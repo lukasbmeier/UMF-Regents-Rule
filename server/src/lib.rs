@@ -3,7 +3,7 @@
 //! Layout
 //!   sim.rs      frozen gravity-only twin for MODULE-authority (Tier A) idle handling + wire types
 //!   challenge.rs pure challenge validators with a GDScript twin + golden vectors
-//!   module.rs tables + reducers (wasm32 only)
+//!   module/    tables + reducers, one file per system (wasm32 only)
 //!   lib.rs   crate root (this file)
 //!
 //! Motion authority per world (docs/SIDECAR_SPEC.md):
@@ -67,9 +67,35 @@ pub mod rules {
     pub fn match_rules(kind: u8) -> &'static MatchRules {
         MATCHES.iter().find(|m| m.kind == kind).unwrap_or(&MatchRules::DEFAULT)
     }
+
+    /// How often one player may call a reducer (REVIEW 0.23.1 B3): `burst` calls at once, the
+    /// allowance coming back at `per_sec`. A token bucket rather than a minimum interval, because an
+    /// honest client sends some things in quick pairs (a fight's tell changing twice in a frame).
+    pub struct RateLimit {
+        pub verb: &'static str,
+        pub burst: f32,
+        pub per_sec: f32,
+    }
+
+    pub fn rate_limit(verb: &str) -> &'static RateLimit {
+        RATE_LIMITS.iter().find(|r| r.verb == verb).unwrap_or(&RATE_DEFAULT)
+    }
+
+    /// One call against a budget that held `tokens` `elapsed_s` seconds ago (None: a fresh one,
+    /// full). The tokens left after it, or None when the call is over the limit.
+    pub fn rate_spend(tokens: Option<f32>, elapsed_s: f64, limit: &RateLimit) -> Option<f32> {
+        let refilled = match tokens {
+            None => limit.burst,
+            Some(t) => (t as f64 + elapsed_s.max(0.0) * limit.per_sec as f64).min(limit.burst as f64) as f32,
+        };
+        if refilled < 1.0 {
+            return None;
+        }
+        Some(refilled - 1.0)
+    }
 }
 
-/// Tables + reducers. wasm32-only: see module.rs for why.
+/// Tables + reducers. wasm32-only: see module/mod.rs for why.
 /// `pub` so the genre layer can use its types; the dependency runs one way only —
 /// `game` imports from `module`, never the reverse (docs/TEMPLATE_WORKFLOW.md).
 #[cfg(target_arch = "wasm32")]

@@ -37,3 +37,6 @@ tools/local.env
 
 # The preview's Save Pictures sheets (regenerated; res://grip_pictures/.gdignore keeps them out of the import)
 grip_pictures/
+
+# Windows leaves these beside a library it could not overwrite while it was loaded.
+~*.TMP

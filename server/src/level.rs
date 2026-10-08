@@ -100,6 +100,28 @@ impl LevelBake {
         self.depth_dm_at(x, z) >= self.min_cast_dm
     }
 
+    /// Somewhere a player may stand (REVIEW 0.23.1 B2): land, water shallow enough to wade, a
+    /// deck (the bake reads the dock's planks as dry), or off the grid. Deeper than `wade_depth`
+    /// counts only when the point's cell AND its eight neighbours all are: the barrier follows the
+    /// terrain, not this grid, so a player against it stands up to a cell from one that reads too
+    /// deep. `apply_client_trust` refuses a Tier A claim that leaves standable ground. Twin:
+    /// `LevelBake.can_stand` (the probes check both).
+    pub fn can_stand(&self, x: f32, z: f32) -> bool {
+        let Some((ci, cj)) = self.cell(x, z) else { return true };
+        let wade_dm = (self.wade_depth * 10.0).round() as u8;
+        for dj in -1i64..=1 {
+            for di in -1i64..=1 {
+                let (i, j) = (ci as i64 + di, cj as i64 + dj);
+                if i < 0 || j < 0 || i >= self.width as i64 || j >= self.height as i64
+                    || self.depth_dm[j as usize * self.width + i as usize] <= wade_dm
+                {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// Every point of one kind (a genre's baskets, its coops), in the bake's order.
     pub fn points_of<'a>(&'a self, kind: &'a str) -> impl Iterator<Item = &'static Point> + 'a {
         self.points.iter().filter(move |p| p.kind == kind)

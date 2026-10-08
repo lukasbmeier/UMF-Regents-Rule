@@ -142,6 +142,25 @@ func is_water(x: float, z: float) -> bool:
 	return depth_dm_at(x, z) >= min_cast_dm
 
 
+## Somewhere a player may stand (REVIEW 0.23.1 B2): land, water shallow enough to wade, a deck
+## (the bake reads the dock's planks as dry), or off the grid. Deeper than `wade_depth` counts only
+## when the point's cell AND its eight neighbours all are: the barrier follows the terrain, not
+## this grid, so a player against it stands up to a cell from a cell that reads too deep. The
+## module refuses a Tier A claim that leaves standable ground for anywhere this says no.
+func can_stand(x: float, z: float) -> bool:
+	var c: Vector2i = cell(x, z)
+	if c.x < 0:
+		return true
+	var wade_dm: int = roundi(wade_depth * 10.0)
+	for dj: int in range(-1, 2):
+		for di: int in range(-1, 2):
+			var i: int = c.x + di
+			var j: int = c.y + dj
+			if i < 0 or j < 0 or i >= width or j >= height or _depth[j * width + i] <= wade_dm:
+				return true
+	return false
+
+
 ## The named spot containing a point, or {} for open water.
 func spot_at(x: float, z: float) -> Dictionary:
 	for s: Dictionary in spots:

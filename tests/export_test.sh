@@ -68,7 +68,7 @@ CPCK=build/client/umf.exe
 # in the client is readable by every player and is exactly what the rule exists to prevent.
 check "$([ "$(count $CPCK '^sidecar/')" = "0" ] && echo true || echo false)" \
   "no sidecar/ file is in the client ($(count $CPCK '^sidecar/') found)"
-check "$([ "$(count $CPCK '^(tests/(test_runner|e2e/|playtest/|render/|fight_bot)|tools/)')" = "0" ] && echo true || echo false)" \
+check "$([ "$(count $CPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|tools/)')" = "0" ] && echo true || echo false)" \
   "nor test code or tools"
 # THE LEVEL LIVES UNDER tests/levels/ — the game and the sidecar both load it — so "leave the tests
 # out" must not mean "leave the level out". The first version of these presets did exactly that,
@@ -108,6 +108,13 @@ check "$([ "$(count $CPCK '^shared/world/meadow\.json$')" = "1" ] && [ "$(count 
 # only place a missing include shows is here, in the pack.
 check "$([ "$(count $CPCK '^game/world/kits/nature_foliage(_opaque)?\.gdshader$')" = "2" ] && [ "$(count $CPCK '^game/world/kits/nature_foliage\.gdshaderinc$')" = "1" ] && echo true || echo false)" \
   "and the foliage shaders, with the file they include"
+
+# EDITOR TOOLING STAYS IN THE EDITOR (REVIEW 0.23.1 B4): the MCP bridge (it can run code it is
+# sent), the export plugin that keeps its autoload out, and Terrain3D's demo scene, in neither build.
+for PK in build/client/umf.exe build/server/umf_server.pck; do
+  check "$([ "$(count $PK '^addons/(godot_ai|umf_export)/')" = "0" ] && [ "$(count $PK '^demo/')" = "0" ] && echo true || echo false)" \
+    "no editor tooling in $PK (godot_ai $(count $PK '^addons/godot_ai/'), umf_export $(count $PK '^addons/umf_export/'), demo $(count $PK '^demo/'))"
+done
 
 echo "== what the SERVER carries =="
 SPCK=build/server/umf_server.pck

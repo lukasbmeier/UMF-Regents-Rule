@@ -447,8 +447,15 @@ check "$(python -c "import json; d=json.load(open('shared/fishing/fishing.json')
   "the roll is a catch the catalogue has ($CATCH)"
 assert_eq "$(pfield "$PAYLOAD" spot)" "dock_end" "and it knows which spot the float is in"
 assert_eq "$(pfield "$PAYLOAD" window_mult)" "1" "the starting reel's hook-set window (x1)"
-check "$(python -c "print(str(2.0/1.4 - 1e-3 <= float('$BITE') <= 30.0).lower())")" \
-  "the bite is due between the Dock End's fastest and the cap ($BITE s)"
+# The fastest is the spot's AND the round's (DECISIONS #168): round 1 is dawn, and its weather
+# speeds bites too, so the floor is read off the round's conditions, not the spot's alone.
+TOD="$(sql_first 'SELECT time_of_day FROM fishing_conditions WHERE world_id = 0' 1)"
+WX="$(sql_first 'SELECT weather FROM fishing_conditions WHERE world_id = 0' 1)"
+check "$(python -c "
+import json; d=json.load(open('shared/fishing/fishing.json')); t=d['timing']; c=d['conditions']
+fast=t['bite_min_s']/(d['spots']['dock_end']['bite_speed']*c['times'][$TOD]['bite_speed']*c['weather'][$WX]['bite_speed'])
+print(str(fast - 1e-3 <= float('$BITE') <= t['bite_cap_s']).lower())")" \
+  "the bite is due between the Dock End's fastest under this round's sky and the cap ($BITE s)"
 check "$(python -c "
 import json; d=json.load(open('shared/fishing/fishing.json'))
 print(str(('$(pfield "$PAYLOAD" deadlift)' == 'true') == (float('$KG') > d['gear']['line'][0]['max_load_kg'])).lower())")" \
@@ -588,7 +595,8 @@ assert_eq "$(row_count 'SELECT * FROM catch')" "1" "a non-fishing challenge prod
 # bitten comes in; one that has bitten plays out through the results (you finish what you hooked).
 # Left out, a waiting line got its bite during the results, under the results panel.
 BITE=0
-for _ in 1 2 3 4 5 6; do   # a roll that bites soon could bite before the bell: roll again
+# Twenty tries: at the dock a bite comes 1.4-5 s out, so six missed about one run in 150 (seen).
+for _ in $(seq 1 20); do   # a roll that bites soon could bite before the bell: roll again
   spacetime call "$DB" cast "$(cast_at 0.0 10.0)" >/dev/null 2>&1
   BITE=$(sql_first "SELECT bite_s FROM fishing_cast" 1)
   [ -n "$BITE" ] && python -c "import sys; sys.exit(0 if float('$BITE') >= 3.0 else 1)" && break
@@ -619,6 +627,28 @@ assert_eq "$(row_count 'SELECT * FROM fishing_line')" "1" "the abandoned cast's 
 # The sections below were written against the greybox, with the admin's player at the origin.
 assert_ok "use_level 0 0" "back to the greybox"
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "and home"
+
+echo "== rate limits: a flood of calls is refused (REVIEW 0.23.1 B3) =="
+# Twenty renames at once, all from this player: set_player_name's budget (shared/rules.json
+# rate_limits: 4 at once, half a call a second back) takes the first few and refuses the rest,
+# each refusal saying why and changing nothing. Run in parallel so they land inside a second.
+RL_DIR="$(mktemp -d)"
+for i in $(seq 1 20); do
+  ( spacetime call "$DB" set_player_name "\"Flood$i\"" > "$RL_DIR/$i" 2>&1 ) &
+done
+wait
+RL_OK=0; RL_REFUSED=0
+for i in $(seq 1 20); do
+  if grep -qi "too many calls" "$RL_DIR/$i"; then RL_REFUSED=$((RL_REFUSED + 1));
+  elif ! grep -qiE "^error|error:" "$RL_DIR/$i"; then RL_OK=$((RL_OK + 1)); fi
+done
+rm -rf "$RL_DIR"
+check "$([ "$RL_OK" -ge 4 ] && [ "$RL_OK" -le 8 ] && echo true || echo false)" "the burst is taken ($RL_OK of 20 renames went through)"
+check "$([ "$RL_REFUSED" -ge 12 ] && [ $((RL_OK + RL_REFUSED)) -eq 20 ] && echo true || echo false)" \
+  "and the rest refused as too many calls ($RL_REFUSED refused)"
+sleep 2.5
+assert_ok 'set_player_name "Admin"' "after a pause the allowance has come back"
+assert_eq "$(sql_first "SELECT name FROM player WHERE identity = $ADMIN" 1)" '"Admin"' "and the name is the last one taken"
 
 echo "== Tier A trust: the envelope, correction epochs and the replay budget =="
 # Runs LAST: it moves the CLI's own player, and every section above assumes it sits at the
@@ -783,7 +813,23 @@ SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$XF" "$YF" "$ZF" "$E4" 101)]"
 assert_eq "$(field move_state)" "101" "a genre move_state (>= 100) is mirrored"
 
-# 9. Overrides from reducers bump the epoch too.
+# 9a. THE DEV TOOLS ARE OFF FOR PLAYERS (REVIEW 0.23.1 B1). A fresh publish has them off: a player
+#     who is not an admin cannot teleport (past the rod-reach gate) or nudge itself, and cannot turn
+#     them on. The admin (this CLI) still may. The suites whose clients teleport turn them on.
+for verb in teleport dev_nudge; do
+  out="$(spacetime call --anonymous "$DB" $verb '{"x":0.0,"y":0.0,"z":0.0}' 2>&1)"
+  check "$(echo "$out" | grep -qi "dev tool" && echo true || echo false)" "a player's $verb is refused while the dev tools are off ($(echo "$out" | tail -1))"
+done
+out="$(spacetime call --anonymous "$DB" set_dev_tools true 2>&1)"
+check "$(echo "$out" | grep -qi "admin only" && echo true || echo false)" "only an admin turns the dev tools on"
+assert_ok "set_dev_tools true" "an admin turns the dev tools on"
+out="$(spacetime call --anonymous "$DB" teleport '{"x":0.0,"y":0.0,"z":0.0}' 2>&1)"
+check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "with them on, a player may teleport ($(echo "$out" | tail -1))"
+assert_ok "set_dev_tools false" "and off again"
+out="$(spacetime call --anonymous "$DB" teleport '{"x":0.0,"y":0.0,"z":0.0}' 2>&1)"
+check "$(echo "$out" | grep -qi "dev tool" && echo true || echo false)" "off means off again"
+
+# 9. Overrides from reducers bump the epoch too (the admin's own, with the dev tools off).
 assert_ok 'dev_nudge {"x":0.4,"y":0.0,"z":0.0}' "dev_nudge applies a correction"
 assert_eq "$(field correction_epoch)" "$((E4 + 1))" "dev_nudge starts a new correction epoch"
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "teleport back to the origin"
@@ -825,6 +871,34 @@ assert_eq "$(python -c "print('true' if 0 < $MOVED_H < 1.0 else 'false')")" "tru
   "a claim 5 km off and 1.35 m lower is clamped (moved $MOVED_H m)"
 assert_eq "$(python -c "print('true' if 0 <= $DROP < 0.001 else 'false')")$(field grounded)" "truetrue" \
   "and takes only its share of the drop ($DROP m): the player keeps their footing instead of sinking"
+
+# 11. THE LAKE IS NOT A ROAD (REVIEW 0.23.1 B2): the envelope bounds speed, not place. Off the end
+#     of the lakeside's dock in 10 cm steps — each well inside the envelope — the claim that leaves
+#     ground a player may stand on is refused whole, and the one before it is taken exactly. The
+#     edge comes from the probes (tools/world/gen_level_probes.py), not from a number here.
+read -r Z_OK Z_NO <<< "$(python -c "
+import json; p=[q for q in json.load(open('shared/golden/level/lakeside_probes.json'))['probes'] if q['name'].startswith('dock_off_')]
+k=next(i for i in range(len(p)-1) if p[i]['can_stand'] and not p[i+1]['can_stand']); print(p[k]['z'], p[k+1]['z'])")"
+assert_ok "use_level 0 1" "to the lakeside, whose bake knows the water"
+assert_ok "teleport {\"x\":0.0,\"y\":0.9,\"z\":$(python -c "print($Z_OK + 0.1)")}" "on the end of the dock"
+# Offline between CLI calls and flagged airborne by the teleport, this player falls under the idle
+# twin until it lands; a claim made mid-fall has a vertical step, stays airborne, and the twin
+# then carries the claim's velocity on across ticks. Let it land first, as the climb above does.
+sleep 1.5
+read -r XL YL ZL <<< "$(pos_of)"
+EL=$(field correction_epoch)
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$XL" "$YL" "$Z_OK" "$EL")]"
+read -r XL YL ZL <<< "$(pos_of)"
+assert_eq "$(python -c "print('true' if abs($ZL - $Z_OK) < 1e-5 else 'false')") $(field correction_epoch)" "true $EL" \
+  "a step to the last ground a player may stand on is taken exactly (z $ZL)"
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$XL" "$YL" "$Z_NO" "$EL")]"
+read -r XM YM ZM <<< "$(pos_of)"
+assert_eq "$(python -c "print('true' if abs($ZM - $Z_OK) < 1e-5 else 'false')")" "true" \
+  "the next 10 cm, onto deep water, is refused: the player stays at z $Z_OK (z $ZM, claimed $Z_NO)"
+assert_eq "$(field correction_epoch)" "$((EL + 1))" "and the client is told: a new correction epoch"
+assert_ok "use_level 0 0" "back to the greybox"
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "teleport back to the origin"
 
 

@@ -7,10 +7,14 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]   # cdylib for the WASM module; rlib so tests/golden.rs can link sim
 
 [dependencies]
-# Must match the server's minor. Verified against 2.10.0 docs; `spacetime version` on the host.
-spacetimedb = { version = "2.10", features = ["unstable"] }   # "unstable" only for #[client_visibility_filter] (RLS)
+# PINNED to the exact patch (REVIEW 0.23.1 B5): row-level security rides on the "unstable" feature
+# (#[client_visibility_filter]), so a bump could silently stop enforcing it and leak every player's
+# `challenge` rows. Change this only together with the server (`spacetime version`), then run
+# tests/integration_test.sh: its row-level security section reads as an anonymous identity and
+# fails if the filters stopped working (DECISIONS #32).
+spacetimedb = { version = "=2.10.1", features = ["unstable"] }
 # sim.rs derives SpacetimeType from here, not from `spacetimedb`, so the golden harness links natively.
-spacetimedb-lib = "2.10"
+spacetimedb-lib = "=2.10.1"
 log = "0.4"
 
 [build-dependencies]

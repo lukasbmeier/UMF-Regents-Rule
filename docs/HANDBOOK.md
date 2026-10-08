@@ -32,7 +32,7 @@ And the code is split in two layers:
 
 | Layer | Folders | Knows about |
 |---|---|---|
-| **Foundation** (the template) | `foundation/`, `sidecar/`, `server/src/module.rs`, `sim.rs`, `challenge.rs` | movement, entities, health, inventory, sessions/rounds, interaction, challenges, NPC brains |
+| **Foundation** (the template) | `foundation/`, `sidecar/`, `server/src/module/`, `sim.rs`, `challenge.rs` | movement, entities, health, inventory, sessions/rounds, interaction, challenges, NPC brains |
 | **Genre** (one game: fishing) | `game/`, `server/src/game/`, `server/src/genre/`, `shared/fishing/` | fishing |
 
 The foundation never mentions fishing. Fishing plugs into it through definitions, components and
@@ -68,7 +68,7 @@ game/                  THE GENRE, client side
   world/               the lakeside level, water, nature/village/props kits
 sidecar/               SERVER-ONLY Godot code: the headless authority and NPC brains
 server/                the SpacetimeDB module (Rust)
-  src/module.rs        foundation tables + reducers
+  src/module/          foundation tables + reducers, one file per system
   src/game/            fishing's tables + reducers (the genre's server half)
   src/genre/           fishing's pure rules (no database), testable on their own
   build.rs             compiles shared/ data INTO the module
@@ -103,7 +103,7 @@ The local database is called **`umf`**.
 ### Where its code is
 | File | Holds |
 |---|---|
-| `server/src/module.rs` | every foundation table and reducer. A game never edits it: it uses the hooks below and `shared/rules.json` |
+| `server/src/module/` | every foundation table and reducer, one file per system (`tables.rs`, `movement.rs`, `sessions.rs`, `authorities.rs`, `items.rs`, `challenges.rs`, `actions.rs`, `lifecycle.rs`, `interaction.rs`). A game never edits it: it uses the hooks below and `shared/rules.json` |
 | `server/src/game/mod.rs` | the HOOKS the foundation calls into the genre (section 3, "Hooks") |
 | `server/src/game/fishing.rs` | fishing's tables and reducers: `cast`, `reel_in`, `buy_upgrade`, `use_level` |
 | `server/src/genre/fishing.rs`, `fight.rs` | fishing's pure rules: the rolls, the hook-set, THE FIGHT. No database |
@@ -158,6 +158,13 @@ counted. The server's `session.round` keeps counting across matches (catches are
 show the match's round (`SessionComponent.get_match_round()`). To start a new match by hand:
 `spacetime call umf new_match 1`.
 
+`rate_limits` says HOW OFTEN one player may call a reducer that writes rows everyone receives
+(DECISIONS #189): `burst` calls at once, `per_sec` coming back each second; a reducer not named
+takes `default`. A call over it is refused ("too many calls") and changes nothing. The shipped
+numbers are far above what an honest client sends (the fight is reported five times a second).
+A genre's own verb that writes a public row calls `spend_rate(ctx, entity, "<reducer>")` first
+and gets a line here; `cargo test --test rate` fails if a limited reducer has none.
+
 ### Running the project's scripts on Windows
 The scripts (`tests/*.sh`, `tools/publish.sh`) are bash. On Windows run them through
 `tools\run.cmd`, which uses Git Bash (installed with Git for Windows), from cmd or PowerShell:
@@ -207,6 +214,10 @@ the server's own schema; a test that changes the schema without codegen is refus
 4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`.
 5. **After you change the server**, publish with `--codegen` and send them a new export: an old
    build is refused with a message saying so (above).
+6. **What is NOT in the export:** editor tooling. Both presets leave out `addons/godot_ai/` (the
+   AI bridge) and `addons/umf_export/`, the small editor plugin that takes the bridge's autoload
+   out while exporting (DECISIONS #190). Another editor addon that adds an autoload goes in its
+   `EDITOR_ONLY_AUTOLOADS`; the export test fails if any of it is in a build.
 
 Voice: use Discord alongside for now (the roadmap has voice chat later).
 
@@ -214,7 +225,9 @@ Voice: use Discord alongside for now (the roadmap has voice chat later).
 Each world picks one:
 - **MODULE (Tier A, what fishing uses):** your client simulates your movement and tells the
   server where you are; the server only checks you could have moved that far that fast, and clamps
-  a claim it doesn't believe. Cheap, no server physics.
+  a claim it doesn't believe. It also checks WHERE: a claim that walks off standable ground into
+  water too deep to wade is refused (the level's bake says where; DECISIONS #188). Cheap, no
+  server physics.
 - **SIDECAR:** a headless Godot process (`sidecar/`) runs real physics for the world and is the
   authority. For games where the server must see walls (NPCs, survival). The fishing rival angler
   NPC is driven by a sidecar brain.
@@ -645,6 +658,16 @@ they find Godot through `tools\local.env` (the integration suite needs it too: i
 through the client's simulation). The server suites publish and wipe `umf-test`, never
 `umf`, so they are safe to run while you play. To run one unit suite while iterating:
 `godot --headless --path . res://tests/test_runner.tscn -- --only=grip`.
+
+Each unit suite is its own file, `tests/suites/<name>.gd`, extending `tests/suite_base.gd` (the
+counters, `_check`, and every helper two suites share). A new suite is a new file there plus its
+name in `SUITES` in `tests/test_runner.gd`, in the order it should run; the runner fails on a file
+it does not list.
+
+**The dev tools** (`teleport`, `dev_nudge`) are off for players on every database (DECISIONS
+#187); an admin (the identity that published) can always use them. The suites whose clients
+teleport turn them on for `umf-test` with `spacetime call umf-test set_dev_tools true`. Never
+turn them on for a database friends play on: a player could teleport anywhere.
 
 ---
 

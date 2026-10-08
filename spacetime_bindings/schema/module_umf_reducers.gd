@@ -114,6 +114,10 @@ func seed_item_defs(defs: Array[UmfItemDef]) -> SpacetimeDBReducerCall:
 func set_appearance(look: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_appearance', [look], [&'string'], &'')
 
+## 0. enabled: bool [br]
+func set_dev_tools(enabled: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_dev_tools', [enabled], [&'bool'], &'')
+
 ## 0. state: int [br]
 func set_equip_state(state: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_equip_state', [state], [&'u8'], &'')

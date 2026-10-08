@@ -23,6 +23,7 @@ struct Probe {
     depth_dm: u8,
     is_water: bool,
     spot: Option<String>,
+    can_stand: bool,
 }
 
 fn load(level: &str) -> Doc {
@@ -47,10 +48,11 @@ fn every_probe_matches() {
         let dm = l.depth_dm_at(p.x, p.z);
         let water = l.is_water(p.x, p.z);
         let spot = l.spot_at(p.x, p.z).map(|s| s.id.to_string());
-        if cell != p.cell || dm != p.depth_dm || water != p.is_water || spot != p.spot {
+        let stand = l.can_stand(p.x, p.z);
+        if cell != p.cell || dm != p.depth_dm || water != p.is_water || spot != p.spot || stand != p.can_stand {
             bad.push(format!(
-                "{}: ({}, {}) got cell={cell:?} dm={dm} water={water} spot={spot:?}, want cell={:?} dm={} water={} spot={:?}",
-                p.name, p.x, p.z, p.cell, p.depth_dm, p.is_water, p.spot
+                "{}: ({}, {}) got cell={cell:?} dm={dm} water={water} spot={spot:?} stand={stand}, want cell={:?} dm={} water={} spot={:?} stand={}",
+                p.name, p.x, p.z, p.cell, p.depth_dm, p.is_water, p.spot, p.can_stand
             ));
         }
     }
@@ -83,6 +85,10 @@ fn the_lakeside_is_the_level_the_game_describes() {
     // The dock stands over water, but a float cannot land on its planks.
     assert!(!l.is_water(0.0, 40.0) && !l.is_water(3.0, 25.0), "the dock's deck counts as water");
     assert!(l.is_water(0.0, 19.0), "but the water just past the end of the dock does");
+    // Where a player may stand (REVIEW B2): the module refuses a Tier A claim anywhere else.
+    assert!(l.can_stand(l.spawn[0], l.spawn[2]) && l.can_stand(0.0, 40.0) && l.can_stand(3.0, 25.0),
+        "the spawn and the dock's planks are ground a player may stand on");
+    assert!(!l.can_stand(0.0, 16.0) && !l.can_stand(hx, hz), "past the end of the dock and the Deep Hole are not");
     // Every named spot's centre is fishable water.
     for s in l.spots {
         assert!(l.is_water(s.x as f32, s.z as f32), "spot {} is centred on land", s.id);

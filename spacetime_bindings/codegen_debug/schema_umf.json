@@ -480,6 +480,30 @@
 			]
 		},
 		{
+			"name": "DevTools",
+			"namespace": [],
+			"source_name": "DevTools",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U8"
+				},
+				{
+					"name": "enabled",
+					"type": "Bool"
+				}
+			],
+			"table_names": [
+				"dev_tools"
+			],
+			"table_name": "dev_tools",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				false
+			]
+		},
+		{
 			"name": "Entity",
 			"namespace": [],
 			"source_name": "Entity",
@@ -959,7 +983,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 25
+					"type_idx": 26
 				},
 				{
 					"name": "received_at",
@@ -1288,6 +1312,38 @@
 			"primary_key_name": "identity",
 			"is_public": [
 				true
+			]
+		},
+		{
+			"name": "RateBudget",
+			"namespace": [],
+			"source_name": "RateBudget",
+			"struct": [
+				{
+					"name": "key",
+					"type": "String"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "tokens",
+					"type": "F32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"rate_budget"
+			],
+			"table_name": "rate_budget",
+			"primary_key": 0,
+			"primary_key_name": "key",
+			"is_public": [
+				false
 			]
 		},
 		{
@@ -2043,7 +2099,7 @@
 				{
 					"name": "_sched",
 					"type": "RivalSchedule",
-					"type_idx": 33
+					"type_idx": 35
 				}
 			],
 			"return_type": "",
@@ -2063,7 +2119,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 27
+					"type_idx": 28
 				}
 			],
 			"return_type": "",
@@ -2078,6 +2134,20 @@
 				{
 					"name": "look",
 					"type": "String"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "set_dev_tools",
+			"wire_name": "set_dev_tools",
+			"namespace": [],
+			"local_name": "set_dev_tools",
+			"params": [
+				{
+					"name": "enabled",
+					"type": "Bool"
 				}
 			],
 			"return_type": "",
@@ -2347,7 +2417,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 25
+					"type_idx": 26
 				}
 			],
 			"return_type": "",
@@ -2377,7 +2447,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 38
+					"type_idx": 40
 				}
 			],
 			"return_type": "",
@@ -2446,7 +2516,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 41
+					"type_idx": 43
 				}
 			],
 			"return_type": "",
@@ -2741,11 +2811,30 @@
 			"is_public": false
 		},
 		{
+			"name": "dev_tools",
+			"wire_name": "dev_tools",
+			"namespace": [],
+			"local_name": "dev_tools",
+			"type_idx": 13,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U8",
+					"constraint_name": "dev_tools_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false
+		},
+		{
 			"name": "entity",
 			"wire_name": "entity",
 			"namespace": [],
 			"local_name": "entity",
-			"type_idx": 13,
+			"type_idx": 14,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2769,7 +2858,7 @@
 			"wire_name": "equip_state",
 			"namespace": [],
 			"local_name": "equip_state",
-			"type_idx": 14,
+			"type_idx": 15,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2793,7 +2882,7 @@
 			"wire_name": "fight_show",
 			"namespace": [],
 			"local_name": "fight_show",
-			"type_idx": 15,
+			"type_idx": 16,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2817,7 +2906,7 @@
 			"wire_name": "fishing_cast",
 			"namespace": [],
 			"local_name": "fishing_cast",
-			"type_idx": 16,
+			"type_idx": 17,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -2841,7 +2930,7 @@
 			"wire_name": "fishing_conditions",
 			"namespace": [],
 			"local_name": "fishing_conditions",
-			"type_idx": 17,
+			"type_idx": 18,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -2860,7 +2949,7 @@
 			"wire_name": "fishing_line",
 			"namespace": [],
 			"local_name": "fishing_line",
-			"type_idx": 18,
+			"type_idx": 19,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2884,7 +2973,7 @@
 			"wire_name": "fishing_rival",
 			"namespace": [],
 			"local_name": "fishing_rival",
-			"type_idx": 19,
+			"type_idx": 20,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2908,7 +2997,7 @@
 			"wire_name": "fishing_spot",
 			"namespace": [],
 			"local_name": "fishing_spot",
-			"type_idx": 20,
+			"type_idx": 21,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -2927,7 +3016,7 @@
 			"wire_name": "fishing_world",
 			"namespace": [],
 			"local_name": "fishing_world",
-			"type_idx": 21,
+			"type_idx": 22,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -2946,7 +3035,7 @@
 			"wire_name": "gear",
 			"namespace": [],
 			"local_name": "gear",
-			"type_idx": 22,
+			"type_idx": 23,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2965,7 +3054,7 @@
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 23,
+			"type_idx": 24,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2989,7 +3078,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 24,
+			"type_idx": 25,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3017,7 +3106,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 26,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3041,7 +3130,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 27,
+			"type_idx": 28,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -3060,7 +3149,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 28,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3088,7 +3177,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 29,
+			"type_idx": 30,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3112,7 +3201,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 30,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3159,7 +3248,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 31,
+			"type_idx": 32,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -3179,11 +3268,35 @@
 			"is_public": true
 		},
 		{
+			"name": "rate_budget",
+			"wire_name": "rate_budget",
+			"namespace": [],
+			"local_name": "rate_budget",
+			"type_idx": 33,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "key",
+			"unique_indexes": [
+				{
+					"name": "key",
+					"type": "String",
+					"constraint_name": "rate_budget_key_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"is_public": false
+		},
+		{
 			"name": "rival_bench",
 			"wire_name": "rival_bench",
 			"namespace": [],
 			"local_name": "rival_bench",
-			"type_idx": 32,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3202,7 +3315,7 @@
 			"wire_name": "rival_schedule",
 			"namespace": [],
 			"local_name": "rival_schedule",
-			"type_idx": 33,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3225,7 +3338,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 34,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3249,7 +3362,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 35,
+			"type_idx": 37,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3268,7 +3381,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 36,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3292,7 +3405,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 37,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3320,7 +3433,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 38,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3343,7 +3456,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 39,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3362,7 +3475,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 40,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3422,6 +3535,7 @@
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"Correction": "UmfCorrection",
+		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
 		"FightShow": "UmfFightShow",
@@ -3441,6 +3555,7 @@
 		"MovementStateRow": "UmfMovementStateRow",
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
+		"RateBudget": "UmfRateBudget",
 		"RivalBench": "UmfRivalBench",
 		"RivalSchedule": "UmfRivalSchedule",
 		"Session": "UmfSession",
@@ -3496,6 +3611,7 @@
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"Correction": "UmfCorrection",
+		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
 		"FightShow": "UmfFightShow",
@@ -3515,6 +3631,7 @@
 		"MovementStateRow": "UmfMovementStateRow",
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
+		"RateBudget": "UmfRateBudget",
 		"RivalBench": "UmfRivalBench",
 		"RivalSchedule": "UmfRivalSchedule",
 		"Session": "UmfSession",
@@ -4382,6 +4499,28 @@
 				"elements": [
 					{
 						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U8": []
+						}
+					},
+					{
+						"name": {
+							"some": "enabled"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -5109,7 +5248,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 25.0
+							"Ref": 26.0
 						}
 					},
 					{
@@ -5620,6 +5759,55 @@
 						},
 						"algebraic_type": {
 							"Bool": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "key"
+						},
+						"algebraic_type": {
+							"String": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "tokens"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
 						}
 					}
 				]

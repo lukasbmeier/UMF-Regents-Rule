@@ -11,6 +11,8 @@ extends Node
 ##               lurches between packets, no stop-start where the buffer ran dry
 ##   no stalls   the drawn walker never freezes mid-walk while it is really moving
 ##   teleport    a teleport is ONE snap, announced with entity_teleported, not a glide across
+##   jumps       up a ramp and three jumps on the platform: exactly three `jumped` and no more,
+##               none on the ramp (the friends' test saw jump/land restart on every bump)
 ##
 ## Driven by tests/remote_playtest.sh, which runs both at a chosen simulated latency. Exits 0/1.
 
@@ -23,6 +25,8 @@ const SIDE_SEC: float = 1.5
 ## Interpolation between 20 Hz snapshots adds a kink at each sample; a stall or lurch between
 ## packets is several times larger. 0.05 m sits well above the first and well below the second.
 const LURCH_EPS: float = 0.05
+## The walker's jumps on the platform, after it walks up the ramp.
+const JUMPS: int = 3
 
 var _passes: int = 0
 var _failures: int = 0
@@ -87,6 +91,24 @@ func _walk(me: SpaceTimeEntity) -> void:
 	# The observer's last check: a teleport arrives as one snap.
 	SpaceTimeSync.call_reducer(&"teleport", [Vector3(-6.0, 0.5, 6.0)], ["vector3[f32,f32,f32]"])
 	await get_tree().create_timer(4.0).timeout
+	# UP THE RAMP AND JUMP. Ramp30 climbs +Z at x 5 onto the platform (top 1.75 m). Walked, not
+	# teleported: the walk up a slope is what must NOT read as a jump to anyone watching.
+	SpaceTimeSync.call_reducer(&"teleport", [Vector3(5.0, 0.0, -5.0)], ["vector3[f32,f32,f32]"])
+	await get_tree().create_timer(2.0).timeout
+	input.set_look(PI, 0.0)
+	Input.action_press(&"move_forward")
+	for f: int in range(int(2.2 * 60.0)):
+		await get_tree().physics_frame
+	Input.action_release(&"move_forward")
+	await get_tree().create_timer(1.0).timeout
+	print("   walker on the platform at %s" % me.global_position)
+	for k: int in range(JUMPS):
+		Input.action_press(&"jump")
+		for f: int in range(6):
+			await get_tree().physics_frame
+		Input.action_release(&"jump")
+		await get_tree().create_timer(1.4).timeout
+	await get_tree().create_timer(2.0).timeout
 	_check(true, "walker finished its route")
 
 
@@ -125,6 +147,11 @@ func _observe(me: SpaceTimeEntity) -> void:
 		"someone else's player is interpolated, not predicted")
 	print("   watching entity %d" % target.entity_id)
 	mv.diagnostics_enabled = true   # explain any lurch measured below
+	# Every jump and landing the watcher is told about, with where the walker was (authoritative).
+	var jumps_seen: Array[Vector3] = []
+	var lands_seen: Array[Vector3] = []
+	mv.jumped.connect(func() -> void: jumps_seen.append(mv.get_authoritative_state().pos))
+	mv.landed.connect(func(_impact: float) -> void: lands_seen.append(mv.get_authoritative_state().pos))
 	# The same entity, animated: a remote character is driven by `move_state` and the mirrored
 	# jump/land events alone (DECISIONS #94), which only a second real client can exercise.
 	var anim: AnimationDriverComponent = target.find_component(
@@ -252,6 +279,31 @@ func _observe(me: SpaceTimeEntity) -> void:
 		print("   teleport drawn as a %.2f m jump; largest step after it %.3f m" % [jump, after])
 		_check(jump > 5.0, "the teleport is drawn as ONE snap (%.2f m in a single frame)" % jump)
 		_check(after < 0.2, "after the teleport the walker is not sliding across the map (%.3f m)" % after)
+
+	# THE JUMPS, AS SOMEONE ELSE IS TOLD THEM. Wait out the ramp and the jumps.
+	var jumps_before: int = jumps_seen.size()
+	deadline = Time.get_ticks_msec() + 16_000
+	while Time.get_ticks_msec() < deadline and (jumps_seen.size() - jumps_before < JUMPS
+			or Time.get_ticks_msec() < deadline - 4000):
+		await get_tree().physics_frame
+	# And see the last one come down: the loop ends on the jump it was waiting for.
+	await get_tree().create_timer(2.0).timeout
+	var on_ramp: int = 0
+	for j: Vector3 in jumps_seen:
+		if j.z < 1.0:
+			on_ramp += 1
+	print("   jumps the observer was told of: %d (on the walk and ramp: %d), landings %d" % [jumps_seen.size(), on_ramp, lands_seen.size()])
+	for j: Vector3 in jumps_seen:
+		print("      jumped at %s" % j)
+	for l: Vector3 in lands_seen:
+		print("      landed at %s" % l)
+	_check(on_ramp == 0, "walking up a ramp is not a jump to anyone watching (%d jumps announced on it)" % on_ramp)
+	_check(jumps_seen.size() == JUMPS, "each of the walker's %d jumps is announced exactly once (%d)" % [JUMPS, jumps_seen.size()])
+	var lands_up: int = 0
+	for l: Vector3 in lands_seen:
+		if l.y > 1.5:
+			lands_up += 1
+	_check(lands_up == JUMPS, "and lands exactly once each, on the platform (%d landings up there)" % lands_up)
 
 
 # --- helpers -----------------------------------------------------------------------------

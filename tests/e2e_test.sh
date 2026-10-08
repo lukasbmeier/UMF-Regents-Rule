@@ -27,6 +27,9 @@ echo "== publish (fresh data) =="
 # lakeside (the game). Selecting it moves the spawn to the origin and stocks the ponds.
 spacetime call "$DB" use_level 0 0 >/dev/null 2>&1 \
   || { echo "use_level failed" >&2; exit 1; }
+# Its clients teleport (and nudge) themselves: dev tools, off on any other database (REVIEW B1).
+spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 \
+  || { echo "set_dev_tools failed" >&2; exit 1; }
 sleep 3
 echo "ok"
 

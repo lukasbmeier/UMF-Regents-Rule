@@ -875,6 +875,7 @@ pub fn cast(ctx: &ReducerContext, target: Vector3) -> Result<(), String> {
 #[reducer]
 pub fn show_fight(ctx: &ReducerContext, state: u8, load: f32, line_m: f32) -> Result<(), String> {
     let p = ctx.db.player().identity().find(ctx.sender()).ok_or("show_fight: no player row")?;
+    crate::module::spend_rate(ctx, p.entity_id, "show_fight")?;
     let cast = ctx.db.fishing_cast().entity_id().find(p.entity_id).ok_or("show_fight: you have no line out")?;
     if state > FIGHT_RUNNING {
         return Err(format!("show_fight: {state} is not a fight state (0..{FIGHT_RUNNING})"));

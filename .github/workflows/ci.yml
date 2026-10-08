@@ -1,0 +1,100 @@
+# CI (REVIEW 0.23.1 C3). Three jobs, from cheapest to most complete:
+#   rust     cargo test (every native suite) + the wasm type-check that counts. No server.
+#   godot    lints + the headless unit/scene suite (tests/run_tests.sh). No server.
+#   server   a local SpacetimeDB, then the integration and end-to-end suites on umf-test.
+# Versions are pinned to what the repo is verified on: Godot 4.7.1, SpacetimeDB 2.10.1
+# (server/Cargo.toml pins the crate to the same patch, DECISIONS #190).
+#
+# NOT YET RUN ON GITHUB: written on the owner's Windows machine, where every suite it calls is
+# green (docs/CHANGELOG.md 0.24.0). Expect the first runs to need path or install fixes; the
+# server job is manual (Actions tab, "Run workflow") until it has passed once.
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: "Also run the server suites (integration, e2e)"
+        type: boolean
+        default: true
+
+env:
+  GODOT_VERSION: "4.7.1"
+  SPACETIME_VERSION: "2.10.1"
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - name: wasm type-check (module.rs is wasm-gated; a bare check skips it)
+        run: cargo check --target wasm32-unknown-unknown
+      - name: native suites (golden, challenge, level, fishing, fight, rate, genres)
+        run: cargo test
+
+  godot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d "$HOME/godot"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+      - name: import (twice: the second registers the generated class_names)
+        run: |
+          "$GODOT" --headless --path . --import || true
+          "$GODOT" --headless --path . --import
+      - name: lints + unit and scene suites
+        run: ./tests/run_tests.sh
+
+  server:
+    if: github.event_name == 'workflow_dispatch' && inputs.server
+    needs: [rust, godot]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - name: install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d "$HOME/godot"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+      - name: install SpacetimeDB ${{ env.SPACETIME_VERSION }}
+        run: |
+          curl -sSf https://install.spacetimedb.com | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/spacetime" version install "${SPACETIME_VERSION}" --use --yes
+      - name: start the local server
+        run: |
+          (spacetime start > "$RUNNER_TEMP/spacetime.log" 2>&1 &)
+          for i in $(seq 1 60); do curl -s -m 2 -o /dev/null http://127.0.0.1:3000/v1/ping && break; sleep 1; done
+      - name: import
+        run: |
+          "$GODOT" --headless --path . --import || true
+          "$GODOT" --headless --path . --import
+      - name: integration (every reducer and its refusals)
+        run: ./tests/integration_test.sh
+      - name: end to end (a real client against the real module)
+        run: ./tests/e2e_test.sh
+      - name: the foundation with no genres
+        run: ./tests/genres_test.sh
+      - name: server log on failure
+        if: failure()
+        run: tail -200 "$RUNNER_TEMP/spacetime.log"

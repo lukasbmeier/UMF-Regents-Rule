@@ -8,7 +8,7 @@ class_name OffHand extends RefCounted
 ##
 ## The game (`HeldItem`) and the editor preview (`held_item_preview.gd`) run this same code, so the
 ## preview shows the hand where the game will. Static, engine types only: a tool script's preview
-## may call it (EDITOR PREVIEWS, AGENTS.md).
+## may call it (EDITOR PREVIEWS, docs/rules/held_items.md).
 ##
 ## A clip cannot know where a held item's moving part is: left to its own left hand, a fishing clip
 ## floated it off the reel, hung it in the air while waiting, and put it through her chest casting

@@ -402,3 +402,13 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 
 ## 0.23.2 — a republish is not a new version
 - **Fix: "this server is running a different version of the game" after every republish.** The server lists its tables in a different order each time it's published, and the version check fingerprinted that order. It now ignores order (DECISIONS #186). Export the game again: older builds compare the old way.
+
+## 0.24.0 — before strangers play (REVIEW 0.23.1 B1–B5)
+- **Players can no longer teleport themselves.** `teleport` and `dev_nudge` are admin-only unless a database's dev tools are on (`set_dev_tools`, admin); the test suites turn them on for `umf-test` (DECISIONS #187).
+- **No walking on the lake.** The server refuses a position claim that walks off standable ground into water too deep to wade, using the level's bake (`LevelBake.can_stand`, both twins, #188).
+- **Rate limits** on the reducers whose rows everyone receives, as data in `shared/rules.json` `rate_limits` (#189).
+- **The builds leave out editor tooling** (`addons/godot_ai`, the new `addons/umf_export` plugin that keeps the bridge's autoload out of exports) and Terrain3D's `demo/` is gone; the SpacetimeDB crates are pinned to `=2.10.1` (#190).
+- Fixed a test that depended on the order the server lists its tables (#191).
+- **Fix: other players' jump and land animations restarted** (the friends' test). Walking up a slope read as a jump to everyone watching, and a jump's top as a landing; the server now takes 'in the air' from the player's own movement state (#192).
+- **Split for the template (REVIEW C1–C3):** AGENTS.md is 1,700 words with the topical rules in `docs/rules/`; DECISIONS.md has an index by system; the unit tests are one file per suite (`tests/suites/`); the module is one file per system (`server/src/module/`); a CI workflow (`.github/workflows/ci.yml`, not yet run on GitHub) (#193).
+- Server: new private tables `dev_tools` and `rate_budget`, new reducer `set_dev_tools`. Republished `umf` with `--codegen` (no wipe). **Export again** before playing with a friend: older builds are refused.

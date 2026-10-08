@@ -6,6 +6,18 @@
     "max_health": 100.0
   },
   "interact_range_m": 3.0,
+  "rate_limits": {
+    "_comment": "HOW OFTEN ONE PLAYER MAY CALL A REDUCER (REVIEW 0.23.1 B3). burst: calls allowed at once; per_sec: how fast that allowance comes back. A call over it is refused with an error and changes nothing. Reducers not named here take default, and only the reducers that call spend_rate are limited (the ones that write rows everyone receives, or move a player between worlds). An honest client stays far inside these: the fight is reported five times a second, a look or the equip state only when it changes.",
+    "default": { "burst": 10, "per_sec": 4 },
+    "show_fight": { "burst": 15, "per_sec": 10 },
+    "set_equip_state": { "burst": 8, "per_sec": 4 },
+    "set_appearance": { "burst": 6, "per_sec": 1 },
+    "set_player_name": { "burst": 4, "per_sec": 0.5 },
+    "set_ready": { "burst": 6, "per_sec": 2 },
+    "set_team": { "burst": 6, "per_sec": 2 },
+    "join_session": { "burst": 4, "per_sec": 0.25 },
+    "leave_session": { "burst": 4, "per_sec": 0.25 }
+  },
   "sessions": [
     {
       "_comment": "Session kind 0, the one client_connected joins: fishing's rounds. The machine goes round the phases in this order; entering phase 0 (LOBBY) starts a new round (scores reset, a fresh seed). Seconds 0 holds a phase until a reducer moves it on. Phases 0-3 are the foundation's (LOBBY, PLAYING, RESULTS, SHOP); a genre numbers its own from 4.",

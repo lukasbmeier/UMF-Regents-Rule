@@ -42,6 +42,20 @@ def main(level: str) -> None:
             return None
         return [i, j]
 
+    wade_dm = round(bake["wade_depth"] * 10.0)
+
+    def can_stand(x: float, z: float) -> bool:
+        # Off the grid, or any of the cell and its eight neighbours shallow enough (REVIEW B2).
+        c = cell(x, z)
+        if c is None:
+            return True
+        for dj in (-1, 0, 1):
+            for di in (-1, 0, 1):
+                i, j = c[0] + di, c[1] + dj
+                if i < 0 or j < 0 or i >= w or j >= h or data[j * w + i] <= wade_dm:
+                    return True
+        return False
+
     def spot(x: float, z: float):
         for s in spots:
             dx = x - float(s["x"])
@@ -77,6 +91,10 @@ def main(level: str) -> None:
     rng = random.Random(0x1A4E)
     for k in range(60):
         pts.append((f"random{k}", rng.uniform(ox - 5, ox + w * sp + 5), rng.uniform(oz - 5, oz + h * sp + 5)))
+    # The wading edge (REVIEW B2): off the end of the dock in 10 cm steps, where `can_stand` turns.
+    # Appended after the random ones so every earlier probe keeps its value and its place.
+    for k in range(60):
+        pts.append((f"dock_off_{k}", 0.0, 21.0 - k * 0.1))
 
     probes = []
     for name, x, z in pts:
@@ -84,7 +102,7 @@ def main(level: str) -> None:
         c = cell(x, z)
         dm = data[c[1] * w + c[0]] if c is not None else 0
         probes.append({"name": name, "x": x, "z": z, "cell": c, "depth_dm": dm,
-                       "is_water": dm >= min_dm, "spot": spot(x, z)})
+                       "is_water": dm >= min_dm, "spot": spot(x, z), "can_stand": can_stand(x, z)})
     out = ROOT / "shared/golden/level" / f"{level}_probes.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     doc = {"name": f"{level}_probes", "level": level,

@@ -1,0 +1,41 @@
+# Netcode: entities, subscriptions, connecting
+How entities are shaped and bound, what the client subscribes to, and how it connects. Moved verbatim from AGENTS.md (REVIEW 0.23.1 C1); the DECISIONS rows in each heading say why.
+
+## ENTITY CONVENTIONS (DECISIONS #68, #69)
+- An entity body's origin is at its FEET. `pos.y == ground_y` means standing on the ground; a
+  collision shape centred on the origin puts the body half inside the floor.
+- Entity bodies: `collision_layer = SpaceTimeEntity.ENTITY_MASK`, `collision_mask =
+  SpaceTimeEntity.WORLD_MASK`. Level geometry stays on layer 1. Entities never collide with each other.
+- A component whose table may legitimately have NO rows for an entity (a collection) lists it in
+  `optional_tables()` as well as `required_tables()`, or every spawn waits out `bind_timeout_sec`.
+- `InputFrame` and `movement_state` changed shape (`epoch`, `correction_epoch`, `move_state`,
+  `dash`): after changing either, republish and regenerate bindings, then `--import` so new
+  class_names register.
+
+## SUBSCRIPTIONS (DECISIONS #104, #105)
+- `InterestManager` is the ONLY place subscription SQL is built. A component that needs a table
+  adds it to `NetConfig.core_tables`; nothing else writes a query. A game's `.tres` NetConfig
+  lists its own copy: a new FOUNDATION table goes in it too (`fishing_net_config.tres`), and the
+  interest suite checks every game scene's list against its entities' components (#160).
+- A table is filtered `WHERE world_id = N` only if it HAS that column and its rows belong to one
+  world. `WORLD_TABLES` is that list; the test asserts every shipped table has been decided.
+- Switching world subscribes the new set BEFORE dropping the old one. Never the other way: the
+  spawner cannot tell a torn-down cache from a reconnect.
+- Never connect a lambda that closes over an SDK handle to that handle's own signal (#105).
+
+## CONNECTING (DECISIONS #122-#126, #148)
+- The connect screen greets whenever there is a display; headless processes connect on their own.
+  Auto-connect and `--host=` press the screen's own Connect, so timeouts and explanations apply.
+- `ConnectSettings` is one profile per IDENTITY, and only the screen writes it. Flags override a
+  run; they are never remembered. Under a test suite (UMF_DB) the profile carries the database's name
+  (`connect_dev1.umf-test.cfg`, #179): the e2e client runs as Luke's editor slot 1, and read his look.
+- A terminal DISCONNECTED despawns the world (`EntitySpawner.despawn_all`). A transient drop does not.
+- `SpaceTimeSync.last_disconnect_requested` says whether the player left or was dropped.
+- `_sdk_reset_token_fetch` works around two SDK faults in the identity request (#125). A harness
+  that tests connecting must delete the identity TOKEN too, or the faulty path never runs.
+- MouseCapture takes the cursor back only on a click NO UI consumed (`_unhandled_input`). A genre
+  that acts on the left button ignores clicks while `is_captured()` is false.
+- FULLSCREEN is `WindowMode` (#148): F11 / Alt+Enter, read by the PauseMenu whether it is open or
+  not, and the menu's button. In the editor's game view the window is not the game's: the button
+  is greyed and the view's ⋮ → Stretch to Fit is the answer. `tests/render_test.sh` proves the
+  real toggle; a headless run cannot.

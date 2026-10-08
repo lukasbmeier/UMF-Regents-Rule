@@ -17,7 +17,7 @@ class_name FightSim extends RefCounted
 ##   - randomness is the xorshift32 below, never RandomNumberGenerator;
 ##   - time is `tick()`, one fixed step of 1 / TICK_HZ, never the frame's delta;
 ##   - `shared/golden/fishing/fight.json` pins every field at checkpoints through scripted fights,
-##     and `tests/test_runner.gd` replays it at max_err = 0.
+##     and `tests/suites/fight.gd` replays it at max_err = 0.
 ##
 ## Beyond the twin: signals for presentation (they change nothing), and read-outs for the HUD.
 
