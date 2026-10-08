@@ -1,0 +1,18 @@
+# Crate source.
+#
+# DEFAULT (local / personal machine): plain crates.io. Nothing to configure.
+#
+# ORG BUILDS (decision #22 in docs/DECISIONS.md): crates are pulled through Artifactory,
+# not crates.io directly. Uncomment the block below and replace <cargo-remote-repo> with
+# the Cargo remote configured for your team; see "Artifactory | Developer Platform Front
+# Door" for the repo name and token setup. Leaving the placeholder in place makes every
+# `cargo` command fail at dependency resolution, which is why it ships commented out.
+#
+# [source.crates-io]
+# replace-with = "artifactory"
+#
+# [source.artifactory]
+# registry = "sparse+https://elilillyco.jfrog.io/artifactory/api/cargo/<cargo-remote-repo>/index/"
+#
+# [registries.artifactory]
+# index = "sparse+https://elilillyco.jfrog.io/artifactory/api/cargo/<cargo-remote-repo>/index/"

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/ui/splash_screen.gd" id="1_splash"]
+
+[node name="SplashScreen" type="CanvasLayer"]
+layer = 110
+script = ExtResource("1_splash")

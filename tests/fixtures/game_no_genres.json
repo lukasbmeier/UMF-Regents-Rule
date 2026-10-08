@@ -1,0 +1,5 @@
+{
+  "_comment": "A game made of no genres: the foundation alone. tests/genres_test.sh builds the server from this (UMF_GAME) to prove the foundation still stands without fishing (DECISIONS #173).",
+  "title": "Foundation",
+  "genres": []
+}

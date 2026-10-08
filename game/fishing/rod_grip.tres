@@ -1,0 +1,198 @@
+[gd_resource type="Resource" script_class="ItemGrip" format=3 uid="uid://yf0g5kok5cs6"]
+
+[ext_resource type="Script" uid="uid://h2oobh1iuatv" path="res://foundation/held/grip_entry.gd" id="1_dm2xy"]
+[ext_resource type="Script" uid="uid://ct18lkq3ruqa" path="res://foundation/held/item_grip.gd" id="2_ftkgk"]
+
+[sub_resource type="Resource" id="Resource_dm2xy"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.idle"
+position = Vector3(-0.006295979, 0.052157372, 0.018773317)
+rotation_degrees = Vector3(-22.079916, 112.83806, 35.40255)
+steady = true
+
+[sub_resource type="Resource" id="Resource_ftkgk"]
+script = ExtResource("1_dm2xy")
+animation = &"ability.0"
+position = Vector3(-0.021637788, 0.080899365, 0.013624077)
+rotation_degrees = Vector3(24.363754, -71.88464, -78.69731)
+
+[sub_resource type="Resource" id="Resource_jgoyh"]
+script = ExtResource("1_dm2xy")
+animation = &"fishing.fail"
+position = Vector3(-0.021636808, 0.080900304, 0.013623833)
+rotation_degrees = Vector3(74.79342, 14.3832035, 14.205734)
+
+[sub_resource type="Resource" id="Resource_vg7up"]
+script = ExtResource("1_dm2xy")
+animation = &"fishing.heave"
+position = Vector3(-0.021637253, 0.08090001, 0.013623892)
+rotation_degrees = Vector3(75.261665, 1.5495462, 1.8042209)
+
+[sub_resource type="Resource" id="Resource_od57u"]
+script = ExtResource("1_dm2xy")
+animation = &"fishing.wait"
+position = Vector3(-0.021637747, 0.08089944, 0.013624053)
+rotation_degrees = Vector3(73.96856, 23.475576, 22.96391)
+
+[sub_resource type="Resource" id="Resource_74c67"]
+script = ExtResource("1_dm2xy")
+animation = &"interact"
+position = Vector3(-0.021637058, 0.080900356, 0.013623807)
+rotation_degrees = Vector3(75.26843, 0.24910781, 0.54654104)
+
+[sub_resource type="Resource" id="Resource_sfih6"]
+script = ExtResource("1_dm2xy")
+animation = &"jump.land"
+position = Vector3(-0.0218203, 0.08082806, 0.013641834)
+rotation_degrees = Vector3(-33.15978, 174.38568, 18.14811)
+steady = true
+
+[sub_resource type="Resource" id="Resource_oe0ag"]
+script = ExtResource("1_dm2xy")
+animation = &"jump.loop"
+position = Vector3(-0.021639315, 0.080898434, 0.013624266)
+rotation_degrees = Vector3(-44.999996, 180, 0)
+steady = true
+
+[sub_resource type="Resource" id="Resource_i3xm2"]
+script = ExtResource("1_dm2xy")
+animation = &"jump.start"
+position = Vector3(-0.021636035, 0.080899835, 0.013623947)
+rotation_degrees = Vector3(30.958294, 90.54896, 76.945335)
+steady = true
+
+[sub_resource type="Resource" id="Resource_gc4so"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.run"
+position = Vector3(-0.021637373, 0.0809, 0.013623905)
+rotation_degrees = Vector3(-44.999996, 180, 0)
+steady = true
+
+[sub_resource type="Resource" id="Resource_yslxv"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.run_back"
+position = Vector3(-0.021637356, 0.08089983, 0.013623949)
+rotation_degrees = Vector3(-28.301653, 153.87769, 39.7162)
+steady = true
+
+[sub_resource type="Resource" id="Resource_ygrms"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.run_left"
+position = Vector3(-0.021637397, 0.08090032, 0.0136238085)
+rotation_degrees = Vector3(-44.999996, 180, 0)
+steady = true
+
+[sub_resource type="Resource" id="Resource_kqd2i"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.run_right"
+position = Vector3(-0.021637678, 0.080899805, 0.013623934)
+rotation_degrees = Vector3(-48.49703, 175.51845, 23.744171)
+steady = true
+
+[sub_resource type="Resource" id="Resource_gb8of"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.sprint"
+position = Vector3(-0.021637194, 0.08090039, 0.013623788)
+rotation_degrees = Vector3(-45.000004, 180, 0)
+steady = true
+
+[sub_resource type="Resource" id="Resource_j7lmh"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.walk"
+position = Vector3(-0.021637684, 0.080899455, 0.013624054)
+rotation_degrees = Vector3(-48.13647, 177.28477, 27.349386)
+steady = true
+
+[sub_resource type="Resource" id="Resource_eglp7"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.walk_back"
+position = Vector3(-0.021637233, 0.080899686, 0.013623996)
+rotation_degrees = Vector3(-58.45847, 174.31947, 25.230467)
+steady = true
+
+[sub_resource type="Resource" id="Resource_xer4n"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.walk_left"
+position = Vector3(-0.021637196, 0.08089985, 0.013623932)
+rotation_degrees = Vector3(-23.635973, 119.15273, 73.05053)
+steady = true
+
+[sub_resource type="Resource" id="Resource_ftdrw"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.walk_right"
+position = Vector3(-0.021637583, 0.080899775, 0.013623956)
+rotation_degrees = Vector3(26.489122, 116.64053, 76.10253)
+steady = true
+
+[sub_resource type="Resource" id="Resource_58bgq"]
+script = ExtResource("1_dm2xy")
+animation = &"react.death"
+position = Vector3(-0.021636143, 0.080900624, 0.013623738)
+rotation_degrees = Vector3(35.569065, -79.47884, -71.7836)
+
+[sub_resource type="Resource" id="Resource_ob3h8"]
+script = ExtResource("1_dm2xy")
+animation = &"react.hit"
+position = Vector3(-0.026564503, 0.081094645, 0.013545884)
+rotation_degrees = Vector3(70.003624, -62.73628, -49.32505)
+
+[sub_resource type="Resource" id="Resource_y7nu1"]
+script = ExtResource("1_dm2xy")
+animation = &"react.revive"
+position = Vector3(-0.024528813, 0.080587514, 0.013690417)
+rotation_degrees = Vector3(-7.9626455, -108.50508, -52.8136)
+
+[sub_resource type="Resource" id="Resource_c0dwb"]
+script = ExtResource("1_dm2xy")
+animation = &"item.draw"
+position = Vector3(-0.01430577, 0.07958847, 0.014012337)
+rotation_degrees = Vector3(-3.4713285, -91.24791, -101.20094)
+
+[sub_resource type="Resource" id="Resource_eebau"]
+script = ExtResource("1_dm2xy")
+animation = &"item.stow"
+position = Vector3(-0.017385066, 0.076497376, 0.0032577515)
+rotation_degrees = Vector3(-2.7409878, -91.427444, -99.17496)
+
+[sub_resource type="Resource" id="Resource_foh2n"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.idle"
+body = &"male"
+position = Vector3(-0.025656343, 0.085229516, 0.056343436)
+rotation_degrees = Vector3(-26.317854, 106.386986, 53.015617)
+steady = true
+
+[sub_resource type="Resource" id="Resource_huu1x"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.run"
+body = &"male"
+position = Vector3(-0.13055503, 0.23409802, 0.21092963)
+steady = true
+
+[sub_resource type="Resource" id="Resource_54ks5"]
+script = ExtResource("1_dm2xy")
+animation = &"locomotion.idle"
+body = &"female"
+position = Vector3(-0.014843732, 0.057979107, 0.012765408)
+rotation_degrees = Vector3(-35.61736, 135.60849, 34.254017)
+steady = true
+
+[resource]
+script = ExtResource("2_ftkgk")
+entries = Array[ExtResource("1_dm2xy")]([SubResource("Resource_dm2xy"), SubResource("Resource_ftkgk"), SubResource("Resource_jgoyh"), SubResource("Resource_vg7up"), SubResource("Resource_od57u"), SubResource("Resource_74c67"), SubResource("Resource_sfih6"), SubResource("Resource_oe0ag"), SubResource("Resource_i3xm2"), SubResource("Resource_gc4so"), SubResource("Resource_yslxv"), SubResource("Resource_ygrms"), SubResource("Resource_kqd2i"), SubResource("Resource_gb8of"), SubResource("Resource_j7lmh"), SubResource("Resource_eglp7"), SubResource("Resource_xer4n"), SubResource("Resource_ftdrw"), SubResource("Resource_58bgq"), SubResource("Resource_ob3h8"), SubResource("Resource_y7nu1"), SubResource("Resource_c0dwb"), SubResource("Resource_eebau"), SubResource("Resource_foh2n"), SubResource("Resource_huu1x"), SubResource("Resource_54ks5")])
+stow_position = Vector3(-0.18072292, 0.4031104, -0.15455095)
+stow_rotation_degrees = Vector3(-13.744231, 13.673612, -146.50392)
+draw_swap_at = 0.3333333333333333
+stow_swap_at = 0.5833333333333334
+stow_point = Vector3(-0.6, -0.8, 0)
+stow_face = Vector3(0, 0, 1)
+stow_length = 0.45
+off_hand_animations = Array[StringName]([&"interact", &"fishing.wait", &"fishing.heave"])
+off_hand_arm = Array[StringName]([&"upperarm_l", &"lowerarm_l", &"hand_l"])
+off_hand_point = &"OffHand"
+off_hand_wrist = Vector3(-0.069, -0.007, 0.089)
+off_hand_elbow = Vector3(0.35, -0.35, 0.1)
+off_hand_spine = Array[StringName]([&"spine_01", &"neck_01"])
+off_hand_reach = 0.96
+carry_point = Vector3(0, 1, 1)
+fit_face = Vector3(0, 1, 0)

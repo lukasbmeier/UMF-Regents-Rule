@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://game/fishing/fishing_game.tscn" id="1_game"]
+[ext_resource type="Script" path="res://tests/playtest/remote_playtest.gd" id="2_driver"]
+
+[node name="RemotePlaytest" type="Node3D"]
+
+[node name="Game" parent="." instance=ExtResource("1_game")]
+
+[node name="Driver" type="Node" parent="."]
+script = ExtResource("2_driver")

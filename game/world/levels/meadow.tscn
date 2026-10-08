@@ -1,0 +1,111 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/world/lakeside_level.gd" id="1_xui8y"]
+[ext_resource type="Script" path="res://foundation/level/level_info.gd" id="2_y3umt"]
+[ext_resource type="Script" path="res://foundation/level/level_spawn.gd" id="3_v0mqq"]
+[ext_resource type="Script" path="res://foundation/level/level_spot.gd" id="4_dt6s1"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="5_r7w40"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wunne"]
+albedo_color = Color(0.36, 0.55, 0.26, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s2kty"]
+albedo_color = Color(0.33, 0.27, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hvdge"]
+transparency = 1
+albedo_color = Color(0.16, 0.36, 0.5, 0.75)
+metallic = 0.2
+roughness = 0.08
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_pox4n"]
+size = Vector2(34, 34)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_f7fv3"]
+
+[sub_resource type="Sky" id="Sky_n45sl"]
+sky_material = SubResource("ProceduralSkyMaterial_f7fv3")
+
+[sub_resource type="Environment" id="Environment_h73vk"]
+background_mode = 2
+sky = SubResource("Sky_n45sl")
+ambient_light_source = 3
+tonemap_mode = 2
+fog_enabled = true
+fog_density = 0.0016
+
+[node name="Meadow" type="Node3D" unique_id=697574667]
+script = ExtResource("1_xui8y")
+level_name = "meadow"
+terrain_path = NodePath("")
+water_path = NodePath("")
+
+[node name="LevelInfo" type="Node3D" parent="." unique_id=774132621]
+script = ExtResource("2_y3umt")
+level_name = "meadow"
+level_id = 2
+water_y = -0.4
+bake_bounds = AABB(-30, -10, -36, 60, 20, 56)
+
+[node name="Ground" type="CSGCombiner3D" parent="." unique_id=469080877]
+use_collision = true
+
+[node name="Meadow" type="CSGBox3D" parent="Ground" unique_id=1517836469]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+size = Vector3(400, 4, 400)
+material = SubResource("StandardMaterial3D_wunne")
+
+[node name="Shallows" type="CSGCylinder3D" parent="Ground" unique_id=604517844]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -10)
+operation = 2
+radius = 15.0
+height = 1.0
+sides = 40
+material = SubResource("StandardMaterial3D_s2kty")
+
+[node name="Deep" type="CSGCylinder3D" parent="Ground" unique_id=586139235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -10)
+operation = 2
+radius = 11.0
+height = 3.0
+sides = 40
+material = SubResource("StandardMaterial3D_s2kty")
+
+[node name="Water" type="MeshInstance3D" parent="." unique_id=1802020184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -10)
+material_override = SubResource("StandardMaterial3D_hvdge")
+mesh = SubResource("PlaneMesh_pox4n")
+
+[node name="Spawn" type="Marker3D" parent="." unique_id=1054566907]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 14)
+script = ExtResource("3_v0mqq")
+
+[node name="PondSpot" type="Marker3D" parent="." unique_id=628376082]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -10)
+gizmo_extents = 11.0
+script = ExtResource("4_dt6s1")
+spot_id = "meadow_pond"
+display_name = "The Meadow Pond"
+radius = 11.0
+
+[node name="Bench" type="Marker3D" parent="." unique_id=13903649]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 12)
+gizmo_extents = 1.0
+script = ExtResource("5_r7w40")
+point_id = "bench_south"
+kind = "bench"
+radius = 1.0
+tags = PackedStringArray()
+
+[node name="WorldRoot" type="Node3D" parent="." unique_id=435365775]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=542207579]
+transform = Transform3D(0.81915206, -0.43938506, 0.36868784, 0, 0.64278764, 0.76604444, -0.57357645, -0.62750685, 0.5265408, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1236590155]
+environment = SubResource("Environment_h73vk")
+
+[node name="OverviewCamera" type="Camera3D" parent="." unique_id=116241508]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 14, 30)

@@ -1,0 +1,30 @@
+[gd_resource type="ShaderMaterial" load_steps=11 format=3 uid="uid://dtjsasqhu7pha"]
+
+[ext_resource type="Shader" uid="uid://dfjog4wt21go1" path="res://game/world/kits/village/materials/M_Plaster.tres" id="1_kpt1g"]
+[ext_resource type="Texture2D" uid="uid://bte6ot3pl3l45" path="res://game/world/kits/village/materials/T_BottomWear.png" id="2_64kig"]
+[ext_resource type="Texture2D" uid="uid://bo3pjwwqhriwh" path="res://game/world/kits/village/materials/T_Brick_Normal.png" id="3_qjcsb"]
+[ext_resource type="Texture2D" uid="uid://dlofx82u6ftx0" path="res://game/world/kits/village/materials/T_Brick_Roughness.png" id="4_lwg5u"]
+[ext_resource type="Texture2D" uid="uid://c6n7ao12xus05" path="res://game/world/kits/village/materials/T_Brick_BaseColor.png" id="5_m3vbj"]
+[ext_resource type="Texture2D" uid="uid://buf4w3ri1fmtw" path="res://game/world/kits/village/materials/T_MidWear.png" id="6_w7lgt"]
+[ext_resource type="Texture2D" uid="uid://cbvfm0xiqtkk5" path="res://game/world/kits/village/materials/T_Plaster_Normal.png" id="6_yeg1j"]
+[ext_resource type="Texture2D" uid="uid://c2k5qggx08yon" path="res://game/world/kits/village/materials/T_Plaster_ORM.png" id="7_bo2ux"]
+[ext_resource type="Texture2D" uid="uid://b2w6dwrfchuhm" path="res://game/world/kits/village/materials/T_Plaster_BaseColor.png" id="8_m2fva"]
+[ext_resource type="Texture2D" uid="uid://bm5vpg5hu783y" path="res://game/world/kits/village/materials/T_TopWear.png" id="9_peb76"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_kpt1g")
+shader_parameter/Plaster_Color = Color(1, 1, 1, 1)
+shader_parameter/Brick_Color = Color(1, 1, 1, 1)
+shader_parameter/Top_Wear = true
+shader_parameter/Mid_Wear = false
+shader_parameter/Bottom_Wear = true
+shader_parameter/Plaster_Texture = ExtResource("8_m2fva")
+shader_parameter/Brick_Texture = ExtResource("5_m3vbj")
+shader_parameter/Top_Wear_Texture = ExtResource("9_peb76")
+shader_parameter/Mid_Wear_Texture = ExtResource("6_w7lgt")
+shader_parameter/Bottom_Wear_Texture = ExtResource("2_64kig")
+shader_parameter/Plaster_Roughness_Texture = ExtResource("7_bo2ux")
+shader_parameter/Brick_Roughness_Texture = ExtResource("4_lwg5u")
+shader_parameter/Plaster_Normal_Texture = ExtResource("6_yeg1j")
+shader_parameter/Brick_Normal_Texture = ExtResource("3_qjcsb")

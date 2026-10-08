@@ -1,0 +1,154 @@
+[gd_resource type="Resource" script_class="AnimationSet" format=3 uid="uid://b4viqj1dd2six"]
+
+[ext_resource type="Script" uid="uid://cf8lv8y8vii74" path="res://foundation/anim/animation_clip_ref.gd" id="1_2d1jw"]
+[ext_resource type="AnimationLibrary" path="res://game/anim/humanoid_core.res" id="2_2sbwk"]
+[ext_resource type="AnimationLibrary" path="res://game/anim/humanoid_extra.res" id="3_5hdoa"]
+[ext_resource type="Script" uid="uid://dd3rnr1smwhq4" path="res://foundation/anim/animation_set.gd" id="4_cbxfb"]
+
+[sub_resource type="Resource" id="Resource_natu7"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Melee_Hook"
+
+[sub_resource type="Resource" id="Resource_887l6"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Fish_Reel_Failed"
+
+[sub_resource type="Resource" id="Resource_b2jpw"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Fish_Reel"
+
+[sub_resource type="Resource" id="Resource_dvxjd"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Fish_Cast_Idle"
+loop = true
+
+[sub_resource type="Resource" id="Resource_0jt2i"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Fish_Cast"
+
+[sub_resource type="Resource" id="Resource_krylb"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Sword_Enter"
+
+[sub_resource type="Resource" id="Resource_qp1s7"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Sword_Exit"
+
+[sub_resource type="Resource" id="Resource_ditfa"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jump_Land"
+speed_scale = 2.64
+
+[sub_resource type="Resource" id="Resource_lwcir"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jump"
+loop = true
+
+[sub_resource type="Resource" id="Resource_g7yye"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jump_Start"
+speed_scale = 4.17
+
+[sub_resource type="Resource" id="Resource_xtuj8"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Idle"
+loop = true
+
+[sub_resource type="Resource" id="Resource_ukdon"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jog_Fwd"
+loop = true
+speed_scale = 0.97
+
+[sub_resource type="Resource" id="Resource_t1ild"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jog_Bwd"
+loop = true
+speed_scale = 0.76
+
+[sub_resource type="Resource" id="Resource_s328a"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jog_Left"
+loop = true
+speed_scale = 1.36
+
+[sub_resource type="Resource" id="Resource_m4ejq"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Jog_Right"
+loop = true
+speed_scale = 1.37
+
+[sub_resource type="Resource" id="Resource_etsm6"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Sprint"
+loop = true
+speed_scale = 1.02
+
+[sub_resource type="Resource" id="Resource_3fq3a"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Walk_Fwd"
+loop = true
+speed_scale = 1.25
+
+[sub_resource type="Resource" id="Resource_af3tc"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Walk_Bwd"
+loop = true
+speed_scale = 0.6
+
+[sub_resource type="Resource" id="Resource_12431"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Walk_L"
+loop = true
+speed_scale = 1.17
+
+[sub_resource type="Resource" id="Resource_lb551"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/Walk_R"
+loop = true
+speed_scale = 1.16
+
+[sub_resource type="Resource" id="Resource_ggfp6"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Death01"
+
+[sub_resource type="Resource" id="Resource_up5hr"]
+script = ExtResource("1_2d1jw")
+anim_name = &"Hit_Chest"
+
+[sub_resource type="Resource" id="Resource_rithg"]
+script = ExtResource("1_2d1jw")
+anim_name = &"extra/KipUp"
+
+[resource]
+script = ExtResource("4_cbxfb")
+libraries = Dictionary[StringName, AnimationLibrary]({
+&"": ExtResource("2_2sbwk"),
+&"extra": ExtResource("3_5hdoa")
+})
+strafe = true
+clips = Dictionary[StringName, ExtResource("1_2d1jw")]({
+&"ability.0": SubResource("Resource_natu7"),
+&"fishing.fail": SubResource("Resource_887l6"),
+&"fishing.heave": SubResource("Resource_b2jpw"),
+&"fishing.wait": SubResource("Resource_dvxjd"),
+&"interact": SubResource("Resource_0jt2i"),
+&"item.draw": SubResource("Resource_krylb"),
+&"item.stow": SubResource("Resource_qp1s7"),
+&"jump.land": SubResource("Resource_ditfa"),
+&"jump.loop": SubResource("Resource_lwcir"),
+&"jump.start": SubResource("Resource_g7yye"),
+&"locomotion.idle": SubResource("Resource_xtuj8"),
+&"locomotion.run": SubResource("Resource_ukdon"),
+&"locomotion.run_back": SubResource("Resource_t1ild"),
+&"locomotion.run_left": SubResource("Resource_s328a"),
+&"locomotion.run_right": SubResource("Resource_m4ejq"),
+&"locomotion.sprint": SubResource("Resource_etsm6"),
+&"locomotion.walk": SubResource("Resource_3fq3a"),
+&"locomotion.walk_back": SubResource("Resource_af3tc"),
+&"locomotion.walk_left": SubResource("Resource_12431"),
+&"locomotion.walk_right": SubResource("Resource_lb551"),
+&"react.death": SubResource("Resource_ggfp6"),
+&"react.hit": SubResource("Resource_up5hr"),
+&"react.revive": SubResource("Resource_rithg")
+})

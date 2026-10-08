@@ -1,0 +1,24 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://game/characters/modular_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Regular_Male_OnlyHead.gltf" id="2"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Noble_Arms.gltf" id="3"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Noble_Body.gltf" id="4"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Noble_Legs.gltf" id="5"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Noble_Feet.gltf" id="6"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Noble_Acc_Gorget.gltf" id="7"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Eyebrows_Regular.gltf" id="8"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_Buzzed.gltf" id="9"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_MuttonChops.gltf" id="10"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Regular_Male_Light_BaseColor.png" id="11"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Noble_2_BaseColor.png" id="12"]
+
+[node name="NobleM" type="Node3D"]
+script = ExtResource("1")
+head = ExtResource("2")
+body = &"male"
+parts = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10")])
+skin_texture = ExtResource("11")
+skin_tint = Color(0.86, 0.7, 0.57, 1)
+hair_color = Color(0.74, 0.6, 0.34, 1)
+outfit_texture = ExtResource("12")

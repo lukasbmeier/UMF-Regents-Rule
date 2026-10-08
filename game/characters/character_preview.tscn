@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://game/characters/character_preview.gd" id="1_prev"]
+[ext_resource type="Resource" path="res://game/fishing/fisher_definition.tres" id="2_def"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("Sky_mat")
+
+[sub_resource type="Environment" id="EnvRes"]
+background_mode = 2
+sky = SubResource("Sky")
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="Mesh_ground"]
+size = Vector2(12, 12)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.55, 0.56, 0.58, 1)
+
+[sub_resource type="CapsuleMesh" id="Mesh_capsule"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_capsule"]
+transparency = 1
+albedo_color = Color(0.3, 0.7, 1, 0.25)
+
+[node name="CharacterPreview" type="Node3D"]
+script = ExtResource("1_prev")
+definition = ExtResource("2_def")
+
+[node name="Env" type="WorldEnvironment" parent="."]
+environment = SubResource("EnvRes")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.5, 0.5, 0, 0.7, 0.7, -0.7, -0.5, 0.5, 0, 6, 0)
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="CollisionPreview" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("Mesh_capsule")
+surface_material_override/0 = SubResource("Mat_capsule")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 3.2)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Info" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 780.0
+offset_bottom = 110.0
+text = "loading…"

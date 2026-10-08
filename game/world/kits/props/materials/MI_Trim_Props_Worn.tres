@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" load_steps=5 format=3 uid="uid://ddnnlrxov5lmo"]
+
+[ext_resource type="Shader" uid="uid://basudgq80dbs7" path="res://game/world/kits/props/materials/M_Trim_Base.tres" id="1_vdymf"]
+[ext_resource type="Texture2D" uid="uid://kaxsjg7g1g55" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/T_Trim_Props_Worn_BaseColor.png" id="2_a6l4y"]
+[ext_resource type="Texture2D" uid="uid://dl8k4rc3lyife" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/T_Trim_Props_Worn_Normal.png" id="3_jxc53"]
+[ext_resource type="Texture2D" uid="uid://cp57im7rmr7l1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/T_Trim_Props_Worn_ORM.png" id="4_jfrj3"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_vdymf")
+shader_parameter/Vertex_Colors = true
+shader_parameter/Base_Color = ExtResource("2_a6l4y")
+shader_parameter/ORM = ExtResource("4_jfrj3")
+shader_parameter/Normal = ExtResource("3_jxc53")

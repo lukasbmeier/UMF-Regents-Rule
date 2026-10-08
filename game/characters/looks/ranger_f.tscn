@@ -1,0 +1,23 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://game/characters/modular_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Regular_Female_OnlyHead.gltf" id="2"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Arms.gltf" id="3"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Body.gltf" id="4"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Legs.gltf" id="5"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Feet.gltf" id="6"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Acc_Pauldrons.gltf" id="7"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Female_Ranger_Head_Hood.gltf" id="8"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Eyebrows_Female.gltf" id="9"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Regular_Female_Light_BaseColor.png" id="10"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Ranger_2_BaseColor.png" id="11"]
+
+[node name="RangerF" type="Node3D"]
+script = ExtResource("1")
+head = ExtResource("2")
+body = &"female"
+parts = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9")])
+skin_texture = ExtResource("10")
+skin_tint = Color(1.0, 0.95, 0.9, 1)
+hair_color = Color(0.55, 0.38, 0.2, 1)
+outfit_texture = ExtResource("11")

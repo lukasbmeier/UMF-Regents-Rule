@@ -1,0 +1,16 @@
+# Git on Windows would otherwise check out CRLF, which breaks tests/run_tests.sh under bash
+# ("\r: command not found") for anyone cloning this template.
+* text=auto eol=lf
+
+*.exe binary
+*.pck binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.glb binary
+# Batch files need Windows line endings (cmd mis-reads labels in LF files).
+*.cmd text eol=crlf

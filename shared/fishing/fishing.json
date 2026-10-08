@@ -1,0 +1,169 @@
+{
+  "_comment": "THE FISHING CONTENT. One file, read by both halves: server/build.rs compiles it into the module (server/src/genre/fishing/), game/fishing/fishing_data.gd loads it on the client. What a catch IS (category, weight, value), where it lives (spot loot tables), what gear does, and every timing the cast and the bite run on. Mechanics and most of the catalog are carried over from Fishing for Compliments ('Bottom Feeders'); junk and treasure are the Fantasy Props kit's models, which is what the catch fly-out shows.",
+  "version": 1,
+
+  "timing": {
+    "_comment": "Seconds. The bite is rolled from the cast's seed between bite_min_s and bite_max_s, then divided by the spot's bite_speed and its richness factor, and never longer than bite_cap_s: the slowest spot, fished out and crowded, came to a minute's wait, which is a player walking away. The bobber twitches for tell_lead_s before it goes under; from the moment it does, a press inside hookset_window_s (x the reel's hookset_window_mult) sets the hook. Inside hookset_perfect_s it is PERFECT, after hookset_late_s it is LATE. A press faster than min_reaction_s is a guess, not a reaction, and is refused. clock_slack_s is how early the server will believe a bite happened, for clock skew between it and the client.",
+    "bite_min_s": 2.0,
+    "bite_max_s": 7.0,
+    "bite_cap_s": 30.0,
+    "tell_lead_s": 0.9,
+    "hookset_window_s": 0.85,
+    "hookset_perfect_s": 0.30,
+    "hookset_late_s": 0.62,
+    "min_reaction_s": 0.08,
+    "clock_slack_s": 0.35,
+    "line_life_s": 150.0
+  },
+
+  "cast": {
+    "_comment": "Metres. A cast must land at least min_range_m out (a float dropped at your feet is not a cast) and no further than the rod's max_cast_m plus range_slack_m, which covers the rod tip being ahead of the body and a position a frame old.",
+    "min_range_m": 4.0,
+    "range_slack_m": 2.0
+  },
+
+  "economy": {
+    "_comment": "SPOTS DEPLETE, and it is the server's number, not each client's. Every catch landed in a spot takes depletion_per_catch off its richness; it grows back at regen_per_second, never below richness_floor. A fished-out spot bites slower, so the lake keeps moving. Each OTHER line already in the same spot slows your bite by crowding_penalty.",
+    "depletion_per_catch": 0.08,
+    "regen_per_second": 0.004,
+    "richness_floor": 0.25,
+    "crowding_penalty": 0.15
+  },
+
+  "categories": [
+    { "id": "fish_trash",   "word": "small fish",                      "rarity": 0, "alive": true },
+    { "id": "fish_decent",  "word": "decent fish",                     "rarity": 1, "alive": true },
+    { "id": "fish_nice",    "word": "good fish",                       "rarity": 2, "alive": true },
+    { "id": "fish_whoa",    "word": "strange fish",                    "rarity": 3, "alive": true },
+    { "id": "fish_illegal", "word": "things that should not be here",  "rarity": 4, "alive": true },
+    { "id": "junk_light",   "word": "light junk",                      "rarity": 0, "alive": false },
+    { "id": "junk_heavy",   "word": "heavy junk",                      "rarity": 1, "alive": false },
+    { "id": "treasure",     "word": "treasure",                        "rarity": 3, "alive": false }
+  ],
+
+  "catches": [
+    { "id": "bluegill",       "name": "Bluegill",                          "category": "fish_trash",   "kg": 0.3,   "value": 4 },
+    { "id": "yellow_perch",   "name": "Yellow Perch",                      "category": "fish_trash",   "kg": 0.4,   "value": 5 },
+    { "id": "sunfish",        "name": "Sunfish",                           "category": "fish_trash",   "kg": 0.25,  "value": 3 },
+    { "id": "small_crappie",  "name": "One Very Small Crappie",            "category": "fish_trash",   "kg": 0.15,  "value": 2 },
+    { "id": "largemouth_bass","name": "Largemouth Bass",                   "category": "fish_decent",  "kg": 2.2,   "value": 14 },
+    { "id": "walleye",        "name": "Walleye",                           "category": "fish_decent",  "kg": 3.1,   "value": 16 },
+    { "id": "carp",           "name": "Carp",                              "category": "fish_decent",  "kg": 8.5,   "value": 20 },
+    { "id": "channel_catfish","name": "Channel Catfish",                   "category": "fish_decent",  "kg": 5.4,   "value": 18 },
+    { "id": "northern_pike",  "name": "Northern Pike",                     "category": "fish_nice",    "kg": 9.5,   "value": 40 },
+    { "id": "muskellunge",    "name": "Muskellunge",                       "category": "fish_nice",    "kg": 14.0,  "value": 55 },
+    { "id": "lake_sturgeon",  "name": "Lake Sturgeon",                     "category": "fish_nice",    "kg": 40.0,  "value": 90 },
+    { "id": "snapping_turtle","name": "Snapping Turtle",                   "category": "fish_nice",    "kg": 11.0,  "value": 35 },
+    { "id": "golden_koi",     "name": "Golden Koi",                        "category": "fish_whoa",    "kg": 6.0,   "value": 180 },
+    { "id": "coelacanth",     "name": "Coelacanth",                        "category": "fish_whoa",    "kg": 68.0,  "value": 160 },
+    { "id": "alligator_gar",  "name": "Alligator Gar",                     "category": "fish_whoa",    "kg": 60.0,  "value": 140 },
+    { "id": "long_eel",       "name": "An Eel That Is Far Too Long",       "category": "fish_whoa",    "kg": 22.0,  "value": 110 },
+    { "id": "albino_sturgeon","name": "Albino Sturgeon",                   "category": "fish_illegal", "kg": 120.0, "value": 300 },
+    { "id": "lake_marlin",    "name": "A Marlin (In A Lake)",              "category": "fish_illegal", "kg": 180.0, "value": 400 },
+
+    { "id": "tankard",        "name": "Somebody's Tankard",                "category": "junk_light",   "kg": 0.4,   "value": 2,   "model": "Mug" },
+    { "id": "bucket",         "name": "A Bucket, Full of Lake",            "category": "junk_light",   "kg": 1.5,   "value": 3,   "model": "Bucket_Wooden_1" },
+    { "id": "soggy_book",     "name": "A Very Soggy Book",                 "category": "junk_light",   "kg": 0.8,   "value": 4,   "model": "Book_1" },
+    { "id": "clay_pot",       "name": "Clay Pot",                          "category": "junk_light",   "kg": 1.2,   "value": 3,   "model": "Pot_1" },
+    { "id": "frying_pan",     "name": "Frying Pan",                        "category": "junk_light",   "kg": 1.8,   "value": 5,   "model": "Pan_1" },
+    { "id": "rusty_key",      "name": "A Key to Something",                "category": "junk_light",   "kg": 0.1,   "value": 6,   "model": "Key_Metal" },
+    { "id": "barrel",         "name": "Barrel (Empty, Sadly)",             "category": "junk_heavy",   "kg": 30.0,  "value": 12,  "model": "Barrel" },
+    { "id": "crate",          "name": "Waterlogged Crate",                 "category": "junk_heavy",   "kg": 18.0,  "value": 10,  "model": "Crate_Wooden" },
+    { "id": "chain",          "name": "A Great Deal of Chain",             "category": "junk_heavy",   "kg": 25.0,  "value": 15,  "model": "Chain_Coil" },
+    { "id": "cauldron",       "name": "Witch's Cauldron",                  "category": "junk_heavy",   "kg": 45.0,  "value": 25,  "model": "Cauldron" },
+    { "id": "anvil",          "name": "An Anvil (How?)",                   "category": "junk_heavy",   "kg": 120.0, "value": 45,  "model": "Anvil" },
+    { "id": "training_dummy", "name": "Training Dummy",                    "category": "junk_heavy",   "kg": 20.0,  "value": 8,   "model": "Dummy" },
+    { "id": "treasure_chest", "name": "Treasure Chest",                    "category": "treasure",     "kg": 35.0,  "value": 120, "model": "Chest_Wood" },
+    { "id": "legendary_chest","name": "The Legendary Chest",               "category": "treasure",     "kg": 60.0,  "value": 350, "model": "Chest_Legendary" },
+    { "id": "golden_chalice", "name": "Golden Chalice",                    "category": "treasure",     "kg": 1.5,   "value": 150, "model": "Chalice_Golden" },
+    { "id": "coin_pile",      "name": "A Pile of Coins",                   "category": "treasure",     "kg": 3.0,   "value": 80,  "model": "Coin_Pile" },
+    { "id": "lady_sword",     "name": "Somebody Else's Sword",             "category": "treasure",     "kg": 2.5,   "value": 110, "model": "Sword_Bronze" },
+    { "id": "old_skull",      "name": "A Skull (Probably Fine)",           "category": "treasure",     "kg": 1.0,   "value": 30,  "model": "Skull" },
+    { "id": "odd_potion",     "name": "A Potion With No Label",            "category": "treasure",     "kg": 0.3,   "value": 60,  "model": "Potion_1" },
+    { "id": "bottle_message", "name": "Message in a Bottle",               "category": "treasure",     "kg": 0.6,   "value": 70,  "model": "Bottle_1" }
+  ],
+
+  "conditions": {
+    "_comment": "THE TIME OF DAY AND THE WEATHER (DECISIONS #168). Each round is one time of day, in the order of times (round 1 the first, then round and round), and has weather rolled from its seed when its lobby opens, by weight; the server keeps both in fishing_conditions and every client draws them. They change what bites: bite_speed divides the bite delay (times the spot's), and likes multiply a category's loot weight (or one catch's, inside its category) under that time or weather. A condition a category does not name leaves it as it is.",
+    "times": [
+      { "id": "dawn",  "name": "Dawn",  "bite_speed": 1.2 },
+      { "id": "day",   "name": "Day",   "bite_speed": 1.0 },
+      { "id": "dusk",  "name": "Dusk",  "bite_speed": 1.25 },
+      { "id": "night", "name": "Night", "bite_speed": 0.9 }
+    ],
+    "weather": [
+      { "id": "clear",    "name": "Clear",    "weight": 50, "bite_speed": 1.0 },
+      { "id": "overcast", "name": "Overcast", "weight": 25, "bite_speed": 1.1 },
+      { "id": "rain",     "name": "Rain",     "weight": 17, "bite_speed": 1.3 },
+      { "id": "fog",      "name": "Fog",      "weight": 8,  "bite_speed": 0.95 }
+    ],
+    "likes": {
+      "fish_trash":   { "day": 1.3, "clear": 1.2 },
+      "fish_decent":  { "dawn": 1.3, "overcast": 1.3 },
+      "fish_nice":    { "dawn": 1.5, "dusk": 1.6, "rain": 1.4 },
+      "fish_whoa":    { "night": 2.0, "fog": 1.8, "dusk": 1.3 },
+      "fish_illegal": { "night": 1.8, "fog": 1.6 },
+      "junk_light":   { "rain": 1.5 },
+      "junk_heavy":   { "rain": 1.3, "fog": 1.2 },
+      "treasure":     { "fog": 1.7, "night": 1.3 },
+      "channel_catfish": { "night": 3.0, "rain": 1.5 },
+      "long_eel":     { "night": 2.5 },
+      "golden_koi":   { "clear": 1.8, "day": 1.5 }
+    }
+  },
+
+  "rival": {
+    "_comment": "THE RIVAL ANGLER (DECISIONS #169), for worlds the module runs (no sidecar): he stands at stand (x, ground y, z) on the level named, facing yaw_deg (0 faces -Z), and fishes the spots listed while a round plays, through the same rolls as a player, and appears in the standings. His fights are not played: one lasts fight_s_per_kg_sqrt x the square root of the catch's weight (within fight_s), and lands with land_chance by the catch's rarity (index 0 to 4). rest_s is his pause between casts. tests/test_runner.gd (lakeside) checks the stand is on the ground and the spots in his rod's reach.",
+    "level": "lakeside",
+    "name": "Old Barnaby",
+    "stand": [-40.0, 1.02, 50.0],
+    "yaw_deg": 0.0,
+    "rod_tier": 0,
+    "spots": ["village_shallows"],
+    "rest_s": [5.0, 12.0],
+    "fight_s": [4.0, 18.0],
+    "fight_s_per_kg_sqrt": 2.5,
+    "land_chance": [0.95, 0.85, 0.7, 0.45, 0.3]
+  },
+
+  "open_water": {
+    "_comment": "Casting nowhere in particular: a legal answer and a deliberately poor one, so aiming at a named spot beats not aiming.",
+    "bite_speed": 1.0,
+    "loot": { "fish_trash": 40, "fish_decent": 22, "junk_light": 26, "fish_nice": 8, "junk_heavy": 4 }
+  },
+
+  "spots": {
+    "_comment": "Keyed by the level bake's spot ids (shared/world/<level>.json). Loot weights are relative within a spot. bite_speed divides the bite delay: above 1 bites come faster. min_rod is the rod tier that reaches the spot AT ALL (Fishing for Compliments: where you cast decides what you catch, and how far your rod throws decides where you can cast): no part of it is in reach of a lesser rod from anywhere a player can stand, and some of it is in reach of that one. The LEVEL makes it true, by where it puts the spot; server/tests/level.rs checks every baked level against it.",
+    "dock_end":         { "min_rod": 0, "bite_speed": 1.4,  "loot": { "fish_trash": 55, "fish_decent": 25, "junk_light": 15, "fish_nice": 5 } },
+    "village_shallows": { "min_rod": 0, "bite_speed": 1.2,  "loot": { "junk_light": 38, "junk_heavy": 26, "fish_trash": 22, "fish_decent": 6, "treasure": 8 } },
+    "reed_bay":         { "min_rod": 0, "bite_speed": 1.6,  "loot": { "fish_trash": 45, "fish_decent": 35, "fish_nice": 12, "junk_light": 8 } },
+    "meadow_pond":      { "min_rod": 0, "bite_speed": 1.3,  "loot": { "fish_trash": 50, "fish_decent": 30, "fish_nice": 10, "junk_light": 10 } },
+    "north_drop":       { "min_rod": 1, "bite_speed": 0.85, "loot": { "fish_decent": 28, "fish_nice": 30, "junk_heavy": 14, "treasure": 12, "fish_whoa": 10, "fish_trash": 6 } },
+    "deep_hole":        { "min_rod": 2, "bite_speed": 0.45, "loot": { "fish_nice": 28, "fish_whoa": 36, "fish_illegal": 14, "fish_decent": 14, "treasure": 8 } }
+  },
+
+  "gear": {
+    "_comment": "Three tracks, five tiers each (0 is the starting kit), and each changes a DIFFERENT thing: the ROD how much lake you can reach (and later how hard it pulls), the REEL how forgiving the hook-set is (and later how fast it cranks), the LINE how much weight it holds before a fight is a Deadlift. cost is what that tier costs to buy, in coins.",
+    "rod": [
+      { "tier": 0, "name": "Willow Switch",  "cost": 0,   "max_cast_m": 24.0, "reel_power": 1.00 },
+      { "tier": 1, "name": "Ash Rod",        "cost": 40,  "max_cast_m": 32.0, "reel_power": 1.15 },
+      { "tier": 2, "name": "Yew Longrod",    "cost": 110, "max_cast_m": 40.0, "reel_power": 1.32 },
+      { "tier": 3, "name": "The Persuader",  "cost": 260, "max_cast_m": 47.0, "reel_power": 1.55 },
+      { "tier": 4, "name": "Wizard's Reach", "cost": 600, "max_cast_m": 55.0, "reel_power": 1.85 }
+    ],
+    "reel": [
+      { "tier": 0, "name": "Wooden Spool",   "cost": 0,   "reel_speed": 1.00, "hookset_window_mult": 1.00 },
+      { "tier": 1, "name": "Brass Reel",     "cost": 40,  "reel_speed": 1.18, "hookset_window_mult": 1.10 },
+      { "tier": 2, "name": "Ball-Bearing",   "cost": 110, "reel_speed": 1.38, "hookset_window_mult": 1.22 },
+      { "tier": 3, "name": "Two-Speed",      "cost": 260, "reel_speed": 1.62, "hookset_window_mult": 1.35 },
+      { "tier": 4, "name": "The Winch",      "cost": 600, "reel_speed": 1.95, "hookset_window_mult": 1.50 }
+    ],
+    "line": [
+      { "tier": 0, "name": "Twine",          "cost": 0,   "max_load_kg": 25.0,   "tension_ceiling": 100.0 },
+      { "tier": 1, "name": "Hemp Cord",      "cost": 40,  "max_load_kg": 60.0,   "tension_ceiling": 115.0 },
+      { "tier": 2, "name": "Silk Line",      "cost": 110, "max_load_kg": 150.0,  "tension_ceiling": 130.0 },
+      { "tier": 3, "name": "Spider Silk",    "cost": 260, "max_load_kg": 400.0,  "tension_ceiling": 150.0 },
+      { "tier": 4, "name": "Dragon Gut",     "cost": 600, "max_load_kg": 2000.0, "tension_ceiling": 175.0 }
+    ]
+  }
+}

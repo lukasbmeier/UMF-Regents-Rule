@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="1_level"]
+[ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
+[ext_resource type="Resource" path="res://foundation/entities/player_definition.tres" id="3_player"]
+[ext_resource type="Script" path="res://tests/e2e/e2e_runner.gd" id="4_runner"]
+
+[node name="E2E" type="Node3D"]
+
+[node name="Greybox" parent="." instance=ExtResource("1_level")]
+
+[node name="Boot" type="Node" parent="."]
+script = ExtResource("2_boot")
+entity_definitions = Array[Resource]([ExtResource("3_player")])
+world_root = NodePath("../Greybox/WorldRoot")
+
+[node name="Runner" type="Node" parent="."]
+script = ExtResource("4_runner")

@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://5l1jt8g5j00c"]
+
+[ext_resource type="Shader" uid="uid://bb860ry50in5b" path="res://game/world/kits/village/materials/M_SampleScene_Landscape.tres" id="1_t1l1m"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_t1l1m")
+shader_parameter/Grass_A = Color(0.321569, 0.372549, 0.27451, 1)
+shader_parameter/Grass_A2 = Color(0.466667, 0.517647, 0, 1)
+shader_parameter/Dirt_A = Color(0.380392, 0.352941, 0.176471, 1)
+shader_parameter/Dirt_B = Color(0.415686, 0.368627, 0, 1)

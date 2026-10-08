@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CameraRigConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/camera/camera_rig_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+first_person = false
+pivot_height = 1.5
+boom_length = 4.5
+shoulder_offset = 0.5
+collide_with_world = true
+collision_padding = 0.25
+pitch_min_deg = -70.0
+pitch_max_deg = 60.0
+fov = 75.0
+follow_smoothing = 12.0

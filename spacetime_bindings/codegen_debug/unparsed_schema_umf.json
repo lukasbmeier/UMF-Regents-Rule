@@ -1,0 +1,7627 @@
+{
+	"sections": [
+		{
+			"Typespace": {
+				"types": [
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "ability_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "cooldown_ms"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "range"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "wind_up_ms"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "damage"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "ability_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "cooldown_until"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "charges"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "actor_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "ability_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "target_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "aim"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "outcome"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "predicted_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "server_ts"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "y"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "z"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "look"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "role"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "last_seen"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "owner_entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "catch_key"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "kg"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "quality"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "hookset"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "spot"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "deadlift"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "coins"
+									},
+									"algebraic_type": {
+										"I64": []
+									}
+								},
+								{
+									"name": {
+										"some": "round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "caught_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "best_combo"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "fight_s"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "clean"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "kind"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "seed"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "difficulty"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "issued_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "expires_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "payload"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "epoch"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "from_seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "kind"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "owner"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "spawned_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "load"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "line_m"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "challenge_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "spot"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "catch_key"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "kg"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "bite_s"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "window_mult"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "deadlift"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "z"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "fight_seed"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "range_cm"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "rod_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "reel_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "line_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "time_of_day"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "weather"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "spot"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "z"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "challenge_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "cast_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "next_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "catch_key"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "kg"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "spot"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "z"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "fight_s"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "casts"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "fight_started"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "key"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "richness"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "updated_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "level"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "rod_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "reel_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "line_tier"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "current"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "max"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "is_dead"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "last_damage_source"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "last_change_server_tick"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "frame"
+									},
+									"algebraic_type": {
+										"Ref": 25.0
+									}
+								},
+								{
+									"name": {
+										"some": "received_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "client_tick"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "move_x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "move_y"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "look_yaw"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "look_pitch"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "jump"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "sprint"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "client_pos"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "epoch"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "move_state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "dash"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "slow"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "face"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "owner_entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "item_def_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "qty"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "slot"
+									},
+									"algebraic_type": {
+										"I16": []
+									}
+								},
+								{
+									"name": {
+										"some": "instance_data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "item_def_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "kind"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "max_stack"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "ready"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "team"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "vel"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "yaw"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "grounded"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "move_state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "last_processed_seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "server_tick"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "server_ts"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "teleport_flag"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "correction_epoch"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "brain"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "state"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "target_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "updated_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "name"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "online"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "kind"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "phase"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "phase_ends_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "seed"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "max_members"
+									},
+									"algebraic_type": {
+										"U16": []
+									}
+								},
+								{
+									"name": {
+										"some": "round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "since"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "first_round"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "started"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "number"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "session_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "score"
+									},
+									"algebraic_type": {
+										"I64": []
+									}
+								},
+								{
+									"name": {
+										"some": "coins"
+									},
+									"algebraic_type": {
+										"I64": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "sim_authority"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "authority_online"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "server_tick"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "server_ts"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "spawn"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "level_id"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "vel"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "yaw"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "grounded"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "move_state"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "last_processed_seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "teleport_flag"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								}
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"Types": [
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityState"
+					},
+					"ty": 1.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Authority"
+					},
+					"ty": 7.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RivalSchedule"
+					},
+					"ty": 33.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldLevel"
+					},
+					"ty": 40.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TickSchedule"
+					},
+					"ty": 38.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Catch"
+					},
+					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingSpot"
+					},
+					"ty": 20.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionPruneSchedule"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AppearanceRow"
+					},
+					"ty": 6.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Gear"
+					},
+					"ty": 22.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AuthorityCheckSchedule"
+					},
+					"ty": 8.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ChallengePruneSchedule"
+					},
+					"ty": 11.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InventoryItem"
+					},
+					"ty": 26.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Entity"
+					},
+					"ty": 13.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HealthStateRow"
+					},
+					"ty": 23.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Session"
+					},
+					"ty": 34.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldConfig"
+					},
+					"ty": 39.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingCast"
+					},
+					"ty": 16.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "NpcBrainRow"
+					},
+					"ty": 30.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 31.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputQueueRow"
+					},
+					"ty": 24.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingWorld"
+					},
+					"ty": 21.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMatch"
+					},
+					"ty": 36.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 25.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Challenge"
+					},
+					"ty": 10.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LobbyMember"
+					},
+					"ty": 28.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementStateRow"
+					},
+					"ty": 29.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FightShow"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingConditions"
+					},
+					"ty": 17.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Vector3"
+					},
+					"ty": 3.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMember"
+					},
+					"ty": 37.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ItemDef"
+					},
+					"ty": 27.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingRival"
+					},
+					"ty": 19.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Correction"
+					},
+					"ty": 12.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementWrite"
+					},
+					"ty": 41.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RivalBench"
+					},
+					"ty": 32.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityDef"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingLine"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "EquipStateRow"
+					},
+					"ty": 14.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PhaseSchedule"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionEmpty"
+					},
+					"ty": 35.0,
+					"custom_ordering": true
+				}
+			]
+		},
+		{
+			"Tables": [
+				{
+					"source_name": "ability_state",
+					"product_type_ref": 1.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "ability_state_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ability_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ability_state_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "ability_state_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge",
+					"product_type_ref": 10.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "catch",
+					"product_type_ref": 9.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "catch_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "catch_owner_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "catch_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "catch_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "catch_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_world",
+					"product_type_ref": 21.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_world_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_world_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_cast",
+					"product_type_ref": 16.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_cast_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_cast_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_cast_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_cast_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fight_show",
+					"product_type_ref": 15.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fight_show_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fight_show_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fight_show_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "gear",
+					"product_type_ref": 22.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "gear_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "gear_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rival_bench",
+					"product_type_ref": 32.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rival_bench_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rival_bench_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "equip_state",
+					"product_type_ref": 14.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "equip_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "equip_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "equip_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "movement_state",
+					"product_type_ref": 29.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "movement_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_member",
+					"product_type_ref": 37.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_member_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_member_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_member_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_member_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "session_member_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "world_level",
+					"product_type_ref": 40.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority",
+					"product_type_ref": 7.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "authority_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rival_schedule",
+					"product_type_ref": 33.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "input_queue",
+					"product_type_ref": 24.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "input_queue_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "input_queue_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "input_queue_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "item_def",
+					"product_type_ref": 27.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "item_def_item_def_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "item_def_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "item_def_item_def_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_conditions",
+					"product_type_ref": 17.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_conditions_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_conditions_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_spot",
+					"product_type_ref": 20.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_spot_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_spot_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge_prune_schedule",
+					"product_type_ref": 11.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "player",
+					"product_type_ref": 31.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "player_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "player_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "player_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "player_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "npc_brain",
+					"product_type_ref": 30.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "npc_brain_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "ability_def",
+					"product_type_ref": 0.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "ability_def_ability_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "ability_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ability_def_ability_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "action_event",
+					"product_type_ref": 2.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "action_event_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "action_event_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "action_event_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_event_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "inventory_item",
+					"product_type_ref": 26.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "inventory_item_owner_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "entity",
+					"product_type_ref": 13.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "entity_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "entity_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "entity_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "entity_entity_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_line",
+					"product_type_ref": 18.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_line_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_line_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_line_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority_check_schedule",
+					"product_type_ref": 8.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "tick_schedule",
+					"product_type_ref": 38.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "world_config",
+					"product_type_ref": 39.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "appearance",
+					"product_type_ref": 6.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "appearance_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "appearance_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "lobby_member",
+					"product_type_ref": 28.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "lobby_member_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "lobby_member_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "lobby_member_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "lobby_member_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_match",
+					"product_type_ref": 36.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_match_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_match_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_match_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_rival",
+					"product_type_ref": 19.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_rival_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_rival_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_rival_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_rival_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "phase_schedule",
+					"product_type_ref": 5.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "correction",
+					"product_type_ref": 12.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "health_state",
+					"product_type_ref": 23.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "health_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "health_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "health_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_empty",
+					"product_type_ref": 35.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "action_prune_schedule",
+					"product_type_ref": 4.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session",
+					"product_type_ref": 34.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "session_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				}
+			]
+		},
+		{
+			"Reducers": [
+				{
+					"source_name": "add_score",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "score"
+								},
+								"algebraic_type": {
+									"I64": []
+								}
+							},
+							{
+								"name": {
+									"some": "coins"
+								},
+								"algebraic_type": {
+									"I64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "advance_phases",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 5.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "apply_damage",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "target_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "amount"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "source_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "buy_upgrade",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "cast",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "target"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "check_authorities",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 8.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "client_connected",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "client_disconnected",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "consume_item",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "qty"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "create_session",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "max_members"
+								},
+								"algebraic_type": {
+									"U16": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "create_world",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "sim_authority"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "define_ability",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "ability_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "cooldown_ms"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "range"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "wind_up_ms"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "damage"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "data"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "despawn_entity",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "dev_nudge",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "offset"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "grant_item",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "item_def_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "qty"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "heartbeat",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "init",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "interact",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "target_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "verb"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "issue_challenge",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "difficulty"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "join_session",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "session_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "leave_session",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "new_match",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "session_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "prune_action_events",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 4.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "prune_challenges",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 11.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "reel_in",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "register_authority",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "identity"
+								},
+								"algebraic_type": {
+									"Product": {
+										"elements": [
+											{
+												"name": {
+													"some": "__identity__"
+												},
+												"algebraic_type": {
+													"U256": []
+												}
+											}
+										]
+									}
+								}
+							},
+							{
+								"name": {
+									"some": "role"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "revoke_authority",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "identity"
+								},
+								"algebraic_type": {
+									"Product": {
+										"elements": [
+											{
+												"name": {
+													"some": "__identity__"
+												},
+												"algebraic_type": {
+													"U256": []
+												}
+											}
+										]
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "rival_tick",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 33.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "seed_item_defs",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "defs"
+								},
+								"algebraic_type": {
+									"Array": {
+										"Ref": 27.0
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_appearance",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "look"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_equip_state",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "state"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_item_slot",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "slot"
+								},
+								"algebraic_type": {
+									"I16": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_player_name",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "name"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_ready",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "ready"
+								},
+								"algebraic_type": {
+									"Bool": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_rival",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "on"
+								},
+								"algebraic_type": {
+									"Bool": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_session_phase",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "session_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "phase"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_sim_authority",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "mode"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_team",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "team"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_world_level",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "level_id"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_world_spawn",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "show_fight",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "state"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "load"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "line_m"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "spawn_npc",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "spawn_resource_node",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "submit_challenge_result",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "challenge_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "result"
+								},
+								"algebraic_type": {
+									"Array": {
+										"F32": []
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "submit_input",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "frames"
+								},
+								"algebraic_type": {
+									"Array": {
+										"Ref": 25.0
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "teleport",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "tick_movement",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 38.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "use_ability",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "ability_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "target_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "aim"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							},
+							{
+								"name": {
+									"some": "predicted_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "use_level",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "level"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "write_movement_batch",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "world_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "writes"
+								},
+								"algebraic_type": {
+									"Array": {
+										"Ref": 41.0
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "write_npc_brain",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "brain"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "state"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "target_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "data"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				}
+			]
+		},
+		{
+			"Schedules": [
+				{
+					"source_name": {
+						"some": "rival_schedule_sched"
+					},
+					"table_name": "rival_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "rival_tick"
+				},
+				{
+					"source_name": {
+						"some": "challenge_prune_schedule_sched"
+					},
+					"table_name": "challenge_prune_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "prune_challenges"
+				},
+				{
+					"source_name": {
+						"some": "authority_check_schedule_sched"
+					},
+					"table_name": "authority_check_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "check_authorities"
+				},
+				{
+					"source_name": {
+						"some": "tick_schedule_sched"
+					},
+					"table_name": "tick_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "tick_movement"
+				},
+				{
+					"source_name": {
+						"some": "phase_schedule_sched"
+					},
+					"table_name": "phase_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "advance_phases"
+				},
+				{
+					"source_name": {
+						"some": "action_prune_schedule_sched"
+					},
+					"table_name": "action_prune_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "prune_action_events"
+				}
+			]
+		},
+		{
+			"LifeCycleReducers": [
+				{
+					"lifecycle_spec": {
+						"Init": []
+					},
+					"function_name": "init"
+				},
+				{
+					"lifecycle_spec": {
+						"OnConnect": []
+					},
+					"function_name": "client_connected"
+				},
+				{
+					"lifecycle_spec": {
+						"OnDisconnect": []
+					},
+					"function_name": "client_disconnected"
+				}
+			]
+		},
+		{
+			"RowLevelSecurity": [
+				{
+					"sql": "SELECT c.* FROM challenge c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT q.* FROM input_queue q JOIN authority a ON a.world_id = q.world_id WHERE a.identity = :sender"
+				},
+				{
+					"sql": "SELECT b.* FROM npc_brain b JOIN authority a ON a.world_id = b.world_id WHERE a.identity = :sender"
+				}
+			]
+		},
+		{
+			"ExplicitNames": {
+				"entries": [
+					{
+						"Table": {
+							"source_name": "ability_state",
+							"canonical_name": "ability_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "challenge",
+							"canonical_name": "challenge"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "catch",
+							"canonical_name": "catch"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_world",
+							"canonical_name": "fishing_world"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_cast",
+							"canonical_name": "fishing_cast"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fight_show",
+							"canonical_name": "fight_show"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "gear",
+							"canonical_name": "gear"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rival_bench",
+							"canonical_name": "rival_bench"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "equip_state",
+							"canonical_name": "equip_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "movement_state",
+							"canonical_name": "movement_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_member",
+							"canonical_name": "session_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_level",
+							"canonical_name": "world_level"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority",
+							"canonical_name": "authority"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rival_schedule",
+							"canonical_name": "rival_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "input_queue",
+							"canonical_name": "input_queue"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "item_def",
+							"canonical_name": "item_def"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_conditions",
+							"canonical_name": "fishing_conditions"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_spot",
+							"canonical_name": "fishing_spot"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "challenge_prune_schedule",
+							"canonical_name": "challenge_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "player",
+							"canonical_name": "player"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "npc_brain",
+							"canonical_name": "npc_brain"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ability_def",
+							"canonical_name": "ability_def"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "action_event",
+							"canonical_name": "action_event"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "inventory_item",
+							"canonical_name": "inventory_item"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "entity",
+							"canonical_name": "entity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_line",
+							"canonical_name": "fishing_line"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority_check_schedule",
+							"canonical_name": "authority_check_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "tick_schedule",
+							"canonical_name": "tick_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_config",
+							"canonical_name": "world_config"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "appearance",
+							"canonical_name": "appearance"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "lobby_member",
+							"canonical_name": "lobby_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_match",
+							"canonical_name": "session_match"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_rival",
+							"canonical_name": "fishing_rival"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "phase_schedule",
+							"canonical_name": "phase_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "correction",
+							"canonical_name": "correction"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "health_state",
+							"canonical_name": "health_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_empty",
+							"canonical_name": "session_empty"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "action_prune_schedule",
+							"canonical_name": "action_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session",
+							"canonical_name": "session"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "add_score",
+							"canonical_name": "add_score"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "advance_phases",
+							"canonical_name": "advance_phases"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "apply_damage",
+							"canonical_name": "apply_damage"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "buy_upgrade",
+							"canonical_name": "buy_upgrade"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "cast",
+							"canonical_name": "cast"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "check_authorities",
+							"canonical_name": "check_authorities"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "client_connected",
+							"canonical_name": "client_connected"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "client_disconnected",
+							"canonical_name": "client_disconnected"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "consume_item",
+							"canonical_name": "consume_item"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "create_session",
+							"canonical_name": "create_session"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "create_world",
+							"canonical_name": "create_world"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "define_ability",
+							"canonical_name": "define_ability"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "despawn_entity",
+							"canonical_name": "despawn_entity"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "dev_nudge",
+							"canonical_name": "dev_nudge"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "grant_item",
+							"canonical_name": "grant_item"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "heartbeat",
+							"canonical_name": "heartbeat"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "init",
+							"canonical_name": "init"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "interact",
+							"canonical_name": "interact"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "issue_challenge",
+							"canonical_name": "issue_challenge"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "join_session",
+							"canonical_name": "join_session"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "leave_session",
+							"canonical_name": "leave_session"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "new_match",
+							"canonical_name": "new_match"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "prune_action_events",
+							"canonical_name": "prune_action_events"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "prune_challenges",
+							"canonical_name": "prune_challenges"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "reel_in",
+							"canonical_name": "reel_in"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "register_authority",
+							"canonical_name": "register_authority"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "revoke_authority",
+							"canonical_name": "revoke_authority"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "rival_tick",
+							"canonical_name": "rival_tick"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "seed_item_defs",
+							"canonical_name": "seed_item_defs"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_appearance",
+							"canonical_name": "set_appearance"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_equip_state",
+							"canonical_name": "set_equip_state"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_item_slot",
+							"canonical_name": "set_item_slot"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_player_name",
+							"canonical_name": "set_player_name"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_ready",
+							"canonical_name": "set_ready"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_rival",
+							"canonical_name": "set_rival"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_session_phase",
+							"canonical_name": "set_session_phase"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_sim_authority",
+							"canonical_name": "set_sim_authority"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_team",
+							"canonical_name": "set_team"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_world_level",
+							"canonical_name": "set_world_level"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_world_spawn",
+							"canonical_name": "set_world_spawn"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "show_fight",
+							"canonical_name": "show_fight"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "spawn_npc",
+							"canonical_name": "spawn_npc"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "spawn_resource_node",
+							"canonical_name": "spawn_resource_node"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "submit_challenge_result",
+							"canonical_name": "submit_challenge_result"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "submit_input",
+							"canonical_name": "submit_input"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "teleport",
+							"canonical_name": "teleport"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "tick_movement",
+							"canonical_name": "tick_movement"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "use_ability",
+							"canonical_name": "use_ability"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "use_level",
+							"canonical_name": "use_level"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "write_movement_batch",
+							"canonical_name": "write_movement_batch"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "write_npc_brain",
+							"canonical_name": "write_npc_brain"
+						}
+					}
+				]
+			}
+		}
+	]
+}

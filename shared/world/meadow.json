@@ -1,0 +1,43 @@
+{
+  "_comment": "BAKED from res://game/world/levels/meadow.tscn by tools/world/bake_level.gd (LevelInfo, DECISIONS #175). The server compiles this in (build.rs); the client's LevelBake reads it. Do not edit: move the markers in the scene and bake again.",
+  "level": "meadow",
+  "id": 2,
+  "scene": "res://game/world/levels/meadow.tscn",
+  "water_y": -0.4,
+  "spawn": [
+    0.0,
+    0.0,
+    14.0
+  ],
+  "wade_depth": 0.7,
+  "min_cast_depth": 0.5,
+  "depth_grid": {
+    "file": "meadow_depth.bin",
+    "origin_x": -17.0,
+    "origin_z": -27.0,
+    "spacing": 1.0,
+    "width": 34,
+    "height": 34,
+    "unit": "decimetres of water, 0 = dry"
+  },
+  "spots": [
+    {
+      "id": "meadow_pond",
+      "name": "The Meadow Pond",
+      "x": 0.0,
+      "z": -10.0,
+      "radius": 11.0
+    }
+  ],
+  "points": [
+    {
+      "id": "bench_south",
+      "kind": "bench",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 12.0,
+      "radius": 1.0,
+      "tags": []
+    }
+  ]
+}

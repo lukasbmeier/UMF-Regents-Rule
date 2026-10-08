@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://o4nk201d614d"]
+
+[ext_resource type="Shader" uid="uid://duw25o2tuctnx" path="res://game/world/kits/village/materials/M_WindowGlass.tres" id="1_me5ey"]
+[ext_resource type="Texture2D" uid="uid://jv6g0xwirubw" path="res://game/world/kits/village/materials/T_WindowGradient.png" id="2_h2l7y"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_me5ey")
+shader_parameter/Night_Mode = false
+shader_parameter/Emissive_Color = Color(1, 0.933333, 0.607843, 1)
+shader_parameter/Emissive_Intensity = 2.0
+shader_parameter/Window_Gradient_Texture = ExtResource("2_h2l7y")

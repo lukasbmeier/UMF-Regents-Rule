@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="NetConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/net/net_config.gd" id="1_net"]
+
+[resource]
+script = ExtResource("1_net")
+authority_process = true
+token_path = "user://sidecar_token.dat"
+core_tables = Array[StringName]([&"world_config", &"entity", &"player", &"movement_state", &"health_state", &"session", &"session_member", &"item_def", &"inventory_item", &"ability_def", &"ability_state", &"action_event", &"catch", &"gear"])

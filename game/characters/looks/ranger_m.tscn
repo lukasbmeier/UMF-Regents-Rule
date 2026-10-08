@@ -1,0 +1,22 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://game/characters/modular_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Regular_Male_OnlyHead.gltf" id="2"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Ranger_Arms.gltf" id="3"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Ranger_Body.gltf" id="4"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Ranger_Legs.gltf" id="5"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Ranger_Feet_Boots.gltf" id="6"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Ranger_Acc_Pauldron.gltf" id="7"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Eyebrows_Thick.gltf" id="8"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_Ponytail.gltf" id="9"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_Moustache.gltf" id="10"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Regular_Male_Dark_BaseColor.png" id="11"]
+
+[node name="RangerM" type="Node3D"]
+script = ExtResource("1")
+head = ExtResource("2")
+body = &"male"
+parts = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10")])
+skin_texture = ExtResource("11")
+skin_tint = Color(1.0, 1.0, 1.0, 1)
+hair_color = Color(0.06, 0.05, 0.05, 1)

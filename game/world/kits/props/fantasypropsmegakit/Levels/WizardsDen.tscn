@@ -1,0 +1,706 @@
+[gd_scene load_steps=63 format=3 uid="uid://ujwsr33dx58p"]
+
+[ext_resource type="PackedScene" uid="uid://dm5nlucwpjvx" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/WizardsDen.gltf" id="1_bclst"]
+[ext_resource type="PackedScene" uid="uid://dxakq3j7ybhhy" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bookcase_1.gltf" id="2_1usc5"]
+[ext_resource type="PackedScene" uid="uid://cqhfivwxw5eio" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_1.gltf" id="3_vulis"]
+[ext_resource type="PackedScene" uid="uid://b75brcx7fx3d7" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_2.gltf" id="4_xijgp"]
+[ext_resource type="PackedScene" uid="uid://b6ywu3t3b2iy4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_3.gltf" id="5_mve5r"]
+[ext_resource type="PackedScene" uid="uid://bfbwm0vr0ugyh" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bookcase_2.gltf" id="6_rp6us"]
+[ext_resource type="PackedScene" uid="uid://5uqobcrhqqt1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_1.gltf" id="7_rfm7f"]
+[ext_resource type="PackedScene" uid="uid://dnw1eskwtgr1o" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_2.gltf" id="8_mgtra"]
+[ext_resource type="PackedScene" uid="uid://dbvtrv5nfm3g3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_3.gltf" id="9_dvi62"]
+[ext_resource type="PackedScene" uid="uid://cawkw7srsllik" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Torch_Metal.gltf" id="10_e2kvw"]
+[ext_resource type="PackedScene" uid="uid://cgthnti7nhph6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shelf_Small_Bottles.gltf" id="11_14p24"]
+[ext_resource type="PackedScene" uid="uid://diu5jc1ividh2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_2.gltf" id="12_fp3xv"]
+[ext_resource type="PackedScene" uid="uid://d0colwbujb0nv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_3.gltf" id="13_awiso"]
+[ext_resource type="PackedScene" uid="uid://b671p1icgeelj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chain_Coil.gltf" id="14_uo4vb"]
+[ext_resource type="PackedScene" uid="uid://lyqxtpdto4ft" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Ladder.gltf" id="15_cg6j0"]
+[ext_resource type="PackedScene" uid="uid://cmkjcprntwmyi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Workbench.gltf" id="16_etqmc"]
+[ext_resource type="PackedScene" uid="uid://dvvydn0rul8vv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Workbench_Drawers.gltf" id="17_8c2kp"]
+[ext_resource type="PackedScene" uid="uid://cagplpt1w0v2f" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_4.gltf" id="18_1jmo0"]
+[ext_resource type="PackedScene" uid="uid://cwnyuwsuog2xj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Parchment.gltf" id="19_5oinc"]
+[ext_resource type="PackedScene" uid="uid://di5rtsyhfua8m" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chalice.gltf" id="20_wvsnk"]
+[ext_resource type="PackedScene" uid="uid://dxoqgss460glb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Coin_Pile.gltf" id="21_y5mq6"]
+[ext_resource type="PackedScene" uid="uid://bdghia3yn3bds" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Stack_Small.gltf" id="22_5y4re"]
+[ext_resource type="PackedScene" uid="uid://cav33x3tr663x" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Stack_Large.gltf" id="23_elm4i"]
+[ext_resource type="PackedScene" uid="uid://c5f3fhfj7rju0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Scroll_1.gltf" id="24_u4ljn"]
+[ext_resource type="PackedScene" uid="uid://ckbuqoeq7qd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Scroll_2.gltf" id="25_rcome"]
+[ext_resource type="PackedScene" uid="uid://bvejw31uyihmi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick.gltf" id="26_ijgql"]
+[ext_resource type="PackedScene" uid="uid://y44m2p23uguj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Candle_2.gltf" id="27_xk6lp"]
+[ext_resource type="PackedScene" uid="uid://dcermvf1wlip1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_1.gltf" id="28_wmc2u"]
+[ext_resource type="PackedScene" uid="uid://c4x12xa2nw12k" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick_Stand.gltf" id="29_qvqay"]
+[ext_resource type="PackedScene" uid="uid://cg52mdo53q8pv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Desk.gltf" id="30_8pm3g"]
+[ext_resource type="PackedScene" uid="uid://caix7bti1omox" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bag.gltf" id="31_b3lrs"]
+[ext_resource type="PackedScene" uid="uid://btst6tnxnqoqa" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cabinet.gltf" id="32_0exre"]
+[ext_resource type="PackedScene" uid="uid://cyxubcfivi4hu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Rug_Round.gltf" id="33_x62tp"]
+[ext_resource type="PackedScene" uid="uid://cblrjfnl8vusc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cauldron.gltf" id="34_ic3pp"]
+[ext_resource type="PackedScene" uid="uid://b6lie4ctwdtb5" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Runes.gltf" id="35_bl3cp"]
+[ext_resource type="PackedScene" uid="uid://blw5oyenk1jol" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookStand.gltf" id="36_va158"]
+[ext_resource type="PackedScene" uid="uid://bbytcwm0rclp1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Open.gltf" id="37_d01ba"]
+[ext_resource type="PackedScene" uid="uid://b1cpfw5i1o7yq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Skull_Top.gltf" id="38_3ujut"]
+[ext_resource type="PackedScene" uid="uid://b72rjixedmba8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bucket_Wooden_2.gltf" id="39_aowlw"]
+[ext_resource type="PackedScene" uid="uid://caxbxqqtuu7v4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_Rubble_Large.gltf" id="40_jbtgr"]
+[ext_resource type="PackedScene" uid="uid://c6xdwwai23ryc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_7.gltf" id="41_makmx"]
+[ext_resource type="PackedScene" uid="uid://bsp37aqv7bfbu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_2.gltf" id="42_gicle"]
+[ext_resource type="PackedScene" uid="uid://c5kw4dc37vty8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_6.gltf" id="43_aur6b"]
+[ext_resource type="PackedScene" uid="uid://dud2vk4483rrq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_5.gltf" id="44_2csq2"]
+[ext_resource type="PackedScene" uid="uid://ctyin1er1pcmf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_3.gltf" id="45_k6yp4"]
+[ext_resource type="PackedScene" uid="uid://bhvsxiwlj41jq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_4.gltf" id="46_20202"]
+[ext_resource type="PackedScene" uid="uid://bxsp7pvsgrihm" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bottle_1.gltf" id="47_itwbi"]
+[ext_resource type="PackedScene" uid="uid://bbafllqo0cgn2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/SmallBottles_2.gltf" id="48_0tmx5"]
+[ext_resource type="PackedScene" uid="uid://cle14t05hg8qd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/SmallBottles_1.gltf" id="49_6ccbj"]
+[ext_resource type="PackedScene" uid="uid://cy0jff2nkyvr4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Single.gltf" id="50_51q81"]
+[ext_resource type="PackedScene" uid="uid://f35j5o8wnc2q" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_1.gltf" id="51_7v4ae"]
+[ext_resource type="PackedScene" uid="uid://dw4aogjs4q560" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_2.gltf" id="52_neq6u"]
+[ext_resource type="PackedScene" uid="uid://bg3mbr61se8x0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick_Triple.gltf" id="53_hrkp5"]
+[ext_resource type="PackedScene" uid="uid://dm3whdq30vixb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_4.gltf" id="54_ncn2u"]
+[ext_resource type="PackedScene" uid="uid://dqdqy3nu7ric" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_7.gltf" id="55_jhgmv"]
+[ext_resource type="PackedScene" uid="uid://cy281h7fc4p2r" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_4.gltf" id="56_b6oio"]
+[ext_resource type="PackedScene" uid="uid://bqi6jegyyqrd8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_1.gltf" id="57_edll8"]
+[ext_resource type="PackedScene" uid="uid://bjc7sfa2mjxr3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Candle_1.gltf" id="58_s6w86"]
+[ext_resource type="PackedScene" uid="uid://cexmv3osy8mvi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pouch_Large.gltf" id="59_hbpn4"]
+[ext_resource type="PackedScene" uid="uid://ckxde0ql1onkc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chandelier_Large.gltf" id="60_jagbx"]
+[ext_resource type="PackedScene" uid="uid://c75qgem4bx0pq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chest_Legendary.gltf" id="61_586ik"]
+
+[sub_resource type="Environment" id="Environment_qke7l"]
+background_energy_multiplier = 3.09
+ambient_light_source = 2
+ambient_light_color = Color(0.293477, 0.237556, 0.330801, 1)
+ambient_light_energy = 4.22
+reflected_light_source = 2
+ssr_enabled = true
+ssr_max_steps = 2
+ssao_enabled = true
+ssao_radius = 2.54
+ssao_intensity = 5.24
+ssao_power = 2.04906
+glow_enabled = true
+glow_intensity = 3.09
+glow_strength = 1.27
+glow_bloom = 0.1
+glow_blend_mode = 4
+fog_light_color = Color(0.562893, 0.563031, 0.393335, 1)
+fog_density = 0.0065
+volumetric_fog_density = 0.0338
+
+[node name="Node3D" type="Node3D"]
+
+[node name="WizardsDen" parent="." instance=ExtResource("1_bclst")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="Bookcase_12" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.44641, 0, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_12" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_12" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_12" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_12" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_13" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65546, 0, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_13" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_13" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_13" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_14" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125949, 0, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_14" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_14" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_14" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_15" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.91381, 0, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_15" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_15" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_15" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_15" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_16" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.74303, 0, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_16" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_16" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_16" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_16" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_17" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.44641, 2.42098, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_17" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_17" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_17" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_17" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_18" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65546, 2.42098, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_18" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_18" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_18" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_19" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125949, 2.42098, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_19" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_19" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_19" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_19" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_20" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.91381, 2.42098, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_20" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_20" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_20" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_20" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_21" parent="." instance=ExtResource("2_1usc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.74303, 2.42098, -3.36556)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_12" parent="Bookcase_21" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 1.90954, -0.00601411)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_13" parent="Bookcase_21" instance=ExtResource("3_vulis")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0168922, 0.768479, 0.0395319)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_22" parent="Bookcase_21" instance=ExtResource("4_xijgp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00373864, 1.52891, 0.0267029)
+metadata/_edit_group_ = true
+
+[node name="BookGroup_Large_32" parent="Bookcase_21" instance=ExtResource("5_mve5r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0332255, 1.14756, 0.0462494)
+metadata/_edit_group_ = true
+
+[node name="Bookcase_22" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 0, -2.30852)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_22" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_22" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_22" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_22" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_23" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 0, -0.855601)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_23" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_23" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_23" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_26" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 0, 2.08101)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_26" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_26" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_26" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_27" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 0, 3.5877)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_27" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_27" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_27" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_27" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_24" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 2.53277, -2.30852)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_24" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_24" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_24" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_24" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_25" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 2.53277, -0.855601)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_25" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_25" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_25" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_25" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_28" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 2.53277, 2.08101)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_28" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_28" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_28" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_28" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Bookcase_29" parent="." instance=ExtResource("6_rp6us")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.45061, 2.53277, 3.5877)
+
+[node name="BookGroup_Medium_12" parent="Bookcase_29" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 1.92059, 0.0595274)
+
+[node name="BookGroup_Medium_13" parent="Bookcase_29" instance=ExtResource("7_rfm7f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00796461, 0.772035, 0.0595274)
+
+[node name="BookGroup_Medium_22" parent="Bookcase_29" instance=ExtResource("8_mgtra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00364041, 1.52528, 0.0586443)
+
+[node name="BookGroup_Medium_32" parent="Bookcase_29" instance=ExtResource("9_dvi62")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00316906, 1.14424, 0.0479345)
+
+[node name="Torch_Metal2" parent="." instance=ExtResource("10_e2kvw")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.75046, 1.75783, 0.596668)
+
+[node name="Shelf_Small_Bottles2" parent="." instance=ExtResource("11_14p24")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.79544, 0.754489, 0.563)
+
+[node name="Vase_22" parent="." instance=ExtResource("12_fp3xv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.80736, 0, 3.46712)
+
+[node name="Vase_32" parent="." instance=ExtResource("13_awiso")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.54293, 0, 4.10945)
+
+[node name="Chain_Coil2" parent="." instance=ExtResource("14_uo4vb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.23013, 0, 0.554231)
+
+[node name="Ladder2" parent="." instance=ExtResource("15_cg6j0")]
+transform = Transform3D(1, 0, 0, 0, 0.992548, 0.121852, 0, -0.121852, 0.992548, 0.291767, 0, -2.82532)
+
+[node name="Workbench2" parent="." instance=ExtResource("16_etqmc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.280424, 0, -1.75691)
+
+[node name="Workbench_Drawers2" parent="." instance=ExtResource("17_8c2kp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.280181, 0.00586522, -1.74149)
+
+[node name="Book_42" parent="." instance=ExtResource("18_1jmo0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.201352, 0.929718, -1.50365)
+
+[node name="Parchment2" parent="." instance=ExtResource("19_5oinc")]
+transform = Transform3D(0.835932, 0, -0.548833, 0, 1, 0, 0.548833, 0, 0.835932, 0.667704, 0.892195, -1.4917)
+
+[node name="Chalice2" parent="." instance=ExtResource("20_wvsnk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.935176, 0.892254, -1.44199)
+
+[node name="Coin_Pile2" parent="." instance=ExtResource("21_y5mq6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.83439, 0.892166, -1.78796)
+
+[node name="Page_Stack_Small2" parent="." instance=ExtResource("22_5y4re")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.288566, 0.89169, -1.77398)
+
+[node name="Page_Stack_Large2" parent="." instance=ExtResource("23_elm4i")]
+transform = Transform3D(0.849782, 0, -0.527134, 0, 1, 0, 0.527134, 0, 0.849782, -0.237416, 0.891232, -1.99448)
+
+[node name="Page_Stack_Large3" parent="." instance=ExtResource("23_elm4i")]
+transform = Transform3D(0.9991, 0, 0.0424162, 0, 1, 0, -0.0424162, 0, 0.9991, -0.767609, 0.0186989, -1.93707)
+
+[node name="Scroll_12" parent="." instance=ExtResource("24_u4ljn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0204644, 0.891421, -1.85763)
+
+[node name="Scroll_22" parent="." instance=ExtResource("25_rcome")]
+transform = Transform3D(0.801024, 0, 0.598632, 0, 1, 0, -0.598632, 0, 0.801024, 0.0862721, 0.891514, -2.05134)
+
+[node name="CandleStick2" parent="." instance=ExtResource("26_ijgql")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3483, 0.891742, -2.13891)
+
+[node name="Candle_22" parent="." instance=ExtResource("27_xk6lp")]
+transform = Transform3D(0.632425, 0, 0, 0, 0.632425, 0, 0, 0, 0.632425, 0.346525, 1.02375, -2.13313)
+
+[node name="Vase_12" parent="." instance=ExtResource("28_wmc2u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.586422, 0, -2.75078)
+
+[node name="CandleStick_Stand2" parent="." instance=ExtResource("29_qvqay")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.07821, 0, -1.90586)
+
+[node name="Desk2" parent="." instance=ExtResource("30_8pm3g")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.20573, 0, -0.198115)
+
+[node name="Bag2" parent="." instance=ExtResource("31_b3lrs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1938, 0, -1.55142)
+
+[node name="Cabinet2" parent="." instance=ExtResource("32_0exre")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.1945, 0, 1.86668)
+
+[node name="Rug_Round2" parent="." instance=ExtResource("33_x62tp")]
+transform = Transform3D(1.45, 0, 0, 0, 1.45, 0, 0, 0, 1.45, 0.427858, 0.0144746, -0.139448)
+
+[node name="Cauldron2" parent="." instance=ExtResource("34_ic3pp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.238506, 0, 0.0151202)
+
+[node name="Runes2" parent="." instance=ExtResource("35_bl3cp")]
+transform = Transform3D(0.818162, -0.46585, 0.337036, 0.538535, 0.826232, -0.165289, -0.201469, 0.316739, 0.926869, 0.149473, 0.818164, 0.0985138)
+
+[node name="BookStand2" parent="." instance=ExtResource("36_va158")]
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, 0.791332, 0, 1.32469)
+
+[node name="Book_Open2" parent="BookStand2" instance=ExtResource("37_d01ba")]
+transform = Transform3D(1, 0, 0, 0, 0.667534, -0.74458, 0, 0.74458, 0.667534, -0.00809169, 1.28841, -0.0223666)
+
+[node name="Vase_13" parent="." instance=ExtResource("28_wmc2u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.28325, 0, -2.78853)
+
+[node name="Vase_33" parent="." instance=ExtResource("13_awiso")]
+transform = Transform3D(0.76697, 0, 0, 0, 0.76697, 0, 0, 0, 0.76697, -3.64605, 0, -2.7784)
+
+[node name="Parchment3" parent="." instance=ExtResource("19_5oinc")]
+transform = Transform3D(-0.238872, 0, -0.971051, 0, 1, 0, 0.971051, 0, -0.238872, -1.77178, 0.0159165, -0.237323)
+
+[node name="Skull_Top2" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.911983, 0, -0.206503)
+
+[node name="Bucket_Wooden_22" parent="." instance=ExtResource("39_aowlw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.917554, 0, 2.54272)
+
+[node name="Scroll_13" parent="Bucket_Wooden_22" instance=ExtResource("24_u4ljn")]
+transform = Transform3D(0.311973, -1.84, 0, 1.84, 0.311973, 0, 0, 0, 1.86626, 0.0141289, 0.385361, 0.0937312)
+
+[node name="Scroll_15" parent="Bucket_Wooden_22" instance=ExtResource("24_u4ljn")]
+transform = Transform3D(-0.10694, -1.73303, 0.0271456, -1.72927, 0.108523, 0.115882, -0.117344, -0.0198957, -1.73246, 0.0341403, 0.398276, 0.0026927)
+
+[node name="Scroll_14" parent="Bucket_Wooden_22" instance=ExtResource("24_u4ljn")]
+transform = Transform3D(0.311973, -1.84, 0, 1.82045, 0.308658, 0.27134, -0.267522, -0.0453584, 1.84643, 0.0135489, 0.317615, -0.101043)
+
+[node name="Scroll_23" parent="Bucket_Wooden_22" instance=ExtResource("25_rcome")]
+transform = Transform3D(-0.0168188, -1.74885, 0, 1.74885, -0.0168188, 0, 0, 0, 1.74893, -0.0795205, 0.358548, 0.00417233)
+
+[node name="Scroll_24" parent="Bucket_Wooden_22" instance=ExtResource("25_rcome")]
+transform = Transform3D(0.429884, -1.69527, 0, 1.69527, 0.429884, 0, 0, 0, 1.74893, 0.132925, 0.358548, 0.00417233)
+
+[node name="Vase_Rubble_Large2" parent="Bucket_Wooden_22" instance=ExtResource("40_jbtgr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.64004, 0, 1.04953)
+
+[node name="Potion_72" parent="." instance=ExtResource("41_makmx")]
+transform = Transform3D(-0.258819, 0, 0.965926, 0, 1, 0, -0.965926, 0, -0.258819, 1.9625, 0.841241, -0.798987)
+
+[node name="Potion_22" parent="." instance=ExtResource("42_gicle")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.17153, 0.841241, -0.715389)
+
+[node name="Potion_62" parent="." instance=ExtResource("43_aur6b")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.18697, 0.841241, -0.443938)
+
+[node name="Potion_52" parent="." instance=ExtResource("44_2csq2")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.18254, 0.841241, -0.305524)
+
+[node name="Potion_32" parent="." instance=ExtResource("45_k6yp4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.27752, 0.841241, 0.469649)
+
+[node name="Potion_42" parent="." instance=ExtResource("46_20202")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.20916, 0.841241, -0.0788918)
+
+[node name="Bottle_12" parent="." instance=ExtResource("47_itwbi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.49897, 0.841241, 0.434284)
+
+[node name="SmallBottles_22" parent="." instance=ExtResource("48_0tmx5")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.51471, 0.841242, -0.320111)
+
+[node name="SmallBottles_23" parent="." instance=ExtResource("48_0tmx5")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.51471, 0.841242, 0.12896)
+
+[node name="SmallBottles_12" parent="." instance=ExtResource("49_6ccbj")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 1.89464, 0.841241, 0.389587)
+
+[node name="Page_Stack_Small3" parent="." instance=ExtResource("22_5y4re")]
+transform = Transform3D(0.597807, 0, 0.80164, 0, 1, 0, -0.80164, 0, 0.597807, 1.25336, 0.021524, 0.786131)
+
+[node name="Page_Stack_Small4" parent="." instance=ExtResource("22_5y4re")]
+transform = Transform3D(-0.596519, 0, 0.802599, 0, 1, 0, -0.802599, 0, -0.596519, -0.298276, 0.021524, 1.15367)
+
+[node name="Page_Stack_Small5" parent="." instance=ExtResource("22_5y4re")]
+transform = Transform3D(-0.98414, 0, -0.177394, 0, 1, 0, 0.177394, 0, -0.98414, -0.298276, 0.021524, -1.24385)
+
+[node name="Page_Single2" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(0.673013, 0, 0.739631, 0, 1, 0, -0.739631, 0, 0.673013, 0.63166, 0.0164721, -0.767333)
+
+[node name="Page_Single3" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(0.0765723, -0.993507, 0.084152, 0.668642, 0.113776, 0.734828, -0.739631, -2.0088e-09, 0.673013, 1.05867, 1.64512, 0.867992)
+
+[node name="Page_Single5" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(-0.674511, -0.605789, -0.421965, -0.19506, 0.697488, -0.689538, 0.71203, -0.382792, -0.588629, 1.06292, 1.03432, 0.820386)
+
+[node name="Page_Single6" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(-0.674511, -0.605789, -0.421965, -0.73346, 0.484772, 0.476479, -0.084089, 0.630885, -0.771306, -0.134666, 1.47912, -0.90374)
+
+[node name="Page_Single7" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(-0.201863, -0.903491, -0.378095, -0.525603, 0.425677, -0.736574, 0.826434, 0.0500413, -0.560806, 1.06253, 0.888465, -0.36888)
+
+[node name="Page_Single4" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(0.905072, 0.411648, -0.106724, -0.135633, 0.517284, 0.844997, 0.403048, -0.750308, 0.524013, 0.373355, 1.70471, 1.64238)
+
+[node name="Page_Single8" parent="." instance=ExtResource("50_51q81")]
+transform = Transform3D(0.872341, -0.45183, 0.186738, 0.309156, 0.805697, 0.505247, -0.37874, -0.383017, 0.842529, 1.15956, 0.731546, 1.56741)
+
+[node name="Book_Stack_12" parent="." instance=ExtResource("51_7v4ae")]
+transform = Transform3D(0.782967, 0, -0.622064, 0, 1, 0, 0.622064, 0, 0.782967, 2.18977, 0.994894, 1.40451)
+
+[node name="Book_Stack_22" parent="." instance=ExtResource("52_neq6u")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.19895, 0.994894, 2.30683)
+
+[node name="CandleStick_Triple2" parent="." instance=ExtResource("53_hrkp5")]
+transform = Transform3D(-0.258819, 0, -0.965926, 0, 1, 0, 0.965926, 0, -0.258819, 2.17405, 0.987219, 1.88024)
+
+[node name="Book_Stack_42" parent="." instance=ExtResource("54_ncn2u")]
+transform = Transform3D(0.332028, 0, -0.998345, 0, 0.991992, 0, 0.998345, 0, 0.332028, 2.22344, 0.693157, 1.44767)
+
+[node name="Book_72" parent="." instance=ExtResource("55_jhgmv")]
+transform = Transform3D(0.906858, 0, 0, 0, 0.640535, -0.542117, 0, 0.565841, 0.613679, 2.22889, 0.822993, 1.73501)
+
+[node name="Scroll_13" parent="." instance=ExtResource("24_u4ljn")]
+transform = Transform3D(-4.87925e-08, 0, -1, 0, 1.09445, 0, 1.11624, 0, -4.37114e-08, 2.27325, 0.68761, 2.03618)
+
+[node name="Scroll_14" parent="." instance=ExtResource("24_u4ljn")]
+transform = Transform3D(-4.30545e-08, 0, -0.830274, 0, 0.985286, 0, 0.984973, 0, -3.62924e-08, 2.12766, 0.68761, 2.03618)
+
+[node name="Scroll_23" parent="." instance=ExtResource("25_rcome")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.12477, 0.696627, 2.30699)
+
+[node name="Scroll_24" parent="." instance=ExtResource("25_rcome")]
+transform = Transform3D(-5.2084e-08, 0, 1.41836, 0, 1.2865, 0, -1.19154, 0, -6.19987e-08, 2.25896, 0.696627, 2.30699)
+
+[node name="Page_Stack_Large4" parent="." instance=ExtResource("23_elm4i")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08077, 0, 0.984776)
+
+[node name="Vase_42" parent="." instance=ExtResource("56_b6oio")]
+transform = Transform3D(0.554719, 0, 0, 0, 0.554719, 0, 0, 0, 0.554719, 4.42139, 1.91179, 1.69929)
+
+[node name="Vase_43" parent="." instance=ExtResource("56_b6oio")]
+transform = Transform3D(0.554719, 0, 0, 0, 0.554719, 0, 0, 0, 0.554719, 4.42139, 1.91179, 2.13742)
+
+[node name="Vase_34" parent="." instance=ExtResource("13_awiso")]
+transform = Transform3D(0.381075, 0, 0, 0, 0.370034, 0, 0, 0, 0.401109, 4.45236, 1.91039, 1.89665)
+
+[node name="Vase_14" parent="." instance=ExtResource("28_wmc2u")]
+transform = Transform3D(0.290934, 0, 0, 0, 0.290934, 0, 0, 0, 0.290934, 4.43849, 1.91176, 2.49537)
+
+[node name="Potion_12" parent="." instance=ExtResource("57_edll8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.41771, 1.90319, -1.27145)
+
+[node name="Potion_23" parent="." instance=ExtResource("42_gicle")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.47144, 1.90587, -0.98175)
+
+[node name="Potion_33" parent="." instance=ExtResource("45_k6yp4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.47144, 1.89203, -0.777234)
+
+[node name="Potion_43" parent="." instance=ExtResource("46_20202")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.47144, 1.90197, -0.565721)
+
+[node name="Potion_53" parent="." instance=ExtResource("44_2csq2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.47144, 1.89779, -1.11211)
+
+[node name="Potion_63" parent="." instance=ExtResource("43_aur6b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.47144, 1.90501, -0.396511)
+
+[node name="Skull_Top3" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(0.953995, 0, -0.299823, 0, 1, 0, 0.299823, 0, 0.953995, -2.23255, 3.18499, -3.39479)
+
+[node name="Skull_Top4" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(0.679272, 0, 0.284564, 0, 0.804515, 0, -0.284564, 0, 0.679272, -2.01947, 3.18499, -3.30698)
+
+[node name="Skull_Top8" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(0.794836, 0, -0.610472, 0, 1.09482, 0, 0.610472, 0, 0.794836, -0.431282, 1.52358, -3.34807)
+
+[node name="Skull_Top6" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(0.436434, 0, -0.768201, 0, 0.965152, 0, 0.768201, 0, 0.436434, -1.23122, 3.18499, -3.30698)
+
+[node name="Skull_Top7" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(-0.00745811, -0.962857, -0.0604267, 0.883447, -0.0074884, -0.00904812, 0.00855778, -0.0660878, 0.881404, -0.964056, 3.24073, -3.29814)
+
+[node name="Skull_Top5" parent="." instance=ExtResource("38_3ujut")]
+transform = Transform3D(1.11561, 0, 0.467357, 0, 1.47939, 0, -0.467357, 0, 1.11561, -1.76068, 3.18499, -3.30698)
+
+[node name="Candle_12" parent="." instance=ExtResource("58_s6w86")]
+transform = Transform3D(-0.752909, 0, -0.658125, 0, 1, 0, 0.658125, 0, -0.752909, -1.51163, 3.18523, -3.31524)
+
+[node name="Page_Stack_Large5" parent="." instance=ExtResource("23_elm4i")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.1565, 0.778818, -3.36321)
+
+[node name="Pouch_Large2" parent="." instance=ExtResource("59_hbpn4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7641, 0.763263, -3.32151)
+
+[node name="CandleStick3" parent="." instance=ExtResource("26_ijgql")]
+transform = Transform3D(0.821946, 0, 0, 0, 0.821946, 0, 0, 0, 0.821946, -1.19079, 0.765589, -3.31334)
+
+[node name="Candle_23" parent="." instance=ExtResource("27_xk6lp")]
+transform = Transform3D(-0.620553, 0, 0.111733, 0, 0.630532, 0, -0.111733, 0, -0.620553, -1.18831, 0.855921, -3.31457)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_qke7l")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.211293, 0.965426, 0.0465013)
+light_color = Color(0.384314, 1, 0, 1)
+light_energy = 2.693
+shadow_enabled = true
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1057, 1.40976, -2.0378)
+light_color = Color(0.853738, 0.69004, 0.256227, 1)
+light_energy = 2.693
+shadow_enabled = true
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.41454, 2.13393, 0.604831)
+light_color = Color(0.853738, 0.69004, 0.256227, 1)
+light_energy = 3.915
+
+[node name="OmniLight3D5" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.23728, 2.48, -0.160612)
+light_color = Color(0.853738, 0.69004, 0.256227, 1)
+light_energy = 3.915
+
+[node name="OmniLight3D6" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0596898, 2.48, 0.995694)
+light_color = Color(0.853738, 0.69004, 0.256227, 1)
+light_energy = 3.915
+
+[node name="Chandelier_Large2" parent="." instance=ExtResource("60_jagbx")]
+transform = Transform3D(1.21943, 0, 0, 0, 1.21943, 0, 0, 0, 1.21943, 0.216713, 4.91521, 0.0211679)
+
+[node name="SmallBottles_24" parent="." instance=ExtResource("48_0tmx5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0577311, 1.51558, -3.34596)
+
+[node name="SmallBottles_25" parent="." instance=ExtResource("48_0tmx5")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.478848, 1.51558, -3.34596)
+
+[node name="Chest_Legendary" parent="." instance=ExtResource("61_586ik")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.08713, 0.00273567, -1.89507)

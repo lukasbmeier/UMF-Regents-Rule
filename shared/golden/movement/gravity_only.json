@@ -1,0 +1,1860 @@
+{
+  "name": "gravity_only",
+  "model_version": "phase2-gravity-only",
+  "frozen_twin": true,
+  "dt": 0.01666666753590107,
+  "tolerance": 1e-05,
+  "config": {
+    "gravity": 20.0,
+    "jump_velocity": 8.0,
+    "ground_y": 0.0
+  },
+  "cases": [
+    {
+      "name": "rest_on_ground",
+      "note": "Grounded entity with no input must be bit-identical after 60 frames.",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "expected_at": {}
+    },
+    {
+      "name": "free_fall_and_land",
+      "note": "Drop from y=5; must land exactly on ground_y with vel.y=0 and grounded=true.",
+      "initial": {
+        "pos": [
+          0.0,
+          5.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": false,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "expected_at": {
+        "0": {
+          "pos": [
+            0.0,
+            4.994444370269775,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            -0.3333333432674408,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "30": {
+          "pos": [
+            0.0,
+            2.244443893432617,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            -10.333332061767578,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "59": {
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 0
+        }
+      }
+    },
+    {
+      "name": "jump_apex",
+      "note": "Jump then 23 idle frames; still airborne near apex.",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": true
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          1.5333329439163208,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          -1.4901161193847656e-06,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": false,
+        "move_state": 3
+      },
+      "expected_at": {
+        "0": {
+          "pos": [
+            0.0,
+            0.12777778506278992,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            7.666666507720947,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "12": {
+          "pos": [
+            0.0,
+            1.2277776002883911,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            3.6666650772094727,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "23": {
+          "pos": [
+            0.0,
+            1.5333329439163208,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            -1.4901161193847656e-06,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        }
+      }
+    },
+    {
+      "name": "jump_full_arc",
+      "note": "Full jump arc; must be grounded at the end.",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": true
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "expected_at": {
+        "0": {
+          "pos": [
+            0.0,
+            0.12777778506278992,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            7.666666507720947,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "24": {
+          "pos": [
+            0.0,
+            1.5277773141860962,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            -0.3333348333835602,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "48": {
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 0
+        }
+      }
+    },
+    {
+      "name": "airborne_jump_ignored",
+      "note": "Jump pressed while airborne must have no effect.",
+      "initial": {
+        "pos": [
+          0.0,
+          3.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": false,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": true
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.4166664183139801,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          -9.999999046325684,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": false,
+        "move_state": 3
+      },
+      "expected_at": {
+        "0": {
+          "pos": [
+            0.0,
+            2.9944443702697754,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            -0.3333333432674408,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        }
+      }
+    },
+    {
+      "name": "double_jump_after_landing",
+      "note": "Second jump only takes effect once grounded again.",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "jump": true
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": true
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        },
+        {
+          "jump": false
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "expected_at": {
+        "0": {
+          "pos": [
+            0.0,
+            0.12777778506278992,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            7.666666507720947,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "60": {
+          "pos": [
+            0.0,
+            0.12777778506278992,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            7.666666507720947,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "61": {
+          "pos": [
+            0.0,
+            0.25,
+            0.0
+          ],
+          "vel": [
+            0.0,
+            7.3333330154418945,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        }
+      }
+    }
+  ],
+  "_frozen_twin_note": "Also run against server/src/sim.rs. The Rust twin is frozen at gravity-only (AGENTS rule 7), so only vectors it can reproduce may carry this flag.",
+  "asserts_move_state": true
+}

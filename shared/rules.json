@@ -1,0 +1,32 @@
+{
+  "_comment": "THE FOUNDATION'S RULES, AS THIS GAME SETS THEM (DECISIONS #154). server/build.rs compiles this into the module, and the client reads it (foundation/core/rules.gd). Change a number, republish (tools/publish.sh), restart. Movement has its own file (movement_config.json); a genre's content has its own (shared/fishing/).",
+  "version": 1,
+  "player": {
+    "_comment": "A NEW player, as client_connected makes one. A genre adds its own starting state in game::on_player_created.",
+    "max_health": 100.0
+  },
+  "interact_range_m": 3.0,
+  "sessions": [
+    {
+      "_comment": "Session kind 0, the one client_connected joins: fishing's rounds. The machine goes round the phases in this order; entering phase 0 (LOBBY) starts a new round (scores reset, a fresh seed). Seconds 0 holds a phase until a reducer moves it on. Phases 0-3 are the foundation's (LOBBY, PLAYING, RESULTS, SHOP); a genre numbers its own from 4.",
+      "kind": 0,
+      "lobby": {
+        "_comment": "THE LOBBY (DECISIONS #174). ready_up: the round starts as soon as every player here has said they are ready (R), when there are at least min_players of them; otherwise when the lobby's time runs out. teams: the teams a player picks from in the lobby (T), by name, numbered in this order; empty for none. A new player is put on the smallest team.",
+        "ready_up": true,
+        "min_players": 1,
+        "teams": []
+      },
+      "match": {
+        "_comment": "THE MATCH (DECISIONS #182): the rounds a world plays from the first player's arrival until the last one leaves, counted for players from round 1. wait_s: how long the first lobby of a match waits for its players (0: with ready_up, until every player here is ready; without, the lobby's own seconds). end_after_empty_s: how long a world may have no player online before its match ends, so a dropped player can come back to it; after that the world waits, and nothing is played or counted.",
+        "wait_s": 0,
+        "end_after_empty_s": 60
+      },
+      "phases": [
+        { "phase": 0, "name": "lobby", "seconds": 30 },
+        { "phase": 1, "name": "playing", "seconds": 180 },
+        { "phase": 2, "name": "results", "seconds": 20 },
+        { "phase": 3, "name": "shop", "seconds": 25 }
+      ]
+    }
+  ]
+}

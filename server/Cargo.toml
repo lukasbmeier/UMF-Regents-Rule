@@ -1,0 +1,27 @@
+[package]
+name = "umf_module"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]   # cdylib for the WASM module; rlib so tests/golden.rs can link sim
+
+[dependencies]
+# Must match the server's minor. Verified against 2.10.0 docs; `spacetime version` on the host.
+spacetimedb = { version = "2.10", features = ["unstable"] }   # "unstable" only for #[client_visibility_filter] (RLS)
+# sim.rs derives SpacetimeType from here, not from `spacetimedb`, so the golden harness links natively.
+spacetimedb-lib = "2.10"
+log = "0.4"
+
+[build-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

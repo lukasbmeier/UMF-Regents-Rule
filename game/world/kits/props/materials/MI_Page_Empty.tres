@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://btog3vlu1ivlq"]
+
+[ext_resource type="Shader" uid="uid://c70dlam03qrnj" path="res://game/world/kits/props/materials/M_Pages.tres" id="1_64nhn"]
+[ext_resource type="Texture2D" uid="uid://dc28fit4wedwt" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/T_Page_2.png" id="2_3n2gf"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_64nhn")
+shader_parameter/Color_A = Color(0.443137, 0.372549, 0.203922, 1)
+shader_parameter/Color_B = Color(0.72549, 0.611765, 0.407843, 1)
+shader_parameter/Has_Text = false
+shader_parameter/Ink_Intensity = 0.0
+shader_parameter/Page = ExtResource("2_3n2gf")

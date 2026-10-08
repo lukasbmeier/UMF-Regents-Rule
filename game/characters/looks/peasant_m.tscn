@@ -1,0 +1,21 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://game/characters/modular_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Regular_Male_OnlyHead.gltf" id="2"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Peasant_Arms.gltf" id="3"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Peasant_Body.gltf" id="4"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Peasant_Legs.gltf" id="5"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Male_Peasant_Feet.gltf" id="6"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Eyebrows_Regular.gltf" id="7"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_Buzzed.gltf" id="8"]
+[ext_resource type="PackedScene" path="res://game/characters/quaternius/models/Hair_Beard.gltf" id="9"]
+[ext_resource type="Texture2D" path="res://game/characters/quaternius/textures/T_Regular_Male_Light_BaseColor.png" id="10"]
+
+[node name="PeasantM" type="Node3D"]
+script = ExtResource("1")
+head = ExtResource("2")
+body = &"male"
+parts = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9")])
+skin_texture = ExtResource("10")
+skin_tint = Color(1.0, 0.93, 0.86, 1)
+hair_color = Color(0.3, 0.19, 0.1, 1)

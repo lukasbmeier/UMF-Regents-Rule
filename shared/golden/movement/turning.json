@@ -1,0 +1,1490 @@
+{
+  "name": "turning",
+  "frozen_twin": false,
+  "model_version": "phase4-reversal-braking",
+  "dt": 0.016666666666666666,
+  "tolerance": 1e-05,
+  "config": {
+    "_comment": "Single source of truth for movement tunables. Godot imports this via foundation/tools/movement_config_codegen.gd; the Rust module bakes it in via build.rs. Never edit MovementConfig.tres or movement_config.rs by hand.",
+    "schema_version": 1,
+    "walk_speed": 5.0,
+    "run_speed": 5.0,
+    "sprint_speed": 8.0,
+    "strafe_speed_mult": 1.0,
+    "back_speed_mult": 1.0,
+    "acceleration": 70.0,
+    "friction": 60.0,
+    "air_control": 0.3,
+    "jump_velocity": 8.0,
+    "gravity": 20.0,
+    "max_slope_deg": 45.0,
+    "coyote_time_sec": 0.0,
+    "ground_y": 0.0,
+    "client_tick_hz": 60,
+    "server_tick_hz": 20,
+    "input_batch_size": 3,
+    "reconcile_accept_epsilon": 0.02,
+    "reconcile_snap_threshold": 1.0,
+    "reconcile_smooth_time": 0.1,
+    "remote_interp_delay": 0.1
+  },
+  "note": "Reversal braking (DECISIONS #81). NumPy float32 mirroring movement_model.gd, with GDScript's f64 scalar products rounded once where GDScript does. GDScript-only: the frozen twin has no horizontal movement.",
+  "cases": [
+    {
+      "name": "reverse_at_walk_brakes",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          -1.0361106395721436
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          5.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 7
+      },
+      "expected_at": {
+        "29": {
+          "pos": [
+            0.0,
+            0.0,
+            -2.3611111640930176
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            -5.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        },
+        "32": {
+          "pos": [
+            0.0,
+            0.0,
+            -2.394444227218628
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            1.500000238418579
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        },
+        "49": {
+          "pos": [
+            0.0,
+            0.0,
+            -1.0361106395721436
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            5.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        }
+      }
+    },
+    {
+      "name": "reverse_at_sprint_brakes",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": -1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        },
+        {
+          "move_y": 1.0,
+          "sprint": true
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          -1.9722214937210083
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          8.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 2
+      },
+      "expected_at": {
+        "39": {
+          "pos": [
+            0.0,
+            0.0,
+            -4.941667556762695
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            -8.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 2
+        },
+        "42": {
+          "pos": [
+            0.0,
+            0.0,
+            -5.125000953674316
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            -1.4999995231628418
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 2
+        },
+        "69": {
+          "pos": [
+            0.0,
+            0.0,
+            -1.9722214937210083
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            8.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 2
+        }
+      }
+    },
+    {
+      "name": "quarter_turn_does_not_brake",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        },
+        {
+          "move_x": 1.0
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          1.4554020166397095,
+          0.0,
+          -2.572376012802124
+        ],
+        "vel": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 7
+      },
+      "expected_at": {
+        "29": {
+          "pos": [
+            0.0,
+            0.0,
+            -2.3611111640930176
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            -5.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        },
+        "31": {
+          "pos": [
+            0.0412478968501091,
+            0.0,
+            -2.486530065536499
+          ],
+          "vel": [
+            1.6499156951904297,
+            0.0,
+            -3.3500843048095703
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        },
+        "49": {
+          "pos": [
+            1.4554020166397095,
+            0.0,
+            -2.572376012802124
+          ],
+          "vel": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        }
+      }
+    },
+    {
+      "name": "shallow_turn_does_not_brake",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        },
+        {
+          "move_x": 0.6,
+          "move_y": -0.8
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.7053399682044983,
+          0.0,
+          -3.3759970664978027
+        ],
+        "vel": [
+          3.0,
+          0.0,
+          -4.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 7
+      },
+      "expected_at": {
+        "44": {
+          "pos": [
+            0.7053399682044983,
+            0.0,
+            -3.3759970664978027
+          ],
+          "vel": [
+            3.0,
+            0.0,
+            -4.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        }
+      }
+    },
+    {
+      "name": "reverse_in_air_is_limited",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0,
+          "jump": true
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          1.516666293144226,
+          -2.2261109352111816
+        ],
+        "vel": [
+          0.0,
+          0.9999985694885254,
+          4.400000095367432
+        ],
+        "yaw": 0.0,
+        "grounded": false,
+        "move_state": 3
+      },
+      "expected_at": {
+        "30": {
+          "pos": [
+            0.0,
+            0.12777778506278992,
+            -2.444444417953491
+          ],
+          "vel": [
+            0.0,
+            7.666666507720947,
+            -5.0
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        },
+        "50": {
+          "pos": [
+            0.0,
+            1.516666293144226,
+            -2.2261109352111816
+          ],
+          "vel": [
+            0.0,
+            0.9999985694885254,
+            4.400000095367432
+          ],
+          "yaw": 0.0,
+          "grounded": false,
+          "move_state": 3
+        }
+      }
+    },
+    {
+      "name": "release_then_reverse",
+      "initial": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 0
+      },
+      "inputs": [
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {
+          "move_y": -1.0
+        },
+        {},
+        {},
+        {},
+        {},
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        },
+        {
+          "move_y": 1.0
+        }
+      ],
+      "expected_final": {
+        "pos": [
+          0.0,
+          0.0,
+          -1.4166662693023682
+        ],
+        "vel": [
+          0.0,
+          0.0,
+          5.0
+        ],
+        "yaw": 0.0,
+        "grounded": true,
+        "move_state": 7
+      },
+      "expected_at": {
+        "33": {
+          "pos": [
+            0.0,
+            0.0,
+            -2.527777671813965
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        },
+        "48": {
+          "pos": [
+            0.0,
+            0.0,
+            -1.4166662693023682
+          ],
+          "vel": [
+            0.0,
+            0.0,
+            5.0
+          ],
+          "yaw": 0.0,
+          "grounded": true,
+          "move_state": 7
+        }
+      }
+    }
+  ],
+  "asserts_move_state": true
+}

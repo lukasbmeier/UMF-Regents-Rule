@@ -1,0 +1,751 @@
+[gd_scene load_steps=187 format=3 uid="uid://d37gb51xk7du8"]
+
+[ext_resource type="PackedScene" uid="uid://bqi6jegyyqrd8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_1.gltf" id="1_0xblc"]
+[ext_resource type="PackedScene" uid="uid://bsp37aqv7bfbu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_2.gltf" id="2_5geho"]
+[ext_resource type="PackedScene" uid="uid://ctyin1er1pcmf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_3.gltf" id="3_bhesj"]
+[ext_resource type="PackedScene" uid="uid://bhvsxiwlj41jq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_4.gltf" id="4_xtsei"]
+[ext_resource type="PackedScene" uid="uid://dud2vk4483rrq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_5.gltf" id="5_1p85v"]
+[ext_resource type="PackedScene" uid="uid://c5kw4dc37vty8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_6.gltf" id="6_6f8qw"]
+[ext_resource type="PackedScene" uid="uid://c6xdwwai23ryc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_7.gltf" id="7_wmi72"]
+[ext_resource type="PackedScene" uid="uid://b7sn88f5pwg7j" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Potion_8.gltf" id="8_m7lv1"]
+[ext_resource type="PackedScene" uid="uid://dq8eqdd8fgq4w" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/SmallBottle.gltf" id="9_p5etl"]
+[ext_resource type="PackedScene" uid="uid://cle14t05hg8qd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/SmallBottles_1.gltf" id="10_on0wt"]
+[ext_resource type="PackedScene" uid="uid://bbafllqo0cgn2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/SmallBottles_2.gltf" id="11_24rna"]
+[ext_resource type="PackedScene" uid="uid://tdgdfgjp1mx6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Table_Plate.gltf" id="12_dv65r"]
+[ext_resource type="PackedScene" uid="uid://dy23i24wbkvc7" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Table_Fork.gltf" id="13_dvygu"]
+[ext_resource type="PackedScene" uid="uid://cqcdfaqf7r6ls" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Table_Knife.gltf" id="14_7yl3b"]
+[ext_resource type="PackedScene" uid="uid://w47c8611pkv5" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Table_Spoon.gltf" id="15_cj8sg"]
+[ext_resource type="PackedScene" uid="uid://b1cpfw5i1o7yq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Skull_Top.gltf" id="16_xrewk"]
+[ext_resource type="PackedScene" uid="uid://d3kbx5snr4ogv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Skull.gltf" id="17_l2rx4"]
+[ext_resource type="PackedScene" uid="uid://ckbuqoeq7qd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Scroll_2.gltf" id="18_n2bf2"]
+[ext_resource type="PackedScene" uid="uid://c5f3fhfj7rju0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Scroll_1.gltf" id="19_02lfv"]
+[ext_resource type="PackedScene" uid="uid://bew15upyywijm" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pouch_Small.gltf" id="20_yq6yp"]
+[ext_resource type="PackedScene" uid="uid://cexmv3osy8mvi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pouch_Large.gltf" id="21_me0yh"]
+[ext_resource type="PackedScene" uid="uid://cwnyuwsuog2xj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Parchment.gltf" id="22_pwuvi"]
+[ext_resource type="PackedScene" uid="uid://cy0jff2nkyvr4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Single.gltf" id="23_nhygu"]
+[ext_resource type="PackedScene" uid="uid://cav33x3tr663x" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Stack_Large.gltf" id="24_k2ob1"]
+[ext_resource type="PackedScene" uid="uid://bdghia3yn3bds" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Page_Stack_Small.gltf" id="25_cib87"]
+[ext_resource type="PackedScene" uid="uid://ceovx0h78i44x" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Mug.gltf" id="26_7hl7d"]
+[ext_resource type="PackedScene" uid="uid://dcxi4djd2rosa" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Coin.gltf" id="27_h6jvr"]
+[ext_resource type="PackedScene" uid="uid://dxoqgss460glb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Coin_Pile.gltf" id="28_mqnmk"]
+[ext_resource type="PackedScene" uid="uid://cfvyykghpy0d6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Coin_Pile_2.gltf" id="29_8ijqi"]
+[ext_resource type="PackedScene" uid="uid://bjc7sfa2mjxr3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Candle_1.gltf" id="30_n4ecs"]
+[ext_resource type="PackedScene" uid="uid://y44m2p23uguj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Candle_2.gltf" id="31_p80fq"]
+[ext_resource type="PackedScene" uid="uid://dnxiq5osiayl8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Candle_3.gltf" id="32_svhmb"]
+[ext_resource type="PackedScene" uid="uid://di5rtsyhfua8m" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chalice.gltf" id="33_xcyan"]
+[ext_resource type="PackedScene" uid="uid://dawdc565jaobg" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chalice_Golden.gltf" id="34_foy5c"]
+[ext_resource type="PackedScene" uid="uid://b8ok3v50id865" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_1.gltf" id="35_a1dnj"]
+[ext_resource type="PackedScene" uid="uid://cvhjkcb1gnpcb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_2.gltf" id="36_gnkjl"]
+[ext_resource type="PackedScene" uid="uid://cmge3fpp74iut" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_3.gltf" id="37_c3wya"]
+[ext_resource type="PackedScene" uid="uid://cagplpt1w0v2f" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_4.gltf" id="38_yb0xw"]
+[ext_resource type="PackedScene" uid="uid://gyxw3hxhpeep" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_5.gltf" id="39_81jwi"]
+[ext_resource type="PackedScene" uid="uid://pjmx318ue1pf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_6.gltf" id="40_eb0pl"]
+[ext_resource type="PackedScene" uid="uid://dqdqy3nu7ric" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_7.gltf" id="41_qo65v"]
+[ext_resource type="PackedScene" uid="uid://bbytcwm0rclp1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Open.gltf" id="42_048kb"]
+[ext_resource type="PackedScene" uid="uid://bd31md63d2th2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Simplified_Single.gltf" id="43_pp2gh"]
+[ext_resource type="PackedScene" uid="uid://f35j5o8wnc2q" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_1.gltf" id="44_65f3s"]
+[ext_resource type="PackedScene" uid="uid://dw4aogjs4q560" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_2.gltf" id="45_8vvqk"]
+[ext_resource type="PackedScene" uid="uid://ddcdv1trtvj3s" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_3.gltf" id="46_61jhm"]
+[ext_resource type="PackedScene" uid="uid://dm3whdq30vixb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Book_Stack_4.gltf" id="47_m0bfw"]
+[ext_resource type="PackedScene" uid="uid://bg3mbr61se8x0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick_Triple.gltf" id="48_nngff"]
+[ext_resource type="PackedScene" uid="uid://bvejw31uyihmi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick.gltf" id="49_dw8gk"]
+[ext_resource type="PackedScene" uid="uid://5uqobcrhqqt1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_1.gltf" id="50_ul372"]
+[ext_resource type="PackedScene" uid="uid://dnw1eskwtgr1o" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_2.gltf" id="51_032o1"]
+[ext_resource type="PackedScene" uid="uid://dbvtrv5nfm3g3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Medium_3.gltf" id="52_u8fnt"]
+[ext_resource type="PackedScene" uid="uid://b6ywu3t3b2iy4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_3.gltf" id="53_nrcad"]
+[ext_resource type="PackedScene" uid="uid://b75brcx7fx3d7" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_2.gltf" id="54_2kalt"]
+[ext_resource type="PackedScene" uid="uid://cqhfivwxw5eio" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookGroup_Large_1.gltf" id="55_fa5hl"]
+[ext_resource type="PackedScene" uid="uid://b0u5e6ro1g0ee" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Rope_1.gltf" id="56_07ymn"]
+[ext_resource type="PackedScene" uid="uid://exa1rscxhc61" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Rope_2.gltf" id="57_c4vfk"]
+[ext_resource type="PackedScene" uid="uid://o1s2gbbkiuvf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Rope_3.gltf" id="58_mox8c"]
+[ext_resource type="PackedScene" uid="uid://blw5oyenk1jol" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/BookStand.gltf" id="59_3mpka"]
+[ext_resource type="PackedScene" uid="uid://caix7bti1omox" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bag.gltf" id="60_oxsc4"]
+[ext_resource type="PackedScene" uid="uid://b2hx7hwslt33a" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bench.gltf" id="61_vpowj"]
+[ext_resource type="PackedScene" uid="uid://dws8dsb8s5aan" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bench_MetalSides.gltf" id="62_qj3vl"]
+[ext_resource type="PackedScene" uid="uid://bxsp7pvsgrihm" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bottle_1.gltf" id="63_c1hvt"]
+[ext_resource type="PackedScene" uid="uid://pwk034u8ptr8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bottle_2.gltf" id="64_jof68"]
+[ext_resource type="PackedScene" uid="uid://dh7ynls17agbi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bucket_Metal.gltf" id="65_543a5"]
+[ext_resource type="PackedScene" uid="uid://lcvsuvaqxbs4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bucket_Wooden_1.gltf" id="66_t42w4"]
+[ext_resource type="PackedScene" uid="uid://b72rjixedmba8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bucket_Wooden_2.gltf" id="67_r4yhq"]
+[ext_resource type="PackedScene" uid="uid://c4x12xa2nw12k" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CandleStick_Stand.gltf" id="68_pcy4x"]
+[ext_resource type="PackedScene" uid="uid://byxbavkwnaoam" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chandelier.gltf" id="69_we86l"]
+[ext_resource type="PackedScene" uid="uid://ckxde0ql1onkc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chandelier_Large.gltf" id="70_f7a57"]
+[ext_resource type="PackedScene" uid="uid://ded1dade2v85t" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pan_1.gltf" id="71_2m12v"]
+[ext_resource type="PackedScene" uid="uid://cc5m7infumvra" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pan_2.gltf" id="72_cxfsl"]
+[ext_resource type="PackedScene" uid="uid://bg74i7wx8s36g" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pot_1.gltf" id="73_kyf8p"]
+[ext_resource type="PackedScene" uid="uid://ba0djjtfqoe7g" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pot_1_Lid.gltf" id="74_fo3n1"]
+[ext_resource type="PackedScene" uid="uid://brw1m46dyto6a" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pot_2.gltf" id="75_s87j0"]
+[ext_resource type="PackedScene" uid="uid://b1ts5my54goh0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pot_2_Lid.gltf" id="76_dvmq0"]
+[ext_resource type="PackedScene" uid="uid://cawkw7srsllik" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Torch_Metal.gltf" id="77_yd40i"]
+[ext_resource type="PackedScene" uid="uid://ccdug30vov1ek" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FirePit.gltf" id="78_euyr8"]
+[ext_resource type="PackedScene" uid="uid://b6lie4ctwdtb5" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Runes.gltf" id="79_0a4c6"]
+[ext_resource type="PackedScene" uid="uid://cj2ywxsf5hgg0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Carrot.gltf" id="80_65f5o"]
+[ext_resource type="PackedScene" uid="uid://bimsm3eci1chq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Leek.gltf" id="81_fb701"]
+[ext_resource type="PackedScene" uid="uid://coxlyyl18l5ad" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Radish.gltf" id="82_wnkv3"]
+[ext_resource type="PackedScene" uid="uid://c3h8a4bnbwaye" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_Leek.gltf" id="83_0p7xf"]
+[ext_resource type="PackedScene" uid="uid://d0eoopgxqgmfh" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_Oranges.gltf" id="84_roybr"]
+[ext_resource type="PackedScene" uid="uid://b8akok8vcu36a" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_Radish.gltf" id="85_n46bl"]
+[ext_resource type="PackedScene" uid="uid://cauxu311epi5d" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_Apple.gltf" id="86_uwkhg"]
+[ext_resource type="PackedScene" uid="uid://c0jnldi50pv4q" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_Carrot.gltf" id="87_q3diu"]
+[ext_resource type="PackedScene" uid="uid://rplaaond4tys" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/FarmCrate_GreenApples.gltf" id="88_6b25d"]
+[ext_resource type="PackedScene" uid="uid://bjyk3nw77usmg" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stool.gltf" id="89_bliwx"]
+[ext_resource type="PackedScene" uid="uid://dcermvf1wlip1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_1.gltf" id="90_a2t2w"]
+[ext_resource type="PackedScene" uid="uid://diu5jc1ividh2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_2.gltf" id="91_t6uyg"]
+[ext_resource type="PackedScene" uid="uid://d0colwbujb0nv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_3.gltf" id="92_uoa2s"]
+[ext_resource type="PackedScene" uid="uid://cy281h7fc4p2r" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_4.gltf" id="93_orx3p"]
+[ext_resource type="PackedScene" uid="uid://caxbxqqtuu7v4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_Rubble_Large.gltf" id="94_vmyfi"]
+[ext_resource type="PackedScene" uid="uid://jjwipqnt5hw2" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_Rubble_Medium.gltf" id="95_xxibc"]
+[ext_resource type="PackedScene" uid="uid://1utl13u50041" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Vase_Rubble_Small.gltf" id="96_kb5l5"]
+[ext_resource type="PackedScene" uid="uid://c75qgem4bx0pq" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chest_Legendary.gltf" id="97_5l1vd"]
+[ext_resource type="PackedScene" uid="uid://v1og5te2o1j6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chest_Wood.gltf" id="98_8xdih"]
+[ext_resource type="PackedScene" uid="uid://brjnil7g8tiwk" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Whetstone.gltf" id="99_f5y8d"]
+[ext_resource type="PackedScene" uid="uid://dm5cpbtelggnc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/WeaponStand.gltf" id="100_sh5n0"]
+[ext_resource type="PackedScene" uid="uid://cv7vyasv1df0j" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chair_1.gltf" id="101_jek24"]
+[ext_resource type="PackedScene" uid="uid://dfr5l6juqwqdm" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chair_2.gltf" id="102_we328"]
+[ext_resource type="PackedScene" uid="uid://bw45kxknprakb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Chair_3.gltf" id="103_nye7t"]
+[ext_resource type="PackedScene" uid="uid://b3cgsqipdsxt7" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Dummy.gltf" id="104_8djlv"]
+[ext_resource type="PackedScene" uid="uid://cga6ol8vhhiad" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Lantern_Wall.gltf" id="105_285ho"]
+[ext_resource type="PackedScene" uid="uid://bnbndo75ea4hy" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shelf_Small.gltf" id="106_6hc2m"]
+[ext_resource type="PackedScene" uid="uid://cgthnti7nhph6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shelf_Small_Bottles.gltf" id="107_g6xsv"]
+[ext_resource type="PackedScene" uid="uid://diuggvcmsem0k" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Dresser_1.gltf" id="108_y6q7y"]
+[ext_resource type="PackedScene" uid="uid://guw4k7xpql7u" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Nightstand_Drawer.gltf" id="109_4gn14"]
+[ext_resource type="PackedScene" uid="uid://k5yc2cfxvdgw" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Nightstand_Shelf.gltf" id="110_fq2g6"]
+[ext_resource type="PackedScene" uid="uid://bfv8fljr7ixmt" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Peg_Rack.gltf" id="111_py08s"]
+[ext_resource type="PackedScene" uid="uid://bds6yi11nby0f" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shelf_Arch.gltf" id="112_nt4xi"]
+[ext_resource type="PackedScene" uid="uid://do3yf7lyopm0g" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shelf_Simple.gltf" id="113_0pjnp"]
+[ext_resource type="PackedScene" uid="uid://bslslvxlh78vu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Anvil.gltf" id="114_cvs0e"]
+[ext_resource type="PackedScene" uid="uid://dv66mtj4j0sfw" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Anvil_Log.gltf" id="115_gtyf4"]
+[ext_resource type="PackedScene" uid="uid://d2volyfali753" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bellows.gltf" id="116_f70in"]
+[ext_resource type="PackedScene" uid="uid://bye3veweuh8y3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shovel_Steel.gltf" id="117_nt7vs"]
+[ext_resource type="PackedScene" uid="uid://brehe525ba7v8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pickaxe_Steel.gltf" id="118_3ob7t"]
+[ext_resource type="PackedScene" uid="uid://b5p1uxldpipyn" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hoe_Steel.gltf" id="119_3p7ma"]
+[ext_resource type="PackedScene" uid="uid://c3oqnhfcew65s" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Large_Steel.gltf" id="120_5m2ww"]
+[ext_resource type="PackedScene" uid="uid://5nvpvgrfx5ve" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Medium_Steel.gltf" id="121_help0"]
+[ext_resource type="PackedScene" uid="uid://h5ndxnk62ij" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Small_Steel_Steel.gltf" id="122_j0mkq"]
+[ext_resource type="PackedScene" uid="uid://rsfrrg8ly3a0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sword_Steel.gltf" id="123_ny7gm"]
+[ext_resource type="PackedScene" uid="uid://3ex2x46mlhr" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Dagger_Steel_Steel.gltf" id="124_fjcvv"]
+[ext_resource type="PackedScene" uid="uid://bypy4exovww7e" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shield_Metal.gltf" id="125_55uqo"]
+[ext_resource type="PackedScene" uid="uid://cyt6to08jw8wr" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shield_Wooden.gltf" id="126_wu1it"]
+[ext_resource type="PackedScene" uid="uid://cnktei81kbpf8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Shovel_Bronze.gltf" id="127_20q0x"]
+[ext_resource type="PackedScene" uid="uid://i11ut6gomx5d" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Pickaxe_Bronze.gltf" id="128_l6sdc"]
+[ext_resource type="PackedScene" uid="uid://d04ujxh8cv6sk" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hoe_Bronze.gltf" id="129_s8hxf"]
+[ext_resource type="PackedScene" uid="uid://dkjbvt5l3km3u" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Large_Bronze.gltf" id="130_3hahr"]
+[ext_resource type="PackedScene" uid="uid://bwovcxi1jaeuw" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Medium_Bronze.gltf" id="131_mfhng"]
+[ext_resource type="PackedScene" uid="uid://d1iaabyuvjrpf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Small_Bronze.gltf" id="132_ph43f"]
+[ext_resource type="PackedScene" uid="uid://cmbtqkbm2q3p3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Axe_Double_Steel.gltf" id="133_3a2ae"]
+[ext_resource type="PackedScene" uid="uid://mxr1vewkqssk" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Axe_Steel.gltf" id="134_0t67y"]
+[ext_resource type="PackedScene" uid="uid://cvjjwqthsbaqj" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sword_Bronze.gltf" id="135_p5mg7"]
+[ext_resource type="PackedScene" uid="uid://bgoubylvq8blu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Dagger_Bronze.gltf" id="136_3rgwf"]
+[ext_resource type="PackedScene" uid="uid://bthertqjgurpd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Axe_Double_Bronze.gltf" id="137_wegwb"]
+[ext_resource type="PackedScene" uid="uid://bir64wqs1lltg" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Axe_Bronze.gltf" id="138_gu6lp"]
+[ext_resource type="PackedScene" uid="uid://ytxkqwdkmd0j" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Hammer_Rack.gltf" id="139_my67d"]
+[ext_resource type="PackedScene" uid="uid://5ogatf8t5wp6" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_1_Cloth.gltf" id="140_4oynq"]
+[ext_resource type="PackedScene" uid="uid://dcwt772h8jbft" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_2_Cloth.gltf" id="141_u7to7"]
+[ext_resource type="PackedScene" uid="uid://chs3sede3vkow" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_1.gltf" id="142_q73lf"]
+[ext_resource type="PackedScene" uid="uid://jshmteukclrb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_2.gltf" id="143_6e8t6"]
+[ext_resource type="PackedScene" uid="uid://b1ir6sbstjujg" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_Vertical_1.gltf" id="144_vj2yo"]
+[ext_resource type="PackedScene" uid="uid://6c867vklc4qs" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_Vertical_2.gltf" id="145_mpn3x"]
+[ext_resource type="PackedScene" uid="uid://gqrbkml3ef7q" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Barrel.gltf" id="146_7gio4"]
+[ext_resource type="PackedScene" uid="uid://bsmrmfx0om5dd" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Barrel_Dark.gltf" id="147_ebf1j"]
+[ext_resource type="PackedScene" uid="uid://cqop7q64uvdl1" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Barrel_Apples.gltf" id="148_ovkom"]
+[ext_resource type="PackedScene" uid="uid://b450dnfqj5hsx" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Barrel_Holder.gltf" id="149_5c6pe"]
+[ext_resource type="PackedScene" uid="uid://3r5n7ca883r0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Crate_Metal.gltf" id="150_xq53g"]
+[ext_resource type="PackedScene" uid="uid://0h56puxaycga" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Crate_Wooden.gltf" id="151_hkejm"]
+[ext_resource type="PackedScene" uid="uid://cg52mdo53q8pv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Desk.gltf" id="152_7l0vk"]
+[ext_resource type="PackedScene" uid="uid://bmpfo3oalicbu" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cage_Large.gltf" id="153_y1uah"]
+[ext_resource type="PackedScene" uid="uid://hi5ckoelg1p" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cage_Small.gltf" id="154_tuld6"]
+[ext_resource type="PackedScene" uid="uid://bq1x8y743dyy3" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/CampfireTripod.gltf" id="155_dhbja"]
+[ext_resource type="PackedScene" uid="uid://cblrjfnl8vusc" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cauldron.gltf" id="156_nrbus"]
+[ext_resource type="PackedScene" uid="uid://ijbdb1bu2tgv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Table_Large.gltf" id="157_81w6q"]
+[ext_resource type="PackedScene" uid="uid://cmkjcprntwmyi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Workbench.gltf" id="158_u8vxm"]
+[ext_resource type="PackedScene" uid="uid://dvvydn0rul8vv" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Workbench_Drawers.gltf" id="159_71nc3"]
+[ext_resource type="PackedScene" uid="uid://ihh6kqd5u0h8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Workbench_Vice.gltf" id="160_4q3rh"]
+[ext_resource type="PackedScene" uid="uid://dxakq3j7ybhhy" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bookcase_1.gltf" id="161_k0ma0"]
+[ext_resource type="PackedScene" uid="uid://bfbwm0vr0ugyh" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bookcase_2.gltf" id="162_j3d43"]
+[ext_resource type="PackedScene" uid="uid://btst6tnxnqoqa" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Cabinet.gltf" id="163_in3j1"]
+[ext_resource type="PackedScene" uid="uid://cyhv4ye72drcf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stall_Blacksmith.gltf" id="164_h1up6"]
+[ext_resource type="PackedScene" uid="uid://c1ar288gpffl0" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stall_Potions.gltf" id="165_6kmcd"]
+[ext_resource type="PackedScene" uid="uid://2jjbi74fooow" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stall_Vegetables_Full.gltf" id="166_1ya8m"]
+[ext_resource type="PackedScene" uid="uid://c3juv8q35iny4" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stall_Empty.gltf" id="167_aagaj"]
+[ext_resource type="PackedScene" uid="uid://b6vj808oqs3h" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Stall_Cart_Empty.gltf" id="168_bw3oy"]
+[ext_resource type="PackedScene" uid="uid://bysik6ojcatrg" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Bunk2.gltf" id="169_5krub"]
+[ext_resource type="PackedScene" uid="uid://8ehqddq0whd7" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Bunk.gltf" id="170_m2afg"]
+[ext_resource type="PackedScene" uid="uid://l0bcjnnlsrri" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Double2.gltf" id="171_64jbr"]
+[ext_resource type="PackedScene" uid="uid://dieq7u8501xxk" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Double.gltf" id="172_430ne"]
+[ext_resource type="PackedScene" uid="uid://bh08ytmgvjeo8" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Twin1.gltf" id="173_w18wl"]
+[ext_resource type="PackedScene" uid="uid://de2nuu4rnkpxh" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Twin2.gltf" id="174_ypo03"]
+[ext_resource type="PackedScene" uid="uid://dcgoi2dce8vwb" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Bed_Twin3.gltf" id="175_m2wc7"]
+[ext_resource type="PackedScene" uid="uid://lyqxtpdto4ft" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Ladder.gltf" id="176_jqtb6"]
+[ext_resource type="PackedScene" uid="uid://k1p8jiqqlpkw" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Armory.gltf" id="177_6our3"]
+[ext_resource type="PackedScene" uid="uid://makskj5jdpcy" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Armory_2.gltf" id="178_5oqce"]
+[ext_resource type="PackedScene" uid="uid://cctfdkiuti1rw" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Blacksmith.gltf" id="179_r6wnl"]
+[ext_resource type="PackedScene" uid="uid://hkwddynd8w87" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Food.gltf" id="180_68qjs"]
+[ext_resource type="PackedScene" uid="uid://5fw8r3p01c8g" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Potions.gltf" id="181_7ll5s"]
+[ext_resource type="PackedScene" uid="uid://dyuaopc0tg0xt" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Sign_Pub.gltf" id="182_8vvru"]
+[ext_resource type="PackedScene" uid="uid://b31osvxxqxdqr" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Wagon.gltf" id="183_uwdd8"]
+[ext_resource type="PackedScene" uid="uid://djnniiiug4imi" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_SmallTriangles_Long.gltf" id="184_2da7m"]
+[ext_resource type="PackedScene" uid="uid://xr21ngoc3cvf" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_SmallTriangles_Medium.gltf" id="185_c0yru"]
+[ext_resource type="PackedScene" uid="uid://cn6v5obayuj3q" path="res://game/world/kits/props/fantasypropsmegakit/Meshes/Banner_SmallTriangles_Short.gltf" id="186_37d3h"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Potion_12" parent="." instance=ExtResource("1_0xblc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.0147, 0, 5.69304)
+
+[node name="Potion_22" parent="." instance=ExtResource("2_5geho")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.8639, 0, 5.69036)
+
+[node name="Potion_32" parent="." instance=ExtResource("3_bhesj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.6847, -2.98023e-08, 5.69296)
+
+[node name="Potion_42" parent="." instance=ExtResource("4_xtsei")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5048, 0, 5.70908)
+
+[node name="Potion_52" parent="." instance=ExtResource("5_1p85v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.3441, 0, 5.69982)
+
+[node name="Potion_62" parent="." instance=ExtResource("6_6f8qw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.1888, -2.98023e-08, 5.70457)
+
+[node name="Potion_72" parent="." instance=ExtResource("7_wmi72")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.0125, 0, 5.70628)
+
+[node name="Potion_82" parent="." instance=ExtResource("8_m7lv1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.7921, 0, 5.69994)
+
+[node name="SmallBottle2" parent="." instance=ExtResource("9_p5etl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5752, 0, 5.70685)
+
+[node name="SmallBottles_12" parent="." instance=ExtResource("10_on0wt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.3452, 0, 5.73147)
+
+[node name="SmallBottles_22" parent="." instance=ExtResource("11_24rna")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0037, 0, 5.71973)
+
+[node name="Table_Plate2" parent="." instance=ExtResource("12_dv65r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5435, 0, 5.74051)
+
+[node name="Table_Fork2" parent="." instance=ExtResource("13_dvygu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.2517, -5.96046e-08, 5.82718)
+
+[node name="Table_Knife2" parent="." instance=ExtResource("14_7yl3b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.1516, 0, 5.8128)
+
+[node name="Table_Spoon2" parent="." instance=ExtResource("15_cj8sg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.0719, 0.00750372, 5.8231)
+
+[node name="Skull_Top2" parent="." instance=ExtResource("16_xrewk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.0032, 0, 5.326)
+
+[node name="Skull2" parent="." instance=ExtResource("17_l2rx4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.198, 0, 5.32621)
+
+[node name="Scroll_22" parent="." instance=ExtResource("18_n2bf2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5074, 0, 5.35906)
+
+[node name="Scroll_12" parent="." instance=ExtResource("19_02lfv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.7814, 0, 5.36096)
+
+[node name="Pouch_Small2" parent="." instance=ExtResource("20_yq6yp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0512, 0, 5.37627)
+
+[node name="Pouch_Large2" parent="." instance=ExtResource("21_me0yh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.3395, 5.96046e-08, 5.37208)
+
+[node name="Parchment2" parent="." instance=ExtResource("22_pwuvi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.6463, 0, 5.32724)
+
+[node name="Page_Single2" parent="." instance=ExtResource("23_nhygu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.9723, 0, 5.33262)
+
+[node name="Page_Stack_Large2" parent="." instance=ExtResource("24_k2ob1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.2963, -5.96046e-08, 5.33487)
+
+[node name="Page_Stack_Small2" parent="." instance=ExtResource("25_cib87")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.7809, 5.96046e-08, 5.36612)
+
+[node name="Mug2" parent="." instance=ExtResource("26_7hl7d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.2067, 0, 5.37111)
+
+[node name="Coin2" parent="." instance=ExtResource("27_h6jvr")]
+transform = Transform3D(3.56722, 0, 0, 0, 3.56722, 0, 0, 0, 3.56722, -20.1597, 0.0790883, 5.39194)
+
+[node name="Coin_Pile2" parent="." instance=ExtResource("28_mqnmk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9044, 0, 5.36566)
+
+[node name="Coin_Pile_22" parent="." instance=ExtResource("29_8ijqi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5184, 0, 5.35761)
+
+[node name="Candle_12" parent="." instance=ExtResource("30_n4ecs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.3155, 0, 5.0533)
+
+[node name="Candle_22" parent="." instance=ExtResource("31_p80fq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.1444, 0, 5.04554)
+
+[node name="Candle_32" parent="." instance=ExtResource("32_svhmb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.9362, 0, 5.02594)
+
+[node name="Chalice2" parent="." instance=ExtResource("33_xcyan")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.6816, 0, 5.04319)
+
+[node name="Chalice_Golden2" parent="." instance=ExtResource("34_foy5c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5004, 0, 4.99992)
+
+[node name="Book_12" parent="." instance=ExtResource("35_a1dnj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.211, 0, 4.79052)
+
+[node name="Book_22" parent="." instance=ExtResource("36_gnkjl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.9037, 0, 4.82208)
+
+[node name="Book_32" parent="." instance=ExtResource("37_c3wya")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5961, 0, 4.79967)
+
+[node name="Book_42" parent="." instance=ExtResource("38_yb0xw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.2369, 0, 4.77329)
+
+[node name="Book_52" parent="." instance=ExtResource("39_81jwi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.9453, 0, 4.78964)
+
+[node name="Book_62" parent="." instance=ExtResource("40_eb0pl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.6364, 0, 4.77608)
+
+[node name="Book_72" parent="." instance=ExtResource("41_qo65v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.3382, 0, 4.7608)
+
+[node name="Book_Open2" parent="." instance=ExtResource("42_048kb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.8341, 0, 4.80898)
+
+[node name="Book_Simplified_Single2" parent="." instance=ExtResource("43_pp2gh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.4099, 0, 4.87865)
+
+[node name="Book_Stack_12" parent="." instance=ExtResource("44_65f3s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.8951, 0, 4.24708)
+
+[node name="Book_Stack_22" parent="." instance=ExtResource("45_8vvqk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.3926, 0, 4.26928)
+
+[node name="Book_Stack_32" parent="." instance=ExtResource("46_61jhm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.9398, 0, 4.27297)
+
+[node name="Book_Stack_42" parent="." instance=ExtResource("47_m0bfw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.4059, 0, 4.27494)
+
+[node name="CandleStick_Triple2" parent="." instance=ExtResource("48_nngff")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.7842, 0, 4.27939)
+
+[node name="CandleStick2" parent="." instance=ExtResource("49_dw8gk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.3848, 0, 4.24895)
+
+[node name="BookGroup_Medium_12" parent="." instance=ExtResource("50_ul372")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5145, 0, 4.30496)
+
+[node name="BookGroup_Medium_22" parent="." instance=ExtResource("51_032o1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.3394, 0, 4.31773)
+
+[node name="BookGroup_Medium_32" parent="." instance=ExtResource("52_u8fnt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.715, 0, 4.86299)
+
+[node name="BookGroup_Large_32" parent="." instance=ExtResource("53_nrcad")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.3832, 0, 3.87285)
+
+[node name="BookGroup_Large_22" parent="." instance=ExtResource("54_2kalt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.8265, 0, 3.83657)
+
+[node name="BookGroup_Large_12" parent="." instance=ExtResource("55_fa5hl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.8772, 0, 3.83237)
+
+[node name="Rope_12" parent="." instance=ExtResource("56_07ymn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.2778, 0, 3.28496)
+
+[node name="Rope_22" parent="." instance=ExtResource("57_c4vfk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5072, 0, 3.1896)
+
+[node name="Rope_32" parent="." instance=ExtResource("58_mox8c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.1827, 0, 3.25356)
+
+[node name="BookStand2" parent="." instance=ExtResource("59_3mpka")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5426, 0, 3.33733)
+
+[node name="Bag2" parent="." instance=ExtResource("60_oxsc4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.6419, 0, 3.24767)
+
+[node name="Bag3" parent="." instance=ExtResource("60_oxsc4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.7639, 0, 3.25309)
+
+[node name="Bench2" parent="." instance=ExtResource("61_vpowj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.7863, 0, 3.3066)
+
+[node name="Bench_MetalSides2" parent="." instance=ExtResource("62_qj3vl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.6379, 2.38419e-07, 3.3511)
+
+[node name="Bottle_12" parent="." instance=ExtResource("63_c1hvt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4893, 0, 4.23885)
+
+[node name="Bottle_22" parent="." instance=ExtResource("64_jof68")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.2048, 0, 4.20461)
+
+[node name="Bucket_Metal2" parent="." instance=ExtResource("65_543a5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.9086, 0, 4.76528)
+
+[node name="Bucket_Wooden_12" parent="." instance=ExtResource("66_t42w4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.3158, 0, 4.74321)
+
+[node name="Bucket_Wooden_22" parent="." instance=ExtResource("67_r4yhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.6497, 0, 4.76861)
+
+[node name="CandleStick_Stand2" parent="." instance=ExtResource("68_pcy4x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2452, 0, 4.11319)
+
+[node name="Chandelier2" parent="." instance=ExtResource("69_we86l")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.6974, 1.34899, 4.48591)
+
+[node name="Chandelier_Large2" parent="." instance=ExtResource("70_f7a57")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.7101, 2.49835, 4.43943)
+
+[node name="Pan_12" parent="." instance=ExtResource("71_2m12v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.9042, 0, 5.72472)
+
+[node name="Pan_22" parent="." instance=ExtResource("72_cxfsl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2931, 0, 5.82408)
+
+[node name="Pot_12" parent="." instance=ExtResource("73_kyf8p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.7438, 0, 5.74895)
+
+[node name="Pot_1_Lid2" parent="." instance=ExtResource("74_fo3n1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.0705, 0, 5.67412)
+
+[node name="Pot_22" parent="." instance=ExtResource("75_s87j0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.3506, 0, 5.67427)
+
+[node name="Pot_2_Lid2" parent="." instance=ExtResource("76_dvmq0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.6449, 0, 5.72907)
+
+[node name="Torch_Metal2" parent="." instance=ExtResource("77_yd40i")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.7538, 0, 5.58351)
+
+[node name="FirePit" parent="." instance=ExtResource("78_euyr8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.13288, 0, 4.52078)
+
+[node name="Runes2" parent="." instance=ExtResource("79_0a4c6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.49124, 0, 5.97582)
+
+[node name="Carrot2" parent="." instance=ExtResource("80_65f5o")]
+transform = Transform3D(1.75942, 0, 0, 0, 1.75942, 0, 0, 0, 1.75942, -7.6229, 0.746428, 4.62505)
+
+[node name="Leek2" parent="." instance=ExtResource("81_fb701")]
+transform = Transform3D(1.75942, 0, 0, 0, 1.75942, 0, 0, 0, 1.75942, -8.40268, 0.746428, 4.59689)
+
+[node name="Radish2" parent="." instance=ExtResource("82_wnkv3")]
+transform = Transform3D(1.75942, 0, 0, 0, 1.75942, 0, 0, 0, 1.75942, -8.04295, 0.746428, 4.67959)
+
+[node name="FarmCrate_Leek2" parent="." instance=ExtResource("83_0p7xf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.89468, 0, 4.75686)
+
+[node name="FarmCrate_Oranges2" parent="." instance=ExtResource("84_roybr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.95272, 0, 4.70539)
+
+[node name="FarmCrate_Radish2" parent="." instance=ExtResource("85_n46bl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.00572, 0, 4.79173)
+
+[node name="FarmCrate_Apple2" parent="." instance=ExtResource("86_uwkhg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.87138, 0, 5.52707)
+
+[node name="FarmCrate_Carrot2" parent="." instance=ExtResource("87_q3diu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.01435, 0, 5.5335)
+
+[node name="FarmCrate_GreenApples2" parent="." instance=ExtResource("88_6b25d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.05472, 2.38419e-07, 5.49967)
+
+[node name="Stool2" parent="." instance=ExtResource("89_bliwx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.09544, 0, 4.85252)
+
+[node name="Vase_12" parent="." instance=ExtResource("90_a2t2w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.64905, 0, 5.67518)
+
+[node name="Vase_22" parent="." instance=ExtResource("91_t6uyg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.81329, 0, 5.56343)
+
+[node name="Vase_32" parent="." instance=ExtResource("92_uoa2s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9832, 0, 5.76085)
+
+[node name="Vase_42" parent="." instance=ExtResource("93_orx3p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.31751, 0, 5.70426)
+
+[node name="Vase_Rubble_Large2" parent="." instance=ExtResource("94_vmyfi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.442861, 0, 5.6272)
+
+[node name="Vase_Rubble_Medium2" parent="." instance=ExtResource("95_xxibc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.729679, 0, 5.63639)
+
+[node name="Vase_Rubble_Small2" parent="." instance=ExtResource("96_kb5l5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.55049, 0, 5.64258)
+
+[node name="Chest_Legendary" parent="." instance=ExtResource("97_5l1vd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.79971, 0, 5.58485)
+
+[node name="Chest_Wood" parent="." instance=ExtResource("98_8xdih")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.34019, 0, 5.56019)
+
+[node name="Whetstone2" parent="." instance=ExtResource("99_f5y8d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.17716, 1.19209e-07, 5.55427)
+
+[node name="WeaponStand2" parent="." instance=ExtResource("100_sh5n0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.79616, 0, 5.58788)
+
+[node name="Chair_12" parent="." instance=ExtResource("101_jek24")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.82181, 0, 3.73331)
+
+[node name="Chair_22" parent="." instance=ExtResource("102_we328")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.02506, 0, 3.70333)
+
+[node name="Chair_32" parent="." instance=ExtResource("103_nye7t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.12954, 0, 3.78046)
+
+[node name="Dummy2" parent="." instance=ExtResource("104_8djlv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.154, 0, 3.85602)
+
+[node name="Lantern_Wall2" parent="." instance=ExtResource("105_285ho")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.52519, 0, 3.43598)
+
+[node name="Shelf_Small2" parent="." instance=ExtResource("106_6hc2m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52835, 0, 4.33569)
+
+[node name="Shelf_Small_Bottles2" parent="." instance=ExtResource("107_g6xsv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.13812, 0, 4.36919)
+
+[node name="Dresser_12" parent="." instance=ExtResource("108_y6q7y")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.589248, 0, 4.45462)
+
+[node name="Nightstand_Drawer2" parent="." instance=ExtResource("109_4gn14")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.31503, 0, 4.44229)
+
+[node name="Nightstand_Shelf2" parent="." instance=ExtResource("110_fq2g6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.40148, 0, 4.56986)
+
+[node name="Peg_Rack2" parent="." instance=ExtResource("111_py08s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.16506, 0.95983, 4.455)
+
+[node name="Shelf_Arch2" parent="." instance=ExtResource("112_nt4xi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.49588, 0, 4.09058)
+
+[node name="Shelf_Simple2" parent="." instance=ExtResource("113_0pjnp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.9397, -2.38419e-07, 4.18008)
+
+[node name="Anvil2" parent="." instance=ExtResource("114_cvs0e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.42211, 0.0233014, 4.41747)
+
+[node name="Anvil_Log2" parent="." instance=ExtResource("115_gtyf4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.31253, 0, 4.35696)
+
+[node name="Bellows2" parent="." instance=ExtResource("116_f70in")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 10.2354, 0.00571609, 4.49058)
+
+[node name="Shovel_Steel2" parent="." instance=ExtResource("117_nt7vs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.1908, 0, 2.25729)
+
+[node name="Pickaxe_Steel2" parent="." instance=ExtResource("118_3ob7t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5769, 0.40585, 2.19248)
+
+[node name="Hoe_Steel2" parent="." instance=ExtResource("119_3p7ma")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.9349, 0.416825, 2.17633)
+
+[node name="Hammer_Large_Steel2" parent="." instance=ExtResource("120_5m2ww")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5442, 0.466102, 2.28372)
+
+[node name="Hammer_Medium_Steel2" parent="." instance=ExtResource("121_help0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.3101, 0.45456, 2.26869)
+
+[node name="Hammer_Small_Steel_Steel2" parent="." instance=ExtResource("122_j0mkq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.0605, 0.466102, 2.27268)
+
+[node name="Sword_Steel2" parent="." instance=ExtResource("123_ny7gm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.821, -0.0127028, 2.23756)
+
+[node name="Dagger_Steel_Steel2" parent="." instance=ExtResource("124_fjcvv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4446, 0.0573006, 2.19058)
+
+[node name="Shield_Metal2" parent="." instance=ExtResource("125_55uqo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.3269, 1.13106, 2.20754)
+
+[node name="Shield_Wooden2" parent="." instance=ExtResource("126_wu1it")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.3421, 1.90559, 2.25553)
+
+[node name="Shovel_Bronze2" parent="." instance=ExtResource("127_20q0x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.1865, -0.00242257, 2.15463)
+
+[node name="Pickaxe_Bronze2" parent="." instance=ExtResource("128_l6sdc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.6513, 0.395354, 2.09916)
+
+[node name="Hoe_Bronze2" parent="." instance=ExtResource("129_s8hxf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.0836, 0, 2.07319)
+
+[node name="Hammer_Large_Bronze2" parent="." instance=ExtResource("130_3hahr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.7965, 0.166831, 2.10498)
+
+[node name="Hammer_Medium_Bronze2" parent="." instance=ExtResource("131_mfhng")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5251, 0.166831, 2.09232)
+
+[node name="Hammer_Small_Bronze2" parent="." instance=ExtResource("132_ph43f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.2866, 0.19908, 2.08792)
+
+[node name="Axe_Double_Steel2" parent="." instance=ExtResource("133_3a2ae")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.0359, 0.0169576, 2.16166)
+
+[node name="Axe_Steel2" parent="." instance=ExtResource("134_0t67y")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5257, 0.175978, 2.1766)
+
+[node name="Sword_Bronze2" parent="." instance=ExtResource("135_p5mg7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0077, 0, 2.08561)
+
+[node name="Dagger_Bronze2" parent="." instance=ExtResource("136_3rgwf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.751, -0.0155685, 2.07314)
+
+[node name="Axe_Double_Bronze2" parent="." instance=ExtResource("137_wegwb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.3439, 1.19209e-07, 2.08184)
+
+[node name="Axe_Bronze2" parent="." instance=ExtResource("138_gu6lp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.8521, 0, 2.08325)
+
+[node name="Hammer_Rack2" parent="." instance=ExtResource("139_my67d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.1439, 0.252614, 1.82395)
+
+[node name="Banner_1_Cloth2" parent="." instance=ExtResource("140_4oynq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.8401, 3.28593, 1.59482)
+
+[node name="Banner_2_Cloth2" parent="." instance=ExtResource("141_u7to7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.9708, 3.28593, 1.6913)
+
+[node name="Banner_12" parent="." instance=ExtResource("142_q73lf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.0707, 2.33118, 1.65062)
+
+[node name="Banner_22" parent="." instance=ExtResource("143_6e8t6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.9765, 2.34413, 1.66093)
+
+[node name="Banner_Vertical_12" parent="." instance=ExtResource("144_vj2yo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.8, 0, 0.914806)
+
+[node name="Banner_Vertical_22" parent="." instance=ExtResource("145_mpn3x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.3485, 0, 0.891278)
+
+[node name="Barrel2" parent="." instance=ExtResource("146_7gio4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.4117, 0, 0.872077)
+
+[node name="Barrel_Dark2" parent="." instance=ExtResource("147_ebf1j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5461, 0, 0.850351)
+
+[node name="Barrel_Apples2" parent="." instance=ExtResource("148_ovkom")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.6294, 0, 0.817451)
+
+[node name="Barrel_Holder2" parent="." instance=ExtResource("149_5c6pe")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.1578, 0, 0.807207)
+
+[node name="Crate_Metal2" parent="." instance=ExtResource("150_xq53g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8409, 0, 2.23849)
+
+[node name="Crate_Wooden2" parent="." instance=ExtResource("151_hkejm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.56518, 0, 2.21809)
+
+[node name="Desk2" parent="." instance=ExtResource("152_7l0vk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.66881, 0, 2.38779)
+
+[node name="Cage_Large2" parent="." instance=ExtResource("153_y1uah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.95056, 0, 2.32735)
+
+[node name="Cage_Small2" parent="." instance=ExtResource("154_tuld6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.68805, 0, 2.36479)
+
+[node name="CampfireTripod2" parent="." instance=ExtResource("155_dhbja")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.41315, 0, 2.27648)
+
+[node name="Cauldron2" parent="." instance=ExtResource("156_nrbus")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.688619, 0, 2.46083)
+
+[node name="Workbench_Drawers2" parent="." instance=ExtResource("159_71nc3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.78301, -0.0104477, 2.46149)
+
+[node name="Workbench_Vice2" parent="." instance=ExtResource("160_4q3rh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.48445, 0.00598812, 2.48556)
+
+[node name="Bookcase_12" parent="." instance=ExtResource("161_k0ma0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.80575, 0, 0.494878)
+
+[node name="Bookcase_22" parent="." instance=ExtResource("162_j3d43")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.89503, 0, 0.484565)
+
+[node name="Cabinet2" parent="." instance=ExtResource("163_in3j1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.27974, 0, 0.529745)
+
+[node name="Stall_Blacksmith2" parent="." instance=ExtResource("164_h1up6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.29887, 0, 0.302835)
+
+[node name="Stall_Potions2" parent="." instance=ExtResource("165_6kmcd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.21968, 0, 0.221391)
+
+[node name="Stall_Vegetables_Full2" parent="." instance=ExtResource("166_1ya8m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75466, 0, 0.228108)
+
+[node name="Stall_Empty2" parent="." instance=ExtResource("167_aagaj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.93821, 0, 0.301678)
+
+[node name="Stall_Cart_Empty2" parent="." instance=ExtResource("168_bw3oy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.01803, 0, 0.288414)
+
+[node name="Bed_Bunk22" parent="." instance=ExtResource("169_5krub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.3591, 0.00993729, -1.32281)
+
+[node name="Bed_Bunk2" parent="." instance=ExtResource("170_m2afg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5073, 0, -1.30984)
+
+[node name="Bed_Double22" parent="." instance=ExtResource("171_64jbr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.3873, 0, -1.452)
+
+[node name="Bed_Double2" parent="." instance=ExtResource("172_430ne")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.2297, -4.76837e-07, -1.4071)
+
+[node name="Bed_Twin12" parent="." instance=ExtResource("173_w18wl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.7229, 0, -1.42414)
+
+[node name="Bed_Twin22" parent="." instance=ExtResource("174_ypo03")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.49034, 0, -1.44324)
+
+[node name="Bed_Twin32" parent="." instance=ExtResource("175_m2wc7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.1048, 0, -1.47806)
+
+[node name="Ladder2" parent="." instance=ExtResource("176_jqtb6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.14373, 0, -1.40382)
+
+[node name="Sign_Armory2" parent="." instance=ExtResource("177_6our3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00036, -4.76837e-07, -1.73264)
+
+[node name="Sign_Armory_22" parent="." instance=ExtResource("178_5oqce")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.43907, 0, -1.7107)
+
+[node name="Sign_Blacksmith2" parent="." instance=ExtResource("179_r6wnl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.846021, 0, -1.68008)
+
+[node name="Sign_Food2" parent="." instance=ExtResource("180_68qjs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.795038, 4.76837e-07, -1.72387)
+
+[node name="Sign_Potions2" parent="." instance=ExtResource("181_7ll5s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.47574, 0, -1.7282)
+
+[node name="Sign_Pub2" parent="." instance=ExtResource("182_8vvru")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.96186, 0, -1.73338)
+
+[node name="Wagon2" parent="." instance=ExtResource("183_uwdd8")]
+transform = Transform3D(0.67163, 0, -0.740887, 0, 1, 0, 0.740887, 0, 0.67163, 7.81075, 4.76837e-07, -2.97532)
+
+[node name="Banner_SmallTriangles_Long2" parent="." instance=ExtResource("184_2da7m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.17661, 0, -6.9394)
+
+[node name="Banner_SmallTriangles_Medium2" parent="." instance=ExtResource("185_c0yru")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.80687, 0, -5.59082)
+
+[node name="Banner_SmallTriangles_Short2" parent="." instance=ExtResource("186_37d3h")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.73482, 0, -4.28266)
+
+[node name="Table_Large2" parent="." instance=ExtResource("157_81w6q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.99623, 0, 2.44687)
+
+[node name="Workbench2" parent="." instance=ExtResource("158_u8vxm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.57357, 0, 2.44996)

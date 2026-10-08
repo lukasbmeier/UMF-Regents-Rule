@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GenreModule" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/genre_module.gd" id="1_genre"]
+[ext_resource type="Resource" path="res://game/fishing/fisher_definition.tres" id="2_fisher"]
+[ext_resource type="Resource" path="res://game/fishing/spot_definition.tres" id="3_spot"]
+[ext_resource type="Resource" path="res://game/fishing/rival_definition.tres" id="4_rival"]
+[ext_resource type="PackedScene" path="res://game/fishing/fishing_hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://game/fishing/fishing_world.tscn" id="6_world"]
+
+[resource]
+script = ExtResource("1_genre")
+id = &"fishing"
+display_name = "Fishing"
+entity_definitions = Array[Resource]([ExtResource("2_fisher"), ExtResource("3_spot"), ExtResource("4_rival")])
+tables = Array[StringName]([&"catch", &"gear", &"fishing_line", &"fishing_spot", &"fishing_conditions", &"fight_show"])
+world_tables = Array[StringName]([&"fishing_line", &"fishing_conditions", &"fight_show"])
+scenes = Array[PackedScene]([ExtResource("5_hud"), ExtResource("6_world")])
