@@ -12,7 +12,7 @@ class_name AbilityWorkbench extends Workbench
 ##   cooldown           used twice at once: the second is refused until the cooldown is over
 
 ## Who uses it.
-@export var character: EntityDefinition = preload("res://game/characters/character_definition.tres"):
+@export var character: EntityDefinition = preload("res://foundation/content/character/humanoid.tres"):
 	set(v):
 		character = v
 		var m: Mannequin = get_node_or_null(^"Mannequin") as Mannequin

@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://sidecar/sidecar_main.gd" id="1_main"]
 [ext_resource type="Resource" path="res://sidecar/sidecar_net_config.tres" id="2_net"]
 [ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="3_level"]
-[ext_resource type="Resource" path="res://foundation/entities/player_definition.tres" id="4_player"]
-[ext_resource type="Resource" path="res://foundation/entities/npc_definition.tres" id="5_npc"]
+[ext_resource type="Resource" path="res://foundation/content/character/player.tres" id="4_player"]
+[ext_resource type="Resource" path="res://foundation/content/character/npc.tres" id="5_npc"]
 
 [node name="Sidecar" type="Node"]
 script = ExtResource("1_main")

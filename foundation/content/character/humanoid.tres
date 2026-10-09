@@ -15,6 +15,7 @@
 
 [resource]
 script = ExtResource("1_def")
+id = 2
 kind = 0
 scene = ExtResource("2_scene")
 display_name = "Player"

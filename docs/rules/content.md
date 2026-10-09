@@ -64,6 +64,7 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
 |---|---|---|---|
 | ability | `AbilityDef` | `foundation/content/ability/` (melee), `game/<genre>/content/ability/` | `content::ABILITIES`, seeded into `ability_def` at init |
 | rules | `RuleSetDef` (`RuleEntry`, `RuleOverride`) | `foundation/content/rules/`, `game/<genre>/content/rules/` | `hot::ALL` and `hot::<owner>::<NAME>`, served live in `hot_rule` |
+| character | `EntityDefinition` | `foundation/content/character/` (player, npc, humanoid), `game/<genre>/content/character/` | nothing compiled yet (`kind`, `brain` baked for a later check of a game's kinds) |
 
 ## Hot rules (DECISIONS #201, CONTENT_TOOLING_SPEC §4)
 A number the game is tuned by while it runs: a range, a health, a round's length, a price.
@@ -114,8 +115,9 @@ character, the real animations and the moment the content lives in, and no serve
   test checks). `ContentDef.workbench_scene()` finds it; override only to point elsewhere.
 - **Writing one:** extend `Workbench` (`tools/workbench/workbench.gd`): `content_type()`,
   `load_item()` (show the piece), `test_actions()` and `run_test()` (play the moment, return a
-  sentence). Optional: `fit_checks()` (amber warnings), `new_item_from()` (a dropped file becomes a
-  piece), a `ThumbnailCamera`. The base gives the Inspector controls (the piece, the test, Run test,
+  sentence). Optional: `fit_checks()` (amber warnings), `fill_from_file()` (New From File: the base
+  makes the piece in its folder with the next free id, the bench fills it from the dropped file), a
+  `ThumbnailCamera`. The base gives the Inspector controls (the piece, the test, Run test,
   Previous, Next, Save, Capture thumbnail, status), follows edits to the piece (it watches the
   piece's saved fields: a script's fields announce nothing), takes the piece the dock hands it
   (`Workbench.pending`), and renders thumbnails. A character goes in with `Mannequin`: an
@@ -134,10 +136,19 @@ character, the real animations and the moment the content lives in, and no serve
 | Workbench | Tests | Where |
 |---|---|---|
 | ability | use in range (the wind-up plays, it lands), use out of range (refused), cooldown | `tools/workbench/ability_workbench.tscn` |
+| character | every clip (and which the game needs are missing), walk facing (read from a walk that travels; else the floor arrow), looks; fit: feet on the floor, height against its capsule; New From File (a rigged model) | `tools/workbench/character_workbench.tscn` |
+
+### Character definitions are content (DECISIONS #204)
+`EntityDefinition` is a `ContentDef` (type `character`): listed, benched, Catalogued. Its content
+`id` is NOT its `kind`: kinds may repeat on purpose (the bare foundation's capsule player and the
+humanoid player are both kind 0; a scene's Boot picks one, a genre's replaces the foundation's).
+A definition outside a content folder still works everywhere; it is just not listed: a genre moves
+its own (`game/<genre>/content/character/`) when it is ready.
 
 ## Not yet (CONTENT_TOOLING_SPEC §9)
-Step 5's benches: character looks and levels as content types with benches (the
-`character_preview` and `LevelInfo` tools become them), the NPC sandbox; Fishing's fish, spot and
+Step 5's rest: levels stay scenes (the level scene is its own bench: its Bake button) and gain a
+"what the server sees" overlay and a walk test; the NPC sandbox; look PIECES as content (players'
+choices are stored by position today, so it is a migration to stable ids, its own step); Fishing's fish, spot and
 held-item (rod) benches, in Fishing, with its content. Round lengths as hot rules. Fishing's
 content (`shared/fishing/*.json`) moves to `.tres` in Fishing, where its round-trip test (bake the
 generated resources, compare byte for byte) belongs.

@@ -15,8 +15,8 @@ class_name Workbench extends Node3D
 ## WRITING ONE. Subclass this as `<type>_workbench.gd`, scene `tools/workbench/<type>_workbench.tscn`
 ## (a genre's: `game/<genre>/workbench/`; both stay out of the builds). Implement `content_type()`,
 ## `load_item()` (show it), `test_actions()` and `run_test()` (play that moment and say what
-## happened). Optional: `fit_checks()` (amber warnings), `new_item_from()` (a dropped file becomes a
-## piece), a `ThumbnailCamera`. The base does the listing, loading, live edits, saving, the badge
+## happened). Optional: `fit_checks()` (amber warnings), `fill_from_file()` (a dropped file becomes a
+## piece: the base makes it in the right folder with the next free id), a `ThumbnailCamera`. The base does the listing, loading, live edits, saving, the badge
 ## and thumbnails, so a workbench is mostly its tests.
 
 ## Handed over by the Content dock just before it opens this scene: the piece to load.
@@ -37,6 +37,14 @@ static var pending: ContentDef = null
 @export_tool_button("Capture thumbnail", "Image") var _thumb_button: Callable = capture_and_store_thumbnail
 ## What the bench says about the piece: its badge, its problems, the last test.
 @export_multiline var status: String = ""
+@export_group("New from a file")
+## A file to make a new piece from (a rigged model for a character, later a sound, a fish model):
+## drag it here from the FileSystem, then New From File.
+@export_file var intake_file: String = ""
+## Who the new piece belongs to: a genre the game lists, or "foundation". Empty: the game's first
+## genre (most new content is a genre's), else the foundation.
+@export var intake_owner: String = ""
+@export_tool_button("New From File", "Add") var _intake_button: Callable = new_from_intake
 
 ## What the last test said.
 var last_result: String = ""
@@ -69,10 +77,47 @@ func fit_checks() -> Array[String]:
 	return []
 
 
-## A dropped file (a .glb, a .wav) made into a new piece of this type, or null when this type is not
-## made from a file.
-func new_item_from(_path: String) -> ContentDef:
-	return null
+## Fill `def` (just made, with its id and folder) from the file at `path`. "" when it worked, else
+## why not, in a sentence. A bench whose type is not made from a file leaves this as it is.
+func fill_from_file(_def: ContentDef, _path: String) -> String:
+	return "a %s is not made from a file: use New in the Content dock" % content_type()
+
+
+## NEW FROM A FILE: make a piece of this bench's type for `owner` (see `intake_owner`), fill it from
+## `path`, save it, and put it on the bench. Returns its path, or "" (and `last_result` says why).
+func new_from_file(path: String, owner: String = "") -> String:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		last_result = "choose a file to make it from first"
+		_update_status()
+		return ""
+	var o: String = owner if not owner.is_empty() else _default_owner()
+	var errors: Array[String] = []
+	var made: String = ContentLibrary.create(content_type(), o, path.get_file().get_basename().replace("_", " ").capitalize(), errors)
+	if made.is_empty():
+		last_result = "could not make it: %s" % "; ".join(errors)
+		_update_status()
+		return ""
+	var def: ContentDef = ResourceLoader.load(made, "", ResourceLoader.CACHE_MODE_REPLACE) as ContentDef
+	var why: String = fill_from_file(def, path)
+	if not why.is_empty():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(made))
+		last_result = why
+		_update_status()
+		return ""
+	ResourceSaver.save(def, made)
+	_set_item(def)
+	last_result = "made %s from %s" % [made.get_file(), path.get_file()]
+	_update_status()
+	return made
+
+
+func new_from_intake() -> void:
+	new_from_file(intake_file, intake_owner)
+
+
+func _default_owner() -> String:
+	var owners: PackedStringArray = ContentLibrary.owners()
+	return owners[1] if owners.size() > 1 else ContentLibrary.FOUNDATION
 
 
 func _ready() -> void:

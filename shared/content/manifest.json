@@ -11,6 +11,17 @@
 			},
 			"type": "ability"
 		},
+		"shared/content/foundation/character.json": {
+			"count": 3,
+			"hash": "30b9abc3",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/character/humanoid.tres": "21eeed72",
+				"foundation/content/character/npc.tres": "15c3329a",
+				"foundation/content/character/player.tres": "db6ba2c6"
+			},
+			"type": "character"
+		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
 			"hash": "a22bce5a",

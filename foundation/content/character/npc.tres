@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_def")
+id = 1
 kind = 1
 scene = ExtResource("2_scene")
 display_name = "NPC"

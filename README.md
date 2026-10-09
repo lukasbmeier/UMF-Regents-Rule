@@ -29,7 +29,7 @@ project.godot               the Godot client project IS the repo root
                             (autoload order = boot sequence; see AGENTS.md)
 foundation/core/            SignalBus · ClockSync · EntityRegistry · EntitySpawner · SpaceTimeEntity
 foundation/components/      SpaceTimeHealthComponent (one per Phase 3 task)
-foundation/entities/        player.tscn · player_definition.tres
+foundation/entities/        player.tscn (definitions: foundation/content/character/)
 foundation/net/             SpaceTimeSync (SDK adapter) · NetConfig · RowEvent · ReducerRequest · SubscriptionSet
 foundation/sim/             MovementModel · MovementState · InputFrame · MovementConfig
 foundation/tools/           EditorScripts (config codegen)

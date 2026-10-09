@@ -1,6 +1,14 @@
-class_name EntityDefinition extends Resource
+@tool
+class_name EntityDefinition extends ContentDef
 ## Design-time description of one kind of entity. The spawner maps `entity.kind` from the server
 ## to one of these and instantiates `scene`.
+##
+## CONTENT (type `character`, DECISIONS #204): made and fitted in the character workbench (drop a
+## rigged model in, fit it, play every clip), listed in the Content dock and the Catalog, kept
+## under `foundation/content/character/` or `game/<genre>/content/character/`. Its content `id`
+## is not its `kind`: two definitions may share a kind on purpose (the bare foundation's capsule
+## player and the humanoid player are both kind 0; a scene's Boot picks which it uses, and a
+## genre's definition for a kind replaces the foundation's).
 ##
 ## This is the seam that keeps the foundation genre-agnostic: the foundation knows "kind 0 exists
 ## and maps to some scene", never what a kind means. A genre ships its own `.tres` definitions.
@@ -12,8 +20,6 @@ class_name EntityDefinition extends Resource
 ## Instantiated once per entity row. Its root must be a `SpaceTimeEntity`.
 @export var scene: PackedScene
 
-## For nameplates and debug output. Not an identifier.
-@export var display_name: String = ""
 
 ## WHO DRIVES THIS ENTITY. Empty means a player does, through their input queue. A name here
 ## means an authority does: the sidecar looks up a brain by this name and attaches it
@@ -97,4 +103,24 @@ func variant_names() -> PackedStringArray:
 	for v: PackedScene in visual_variants:
 		if v != null:
 			out.append(v.resource_path.get_file().get_basename())
+	return out
+
+
+func content_type() -> StringName:
+	return &"character"
+
+
+## What a server could check a game's kinds against (it compiles nothing from it yet).
+func to_bake() -> Dictionary:
+	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain)}
+
+
+func validate() -> Array[String]:
+	var out: Array[String] = super()
+	if kind < 0:
+		out.append("its kind (%d) is negative" % kind)
+	if scene == null:
+		out.append("it has no scene: the entity it spawns (instance foundation/entities/player.tscn)")
+	if animation_set != null and visual_scene == null and visual_variants.is_empty():
+		out.append("it has an animation set but no model to play it on")
 	return out

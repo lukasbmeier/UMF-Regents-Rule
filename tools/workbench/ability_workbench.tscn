@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://tools/workbench/ability_workbench.gd" id="1_bench"]
 [ext_resource type="Script" path="res://tools/workbench/mannequin.gd" id="2_mannequin"]
-[ext_resource type="Resource" path="res://game/characters/character_definition.tres" id="3_character"]
+[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="3_character"]
 
 [sub_resource type="PlaneMesh" id="Floor_mesh"]
 size = Vector2(16, 16)

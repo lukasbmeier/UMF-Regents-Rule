@@ -50,7 +50,7 @@ docs/CHANGELOG.md              bundle version; 0.3.1
 foundation/core/               SignalBus · ClockSync · EntityRegistry · EntitySpawner · SpaceTimeComponent · SpaceTimeEntity · EntityDefinition · AppExit (the one way to quit)
 foundation/components/         Health · Movement · LocalInput · Session · Equip (in hand or put away)
                                components + configs
-foundation/entities/           player.tscn · player_definition.tres
+foundation/entities/           player.tscn (definitions: foundation/content/character/)
 foundation/net/                SpaceTimeSync (SDK adapter) · NetConfig · RowEvent · ReducerRequest · SubscriptionSet
 foundation/sim/                MovementModel · MovementState · InputFrame · MovementConfig · ChallengeModel
 foundation/tools/              EditorScripts (config codegen; collider exporter in Phase 3)

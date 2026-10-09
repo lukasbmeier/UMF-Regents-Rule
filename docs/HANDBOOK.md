@@ -579,6 +579,14 @@ Catalog card). The Catalog shows every piece with a coloured strip: red, somethi
 for why); amber, fine but not yet looked at in its bench; green, done. **Regenerate thumbnails**
 redraws every picture.
 
+**A new character (a chicken, a wolf, a knight): the character workbench.** Content panel, type
+`character`, open any one in its bench. Drag the rigged model (.glb) from the FileSystem onto the
+bench's **Intake File**, press **New From File**: a new character is made in the right folder, with
+the model on it (and the humanoid's animations, if it has the humanoid's skeleton). Then fit it in
+the Inspector: `visual_offset` until its feet are on the floor, `visual_yaw_deg` until it faces the
+yellow arrow (the game's forward). The pale capsule beside it is what other players bump into. Run
+**every_clip** to see each animation and hear which ones the game needs are missing.
+
 **Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
 of content is a type (`AbilityDef`); each piece is a `.tres` you edit in the Inspector. The
 **Content** panel at the bottom of the editor is where you find and make them: the types on the

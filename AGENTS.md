@@ -119,7 +119,7 @@ foundation/                 THE CORE: content/ (ContentDef, ContentLibrary, Abil
                             InputFrame, ChallengeModel, LevelBake) · anim/ · held/ · camera/ · level/ ·
                             ui/ · audio/ · debug/
 game/                       THE GAME: <genre>/ (each genre's client half, its tests in tests/) ·
-                            characters/ + anim/ (the reference humanoid: character_definition.tres) ·
+                            characters/ + anim/ (the reference humanoid's looks and animations; its definition is foundation/content/character/humanoid.tres) ·
                             greybox_game.tscn (the foundation's playable game)
 sidecar/                    SERVER-ONLY authority process; excluded from the client build
 server/src/                 lib.rs · sim.rs (FROZEN, spacetimedb-lib only, #27) · challenge.rs · level.rs ·

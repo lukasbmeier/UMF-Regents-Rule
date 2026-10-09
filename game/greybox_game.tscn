@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="1_level"]
 [ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
-[ext_resource type="Resource" path="res://game/characters/character_definition.tres" id="4_character"]
+[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="4_character"]
 [ext_resource type="PackedScene" path="res://foundation/debug/net_debug_overlay.tscn" id="7_net"]
 [ext_resource type="PackedScene" path="res://foundation/ui/connect_screen.tscn" id="9_connect"]
 [ext_resource type="PackedScene" path="res://foundation/ui/pause_menu.tscn" id="10_menu"]

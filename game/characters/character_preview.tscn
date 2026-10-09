@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://game/characters/character_preview.gd" id="1_prev"]
-[ext_resource type="Resource" path="res://game/characters/character_definition.tres" id="2_def"]
+[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="2_def"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
 

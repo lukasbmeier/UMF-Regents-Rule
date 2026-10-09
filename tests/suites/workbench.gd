@@ -11,6 +11,7 @@ const ABILITY_BENCH: String = "res://tools/workbench/ability_workbench.tscn"
 func run() -> void:
 	_run_every_type_has_a_bench()
 	await _run_ability_bench()
+	await _run_character_bench()
 	await _run_catalog()
 
 
@@ -160,3 +161,101 @@ func _wipe(dir: String) -> void:
 	for d: String in DirAccess.get_directories_at(abs):
 		_wipe(dir.path_join(d))
 	DirAccess.remove_absolute(abs)
+
+
+const CHARACTER_BENCH: String = "res://tools/workbench/character_workbench.tscn"
+const HUMANOID: String = "res://foundation/content/character/humanoid.tres"
+
+
+## THE CHARACTER BENCH (DECISIONS #204): the real humanoid, fitted (feet on the floor, as tall as its
+## capsule), every clip it needs; the facing read from a walk that travels; a new character made
+## from a rigged model, in the right folder, playing the humanoid's animations when it has its rig.
+func _run_character_bench() -> void:
+	print("== workbench: characters ==")
+	var bench: CharacterWorkbench = (load(CHARACTER_BENCH) as PackedScene).instantiate() as CharacterWorkbench
+	bench.seconds_each = 0.01
+	get_tree().root.add_child(bench)
+	var humanoid: EntityDefinition = load(HUMANOID) as EntityDefinition
+	bench.item = humanoid
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var cap: MeshInstance3D = bench.get_node(^"Capsule") as MeshInstance3D
+	_check(bench.badge()["level"] == "green" and cap.visible and is_equal_approx((cap.mesh as CapsuleMesh).height, 1.8),
+		"the humanoid on the bench is green: feet on the floor, as tall as the 1.8 m capsule shown beside it %s" % str(bench.fit_checks()))
+	var clips: String = await bench.run_named_test(&"every_clip")
+	_check(clips.contains("every clip the game needs is there") and clips.contains("played %d clip" % humanoid.animation_set.clips.size()),
+		"every clip it names plays, and none the game needs is missing: %s" % clips)
+	var looks: String = await bench.run_named_test(&"looks")
+	_check(looks.begins_with("looks: %d look(s)" % humanoid.visual_variants.size()), "and it wears each of its looks: %s" % looks.left(80))
+	var facing: String = await bench.run_named_test(&"walk_facing")
+	_check(facing.contains("in place") and facing.contains("arrow") and bench.get_node_or_null(^"Forward") != null,
+		"its walk is in place, so the bench says so and points at the arrow that is the game's forward")
+
+	# A walk that travels: +Z, the way a Quaternius rig is authored.
+	var lib := AnimationLibrary.new()
+	var walk := Animation.new()
+	walk.length = 1.0
+	var t: int = walk.add_track(Animation.TYPE_POSITION_3D)
+	walk.track_set_path(t, ^"Skeleton3D:root")
+	walk.position_track_insert_key(t, 0.0, Vector3.ZERO)
+	walk.position_track_insert_key(t, 1.0, Vector3(0, 0, 1.2))
+	lib.add_animation(&"Walk", walk)
+	var still := Animation.new()
+	still.length = 1.0
+	var t2: int = still.add_track(Animation.TYPE_POSITION_3D)
+	still.track_set_path(t2, ^"Skeleton3D:root")
+	still.position_track_insert_key(t2, 0.0, Vector3.ZERO)
+	still.position_track_insert_key(t2, 1.0, Vector3(0.01, 0, 0.01))
+	lib.add_animation(&"Still", still)
+	var set := AnimationSet.new()
+	set.libraries = {&"": lib}
+	set.clips = {&"locomotion.walk": AnimationClipRef.make(&"Walk", true)}
+	var d := EntityDefinition.new()
+	d.animation_set = set
+	d.visual_yaw_deg = 180.0
+	var turned: String = CharacterWorkbench.facing(d)
+	d.visual_yaw_deg = 0.0
+	var unturned: String = CharacterWorkbench.facing(d)
+	set.clips = {&"locomotion.walk": AnimationClipRef.make(&"Still", true)}
+	var in_place: String = CharacterWorkbench.facing(d)
+	_check(turned == "forward" and unturned == "backward" and in_place == "in_place",
+		"a walk that travels says which way the rig faces: turned 180 it walks forward, unturned it would moonwalk, a walk in place cannot say (%s, %s, %s)" % [turned, unturned, in_place])
+
+	d.display_name = "Walker"
+	bench.item = d
+	await get_tree().process_frame
+	var thin: String = await bench.run_named_test(&"every_clip")
+	_check(thin.contains("MISSING") and thin.contains("locomotion.idle") and thin.contains("jump.start"),
+		"a set without what the game needs says which clips are missing: %s" % thin)
+
+	var raised: EntityDefinition = humanoid.duplicate() as EntityDefinition
+	raised.visual_offset = Vector3(0, 0.3, 0)
+	bench.item = raised
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var warn: Array[String] = bench.fit_checks()
+	_check(bench.badge()["level"] == "amber" and warn.size() == 1 and warn[0].contains("30 cm above"),
+		"a model floating 30 cm up is amber, and the bench says what to set: %s" % str(warn))
+
+	# NEW FROM A FILE, into a scratch project.
+	var root: String = "user://character_bench_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray()
+	var made: String = bench.new_from_file("res://game/characters/mannequin_f.glb", "foundation")
+	var nd: EntityDefinition = ResourceLoader.load(made, "", ResourceLoader.CACHE_MODE_IGNORE) as EntityDefinition if not made.is_empty() else null
+	_check(made == root.path_join("foundation/content/character/mannequin_f.tres") and nd != null
+		and nd.visual_scene != null and nd.visual_scene.resource_path.ends_with("mannequin_f.glb") and nd.scene != null
+		and bench.item != null and bench.item.resource_path == made,
+		"New From File makes a character from a rigged model, in its type's folder, and puts it on the bench (%s)" % made)
+	_check(nd != null and nd.animation_set == humanoid.animation_set and is_equal_approx(nd.visual_yaw_deg, humanoid.visual_yaw_deg),
+		"with the humanoid's rig, it plays the humanoid's animations, turned the same way")
+	var refused: String = bench.new_from_file("res://foundation/content/rules/foundation.tres", "foundation")
+	_check(refused.is_empty() and bench.last_result.contains("not a model")
+		and not FileAccess.file_exists(root.path_join("foundation/content/character/foundation.tres")),
+		"a file that is not a model is refused, and nothing is left behind: %s" % bench.last_result)
+	bench.queue_free()
+	await get_tree().process_frame
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = null
+	_wipe(root)

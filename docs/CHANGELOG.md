@@ -464,3 +464,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - Every content type has a bench, or says why not (rules: tried live in the game). A new bench is mostly its tests (`docs/rules/content.md`).
 - Players who are not connected cannot be targeted by abilities either.
 - No server schema change. **Restart the editor.**
+
+## 0.32.0 — characters are content, with a bench
+- **The character workbench** (DECISIONS #204): drop a rigged model in (New From File) and get a character, in the right folder, on the bench. Fit it (feet on the floor, facing the arrow), see it beside the capsule it really collides with, play every animation, and hear which ones the game needs are missing.
+- **Character definitions are content**: the foundation's are `foundation/content/character/` (player, npc, humanoid); they show in the Content panel and the Catalog. A genre's become content when it moves them into its own content folder.
+- Workbenches can make a new piece from a file (`fill_from_file`); the next benches (fish models, sounds) use it.
+- No server schema change. **Restart the editor.**

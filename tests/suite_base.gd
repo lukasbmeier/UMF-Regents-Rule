@@ -273,7 +273,7 @@ func _tick_frames(n: int) -> void:
 
 ## THE FOUNDATION'S CHARACTER: a humanoid with every look and the plain humanoid set
 ## (`game/characters/`, `game/anim/`), what a game with no genre plays as.
-const CHARACTER_DEF: String = "res://game/characters/character_definition.tres"
+const CHARACTER_DEF: String = "res://foundation/content/character/humanoid.tres"
 const HUMANOID_SET: String = "res://game/anim/humanoid.tres"
 
 
