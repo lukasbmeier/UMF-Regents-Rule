@@ -12,12 +12,12 @@
 # Requires a local server (`spacetime start`). Republishes the TEST database (umf-test) with --delete-data; `umf`, the one you play in, is not touched.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-# THE TEST DATABASE (DECISIONS #154): suites publish and play on `umf-test`, never on `umf`, the
+# THE TEST DATABASE (DECISIONS #154): suites publish and play on `<database>-test` (shared/game.json), never on the
 # database a person plays in. UMF_DB reaches every Godot process started from here.
-DB="${DB:-umf-test}"
-export UMF_DB="$DB"
+. tests/lib/db.sh
 GODOT="${GODOT:-godot}"
-SCENE="res://game/fishing/fishing_game.tscn"
+. tests/lib/genre_hooks.sh
+SCENE="res://game/greybox_game.tscn"
 RUN_SECONDS="${RUN_SECONDS:-16}"
 
 pass=0; fail=0
@@ -38,13 +38,13 @@ fi
 echo "== publish (fresh data) =="
 (cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1 \
   || { echo "publish failed" >&2; exit 1; }
-# Every scripted route in this suite is on the greybox; the module's default level is the
-# lakeside (the game). Selecting it moves the spawn to the origin and stocks the ponds.
-spacetime call "$DB" use_level 0 0 >/dev/null 2>&1 \
-  || { echo "use_level failed" >&2; exit 1; }
+# Every scripted route in this suite is on the greybox (level 0); a game's default world may run
+# another. The foundation's switch moves the spawn to the origin; a genre's hook sets up its part.
+spacetime call "$DB" set_world_level 0 0 >/dev/null 2>&1 \
+  || { echo "set_world_level failed" >&2; exit 1; }
 sleep 3
-# Casting is PLAYING-gated and a fresh session starts in LOBBY; this suite is about identity and
-# visibility, not the fishing loop, but the phase is set so the clients run the same path players do.
+# A fresh session starts in LOBBY; this suite is about identity and visibility, not a genre's loop,
+# but the phase is set to PLAYING so the clients run the same path players do.
 spacetime call "$DB" set_session_phase 1 1 >/dev/null 2>&1
 
 log_a="$(mktemp)"; log_b="$(mktemp)"
@@ -115,17 +115,6 @@ check "$(grep -c "nameplate: $ent_b = Bram the Bold" "$log_a")" "1" "A draws B's
 check "$(grep -c "nameplate: $ent_a = Ailsa" "$log_b")" "1" "B draws A's name over A"
 check "$(grep -c "nameplate: $ent_a =" "$log_a")" "0" "A does not draw a nameplate over itself"
 
-echo "== the leaderboard =="
-# The board prints each time it changes; the LAST line is what each player was looking at. B's
-# score came from the server, so A can only show it if B's session row reached A's copy of B.
-# The CLI connections above are players too (offline, no score) and must not be on it.
-board_a="$(grep -o '\[Board\] .*' "$log_a" | tail -1 | tr -d '\r')"
-board_b="$(grep -o '\[Board\] .*' "$log_b" | tail -1 | tr -d '\r')"
-echo "  A shows: ${board_a:-nothing}"
-echo "  B shows: ${board_b:-nothing}"
-check "$board_a" "[Board] 1. Bram the Bold 30  2. Ailsa 0" "A ranks B first on B's server-side score, by name"
-check "$board_b" "[Board] 1. Bram the Bold 30  2. Ailsa 0" "B's board agrees with A's"
-
 echo "== both clients are actually rendering =="
 # A client with no current camera draws nothing but its CanvasLayer HUD, reports no error, and
 # passes every other suite. This runs the REAL genre scene, which is what a player launches.
@@ -134,9 +123,7 @@ check "$(grep -c 'view: looking through' "$log_b")" "1" "B is looking through a 
 check "$(grep -c 'no camera is current' "$log_a")" "0" "A never reported a missing camera"
 check "$(grep -c 'no camera is current' "$log_b")" "0" "B never reported a missing camera"
 
-echo "== the seeded pond reaches the clients =="
-check "$(grep -c 'entity spawned: [0-9]* kind 2' "$log_a")" "3" "A spawned the three seeded fishing spots"
-check "$(grep -c 'entity spawned: [0-9]* kind 2' "$log_b")" "3" "B spawned the three seeded fishing spots"
+run_genre_hooks multiclient   # a genre's checks on the same two logs (fishing: its board, its ponds)
 
 echo "== the server agrees =="
 # One player row per client, plus one for the CLI connection that published/queried.

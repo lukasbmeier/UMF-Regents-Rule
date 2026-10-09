@@ -13,10 +13,9 @@
 # Requires a local server (`spacetime start`). Republishes the TEST database (umf-test) with --delete-data; `umf`, the one you play in, is not touched.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-# THE TEST DATABASE (DECISIONS #154): suites publish and play on `umf-test`, never on `umf`, the
+# THE TEST DATABASE (DECISIONS #154): suites publish and play on `<database>-test` (shared/game.json), never on the
 # database a person plays in. UMF_DB reaches every Godot process started from here.
-DB="${DB:-umf-test}"
-export UMF_DB="$DB"
+. tests/lib/db.sh
 GODOT="${GODOT:-godot}"
 SHOTS="${SHOTS:-}"
 LATENCIES="${LATENCIES:-0 150}"

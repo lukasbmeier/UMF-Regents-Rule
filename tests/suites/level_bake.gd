@@ -11,16 +11,43 @@ func run() -> void:
 
 # --- LevelBake parity (server/src/level.rs) -----------------------------------------------
 
-const LEVEL_PROBES: String = "res://shared/golden/level/lakeside_probes.json"
+const PROBE_DIR: String = "res://shared/golden/level/"
 
-## The client's answer to "is that water, which spot" must be the server's, point for point:
-## a float the aim ring shows landing in the lake has to be one the module accepts. The Rust
-## twin runs the same file (`cargo test --test level`).
+## The client's answer to "is that water, which spot, may I stand here" must be the server's,
+## point for point, for EVERY baked level (`<level>_probes.json`); the Rust twin runs the same
+## files (`cargo test --test level`). A level's own facts are its game's suites' (fishing's lakeside).
 func _run_level_bake_tests() -> void:
 	print("== LevelBake ==")
-	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(LEVEL_PROBES))
+	var checked: int = 0
+	for f: String in DirAccess.get_files_at(PROBE_DIR):
+		if not f.ends_with("_probes.json"):
+			continue
+		var level_name: String = f.trim_suffix("_probes.json")
+		if not FileAccess.file_exists(LevelBake.DIR + level_name + ".json"):
+			continue
+		_check_probes(PROBE_DIR + f)
+		checked += 1
+	_check(checked >= 1 and FileAccess.file_exists(PROBE_DIR + "example_probes.json"),
+		"the example level's probes were checked (%d levels)" % checked)
+	# The foundation's example level (level 200): the pond is water, its shore is not.
+	var bake: LevelBake = LevelBake.load_level("example")
+	_check(bake != null, "the example bake loads")
+	if bake == null:
+		return
+	_check(not bake.is_water(bake.spawn.x, bake.spawn.z) and bake.can_stand(bake.spawn.x, bake.spawn.z),
+		"players arrive on dry land they may stand on")
+	_check(bake.is_water(0.0, -10.0) and not bake.can_stand(0.0, -10.0) and bake.spot_at(0.0, -10.0).get("id", "") == "example_pond",
+		"the pond's middle is water too deep to stand in, and it is the Example Pond")
+	# NaN fails every comparison: without its guard it would index a real cell.
+	_check(bake.cell(NAN, 0.0) == Vector2i(-1, -1) and bake.cell(0.0, NAN) == Vector2i(-1, -1),
+		"a NaN position is off the grid, not cell zero")
+	_check(bake.depth_dm_at(INF, 0.0) == 0, "infinity is dry land")
+
+
+func _check_probes(path: String) -> void:
+	var doc: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not doc is Dictionary:
-		_check(false, "cannot read " + LEVEL_PROBES)
+		_check(false, "cannot read " + path)
 		return
 	var bake: LevelBake = LevelBake.load_level(str(doc["level"]))
 	_check(bake != null, "the %s bake loads, grid and all" % str(doc["level"]))
@@ -53,24 +80,6 @@ func _run_level_bake_tests() -> void:
 			printerr("  level probe %s (%s, %s): cell=%s dm=%d water=%s spot=%s stand=%s; want %s" % [
 				probe["name"], v.x, v.z, c, bake.depth_dm_at(v.x, v.z), water, spot_id, stand, probe])
 	print("  %s: %d probes, %d over water" % [doc["level"], probes.size(), wet])
-	_check(mismatches == 0, "every level probe matches the Rust twin (%d mismatches)" % mismatches)
-	_check(wet > 0 and wet < probes.size(), "the probes cover both water and land")
+	_check(mismatches == 0, "every %s probe matches the Rust twin (%d mismatches)" % [doc["level"], mismatches])
+	_check(wet > 0 and wet < probes.size(), "the %s probes cover both water and land" % doc["level"])
 	_check(deep > 0 and deep < wet, "and both wading water and water too deep to stand in (%d of %d wet)" % [deep, wet])
-	# WHERE A PLAYER MAY STAND (REVIEW B2): the module refuses a claim anywhere else.
-	_check(bake.can_stand(bake.spawn.x, bake.spawn.z) and bake.can_stand(0.0, 40.0) and bake.can_stand(3.0, 25.0),
-		"the spawn and the dock's planks are ground a player may stand on")
-	_check(not bake.can_stand(0.0, 16.0) and not bake.can_stand(0.0, -24.0),
-		"past the end of the dock and the Deep Hole are not")
-	# The things the game relies on, whatever the probe file says.
-	_check(not bake.is_water(bake.spawn.x, bake.spawn.z), "players arrive on dry land")
-	_check(bake.is_water(0.0, 16.0), "the end of the dock is fishable")
-	_check(not bake.is_water(0.0, 40.0) and not bake.is_water(3.0, 25.0),
-		"but a float cannot land on the dock's planks, though they stand over water")
-	_check(bake.spot_at(0.0, 16.0).get("id", "") == "dock_end", "and it is the Dock End spot")
-	_check(bake.spot_at(0.0, -24.0).get("id", "") == "deep_hole", "the middle of the lake is the Deep Hole")
-	_check(bake.is_water(-60.0, -20.0) and bake.spot_at(-60.0, -20.0).is_empty(),
-		"and west of it is open water, no spot")
-	# NaN fails every comparison: without its guard it would index a real cell.
-	_check(bake.cell(NAN, 0.0) == Vector2i(-1, -1) and bake.cell(0.0, NAN) == Vector2i(-1, -1),
-		"a NaN position is off the grid, not cell zero")
-	_check(bake.depth_dm_at(INF, 0.0) == 0, "infinity is dry land")

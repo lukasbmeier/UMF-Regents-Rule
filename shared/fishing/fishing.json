@@ -1,5 +1,6 @@
 {
   "_comment": "THE FISHING CONTENT. One file, read by both halves: server/build.rs compiles it into the module (server/src/genre/fishing/), game/fishing/fishing_data.gd loads it on the client. What a catch IS (category, weight, value), where it lives (spot loot tables), what gear does, and every timing the cast and the bite run on. Mechanics and most of the catalog are carried over from Fishing for Compliments ('Bottom Feeders'); junk and treasure are the Fantasy Props kit's models, which is what the catch fly-out shows.",
+  "levels": ["lakeside", "meadow"],
   "version": 1,
 
   "timing": {

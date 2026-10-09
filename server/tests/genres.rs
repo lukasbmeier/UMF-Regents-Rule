@@ -36,10 +36,3 @@ fn the_build_is_made_of_the_genres_game_json_names() {
     let listed: Vec<String> = v["genres"].as_array().unwrap().iter().map(|g| g.as_str().unwrap().to_string()).collect();
     assert_eq!(enabled::ENABLED.iter().map(|s| s.to_string()).collect::<Vec<_>>(), listed);
 }
-
-#[cfg(genre_fishing)]
-#[test]
-fn fishing_claims_only_its_own() {
-    assert_eq!(check_claims(&[&umf_module::genre::fishing::CLAIMS]), Ok(()));
-    assert_eq!(umf_module::genre::fishing::CLAIMS.challenge_kinds, &[100]);
-}

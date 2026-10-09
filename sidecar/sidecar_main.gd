@@ -25,8 +25,12 @@ extends Node
 ## The level to resolve movement against. The same scene the clients load — see SimWorld.
 @export var level_scene: PackedScene
 ## Entity kinds this process knows how to spawn. Must cover every kind in the worlds it serves,
-## or those entities never exist here and nothing simulates them.
+## or those entities never exist here and nothing simulates them. The scene lists the foundation's
+## (a player, kind 0; an NPC, kind 1); a genre's definition for the same kind replaces it.
 @export var entity_definitions: Array[EntityDefinition] = []
+## Also take every genre's entity definitions and tables (shared/game.json, DECISIONS #173), the
+## way Boot does, so the sidecar knows the game's kinds without its scene naming a genre.
+@export var load_genres: bool = true
 
 var world: SimWorld = null
 
@@ -42,7 +46,15 @@ func _ready() -> void:
 	add_child(world)
 	world.setup(world_id, level_scene, float(cfg.server_tick_hz))
 
-	for defn: EntityDefinition in entity_definitions:
+	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
+	if load_genres:
+		var mods: Array[GenreModule] = Genres.modules()
+		for d: EntityDefinition in Genres.definitions(mods):
+			if not defs.has(d):
+				defs.append(d)
+		Genres.merge_tables(cfg, mods)
+		print("[Sidecar] genres: ", ", ".join(Genres.listed()))
+	for defn: EntityDefinition in defs:
 		EntitySpawner.register_definition(defn)
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
 

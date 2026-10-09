@@ -12,7 +12,7 @@
 
 use std::fmt::Write as _;
 
-use umf_module::genre::fight::{
+use umf_module::genre::fishing::fight::{
     self, decode_log, encode_log, fight_length, params_for, replay, Behavior, Fight, FightParams, Grade, Profile,
     Run, State,
 };

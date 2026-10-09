@@ -305,3 +305,29 @@ fn the_rival_is_set_up_sensibly() {
     assert!(RIVAL.fight_s.0 > 0.0 && RIVAL.fight_s.0 <= RIVAL.fight_s.1);
     assert!((RIVAL.rod_tier as usize) < RODS.len());
 }
+
+/// Fishing claims only numbers of its own (moved from tests/genres.rs: the foundation's suite names no genre).
+#[test]
+fn fishing_claims_only_its_own() {
+    assert_eq!(umf_module::genre::check_claims(&[&CLAIMS]), Ok(()));
+    assert_eq!(CLAIMS.challenge_kinds, &[100]);
+}
+
+/// THE FIGHT'S REPORTS FIT THEIR RATE LIMIT (REVIEW B3; moved from tests/rate.rs).
+#[test]
+fn honest_clients_stay_inside_the_shipped_limits() {
+    // The fight is reported every 0.2 s and at once when its tell changes (fishing_component.gd,
+    // SHOW_INTERVAL_SEC): at worst a change on every physics frame for a moment. A second of
+    // reports at 5 a second, then 8 changes inside 0.1 s, then reports again, must all pass.
+    let l = umf_module::rules::rate_limit("show_fight");
+    let mut t = None;
+    let mut calls: Vec<f64> = (0..5).map(|k| k as f64 * 0.2).collect();
+    calls.extend((0..8).map(|k| 1.0 + k as f64 / 60.0));
+    calls.extend((0..25).map(|k| 1.2 + k as f64 * 0.2));
+    let mut last = 0.0;
+    for at in calls {
+        t = Some(umf_module::rules::rate_spend(t, at - last, l).unwrap_or_else(|| panic!("show_fight refused at {at:.2} s")));
+        last = at;
+    }
+    assert_eq!(l.verb, "show_fight", "shared/rules.json has no rate_limits.show_fight");
+}

@@ -15,7 +15,7 @@ func _run_remote_animation_tests() -> void:
 	var reg: Node = _autoload("EntityRegistry")
 	var spawner: Node = _autoload("EntitySpawner")
 	var packed: PackedScene = load(GREYBOX_SCENE) as PackedScene
-	var defn: EntityDefinition = load(FISHER_DEF) as EntityDefinition
+	var defn: EntityDefinition = load(CHARACTER_DEF) as EntityDefinition
 	if reg == null or spawner == null or packed == null or defn == null:
 		_check(false, "autoloads, level and fisher definition present")
 		return

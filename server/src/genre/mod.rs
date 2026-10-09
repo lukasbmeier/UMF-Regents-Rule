@@ -10,10 +10,9 @@
 //! A GAME IS A LIST OF GENRES (DECISIONS #173): `shared/game.json` names them and build.rs compiles
 //! exactly those in, as `cfg(genre_<name>)`. A genre's pure rules sit behind its flag here.
 
-#[cfg(genre_fishing)]
-pub mod fight;
-#[cfg(genre_fishing)]
-pub mod fishing;
+// Each genre's pure rules (`genre/<name>/mod.rs` or `genre/<name>.rs`), declared by build.rs for
+// the genres shared/game.json lists: no foundation file names a genre (the template strips by path).
+include!(concat!(env!("OUT_DIR"), "/genre_rules.rs"));
 
 /// The genres this build is made of, in shared/game.json's order.
 pub mod enabled {

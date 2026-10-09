@@ -1,5 +1,6 @@
 {
-  "_comment": "THE GAME: which genres this build is made of (DECISIONS #173). Each name is a genre's folder: server/src/game/<name>.rs (its tables, reducers and hooks) with server/src/genre/<name>* (its pure rules), and game/<name>/ on the client, whose genre.tres says what the client boots (entity definitions, tables, scenes). server/build.rs compiles exactly these in, and the client boots exactly these. Take a genre out: republish (tools/publish.sh --codegen) and restart, and its tables, reducers and scenes are gone while the foundation still stands. Order matters only for the order the hooks are called in.",
+  "_comment": "THE GAME: which genres this build is made of (DECISIONS #173). Each name is a genre's folder: server/src/game/<name>.rs (its tables, reducers and hooks) with server/src/genre/<name>* (its pure rules), and game/<name>/ on the client, whose genre.tres says what the client boots (entity definitions, tables, scenes). server/build.rs compiles exactly these in, and the client boots exactly these. Take a genre out: republish (tools/publish.sh --codegen) and restart, and its tables, reducers and scenes are gone while the foundation still stands. Order matters only for the order the hooks are called in. database: the SpacetimeDB database this game is published to and plays in; the test suites use <database>-test. Every game on one server needs its own.",
   "title": "Lakeside",
+  "database": "umf",
   "genres": ["fishing"]
 }

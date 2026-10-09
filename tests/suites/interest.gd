@@ -63,8 +63,12 @@ func _run_interest_tests() -> void:
 	# missing from the fishing game's: nobody's rod came out on anyone else's screen, and nothing
 	# said why. So each game scene's set is checked against what its entities' components require.
 	# (Not the sidecar's: it leaves out what only a screen shows, on purpose.)
-	for game_path: String in ["res://foundation/boot.tscn", "res://game/fishing/lakeside_game.tscn",
-			"res://game/fishing/fishing_game.tscn", "res://tests/levels/greybox_demo.tscn"]:
+	# The foundation's scenes and the game's main scene (a genre's suites check its other scenes).
+	var game_scenes: PackedStringArray = ["res://foundation/boot.tscn", "res://tests/levels/greybox_demo.tscn"]
+	var main_scene: String = str(ProjectSettings.get_setting("application/run/main_scene", ""))
+	if not main_scene.is_empty() and not game_scenes.has(main_scene):
+		game_scenes.append(main_scene)
+	for game_path: String in game_scenes:
 		var st: SceneState = (load(game_path) as PackedScene).get_state()
 		var game_cfg: NetConfig = null
 		var defs: Array = []
@@ -130,16 +134,13 @@ func _run_interest_tests() -> void:
 	# subscribes the client to every world at once, and a filtered table with no `world_id` column
 	# is a subscription the server refuses.
 	# A GAME'S per-world tables are decided in its own NetConfig (`world_tables`), never by editing
-	# the foundation's list (DECISIONS #154): fishing's line in the water belongs to one world.
+	# the foundation's list (DECISIONS #154); a genre's suites check its own. These are the foundation's.
 	var expect_filtered: Array[StringName] = [&"entity", &"movement_state", &"health_state",
-		&"session", &"action_event", &"equip_state", &"appearance", &"lobby_member", &"world_level", &"session_match", &"fishing_line",
-		&"fishing_conditions", &"fight_show"]
+		&"session", &"action_event", &"equip_state", &"appearance", &"lobby_member", &"world_level", &"session_match"]
 	var expect_whole: Array[StringName] = [&"world_config", &"player", &"session_member",
-		&"item_def", &"inventory_item", &"challenge", &"ability_def", &"ability_state",
-		&"catch", &"gear", &"fishing_spot"]
-	var shipped: NetConfig = (load(FISHING_NET_CONFIG) as NetConfig).duplicate() as NetConfig
-	_check(shipped != null, "the fishing NetConfig loads")
-	Genres.merge_tables(shipped, Genres.modules())   # and the genres' tables, as Boot adds them
+		&"item_def", &"inventory_item", &"challenge", &"ability_def", &"ability_state"]
+	var shipped := NetConfig.new()
+	_check(shipped != null, "the foundation's NetConfig is made")
 	var undecided: Array[StringName] = []
 	if shipped != null:
 		for t: StringName in shipped.core_tables:

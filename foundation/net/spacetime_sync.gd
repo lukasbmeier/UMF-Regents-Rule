@@ -130,7 +130,8 @@ func get_simulated_latency() -> Vector2i:
 
 
 ## The database to join: `--db=<name>` on the command line, else the `UMF_DB` environment
-## variable, else the config's `module_name`. How the test suites keep off the database a person
+## variable, else the game's (shared/game.json `database`, DECISIONS #195), else the config's
+## `module_name`. How the test suites keep off the database a person
 ## plays in: they publish `umf-test` and set `UMF_DB` for every process they start (DECISIONS #154).
 static func database_name(cfg: NetConfig) -> String:
 	for arg: String in OS.get_cmdline_user_args():
@@ -139,6 +140,9 @@ static func database_name(cfg: NetConfig) -> String:
 	var env: String = OS.get_environment("UMF_DB")
 	if not env.is_empty():
 		return env
+	var game_db: String = str(Genres.game().get("database", ""))
+	if not game_db.is_empty():
+		return game_db
 	return cfg.module_name if cfg != null else "umf"
 
 

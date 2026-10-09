@@ -26,6 +26,20 @@ def f32(v: float) -> float:
     return struct.unpack("<f", struct.pack("<f", v))[0]
 
 
+LAKESIDE_NAMED = {
+    "square": [0.0, 96.0],
+    "dock_end": [0.0, 16.0],
+    "deep_hole": [10.0, -27.0],
+    "reed_bay": [-114.0, 16.0],
+    "north_drop": [-31.0, -51.0],
+    "north_beach": [-10.0, -96.0],
+    "rocky_point": [85.0, -42.0],
+    "lake_centre": [0.0, -24.0],
+    "dock_pier": [0.0, 40.0],
+    "dock_head": [3.0, 25.0],
+}
+
+
 def main(level: str) -> None:
     bake = json.loads((ROOT / "shared/world" / f"{level}.json").read_text(encoding="utf-8"))
     g = bake["depth_grid"]
@@ -64,25 +78,21 @@ def main(level: str) -> None:
                 return s["id"]
         return None
 
+    # Every level: its spawn, each spot's centre, a point far off the grid. The lakeside instead keeps
+    # the places the fishing game's tests name, in their original order (its file must not change).
+    if level == "lakeside":
+        named = {"spawn": bake["spawn"][0::2], **LAKESIDE_NAMED, "off_grid_far": [400.0, 400.0]}
+        edge_cells = [(10, 10), (134, 79), (0, 0), (w - 1, h - 1), (200, 30)]
+    else:
+        named = {"spawn": bake["spawn"][0::2], "off_grid_far": [400.0, 400.0]}
+        for s_ in spots:
+            named[f"spot_{s_['id']}"] = [float(s_["x"]), float(s_["z"])]
+        edge_cells = [(0, 0), (w // 2, h // 2), (w - 1, h - 1), (w // 3, 2 * h // 3)]
     pts = []
-    named = {
-        "spawn": bake["spawn"][0::2],
-        "square": [0.0, 96.0],
-        "dock_end": [0.0, 16.0],
-        "deep_hole": [10.0, -27.0],
-        "reed_bay": [-114.0, 16.0],
-        "north_drop": [-31.0, -51.0],
-        "north_beach": [-10.0, -96.0],
-        "rocky_point": [85.0, -42.0],
-        "lake_centre": [0.0, -24.0],
-        "dock_pier": [0.0, 40.0],
-        "dock_head": [3.0, 25.0],
-        "off_grid_far": [400.0, 400.0],
-    }
     for name, (x, z) in named.items():
         pts.append((name, x, z))
     # Cell edges: exactly on a boundary, and a hair either side of it.
-    for k, (i, j) in enumerate([(10, 10), (134, 79), (0, 0), (w - 1, h - 1), (200, 30)]):
+    for k, (i, j) in enumerate(edge_cells):
         cx = ox + i * sp
         cz = oz + j * sp
         for dx, dz, tag in [(0.5, 0.5, "edge"), (0.4999, 0.4999, "inside"), (0.5001, -0.5001, "across"),
@@ -93,8 +103,15 @@ def main(level: str) -> None:
         pts.append((f"random{k}", rng.uniform(ox - 5, ox + w * sp + 5), rng.uniform(oz - 5, oz + h * sp + 5)))
     # The wading edge (REVIEW B2): off the end of the dock in 10 cm steps, where `can_stand` turns.
     # Appended after the random ones so every earlier probe keeps its value and its place.
-    for k in range(60):
-        pts.append((f"dock_off_{k}", 0.0, 21.0 - k * 0.1))
+    if level == "lakeside":
+        for k in range(60):
+            pts.append((f"dock_off_{k}", 0.0, 21.0 - k * 0.1))
+    else:
+        # into each spot from its edge, 25 cm at a time, over where the ground stops being standable
+        for s_ in spots:
+            r = float(s_["radius"])
+            for k in range(int(r * 4) + 12):
+                pts.append((f"into_{s_['id']}_{k}", float(s_["x"]), float(s_["z"]) + r + 2.0 - k * 0.25))
 
     probes = []
     for name, x, z in pts:

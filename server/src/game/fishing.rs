@@ -28,7 +28,7 @@
 
 use spacetimedb::{reducer, table, ReducerContext, ScheduleAt, Table, TimeDuration, Timestamp};
 
-use crate::genre::fight;
+use crate::genre::fishing::fight;
 use crate::genre::fishing as rules;
 use crate::module::{
     challenge, entity, entity_kind, movement_state, player, require_admin, session,

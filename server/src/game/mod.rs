@@ -12,13 +12,12 @@
 //! kinds, phases, session kinds) are its `Claims`; two genres claiming one, or one claiming the
 //! foundation's, stops the module at `init`.
 //!
-//! ADDING A GENRE: write `<name>.rs` (its tables, reducers and a `Genre`), declare it below behind
-//! `#[cfg(genre_<name>)]`, add it to `GENRES`, and name it in `shared/game.json`. If you find
+//! ADDING A GENRE: write `<name>.rs` (its tables, reducers and a `pub static <NAME>: impl Genre`,
+//! the name upper-cased), its pure rules in `genre/<name>/`, any content it compiles in as a build
+//! step in `server/build/` (listed in `build/genres.rs`), and name it in `shared/game.json`. No
+//! foundation file names a genre: build.rs declares the modules. If you find
 //! yourself wanting to edit `module.rs` to make your game work, the seam is in the wrong place:
 //! widen a hook instead.
-
-#[cfg(genre_fishing)]
-pub mod fishing;
 
 use crate::genre::Claims;
 use crate::module::{Challenge, Entity, Session};
@@ -76,12 +75,9 @@ pub trait Genre: Sync {
     }
 }
 
-/// EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order. Add a genre here (behind its
-/// flag) when you add its file.
-pub static GENRES: &[&dyn Genre] = &[
-    #[cfg(genre_fishing)]
-    &fishing::FISHING,
-];
+// EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order: build.rs declares each one's
+// module (`game/<name>.rs`) and lists it in `GENRES` (its `pub static <NAME>`, the name upper-cased).
+include!(concat!(env!("OUT_DIR"), "/genre_layer.rs"));
 
 /// The genre that claims challenge kind `kind`, if any.
 fn owner_of_challenge(kind: u8) -> Option<&'static dyn Genre> {

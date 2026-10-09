@@ -3,11 +3,11 @@
 [ext_resource type="Script" path="res://sidecar/sidecar_main.gd" id="1_main"]
 [ext_resource type="Resource" path="res://sidecar/sidecar_net_config.tres" id="2_net"]
 [ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="3_level"]
-[ext_resource type="Resource" path="res://game/fishing/fisher_definition.tres" id="4_fisher"]
-[ext_resource type="Resource" path="res://game/fishing/rival_definition.tres" id="5_rival"]
+[ext_resource type="Resource" path="res://foundation/entities/player_definition.tres" id="4_player"]
+[ext_resource type="Resource" path="res://foundation/entities/npc_definition.tres" id="5_npc"]
 
 [node name="Sidecar" type="Node"]
 script = ExtResource("1_main")
 net_config = ExtResource("2_net")
 level_scene = ExtResource("3_level")
-entity_definitions = Array[Resource]([ExtResource("4_fisher"), ExtResource("5_rival")])
+entity_definitions = Array[Resource]([ExtResource("4_player"), ExtResource("5_npc")])

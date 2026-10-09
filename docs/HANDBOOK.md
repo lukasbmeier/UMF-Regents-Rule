@@ -187,8 +187,11 @@ tools\publish.cmd --codegen       :: a table or a reducer's arguments changed
 Close the editor first (or let it reload the generated scripts). `DB=<name>` picks another
 database.
 
-**Two databases:** `umf` is the one you play in; `umf-test` is the one every test suite uses (and
-wipes). Running the tests no longer touches your world. A lint stops a test script naming `umf`.
+**Two databases per game:** the game's own (`shared/game.json` `database`: Fishing's is `umf`, the
+template's `umf-template`, Fowl Play's `fowl-play`) is the one you play in; `<database>-test` is the
+one every test suite uses (and wipes). Every game on one SpacetimeDB server needs its own name, or
+publishing one game overwrites another's world. Running the tests never touches your world: suites
+pick their database through `tests/lib/db.sh`, and a lint stops one naming the play database.
 
 **The version check:** a game refuses to connect to a server whose tables or reducers differ from
 the ones it was built with, and says so on the connect screen ("This server is running a different
@@ -623,18 +626,33 @@ what is worn (a piece's own colourways). See `game/characters/character_looks.gd
    needs (a Kind such as "basket", "tee", "coop").
 4. Save, select `LevelInfo`, press **Bake For The Server**. It writes `shared/world/<name>.json`.
 5. Republish. `spacetime call umf set_world_level 0 <id>` puts world 0 there; the game loads the
-   scene the bake names. Copy `meadow.tscn` to start.
+   scene the bake names. Copy `foundation/level/example/example_level.tscn` to start.
 
-**A new genre** (the start of game 2): `server/src/game/<name>.rs` with its tables, reducers and a
-`Genre` (copy fishing's impl block at the bottom of `fishing.rs`: claims and the hooks you need),
-declared in `server/src/game/mod.rs` behind `#[cfg(genre_<name>)]` and added to `GENRES`; its pure
-rules in `server/src/genre/`. On the client, `game/<name>/genre.tres` (a `GenreModule`: its entity
-definitions, tables, and scenes). Name it in `shared/game.json`, `tools\publish.cmd --codegen`,
-restart.
+**A new genre** (the start of game 2). EVERY FILE IS EITHER THE FOUNDATION'S OR ONE GENRE'S, and a
+genre's files are listed in `tools/template/genres/<name>.paths`: that list is what makes a game
+without it (`python tools/template/strip_genre.py <name>`), so keep it complete. A genre has:
+- **server:** `server/src/game/<name>.rs` (its tables, reducers and a `pub static <NAME>`, the name in
+  capitals, implementing `Genre`: copy fishing's impl block at the bottom of `fishing.rs`); its pure
+  rules in `server/src/genre/<name>/`; any content it compiles in as `server/build/<name>.rs`, with
+  two lines tagged `// genre:<name>` in `server/build/genres.rs`; its native tests in
+  `server/tests/<file>.rs` starting `#![cfg(genre_<name>)]`. You do NOT declare it anywhere in the
+  foundation: build.rs declares the modules of every genre `shared/game.json` lists.
+- **client:** `game/<name>/genre.tres` (a `GenreModule`: its entity definitions, tables, and scenes);
+  its data in `shared/<name>/`.
+- **tests:** unit suites in `game/<name>/tests/suites/` (the runner finds them, after the
+  foundation's), sharing a `game/<name>/tests/<name>_suite_base.gd`; shell checks as HOOKS,
+  `game/<name>/tests/hooks/<point>.sh`, sourced where a foundation suite calls `run_genre_hooks
+  <point>` (integration_init, integration_levels, integration_genre, integration_genre_late,
+  integration_match_began, multiclient, genres_absent, genres_present, export_client); windowed checks
+  in `game/<name>/tests/render/`.
+Name it in `shared/game.json`, `tools\publish.cmd --codegen`, restart.
 
-**A new game:** a list of genres in `shared/game.json`, a game scene (a level, Boot with Load
-Genres on, a LevelLoader), and the main scene set to it. See `docs/TEMPLATE_WORKFLOW.md` for
-pulling the foundation into its own repository (not set up yet, section 11).
+**A new game** starts from the TEMPLATE (`UMF Template`, a repo of the foundation with no genres; its
+main scene, `game/greybox_game.tscn`, plays the foundation's character on the greybox). Clone it,
+add genres, and take foundation updates with `git pull template main`. A game made from a game with
+a genre you do not want: `python tools/template/strip_genre.py <name>`. The reference content every
+game keeps: the humanoid looks and animations (`game/characters/`, `game/anim/humanoid*`), the greybox,
+and the example level (`foundation/level/example/`, level 200).
 
 ---
 

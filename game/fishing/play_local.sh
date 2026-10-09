@@ -21,8 +21,9 @@
 #   Between rounds the shop opens: 1 rod (reach), 2 reel (hook-set window), 3 line (load).
 set -uo pipefail
 cd "$(dirname "$0")/../.."
-# The database to play in: `umf` unless DB says otherwise. UMF_DB reaches every client started here.
-DB="${DB:-umf}"
+# The database to play in: the game's (shared/game.json) unless DB says otherwise. UMF_DB reaches
+# every client started here.
+DB="${DB:-$(python -c "import json; print(json.load(open('shared/game.json')).get('database', 'umf'))" | tr -d '\r')}"
 export UMF_DB="$DB"
 
 GODOT="${GODOT:-godot}"

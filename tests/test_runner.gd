@@ -13,13 +13,9 @@ const SUITES: PackedStringArray = [
 	"interest",
 	"authority",
 	"npc",
-	"gear",
-	"standings",
 	"entity_registry",
 	"component",
 	"challenge",
-	"fishing_rules",
-	"fight",
 	"level_bake",
 	"entity",
 	"spawner",
@@ -38,25 +34,18 @@ const SUITES: PackedStringArray = [
 	"settings",
 	"music",
 	"looks",
-	"fishing_world",
 	"genres",
 	"match",
 	"lobby",
 	"levels",
 	"camera",
-	"aim",
 	"animation",
 	"character",
 	"pose",
 	"animation_scene",
 	"remote_animation",
 	"greybox",
-	"lakeside",
-	"kits",
-	"fishing_fx",
-	"grip",
 	"equip",
-	"arms",
 ]
 
 
@@ -102,6 +91,23 @@ func _run_all() -> void:
 		add_child(suite)
 		await suite.run()
 		suite.queue_free()
+	# Then every genre's own suites (`game/<genre>/tests/suites/*.gd`, by name), for the genres
+	# shared/game.json lists: a genre's tests go with it, and a game without it never runs them.
+	for genre: String in Genres.listed():
+		var dir: String = "res://game/%s/tests/suites/" % genre
+		if not DirAccess.dir_exists_absolute(dir):
+			continue
+		var files: PackedStringArray = DirAccess.get_files_at(dir)
+		files.sort()
+		for f: String in files:
+			if not f.ends_with(".gd") or not _on(f.get_basename()):
+				continue
+			var gscript: GDScript = load(dir + f) as GDScript
+			var gsuite: SuiteBase = gscript.new() as SuiteBase
+			gsuite.name = f.get_basename()
+			add_child(gsuite)
+			await gsuite.run()
+			gsuite.queue_free()
 	var passes: int = SuiteBase._passes
 	var failures: int = SuiteBase._failures
 	print("\n%d passed, %d failed" % [passes, failures])

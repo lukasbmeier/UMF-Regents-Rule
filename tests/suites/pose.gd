@@ -19,7 +19,7 @@ func run() -> void:
 ## a pelvis above a pair of feet, at human height, in this game's units.
 func _run_pose_tests() -> void:
 	print("== animation: the character stands up ==")
-	var set: AnimationSet = load(FISHER_SET) as AnimationSet
+	var set: AnimationSet = load(HUMANOID_SET) as AnimationSet
 	var model_scene: PackedScene = load("res://game/characters/mannequin_f.glb") as PackedScene
 	if set == null or model_scene == null:
 		_check(false, "the fisher set and the default model load")

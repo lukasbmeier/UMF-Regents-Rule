@@ -11,7 +11,7 @@ func run() -> void:
 
 func _run_animation_tests() -> void:
 	print("== animation: sets and the generated tree ==")
-	var set: AnimationSet = load(FISHER_SET) as AnimationSet
+	var set: AnimationSet = load(HUMANOID_SET) as AnimationSet
 	_check(set != null, "the fisher's AnimationSet loads")
 	if set == null:
 		return
@@ -85,12 +85,10 @@ func _run_animation_tests() -> void:
 	_check(not swap.use_custom_timeline,
 		"and swapping an UNSCALED clip in clears it rather than inheriting %.2f s" % swapped_len)
 
-	# (b) a genre's own verb, from a SECOND library: pressing E at a pond plays the rod cast.
-	_check(set.anim_name(AnimationSet.INTERACT) == &"extra/Fish_Cast",
-		"the fishing genre overrides `interact` with the rod cast from the other library (%s)"
-			% set.anim_name(AnimationSet.INTERACT))
-	_check(set.has_exact(StringName("ability.0")),
-		"and gives ability 0 its own clip, so the action component's predicted start has one")
+	# (b) The interact verb resolves to a clip (a genre's set may override it with its own, from a
+	# second library: fishing's cast, checked in its own suite).
+	_check(set.clip(AnimationSet.INTERACT) != null and set.anim_name(AnimationSet.INTERACT) != &"",
+		"the set's `interact` resolves to a clip (%s)" % set.anim_name(AnimationSet.INTERACT))
 
 	# (c) FALLBACKS. The libraries have no heavy landing; the set must still land.
 	_check(not set.has_exact(AnimationSet.JUMP_LAND_HEAVY),

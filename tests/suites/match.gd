@@ -88,7 +88,7 @@ func _run_match_tests() -> void:
 	get_tree().root.add_child(level)
 	var prev_local: int = reg.local_entity_id
 	var prev_ready: bool = spawner._world_ready
-	spawner.register_definition(load(FISHER_DEF) as EntityDefinition)
+	spawner.register_definition(load(CHARACTER_DEF) as EntityDefinition)
 	spawner.world_root_path = spawner.get_path_to(level.get_node(^"WorldRoot"))
 	spawner._world_ready = true
 	reg.local_entity_id = 5701
@@ -211,7 +211,7 @@ func _run_match_tests() -> void:
 	level.queue_free()
 
 	# --- the splash ----------------------------------------------------------------------------------
-	var game_scene: PackedScene = load("res://game/fishing/lakeside_game.tscn") as PackedScene
+	var game_scene: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	var state: SceneState = game_scene.get_state()
 	var splash_scene: PackedScene = null
 	for i: int in range(state.get_node_count()):

@@ -19,10 +19,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
-# THE TEST DATABASE (DECISIONS #154): suites publish and play on `umf-test`, never on `umf`, the
+# THE TEST DATABASE (DECISIONS #154): suites publish and play on `<database>-test` (shared/game.json), never on the
 # database a person plays in. UMF_DB reaches every Godot process started from here.
-DB="${DB:-umf-test}"
-export UMF_DB="$DB"
+. tests/lib/db.sh
 WORLD=1
 
 passes=0
@@ -129,7 +128,7 @@ check "$([ -n "$landed" ] && echo true || echo false)" \
 echo "== an NPC it drives itself =="
 # Kind 1 is the rival angler, whose definition names a brain. Nobody sends it input: if it moves,
 # the sidecar decided to move it and then moved it through the ordinary movement path.
-assert_ok "spawn_npc $WORLD 1 {\"x\":-4.0,\"y\":0.0,\"z\":-4.0}" "spawn the rival angler"
+assert_ok "spawn_npc $WORLD 1 {\"x\":-4.0,\"y\":0.0,\"z\":-4.0}" "spawn an NPC (kind 1: the foundation's, or a genre's, with a brain)"
 npc_from=""
 npc_moved=""
 for _ in $(seq 1 40); do

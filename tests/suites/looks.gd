@@ -66,9 +66,9 @@ func _run_look_tests() -> void:
 		"only what the module takes is valid (lowercase, digits, _;=,.-, at most %d)" % Appearance.MAX_LENGTH)
 
 	# --- the variant it names ------------------------------------------------------------------
-	var fisher: EntityDefinition = load(FISHER_DEF) as EntityDefinition
+	var fisher: EntityDefinition = load(CHARACTER_DEF) as EntityDefinition
 	_check(fisher.variant_names().size() == fisher.visual_variants.size() and fisher.variant_names().has("wizard_f"),
-		"the angler's looks by name (%s)" % ", ".join(fisher.variant_names()))
+		"the character's looks by name (%s)" % ", ".join(fisher.variant_names()))
 	_check(fisher.visual_for(3, "wizard_f;hair=2").resource_path.ends_with("/wizard_f.tscn"),
 		"an appearance names the look worn")
 	_check(fisher.visual_for(3, "no_such_look") == fisher.visual_for(3) and fisher.visual_for(3, "") == fisher.visual_for(3),
@@ -120,7 +120,7 @@ func _run_look_tests() -> void:
 	var fake := FakeLookSdk.new()
 	add_child(fake)
 	SpaceTimeSync._sdk = fake
-	SpaceTimeSync.config = (load(FISHING_NET_CONFIG) as NetConfig).duplicate() as NetConfig
+	SpaceTimeSync.config = NetConfig.new()
 	Genres.merge_tables(SpaceTimeSync.config, Genres.modules())
 	var entity_row := FakeEntityRow.new(eid, 0)
 	fake.cache.put(&"entity", eid, entity_row)
@@ -343,7 +343,7 @@ func _run_piece_tests() -> void:
 
 	# The picker: a slot's colours beside it, asked again after a choice, a stale one dropped.
 	var picker := CharacterPicker.new()
-	picker.definition = load(FISHER_DEF) as EntityDefinition
+	picker.definition = load(CHARACTER_DEF) as EntityDefinition
 	picker.appearance = "peasant_f;torso_dye=3"
 	add_child(picker)
 	picker.open()

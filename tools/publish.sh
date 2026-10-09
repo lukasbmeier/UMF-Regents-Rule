@@ -4,7 +4,8 @@
 # compiles in: shared/rules.json, shared/movement_config.json, shared/fishing/*.json,
 # shared/world/*.json.
 #
-#   ./tools/publish.sh                     build and publish to `umf`, keeping its data
+#   ./tools/publish.sh                     build and publish to the game's database (shared/game.json
+#                                          `database`; Fishing's is umf), keeping its data
 #   ./tools/publish.sh --fresh             ...wiping its data first: needed when a table changed
 #                                          shape (a column added, renamed or retyped)
 #   GODOT=<path> ./tools/publish.sh --codegen
@@ -22,7 +23,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 # This machine's settings, when not run through tools\run.cmd (tools/local.env.example).
 if [ -z "${GODOT:-}" ] && [ -f tools/local.env ]; then set -a; eval "$(tr -d '\r' < tools/local.env)"; set +a; fi
-DB="${DB:-umf}"
+GAME_DB="$(python -c "import json; print(json.load(open('shared/game.json')).get('database', 'umf'))" | tr -d '\r')"
+DB="${DB:-$GAME_DB}"
 GODOT="${GODOT:-godot}"
 fresh=0
 codegen=0
@@ -35,9 +37,9 @@ for arg in "$@"; do
   esac
 done
 
-if [ $codegen -eq 1 ] && [ "$DB" != "umf" ]; then
-  echo "--codegen reads the schema from the database named after the module, umf, not $DB: the" >&2
-  echo "bindings would come out of whatever umf has. Publish umf with --codegen instead." >&2
+if [ $codegen -eq 1 ] && [ "$DB" != "$GAME_DB" ]; then
+  echo "--codegen reads the schema from the game's database ($GAME_DB, shared/game.json), not $DB: the" >&2
+  echo "bindings would come out of whatever $GAME_DB has. Publish $GAME_DB with --codegen instead." >&2
   exit 2
 fi
 

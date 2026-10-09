@@ -10,10 +10,9 @@
 # Requires a local server (`spacetime start`). Republishes the TEST database (umf-test) with --delete-data; `umf`, the one you play in, is not touched.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-# THE TEST DATABASE (DECISIONS #154): suites publish and play on `umf-test`, never on `umf`, the
+# THE TEST DATABASE (DECISIONS #154): suites publish and play on `<database>-test` (shared/game.json), never on the
 # database a person plays in. UMF_DB reaches every Godot process started from here.
-DB="${DB:-umf-test}"
-export UMF_DB="$DB"
+. tests/lib/db.sh
 GODOT="${GODOT:-godot}"
 LATENCIES="${LATENCIES:-0 100 200}"
 # Jitter per direction, applied at every latency above 0. Real networks are never steady.
@@ -30,10 +29,10 @@ for ms in $LATENCIES; do
   echo "== publish (fresh data) =="
   (cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1 \
     || { echo "publish failed" >&2; exit 1; }
-  # Every scripted route in this suite is on the greybox; the module's default level is the
-  # lakeside (the game). Selecting it moves the spawn to the origin and stocks the ponds.
-  spacetime call "$DB" use_level 0 0 >/dev/null 2>&1 \
-    || { echo "use_level failed" >&2; exit 1; }
+  # Every scripted route in this suite is on the greybox (level 0); a game's default world may run
+  # another. The foundation's switch moves the spawn to the origin; a genre's hook sets up its part.
+  spacetime call "$DB" set_world_level 0 0 >/dev/null 2>&1 \
+    || { echo "set_world_level failed" >&2; exit 1; }
   # Its clients teleport (and nudge) themselves: dev tools, off on any other database (REVIEW B1).
   spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 \
     || { echo "set_dev_tools failed" >&2; exit 1; }

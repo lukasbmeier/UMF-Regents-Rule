@@ -4,19 +4,23 @@
 #
 #   GODOT=<path> ./tests/render_test.sh
 #
-# Today: the Nature kit's leaves and blades are lit the same from behind as from the front, and
-# the grass keeps its colour at a distance (DECISIONS #141, #146), each with a control that shows
-# the bug; the lake shows its depth from a player's camera (#150); the grip preview's Save
-# Pictures draws every animation (#157); and F11 really makes the game fullscreen and back
-# (#148) — the window flashes to full screen for a moment while that runs.
+# The foundation's: F11 really makes the game fullscreen and back (#148) — the window flashes to
+# full screen for a moment while that runs. A genre's own run after it (fishing's: the foliage lit
+# from both sides #141 #146, the lake's depth #150, the grip pictures #157).
 set -u
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
 # On the defaults, not the player's settings: a saved fullscreen would change every picture.
 export UMF_SETTINGS=none
 failed=0
-for scene in res://tests/render/foliage_render_test.tscn res://tests/render/water_render_test.tscn \
-    res://tests/render/grip_pictures_test.tscn res://tests/render/window_test.tscn; do
+. tests/lib/genre_hooks.sh
+# The foundation's (tests/render/) and each listed genre's (game/<genre>/tests/render/).
+scenes=""
+for f in tests/render/*_test.tscn; do scenes="$scenes res://$f"; done
+for g in $(genres_listed); do
+  for f in game/$g/tests/render/*_test.tscn; do [ -f "$f" ] && scenes="$scenes res://$f"; done
+done
+for scene in $scenes; do
   out="$(mktemp)"
   "$GODOT" --path . --resolution 320x240 "$scene" 2>&1 | tee "$out"
   code=${PIPESTATUS[0]}

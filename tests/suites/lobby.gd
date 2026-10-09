@@ -11,8 +11,15 @@ func run() -> void:
 func _run_lobby_tests() -> void:
 	print("== the lobby ==")
 	var lobby: Dictionary = Rules.lobby(0)
-	_check(bool(lobby.get("ready_up", false)) and int(lobby.get("min_players", 0)) == 1 and Rules.teams(0).is_empty(),
-		"fishing's rounds have a lobby that starts on ready, for one player, with no teams")
+	var plan: Dictionary = {}
+	for k: Variant in (JSON.parse_string(FileAccess.get_file_as_string("res://shared/rules.json")) as Dictionary)["sessions"]:
+		if int((k as Dictionary)["kind"]) == 0:
+			plan = ((k as Dictionary).get("lobby", {}) as Dictionary)
+	_check(bool(lobby.get("ready_up", false)) == bool(plan.get("ready_up", false))
+		and int(lobby.get("min_players", 0)) == int(plan.get("min_players", 0))
+		and Rules.teams(0).size() == (plan.get("teams", []) as Array).size(),
+		"the default kind's lobby is shared/rules.json's: ready-up %s, %d players, %d teams"
+			% [lobby.get("ready_up", false), int(lobby.get("min_players", 0)), Rules.teams(0).size()])
 	_check(Rules.lobby(77).is_empty() and Rules.teams(77).is_empty(), "a kind with no lobby has none")
 	var sess := SessionComponent.new()
 	add_child(sess)
@@ -36,7 +43,7 @@ func _run_lobby_tests() -> void:
 	var level: Node3D = (load(GREYBOX_SCENE) as PackedScene).instantiate() as Node3D
 	get_tree().root.add_child(level)
 	var prev_ready: bool = spawner._world_ready
-	spawner.register_definition(load(FISHER_DEF) as EntityDefinition)
+	spawner.register_definition(load(CHARACTER_DEF) as EntityDefinition)
 	spawner.world_root_path = spawner.get_path_to(level.get_node(^"WorldRoot"))
 	spawner._world_ready = true
 	reg.local_entity_id = 5601

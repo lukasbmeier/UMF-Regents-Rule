@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="PackedScene" path="res://game/fishing/fishing_game.tscn" id="1_game"]
+[ext_resource type="PackedScene" path="res://game/greybox_game.tscn" id="1_game"]
 [ext_resource type="Script" path="res://tests/playtest/connect_playtest.gd" id="2_driver"]
 
 [node name="ConnectPlaytest" type="Node3D"]

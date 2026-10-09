@@ -1,7 +1,8 @@
 extends Node
 ## THE TEST SUITES' COMMON GROUND (REVIEW 0.23.1 C2): the counters every suite adds to (static,
 ## so the runner reads one total), `_check`, and every helper, test double and constant more than
-## one suite uses. Each suite in tests/suites/ extends this; tests/test_runner.gd runs them in order.
+## one suite uses. Each suite in tests/suites/ extends this, and so does each genre's test base
+## (`game/<genre>/tests/`); tests/test_runner.gd runs them in order.
 ## Split mechanically from the one-file runner: a member used by a single suite lives in that
 ## suite's file; anything shared lives here.
 
@@ -270,9 +271,11 @@ func _tick_frames(n: int) -> void:
 
 # --- animation: the set, the generated tree, and a real rig ------------------------------
 
-const FISHER_SET: String = "res://game/anim/fisher.tres"
-const FISHING_NET_CONFIG: String = "res://game/fishing/fishing_net_config.tres"
-const FISHER_DEF: String = "res://game/fishing/fisher_definition.tres"
+## THE FOUNDATION'S CHARACTER: a humanoid with every look and the plain humanoid set
+## (`game/characters/`, `game/anim/`), what a game with no genre plays as.
+const CHARACTER_DEF: String = "res://game/characters/character_definition.tres"
+const HUMANOID_SET: String = "res://game/anim/humanoid.tres"
+
 
 
 ## Resolve a clip by its mixer-qualified name (`Idle`, `extra/Walk_Fwd`).
@@ -285,15 +288,13 @@ func _clip_in(set: AnimationSet, full: StringName) -> Animation:
 	return lib.get_animation(name) if lib != null and lib.has_animation(name) else null
 
 
-## Every model the fishing game dresses an entity in: each angler look and the rival's.
+## Every model the game dresses a player in: the foundation's character's looks. A genre's suites
+## override this with its own (fishing's adds the rival's).
 func _shipped_looks() -> Array[PackedScene]:
 	var out: Array[PackedScene] = []
-	var fisher: EntityDefinition = load(FISHER_DEF) as EntityDefinition
-	var rival: EntityDefinition = load("res://game/fishing/rival_definition.tres") as EntityDefinition
-	if fisher != null:
-		out.append_array(fisher.visual_variants)
-	if rival != null and rival.visual_for(0) != null:
-		out.append(rival.visual_for(0))
+	var defn: EntityDefinition = load(CHARACTER_DEF) as EntityDefinition
+	if defn != null:
+		out.append_array(defn.visual_variants)
 	return out
 
 
@@ -330,26 +331,8 @@ func _teardown_anim(reg: Node, spawner: Node, eid: int, prev_local: int, prev_re
 	await get_tree().process_frame
 
 
-const LAKESIDE_SCENE: String = "res://game/world/lakeside.tscn"
 
 
-## The grips of DECISIONS #147 (clear of every leg through the idle), and one that clears a man's
-## leg in the idle's first frame and sits inside a woman's further in (Luke's first edit): fishing
-## position and turn, carrying position and turn.
-const GRIP_147: Array[Vector3] = [Vector3(-0.03, 0.11, -0.04), Vector3(95.0, 0.0, 0.0),
-	Vector3(-0.01, 0.11, -0.04), Vector3(0.0, -90.0, -95.0)]
-
-
-## A grip that puts the rod's ROOT at `pos`, turned `rot`, written as where its HOLD goes.
-func _root_entry(anim: StringName, pos: Vector3, rot: Vector3, steady: bool) -> GripEntry:
-	var rod: Node3D = (load("res://game/fishing/fishing_rod.tscn") as PackedScene).instantiate() as Node3D
-	var hold: Transform3D = GripFit.hold_of(rod)
-	rod.free()
-	var root := Transform3D(Basis.from_euler(Vector3(deg_to_rad(rot.x), deg_to_rad(rot.y), deg_to_rad(rot.z)),
-		EULER_ORDER_YXZ), pos)
-	var at: Transform3D = root * hold
-	var e: Vector3 = at.basis.get_euler(EULER_ORDER_YXZ)
-	return _grip_entry(anim, at.origin, Vector3(rad_to_deg(e.x), rad_to_deg(e.y), rad_to_deg(e.z)), steady)
 
 
 ## THE LOBBY (DECISIONS #174): the rules say whether a kind has one (ready-up, players, teams); a

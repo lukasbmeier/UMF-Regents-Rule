@@ -49,17 +49,18 @@ echo "ok"
 
 echo "== lint: test suites keep off the database people play in =="
 # Every server suite republishes its database with --delete-data. On `umf` that wiped the world
-# its owner was playing in (DECISIONS #154): suites use "$DB", which defaults to umf-test, and
-# export UMF_DB so every Godot process they start joins it too.
+# its owner was playing in (DECISIONS #154): suites source tests/lib/db.sh ("$DB", the game's
+# database + "-test", exported as UMF_DB to every Godot process) and never name the play database.
+PLAY_DB="$(python -c "import json; print(json.load(open('shared/game.json')).get('database', 'umf'))" | tr -d '\r')"
 bad=""
 for f in tests/*.sh; do
   if grep -qE 'spacetime (publish|call|sql|logs|delete)' "$f"; then
-    grep -q 'DB="${DB:-umf-test}"' "$f" && grep -q 'export UMF_DB="$DB"' "$f" || bad="$bad $f"
-    if grep -nE 'spacetime (publish|call|sql|logs|delete)( --[a-z]+)* umf($|[^-_a-z0-9])' "$f"; then bad="$bad $f"; fi
+    grep -q '^\. tests/lib/db\.sh' "$f" || bad="$bad $f"
+    if grep -nE "spacetime (publish|call|sql|logs|delete)( --[a-z]+)* $PLAY_DB(\$|[^-_a-z0-9])" "$f"; then bad="$bad $f"; fi
   fi
 done
 if [ -n "$bad" ]; then
-  echo "VIOLATION: these suites can reach the play database:$bad (use \"\$DB\", DB=\"\${DB:-umf-test}\", export UMF_DB=\"\$DB\")." >&2
+  echo "VIOLATION: these suites can reach the play database:$bad (source tests/lib/db.sh and use \"\$DB\")." >&2
   exit 1
 fi
 echo "ok"

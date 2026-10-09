@@ -17,10 +17,10 @@
 # that boots the fishing game instead of the sidecar.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-# THE TEST DATABASE (DECISIONS #154): suites publish and play on `umf-test`, never on `umf`, the
+. tests/lib/genre_hooks.sh
+# THE TEST DATABASE (DECISIONS #154): suites publish and play on `<database>-test` (shared/game.json), never on the
 # database a person plays in. UMF_DB reaches every Godot process started from here.
-DB="${DB:-umf-test}"
-export UMF_DB="$DB"
+. tests/lib/db.sh
 GODOT="${GODOT:-godot}"
 PYTHON="${PYTHON:-python}"
 
@@ -68,7 +68,7 @@ CPCK=build/client/umf.exe
 # in the client is readable by every player and is exactly what the rule exists to prevent.
 check "$([ "$(count $CPCK '^sidecar/')" = "0" ] && echo true || echo false)" \
   "no sidecar/ file is in the client ($(count $CPCK '^sidecar/') found)"
-check "$([ "$(count $CPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|tools/)')" = "0" ] && echo true || echo false)" \
+check "$([ "$(count $CPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|game/[a-z_]+/tests/|tools/)')" = "0" ] && echo true || echo false)" \
   "nor test code or tools"
 # THE LEVEL LIVES UNDER tests/levels/ — the game and the sidecar both load it — so "leave the tests
 # out" must not mean "leave the level out". The first version of these presets did exactly that,
@@ -83,31 +83,7 @@ check "$([ "$(count $CPCK '^shared/golden/')" = "0" ] && echo true || echo false
 # `*.json` — both look like tidying) quietly taking it out of every client.
 check "$([ "$(count $CPCK '^shared/movement_config\.json$')" = "1" ] && echo true || echo false)" \
   "the movement tunables the client reads at runtime ARE in it"
-check "$([ "$(count $CPCK '^game/fishing/sfx/[a-z_]+\.wav\.import$')" -ge 12 ] && echo true || echo false)" \
-  "and the game's sounds"
-# THE LAKESIDE. Its bake is how the client knows water from land (the aim ring), read as plain
-# files: the JSON is a resource and travels on its own, the depth grid is not and needs the
-# include filter. A client without it draws every cast as dry land.
-check "$([ "$(count $CPCK '^game/world/lakeside\.tscn')" -ge 1 ] && echo true || echo false)" \
-  "the lakeside level is in the client"
-check "$([ "$(count $CPCK '^shared/world/lakeside\.json$')" = "1" ] && [ "$(count $CPCK '^shared/world/lakeside_depth\.bin$')" = "1" ] && echo true || echo false)" \
-  "with its bake: the JSON and the depth grid"
-check "$([ "$(count $CPCK '^shared/fishing/fishing\.json$')" = "1" ] && echo true || echo false)" \
-  "and the fishing content the HUD names catches and gear from"
-check "$([ "$(count $CPCK '^game/characters/looks/[a-z_]+\.tscn')" -ge 9 ] && echo true || echo false)" \
-  "and every character look"
-# A friend's build must know which version it is (DECISIONS #164) and what the game is made of (#173).
-check "$([ "$(count $CPCK '^spacetime_bindings/schema_fingerprint\.json$')" = "1" ] && echo true || echo false)" \
-  "the bindings' schema fingerprint is in the client (the version check)"
-check "$([ "$(count $CPCK '^shared/game\.json$')" = "1" ] && [ "$(count $CPCK '^game/fishing/genre\.tres')" -ge 1 ] && echo true || echo false)" \
-  "and the game's genres: shared/game.json and fishing's genre.tres"
-check "$([ "$(count $CPCK '^shared/world/meadow\.json$')" = "1" ] && [ "$(count $CPCK '^shared/world/meadow_depth\.bin$')" = "1" ] && echo true || echo false)" \
-  "and the meadow's bake, the level built in the editor"
-# The Nature kit's leaves are drawn by a shader that INCLUDES another file (#141). A shader that
-# cannot find its include compiles to nothing, and a headless run never compiles one — so the
-# only place a missing include shows is here, in the pack.
-check "$([ "$(count $CPCK '^game/world/kits/nature_foliage(_opaque)?\.gdshader$')" = "2" ] && [ "$(count $CPCK '^game/world/kits/nature_foliage\.gdshaderinc$')" = "1" ] && echo true || echo false)" \
-  "and the foliage shaders, with the file they include"
+run_genre_hooks export_client   # what a genre's client must carry (fishing: its sounds, lakeside, content)
 
 # EDITOR TOOLING STAYS IN THE EDITOR (REVIEW 0.23.1 B4): the MCP bridge (it can run code it is
 # sent), the export plugin that keeps its autoload out, and Terrain3D's demo scene, in neither build.

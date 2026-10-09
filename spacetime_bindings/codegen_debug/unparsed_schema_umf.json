@@ -2683,129 +2683,17 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Correction"
+					},
+					"ty": 12.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "SessionEmpty"
 					},
 					"ty": 37.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Entity"
-					},
-					"ty": 14.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMatch"
-					},
-					"ty": 38.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InputFrame"
-					},
-					"ty": 26.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorldLevel"
-					},
-					"ty": 42.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementWrite"
-					},
-					"ty": 43.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FishingLine"
-					},
-					"ty": 19.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DevTools"
-					},
-					"ty": 13.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Vector3"
-					},
-					"ty": 3.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ChallengePruneSchedule"
-					},
-					"ty": 11.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FightShow"
-					},
-					"ty": 16.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementStateRow"
-					},
-					"ty": 30.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FishingSpot"
-					},
-					"ty": 21.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FishingCast"
-					},
-					"ty": 17.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FishingConditions"
-					},
-					"ty": 18.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TickSchedule"
-					},
-					"ty": 40.0,
 					"custom_ordering": true
 				},
 				{
@@ -2819,110 +2707,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ActionPruneSchedule"
-					},
-					"ty": 4.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "LobbyMember"
-					},
-					"ty": 29.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionEvent"
-					},
-					"ty": 2.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "PhaseSchedule"
-					},
-					"ty": 5.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Player"
-					},
-					"ty": 32.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Session"
-					},
-					"ty": 36.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Gear"
-					},
-					"ty": 23.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Correction"
-					},
-					"ty": 12.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AbilityDef"
-					},
-					"ty": 0.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Catch"
-					},
-					"ty": 9.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InputQueueRow"
-					},
-					"ty": 25.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RateBudget"
-					},
-					"ty": 33.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Authority"
-					},
-					"ty": 7.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "AbilityState"
 					},
 					"ty": 1.0,
@@ -2931,73 +2715,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ItemDef"
+						"source_name": "FightShow"
 					},
-					"ty": 28.0,
+					"ty": 16.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "FishingWorld"
+						"source_name": "MovementWrite"
 					},
-					"ty": 22.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMember"
-					},
-					"ty": 39.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Challenge"
-					},
-					"ty": 10.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AppearanceRow"
-					},
-					"ty": 6.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "EquipStateRow"
-					},
-					"ty": 15.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HealthStateRow"
-					},
-					"ty": 24.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "NpcBrainRow"
-					},
-					"ty": 31.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RivalBench"
-					},
-					"ty": 34.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -3011,9 +2739,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "FishingRival"
+						"source_name": "LobbyMember"
 					},
-					"ty": 20.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -3027,9 +2755,281 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "WorldLevel"
+					},
+					"ty": 42.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Authority"
+					},
+					"ty": 7.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionPruneSchedule"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingConditions"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ItemDef"
+					},
+					"ty": 28.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RateBudget"
+					},
+					"ty": 33.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ChallengePruneSchedule"
+					},
+					"ty": 11.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingWorld"
+					},
+					"ty": 22.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "NpcBrainRow"
+					},
+					"ty": 31.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityDef"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DevTools"
+					},
+					"ty": 13.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HealthStateRow"
+					},
+					"ty": 24.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Gear"
+					},
+					"ty": 23.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMember"
+					},
+					"ty": 39.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "AuthorityCheckSchedule"
 					},
 					"ty": 8.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingSpot"
+					},
+					"ty": 21.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputQueueRow"
+					},
+					"ty": 25.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AppearanceRow"
+					},
+					"ty": 6.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMatch"
+					},
+					"ty": 38.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingRival"
+					},
+					"ty": 20.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Session"
+					},
+					"ty": 36.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PhaseSchedule"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Vector3"
+					},
+					"ty": 3.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingCast"
+					},
+					"ty": 17.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FishingLine"
+					},
+					"ty": 19.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementStateRow"
+					},
+					"ty": 30.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Challenge"
+					},
+					"ty": 10.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TickSchedule"
+					},
+					"ty": 40.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RivalBench"
+					},
+					"ty": 34.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Entity"
+					},
+					"ty": 14.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 32.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Catch"
+					},
+					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "EquipStateRow"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 26.0,
 					"custom_ordering": true
 				}
 			]
@@ -3037,175 +3037,12 @@
 		{
 			"Tables": [
 				{
-					"source_name": "rival_schedule",
-					"product_type_ref": 35.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rival_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rival_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "rival_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "catch",
-					"product_type_ref": 9.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "catch_owner_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "owner_entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "catch_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "catch_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "catch_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "catch_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "session_member",
 					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
-						{
-							"source_name": {
-								"some": "session_member_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
 						{
 							"source_name": {
 								"some": "session_member_entity_id_idx_btree"
@@ -3216,6 +3053,19 @@
 							"algorithm": {
 								"BTree": [
 									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_member_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
 								]
 							}
 						},
@@ -3265,428 +3115,6 @@
 							"increment": 1.0
 						}
 					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "action_prune_schedule",
-					"product_type_ref": 4.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "world_config",
-					"product_type_ref": 41.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "world_config_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "world_config_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "challenge",
-					"product_type_ref": 10.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "challenge_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "challenge_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 11.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "gear",
-					"product_type_ref": 23.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "gear_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "gear_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "phase_schedule",
-					"product_type_ref": 5.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "lobby_member",
-					"product_type_ref": 29.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "lobby_member_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "lobby_member_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "lobby_member_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "lobby_member_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
 					"table_type": {
 						"User": []
 					},
@@ -3772,6 +3200,358 @@
 					"is_event": false
 				},
 				{
+					"source_name": "movement_state",
+					"product_type_ref": 30.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "movement_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rate_budget",
+					"product_type_ref": 33.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "rate_budget_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "lobby_member",
+					"product_type_ref": 29.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "lobby_member_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "lobby_member_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "lobby_member_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "lobby_member_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_world",
+					"product_type_ref": 22.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_world_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_world_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority_check_schedule",
+					"product_type_ref": 8.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "npc_brain",
+					"product_type_ref": 31.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "npc_brain_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "fishing_conditions",
 					"product_type_ref": 18.0,
 					"primary_key": [
@@ -3796,6 +3576,64 @@
 						{
 							"source_name": {
 								"some": "fishing_conditions_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fight_show",
+					"product_type_ref": 16.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fight_show_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fight_show_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fight_show_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -3904,6 +3742,113 @@
 					"is_event": false
 				},
 				{
+					"source_name": "rival_bench",
+					"product_type_ref": 34.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rival_bench_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rival_bench_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rival_schedule",
+					"product_type_ref": 35.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "rival_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "tick_schedule",
 					"product_type_ref": 40.0,
 					"primary_key": [
@@ -3966,15 +3911,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "equip_state",
-					"product_type_ref": 15.0,
+					"source_name": "fishing_line",
+					"product_type_ref": 19.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "equip_state_world_id_idx_btree"
+								"some": "fishing_line_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -3987,7 +3932,7 @@
 						},
 						{
 							"source_name": {
-								"some": "equip_state_entity_id_idx_btree"
+								"some": "fishing_line_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -4002,271 +3947,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "equip_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "dev_tools",
-					"product_type_ref": 13.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "dev_tools_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "dev_tools_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "movement_state",
-					"product_type_ref": 30.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "movement_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "movement_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "movement_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "rival_bench",
-					"product_type_ref": 34.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rival_bench_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rival_bench_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "npc_brain",
-					"product_type_ref": 31.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "npc_brain_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "npc_brain_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "npc_brain_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "session_match",
-					"product_type_ref": 38.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "session_match_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "session_match_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "session_match_session_id_key"
+								"some": "fishing_line_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -4333,708 +4014,6 @@
 					"is_event": false
 				},
 				{
-					"source_name": "appearance",
-					"product_type_ref": 6.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "appearance_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "appearance_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "appearance_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "health_state",
-					"product_type_ref": 24.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "health_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "health_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "health_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fishing_cast",
-					"product_type_ref": 17.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fishing_cast_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "fishing_cast_challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "challenge_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fishing_cast_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										1.0
-									]
-								}
-							}
-						},
-						{
-							"source_name": {
-								"some": "fishing_cast_challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "session_empty",
-					"product_type_ref": 37.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "session_empty_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "session_empty_session_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fight_show",
-					"product_type_ref": 16.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fight_show_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "fight_show_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fight_show_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fishing_world",
-					"product_type_ref": 22.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fishing_world_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fishing_world_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fishing_spot",
-					"product_type_ref": 21.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fishing_spot_key_idx_btree"
-							},
-							"accessor_name": {
-								"some": "key"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fishing_spot_key_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fishing_rival",
-					"product_type_ref": 20.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fishing_rival_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "fishing_rival_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fishing_rival_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						},
-						{
-							"source_name": {
-								"some": "fishing_rival_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										1.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "inventory_item",
-					"product_type_ref": 27.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "inventory_item_owner_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "owner_entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "inventory_item_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "inventory_item_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "inventory_item_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "rate_budget",
-					"product_type_ref": 33.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_idx_btree"
-							},
-							"accessor_name": {
-								"some": "key"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "rate_budget_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "item_def",
-					"product_type_ref": 28.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "item_def_item_def_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "item_def_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "item_def_item_def_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "ability_state",
-					"product_type_ref": 1.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "ability_state_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "ability_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "ability_state_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "ability_state_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "ability_def",
 					"product_type_ref": 0.0,
 					"primary_key": [
@@ -5080,15 +4059,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "authority_check_schedule",
-					"product_type_ref": 8.0,
+					"source_name": "challenge_prune_schedule",
+					"product_type_ref": 11.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_idx_btree"
+								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "scheduled_id"
@@ -5103,7 +4082,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_key"
+								"some": "challenge_prune_schedule_scheduled_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -5117,7 +4096,7 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_seq"
+								"some": "challenge_prune_schedule_scheduled_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -5137,64 +4116,6 @@
 					},
 					"table_access": {
 						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "fishing_line",
-					"product_type_ref": 19.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "fishing_line_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "fishing_line_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "fishing_line_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -5275,15 +4196,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "correction",
-					"product_type_ref": 12.0,
+					"source_name": "health_state",
+					"product_type_ref": 24.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "correction_entity_id_idx_btree"
+								"some": "health_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -5293,12 +4214,25 @@
 									0.0
 								]
 							}
+						},
+						{
+							"source_name": {
+								"some": "health_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
 						}
 					],
 					"constraints": [
 						{
 							"source_name": {
-								"some": "correction_entity_id_key"
+								"some": "health_state_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -5314,54 +4248,28 @@
 						"User": []
 					},
 					"table_access": {
-						"Private": []
+						"Public": []
 					},
 					"default_values": [],
 					"is_event": false
 				},
 				{
-					"source_name": "input_queue",
-					"product_type_ref": 25.0,
+					"source_name": "phase_schedule",
+					"product_type_ref": 5.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "input_queue_id_idx_btree"
+								"some": "phase_schedule_scheduled_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "id"
+								"some": "scheduled_id"
 							},
 							"algorithm": {
 								"BTree": [
 									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "input_queue_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "input_queue_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
 								]
 							}
 						}
@@ -5369,7 +4277,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "input_queue_id_key"
+								"some": "phase_schedule_scheduled_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -5383,7 +4291,7 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "input_queue_id_seq"
+								"some": "phase_schedule_scheduled_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -5398,6 +4306,109 @@
 							"increment": 1.0
 						}
 					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_match",
+					"product_type_ref": 38.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_match_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_match_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_match_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "item_def",
+					"product_type_ref": 28.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "item_def_item_def_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "item_def_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "item_def_item_def_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
 					"table_type": {
 						"User": []
 					},
@@ -5466,6 +4477,379 @@
 					"is_event": false
 				},
 				{
+					"source_name": "equip_state",
+					"product_type_ref": 15.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "equip_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "equip_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "equip_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "ability_state",
+					"product_type_ref": 1.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "ability_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ability_state_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ability_state_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "ability_state_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_empty",
+					"product_type_ref": 37.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "world_config",
+					"product_type_ref": 41.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge",
+					"product_type_ref": 10.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "inventory_item",
+					"product_type_ref": 27.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "inventory_item_owner_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "inventory_item_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "player",
 					"product_type_ref": 32.0,
 					"primary_key": [
@@ -5502,7 +4886,184 @@
 					"constraints": [
 						{
 							"source_name": {
+								"some": "player_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
 								"some": "player_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "correction",
+					"product_type_ref": 12.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "action_prune_schedule",
+					"product_type_ref": 4.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_rival",
+					"product_type_ref": 20.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_rival_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_rival_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_rival_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -5514,12 +5075,451 @@
 						},
 						{
 							"source_name": {
-								"some": "player_entity_id_key"
+								"some": "fishing_rival_world_id_key"
 							},
 							"data": {
 								"Unique": {
 									"columns": [
 										1.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "dev_tools",
+					"product_type_ref": 13.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "dev_tools_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "dev_tools_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "gear",
+					"product_type_ref": 23.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "gear_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "gear_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "input_queue",
+					"product_type_ref": 25.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "input_queue_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "input_queue_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "input_queue_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_cast",
+					"product_type_ref": 17.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_cast_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_cast_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_cast_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "fishing_cast_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "fishing_spot",
+					"product_type_ref": 21.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "fishing_spot_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "fishing_spot_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "catch",
+					"product_type_ref": 9.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "catch_owner_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "catch_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "catch_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "catch_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "catch_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "appearance",
+					"product_type_ref": 6.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "appearance_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
 									]
 								}
 							}
@@ -7210,6 +7210,14 @@
 			"Schedules": [
 				{
 					"source_name": {
+						"some": "authority_check_schedule_sched"
+					},
+					"table_name": "authority_check_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "check_authorities"
+				},
+				{
+					"source_name": {
 						"some": "rival_schedule_sched"
 					},
 					"table_name": "rival_schedule",
@@ -7218,11 +7226,11 @@
 				},
 				{
 					"source_name": {
-						"some": "action_prune_schedule_sched"
+						"some": "tick_schedule_sched"
 					},
-					"table_name": "action_prune_schedule",
+					"table_name": "tick_schedule",
 					"schedule_at_col": 1.0,
-					"function_name": "prune_action_events"
+					"function_name": "tick_movement"
 				},
 				{
 					"source_name": {
@@ -7242,19 +7250,11 @@
 				},
 				{
 					"source_name": {
-						"some": "tick_schedule_sched"
+						"some": "action_prune_schedule_sched"
 					},
-					"table_name": "tick_schedule",
+					"table_name": "action_prune_schedule",
 					"schedule_at_col": 1.0,
-					"function_name": "tick_movement"
-				},
-				{
-					"source_name": {
-						"some": "authority_check_schedule_sched"
-					},
-					"table_name": "authority_check_schedule",
-					"schedule_at_col": 1.0,
-					"function_name": "check_authorities"
+					"function_name": "prune_action_events"
 				}
 			]
 		},
@@ -7283,13 +7283,13 @@
 		{
 			"RowLevelSecurity": [
 				{
-					"sql": "SELECT b.* FROM npc_brain b JOIN authority a ON a.world_id = b.world_id WHERE a.identity = :sender"
-				},
-				{
 					"sql": "SELECT q.* FROM input_queue q JOIN authority a ON a.world_id = q.world_id WHERE a.identity = :sender"
 				},
 				{
 					"sql": "SELECT c.* FROM challenge c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT b.* FROM npc_brain b JOIN authority a ON a.world_id = b.world_id WHERE a.identity = :sender"
 				}
 			]
 		},
@@ -7298,26 +7298,164 @@
 				"entries": [
 					{
 						"Table": {
-							"source_name": "rival_schedule",
-							"canonical_name": "rival_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "catch",
-							"canonical_name": "catch"
-						}
-					},
-					{
-						"Table": {
 							"source_name": "session_member",
 							"canonical_name": "session_member"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "action_prune_schedule",
-							"canonical_name": "action_prune_schedule"
+							"source_name": "action_event",
+							"canonical_name": "action_event"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "movement_state",
+							"canonical_name": "movement_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rate_budget",
+							"canonical_name": "rate_budget"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "lobby_member",
+							"canonical_name": "lobby_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_world",
+							"canonical_name": "fishing_world"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority_check_schedule",
+							"canonical_name": "authority_check_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "npc_brain",
+							"canonical_name": "npc_brain"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_conditions",
+							"canonical_name": "fishing_conditions"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fight_show",
+							"canonical_name": "fight_show"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session",
+							"canonical_name": "session"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rival_bench",
+							"canonical_name": "rival_bench"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rival_schedule",
+							"canonical_name": "rival_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "tick_schedule",
+							"canonical_name": "tick_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_line",
+							"canonical_name": "fishing_line"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_level",
+							"canonical_name": "world_level"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ability_def",
+							"canonical_name": "ability_def"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "challenge_prune_schedule",
+							"canonical_name": "challenge_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "entity",
+							"canonical_name": "entity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "health_state",
+							"canonical_name": "health_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "phase_schedule",
+							"canonical_name": "phase_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_match",
+							"canonical_name": "session_match"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "item_def",
+							"canonical_name": "item_def"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority",
+							"canonical_name": "authority"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "equip_state",
+							"canonical_name": "equip_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ability_state",
+							"canonical_name": "ability_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_empty",
+							"canonical_name": "session_empty"
 						}
 					},
 					{
@@ -7334,188 +7472,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "challenge_prune_schedule",
-							"canonical_name": "challenge_prune_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "gear",
-							"canonical_name": "gear"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "phase_schedule",
-							"canonical_name": "phase_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "lobby_member",
-							"canonical_name": "lobby_member"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "action_event",
-							"canonical_name": "action_event"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_conditions",
-							"canonical_name": "fishing_conditions"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session",
-							"canonical_name": "session"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "tick_schedule",
-							"canonical_name": "tick_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "equip_state",
-							"canonical_name": "equip_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "dev_tools",
-							"canonical_name": "dev_tools"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "movement_state",
-							"canonical_name": "movement_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "rival_bench",
-							"canonical_name": "rival_bench"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "npc_brain",
-							"canonical_name": "npc_brain"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session_match",
-							"canonical_name": "session_match"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "world_level",
-							"canonical_name": "world_level"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "appearance",
-							"canonical_name": "appearance"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "health_state",
-							"canonical_name": "health_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_cast",
-							"canonical_name": "fishing_cast"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session_empty",
-							"canonical_name": "session_empty"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fight_show",
-							"canonical_name": "fight_show"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_world",
-							"canonical_name": "fishing_world"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_spot",
-							"canonical_name": "fishing_spot"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_rival",
-							"canonical_name": "fishing_rival"
-						}
-					},
-					{
-						"Table": {
 							"source_name": "inventory_item",
 							"canonical_name": "inventory_item"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "rate_budget",
-							"canonical_name": "rate_budget"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "item_def",
-							"canonical_name": "item_def"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "ability_state",
-							"canonical_name": "ability_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "ability_def",
-							"canonical_name": "ability_def"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "authority_check_schedule",
-							"canonical_name": "authority_check_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "fishing_line",
-							"canonical_name": "fishing_line"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "entity",
-							"canonical_name": "entity"
+							"source_name": "player",
+							"canonical_name": "player"
 						}
 					},
 					{
@@ -7526,20 +7490,56 @@
 					},
 					{
 						"Table": {
+							"source_name": "action_prune_schedule",
+							"canonical_name": "action_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "fishing_rival",
+							"canonical_name": "fishing_rival"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "dev_tools",
+							"canonical_name": "dev_tools"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "gear",
+							"canonical_name": "gear"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "input_queue",
 							"canonical_name": "input_queue"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "authority",
-							"canonical_name": "authority"
+							"source_name": "fishing_cast",
+							"canonical_name": "fishing_cast"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "player",
-							"canonical_name": "player"
+							"source_name": "fishing_spot",
+							"canonical_name": "fishing_spot"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "catch",
+							"canonical_name": "catch"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "appearance",
+							"canonical_name": "appearance"
 						}
 					},
 					{

@@ -22,12 +22,12 @@ func _run_animation_scene_tests() -> void:
 	var reg: Node = _autoload("EntityRegistry")
 	var spawner: Node = _autoload("EntitySpawner")
 	var packed: PackedScene = load(GREYBOX_SCENE) as PackedScene
-	var defn: EntityDefinition = load(FISHER_DEF) as EntityDefinition
+	var defn: EntityDefinition = load(CHARACTER_DEF) as EntityDefinition
 	if reg == null or spawner == null or packed == null or defn == null:
-		_check(false, "autoloads, level and fisher definition present")
+		_check(false, "autoloads, level and character definition present")
 		return
 	_check(defn.visual_for(0) != null and defn.animation_set != null,
-		"the fisher definition carries a rigged model and an animation set")
+		"the character definition carries a rigged model and an animation set")
 	var level: Node3D = packed.instantiate() as Node3D
 	get_tree().root.add_child(level)
 	var world_root: Node3D = level.get_node(^"WorldRoot") as Node3D
@@ -43,7 +43,7 @@ func _run_animation_scene_tests() -> void:
 	spawner._on_entity_inserted(RowEvent.make(
 		RowEvent.Kind.INSERTED, &"entity", null, FakeEntityRow.new(eid, 0)))
 	var me: SpaceTimeEntity = spawner.get_entity_node(eid) as SpaceTimeEntity
-	_check(me != null and me.is_local_authority, "the fisher spawned as ours")
+	_check(me != null and me.is_local_authority, "the character spawned as ours")
 	if me == null:
 		reg.local_entity_id = prev_local
 		spawner._world_ready = prev_ready
@@ -61,7 +61,7 @@ func _run_animation_scene_tests() -> void:
 	var action: SpaceTimeActionComponent = me.find_component(
 		SpaceTimeActionComponent) as SpaceTimeActionComponent
 	_check(driver != null and movement != null, "it carries an animation driver and movement")
-	# The fisher is a LOCAL entity, so its own input component samples the keyboard every physics
+	# The character is a LOCAL entity, so its own input component samples the keyboard every physics
 	# tick. Left running, its "nothing pressed" frames interleave with this suite's and halve
 	# every speed — which is exactly what it did, and the gait modifiers came out as noise.
 	var input: LocalInputComponent = me.find_component(LocalInputComponent) as LocalInputComponent
@@ -136,7 +136,7 @@ func _run_animation_scene_tests() -> void:
 
 	# --- STRAFING. The body keeps facing the camera, so sideways movement has to come out as a
 	# side-step in the character's OWN frame rather than a forward run pointed sideways.
-	_check(driver.is_strafing(), "the fisher's set drives a strafing blend")
+	_check(driver.is_strafing(), "the character's set drives a strafing blend")
 	await _anim_frames(movement, seq, 50, Vector2(1.0, 0.0))
 	var side: Vector2 = driver.strafe_blend()
 	print("   strafing right: blend %s" % side)
@@ -276,375 +276,28 @@ func _run_animation_scene_tests() -> void:
 	if interaction != null:
 		interaction.interact_requested.emit(99)
 		await _anim_frames(movement, seq, 2, Vector2.ZERO)
-		_check(driver.action_clip() == &"extra/Fish_Cast" and driver.action_playing(),
-			"the interact key plays the genre's cast animation (%s)" % driver.action_clip())
+		_check(driver.action_clip() == defn.animation_set.anim_name(AnimationSet.INTERACT) and driver.action_playing(),
+			"the interact key plays the set's interact animation (%s)" % driver.action_clip())
 	if action != null:
 		action.action_started.emit(0, 1)
 		await _anim_frames(movement, seq, 2, Vector2.ZERO)
-		_check(driver.action_clip() == &"extra/Melee_Hook",
-			"and an ability plays its own clip (%s)" % driver.action_clip())
+		# Its own clip when the set has one (fishing's does), else the set's interact fallback.
+		var ability_clip: StringName = defn.animation_set.anim_name(&"ability.0")
+		if not defn.animation_set.has_exact(&"ability.0"):
+			ability_clip = defn.animation_set.anim_name(AnimationSet.INTERACT)
+		_check(driver.action_clip() == ability_clip,
+			"and an ability plays its clip (%s, want %s)" % [driver.action_clip(), ability_clip])
 
-	# --- a HELD POSE: the fight's heave (DECISIONS #144) ------------------------------------
-	# A clip frozen at a point a value picks, blended over the body. Measured on the skeleton: the
-	# rod hand has to RISE as the heave goes on, or the pose layer is wired to nothing. The fisher's
-	# FishingFeedback owns this pose in the game (it lets it go every frame no line is out), so it
-	# is paused while the driver is asked directly.
-	var feedback: FishingFeedback = me.find_component(FishingFeedback) as FishingFeedback
-	if feedback != null:
-		feedback.set_process(false)
-	await _anim_frames(movement, seq, 40, Vector2.ZERO)
-	var rest_hand: float = _bone_y(skel, "hand_r")
-	driver.hold_pose(&"fishing.heave", 1.0, 0.0)
-	await _anim_frames(movement, seq, 20, Vector2.ZERO)
-	var low_hand: float = _bone_y(skel, "hand_r")
-	_check(driver.pose_clip() == &"extra/Fish_Reel" and is_equal_approx(driver.pose_weight(), 1.0),
-		"holding the heave blends the set's heave clip in fully (%s, %.2f)" % [driver.pose_clip(), driver.pose_weight()])
-	driver.hold_pose(&"fishing.heave", 1.0, 0.75)
-	await _anim_frames(movement, seq, 6, Vector2.ZERO)
-	var high_hand: float = _bone_y(skel, "hand_r")
-	print("   rod hand: %.2f m standing, %.2f m braced, %.2f m heaved" % [rest_hand, low_hand, high_hand])
-	_check(high_hand > low_hand + 0.15,
-		"and heaving it three-quarters through lifts the rod hand (%.2f -> %.2f m)" % [low_hand, high_hand])
-	_check(is_equal_approx(float(tree.get(AnimationTreeBuilder.P_POSE_SCALE)), 0.0),
-		"a held point is frozen there, not played on")
-	driver.hold_pose(&"fishing.wait", 1.0)
-	await _anim_frames(movement, seq, 3, Vector2.ZERO)
-	_check(driver.pose_clip() == &"extra/Fish_Cast_Idle"
-			and is_equal_approx(float(tree.get(AnimationTreeBuilder.P_POSE_SCALE)), 1.0),
-		"waiting with a line out plays the waiting clip, looping (%s)" % driver.pose_clip())
-	driver.hold_pose(&"no.such.pose", 1.0)
-	_check(driver.pose_clip() == &"extra/Fish_Cast_Idle", "a pose the set does not have changes nothing")
-	driver.release_pose()
-	await _anim_frames(movement, seq, 20, Vector2.ZERO)
-	_check(is_zero_approx(driver.pose_weight())
-			and absf(_bone_y(skel, "hand_r") - rest_hand) < 0.05,
-		"letting go blends it out, and the body is its own again (%.2f m)" % _bone_y(skel, "hand_r"))
-	driver.play_action(&"fishing.fail")
-	await _anim_frames(movement, seq, 2, Vector2.ZERO)
-	_check(driver.action_clip() == &"extra/Fish_Reel_Failed" and driver.action_playing(),
-		"a genre's own reaction plays through the action slot (%s)" % driver.action_clip())
-	var waited: int = 0
-	while driver.action_playing() and waited < 400:
-		await _anim_frames(movement, seq, 1, Vector2.ZERO)
-		waited += 1
-	print("   the fail clip played out in %d frames" % waited)
-	if feedback != null:
-		feedback.set_process(true)
-
-	# --- THE ROD, HELD (DECISIONS #147, #153) ----------------------------------------------------
-	# Luke: "the reel clips into her leg", and "the run animation feels strange" — the rod rode the
-	# running arm, its tip swept through her head every stride. Then: "I get it aligned for one
-	# animation, but a separate animation (run) needs a different value" — so a grip is per
-	# animation (and per body, #155), blended as the animations blend (#156: no modes). Measured on
-	# the real rig, driven by the real FishingFeedback and the real driver. The control first: the
-	# rod left to the hand in #147's fishing grip for every animation, pinned here (the grip file is
-	# tuned by hand).
-	var rod: FishingRod = feedback.fx().rod() if feedback != null and feedback.fx() != null else null
-	_check(rod != null, "the fisher holds a rod")
-	if rod != null and feedback != null:
-		# Carried in the hand for these; put away is checked after (DECISIONS #158, #159).
-		var equip: EquipComponent = me.find_component(EquipComponent) as EquipComponent
-		_check(equip != null, "the fisher has an equip state")
-		equip.away_when_idle = false
-		equip.set_equipped_now(true)
-		var file_grip: ItemGrip = rod.grip
-		var as_it_was := ItemGrip.new()
-		as_it_was.entries.append(_root_entry(AnimationSet.IDLE, GRIP_147[0], GRIP_147[1], false))
-		rod.grip = as_it_was
-		feedback.set_process(false)
-		await _place_predicted(movement, Vector3(-3.0, 0.0, 3.0), seq, 6)
-		await _anim_frames(movement, seq, 40, Vector2.ZERO)
-		var loose_idle: Dictionary = await _measure_rod(movement, seq, skel, rod, Vector2.ZERO, 40)
-		await _anim_frames(movement, seq, 20, Vector2(0.0, -1.0))
-		var loose_run: Dictionary = await _measure_rod(movement, seq, skel, rod, Vector2(0.0, -1.0), 60)
-		print("   rod left to the hand: reel %.1f cm off the leg standing; running, it swings %.0f deg, %.1f cm from the head"
-			% [loose_idle["air"] * 100.0, loose_run["swing"], loose_run["head"] * 100.0])
-		_check(loose_idle["air"] < 0.01 and loose_run["swing"] > 35.0 and loose_run["head"] < 0.0,
-			"CONTROL: held the fishing way and left to the hand, the reel sits on the leg (%.1f cm) and running swings the rod %.0f deg through the head (%.1f cm) — the bug"
-				% [loose_idle["air"] * 100.0, loose_run["swing"], loose_run["head"] * 100.0])
-		rod.grip = file_grip
-		feedback.set_process(true)
-		await _place_predicted(movement, Vector3(-3.0, 0.0, 3.0), seq, 6)
-		await _anim_frames(movement, seq, 40, Vector2.ZERO)
-		var stood: Dictionary = await _measure_rod(movement, seq, skel, rod, Vector2.ZERO, 40)
-		_check(rod.driver == driver and rod.body_type == &"female",
-			"the rod reads the body's animation from its driver, and knows it is in a woman's hand")
-		_check(stood["air"] >= 0.02,
-			"and standing, the reel is 2 cm or more off her body: %.1f cm %s (%s; if not, retune the idle grip in rod_grip_preview.tscn until her label is green)"
-				% [absf(stood["air"]) * 100.0, "clear" if stood["air"] >= 0.0 else "INSIDE",
-					defn.visual_for(eid).resource_path.get_file().get_basename()])
-		# THE WRIST (DECISIONS #158): carried steady, the hand turns to keep the handle in the fist.
-		# The clip's own hand is what the skeleton gives back after the frame; the hand the rod was
-		# drawn in is the turned one.
-		var raw_hand: Transform3D = _hand_of(skel, file_grip)
-		var turned_by: float = rad_to_deg(Quaternion(raw_hand.basis.orthonormalized()).angle_to(
-			Quaternion(rod.hand_now().basis.orthonormalized())))
-		var fist_line: Vector3 = GripFit.hole(skel, file_grip.hand)["axis"]
-		var off_line: float = rad_to_deg(rod.held_in_hand().basis.y.angle_to(fist_line))
-		var raw_off: float = rad_to_deg((raw_hand.basis.orthonormalized().inverse()
-			* (rod.hand_now().basis.orthonormalized() * rod.held_in_hand().basis.y)).angle_to(fist_line))
-		print("   standing, the wrist turns %.0f deg: the handle %.0f deg off the fist's line (%.0f deg with the wrist as the clip has it)"
-			% [turned_by, off_line, raw_off])
-		_check(turned_by > 10.0 and off_line < 5.0 and raw_off > 20.0,
-			"carried steady, her wrist turns %.0f deg to keep the handle in the fist (%.0f deg off its line; %.0f deg without the turn)"
-				% [turned_by, off_line, raw_off])
-		# THE ANIMATION'S WEIGHTS, as the tree blends them. The locomotion points are read back by
-		# position in the order the builder adds them: a reordering there must show up here.
-		var body_sm: AnimationNodeStateMachine = (tree.tree_root as AnimationNodeBlendTree).get_node(
-			AnimationTreeBuilder.NODE_BODY) as AnimationNodeStateMachine
-		var plane: AnimationNodeBlendSpace2D = body_sm.get_node(AnimationTreeBuilder.STATE_GROUNDED) as AnimationNodeBlendSpace2D
-		var order_ok: bool = plane != null and plane.get_blend_point_count() == AnimationTreeBuilder.PLANE_POINTS.size()
-		if order_ok:
-			for i: int in range(plane.get_blend_point_count()):
-				var clip: StringName = (plane.get_blend_point_node(i) as AnimationNodeAnimation).animation
-				order_ok = order_ok and clip == defn.animation_set.anim_name(AnimationTreeBuilder.PLANE_POINTS[i])
-		_check(order_ok, "the locomotion plane's points are the builder's PLANE_POINTS, in order")
-		var standing_w: Dictionary[StringName, float] = driver.semantic_weights()
-		_check(absf(float(standing_w.get(AnimationSet.IDLE, 0.0)) - 1.0) < 0.02,
-			"standing, the driver says the body shows its idle (%s)" % standing_w)
-		# WHAT THE GRIP FILE SAYS IS WHAT THE GAME DRAWS (DECISIONS #152): the rod as drawn
-		# (interpolated, as rendered), in the frame of the hand it is drawn in.
-		var carried: Dictionary = _rod_in_hand(skel, rod)
-		var want_carry: Transform3D = file_grip.resolve(AnimationSet.IDLE, rod.body_type).in_hand(
-			rod.hand_now(), skel.global_basis)
-		_check(_near(carried["drawn"] as Transform3D, want_carry) and _near(carried["in_hand"] as Transform3D, want_carry),
-			"and it is drawn in the hand where the grip file's idle grip for her puts it (%s, want %s)"
-				% [(carried["drawn"] as Transform3D).origin, want_carry.origin])
-		await _anim_frames(movement, seq, 20, Vector2(0.0, -1.0))
-		var running_w: Dictionary[StringName, float] = driver.semantic_weights()
-		var run_share: float = float(running_w.get(AnimationSet.RUN, 0.0)) + float(running_w.get(AnimationSet.SPRINT, 0.0))
-		var total_w: float = 0.0
-		for k: StringName in running_w:
-			total_w += running_w[k]
-		_check(run_share > 0.8 and absf(total_w - 1.0) < 0.001,
-			"running, the body shows its run (%.2f of it), and the weights sum to 1 (%.3f)" % [run_share, total_w])
-		var ran: Dictionary = await _measure_rod(movement, seq, skel, rod, Vector2(0.0, -1.0), 60)
-		print("   rod carried: reel %.1f cm off the body standing; running, it swings %.1f deg, %.1f cm from the head, reel %.1f cm off the body"
-			% [stood["air"] * 100.0, ran["swing"], ran["head"] * 100.0, ran["air"] * 100.0])
-		_check(ran["swing"] < 8.0 and ran["head"] > 0.05 and ran["air"] >= 0.02,
-			"running, the rod is carried STEADY: it turns %.1f deg over the strides, stays %.1f cm from the head and %.1f cm off the body (if not: give the run a steady grip in rod_grip_preview.tscn)"
-				% [ran["swing"], ran["head"] * 100.0, ran["air"] * 100.0])
-		# A GRIP OF ITS OWN FOR ONE ANIMATION. A copy of the file, so the file is never touched: her
-		# run's grip moved 6 cm along her fingers. Running, the rod sits there; standing, it is back
-		# in the idle's.
-		var copy: ItemGrip = file_grip.duplicate(true) as ItemGrip
-		var run_own: GripEntry = copy.ensure(AnimationSet.RUN, rod.body_type)
-		run_own.position += Vector3(0.0, 0.06, 0.0)
-		rod.grip = copy
-		await _anim_frames(movement, seq, 30, Vector2(0.0, -1.0))
-		var moved_by: float = rod.held_in_hand().origin.distance_to(file_grip.blend(rod.animation_weights(),
-			rod.hand_now(), skel.global_basis, rod.body_type).origin)
-		_check(moved_by > 0.045 and moved_by < 0.065,
-			"given its own grip 6 cm along the fingers, the RUN holds the rod %.1f cm from where the file had it" % (moved_by * 100.0))
-		await _anim_frames(movement, seq, 50, Vector2.ZERO)
-		_check(_near(rod.held_in_hand(), copy.resolve(AnimationSet.IDLE, rod.body_type).in_hand(
-				rod.hand_now(), skel.global_basis)),
-			"and standing again it is back in the idle's grip: the run's own grip is the run's alone")
-		# HER OWN GRIP (DECISIONS #155): the fisher here wears a woman's look, and the rod knows it
-		# from the look. An idle grip kept for the male body changes nothing for her; one kept for
-		# hers is the one drawn. Her own, if the file has one, is taken away first: she starts on
-		# the shared grip.
-		var me_body: StringName = rod.body_type
-		copy.remove(AnimationSet.IDLE, me_body)
-		var his_only: GripEntry = copy.ensure(AnimationSet.IDLE, &"male")
-		his_only.position += Vector3(0.05, 0.0, 0.0)
-		await _anim_frames(movement, seq, 4, Vector2.ZERO)
-		var shared_idle: Transform3D = copy.find(AnimationSet.IDLE).in_hand(rod.hand_now(), skel.global_basis)
-		var unmoved: bool = _near(rod.held_in_hand(), shared_idle)
-		var hers_only: GripEntry = copy.ensure(AnimationSet.IDLE, &"female")
-		hers_only.position += Vector3(0.0, 0.0, 0.03)
-		await _anim_frames(movement, seq, 4, Vector2.ZERO)
-		_check(me_body == &"female" and unmoved
-				and _near(rod.held_in_hand(), hers_only.in_hand(rod.hand_now(), skel.global_basis)),
-			"a %s look holds the rod in her body's own grip, and a grip kept for the male body does not touch it" % me_body)
-		rod.grip = file_grip
-		await _anim_frames(movement, seq, 10, Vector2.ZERO)
-		if interaction != null:
-			# THE CAST HOLDS IT THE CAST'S WAY (DECISIONS #156): nothing tells the rod it is fishing;
-			# the body plays the cast, and the rod reads that.
-			interaction.interact_requested.emit(99)
-			await _anim_frames(movement, seq, 40, Vector2.ZERO)
-			var cast_w: Dictionary[StringName, float] = driver.semantic_weights()
-			_check(driver.action_playing() and float(cast_w.get(AnimationSet.INTERACT, 0.0)) > 0.99,
-				"a cast: the driver says the body is showing the cast (%s)" % cast_w)
-			var fishing: Dictionary = _rod_in_hand(skel, rod)
-			var want_cast: Transform3D = file_grip.resolve(AnimationSet.INTERACT, rod.body_type).in_hand(
-				rod.hand_now(), skel.global_basis)
-			_check(_near(fishing["drawn"] as Transform3D, want_cast) and _near(fishing["in_hand"] as Transform3D, want_cast)
-					and not _near(want_cast, want_carry),
-				"and the rod is drawn where the grip file's grip for the cast puts it (%s), not the idle's"
-					% (fishing["drawn"] as Transform3D).origin)
-			var cast_wait: int = 0
-			while driver.action_playing() and cast_wait < 400:
-				await _anim_frames(movement, seq, 1, Vector2.ZERO)
-				cast_wait += 1
-			await _anim_frames(movement, seq, 40, Vector2.ZERO)
-			_check(_near(rod.held_in_hand(), file_grip.resolve(AnimationSet.IDLE, rod.body_type).in_hand(
-					rod.hand_now(), skel.global_basis)),
-				"and once the cast is over it is back in the idle's grip")
-			# PUT AWAY (DECISIONS #158): slung on the back while she is not fishing, drawn to fish.
-			# The stow plays on the UPPER BODY: she walks on through it.
-			_check(rod.can_stow(), "the grip file has a place to put the rod away (Fit Stow)")
-			# The idle clock, short here (the fisher's own is longer); speed is checked after.
-			var idle_was: float = equip.away_after_sec
-			var faster_was: EquipComponent.Gait = equip.away_when_faster_than
-			equip.away_after_sec = 1.5
-			equip.away_when_faster_than = EquipComponent.Gait.NEVER
-			equip.away_when_idle = true
-			var stow_bone: int = skel.find_bone(String(file_grip.stow_bone))
-			var thigh: int = skel.find_bone("thigh_r")
-			var thigh_first: Quaternion = Quaternion.IDENTITY
-			var thigh_most: float = 0.0
-			var upper_seen: bool = false
-			var waited_back: int = 0
-			while not rod.is_stowed() and waited_back < 400:
-				await _anim_frames(movement, seq, 1, Vector2(0.0, -0.4))
-				waited_back += 1
-				if driver.upper_playing():
-					var q: Quaternion = skel.get_bone_pose_rotation(thigh)
-					if not upper_seen:
-						thigh_first = q
-					upper_seen = true
-					thigh_most = maxf(thigh_most, rad_to_deg(thigh_first.angle_to(q)))
-			var packed_when_slung: float = rod.packed()
-			print("   put away after %d frames walking; her right thigh swung %.0f deg while the stow played" % [waited_back, thigh_most])
-			_check(rod.is_stowed() and upper_seen and driver.upper_clip() == &"Sword_Exit"
-					and driver.current_state() == AnimationTreeBuilder.STATE_GROUNDED,
-				"not fishing, she puts the rod away: the stow plays on her upper body while she walks on, grounded (that it leaves her legs to the walk: the animation suite)")
-			await _anim_frames(movement, seq, 2, Vector2.ZERO)
-			var slung: Transform3D = skel.global_transform * skel.get_bone_global_pose(stow_bone) * file_grip.stow_transform()
-			var rod_hold: Transform3D = rod.global_transform * rod.hold_offset()
-			_check(_near(rod_hold, slung) and rod.wrist_turn_now(skel).is_equal_approx(Basis.IDENTITY),
-				"and it rides on her %s where the grip file slings it (%.1f mm off), her wrist left alone"
-					% [file_grip.stow_bone, rod_hold.origin.distance_to(slung.origin) * 1000.0])
-			# PACKED SHORT (DECISIONS #161, Luke's choice). Slung from the shoulder at its full 1.85 m,
-			# the rod's tip dragged on the ground behind her. On her back it is the grip file's stow
-			# length, packed in her hand before the stow let go of it.
-			var full_reach: float = (rod.get_node(^"Tip") as Node3D).position.distance_to(rod.hold_offset().origin)
-			var slung_reach: float = rod.tip_position().distance_to(rod_hold.origin)
-			var tip_up: float = rod.tip_position().y - skel.global_position.y
-			print("   slung: the tip %.2f m from the hold (%.2f m drawn), %.2f m off the ground" % [slung_reach, full_reach, tip_up])
-			_check(file_grip.stow_length < 0.6 and absf(slung_reach - full_reach * file_grip.stow_length) < 0.01
-					and tip_up > 0.5 and packed_when_slung > 0.99,
-				"and it is packed to %.0f%% of its length on her back (its tip %.2f m off the ground), all the way before it landed there (%.2f)"
-					% [file_grip.stow_length * 100.0, tip_up, packed_when_slung])
-			# Another player's cast arrives already playing (their public rows): their rod is in their
-			# hand at once. (Our own waits for the draw: the aim suite.) She is shown as someone else's
-			# angler for this.
-			feedback.is_local_authority = false
-			interaction.interact_requested.emit(99)
-			await _anim_frames(movement, seq, 2, Vector2.ZERO)
-			_check(not rod.is_stowed() and driver.action_playing() and equip.is_equipped(),
-				"another player's cast, already playing with the rod on their back, puts it in their hand at once")
-			feedback.is_local_authority = true
-			var back_wait: int = 0
-			while not rod.is_stowed() and back_wait < 600:
-				await _anim_frames(movement, seq, 1, Vector2.ZERO)
-				back_wait += 1
-			# DRAWN: asked for again, she draws it on her upper body, and the hand takes it part way
-			# through the draw, when the equip state says it is in hand.
-			equip.away_when_idle = false
-			equip.needed()
-			await _anim_frames(movement, seq, 2, Vector2.ZERO)
-			_check(rod.is_stowed() and driver.upper_playing() and driver.upper_clip() == &"Sword_Enter",
-				"wanted in the hand again, she draws it: the draw plays on her upper body, the rod still slung for now")
-			var drawn_wait: int = 0
-			while rod.is_stowed() and drawn_wait < 200:
-				await _anim_frames(movement, seq, 1, Vector2.ZERO)
-				drawn_wait += 1
-			_check(not rod.is_stowed() and driver.upper_playing() and equip.is_equipped(),
-				"and her hand takes it during the draw (%d frames in), as the equip state says it is in hand" % drawn_wait)
-			var stretch_until: int = Time.get_ticks_msec() + int(HeldItem.PACK_SEC * 1000.0) + 200
-			while Time.get_ticks_msec() < stretch_until:
-				await _anim_frames(movement, seq, 1, Vector2.ZERO)
-			var drawn_hold: Vector3 = (rod.global_transform * rod.hold_offset()).origin
-			_check(rod.packed() < 0.01 and absf(rod.tip_position().distance_to(drawn_hold) - full_reach) < 0.01,
-				"and in her hand it stretches out to its full length again (%.2f m)" % rod.tip_position().distance_to(drawn_hold))
-			# PUT AWAY TO RUN. Luke: "tweak the stow rate (from immediately even when standing still
-			# like it is now, to 10 seconds of idle or moving past walking speed)". In hand and
-			# unused: standing, and walking, keep it out past the old 1.5 s; running puts it away in a
-			# moment, the stow playing while she runs. NEVER is the control: she runs on with it. (She
-			# goes backwards: the walks above left her at a wall.)
-			equip.away_after_sec = idle_was
-			equip.away_when_faster_than = EquipComponent.Gait.WALK
-			equip.away_when_idle = true
-			equip.set_equipped_now(true)
-			await _anim_seconds(movement, seq, 2.0, Vector2.ZERO)
-			var kept_standing: bool = equip.is_equipped()
-			var walked_at: float = 0.0
-			var kept_walking: bool = true
-			var until_walk: int = Time.get_ticks_msec() + 1500
-			while Time.get_ticks_msec() < until_walk:
-				await _anim_frames(movement, seq, 1, Vector2(0.0, 1.0), false, false, true)
-				walked_at = maxf(walked_at, equip.moving_speed())
-				kept_walking = kept_walking and equip.is_equipped()
-			_check(idle_was >= 10.0 and kept_standing and kept_walking and walked_at > 0.5 and walked_at < equip.faster_than_speed(),
-				"unused, standing 2 s and walking 1.5 s (at %.1f m/s) leave the rod in her hand (the fisher waits %.0f s)" % [walked_at, idle_was])
-			equip.away_when_faster_than = EquipComponent.Gait.NEVER
-			var ran_at: float = 0.0
-			var kept_running: bool = true
-			var until_run: int = Time.get_ticks_msec() + 1000
-			while Time.get_ticks_msec() < until_run:
-				await _anim_frames(movement, seq, 1, Vector2(0.0, 1.0))
-				ran_at = maxf(ran_at, equip.moving_speed())
-				kept_running = kept_running and equip.is_equipped()
-			_check(kept_running and ran_at > MovementConfig.shared().walk_speed * EquipComponent.GAIT_MARGIN,
-				"the control: told never to put it away for speed, she runs a second (%.1f m/s) with it in hand" % ran_at)
-			equip.away_when_faster_than = EquipComponent.Gait.WALK
-			var run_start: int = Time.get_ticks_msec()
-			var stow_after: float = -1.0
-			var stow_shown_running: bool = false
-			while not rod.is_stowed() and Time.get_ticks_msec() - run_start < 3000:
-				await _anim_frames(movement, seq, 1, Vector2(0.0, 1.0))
-				if stow_after < 0.0 and equip.state() == EquipComponent.State.STOWING:
-					stow_after = float(Time.get_ticks_msec() - run_start) / 1000.0
-				if driver.upper_playing() and driver.upper_clip() == &"Sword_Exit" and equip.moving_speed() > equip.faster_than_speed():
-					stow_shown_running = true
-			print("   running, the put-away began %.2f s in" % stow_after)
-			_check(stow_after >= equip.away_moving_after_sec - 0.05 and stow_after < equip.away_moving_after_sec + 0.3
-					and stow_shown_running and rod.is_stowed(),
-				"told to put it away above a walk, running puts it away %.2f s in, the stow playing as she runs" % stow_after)
-			# THE HAND STAYS SHUT (DECISIONS #160). The jump's clip flings the fingers wide; holding the
-			# rod they stay shut round it, as the skeleton is drawn (read during its update: the
-			# fingers are put back after it). Put away, the hand is free: the control.
-			var curls: Array[float] = []
-			var closed_by: Array[float] = []
-			var in_air := func() -> void:
-				if driver.current_state() == AnimationTreeBuilder.STATE_AIR:
-					var hh: Dictionary = GripFit.hole(skel, file_grip.hand, false)
-					if not hh.is_empty():
-						curls.append(float(hh["curl_deg"]))
-						closed_by.append(rod.fist_closed())
-			skel.skeleton_updated.connect(in_air)
-			equip.away_when_idle = false
-			var jumps: Array[Array] = []
-			for held: bool in [false, true]:
-				equip.set_equipped_now(held)
-				await _anim_frames(movement, seq, 30, Vector2.ZERO)
-				curls.clear()
-				closed_by.clear()
-				await _anim_frames(movement, seq, 1, Vector2.ZERO, true)
-				var air_wait: int = 0
-				while (curls.size() < 10 or driver.current_state() == AnimationTreeBuilder.STATE_AIR) and air_wait < 120:
-					await _anim_frames(movement, seq, 1, Vector2.ZERO)
-					air_wait += 1
-				jumps.append([curls.duplicate(), closed_by.duplicate(), rod.is_stowed()])
-			skel.skeleton_updated.disconnect(in_air)
-			var loose: Array = jumps[0][0]
-			var shut: Array = jumps[1][0]
-			var loose_max: float = loose.max() if not loose.is_empty() else 999.0
-			var shut_min: float = shut.min() if not shut.is_empty() else -1.0
-			print("   jumping with the rod put away her fingers curl at most %.0f deg; holding it, at least %.0f deg (%d and %d frames in the air)"
-				% [loose_max, shut_min, loose.size(), shut.size()])
-			_check(bool(jumps[0][2]) and loose.size() >= 10 and loose_max < 60.0 and (jumps[0][1] as Array).max() == 0.0,
-				"CONTROL: jumping with the rod put away, her hand opens as the clip has it (at most %.0f deg)" % loose_max)
-			_check(not bool(jumps[1][2]) and shut.size() >= 10 and shut_min >= GripFit.FIST_CURL_DEG and (jumps[1][1] as Array).min() > 0.9,
-				"jumping with it in her hand, her fingers stay shut round it (at least %.0f deg, a fist)" % shut_min)
-			equip.away_after_sec = idle_was
-			equip.away_when_faster_than = faster_was
-			equip.away_when_idle = true
+	# (The fishing half of this suite, the heave pose and the rod in the hand, is fishing's:
+	# game/fishing/tests/suites/fishing_animation_scene.gd.)
 
 	# --- death and revival ------------------------------------------------------------------
+	# A full-body one-shot holds the state machine under it, so a revival asked for meanwhile lands
+	# when it ends: let the ability's action finish first (AGENTS: animation rules).
+	for i: int in range(240):
+		if not driver.action_playing() and not driver.hit_playing():
+			break
+		await _anim_frames(movement, seq, 1, Vector2.ZERO)
 	if health != null:
 		health.died.emit(0)
 		var died: bool = await _wait_for_state(driver, movement, seq,
@@ -657,55 +310,6 @@ func _run_animation_scene_tests() -> void:
 
 	await _teardown_anim(reg, spawner, eid, prev_local, prev_ready, level)
 
-
-## The rod over `frames` frames of `dir`: the least air between its reel and the leg (m), the most
-## its axis turned from where it started, in the body's frame (deg), and the least room between
-## the rod and the head (m, from a ball of HEAD_RADIUS round the head bone).
-const HEAD_RADIUS: float = 0.12
-
-func _measure_rod(m: SpaceTimeMovementComponent, seq_ref: Array[int], skel: Skeleton3D,
-		rod: FishingRod, dir: Vector2, frames: int) -> Dictionary:
-	var air: float = INF
-	var swing: float = 0.0
-	var head: float = INF
-	var first: Vector3 = Vector3.ZERO
-	var reel: Node3D = rod.get_node(^"Reel") as Node3D
-	var tip: Node3D = rod.get_node(^"Tip") as Node3D
-	var head_bone: int = skel.find_bone("Head")
-	for i: int in range(frames):
-		await _anim_frames(m, seq_ref, 1, dir)
-		air = minf(air, float(BodyClearance.measure(skel, reel.global_position, float(reel.get_meta(BodyClearance.META)))["air"]))
-		var axis: Vector3 = (skel.global_basis.inverse() * rod.global_transform.basis.y).normalized()
-		if first == Vector3.ZERO:
-			first = axis
-		swing = maxf(swing, rad_to_deg(first.angle_to(axis)))
-		var h: Vector3 = skel.global_transform * skel.get_bone_global_pose(head_bone).origin
-		head = minf(head, BodyClearance.to_segment(h, rod.global_position, tip.global_position) - HEAD_RADIUS)
-	return {"air": air, "swing": swing, "head": head}
-
-
-## The rod's HOLD in the frame of the hand holding it (DECISIONS #158): as the rod was last placed
-## in the hand the skeleton drew, the wrist turned ("in_hand"), and as both are DRAWN ("drawn":
-## physics interpolation is on, and the renderer reads that transform).
-func _rod_in_hand(_skel: Skeleton3D, rod: FishingRod) -> Dictionary:
-	var attach: Node3D = rod.get_parent() as Node3D
-	return {
-		"in_hand": rod.hand_now().affine_inverse() * rod.global_transform * rod.hold_offset(),
-		"drawn": attach.get_global_transform_interpolated().affine_inverse()
-			* rod.get_global_transform_interpolated() * rod.hold_offset(),
-	}
-
-
-func _hand_of(skel: Skeleton3D, grip: ItemGrip) -> Transform3D:
-	return skel.global_transform * skel.get_bone_global_pose(skel.find_bone(String(grip.hand)))
-
-
-func _near(a: Transform3D, b: Transform3D) -> bool:
-	return a.origin.distance_to(b.origin) < 0.001 \
-		and Quaternion(a.basis.orthonormalized()).angle_to(Quaternion(b.basis.orthonormalized())) < deg_to_rad(0.3)
-
-
-# --- animation helpers --------------------------------------------------------------------
 
 ## Physics frames that also let the render clock run: the body is driven by `push_input` on the
 ## physics tick, the AnimationTree advances on the idle tick, and this suite needs both.

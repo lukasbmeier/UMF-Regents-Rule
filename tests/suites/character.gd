@@ -14,7 +14,8 @@ func run() -> void:
 ## wrong in ways a pose would not show — a piece left on a skeleton of its own renders in its
 ## rest pose, frozen, next to a character that animates perfectly.
 const PIECES_DIR: String = "res://game/characters/quaternius/models/"
-const LOD_CONTROL: String = "res://game/world/kits/nature/Birch_1.gltf"
+## Imported WITH LODs (its .import says so): proof the check can see them.
+const LOD_CONTROL: String = "res://game/characters/mannequin_f.glb"
 
 ## How many LODs the renderer holds for a mesh's surfaces (the most of any surface).
 static func _lod_count(mesh: Mesh) -> int:
@@ -29,7 +30,7 @@ static func _lod_count(mesh: Mesh) -> int:
 
 func _run_character_tests() -> void:
 	print("== characters: looks ==")
-	var fisher: EntityDefinition = load(FISHER_DEF) as EntityDefinition
+	var fisher: EntityDefinition = load(CHARACTER_DEF) as EntityDefinition
 	_check(fisher != null and fisher.visual_variants.size() >= 2,
 		"anglers come in several looks (%d)" % (fisher.visual_variants.size() if fisher != null else 0))
 	if fisher == null:
@@ -112,7 +113,7 @@ func _run_character_tests() -> void:
 	# NO LODS ON A WORN PIECE (DECISIONS #177). The pieces are worn in layers a millimetre apart, and
 	# an LOD simplifies each one on its own: at 8 m the buzzed hair sank into the scalp and the skin
 	# showed through it in spots. The renderer's own surface data says what it would draw at a
-	# distance; a kit tree, imported with LODs, proves this check can see them.
+	# distance; the mannequin, imported with LODs, proves this check can see them.
 	var tree: Node = (load(LOD_CONTROL) as PackedScene).instantiate()
 	var control_lods: int = 0
 	for node: Node in tree.find_children("*", "MeshInstance3D", true, false):
