@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Template GODOT"
-run/main_scene="res://game/fishing/lakeside_game.tscn"
+config/name="UMF Template"
+run/main_scene="res://game/greybox_game.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 run/main_scene.dedicated_server="res://sidecar/sidecar_main.tscn"

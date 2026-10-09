@@ -2,23 +2,16 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"catch", &"challenge", &"entity", &"equip_state", &"fight_show", &"fishing_conditions", &"fishing_line", &"fishing_spot", &"fishing_world", &"gear", &"health_state", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
 var action_event: UmfActionEventTable
 var appearance: UmfAppearanceTable
 var authority: UmfAuthorityTable
-var catch: UmfCatchTable
 var challenge: UmfChallengeTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
-var fight_show: UmfFightShowTable
-var fishing_conditions: UmfFishingConditionsTable
-var fishing_line: UmfFishingLineTable
-var fishing_spot: UmfFishingSpotTable
-var fishing_world: UmfFishingWorldTable
-var gear: UmfGearTable
 var health_state: UmfHealthStateTable
 var input_queue: UmfInputQueueTable
 var inventory_item: UmfInventoryItemTable
@@ -39,16 +32,9 @@ func _init(p_local_db: LocalDatabase) -> void:
 	action_event = preload('res://spacetime_bindings/schema/tables/umf_action_event_table.gd').new(p_local_db)
 	appearance = preload('res://spacetime_bindings/schema/tables/umf_appearance_table.gd').new(p_local_db)
 	authority = preload('res://spacetime_bindings/schema/tables/umf_authority_table.gd').new(p_local_db)
-	catch = preload('res://spacetime_bindings/schema/tables/umf_catch_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
-	fight_show = preload('res://spacetime_bindings/schema/tables/umf_fight_show_table.gd').new(p_local_db)
-	fishing_conditions = preload('res://spacetime_bindings/schema/tables/umf_fishing_conditions_table.gd').new(p_local_db)
-	fishing_line = preload('res://spacetime_bindings/schema/tables/umf_fishing_line_table.gd').new(p_local_db)
-	fishing_spot = preload('res://spacetime_bindings/schema/tables/umf_fishing_spot_table.gd').new(p_local_db)
-	fishing_world = preload('res://spacetime_bindings/schema/tables/umf_fishing_world_table.gd').new(p_local_db)
-	gear = preload('res://spacetime_bindings/schema/tables/umf_gear_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
 	input_queue = preload('res://spacetime_bindings/schema/tables/umf_input_queue_table.gd').new(p_local_db)
 	inventory_item = preload('res://spacetime_bindings/schema/tables/umf_inventory_item_table.gd').new(p_local_db)

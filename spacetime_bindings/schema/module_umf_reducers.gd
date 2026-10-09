@@ -18,14 +18,6 @@ func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall
 func apply_damage(target_id: int, amount: float, source_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('apply_damage', [target_id, amount, source_id], [&'u64', &'f32', &'u64'], &'')
 
-## 0. kind: int [br]
-func buy_upgrade(kind: int) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('buy_upgrade', [kind], [&'u8'], &'')
-
-## 0. target: Vector3 [br]
-func cast(target: Vector3) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('cast', [target], [&'vector3[f32,f32,f32]'], &'')
-
 ## 0. item_id: int [br]
 ## 1. qty: int [br]
 func consume_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
@@ -92,10 +84,6 @@ func leave_session() -> SpacetimeDBReducerCall:
 func new_match(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('new_match', [session_id], [&'u64'], &'')
 
-
-func reel_in() -> SpacetimeDBReducerCall:
-	return _client.call_reducer('reel_in', [], [], &'')
-
 ## 0. identity: PackedByteArray [br]
 ## 1. role: int [br]
 ## 2. world_id: int [br]
@@ -135,11 +123,6 @@ func set_player_name(name: String) -> SpacetimeDBReducerCall:
 func set_ready(ready: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_ready', [ready], [&'bool'], &'')
 
-## 0. world_id: int [br]
-## 1. on: bool [br]
-func set_rival(world_id: int, on: bool) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('set_rival', [world_id, on], [&'u32', &'bool'], &'')
-
 ## 0. session_id: int [br]
 ## 1. phase: int [br]
 func set_session_phase(session_id: int, phase: int) -> SpacetimeDBReducerCall:
@@ -163,12 +146,6 @@ func set_world_level(world_id: int, level_id: int) -> SpacetimeDBReducerCall:
 ## 1. pos: Vector3 [br]
 func set_world_spawn(world_id: int, pos: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_world_spawn', [world_id, pos], [&'u32', &'vector3[f32,f32,f32]'], &'')
-
-## 0. state: int [br]
-## 1. load: float [br]
-## 2. line_m: float [br]
-func show_fight(state: int, load: float, line_m: float) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('show_fight', [state, load, line_m], [&'u8', &'f32', &'f32'], &'')
 
 ## 0. world_id: int [br]
 ## 1. kind: int [br]
@@ -200,11 +177,6 @@ func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 ## 3. predicted_id: int [br]
 func use_ability(ability_id: int, target_id: int, aim: Vector3, predicted_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability', [ability_id, target_id, aim, predicted_id], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32'], &'')
-
-## 0. world_id: int [br]
-## 1. level: int [br]
-func use_level(world_id: int, level: int) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('use_level', [world_id, level], [&'u32', &'u8'], &'')
 
 ## 0. world_id: int [br]
 ## 1. writes: Array of UmfMovementWrite [br]

@@ -296,82 +296,6 @@
 			}
 		},
 		{
-			"name": "Catch",
-			"namespace": [],
-			"source_name": "Catch",
-			"struct": [
-				{
-					"name": "id",
-					"type": "U64"
-				},
-				{
-					"name": "owner_entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "session_id",
-					"type": "U64"
-				},
-				{
-					"name": "catch_key",
-					"type": "String"
-				},
-				{
-					"name": "kg",
-					"type": "F32"
-				},
-				{
-					"name": "quality",
-					"type": "F32"
-				},
-				{
-					"name": "hookset",
-					"type": "U8"
-				},
-				{
-					"name": "spot",
-					"type": "String"
-				},
-				{
-					"name": "deadlift",
-					"type": "Bool"
-				},
-				{
-					"name": "coins",
-					"type": "I64"
-				},
-				{
-					"name": "round",
-					"type": "U32"
-				},
-				{
-					"name": "caught_at",
-					"type": "__timestamp_micros_since_unix_epoch__"
-				},
-				{
-					"name": "best_combo",
-					"type": "U32"
-				},
-				{
-					"name": "fight_s",
-					"type": "F32"
-				},
-				{
-					"name": "clean",
-					"type": "Bool"
-				}
-			],
-			"table_names": [
-				"catch"
-			],
-			"table_name": "catch",
-			"primary_key": 0,
-			"primary_key_name": "id",
-			"is_public": [
-				true
-			]
-		},
-		{
 			"name": "Challenge",
 			"namespace": [],
 			"source_name": "Challenge",
@@ -568,358 +492,6 @@
 			]
 		},
 		{
-			"name": "FightShow",
-			"namespace": [],
-			"source_name": "FightShow",
-			"struct": [
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "state",
-					"type": "U8"
-				},
-				{
-					"name": "load",
-					"type": "F32"
-				},
-				{
-					"name": "line_m",
-					"type": "F32"
-				}
-			],
-			"table_names": [
-				"fight_show"
-			],
-			"table_name": "fight_show",
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"is_public": [
-				true
-			]
-		},
-		{
-			"name": "FishingCast",
-			"namespace": [],
-			"source_name": "FishingCast",
-			"struct": [
-				{
-					"name": "challenge_id",
-					"type": "U64"
-				},
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "spot",
-					"type": "String"
-				},
-				{
-					"name": "catch_key",
-					"type": "String"
-				},
-				{
-					"name": "kg",
-					"type": "F32"
-				},
-				{
-					"name": "bite_s",
-					"type": "F32"
-				},
-				{
-					"name": "window_mult",
-					"type": "F32"
-				},
-				{
-					"name": "deadlift",
-					"type": "Bool"
-				},
-				{
-					"name": "x",
-					"type": "F32"
-				},
-				{
-					"name": "z",
-					"type": "F32"
-				},
-				{
-					"name": "fight_seed",
-					"type": "U32"
-				},
-				{
-					"name": "range_cm",
-					"type": "U32"
-				},
-				{
-					"name": "rod_tier",
-					"type": "U8"
-				},
-				{
-					"name": "reel_tier",
-					"type": "U8"
-				},
-				{
-					"name": "line_tier",
-					"type": "U8"
-				},
-				{
-					"name": "session_id",
-					"type": "U64"
-				},
-				{
-					"name": "round",
-					"type": "U32"
-				}
-			],
-			"table_names": [
-				"fishing_cast"
-			],
-			"table_name": "fishing_cast",
-			"primary_key": 0,
-			"primary_key_name": "challenge_id",
-			"is_public": [
-				false
-			]
-		},
-		{
-			"name": "FishingConditions",
-			"namespace": [],
-			"source_name": "FishingConditions",
-			"struct": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "round",
-					"type": "U32"
-				},
-				{
-					"name": "time_of_day",
-					"type": "U8"
-				},
-				{
-					"name": "weather",
-					"type": "U8"
-				}
-			],
-			"table_names": [
-				"fishing_conditions"
-			],
-			"table_name": "fishing_conditions",
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"is_public": [
-				true
-			]
-		},
-		{
-			"name": "FishingLine",
-			"namespace": [],
-			"source_name": "FishingLine",
-			"struct": [
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "spot",
-					"type": "String"
-				},
-				{
-					"name": "x",
-					"type": "F32"
-				},
-				{
-					"name": "z",
-					"type": "F32"
-				},
-				{
-					"name": "challenge_id",
-					"type": "U64"
-				},
-				{
-					"name": "cast_at",
-					"type": "__timestamp_micros_since_unix_epoch__"
-				}
-			],
-			"table_names": [
-				"fishing_line"
-			],
-			"table_name": "fishing_line",
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"is_public": [
-				true
-			]
-		},
-		{
-			"name": "FishingRival",
-			"namespace": [],
-			"source_name": "FishingRival",
-			"struct": [
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "state",
-					"type": "U8"
-				},
-				{
-					"name": "next_at",
-					"type": "__timestamp_micros_since_unix_epoch__"
-				},
-				{
-					"name": "catch_key",
-					"type": "String"
-				},
-				{
-					"name": "kg",
-					"type": "F32"
-				},
-				{
-					"name": "spot",
-					"type": "String"
-				},
-				{
-					"name": "x",
-					"type": "F32"
-				},
-				{
-					"name": "z",
-					"type": "F32"
-				},
-				{
-					"name": "fight_s",
-					"type": "F32"
-				},
-				{
-					"name": "casts",
-					"type": "U32"
-				},
-				{
-					"name": "round",
-					"type": "U32"
-				},
-				{
-					"name": "fight_started",
-					"type": "__timestamp_micros_since_unix_epoch__"
-				}
-			],
-			"table_names": [
-				"fishing_rival"
-			],
-			"table_name": "fishing_rival",
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"is_public": [
-				false
-			]
-		},
-		{
-			"name": "FishingSpot",
-			"namespace": [],
-			"source_name": "FishingSpot",
-			"struct": [
-				{
-					"name": "key",
-					"type": "String"
-				},
-				{
-					"name": "richness",
-					"type": "F32"
-				},
-				{
-					"name": "updated_at",
-					"type": "__timestamp_micros_since_unix_epoch__"
-				}
-			],
-			"table_names": [
-				"fishing_spot"
-			],
-			"table_name": "fishing_spot",
-			"primary_key": 0,
-			"primary_key_name": "key",
-			"is_public": [
-				true
-			]
-		},
-		{
-			"name": "FishingWorld",
-			"namespace": [],
-			"source_name": "FishingWorld",
-			"struct": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "level",
-					"type": "U8"
-				}
-			],
-			"table_names": [
-				"fishing_world"
-			],
-			"table_name": "fishing_world",
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"is_public": [
-				true
-			]
-		},
-		{
-			"name": "Gear",
-			"namespace": [],
-			"source_name": "Gear",
-			"struct": [
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "rod_tier",
-					"type": "U8"
-				},
-				{
-					"name": "reel_tier",
-					"type": "U8"
-				},
-				{
-					"name": "line_tier",
-					"type": "U8"
-				}
-			],
-			"table_names": [
-				"gear"
-			],
-			"table_name": "gear",
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"is_public": [
-				true
-			]
-		},
-		{
 			"name": "HealthStateRow",
 			"namespace": [],
 			"source_name": "HealthStateRow",
@@ -983,7 +555,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 26
+					"type_idx": 17
 				},
 				{
 					"name": "received_at",
@@ -1347,54 +919,6 @@
 			]
 		},
 		{
-			"name": "RivalBench",
-			"namespace": [],
-			"source_name": "RivalBench",
-			"struct": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				}
-			],
-			"table_names": [
-				"rival_bench"
-			],
-			"table_name": "rival_bench",
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"is_public": [
-				false
-			]
-		},
-		{
-			"name": "RivalSchedule",
-			"namespace": [],
-			"source_name": "RivalSchedule",
-			"struct": [
-				{
-					"name": "scheduled_id",
-					"type": "U64"
-				},
-				{
-					"name": "scheduled_at",
-					"type": "__schedule_at__"
-				}
-			],
-			"table_names": [
-				"rival_schedule"
-			],
-			"table_name": "rival_schedule",
-			"primary_key": 0,
-			"primary_key_name": "scheduled_id",
-			"is_public": [
-				false
-			],
-			"schedule": {
-				"reducer_name": "rival_tick",
-				"schedule_at_col": 1.0
-			}
-		},
-		{
 			"name": "Session",
 			"namespace": [],
 			"source_name": "Session",
@@ -1735,35 +1259,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "buy_upgrade",
-			"wire_name": "buy_upgrade",
-			"namespace": [],
-			"local_name": "buy_upgrade",
-			"params": [
-				{
-					"name": "kind",
-					"type": "U8"
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
-			"name": "cast",
-			"wire_name": "cast",
-			"namespace": [],
-			"local_name": "cast",
-			"params": [
-				{
-					"name": "target",
-					"type": "Vector3",
-					"type_idx": 3
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
 			"name": "check_authorities",
 			"wire_name": "check_authorities",
 			"namespace": [],
@@ -2038,21 +1533,12 @@
 				{
 					"name": "_sched",
 					"type": "ChallengePruneSchedule",
-					"type_idx": 11
+					"type_idx": 10
 				}
 			],
 			"return_type": "",
 			"return_data": {},
 			"is_scheduled": true
-		},
-		{
-			"name": "reel_in",
-			"wire_name": "reel_in",
-			"namespace": [],
-			"local_name": "reel_in",
-			"params": [],
-			"return_type": "",
-			"return_data": {}
 		},
 		{
 			"name": "register_authority",
@@ -2091,22 +1577,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "rival_tick",
-			"wire_name": "rival_tick",
-			"namespace": [],
-			"local_name": "rival_tick",
-			"params": [
-				{
-					"name": "_sched",
-					"type": "RivalSchedule",
-					"type_idx": 35
-				}
-			],
-			"return_type": "",
-			"return_data": {},
-			"is_scheduled": true
-		},
-		{
 			"name": "seed_item_defs",
 			"wire_name": "seed_item_defs",
 			"namespace": [],
@@ -2119,7 +1589,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 28
+					"type_idx": 19
 				}
 			],
 			"return_type": "",
@@ -2214,24 +1684,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "set_rival",
-			"wire_name": "set_rival",
-			"namespace": [],
-			"local_name": "set_rival",
-			"params": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "on",
-					"type": "Bool"
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
 			"name": "set_session_phase",
 			"wire_name": "set_session_phase",
 			"namespace": [],
@@ -2319,28 +1771,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "show_fight",
-			"wire_name": "show_fight",
-			"namespace": [],
-			"local_name": "show_fight",
-			"params": [
-				{
-					"name": "state",
-					"type": "U8"
-				},
-				{
-					"name": "load",
-					"type": "F32"
-				},
-				{
-					"name": "line_m",
-					"type": "F32"
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
 			"name": "spawn_npc",
 			"wire_name": "spawn_npc",
 			"namespace": [],
@@ -2417,7 +1847,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 26
+					"type_idx": 17
 				}
 			],
 			"return_type": "",
@@ -2447,7 +1877,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 40
+					"type_idx": 29
 				}
 			],
 			"return_type": "",
@@ -2482,24 +1912,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "use_level",
-			"wire_name": "use_level",
-			"namespace": [],
-			"local_name": "use_level",
-			"params": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "level",
-					"type": "U8"
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
 			"name": "write_movement_batch",
 			"wire_name": "write_movement_batch",
 			"namespace": [],
@@ -2516,7 +1928,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 43
+					"type_idx": 32
 				}
 			],
 			"return_type": "",
@@ -2717,39 +2129,11 @@
 			}
 		},
 		{
-			"name": "catch",
-			"wire_name": "catch",
-			"namespace": [],
-			"local_name": "catch",
-			"type_idx": 9,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "id",
-			"unique_indexes": [
-				{
-					"name": "id",
-					"type": "U64",
-					"constraint_name": "catch_id_key"
-				}
-			],
-			"btree_indexes": [
-				{
-					"name": "owner_entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "session_id",
-					"type": "U64"
-				}
-			],
-			"is_public": true
-		},
-		{
 			"name": "challenge",
 			"wire_name": "challenge",
 			"namespace": [],
 			"local_name": "challenge",
-			"type_idx": 10,
+			"type_idx": 9,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2773,7 +2157,7 @@
 			"wire_name": "challenge_prune_schedule",
 			"namespace": [],
 			"local_name": "challenge_prune_schedule",
-			"type_idx": 11,
+			"type_idx": 10,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -2796,7 +2180,7 @@
 			"wire_name": "correction",
 			"namespace": [],
 			"local_name": "correction",
-			"type_idx": 12,
+			"type_idx": 11,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2815,7 +2199,7 @@
 			"wire_name": "dev_tools",
 			"namespace": [],
 			"local_name": "dev_tools",
-			"type_idx": 13,
+			"type_idx": 12,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2834,7 +2218,7 @@
 			"wire_name": "entity",
 			"namespace": [],
 			"local_name": "entity",
-			"type_idx": 14,
+			"type_idx": 13,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2858,7 +2242,7 @@
 			"wire_name": "equip_state",
 			"namespace": [],
 			"local_name": "equip_state",
-			"type_idx": 15,
+			"type_idx": 14,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2878,183 +2262,11 @@
 			"is_public": true
 		},
 		{
-			"name": "fight_show",
-			"wire_name": "fight_show",
-			"namespace": [],
-			"local_name": "fight_show",
-			"type_idx": 16,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"unique_indexes": [
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "fight_show_entity_id_key"
-				}
-			],
-			"btree_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				}
-			],
-			"is_public": true
-		},
-		{
-			"name": "fishing_cast",
-			"wire_name": "fishing_cast",
-			"namespace": [],
-			"local_name": "fishing_cast",
-			"type_idx": 17,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "challenge_id",
-			"unique_indexes": [
-				{
-					"name": "challenge_id",
-					"type": "U64",
-					"constraint_name": "fishing_cast_challenge_id_key"
-				},
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "fishing_cast_entity_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": false
-		},
-		{
-			"name": "fishing_conditions",
-			"wire_name": "fishing_conditions",
-			"namespace": [],
-			"local_name": "fishing_conditions",
-			"type_idx": 18,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"unique_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32",
-					"constraint_name": "fishing_conditions_world_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": true
-		},
-		{
-			"name": "fishing_line",
-			"wire_name": "fishing_line",
-			"namespace": [],
-			"local_name": "fishing_line",
-			"type_idx": 19,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"unique_indexes": [
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "fishing_line_entity_id_key"
-				}
-			],
-			"btree_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				}
-			],
-			"is_public": true
-		},
-		{
-			"name": "fishing_rival",
-			"wire_name": "fishing_rival",
-			"namespace": [],
-			"local_name": "fishing_rival",
-			"type_idx": 20,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"unique_indexes": [
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "fishing_rival_entity_id_key"
-				},
-				{
-					"name": "world_id",
-					"type": "U32",
-					"constraint_name": "fishing_rival_world_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": false
-		},
-		{
-			"name": "fishing_spot",
-			"wire_name": "fishing_spot",
-			"namespace": [],
-			"local_name": "fishing_spot",
-			"type_idx": 21,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "key",
-			"unique_indexes": [
-				{
-					"name": "key",
-					"type": "String",
-					"constraint_name": "fishing_spot_key_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": true
-		},
-		{
-			"name": "fishing_world",
-			"wire_name": "fishing_world",
-			"namespace": [],
-			"local_name": "fishing_world",
-			"type_idx": 22,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"unique_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32",
-					"constraint_name": "fishing_world_world_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": true
-		},
-		{
-			"name": "gear",
-			"wire_name": "gear",
-			"namespace": [],
-			"local_name": "gear",
-			"type_idx": 23,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"unique_indexes": [
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "gear_entity_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": true
-		},
-		{
 			"name": "health_state",
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 24,
+			"type_idx": 15,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3078,7 +2290,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 25,
+			"type_idx": 16,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3106,7 +2318,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 27,
+			"type_idx": 18,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3130,7 +2342,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 28,
+			"type_idx": 19,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -3149,7 +2361,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 29,
+			"type_idx": 20,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3177,7 +2389,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 30,
+			"type_idx": 21,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3201,7 +2413,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 31,
+			"type_idx": 22,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3248,7 +2460,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 32,
+			"type_idx": 23,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -3272,7 +2484,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 33,
+			"type_idx": 24,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -3292,53 +2504,11 @@
 			"is_public": false
 		},
 		{
-			"name": "rival_bench",
-			"wire_name": "rival_bench",
-			"namespace": [],
-			"local_name": "rival_bench",
-			"type_idx": 34,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "world_id",
-			"unique_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32",
-					"constraint_name": "rival_bench_world_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": false
-		},
-		{
-			"name": "rival_schedule",
-			"wire_name": "rival_schedule",
-			"namespace": [],
-			"local_name": "rival_schedule",
-			"type_idx": 35,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "scheduled_id",
-			"unique_indexes": [
-				{
-					"name": "scheduled_id",
-					"type": "U64",
-					"constraint_name": "rival_schedule_scheduled_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": false,
-			"schedule": {
-				"reducer_name": "rival_tick",
-				"schedule_at_col": 1.0
-			}
-		},
-		{
 			"name": "session",
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 36,
+			"type_idx": 25,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3362,7 +2532,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 37,
+			"type_idx": 26,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3381,7 +2551,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 38,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3405,7 +2575,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 39,
+			"type_idx": 28,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3433,7 +2603,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 40,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3456,7 +2626,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 41,
+			"type_idx": 30,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3475,7 +2645,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 42,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3531,21 +2701,12 @@
 		"AppearanceRow": "UmfAppearanceRow",
 		"Authority": "UmfAuthority",
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
-		"Catch": "UmfCatch",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
-		"FightShow": "UmfFightShow",
-		"FishingCast": "UmfFishingCast",
-		"FishingConditions": "UmfFishingConditions",
-		"FishingLine": "UmfFishingLine",
-		"FishingRival": "UmfFishingRival",
-		"FishingSpot": "UmfFishingSpot",
-		"FishingWorld": "UmfFishingWorld",
-		"Gear": "UmfGear",
 		"HealthStateRow": "UmfHealthStateRow",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
@@ -3556,8 +2717,6 @@
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
-		"RivalBench": "UmfRivalBench",
-		"RivalSchedule": "UmfRivalSchedule",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -3607,21 +2766,12 @@
 		"AppearanceRow": "UmfAppearanceRow",
 		"Authority": "UmfAuthority",
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
-		"Catch": "UmfCatch",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
-		"FightShow": "UmfFightShow",
-		"FishingCast": "UmfFishingCast",
-		"FishingConditions": "UmfFishingConditions",
-		"FishingLine": "UmfFishingLine",
-		"FishingRival": "UmfFishingRival",
-		"FishingSpot": "UmfFishingSpot",
-		"FishingWorld": "UmfFishingWorld",
-		"Gear": "UmfGear",
 		"HealthStateRow": "UmfHealthStateRow",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
@@ -3632,8 +2782,6 @@
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
-		"RivalBench": "UmfRivalBench",
-		"RivalSchedule": "UmfRivalSchedule",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -4166,143 +3314,6 @@
 					},
 					{
 						"name": {
-							"some": "owner_entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "session_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "catch_key"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "kg"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "quality"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "hookset"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "spot"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "deadlift"
-						},
-						"algebraic_type": {
-							"Bool": []
-						}
-					},
-					{
-						"name": {
-							"some": "coins"
-						},
-						"algebraic_type": {
-							"I64": []
-						}
-					},
-					{
-						"name": {
-							"some": "round"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "caught_at"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
-						}
-					},
-					{
-						"name": {
-							"some": "best_combo"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "fight_s"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "clean"
-						},
-						"algebraic_type": {
-							"Bool": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -4635,546 +3646,6 @@
 					},
 					{
 						"name": {
-							"some": "state"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "load"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "line_m"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "challenge_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "spot"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "catch_key"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "kg"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "bite_s"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "window_mult"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "deadlift"
-						},
-						"algebraic_type": {
-							"Bool": []
-						}
-					},
-					{
-						"name": {
-							"some": "x"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "z"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "fight_seed"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "range_cm"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "rod_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "reel_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "line_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "session_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "round"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "round"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "time_of_day"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "weather"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "spot"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "x"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "z"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "challenge_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "cast_at"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "state"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "next_at"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
-						}
-					},
-					{
-						"name": {
-							"some": "catch_key"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "kg"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "spot"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "x"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "z"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "fight_s"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "casts"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "round"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "fight_started"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "key"
-						},
-						"algebraic_type": {
-							"String": []
-						}
-					},
-					{
-						"name": {
-							"some": "richness"
-						},
-						"algebraic_type": {
-							"F32": []
-						}
-					},
-					{
-						"name": {
-							"some": "updated_at"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "level"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "rod_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "reel_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					},
-					{
-						"name": {
-							"some": "line_tier"
-						},
-						"algebraic_type": {
-							"U8": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "entity_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
 							"some": "current"
 						},
 						"algebraic_type": {
@@ -5248,7 +3719,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 26.0
+							"Ref": 17.0
 						}
 					},
 					{
@@ -5804,83 +4275,6 @@
 										},
 										"algebraic_type": {
 											"I64": []
-										}
-									}
-								]
-							}
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "world_id"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
-							"some": "scheduled_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "scheduled_at"
-						},
-						"algebraic_type": {
-							"Sum": {
-								"variants": [
-									{
-										"name": {
-											"some": "Interval"
-										},
-										"algebraic_type": {
-											"Product": {
-												"elements": [
-													{
-														"name": {
-															"some": "__time_duration_micros__"
-														},
-														"algebraic_type": {
-															"I64": []
-														}
-													}
-												]
-											}
-										}
-									},
-									{
-										"name": {
-											"some": "Time"
-										},
-										"algebraic_type": {
-											"Product": {
-												"elements": [
-													{
-														"name": {
-															"some": "__timestamp_micros_since_unix_epoch__"
-														},
-														"algebraic_type": {
-															"I64": []
-														}
-													}
-												]
-											}
 										}
 									}
 								]
