@@ -50,6 +50,28 @@ func _run_genre_tests() -> void:
 		twice = twice and cfg.core_tables.count(t) == 1
 	_check(twice, "merging twice adds nothing twice")
 	# (Boot in a game scene, taking the genres' definitions and scenes, is each genre's own suite.)
+	# A genre scene named like one of the game scene's own children replaces it (DECISIONS #197):
+	# the foundation's HUD gives way to a genre's; a name nobody has is simply added.
+	var root := Node.new()
+	var own_hud := Control.new()
+	own_hud.name = "HUD"
+	root.add_child(own_hud)
+	var boot: Node = (load("res://foundation/boot.gd") as GDScript).new()
+	var genre_hud := Control.new()
+	genre_hud.name = "HUD"
+	boot.call(&"_add_genre_scene", root, genre_hud)
+	var sky := Node.new()
+	sky.name = "Sky"
+	boot.call(&"_add_genre_scene", root, sky)
+	_check(root.get_child_count() == 2 and root.get_node_or_null(^"HUD") == genre_hud
+		and own_hud.is_queued_for_deletion() and root.get_node_or_null(^"Sky") == sky,
+		"a genre's HUD replaces the game scene's own; a scene with a new name is added beside it")
+	root.free()
+	boot.free()
+	var greybox: Node = (load("res://game/greybox_game.tscn") as PackedScene).instantiate()
+	_check(greybox.get_node_or_null(^"HUD") is FoundationHud,
+		"the greybox game carries the foundation's HUD")
+	greybox.free()
 	# An unknown genre is reported, by name.
 	Genres.override_list = PackedStringArray(["no_such_genre"])
 	var bad: Array[GenreModule] = Genres.modules()

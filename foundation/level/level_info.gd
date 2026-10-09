@@ -15,7 +15,7 @@ class_name LevelInfo extends Node3D
 ## into `shared/world/<level_name>.json` and its depth grid, the files `server/build.rs` compiles in
 ## and the client's `LevelBake` reads. Then republish (`tools/publish.sh`) so the server has it.
 ## The bake runs headless (`tools/world/bake_level.gd`), the same as from a shell:
-##   godot --headless --path . -s res://tools/world/bake_level.gd -- --scene=res://game/world/levels/meadow.tscn
+##   godot --headless --path . -s res://tools/world/bake_level.gd -- --scene=res://foundation/level/example/example_level.tscn
 ##
 ## Place markers anywhere under the scene's root. Nothing here runs in the game.
 

@@ -1,26 +1,51 @@
 # From foundation to games — template workflow
 
-## Sequence
-1. **Phase 3, Phase 4** on this repo (see specs).
-2. **Phase 5 = one real genre** built *inside* this repo under `game/`, `sidecar/game/`, `server/src/game/`. Pick fishing (exercises sessions, challenge, inventory, Tier A) or chicken (exercises sidecar, NPCs, prediction). Do not template before a game has shipped a playable loop on the foundation; that game is what finds the gaps.
-3. **Tag the foundation** (`foundation-v1.0`). Move the first game out into its own repo (step 4) or keep it as the reference game in `examples/`.
-4. **New game = new repo from the template** containing:
-   - `foundation/`, `sidecar/` (core), `server/src/{lib,sim,challenge}.rs`, `shared/`, `docs/`, `AGENTS.md` — pulled in with `git subtree add --prefix=... <foundation-repo> foundation-v1.0 --squash` so `git subtree pull/push` moves fixes both ways.
-   - Empty `game/`, `sidecar/game/`, `server/src/game/` with the `mod.rs` hooks the module calls:
-     `on_init`, `on_player_created`, `on_player_returned`, `on_player_left`, `on_interact`,
-     `resolve_challenge`, `on_challenge_succeeded`, `on_challenge_closed` — and a
-     `shared/rules.json` with the game's health, interact range and round plans. A genre's
-     tables and reducers need no registration: SpacetimeDB finds them wherever they are declared.
-     The client half needs no hook either: the game scene's `Boot` node lists its entity
-     definitions, and its `NetConfig` lists its tables. (An earlier draft planned a
-     `game::register_tables!` macro and a `GameLayer` autoload; neither was needed, and neither
-     exists. The hooks still missing are listed in `docs/HANDBOOK.md` §11.)
-   - `GAME_BRIEF.md` (below) and the matching section copied from `docs/GENRE_ADAPTERS.md`.
-   - `project.godot`'s `run/main_scene` repointed at the new game's scene. It ships pointing at
-     `game/fishing/lakeside_game.tscn` so that pressing Play runs the reference game; leaving it
-     there after deleting `game/` is a dangling path (DECISIONS #64). `foundation/boot.tscn` is
-     the bare foundation if you want to run that alone.
-5. The frontier model starts from `AGENTS.md` → `GAME_BRIEF.md` → the genre section. It never needs the design conversation.
+## How the repos fit (0.25.0, DECISIONS #196)
+```
+UMF ALL/
+  UMF Template/   github UMF-Foundation   the foundation with no genre; plays as the greybox game
+  Fishing/        github UMF-Fishing      game: genres ["fishing"], database umf
+  Fowl Play/      github (its own)        game: genres ["chicken"], database fowl-play
+```
+Each game is a FORK of the template: the same history, plus its genre's files. A game has a git
+remote named `template` pointing at UMF-Foundation, and takes foundation updates with
+```bash
+git pull template main
+```
+That merges cleanly when the game kept the boundary (AGENTS.md rule 16): the game changed only
+its genre's files (those in `tools/template/genres/<genre>.paths`) and its own settings
+(`project.godot`'s name and main scene, `shared/game.json`, `shared/rules.json`). A conflict
+anywhere else means foundation work was done in the game; move it to the template.
+
+The template was made from Fishing by removing the genre (`python tools/template/strip_genre.py
+fishing`), so Fishing joined the template's history with a one-time `git merge -s ours
+template/main` ("I already have all of this"), and pulls normally from then on.
+
+## Where work goes
+- **Foundation work goes in the template**, with its tests, then each game pulls it. Never fix the
+  foundation in a game: the fix would stay there.
+- **Genre work goes in the game.** If a second game needs it, it moves down into the template
+  (`foundation/`, or a foundation hook), with a `DECISIONS.md` entry; the first game then deletes
+  its copy after pulling.
+- **Each game has its own database** (`shared/game.json` `database`), so publishing one game never
+  touches another's world on the same server. Tests use `<database>-test`.
+- **Old clients keep working** on a new server within a major version (`docs/rules/compatibility.md`):
+  a foundation update a game pulls must not force its players to re-download.
+
+## Starting a new game
+```bash
+cd "UMF ALL"
+git clone https://github.com/lukasbmeier/UMF-Foundation.git "<Game>"
+cd "<Game>"
+git remote rename origin template
+git remote add origin https://github.com/lukasbmeier/<game-repo>.git
+```
+Then: `project.godot` `config/name`, `shared/game.json` `title` and `database`, copy
+`tools/local.env`, open the project in Godot once (import), `tools\publish.cmd --codegen`, and the
+suites. A genre is added the way `docs/HANDBOOK.md` (the genre recipe) says: its folder under
+`game/<genre>/`, `server/src/game/<genre>.rs`, `server/src/genre/<genre>/`, its manifest
+`tools/template/genres/<genre>.paths`, its name in `shared/game.json` `genres`. Write
+`GAME_BRIEF.md` (below) first.
 
 ## `GAME_BRIEF.md` template
 ```
@@ -38,7 +63,7 @@ Definition of done for the first playable: <one paragraph>
 ```
 
 ## Rules for keeping the template healthy
-- Anything two games need moves *down* into the foundation via subtree push, with a `DECISIONS.md` entry.
+- Anything two games need moves *down* into the template (done in the template, then each game pulls), with a `DECISIONS.md` entry.
 - Foundation never imports from `game/`. Hooks only.
 - A game may add `move_state` values ≥ 100 and semantic animation names under its own namespace (`game.*`).
 - Every foundation release runs `run_tests.sh`, `cargo test`, `integration_test.sh`, `e2e_test.sh`

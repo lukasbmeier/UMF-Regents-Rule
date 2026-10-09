@@ -209,7 +209,9 @@ func _announce_name() -> void:
 
 
 ## The genres' definitions, tables and scenes (DECISIONS #173). The scenes go under this scene's
-## root, deferred: the root is still adding its own children while this runs.
+## root, deferred: the root is still adding its own children while this runs. A genre scene whose
+## root has the name of one of the game scene's own children REPLACES it (DECISIONS #197): the
+## greybox game's `HUD` is the foundation's, and a genre's `HUD` takes its place.
 func _load_genres() -> void:
 	genres = Genres.modules()
 	for d: EntityDefinition in Genres.definitions(genres):
@@ -220,8 +222,16 @@ func _load_genres() -> void:
 	for m: GenreModule in genres:
 		for scene: PackedScene in m.scenes:
 			if scene != null:
-				root.add_child.call_deferred(scene.instantiate())
+				_add_genre_scene.call_deferred(root, scene.instantiate())
 	print("[Boot] genres: ", ", ".join(Genres.listed()))
+
+
+func _add_genre_scene(root: Node, node: Node) -> void:
+	var existing: Node = root.get_node_or_null(NodePath(String(node.name)))
+	if existing != null:
+		root.remove_child(existing)
+		existing.queue_free()
+	root.add_child(node)
 
 
 ## The player's look, chosen in the picker (DECISIONS #166). Like the name: sent on every connect,

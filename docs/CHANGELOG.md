@@ -412,3 +412,14 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **Fix: other players' jump and land animations restarted** (the friends' test). Walking up a slope read as a jump to everyone watching, and a jump's top as a landing; the server now takes 'in the air' from the player's own movement state (#192).
 - **Split for the template (REVIEW C1–C3):** AGENTS.md is 1,700 words with the topical rules in `docs/rules/`; DECISIONS.md has an index by system; the unit tests are one file per suite (`tests/suites/`); the module is one file per system (`server/src/module/`); a CI workflow (`.github/workflows/ci.yml`, not yet run on GitHub) (#193).
 - Server: new private tables `dev_tools` and `rate_budget`, new reducer `set_dev_tools`. Republished `umf` with `--codegen` (no wipe). **Export again** before playing with a friend: older builds are refused.
+
+## 0.24.1 — the foundation and fishing, apart
+- **Every file is the foundation's or fishing's** (`tools/template/genres/fishing.paths`), and `tools/template/strip_genre.py fishing` makes the game without it (DECISIONS #194). The foundation's own tests run on its own character, the greybox game and an example level; fishing's tests are in `game/fishing/tests/`.
+- **Each game names its database** in `shared/game.json` `database`; Fishing's is `umf`, unchanged (#195).
+
+## 0.25.0 — the template
+- **UMF Template** (github UMF-Foundation): the foundation with no genre, made from Fishing 0.24.1; games are its forks and take its updates with `git pull template main` (`docs/TEMPLATE_WORKFLOW.md`, #196).
+- **`GAME.md`**: each repo says what it is; AGENTS.md is the foundation's and the same in every game.
+- **The specs are in the repo**: `docs/CONTENT_TOOLING_SPEC.md` (workbenches, the Content Dock, hot tunables, the admin panel) and `docs/reviews/REVIEW_0.23.1.md`.
+- Codegen names the bindings `Umf` whatever the database is called; a pull keeps a game's own bindings (`.gitattributes`).
+- **A foundation HUD** (`foundation/ui/hud.tscn`): the greybox game shows its connection and round; a genre's `HUD` replaces it (#197). The sidecar no longer subscribes to fishing's tables by name.

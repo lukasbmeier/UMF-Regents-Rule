@@ -9,6 +9,11 @@ const SAVE_PATH: String = "res://addons/SpacetimeDB/plugin_config.tres"
 
 ## The database the bindings are generated from: the game's (shared/game.json `database`).
 const DEFAULT_MODULE: String = "umf"
+## What the bindings are NAMED after, in every game (`module_umf_*.gd`, `UmfPlayer`, ...): the
+## addon names the generated classes after the module's key here, and fetches the schema from its
+## `name`. The key stays "umf" whatever the database is called, so every game's bindings, and the
+## foundation code that reads them, are spelled the same (DECISIONS #196).
+const BINDINGS_KEY: String = "umf"
 const MODULE_ALIAS: String = "Umf"
 const SERVER_URI: String = "http://127.0.0.1:3000"
 
@@ -29,7 +34,7 @@ func _initialize() -> void:
 	var module_name: String = _game_database()
 	mod.name = module_name
 	mod.alias = MODULE_ALIAS
-	cfg.module_configs[module_name] = mod
+	cfg.module_configs[BINDINGS_KEY] = mod
 
 	var err: Error = ResourceSaver.save(cfg, SAVE_PATH)
 	if err != OK:

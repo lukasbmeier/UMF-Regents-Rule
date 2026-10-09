@@ -43,5 +43,7 @@ func _run_rules_tests() -> void:
 		OS.unset_environment("UMF_DB")
 	else:
 		OS.set_environment("UMF_DB", was)
-	_check(plain == cfg.module_name and steered == "umf_probe",
-		"a client joins its config's database (%s), or the one UMF_DB names (%s)" % [plain, steered])
+	# The game's database (shared/game.json, DECISIONS #195); the config's only when the game names none.
+	var game_db: String = str(Genres.game().get("database", cfg.module_name))
+	_check(plain == game_db and steered == "umf_probe",
+		"a client joins the game's database (%s, wanted %s), or the one UMF_DB names (%s)" % [plain, game_db, steered])

@@ -14,3 +14,9 @@
 *.glb binary
 # Batch files need Windows line endings (cmd mis-reads labels in LF files).
 *.cmd text eol=crlf
+
+# Generated bindings are each game's own (its genres' tables): a `git pull template main` keeps the
+# game's copy, and the game regenerates them after the pull (tools/publish.sh --codegen), never
+# merges them. Needs the driver once per clone: git config merge.ours.driver true
+# (docs/TEMPLATE_WORKFLOW.md, DECISIONS #196).
+spacetime_bindings/** merge=ours

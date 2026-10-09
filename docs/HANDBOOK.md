@@ -421,6 +421,9 @@ says. Nothing in code tells an item how to be held.
 
 ### Camera, UI, debug
 - Camera: `foundation/camera/third_person.tres` / `first_person.tres`, chosen per definition.
+- The HUD: `foundation/ui/hud.tscn`, one status line (connection, then the round). The greybox game
+  carries it as `HUD`; a genre's own `HUD` scene (its `genre.tres` `scenes`) replaces it, and any
+  genre scene named like one of the game scene's children replaces that child the same way.
 - Connect screen and Esc menu: `foundation/ui/`. F11 or Alt+Enter: fullscreen. The menu also has
   Settings, Open log folder, Character, and whatever a game adds (`PauseMenu.add_button`,
   `open_page`: fishing's Journal).
@@ -649,7 +652,11 @@ Name it in `shared/game.json`, `tools\publish.cmd --codegen`, restart.
 
 **A new game** starts from the TEMPLATE (`UMF Template`, a repo of the foundation with no genres; its
 main scene, `game/greybox_game.tscn`, plays the foundation's character on the greybox). Clone it,
-add genres, and take foundation updates with `git pull template main`. A game made from a game with
+add genres, and take foundation updates with `git pull template main` (the steps, and where work
+goes: `docs/TEMPLATE_WORKFLOW.md`). After a pull that changed the server, `tools\publish.cmd
+--codegen`: the bindings are each game's own and a pull keeps the game's copy. Fix the foundation
+in the template, never in a game, or the fix stays in that game. What a repo is (its genres,
+database, state) is its `GAME.md`. A game made from a game with
 a genre you do not want: `python tools/template/strip_genre.py <name>`. The reference content every
 game keeps: the humanoid looks and animations (`game/characters/`, `game/anim/humanoid*`), the greybox,
 and the example level (`foundation/level/example/`, level 200).
@@ -702,10 +709,8 @@ with what the next games need, is `docs/ROADMAP.md`.
    same time is not supported yet.
 3. **Content is hand-edited JSON** (`shared/fishing/*.json`, `shared/rules.json`) with no editor
    and no validation short of the build and the tests.
-4. **`docs/TEMPLATE_WORKFLOW.md` describes the split into a template** (a tagged foundation,
-   `git subtree`), which hasn't been done.
 Done since the first inventory (0.15.0): the genre hooks (a game no longer edits `module.rs`),
 round plans and player rules as data, a game's per-world tables in its own `NetConfig`, one
 publish command, a test database, per-animation grips for held items, (0.20.0) a held item's
 off hand as data on its grip, settings as data, a character picker, and (0.21.0) genres as
-modules, the lobby, and levels built in the editor.
+modules, the lobby, and levels built in the editor, and (0.25.0) the template, a repo the games fork.

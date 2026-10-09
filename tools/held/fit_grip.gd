@@ -2,7 +2,7 @@ extends SceneTree
 ## FIT A HELD ITEM'S GRIPS AND PHOTOGRAPH THEM, from a shell (DECISIONS #157): the grip preview's
 ## Fit Every Animation and Save Pictures buttons, for a script or an agent to run and look at.
 ##
-##   godot --path . -s res://tools/held/fit_grip.gd -- --preview=res://game/fishing/rod_grip_preview.tscn
+##   godot --path . -s res://tools/held/fit_grip.gd -- --preview=res://game/<genre>/<item>_grip_preview.tscn
 ##       [--fit]           fit every animation (else only photograph the grips as they are)
 ##       [--body=both]     the body to fit for: both (the shared grips), female, male
 ##       [--save]          write the fitted grip file (else it is only photographed)

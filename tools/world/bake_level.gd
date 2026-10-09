@@ -2,7 +2,7 @@ extends SceneTree
 ## BAKE A LEVEL SCENE FOR THE SERVER (DECISIONS #175): the scene's `LevelInfo` says its name, number,
 ## water and bounds; its LevelSpawn, LevelSpot and LevelPoint markers say the rest. Writes
 ## `shared/world/<name>.json` + `<name>_depth.bin`. `LevelInfo`'s Bake button runs this.
-##   godot --headless --path . -s res://tools/world/bake_level.gd -- --scene=res://game/world/levels/meadow.tscn
+##   godot --headless --path . -s res://tools/world/bake_level.gd -- --scene=res://foundation/level/example/example_level.tscn
 ## Then republish (tools/publish.sh) so the server has it.
 
 ## Physics frames to wait for the scene's collision to be in the world.

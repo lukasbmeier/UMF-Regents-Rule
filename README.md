@@ -15,10 +15,12 @@ Godot 4.7 (strictly typed GDScript 2.0; 4.6 is the floor) + SpacetimeDB 2.10 (Ru
 | [`docs/SIDECAR_SPEC.md`](docs/SIDECAR_SPEC.md) | the headless-Godot simulation authority: trust model, reducers, runtime, deployment |
 | [`docs/ANIMATION_SPEC.md`](docs/ANIMATION_SPEC.md) | animation contract, data-driven AnimationTree generation, visual feedback layer |
 | [`docs/TEMPLATE_WORKFLOW.md`](docs/TEMPLATE_WORKFLOW.md) | turning the foundation into a template and starting new games from it |
+| [`docs/CONTENT_TOOLING_SPEC.md`](docs/CONTENT_TOOLING_SPEC.md) | content as Resources, the Content Dock, workbenches and the Catalog, hot tunables, the admin panel; §9 is the order of work |
+| [`docs/reviews/REVIEW_0.23.1.md`](docs/reviews/REVIEW_0.23.1.md) | the architecture review: B, C done in 0.24.0; D, E, F open |
 | [`docs/GENRE_ADAPTERS.md`](docs/GENRE_ADAPTERS.md) | deciding whether something belongs in the foundation or a genre layer |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | before changing a design choice |
 | [`shared/golden/GENERATE.md`](shared/golden/GENERATE.md) | changing the movement model |
-| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | confirming which bundle version you hold (this is 0.23.2) |
+| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | confirming which bundle version you hold (this is 0.25.0) |
 | [`addons/README.md`](addons/README.md) | installing the SDK and running codegen |
 
 ## Layout

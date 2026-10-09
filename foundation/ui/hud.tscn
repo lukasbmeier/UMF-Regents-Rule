@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/ui/hud.gd" id="1_hud"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="Status" type="Label" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 700.0
+offset_bottom = 38.0
+text = "connecting…"
