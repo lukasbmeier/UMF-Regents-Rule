@@ -24,6 +24,15 @@
 					"number": 100.0,
 					"text": "",
 					"unit": "hp"
+				},
+				{
+					"key": "foundation.offline_linger_s",
+					"kind": "number",
+					"max": 600.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

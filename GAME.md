@@ -13,13 +13,14 @@ NPC). Every game is a fork of this repo and takes its updates with `git pull tem
 | Genre rules files | none |
 | Games made from it | Fishing (UMF-Fishing, the reference game, parked) · Fowl Play (game 2) |
 
-## Current state (0.29.0)
+## Current state (0.30.0)
 Made from Fishing 0.24.1 by `python tools/template/strip_genre.py fishing` (DECISIONS #196). It
 builds, publishes and passes every suite with no genre in it. FOUNDATION WORK IS DONE HERE, with
 its tests, then each game pulls it (`tools\update_from_template.cmd`). 0.26.0: old builds keep
 working on new servers (#198); builds for friends come from `tools\release.cmd`. 0.27.0-0.28.0:
 content is `ContentDef` resources, baked, in the Content Dock (#199, #200). 0.29.0: hot rules,
-tuned while the game runs (#201). `docs/rules/content.md`: read its design commitments before
+tuned while the game runs (#201). 0.30.0: players who disconnect leave the world; names are unique
+(#202). `docs/rules/content.md`: read its design commitments before
 extending content.
 
 Next, in order (`docs/CONTENT_TOOLING_SPEC.md` §9):

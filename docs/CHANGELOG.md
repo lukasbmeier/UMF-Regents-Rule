@@ -451,3 +451,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **Moved**: the interact range and a new player's health are hot rules now (`shared/rules.json` no longer has them; the build says so if a game's still does).
 - Server: new table `hot_rule`, reducers `set_rule`, `reset_rule` (admin only). Every client now also subscribes to `authority` (who the admin is). Additive: older builds keep playing. Publish with `--codegen`; **restart the editor** (a new autoload, `HotRules`).
 - New suite: `tests/hot_rules_test.sh` (a real server).
+
+## 0.30.0 — players who leave, leave; one name, one player
+- **A player who quits leaves the world** a few seconds later (the hot rule `foundation.offline_linger_s`): no more characters standing on the dock for players long gone. They come back where they left (DECISIONS #202).
+- **Names are unique**, whatever the case. Two players who already shared a name: the first keeps it, the other becomes "Name 2" on their next join.
+- **Notices on screen**: lost connection, reconnecting, a name refused (they were sent before but nothing showed them).
+- Server: no new tables or reducers (old builds keep playing). Publish; restart the editor.

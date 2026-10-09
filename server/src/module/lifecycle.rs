@@ -119,12 +119,28 @@ pub fn set_player_name(ctx: &ReducerContext, name: String) -> Result<(), String>
     if trimmed == p.name {
         return Ok(());   // idempotent: clients send this on every connect
     }
+    // NAMES ARE UNIQUE (DECISIONS #202): two identities called "Luke" are two people nobody can
+    // tell apart (or one pretending to be the other). Case and spacing do not make a new name.
+    if let Some(other) = name_holder(ctx, &trimmed, ctx.sender()) {
+        return Err(format!("the name '{}' is taken (player {other}): choose another", trimmed));
+    }
     log::info!("player {} is now '{}'", p.entity_id, trimmed);
     p.name = trimmed;
     ctx.db.player().identity().update(p);
     Ok(())
 }
 
+
+/// The entity of another identity's player called `name` (ignoring case), if any.
+pub fn name_holder(ctx: &ReducerContext, name: &str, me: Identity) -> Option<u64> {
+    let want = name.to_lowercase();
+    ctx.db.player().iter().find(|p| p.identity != me && !p.name.is_empty() && p.name.to_lowercase() == want).map(|p| p.entity_id)
+}
+
+/// A name nobody else holds, made from `name` (`crate::names::free`).
+fn free_name(ctx: &ReducerContext, name: &str, me: Identity) -> String {
+    crate::names::free(name, MAX_NAME_LEN, |n| name_holder(ctx, n, me).is_some())
+}
 
 /// A client connected. Creates its player row, entity and state on first sight; flips
 /// `online` back on for a returning identity.
@@ -134,6 +150,17 @@ pub fn client_connected(ctx: &ReducerContext) {
     sync_hot_rules(ctx);
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
         p.online = true;
+        // A name shared with an OLDER player (from before names were unique, #202) becomes free:
+        // the first to hold it keeps it.
+        if !p.name.is_empty() {
+            let want = p.name.to_lowercase();
+            let older = ctx.db.player().iter().any(|o| o.identity != p.identity && o.entity_id < p.entity_id && o.name.to_lowercase() == want);
+            if older {
+                let fresh = free_name(ctx, &p.name, p.identity);
+                log::info!("player {} shared the name '{}' with an older player: now '{}'", p.entity_id, p.name, fresh);
+                p.name = fresh;
+            }
+        }
         let entity_id = p.entity_id;
         ctx.db.player().identity().update(p);
         player_arrived(ctx, entity_id);

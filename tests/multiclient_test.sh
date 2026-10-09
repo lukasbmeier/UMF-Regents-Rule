@@ -18,7 +18,7 @@ cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
 . tests/lib/genre_hooks.sh
 SCENE="res://game/greybox_game.tscn"
-RUN_SECONDS="${RUN_SECONDS:-16}"
+RUN_SECONDS="${RUN_SECONDS:-20}"
 
 pass=0; fail=0
 check() {   # check <actual> <expected> <label>
@@ -65,7 +65,11 @@ sleep "$half"
 ent_bram="$(spacetime sql "$DB" "SELECT entity_id FROM player WHERE name = 'Bram the Bold'" 2>/dev/null \
   | tail -n +3 | head -1 | tr -d ' ')"
 [ -n "$ent_bram" ] && spacetime call "$DB" add_score "$ent_bram" 30 0 >/dev/null 2>&1
-sleep $((RUN_SECONDS - half))
+# Then B quits while A plays on (DECISIONS #202): A must see B's character leave the world once the
+# grace (`foundation.offline_linger_s`) is over, and the server must mark B offline.
+sleep 3
+kill "$pid_b" 2>/dev/null
+sleep $((RUN_SECONDS - half - 3))
 # Make sure both clients are really gone. A survivor keeps its identity slot bound and its
 # connection open, which silently shifts the next run's slots and leaves a stale player row.
 for pid in $pid_a $pid_b; do
@@ -122,6 +126,11 @@ check "$(grep -c 'view: looking through' "$log_a")" "1" "A is looking through a 
 check "$(grep -c 'view: looking through' "$log_b")" "1" "B is looking through a camera"
 check "$(grep -c 'no camera is current' "$log_a")" "0" "A never reported a missing camera"
 check "$(grep -c 'no camera is current' "$log_b")" "0" "B never reported a missing camera"
+
+echo "== a player who quits leaves the world (DECISIONS #202) =="
+check "$(spacetime sql "$DB" "SELECT online FROM player WHERE entity_id = ${ent_b:-0}" 2>/dev/null | tail -n +3 | head -1 | tr -d ' ')" "false"   "the server marks B offline when B quits"
+check "$(grep -c "\[Presence\] entity ${ent_b:-x} left the world" "$log_a")" "1" "A sees B's character leave its world after the grace"
+check "$(grep -c "\[Presence\] entity ${ent_a:-x} left the world" "$log_a")" "0" "and A itself never left"
 
 run_genre_hooks multiclient   # a genre's checks on the same two logs (fishing: its board, its ponds)
 

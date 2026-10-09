@@ -141,6 +141,12 @@ func _start() -> void:
 
 ## Everything after the splash: the menu, the connect screen (or connecting), the lobby.
 func _start_game(has_display: bool) -> void:
+	# What the game tells the player briefly (lost connection, a name taken): in every game scene,
+	# outside the HUD, so a genre's own HUD keeps them (DECISIONS #202).
+	if has_display:
+		var notices := Notices.new()
+		notices.name = "Notices"
+		add_child(notices)
 	if pause_menu != null:
 		_menu = pause_menu.instantiate() as PauseMenu
 		add_child(_menu)
@@ -205,7 +211,10 @@ func _announce_name() -> void:
 	req.settled.connect(func(r: ReducerRequest) -> void:
 		if not r.is_ok():
 			push_warning("[Boot] the server would not take the name '%s': %s"
-				% [_player_name, r.error_message]))
+				% [_player_name, r.error_message])
+			# Said to the player too: a name another player holds is refused (DECISIONS #202).
+			SignalBus.notification_requested.emit("The server would not take the name '%s': %s. Escape, Disconnect, and choose another."
+				% [_player_name, r.error_message.trim_prefix("set_player_name: ")], 1))
 
 
 ## The genres' definitions, tables and scenes (DECISIONS #173). The scenes go under this scene's

@@ -201,6 +201,17 @@ on the connect screen ("This server runs a version of the game this build cannot
 A deliberate break (you retuned movement, or reshaped a table) is made by adding `"compat": 2` to
 `shared/game.json` (the next number each time): every older build is then told to update.
 
+### Who is in the world
+- **A player who quits leaves the world** after a few seconds (the hot rule `foundation.offline_linger_s`,
+  5 s: a connection that drops and comes straight back does not make them vanish). Their character
+  is hidden and nothing can bump into it or use it; their progress, catches and records stay. They
+  reappear where they left when they come back.
+- **Names are unique.** Two players cannot both be "Luke" (nor "luke"). Each copy of the game on a
+  computer is its own player (each editor window, each exported build): a second copy you start
+  needs another name. If two players already shared a name, the one who had it first keeps it and
+  the other becomes "Luke 2" the next time they join. Proper accounts (log in, and be the same
+  player on any computer) are on the roadmap.
+
 ### Playing with a friend on another computer
 1. **Make the build:** double-click `tools\release.cmd`. It exports and tests both builds, records
    what this build needs from a server (`shared/compat/`: commit it, so later changes are checked

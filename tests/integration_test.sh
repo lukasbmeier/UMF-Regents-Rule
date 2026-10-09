@@ -357,6 +357,18 @@ sleep 2.5
 assert_ok 'set_player_name "Admin"' "after a pause the allowance has come back"
 assert_eq "$(sql_first "SELECT name FROM player WHERE identity = $ADMIN" 1)" '"Admin"' "and the name is the last one taken"
 
+echo "== names are unique; a player who is not here cannot be used (DECISIONS #202) =="
+out="$(spacetime call --anonymous "$DB" set_player_name '" aDMIN "' 2>&1)"
+check "$(echo "$out" | grep -q "is taken" && echo true || echo false)" \
+  "another player cannot take a name someone holds, whatever its case and spacing (output: $(echo "$out" | grep -o "the name[^(]*is taken" | head -1))"
+spacetime call --anonymous "$DB" set_player_name '"Gone Soon"' >/dev/null 2>&1
+GONE="$(sql_first "SELECT entity_id FROM player WHERE name = 'Gone Soon'" 1)"
+assert_eq "$(sql_first "SELECT online FROM player WHERE name = 'Gone Soon'" 1)" "false" \
+  "a player whose client has gone is marked offline"
+out="$(spacetime call "$DB" interact "$GONE" 0 2>&1)"
+check "$(echo "$out" | grep -q "they are not here" && echo true || echo false)" \
+  "and cannot be interacted with (output: $(echo "$out" | grep -o "they are not here" | head -1))"
+
 echo "== Tier A trust: the envelope, correction epochs and the replay budget =="
 # Runs LAST: it moves the CLI's own player, and every section above assumes it sits at the
 # origin. The CLI disconnects after each call, so between calls this player is OFFLINE, which

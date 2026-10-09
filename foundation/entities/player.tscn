@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://foundation/core/spacetime_entity.gd" id="1_entity"]
 [ext_resource type="Script" path="res://foundation/components/spacetime_health_component.gd" id="2_health"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://foundation/components/spacetime_action_component.gd" id="10_action"]
 [ext_resource type="Script" path="res://foundation/anim/animation_driver_component.gd" id="11_anim"]
 [ext_resource type="Script" path="res://foundation/components/nameplate_component.gd" id="12_plate"]
+[ext_resource type="Script" path="res://foundation/components/presence_component.gd" id="13_presence"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -54,6 +55,9 @@ script = ExtResource("11_anim")
 
 [node name="Nameplate" type="Node" parent="Components"]
 script = ExtResource("12_plate")
+
+[node name="Presence" type="Node" parent="Components"]
+script = ExtResource("13_presence")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)

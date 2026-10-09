@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -21,8 +21,17 @@ maximum = 10000.0
 unit = "hp"
 description = "The health a player starts with the first time they join. A player who has joined before keeps theirs."
 
+[sub_resource type="Resource" id="Rule_linger"]
+script = ExtResource("2_rule")
+name = &"offline_linger_s"
+number = 5.0
+minimum = 0.0
+maximum = 600.0
+unit = "s"
+description = "How long a player who disconnects stays standing in the world before their character leaves it. Covers a dropped connection that comes straight back; 0 makes them vanish at once. Their progress is kept either way."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger")])

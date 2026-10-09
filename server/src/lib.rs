@@ -74,6 +74,26 @@ pub mod hot {
     include!(concat!(env!("OUT_DIR"), "/hot_rules.rs"));
 }
 
+/// PLAYER NAMES (DECISIONS #202): unique, ignoring case. Pure, so the native suites check it.
+pub mod names {
+    /// `name` if nobody holds it, else "<name> 2", "<name> 3"... (cut to fit `max_len` characters).
+    pub fn free(name: &str, max_len: usize, taken: impl Fn(&str) -> bool) -> String {
+        if !taken(name) {
+            return name.to_string();
+        }
+        let mut n = 2;
+        loop {
+            let suffix = format!(" {n}");
+            let base: String = name.chars().take(max_len.saturating_sub(suffix.chars().count())).collect();
+            let candidate = format!("{}{suffix}", base.trim_end());
+            if !taken(&candidate) {
+                return candidate;
+            }
+            n += 1;
+        }
+    }
+}
+
 /// Constants baked from shared/movement_config.json by build.rs.
 pub mod movement_config {
     include!(concat!(env!("OUT_DIR"), "/movement_config.rs"));

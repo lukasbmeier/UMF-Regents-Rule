@@ -27,6 +27,10 @@ pub fn interact(ctx: &ReducerContext, target_id: u64, verb: u8) -> Result<(), St
         .entity_id()
         .find(target_id)
         .ok_or("interact: no such entity")?;
+    // A player who is not connected is not in the world (DECISIONS #202).
+    if ctx.db.player().entity_id().find(target_id).is_some_and(|p| !p.online) {
+        return Err("interact: they are not here".into());
+    }
     let target_pos = ctx
         .db
         .movement_state()

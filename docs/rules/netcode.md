@@ -23,6 +23,22 @@ How entities are shaped and bound, what the client subscribes to, and how it con
   spawner cannot tell a torn-down cache from a reconnect.
 - Never connect a lambda that closes over an SDK handle to that handle's own signal (#105).
 
+## WHO IS HERE, AND WHO THEY ARE (DECISIONS #202)
+- A player who disconnects LEAVES THE WORLD: `PresenceComponent` (in `foundation/entities/player.tscn`,
+  so every genre's player has it) hides the body and drops its collision after the grace the hot rule
+  `foundation.offline_linger_s` gives, and brings it back when `player.online` is true again. The
+  rows stay (progress, catches, standings). An entity with no player row (an NPC) is always present.
+  The server refuses to let anyone `interact` with an offline player. Anything new that targets a
+  player (an ability, a carry, an NPC's chase) checks `player.online` the same way.
+- NAMES ARE UNIQUE, ignoring case and spacing: `set_player_name` refuses a name another identity
+  holds; a player who shared a name with an OLDER player before this rule becomes "<name> 2" on
+  their next connect (the first holder keeps it). A refused name is said on screen (`Notices`).
+- An identity is a TOKEN FILE on the machine, not a name: each editor slot, each exported copy and
+  each `--token=` has its own, by design. Accounts (the same person, the same identity, on any
+  machine) are a roadmap item: SpacetimeDB's OpenID Connect login.
+- `Notices` (Boot adds one to every game scene, outside the HUD) shows every
+  `SignalBus.notification_requested` briefly at the top of the screen.
+
 ## CONNECTING (DECISIONS #122-#126, #148)
 - The connect screen greets whenever there is a display; headless processes connect on their own.
   Auto-connect and `--host=` press the screen's own Connect, so timeouts and explanations apply.

@@ -40,16 +40,16 @@ check "$([ "$(rule foundation.interact_range_m)" = "5|true" ] && echo true || ec
   "an admin can, and the row says so ($(rule foundation.interact_range_m))"
 
 echo "== the server uses the live value =="
-# The admin (this CLI) is moved 40 m away from a fresh player, then tries to use them: the refusal
-# names the range it judged by.
+# The admin (this CLI) is moved 40 m from an NPC, then tries to use it: the refusal names the range
+# it judged by. (An NPC, not a player: a CLI player is offline between calls, and an offline player
+# is refused before the range is looked at, DECISIONS #202.)
 spacetime call "$DB" set_dev_tools true >/dev/null 2>&1
-touch_server
-target="$(spacetime sql "$DB" "SELECT entity_id FROM player WHERE name = 'Tester'" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | tr -d ' ' | head -1)"
+spacetime call "$DB" spawn_npc 0 1 '{"x":0.0,"y":1.0,"z":0.0}' >/dev/null 2>&1
+target="$(spacetime sql "$DB" "SELECT entity_id FROM entity WHERE kind = 1" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | tr -d ' ' | tail -1)"
 spacetime call "$DB" teleport '{"x":40.0,"y":1.0,"z":40.0}' >/dev/null 2>&1
 sleep 1
 out="$(spacetime call "$DB" interact "$target" 0 2>&1)"
-check "$(echo "$out" | grep -q '> 5.00 m' && echo true || echo false)" \
-  "interact is judged by the live range, 5 m (output: $(echo "$out" | grep -o 'out of range[^"]*' | head -1))"
+check "$(echo "$out" | grep -q '> 5.00 m' && echo true || echo false)"   "interact is judged by the live range, 5 m (output: $(echo "$out" | grep -o 'out of range[^"]*' | head -1))"
 
 echo "== a republish with a new default =="
 work="$(mktemp -d)"
