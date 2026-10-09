@@ -430,3 +430,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **`tools\release.cmd`**: exports and tests both builds, records the build's contract in `shared/compat/` (commit it), and zips the client to `build/releases/`. The unit tests then fail while a change would strand a released build.
 - `tests/export_test.sh` plays the exported build against a newer server (it plays) and the next generation (refused).
 - Server: a new reducer `compat_generation_1`. Publish with `--codegen` and export once more: builds from before 0.26.0 compare fingerprints exactly and are refused by any new server (this is the last time).
+
+## 0.27.0 — content is resources (CONTENT_TOOLING_SPEC step 1)
+- **`ContentDef`**: content is a `.tres` edited in the Inspector, with tooltips and bounds; `tools/bake_content.gd` bakes it to `shared/content/` for the server (DECISIONS #199, `docs/rules/content.md`).
+- **The server refuses a stale bake**, naming the file: a `.tres` changed or added without baking, or a baked file edited by hand. `tools\publish.cmd` bakes first.
+- **Abilities are content**: the built-in `melee` is `foundation/content/abilities/melee.tres` (it was hard-coded in the module); a genre adds abilities by adding `.tres` files.
+- New suites: `content` (unit) and `tests/content_test.sh`.

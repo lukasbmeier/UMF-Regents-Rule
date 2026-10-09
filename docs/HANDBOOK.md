@@ -527,6 +527,7 @@ Around it:
 ### In the editor: resources and scenes
 | I want to... | Open | Then |
 |---|---|---|
+| change an ability (cooldown, range, wind-up, damage) or add one | its `.tres` under `foundation/content/abilities/` (or a genre's `content/`): the Inspector's tooltips say what each number does. A new one: FileSystem, right-click the folder, New Resource, `AbilityDef` | `tools\publish.cmd` (it bakes first, `docs/rules/content.md`); a fresh database seeds them (`--fresh`), an existing one keeps its rows |
 | change how the rod sits in the hand, for one animation or all | `game/fishing/rod_grip_preview.tscn`: pick an Animation and a Body (both, female, male), drag the Grip node until the labels are green | restart |
 | swap a character model or the camera | the definition `.tres` (`game/fishing/fisher_definition.tres`) | restart |
 | change key bindings | Project → Project Settings → Input Map | restart (and restart the editor if `project.godot` was edited outside it) |
@@ -555,6 +556,13 @@ New mechanics (a table, a reducer, a rule), a new component, a new UI screen. Re
 ---
 
 ## 9. Adding things: recipes
+
+**Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
+of content is a type (`AbilityDef`); each piece is a `.tres` you make and edit in the Inspector,
+saved under its folder (`foundation/content/abilities/`, `game/<genre>/content/`). Publishing
+bakes them into `shared/content/` for the server; the server refuses to build while one was
+changed without a bake (it names the file). A new TYPE of content is a developer's job:
+`docs/rules/content.md`.
 
 **A new kind of entity** (a chest, a creature): server side, insert an `entity` row with your kind
 (100+) and its `movement_state`; what using it does goes in the `on_interact` hook. Client side,

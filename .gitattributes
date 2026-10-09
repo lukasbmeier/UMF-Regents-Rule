@@ -24,3 +24,5 @@ spacetime_bindings/** merge=ours
 # each game's own: a pull keeps the game's copy (same driver).
 GAME.md merge=ours
 shared/game.json merge=ours
+# Codegen writes the game's own database name into the addon's config.
+addons/SpacetimeDB/plugin_config.tres merge=ours

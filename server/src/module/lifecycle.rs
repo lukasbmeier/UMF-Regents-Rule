@@ -41,15 +41,19 @@ pub fn init(ctx: &ReducerContext) {
         scheduled_id: 0,
         scheduled_at: TimeDuration::from_micros(1_000_000).into(),
     });
-    // PHASE3_SPEC Task 12: one built-in ability so the action path works out of the box.
-    ctx.db.ability_def().insert(AbilityDef {
-        ability_id: 0,
-        cooldown_ms: 800,
-        range: 2.0,
-        wind_up_ms: 150,
-        damage: 10.0,
-        data: "{\"name\":\"melee\"}".to_string(),
-    });
+    // The abilities, as baked from their .tres (foundation/content/abilities/, a genre's
+    // content/; DECISIONS #199). The foundation's own, `melee`, makes the action path work out of
+    // the box (PHASE3_SPEC Task 12).
+    for a in crate::content::ABILITIES {
+        ctx.db.ability_def().insert(AbilityDef {
+            ability_id: a.ability_id,
+            cooldown_ms: a.cooldown_ms,
+            range: a.range,
+            wind_up_ms: a.wind_up_ms,
+            damage: a.damage,
+            data: a.data.to_string(),
+        });
+    }
     // A default session on the default world, so a client that just connects lands somewhere
     // with a phase machine already running rather than in a null session.
     let sess = ctx.db.session().insert(Session {

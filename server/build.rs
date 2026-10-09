@@ -7,6 +7,9 @@
 //!   shared/fishing/fishing.json  -> $OUT_DIR/fishing_data.rs (the fishing genre's content,
 //!                                   `genre::fishing`)
 //!
+//!   shared/content/manifest.json -> checks the content bake is current, then
+//!   shared/content/*/ability.json   -> $OUT_DIR/content.rs (`content::ABILITIES`) (build/content.rs)
+//!
 //! Regenerates whenever any of them changes.
 
 use serde::Deserialize;
@@ -15,6 +18,10 @@ use std::{env, fs, path::PathBuf};
 /// THIS GAME'S GENRES' BUILD STEPS (content they compile in): `build/genres.rs`, owned by the game.
 #[path = "build/genres.rs"]
 mod genre_build;
+
+/// THE BAKED CONTENT: refuses a stale bake, compiles in what the module seeds (DECISIONS #199).
+#[path = "build/content.rs"]
+mod content;
 
 #[derive(Deserialize)]
 struct Cfg {
@@ -92,6 +99,7 @@ fn main() {
     rules();
     levels();
     genre_build::run(&listed);
+    content::run(&listed);
 }
 
 /// shared/game.json `compat` -> $OUT_DIR/compat.rs: an empty reducer named `compat_generation_<N>`

@@ -48,6 +48,18 @@ if ! curl -s -m 3 -o /dev/null http://127.0.0.1:3000/v1/ping; then
   exit 1
 fi
 
+echo "== bake the content =="
+# The .tres content to shared/content/ (DECISIONS #199): build.rs refuses a stale bake, so publishing
+# bakes first. Without Godot, the build still says whether the bake is current.
+if command -v "$GODOT" >/dev/null 2>&1 || [ -x "$GODOT" ]; then
+  bake_out="$("$GODOT" --headless --path . -s res://tools/bake_content.gd 2>&1)"
+  bake_status=$?
+  printf '%s\n' "$bake_out" | grep -E "^ |baked|refused" || true
+  [ $bake_status -eq 0 ] || { echo "the bake refused the content above: fix what it names, then publish" >&2; exit 1; }
+else
+  echo "(Godot not found, so the content is not baked here; the build checks the bake is current)"
+fi
+
 echo "== build =="
 (cd server && spacetime build) || { echo "the build failed: see the errors above" >&2; exit 1; }
 

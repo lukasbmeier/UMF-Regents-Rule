@@ -31,6 +31,7 @@ const SUITES: PackedStringArray = [
 	"mouse_capture",
 	"connect",
 	"version",
+	"content",
 	"settings",
 	"music",
 	"looks",

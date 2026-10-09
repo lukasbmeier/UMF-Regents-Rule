@@ -40,8 +40,11 @@ jobs:
           workspaces: server
       - name: wasm type-check (module.rs is wasm-gated; a bare check skips it)
         run: cargo check --target wasm32-unknown-unknown
-      - name: native suites (golden, challenge, level, fishing, fight, rate, genres)
+      - name: native suites (golden, challenge, level, rate, genres; a genre's own)
         run: cargo test
+      - name: a stale content bake stops the build (DECISIONS #199)
+        working-directory: .
+        run: ./tests/content_test.sh
 
   godot:
     runs-on: ubuntu-latest

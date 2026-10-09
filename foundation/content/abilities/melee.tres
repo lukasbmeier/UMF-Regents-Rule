@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 800
+range_m = 2.0
+wind_up_ms = 150
+damage = 10.0
+display_name = "melee"
+designer_notes = "The foundation's one built-in ability (PHASE3_SPEC Task 12), so the action path works out of the box."

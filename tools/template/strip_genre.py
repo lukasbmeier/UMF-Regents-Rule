@@ -103,6 +103,15 @@ def main() -> None:
     if not dry:
         rules.write_bytes(text2.encode())
 
+    # Its baked content (DECISIONS #199). The manifest is rewritten by the next bake, which
+    # tools/publish.sh runs first.
+    if (ROOT / "shared/content" / genre).is_dir():
+        print(f"shared/content/{genre}/: its baked content (the next publish re-bakes the manifest)")
+        if not dry:
+            run("git", "rm", "-r", "-q", "-f", "--ignore-unmatch", "--", f"shared/content/{genre}")
+            import shutil
+            shutil.rmtree(ROOT / "shared/content" / genre, ignore_errors=True)
+
     proj = ROOT / "project.godot"
     p = proj.read_text(encoding="utf-8")
     for l in p.split("\n"):

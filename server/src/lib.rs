@@ -24,6 +24,12 @@ pub mod challenge;
 /// Level bakes (spawn, water depth, named spots) compiled in from `shared/world/`. Pure.
 pub mod level;
 
+/// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
+/// build.rs from `shared/content/` (DECISIONS #199).
+pub mod content {
+    include!(concat!(env!("OUT_DIR"), "/content.rs"));
+}
+
 /// Constants baked from shared/movement_config.json by build.rs.
 pub mod movement_config {
     include!(concat!(env!("OUT_DIR"), "/movement_config.rs"));
