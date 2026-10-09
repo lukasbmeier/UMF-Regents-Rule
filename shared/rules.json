@@ -1,11 +1,6 @@
 {
   "_comment": "THE FOUNDATION'S RULES, AS THIS GAME SETS THEM (DECISIONS #154). server/build.rs compiles this into the module, and the client reads it (foundation/core/rules.gd). Change a number, republish (tools/publish.sh), restart. Movement has its own file (movement_config.json); a genre's content has its own (shared/fishing/).",
   "version": 1,
-  "player": {
-    "_comment": "A NEW player, as client_connected makes one. A genre adds its own starting state in game::on_player_created.",
-    "max_health": 100.0
-  },
-  "interact_range_m": 3.0,
   "rate_limits": {
     "_comment": "HOW OFTEN ONE PLAYER MAY CALL A REDUCER (REVIEW 0.23.1 B3). burst: calls allowed at once; per_sec: how fast that allowance comes back. A call over it is refused with an error and changes nothing. Reducers not named here take default, and only the reducers that call spend_rate are limited (the ones that write rows everyone receives, or move a player between worlds). An honest client stays far inside these: the fight is reported five times a second, a look or the equip state only when it changes.",
     "default": { "burst": 10, "per_sec": 4 },

@@ -38,11 +38,12 @@ pub fn interact(ctx: &ReducerContext, target_id: u64, verb: u8) -> Result<(), St
         return Err("interact: target is in another world".into());
     }
     let d2 = me.pos.sub(target_pos.pos).length_sq();
-    if d2 > INTERACT_RANGE * INTERACT_RANGE {
+    let range = hot_number(ctx, crate::hot::foundation::INTERACT_RANGE_M) as f32;
+    if d2 > range * range {
         return Err(format!(
             "interact: out of range ({:.2} m > {:.2} m)",
             d2.sqrt(),
-            INTERACT_RANGE
+            range
         ));
     }
 

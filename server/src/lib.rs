@@ -30,6 +30,50 @@ pub mod content {
     include!(concat!(env!("OUT_DIR"), "/content.rs"));
 }
 
+/// THE HOT RULES (DECISIONS #201): numbers the game is tuned by while it runs, declared in rule sets
+/// (`foundation/content/rules/`, a genre's), baked, and compiled in here as this game's defaults.
+/// The module serves each in the `hot_rule` table, where an admin may change it (`set_rule`);
+/// reducers read the live value (`module::hot_number`). Pure, so the native suites check them.
+pub mod hot {
+    /// What a rule holds.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Kind { Number, Integer, Flag, Text }
+
+    /// One rule: its key (`<owner>.<name>`), its kind, this game's default and its bounds.
+    #[derive(Debug)]
+    pub struct Rule {
+        pub key: &'static str,
+        pub kind: Kind,
+        pub number: f64,
+        pub text: &'static str,
+        pub min: f64,
+        pub max: f64,
+    }
+
+    impl Rule {
+        /// Whether `number` may be this rule's value (what `set_rule` accepts).
+        pub fn check(&self, number: f64) -> Result<(), String> {
+            match self.kind {
+                Kind::Text => Ok(()),
+                _ if !number.is_finite() => Err(format!("{}: not a number", self.key)),
+                Kind::Flag if number != 0.0 && number != 1.0 => Err(format!("{}: a flag is 0 or 1", self.key)),
+                Kind::Integer if number.fract() != 0.0 => Err(format!("{}: a whole number", self.key)),
+                _ if number < self.min || number > self.max => {
+                    Err(format!("{}: {} is outside {}..{}", self.key, number, self.min, self.max))
+                }
+                _ => Ok(()),
+            }
+        }
+    }
+
+    /// A rule by key.
+    pub fn find(key: &str) -> Option<&'static Rule> {
+        ALL.iter().find(|r| r.key == key)
+    }
+
+    include!(concat!(env!("OUT_DIR"), "/hot_rules.rs"));
+}
+
 /// Constants baked from shared/movement_config.json by build.rs.
 pub mod movement_config {
     include!(concat!(env!("OUT_DIR"), "/movement_config.rs"));

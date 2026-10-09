@@ -28,6 +28,7 @@ SpaceTimeSync="*res://foundation/net/spacetime_sync.gd"
 InterestManager="*res://foundation/net/interest_manager.gd"
 EntityRegistry="*res://foundation/core/entity_registry.gd"
 EntitySpawner="*res://foundation/core/entity_spawner.gd"
+HotRules="*res://foundation/core/hot_rules.gd"
 
 [debug]
 

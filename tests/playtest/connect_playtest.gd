@@ -68,6 +68,7 @@ func _run() -> void:
 	await _step_look_arrived()
 	await _step_lobby_screen()
 	await _step_menu()
+	await _step_hot_rules()
 	await _step_menu_character()
 	if not await _step_disconnect():
 		_finish()
@@ -360,6 +361,42 @@ func _step_menu() -> void:
 	await _frames(2)
 	_check(MouseCapture.is_captured() and not _menu.visible,
 		"a click on the world, outside the menu, takes the cursor back and closes it")
+
+
+## THE HOT RULES, LIVE (DECISIONS #201): the server's rows arrive with the world; an admin (the CLI
+## that published, run from here) changes the interact range while this client plays, and the client
+## follows at once: its rules and its interaction prompt both read the new value. This player is no
+## admin, so its Escape menu does not offer the rules page.
+func _step_hot_rules() -> void:
+	print("-- hot rules, live --")
+	var key: StringName = &"foundation.interact_range_m"
+	var arrived: bool = await _until(func() -> bool: return HotRules.is_live(key), "the hot_rule rows")
+	var before: float = HotRules.number(key)
+	_check(arrived and is_equal_approx(before, float(HotRules.defaults()[String(key)]["number"])),
+		"the server's rules arrive with the world (%s = %s)" % [key, before])
+	var target: float = before + 1.5
+	var out: Array = []
+	var code: int = OS.execute("spacetime", ["call", SpaceTimeSync.database_name(SpaceTimeSync.config),
+		"set_rule", String(key), str(target), "\"\""], out, true)
+	var heard: bool = await _until(func() -> bool: return is_equal_approx(HotRules.number(key), target),
+		"the admin's change to reach this client")
+	_check(code == 0 and heard and HotRules.is_overridden(key) and is_equal_approx(Rules.interact_range(), target),
+		"an admin's change reaches this client while it plays: %s = %s (spacetime exit %d %s)"
+			% [key, HotRules.number(key), code, "".join(out).strip_edges().left(120)])
+	var ic: Node = _local().find_child("*Interaction*", true, false) if _local() != null else null
+	if ic != null and ic.has_method(&"range_m"):
+		_check(is_equal_approx(float(ic.call(&"range_m")), target), "and its interaction prompt uses it (%s m)" % ic.call(&"range_m"))
+	OS.execute("spacetime", ["call", SpaceTimeSync.database_name(SpaceTimeSync.config), "reset_rule", String(key)], out, true)
+	var back: bool = await _until(func() -> bool: return is_equal_approx(HotRules.number(key), before) and not HotRules.is_overridden(key),
+		"the reset to reach this client")
+	_check(back, "and reset brings it back (%s)" % HotRules.number(key))
+	await _key(KEY_ESCAPE)
+	await _frames(2)
+	var rules_button: Control = _menu.find_child("Rules", true, false) as Control
+	_check(rules_button != null and not rules_button.visible and not Roles.is_local_admin(),
+		"a player who is not the admin is not offered the rules page")
+	await _key(KEY_ESCAPE)
+	await _frames(2)
 
 
 func _step_disconnect() -> bool:

@@ -49,6 +49,12 @@ static func ref(def: ContentDef) -> int:
 	return def.id if def != null else -1
 
 
+## What is wrong with it next to every other piece of its type (keys unique across them, a link
+## that must agree with another); empty when fine. The bake calls it with the whole type.
+func validate_with(_all_of_type: Array[ContentDef]) -> Array[String]:
+	return []
+
+
 ## What is wrong with it that the types cannot say, one human sentence each; empty when it is
 ## fine. The bake refuses content with any.
 func validate() -> Array[String]:

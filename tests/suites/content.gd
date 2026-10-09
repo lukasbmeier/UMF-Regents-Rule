@@ -11,6 +11,9 @@ func run() -> void:
 	_run_content_tests()
 	_run_library_tests()
 	await _run_task_tests()
+	_run_hot_rule_tests()
+	await _run_hot_rule_live_tests()
+	_run_keep_live_tests()
 	await get_tree().process_frame
 
 
@@ -99,7 +102,7 @@ func _run_library_tests() -> void:
 	var names: Array[String] = []
 	for a2: Dictionary in dock.model.actions:
 		names.append(String(a2["id"]))
-	_check(names == ["validate", "bake", "publish", "play"], "its toolbar: %s" % str(names))
+	_check(names == ["validate", "bake", "publish", "play", "keep_live"], "its toolbar: %s" % str(names))
 	_check(dock.selected_type() == &"ability" and dock.listed_paths().size() == 4,
 		"it opens on a type and lists its pieces, every owner's (%s)" % str(dock.listed_paths()))
 	dock.select_path(c)
@@ -182,3 +185,200 @@ exit 3
 		and task.exit_code == 3,
 		"a script runs from the repo root, its lines (and errors) arrive, then its exit code: %s, exit %d" % [str(lines), task.exit_code])
 	DirAccess.remove_absolute(script)
+
+
+## HOT RULES AS CONTENT (DECISIONS #201): a rule says what is wrong with it in words; keys are
+## `<owner>.<name>` and unique; a genre sets this game's value for another owner's rule with an
+## override (one per key, within bounds), and that is the default the game uses.
+func _run_hot_rule_tests() -> void:
+	print("== content: hot rules ==")
+	var hot: Dictionary = RuleSetDef.effective()
+	_check(hot.has("foundation.interact_range_m") and hot.has("foundation.new_player_health"),
+		"the foundation declares its rules: %s" % str(hot.keys()))
+	var r := RuleEntry.new()
+	r.name = &"Bad Name"
+	r.number = 5.0
+	r.minimum = 0.0
+	r.maximum = 1.0
+	var why: Array[String] = r.problems()
+	_check(why.size() == 3 and why[0].contains("lower case") and why[1].contains("outside") and why[2].contains("description"),
+		"a rule says what is wrong with it: %s" % str(why))
+	var walk := RuleEntry.new()
+	walk.name = &"walk_speed"
+	walk.description = "x"
+	walk.maximum = 10.0
+	var set_walk := RuleSetDef.new()
+	set_walk.display_name = "x"
+	set_walk.rules = [walk]
+	_check(set_walk.validate().any(func(s: String) -> bool: return s.contains("predict exactly")),
+		"a movement number clients predict exactly cannot be a hot rule")
+
+	# A scratch game: the foundation's rules, a genre overriding one, a second genre trying too.
+	var root: String = "user://hot_rules_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray(["alpha", "beta"])
+	var base := RuleSetDef.new()
+	base.display_name = "base"
+	var range := RuleEntry.new()
+	range.name = &"reach_m"
+	range.number = 3.0
+	range.minimum = 1.0
+	range.maximum = 10.0
+	range.description = "how far"
+	base.rules = [range]
+	_save(base, root.path_join("foundation/content/rules/base.tres"))
+	var alpha := RuleSetDef.new()
+	alpha.display_name = "alpha"
+	var o := RuleOverride.new()
+	o.key = "foundation.reach_m"
+	o.number = 4.5
+	alpha.overrides = [o]
+	_save(alpha, root.path_join("game/alpha/content/rules/alpha.tres"))
+	var eff: Dictionary = RuleSetDef.effective()
+	_check(eff.size() == 1 and is_equal_approx(float(eff["foundation.reach_m"]["number"]), 4.5)
+		and eff["foundation.reach_m"]["overridden_by"] == "alpha",
+		"a genre's override is this game's default: %s" % str(eff))
+	var sets: Array[ContentDef] = ContentLibrary.items(&"rules")
+	var clean: bool = true
+	for s: ContentDef in sets:
+		clean = clean and s.validate_with(sets).is_empty() and s.validate().is_empty()
+	_check(clean, "and every set agrees with the others")
+	var beta := RuleSetDef.new()
+	beta.display_name = "beta"
+	var o2 := RuleOverride.new()
+	o2.key = "foundation.reach_m"
+	o2.number = 50.0
+	var o3 := RuleOverride.new()
+	o3.key = "foundation.nothing"
+	beta.overrides = [o2, o3]
+	var dup := RuleEntry.new()
+	dup.name = &"reach_m"
+	dup.number = 2.0
+	dup.maximum = 5.0
+	dup.description = "again"
+	_save(beta, root.path_join("game/beta/content/rules/beta.tres"))
+	var base2 := RuleSetDef.new()
+	base2.display_name = "base2"
+	base2.rules = [dup]
+	_save(base2, root.path_join("foundation/content/rules/base2.tres"))
+	sets = ContentLibrary.items(&"rules")
+	var found: Array[String] = []
+	for s: ContentDef in sets:
+		found.append_array(s.validate_with(sets))
+	var text: String = " / ".join(found)
+	_check(text.contains("also overridden") and text.contains("outside 1.0..10.0") and text.contains("no rule set declares")
+		and text.contains("also declared"),
+		"two overrides of one key, a value out of bounds, a key nobody declares and a key declared twice are each refused: %s" % text)
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = PackedStringArray()
+	_wipe(root)
+
+
+## THE LIVE VALUE: a `hot_rule` row (as the server sends it) wins over this build's default, its
+## change is announced, and a disconnect puts the defaults back.
+func _run_hot_rule_live_tests() -> void:
+	HotRules.reset()
+	var key: StringName = &"foundation.interact_range_m"
+	var default: float = HotRules.number(key)
+	var heard: Array[StringName] = []
+	var on_change: Callable = func(k: StringName) -> void: heard.append(k)
+	HotRules.changed.connect(on_change)
+	var row := _FakeRow.new()
+	row.key = String(key)
+	row.number = default + 2.5
+	row.overridden = true
+	EntityRegistry.global_row_event.emit(RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, row))
+	_check(is_equal_approx(HotRules.number(key), default + 2.5) and HotRules.is_live(key) and HotRules.is_overridden(key)
+		and is_equal_approx(Rules.interact_range(), default + 2.5) and heard == [key],
+		"the server's value wins over this build's (%s over %s), and the change is announced" % [HotRules.number(key), default])
+	HotRules._on_connection(SpaceTimeSync.ConnectionState.DISCONNECTED)
+	_check(is_equal_approx(HotRules.number(key), default) and not HotRules.is_live(key) and heard.size() == 2,
+		"offline, this build's default is back")
+	HotRules.changed.disconnect(on_change)
+	await get_tree().process_frame
+
+
+class _FakeRow extends RefCounted:
+	var key: String = ""
+	var number: float = 0.0
+	var text: String = ""
+	var overridden: bool = false
+
+
+func _save(res: Resource, path: String) -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
+	ResourceSaver.save(res, path)
+	res.take_over_path(path)
+
+
+## KEEP LIVE TUNING (DECISIONS #201): what an admin set on the server becomes this game's default,
+## in the right file: a genre's own rule takes the value; a foundation rule becomes the genre's
+## override (made, or updated), never an edit of the foundation's file; with no genre (the template)
+## the foundation's own value. A key nobody declares and a value outside the bounds are refused.
+func _run_keep_live_tests() -> void:
+	print("== content: keep live tuning ==")
+	var printed := PackedStringArray(["database: x", "", " key                           | number | text ",
+		"-------------------------------+--------+------", " \"foundation.reach_m\" | 4.5    | \"\"   ",
+		" \"alpha.bite_s\"      | 7      | \"\"   ", " \"foundation.gone\"   | 1      | \"\"   "])
+	var rows: Array[Dictionary] = ContentDockModel.parse_live(printed)
+	_check(rows.size() == 3 and rows[0]["key"] == "foundation.reach_m" and is_equal_approx(float(rows[0]["number"]), 4.5)
+		and rows[1]["key"] == "alpha.bite_s", "the server's table is read: %s" % str(rows))
+	var root: String = "user://keep_live_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray(["alpha"])
+	var base := RuleSetDef.new()
+	base.display_name = "base"
+	var reach := RuleEntry.new()
+	reach.name = &"reach_m"
+	reach.number = 3.0
+	reach.minimum = 1.0
+	reach.maximum = 10.0
+	reach.description = "how far"
+	base.rules = [reach]
+	_save(base, root.path_join("foundation/content/rules/base.tres"))
+	var alpha := RuleSetDef.new()
+	alpha.display_name = "alpha"
+	var bite := RuleEntry.new()
+	bite.name = &"bite_s"
+	bite.number = 5.0
+	bite.minimum = 1.0
+	bite.maximum = 20.0
+	bite.description = "how long"
+	alpha.rules = [bite]
+	_save(alpha, root.path_join("game/alpha/content/rules/alpha.tres"))
+	var model := ContentDockModel.new()
+	var r: Dictionary = model.keep_live(rows)
+	var base_after: RuleSetDef = ResourceLoader.load(root.path_join("foundation/content/rules/base.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	var alpha_after: RuleSetDef = ResourceLoader.load(root.path_join("game/alpha/content/rules/alpha.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	_check((r["kept"] as Array).size() == 2 and (r["problems"] as Array).size() == 1
+		and String((r["problems"] as Array)[0]).contains("foundation.gone"),
+		"two kept, the undeclared one refused: %s" % str(r))
+	_check(is_equal_approx(alpha_after.rules[0].number, 7.0), "a genre's own rule takes the server's value (%s)" % alpha_after.rules[0].number)
+	_check(is_equal_approx(base_after.rules[0].number, 3.0) and alpha_after.overrides.size() == 1
+		and alpha_after.overrides[0].key == "foundation.reach_m" and is_equal_approx(alpha_after.overrides[0].number, 4.5),
+		"a foundation rule becomes the genre's override; the foundation's file is untouched")
+	var again: Array[Dictionary] = [{"key": "foundation.reach_m", "number": 6.0, "text": ""}, {"key": "foundation.reach_m", "number": 99.0, "text": ""}]
+	r = model.keep_live(again)
+	alpha_after = ResourceLoader.load(root.path_join("game/alpha/content/rules/alpha.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	_check(alpha_after.overrides.size() == 1 and is_equal_approx(alpha_after.overrides[0].number, 6.0)
+		and String((r["problems"] as Array)[0]).contains("outside"),
+		"a second keep updates the same override, and refuses a value out of bounds")
+	var template_root: String = "user://keep_live_template"
+	_wipe(template_root)
+	ContentLibrary.root_override = template_root
+	ContentLibrary.genres_override = PackedStringArray()
+	var only := RuleSetDef.new()
+	only.display_name = "only"
+	var reach2: RuleEntry = reach.duplicate()
+	only.rules = [reach2]
+	_save(only, template_root.path_join("foundation/content/rules/only.tres"))
+	model.keep_live([{"key": "foundation.reach_m", "number": 2.5, "text": ""}] as Array[Dictionary])
+	var only_after: RuleSetDef = ResourceLoader.load(template_root.path_join("foundation/content/rules/only.tres"), "", ResourceLoader.CACHE_MODE_IGNORE)
+	_check(is_equal_approx(only_after.rules[0].number, 2.5) and only_after.overrides.is_empty(),
+		"with no genre (the template) the foundation's own value takes it")
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = PackedStringArray()
+	_wipe(root)
+	_wipe(template_root)

@@ -10,6 +10,15 @@
 				"foundation/content/ability/melee.tres": "29e165b2"
 			},
 			"type": "ability"
+		},
+		"shared/content/foundation/rules.json": {
+			"count": 1,
+			"hash": "77b9e6ab",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/rules/foundation.tres": "ec13b372"
+			},
+			"type": "rules"
 		}
 	}
 }

@@ -15,12 +15,16 @@ func run() -> void:
 func _run_rules_tests() -> void:
 	print("== rules: shared/rules.json ==")
 	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Rules.PATH)) as Dictionary
-	_check(raw != null and raw.has("player") and raw.has("sessions"), "shared/rules.json parses")
+	_check(raw != null and raw.has("sessions"), "shared/rules.json parses")
 	if raw == null:
 		return
-	_check(is_equal_approx(Rules.max_health(), float((raw["player"] as Dictionary)["max_health"]))
-			and is_equal_approx(Rules.interact_range(), float(raw["interact_range_m"])),
-		"a new player's health and the interact range are the file's (%s, %s m)" % [Rules.max_health(), Rules.interact_range()])
+	# Moved to hot rules (DECISIONS #201): build.rs refuses a rules.json that still sets them.
+	_check(not raw.has("player") and not raw.has("interact_range_m"),
+		"a new player's health and the interact range are not in it: they are hot rules")
+	var hot: Dictionary = HotRules.defaults()
+	_check(is_equal_approx(Rules.max_health(), float((hot["foundation.new_player_health"] as Dictionary)["number"]))
+			and is_equal_approx(Rules.interact_range(), float((hot["foundation.interact_range_m"] as Dictionary)["number"])),
+		"Rules reads them from the hot rules (%s, %s m)" % [Rules.max_health(), Rules.interact_range()])
 	var names: Array[String] = []
 	var total: float = 0.0
 	for p: Variant in Rules.phases(0):

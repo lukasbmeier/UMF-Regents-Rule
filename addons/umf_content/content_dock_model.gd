@@ -112,6 +112,104 @@ func problems_for_type(type: StringName) -> Array[Dictionary]:
 	return out
 
 
+## The rows `tools/rules_live.sh` prints (`spacetime sql`'s table): [{ key, number, text }].
+static func parse_live(lines: PackedStringArray) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var past_header: bool = false
+	for l: String in lines:
+		if not past_header:
+			past_header = l.strip_edges().begins_with("---")
+			continue
+		var cells: PackedStringArray = l.split("|")
+		if cells.size() < 3:
+			continue
+		var key: String = cells[0].strip_edges().trim_prefix("\"").trim_suffix("\"")
+		if key.is_empty():
+			continue
+		out.append({"key": key, "number": cells[1].strip_edges().to_float(),
+			"text": cells[2].strip_edges().trim_prefix("\"").trim_suffix("\"")})
+	return out
+
+
+## KEEP LIVE TUNING (DECISIONS #201): make the values an admin set on the server this game's
+## defaults. A rule this game's genre declares takes the value itself; a foundation rule becomes an
+## override in a genre's rule set (the one already overriding it, else the first genre's: never the
+## foundation's own file, which every game shares), except in the template, which has no genre.
+## Returns { kept: [sentences], problems: [sentences] }; the files are saved.
+func keep_live(rows: Array[Dictionary]) -> Dictionary:
+	var kept: Array[String] = []
+	var bad: Array[String] = []
+	var eff: Dictionary = RuleSetDef.effective()
+	var sets: Array[ContentDef] = ContentLibrary.items(&"rules")
+	var genres: PackedStringArray = ContentLibrary.owners().slice(1)
+	var touched: Dictionary = {}
+	for row: Dictionary in rows:
+		var key: String = row["key"]
+		if not eff.has(key):
+			bad.append("'%s' is live on the server but no rule set here declares it" % key)
+			continue
+		var entry: RuleEntry = eff[key]["entry"]
+		var number: float = float(row["number"])
+		if entry.kind != RuleEntry.Kind.TEXT and (number < entry.minimum or number > entry.maximum):
+			bad.append("'%s' = %s on the server is outside %s..%s here: not kept" % [key, number, entry.minimum, entry.maximum])
+			continue
+		var owner: String = eff[key]["owner"]
+		if owner != ContentLibrary.FOUNDATION or genres.is_empty():
+			entry.number = number
+			entry.text = String(row["text"])
+			var home: RuleSetDef = _set_declaring(sets, entry)
+			touched[home] = true
+			kept.append("%s = %s (its own value, %s)" % [key, _shown(entry, number, row), home.resource_path.get_file()])
+			continue
+		var target: RuleSetDef = null
+		var override: RuleOverride = null
+		for d: ContentDef in sets:
+			var s: RuleSetDef = d as RuleSetDef
+			if s == null or not genres.has(ContentLibrary.owner_of_path(s.resource_path)):
+				continue
+			for o: RuleOverride in s.overrides:
+				if o != null and o.key == key:
+					target = s
+					override = o
+		if target == null:
+			for d: ContentDef in sets:
+				if d is RuleSetDef and ContentLibrary.owner_of_path(d.resource_path) == genres[0]:
+					target = d as RuleSetDef
+					break
+		if target == null:
+			var errors: Array[String] = []
+			var path: String = ContentLibrary.create(&"rules", genres[0], "%s rules" % genres[0], errors)
+			if path.is_empty():
+				bad.append("no rule set for %s and none could be made: %s" % [genres[0], "; ".join(errors)])
+				continue
+			target = ResourceLoader.load(path) as RuleSetDef
+			sets.append(target)
+		if override == null:
+			override = RuleOverride.new()
+			override.key = key
+			override.reason = "Kept from live tuning on the server."
+			target.overrides.append(override)
+		override.number = number
+		override.text = String(row["text"])
+		touched[target] = true
+		kept.append("%s = %s (this game's override, %s)" % [key, _shown(entry, number, row), target.resource_path.get_file()])
+	for s: RuleSetDef in touched:
+		ResourceSaver.save(s, s.resource_path)
+	return {"kept": kept, "problems": bad}
+
+
+static func _set_declaring(sets: Array[ContentDef], entry: RuleEntry) -> RuleSetDef:
+	for d: ContentDef in sets:
+		var s: RuleSetDef = d as RuleSetDef
+		if s != null and s.rules.has(entry):
+			return s
+	return null
+
+
+static func _shown(entry: RuleEntry, number: float, row: Dictionary) -> String:
+	return "\"%s\"" % row["text"] if entry.kind == RuleEntry.Kind.TEXT else str(number)
+
+
 ## "res://x.tres: why" -> { path, text }.
 static func _problem(e: String) -> Dictionary:
 	if e.begins_with("res://") or e.begins_with("user://"):

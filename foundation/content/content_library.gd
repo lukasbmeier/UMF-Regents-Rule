@@ -85,6 +85,14 @@ static func may_own(type: StringName, owner: String) -> bool:
 	return not t.is_empty() and owners().has(owner) and (String(t["owner"]).is_empty() or t["owner"] == owner)
 
 
+## Who owns the content at `path`: "foundation", a genre, or "" when it is under no content root.
+static func owner_of_path(path: String) -> String:
+	for owner: String in owners():
+		if path.begins_with(root_of(owner) + "/"):
+			return owner
+	return ""
+
+
 ## Every content file: [{ owner, path }], by owner then path.
 static func files() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

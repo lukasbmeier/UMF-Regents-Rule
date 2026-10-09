@@ -90,7 +90,5 @@ pub mod entity_kind {
     pub const RESOURCE_NODE: u8 = 2;
 }
 
-/// How close a player must be to interact. The client raycasts to decide what to PROMPT; this
-/// is what decides whether it happens. Data: shared/rules.json `interact_range_m`, which the
-/// client's prompt reads too, so the two cannot disagree.
-pub const INTERACT_RANGE: f32 = crate::rules::INTERACT_RANGE;
+// How close a player must be to interact is a hot rule now: `hot::foundation::INTERACT_RANGE_M`
+// (DECISIONS #201), read live in `interact`; the client's prompt reads the same row.

@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -13,6 +13,7 @@ var challenge: UmfChallengeTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
 var health_state: UmfHealthStateTable
+var hot_rule: UmfHotRuleTable
 var input_queue: UmfInputQueueTable
 var inventory_item: UmfInventoryItemTable
 var item_def: UmfItemDefTable
@@ -36,6 +37,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
+	hot_rule = preload('res://spacetime_bindings/schema/tables/umf_hot_rule_table.gd').new(p_local_db)
 	input_queue = preload('res://spacetime_bindings/schema/tables/umf_input_queue_table.gd').new(p_local_db)
 	inventory_item = preload('res://spacetime_bindings/schema/tables/umf_inventory_item_table.gd').new(p_local_db)
 	item_def = preload('res://spacetime_bindings/schema/tables/umf_item_def_table.gd').new(p_local_db)

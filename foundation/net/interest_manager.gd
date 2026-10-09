@@ -34,6 +34,11 @@ signal world_changed(world_id: int)
 ## `world_config`, which is how a client learns that the other worlds exist at all.
 ##
 ## A table listed here MUST have a `world_id` column or its subscription fails at the server.
+## Tables EVERY client and sidecar subscribes, whatever its config lists: what the foundation itself
+## needs everywhere: the hot rules (DECISIONS #201: every client follows the live values) and who
+## is trusted (`authority`: the client shows the admin's pages only to the admin, `Roles`).
+const ALWAYS_TABLES: Array[StringName] = [&"hot_rule", &"authority"]
+
 const WORLD_TABLES: Array[StringName] = [
 	&"entity", &"movement_state", &"health_state", &"session", &"action_event", &"equip_state",
 	&"appearance", &"lobby_member", &"world_level", &"session_match",
@@ -101,6 +106,9 @@ func build_queries(for_world: int) -> Array[String]:
 	for t: StringName in extra_tables:
 		if not tables.has(t):
 			tables.append(t)
+	for t: StringName in ALWAYS_TABLES:
+		if not tables.has(t):
+			tables.append(t)
 	for t: StringName in tables:
 		out.append(query_for(t, for_world))
 	return out
@@ -113,6 +121,9 @@ func subscribed_tables() -> Array[StringName]:
 	if SpaceTimeSync.config != null:
 		tables.assign(SpaceTimeSync.config.core_tables)
 	for t: StringName in extra_tables:
+		if not tables.has(t):
+			tables.append(t)
+	for t: StringName in ALWAYS_TABLES:
 		if not tables.has(t):
 			tables.append(t)
 	return tables

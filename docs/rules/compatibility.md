@@ -57,4 +57,6 @@ attempted: a new client would ask for tables and reducers the old server never h
   Do it the compatible way instead (side table, `_v2` reducer), or, if it is worth a re-download,
   bump `compat` and send everyone a new build.
 - Retuned something clients simulate (movement, a minigame's curve): bump `compat`; the unit suite
-  cannot see that one.
+  cannot see that one. UNLESS it is a hot rule (`docs/rules/content.md`): clients read those live
+  from the server, old builds included, so a retune needs no bump and no re-download. Prefer making a
+  tunable hot over bumping `compat` whenever it is not a parity number (movement).

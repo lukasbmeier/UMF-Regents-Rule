@@ -94,6 +94,10 @@ func new_match(session_id: int) -> SpacetimeDBReducerCall:
 func register_authority(identity: PackedByteArray, role: int, world_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('register_authority', [identity, role, world_id], [&'identity', &'u8', &'u32'], &'')
 
+## 0. key: String [br]
+func reset_rule(key: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('reset_rule', [key], [&'string'], &'')
+
 ## 0. identity: PackedByteArray [br]
 func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('revoke_authority', [identity], [&'identity'], &'')
@@ -126,6 +130,12 @@ func set_player_name(name: String) -> SpacetimeDBReducerCall:
 ## 0. ready: bool [br]
 func set_ready(ready: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_ready', [ready], [&'bool'], &'')
+
+## 0. key: String [br]
+## 1. number: float [br]
+## 2. text: String [br]
+func set_rule(key: String, number: float, text: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_rule', [key, number, text], [&'string', &'f64', &'string'], &'')
 
 ## 0. session_id: int [br]
 ## 1. phase: int [br]

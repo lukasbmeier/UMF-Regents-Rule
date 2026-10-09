@@ -443,3 +443,11 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The bake checks more**: ids unique across the foundation and every genre, a genre's type only in its own folder, every piece in its type's folder, links only to baked content. Baked files carry a format number the server checks.
 - **`content_id_base`** on a genre's `genre.tres`: where its new content's ids start.
 - `foundation/content/abilities/` is now `foundation/content/ability/` (one folder per type, named after it).
+
+## 0.29.0 — hot rules: tune the game while it runs (CONTENT_TOOLING_SPEC step 3)
+- **Hot rules** (DECISIONS #201): numbers the server serves live. The admin changes one in game (Escape, **Rules (admin)**) and every player follows at once, old builds included: no republish, no re-download.
+- **Declared as content**: rule sets in the Content panel (type `rules`), each rule with bounds, a unit and a description. A genre sets its game's value for a foundation rule with an override, never by editing the foundation's file.
+- **Keep live tuning** (Content panel): what the admin tuned becomes the game's defaults.
+- **Moved**: the interact range and a new player's health are hot rules now (`shared/rules.json` no longer has them; the build says so if a game's still does).
+- Server: new table `hot_rule`, reducers `set_rule`, `reset_rule` (admin only). Every client now also subscribes to `authority` (who the admin is). Additive: older builds keep playing. Publish with `--codegen`; **restart the editor** (a new autoload, `HotRules`).
+- New suite: `tests/hot_rules_test.sh` (a real server).

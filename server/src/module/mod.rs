@@ -40,3 +40,5 @@ mod helpers;
 pub use helpers::*;
 mod compat;
 pub use compat::*;
+mod hot_rules;
+pub use hot_rules::*;

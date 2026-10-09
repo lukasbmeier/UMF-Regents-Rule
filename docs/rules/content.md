@@ -26,7 +26,8 @@ add to it without reworking it.
    content folders. This is generic: a new type gets it for free.
 8. **The baked layout has a `format`** (1). build.rs refuses another, so a change of layout is
    caught, never misread; change both sides together.
-9. **`ContentDef` grows only by methods with a default** (`workbench_scene()` returns "", `ref()`),
+9. **`ContentDef` grows only by methods with a default** (`workbench_scene()` returns "", `ref()`,
+   `validate_with()` for checks against every other piece of the type),
    so adding a hook never breaks a type written before it. Planned next: a thumbnail for the
    Catalog, a singleton flag for the rules.
 10. **The dock is a thin view.** Its behaviour is `ContentDockModel` (tested headless); its toolbar
@@ -62,6 +63,35 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
 | Type | Class | Folder | The server |
 |---|---|---|---|
 | ability | `AbilityDef` | `foundation/content/ability/` (melee), `game/<genre>/content/ability/` | `content::ABILITIES`, seeded into `ability_def` at init |
+| rules | `RuleSetDef` (`RuleEntry`, `RuleOverride`) | `foundation/content/rules/`, `game/<genre>/content/rules/` | `hot::ALL` and `hot::<owner>::<NAME>`, served live in `hot_rule` |
+
+## Hot rules (DECISIONS #201, CONTENT_TOOLING_SPEC §4)
+A number the game is tuned by while it runs: a range, a health, a round's length, a price.
+- **Declared in a rule set** (`RuleSetDef`): name, kind (number, whole number, flag, text), value,
+  bounds, unit, and a description (what the tuner reads). Its key is `<owner>.<name>`, unique in the
+  game. A rule set's `overrides` set THIS GAME's value for another owner's rule: a genre tuning the
+  foundation's interact range for its game, never by editing the foundation's file. One override per
+  key per game, within bounds.
+- **Served live.** Every rule has a row in the public `hot_rule` table (subscribed by the foundation
+  for every client and sidecar, `InterestManager.ALWAYS_TABLES`). The server keeps it current on
+  init and every connect: a rule nobody set follows the build's default (so a republish with a new
+  default needs no wipe), one an admin set keeps its value, one the build no longer has is removed.
+- **Read live.** Server: `hot_number(ctx, crate::hot::foundation::INTERACT_RANGE_M)` (a generated
+  constant: a misspelt rule does not build). Client: `HotRules.number(&"foundation.interact_range_m")`,
+  and `HotRules.changed` when it moves; offline, the build's default.
+- **Tuned live by the admin.** `set_rule` / `reset_rule` (admin only, within bounds). In game: Escape,
+  **Rules (admin)** (shown only to the admin, `Roles`). In the editor: the Content dock's **Keep live
+  tuning** writes what the admin set into the rule sets (a genre's own rule takes the value; a
+  foundation rule becomes the genre's override; the template's own values with no genre); then Publish.
+- **Never for what a client predicts exactly** (movement): the bake refuses a rule named like a
+  `shared/movement_config.json` field. A hot rule that a client simulates with is fine ONLY because the
+  client reads it live too; that is what lets it be retuned without a `compat` bump.
+- **The table never changes shape** (old builds read it). Moving a number from `shared/rules.json`
+  into a rule set: build.rs refuses a `rules.json` that still has it, naming where it went, so a
+  game's own value is never silently dropped.
+- Moved so far: `foundation.interact_range_m`, `foundation.new_player_health`. Round lengths are still
+  in `shared/rules.json` (a session plan is structure: which phases, in what order); making each
+  phase's length a hot rule is the next candidate.
 
 ## Adding a content type
 1. `foundation/content/<type>_def.gd` (any owner may make them) or `game/<genre>/content/<type>_def.gd`
@@ -75,6 +105,6 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
    `validate()` case for the type's own rule.
 
 ## Not yet (CONTENT_TOOLING_SPEC §9)
-The `rules` table and hot tunables (step 3), the `Workbench` base and the Catalog (step 4). Fishing's
+The `Workbench` base and the Catalog (step 4); round lengths as hot rules. Fishing's
 content (`shared/fishing/*.json`) moves to `.tres` in Fishing, where its round-trip test (bake the
 generated resources, compare byte for byte) belongs.

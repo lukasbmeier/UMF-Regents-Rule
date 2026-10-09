@@ -1,8 +1,9 @@
 class_name Rules
 ## THE FOUNDATION'S RULES, AS THE GAME SETS THEM: `res://shared/rules.json` (DECISIONS #154) — the
-## same file `server/build.rs` compiles into the module, so the two halves read one number. A new
-## player's health, how close you must be to use something, and each session kind's round plan
-## (its phases in order, their names and lengths).
+## same file `server/build.rs` compiles into the module, so the two halves read one number: each
+## session kind's round plan (its phases in order, their names and lengths), its lobby and match.
+## A new player's health and the interact range are HOT rules now (`HotRules`, DECISIONS #201):
+## the two functions for them below read those, live.
 ##
 ## Change the file, republish (`tools/publish.sh`), restart. The client reads it fresh each run.
 
@@ -22,16 +23,16 @@ static func doc() -> Dictionary:
 	return _doc
 
 
-## A new player's health.
+## A new player's health: the hot rule `foundation.new_player_health` (DECISIONS #201), live.
 static func max_health() -> float:
-	var player: Dictionary = doc().get("player", {}) as Dictionary
-	return float(player.get("max_health", 100.0))
+	return HotRules.number(&"foundation.new_player_health")
 
 
-## How close (m) a player must be for the server to accept `interact`. The client's prompt uses it
-## too, so it never offers what the server will refuse.
+## How close (m) a player must be for the server to accept `interact`: the hot rule
+## `foundation.interact_range_m`, live. The client's prompt uses it too, so it never offers what
+## the server will refuse, even right after an admin changes it.
 static func interact_range() -> float:
-	return float(doc().get("interact_range_m", 3.0))
+	return HotRules.number(&"foundation.interact_range_m")
 
 
 ## A session kind's phases, in order: [{phase, name, seconds}]. Empty for a kind with no plan.

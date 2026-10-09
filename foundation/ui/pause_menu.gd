@@ -39,6 +39,9 @@ var _open_page: Control = null
 ## The menu's group: a genre finds the menu here to add its own buttons and pages.
 const GROUP: StringName = &"pause_menu"
 
+var _rules: RulesPanel = null
+var _rules_button: Button = null
+
 
 func _ready() -> void:
 	visible = false
@@ -52,6 +55,13 @@ func _ready() -> void:
 	_panel = SettingsPanel.new()
 	add_child(_panel)
 	_panel.closed.connect(_show_menu)
+	# The hot rules page (DECISIONS #201): its button is shown to the admin only (`Roles`); the
+	# server refuses anyone else's change regardless.
+	_rules = RulesPanel.new()
+	add_child(_rules)   # in the tree from the start (hidden), so it is freed with the menu
+	_rules_button = add_button("Rules (admin)", "Rules")
+	_rules_button.pressed.connect(func() -> void: open_page(_rules))
+	_rules_button.visible = false
 
 
 ## The settings screen, in place of the menu.
@@ -97,6 +107,10 @@ func add_button(text: String, button_name: String = "") -> Button:
 	return b
 
 
+func rules_panel() -> RulesPanel:
+	return _rules
+
+
 func settings_panel() -> SettingsPanel:
 	return _panel
 
@@ -108,6 +122,7 @@ func is_page_open() -> bool:
 func _show_menu() -> void:
 	_open_page = null
 	_box.visible = true
+	_rules_button.visible = Roles.is_local_admin()
 	if visible:
 		_resume.grab_focus()
 
@@ -139,6 +154,7 @@ func _process(_delta: float) -> void:
 	visible = want
 	if want:
 		_disconnect.visible = can_disconnect
+		_rules_button.visible = Roles.is_local_admin()
 		_refresh_fullscreen()
 		_info.text = _describe()
 		if _open_page == null:

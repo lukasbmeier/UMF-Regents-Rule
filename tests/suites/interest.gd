@@ -118,14 +118,20 @@ func _run_interest_tests() -> void:
 		"a static catalogue is not: every world shares one")
 	_check(qs.has("SELECT * FROM input_queue WHERE world_id = 3"),
 		"and a table the sidecar adds goes through the same rule")
-	_check(qs.size() == cfg.core_tables.size() + 1,
-		"one query per table, %d for %d" % [qs.size(), cfg.core_tables.size() + 1])
+	var always: int = InterestManager.ALWAYS_TABLES.filter(func(t: StringName) -> bool: return not cfg.core_tables.has(t)).size()
+	_check(qs.size() == cfg.core_tables.size() + 1 + always,
+		"one query per table, %d for %d" % [qs.size(), cfg.core_tables.size() + 1 + always])
 	_check(im.build_queries(0).has("SELECT * FROM entity WHERE world_id = 0"),
 		"and world 0 is spelled out rather than left unfiltered")
 	var dupe: Array[StringName] = [&"entity"]
 	im.extra_tables = dupe
-	_check(im.build_queries(0).size() == cfg.core_tables.size(),
+	_check(im.build_queries(0).size() == cfg.core_tables.size() + always,
 		"an extra table already in the core set is not asked for twice")
+	# What the foundation needs everywhere is asked for whatever a config lists (DECISIONS #201):
+	# the hot rules and the authority list, whole (neither is per world).
+	_check(qs.has("SELECT * FROM hot_rule") and qs.has("SELECT * FROM authority")
+		and im.subscribed_tables().has(&"hot_rule"),
+		"the hot rules and the authority list are always asked for, unfiltered")
 	var none: Array[StringName] = []
 	im.extra_tables = none
 

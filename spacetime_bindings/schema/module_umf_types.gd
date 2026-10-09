@@ -11,6 +11,7 @@ const Challenge = preload('res://spacetime_bindings/schema/types/umf_challenge.g
 const Entity = preload('res://spacetime_bindings/schema/types/umf_entity.gd')
 const EquipStateRow = preload('res://spacetime_bindings/schema/types/umf_equip_state_row.gd')
 const HealthStateRow = preload('res://spacetime_bindings/schema/types/umf_health_state_row.gd')
+const HotRuleRow = preload('res://spacetime_bindings/schema/types/umf_hot_rule_row.gd')
 const InputQueueRow = preload('res://spacetime_bindings/schema/types/umf_input_queue_row.gd')
 const InputFrame = preload('res://spacetime_bindings/schema/types/umf_input_frame.gd')
 const InventoryItem = preload('res://spacetime_bindings/schema/types/umf_inventory_item.gd')

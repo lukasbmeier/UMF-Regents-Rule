@@ -80,6 +80,12 @@ static func bake(write: bool) -> Dictionary:
 		(ids[type] as Dictionary)[def.id] = path
 		for why: String in _bad_links(def, baked_paths):
 			errors.append("%s: %s" % [path, why])
+		var same_type: Array[ContentDef] = []
+		for other: Dictionary in entries:
+			if other["def"] != null and (other["def"] as ContentDef).content_type() == type:
+				same_type.append(other["def"])
+		for why: String in def.validate_with(same_type):
+			errors.append("%s: %s" % [path, why])
 		var key: String = "%s/%s" % [owner, type]
 		if not groups.has(key):
 			groups[key] = {"owner": owner, "type": String(type), "items": [], "sources": {}}

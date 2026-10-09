@@ -75,11 +75,12 @@ MYENT=$(sql_first "SELECT entity_id FROM player WHERE identity = $ADMIN" 1)
 check "$([ -n "$MYENT" ] && echo true || echo false)" "connecting created a player row"
 assert_eq "$(row_count "SELECT * FROM movement_state WHERE entity_id = $MYENT")" "1" "player got movement_state"
 assert_eq "$(row_count "SELECT * FROM health_state WHERE entity_id = $MYENT")" "1" "player got health_state"
-# THE FOUNDATION'S RULES ARE DATA (DECISIONS #154): a new player's health is shared/rules.json's,
-# compiled in by build.rs, not a number in module.rs.
-RULE_HP="$(python -c "import json; print(f\"{float(json.load(open('shared/rules.json'))['player']['max_health']):g}\")")"
+# A NEW PLAYER'S HEALTH IS A HOT RULE (DECISIONS #201): the server's live `hot_rule` row, which
+# starts at the rule set's value (foundation/content/rules/), not a number in module.rs.
+RULE_HP="$(sql_first "SELECT number FROM hot_rule WHERE key = 'foundation.new_player_health'" 1)"
+check "$([ -n "$RULE_HP" ] && echo true || echo false)" "the rule has its row"
 assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $MYENT" 1)" "$RULE_HP" \
-  "a new player's health is shared/rules.json's ($RULE_HP)"
+  "a new player's health is the hot rule's ($RULE_HP)"
 assert_eq "$(row_count "SELECT * FROM session_member WHERE entity_id = $MYENT")" "1" "player auto-joined the default session"
 assert_eq "$(sql_first "SELECT world_id FROM entity WHERE entity_id = $MYENT" 1)" "0" "player is in the default world"
 assert_eq "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)" \

@@ -903,6 +903,63 @@
 							"elements": [
 								{
 									"name": {
+										"some": "key"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "number"
+									},
+									"algebraic_type": {
+										"F64": []
+									}
+								},
+								{
+									"name": {
+										"some": "text"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "overridden"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "updated_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "id"
 									},
 									"algebraic_type": {
@@ -930,7 +987,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 17.0
+										"Ref": 18.0
 									}
 								},
 								{
@@ -1931,7 +1988,7 @@
 						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 30.0,
+					"ty": 31.0,
 					"custom_ordering": true
 				},
 				{
@@ -1939,7 +1996,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 32.0,
+					"ty": 33.0,
 					"custom_ordering": true
 				},
 				{
@@ -1955,7 +2012,7 @@
 						"scope": [],
 						"source_name": "LobbyMember"
 					},
-					"ty": 20.0,
+					"ty": 21.0,
 					"custom_ordering": true
 				},
 				{
@@ -1963,7 +2020,7 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 18.0,
+					"ty": 19.0,
 					"custom_ordering": true
 				},
 				{
@@ -1971,7 +2028,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 31.0,
+					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -1985,6 +2042,14 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "RateBudget"
+					},
+					"ty": 25.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "ActionPruneSchedule"
 					},
 					"ty": 4.0,
@@ -1993,17 +2058,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "RateBudget"
+						"source_name": "ItemDef"
 					},
-					"ty": 24.0,
+					"ty": 20.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ItemDef"
+						"source_name": "HotRuleRow"
 					},
-					"ty": 19.0,
+					"ty": 16.0,
 					"custom_ordering": true
 				},
 				{
@@ -2019,7 +2084,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 22.0,
+					"ty": 23.0,
 					"custom_ordering": true
 				},
 				{
@@ -2051,7 +2116,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 28.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -2067,7 +2132,7 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 16.0,
+					"ty": 17.0,
 					"custom_ordering": true
 				},
 				{
@@ -2083,7 +2148,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 27.0,
+					"ty": 28.0,
 					"custom_ordering": true
 				},
 				{
@@ -2099,7 +2164,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 25.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
@@ -2123,7 +2188,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 21.0,
+					"ty": 22.0,
 					"custom_ordering": true
 				},
 				{
@@ -2139,7 +2204,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 29.0,
+					"ty": 30.0,
 					"custom_ordering": true
 				},
 				{
@@ -2147,7 +2212,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 26.0,
+					"ty": 27.0,
 					"custom_ordering": true
 				},
 				{
@@ -2163,7 +2228,7 @@
 						"scope": [],
 						"source_name": "Player"
 					},
-					"ty": 23.0,
+					"ty": 24.0,
 					"custom_ordering": true
 				},
 				{
@@ -2179,7 +2244,7 @@
 						"scope": [],
 						"source_name": "InputFrame"
 					},
-					"ty": 17.0,
+					"ty": 18.0,
 					"custom_ordering": true
 				},
 				{
@@ -2270,8 +2335,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "hot_rule",
+					"product_type_ref": 16.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hot_rule_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hot_rule_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "movement_state",
-					"product_type_ref": 21.0,
+					"product_type_ref": 22.0,
 					"primary_key": [
 						0.0
 					],
@@ -2328,66 +2438,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "rate_budget",
-					"product_type_ref": 24.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_idx_btree"
-							},
-							"accessor_name": {
-								"some": "key"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "rate_budget_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "lobby_member",
-					"product_type_ref": 20.0,
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
@@ -2457,8 +2509,186 @@
 					"is_event": false
 				},
 				{
-					"source_name": "session",
+					"source_name": "rate_budget",
 					"product_type_ref": 25.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "rate_budget_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority_check_schedule",
+					"product_type_ref": 8.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "npc_brain",
+					"product_type_ref": 23.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "npc_brain_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session",
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -2544,128 +2774,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "authority_check_schedule",
-					"product_type_ref": 8.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "npc_brain",
-					"product_type_ref": 22.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "npc_brain_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "npc_brain_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "npc_brain_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 29.0,
+					"product_type_ref": 30.0,
 					"primary_key": [
 						0.0
 					],
@@ -2727,7 +2837,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 31.0,
+					"product_type_ref": 32.0,
 					"primary_key": [
 						0.0
 					],
@@ -3074,7 +3184,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 27.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -3132,7 +3242,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 19.0,
+					"product_type_ref": 20.0,
 					"primary_key": [
 						0.0
 					],
@@ -3368,7 +3478,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 26.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -3413,7 +3523,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 30.0,
+					"product_type_ref": 31.0,
 					"primary_key": [
 						0.0
 					],
@@ -3533,7 +3643,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 18.0,
+					"product_type_ref": 19.0,
 					"primary_key": [
 						0.0
 					],
@@ -3608,7 +3718,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 23.0,
+					"product_type_ref": 24.0,
 					"primary_key": [
 						0.0
 					],
@@ -3830,7 +3940,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 16.0,
+					"product_type_ref": 17.0,
 					"primary_key": [
 						0.0
 					],
@@ -3918,7 +4028,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 28.0,
+					"product_type_ref": 29.0,
 					"primary_key": [
 						0.0
 					],
@@ -4817,6 +4927,32 @@
 					}
 				},
 				{
+					"source_name": "reset_rule",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "key"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "revoke_authority",
 					"params": {
 						"elements": [
@@ -4863,7 +4999,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 19.0
+										"Ref": 20.0
 									}
 								}
 							}
@@ -5029,6 +5165,48 @@
 								},
 								"algebraic_type": {
 									"Bool": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_rule",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "key"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "number"
+								},
+								"algebraic_type": {
+									"F64": []
+								}
+							},
+							{
+								"name": {
+									"some": "text"
+								},
+								"algebraic_type": {
+									"String": []
 								}
 							}
 						]
@@ -5329,7 +5507,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 17.0
+										"Ref": 18.0
 									}
 								}
 							}
@@ -5382,7 +5560,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 29.0
+									"Ref": 30.0
 								}
 							}
 						]
@@ -5467,7 +5645,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 32.0
+										"Ref": 33.0
 									}
 								}
 							}
@@ -5635,14 +5813,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "movement_state",
-							"canonical_name": "movement_state"
+							"source_name": "hot_rule",
+							"canonical_name": "hot_rule"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "rate_budget",
-							"canonical_name": "rate_budget"
+							"source_name": "movement_state",
+							"canonical_name": "movement_state"
 						}
 					},
 					{
@@ -5653,8 +5831,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "session",
-							"canonical_name": "session"
+							"source_name": "rate_budget",
+							"canonical_name": "rate_budget"
 						}
 					},
 					{
@@ -5667,6 +5845,12 @@
 						"Table": {
 							"source_name": "npc_brain",
 							"canonical_name": "npc_brain"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session",
+							"canonical_name": "session"
 						}
 					},
 					{
@@ -5953,6 +6137,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "reset_rule",
+							"canonical_name": "reset_rule"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "revoke_authority",
 							"canonical_name": "revoke_authority"
 						}
@@ -5997,6 +6187,12 @@
 						"Function": {
 							"source_name": "set_ready",
 							"canonical_name": "set_ready"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_rule",
+							"canonical_name": "set_rule"
 						}
 					},
 					{

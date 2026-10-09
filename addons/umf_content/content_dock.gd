@@ -40,6 +40,7 @@ func setup(m: ContentDockModel = null, b: ContentDockBridge = null) -> void:
 		model.add_action(&"bake", "Bake", "Write the content the server compiles in (shared/content/)", bake)
 		model.add_action(&"publish", "Publish", "tools/publish.sh: bake, build, publish this game's database (keeps its data)", publish)
 		model.add_action(&"play", "Play", "Run the game (Debug > Customize Run Instances sets how many)", func() -> void: bridge.play())
+		model.add_action(&"keep_live", "Keep live tuning", "Make the rule values an admin set on this game's server (the Rules page in game) this game's defaults: they are written into the rule sets; then Bake or Publish", keep_live_tuning)
 	_build()
 	refresh()
 
@@ -117,6 +118,37 @@ func publish() -> void:
 	_say("Publish: tools/publish.sh (bake, build, publish; keeps the data)")
 	if _task.start("tools/publish.sh"):
 		_status.text = "publishing…"
+
+
+func keep_live_tuning() -> void:
+	if _task != null and _task.is_running():
+		_say("Wait for the running task to finish")
+		return
+	var lines := PackedStringArray()
+	_task = ProjectTask.new()
+	_task.line.connect(func(t: String) -> void: lines.append(t))
+	_task.finished.connect(func(code: int) -> void:
+		_status.text = ""
+		if code != 0:
+			_say("Keep live tuning: could not read the server (is it running?)")
+			for l: String in lines:
+				_say("  " + l)
+			return
+		var rows: Array[Dictionary] = ContentDockModel.parse_live(lines)
+		if rows.is_empty():
+			_say("Keep live tuning: no rule was changed on the server (%s)" % (lines[0] if not lines.is_empty() else ""))
+			return
+		var r: Dictionary = model.keep_live(rows)
+		_say("Keep live tuning: %d kept" % (r["kept"] as Array).size())
+		for k: String in r["kept"] as Array:
+			_say("  " + k)
+		for p: String in r["problems"] as Array:
+			_say("  ⚠ " + p)
+		_say("  Publish to make them the defaults; then Reset them in the game's Rules page (or leave them: they now equal the defaults).")
+		bridge.files_changed()
+		refresh())
+	if _task.start("tools/rules_live.sh"):
+		_status.text = "reading the server's rules…"
 
 
 func _process(_delta: float) -> void:

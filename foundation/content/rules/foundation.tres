@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
+[ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
+
+[sub_resource type="Resource" id="Rule_interact"]
+script = ExtResource("2_rule")
+name = &"interact_range_m"
+number = 3.0
+minimum = 0.5
+maximum = 20.0
+unit = "m"
+description = "How close a player must be to use something (a door, a spot, an NPC). The server refuses a use from further away; the prompt on screen uses the same number, so it never offers what will be refused."
+
+[sub_resource type="Resource" id="Rule_health"]
+script = ExtResource("2_rule")
+name = &"new_player_health"
+number = 100.0
+minimum = 1.0
+maximum = 10000.0
+unit = "hp"
+description = "The health a player starts with the first time they join. A player who has joined before keeps theirs."
+
+[resource]
+script = ExtResource("1_set")
+display_name = "Foundation rules"
+designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health")])

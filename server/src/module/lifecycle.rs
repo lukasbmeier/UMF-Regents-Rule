@@ -41,6 +41,8 @@ pub fn init(ctx: &ReducerContext) {
         scheduled_id: 0,
         scheduled_at: TimeDuration::from_micros(1_000_000).into(),
     });
+    // The hot rules' rows, with this build's values (DECISIONS #201).
+    sync_hot_rules(ctx);
     // The abilities, as baked from their .tres (foundation/content/abilities/, a genre's
     // content/; DECISIONS #199). The foundation's own, `melee`, makes the action path work out of
     // the box (PHASE3_SPEC Task 12).
@@ -128,6 +130,8 @@ pub fn set_player_name(ctx: &ReducerContext, name: String) -> Result<(), String>
 /// `online` back on for a returning identity.
 #[reducer(client_connected)]
 pub fn client_connected(ctx: &ReducerContext) {
+    // A republish does not run init: the first connect after one brings the hot rules up to date.
+    sync_hot_rules(ctx);
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
         p.online = true;
         let entity_id = p.entity_id;
@@ -173,8 +177,8 @@ pub fn client_connected(ctx: &ReducerContext) {
     ctx.db.health_state().insert(HealthStateRow {
         entity_id: ent.entity_id,
         world_id: DEFAULT_WORLD,
-        current: crate::rules::PLAYER_MAX_HEALTH,
-        max: crate::rules::PLAYER_MAX_HEALTH,
+        current: hot_number(ctx, crate::hot::foundation::NEW_PLAYER_HEALTH) as f32,
+        max: hot_number(ctx, crate::hot::foundation::NEW_PLAYER_HEALTH) as f32,
         is_dead: false,
         last_damage_source: 0,
         last_change_server_tick: current_tick(ctx, DEFAULT_WORLD),
