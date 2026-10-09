@@ -64,7 +64,8 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
 |---|---|---|---|
 | ability | `AbilityDef` | `foundation/content/ability/` (melee), `game/<genre>/content/ability/` | `content::ABILITIES`, seeded into `ability_def` at init |
 | rules | `RuleSetDef` (`RuleEntry`, `RuleOverride`) | `foundation/content/rules/`, `game/<genre>/content/rules/` | `hot::ALL` and `hot::<owner>::<NAME>`, served live in `hot_rule` |
-| character | `EntityDefinition` | `foundation/content/character/` (player, npc, humanoid), `game/<genre>/content/character/` | nothing compiled yet (`kind`, `brain` baked for a later check of a game's kinds) |
+| character | `EntityDefinition` | `foundation/content/character/` (player, npc, humanoid), `game/<genre>/content/character/` | its kind and movement profile: each kind's Tier A speed bound (`content::movement_limits`) |
+| movement | `MovementProfileDef` | `foundation/content/movement/`, `game/<genre>/content/movement/` | its sprint, dash and lift, for the kinds whose characters use it |
 
 ## Hot rules (DECISIONS #201, CONTENT_TOOLING_SPEC §4)
 A number the game is tuned by while it runs: a range, a health, a round's length, a price.
@@ -137,6 +138,18 @@ character, the real animations and the moment the content lives in, and no serve
 |---|---|---|
 | ability | use in range (the wind-up plays, it lands), use out of range (refused), cooldown | `tools/workbench/ability_workbench.tscn` |
 | character | every clip (and which the game needs are missing), walk facing (read from a walk that travels; else the floor arrow), looks; fit: feet on the floor, height against its capsule; New From File (a rigged model) | `tools/workbench/character_workbench.tscn` |
+| movement | accelerate (time to run and sprint speed, slide to a stop), jump (height, air time), flaps (each flap's height), reverse (frames to turn a sprint round); the path drawn. Measured by the real model: its numbers match the movement playtest's | `tools/workbench/movement_workbench.tscn` |
+
+### Movement profiles (DECISIONS #205, docs/FOUNDATION_SYSTEMS.md milestone 1)
+A character links to a `MovementProfileDef` (`EntityDefinition.movement_profile`): every
+per-character movement number (speeds, acceleration, jump, flaps, dash). New fills it from the
+default (`shared/movement_config.json`), which every character without a profile still moves by,
+and which keeps the network's numbers (tick rates, reconciliation). The entity applies its
+character's profile to its movement component before binding, so its player's prediction and the
+sidecar's simulation use the same numbers. The module bounds a Tier A claim by its entity's KIND:
+the widest of that kind's characters' profiles. Profile numbers are PARITY numbers (clients predict
+with them), so they are not hot rules: change one in a shipped build and bump `compat`, or add a
+profile. `--character=<res path>` plays as any character for a run (Boot): how a designer tries one.
 
 ### Character definitions are content (DECISIONS #204)
 `EntityDefinition` is a `ContentDef` (type `character`): listed, benched, Catalogued. Its content

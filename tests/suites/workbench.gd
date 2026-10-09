@@ -12,6 +12,7 @@ func run() -> void:
 	_run_every_type_has_a_bench()
 	await _run_ability_bench()
 	await _run_character_bench()
+	await _run_movement_profiles()
 	await _run_catalog()
 
 
@@ -254,6 +255,77 @@ func _run_character_bench() -> void:
 	_check(refused.is_empty() and bench.last_result.contains("not a model")
 		and not FileAccess.file_exists(root.path_join("foundation/content/character/foundation.tres")),
 		"a file that is not a model is refused, and nothing is left behind: %s" % bench.last_result)
+	bench.queue_free()
+	await get_tree().process_frame
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = null
+	_wipe(root)
+
+
+const MOVEMENT_BENCH: String = "res://tools/workbench/movement_workbench.tscn"
+
+
+## MOVEMENT PROFILES (DECISIONS #205): a new profile starts as the default, number for number; a
+## character with one moves by it; the movement bench measures it with the real model, and its
+## numbers agree with what the movement playtest measures through the game (a 1.53 m jump, a 0.47 m
+## slide from a sprint).
+func _run_movement_profiles() -> void:
+	print("== workbench: movement profiles ==")
+	var root: String = "user://movement_bench_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray()
+	var errors: Array[String] = []
+	# The default changed for a moment: a new profile must copy what the default IS, not what the
+	# script's own initial values happen to be.
+	var real_run: float = MovementConfig.shared().run_speed
+	MovementConfig.shared().run_speed = 5.75
+	var path: String = ContentLibrary.create(&"movement", "foundation", "Hen", errors)
+	var hen: MovementProfileDef = load(path) as MovementProfileDef
+	var same: bool = hen != null
+	for f: StringName in MovementProfileDef.PROFILE_FIELDS:
+		same = same and hen.get(f) == MovementConfig.shared().get(f)
+	MovementConfig.shared().run_speed = real_run
+	_check(same and is_equal_approx(hen.run_speed, 5.75), "a new profile starts as the default movement, number for number (%s)" % path)
+	hen.run_speed = real_run
+	hen.run_speed = 4.0
+	hen.sprint_speed = 6.0
+	hen.flap_charges = 2
+	var d := EntityDefinition.new()
+	_check(d.movement_config() == MovementConfig.shared(), "a character with no profile moves by the default")
+	d.movement_profile = hen
+	var cfg: MovementConfig = d.movement_config()
+	_check(is_equal_approx(cfg.run_speed, 4.0) and cfg.flap_charges == 2
+		and cfg.reconcile_smooth_time == MovementConfig.shared().reconcile_smooth_time,
+		"one with a profile moves by its numbers, with the game's network numbers")
+	_check(d.to_bake()["movement"] == hen.id, "and its bake names its profile, for the server's bound")
+	hen.walk_speed = 9.0
+	_check(hen.validate().any(func(s: String) -> bool: return s.contains("out of order")), "gaits out of order are refused")
+	hen.walk_speed = 1.2
+
+	var bench: MovementWorkbench = (load(MOVEMENT_BENCH) as PackedScene).instantiate() as MovementWorkbench
+	get_tree().root.add_child(bench)
+	bench.item = load(path)
+	await get_tree().process_frame
+	var base: MovementProfileDef = load(path) as MovementProfileDef
+	base.fill_from(MovementConfig.shared())
+	var jump: String = await bench.run_named_test(&"jump")
+	_check(absf(float(bench.last_measure["height_m"]) - 1.53) < 0.02 and jump.contains("jumps 1.53 m"),
+		"the default jump measures 1.53 m on the bench, as the playtest measures it in the game: %s" % jump)
+	var acc: String = await bench.run_named_test(&"accelerate")
+	_check(absf(float(bench.last_measure["stop_m"]) - 0.47) < 0.02, "and slides 0.47 m to a stop from a sprint, as in the game: %s" % acc)
+	_check((bench.get_node(^"Trace") as MultiMeshInstance3D).multimesh.instance_count > 10, "the test leaves its path drawn")
+	base.flap_charges = 2
+	await get_tree().create_timer(0.3).timeout
+	var flaps: String = await bench.run_named_test(&"flaps")
+	var heights: Array = bench.last_measure["flap_heights_m"]
+	_check(heights.size() == 2 and float(heights[0]) > 1.6 and float(heights[1]) > float(heights[0]),
+		"two flaps, each at the top of a rise, each higher: %s" % flaps)
+	base.run_speed = 3.0
+	base.sprint_speed = 4.0
+	await get_tree().create_timer(0.3).timeout
+	await bench.run_named_test(&"accelerate")
+	_check(float(bench.last_measure["stop_m"]) < 0.47, "a slower profile measures slower (an edit followed: %.2f m slide)" % float(bench.last_measure["stop_m"]))
 	bench.queue_free()
 	await get_tree().process_frame
 	ContentLibrary.root_override = ""

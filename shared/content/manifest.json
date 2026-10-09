@@ -13,7 +13,7 @@
 		},
 		"shared/content/foundation/character.json": {
 			"count": 3,
-			"hash": "30b9abc3",
+			"hash": "f761ce8d",
 			"owner": "foundation",
 			"sources": {
 				"foundation/content/character/humanoid.tres": "21eeed72",

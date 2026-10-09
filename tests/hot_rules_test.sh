@@ -57,6 +57,7 @@ trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/shared"
 cp -r foundation "$work/foundation"
 cp -r shared/content "$work/shared/content"
+cp shared/movement_config.json "$work/shared/"   # the default movement: build.rs bounds each kind from it
 sed -i 's/^number = 100.0$/number = 150.0/' "$work/foundation/content/rules/foundation.tres"
 "$PYTHON" - "$work" <<'PY'
 import json, sys, pathlib

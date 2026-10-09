@@ -115,9 +115,13 @@ func _step_walk_from_spawn() -> void:
 	var start: Vector3 = _body.global_position
 	var trace: Array[Vector3] = await _hold([&"move_forward"], 60)
 	var moved: float = _horizontal(trace[-1] - start)
+	var run: float = _movement.config.run_speed
 	print("   walked %.2f m in 1.0 s" % moved)
-	# A plain key press RUNS: 5 m/s, which covers about 4.7 m in a second from a standstill.
-	_check(moved > 3.5, "walking from spawn moves the player without a jump first (%.2f m)" % moved)
+	print("[playtest] moving by run %s sprint %s (this character's movement)" % [run, _movement.config.sprint_speed])
+	# A plain key press RUNS: at the default 5 m/s that covers about 4.7 m in a second from a standstill.
+	_check(moved > 0.7 * run, "walking from spawn moves the player without a jump first (%.2f m)" % moved)
+	# ...and no further than this character runs (its movement profile, DECISIONS #205).
+	_check(moved <= run + 0.15, "and no faster than this character runs (%.2f m in 1 s at %s m/s)" % [moved, run])
 	_check_no_snapback(trace, Vector3.FORWARD, "walking")
 	await _frames(30)   # let friction stop us
 
@@ -133,7 +137,7 @@ func _step_sprint_and_turn() -> void:
 	var trace: Array[Vector3] = await _hold([&"move_forward", &"sprint"], 90)
 	var moved: float = _horizontal(trace[-1] - start)
 	print("   sprinted %.2f m in 1.5 s" % moved)
-	_check(moved > 9.0, "sprinting covers ground (%.2f m in 1.5 s)" % moved)
+	_check(moved > 0.75 * _movement.config.sprint_speed * 1.5, "sprinting covers ground (%.2f m in 1.5 s)" % moved)
 	_check_no_snapback(trace, Vector3.BACK, "sprinting")
 
 	_input.set_look(0.0, 0.0)   # about face, toward -Z

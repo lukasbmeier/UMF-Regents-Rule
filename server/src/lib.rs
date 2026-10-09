@@ -28,6 +28,7 @@ pub mod level;
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {
     include!(concat!(env!("OUT_DIR"), "/content.rs"));
+    include!(concat!(env!("OUT_DIR"), "/movement_limits.rs"));
 }
 
 /// THE HOT RULES (DECISIONS #201): numbers the game is tuned by while it runs, declared in rule sets

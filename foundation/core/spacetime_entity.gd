@@ -326,6 +326,12 @@ func _apply_presentation() -> void:
 		if rig != null:
 			rig.config = definition.camera_rig
 
+	# How this character moves (its movement profile, DECISIONS #205), before bind: the movement
+	# component predicts (or, on the sidecar, simulates) with these numbers from its first frame.
+	var mover: SpaceTimeMovementComponent = find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	if mover != null and definition.movement_profile != null:
+		mover.config = definition.movement_config()
+
 	# Before bind, because the driver builds its tree in `_on_bound`.
 	if definition.animation_set != null:
 		var driver: AnimationDriverComponent = find_component(

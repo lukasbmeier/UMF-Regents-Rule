@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://foundation/content/movement_profile_def.gd" id="2_profile"]
+[ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="3_scene"]
+[ext_resource type="Resource" path="res://foundation/camera/third_person.tres" id="4_cam"]
+
+[sub_resource type="Resource" id="Profile_slow"]
+script = ExtResource("2_profile")
+display_name = "Slow runner"
+designer_notes = "TESTING (tests/playtest_test.sh): every movement number the default's but the gaits, so the movement playtest's other checks hold while its speeds prove the profile is what moves the player."
+walk_speed = 1.0
+run_speed = 3.0
+sprint_speed = 4.5
+
+[resource]
+script = ExtResource("1_def")
+display_name = "Slow runner"
+designer_notes = "TESTING: the capsule player, moving by a slow movement profile."
+kind = 0
+scene = ExtResource("3_scene")
+camera_rig = ExtResource("4_cam")
+movement_profile = SubResource("Profile_slow")

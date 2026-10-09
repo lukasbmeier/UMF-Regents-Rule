@@ -179,6 +179,7 @@ static func create(type: StringName, owner: String, display_name: String, error:
 	var def: ContentDef = script.new() as ContentDef
 	def.id = next_free_id(type, owner)
 	def.display_name = display_name
+	def.on_created()
 	var folder: String = folder_for(type, owner)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(folder))
 	var stem: String = file_stem(display_name)

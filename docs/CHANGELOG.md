@@ -470,3 +470,10 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **Character definitions are content**: the foundation's are `foundation/content/character/` (player, npc, humanoid); they show in the Content panel and the Catalog. A genre's become content when it moves them into its own content folder.
 - Workbenches can make a new piece from a file (`fill_from_file`); the next benches (fish models, sounds) use it.
 - No server schema change. **Restart the editor.**
+
+## 0.33.0 — each character moves its own way (Foundation systems, milestone 1)
+- **The plan** for the foundation systems Fowl Play (and every later game) needs: `docs/FOUNDATION_SYSTEMS.md`, twelve milestones, their data and how each stays compatible and tunable.
+- **Movement profiles** (DECISIONS #205): a character links to a profile (its speeds, jump, flaps, dash); its entities move by it, predicted and simulated the same way. The server bounds each kind by its characters' profiles.
+- **The movement workbench**: measures a profile with the game's own movement (time to top speed, slide to a stop, jump height, each flap, turning round) and draws the path.
+- `--character=<path>` plays as any character for a run.
+- No server schema change. **Restart the editor.**

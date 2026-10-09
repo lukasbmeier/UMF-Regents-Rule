@@ -6,18 +6,21 @@
 			"brain": "",
 			"id": 0,
 			"kind": 0,
+			"movement": -1,
 			"name": "Player"
 		},
 		{
 			"brain": "wander",
 			"id": 1,
 			"kind": 1,
+			"movement": -1,
 			"name": "NPC"
 		},
 		{
 			"brain": "",
 			"id": 2,
 			"kind": 0,
+			"movement": -1,
 			"name": "Player"
 		}
 	],

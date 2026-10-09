@@ -26,3 +26,5 @@ GAME.md merge=ours
 shared/game.json merge=ours
 # Codegen writes the game's own database name into the addon's config.
 addons/SpacetimeDB/plugin_config.tres merge=ours
+# The character preview names the game's own character: each game's.
+game/characters/character_preview.tscn merge=ours

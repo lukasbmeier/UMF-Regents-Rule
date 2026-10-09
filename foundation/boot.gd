@@ -347,6 +347,9 @@ const DEV_IDENTITY_SLOTS: int = 8
 ##                     ONE: the server keys entities by identity, so they would be handed the
 ##                     same entity and look like a single player. Absent, and running from the
 ##                     editor, a free slot is claimed automatically — see _claim_dev_identity.
+##   --character=<res path>  play as this character (an EntityDefinition): it replaces the scene's
+##                     definition of the same kind, for this run. The character workbench's way to
+##                     play what is on it; the movement playtest's way to play a movement profile.
 ##   --first-person    swap the camera rig, to show that the view is a resource swap.
 ##   --third-person
 ##   --latency=<ms>    TESTING: add this much round trip (half each way) to all traffic.
@@ -377,6 +380,8 @@ func _apply_cli_overrides() -> void:
 			net_config.token_path = "user://spacetime_token_%s.txt" % tag
 			explicit_identity = true
 			print("[Boot] identity file: ", net_config.token_path)
+		elif arg.begins_with("--character="):
+			_use_character(arg.substr("--character=".length()))
 		elif arg == "--first-person" or arg == "--third-person":
 			_set_camera_rig("first_person" if arg == "--first-person" else "third_person")
 		elif arg.begins_with("--latency="):
@@ -387,6 +392,21 @@ func _apply_cli_overrides() -> void:
 			print("[Boot] simulated jitter: up to %d ms each way" % net_config.sim_jitter_ms)
 	if not explicit_identity and OS.has_feature("editor"):
 		_claim_dev_identity()
+
+
+## Play as `path`'s character this run: it takes the place of the scene's definition of its kind.
+func _use_character(path: String) -> void:
+	var def: EntityDefinition = load(path) as EntityDefinition if ResourceLoader.exists(path) else null
+	if def == null:
+		push_warning("[Boot] --character=%s is not a character (an EntityDefinition); ignoring it" % path)
+		return
+	for i: int in entity_definitions.size():
+		if entity_definitions[i] != null and entity_definitions[i].kind == def.kind:
+			entity_definitions[i] = def
+			print("[Boot] playing as %s (%s)" % [def.display_name, path])
+			return
+	entity_definitions.append(def)
+	print("[Boot] playing as %s (%s)" % [def.display_name, path])
 
 
 ## The editor's per-instance arguments arrive on the raw command line; the launch scripts pass

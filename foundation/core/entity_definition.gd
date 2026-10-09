@@ -54,6 +54,10 @@ class_name EntityDefinition extends ContentDef
 ## the entity's AnimationDriverComponent before bind. Null means the character does not animate,
 ## which is the right answer for a greybox capsule.
 @export var animation_set: AnimationSet
+## HOW IT MOVES (DECISIONS #205): its speeds, jump, flaps, dash. Empty: the foundation's default
+## (`shared/movement_config.json`). Predicted by its player's client and simulated by the sidecar
+## with the same numbers.
+@export var movement_profile: MovementProfileDef
 ## SWAP FIRST/THIRD PERSON HERE. Applied to the entity's CameraRig; null keeps the scene's own.
 ## `foundation/camera/` ships `first_person.tres` and `third_person.tres`.
 @export var camera_rig: CameraRigConfig
@@ -106,13 +110,20 @@ func variant_names() -> PackedStringArray:
 	return out
 
 
+## The movement config this character's entities move by: the game's, with its profile's numbers.
+func movement_config() -> MovementConfig:
+	if movement_profile == null:
+		return MovementConfig.shared()
+	return movement_profile.apply_to(MovementConfig.shared())
+
+
 func content_type() -> StringName:
 	return &"character"
 
 
 ## What a server could check a game's kinds against (it compiles nothing from it yet).
 func to_bake() -> Dictionary:
-	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain)}
+	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile)}
 
 
 func validate() -> Array[String]:

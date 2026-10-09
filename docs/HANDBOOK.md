@@ -176,11 +176,11 @@ Put this machine's Godot path in `tools\local.env` once (copy `tools\local.env.e
 the quotes) and every script finds Godot without being told.
 
 ### Publishing, and keeping the client in step
-One command (double-click `toolspublish.cmd`, or from a terminal):
+One command (double-click `tools\publish.cmd`, or from a terminal):
 ```bat
-toolspublish.cmd                 :: code or data changed; keeps the world's data
-toolspublish.cmd --fresh         :: a table changed shape: wipes the data first
-toolspublish.cmd --codegen       :: a table or a reducer's arguments changed
+tools\publish.cmd                 :: code or data changed; keeps the world's data
+tools\publish.cmd --fresh         :: a table changed shape: wipes the data first
+tools\publish.cmd --codegen       :: a table or a reducer's arguments changed
 ```
 (In Git Bash, or on Mac and Linux: `./tools/publish.sh` with the same options.)
 `--codegen` regenerates the client's bindings; without it the client silently ignores a new table.
@@ -513,8 +513,8 @@ Around it:
 
 ## 8. What you can change, and what it takes
 
-**Restart** = stop and press Play again. **Republish** = `toolspublish.cmd` (section 3).
-**Codegen** = `toolspublish.cmd --codegen` (section 3).
+**Restart** = stop and press Play again. **Republish** = `tools\publish.cmd` (section 3).
+**Codegen** = `tools\publish.cmd --codegen` (section 3).
 
 ### Without code: data files
 | I want to... | Edit | Then |
@@ -530,7 +530,7 @@ Around it:
 | the lobby: start when everyone is ready, how many players, the teams | `shared/rules.json` → `sessions` → `lobby` | `./tools/publish.sh`, restart |
 | a match: how long its first lobby waits, how long an empty world keeps its match | `shared/rules.json` → `sessions` → `match` | `./tools/publish.sh`, restart |
 | the splash: its words, colours, a logo, how long it stays | `game/splash_screen.tscn` (Inspector) | restart |
-| which genres the game is made of | `shared/game.json` → `genres` | `toolspublish.cmd --codegen`, restart (and export again) |
+| which genres the game is made of | `shared/game.json` → `genres` | `tools\publish.cmd --codegen`, restart (and export again) |
 | what each time of day and weather favours, how fast things bite in them, the weather's odds | `fishing.json` → `conditions` | republish, restart |
 | the rival: where he stands, which spots, how often he lands | `fishing.json` → `rival` (his name also on `rival_definition.tres`) | republish; `cargo test --test level` checks his reach |
 
@@ -539,7 +539,7 @@ Around it:
 |---|---|---|
 | tune the game WHILE IT RUNS (the interact range, a new player's health; more to come): every player follows at once, no republish, no re-download | as the admin (the PC that publishes), in game: Escape, **Rules (admin)**. To keep the values: the Content panel's **Keep live tuning**, then Publish | nothing else: it is live. Reset puts a rule back |
 | change a hot rule's default, or add one | the Content panel, type `rules`: `foundation.tres` (the foundation's) or your genre's rule set; a genre sets ITS game's value for a foundation rule under `overrides` | `tools\publish.cmd` |
-| change an ability (cooldown, range, wind-up, damage) or add one | the **Content** panel at the bottom of the editor: pick `ability`, pick the piece (it opens in the Inspector, whose tooltips say what each number does), or type a name and press New | `toolspublish.cmd` (it bakes first, `docs/rules/content.md`); a fresh database seeds them (`--fresh`), an existing one keeps its rows |
+| change an ability (cooldown, range, wind-up, damage) or add one | the **Content** panel at the bottom of the editor: pick `ability`, pick the piece (it opens in the Inspector, whose tooltips say what each number does), or type a name and press New | `tools\publish.cmd` (it bakes first, `docs/rules/content.md`); a fresh database seeds them (`--fresh`), an existing one keeps its rows |
 | change how the rod sits in the hand, for one animation or all | `game/fishing/rod_grip_preview.tscn`: pick an Animation and a Body (both, female, male), drag the Grip node until the labels are green | restart |
 | swap a character model or the camera | the definition `.tres` (`game/fishing/fisher_definition.tres`) | restart |
 | change key bindings | Project → Project Settings → Input Map | restart (and restart the editor if `project.godot` was edited outside it) |
@@ -586,6 +586,13 @@ the model on it (and the humanoid's animations, if it has the humanoid's skeleto
 the Inspector: `visual_offset` until its feet are on the floor, `visual_yaw_deg` until it faces the
 yellow arrow (the game's forward). The pale capsule beside it is what other players bump into. Run
 **every_clip** to see each animation and hear which ones the game needs are missing.
+
+**How a character moves: a movement profile.** Content panel, type `movement`, New: a profile that
+starts as the game's default movement. Open it in its bench and press Run test (accelerate, jump,
+flaps, reverse): the bench measures it with the game's own movement and draws the path, so you see
+how high it jumps and how far it slides. Then link it from a character (the character's
+`movement_profile`). Play as that character with `--character=res://.../your_character.tres` on the
+command line (or in Debug, Customize Run Instances).
 
 **Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
 of content is a type (`AbilityDef`); each piece is a `.tres` you edit in the Inspector. The
@@ -694,7 +701,7 @@ without it (`python tools/template/strip_genre.py <name>`), so keep it complete.
   <point>` (integration_init, integration_levels, integration_genre, integration_genre_late,
   integration_match_began, multiclient, genres_absent, genres_present, export_client); windowed checks
   in `game/<name>/tests/render/`.
-Name it in `shared/game.json`, `toolspublish.cmd --codegen`, restart.
+Name it in `shared/game.json`, `tools\publish.cmd --codegen`, restart.
 
 **A new game** starts from the TEMPLATE (`UMF Template`, a repo of the foundation with no genres; its
 main scene, `game/greybox_game.tscn`, plays the foundation's character on the greybox). Clone it,

@@ -1,3 +1,4 @@
+@tool
 class_name MovementConfig extends Resource
 ## Movement tunables. The single source of truth is `shared/movement_config.json`: the Rust
 ## module bakes it in at build time (server/build.rs) and the client reads it through `shared()`.
