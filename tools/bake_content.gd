@@ -1,10 +1,10 @@
+@tool
 extends SceneTree
 ## BAKE: THE CONTENT RESOURCES -> THE JSON THE SERVER COMPILES IN (docs/CONTENT_TOOLING_SPEC.md
-## §1.2, DECISIONS #199).
+## §1.2, docs/rules/content.md, DECISIONS #199, #200).
 ##
-## Walks every `.tres` under `foundation/content/` and `game/<genre>/content/` (the genres
-## shared/game.json lists), checks each (`ContentDef.validate()`, ids unique within a type), and
-## writes `shared/content/<owner>/<type>.json` (sorted, stable, readable in a diff) and
+## Takes every piece of content `ContentLibrary` finds, checks it, and writes
+## `shared/content/<owner>/<type>.json` (sorted, stable, readable in a diff) and
 ## `shared/content/manifest.json`: every output's hash and the hash of every `.tres` it came from.
 ## `server/build.rs` checks the manifest, so a `.tres` changed or added without a bake, or a baked
 ## file edited by hand, stops the build with the name of the file.
@@ -12,12 +12,16 @@ extends SceneTree
 ##   godot --headless --path . -s res://tools/bake_content.gd            bake
 ##   godot --headless --path . -s res://tools/bake_content.gd -- --check  say whether the bake is current
 ##
-## Nothing in a content folder may be anything but content: a stray resource is an error, not
-## skipped, so a folder never holds something the bake silently ignores.
+## What it refuses (nothing is written while there is any): a file in a content folder that is not
+## content; a piece whose `validate()` objects; two pieces of one type with one id (whoever owns
+## them); a genre's type in another owner's folder; a piece in the wrong type's folder; a link to
+## content that is not itself baked content.
 
+## The baked files' layout. server/build.rs refuses another, so a change to the layout is caught
+## rather than misread: bump it with the reader.
+const FORMAT: int = 1
 const OUT_DIR: String = "res://shared/content"
 const MANIFEST: String = "res://shared/content/manifest.json"
-const FOUNDATION_ROOT: String = "res://foundation/content"
 
 
 func _initialize() -> void:
@@ -44,29 +48,43 @@ func _initialize() -> void:
 
 
 ## Bake everything. `write`: put the files on disk (else only compare). Returns
-## { errors: Array[String], files: {res path: text}, stale: [res paths that differ on disk],
+## { errors: Array[String], files: {res path: text}, stale: [paths that differ on disk],
 ##   summary: [lines] }. With any error, nothing is written.
 static func bake(write: bool) -> Dictionary:
 	var errors: Array[String] = []
-	var groups: Dictionary = {}   # "owner/type" -> { owner, type, items: Array[Dictionary], sources: {path: hash} }
-	for root: Dictionary in roots():
-		for path: String in _tres_under(String(root["dir"])):
-			var res: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
-			if not res is ContentDef:
-				errors.append("%s is in a content folder but is not content (a ContentDef)" % path)
-				continue
-			var def: ContentDef = res as ContentDef
-			for why: String in def.validate():
-				errors.append("%s: %s" % [path, why])
-			var key: String = "%s/%s" % [root["owner"], def.content_type()]
-			if not groups.has(key):
-				groups[key] = {"owner": root["owner"], "type": String(def.content_type()), "items": [], "sources": {}, "ids": {}}
-			var g: Dictionary = groups[key]
-			if (g["ids"] as Dictionary).has(def.id):
-				errors.append("%s: id %d is taken by %s" % [path, def.id, (g["ids"] as Dictionary)[def.id]])
-			(g["ids"] as Dictionary)[def.id] = path
-			(g["items"] as Array).append(def.to_bake())
-			(g["sources"] as Dictionary)[path.trim_prefix("res://")] = hash_bytes(FileAccess.get_file_as_bytes(path))
+	var entries: Array[Dictionary] = ContentLibrary.load_all(true)
+	var baked_paths: Dictionary = {}
+	for e: Dictionary in entries:
+		if e["def"] != null:
+			baked_paths[e["path"]] = true
+	var groups: Dictionary = {}   # "owner/type" -> { owner, type, items: [[id, dict]], sources }
+	var ids: Dictionary = {}      # type -> { id: path }
+	for e: Dictionary in entries:
+		var path: String = e["path"]
+		var owner: String = e["owner"]
+		var def: ContentDef = e["def"]
+		if def == null:
+			errors.append("%s is in a content folder but is not content (a ContentDef)" % path)
+			continue
+		var type: StringName = def.content_type()
+		for why: String in def.validate():
+			errors.append("%s: %s" % [path, why])
+		if not ContentLibrary.may_own(type, owner):
+			errors.append("%s: a %s is %s's type, and this is %s's folder" % [path, type, ContentLibrary.type_info(type).get("owner", "?"), owner])
+		if path.get_base_dir() != ContentLibrary.folder_for(type, owner):
+			errors.append("%s: a %s belongs in %s/" % [path, type, ContentLibrary.folder_for(type, owner).trim_prefix("res://")])
+		if not ids.has(type):
+			ids[type] = {}
+		if (ids[type] as Dictionary).has(def.id):
+			errors.append("%s: %s id %d is taken by %s" % [path, type, def.id, (ids[type] as Dictionary)[def.id]])
+		(ids[type] as Dictionary)[def.id] = path
+		for why: String in _bad_links(def, baked_paths):
+			errors.append("%s: %s" % [path, why])
+		var key: String = "%s/%s" % [owner, type]
+		if not groups.has(key):
+			groups[key] = {"owner": owner, "type": String(type), "items": [], "sources": {}}
+		(groups[key]["items"] as Array).append([def.id, def.to_bake()])
+		(groups[key]["sources"] as Dictionary)[_rel(path)] = hash_bytes(FileAccess.get_file_as_bytes(path))
 	var files: Dictionary = {}
 	var outputs: Dictionary = {}
 	var summary: Array[String] = []
@@ -74,10 +92,12 @@ static func bake(write: bool) -> Dictionary:
 	keys.sort()
 	for key: String in keys:
 		var g: Dictionary = groups[key]
-		var items: Array = g["items"]
-		items.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return _id_of(a) < _id_of(b))
+		var pairs: Array = g["items"]
+		pairs.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) < int(b[0]))
+		var items: Array = pairs.map(func(p: Array) -> Dictionary: return p[1])
 		var doc: Dictionary = {
-			"_comment": "GENERATED by tools/bake_content.gd from the .tres files under %s: edit those in the Inspector and bake. Never edit this file (server/build.rs refuses a hand edit)." % _root_of(String(g["owner"])),
+			"_comment": "GENERATED by tools/bake_content.gd from the .tres files under %s/%s/: edit those in the Inspector and bake. Never edit this file (server/build.rs refuses a hand edit)." % [_rel(ContentLibrary.root_of(String(g["owner"]))), g["type"]],
+			"format": FORMAT,
 			"owner": g["owner"],
 			"type": g["type"],
 			"items": items,
@@ -85,23 +105,24 @@ static func bake(write: bool) -> Dictionary:
 		var text: String = JSON.stringify(doc, "\t", true) + "\n"
 		var out: String = "%s/%s/%s.json" % [OUT_DIR, g["owner"], g["type"]]
 		files[out] = text
-		outputs[out.trim_prefix("res://")] = {
+		outputs[_rel(out)] = {
 			"owner": g["owner"], "type": g["type"], "count": items.size(),
 			"hash": hash_bytes(text.to_utf8_buffer()), "sources": g["sources"],
 		}
-		summary.append("  %s: %d %s" % [out.trim_prefix("res://"), items.size(), g["type"]])
+		summary.append("  %s: %d %s" % [_rel(out), items.size(), g["type"]])
 	var manifest: Dictionary = {
 		"_comment": "GENERATED by tools/bake_content.gd. What server/build.rs checks: every baked file's hash, and the hash of every .tres it was baked from. FNV-1a 32 over the file's bytes.",
+		"format": FORMAT,
 		"outputs": outputs,
 	}
 	files[MANIFEST] = JSON.stringify(manifest, "\t", true) + "\n"
 	var stale: Array[String] = []
 	for path: String in files:
 		if not FileAccess.file_exists(path) or FileAccess.get_file_as_string(path) != String(files[path]):
-			stale.append(path.trim_prefix("res://"))
+			stale.append(_rel(path))
 	for old: String in _json_under(OUT_DIR):
 		if not files.has(old):
-			stale.append(old.trim_prefix("res://") + " (no longer baked)")
+			stale.append(_rel(old) + " (no longer baked)")
 	if write and errors.is_empty():
 		for old: String in _json_under(OUT_DIR):
 			if not files.has(old):
@@ -113,18 +134,8 @@ static func bake(write: bool) -> Dictionary:
 			var f: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 			f.store_string(String(files[path]))
 			f.close()
-		summary.append("baked: %d file(s) and the manifest" % (files.size() - 1))
+		summary.append("baked: %d file(s) and the manifest%s" % [files.size() - 1, "" if not stale.is_empty() else " (nothing had changed)"])
 	return {"errors": errors, "files": files, "stale": stale, "summary": summary}
-
-
-## Where content lives: the foundation's, then each listed genre's.
-static func roots() -> Array[Dictionary]:
-	var out: Array[Dictionary] = [{"owner": "foundation", "dir": FOUNDATION_ROOT}]
-	var game: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://shared/game.json"))
-	if game is Dictionary:
-		for g: Variant in (game as Dictionary).get("genres", []) as Array:
-			out.append({"owner": String(g), "dir": "res://game/%s/content" % g})
-	return out
 
 
 ## FNV-1a, 32 bits, as hex: the manifest's hash. server/build.rs computes the same.
@@ -135,28 +146,28 @@ static func hash_bytes(bytes: PackedByteArray) -> String:
 	return "%08x" % h
 
 
-static func _root_of(owner: String) -> String:
-	return "foundation/content/" if owner == "foundation" else "game/%s/content/" % owner
-
-
-static func _id_of(item: Dictionary) -> int:
-	for k: String in item:
-		if k == "id" or k.ends_with("_id"):
-			return int(item[k])
-	return 0
-
-
-static func _tres_under(dir: String) -> Array[String]:
+## Every link from `def` to other content that is not baked content: a piece made inside another
+## (it has no file of its own, so no id the server knows), or a file outside the content folders.
+static func _bad_links(def: ContentDef, baked_paths: Dictionary) -> Array[String]:
 	var out: Array[String] = []
-	if not DirAccess.dir_exists_absolute(dir):
-		return out
-	for f: String in DirAccess.get_files_at(dir):
-		if f.ends_with(".tres"):
-			out.append(dir.path_join(f))
-	for d: String in DirAccess.get_directories_at(dir):
-		out.append_array(_tres_under(dir.path_join(d)))
-	out.sort()
+	for p: Dictionary in def.get_property_list():
+		if int(p["usage"]) & PROPERTY_USAGE_STORAGE == 0:
+			continue
+		var v: Variant = def.get(p["name"])
+		var linked: Array = v if v is Array else [v]
+		for x: Variant in linked:
+			if not x is ContentDef:
+				continue
+			var path: String = (x as ContentDef).resource_path
+			if path.is_empty() or path.contains("::"):
+				out.append("'%s' links to content made inside it: save that as its own piece and link to it" % p["name"])
+			elif not baked_paths.has(path):
+				out.append("'%s' links to %s, which is not in a content folder" % [p["name"], path])
 	return out
+
+
+static func _rel(path: String) -> String:
+	return path.trim_prefix("res://")
 
 
 static func _json_under(dir: String) -> Array[String]:

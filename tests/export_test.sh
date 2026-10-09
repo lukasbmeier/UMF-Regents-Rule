@@ -88,8 +88,8 @@ run_genre_hooks export_client   # what a genre's client must carry (fishing: its
 # EDITOR TOOLING STAYS IN THE EDITOR (REVIEW 0.23.1 B4): the MCP bridge (it can run code it is
 # sent), the export plugin that keeps its autoload out, and Terrain3D's demo scene, in neither build.
 for PK in build/client/umf.exe build/server/umf_server.pck; do
-  check "$([ "$(count $PK '^addons/(godot_ai|umf_export)/')" = "0" ] && [ "$(count $PK '^demo/')" = "0" ] && echo true || echo false)" \
-    "no editor tooling in $PK (godot_ai $(count $PK '^addons/godot_ai/'), umf_export $(count $PK '^addons/umf_export/'), demo $(count $PK '^demo/'))"
+  check "$([ "$(count $PK '^addons/(godot_ai|umf_export|umf_content)/')" = "0" ] && [ "$(count $PK '^demo/')" = "0" ] && echo true || echo false)" \
+    "no editor tooling in $PK (godot_ai $(count $PK '^addons/godot_ai/'), umf_export $(count $PK '^addons/umf_export/'), umf_content $(count $PK '^addons/umf_content/'), demo $(count $PK '^demo/'))"
 done
 
 echo "== what the SERVER carries =="

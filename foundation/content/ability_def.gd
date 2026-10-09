@@ -1,3 +1,4 @@
+@tool
 class_name AbilityDef extends ContentDef
 ## AN ABILITY (PHASE3_SPEC Task 12): what `use_ability` does on the server. Baked to
 ## `shared/content/<owner>/ability.json`; the module seeds the `ability_def` table from it at

@@ -436,3 +436,10 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The server refuses a stale bake**, naming the file: a `.tres` changed or added without baking, or a baked file edited by hand. `tools\publish.cmd` bakes first.
 - **Abilities are content**: the built-in `melee` is `foundation/content/abilities/melee.tres` (it was hard-coded in the module); a genre adds abilities by adding `.tres` files.
 - New suites: `content` (unit) and `tests/content_test.sh`.
+
+## 0.28.0 — the Content Dock (CONTENT_TOOLING_SPEC step 2)
+- **A Content panel at the bottom of the editor**: every content type and its pieces, search, New (the next free id, the right folder), Validate (every problem in words, a click opens the piece), Bake, Publish (its output in the panel) and Play (DECISIONS #200, `docs/rules/content.md`). **Restart the editor once** to load it.
+- **`ContentLibrary`**: one place that knows where content is; content types are found by themselves (a new `ContentDef` subclass needs no registering).
+- **The bake checks more**: ids unique across the foundation and every genre, a genre's type only in its own folder, every piece in its type's folder, links only to baked content. Baked files carry a format number the server checks.
+- **`content_id_base`** on a genre's `genre.tres`: where its new content's ids start.
+- `foundation/content/abilities/` is now `foundation/content/ability/` (one folder per type, named after it).

@@ -48,6 +48,10 @@ pub fn run(listed: &[String]) {
         Ok(t) => serde_json::from_str(&t).expect("shared/content/manifest.json is malformed: bake again (tools/bake_content.gd)"),
         Err(_) => serde_json::json!({ "outputs": {} }),
     };
+    // The baked layout this reader knows (tools/bake_content.gd FORMAT). Another is refused, not misread.
+    const FORMAT: u64 = 1;
+    let fmt = manifest["format"].as_u64().unwrap_or(FORMAT);
+    assert!(fmt == FORMAT, "shared/content/manifest.json is bake format {fmt}; this server reads format {FORMAT}:         update server/build/content.rs with tools/bake_content.gd, or bake with the matching version");
     let outputs = manifest["outputs"].as_object().cloned().unwrap_or_default();
     let mut baked: Vec<String> = Vec::new();
     let mut abilities: Vec<(u64, String)> = Vec::new();
@@ -75,6 +79,7 @@ pub fn run(listed: &[String]) {
             baked.push(src);
         }
         let doc: serde_json::Value = serde_json::from_slice(&bytes).expect("a baked file is not JSON: bake again");
+        assert!(doc["format"].as_u64() == Some(FORMAT), "{out} is not bake format {FORMAT}: bake again (tools/bake_content.gd)");
         if info["type"] == "ability" {
             for it in doc["items"].as_array().cloned().unwrap_or_default() {
                 let id = it["ability_id"].as_u64().expect("an ability without an ability_id");

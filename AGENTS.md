@@ -69,7 +69,7 @@ A game's own design docs live in that game's repo (Fowl Play: `docs/fowl_play/`)
 | `docs/rules/version_settings_looks.md` | the schema fingerprint, `Settings`, the `appearance` row, modular pieces, no LODs, the registry's buffer |
 | `docs/rules/presentation.md` | presentation never decides, announcing verbs, one-shots and movement, the foliage/lake shaders, exports, quitting (`AppExit`) |
 | `docs/rules/compatibility.md` | old clients on new servers: add-only schema, side tables, `_v2` reducers, what a client simulates, the compatibility check |
-| `docs/rules/content.md` | content as `ContentDef` resources, the bake, the stale-bake check in build.rs, adding a content type |
+| `docs/rules/content.md` | content as `ContentDef` resources: the design commitments (one library, discovered types, ids, links, format), the bake, the stale-bake check, the Content Dock, adding a type |
 | `docs/rules/testing.md` | every test layer with why it exists (the long form of the verify loop below) |
 | `docs/rules/file_map.md` | the full file map |
 | `docs/rules/history.md` | what was built when, task by task, up to 0.23.2 |
@@ -112,7 +112,7 @@ Golden output must read `max_err=0.000e+00` on every case on both sides. A non-z
 ## File map (top level; the full map is `docs/rules/file_map.md`)
 ```
 AGENTS.md  docs/            this file; ARCHITECTURE, HANDBOOK, DECISIONS, CHANGELOG, ROADMAP, specs, rules/
-foundation/                 THE CORE: content/ (ContentDef, AbilityDef, the content) · core/ (SignalBus, EntityRegistry, EntitySpawner, SpaceTimeEntity,
+foundation/                 THE CORE: content/ (ContentDef, ContentLibrary, AbilityDef, the content) · core/ (SignalBus, EntityRegistry, EntitySpawner, SpaceTimeEntity,
                             SpaceTimeComponent, Settings, AppExit) · net/ (SpaceTimeSync, NetConfig,
                             InterestManager, SchemaFingerprint) · components/ · sim/ (MovementModel,
                             InputFrame, ChallengeModel, LevelBake) · anim/ · held/ · camera/ · level/ ·
@@ -132,7 +132,7 @@ tests/                      test_runner.tscn/.gd + suites/ (one file per suite, 
 tools/                      publish.sh/.cmd, release.sh/.cmd (a build for friends), run.cmd, codegen, world/ (bakes), held/, characters/ ·
                             template/ (genre manifests, strip_genre.py)
 addons/                     SpacetimeDB (vendored SDK, v2.8.0) · terrain_3d · godot_ai (editor only) ·
-                            umf_export (keeps editor tooling out of exports)
+                            umf_export (keeps editor tooling out of exports) · umf_content (the Content Dock)
 ```
 
 ## When you are unsure

@@ -9,6 +9,8 @@ const BAKE: GDScript = preload("res://tools/bake_content.gd")
 
 func run() -> void:
 	_run_content_tests()
+	_run_library_tests()
+	await _run_task_tests()
 	await get_tree().process_frame
 
 
@@ -18,7 +20,7 @@ func _run_content_tests() -> void:
 	_check((result["errors"] as Array).is_empty(), "every piece of content is valid %s" % str(result["errors"]))
 	_check((result["stale"] as Array).is_empty(),
 		"the bake on disk is current (Bake, or tools/bake_content.gd) %s" % str(result["stale"]))
-	var melee: AbilityDef = load("res://foundation/content/abilities/melee.tres") as AbilityDef
+	var melee: AbilityDef = load("res://foundation/content/ability/melee.tres") as AbilityDef
 	_check(melee != null and melee.validate().is_empty(), "the foundation's ability, melee, is content")
 	var baked: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://shared/content/foundation/ability.json"))
 	var item: Dictionary = ((baked as Dictionary)["items"] as Array)[0] if baked is Dictionary else {}
@@ -34,3 +36,149 @@ func _run_content_tests() -> void:
 	_check(BAKE.call(&"hash_bytes", "a".to_utf8_buffer()) == "e40c292c"
 		and BAKE.call(&"hash_bytes", PackedByteArray()) == "811c9dc5",
 		"the manifest's hash is FNV-1a 32 (build.rs computes the same)")
+
+
+## THE LIBRARY AND THE RULES IT KEEPS (DECISIONS #200): types are found, not registered, and every
+## one is a tool; a new piece goes in its type's folder with the next free id at or above its
+## owner's base; links between content are checked; a stray file is an error.
+func _run_library_tests() -> void:
+	print("== content: the library ==")
+	var types: Array[Dictionary] = ContentLibrary.types()
+	var ability: Dictionary = ContentLibrary.type_info(&"ability")
+	_check(not ability.is_empty() and ability["class_name"] == &"AbilityDef" and String(ability["owner"]).is_empty(),
+		"types are found in the class list, with no registry: ability is the foundation's (%d type(s))" % types.size())
+	var not_tool: Array[String] = []
+	for c: Dictionary in ProjectSettings.get_global_class_list():
+		var t: Dictionary = {}
+		for x: Dictionary in types:
+			if x["class_name"] == c["class"]:
+				t = x
+		if (not t.is_empty() or c["class"] == &"ContentDef") and not bool(c.get("is_tool", false)):
+			not_tool.append(String(c["class"]))
+	_check(not_tool.is_empty(), "every content script is @tool, so the editor can check and bake it %s" % str(not_tool))
+	_check(ContentLibrary.folder_for(&"ability", "foundation") == "res://foundation/content/ability"
+		and ContentLibrary.folder_for(&"ability", "fishing") == "res://game/fishing/content/ability",
+		"a type's pieces live in <root>/<type>/")
+	_check(ContentLibrary.file_stem("  Big Bass!  ") == "big_bass" and ContentLibrary.file_stem("???") == "new",
+		"a name becomes a file name")
+
+	# A scratch project under user://: two owners, a genre with an id base.
+	var root: String = "user://content_library_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray(["testgenre"])
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(root.path_join("game/testgenre")))
+	var mod := GenreModule.new()
+	mod.id = &"testgenre"
+	mod.content_id_base = 10000
+	ResourceSaver.save(mod, root.path_join("game/testgenre/genre.tres"))
+	var errors: Array[String] = []
+	var a: String = ContentLibrary.create(&"ability", "foundation", "Kick", errors)
+	var b: String = ContentLibrary.create(&"ability", "foundation", "Kick", errors)
+	var c: String = ContentLibrary.create(&"ability", "testgenre", "Peck", errors)
+	var d: String = ContentLibrary.create(&"ability", "testgenre", "Flap", errors)
+	_check(errors.is_empty() and a == root.path_join("foundation/content/ability/kick.tres")
+		and b.ends_with("ability/kick_2.tres") and c == root.path_join("game/testgenre/content/ability/peck.tres"),
+		"New puts a piece in its owner's folder for its type, named after it (a second Kick is kick_2) %s" % str(errors))
+	var ids: Array[int] = []
+	for p: String in [a, b, c, d]:
+		ids.append((ResourceLoader.load(p, "", ResourceLoader.CACHE_MODE_IGNORE) as ContentDef).id)
+	_check(ids == [0, 1, 10000, 10001], "with the next free id at or above its owner's base (%s)" % str(ids))
+	_check(ContentLibrary.items(&"ability").size() == 4 and ContentLibrary.find(&"ability", 10001) != null
+		and ContentLibrary.find(&"ability", 10001).display_name == "Flap",
+		"the library lists every owner's pieces and finds one by id")
+	_check(ContentLibrary.create(&"ability", "nobody", "X", errors).is_empty() and not errors.is_empty(),
+		"an owner the game does not have cannot make content: %s" % str(errors))
+
+	# THE DOCK, built and clicked with no editor.
+	print("== content: the dock ==")
+	var bridge := ContentDockBridge.new()
+	var dock := ContentDock.new()
+	get_tree().root.add_child(dock)
+	dock.setup(ContentDockModel.new(), bridge)
+	var names: Array[String] = []
+	for a2: Dictionary in dock.model.actions:
+		names.append(String(a2["id"]))
+	_check(names == ["validate", "bake", "publish", "play"], "its toolbar: %s" % str(names))
+	_check(dock.selected_type() == &"ability" and dock.listed_paths().size() == 4,
+		"it opens on a type and lists its pieces, every owner's (%s)" % str(dock.listed_paths()))
+	dock.select_path(c)
+	_check(bridge.asked.has("edit " + c), "choosing one opens it in the Inspector %s" % str(bridge.asked))
+	var model: ContentDockModel = dock.model
+	_check(model.owners_for(&"ability") == PackedStringArray(["foundation", "testgenre"]),
+		"a foundation type may be made by any owner")
+	var made: String = model.create(&"ability", "testgenre", "  ", errors)
+	_check(made.is_empty() and errors[errors.size() - 1].contains("name"), "New wants a name")
+	(dock.find_child("New", true, false) as Button).disabled = false
+	var bad: AbilityDef = ResourceLoader.load(d, "", ResourceLoader.CACHE_MODE_IGNORE) as AbilityDef
+	bad.wind_up_ms = 20
+	ResourceSaver.save(bad, d)
+	dock.validate()
+	_check(dock.log_text().contains("1 problem") and dock.log_text().contains("flap.tres") and dock.log_text().contains("20 ms"),
+		"Validate lists the problem, naming the file, in words: %s" % dock.log_text().replace("\n", " / "))
+	_check(model.type_rows()[0]["problems"] == 1 and model.item_rows(&"ability", "flap")[0]["problems"] == 1,
+		"and marks its type and its piece")
+	_check(model.item_rows(&"ability", "10000").size() == 1 and model.item_rows(&"ability", "kick").size() == 2,
+		"search finds by id, name or file")
+	dock.queue_free()
+
+	# What the bake refuses, beyond validate(): links to content that is not baked content.
+	var linking := GDScript.new()
+	linking.source_code = "@tool\nextends ContentDef\n@export var other: ContentDef\nfunc content_type() -> StringName:\n\treturn &\"linking\"\nfunc to_bake() -> Dictionary:\n\treturn {\"other\": ContentDef.ref(other)}\n"
+	linking.reload()
+	var l: ContentDef = linking.new() as ContentDef
+	var baked: Dictionary = {a: true}
+	l.set(&"other", ResourceLoader.load(a))
+	var ok_links: Array[String] = BAKE.call(&"_bad_links", l, baked)
+	l.set(&"other", AbilityDef.new())
+	var inside: Array[String] = BAKE.call(&"_bad_links", l, baked)
+	l.set(&"other", ResourceLoader.load(b))
+	var outside: Array[String] = BAKE.call(&"_bad_links", l, {a: true})
+	_check(ok_links.is_empty() and inside.size() == 1 and inside[0].contains("made inside")
+		and outside.size() == 1 and outside[0].contains("not in a content folder"),
+		"a link must be to baked content: %s %s" % [str(inside), str(outside)])
+	l.set(&"other", ResourceLoader.load(a))
+	_check(l.to_bake()["other"] == 0 and ContentDef.ref(null) == -1, "and is baked as its id (-1 for none)")
+
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = PackedStringArray()
+	_wipe(root)
+
+
+func _wipe(dir: String) -> void:
+	var abs: String = ProjectSettings.globalize_path(dir)
+	if not DirAccess.dir_exists_absolute(abs):
+		return
+	for f: String in DirAccess.get_files_at(abs):
+		DirAccess.remove_absolute(abs.path_join(f))
+	for d: String in DirAccess.get_directories_at(abs):
+		_wipe(dir.path_join(d))
+	DirAccess.remove_absolute(abs)
+
+
+## A PROJECT SCRIPT RUN FROM THE EDITOR (the dock's Publish): it runs the way toolsun.cmd runs
+## one, through Git Bash and tools/run_env.sh, and its output arrives line by line with its exit code.
+func _run_task_tests() -> void:
+	print("== content: a project task ==")
+	var script: String = ProjectSettings.globalize_path("user://project_task_test.sh")
+	var f: FileAccess = FileAccess.open(script, FileAccess.WRITE)
+	f.store_string("echo first
+echo \"second, from $(basename \"$(pwd)\")\"
+echo oops >&2
+exit 3
+")
+	f.close()
+	var task := ProjectTask.new()
+	var lines: Array[String] = []
+	task.line.connect(func(t: String) -> void: lines.append(t))
+	var started: bool = task.start(script)
+	var frames: int = 0
+	while task.is_running() and frames < 600:
+		task.poll()
+		await get_tree().process_frame
+		frames += 1
+	var root_name: String = ProjectSettings.globalize_path("res://").trim_suffix("/").get_file()
+	_check(started and lines.has("first") and lines.has("second, from %s" % root_name) and lines.has("oops")
+		and task.exit_code == 3,
+		"a script runs from the repo root, its lines (and errors) arrive, then its exit code: %s, exit %d" % [str(lines), task.exit_code])
+	DirAccess.remove_absolute(script)

@@ -19,3 +19,7 @@ class_name GenreModule extends Resource
 @export var tables: Array[StringName] = []
 @export var world_tables: Array[StringName] = []
 @export var scenes: Array[PackedScene] = []
+## Where this genre's content ids start (ContentLibrary, DECISIONS #200): a new ability, item or
+## species made for it gets the next free id at or above this, so two genres' content in one game
+## never collides. Pick a block no other genre uses (fishing 0 by history; the next 10000, ...).
+@export var content_id_base: int = 0
