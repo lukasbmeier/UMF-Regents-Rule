@@ -38,9 +38,17 @@ class_name ContentDef extends Resource
 @abstract func to_bake() -> Dictionary
 
 
-## The workbench scene this piece is made and tested in (CONTENT_TOOLING_SPEC §3), or "" for none
-## yet. The Content Dock opens it. Override in a type that has one.
+## The workbench scene this piece is made and tested in (CONTENT_TOOLING_SPEC §3, DECISIONS #203),
+## or "" when there is none: by convention `tools/workbench/<type>_workbench.tscn`, or a genre type's
+## `game/<genre>/workbench/<type>_workbench.tscn` (`ContentLibrary.workbench_for`). The Content
+## dock opens it with this piece loaded. Override only to point somewhere else.
 func workbench_scene() -> String:
+	return ContentLibrary.workbench_for(content_type())
+
+
+## "" when this type is made and tested in a workbench (the rule: no content type without one).
+## A type that genuinely needs none says why here, in a sentence the `content` suite prints.
+func why_no_workbench() -> String:
 	return ""
 
 

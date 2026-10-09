@@ -33,6 +33,7 @@ const SUITES: PackedStringArray = [
 	"version",
 	"content",
 	"presence",
+	"workbench",
 	"settings",
 	"music",
 	"looks",

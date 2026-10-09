@@ -1,3 +1,4 @@
+@tool
 class_name AnimationSet extends Resource
 ## THE CONTRACT BETWEEN A CHARACTER AND THE GAME (`docs/ANIMATION_SPEC.md` §3).
 ##

@@ -144,7 +144,7 @@ func _run_library_tests() -> void:
 	_check(l.to_bake()["other"] == 0 and ContentDef.ref(null) == -1, "and is baked as its id (-1 for none)")
 
 	ContentLibrary.root_override = ""
-	ContentLibrary.genres_override = PackedStringArray()
+	ContentLibrary.genres_override = null
 	_wipe(root)
 
 
@@ -271,7 +271,7 @@ func _run_hot_rule_tests() -> void:
 		and text.contains("also declared"),
 		"two overrides of one key, a value out of bounds, a key nobody declares and a key declared twice are each refused: %s" % text)
 	ContentLibrary.root_override = ""
-	ContentLibrary.genres_override = PackedStringArray()
+	ContentLibrary.genres_override = null
 	_wipe(root)
 
 
@@ -379,6 +379,6 @@ func _run_keep_live_tests() -> void:
 	_check(is_equal_approx(only_after.rules[0].number, 2.5) and only_after.overrides.is_empty(),
 		"with no genre (the template) the foundation's own value takes it")
 	ContentLibrary.root_override = ""
-	ContentLibrary.genres_override = PackedStringArray()
+	ContentLibrary.genres_override = null
 	_wipe(root)
 	_wipe(template_root)

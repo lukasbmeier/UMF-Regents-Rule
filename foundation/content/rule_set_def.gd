@@ -22,6 +22,10 @@ func content_type() -> StringName:
 	return &"rules"
 
 
+func why_no_workbench() -> String:
+	return "rules are numbers with bounds and a description: they are edited in the Inspector and tried live in the game (Escape, Rules), which is their workbench"
+
+
 func to_bake() -> Dictionary:
 	var owner: String = ContentLibrary.owner_of_path(resource_path)
 	var out_rules: Array = []

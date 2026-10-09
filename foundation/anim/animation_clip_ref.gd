@@ -1,3 +1,4 @@
+@tool
 class_name AnimationClipRef extends Resource
 ## One clip, addressed the way the AnimationTree addresses it, plus how to blend into it.
 ##

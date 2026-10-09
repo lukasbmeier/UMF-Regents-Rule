@@ -651,6 +651,8 @@ assert_eq "$(row_count "SELECT * FROM action_event WHERE predicted_id = 42")" "0
 sleep 1
 assert_rejected "use_ability 0 $FAR $AIM 43" "out of range" "a target 5 m away is out of melee range"
 assert_rejected "use_ability 99 $NEAR $AIM 44" "unknown ability" "an ability nobody defined is refused"
+# A player who is not connected is not in the world (DECISIONS #202): "Gone Soon", from the names section.
+assert_rejected "use_ability 0 $GONE $AIM 49" "they are not here" "an ability cannot target a player who is not connected"
 assert_ok "use_ability 0 0 $AIM 45" "an untargeted use is accepted"
 assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 45" 1)" "1" \
   "and resolves as a MISS: Tier A has no hit test, the sidecar will"

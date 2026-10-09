@@ -54,6 +54,16 @@ class EditorBridge extends ContentDockBridge:
 	func open_scene(path: String) -> void:
 		EditorInterface.open_scene_from_path(path)
 
+	func open_workbench(path: String, def: ContentDef) -> void:
+		Workbench.pending = def
+		EditorInterface.open_scene_from_path(path)
+		# Already open: Godot only switched to its tab, so its _ready will not run again.
+		var root: Node = EditorInterface.get_edited_scene_root()
+		if root is Workbench and Workbench.pending != null:
+			(root as Workbench).item = def
+			Workbench.pending = null
+			EditorInterface.edit_node(root)
+
 	func show_file(path: String) -> void:
 		EditorInterface.get_file_system_dock().navigate_to_path(path)
 

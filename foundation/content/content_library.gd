@@ -24,8 +24,9 @@ const BASE_CLASS: StringName = &"ContentDef"
 ## TESTING: put every root under this directory instead (`<dir>/foundation/content`,
 ## `<dir>/game/<genre>/content`), so a suite can make content without touching the project's.
 static var root_override: String = ""
-## TESTING: stands in for shared/game.json's genre list.
-static var genres_override: PackedStringArray = PackedStringArray()
+## TESTING: stands in for shared/game.json's genre list: a PackedStringArray (an EMPTY one means
+## "no genres"), or null for the game's own.
+static var genres_override: Variant = null
 
 
 ## Who owns content: the foundation, then each genre the game is made of.
@@ -83,6 +84,18 @@ static func type_info(type: StringName) -> Dictionary:
 static func may_own(type: StringName, owner: String) -> bool:
 	var t: Dictionary = type_info(type)
 	return not t.is_empty() and owners().has(owner) and (String(t["owner"]).is_empty() or t["owner"] == owner)
+
+
+## Where a type's workbench is by convention (DECISIONS #203): `tools/workbench/<type>_workbench.tscn`
+## for a foundation type, `game/<genre>/workbench/<type>_workbench.tscn` for a genre's. "" when the
+## scene is not there.
+static func workbench_for(type: StringName) -> String:
+	var t: Dictionary = type_info(type)
+	if t.is_empty():
+		return ""
+	var owner: String = t["owner"]
+	var path: String = ("res://tools/workbench/%s_workbench.tscn" % type) if owner.is_empty() 		else ("res://game/%s/workbench/%s_workbench.tscn" % [owner, type])
+	return path if ResourceLoader.exists(path) else ""
 
 
 ## Who owns the content at `path`: "foundation", a genre, or "" when it is under no content root.
@@ -193,8 +206,8 @@ static func file_stem(display_name: String) -> String:
 
 
 static func _genres() -> PackedStringArray:
-	if not genres_override.is_empty():
-		return genres_override
+	if genres_override != null:
+		return PackedStringArray(genres_override)
 	var game: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://shared/game.json"))
 	var out := PackedStringArray()
 	if game is Dictionary:

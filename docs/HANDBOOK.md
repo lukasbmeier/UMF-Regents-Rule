@@ -569,6 +569,16 @@ New mechanics (a table, a reducer, a rule), a new component, a new UI screen. Re
 
 ## 9. Adding things: recipes
 
+**Workbenches: make and try content without a server.** In the Content panel, pick a piece and
+press **Open workbench** (or click its card in the **Catalog** tab). The bench opens with the real
+character and that piece on it. Select the bench's top node: the Inspector shows the piece (edit it
+right there and the bench follows at once), a **test** to choose and **Run test** (for an ability:
+use it on the dummy, use it out of range, use it twice inside its cooldown; the bench says what the
+game would do), **Previous** / **Next**, **Save**, and **Capture thumbnail** (the picture on its
+Catalog card). The Catalog shows every piece with a coloured strip: red, something is wrong (hover
+for why); amber, fine but not yet looked at in its bench; green, done. **Regenerate thumbnails**
+redraws every picture.
+
 **Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
 of content is a type (`AbilityDef`); each piece is a `.tres` you edit in the Inspector. The
 **Content** panel at the bottom of the editor is where you find and make them: the types on the

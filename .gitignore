@@ -41,3 +41,7 @@ grip_pictures/
 # Windows leaves these beside a library it could not overwrite while it was loaded.
 ~*.TMP
 addons/terrain_3d/bin/~*
+
+# Workbench thumbnails: a cache the Catalog regenerates (DECISIONS #203); the .gdignore keeps them out of the import.
+tools/workbench/thumbnails/*
+!tools/workbench/thumbnails/.gdignore

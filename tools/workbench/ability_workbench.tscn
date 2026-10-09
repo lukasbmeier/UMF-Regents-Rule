@@ -1,0 +1,42 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://tools/workbench/ability_workbench.gd" id="1_bench"]
+[ext_resource type="Script" path="res://tools/workbench/mannequin.gd" id="2_mannequin"]
+[ext_resource type="Resource" path="res://game/characters/character_definition.tres" id="3_character"]
+
+[sub_resource type="PlaneMesh" id="Floor_mesh"]
+size = Vector2(16, 16)
+
+[sub_resource type="StandardMaterial3D" id="Floor_mat"]
+albedo_color = Color(0.32, 0.34, 0.36, 1)
+
+[sub_resource type="CapsuleMesh" id="Dummy_mesh"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Dummy_mat"]
+albedo_color = Color(0.75, 0.55, 0.35, 1)
+
+[node name="AbilityWorkbench" type="Node3D"]
+script = ExtResource("1_bench")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("Floor_mesh")
+surface_material_override/0 = SubResource("Floor_mat")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 6, 0)
+shadow_enabled = true
+
+[node name="Mannequin" type="Node3D" parent="."]
+script = ExtResource("2_mannequin")
+definition = ExtResource("3_character")
+
+[node name="Dummy" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.6)
+mesh = SubResource("Dummy_mesh")
+surface_material_override/0 = SubResource("Dummy_mat")
+
+[node name="ThumbnailCamera" type="Camera3D" parent="."]
+transform = Transform3D(0.707, -0.29, 0.645, 0, 0.912, 0.41, -0.707, -0.29, 0.645, 3.6, 2.8, 2.2)
+fov = 50.0

@@ -104,7 +104,40 @@ A number the game is tuned by while it runs: a range, a health, a round's length
 4. Tests: the `content` suite already checks every piece is valid and the bake current; add a
    `validate()` case for the type's own rule.
 
+## Workbenches and the Catalog (DECISIONS #203, CONTENT_TOOLING_SPEC §3)
+A workbench is where a piece of content is made and tested: a `@tool` scene with the real
+character, the real animations and the moment the content lives in, and no server.
+- **No content type without one.** The `workbench` suite fails a type with no bench unless it says
+  why in `why_no_workbench()` (rules: tried live in the game's Rules page instead).
+- **Found by name:** `tools/workbench/<type>_workbench.tscn` (a foundation type), or
+  `game/<genre>/workbench/<type>_workbench.tscn` (a genre's). Both stay out of the builds (the export
+  test checks). `ContentDef.workbench_scene()` finds it; override only to point elsewhere.
+- **Writing one:** extend `Workbench` (`tools/workbench/workbench.gd`): `content_type()`,
+  `load_item()` (show the piece), `test_actions()` and `run_test()` (play the moment, return a
+  sentence). Optional: `fit_checks()` (amber warnings), `new_item_from()` (a dropped file becomes a
+  piece), a `ThumbnailCamera`. The base gives the Inspector controls (the piece, the test, Run test,
+  Previous, Next, Save, Capture thumbnail, status), follows edits to the piece (it watches the
+  piece's saved fields: a script's fields announce nothing), takes the piece the dock hands it
+  (`Workbench.pending`), and renders thumbnails. A character goes in with `Mannequin`: an
+  `EntityDefinition`'s model and its AnimationSet, played as the game plays it.
+- **A bench's judgement is the game's.** The ability bench's outcomes are `use_ability`'s Tier A
+  rules (`AbilityWorkbench.judge`); a bench that predicted something the server would not do would
+  teach the designer the wrong game. When the server's rule changes, the bench's does in the same change.
+- **Scripts a bench calls run in the EDITOR**: a resource script it uses must be `@tool` (an
+  `AnimationSet` was not, and the editor could not call it; found by opening the bench in a real editor).
+- **The Catalog** (the Content dock's second tab): every piece as a card, its picture and a badge:
+  red (something is wrong: the first sentence), amber (valid, not yet seen in its bench: no
+  picture), green. Filter by type and badge; a click opens the piece and its bench. Pictures are a
+  cache under `tools/workbench/thumbnails/` (not imported, not committed): **Regenerate** renders
+  every piece in its own bench off screen (needs a renderer; `tests/render_test.sh` proves it).
+
+| Workbench | Tests | Where |
+|---|---|---|
+| ability | use in range (the wind-up plays, it lands), use out of range (refused), cooldown | `tools/workbench/ability_workbench.tscn` |
+
 ## Not yet (CONTENT_TOOLING_SPEC §9)
-The `Workbench` base and the Catalog (step 4); round lengths as hot rules. Fishing's
+Step 5's benches: character looks and levels as content types with benches (the
+`character_preview` and `LevelInfo` tools become them), the NPC sandbox; Fishing's fish, spot and
+held-item (rod) benches, in Fishing, with its content. Round lengths as hot rules. Fishing's
 content (`shared/fishing/*.json`) moves to `.tres` in Fishing, where its round-trip test (bake the
 generated resources, compare byte for byte) belongs.

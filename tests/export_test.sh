@@ -68,7 +68,7 @@ CPCK=build/client/umf.exe
 # in the client is readable by every player and is exactly what the rule exists to prevent.
 check "$([ "$(count $CPCK '^sidecar/')" = "0" ] && echo true || echo false)" \
   "no sidecar/ file is in the client ($(count $CPCK '^sidecar/') found)"
-check "$([ "$(count $CPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|game/[a-z_]+/tests/|tools/)')" = "0" ] && echo true || echo false)" \
+check "$([ "$(count $CPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|game/[a-z_]+/(tests|workbench)/|tools/)')" = "0" ] && echo true || echo false)" \
   "nor test code or tools"
 # THE LEVEL LIVES UNDER tests/levels/ — the game and the sidecar both load it — so "leave the tests
 # out" must not mean "leave the level out". The first version of these presets did exactly that,

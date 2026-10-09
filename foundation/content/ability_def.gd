@@ -14,6 +14,9 @@ class_name AbilityDef extends ContentDef
 @export_range(0, 5000, 10, "suffix:ms") var wind_up_ms: int = 150
 ## Health taken from what it hits.
 @export_range(0.0, 1000.0, 0.5) var damage: float = 10.0
+## The animation the user plays (a semantic name from the character's AnimationSet: `interact`,
+## `ability.3`...). Presentation only: not baked, the server does not know it.
+@export var animation: StringName = &"interact"
 
 ## The shortest wind-up the network allows (ARCHITECTURE: the RTT floor).
 const MIN_WIND_UP_MS: int = 100

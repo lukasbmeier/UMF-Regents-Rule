@@ -457,3 +457,10 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **Names are unique**, whatever the case. Two players who already shared a name: the first keeps it, the other becomes "Name 2" on their next join.
 - **Notices on screen**: lost connection, reconnecting, a name refused (they were sent before but nothing showed them).
 - Server: no new tables or reducers (old builds keep playing). Publish; restart the editor.
+
+## 0.31.0 — workbenches and the Catalog (CONTENT_TOOLING_SPEC step 4)
+- **Workbenches** (DECISIONS #203): make and try a piece of content with the real character, no server. The first is the **ability bench**: a range ring, a dummy, and tests that play the wind-up and say what the game would do (hit, refused out of range, refused on cooldown). Edit the ability in the Inspector and the bench follows.
+- **The Catalog**: a second tab in the Content panel, every piece as a card with its picture and a red / amber / green strip; click to open it in its bench; Regenerate redraws every picture.
+- Every content type has a bench, or says why not (rules: tried live in the game). A new bench is mostly its tests (`docs/rules/content.md`).
+- Players who are not connected cannot be targeted by abilities either.
+- No server schema change. **Restart the editor.**

@@ -258,6 +258,10 @@ pub fn use_ability(
     let mut outcome = OUTCOME_MISS;
     if target_id != 0 && def.range > 0.0 {
         let them = ctx.db.movement_state().entity_id().find(target_id).ok_or("use_ability: no such target")?;
+        // A player who is not connected is not in the world (DECISIONS #202).
+        if ctx.db.player().entity_id().find(target_id).is_some_and(|p| !p.online) {
+            return Err("use_ability: they are not here".into());
+        }
         if them.world_id != me.world_id {
             return Err("use_ability: target is in another world".into());
         }

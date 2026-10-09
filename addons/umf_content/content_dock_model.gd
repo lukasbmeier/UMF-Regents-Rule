@@ -54,6 +54,36 @@ func item_rows(type: StringName, filter: String = "") -> Array[Dictionary]:
 	return out
 
 
+## THE CATALOG (CONTENT_TOOLING_SPEC §3.3, DECISIONS #203): every piece of every type as a card:
+## [{ def, path, owner, type, badge, sentence, thumbnail, workbench }], by type then id. `badge`:
+## "red" (something is wrong: the first problem is `sentence`), "amber" (valid, but not yet seen in
+## its workbench: no thumbnail), "green". Filters: a type (&"" all) and a badge ("" all).
+func catalog_rows(type_filter: StringName = &"", badge_filter: String = "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e: Dictionary in ContentLibrary.load_all():
+		var def: ContentDef = e["def"]
+		if def == null:
+			continue
+		var type: StringName = def.content_type()
+		if type_filter != &"" and type != type_filter:
+			continue
+		var path: String = e["path"]
+		var why: Array[String] = def.validate()
+		for p: Dictionary in problems_for(path):
+			why.append(String(p["text"]))
+		var bench: String = def.workbench_scene()
+		var thumb: String = Workbench.thumbnail_path(def)
+		var badge: String = "red" if not why.is_empty() else ("amber" if not bench.is_empty() and not FileAccess.file_exists(thumb) else "green")
+		var sentence: String = why[0] if not why.is_empty() else ("not yet seen in its workbench (no picture): open it there, or Regenerate" if badge == "amber" else "")
+		if not badge_filter.is_empty() and badge != badge_filter:
+			continue
+		out.append({"def": def, "path": path, "owner": e["owner"], "type": type, "badge": badge,
+			"sentence": sentence, "thumbnail": thumb, "workbench": bench})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return String(a["type"]) < String(b["type"]) or (a["type"] == b["type"] and (a["def"] as ContentDef).id < (b["def"] as ContentDef).id))
+	return out
+
+
 ## Who may make a piece of `type`: the foundation and every genre for a foundation type, the genre
 ## alone for a genre's.
 func owners_for(type: StringName) -> PackedStringArray:

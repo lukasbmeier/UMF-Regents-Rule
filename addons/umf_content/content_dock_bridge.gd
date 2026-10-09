@@ -23,6 +23,13 @@ func open_scene(path: String) -> void:
 	asked.append("open " + path)
 
 
+## Open a workbench with `def` on it (DECISIONS #203): the bench takes `Workbench.pending` when it
+## loads, and an already-open bench is handed the piece directly.
+func open_workbench(path: String, def: ContentDef) -> void:
+	Workbench.pending = def
+	open_scene(path)
+
+
 ## Point the FileSystem dock at a file.
 func show_file(path: String) -> void:
 	asked.append("show " + path)

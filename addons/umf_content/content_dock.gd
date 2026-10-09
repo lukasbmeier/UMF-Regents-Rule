@@ -29,6 +29,11 @@ var _type_order: Array[StringName] = []
 var _item_paths: Array[String] = []
 var _selected_path: String = ""
 var _task: ProjectTask = null
+var _tabs: TabContainer
+var _cards: HFlowContainer
+var _catalog_type: OptionButton
+var _catalog_badge: OptionButton
+const BADGE_COLOURS: Dictionary = {"red": Color(1.0, 0.42, 0.38), "amber": Color(1.0, 0.78, 0.3), "green": Color(0.45, 0.85, 0.5)}
 
 
 ## Build it. `bridge` defaults to one that does nothing (tests).
@@ -63,6 +68,9 @@ func refresh() -> void:
 	if at >= 0:
 		_types.select(at)
 	_refresh_items()
+	_refresh_catalog_types()
+	if _tabs.current_tab == 1:
+		refresh_catalog()
 
 
 func selected_type() -> StringName:
@@ -175,9 +183,14 @@ func _build() -> void:
 	_status = Label.new()
 	_toolbar.add_child(_status)
 
+	_tabs = TabContainer.new()
+	_tabs.name = "Tabs"
+	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_tabs)
 	var split := HSplitContainer.new()
-	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(split)
+	split.name = "Browse"
+	_tabs.add_child(split)
+	_build_catalog()
 	_types = ItemList.new()
 	_types.name = "Types"
 	_types.custom_minimum_size = Vector2(180, 0)
@@ -230,7 +243,7 @@ func _build() -> void:
 	_workbench.text = "Open workbench"
 	_workbench.tooltip_text = "Where this piece is made and tested against the real animations and level (a workbench)"
 	_workbench.disabled = true
-	_workbench.pressed.connect(func() -> void: bridge.open_scene(_workbench_of(_selected_path)))
+	_workbench.pressed.connect(func() -> void: open_in_workbench(_selected_path))
 	buttons.add_child(_workbench)
 	_show_file = Button.new()
 	_show_file.text = "Show in FileSystem"
@@ -244,6 +257,146 @@ func _build() -> void:
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_log.meta_clicked.connect(func(meta: Variant) -> void: select_path(String(meta)))
 	detail.add_child(_log)
+
+
+## Open the piece at `path` in its workbench (with the piece on the bench). False when its type
+## has none.
+func open_in_workbench(path: String) -> bool:
+	var bench: String = _workbench_of(path)
+	var def: ContentDef = load(path) as ContentDef if ResourceLoader.exists(path) else null
+	if bench.is_empty() or def == null:
+		return false
+	bridge.open_workbench(bench, def)
+	return true
+
+
+## The Catalog's cards now, as paths (tests).
+func catalog_paths() -> Array[String]:
+	var out: Array[String] = []
+	for c: Node in _cards.get_children():
+		if c.has_meta(&"path") and not c.is_queued_for_deletion():
+			out.append(String(c.get_meta(&"path")))
+	return out
+
+
+## Show the Catalog tab (tests, and a key some day).
+func show_catalog() -> void:
+	_tabs.current_tab = 1
+	refresh_catalog()
+
+
+func refresh_catalog() -> void:
+	for c: Node in _cards.get_children():
+		c.queue_free()
+	var type: StringName = &"" if _catalog_type.selected <= 0 else StringName(_catalog_type.get_item_text(_catalog_type.selected))
+	var badge: String = "" if _catalog_badge.selected <= 0 else _catalog_badge.get_item_text(_catalog_badge.selected)
+	for row: Dictionary in model.catalog_rows(type, badge):
+		_cards.add_child(_card(row))
+
+
+## Every piece's picture again, each rendered in its own workbench off screen (needs a renderer).
+func regenerate_thumbnails() -> void:
+	var done: int = 0
+	for row: Dictionary in model.catalog_rows():
+		if String(row["workbench"]).is_empty():
+			continue
+		var img: Image = await Workbench.render_offscreen(row["workbench"], row["def"], self)
+		if img != null:
+			done += 1
+	_say("Regenerate: %d picture(s)%s" % [done, "" if done > 0 else " (no renderer here, or no workbench yet)"])
+	refresh_catalog()
+
+
+func _build_catalog() -> void:
+	var box := VBoxContainer.new()
+	box.name = "Catalog"
+	_tabs.add_child(box)
+	var bar := HBoxContainer.new()
+	box.add_child(bar)
+	_catalog_type = OptionButton.new()
+	_catalog_type.tooltip_text = "Which type"
+	_catalog_type.item_selected.connect(func(_i: int) -> void: refresh_catalog())
+	bar.add_child(_catalog_type)
+	_catalog_badge = OptionButton.new()
+	_catalog_badge.tooltip_text = "red: something is wrong · amber: not yet seen in its workbench · green: done"
+	for b: String in ["every badge", "red", "amber", "green"]:
+		_catalog_badge.add_item(b)
+	_catalog_badge.item_selected.connect(func(_i: int) -> void: refresh_catalog())
+	bar.add_child(_catalog_badge)
+	var regen := Button.new()
+	regen.text = "Regenerate thumbnails"
+	regen.tooltip_text = "Render every piece in its own workbench, off screen"
+	regen.pressed.connect(regenerate_thumbnails)
+	bar.add_child(regen)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+	_cards = HFlowContainer.new()
+	_cards.name = "Cards"
+	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_cards)
+	_tabs.tab_changed.connect(func(t: int) -> void:
+		if t == 1:
+			refresh_catalog())
+
+
+func _refresh_catalog_types() -> void:
+	var keep: String = _catalog_type.get_item_text(_catalog_type.selected) if _catalog_type.selected >= 0 else ""
+	_catalog_type.clear()
+	_catalog_type.add_item("every type")
+	for t: StringName in _type_order:
+		_catalog_type.add_item(String(t))
+	for i: int in _catalog_type.item_count:
+		if _catalog_type.get_item_text(i) == keep:
+			_catalog_type.select(i)
+
+
+func _card(row: Dictionary) -> Control:
+	var def: ContentDef = row["def"]
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(150, 0)
+	card.set_meta(&"path", row["path"])
+	card.tooltip_text = "%s\n%s" % [row["path"], row["sentence"]]
+	var v := VBoxContainer.new()
+	card.add_child(v)
+	var strip := ColorRect.new()
+	strip.color = BADGE_COLOURS[row["badge"]]
+	strip.custom_minimum_size = Vector2(0, 4)
+	v.add_child(strip)
+	var pic := TextureRect.new()
+	pic.custom_minimum_size = Vector2(140, 100)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.texture = Workbench.thumbnail_of(def)
+	v.add_child(pic)
+	var name := Label.new()
+	name.text = def.display_name
+	name.clip_text = true
+	v.add_child(name)
+	var kind := Label.new()
+	kind.text = "%s %d%s" % [row["type"], def.id, "" if row["owner"] == ContentLibrary.FOUNDATION else " · " + String(row["owner"])]
+	kind.modulate = Color(1, 1, 1, 0.6)
+	v.add_child(kind)
+	if not String(row["sentence"]).is_empty():
+		var why := Label.new()
+		why.text = String(row["sentence"])
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.custom_minimum_size = Vector2(140, 0)
+		why.modulate = BADGE_COLOURS[row["badge"]]
+		v.add_child(why)
+	card.gui_input.connect(func(ev: InputEvent) -> void:
+		var mb: InputEventMouseButton = ev as InputEventMouseButton
+		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			open_card(String(row["path"])))
+	return card
+
+
+## A card clicked: the piece is chosen (it opens in the Inspector) and, when its type has one, its
+## workbench opens with it on the bench.
+func open_card(path: String) -> void:
+	select_path(path)
+	open_in_workbench(path)
 
 
 func _refresh_items() -> void:
