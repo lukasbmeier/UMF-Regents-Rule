@@ -1275,6 +1275,15 @@
 			"is_scheduled": true
 		},
 		{
+			"name": "compat_generation_1",
+			"wire_name": "compat_generation_1",
+			"namespace": [],
+			"local_name": "compat_generation_1",
+			"params": [],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "consume_item",
 			"wire_name": "consume_item",
 			"namespace": [],

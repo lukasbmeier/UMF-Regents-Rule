@@ -166,21 +166,28 @@ func _step_wrong_server() -> void:
 		% _screen.status_text().replace("\n", " / "))
 
 
-## The right server, but this build's bindings came from another schema. The adapter asks the
-## server for its schema first and refuses the difference, so nothing is decoded into the wrong
-## columns. The build's own fingerprint is replaced for this one attempt.
+## The right server, but this build is NEWER than it: it needs a table the server never had. The
+## adapter asks the server for its schema first and refuses what this build cannot play, so
+## nothing is decoded into the wrong columns (DECISIONS #164, #198). The build's own fingerprint and
+## contract are replaced for this one attempt.
 func _step_other_version() -> void:
 	print("-- another version of the game --")
 	_errors_seen.clear()
 	_check(not SpaceTimeSync.bindings_fingerprint().is_empty(),
 		"this build knows which schema it was generated from (%s)" % SpaceTimeSync.bindings_fingerprint())
+	_check(not SpaceTimeSync.bindings_contract().is_empty(), "and what it needs from a server (its contract)")
+	var newer: Dictionary = SpaceTimeSync.bindings_contract().duplicate(true)
+	(newer["tables"] as Dictionary)["a_table_from_the_future"] = "()"
 	SpaceTimeSync.fingerprint_override = "000000000000"
+	SpaceTimeSync.contract_override = newer
 	await _type_into(_field(^"%Host"), "127.0.0.1")
 	await _press_enter()
 	var refused: bool = await _until(func() -> bool: return not _screen.is_connecting(),
 		"the screen to report the other version")
 	SpaceTimeSync.fingerprint_override = ""
-	_check(refused and _screen.status_text().contains("different version of the game")
+	SpaceTimeSync.contract_override = {}
+	_check(refused and _screen.status_text().contains("cannot play")
+		and _screen.status_text().contains("a_table_from_the_future")
 		and _screen.status_text().contains("000000000000")
 		and _screen.status_text().contains(SpaceTimeSync.bindings_fingerprint()),
 		"a server running another schema is refused, and the screen says why: \"%s\""
@@ -285,15 +292,26 @@ func _model_name() -> String:
 	return m.scene_file_path.get_file().get_basename() if m != null else ""
 
 
+## Connects AS AN OLDER BUILD (DECISIONS #198): another fingerprint, and a contract that knew one
+## table and one action fewer, as a build from before the server added them would. The server has
+## more than it needs, so it plays: a friend's old build keeps working on an updated server.
 func _step_connect() -> bool:
-	print("-- connect --")
+	print("-- connect (as an older build) --")
+	var older: Dictionary = SpaceTimeSync.bindings_contract().duplicate(true)
+	var older_tables: Dictionary = older["tables"]
+	(older["reducers"] as Dictionary).erase("set_dev_tools")
+	older_tables.erase("rate_budget" if older_tables.has("rate_budget") else older_tables.keys()[0])
+	SpaceTimeSync.fingerprint_override = "0123456789ab"
+	SpaceTimeSync.contract_override = older
 	await _type_into(_field(^"%Host"), "127.0.0.1")
 	await _type_into(_field(^"%Name"), "Tester One")
 	await _press_enter()
 	var ready: bool = await _until(func() -> bool:
 		return SpaceTimeSync.is_world_ready and EntityRegistry.local_entity_id >= 0 \
 			and _local() != null and _local().is_bound(), "the world and the local player")
-	_check(ready, "Enter in the name field connects, and the local player spawns and binds")
+	SpaceTimeSync.fingerprint_override = ""
+	SpaceTimeSync.contract_override = {}
+	_check(ready, "an OLDER build (fingerprint 0123456789ab, one table and one action fewer) connects on Enter, and the local player spawns and binds")
 	if not ready:
 		return false
 	_first_entity = EntityRegistry.local_entity_id

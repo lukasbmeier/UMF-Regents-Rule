@@ -60,21 +60,27 @@ var last_disconnect_requested: bool = false
 ## the terminal signal we caused from one we did not.
 var _disconnecting: bool = false
 
-## THE VERSION CHECK (DECISIONS #164). Before it opens the socket, the adapter asks the server for
-## its schema and compares its fingerprint (`SchemaFingerprint`) with the one the bindings were
-## generated from, written beside them at codegen by `tools/write_schema_fingerprint.gd`. A
-## mismatch is refused here, in words a player can act on, instead of failing later in ways nobody
-## can read. A server that does not answer the question (no answer, not SpacetimeDB, no such
-## database) is left to the connection itself to explain, exactly as before.
+## THE VERSION CHECK (DECISIONS #164, #198). Before it opens the socket, the adapter asks the
+## server for its schema and checks THIS BUILD'S CONTRACT against it (`SchemaContract`, written
+## beside the bindings at codegen by `tools/write_schema_fingerprint.gd`): every table the bindings
+## decode has the same row there, every reducer the same arguments, and the compatibility
+## generation is the same. A server that only ADDED is played on: an old build keeps working on a
+## new server (docs/rules/compatibility.md). A refusal is said here, in words a player can act on,
+## instead of failing later in ways nobody can read. A build with no contract (from before #198)
+## falls back to the exact fingerprint. A server that does not answer the question (no answer, not
+## SpacetimeDB, no such database) is left to the connection itself to explain, exactly as before.
 const BINDINGS_FINGERPRINT_PATH: String = "res://spacetime_bindings/schema_fingerprint.json"
+const BINDINGS_CONTRACT_PATH: String = "res://spacetime_bindings/schema_contract.json"
 ## The schema the last codegen read (editor and tests only: the export leaves it out).
 const CODEGEN_SCHEMA_PATH: String = "res://spacetime_bindings/codegen_debug/unparsed_schema_%s.json"
 ## How long the schema question may take before the adapter connects without an answer.
 const SCHEMA_CHECK_TIMEOUT_SEC: float = 3.0
 ## Why the last attempt was refused before connecting, for the player; empty otherwise.
 var incompatible_reason: String = ""
-## TESTING: stands in for the bindings' fingerprint (the connect playtest's mismatch step).
+## TESTING: stand in for the bindings' fingerprint and contract (the connect playtest plays an
+## older build and a newer one this way).
 var fingerprint_override: String = ""
+var contract_override: Dictionary = {}
 ## Counts attempts, so a check that answers after its attempt was cancelled does nothing.
 var _attempt: int = 0
 var _schema_request: HTTPRequest = null
@@ -175,6 +181,29 @@ static func bindings_fingerprint() -> String:
 	return String((parsed as Dictionary).get("fingerprint", "")) if parsed is Dictionary else ""
 
 
+## The contract this build's bindings were generated with (`SchemaContract`). Empty when no codegen
+## has written one, and then the fingerprint decides.
+static func bindings_contract() -> Dictionary:
+	if not FileAccess.file_exists(BINDINGS_CONTRACT_PATH):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(BINDINGS_CONTRACT_PATH))
+	return parsed as Dictionary if parsed is Dictionary else {}
+
+
+## Why a build with fingerprint `ours` and `contract` cannot play on the server whose schema is
+## `server_schema_text`, for the player; empty when it can, or when the text is not a schema.
+static func compatibility_problem(ours: String, contract: Dictionary, server_schema_text: String) -> String:
+	var theirs: String = SchemaFingerprint.of(server_schema_text)
+	if theirs.is_empty():
+		return ""
+	if int(contract.get("format", 0)) == SchemaContract.FORMAT:
+		var found: PackedStringArray = SchemaContract.problems(contract, server_schema_text)
+		return "" if found.is_empty() else SchemaContract.refusal_message(found, ours, theirs)
+	if not ours.is_empty() and theirs != ours:
+		return SchemaFingerprint.mismatch_message(ours, theirs)
+	return ""
+
+
 ## The schema text the last codegen read, for `module` (the tests compare its fingerprint with the
 ## bindings'). Empty in an export.
 static func codegen_schema_text(module: String = "umf") -> String:
@@ -184,23 +213,25 @@ static func codegen_schema_text(module: String = "umf") -> String:
 
 func _check_version_then_connect(cfg: NetConfig, attempt: int) -> void:
 	var ours: String = fingerprint_override if not fingerprint_override.is_empty() else bindings_fingerprint()
-	if not ours.is_empty():
-		var theirs: String = await _server_fingerprint(cfg)
+	var contract: Dictionary = contract_override if not contract_override.is_empty() else bindings_contract()
+	if not ours.is_empty() or not contract.is_empty():
+		var text: String = await _server_schema(cfg)
 		if attempt != _attempt or state != ConnectionState.CONNECTING:
 			return   # given up on while the server was asked
-		if not theirs.is_empty() and theirs != ours:
-			incompatible_reason = SchemaFingerprint.mismatch_message(ours, theirs)
+		var problem: String = compatibility_problem(ours, contract, text)
+		if not problem.is_empty():
+			incompatible_reason = problem
 			last_disconnect_reason = incompatible_reason
-			push_warning("[SpaceTimeSync] %s runs schema %s; this build's bindings are %s. Not connecting."
-				% [cfg.host, theirs, ours])
+			push_warning("[SpaceTimeSync] %s runs schema %s, which this build (%s) cannot play. Not connecting."
+				% [cfg.host, SchemaFingerprint.of(text), ours])
 			connection_error.emit(0, incompatible_reason)
 			state = ConnectionState.DISCONNECTED
 			return
 	_sdk_connect(cfg)
 
 
-## The fingerprint of the schema the server runs, or "" when it does not say.
-func _server_fingerprint(cfg: NetConfig) -> String:
+## The schema the server runs, as it serves it, or "" when it does not say.
+func _server_schema(cfg: NetConfig) -> String:
 	_cancel_schema_request()
 	var http := HTTPRequest.new()
 	http.timeout = SCHEMA_CHECK_TIMEOUT_SEC
@@ -215,7 +246,7 @@ func _server_fingerprint(cfg: NetConfig) -> String:
 	http.queue_free()
 	if int(result[0]) != HTTPRequest.RESULT_SUCCESS or int(result[1]) != 200:
 		return ""
-	return SchemaFingerprint.of((result[3] as PackedByteArray).get_string_from_utf8())
+	return (result[3] as PackedByteArray).get_string_from_utf8()
 
 
 func _cancel_schema_request() -> void:

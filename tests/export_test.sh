@@ -139,6 +139,39 @@ else
 fi
 [ -n "$ready" ] || { echo "--- client log ---" >&2; tail -30 "$client_log" >&2; }
 
+echo "== the exported client, an OLDER build, on NEWER servers (DECISIONS #198) =="
+# OLD CLIENTS ON NEW SERVERS: the build just exported is played against servers built from this
+# source with UMF_COMPAT_PROBE (server/build.rs): one that ADDED a table and a reducer, which it must
+# still play on, and the next compatibility generation, which must refuse it before it connects.
+probe_run() {   # $1: add|break -> publishes that server, runs the client, leaves its log in $client_log
+  if ! (cd server && UMF_COMPAT_PROBE="$1" spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1; then
+    fail "a '$1' server publishes"; return 1
+  fi
+  : > "$client_log"
+  build/client/umf.exe --headless -- --token=exporttest_old --name=OldBuild >"$client_log" 2>&1 &
+  client_pid=$!
+  for _ in $(seq 1 40); do
+    if grep -q "\[Boot\] world ready" "$client_log" || grep -q "cannot play" "$client_log"; then break; fi
+    sleep 0.5
+  done
+  sleep 2
+  probe_log="$(cat "$client_log")"   # as it stood running: Godot's shutdown reports are not this game's
+  kill "$client_pid" 2>/dev/null; wait "$client_pid" 2>/dev/null; client_pid=""
+}
+if probe_run add; then
+  check "$(curl -s "http://127.0.0.1:3000/v1/database/$DB/schema?version=10" | grep -q compat_probe && echo true || echo false)" \
+    "the newer server really has a table and an action this build never heard of"
+  check "$(grep -q '\[Boot\] world ready' "$client_log" && grep -q '\[Boot\] local entity:' "$client_log" && echo true || echo false)" \
+    "the older build plays on it: connects, subscribes, is handed its player"
+  check "$(printf '%s\n' "$probe_log" | grep -qE '^(ERROR|SCRIPT ERROR)' && echo false || echo true)" "with no errors"
+fi
+if probe_run break; then
+  check "$(grep -q 'cannot play' "$client_log" && ! grep -q '\[Boot\] world ready' "$client_log" && echo true || echo false)" \
+    "a server of the next compatibility generation refuses it before it connects"
+  grep -m1 "cannot play" "$client_log" | sed 's/^/   /'
+fi
+(cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1 || fail "the plain server publishes again"
+
 echo "== run the exported SERVER as a sidecar =="
 # The whole sidecar suite, pointed at the exported binary: it must boot the sidecar (the
 # `dedicated_server` feature picks its main scene), simulate, drive an NPC, and resume that NPC's

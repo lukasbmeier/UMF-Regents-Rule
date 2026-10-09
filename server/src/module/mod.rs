@@ -38,3 +38,5 @@ mod interaction;
 pub use interaction::*;
 mod helpers;
 pub use helpers::*;
+mod compat;
+pub use compat::*;

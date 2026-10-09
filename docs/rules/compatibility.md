@@ -25,14 +25,36 @@ attempted: a new client would ask for tables and reducers the old server never h
 5. **New content falls back.** An item, species or look an old client has no model for is drawn as
    a generic stand-in with the name from its row. It still plays; the new model needs an update.
 
-## What enforces it (being built in the template)
-- **A compatibility check instead of an exact match.** At connect the client checks only what IT
-  uses: every table it subscribes to has the same row shape on the server, every reducer it calls the
-  same arguments. Extra server tables and reducers are fine. The server carries a
-  `min_client_version`, bumped by hand for a deliberate break; a client below it is told plainly
-  "this server needs a newer version". (Today the fingerprint must match exactly, DECISIONS #164.)
-- **A schema snapshot per release.** Each release saves its schema to `shared/compat/<version>.json`;
-  a test fails the build when the new schema is not a superset of the last release's, unless the
-  major version was bumped.
-- **A real old client.** The export test keeps the previous release's build and plays it against
-  the new server.
+## What enforces it (DECISIONS #198)
+- **The contract, not the fingerprint.** Codegen writes `spacetime_bindings/schema_contract.json`
+  beside the bindings (`SchemaContract`): every public table the bindings decode, with its row, and
+  every reducer a client can call, with its arguments (types resolved, by name and shape). At
+  connect the client fetches the server's schema and checks only that: extra tables and reducers
+  are fine, a changed or missing one is refused with the reason ("the server's table 'x' has other
+  columns"). The fingerprint is still shown, to tell versions apart; it no longer decides. A build
+  from before #198 has no contract and still needs the exact fingerprint.
+- **The compatibility generation.** `shared/game.json` `compat` (1 when absent). build.rs puts it
+  in the schema as an empty reducer, `compat_generation_<N>`, so it is part of every contract: builds
+  and servers of different generations refuse each other, both ways round, in those words. Bump it
+  (add `"compat": 2`) for a deliberate break: a change to what clients simulate (rule 4), a reshaped
+  table. Never for an addition.
+- **Release snapshots.** `tools\release.cmd` (the way to make a build for friends) exports and tests
+  both builds, saves the build's contract to `shared/compat/<database>/<fingerprint>.json`, and zips
+  the client to `build/releases/`. Commit the snapshot. Exporting from the editor saves one too
+  (`addons/umf_export`). The `version` unit suite then fails while any snapshot of the current
+  generation cannot play on the current schema: a change that would strand a friend's build is
+  caught before it is published.
+- **A real old client.** `tests/export_test.sh` plays the build it just exported against servers
+  built from the same source with `UMF_COMPAT_PROBE`: `add` (a new table and reducer: it must play)
+  and `break` (the next generation: it must be refused before connecting).
+- Negative-tested: with the contract check off, the unit suite, the connect playtest's older build
+  and the export test's old client all fail.
+
+## What this means day to day
+- Added a table or a reducer: `tools\publish.cmd --codegen`. Friends' builds keep playing; they
+  update when they want the new feature.
+- Changed a table's columns or a reducer's arguments: the unit suite says which release it strands.
+  Do it the compatible way instead (side table, `_v2` reducer), or, if it is worth a re-download,
+  bump `compat` and send everyone a new build.
+- Retuned something clients simulate (movement, a minigame's curve): bump `compat`; the unit suite
+  cannot see that one.

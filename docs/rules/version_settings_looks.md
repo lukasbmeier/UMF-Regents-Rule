@@ -2,9 +2,11 @@
 The schema fingerprint, settings as data, appearance rows, modular pieces, LODs, the registry's buffer. Moved verbatim from AGENTS.md (REVIEW 0.23.1 C1); the DECISIONS rows in each heading say why.
 
 ## VERSION, SETTINGS, LOOKS (DECISIONS #164-#166, #176-#178)
-- THE VERSION CHECK: `publish.sh --codegen` writes `spacetime_bindings/schema_fingerprint.json`;
-  the adapter refuses a server whose schema fingerprint differs. A schema change without codegen
-  makes EVERY suite fail to connect ("runs schema X; this build's bindings are Y"): run codegen.
+- THE VERSION CHECK (#164, #198): `publish.sh --codegen` writes `spacetime_bindings/schema_fingerprint.json`
+  and `schema_contract.json`; the adapter refuses a server that lacks or changed something the
+  contract names, or is of another compatibility generation (`docs/rules/compatibility.md`). A
+  schema change without codegen fails the `version` unit suite ("the bindings' contract is the
+  schema codegen read"): run codegen.
 - SETTINGS: one `Settings.define()` per setting; nothing else stores a copy. Sounds set `bus` to a
   `Settings.BUS_*`. Processes under a test suite (UMF_DB) or UMF_SETTINGS=none never read or write
   the player's file (`run_tests.sh` and `render_test.sh` export UMF_SETTINGS=none).

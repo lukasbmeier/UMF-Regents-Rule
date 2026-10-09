@@ -8,11 +8,14 @@ UMF ALL/
   Fowl Play/      github (its own)        game: genres ["chicken"], database fowl-play
 ```
 Each game is a FORK of the template: the same history, plus its genre's files. A game has a git
-remote named `template` pointing at UMF-Foundation, and takes foundation updates with
+remote named `template` pointing at UMF-Foundation, and takes foundation updates by
+double-clicking `tools\update_from_template.cmd` (commit your work first). It runs
 ```bash
 git pull template main
 ```
-That merges cleanly when the game kept the boundary (AGENTS.md rule 16): the game changed only
+then republishes the game's own database with `--codegen` (keeping its data: the bindings are each
+game's, and a pull keeps the game's copy, `.gitattributes`) and runs the unit suite; then commit
+and push. Each game's `GAME.md` and `shared/game.json` are its own too. That merges cleanly when the game kept the boundary (AGENTS.md rule 16): the game changed only
 its genre's files (those in `tools/template/genres/<genre>.paths`) and its own settings
 (`project.godot`'s name and main scene, `shared/game.json`, `shared/rules.json`). A conflict
 anywhere else means foundation work was done in the game; move it to the template.

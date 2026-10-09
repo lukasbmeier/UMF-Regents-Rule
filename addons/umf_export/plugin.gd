@@ -8,6 +8,10 @@ extends EditorPlugin
 ## proves the builds carry neither the files nor the error.
 ##
 ## Add an autoload to `EDITOR_ONLY_AUTOLOADS` when an editor addon brings another one.
+##
+## EVERY EXPORT FROM THE EDITOR SAVES THE BUILD'S CONTRACT (DECISIONS #198,
+## `tools/compat_snapshot.gd`): those are the builds that reach players, and the version suite holds
+## every later server to them. Headless exports (the test suites') save none.
 
 const EDITOR_ONLY_AUTOLOADS: PackedStringArray = ["_mcp_game_helper"]
 
@@ -33,7 +37,10 @@ class UmfExport extends EditorExportPlugin:
 	func _get_name() -> String:
 		return "UmfExport"
 
-	func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String, _flags: int) -> void:
+	func _export_begin(features: PackedStringArray, _is_debug: bool, _path: String, _flags: int) -> void:
+		if DisplayServer.get_name() != "headless" and not features.has("dedicated_server"):
+			var snap: String = (load("res://tools/compat_snapshot.gd") as GDScript).call(&"save")
+			print("[UmfExport] compatibility snapshot: ", snap if not snap.is_empty() else "none (no contract: codegen first)")
 		_held.clear()
 		_order.clear()
 		for name: String in EDITOR_ONLY_AUTOLOADS:

@@ -193,16 +193,19 @@ one every test suite uses (and wipes). Every game on one SpacetimeDB server need
 publishing one game overwrites another's world. Running the tests never touches your world: suites
 pick their database through `tests/lib/db.sh`, and a lint stops one naming the play database.
 
-**The version check:** a game refuses to connect to a server whose tables or reducers differ from
-the ones it was built with, and says so on the connect screen ("This server is running a different
-version of the game"). So after `--codegen`, export the game again for anyone you play with. The
-check compares a fingerprint written at codegen (`spacetime_bindings/schema_fingerprint.json`) with
-the server's own schema; a test that changes the schema without codegen is refused the same way.
+**The version check: old builds keep working** (`docs/rules/compatibility.md`). A build checks only
+what IT uses: the tables it reads and the actions it sends must be the same on the server; anything
+the server added is fine. So adding a table or an action and publishing with `--codegen` does NOT
+make friends re-download. A server that changed something a build uses refuses it with the reason
+on the connect screen ("This server runs a version of the game this build cannot play: ...").
+A deliberate break (you retuned movement, or reshaped a table) is made by adding `"compat": 2` to
+`shared/game.json` (the next number each time): every older build is then told to update.
 
 ### Playing with a friend on another computer
-1. **Export** the game: `tools\run.cmd tests\export_test.sh` builds `build/` (the client is the
-   `Windows Client` preset). Zip `build\client\` and send it: `umf.exe` holds the whole game, and
-   `libterrain...dll` (Terrain3D, which draws the lakeside's ground) must sit beside it.
+1. **Make the build:** double-click `tools\release.cmd`. It exports and tests both builds, records
+   what this build needs from a server (`shared/compat/`: commit it, so later changes are checked
+   against this build), and zips the client to `build\releases\<game>-<version>.zip`. Send that:
+   `umf.exe` holds the whole game, and `libterrain...dll` (Terrain3D) sits beside it.
 2. **Let them reach your server.** `spacetime start` only listens on your own machine. Start it
    with `spacetime start --listen-addr 0.0.0.0:3000` instead, then:
    - **Same house:** allow it through Windows Firewall once (an admin PowerShell:
@@ -215,8 +218,9 @@ the server's own schema; a test that changes the schema without codegen is refus
    More info, then Run anyway. They type your address on the connect screen, pick a name and a
    character, and connect.
 4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`.
-5. **After you change the server**, publish with `--codegen` and send them a new export: an old
-   build is refused with a message saying so (above).
+5. **After you change the server**, publish with `--codegen`. Their build keeps working unless you
+   changed something it uses; the unit tests tell you before you publish (the release snapshot),
+   and if you did it on purpose, bump `compat` and send a new build.
 6. **What is NOT in the export:** editor tooling. Both presets leave out `addons/godot_ai/` (the
    AI bridge) and `addons/umf_export/`, the small editor plugin that takes the bridge's autoload
    out while exporting (DECISIONS #190). Another editor addon that adds an autoload goes in its
@@ -652,9 +656,10 @@ Name it in `shared/game.json`, `tools\publish.cmd --codegen`, restart.
 
 **A new game** starts from the TEMPLATE (`UMF Template`, a repo of the foundation with no genres; its
 main scene, `game/greybox_game.tscn`, plays the foundation's character on the greybox). Clone it,
-add genres, and take foundation updates with `git pull template main` (the steps, and where work
-goes: `docs/TEMPLATE_WORKFLOW.md`). After a pull that changed the server, `tools\publish.cmd
---codegen`: the bindings are each game's own and a pull keeps the game's copy. Fix the foundation
+add genres, and take foundation updates with `tools\update_from_template.cmd` (it runs `git pull
+template main`, then codegen and the unit suite; the steps, and where work
+goes: `docs/TEMPLATE_WORKFLOW.md`; the codegen is needed because the bindings are each game's own
+and a pull keeps the game's copy). Fix the foundation
 in the template, never in a game, or the fix stays in that game. What a repo is (its genres,
 database, state) is its `GAME.md`. A game made from a game with
 a genre you do not want: `python tools/template/strip_genre.py <name>`. The reference content every

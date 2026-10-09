@@ -423,3 +423,10 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The specs are in the repo**: `docs/CONTENT_TOOLING_SPEC.md` (workbenches, the Content Dock, hot tunables, the admin panel) and `docs/reviews/REVIEW_0.23.1.md`.
 - Codegen names the bindings `Umf` whatever the database is called; a pull keeps a game's own bindings (`.gitattributes`).
 - **A foundation HUD** (`foundation/ui/hud.tscn`): the greybox game shows its connection and round; a genre's `HUD` replaces it (#197). The sidecar no longer subscribes to fishing's tables by name.
+
+## 0.26.0 — old builds keep working on new servers
+- **The version check is a contract** (DECISIONS #198): a build checks only the tables and actions it uses, so a server that ADDED things still plays with older builds. A server that changed one is refused with the reason on the connect screen.
+- **`compat` in `shared/game.json`** (1 when absent): bump it for a deliberate break, and every older build is told to update.
+- **`tools\release.cmd`**: exports and tests both builds, records the build's contract in `shared/compat/` (commit it), and zips the client to `build/releases/`. The unit tests then fail while a change would strand a released build.
+- `tests/export_test.sh` plays the exported build against a newer server (it plays) and the next generation (refused).
+- Server: a new reducer `compat_generation_1`. Publish with `--codegen` and export once more: builds from before 0.26.0 compare fingerprints exactly and are refused by any new server (this is the last time).

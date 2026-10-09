@@ -20,3 +20,7 @@
 # merges them. Needs the driver once per clone: git config merge.ours.driver true
 # (docs/TEMPLATE_WORKFLOW.md, DECISIONS #196).
 spacetime_bindings/** merge=ours
+# What a repo IS (its GAME.md) and which game it is (shared/game.json: genres, database, compat) are
+# each game's own: a pull keeps the game's copy (same driver).
+GAME.md merge=ours
+shared/game.json merge=ours

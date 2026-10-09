@@ -4237,6 +4237,23 @@
 					}
 				},
 				{
+					"source_name": "compat_generation_1",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "consume_item",
 					"params": {
 						"elements": [
@@ -5824,6 +5841,12 @@
 						"Function": {
 							"source_name": "client_disconnected",
 							"canonical_name": "client_disconnected"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "compat_generation_1",
+							"canonical_name": "compat_generation_1"
 						}
 					},
 					{

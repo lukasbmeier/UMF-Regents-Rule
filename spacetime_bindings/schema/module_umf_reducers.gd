@@ -18,6 +18,10 @@ func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall
 func apply_damage(target_id: int, amount: float, source_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('apply_damage', [target_id, amount, source_id], [&'u64', &'f32', &'u64'], &'')
 
+
+func compat_generation_1() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('compat_generation_1', [], [], &'')
+
 ## 0. item_id: int [br]
 ## 1. qty: int [br]
 func consume_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
