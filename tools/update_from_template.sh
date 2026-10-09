@@ -25,7 +25,8 @@ before="$(git rev-parse HEAD)"
 git fetch -q template
 # The template's .gitattributes rules apply to THIS merge too: git reads the attributes already
 # checked out, so a rule arriving in the pull (GAME.md merge=ours) would otherwise miss it.
-git show template/main:.gitattributes > .git/info/attributes
+# (MSYS2 shells rewrite "a/b:c" as a Windows path list; these two stop that, here only.)
+MSYS2_ARG_CONV_EXCL="*" MSYS_NO_PATHCONV=1 git show "template/main:.gitattributes" > .git/info/attributes
 git merge --no-edit template/main
 if [ "$(git rev-parse HEAD)" = "$before" ]; then
   echo "Already up to date."
