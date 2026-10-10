@@ -134,17 +134,27 @@ func publish(then: Callable = Callable()) -> void:
 ## PLAY AS THIS (DECISIONS #207): run the game with `args`. Content changed since the last bake
 ## is published first (the server must know a new character's speed bound or an ability's range);
 ## content with problems is not played.
+##
+## Pieces made inside others (the Inspector's New on a link) are made their own first. Only a change
+## the SERVER reads (a baked file) needs a publish: a look, an animation, a fit only re-bakes, here,
+## and plays at once.
 func play_fresh(args: PackedStringArray) -> void:
+	for line: String in model.extract_all_inline():
+		_say("Play: made its own piece: " + line)
 	var found: Array[Dictionary] = model.check()
 	if not found.is_empty():
 		_say("Play: fix these first")
 		_say_problems(found)
 		return
-	if model.stale.is_empty():
+	var server_reads: Array[String] = model.stale.filter(func(p: String) -> bool: return not p.ends_with("manifest.json"))
+	if server_reads.is_empty():
+		if not model.stale.is_empty():
+			model.bake()   # only the record of what was baked from: the server's content is the same
+			bridge.files_changed()
 		_say("Play: %s" % " ".join(args))
 		bridge.play(args)
 		return
-	_say("Play: the content changed (%s): publishing first" % ", ".join(model.stale))
+	_say("Play: what the server reads changed (%s): publishing first" % ", ".join(server_reads))
 	publish(func() -> void: bridge.play(args))
 
 
@@ -272,7 +282,7 @@ func _build() -> void:
 	detail.add_child(buttons)
 	_workbench = Button.new()
 	_workbench.text = "Open workbench"
-	_workbench.tooltip_text = "Where this piece is made and tested against the real animations and level (a workbench)"
+	_workbench.tooltip_text = "Where this piece is made and tested (a workbench): the piece opens in the Inspector, the bench's tests, settings and buttons in the Workbench panel"
 	_workbench.disabled = true
 	_workbench.pressed.connect(func() -> void: open_in_workbench(_selected_path))
 	buttons.add_child(_workbench)

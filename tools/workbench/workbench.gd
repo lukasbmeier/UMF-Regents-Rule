@@ -162,6 +162,10 @@ func play_args() -> PackedStringArray:
 ## to this piece. [{name, label, tooltip}]
 func actions() -> Array[Dictionary]:
 	var out: Array[Dictionary] = bench_actions()
+	# Back to the character it is tried on, from wherever this bench was opened.
+	if tries_on_character() and character != null and not character.resource_path.is_empty() and not character.resource_path.contains("::"):
+		out.push_front({"name": &"open_character", "label": "Open character: %s" % character.display_name,
+			"tooltip": "%s on the character bench" % character.display_name})
 	if _item == null:
 		return out
 	if not play_args().is_empty():
@@ -192,6 +196,8 @@ func do_action(action: StringName) -> Dictionary:
 			return {}
 		&"play_as":
 			return {"play": play_args()}
+		&"open_character":
+			return {"open": character}
 	if String(action).begins_with("copy_into:"):
 		return {"edit": _item} if not duplicate_item(String(action).get_slice(":", 1), true).is_empty() else {}
 	return {}
@@ -335,12 +341,16 @@ func badge() -> Dictionary:
 	return {"level": "green", "sentences": []}
 
 
-## Save the piece to its file. OK, or the error.
+## Save the piece to its file (a piece made inside it, by the Inspector's New on a link, is saved as
+## its own first: DECISIONS #208). OK, or the error.
 func save() -> Error:
 	if _item == null or _item.resource_path.is_empty():
 		return ERR_UNCONFIGURED
+	var made: Array[String] = ContentLibrary.extract_inline(_item)
 	var err: Error = ResourceSaver.save(_item, _item.resource_path)
 	last_result = "saved %s" % _item.resource_path.get_file() if err == OK else "could not save: %s" % error_string(err)
+	if not made.is_empty():
+		last_result += "; made its own piece: " + "; ".join(made)
 	_update_status()
 	return err
 
@@ -477,13 +487,14 @@ func _refresh() -> void:
 func _update_status() -> void:
 	var b: Dictionary = badge()
 	var lines: PackedStringArray = PackedStringArray()
+	lines.append("THIS BENCH'S TESTS, SETTINGS AND BUTTONS: the Workbench panel (a tab beside the Inspector). The piece's own fields: the Inspector, when the piece is selected.")
 	lines.append("%s%s" % [String(b["level"]).to_upper(), "" if _item == null else "  %s %d %s" % [_item.content_type(), _item.id, _item.display_name]])
 	for s: String in b["sentences"] as Array:
 		lines.append("• " + s)
 	if not last_result.is_empty():
 		lines.append(last_result)
 	if read_only_here():
-		lines.insert(1, "the template's piece: read-only in this game (Copy into a genre to change it)")
+		lines.insert(2, "the template's piece: read-only in this game (Copy into a genre to change it)")
 	status = "\n".join(lines)
 	notify_property_list_changed()
 	panel_changed.emit()

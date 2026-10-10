@@ -218,6 +218,51 @@ static func create_copy(source: ContentDef, owner: String, display_name: String,
 	return _save_new(def, type, owner, display_name, error)
 
 
+## A PIECE MADE INSIDE ANOTHER becomes its own (DECISIONS #208): the Inspector's "New
+## MovementProfileDef" on a character's `movement_profile` makes the profile inside the character's
+## file, which the server cannot know (it has no id of its own). Every such link of `def` is saved as
+## its own piece in its type's folder for `def`'s owner (named after `def` and the field), and `def`
+## is linked to that file and saved. Returns one line per piece made; `error` gets what failed.
+static func extract_inline(def: ContentDef, error: Array[String] = []) -> Array[String]:
+	var made: Array[String] = []
+	if def == null or def.resource_path.is_empty():
+		return made
+	var owner: String = owner_of_path(def.resource_path)
+	var changed: bool = false
+	for p: Dictionary in def.get_property_list():
+		if int(p["usage"]) & PROPERTY_USAGE_STORAGE == 0:
+			continue
+		var v: Variant = def.get(p["name"])
+		if v is ContentDef and _inside(v as ContentDef):
+			var path: String = _save_inline(v as ContentDef, owner, "%s %s" % [def.display_name, String(p["name"]).replace("_profile", "")], error)
+			if not path.is_empty():
+				def.set(p["name"], load(path))
+				made.append("%s.%s -> %s" % [def.display_name, p["name"], path])
+				changed = true
+		elif v is Array:
+			var arr: Array = v
+			for i: int in arr.size():
+				if arr[i] is ContentDef and _inside(arr[i] as ContentDef):
+					var path: String = _save_inline(arr[i] as ContentDef, owner, "%s %s %d" % [def.display_name, String(p["name"]).trim_suffix("s"), i + 1], error)
+					if not path.is_empty():
+						arr[i] = load(path)
+						made.append("%s.%s[%d] -> %s" % [def.display_name, p["name"], i, path])
+						changed = true
+	if changed:
+		ResourceSaver.save(def, def.resource_path)
+	return made
+
+
+## Whether a piece lives inside another's file (no file of its own).
+static func _inside(d: ContentDef) -> bool:
+	return d.resource_path.is_empty() or d.resource_path.contains("::")
+
+
+static func _save_inline(d: ContentDef, owner: String, fallback_name: String, error: Array[String]) -> String:
+	var name: String = d.display_name if not d.display_name.strip_edges().is_empty() else fallback_name
+	return create_copy(d, owner, name, error)
+
+
 ## A name as a file name: lower case, words joined by underscores, nothing else.
 static func file_stem(display_name: String) -> String:
 	var out: String = ""

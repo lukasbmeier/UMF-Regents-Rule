@@ -119,6 +119,12 @@ func controls() -> Array[Dictionary]:
 	out.append({"name": &"paused", "label": "Paused", "kind": "toggle", "value": m.preview_paused})
 	out.append({"name": &"position", "label": "Position (0-1)", "kind": "number", "value": m.preview_fraction(), "min": 0.0, "max": 1.0, "step": 0.01,
 		"tooltip": "Scrub through the clip (pause first to hold a frame)"})
+	var cap: CapsuleShape3D = d.body_capsule()
+	out.append({"kind": "heading", "label": "Its body", "value": "The capsule drawn around it: what it collides with. Fit it, then fine-tune here (or in the Inspector)."})
+	out.append({"name": &"body_height", "label": "Body height (m)", "kind": "number", "value": cap.height if cap != null else 0.0,
+		"min": 0.05, "max": 10.0, "step": 0.01, "tooltip": "collision_height: from its feet to the top of its body"})
+	out.append({"name": &"body_radius", "label": "Body radius (m)", "kind": "number", "value": cap.radius if cap != null else 0.0,
+		"min": 0.02, "max": 5.0, "step": 0.01, "tooltip": "collision_radius: how wide its body is, from its middle"})
 	out.append({"kind": "heading", "label": "Animations the game needs", "value": _set_note(d)})
 	if _owns_set(d):
 		var options: Array = [[&"", "(none: borrows another)"]]
@@ -138,6 +144,20 @@ func controls() -> Array[Dictionary]:
 				"value": ref.anim_name if ref != null else &"", "options": options,
 				"tooltip": "The clip the game plays for %s%s" % [semantic, " (the game cannot do without it)" if AnimationSet.REQUIRED.has(semantic) else ""]})
 	out.append({"kind": "heading", "label": "How it plays", "value": _plays_note(d)})
+	if not read_only_here():
+		# Choose from the pieces there are (the Inspector's New on these fields makes a blank one
+		# inside the character instead, which is rarely what is meant).
+		var moves: Array = [[null, "(the game's default movement)"]]
+		for p: ContentDef in ContentLibrary.items(&"movement"):
+			moves.append([p, "%s  (%s)" % [p.display_name, ContentLibrary.owner_of_path(p.resource_path)]])
+		out.append({"name": &"movement", "label": "Movement", "kind": "choice", "value": d.movement_profile, "options": moves,
+			"tooltip": "The movement profile it moves by: any there is (New movement for it makes another)"})
+		var adds: Array = [[null, "(choose one to add)"]]
+		for a: ContentDef in ContentLibrary.items(&"ability"):
+			if not d.abilities.has(a):
+				adds.append([a, "%s  (%s)" % [a.display_name, ContentLibrary.owner_of_path(a.resource_path)]])
+		out.append({"name": &"add_ability", "label": "Add ability", "kind": "choice", "value": null, "options": adds,
+			"tooltip": "List an ability it can use (New ability for it makes another; remove one in the Inspector)"})
 	out.append({"name": &"seconds_each", "label": "Seconds each (tests)", "kind": "number", "value": seconds_each, "min": 0.1, "max": 3.0, "step": 0.1})
 	return out
 
@@ -165,6 +185,22 @@ func set_control(n: StringName, value: Variant) -> void:
 			_kept_fraction = float(value)
 		&"seconds_each":
 			seconds_each = float(value)
+		&"movement":
+			if d != null and not read_only_here():
+				d.movement_profile = value as MovementProfileDef
+				last_result = "moves by %s (Save keeps it)" % (d.movement_profile.display_name if d.movement_profile != null else "the game's default")
+		&"add_ability":
+			if d != null and not read_only_here() and value is AbilityDef and not d.abilities.has(value):
+				d.abilities.append(value as AbilityDef)
+				last_result = "can use %s (Save keeps it)" % (value as AbilityDef).display_name
+		&"body_height":
+			if d != null and not read_only_here():
+				d.collision_height = snappedf(float(value), 0.01)
+				_refresh()
+		&"body_radius":
+			if d != null and not read_only_here():
+				d.collision_radius = snappedf(float(value), 0.01)
+				_refresh()
 		_:
 			if String(n).begins_with("map:") and d != null and _owns_set(d):
 				var semantic: StringName = StringName(String(n).substr(4))
@@ -187,12 +223,16 @@ func bench_actions() -> Array[Dictionary]:
 	if scene != null and not ClipMatcher.model_clips(scene).is_empty():
 		out.append({"name": &"make_set", "label": "Animation set from the model",
 			"tooltip": "Make this character's own animation set from its model's clips (each matched by name; change any in the panel)"})
-	out.append({"name": &"fit_body", "label": "Fit the body to the model", "tooltip": "Set collision_height and collision_radius to the model's size"})
+	out.append({"name": &"fit_body", "label": "Fit the body to the model", "tooltip": "Size its body to the CORE of the model: the outermost bits (a beak, head feathers, a tail) are left out. Then fine-tune Body height and Body radius"})
 	if d.movement_profile == null:
 		out.append({"name": &"new_movement", "label": "New movement for it", "tooltip": "A movement profile for this character (starting as the game's default), linked to it, opened on its bench"})
 	else:
 		out.append({"name": &"open_movement", "label": "Open its movement", "tooltip": "%s, on the movement bench" % d.movement_profile.display_name})
 	out.append({"name": &"new_ability", "label": "New ability for it", "tooltip": "An ability this character can use, linked to it, opened on the ability bench"})
+	for i: int in d.abilities.size():
+		if d.abilities[i] != null:
+			out.append({"name": StringName("open_ability:%d" % i), "label": "Open %s" % d.abilities[i].display_name,
+				"tooltip": "%s, on the ability bench" % d.abilities[i].display_name})
 	return out
 
 
@@ -220,6 +260,9 @@ func do_action(action: StringName) -> Dictionary:
 				save()
 				return {"open": ab}
 			return {}
+	if String(action).begins_with("open_ability:"):
+		var i: int = int(String(action).get_slice(":", 1))
+		return {"open": d.abilities[i]} if i < d.abilities.size() and d.abilities[i] != null else {}
 	return super(action)
 
 
@@ -278,19 +321,57 @@ static func anim_path_for(d: EntityDefinition) -> String:
 	return root.path_join("anim/characters").path_join(d.resource_path.get_file())
 
 
-## FIT THE BODY TO THE MODEL: its capsule as tall as the model, as wide as it (within reason).
+## How much of the model's outline the body keeps: the top of the body is where all but the
+## highest few percent of the model's points are (a crest, ears), its width where all but the
+## outermost fifth are (a beak, a tail, arms held out). Luke: "I don't want its head feathers to be
+## part of the collision, or its beak".
+const FIT_HEIGHT_PERCENTILE: float = 0.95
+const FIT_WIDTH_PERCENTILE: float = 0.8
+
+
+## FIT THE BODY TO THE MODEL'S CORE: its capsule as tall as the model without its topmost bits, as
+## wide as it without its outermost (`body_core`). Fine-tuned after in the panel or the Inspector.
 func fit_body() -> void:
 	var d: EntityDefinition = item as EntityDefinition
 	var m: Mannequin = _mannequin()
 	if d == null or m.model == null:
 		return
-	var box: AABB = model_bounds(m.model)
-	if box.size == Vector3.ZERO:
+	var core: Vector2 = body_core(m.model)
+	if core == Vector2.ZERO:
 		return
-	d.collision_height = snappedf(box.size.y, 0.01)
-	d.collision_radius = snappedf(clampf(maxf(box.size.x, box.size.z) * 0.5, 0.05, box.size.y * 0.5), 0.01)
-	last_result = "body: %.2f m tall, %.2f m radius (Save keeps it)" % [d.collision_height, d.collision_radius]
+	d.collision_height = snappedf(core.x, 0.01)
+	d.collision_radius = snappedf(clampf(core.y, 0.02, core.x * 0.5), 0.01)
+	last_result = "body fitted to the model's core: %.2f m tall, %.2f m radius (the outermost bits left out; fine-tune Body height and Body radius; Save keeps it)" % [d.collision_height, d.collision_radius]
 	_refresh()
+
+
+## The model's core, as (height, radius): measured from its mesh points as it stands on the bench
+## (its offset, turn and scale applied), the height from the floor to the `FIT_HEIGHT_PERCENTILE`
+## point, the radius from the body's upright axis (where the capsule stands) to the
+## `FIT_WIDTH_PERCENTILE` point. Zero when it has no mesh.
+static func body_core(model: Node3D) -> Vector2:
+	var heights: PackedFloat32Array = PackedFloat32Array()
+	var reach: PackedFloat32Array = PackedFloat32Array()
+	var base: Transform3D = model.get_parent_node_3d().global_transform.affine_inverse() if model.get_parent_node_3d() != null else Transform3D.IDENTITY
+	for n: Node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = n as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var to_bench: Transform3D = base * mi.global_transform
+		for s: int in mi.mesh.get_surface_count():
+			var verts: PackedVector3Array = mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+			for v: Vector3 in verts:
+				var p: Vector3 = to_bench * v
+				heights.append(p.y)
+				reach.append(Vector2(p.x, p.z).length())
+	if heights.is_empty():
+		return Vector2.ZERO
+	heights.sort()
+	reach.sort()
+	var floor_y: float = heights[0]
+	var top: float = heights[mini(int(heights.size() * FIT_HEIGHT_PERCENTILE), heights.size() - 1)]
+	var wide: float = reach[mini(int(reach.size() * FIT_WIDTH_PERCENTILE), reach.size() - 1)]
+	return Vector2(top - floor_y, wide)
 
 
 ## Whether the character's animation set is its own to change here (not the template's in a game,
@@ -398,9 +479,10 @@ func fit_checks() -> Array[String]:
 			roundi(absf(box.position.y) * 100.0), "below" if box.position.y < 0.0 else "above", d.visual_offset.y - box.position.y])
 	var cap: CapsuleShape3D = d.body_capsule()
 	if cap != null:
-		var ratio: float = box.size.y / cap.height
+		var core: float = body_core(_mannequin().model).x
+		var ratio: float = core / cap.height
 		if absf(ratio - 1.0) > HEIGHT_TOLERANCE:
-			out.append("it is %.2f m tall and its body %.2f m: what others bump into is not what they see (Fit the body to the model, or visual_scale)" % [box.size.y, cap.height])
+			out.append("it is %.2f m tall (its core) and its body %.2f m: what others bump into is not what they see (Fit the body to the model, or visual_scale)" % [core, cap.height])
 	if last_facing == "backward":
 		out.append("its walk travels backward: it would moonwalk (visual_yaw_deg)")
 	return out

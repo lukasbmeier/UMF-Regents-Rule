@@ -598,8 +598,10 @@ status). Saving a template piece anyway is warned about in the Content panel's l
 2. **Fit it.** In the Inspector: `visual_offset` until its feet are on the floor, `visual_yaw_deg`
    until it faces the yellow arrow (the game's forward), `visual_scale` for a model made at another
    size. The pale capsule drawn AROUND it is its body (`collision_radius`, `collision_height`: what
-   it collides with and others bump into); **Fit the body to the model** sets them. The badge goes
-   amber, with the number to set, while the feet float or the body does not fit.
+   it collides with and others bump into); **Fit the body to the model** sizes it to the model's
+   CORE (a beak, head feathers, a tail left out), and **Body height** / **Body radius** beside it
+   fine-tune it, the capsule following. The badge goes amber, with the number to set, while the
+   feet float or the body does not fit.
 3. **Look at it.** The Workbench panel's **Animation** plays ANY clip: what the game plays for each
    thing (`locomotion.walk`), any clip of its set, or the model's own (`model: Walk`), with
    **Speed**, **Paused** and **Position** to hold or scrub a frame; **Look** wears any of its looks.
@@ -616,8 +618,13 @@ status). Saving a template piece anyway is warned about in the Content panel's l
    a character use only the abilities its kind's characters list; a kind that lists none may use
    any), and opens it on the ability bench, tried on that character.
 7. **Play as this.** On the character's bench (or a movement's) **Play as this** runs the game as it.
-   Content changed since the last bake is published first (the server needs a new speed or range);
-   content with a problem is not played until it is fixed.
+   A change the server reads (a speed, a range) is published first; a look, an animation or a fit
+   plays at once. Content with a problem is not played until it is fixed. A movement or ability
+   made INSIDE the character (the Inspector's New on its field) is saved as its own piece first.
+
+Moving between them: a bench opened from another shows **← Back to …** at the top of the panel;
+the movement and ability benches always offer **Open character: …**; the character bench offers
+**Open** for its movement and each ability.
 
 **Rules have no bench:** the running game is theirs. Change a default in the Inspector (Content
 panel, type `rules`); a game changes the template's with an entry in its genre's rule set

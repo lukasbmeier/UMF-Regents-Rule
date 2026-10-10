@@ -24,6 +24,16 @@ const OUT_DIR: String = "res://shared/content"
 const MANIFEST: String = "res://shared/content/manifest.json"
 
 
+## Where the bake writes: shared/content/, or under `ContentLibrary.root_override` when a suite has
+## put the content in a scratch project (a test that bakes must never write the real bake).
+static func out_dir() -> String:
+	return OUT_DIR if ContentLibrary.root_override.is_empty() else ContentLibrary.root_override.path_join("shared/content")
+
+
+static func manifest_path() -> String:
+	return out_dir().path_join("manifest.json")
+
+
 func _initialize() -> void:
 	var check: bool = OS.get_cmdline_user_args().has("--check")
 	var result: Dictionary = bake(not check)
@@ -109,7 +119,7 @@ static func bake(write: bool) -> Dictionary:
 			"items": items,
 		}
 		var text: String = JSON.stringify(doc, "\t", true) + "\n"
-		var out: String = "%s/%s/%s.json" % [OUT_DIR, g["owner"], g["type"]]
+		var out: String = "%s/%s/%s.json" % [out_dir(), g["owner"], g["type"]]
 		files[out] = text
 		outputs[_rel(out)] = {
 			"owner": g["owner"], "type": g["type"], "count": items.size(),
@@ -121,16 +131,16 @@ static func bake(write: bool) -> Dictionary:
 		"format": FORMAT,
 		"outputs": outputs,
 	}
-	files[MANIFEST] = JSON.stringify(manifest, "\t", true) + "\n"
+	files[manifest_path()] = JSON.stringify(manifest, "\t", true) + "\n"
 	var stale: Array[String] = []
 	for path: String in files:
 		if not FileAccess.file_exists(path) or FileAccess.get_file_as_string(path) != String(files[path]):
 			stale.append(_rel(path))
-	for old: String in _json_under(OUT_DIR):
+	for old: String in _json_under(out_dir()):
 		if not files.has(old):
 			stale.append(_rel(old) + " (no longer baked)")
 	if write and errors.is_empty():
-		for old: String in _json_under(OUT_DIR):
+		for old: String in _json_under(out_dir()):
 			if not files.has(old):
 				DirAccess.remove_absolute(ProjectSettings.globalize_path(old))
 		for path: String in files:

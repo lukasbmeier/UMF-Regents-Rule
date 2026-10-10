@@ -33,6 +33,7 @@ func _enter_tree() -> void:
 	_bench_dock.title = "Workbench"
 	_bench_dock.layout_key = "umf_workbench"
 	_bench_dock.default_slot = EditorDock.DOCK_SLOT_RIGHT_BL
+	_bench_dock.title_color = Color(1.0, 0.8, 0.3)
 	_bench_dock.add_child(scroll)
 	add_dock(_bench_dock)
 	scene_changed.connect(_on_scene_changed)
@@ -64,6 +65,10 @@ func _exit_tree() -> void:
 func _on_scene_changed(root: Node) -> void:
 	if _bench_panel != null:
 		_bench_panel.show_bench(root as Workbench)
+	# A bench's controls are only in this panel: bring it to the front whenever one opens (Luke's first
+	# try with it never found it, docked as a second tab behind another).
+	if root is Workbench and _bench_dock != null:
+		_bench_dock.make_visible()
 
 
 func _on_files_changed() -> void:

@@ -123,6 +123,17 @@ func bake() -> Dictionary:
 	return {"ok": problems.is_empty(), "problems": problems, "summary": r["summary"]}
 
 
+## Every piece made inside another, anywhere, made its own (`ContentLibrary.extract_inline`). One
+## line per piece made.
+func extract_all_inline() -> Array[String]:
+	var lines: Array[String] = []
+	for e: Dictionary in ContentLibrary.load_all():
+		var def: ContentDef = e["def"]
+		if def != null:
+			lines.append_array(ContentLibrary.extract_inline(def))
+	return lines
+
+
 ## Make a piece: returns its path, or "" with `error` filled in.
 func create(type: StringName, owner: String, display_name: String, error: Array[String] = []) -> String:
 	if display_name.strip_edges().is_empty():

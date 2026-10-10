@@ -496,3 +496,12 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **A character's abilities**: the server lets a character use only its kind's abilities (a kind listing none may use any).
 - Fixed: a model dragged in was named after its internal id; the two "Player" characters are now Player (plain capsule) and Humanoid.
 - Server: no table changes (the abilities rule is new logic). **Republish; restart the editor.**
+
+## 0.35.1 — workbench fixes from the second test
+- Opening a workbench now brings the **Workbench** panel to the front (its title in gold): Luke's second test never found it, docked as a tab behind "Godot AI" below the Inspector. The bench's own status and the Content panel's Open workbench say where its controls are.
+- **Fit the body to the model fits its core**: a beak, head feathers or a tail are left out. **Body height** and **Body radius** are in the panel beside it, to fine-tune with the capsule following.
+- **Moving between benches**: a bench opened from another has **← Back to …**; the movement and ability benches have **Open character: …**; the character bench has **Open** for each of its abilities.
+- **Play as this only publishes when the server's content changed**: a look, an animation or a fit plays at once (the bake is refreshed locally).
+- **Choose a character's movement and abilities from lists** in its bench (Movement, Add ability) instead of the Inspector's New, which made blank ones inside the character.
+- **A movement or ability made inside a character** (the Inspector's New on its field) is saved as its own piece and linked, on Save or Play, instead of Play refusing it.
+- The bake writes into a test's scratch project when there is one, never over the real bake.

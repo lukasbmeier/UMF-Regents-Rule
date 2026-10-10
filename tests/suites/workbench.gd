@@ -394,10 +394,23 @@ func _clip_model(dir: String) -> PackedScene:
 	body.name = "Body"
 	var box := BoxMesh.new()
 	box.size = Vector3(0.3, 0.5, 0.4)
+	box.subdivide_width = 6
+	box.subdivide_height = 6
+	box.subdivide_depth = 6
 	body.mesh = box
 	body.position = Vector3(0, 0.25, 0)
 	root.add_child(body)
 	body.owner = root
+	# A beak out in front and a crest on top: the outermost bits the body's fit leaves out.
+	for bit: Array in [["Beak", Vector3(0.04, 0.04, 0.3), Vector3(0, 0.4, -0.35)], ["Crest", Vector3(0.02, 0.3, 0.05), Vector3(0, 0.65, 0)]]:
+		var mi := MeshInstance3D.new()
+		mi.name = String(bit[0])
+		var b := BoxMesh.new()
+		b.size = bit[1]
+		mi.mesh = b
+		mi.position = bit[2]
+		root.add_child(mi)
+		mi.owner = root
 	var player := AnimationPlayer.new()
 	player.name = "AnimationPlayer"
 	var lib := AnimationLibrary.new()
@@ -474,9 +487,16 @@ func _run_workbenches_2() -> void:
 	_check(bench.badge()["level"] == "amber" and str(bench.fit_checks()).contains("its body 1.80 m"),
 		"a 0.5 m hen in a person's 1.8 m body is amber, and says so: %s" % str(bench.fit_checks()))
 	bench.fit_body()
-	_check(is_equal_approx(hen.collision_height, 0.5) and is_equal_approx(hen.collision_radius, 0.2)
-		and is_equal_approx((cap.mesh as CapsuleMesh).height, 0.5),
-		"Fit the body to the model: 0.5 m tall, 0.2 m radius, and the drawn body follows (%.2f, %.2f)" % [hen.collision_height, hen.collision_radius])
+	var whole: AABB = CharacterWorkbench.model_bounds((bench.get_node(^"Mannequin") as Mannequin).model)
+	_check(absf(hen.collision_height - 0.5) < 0.03 and hen.collision_radius > 0.12 and hen.collision_radius < 0.24
+		and absf((cap.mesh as CapsuleMesh).height - hen.collision_height) < 0.001 and whole.size.y > 0.75,
+		"Fit the body to the model fits its CORE: %.2f m tall, %.2f m radius, though the crest makes it %.2f m and the beak reaches 0.5 m out; the drawn body follows" % [hen.collision_height, hen.collision_radius, whole.size.y])
+	bench.set_control(&"body_height", 0.6)
+	bench.set_control(&"body_radius", 0.22)
+	_check(is_equal_approx(hen.collision_height, 0.6) and is_equal_approx(hen.collision_radius, 0.22) and is_equal_approx((cap.mesh as CapsuleMesh).height, 0.6),
+		"then fine-tuned from the panel's Body height and Body radius, the drawn body following")
+	hen.collision_height = 0.5
+	hen.collision_radius = 0.2
 	hen.visual_scale = 2.0
 	await get_tree().create_timer(0.3).timeout
 	var m: Mannequin = bench.get_node(^"Mannequin") as Mannequin
@@ -538,6 +558,20 @@ func _run_workbenches_2() -> void:
 	_check(bench.controls().any(func(c: Dictionary) -> bool: return c.get("name") == &"map:jump.land"),
 		"the panel lists what the game needs to choose for")
 
+	# The panel keeps a field it is drawing while only its value moves (a number being dragged).
+	var bridge0 := ContentDockBridge.new()
+	var panel0 := WorkbenchPanel.new()
+	get_tree().root.add_child(panel0)
+	panel0.setup(bridge0)
+	panel0.show_bench(bench)
+	var field: Control = panel0.control(&"body_height")
+	bench.set_control(&"body_height", 0.55)
+	await get_tree().process_frame
+	_check(field != null and is_instance_valid(field) and panel0.control(&"body_height") == field and is_equal_approx((field as SpinBox).value, 0.55),
+		"a setting whose value changes keeps its field (so dragging a number is not interrupted) and shows the new value")
+	hen.collision_height = 0.5
+	panel0.queue_free()
+
 	# THE WORKBENCH PANEL: the bench's tests, settings and actions, drawn from what it declares.
 	var bridge := ContentDockBridge.new()
 	var panel := WorkbenchPanel.new()
@@ -559,6 +593,40 @@ func _run_workbenches_2() -> void:
 		"New ability for it: made, listed on the character, opened")
 	var reread_hen: EntityDefinition = ResourceLoader.load(hen_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EntityDefinition
 	_check(reread_hen.movement_profile != null and reread_hen.abilities.size() == 1, "and both links are saved")
+	_check(bench.actions().any(func(a: Dictionary) -> bool: return a["name"] == &"open_ability:0" and String(a["label"]).begins_with("Open ")),
+		"the character offers each of its abilities to open")
+	# CHOOSE FROM WHAT THERE IS: a movement and an ability picked from lists, not made blank inside it.
+	var spare_path: String = ContentLibrary.create(&"ability", "foundation", "Spare", errors)
+	var spare: AbilityDef = load(spare_path) as AbilityDef
+	bench.set_control(&"movement", null)
+	_check(hen.movement_profile == null, "its movement can be set back to the game's default")
+	bench.set_control(&"movement", mv)
+	var add_ctl: Dictionary = {}
+	for c: Dictionary in bench.controls():
+		if c.get("name") == &"add_ability":
+			add_ctl = c
+	_check(not add_ctl.is_empty() and (add_ctl["options"] as Array).any(func(o: Array) -> bool: return o[0] == spare)
+		and not (add_ctl["options"] as Array).any(func(o: Array) -> bool: return o[0] == hen.abilities[0]),
+		"Add ability lists the abilities it does not have yet")
+	bench.set_control(&"add_ability", spare)
+	_check(hen.movement_profile == mv and hen.abilities.has(spare) and hen.abilities.size() == 2, "a movement and an ability chosen from the lists are linked")
+	hen.abilities.erase(spare)
+
+	# PIECES MADE INSIDE IT (the Inspector's New on a link) are made their own when it is saved.
+	hen.movement_profile = MovementProfileDef.new()
+	hen.movement_profile.run_speed = 4.0
+	hen.abilities.append(AbilityDef.new())
+	bench.save()
+	_check(not hen.movement_profile.resource_path.is_empty() and not hen.movement_profile.resource_path.contains("::")
+		and hen.movement_profile.resource_path.begins_with(root.path_join("foundation/content/movement")) and is_equal_approx(hen.movement_profile.run_speed, 4.0)
+		and not hen.abilities[1].resource_path.is_empty() and bench.last_result.contains("made its own piece"),
+		"a movement and an ability made inside the character are saved as their own pieces, numbers kept, and linked: %s" % bench.last_result)
+	var reread2: EntityDefinition = ResourceLoader.load(hen_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EntityDefinition
+	_check(reread2.movement_profile != null and reread2.movement_profile.resource_path == hen.movement_profile.resource_path,
+		"and the character's file links to them")
+	hen.abilities.resize(1)
+	hen.movement_profile = mv
+	ResourceSaver.save(hen, hen_path)
 	var baked: Dictionary = hen.to_bake()
 	_check(baked["abilities"] == [hen.abilities[0].id], "the character's abilities are baked for the server (%s)" % str(baked["abilities"]))
 
@@ -574,6 +642,23 @@ func _run_workbenches_2() -> void:
 		"its tests say what they play; it is tried on a character of your choice: %s" % ", ".join(labels))
 	panel.press_action(&"play_as")
 	_check(bridge.asked.has("play --movement=" + mv.resource_path), "Play as this: the game's character moving by it")
+	_check(mbench.actions().any(func(a: Dictionary) -> bool: return a["name"] == &"open_character" and String(a["label"]) == "Open character: Hen"),
+		"a bench tried on a character can always open that character")
+	panel.press_action(&"open_character")
+	_check(bridge.asked.back() == "open res://tools/workbench/character_workbench.tscn", "and does")
+	# BACK: the panel remembers the bench a bench was opened from.
+	var bridge2 := ContentDockBridge.new()
+	var panel2 := WorkbenchPanel.new()
+	get_tree().root.add_child(panel2)
+	panel2.setup(bridge2)
+	panel2.show_bench(bench)
+	panel2.press_action(&"open_movement")
+	panel2.show_bench(mbench)
+	var back: Button = panel2.find_child("Back", true, false) as Button
+	_check(back != null and back.visible and back.text.begins_with("← Back to Hen"), "a bench opened from another shows the way back: %s" % (back.text if back != null else "none"))
+	panel2.go_back()
+	_check(bridge2.asked.back() == "open res://tools/workbench/character_workbench.tscn", "and Back opens it")
+	panel2.queue_free()
 	mbench.replay_speed = 2.0
 	await mbench.run_named_test(&"accelerate")
 	_check(mbench.performing(), "a test is performed by the character")

@@ -31,6 +31,11 @@ var _controls: GridContainer
 var _actions: HFlowContainer
 var _result: Label
 var _redraw_queued: bool = false
+## The pieces benches were opened FROM (a character, then its movement): "Back" returns to the last.
+var _came_from: Array[ContentDef] = []
+var _back: Button
+## The settings drawn now, without their values (`_shape_of`).
+var _shape: String = ""
 const BADGE_COLOURS: Dictionary = {"red": Color(1.0, 0.42, 0.38), "amber": Color(1.0, 0.78, 0.3), "green": Color(0.45, 0.85, 0.5)}
 
 
@@ -46,42 +51,86 @@ func show_bench(b: Workbench) -> void:
 	if bench != null and is_instance_valid(bench) and bench.panel_changed.is_connected(_queue_redraw):
 		bench.panel_changed.disconnect(_queue_redraw)
 	bench = b
+	_shape = ""
+	# Back on the bench a later one was reached from (by Back, or its tab): that step is done.
+	if bench != null and bench.item != null and not _came_from.is_empty() and _came_from.back() == bench.item:
+		_came_from.pop_back()
 	if bench != null:
 		bench.panel_changed.connect(_queue_redraw)
 	redraw()
 
 
-## Draw everything again from the bench.
+## Draw everything again from the bench. When the bench's settings are the same ones as before (only
+## their values moved: a number being dragged), they are updated in place rather than rebuilt, so a
+## field being edited keeps its focus.
 func redraw() -> void:
 	_redraw_queued = false
-	for box: Node in [_tests, _controls, _actions]:
+	for box: Node in [_tests, _actions]:
 		for c: Node in box.get_children():
 			box.remove_child(c)
 			c.queue_free()
 	var on: bool = bench != null and is_instance_valid(bench)
+	var wanted: Array[Dictionary] = []
+	if on:
+		wanted = bench.controls()
+	var shape: String = _shape_of(wanted)
+	if shape == _shape and on:
+		_update_values(wanted)
+	else:
+		_shape = shape
+		for c: Node in _controls.get_children():
+			_controls.remove_child(c)
+			c.queue_free()
+		for c: Dictionary in wanted:
+			_add_control(c)
 	_pieces.visible = on
 	if not on:
+		_back.visible = false
 		_title.text = "No workbench open"
 		_badge.text = "Content panel (bottom): choose a piece, then Open workbench."
 		_badge.remove_theme_color_override(&"font_color")
 		_result.text = ""
 		return
 	var def: ContentDef = bench.item
+	_back.visible = not _came_from.is_empty()
+	if _back.visible:
+		_back.text = "← Back to %s (%s)" % [_came_from.back().display_name, _came_from.back().content_type()]
 	_title.text = "%s workbench%s" % [String(bench.content_type()).capitalize(),
 		"" if def == null else "  ·  %s (%s %d, %s)" % [def.display_name, def.content_type(), def.id, ContentLibrary.owner_of_path(def.resource_path)]]
 	var b: Dictionary = bench.badge()
 	_badge.text = String(b["level"]).to_upper() + ("" if (b["sentences"] as Array).is_empty() else ": " + "; ".join(b["sentences"] as Array))
 	if bench.read_only_here():
-		_badge.text += "\nThe template's piece: read-only in this game. Copy into a genre to change it."
+		_badge.text += "
+The template's piece: read-only in this game. Copy into a genre to change it."
 	_badge.add_theme_color_override(&"font_color", BADGE_COLOURS.get(b["level"], Color.WHITE))
 	_fill_pieces()
 	for t: StringName in bench.test_actions():
 		_button(_tests, "Test_" + String(t), bench.test_label(t), bench.test_info(t), press_test.bind(t))
-	for c: Dictionary in bench.controls():
-		_add_control(c)
 	for a: Dictionary in bench.actions():
 		_button(_actions, "Action_" + String(a["name"]).replace(":", "_"), String(a["label"]), String(a.get("tooltip", "")), press_action.bind(StringName(a["name"])))
 	_result.text = bench.last_result
+
+
+## What the settings are, without their values: the same shape is updated in place.
+static func _shape_of(cs: Array[Dictionary]) -> String:
+	var parts := PackedStringArray()
+	for c: Dictionary in cs:
+		parts.append("%s|%s|%s|%s" % [c.get("name", ""), c.get("kind", ""), c.get("label", ""), str((c.get("options", []) as Array).map(func(o: Variant) -> String: return str(o[1]) if o is Array else str(o)))])
+	return "
+".join(parts)
+
+
+func _update_values(cs: Array[Dictionary]) -> void:
+	for c: Dictionary in cs:
+		var ed: Control = control(StringName(c.get("name", "")))
+		if ed == null or ed.has_focus():
+			continue
+		ed.set_block_signals(true)
+		if ed is SpinBox:
+			(ed as SpinBox).value = float(c.get("value", 0.0))
+		elif ed is CheckBox:
+			(ed as CheckBox).button_pressed = bool(c.get("value", false))
+		ed.set_block_signals(false)
 
 
 ## Run a test, as its button does.
@@ -104,6 +153,8 @@ func press_action(a: StringName) -> void:
 	if asked.has("open"):
 		var other: ContentDef = asked["open"] as ContentDef
 		if other != null and not other.workbench_scene().is_empty():
+			if bench.item != null and not _came_from.has(bench.item):
+				_came_from.append(bench.item)
 			bridge.open_workbench(other.workbench_scene(), other)
 	redraw()
 
@@ -123,6 +174,15 @@ func play(args: PackedStringArray) -> void:
 		dock.play_fresh(args)
 	else:
 		bridge.play(args)
+
+
+## BACK to the piece the open bench was reached from (its own bench).
+func go_back() -> void:
+	if _came_from.is_empty():
+		return
+	var to: ContentDef = _came_from.pop_back()
+	if to != null and not to.workbench_scene().is_empty():
+		bridge.open_workbench(to.workbench_scene(), to)
 
 
 ## The piece of `index` in the bench's list (the dropdown).
@@ -236,6 +296,12 @@ func _build() -> void:
 	for c: Node in get_children():
 		c.queue_free()
 	custom_minimum_size = Vector2(260, 200)
+	_back = Button.new()
+	_back.name = "Back"
+	_back.visible = false
+	_back.tooltip_text = "Back to the bench this one was opened from"
+	_back.pressed.connect(go_back)
+	add_child(_back)
 	_title = Label.new()
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_title)

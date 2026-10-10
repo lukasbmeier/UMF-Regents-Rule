@@ -140,6 +140,36 @@ func _run_library_tests() -> void:
 	pdock.play_fresh(PackedStringArray(["--character=res://x.tres"]))
 	_check(pdock.published and bridge.asked.has("play --character=res://x.tres") and pdock.log_text().contains("publishing first"),
 		"content changed since the bake is published first, then played")
+	# A change the server does not read (a designer note; a character's look or fit) only re-bakes,
+	# here, and plays at once: no publish (DECISIONS #208).
+	_check(pdock.model.bake()["ok"] and FileAccess.file_exists(root.path_join("shared/content/manifest.json"))
+		and FileAccess.get_file_as_string("res://shared/content/manifest.json").contains("foundation/content"),
+		"(the suite bakes into its scratch project, never over the real bake)")
+	var noted: AbilityDef = ResourceLoader.load(a, "", ResourceLoader.CACHE_MODE_IGNORE) as AbilityDef
+	noted.designer_notes = "a note the server never reads"
+	ResourceSaver.save(noted, a)
+	pdock.published = false
+	pdock.play_fresh(PackedStringArray(["--character=res://y.tres"]))
+	_check(not pdock.published and bridge.asked.has("play --character=res://y.tres"),
+		"a change the server does not read plays at once, without publishing")
+	noted.cooldown_ms = 1234
+	ResourceSaver.save(noted, a)
+	pdock.play_fresh(PackedStringArray(["--character=res://z.tres"]))
+	_check(pdock.published and bridge.asked.has("play --character=res://z.tres"), "a change it does read is published first")
+	# A piece made inside another (the Inspector's New on a link) is made its own before playing.
+	var holder_dir: String = root.path_join("foundation/content/character")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(holder_dir))
+	var holder := EntityDefinition.new()
+	holder.display_name = "Holder"
+	holder.id = 50
+	holder.scene = load("res://foundation/entities/player.tscn") as PackedScene
+	holder.movement_profile = MovementProfileDef.new()
+	ResourceSaver.save(holder, holder_dir.path_join("holder.tres"))
+	pdock.play_fresh(PackedStringArray(["--character=res://w.tres"]))
+	var holder2: EntityDefinition = ResourceLoader.load(holder_dir.path_join("holder.tres"), "", ResourceLoader.CACHE_MODE_IGNORE) as EntityDefinition
+	_check(holder2.movement_profile != null and holder2.movement_profile.resource_path.begins_with(root.path_join("foundation/content/movement"))
+		and pdock.log_text().contains("made its own piece") and bridge.asked.has("play --character=res://w.tres"),
+		"a movement made inside a character is made its own piece before playing, and the game plays")
 	pdock.queue_free()
 	# THE TEMPLATE'S CONTENT IN A GAME: saving it is said to be lost at the next update.
 	dock.warn_if_templates(ResourceLoader.load(a) as ContentDef)
