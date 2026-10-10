@@ -60,7 +60,6 @@ const TIMED_PRESS_COMPONENT: String = "res://foundation/components/timed_press_c
 ## Why its body is hidden (`set_hidden_by`): reason -> true. Empty: shown.
 var _hidden_by: Dictionary = {}
 var _saved_layer: int = 0
-var _saved_mask: int = 0
 var _bind_timer: SceneTreeTimer = null
 
 ## THE LOOK THIS ENTITY WAS BUILT WEARING (DECISIONS #166): its `appearance` row's text when the
@@ -257,8 +256,12 @@ func _ensure_status_component() -> void:
 
 
 ## HIDE THE BODY for a reason (`&"offline"`: PresenceComponent; `&"status"`: an out player), or show
-## it again. It is drawn and collides only while no reason holds, so two of them never undo each
-## other (a player who is out AND has left stays hidden when either ends).
+## it again. It is drawn, and others collide with it, only while no reason holds, so two of them never
+## undo each other (a player who is out AND has left stays hidden when either ends).
+##
+## Hidden, nothing collides WITH it (its layer is cleared), but it still stands on the world (its
+## mask is kept): clearing the mask too let an out player's own game drop them through the floor,
+## into the void, and that is where they were when they came back in (Luke, 2026-10-10).
 func set_hidden_by(reason: StringName, hide: bool) -> void:
 	var was: bool = not _hidden_by.is_empty()
 	if hide:
@@ -271,12 +274,9 @@ func set_hidden_by(reason: StringName, hide: bool) -> void:
 	visible = not now
 	if now:
 		_saved_layer = collision_layer
-		_saved_mask = collision_mask
 		collision_layer = 0
-		collision_mask = 0
 	else:
 		collision_layer = _saved_layer
-		collision_mask = _saved_mask
 
 
 ## Whether its body is hidden, and why (for tests and the debug overlay).

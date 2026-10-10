@@ -528,3 +528,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - Rules: `foundation.press_credit_cap_ms` (120: the most lag forgiven; 0 judges on arrival), `press_lead_in_ms`, `press_sweep_easy_s`, `press_sweep_hard_s`.
 - Proven at a 150 ms round trip by a real client: pressing on the centre of its own bar scored 0.83; with no credit the same play scored 0.00.
 - Server: new tables `timed_press` (public, each player's own) and `client_rtt` (private), new reducers `challenge_seen` and `challenge_press`; no table changed shape. **Republish with codegen; restart the editor.**
+
+## 0.37.1 — fixes from trying Help up
+- **The target is what you stand at, not only what the crosshair is on** (DECISIONS #211): facing a downed teammate within reach offers "Hold E: Help up" while the camera looks elsewhere (third person, scouting while acting). The crosshair still wins when it is on something. Only things there is something to do with are offered nearby (a hold that applies, or what a genre's `nearby_wanted` accepts), so a crowd of players is never "the target". `InteractionComponent.targeting` (crosshair, nearby, both) and `facing_cone_deg`.
+- **An out player no longer falls into the void**: hiding a body cleared its collision mask too, so its own game dropped it through the floor, and coming back in left it there. Hidden, nothing collides with it, but it still stands on the world.
+- **Rules (admin): Go to** the spawn or beside any player (stuck, lost, or to try something on someone).
+- To use the Rules page from the editor's players: they are not the admin (the identity that published is). Make one an admin with `spacetime call <database> register_authority <identity> 0 0`.

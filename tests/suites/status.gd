@@ -236,6 +236,7 @@ func _run_presentation() -> void:
 	_check(plate.shown_tag() == "Downed" and ent.visible, "downed: its tag says so, its body is there")
 	st.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", null, _StatusRow.new(9201, StatusDef.OUT, 2)))
 	_check(not ent.visible and ent.collision_layer == 0 and plate.shown_tag() == "Out", "out: hidden, nothing collides with it")
+	_check(ent.collision_mask == 5, "but it still stands on the world (its mask kept: %d), or an out player falls through the floor" % ent.collision_mask)
 	ent.set_hidden_by(&"offline", true)   # what PresenceComponent does when they leave
 	st.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", null, _StatusRow.new(9201, StatusDef.NORMAL, 3)))
 	_check(not ent.visible and ent.hidden_reasons() == [&"offline"],

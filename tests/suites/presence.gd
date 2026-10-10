@@ -52,8 +52,8 @@ func _run_presence_tests() -> void:
 	await get_tree().process_frame
 	_check(body.visible and p.is_present(), "one who just disconnected is still there during the grace")
 	await get_tree().create_timer(0.45).timeout
-	_check(not body.visible and not p.is_present() and body.collision_layer == 0 and body.collision_mask == 0,
-		"after it, gone: hidden, and nothing collides with them or aims at them")
+	_check(not body.visible and not p.is_present() and body.collision_layer == 0 and body.collision_mask == 5,
+		"after it, gone: hidden, and nothing collides with them or aims at them (no layer); they still stand on the world (mask kept, DECISIONS #211)")
 	p.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"player", _PlayerRow.new(8801, false), _PlayerRow.new(8801, true)))
 	await get_tree().process_frame
 	_check(body.visible and p.is_present() and body.collision_layer == 3 and body.collision_mask == 5,

@@ -8,7 +8,8 @@ class_name RulesPanel extends PanelContainer
 ## Above the rules: TRY A STATUS on yourself (DECISIONS #206): pick one (downed, out, a genre's) and
 ## the server puts you in it for its own length, so a designer feels a crawl or a spectate without
 ## a script. TRY A SKILL CHECK (DECISIONS #210): a timed press, easy, middling or hard, to feel the
-## `press_*` rules while tuning them.
+## `press_*` rules while tuning them. GO TO: the world's spawn or beside another player (stuck, lost,
+## or to try something on someone: help them up).
 
 signal closed
 
@@ -17,6 +18,7 @@ var _status: Label
 var _rows: Dictionary = {}     # key -> { spin / check / edit, live: Label }
 var _built: bool = false
 var _statuses: OptionButton = null
+var _places: OptionButton = null
 
 
 func _ready() -> void:
@@ -52,6 +54,7 @@ func _build() -> void:
 	box.add_child(title)
 	box.add_child(_status_row())
 	box.add_child(_press_row())
+	box.add_child(_go_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -109,6 +112,61 @@ func _press_row() -> HBoxContainer:
 		b.pressed.connect(func() -> void: try_skill_check(d))
 		row.add_child(b)
 	return row
+
+
+## "Go to": the spawn, or beside each other player in this world, by teleport (a dev tool; the admin
+## may always).
+func _go_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = "Go to"
+	label.custom_minimum_size = Vector2(250, 0)
+	row.add_child(label)
+	_places = OptionButton.new()
+	_places.custom_minimum_size = Vector2(200, 0)
+	_places.pressed.connect(_fill_places)   # who is here changes: listed afresh each time it opens
+	_fill_places()
+	row.add_child(_places)
+	var go := Button.new()
+	go.text = "Go"
+	go.pressed.connect(func() -> void: go_to(_places.get_selected_id()))
+	row.add_child(go)
+	return row
+
+
+## The places to go: the spawn (-1), then every other player here, by name.
+func _fill_places() -> void:
+	var keep: int = _places.get_selected_id() if _places.item_count > 0 else -1
+	_places.clear()
+	_places.add_item("the spawn", -1)
+	var me: int = SpaceTimeSync.get_local_entity_id()
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if id == me or e == null or e.definition == null or e.definition.kind != 0:
+			continue
+		var plate: NameplateComponent = e.find_component(NameplateComponent) as NameplateComponent
+		_places.add_item("beside %s" % (plate.shown_name() if plate != null else "player %d" % id), id)
+	var at: int = _places.get_item_index(keep)
+	_places.select(at if at >= 0 else 0)
+
+
+## Teleport the local player to the world's spawn (`where` -1) or beside player `where`.
+func go_to(where: int) -> ReducerRequest:
+	var me: SpaceTimeEntity = EntityRegistry.get_entity(SpaceTimeSync.get_local_entity_id()) as SpaceTimeEntity
+	var to: Vector3 = Vector3.ZERO
+	if where < 0:
+		var cfg: RefCounted = SpaceTimeSync.get_row(&"world_config", me.world_id if me != null else 0)
+		to = cfg.get(&"spawn") as Vector3 if cfg != null and cfg.get(&"spawn") is Vector3 else Vector3.ZERO
+	else:
+		var other: Node3D = EntityRegistry.get_entity(where) as Node3D
+		if other == null:
+			return null
+		to = other.global_position + Vector3(1.2, 0.0, 0.0)
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"teleport", [to], ["vector3[f32,f32,f32]"])
+	req.settled.connect(func(r: ReducerRequest) -> void:
+		if is_instance_valid(self) and _status != null:
+			_status.text = ("went to %s" % to) if r.is_ok() else ("go to: %s" % r.error_message))
+	return req
 
 
 ## A timed press for the local player at `difficulty` (the authority's `issue_challenge`, kind 1).

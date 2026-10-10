@@ -365,6 +365,14 @@ func _step_status() -> void:
 	_check(_movement.get_epoch() == epoch, "the server took every crawling step it predicted (no clamp)")
 	var big_now: int = _reconciles.filter(func(e: float) -> bool: return e > 0.05).size()
 	_check(big_now == big_before, "and no correction over 5 cm (%d)" % (big_now - big_before))
+	# OUT: its body hidden from the world, and still standing on it (Luke fell into the void, 2026-10-10).
+	SpaceTimeSync.call_reducer(&"set_status", [_entity.entity_id, StatusDef.OUT, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	_check(await _until(func() -> bool: return st.status() == StatusDef.OUT, "the out row"), "the server puts the player out")
+	var floor_y: float = _body.global_position.y
+	await _frames(90)
+	print("   out for 1.5 s: hidden %s, from y %.3f to %.3f" % [_entity.is_hidden(), floor_y, _body.global_position.y])
+	_check(_entity.is_hidden() and absf(_body.global_position.y - floor_y) < 0.05,
+		"out: hidden, and still on the floor 1.5 s later (y %.3f -> %.3f)" % [floor_y, _body.global_position.y])
 	SpaceTimeSync.call_reducer(&"set_status", [_entity.entity_id, StatusDef.NORMAL, 4294967295, ""], ["u64", "u8", "u32", "string"])
 	_check(await _until(func() -> bool: return st.status() == StatusDef.NORMAL, "the normal row"), "and back to normal")
 	await _frames(10)

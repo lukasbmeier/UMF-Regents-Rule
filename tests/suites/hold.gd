@@ -13,6 +13,7 @@ func run() -> void:
 	await _run_genre()
 	await _run_component()
 	await _run_key_and_prompt()
+	await _run_nearby()
 	_run_every_entity_has_one()
 	HoldDef.clear_cache()
 
@@ -275,6 +276,48 @@ func _run_key_and_prompt() -> void:
 	_check(not prompt.visible, "nothing to hold where it looks: no prompt")
 	prompt.queue_free()
 	for e: SpaceTimeEntity in [me, down, up]:
+		EntityRegistry.unregister(e.entity_id)
+		e.queue_free()
+	await get_tree().process_frame
+
+
+func _run_nearby() -> void:
+	print("== hold: the target nearby, not only under the crosshair (DECISIONS #211) ==")
+	var me: SpaceTimeEntity = _registered(9811, "res://foundation/content/character/humanoid.tres", StatusDef.NORMAL, true)
+	var ic: InteractionComponent = me.find_component(InteractionComponent) as InteractionComponent
+	me.global_position = Vector3.ZERO   # facing -Z (no camera, no input here: the body's own way)
+	var front: SpaceTimeEntity = _registered(9812, "res://foundation/content/character/humanoid.tres", StatusDef.DOWNED, false)
+	front.global_position = Vector3(0.3, 0.0, -1.5)
+	ic.scan()
+	_check(ic.get_target() == 9812, "a downed teammate 1.5 m in front is the target with no crosshair on them (%d)" % ic.get_target())
+	_check(String(HoldPrompt.state_for(me)["text"]) == "Hold E: Help up", "and the prompt offers to help them up")
+	front.global_position = Vector3(0.0, 0.0, 1.5)
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "behind: not the target")
+	front.global_position = Vector3(0.0, 0.0, -4.0)
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "out of reach (4 m, the reach is %.1f): not the target" % ic.range_m())
+	var standing: SpaceTimeEntity = _registered(9813, "res://foundation/content/character/npc.tres", StatusDef.NORMAL, false)
+	standing.global_position = Vector3(0.0, 0.0, -1.0)
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "someone standing in front, with nothing to do with them: not the target")
+	ic.nearby_wanted = func(id: int) -> bool: return id == 9813
+	ic.scan()
+	_check(ic.get_target() == 9813, "unless a genre wants it offered (a nest, a gate)")
+	ic.nearby_wanted = Callable()
+	front.global_position = Vector3(-0.2, 0.0, -2.2)
+	var near: SpaceTimeEntity = _registered(9814, "res://foundation/content/character/humanoid.tres", StatusDef.DOWNED, false)
+	near.global_position = Vector3(0.6, 0.0, -1.2)
+	ic.scan()
+	_check(ic.get_target() == 9814, "two downed in front: the nearer")
+	near.visible = false
+	ic.scan()
+	_check(ic.get_target() == 9812, "one that is hidden (out) is passed over")
+	ic.targeting = InteractionComponent.Targeting.CROSSHAIR
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "and with the crosshair only, nothing (none is under it)")
+	ic.targeting = InteractionComponent.Targeting.BOTH
+	for e: SpaceTimeEntity in [me, front, standing, near]:
 		EntityRegistry.unregister(e.entity_id)
 		e.queue_free()
 	await get_tree().process_frame

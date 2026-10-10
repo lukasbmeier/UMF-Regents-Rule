@@ -158,6 +158,9 @@ func _run_rules_page() -> void:
 	var req: ReducerRequest = page.try_skill_check(0.5)
 	_check(req != null and req.reducer_name == &"issue_challenge" and req.args.size() == 3 and int(req.args[1]) == ChallengeModel.KIND_TIMED_PRESS
 		and is_equal_approx(float(req.args[2]), 0.5), "a skill check is a timed press for yourself: issue_challenge(me, 1, 0.5)")
+	_check(labels.has("Go"), "and Go to: the spawn or beside a player")
+	req = page.go_to(-1)
+	_check(req != null and req.reducer_name == &"teleport", "Go to the spawn teleports the admin there")
 	req = page.try_status(StatusDef.DOWNED)
 	_check(req != null and req.reducer_name == &"set_status" and int(req.args[1]) == StatusDef.DOWNED and int(req.args[2]) == 0,
 		"and Try a status puts you in one for its own length: set_status(me, 2, 0)")

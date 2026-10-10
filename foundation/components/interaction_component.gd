@@ -18,6 +18,14 @@ class_name InteractionComponent extends SpaceTimeComponent
 ## then measured from the PLAYER to the target, which is the same distance the server checks
 ## (`INTERACT_RANGE` in module.rs) — the prompt has to promise only what the server will allow.
 ##
+## NEARBY, NOT ONLY UNDER THE CROSSHAIR (DECISIONS #211). In third person a player looks around while
+## they act, and standing at a downed teammate, facing them, must be enough: Luke had to swing the
+## camera onto one to see "Hold E: Help up". `targeting`: the crosshair's target, else the NEARBY one
+## (within reach, inside `facing_cone_deg` of where the character or the camera faces, nearest
+## first). Nearby counts only what there is something to do with: an entity a hold applies to, or
+## one `nearby_wanted` accepts (a genre's), so a crowd of players standing around is never "the
+## target". The crosshair still wins when it is on something.
+##
 ## HOLDS (DECISIONS #209). Where a press would start a hold (`HoldDef.find`: the target's kind and
 ## status, this player's kind, the verb: helping a downed teammate up), the key is HELD: down begins
 ## it (`begin_interact`), up lets go (`end_interact`). Everything else is a press, as before.
@@ -34,6 +42,13 @@ const NO_TARGET: int = -1
 const GROUP_INTERACTABLE: StringName = &"interactable"
 const ACTION_INTERACT: StringName = &"interact"
 
+enum Targeting { CROSSHAIR, NEARBY, BOTH }
+## How the target is chosen: what the crosshair is on, what the player is near and facing, or the
+## crosshair's and else the nearby one.
+@export var targeting: Targeting = Targeting.BOTH
+## How far either side of where the character (or the camera) faces something nearby may be.
+@export_range(0.0, 180.0, 1.0, "suffix:deg") var facing_cone_deg: float = 70.0
+
 ## How far (m) the prompt reaches. 0 or less: the server's own range, `shared/rules.json`
 ## `interact_range_m` (DECISIONS #154). Never more than that, or prompts appear for things the
 ## server will refuse.
@@ -49,6 +64,10 @@ func range_m() -> float:
 var _target: int = NO_TARGET
 ## A hold was asked for and not yet let go of: the key's release lets go.
 var _holding_sent: bool = false
+
+## A genre's own nearby targets: `func(entity_id: int) -> bool`, true for an entity the interact key
+## should offer when the player stands at it (a nest, a gate). Holds are offered without it.
+var nearby_wanted: Callable = Callable()
 
 ## A genre's own verb for the interact key: `func(target_id: int) -> bool`, returning true if it
 ## handled the press — in which case the foundation's `interact` reducer is NOT called. Fishing
@@ -198,7 +217,70 @@ func announce_interact(target_id: int) -> void:
 
 ## Recompute the target. Split out of `_physics_process` so a test can step it deliberately.
 func scan() -> void:
-	_set_target(_raycast_target())
+	var id: int = _raycast_target() if targeting != Targeting.NEARBY else NO_TARGET
+	if id == NO_TARGET and targeting != Targeting.CROSSHAIR:
+		id = nearby_target()
+	_set_target(id)
+
+
+## THE NEARBY TARGET: of the entities there is something to do with (`_wanted_nearby`), the one within
+## reach (measured as the server measures it) and inside `facing_cone_deg` of where the character or
+## the camera faces, nearest and most squarely in front first. NO_TARGET when there is none.
+func nearby_target() -> int:
+	var body: CharacterBody3D = entity.body if entity != null else null
+	if body == null or not body.is_inside_tree():
+		return NO_TARGET
+	var facings: Array[Vector3] = _facings()
+	var best: int = NO_TARGET
+	var best_score: float = INF
+	for id: int in EntityRegistry.all_entity_ids():
+		if id == entity_id:
+			continue
+		var node: Node3D = EntityRegistry.get_entity(id) as Node3D
+		if node == null or not node.is_inside_tree() or not node.visible:
+			continue
+		var to: Vector3 = node.global_position - body.global_position
+		var d: float = to.length()
+		if d > range_m():
+			continue
+		var flat: Vector3 = Vector3(to.x, 0.0, to.z)
+		var angle: float = 0.0
+		if flat.length() > 0.05:
+			angle = INF
+			for f: Vector3 in facings:
+				angle = minf(angle, rad_to_deg(f.angle_to(flat)))
+		if angle > facing_cone_deg or not _wanted_nearby(id):
+			continue
+		var score: float = d + angle / 90.0
+		if score < best_score:
+			best_score = score
+			best = id
+	return best
+
+
+## Where the player faces, flat: the character's way, and the camera's.
+func _facings() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var input: LocalInputComponent = ent.find_component(LocalInputComponent) as LocalInputComponent if ent != null else null
+	if input != null:
+		var yaw: float = input.get_body_yaw()
+		out.append(Vector3(-sin(yaw), 0.0, -cos(yaw)))
+	var cam: Camera3D = _camera()
+	if cam != null and cam.is_inside_tree():
+		var f: Vector3 = -cam.global_transform.basis.z
+		f.y = 0.0
+		if f.length() > 0.01:
+			out.append(f.normalized())
+	if out.is_empty():
+		out.append(-(entity as Node3D).global_transform.basis.z if entity is Node3D else Vector3.FORWARD)
+	return out
+
+
+func _wanted_nearby(id: int) -> bool:
+	if hold_for(id) != null:
+		return true
+	return nearby_wanted.is_valid() and bool(nearby_wanted.call(id))
 
 
 func _raycast_target() -> int:

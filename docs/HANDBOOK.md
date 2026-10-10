@@ -648,7 +648,8 @@ is lost. A hold of your own: pick what it is done to (`done_to`: characters), wh
 (`done_by`; none: anyone), the target's status it needs (`only_when`), `seconds_with` (alone, then
 two, three together), what stops it, whether a half-done one keeps its progress (a nest), and the
 status the target is left in when done. Try it in the game with two players (one downed with **Try a
-status on yourself**). In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
+status on yourself**; Rules also has **Go to** a player). Standing at the target and facing it is
+enough: the crosshair need not be on it (`InteractionComponent.targeting`). In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
 (a nest cooling while nobody sits on it) and hears it done in `on_hold_completed`; its bots hold with
 `begin_interact_as`.
 
