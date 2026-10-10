@@ -48,11 +48,17 @@ pub(crate) fn issue_challenge_internal(
         expires_at: ctx.timestamp + TimeDuration::from_micros(ttl_micros),
         payload,
     });
+    if kind == crate::challenge::KIND_TIMED_PRESS {
+        start_timed_press(ctx, &row);   // its sweep (DECISIONS #210)
+    }
     Ok(row.id)
 }
 
 /// The genre layer's way to start a Challenge. Wraps the internal helper so `game/` never
 /// depends on module-private functions — the hook surface stays small and documented.
+///
+/// A SERVER-TIMED PRESS since 0.37.0 (DECISIONS #210): the player presses, the server judges when.
+/// (The timing bar it used to issue was judged from where the client said it stopped: an outcome.)
 pub fn issue_challenge_for(
     ctx: &ReducerContext,
     entity_id: u64,
@@ -67,6 +73,27 @@ pub fn issue_challenge_for(
         payload,
         CHALLENGE_TTL_MICROS,
     )
+}
+
+/// Score a played FOUNDATION challenge (a timing bar, a timed press) for its player, and hand it to the
+/// genres (`on_challenge_succeeded`). After the challenge is closed.
+pub(crate) fn award_foundation_challenge(ctx: &ReducerContext, ch: &Challenge, quality: f32) {
+    // ROUND, not truncate. `as i64` truncates, so a quality of 0.99999994 — one ULP
+    // below a perfect play, which is all it takes for a press to be a hair off the
+    // centre after a decimal round-trip — scored 99 instead of 100. Losing a whole
+    // point to float noise is indistinguishable from a bug to a player.
+    let score = (quality * 100.0f32).round() as i64;
+    let members: Vec<SessionMember> = ctx.db.session_member().entity_id().filter(ch.entity_id).collect();
+    for mut m in members {
+        m.score += score;
+        m.coins += score / 10;
+        ctx.db.session_member().id().update(m);
+    }
+    log::info!("challenge {}: quality {quality:.4} -> score +{score}", ch.id);
+    // Hand the result to the genre. It decides what the play MEANT — a fish, an ore,
+    // nothing at all. Deliberately after the generic award and deliberately infallible:
+    // a genre bug must not roll back a legitimate play.
+    crate::game::on_challenge_succeeded(ctx, ch, quality);
 }
 
 /// Start a challenge of the GENRE's own kind (>= `KIND_GENRE_FROM`), with its own lifetime.
@@ -125,6 +152,8 @@ pub fn submit_challenge_result(
     if ch.entity_id != player.entity_id {
         return Err("not your challenge".into());
     }
+    // A timed press is never submitted (DECISIONS #210): its presses are `challenge_press`. One that
+    // is, is consumed and judged malformed below, so no outcome a client reports is ever accepted.
 
     // A GENRE KIND is the genre's to judge and to pay out. It is resolved while the challenge
     // still exists — before `on_challenge_closed` — because a genre keeps its own rows beside a
@@ -148,6 +177,7 @@ pub fn submit_challenge_result(
     }
 
     ctx.db.challenge().id().delete(challenge_id);
+    forget_press(ctx, challenge_id);   // a timed press submitted as a bar: consumed, judged below as malformed
     // Whatever happens next — an award, an expiry, a rejected submission — this challenge is
     // over, and a genre that keeps something beside it has to hear so on every path.
     crate::game::on_challenge_closed(ctx, &ch);
@@ -158,30 +188,7 @@ pub fn submit_challenge_result(
     }
 
     match crate::challenge::validate_challenge(ch.kind, ch.seed, ch.difficulty, &result) {
-        Some(quality) => {
-            // Award through the same authority-free internal path a genre would use.
-            // ROUND, not truncate. `as i64` truncates, so a quality of 0.99999994 — one ULP
-            // below a perfect play, which is all it takes for a press to be a hair off the
-            // centre after a decimal round-trip — scored 99 instead of 100. Losing a whole
-            // point to float noise is indistinguishable from a bug to a player.
-            let score = (quality * 100.0f32).round() as i64;
-            let members: Vec<SessionMember> = ctx
-                .db
-                .session_member()
-                .entity_id()
-                .filter(ch.entity_id)
-                .collect();
-            for mut m in members {
-                m.score += score;
-                m.coins += score / 10;
-                ctx.db.session_member().id().update(m);
-            }
-            log::info!("challenge {challenge_id}: quality {quality:.4} -> score +{score}");
-            // Hand the result to the genre. It decides what the play MEANT — a fish, an ore,
-            // nothing at all. Deliberately after the generic award and deliberately infallible:
-            // a genre bug must not roll back a legitimate play.
-            crate::game::on_challenge_succeeded(ctx, &ch, quality);
-        }
+        Some(quality) => award_foundation_challenge(ctx, &ch, quality),
         None => {
             // Malformed or out-of-range submission: a client bug or a probe. Consumed, no award.
             log::warn!(
@@ -208,7 +215,9 @@ pub fn prune_challenges(ctx: &ReducerContext, _sched: ChallengePruneSchedule) ->
         .collect();
     for ch in stale {
         ctx.db.challenge().id().delete(ch.id);
+        forget_press(ctx, ch.id);
         crate::game::on_challenge_closed(ctx, &ch);
     }
+    prune_presses(ctx);
     Ok(())
 }

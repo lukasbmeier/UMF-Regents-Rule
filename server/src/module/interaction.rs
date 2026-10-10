@@ -59,12 +59,14 @@ pub fn interact(ctx: &ReducerContext, target_id: u64, verb: u8) -> Result<(), St
         entity_kind::RESOURCE_NODE => {
             // Difficulty rises with the verb so a genre can offer "careful" vs "quick"
             // without another reducer. Payload names the node so the client can theme it.
+            // A SERVER-TIMED PRESS (DECISIONS #210): judged by the server's clock, not by where the
+            // client says it stopped the marker.
             let difficulty = if verb > 0 { 0.75f32 } else { 0.35f32 };
             let payload = format!("{{\"node\":{target_id},\"verb\":{verb}}}");
             issue_challenge_internal(
                 ctx,
                 player.entity_id,
-                crate::challenge::KIND_TIMING_BAR,
+                crate::challenge::KIND_TIMED_PRESS,
                 difficulty,
                 payload,
                 CHALLENGE_TTL_MICROS,

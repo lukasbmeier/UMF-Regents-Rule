@@ -7,7 +7,8 @@ class_name RulesPanel extends PanelContainer
 ##
 ## Above the rules: TRY A STATUS on yourself (DECISIONS #206): pick one (downed, out, a genre's) and
 ## the server puts you in it for its own length, so a designer feels a crawl or a spectate without
-## a script.
+## a script. TRY A SKILL CHECK (DECISIONS #210): a timed press, easy, middling or hard, to feel the
+## `press_*` rules while tuning them.
 
 signal closed
 
@@ -50,6 +51,7 @@ func _build() -> void:
 	title.text = "Rules (admin) — live on THIS server, for every player"
 	box.add_child(title)
 	box.add_child(_status_row())
+	box.add_child(_press_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -89,6 +91,34 @@ func _status_row() -> HBoxContainer:
 	go.pressed.connect(func() -> void: try_status(_statuses.get_selected_id()))
 	row.add_child(go)
 	return row
+
+
+## "Try a skill check": a timed press (DECISIONS #210) for the admin's own player, easy to hard, to
+## feel the press rules (`press_*`) as they are tuned.
+func _press_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = "Try a skill check"
+	label.custom_minimum_size = Vector2(250, 0)
+	row.add_child(label)
+	for pair: Array in [["Easy", 0.0], ["Middling", 0.5], ["Hard", 1.0]]:
+		var b := Button.new()
+		b.text = String(pair[0])
+		b.tooltip_text = "A timed press at difficulty %.1f: press the interact key while the marker is in the zone, three times" % float(pair[1])
+		var d: float = float(pair[1])
+		b.pressed.connect(func() -> void: try_skill_check(d))
+		row.add_child(b)
+	return row
+
+
+## A timed press for the local player at `difficulty` (the authority's `issue_challenge`, kind 1).
+func try_skill_check(difficulty: float) -> ReducerRequest:
+	var me: int = SpaceTimeSync.get_local_entity_id()
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"issue_challenge", [me, ChallengeModel.KIND_TIMED_PRESS, difficulty], ["u64", "u8", "f32"])
+	req.settled.connect(func(r: ReducerRequest) -> void:
+		if is_instance_valid(self) and _status != null:
+			_status.text = "a skill check: press %s in the zone" % HoldPrompt.key_name() if r.is_ok() else "skill check: %s" % r.error_message)
+	return req
 
 
 ## Put the local player in status `n`, for its own length (the reducer: `set_status`).

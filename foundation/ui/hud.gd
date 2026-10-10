@@ -1,6 +1,6 @@
 class_name FoundationHud extends Control
 ## THE FOUNDATION'S HUD: one status line, what the connection is doing and then the local player's
-## round (phase, time left, score). The greybox game carries it as `HUD`; a genre that brings its
+## round (phase, time left, score), the hold prompt (`HoldPrompt`) and the timed press's bar (`TimingBar`). The greybox game carries it as `HUD`; a genre that brings its
 ## own `HUD` scene (`genre.tres` `scenes`) replaces it, the way a genre's entity definition replaces
 ## the foundation's for the same kind (Boot, DECISIONS #197).
 ##
@@ -18,6 +18,10 @@ var _status_c: StatusComponent = null
 
 
 func _ready() -> void:
+	# The hold prompt and its bar (DECISIONS #209): it finds the local player itself.
+	add_child(HoldPrompt.new())
+	# The timed press's bar (DECISIONS #210), likewise.
+	add_child(TimingBar.new())
 	SignalBus.entity_spawned.connect(_on_entity_spawned)
 	SignalBus.entity_despawned.connect(_on_entity_despawned)
 	_status.text = connection_line()

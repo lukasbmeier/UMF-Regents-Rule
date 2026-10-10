@@ -52,6 +52,12 @@ func why_no_workbench() -> String:
 	return ""
 
 
+## One line about it worth seeing at a glance in the Content panel (a hold: how long it takes with
+## each count of doers), or "".
+func summary() -> String:
+	return ""
+
+
 ## A new piece was just made (the dock's New, a bench's New From File): fill in what a fresh one
 ## should start with. Called before it is first saved.
 func on_created() -> void:

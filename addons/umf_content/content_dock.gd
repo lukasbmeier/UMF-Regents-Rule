@@ -474,6 +474,8 @@ func _select(path: String) -> void:
 	var def: ContentDef = load(path) as ContentDef if ResourceLoader.exists(path) else null
 	_title.text = "%s  %d  %s" % [def.content_type(), def.id, def.display_name] if def != null else path
 	var lines: PackedStringArray = PackedStringArray([path])
+	if def != null and not def.summary().is_empty():
+		lines.append(def.summary())
 	for p: Dictionary in model.problems_for(path):
 		lines.append("⚠ " + String(p["text"]))
 	_workbench.disabled = _workbench_of(path).is_empty()

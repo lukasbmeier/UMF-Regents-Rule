@@ -18,6 +18,25 @@ func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall
 func apply_damage(target_id: int, amount: float, source_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('apply_damage', [target_id, amount, source_id], [&'u64', &'f32', &'u64'], &'')
 
+## 0. target_id: int [br]
+## 1. verb: int [br]
+func begin_interact(target_id: int, verb: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('begin_interact', [target_id, verb], [&'u64', &'u8'], &'')
+
+## 0. actor_id: int [br]
+## 1. target_id: int [br]
+## 2. verb: int [br]
+func begin_interact_as(actor_id: int, target_id: int, verb: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('begin_interact_as', [actor_id, target_id, verb], [&'u64', &'u64', &'u8'], &'')
+
+## 0. challenge_id: int [br]
+func challenge_press(challenge_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('challenge_press', [challenge_id], [&'u64'], &'')
+
+## 0. challenge_id: int [br]
+func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('challenge_seen', [challenge_id], [&'u64'], &'')
+
 
 func compat_generation_1() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('compat_generation_1', [], [], &'')
@@ -54,6 +73,14 @@ func despawn_entity(entity_id: int) -> SpacetimeDBReducerCall:
 ## 0. offset: Vector3 [br]
 func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('dev_nudge', [offset], [&'vector3[f32,f32,f32]'], &'')
+
+
+func end_interact() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('end_interact', [], [], &'')
+
+## 0. actor_id: int [br]
+func end_interact_as(actor_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('end_interact_as', [actor_id], [&'u64'], &'')
 
 ## 0. entity_id: int [br]
 ## 1. item_def_id: int [br]

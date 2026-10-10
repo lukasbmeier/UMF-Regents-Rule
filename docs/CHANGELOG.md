@@ -511,3 +511,20 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - The bench's preview of a model's own clips (`model/Walk`) keeps working when its skeleton is renamed for the game's (`Skeleton3D`).
 - **The panel's choices follow the bench**: switching to another piece left "Tried on" showing the last one's character (Chicken, from Peck) while the new ability, which no character listed, was on the humanoid.
 - No server change: nothing to republish for the template; restart the editor.
+
+## 0.36.0 — hold to interact (foundation systems milestone 3)
+- **Hold E to do something** (DECISIONS #209): where a press would start a hold, the interact key is held. Down begins it, up lets go; others can join, and it goes faster together. Moving away from where you began, being hurt, a status that cannot act, or leaving the game lets go; when everyone has let go the progress is lost, or kept (a half-laid nest).
+- **Holds are content** (`HoldDef`, Content panel type `hold`): which press starts it (a verb on these characters, by those, while the target is in this status), seconds to finish alone, with two, with three..., what stops it, and the status the target is left in when done. One press, one hold: two that one press could start are refused (by the bake and by the build), unless a genre's replaces the foundation's.
+- **Help up** (foundation): hold E on a downed player or NPC, 4 s alone, 2.5 s with two, 2 s with three; back on their feet when done.
+- The HUD says "Hold E: Help up" and draws the bar, moving smoothly between the server's updates; the doer holds the hold's pose.
+- Rules: `foundation.hold_speed` (every hold's pace, live: 0.5 = twice as long), `foundation.hold_leave_slack_m` (how far past the reach before a doer lets go).
+- For a genre: `may_hold` (refuse), `hold_rate` (another speed, negative to undo: a nest cooling), `on_hold_completed`, `on_hold_left`; bots and NPCs hold through `begin_interact_as` / `end_interact_as` (an authority's).
+- Server: two new public tables, `hold_progress` and `hold_member` (no table changed shape), and new reducers. **Republish with codegen; restart the editor.**
+
+## 0.37.0 — server-timed skill checks (foundation systems milestone 4)
+- **A skill check judged by the server's clock** (DECISIONS #210): a marker sweeps across a bar, the player presses (the interact key) while it is in the target, three times. The player's game sends only "pressed"; the server works out where the marker was when they saw it, from when the press arrived less half their quickest round trip (which the server measured itself: the game acknowledges each check the moment it arrives), at most a rule's cap. Lag no longer costs a good press, and a cheat cannot claim one.
+- The game draws the marker from the server's clock and shows each press's result at once (its prediction), replaced by the server's a round trip later: Great, Good, Miss. `TimingBar` on the HUD.
+- Using a resource node, and a genre's `issue_challenge_for`, now start a timed press (challenge kind 1). The old timing bar (kind 0, judged from where the game said it stopped: an outcome) is still accepted from old builds; nothing issues it.
+- Rules: `foundation.press_credit_cap_ms` (120: the most lag forgiven; 0 judges on arrival), `press_lead_in_ms`, `press_sweep_easy_s`, `press_sweep_hard_s`.
+- Proven at a 150 ms round trip by a real client: pressing on the centre of its own bar scored 0.83; with no credit the same play scored 0.00.
+- Server: new tables `timed_press` (public, each player's own) and `client_rtt` (private), new reducers `challenge_seen` and `challenge_press`; no table changed shape. **Republish with codegen; restart the editor.**

@@ -372,6 +372,38 @@
 			}
 		},
 		{
+			"name": "ClientRtt",
+			"namespace": [],
+			"source_name": "ClientRtt",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "min_ms",
+					"type": "U32"
+				},
+				{
+					"name": "samples",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"client_rtt"
+			],
+			"table_name": "client_rtt",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				false
+			]
+		},
+		{
 			"name": "Correction",
 			"namespace": [],
 			"source_name": "Correction",
@@ -572,6 +604,131 @@
 			]
 		},
 		{
+			"name": "HoldMember",
+			"namespace": [],
+			"source_name": "HoldMember",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "hold_id",
+					"type": "U64"
+				},
+				{
+					"name": "target_id",
+					"type": "U64"
+				},
+				{
+					"name": "hold",
+					"type": "U32"
+				},
+				{
+					"name": "since",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "from",
+					"type": "Vector3",
+					"type_idx": 3
+				}
+			],
+			"table_names": [
+				"hold_member"
+			],
+			"table_name": "hold_member",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
+			]
+		},
+		{
+			"name": "HoldProgress",
+			"namespace": [],
+			"source_name": "HoldProgress",
+			"struct": [
+				{
+					"name": "hold_id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "hold",
+					"type": "U32"
+				},
+				{
+					"name": "progress",
+					"type": "F32"
+				},
+				{
+					"name": "rate",
+					"type": "F32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "doers",
+					"type": "U8"
+				},
+				{
+					"name": "state",
+					"type": "U8"
+				}
+			],
+			"table_names": [
+				"hold_progress"
+			],
+			"table_name": "hold_progress",
+			"primary_key": 0,
+			"primary_key_name": "hold_id",
+			"is_public": [
+				true
+			]
+		},
+		{
+			"name": "HoldTick",
+			"namespace": [],
+			"source_name": "HoldTick",
+			"struct": [
+				{
+					"name": "scheduled_id",
+					"type": "U64"
+				},
+				{
+					"name": "scheduled_at",
+					"type": "__schedule_at__"
+				}
+			],
+			"table_names": [
+				"hold_tick"
+			],
+			"table_name": "hold_tick",
+			"primary_key": 0,
+			"primary_key_name": "scheduled_id",
+			"is_public": [
+				false
+			],
+			"schedule": {
+				"reducer_name": "tick_holds",
+				"schedule_at_col": 1.0
+			}
+		},
+		{
 			"name": "HotRuleRow",
 			"namespace": [],
 			"source_name": "HotRuleRow",
@@ -627,7 +784,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 19
+					"type_idx": 23
 				},
 				{
 					"name": "received_at",
@@ -1215,6 +1372,82 @@
 			}
 		},
 		{
+			"name": "TimedPress",
+			"namespace": [],
+			"source_name": "TimedPress",
+			"struct": [
+				{
+					"name": "challenge_id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "starts_at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "period_ms",
+					"type": "U32"
+				},
+				{
+					"name": "half_width",
+					"type": "F32"
+				},
+				{
+					"name": "rounds",
+					"type": "U8"
+				},
+				{
+					"name": "seen_ms",
+					"type": "U32"
+				},
+				{
+					"name": "at_ms",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "I32"
+				},
+				{
+					"name": "positions",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "F32"
+				},
+				{
+					"name": "qualities",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "F32"
+				},
+				{
+					"name": "credit_ms",
+					"type": "U32"
+				},
+				{
+					"name": "done",
+					"type": "Bool"
+				}
+			],
+			"table_names": [
+				"timed_press"
+			],
+			"table_name": "timed_press",
+			"primary_key": 0,
+			"primary_key_name": "challenge_id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "WorldConfig",
 			"namespace": [],
 			"source_name": "WorldConfig",
@@ -1383,6 +1616,74 @@
 			"return_data": {}
 		},
 		{
+			"name": "begin_interact",
+			"wire_name": "begin_interact",
+			"namespace": [],
+			"local_name": "begin_interact",
+			"params": [
+				{
+					"name": "target_id",
+					"type": "U64"
+				},
+				{
+					"name": "verb",
+					"type": "U8"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "begin_interact_as",
+			"wire_name": "begin_interact_as",
+			"namespace": [],
+			"local_name": "begin_interact_as",
+			"params": [
+				{
+					"name": "actor_id",
+					"type": "U64"
+				},
+				{
+					"name": "target_id",
+					"type": "U64"
+				},
+				{
+					"name": "verb",
+					"type": "U8"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "challenge_press",
+			"wire_name": "challenge_press",
+			"namespace": [],
+			"local_name": "challenge_press",
+			"params": [
+				{
+					"name": "challenge_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "challenge_seen",
+			"wire_name": "challenge_seen",
+			"namespace": [],
+			"local_name": "challenge_seen",
+			"params": [
+				{
+					"name": "challenge_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "check_authorities",
 			"wire_name": "check_authorities",
 			"namespace": [],
@@ -1529,6 +1830,29 @@
 			"return_data": {}
 		},
 		{
+			"name": "end_interact",
+			"wire_name": "end_interact",
+			"namespace": [],
+			"local_name": "end_interact",
+			"params": [],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "end_interact_as",
+			"wire_name": "end_interact_as",
+			"namespace": [],
+			"local_name": "end_interact_as",
+			"params": [
+				{
+					"name": "actor_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "expire_status",
 			"wire_name": "expire_status",
 			"namespace": [],
@@ -1537,7 +1861,7 @@
 				{
 					"name": "timer",
 					"type": "StatusExpiry",
-					"type_idx": 15
+					"type_idx": 16
 				}
 			],
 			"return_type": "",
@@ -1752,7 +2076,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 21
+					"type_idx": 25
 				}
 			],
 			"return_type": "",
@@ -2058,7 +2382,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 19
+					"type_idx": 23
 				}
 			],
 			"return_type": "",
@@ -2080,6 +2404,22 @@
 			"return_data": {}
 		},
 		{
+			"name": "tick_holds",
+			"wire_name": "tick_holds",
+			"namespace": [],
+			"local_name": "tick_holds",
+			"params": [
+				{
+					"name": "_tick",
+					"type": "HoldTick",
+					"type_idx": 20
+				}
+			],
+			"return_type": "",
+			"return_data": {},
+			"is_scheduled": true
+		},
+		{
 			"name": "tick_movement",
 			"wire_name": "tick_movement",
 			"namespace": [],
@@ -2088,7 +2428,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 32
+					"type_idx": 36
 				}
 			],
 			"return_type": "",
@@ -2139,7 +2479,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 35
+					"type_idx": 40
 				}
 			],
 			"return_type": "",
@@ -2387,11 +2727,30 @@
 			}
 		},
 		{
+			"name": "client_rtt",
+			"wire_name": "client_rtt",
+			"namespace": [],
+			"local_name": "client_rtt",
+			"type_idx": 11,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "client_rtt_entity_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false
+		},
+		{
 			"name": "correction",
 			"wire_name": "correction",
 			"namespace": [],
 			"local_name": "correction",
-			"type_idx": 11,
+			"type_idx": 12,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2410,7 +2769,7 @@
 			"wire_name": "dev_tools",
 			"namespace": [],
 			"local_name": "dev_tools",
-			"type_idx": 12,
+			"type_idx": 13,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2429,7 +2788,7 @@
 			"wire_name": "entity",
 			"namespace": [],
 			"local_name": "entity",
-			"type_idx": 13,
+			"type_idx": 14,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2453,7 +2812,7 @@
 			"wire_name": "equip_state",
 			"namespace": [],
 			"local_name": "equip_state",
-			"type_idx": 14,
+			"type_idx": 15,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2477,7 +2836,7 @@
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 16,
+			"type_idx": 17,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2497,11 +2856,90 @@
 			"is_public": true
 		},
 		{
+			"name": "hold_member",
+			"wire_name": "hold_member",
+			"namespace": [],
+			"local_name": "hold_member",
+			"type_idx": 18,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "hold_member_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "hold_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "hold_progress",
+			"wire_name": "hold_progress",
+			"namespace": [],
+			"local_name": "hold_progress",
+			"type_idx": 19,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "hold_id",
+			"unique_indexes": [
+				{
+					"name": "hold_id",
+					"type": "U64",
+					"constraint_name": "hold_progress_hold_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "hold_tick",
+			"wire_name": "hold_tick",
+			"namespace": [],
+			"local_name": "hold_tick",
+			"type_idx": 20,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "scheduled_id",
+			"unique_indexes": [
+				{
+					"name": "scheduled_id",
+					"type": "U64",
+					"constraint_name": "hold_tick_scheduled_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false,
+			"schedule": {
+				"reducer_name": "tick_holds",
+				"schedule_at_col": 1.0
+			}
+		},
+		{
 			"name": "hot_rule",
 			"wire_name": "hot_rule",
 			"namespace": [],
 			"local_name": "hot_rule",
-			"type_idx": 17,
+			"type_idx": 21,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -2520,7 +2958,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 18,
+			"type_idx": 22,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2548,7 +2986,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 20,
+			"type_idx": 24,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2572,7 +3010,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 21,
+			"type_idx": 25,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -2591,7 +3029,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 22,
+			"type_idx": 26,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2619,7 +3057,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 23,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2643,7 +3081,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 24,
+			"type_idx": 28,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2690,7 +3128,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 25,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -2714,7 +3152,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 26,
+			"type_idx": 30,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -2738,7 +3176,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 27,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2762,7 +3200,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 28,
+			"type_idx": 32,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -2781,7 +3219,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 29,
+			"type_idx": 33,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -2805,7 +3243,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 30,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -2833,7 +3271,7 @@
 			"wire_name": "status_expiry",
 			"namespace": [],
 			"local_name": "status_expiry",
-			"type_idx": 15,
+			"type_idx": 16,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -2861,7 +3299,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 31,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -2885,7 +3323,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 32,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -2904,11 +3342,35 @@
 			}
 		},
 		{
+			"name": "timed_press",
+			"wire_name": "timed_press",
+			"namespace": [],
+			"local_name": "timed_press",
+			"type_idx": 37,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "challenge_id",
+			"unique_indexes": [
+				{
+					"name": "challenge_id",
+					"type": "U64",
+					"constraint_name": "timed_press_challenge_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "world_config",
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 33,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -2927,7 +3389,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 34,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -2985,12 +3447,16 @@
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
+		"ClientRtt": "UmfClientRtt",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"HealthStateRow": "UmfHealthStateRow",
+		"HoldMember": "UmfHoldMember",
+		"HoldProgress": "UmfHoldProgress",
+		"HoldTick": "UmfHoldTick",
 		"HotRuleRow": "UmfHotRuleRow",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
@@ -3007,6 +3473,7 @@
 		"SessionMember": "UmfSessionMember",
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
+		"TimedPress": "UmfTimedPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"MovementWrite": "UmfMovementWrite"
@@ -3053,12 +3520,16 @@
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
+		"ClientRtt": "UmfClientRtt",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
 		"Entity": "UmfEntity",
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"HealthStateRow": "UmfHealthStateRow",
+		"HoldMember": "UmfHoldMember",
+		"HoldProgress": "UmfHoldProgress",
+		"HoldTick": "UmfHoldTick",
 		"HotRuleRow": "UmfHotRuleRow",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
@@ -3075,6 +3546,7 @@
 		"SessionMember": "UmfSessionMember",
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
+		"TimedPress": "UmfTimedPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"MovementWrite": "UmfMovementWrite"
@@ -3757,6 +4229,55 @@
 					},
 					{
 						"name": {
+							"some": "min_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "samples"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
 							"some": "epoch"
 						},
 						"algebraic_type": {
@@ -4059,6 +4580,231 @@
 				"elements": [
 					{
 						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "hold_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "target_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "hold"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "since"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "from"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "hold_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "hold"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "progress"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "rate"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "doers"
+						},
+						"algebraic_type": {
+							"U8": []
+						}
+					},
+					{
+						"name": {
+							"some": "state"
+						},
+						"algebraic_type": {
+							"U8": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "scheduled_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "scheduled_at"
+						},
+						"algebraic_type": {
+							"Sum": {
+								"variants": [
+									{
+										"name": {
+											"some": "Interval"
+										},
+										"algebraic_type": {
+											"Product": {
+												"elements": [
+													{
+														"name": {
+															"some": "__time_duration_micros__"
+														},
+														"algebraic_type": {
+															"I64": []
+														}
+													}
+												]
+											}
+										}
+									},
+									{
+										"name": {
+											"some": "Time"
+										},
+										"algebraic_type": {
+											"Product": {
+												"elements": [
+													{
+														"name": {
+															"some": "__timestamp_micros_since_unix_epoch__"
+														},
+														"algebraic_type": {
+															"I64": []
+														}
+													}
+												]
+											}
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "key"
 						},
 						"algebraic_type": {
@@ -4143,7 +4889,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 19.0
+							"Ref": 23.0
 						}
 					},
 					{
@@ -5061,6 +5807,125 @@
 									}
 								]
 							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "challenge_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "starts_at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "period_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "half_width"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "rounds"
+						},
+						"algebraic_type": {
+							"U8": []
+						}
+					},
+					{
+						"name": {
+							"some": "seen_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at_ms"
+						},
+						"algebraic_type": {
+							"Array": {
+								"I32": []
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "positions"
+						},
+						"algebraic_type": {
+							"Array": {
+								"F32": []
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "qualities"
+						},
+						"algebraic_type": {
+							"Array": {
+								"F32": []
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "credit_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "done"
+						},
+						"algebraic_type": {
+							"Bool": []
 						}
 					}
 				]

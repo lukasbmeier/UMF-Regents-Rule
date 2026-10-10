@@ -51,6 +51,60 @@
 					"number": 1.0,
 					"text": "",
 					"unit": ""
+				},
+				{
+					"key": "foundation.hold_leave_slack_m",
+					"kind": "number",
+					"max": 5.0,
+					"min": 0.0,
+					"number": 0.5,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "foundation.hold_speed",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.05,
+					"number": 1.0,
+					"text": "",
+					"unit": "x"
+				},
+				{
+					"key": "foundation.press_credit_cap_ms",
+					"kind": "integer",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 120.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "foundation.press_lead_in_ms",
+					"kind": "integer",
+					"max": 5000.0,
+					"min": 0.0,
+					"number": 800.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "foundation.press_sweep_easy_s",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.3,
+					"number": 2.4,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.press_sweep_hard_s",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.3,
+					"number": 1.2,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

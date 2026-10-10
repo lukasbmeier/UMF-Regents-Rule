@@ -200,6 +200,9 @@ pub(crate) fn damage_entity(ctx: &ReducerContext, target_id: u64, amount: f32, s
     h.last_damage_source = source_id;
     h.last_change_server_tick = current_tick(ctx, h.world_id);
     ctx.db.health_state().entity_id().update(h);
+    if amount > 0.0 {
+        hurt(ctx, target_id);   // a hold that stops when its doer is hurt (DECISIONS #209)
+    }
     Ok(())
 }
 
@@ -393,8 +396,10 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     let open: Vec<Challenge> = ctx.db.challenge().entity_id().filter(entity_id).collect();
     for ch in open {
         ctx.db.challenge().id().delete(ch.id);
+        forget_press(ctx, ch.id);
         crate::game::on_challenge_closed(ctx, &ch);
     }
+    ctx.db.client_rtt().entity_id().delete(entity_id);
     let memberships: Vec<u64> =
         ctx.db.session_member().entity_id().filter(entity_id).map(|m| m.id).collect();
     for id in memberships {
@@ -402,4 +407,5 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     }
     ctx.db.lobby_member().entity_id().delete(entity_id);
     forget_status(ctx, entity_id);
+    forget_holds(ctx, entity_id);
 }

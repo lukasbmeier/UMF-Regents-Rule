@@ -17,6 +17,10 @@ class_name InteractionComponent extends SpaceTimeComponent
 ## behind the player and can never hit anything they are looking at. The range that decides is
 ## then measured from the PLAYER to the target, which is the same distance the server checks
 ## (`INTERACT_RANGE` in module.rs) — the prompt has to promise only what the server will allow.
+##
+## HOLDS (DECISIONS #209). Where a press would start a hold (`HoldDef.find`: the target's kind and
+## status, this player's kind, the verb: helping a downed teammate up), the key is HELD: down begins
+## it (`begin_interact`), up lets go (`end_interact`). Everything else is a press, as before.
 
 ## The entity now under the crosshair, or NO_TARGET. Fires only on CHANGE.
 signal target_changed(entity_id: int)
@@ -43,6 +47,8 @@ func range_m() -> float:
 	return interaction_range if interaction_range > 0.0 else Rules.interact_range()
 
 var _target: int = NO_TARGET
+## A hold was asked for and not yet let go of: the key's release lets go.
+var _holding_sent: bool = false
 
 ## A genre's own verb for the interact key: `func(target_id: int) -> bool`, returning true if it
 ## handled the press — in which case the foundation's `interact` reducer is NOT called. Fishing
@@ -107,9 +113,13 @@ func request_interact(override_verb: int = -1) -> ReducerRequest:
 
 func _physics_process(_delta: float) -> void:
 	scan()
-	if _target != NO_TARGET and InputMap.has_action(ACTION_INTERACT) \
-			and Input.is_action_just_pressed(ACTION_INTERACT):
-		press_interact()
+	if not InputMap.has_action(ACTION_INTERACT):
+		return
+	if Input.is_action_just_pressed(ACTION_INTERACT) and not press_timed():
+		if _target != NO_TARGET:
+			press_interact()
+	if _holding_sent and not Input.is_action_pressed(ACTION_INTERACT):
+		release_interact()
 
 
 ## The interact key went down on the current target. Public so a playtest can press it without
@@ -128,8 +138,56 @@ func press_interact() -> void:
 	# timing bar, or a refusal it has already decided.
 	if interact_handler.is_valid() and bool(interact_handler.call(_target)):
 		return
+	if hold_for(_target) != null:
+		begin_hold(_target)
+		return
 	announce_interact(_target)
 	request_interact()
+
+
+## While a timed press is being played (DECISIONS #210), the key presses IT, not what is in front of
+## the player. True when it did.
+func press_timed() -> bool:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var tp: TimedPressComponent = ent.find_component(TimedPressComponent) as TimedPressComponent if ent != null else null
+	if tp == null or not tp.wants_press():
+		return false
+	tp.press()
+	return true
+
+
+## THE HOLD a press on `target_id` would start (DECISIONS #209), or null: the target's kind and
+## status as this client knows them, this player's kind, this component's verb. The server checks
+## the same (`hold::find`).
+func hold_for(target_id: int, override_verb: int = -1) -> HoldDef:
+	var target: SpaceTimeEntity = EntityRegistry.get_entity(target_id) as SpaceTimeEntity
+	var me: SpaceTimeEntity = entity as SpaceTimeEntity
+	if target == null or target.definition == null or me == null or me.definition == null:
+		return null
+	var st: StatusComponent = target.find_component(StatusComponent) as StatusComponent
+	var status: int = st.status() if st != null else StatusDef.NORMAL
+	return HoldDef.find(target.definition.kind, override_verb if override_verb >= 0 else verb, status, me.definition.kind)
+
+
+## Begin holding on `target_id`: the server starts the hold, or joins this player to it. The key's
+## release lets go (`release_interact`).
+func begin_hold(target_id: int, override_verb: int = -1) -> ReducerRequest:
+	_holding_sent = true
+	var v: int = override_verb if override_verb >= 0 else verb
+	return SpaceTimeSync.call_reducer(&"begin_interact", [target_id, v], ["u64", "u8"])
+
+
+## The interact key went up: let go of what this player is holding. Public so a playtest can let go.
+func release_interact() -> ReducerRequest:
+	if not _holding_sent:
+		return null
+	_holding_sent = false
+	return SpaceTimeSync.call_reducer(&"end_interact", [], [])
+
+
+## Whether a hold was asked for and the key is still down.
+func is_holding_key() -> bool:
+	return _holding_sent
 
 
 ## Tell presentation a verb is starting NOW. The foundation calls this for its own `interact`;

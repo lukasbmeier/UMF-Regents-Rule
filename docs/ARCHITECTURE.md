@@ -10,6 +10,15 @@
 
 **Two buses.** Entity-local signals for component ↔ component (Movement → AnimationTree). Global `SignalBus` for low-frequency, `entity_id`-first, UI-facing events only. UI filters on `EntityRegistry.local_entity_id`.
 
+**No validator accepts an outcome a client reports (DECISIONS #210).** A skill check has two shapes.
+REPLAY: the client sends its inputs and the server re-simulates them from the seed (the fishing
+fight). SERVER-TIMED PRESS: the client sends only "pressed" (`challenge_press`) and the server judges
+when, by its own clock: the press's arrival less half the player's quickest round trip, which the
+server measured itself (the client acknowledges each one on arrival, `challenge_seen`), capped by a
+rule. The client draws and predicts from the same sweep and the server's clock; the server's
+judgement replaces the prediction. A minigame that cannot be one of these two is not a minigame the
+server can trust.
+
 **SpacetimeDB has no physics engine, so motion authority is pluggable.** Tier A: the module trusts the client within a radius (no geometry). Sidecar: a headless Godot process running the same `MovementModel` + `move_and_slide` is the motion authority and writes back through authority-only reducers (`docs/SIDECAR_SPEC.md`). The client is identical under both; the seam is `input_queue` in, `movement_state` out.
 
 ## 2. Autoloads (order = boot sequence)

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="HoldDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/hold_def.gd" id="1_hold"]
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="2_entdef"]
+[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="3_humanoid"]
+[ext_resource type="Resource" path="res://foundation/content/character/npc.tres" id="4_npc"]
+[ext_resource type="Resource" path="res://foundation/content/status/downed.tres" id="5_downed"]
+[ext_resource type="Resource" path="res://foundation/content/status/normal.tres" id="6_normal"]
+
+[resource]
+script = ExtResource("1_hold")
+done_to = Array[ExtResource("2_entdef")]([ExtResource("3_humanoid"), ExtResource("4_npc")])
+only_when = ExtResource("5_downed")
+seconds_with = PackedFloat32Array(4, 2.5, 2)
+then_status = ExtResource("6_normal")
+prompt = "Help up"
+pose = &"interact"
+id = 0
+display_name = "Help up"
+designer_notes = "Hold E on a downed teammate (or NPC) to get them back on their feet: 4 s alone, faster together. Moving away or being hurt lets go, and the help is lost."

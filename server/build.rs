@@ -24,6 +24,8 @@ mod genre_build;
 mod content;
 #[path = "build/status_rules.rs"]
 mod status_rules;
+#[path = "build/hold_rules.rs"]
+mod hold_rules;
 
 #[derive(Deserialize)]
 struct Cfg {

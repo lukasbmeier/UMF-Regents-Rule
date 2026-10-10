@@ -20,7 +20,8 @@
 //! widen a hook instead.
 
 use crate::genre::Claims;
-use crate::module::{Challenge, Entity, Session, StatusStateRow};
+use crate::hold::HoldSeed;
+use crate::module::{Challenge, Entity, HoldProgress, Session, StatusStateRow};
 use spacetimedb::ReducerContext;
 
 /// A GENRE, as the foundation sees it: the numbers it takes, and the hooks it answers. Every hook
@@ -83,6 +84,26 @@ pub trait Genre: Sync {
         -> Option<Result<(), String>> {
         None
     }
+
+    /// HOLDS (DECISIONS #209). `actor_id` is about to begin `hold` on `target` (reach, status and kinds
+    /// checked): Err refuses it, with the reason the player sees (a nest already full of eggs).
+    fn may_hold(&self, _ctx: &ReducerContext, _actor_id: u64, _target: &Entity, _hold: &HoldSeed) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// How fast `row` goes with `doers` doing it, when the hold's own `seconds_with` is not the answer:
+    /// a share of the whole per second, negative to undo it (a nest cooling while nobody sits on it,
+    /// down to its last checkpoint: answer 0 there). Asked whenever it is settled (each tick while
+    /// held, and on every join and leave); the first genre to answer decides.
+    fn hold_rate(&self, _ctx: &ReducerContext, _row: &HoldProgress, _hold: &HoldSeed, _doers: u32) -> Option<f32> {
+        None
+    }
+
+    /// `row` is done, by `doers` (after the target was put in the hold's `then` status, if it has one).
+    fn on_hold_completed(&self, _ctx: &ReducerContext, _row: &HoldProgress, _hold: &HoldSeed, _doers: &[u64]) {}
+
+    /// `actor_id` let go of `row` before it was done (`why`: `hold::left`, released, out of range, hurt...).
+    fn on_hold_left(&self, _ctx: &ReducerContext, _actor_id: u64, _row: &HoldProgress, _why: u8) {}
 }
 
 // EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order: build.rs declares each one's
@@ -183,6 +204,31 @@ pub fn on_interact(ctx: &ReducerContext, player_entity_id: u64, target: &Entity,
 pub fn on_status_changed(ctx: &ReducerContext, entity_id: u64, from: u8, now: &StatusStateRow) {
     for g in GENRES {
         g.on_status_changed(ctx, entity_id, from, now);
+    }
+}
+
+/// Every genre may refuse a hold: the first refusal stands.
+pub fn may_hold(ctx: &ReducerContext, actor_id: u64, target: &Entity, hold: &HoldSeed) -> Result<(), String> {
+    for g in GENRES {
+        g.may_hold(ctx, actor_id, target, hold)?;
+    }
+    Ok(())
+}
+
+/// The first genre that decides a hold's rate; None: the hold's own `seconds_with`.
+pub fn hold_rate(ctx: &ReducerContext, row: &HoldProgress, hold: &HoldSeed, doers: u32) -> Option<f32> {
+    GENRES.iter().find_map(|g| g.hold_rate(ctx, row, hold, doers)).filter(|r| r.is_finite())
+}
+
+pub fn on_hold_completed(ctx: &ReducerContext, row: &HoldProgress, hold: &HoldSeed, doers: &[u64]) {
+    for g in GENRES {
+        g.on_hold_completed(ctx, row, hold, doers);
+    }
+}
+
+pub fn on_hold_left(ctx: &ReducerContext, actor_id: u64, row: &HoldProgress, why: u8) {
+    for g in GENRES {
+        g.on_hold_left(ctx, actor_id, row, why);
     }
 }
 

@@ -41,7 +41,7 @@ const ALWAYS_TABLES: Array[StringName] = [&"hot_rule", &"authority"]
 
 const WORLD_TABLES: Array[StringName] = [
 	&"entity", &"movement_state", &"health_state", &"session", &"action_event", &"equip_state",
-	&"appearance", &"lobby_member", &"world_level", &"session_match", &"status_state",
+	&"appearance", &"lobby_member", &"world_level", &"session_match", &"status_state", &"hold_progress", &"hold_member",
 	# Not in the client's core set, but a sidecar adds it and it is the highest-volume table
 	# there is: an authority for world 3 must not be fed every other world's input.
 	&"input_queue",

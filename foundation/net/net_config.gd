@@ -65,6 +65,8 @@ class_name NetConfig extends Resource
 	&"item_def", &"inventory_item",
 	# Owner-visible only, under RLS (DECISIONS #32)
 	&"challenge",
+	# A timed press's sweep and its presses as judged, beside its challenge (TimedPressComponent, DECISIONS #210)
+	&"timed_press",
 	# Actions (Task 12): the catalogue, per-entity cooldowns, and what happened
 	&"ability_def", &"ability_state", &"action_event",
 	# In hand or put away (EquipComponent, DECISIONS #160)
@@ -79,4 +81,7 @@ class_name NetConfig extends Resource
 	&"session_match",
 	# Each entity's status: downed, out, a genre's own (StatusComponent, DECISIONS #206)
 	&"status_state",
+	# What is being held on each entity, and who holds what (HoldComponent, DECISIONS #209)
+	&"hold_progress",
+	&"hold_member",
 ]

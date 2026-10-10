@@ -4,6 +4,10 @@
 	"reducers": {
 		"add_score": "(entity_id:U64,score:I64,coins:I64)",
 		"apply_damage": "(target_id:U64,amount:F32,source_id:U64)",
+		"begin_interact": "(target_id:U64,verb:U8)",
+		"begin_interact_as": "(actor_id:U64,target_id:U64,verb:U8)",
+		"challenge_press": "(challenge_id:U64)",
+		"challenge_seen": "(challenge_id:U64)",
 		"compat_generation_1": "()",
 		"consume_item": "(item_id:U64,qty:U32)",
 		"create_session": "(world_id:U32,kind:U8,max_members:U16)",
@@ -11,6 +15,8 @@
 		"define_ability": "(ability_id:U32,cooldown_ms:U32,range:F32,wind_up_ms:U32,damage:F32,data:String)",
 		"despawn_entity": "(entity_id:U64)",
 		"dev_nudge": "(offset:Vector3(x:F32,y:F32,z:F32))",
+		"end_interact": "()",
+		"end_interact_as": "(actor_id:U64)",
 		"grant_item": "(entity_id:U64,item_def_id:U32,qty:U32)",
 		"heartbeat": "(world_id:U32)",
 		"interact": "(target_id:U64,verb:U8)",
@@ -54,6 +60,8 @@
 		"entity": "Entity(entity_id:U64,world_id:U32,kind:U8,owner:(__identity__:U256),spawned_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"equip_state": "EquipStateRow(entity_id:U64,world_id:U32,state:U8)",
 		"health_state": "HealthStateRow(entity_id:U64,world_id:U32,current:F32,max:F32,is_dead:Bool,last_damage_source:U64,last_change_server_tick:U64)",
+		"hold_member": "HoldMember(entity_id:U64,world_id:U32,hold_id:U64,target_id:U64,hold:U32,since:(__timestamp_micros_since_unix_epoch__:I64),from:Vector3(x:F32,y:F32,z:F32))",
+		"hold_progress": "HoldProgress(hold_id:U64,entity_id:U64,world_id:U32,hold:U32,progress:F32,rate:F32,at:(__timestamp_micros_since_unix_epoch__:I64),doers:U8,state:U8)",
 		"hot_rule": "HotRuleRow(key:String,number:F64,text:String,overridden:Bool,updated_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"input_queue": "InputQueueRow(id:U64,entity_id:U64,world_id:U32,frame:InputFrame(seq:U32,client_tick:U32,move_x:F32,move_y:F32,look_yaw:F32,look_pitch:F32,jump:Bool,sprint:Bool,client_pos:Vector3(x:F32,y:F32,z:F32),epoch:U32,move_state:U8,dash:Bool,slow:Bool,face:Bool),received_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"inventory_item": "InventoryItem(id:U64,owner_entity_id:U64,item_def_id:U32,qty:U32,slot:I16,instance_data:String)",
@@ -66,6 +74,7 @@
 		"session_match": "SessionMatch(session_id:U64,world_id:U32,first_round:U32,started:Bool,number:U32)",
 		"session_member": "SessionMember(id:U64,session_id:U64,entity_id:U64,score:I64,coins:I64)",
 		"status_state": "StatusStateRow(entity_id:U64,world_id:U32,status:U8,prev_status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,data:String,serial:U32)",
+		"timed_press": "TimedPress(challenge_id:U64,entity_id:U64,starts_at:(__timestamp_micros_since_unix_epoch__:I64),period_ms:U32,half_width:F32,rounds:U8,seen_ms:U32,at_ms:[I32],positions:[F32],qualities:[F32],credit_ms:U32,done:Bool)",
 		"world_config": "WorldConfig(world_id:U32,sim_authority:U8,authority_online:Bool,server_tick:U64,server_ts:(__timestamp_micros_since_unix_epoch__:I64),spawn:Vector3(x:F32,y:F32,z:F32))",
 		"world_level": "WorldLevel(world_id:U32,level_id:U8)"
 	}

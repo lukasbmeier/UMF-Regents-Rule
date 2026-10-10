@@ -90,3 +90,32 @@ static func validate_challenge(kind: int, seed_value: int, difficulty: float,
 	var s01: float = Vector3(q.x + q.y, 0.0, 0.0).x
 	var s012: float = Vector3(s01 + q.z, 0.0, 0.0).x
 	return Vector3(s012 / 3.0, 0.0, 0.0).x
+
+
+# --- the server-timed press (DECISIONS #210) ----------------------------------------------------
+# The client's twin of `challenge.rs`'s timed press, for drawing the sweep and predicting a press. The
+# server judges every press itself (`challenge_press`); this only says what the player will see.
+
+const KIND_TIMED_PRESS: int = 1
+
+
+## Where the marker is `elapsed_s` after it began to sweep: 0 at the start, 1 half a period later,
+## back to 0 at a full period. 0 before it begins.
+static func sweep_position(elapsed_s: float, period_s: float) -> float:
+	if elapsed_s <= 0.0 or period_s <= 0.0:
+		return 0.0
+	var phase: float = fposmod(elapsed_s / period_s, 1.0)
+	var up: float = phase * 2.0
+	return up if up <= 1.0 else 2.0 - up
+
+
+## How good one press is: 1 on the target's centre, falling to 0 at `half` from it.
+static func press_quality(position: float, center: float, half: float) -> float:
+	if half <= 0.0:
+		return 0.0
+	return clampf(1.0 - absf(position - center) / half, 0.0, 1.0)
+
+
+## The credit a press is given for its trip to the server, in ms: half the quickest round trip, capped.
+static func press_credit_ms(min_rtt_ms: int, cap_ms: int) -> int:
+	return mini(min_rtt_ms / 2, cap_ms) if min_rtt_ms > 0 else 0

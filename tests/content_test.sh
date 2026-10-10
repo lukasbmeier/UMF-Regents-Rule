@@ -178,6 +178,54 @@ out="$(build)"
 check "$(echo "$out" | grep -q "becomes content 999 when it ends, which is not a status" && echo true || echo false)" \
   "a status that becomes something that is not a status stops the build"
 
+echo "== holds: one press, one hold (DECISIONS #209) =="
+# The baked hold file edited as the bake would write it: a press two holds could start, a hold done to
+# nothing, a status link that is not a status, no times. (A genre's holds over the foundation's, which
+# the template has none of: tests/hold_rules.rs.)
+rehold() {   # rehold PYTHON_EXPR_ON_items
+  "$PYTHON" - "$work/root" "$1" <<'PY'
+import json, sys, pathlib, copy
+root = pathlib.Path(sys.argv[1])
+def fnv(b):
+    h = 2166136261
+    for x in b:
+        h = ((h ^ x) * 16777619) & 0xFFFFFFFF
+    return "%08x" % h
+f = root / "shared/content/foundation/hold.json"
+doc = json.loads(f.read_text(encoding="utf-8"))
+items = doc["items"]
+exec(sys.argv[2])
+doc["items"] = items
+f.write_bytes((json.dumps(doc, indent="\t", sort_keys=True) + "\n").encode())
+m = root / "shared/content/manifest.json"
+man = json.loads(m.read_text(encoding="utf-8"))
+man["outputs"]["shared/content/foundation/hold.json"]["hash"] = fnv(f.read_bytes())
+m.write_bytes((json.dumps(man, indent="\t", sort_keys=True) + "\n").encode())
+PY
+}
+fresh_copy
+rehold 'twin = copy.deepcopy(items[0]); twin["id"] = 5; twin["name"] = "Revive"; twin["targets"] = [1]; items.append(twin)'
+out="$(build)"
+check "$(echo "$out" | grep -q "foundation has two holds one press could start: 'Help up' and 'Revive'" && echo true || echo false)" \
+  "two holds one press could start (a downed NPC) stop the build, naming both"
+fresh_copy
+rehold 'twin = copy.deepcopy(items[0]); twin["id"] = 5; twin["name"] = "Search"; twin["when"] = 5; items.append(twin)'
+out="$(build)"
+check "$(echo "$out" | grep -q 'Finished' && echo true || echo false)" "two told apart by the target's status (downed, hidden) build"
+fresh_copy
+rehold 'items[0]["targets"] = []'
+out="$(build)"
+check "$(echo "$out" | grep -q "hold 'Help up' is done to nothing" && echo true || echo false)" "a hold done to nothing stops the build"
+fresh_copy
+rehold 'items[0]["when"] = 999'
+out="$(build)"
+check "$(echo "$out" | grep -q "links when to content 999, which is not a status" && echo true || echo false)" \
+  "a hold for a status that is not one stops the build"
+fresh_copy
+rehold 'items[0]["seconds_with"] = []'
+out="$(build)"
+check "$(echo "$out" | grep -q "needs seconds_with" && echo true || echo false)" "a hold that takes no time stops the build"
+
 echo "== the real tree again =="
 out="$(cd server && cargo check 2>&1)"
 check "$(echo "$out" | grep -q 'Finished' && echo true || echo false)" "the server builds from the repo's own content"

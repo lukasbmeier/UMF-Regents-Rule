@@ -135,3 +135,55 @@ pub fn validate_challenge(kind: u8, seed: u64, difficulty: f32, result: &[f32]) 
     let s012 = s01 + q[2];
     Some(s012 / 3.0f32)
 }
+
+// =============================================================================
+// THE SERVER-TIMED PRESS (docs/FOUNDATION_SYSTEMS.md milestone 4, DECISIONS #210)
+// =============================================================================
+//
+// The timing bar above is judged from where the CLIENT says it stopped the marker: an outcome, which
+// no validator may accept (OPEN_ITEMS A4). A timed press is judged by the SERVER's clock: the marker
+// sweeps from a moment the server chose, the client sends only "pressed", and the server works out
+// where the marker was when the player saw it: the press's arrival, less half the player's quickest
+// measured round trip (the time it took to reach the server), capped by a rule. The client draws the
+// same sweep from the server's clock and predicts its own result; the server's replaces it.
+
+/// `challenge.kind` of a server-timed press.
+pub const KIND_TIMED_PRESS: u8 = 1;
+
+/// Where the marker is `elapsed_s` after it began to sweep: 0 at the start, 1 half a period later,
+/// back to 0 at a full period (a triangle wave). 0 before it begins.
+pub fn sweep_position(elapsed_s: f32, period_s: f32) -> f32 {
+    if elapsed_s <= 0.0 || period_s <= 0.0 {
+        return 0.0;
+    }
+    let phase = (elapsed_s / period_s).fract();
+    let up = phase * 2.0f32;
+    if up <= 1.0f32 { up } else { 2.0f32 - up }
+}
+
+/// How good one press is: 1 on the target's centre, falling to 0 at `half` from it.
+pub fn press_quality(position: f32, center: f32, half: f32) -> f32 {
+    if half <= 0.0 {
+        return 0.0;
+    }
+    (1.0f32 - (position - center).abs() / half).clamp(0.0, 1.0)
+}
+
+/// How long a sweep takes at `difficulty` (0 easy, 1 hard), between the easy and the hard period.
+pub fn sweep_period_s(difficulty: f32, easy_s: f32, hard_s: f32) -> f32 {
+    let d = difficulty.clamp(0.0, 1.0);
+    easy_s + (hard_s - easy_s) * d
+}
+
+/// The time a press is credited with, in ms: half the player's quickest measured round trip (how long
+/// a press takes to reach the server), at most `cap_ms`; none until one has been measured.
+pub fn press_credit_ms(min_rtt_ms: Option<u32>, cap_ms: u32) -> u32 {
+    min_rtt_ms.map(|r| (r / 2).min(cap_ms)).unwrap_or(0)
+}
+
+/// A press arriving `arrived_ms` after the sweep began (negative: before), credited `credit_ms`:
+/// when it is judged to have been made, and so where the marker was.
+pub fn judged_position(arrived_ms: i64, credit_ms: u32, period_s: f32) -> (i64, f32) {
+    let at = arrived_ms - credit_ms as i64;
+    (at, sweep_position(at as f32 / 1000.0, period_s))
+}

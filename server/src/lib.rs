@@ -26,6 +26,7 @@ pub mod level;
 
 /// Statuses (DECISIONS #206): what each one lets an entity do, baked from `StatusDef` content. Pure.
 pub mod status;
+pub mod hold;
 
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).

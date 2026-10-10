@@ -91,7 +91,8 @@ GODOT=<path> ./tests/integration_test.sh   # every reducer and its refusals (the
 GODOT=<path> ./tests/e2e_test.sh           # a real client against the real module: run before claiming anything works
 GODOT=<path> ./tests/multiclient_test.sh   # two clients, distinct identities
 GODOT=<path> LATENCIES="0 100 200" ./tests/playtest_test.sh   # movement feel through real keys
-GODOT=<path> ./tests/remote_playtest.sh    # how a second client draws the first: smoothness, teleports, jumps
+GODOT=<path> ./tests/remote_playtest.sh    # how a second client draws the first: smoothness, teleports, jumps; helping a downed player up (a hold)
+GODOT=<path> ./tests/press_playtest.sh     # a timed press at 150 ms: judged where it was seen, and clearly worse with no credit
 GODOT=<path> ./tests/connect_playtest.sh   # the connect screen and Escape menu, fresh install
 GODOT=<path> ./tests/sidecar_test.sh       # a real sidecar, with an unregistered control and a restart
 GODOT=<path> ./tests/export_test.sh        # both presets exported, packs inspected, both builds run

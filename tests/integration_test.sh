@@ -299,6 +299,122 @@ assert_eq "$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYEN
 assert_eq "$(row_count 'SELECT * FROM challenge')" "0" \
   "malformed submission still consumes the challenge (no retry-probing)"
 
+echo "== timed press: judged by the server's clock (DECISIONS #210) =="
+# A skill check where the client sends only "pressed". The server works out where the marker was:
+# the press's arrival, less half the player's quickest round trip it measured itself (the client
+# acknowledges each one the moment it arrives), at most foundation.press_credit_cap_ms.
+centers_of() {   # centers_of SEED -> "c0 c1 c2", as server/src/challenge.rs computes them (f32)
+  python -c "
+import struct
+f = lambda x: struct.unpack('<f', struct.pack('<f', x))[0]
+M32 = 0xFFFFFFFF
+def nxt(x):
+    x &= M32
+    x = (x ^ ((x << 13) & M32)) & M32
+    x ^= (x >> 17)
+    x = (x ^ ((x << 5) & M32)) & M32
+    return x
+seed = int('$1')
+st = ((seed & M32) ^ ((seed >> 32) & M32)) & M32 or 1
+out = []
+for _ in range(3):
+    st = nxt(st)
+    out.append(f(f(0.15) + f(f(st >> 8) / f(16777216.0)) * f(0.7)))
+print(' '.join('%.6f' % c for c in out))
+"
+}
+SCORE_P0=$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)
+assert_ok "issue_challenge $MYENT 1 0.5" "issue a timed press (kind 1)"
+TP=$(sql_first "SELECT id FROM challenge" 1)
+TP_SEED=$(sql_first "SELECT seed FROM challenge WHERE id = $TP" 1)
+assert_eq "$(sql_first "SELECT kind FROM challenge WHERE id = $TP" 1)" "1" "it is a timed press"
+assert_eq "$(sql_first "SELECT period_ms FROM timed_press WHERE challenge_id = $TP" 1)" "1800" \
+  "its sweep frozen on its row: 1.8 s at difficulty 0.5 (between the rules' 2.4 s easy and 1.2 s hard)"
+assert_eq "$(sql_first "SELECT rounds FROM timed_press WHERE challenge_id = $TP" 1)" "3" "three presses"
+assert_eq "$(sql_rows_anon "SELECT * FROM timed_press" | wc -l | tr -d ' ')" "0" "private to its player (row-level security)"
+assert_ok "challenge_seen $TP" "the player's game acknowledges it"
+SEEN=$(sql_first "SELECT seen_ms FROM timed_press WHERE challenge_id = $TP" 1)
+check "$([ "$SEEN" -gt 0 ] && echo true || echo false)" "the server timed that round trip itself ($SEEN ms)"
+assert_ok "challenge_seen $TP" "a second acknowledgement"
+assert_eq "$(sql_first "SELECT seen_ms FROM timed_press WHERE challenge_id = $TP" 1)" "$SEEN" "changes nothing"
+MINRTT=$(sql_first "SELECT min_ms FROM client_rtt WHERE entity_id = $MYENT" 1)
+check "$([ -n "$MINRTT" ] && [ "$MINRTT" -le "$SEEN" ] && echo true || echo false)" "the player's quickest round trip is kept ($MINRTT ms)"
+sleep 1
+for i in 1 2 3; do assert_ok "challenge_press $TP" "press $i (no payload: only that it was pressed)"; sleep 0.2; done
+assert_eq "$(row_count "SELECT * FROM challenge WHERE id = $TP")" "0" "three presses: scored and closed"
+assert_eq "$(sql_first "SELECT done FROM timed_press WHERE challenge_id = $TP" 1)" "true" \
+  "its sweep stays a moment, every press judged, so the player's game sees the last"
+assert_rejected "challenge_press $TP" "no such challenge" "a fourth press is refused"
+# The judgement, from the server's own record of it: each press judged at its arrival less the credit
+# (half the quickest round trip, at most 120 ms), the marker where the sweep had it then, and the
+# quality its distance from that press's target (the seed's).
+JUDGED="$(spacetime logs "$DB" 2>/dev/null | grep "challenge $TP: press" | tail -3)"
+SCORE_P1=$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)
+TP_START=$(sql_first "SELECT starts_at FROM timed_press WHERE challenge_id = $TP" 1)
+VERDICT=$(python - "$JUDGED" "$(centers_of "$TP_SEED")" "$MINRTT" "$((SCORE_P1 - SCORE_P0))" "$TP_START" <<'PY'
+import re, sys
+from datetime import datetime
+lines = sys.argv[1].strip().splitlines()
+centers = [float(c) for c in sys.argv[2].split()]
+credit_want = min(int(sys.argv[3]) // 2, 120)
+gained = int(sys.argv[4])
+def when(t):   # an RFC 3339 time, to microseconds since the epoch
+    t = t.strip().replace("Z", "+00:00")
+    d, frac = (t.split("+")[0] + ".0").split(".")[:2]
+    base = datetime.fromisoformat(d + "+00:00").timestamp()
+    return int(base * 1_000_000) + int((frac + "000000")[:6])
+start = when(sys.argv[5])
+def sweep(t, p):
+    if t <= 0: return 0.0
+    ph = (t / p) % 1.0
+    up = ph * 2
+    return up if up <= 1 else 2 - up
+qs = []
+bad = []
+for i, l in enumerate(lines):
+    m = re.search(r"press (\d) at (-?\d+) ms \(credit (\d+) ms\): marker ([\d.]+), target ([\d.]+), quality ([\d.]+)", l)
+    if not m: bad.append("unreadable: " + l); continue
+    n, at, credit, marker, target, q = int(m[1]), int(m[2]), int(m[3]), float(m[4]), float(m[5]), float(m[6])
+    if credit != credit_want: bad.append("press %d credit %d, want %d" % (n, credit, credit_want))
+    arrived_ms = (when(l.split()[0]) - start) // 1000   # the log line's time is the press's arrival
+    if abs(at - (arrived_ms - credit)) > 2: bad.append("press %d judged at %d ms, but it arrived at %d ms less %d" % (n, at, arrived_ms, credit))
+    if abs(marker - sweep(at / 1000.0, 1.8)) > 0.002: bad.append("press %d marker %.3f, the sweep says %.3f" % (n, marker, sweep(at / 1000.0, 1.8)))
+    if abs(target - centers[n - 1]) > 0.002: bad.append("press %d target %.3f, the seed says %.3f" % (n, target, centers[n - 1]))
+    want_q = max(0.0, min(1.0, 1 - abs(marker - target) / 0.1))
+    if abs(q - want_q) > 0.002: bad.append("press %d quality %.3f, want %.3f" % (n, q, want_q))
+    qs.append(q)
+if len(qs) != 3: bad.append("%d presses judged" % len(qs))
+elif gained != round(sum(qs) / 3 * 100): bad.append("scored %d, the presses say %d" % (gained, round(sum(qs) / 3 * 100)))
+print("ok" if not bad else "; ".join(bad))
+PY
+)
+assert_eq "$VERDICT" "ok" "each press judged where the sweep had the marker at its arrival less the credit, against the seed's target, and scored their mean"
+
+# A press is for a timed press; a timed press is never submitted.
+assert_ok "issue_challenge $MYENT 0 0.5" "a timing bar (kind 0)"
+BAR=$(sql_first "SELECT id FROM challenge" 1)
+assert_rejected "challenge_press $BAR" "not a timed press" "is not pressed"
+assert_ok "submit_challenge_result $BAR [0.5,0.5,0.5]" "(consumed)"
+SCORE_P2=$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)
+assert_ok "issue_challenge $MYENT 1 0.5" "a timed press"
+TP2=$(sql_first "SELECT id FROM challenge" 1)
+assert_ok "submit_challenge_result $TP2 [$(centers_of "$(sql_first "SELECT seed FROM challenge WHERE id = $TP2" 1)" | tr ' ' ',')]" \
+  "submitted as if a bar, with the perfect answer"
+assert_eq "$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)" "$SCORE_P2" "nothing awarded: no outcome a client reports is accepted"
+assert_eq "$(row_count "SELECT * FROM challenge")$(row_count "SELECT * FROM timed_press WHERE challenge_id = $TP2")" "00" "and it is consumed, its sweep with it"
+
+# The credit is a rule: 0, and a press is judged on arrival.
+assert_ok "set_rule foundation.press_credit_cap_ms 0 \"\"" "no credit for the trip"
+assert_ok "issue_challenge $MYENT 1 0.5" "another"
+TP3=$(sql_first "SELECT id FROM challenge" 1)
+assert_ok "challenge_seen $TP3" "acknowledged"
+assert_ok "challenge_press $TP3" "pressed"
+assert_eq "$(sql_first "SELECT credit_ms FROM timed_press WHERE challenge_id = $TP3" 1)" "0" "judged on arrival"
+assert_ok "reset_rule foundation.press_credit_cap_ms" "the cap back"
+assert_ok "challenge_press $TP3" "finish it"
+assert_ok "challenge_press $TP3" "(the last press)"
+assert_eq "$(row_count 'SELECT * FROM challenge')" "0" "no challenges outstanding"
+
 echo "== interact: the SERVER decides range, not the client raycast =="
 # Put a resource node far away, then next to the player, and check both answers.
 assert_ok 'spawn_resource_node 0 {"x":100.0,"y":0.0,"z":100.0}' "spawn a distant resource node"
@@ -313,7 +429,7 @@ assert_ok 'spawn_resource_node 0 {"x":1.0,"y":0.0,"z":0.0}' "spawn a nearby reso
 NEAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | tail -1 | awk '{print $1}')
 assert_ok "interact $NEAR 0" "interacting in range is accepted"
 assert_eq "$(row_count 'SELECT * FROM challenge')" "1" "a successful interact issues a challenge"
-assert_eq "$(sql_first 'SELECT kind FROM challenge' 1)" "0" "the issued challenge is the timing bar"
+assert_eq "$(sql_first 'SELECT kind FROM challenge' 1)" "1" "the issued challenge is a timed press (judged by the server's clock, DECISIONS #210)"
 assert_eq "$(sql_first 'SELECT difficulty FROM challenge' 1)" "0.35" "verb 0 issues the easier variant"
 
 # Interacting with a player is refused: dispatch is by entity kind, not a catch-all.
@@ -747,6 +863,104 @@ EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY 
 SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
 assert_eq "$(field correction_epoch)" "$EPOCH" "and running, the same step is taken"
+
+echo "== holds: hold to interact (DECISIONS #209) =="
+# What a hold IS is content (foundation/content/hold/: Help up, 4 s alone, 2.5 with two, 2 with three,
+# on a downed player or NPC, back to normal when done); the module keeps who holds what and how far
+# along it is, and a 10 Hz tick lets go of doers who wander, are hurt or cannot act. The CLI's player
+# is offline between calls, so the lasting doers are NPCs, held through the authority's route (the
+# sidecar's, for bots): begin_interact_as.
+hold_rows() { row_count "SELECT * FROM hold_progress WHERE entity_id = $1"; }
+hold_field() { sql_first "SELECT $2 FROM hold_progress WHERE entity_id = $1" 1; }
+doer_count() { row_count "SELECT * FROM hold_member WHERE target_id = $1"; }
+near() { python -c "print('true' if abs(float('$1') - $2) < 0.01 else 'false')"; }
+move_npc() {   # move_npc ID X Z: the authority puts an NPC there
+  spacetime call "$DB" write_movement_batch 0 "[{\"entity_id\":$1,\"pos\":{\"x\":$2,\"y\":0.0,\"z\":$3},\"vel\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"yaw\":0.0,\"grounded\":true,\"move_state\":0,\"last_processed_seq\":0,\"teleport_flag\":true}]" >/dev/null 2>&1
+}
+assert_ok 'spawn_npc 0 1 {"x":1.5,"y":0.0,"z":0.8}' "a helper NPC beside the target"
+H1=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+assert_ok 'spawn_npc 0 1 {"x":0.5,"y":0.0,"z":0.8}' "and another"
+H2=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+assert_ok 'spawn_npc 0 1 {"x":1.0,"y":0.0,"z":-0.8}' "and a third"
+H3=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+
+assert_rejected "begin_interact_as $H1 $NEAR 0" "nothing to hold there" "nothing to hold on someone standing (Help up is for the downed)"
+assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "the target NPC is downed"
+out="$(spacetime call --anonymous "$DB" begin_interact_as "$H1" "$NEAR" 0 2>&1)"
+check "$(echo "$out" | grep -qi "authority" && echo true || echo false)" "a player cannot hold for an NPC"
+assert_rejected "begin_interact_as $FAR $NEAR 0" "out of range" "an NPC 4 m away is out of reach"
+assert_rejected "begin_interact_as $NEAR $NEAR 0" "not on yourself" "nobody helps themself up"
+assert_rejected "begin_interact_as $H1 $NEAR 9" "nothing to hold there" "another verb starts nothing"
+
+# Each CLI call takes about half a second, longer than Help up gives: the game's pace rule slows every
+# hold to a tenth while the rates are read (40 s alone), which is also how a designer slows them live.
+assert_ok "set_rule foundation.hold_speed 0.1 \"\"" "every hold at a tenth of its speed"
+assert_ok "begin_interact_as $H1 $NEAR 0" "one helper holds Help up"
+assert_eq "$(hold_rows $NEAR)" "1" "one thing held on the target"
+assert_eq "$(hold_field $NEAR doers)" "1" "by one"
+check "$(near "$(hold_field $NEAR rate)" 0.025)" "a fortieth a second: 4 s alone, at a tenth of the pace ($(hold_field $NEAR rate))"
+assert_eq "$(sql_first "SELECT target_id FROM hold_member WHERE entity_id = $H1" 1)" "$NEAR" "the helper holds it"
+assert_eq "$(sql_rows_anon "SELECT * FROM hold_progress WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client draws the bar"
+assert_ok "begin_interact_as $H1 $NEAR 0" "holding it again changes nothing"
+assert_eq "$(doer_count $NEAR)" "1" "(still one)"
+assert_ok "begin_interact_as $H2 $NEAR 0" "a second joins"
+check "$(near "$(hold_field $NEAR rate)" 0.04)" "faster together: 2.5 s with two ($(hold_field $NEAR rate))"
+assert_ok "begin_interact_as $H3 $NEAR 0" "a third"
+check "$(near "$(hold_field $NEAR rate)" 0.05)" "2 s with three ($(hold_field $NEAR rate))"
+assert_ok "end_interact_as $H3" "the third lets go"
+check "$([ "$(doer_count $NEAR)" = "2" ] && [ "$(near "$(hold_field $NEAR rate)" 0.04)" = "true" ] && echo true || echo false)" "two again, at two's rate"
+assert_ok "apply_damage $H2 1 0" "the second is hurt"
+check "$([ "$(doer_count $NEAR)" = "1" ] && [ "$(near "$(hold_field $NEAR rate)" 0.025)" = "true" ] && echo true || echo false)" "and lets go (Help up stops when its doer is hurt)"
+assert_ok "set_rule foundation.hold_speed 0.2 \"\"" "the pace changed while it is held"
+sleep 0.5
+check "$(near "$(hold_field $NEAR rate)" 0.05)" "takes effect at once ($(hold_field $NEAR rate))"
+move_npc "$H1" 0.5 0.3
+sleep 0.5
+assert_eq "$(doer_count $NEAR)" "0" "the last helper moved 1.1 m from where it began, still in reach (Help up lets go past 0.75 m): let go by the tick"
+assert_eq "$(hold_rows $NEAR)" "0" "nobody holding Help up: the help is lost (it keeps nothing)"
+assert_eq "$(status_of $NEAR)" "2" "the target still downed"
+
+# Done: three together, 2 s. The target is back to normal, the rows go, the tick stops.
+assert_ok "reset_rule foundation.hold_speed" "holds at their own speed again"
+move_npc "$H1" 1.5 0.8; move_npc "$H2" 0.5 0.8; move_npc "$H3" 1.0 -0.8
+assert_ok "begin_interact_as $H1 $NEAR 0" "three help"
+assert_ok "begin_interact_as $H2 $NEAR 0" "together"
+assert_ok "begin_interact_as $H3 $NEAR 0" "again"
+assert_eq "$(row_count "SELECT * FROM hold_tick")" "1" "the hold tick runs while something is held"
+sleep 3
+assert_eq "$(status_of $NEAR)" "0" "done: the target is back on its feet (Help up's then: normal)"
+assert_eq "$(sql_first "SELECT by_entity FROM status_state WHERE entity_id = $NEAR" 1)" "$H1" "helped up by the first to begin"
+assert_eq "$(hold_rows $NEAR)" "0" "the bar is gone"
+assert_eq "$(row_count "SELECT * FROM hold_member")" "0" "everyone let go"
+assert_eq "$(row_count "SELECT * FROM hold_tick")" "0" "and nothing held: the tick stopped itself"
+
+# A doer who cannot act lets go; a target that is no longer downed ends it; a player offline lets go.
+assert_ok "set_rule foundation.hold_speed 0.1 \"\"" "slow again, so nothing finishes while it is checked"
+assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "downed again"
+assert_ok "begin_interact_as $H1 $NEAR 0" "a helper"
+assert_ok "begin_interact_as $H2 $NEAR 0" "and another"
+assert_ok "set_status $H2 2 $UNTIL_CHANGED \"\"" "the second is downed itself"
+sleep 0.5
+assert_eq "$(doer_count $NEAR)" "1" "a doer who cannot act lets go"
+assert_ok "set_status $H2 0 $UNTIL_CHANGED \"\"" "(back up)"
+assert_ok "set_status $NEAR 0 $UNTIL_CHANGED \"\"" "the target gets up some other way"
+sleep 0.5
+assert_eq "$(hold_rows $NEAR)" "0" "nothing left to help up: the hold ends"
+assert_eq "$(row_count "SELECT * FROM hold_member")" "0" "and its helper lets go"
+assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "downed once more"
+read -r SX SY SZ <<< "$(pos_of)"
+assert_ok "begin_interact $NEAR 0" "the CLI's own player holds it ($(python -c "print(round((($SX - 1.0) ** 2 + ($SZ) ** 2) ** 0.5, 2))") m away)"
+sleep 0.5
+assert_eq "$(row_count "SELECT * FROM hold_member WHERE entity_id = $MYENT")" "0" "and, offline between CLI calls, lets go"
+assert_ok "end_interact" "letting go of nothing is fine (a release after the hold ended)"
+
+# A target that is gone takes its holds with it.
+assert_ok "begin_interact_as $H1 $NEAR 0" "a helper on the downed NPC"
+assert_ok "despawn_entity $NEAR" "and the target despawned"
+assert_eq "$(row_count "SELECT * FROM hold_progress")" "0" "its holds gone with it"
+assert_eq "$(row_count "SELECT * FROM hold_member")" "0" "every helper let go"
+for e in $H1 $H2 $H3; do spacetime call "$DB" despawn_entity "$e" >/dev/null 2>&1; done
+assert_ok "reset_rule foundation.hold_speed" "holds at their own speed"
 
 echo "== NPC brains persist, for their authority only =="
 # `write_npc_brain` keeps what a brain needs to resume after its sidecar restarts. Called here as

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -49,8 +49,64 @@ minimum = 0.0
 maximum = 1.0
 description = "Whether everyone in a world goes back to normal (not downed, not out) when a new match begins there. Off for a game whose statuses last across matches."
 
+[sub_resource type="Resource" id="Rule_hold_slack"]
+script = ExtResource("2_rule")
+name = &"hold_leave_slack_m"
+number = 0.5
+minimum = 0.0
+maximum = 5.0
+unit = "m"
+description = "How far past a hold's reach (helping someone up, laying an egg) a player may drift before they let go of it. A little leeway, so someone standing at the edge of the reach is not dropped by their own small movements."
+
+[sub_resource type="Resource" id="Rule_hold_speed"]
+script = ExtResource("2_rule")
+name = &"hold_speed"
+number = 1.0
+minimum = 0.05
+maximum = 10.0
+unit = "x"
+description = "How fast every hold goes (helping someone up, laying an egg), as a share of the time its content says: 0.5 makes each take twice as long, 2 half as long. For tuning a game's pace live; a hold's own times are in its content."
+
+[sub_resource type="Resource" id="Rule_press_credit"]
+script = ExtResource("2_rule")
+name = &"press_credit_cap_ms"
+kind = 1
+number = 120.0
+minimum = 0.0
+maximum = 300.0
+unit = "ms"
+description = "A timed press (a skill check: press when the marker is in the zone) is judged where the marker was when the player SAW it: the press's arrival less half their quickest round trip to the server. This caps that credit, so a slow or tampered connection cannot buy more than this. 0: judged on arrival, as if everyone were next to the server."
+
+[sub_resource type="Resource" id="Rule_press_lead"]
+script = ExtResource("2_rule")
+name = &"press_lead_in_ms"
+kind = 1
+number = 800.0
+minimum = 0.0
+maximum = 5000.0
+unit = "ms"
+description = "How long after a timed press appears its marker starts to move: time for it to reach the player and for them to see it."
+
+[sub_resource type="Resource" id="Rule_press_easy"]
+script = ExtResource("2_rule")
+name = &"press_sweep_easy_s"
+number = 2.4
+minimum = 0.3
+maximum = 10.0
+unit = "s"
+description = "How long the marker of an EASY timed press takes to sweep across and back. Longer is easier to hit."
+
+[sub_resource type="Resource" id="Rule_press_hard"]
+script = ExtResource("2_rule")
+name = &"press_sweep_hard_s"
+number = 1.2
+minimum = 0.3
+maximum = 10.0
+unit = "s"
+description = "How long the marker of a HARD timed press takes to sweep across and back. A press of middling difficulty is between this and the easy one."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard")])

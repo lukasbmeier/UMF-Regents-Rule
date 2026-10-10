@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -13,6 +13,8 @@ var challenge: UmfChallengeTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
 var health_state: UmfHealthStateTable
+var hold_member: UmfHoldMemberTable
+var hold_progress: UmfHoldProgressTable
 var hot_rule: UmfHotRuleTable
 var input_queue: UmfInputQueueTable
 var inventory_item: UmfInventoryItemTable
@@ -25,6 +27,7 @@ var session: UmfSessionTable
 var session_match: UmfSessionMatchTable
 var session_member: UmfSessionMemberTable
 var status_state: UmfStatusStateTable
+var timed_press: UmfTimedPressTable
 var world_config: UmfWorldConfigTable
 var world_level: UmfWorldLevelTable
 
@@ -38,6 +41,8 @@ func _init(p_local_db: LocalDatabase) -> void:
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
+	hold_member = preload('res://spacetime_bindings/schema/tables/umf_hold_member_table.gd').new(p_local_db)
+	hold_progress = preload('res://spacetime_bindings/schema/tables/umf_hold_progress_table.gd').new(p_local_db)
 	hot_rule = preload('res://spacetime_bindings/schema/tables/umf_hot_rule_table.gd').new(p_local_db)
 	input_queue = preload('res://spacetime_bindings/schema/tables/umf_input_queue_table.gd').new(p_local_db)
 	inventory_item = preload('res://spacetime_bindings/schema/tables/umf_inventory_item_table.gd').new(p_local_db)
@@ -50,5 +55,6 @@ func _init(p_local_db: LocalDatabase) -> void:
 	session_match = preload('res://spacetime_bindings/schema/tables/umf_session_match_table.gd').new(p_local_db)
 	session_member = preload('res://spacetime_bindings/schema/tables/umf_session_member_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
+	timed_press = preload('res://spacetime_bindings/schema/tables/umf_timed_press_table.gd').new(p_local_db)
 	world_config = preload('res://spacetime_bindings/schema/tables/umf_world_config_table.gd').new(p_local_db)
 	world_level = preload('res://spacetime_bindings/schema/tables/umf_world_level_table.gd').new(p_local_db)

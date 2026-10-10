@@ -13,10 +13,12 @@ extends Node
 ##   teleport    a teleport is ONE snap, announced with entity_teleported, not a glide across
 ##   jumps       up a ramp and three jumps on the platform: exactly three `jumped` and no more,
 ##               none on the ramp (the friends' test saw jump/land restart on every bump)
+##   help up     the walker downs itself; the observer walks up, looks at it and HOLDS the interact
+##               key (DECISIONS #209): let go early, the help is lost; held, it is back on its feet
 ##
 ## Driven by tests/remote_playtest.sh, which runs both at a chosen simulated latency. Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 130.0
+const OVERALL_TIMEOUT_SEC: float = 190.0
 const STEP_TIMEOUT_SEC: float = 30.0
 ## Seconds the walker walks, and the length of each side of its square.
 const WALK_SEC: float = 9.0
@@ -111,6 +113,7 @@ func _walk(me: SpaceTimeEntity) -> void:
 	await get_tree().create_timer(2.0).timeout
 	_check(true, "walker finished its route")
 	await _see_the_observer_go_out(me)
+	await _be_helped_up(me)
 
 
 ## OUT, AS SOMEONE ELSE SEES IT (DECISIONS #206): the observer puts itself out at the end; here its
@@ -335,6 +338,7 @@ func _observe(me: SpaceTimeEntity) -> void:
 			lands_up += 1
 	_check(lands_up == JUMPS, "and lands exactly once each, on the platform (%d landings up there)" % lands_up)
 	await _spectate(me, target)
+	await _help_up(me, target)
 
 
 ## OUT, WATCHING A TEAMMATE (DECISIONS #206): the observer puts itself out (the dev tools are on
@@ -363,6 +367,94 @@ func _spectate(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
 		await get_tree().process_frame
 	_check(rig.following() == null and me.visible, "in again: its own view and body back")
 	await get_tree().create_timer(2.0).timeout
+
+
+# --- help up (DECISIONS #209) ------------------------------------------------------------------
+
+## Where the walker waits to be helped up, and where the observer stands to help: open floor, 1.6 m
+## apart along Z, the observer looking toward -Z at it. Half a metre to its left: the camera is over
+## the right shoulder, so that is where the crosshair lines up with it.
+const DOWN_AT: Vector3 = Vector3(-4.0, 0.0, 0.8)
+const HELP_FROM: Vector3 = Vector3(-4.5, 0.0, 2.4)
+
+
+## THE WALKER: down on open floor, until someone helps it up.
+func _be_helped_up(me: SpaceTimeEntity) -> void:
+	SpaceTimeSync.call_reducer(&"teleport", [DOWN_AT], ["vector3[f32,f32,f32]"])
+	await get_tree().create_timer(1.0).timeout
+	SpaceTimeSync.call_reducer(&"set_status", [me.entity_id, StatusDef.DOWNED, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	var st: StatusComponent = me.find_component(StatusComponent) as StatusComponent
+	var hc: HoldComponent = me.find_component(HoldComponent) as HoldComponent
+	var finished: Array = []
+	SignalBus.hold_finished.connect(func(target: int, hold: int) -> void:
+		if target == me.entity_id:
+			finished.append(hold))
+	var deadline: int = Time.get_ticks_msec() + 60_000
+	var was_down: bool = false
+	var most: float = 0.0
+	while Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+		if st.status() == StatusDef.DOWNED:
+			was_down = true
+		elif was_down:
+			break
+		for id: int in hc.holds_on_me():
+			most = maxf(most, hc.progress(id))
+	print("   walker: downed %s, helped %.0f%% of the way at most before it was done, up again: %s" % [was_down, most * 100.0, st.status() == StatusDef.NORMAL])
+	_check(was_down, "the walker is downed")
+	_check(most > 0.3, "it sees itself being helped up (its bar reached %.0f%%)" % (most * 100.0))
+	_check(st.status() == StatusDef.NORMAL and finished.size() == 1 and st.by_entity() != me.entity_id and st.by_entity() > 0,
+		"and is back on its feet, helped up by the other player (%s, by %d)" % [str(finished), st.by_entity()])
+
+
+## THE OBSERVER: walk up to the downed walker, look at it, hold the interact key.
+func _help_up(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
+	var wst: StatusComponent = walker.find_component(StatusComponent) as StatusComponent
+	var whc: HoldComponent = walker.find_component(HoldComponent) as HoldComponent
+	var mine: HoldComponent = me.find_component(HoldComponent) as HoldComponent
+	var ic: InteractionComponent = me.find_component(InteractionComponent) as InteractionComponent
+	var input: LocalInputComponent = me.find_component(LocalInputComponent) as LocalInputComponent
+	var deadline: int = Time.get_ticks_msec() + 20_000
+	while (wst.status() != StatusDef.DOWNED or walker.global_position.distance_to(DOWN_AT) > 0.5) and Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+	_check(wst.status() == StatusDef.DOWNED, "the observer sees the walker downed")
+	SpaceTimeSync.call_reducer(&"teleport", [HELP_FROM], ["vector3[f32,f32,f32]"])
+	await get_tree().create_timer(1.5).timeout
+	# Look at it: down a little until the crosshair is on it (the camera sits above and behind).
+	var pitch: float = 0.0
+	while ic.get_target() != walker.entity_id and pitch > -0.8:
+		input.set_look(0.0, pitch)
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		pitch -= 0.05
+	var s: Dictionary = HoldPrompt.state_for(me)
+	_check(ic.get_target() == walker.entity_id and String(s["text"]) == "Hold E: Help up",
+		"looking at the downed walker: \"%s\"" % s["text"])
+
+	# Let go early: the help is lost.
+	Input.action_press(&"interact")
+	await get_tree().create_timer(1.5).timeout
+	var part: float = whc.progress(whc.hold_id_for(HoldDef.find(walker.definition.kind, 0, StatusDef.DOWNED, me.definition.kind).id))
+	_check(mine.is_holding() and part > 0.1 and part < 0.6, "holding the key: helping, the bar part way (%.0f%%)" % (part * 100.0))
+	_check(String(HoldPrompt.state_for(me)["text"]) == "Help up", "the prompt says what it is doing")
+	Input.action_release(&"interact")
+	await get_tree().create_timer(1.0).timeout
+	_check(not mine.is_holding() and whc.holds_on_me().is_empty() and wst.status() == StatusDef.DOWNED,
+		"let go early: the help is lost, the walker still down")
+
+	# Held: back on its feet in Help up's 4 s (and a round trip).
+	var began: int = Time.get_ticks_msec()
+	Input.action_press(&"interact")
+	deadline = began + 12_000
+	while wst.status() != StatusDef.NORMAL and Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+	var took: float = float(Time.get_ticks_msec() - began) / 1000.0
+	print("   helped the walker up in %.2f s" % took)
+	_check(wst.status() == StatusDef.NORMAL and took > 3.5 and took < 6.5, "held: the walker is back on its feet in about 4 s (%.2f s)" % took)
+	await get_tree().create_timer(0.5).timeout
+	_check(not mine.is_holding(), "and the observer is no longer holding anything")
+	Input.action_release(&"interact")
+	await get_tree().create_timer(1.0).timeout
 
 
 # --- helpers -----------------------------------------------------------------------------
@@ -401,5 +493,6 @@ func _finish() -> void:
 		return
 	_finished = true
 	Input.action_release(&"move_forward")
+	Input.action_release(&"interact")
 	print("\n%s: %d passed, %d failed" % [_role, _passes, _failures])
 	AppExit.quit(get_tree(), 1 if _failures > 0 else 0)

@@ -53,8 +53,10 @@ var _rows: Dictionary[StringName, RefCounted] = {}
 var _history: Dictionary[StringName, Array] = {}
 var _required: Array[StringName] = []
 var _is_bound: bool = false
-## Every entity's status (`_ensure_status_component`).
+## Every entity's status and holds (`_ensure_status_component`).
 const STATUS_COMPONENT: String = "res://foundation/components/status_component.gd"
+const HOLD_COMPONENT: String = "res://foundation/components/hold_component.gd"
+const TIMED_PRESS_COMPONENT: String = "res://foundation/components/timed_press_component.gd"
 ## Why its body is hidden (`set_hidden_by`): reason -> true. Empty: shown.
 var _hidden_by: Dictionary = {}
 var _saved_layer: int = 0
@@ -237,20 +239,21 @@ func _collect_components() -> void:
 				_required.append(t)
 
 
-## EVERY ENTITY HAS A STATUS (DECISIONS #206): a scene that does not carry a `StatusComponent` (a
-## genre's own entity, one made before statuses) is given one, so statuses work everywhere.
+## EVERY ENTITY HAS A STATUS, HOLDS AND TIMED PRESSES (DECISIONS #206, #209, #210): a scene that does
+## not carry a `StatusComponent`, `HoldComponent` or `TimedPressComponent` (a genre's own entity, one
+## made before them) is given one, so they work everywhere.
 ##
-## By PATH, not by class: StatusComponent names this class, and two scripts naming each other this
+## By PATH, not by class: those components name this class, and two scripts naming each other this
 ## way were never freed at exit (the unit run's leak check caught it).
 func _ensure_status_component() -> void:
-	var script: Script = load(STATUS_COMPONENT) as Script
-	var holder: Node = get_node(^"Components")
-	for child: Node in holder.get_children():
-		if child.get_script() == script:
-			return
-	var c: Node = script.new() as Node
-	c.name = "Status"
-	holder.add_child(c)
+	for pair: Array in [[STATUS_COMPONENT, "Status"], [HOLD_COMPONENT, "Holds"], [TIMED_PRESS_COMPONENT, "TimedPress"]]:
+		var script: Script = load(String(pair[0])) as Script
+		var holder: Node = get_node(^"Components")
+		if holder.get_children().any(func(child: Node) -> bool: return child.get_script() == script):
+			continue
+		var c: Node = script.new() as Node
+		c.name = String(pair[1])
+		holder.add_child(c)
 
 
 ## HIDE THE BODY for a reason (`&"offline"`: PresenceComponent; `&"status"`: an out player), or show

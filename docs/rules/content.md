@@ -67,6 +67,7 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
 | character | `EntityDefinition` | `foundation/content/character/` (player: a plain capsule, npc, humanoid), `game/<genre>/content/character/` | its kind, movement profile and abilities: each kind's Tier A speed bound (`content::movement_limits`) and what it may use (`content::kind_may_use`) |
 | movement | `MovementProfileDef` | `foundation/content/movement/`, `game/<genre>/content/movement/` | its run, sprint, dash and lift, for the kinds whose characters use it |
 | status | `StatusDef` | `foundation/content/status/` (normal, injured, downed, carried, out, hidden, escaped), `game/<genre>/content/status/` | `status::STATUSES`: its number, length, what it becomes, its movement and what it allows (a genre's replacing the foundation's of the same number) |
+| hold | `HoldDef` | `foundation/content/hold/` (help up), `game/<genre>/content/hold/` | `hold::HOLDS`: which press starts it, how long with how many, what stops it, the status it leaves the target in (a genre's before the foundation's) |
 
 ## Hot rules (DECISIONS #201, CONTENT_TOOLING_SPEC §4)
 A number the game is tuned by while it runs: a range, a health, a round's length, a price.
@@ -172,6 +173,40 @@ The server keeps who is in which: `status_state` (a side table; no row is normal
 (`status::bound`), with a grace after a change (`foundation.status_grace_ms`) so the player's own
 game, a round trip behind, is not pulled back. A new match puts everyone back to normal
 (`foundation.statuses_reset_each_match`).
+
+### Holds (DECISIONS #209, docs/FOUNDATION_SYSTEMS.md milestone 3)
+A hold is a `HoldDef`: something done by HOLDING the interact key on it until it is finished
+(helping a downed teammate up, laying an egg, opening a gate). Which press starts it: a `verb` (0,
+the interact key) on a character of `done_to`'s kinds, by one of `done_by`'s (none: anyone), while
+the target is `only_when` (none: any status). How long: `seconds_with` (alone, two together, three...,
+the last for more), every hold scaled live by the game's pace, `foundation.hold_speed`. What stops a doer: moving `stopped_by_moving_m` from where they began, being hurt
+(`stopped_by_damage`), leaving its reach (`range_m`, else `foundation.interact_range_m`, plus
+`foundation.hold_leave_slack_m`), a status that cannot act, leaving the game. When everyone lets go
+its progress is lost, or kept (`keeps_progress`: a half-laid nest). Done, the target is put in
+`then_status` (help up: normal). A press two holds could start is refused (the bake and the build);
+a genre's hold over the foundation's REPLACES it for the presses they share. It has no bench (a few
+numbers and links): the Content panel's line for it says how long it takes with each count.
+
+The server: `hold_progress` (one per thing being held: how far along it was at `at` and how fast it
+goes, written only when that changes, so every client draws the bar moving) and `hold_member` (one
+per doer); `begin_interact` / `end_interact` for a player, `begin_interact_as` / `end_interact_as` for
+an authority's NPC or bot; a 10 Hz tick (`tick_holds`) only while something is held. A genre adds
+through hooks: `may_hold` (refuse), `hold_rate` (another rate, negative to undo: a nest cooling),
+`on_hold_completed`, `on_hold_left` (why: `hold::left`). On the client every entity has a
+`HoldComponent` (the bar's numbers, the doer's pose), the interact key is held where a hold applies
+(`InteractionComponent.hold_for`), and the HUD's `HoldPrompt` says "Hold E: Help up" and draws the bar.
+
+### Timed presses (DECISIONS #210, docs/FOUNDATION_SYSTEMS.md milestone 4)
+A skill check where a marker sweeps across a bar and the player presses (the interact key) while it
+is in the target, three times. Challenge kind 1 (`challenge::KIND_TIMED_PRESS`); what the foundation's
+`interact` on a resource node and a genre's `issue_challenge_for` now issue. The sweep is frozen on
+its `timed_press` row when it is issued, from the rules: `foundation.press_lead_in_ms` before it
+moves, a sweep across and back in `press_sweep_easy_s` at difficulty 0 to `press_sweep_hard_s` at 1,
+the target's width from the difficulty (`challenge::timing_half_width`, the timing bar's). The server
+judges each press at its arrival less a credit, half the player's quickest round trip as it measured
+it (`client_rtt`), at most `foundation.press_credit_cap_ms` (0: judged on arrival). The old timing bar
+(kind 0, judged from where the client said it stopped) is still accepted from old builds; nothing
+issues it.
 
 On the client every entity has a `StatusComponent` (added when its scene has none): its movement
 component steps in the status (the config and the presses it takes away: the same in prediction and

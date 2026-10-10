@@ -22,12 +22,21 @@
 			},
 			"type": "character"
 		},
-		"shared/content/foundation/rules.json": {
+		"shared/content/foundation/hold.json": {
 			"count": 1,
-			"hash": "b82966c8",
+			"hash": "d45f38c8",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "bb3ec23f"
+				"foundation/content/hold/help_up.tres": "def9d807"
+			},
+			"type": "hold"
+		},
+		"shared/content/foundation/rules.json": {
+			"count": 1,
+			"hash": "93106d7e",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/rules/foundation.tres": "227953ad"
 			},
 			"type": "rules"
 		},

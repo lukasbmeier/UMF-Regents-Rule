@@ -33,6 +33,14 @@ signal entity_revived(entity_id: int)
 ## Its status changed (`StatusComponent`, DECISIONS #206): numbers, `from` == `to` when the same one
 ## was set again.
 signal entity_status_changed(entity_id: int, from: int, to: int)
+## Something held ON `target_id` changed: begun, joined, let go of, done (`HoldComponent`, DECISIONS #209).
+signal hold_changed(target_id: int)
+## Something held on `target_id` is done (`hold`: its `HoldDef.id`).
+signal hold_finished(target_id: int, hold: int)
+## `entity_id` began holding something on `target_id`, or let go (`target_id` -1).
+signal entity_holding_changed(entity_id: int, target_id: int)
+## The server judged one of `entity_id`'s timed presses (`TimedPressComponent`, DECISIONS #210).
+signal timed_press_judged(entity_id: int, round: int, quality: float)
 
 # --- Movement (discrete events only) -----------------------------------------
 signal entity_jumped(entity_id: int)

@@ -641,6 +641,25 @@ one in its bench and run **moves** (how fast a character crawls in it, whether i
 **Try a status on yourself**. In code, a genre sets one with `set_status_internal` and hears changes
 in `on_status_changed`; when one runs out, `on_status_expired` may choose what it becomes.
 
+**Holds: something done by holding E (help up, lay an egg).** Content panel, type `hold`. The
+foundation's **Help up**: hold E on a downed teammate (or NPC) for 4 s, faster together (2.5 s with
+two, 2 with three), and they are back on their feet; moving away or being hurt lets go, and the help
+is lost. A hold of your own: pick what it is done to (`done_to`: characters), who may do it
+(`done_by`; none: anyone), the target's status it needs (`only_when`), `seconds_with` (alone, then
+two, three together), what stops it, whether a half-done one keeps its progress (a nest), and the
+status the target is left in when done. Try it in the game with two players (one downed with **Try a
+status on yourself**). In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
+(a nest cooling while nobody sits on it) and hears it done in `on_hold_completed`; its bots hold with
+`begin_interact_as`.
+
+**Skill checks: press when the marker is in the zone.** Server-timed (DECISIONS #210): the player's
+game says only "pressed" and the server works out where the marker was when they saw it, so lag does
+not cost a good press and a cheat cannot claim one. In code, `issue_challenge_for(entity, difficulty,
+payload)` starts one (the foundation's resource node does); the genre hears the result in
+`on_challenge_succeeded` (its quality, 0..1). Tune it live in the Rules page: how long the marker
+waits before moving (`press_lead_in_ms`), how fast it sweeps (`press_sweep_easy_s`, `_hard_s`), how
+much a player's lag is forgiven (`press_credit_cap_ms`). The HUD draws it (`TimingBar`).
+
 **Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
 of content is a type (`AbilityDef`); each piece is a `.tres` you edit in the Inspector. The
 **Content** panel at the bottom of the editor is where you find and make them: the types on the
@@ -775,7 +794,7 @@ and the example level (`foundation/level/example/`, level 200).
 | Integration | `./tests/integration_test.sh` | yes (`umf-test`) | every reducer, including the refusals |
 | End to end | `./tests/e2e_test.sh` | yes (`umf-test`) | a real client against the real module |
 | Multiclient | `./tests/multiclient_test.sh` | yes (`umf-test`) | two players see each other |
-| Playtests | `fishing_playtest.sh`, `playtest_test.sh`, `remote_playtest.sh`, `connect_playtest.sh` | yes (`umf-test`) | the game played through real keys. `SHOTS=grip_pictures/play` before `fishing_playtest.sh` plays it in a window and saves a picture of every moment there: look at them after a change to how anything looks |
+| Playtests | `fishing_playtest.sh`, `playtest_test.sh`, `remote_playtest.sh`, `press_playtest.sh`, `connect_playtest.sh` | yes (`umf-test`) | the game played through real keys. `SHOTS=grip_pictures/play` before `fishing_playtest.sh` plays it in a window and saves a picture of every moment there: look at them after a change to how anything looks |
 | Sidecar, export | `sidecar_test.sh`, `export_test.sh` | yes (`umf-test`) | the authority process, the builds |
 | The look | `./tests/render_test.sh` | no, opens a window | foliage, grass, water, fullscreen |
 
