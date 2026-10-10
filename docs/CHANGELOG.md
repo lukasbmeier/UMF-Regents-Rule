@@ -505,3 +505,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **Choose a character's movement and abilities from lists** in its bench (Movement, Add ability) instead of the Inspector's New, which made blank ones inside the character.
 - **A movement or ability made inside a character** (the Inspector's New on its field) is saved as its own piece and linked, on Save or Play, instead of Play refusing it.
 - The bake writes into a test's scratch project when there is one, never over the real bake.
+
+## 0.35.2 — a model's own animations play
+- **An animation set made from a model's own clips now moves its bones.** A glTF's clips are addressed from the model's root (`CharacterArmature/Skeleton3D:Head` in the chicken), but the game and the benches play a set from the skeleton's parent: not one of the chicken's clips reached a bone, and the editor filled with "couldn't resolve track" warnings. `ClipMatcher.set_from_model` now copies the clips re-addressed, as `tools/extract_animation_library.gd` does for the humanoid's. A set made before this needs making again (the character bench's **Animation set from the model**).
+- The bench's preview of a model's own clips (`model/Walk`) keeps working when its skeleton is renamed for the game's (`Skeleton3D`).
+- **The panel's choices follow the bench**: switching to another piece left "Tried on" showing the last one's character (Chicken, from Peck) while the new ability, which no character listed, was on the humanoid.
+- No server change: nothing to republish for the template; restart the editor.

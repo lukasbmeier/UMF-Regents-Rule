@@ -83,6 +83,16 @@ func rebuild() -> void:
 	if set == null or skeleton == null:
 		return
 	if skeleton.name != &"Skeleton3D":
+		# Renamed as a set's clips address it: the model's own clips (its player's) are re-addressed
+		# to match first, or they would no longer reach the bones they move.
+		var own: AnimationPlayer = ClipMatcher.model_player(model)
+		if own != null:
+			var from: Node = own.get_node_or_null(own.root_node)
+			for lib: StringName in own.get_animation_library_list():
+				var copy: AnimationLibrary = ClipMatcher.readdressed(own.get_animation_library(lib), from, skeleton)
+				own.remove_animation_library(lib)
+				own.add_animation_library(lib, copy)
+			own.root_node = own.get_path_to(skeleton.get_parent())
 		skeleton.name = "Skeleton3D"
 	_tree = AnimationTree.new()
 	for lib_name: StringName in set.libraries:

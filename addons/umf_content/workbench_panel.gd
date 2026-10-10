@@ -130,6 +130,9 @@ func _update_values(cs: Array[Dictionary]) -> void:
 			(ed as SpinBox).value = float(c.get("value", 0.0))
 		elif ed is CheckBox:
 			(ed as CheckBox).button_pressed = bool(c.get("value", false))
+		elif ed is OptionButton:
+			# A choice shows what the bench has NOW (another piece, tried on another character).
+			(ed as OptionButton).select((ed.get_meta(&"values", []) as Array).find(c.get("value")))
 		ed.set_block_signals(false)
 
 
@@ -269,6 +272,7 @@ func _add_control(c: Dictionary) -> void:
 				if pair[0] == c.get("value"):
 					opt.select(opt.item_count - 1)
 			opt.item_selected.connect(func(i: int) -> void: set_control(n, values[i]))
+			opt.set_meta(&"values", values)
 			editor = opt
 	editor.name = "Control_" + String(n)
 	editor.tooltip_text = String(c.get("tooltip", ""))

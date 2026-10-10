@@ -87,6 +87,25 @@ static func model_player(model: Node) -> AnimationPlayer:
 	return null
 
 
+## A copy of `lib`, each track addressed from `skel`'s parent instead of `from` (the model's own
+## player's root), its skeleton as `Skeleton3D`. A track to nothing the model has is left as it is.
+static func readdressed(lib: AnimationLibrary, from: Node, skel: Skeleton3D) -> AnimationLibrary:
+	var out := AnimationLibrary.new()
+	for a: StringName in lib.get_animation_list():
+		var anim: Animation = lib.get_animation(a).duplicate(true) as Animation
+		if skel != null and from != null:
+			for t: int in anim.get_track_count():
+				var path: NodePath = anim.track_get_path(t)
+				var subs: String = path.get_concatenated_subnames()
+				var node: Node = from.get_node_or_null(NodePath(path.get_concatenated_names())) if path.get_name_count() > 0 else null
+				if node == null:
+					continue
+				var to: String = "Skeleton3D" if node == skel else String(skel.get_parent().get_path_to(node))
+				anim.track_set_path(t, NodePath(to + (":" + subs if not subs.is_empty() else "")))
+		out.add_animation(a, anim)
+	return out
+
+
 ## A model's own clips: library -> names (the unnamed library is "").
 static func model_clips(scene: PackedScene) -> Dictionary:
 	var out: Dictionary = {}
@@ -108,6 +127,11 @@ static func model_clips(scene: PackedScene) -> Dictionary:
 ## AN ANIMATION SET FROM A MODEL'S OWN CLIPS: each semantic name matched by name, the clips the game
 ## needs and the model lacks filled with a stand-in (`STAND_INS`). `report` gets one line per
 ## semantic name: what it plays, "stand-in" or "none". Null when the model has no clips.
+##
+## The clips are COPIES, re-addressed the way every player of a set reads them: from the skeleton's
+## parent, the skeleton called `Skeleton3D` (as `tools/extract_animation_library.gd` does). A model's
+## own clips are addressed from ITS root ("CharacterArmature/Skeleton3D:Head" in a glTF chicken), and
+## left so, not one bone moved in the game or on a bench.
 static func set_from_model(scene: PackedScene, report: Array[String] = []) -> AnimationSet:
 	if scene == null:
 		return null
@@ -116,8 +140,13 @@ static func set_from_model(scene: PackedScene, report: Array[String] = []) -> An
 	var libs: Dictionary[StringName, AnimationLibrary] = {}
 	var names: Dictionary = {}
 	if player != null:
+		var skel: Skeleton3D = null
+		for n: Node in root.find_children("*", "Skeleton3D", true, false):
+			skel = n as Skeleton3D
+			break
+		var from: Node = player.get_node_or_null(player.root_node)
 		for lib: StringName in player.get_animation_library_list():
-			libs[lib] = player.get_animation_library(lib)
+			libs[lib] = readdressed(player.get_animation_library(lib), from if from != null else player.get_parent(), skel)
 			var list := PackedStringArray()
 			for a: StringName in libs[lib].get_animation_list():
 				if a != &"RESET":

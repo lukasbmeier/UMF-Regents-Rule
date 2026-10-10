@@ -381,14 +381,19 @@ func _run_status_bench() -> void:
 
 
 ## A small model with clips of its own (a stand-in for a chicken: Idle, Walk, Jump on one bone, a
-## 0.4 m box for a body), saved as a scene under `dir`.
+## 0.4 m box for a body), saved as a scene under `dir`. Laid out as a glTF is: the skeleton under an
+## armature node, its clips addressed from the model's root ("Armature/Skeleton:root").
 func _clip_model(dir: String) -> PackedScene:
 	var root := Node3D.new()
 	root.name = "Hen"
+	var armature := Node3D.new()
+	armature.name = "Armature"
+	root.add_child(armature)
+	armature.owner = root
 	var skel := Skeleton3D.new()
-	skel.name = "Skeleton3D"
+	skel.name = "Skeleton"
 	skel.add_bone("root")
-	root.add_child(skel)
+	armature.add_child(skel)
 	skel.owner = root
 	var body := MeshInstance3D.new()
 	body.name = "Body"
@@ -418,9 +423,9 @@ func _clip_model(dir: String) -> PackedScene:
 		var a := Animation.new()
 		a.length = 1.0
 		var t: int = a.add_track(Animation.TYPE_POSITION_3D)
-		a.track_set_path(t, ^"Skeleton3D:root")
+		a.track_set_path(t, ^"Armature/Skeleton:root")
 		a.position_track_insert_key(t, 0.0, Vector3.ZERO)
-		a.position_track_insert_key(t, 1.0, Vector3(0, 0.1 if clip == "Jump" else 0.0, 0))
+		a.position_track_insert_key(t, 1.0, Vector3(0, 0.1 if clip == "Jump" else 0.0, 0.4 if clip == "Walk" else 0.0))
 		lib.add_animation(StringName(clip), a)
 	player.add_animation_library(&"", lib)
 	root.add_child(player)
@@ -539,6 +544,16 @@ func _run_workbenches_2() -> void:
 		and clip_of.call(&"jump.start") == &"Jump" and clip_of.call(&"jump.land") == &"Jump" and set.missing_required().is_empty(),
 		"Idle, Walk and Jump matched by name, the landing it lacks stood in by its jump: nothing the game needs is missing")
 	_check(bench.last_result.contains("stand-in"), "and it says which clips are stand-ins")
+	# THE CLIPS MOVE ITS BONES, played as the game plays a set (from the skeleton's parent), though the
+	# model's own were addressed from its root.
+	bench.set_control(&"paused", true)
+	bench.set_control(&"animation", &"locomotion.walk")
+	bench.set_control(&"position", 0.5)
+	await get_tree().create_timer(0.1).timeout
+	var walked: Vector3 = m.skeleton.get_bone_pose_position(0) if m.skeleton != null else Vector3.ZERO
+	_check(m.playing() == &"locomotion.walk" and absf(walked.z - 0.2) < 0.03,
+		"its walk moves its bones as the game plays a set (the root bone %.2f m along, half way through)" % walked.z)
+	bench.set_control(&"paused", false)
 	var choices: Array = m.clip_choices()
 	var names: Array = choices.map(func(c: Array) -> String: return String(c[0]))
 	_check(names.has("locomotion.walk") and names.has("Walk") and names.has("model/Walk"),
@@ -548,6 +563,8 @@ func _run_workbenches_2() -> void:
 	bench.set_control(&"position", 0.5)
 	await get_tree().create_timer(0.25).timeout
 	_check(m.playing() == &"model/Walk" and absf(m.preview_fraction() - 0.5) < 0.02, "a clip is held paused where it is scrubbed to (%.2f, a quarter second later)" % m.preview_fraction())
+	var held: Vector3 = m.skeleton.get_bone_pose_position(0) if m.skeleton != null else Vector3.ZERO
+	_check(absf(held.z - 0.2) < 0.03, "and the model's OWN clip moves its bones there too, its skeleton renamed for the game's (%.2f m)" % held.z)
 	bench.set_control(&"paused", false)
 	bench.set_control(&"speed", 0.5)
 	_check(m.preview_speed == 0.5, "and played slower")
@@ -585,6 +602,22 @@ func _run_workbenches_2() -> void:
 	_check(bridge.asked.has("play --character=" + hen_path), "Play as this plays the game as it %s" % str(bridge.asked))
 	panel.press_action(&"new_movement")
 	var mv: MovementProfileDef = hen.movement_profile
+	# A CHOICE shows the bench's value now, not the one it was drawn with (Luke: "Tried on: Chicken" on
+	# a bench whose ability no character listed, so on the humanoid).
+	var bridge3 := ContentDockBridge.new()
+	var panel3 := WorkbenchPanel.new()
+	get_tree().root.add_child(panel3)
+	panel3.setup(bridge3)
+	panel3.show_bench(bench)
+	var move_opt: OptionButton = panel3.control(&"movement") as OptionButton
+	panel3.set_control(&"movement", null)
+	await get_tree().process_frame
+	_check(move_opt != null and panel3.control(&"movement") == move_opt and move_opt.get_item_text(move_opt.selected).begins_with("(the game's default"),
+		"a choice changed shows its new value (%s)" % (move_opt.get_item_text(move_opt.selected) if move_opt != null and move_opt.selected >= 0 else "nothing"))
+	panel3.set_control(&"movement", mv)
+	await get_tree().process_frame
+	_check(move_opt.get_item_text(move_opt.selected).begins_with(mv.display_name), "and back (%s)" % move_opt.get_item_text(move_opt.selected))
+	panel3.queue_free()
 	_check(mv != null and mv.resource_path.begins_with(root.path_join("foundation/content/movement"))
 		and bridge.asked.has("open res://tools/workbench/movement_workbench.tscn"),
 		"New movement for it makes one, links it to the character, and opens it on its own bench %s" % str(bridge.asked))
