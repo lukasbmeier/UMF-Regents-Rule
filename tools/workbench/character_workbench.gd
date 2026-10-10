@@ -1,23 +1,37 @@
 @tool
 class_name CharacterWorkbench extends Workbench
-## THE CHARACTER WORKBENCH (DECISIONS #204): a character definition on the bench, its model dressed
-## and animated the way the game does it (`Mannequin`), beside the collision capsule its entity
-## really uses. Make a new one from a rigged model (New From File: drop the .glb), fit it in the
-## Inspector (visual_offset, visual_yaw_deg), and test it:
+## THE CHARACTER WORKBENCH (DECISIONS #204, reworked by #207): where a character is made first, and
+## then everything that hangs off it. The character's own fields are in the Inspector; this bench
+## shows it the way the game does (`Mannequin`), inside the capsule its body really is, facing the
+## game's forward (the yellow arrow), and the Workbench panel holds:
 ##
-##   every_clip    plays every clip its animation set names; lists any the game needs that are missing
-##   walk_facing   reads which way its walk travels: a rig facing the wrong way moonwalks in the game
-##   looks         wears each of its looks in turn
+##   look at it        any look; ANY animation (what the game plays, every clip of its set, the
+##                     model's own), played, paused, slowed and scrubbed
+##   animations        which clip the game plays for each thing it needs (idle, walk, jump...), each
+##                     one a choice; "Animation set from the model" makes the character's own set
+##                     from a model's clips (a chicken's Idle, Walk, Jump)
+##   how it plays      its movement (New movement for it / Open its movement) and its abilities (New
+##                     ability for it): made from here, linked to it, opened on their own benches
+##   Play as this      the game, played as this character
+##   tests             every clip; which way its walk faces; every look
 ##
-## Fit checks (amber): its feet are on the floor; its height fits its collision capsule.
+## Fit checks (amber): its feet are on the floor; its body (collision_*) fits its model.
 
-## How long each clip plays in `every_clip`, and each look in `looks` (s).
-@export_range(0.1, 3.0, 0.1) var seconds_each: float = 0.8
-
-## Feet this far off the floor, or a model this much taller or shorter than its capsule, warns.
+## Feet this far off the floor, or a model this much taller or shorter than its body, warns.
 const FEET_TOLERANCE_M: float = 0.06
 const HEIGHT_TOLERANCE: float = 0.2
+## Besides the clips the game cannot do without, the ones shown to choose in the panel.
+const ALSO_MAPPED: Array[StringName] = [&"locomotion.sprint", &"react.hit", &"react.death", &"interact"]
 
+## How long each clip plays in `every_clip`, and each look in `looks` (s).
+var seconds_each: float = 0.8
+## What the panel's animation picker plays (&"": what the game plays standing still).
+var preview_clip: StringName = &""
+
+## Its own animation set was changed here and not yet saved.
+var _set_dirty: bool = false
+## Where the previewed clip was, so a rebuild (an edit) carries on from there.
+var _kept_fraction: float = 0.0
 var _capsule: MeshInstance3D = null
 var _label: Label3D = null
 ## What the last facing measurement found: "forward", "backward", "in_place", "unknown" (tests).
@@ -32,25 +46,304 @@ func test_actions() -> Array[StringName]:
 	return [&"every_clip", &"walk_facing", &"looks"]
 
 
+func test_label(action: StringName) -> String:
+	match action:
+		&"every_clip": return "Play every clip"
+		&"walk_facing": return "Which way it faces"
+		&"looks": return "Every look"
+	return super(action)
+
+
+func test_info(action: StringName) -> String:
+	match action:
+		&"every_clip": return "Plays each animation the game uses for it, and names any the game needs that it lacks"
+		&"walk_facing": return "Reads which way its walk travels: a model facing backwards moonwalks in the game"
+		&"looks": return "Wears each of its looks in turn"
+	return ""
+
+
 func load_item(def: ContentDef) -> void:
 	_build_props()
 	var d: EntityDefinition = def as EntityDefinition
 	var m: Mannequin = _mannequin()
 	m.definition = d
-	var cap: CapsuleShape3D = capsule_of(d)
+	var cap: CapsuleShape3D = d.body_capsule() if d != null else null
 	_capsule.visible = cap != null
 	if cap != null:
 		var mesh: CapsuleMesh = _capsule.mesh as CapsuleMesh
 		mesh.radius = cap.radius
 		mesh.height = cap.height
-		_capsule.position.y = cap.height * 0.5
+		_capsule.position = Vector3(0.0, cap.height * 0.5, 0.0)
 	var cam: Camera3D = get_node_or_null(^"ThumbnailCamera") as Camera3D
 	if cam != null:
-		cam.look_at_from_position(Vector3(0.9, 1.45, -2.7), Vector3(0.25, 0.95, 0.0))   # a three-quarter front view
+		var h: float = cap.height if cap != null else 1.8
+		cam.look_at_from_position(Vector3(0.5, 0.8, -1.5) * h, Vector3(0.14, 0.53, 0.0) * h)   # a three-quarter front view
 	_label.text = "" if d == null else "%s  ·  kind %d  ·  %s  ·  %d look(s)" % [d.display_name, d.kind,
 		"no animation set" if d.animation_set == null else "%d clips" % d.animation_set.clips.size(),
 		maxi(d.visual_variants.size(), 1 if d.visual_scene != null else 0)]
+	# An edit rebuilds the model: the clip being looked at carries on from where it was (paused or
+	# scrubbed), so changing a field never loses the frame you were fitting it on.
+	if not preview_clip.is_empty():
+		if m.preview(preview_clip):
+			m.seek_fraction(_kept_fraction)
+		else:
+			preview_clip = &""
 
+
+func _process(delta: float) -> void:
+	var m: Mannequin = get_node_or_null(^"Mannequin") as Mannequin
+	if m != null and not preview_clip.is_empty():
+		_kept_fraction = m.preview_fraction()
+	super(delta)
+
+
+# --- the panel ---------------------------------------------------------------------------------
+
+func controls() -> Array[Dictionary]:
+	var d: EntityDefinition = item as EntityDefinition
+	var out: Array[Dictionary] = []
+	if d == null:
+		return out
+	var m: Mannequin = _mannequin()
+	out.append({"kind": "heading", "label": "Look at it", "value": "Any animation, played the way you want to see it"})
+	if d.visual_variants.size() > 1:
+		var looks: Array = []
+		for i: int in d.visual_variants.size():
+			looks.append([i, d.variant_names()[i] if i < d.variant_names().size() else str(i)])
+		out.append({"name": &"look", "label": "Look", "kind": "choice", "value": m.look, "options": looks})
+	var clips: Array = [[&"", "(what the game plays: standing)"]]
+	clips.append_array(m.clip_choices())
+	out.append({"name": &"animation", "label": "Animation", "kind": "choice", "value": preview_clip, "options": clips,
+		"tooltip": "Semantic names are what the game plays for each thing; 'clip:' is any clip of its set; 'model:' the model's own"})
+	out.append({"name": &"speed", "label": "Speed", "kind": "number", "value": m.preview_speed, "min": 0.05, "max": 3.0, "step": 0.05})
+	out.append({"name": &"paused", "label": "Paused", "kind": "toggle", "value": m.preview_paused})
+	out.append({"name": &"position", "label": "Position (0-1)", "kind": "number", "value": m.preview_fraction(), "min": 0.0, "max": 1.0, "step": 0.01,
+		"tooltip": "Scrub through the clip (pause first to hold a frame)"})
+	out.append({"kind": "heading", "label": "Animations the game needs", "value": _set_note(d)})
+	if _owns_set(d):
+		var options: Array = [[&"", "(none: borrows another)"]]
+		for lib: StringName in d.animation_set.libraries:
+			if d.animation_set.libraries[lib] == null:
+				continue
+			for a: StringName in d.animation_set.libraries[lib].get_animation_list():
+				if a != &"RESET":
+					var q: StringName = ClipMatcher.qualify(lib, String(a))
+					options.append([q, String(q)])
+		var shown: Array[StringName] = []
+		shown.append_array(AnimationSet.REQUIRED)
+		shown.append_array(ALSO_MAPPED)
+		for semantic: StringName in shown:
+			var ref: AnimationClipRef = d.animation_set.clips.get(semantic)
+			out.append({"name": StringName("map:" + String(semantic)), "label": String(semantic), "kind": "choice",
+				"value": ref.anim_name if ref != null else &"", "options": options,
+				"tooltip": "The clip the game plays for %s%s" % [semantic, " (the game cannot do without it)" if AnimationSet.REQUIRED.has(semantic) else ""]})
+	out.append({"kind": "heading", "label": "How it plays", "value": _plays_note(d)})
+	out.append({"name": &"seconds_each", "label": "Seconds each (tests)", "kind": "number", "value": seconds_each, "min": 0.1, "max": 3.0, "step": 0.1})
+	return out
+
+
+func set_control(n: StringName, value: Variant) -> void:
+	var d: EntityDefinition = item as EntityDefinition
+	var m: Mannequin = _mannequin()
+	match n:
+		&"look":
+			m.look = int(value)
+			if not preview_clip.is_empty():
+				m.preview(preview_clip)
+		&"animation":
+			preview_clip = StringName(value)
+			if preview_clip.is_empty():
+				m.play(&"locomotion.idle")
+			elif not m.preview(preview_clip):
+				last_result = "the character has no clip '%s'" % preview_clip
+		&"speed":
+			m.preview_speed = float(value)
+		&"paused":
+			m.preview_paused = bool(value)
+		&"position":
+			m.seek_fraction(float(value))
+			_kept_fraction = float(value)
+		&"seconds_each":
+			seconds_each = float(value)
+		_:
+			if String(n).begins_with("map:") and d != null and _owns_set(d):
+				var semantic: StringName = StringName(String(n).substr(4))
+				if String(value).is_empty():
+					d.animation_set.clips.erase(semantic)
+				else:
+					d.animation_set.clips[semantic] = AnimationClipRef.make(StringName(value), ClipMatcher.LOOPING.has(semantic))
+				_set_dirty = true
+				m.rebuild()
+				last_result = "%s now plays %s (Save keeps it)" % [semantic, value if not String(value).is_empty() else "nothing of its own"]
+	panel_changed.emit()
+
+
+func bench_actions() -> Array[Dictionary]:
+	var d: EntityDefinition = item as EntityDefinition
+	var out: Array[Dictionary] = []
+	if d == null or read_only_here():
+		return out
+	var scene: PackedScene = _model_scene(d)
+	if scene != null and not ClipMatcher.model_clips(scene).is_empty():
+		out.append({"name": &"make_set", "label": "Animation set from the model",
+			"tooltip": "Make this character's own animation set from its model's clips (each matched by name; change any in the panel)"})
+	out.append({"name": &"fit_body", "label": "Fit the body to the model", "tooltip": "Set collision_height and collision_radius to the model's size"})
+	if d.movement_profile == null:
+		out.append({"name": &"new_movement", "label": "New movement for it", "tooltip": "A movement profile for this character (starting as the game's default), linked to it, opened on its bench"})
+	else:
+		out.append({"name": &"open_movement", "label": "Open its movement", "tooltip": "%s, on the movement bench" % d.movement_profile.display_name})
+	out.append({"name": &"new_ability", "label": "New ability for it", "tooltip": "An ability this character can use, linked to it, opened on the ability bench"})
+	return out
+
+
+func do_action(action: StringName) -> Dictionary:
+	var d: EntityDefinition = item as EntityDefinition
+	match action:
+		&"make_set":
+			return {"edit": d} if make_set_from_model() else {}
+		&"fit_body":
+			fit_body()
+			return {"edit": d}
+		&"new_movement":
+			var mv: ContentDef = _new_linked(&"movement", "%s movement" % d.display_name)
+			if mv != null:
+				d.movement_profile = mv as MovementProfileDef
+				save()
+				return {"open": mv}
+			return {}
+		&"open_movement":
+			return {"open": d.movement_profile}
+		&"new_ability":
+			var ab: ContentDef = _new_linked(&"ability", "%s ability" % d.display_name)
+			if ab != null:
+				d.abilities.append(ab as AbilityDef)
+				save()
+				return {"open": ab}
+			return {}
+	return super(action)
+
+
+func play_args() -> PackedStringArray:
+	if item == null or item.resource_path.is_empty():
+		return PackedStringArray()
+	return PackedStringArray(["--character=" + item.resource_path])
+
+
+## Save the character, and its own animation set when its clips were changed here.
+func save() -> Error:
+	var d: EntityDefinition = item as EntityDefinition
+	if d != null and _set_dirty and _owns_set(d):
+		ResourceSaver.save(d.animation_set, d.animation_set.resource_path)
+		_set_dirty = false
+	return super()
+
+
+## AN ANIMATION SET FROM THE MODEL (DECISIONS #207): the character's own, made from its model's clips
+## (`ClipMatcher`), saved beside its owner's (game/<genre>/anim/<character>.tres) and linked. True
+## when it was made; `last_result` says what plays what.
+func make_set_from_model() -> bool:
+	var d: EntityDefinition = item as EntityDefinition
+	var scene: PackedScene = _model_scene(d) if d != null else null
+	var report: Array[String] = []
+	var set: AnimationSet = ClipMatcher.set_from_model(scene, report)
+	if set == null:
+		last_result = "its model has no clips of its own to make a set from"
+		_update_status()
+		return false
+	var path: String = anim_path_for(d)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
+	var err: Error = ResourceSaver.save(set, path)
+	if err != OK:
+		last_result = "could not save %s: %s" % [path, error_string(err)]
+		_update_status()
+		return false
+	d.animation_set = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE) as AnimationSet
+	save()
+	_refresh()
+	var missing: Array[StringName] = d.animation_set.missing_required()
+	last_result = "made %s: %s%s" % [path.get_file(), "; ".join(report),
+		"" if missing.is_empty() else ". STILL MISSING what the game needs: %s" % ", ".join(missing)]
+	_update_status()
+	return true
+
+
+## Where a character's own animation set is kept: beside its owner's content, never inside a content
+## folder (those hold content only), and apart from the sets a tool generates for many characters
+## (game/anim/humanoid.tres): game/<genre>/anim/characters/<file>.tres, or game/anim/characters/ for
+## the template's.
+static func anim_path_for(d: EntityDefinition) -> String:
+	var owner: String = ContentLibrary.owner_of_path(d.resource_path)
+	var root: String = ContentLibrary.root_of(owner).get_base_dir() if owner != ContentLibrary.FOUNDATION \
+		else (ContentLibrary.root_override.path_join("game") if not ContentLibrary.root_override.is_empty() else "res://game")
+	return root.path_join("anim/characters").path_join(d.resource_path.get_file())
+
+
+## FIT THE BODY TO THE MODEL: its capsule as tall as the model, as wide as it (within reason).
+func fit_body() -> void:
+	var d: EntityDefinition = item as EntityDefinition
+	var m: Mannequin = _mannequin()
+	if d == null or m.model == null:
+		return
+	var box: AABB = model_bounds(m.model)
+	if box.size == Vector3.ZERO:
+		return
+	d.collision_height = snappedf(box.size.y, 0.01)
+	d.collision_radius = snappedf(clampf(maxf(box.size.x, box.size.z) * 0.5, 0.05, box.size.y * 0.5), 0.01)
+	last_result = "body: %.2f m tall, %.2f m radius (Save keeps it)" % [d.collision_height, d.collision_radius]
+	_refresh()
+
+
+## Whether the character's animation set is its own to change here (not the template's in a game,
+## not one shared from elsewhere): a file under its owner's anim folder.
+func _owns_set(d: EntityDefinition) -> bool:
+	if d == null or d.animation_set == null or d.animation_set.resource_path.is_empty():
+		return false
+	if read_only_here():
+		return false
+	return d.animation_set.resource_path == anim_path_for(d)
+
+
+func _set_note(d: EntityDefinition) -> String:
+	if d.animation_set == null:
+		return "None: this character does not animate. \"Animation set from the model\" makes one from its model's clips."
+	var missing: Array[StringName] = d.animation_set.missing_required()
+	var gap: String = "" if missing.is_empty() else " MISSING what the game needs: %s." % ", ".join(missing)
+	if _owns_set(d):
+		return "Its own (%s): choose the clip for each.%s" % [d.animation_set.resource_path, gap]
+	return "Shared: %s (change it where it is made; or make this character its own from its model).%s" % [d.animation_set.resource_path, gap]
+
+
+func _plays_note(d: EntityDefinition) -> String:
+	var names := PackedStringArray()
+	for a: AbilityDef in d.abilities:
+		if a != null:
+			names.append(a.display_name)
+	return "Movement: %s.  Abilities: %s." % [
+		d.movement_profile.display_name if d.movement_profile != null else "the game's default",
+		", ".join(names) if not names.is_empty() else "none listed (it may use any)"]
+
+
+## A new piece of `type` for this character's owner (a genre's, in a game), saved; null when it could not be made.
+func _new_linked(type: StringName, display_name: String) -> ContentDef:
+	var owner: String = ContentLibrary.owner_of_path(item.resource_path)
+	var errors: Array[String] = []
+	var path: String = ContentLibrary.create(type, owner, display_name, errors)
+	if path.is_empty():
+		last_result = "could not make it: %s" % "; ".join(errors)
+		_update_status()
+		return null
+	return load(path) as ContentDef
+
+
+static func _model_scene(d: EntityDefinition) -> PackedScene:
+	if d == null:
+		return null
+	if d.visual_scene != null:
+		return d.visual_scene
+	return d.visual_variants[0] if not d.visual_variants.is_empty() else null
+
+
+# --- tests -------------------------------------------------------------------------------------
 
 func run_test(action: StringName) -> String:
 	var d: EntityDefinition = item as EntityDefinition
@@ -103,18 +396,19 @@ func fit_checks() -> Array[String]:
 	if absf(box.position.y) > FEET_TOLERANCE_M:
 		out.append("its feet are %d cm %s the floor: set visual_offset.y to %.2f" % [
 			roundi(absf(box.position.y) * 100.0), "below" if box.position.y < 0.0 else "above", d.visual_offset.y - box.position.y])
-	var cap: CapsuleShape3D = capsule_of(d)
+	var cap: CapsuleShape3D = d.body_capsule()
 	if cap != null:
 		var ratio: float = box.size.y / cap.height
 		if absf(ratio - 1.0) > HEIGHT_TOLERANCE:
-			out.append("it is %.2f m tall and its collision capsule %.2f m: what others bump into is not what they see" % [box.size.y, cap.height])
+			out.append("it is %.2f m tall and its body %.2f m: what others bump into is not what they see (Fit the body to the model, or visual_scale)" % [box.size.y, cap.height])
 	if last_facing == "backward":
 		out.append("its walk travels backward: it would moonwalk (visual_yaw_deg)")
 	return out
 
 
 ## FILL FROM A RIGGED MODEL: the model is its look; it plays the reference humanoid's animations
-## when its skeleton has the humanoid's bones, else none yet; its entity is the foundation's player.
+## when its skeleton has the humanoid's bones, else its own clips (an animation set made from them);
+## its entity is the foundation's player; its body is fitted to the model.
 func fill_from_file(def: ContentDef, path: String) -> String:
 	var d: EntityDefinition = def as EntityDefinition
 	var scene: PackedScene = load(path) as PackedScene
@@ -130,11 +424,29 @@ func fill_from_file(def: ContentDef, path: String) -> String:
 	d.scene = load("res://foundation/entities/player.tscn") as PackedScene
 	d.camera_rig = humanoid.camera_rig
 	d.visual_yaw_deg = 0.0
-	if skel != null and humanoid.animation_set != null and _shares_rig(skel, humanoid):
+	var shared_rig: bool = skel != null and humanoid.animation_set != null and _shares_rig(skel, humanoid)
+	if shared_rig:
 		d.animation_set = humanoid.animation_set
 		d.visual_yaw_deg = humanoid.visual_yaw_deg
 	probe.free()
 	return ""
+
+
+## After New From File: a model with clips of its own gets its own set; the body is fitted to it.
+func new_from_file(path: String, owner: String = "") -> String:
+	var made: String = super(path, owner)
+	var d: EntityDefinition = item as EntityDefinition
+	if made.is_empty() or d == null:
+		return made
+	var said: String = last_result
+	if d.animation_set == null and not ClipMatcher.model_clips(_model_scene(d)).is_empty():
+		make_set_from_model()
+		said += "; " + last_result
+	fit_body()
+	save()
+	last_result = said + "; " + last_result
+	_update_status()
+	return made
 
 
 ## Which way the walk clip travels, read from the animation itself (no playback): "forward" (-Z,
@@ -167,18 +479,9 @@ static func facing(d: EntityDefinition) -> String:
 	return "forward" if world.dot(Vector3.FORWARD) > 0.0 else "backward"
 
 
-## The collision capsule the definition's entity scene uses, or null.
+## The collision capsule the definition's body is (its own size, else its scene's), or null.
 static func capsule_of(d: EntityDefinition) -> CapsuleShape3D:
-	if d == null or d.scene == null:
-		return null
-	var root: Node = d.scene.instantiate()
-	var out: CapsuleShape3D = null
-	for n: Node in root.find_children("*", "CollisionShape3D", true, false):
-		if (n as CollisionShape3D).shape is CapsuleShape3D:
-			out = ((n as CollisionShape3D).shape as CapsuleShape3D).duplicate() as CapsuleShape3D
-			break
-	root.free()
-	return out
+	return d.body_capsule() if d != null else null
 
 
 ## Every mesh under `model`, as one box in the model's parent's space.
@@ -222,15 +525,18 @@ func _mannequin() -> Mannequin:
 func _build_props() -> void:
 	if _capsule != null:
 		return
+	# ITS BODY, AROUND IT (DECISIONS #207): the capsule drawn where the body is, over the model, so a
+	# body that does not fit the model shows.
 	_capsule = MeshInstance3D.new()
 	_capsule.name = "Capsule"
 	_capsule.mesh = CapsuleMesh.new()
 	var mat := StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.4, 0.8, 1.0, 0.18)
+	mat.albedo_color = Color(0.4, 0.8, 1.0, 0.16)
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.no_depth_test = false
 	_capsule.material_override = mat
-	_capsule.position.x = 0.9
 	add_child(_capsule)
 	# The game's forward (-Z): a character must face this arrow, or it walks backward in the game.
 	var arrow := MeshInstance3D.new()

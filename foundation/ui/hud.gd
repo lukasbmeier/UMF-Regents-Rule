@@ -14,6 +14,7 @@ const SESSION_KIND: int = 0
 
 var _entity: SpaceTimeEntity = null
 var _session: SessionComponent = null
+var _status_c: StatusComponent = null
 
 
 func _ready() -> void:
@@ -37,7 +38,15 @@ func status_line() -> String:
 		phase = "PHASE %d" % _session.get_phase()
 	var time: String = "waiting for players" if _session.is_waiting() \
 		else "%ds left" % int(maxf(0.0, _session.seconds_remaining()))
-	return "%s  •  %s  •  %d pts" % [phase, time, _session.get_score()]
+	return "%s  •  %s  •  %d pts%s" % [phase, time, _session.get_score(), status_part()]
+
+
+## The player's own status, when it is not normal: "  •  DOWNED 42s".
+func status_part() -> String:
+	if _status_c == null or not is_instance_valid(_status_c) or _status_c.status() == StatusDef.NORMAL:
+		return ""
+	var left: float = _status_c.seconds_left()
+	return "  •  %s%s" % [_status_c.def().display_name.to_upper(), "" if is_inf(left) else " %ds" % ceili(left)]
 
 
 ## Before the local player exists: what the connection is doing.
@@ -61,6 +70,7 @@ func _on_entity_spawned(entity_id: int, _kind: int) -> void:
 		return
 	_entity = ent
 	_session = ent.find_component(SessionComponent) as SessionComponent
+	_status_c = ent.find_component(StatusComponent) as StatusComponent
 
 
 func _on_entity_despawned(entity_id: int) -> void:
@@ -68,3 +78,4 @@ func _on_entity_despawned(entity_id: int) -> void:
 		return
 	_entity = null
 	_session = null
+	_status_c = null

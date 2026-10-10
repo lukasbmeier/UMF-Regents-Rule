@@ -683,6 +683,71 @@ assert_eq "$(row_count "SELECT * FROM action_event WHERE actor_id = $MYENT")" "0
 # integrity: a rod bought mid-cast would change the odds of a fish already on the line.
 run_genre_hooks integration_genre_late   # a genre's sections that need everything above (fishing: the shop, gear, the rival)
 
+echo "== statuses and their timers (DECISIONS #206) =="
+# What a status LETS an entity do is content (foundation/content/status/); the module keeps who is
+# in which (`status_state`), moves it on when its time is up, and holds every rule to it.
+UNTIL_CHANGED=4294967295
+status_of() { sql_first "SELECT status FROM status_state WHERE entity_id = $1" 1; }
+assert_eq "$(row_count "SELECT * FROM status_state WHERE entity_id = $MYENT")" "0" "a player starts with no status row: normal"
+out="$(spacetime call --anonymous "$DB" set_status "$NEAR" 2 0 '""' 2>&1)"
+check "$(echo "$out" | grep -qi "only an authority" && echo true || echo false)" "a player cannot set someone else's status"
+assert_rejected "set_status $NEAR 77 0 \"\"" "no status 77" "a status this game does not have is refused, naming the ones it has"
+assert_rejected "set_status $NEAR 2 0 $(python -c "print('x' * 300)")" "at most 256 bytes" "a status's data is kept short"
+assert_ok "set_status $NEAR 2 0 \"\"" "an authority downs the NPC, for the status's own length"
+assert_eq "$(status_of $NEAR)" "2" "it is downed"
+assert_eq "$(sql_first "SELECT lasts_ms FROM status_state WHERE entity_id = $NEAR" 1)" "60000" "for downed's own 60 s (its StatusDef)"
+assert_eq "$(sql_first "SELECT by_entity FROM status_state WHERE entity_id = $NEAR" 1)" "$MYENT" "and says who did it"
+assert_eq "$(sql_rows_anon "SELECT * FROM status_state WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client shows it"
+
+# The timer: downed for 1.5 s becomes OUT (downed's `then`) on its own; a newer status cancels it.
+assert_ok "set_status $NEAR 2 1500 \"\"" "downed for 1.5 s"
+sleep 3
+assert_eq "$(status_of $NEAR)" "4" "when its time is up it becomes out (downed's then), by the server's timer"
+assert_eq "$(sql_first "SELECT prev_status FROM status_state WHERE entity_id = $NEAR" 1)" "2" "from downed"
+assert_eq "$(sql_first "SELECT lasts_ms FROM status_state WHERE entity_id = $NEAR" 1)" "0" "and out lasts until something changes it"
+assert_ok "set_status $NEAR 2 1500 \"\"" "downed for 1.5 s again"
+assert_ok "set_status $NEAR 1 $UNTIL_CHANGED \"\"" "and injured before that is up"
+sleep 3
+assert_eq "$(status_of $NEAR)" "1" "the old timer does not move the newer status on (it is still injured)"
+assert_eq "$(row_count "SELECT * FROM status_expiry")" "0" "and no timer is left behind"
+
+# What a status allows: a downed actor cannot act; nobody can reach someone who is out.
+assert_ok "set_status $MYENT 2 $UNTIL_CHANGED \"\"" "the CLI player is downed"
+assert_rejected "use_ability 0 $NEAR $AIM 51" "cannot while downed" "a downed player cannot use an ability"
+assert_rejected "interact $NEAR 0" "cannot while downed" "nor use anything"
+assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "back to normal"
+assert_ok "set_status $NEAR 4 $UNTIL_CHANGED \"\"" "the NPC is out"
+assert_rejected "use_ability 0 $NEAR $AIM 52" "cannot be reached" "an ability cannot reach someone who is out"
+assert_ok "set_status $NEAR 0 $UNTIL_CHANGED \"\"" "and back"
+sleep 1
+assert_ok "use_ability 0 $NEAR $AIM 53" "now it can"
+
+# TIER A IN A STATUS: a downed player crawls (a quarter of its speed), so a claim a running player
+# may make is clamped; after the grace (`foundation.status_grace_ms`), and not before it.
+SEQ=$(field last_processed_seq)
+EPOCH=$(field correction_epoch)
+read -r SX SY SZ <<< "$(pos_of)"
+assert_ok "set_status $MYENT 2 $UNTIL_CHANGED \"\"" "downed again"
+sleep 1
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
+check "$([ "$(field correction_epoch)" != "$EPOCH" ] && echo true || echo false)" "a running step (0.1 m in a frame) is clamped while downed"
+read -r CX CY CZ <<< "$(pos_of)"
+check "$(python -c "print('true' if 0.0 < $CX - $SX < 0.04 else 'false')")" "to a crawl's step ($(python -c "print(round($CX - $SX, 4))") m)"
+assert_ok "set_rule foundation.status_grace_ms 3000 \"\"" "a long grace, so the CLI can beat it"
+assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "back to normal"
+assert_ok "set_status $MYENT 2 $UNTIL_CHANGED \"\"" "and downed at once"
+EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY SZ <<< "$(pos_of)"
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
+assert_eq "$(field correction_epoch)" "$EPOCH" "inside the grace the step it could make a moment ago is still taken"
+assert_ok "reset_rule foundation.status_grace_ms" "the grace back to its default"
+assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "normal again"
+EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY SZ <<< "$(pos_of)"
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
+assert_eq "$(field correction_epoch)" "$EPOCH" "and running, the same step is taken"
+
 echo "== NPC brains persist, for their authority only =="
 # `write_npc_brain` keeps what a brain needs to resume after its sidecar restarts. Called here as
 # the publisher, who is an authority for every world (world_id 0) — and whose row in `authority`
@@ -769,6 +834,17 @@ spacetime sql "$DB" "DELETE FROM lobby_member WHERE entity_id = $MYENT" >/dev/nu
 assert_ok "set_ready true" "a member with no lobby row can still say ready (the row is made)"
 assert_eq "$(sql_first "SELECT ready FROM lobby_member WHERE entity_id = $MYENT" 1)" "true" "and it says ready"
 assert_eq "$(sql_first 'SELECT phase FROM session WHERE id = 1' 1)" "1" "and, everyone here ready, the match starts"
+
+# A NEW MATCH, NEW STATUSES (DECISIONS #206): everyone in the world back to normal, unless the
+# game's rule says statuses last across matches.
+assert_ok "set_status $MYENT 1 4294967295 \"\"" "the player is injured"
+assert_ok "new_match 1" "a new match"
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $MYENT" 1)" "0" "and they begin it normal"
+assert_ok "set_rule foundation.statuses_reset_each_match 0 \"\"" "a game whose statuses last"
+assert_ok "set_status $MYENT 1 4294967295 \"\"" "injured again"
+assert_ok "new_match 1" "another match"
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $MYENT" 1)" "1" "keeps them injured"
+assert_ok "reset_rule foundation.statuses_reset_each_match" "the rule back"
 
 echo
 echo "$passes passed, $failures failed"

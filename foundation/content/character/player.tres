@@ -7,4 +7,4 @@
 script = ExtResource("1_def")
 kind = 0
 scene = ExtResource("2_scene")
-display_name = "Player"
+display_name = "Player (plain capsule)"

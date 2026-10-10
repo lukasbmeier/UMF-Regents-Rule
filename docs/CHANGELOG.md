@@ -477,3 +477,22 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The movement workbench**: measures a profile with the game's own movement (time to top speed, slide to a stop, jump height, each flap, turning round) and draws the path.
 - `--character=<path>` plays as any character for a run.
 - No server schema change. **Restart the editor.**
+
+## 0.34.0 — statuses and their timers, spectate (Foundation systems, milestone 2)
+- **Statuses** (DECISIONS #206): downed, out, injured, carried, hidden, escaped, and a genre's own, as content (`StatusDef`, Content panel type `status`). Each says how long it lasts and what it becomes, how a character moves in it, whether it can act or be reached, and how it shows. A genre changes one of the foundation's by making its own with the same number.
+- The server keeps who is in which and moves them on when the time is up; abilities and use hold to it; a downed player's speed is enforced. A new match puts everyone back to normal.
+- **On screen**: a downed player crawls (predicted, no rubber-banding), out players vanish and watch a teammate (Jump: the next), a tag over each head, your own status and countdown on the HUD.
+- **The status workbench**: how a character moves in a status, its burst, its pose, its timeline.
+- **Try a status on yourself**: Escape, Rules (admin).
+- Server: a new table and reducers (old builds keep working). **Republish with codegen; restart the editor.**
+
+## 0.35.0 — Workbenches 2 (from the first real test of the benches)
+- **The piece in the Inspector, the bench in its own panel** (Workbench, beside the Inspector): tests as buttons that say what they play, settings, and actions. What you change is always the piece.
+- **Benches never change their own files** when used.
+- **The character comes first**: its body drawn around the model (and its size a field: `collision_radius`, `collision_height`), `visual_scale`, ANY animation played, paused, slowed or scrubbed, an animation set made from a model's own clips with each clip a choice, then **New movement for it** and **New ability for it**.
+- **The movement bench performs**: the character runs, stops, jumps and turns along the path with a ruler, labels and its speed.
+- **Play as this** (character or movement), publishing first when the content changed.
+- **In a game the template's content is read-only**: Copy into your genre; **New from this** for any piece.
+- **A character's abilities**: the server lets a character use only its kind's abilities (a kind listing none may use any).
+- Fixed: a model dragged in was named after its internal id; the two "Player" characters are now Player (plain capsule) and Humanoid.
+- Server: no table changes (the abilities rule is new logic). **Republish; restart the editor.**

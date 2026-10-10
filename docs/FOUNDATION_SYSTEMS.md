@@ -29,7 +29,7 @@ needs, then the objective loop, then the match around it.
 | # | System | Adds | Proves it |
 |---|---|---|---|
 | 1 ✔ 0.33.0 | **Movement profiles per character** (A3) | `MovementProfileDef` content: a character's overrides of the default movement (speeds, accel, flaps, glide); `EntityDefinition.movement_profile`; prediction and the sidecar use the entity's profile; the module's speed envelope per kind | two characters in one world move at their own speeds, predicted without corrections; Tier A refuses a claim beyond the kind's speed |
-| 2 | **Statuses and their timers** (§3.4) + spectate | side table `status_state {entity_id, world_id, status, since, until, by_entity, data}`; foundation statuses (0 normal, 1 injured, 2 downed, 3 carried, 4 out, 5 hidden, 6 escaped), a genre's 100+; `set_status` for authorities; a timer that moves a status on when `until` passes (a genre hook decides to what); movement MODIFIERS from status (a profile says each status's speed factor, whether it can jump); `SPECTATE` when out | a player injured runs faster for 1.5 s then normal; downed crawls; out spectates a teammate; all predicted |
+| 2 ✔ 0.34.0 | **Statuses and their timers** (§3.4) + spectate | side table `status_state {entity_id, world_id, status, since, until, by_entity, data}`; foundation statuses (0 normal, 1 injured, 2 downed, 3 carried, 4 out, 5 hidden, 6 escaped), a genre's 100+; `set_status` for authorities; a timer that moves a status on when `until` passes (a genre hook decides to what); movement MODIFIERS from status (a profile says each status's speed factor, whether it can jump); `SPECTATE` when out | a player injured runs faster for 1.5 s then normal; downed crawls; out spectates a teammate; all predicted |
 | 3 | **Hold to interact** (§3.5) | table `interaction {id, world_id, actor_id, target_id, verb, started_at, progress}`; `begin_interact` / `end_interact`; a 10 Hz tick (range, status interrupts) and genre hooks for the RATE (by participants) and COMPLETION; the prompt shows progress | three bots lay a nest in ~6 s, one in ~58 s (genre data); a hit interrupts |
 | 4 | **Server-timed skill checks** (A4, also fixes fishing's timing bar) | challenge kind 0 becomes a press judged by the server's clock (issued_at, measured RTT credit), the client sends only the press | a press with simulated 150 ms latency is judged as the player saw it; a client-reported result is impossible |
 | 5 | **Abilities on the sidecar, lag-compensated** (A1) | `use_ability` -> `action_request` for SIDECAR worlds; sidecar resolution with a 300 ms ring of transforms, rewound by the attacker's RTT, capped by a hot rule (150 ms, favour attacker) | a pounce issued at t-100 ms hits a chicken that entered a gap at t; one at t+50 ms misses |
@@ -40,6 +40,14 @@ needs, then the objective loop, then the match around it.
 | 10 | **Team-aware collision** (A6) | collision layers from `session_member.team` on client and sidecar; a hot rule for friendly collision | teammates pass through each other when the rule says so |
 | 11 | **First-person rig and comfort settings** | the first-person camera rig finished (no body, head bob off by default, FOV setting) | a predator plays in first person with the settings applied |
 | 12 | **Recording and replay** (A5) | `SessionRecorder` (inputs sent, rows received, timestamps) and a replay scene | a recorded chase replays with predicted vs authoritative paths |
+
+As built, milestone 2 differs from the line above in two ways: what a status does to movement is on
+the STATUS (`StatusDef`: a share of each character's own speed), not per profile, and a genre may
+replace one of the foundation's statuses by number. A per-character override (a fox crawls faster
+than a hen) would be a new profile field with a default that changes nothing.
+
+Between milestones 2 and 3, Workbenches 2 (0.35.0, DECISIONS #207) reworked the benches after
+Luke's first real use of them, so every bench from milestone 3 on is built the new way.
 
 Milestones 1-4 are the chase and the nest; 5-6 the hunt; 7-8 the match; 9-12 the polish a first human
 playtest needs (12 before it, per A5).

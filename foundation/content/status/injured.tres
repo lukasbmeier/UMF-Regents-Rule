@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 1
+burst = 1.5
+burst_s = 1.5
+color = Color(1, 0.75, 0.3, 1)
+id = 1
+display_name = "Injured"
+designer_notes = "Hit once: still playing, with a burst of speed for a moment to get away (half as fast again for 1.5 s)."

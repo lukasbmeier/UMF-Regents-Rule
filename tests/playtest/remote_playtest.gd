@@ -16,7 +16,7 @@ extends Node
 ##
 ## Driven by tests/remote_playtest.sh, which runs both at a chosen simulated latency. Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 90.0
+const OVERALL_TIMEOUT_SEC: float = 130.0
 const STEP_TIMEOUT_SEC: float = 30.0
 ## Seconds the walker walks, and the length of each side of its square.
 const WALK_SEC: float = 9.0
@@ -110,6 +110,36 @@ func _walk(me: SpaceTimeEntity) -> void:
 		await get_tree().create_timer(1.4).timeout
 	await get_tree().create_timer(2.0).timeout
 	_check(true, "walker finished its route")
+	await _see_the_observer_go_out(me)
+
+
+## OUT, AS SOMEONE ELSE SEES IT (DECISIONS #206): the observer puts itself out at the end; here its
+## body leaves the world (hidden, no collision) and comes back when it is in again. The walker stays
+## connected meanwhile, so the observer has someone to watch.
+func _see_the_observer_go_out(me: SpaceTimeEntity) -> void:
+	var other: SpaceTimeEntity = null
+	var deadline: int = Time.get_ticks_msec() + 30_000
+	var went_out: bool = false
+	var hidden_while_out: bool = false
+	while Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+		if other == null:
+			for id: int in EntityRegistry.all_entity_ids():
+				var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+				if id != me.entity_id and e != null and e.is_bound() and e.definition != null and e.definition.kind == 0:
+					var st0: StatusComponent = e.find_component(StatusComponent) as StatusComponent
+					if st0 != null and st0.status() == StatusDef.OUT:
+						other = e
+			continue
+		var st: StatusComponent = other.find_component(StatusComponent) as StatusComponent
+		if st.status() == StatusDef.OUT:
+			went_out = true
+			hidden_while_out = not other.visible and other.collision_layer == 0
+		elif went_out:
+			break
+	_check(went_out, "the walker sees the observer go out")
+	_check(hidden_while_out, "and its body leave the world (hidden, nothing collides with it)")
+	_check(other != null and other.visible and other.collision_layer != 0, "and come back when it is in again")
 
 
 # --- observer ----------------------------------------------------------------------------
@@ -304,6 +334,35 @@ func _observe(me: SpaceTimeEntity) -> void:
 		if l.y > 1.5:
 			lands_up += 1
 	_check(lands_up == JUMPS, "and lands exactly once each, on the platform (%d landings up there)" % lands_up)
+	await _spectate(me, target)
+
+
+## OUT, WATCHING A TEAMMATE (DECISIONS #206): the observer puts itself out (the dev tools are on
+## here); its camera then follows the walker, the one other player, and comes home when it is in.
+func _spectate(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
+	var st: StatusComponent = me.find_component(StatusComponent) as StatusComponent
+	var rig: CameraRig = me.get_node_or_null(^"CameraRig") as CameraRig
+	_check(st != null and rig != null, "the observer has a status and a camera rig")
+	if st == null or rig == null:
+		return
+	SpaceTimeSync.call_reducer(&"set_status", [me.entity_id, StatusDef.OUT, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	var deadline: int = Time.get_ticks_msec() + 10_000
+	while st.status() != StatusDef.OUT and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	var near: float = cam.global_position.distance_to(walker.global_position) if cam != null else INF
+	print("   out: watching %s, camera %.2f m from the walker" % [rig.following().entity_id if rig.following() != null else -1, near])
+	_check(st.status() == StatusDef.OUT and rig.following() == walker, "out, the observer's camera follows the walker")
+	_check(near < 8.0, "and is over the walker, not where the observer stands (%.2f m away)" % near)
+	_check(not me.visible, "its own body has left the world")
+	await get_tree().create_timer(3.0).timeout   # long enough for the walker to see it
+	SpaceTimeSync.call_reducer(&"set_status", [me.entity_id, StatusDef.NORMAL, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	deadline = Time.get_ticks_msec() + 10_000
+	while st.status() != StatusDef.NORMAL and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	_check(rig.following() == null and me.visible, "in again: its own view and body back")
+	await get_tree().create_timer(2.0).timeout
 
 
 # --- helpers -----------------------------------------------------------------------------

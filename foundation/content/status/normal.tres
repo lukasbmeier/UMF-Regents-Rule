@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 0
+show_on_nameplate = false
+display_name = "Normal"
+designer_notes = "Every entity with no status is in this one. Changes nothing."

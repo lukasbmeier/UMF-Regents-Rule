@@ -13,23 +13,38 @@
 		},
 		"shared/content/foundation/character.json": {
 			"count": 3,
-			"hash": "f761ce8d",
+			"hash": "094cd128",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/character/humanoid.tres": "21eeed72",
+				"foundation/content/character/humanoid.tres": "6b99d034",
 				"foundation/content/character/npc.tres": "15c3329a",
-				"foundation/content/character/player.tres": "db6ba2c6"
+				"foundation/content/character/player.tres": "525b7730"
 			},
 			"type": "character"
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
-			"hash": "a22bce5a",
+			"hash": "b82966c8",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "54b5a032"
+				"foundation/content/rules/foundation.tres": "bb3ec23f"
 			},
 			"type": "rules"
+		},
+		"shared/content/foundation/status.json": {
+			"count": 7,
+			"hash": "a6c63ad9",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/status/carried.tres": "582656a4",
+				"foundation/content/status/downed.tres": "2acf7afe",
+				"foundation/content/status/escaped.tres": "25bf340c",
+				"foundation/content/status/hidden.tres": "9f99c08a",
+				"foundation/content/status/injured.tres": "e9cb2d8d",
+				"foundation/content/status/normal.tres": "cf4ace4b",
+				"foundation/content/status/out.tres": "f63e33d4"
+			},
+			"type": "status"
 		}
 	}
 }

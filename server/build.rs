@@ -22,6 +22,8 @@ mod genre_build;
 /// THE BAKED CONTENT: refuses a stale bake, compiles in what the module seeds (DECISIONS #199).
 #[path = "build/content.rs"]
 mod content;
+#[path = "build/status_rules.rs"]
+mod status_rules;
 
 #[derive(Deserialize)]
 struct Cfg {

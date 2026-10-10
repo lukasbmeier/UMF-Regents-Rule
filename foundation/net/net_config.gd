@@ -77,4 +77,6 @@ class_name NetConfig extends Resource
 	&"world_level",
 	# Each session's match: where its rounds count from, whether it has started (DECISIONS #182)
 	&"session_match",
+	# Each entity's status: downed, out, a genre's own (StatusComponent, DECISIONS #206)
+	&"status_state",
 ]

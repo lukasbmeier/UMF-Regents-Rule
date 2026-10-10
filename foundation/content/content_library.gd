@@ -180,6 +180,10 @@ static func create(type: StringName, owner: String, display_name: String, error:
 	def.id = next_free_id(type, owner)
 	def.display_name = display_name
 	def.on_created()
+	return _save_new(def, type, owner, display_name, error)
+
+
+static func _save_new(def: ContentDef, type: StringName, owner: String, display_name: String, error: Array[String]) -> String:
 	var folder: String = folder_for(type, owner)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(folder))
 	var stem: String = file_stem(display_name)
@@ -193,6 +197,25 @@ static func create(type: StringName, owner: String, display_name: String, error:
 		error.append("could not save %s: %s" % [path, error_string(err)])
 		return ""
 	return path
+
+
+## NEW FROM THIS (DECISIONS #207): a copy of `source` for `owner` (every field, its sub-resources
+## copied too), with the next free id, `display_name`, its own file in `owner`'s folder. The kind, a
+## status number, the links to other content stay as they were. Returns its path, or "" with
+## `error` filled in.
+## `replacing`: the copy is to take the source's place (Copy into a genre), so what makes it the same
+## thing (a status's number) stays; otherwise the copy is a new thing beside it (`on_copied`).
+static func create_copy(source: ContentDef, owner: String, display_name: String, error: Array[String] = [], replacing: bool = false) -> String:
+	var type: StringName = source.content_type()
+	if not may_own(type, owner):
+		error.append("%s cannot make %s content (a genre's type is that genre's alone)" % [owner, type])
+		return ""
+	# Its own sub-resources are copied; what it links to on disk (a model, another piece) is shared.
+	var def: ContentDef = source.duplicate_deep(Resource.DEEP_DUPLICATE_INTERNAL) as ContentDef
+	def.id = next_free_id(type, owner)
+	def.display_name = display_name
+	def.on_copied(owner, replacing)
+	return _save_new(def, type, owner, display_name, error)
 
 
 ## A name as a file name: lower case, words joined by underscores, nothing else.

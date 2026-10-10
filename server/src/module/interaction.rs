@@ -15,6 +15,7 @@ use super::*;
 #[reducer]
 pub fn interact(ctx: &ReducerContext, target_id: u64, verb: u8) -> Result<(), String> {
     let player = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?;
+    require_can_act(ctx, player.entity_id, "interact")?;
     let me = ctx
         .db
         .movement_state()
@@ -30,6 +31,9 @@ pub fn interact(ctx: &ReducerContext, target_id: u64, verb: u8) -> Result<(), St
     // A player who is not connected is not in the world (DECISIONS #202).
     if ctx.db.player().entity_id().find(target_id).is_some_and(|p| !p.online) {
         return Err("interact: they are not here".into());
+    }
+    if !is_targetable(ctx, target_id) {
+        return Err("interact: they cannot be reached".into());
     }
     let target_pos = ctx
         .db

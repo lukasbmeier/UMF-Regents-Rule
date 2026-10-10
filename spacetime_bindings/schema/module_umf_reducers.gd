@@ -147,6 +147,13 @@ func set_session_phase(session_id: int, phase: int) -> SpacetimeDBReducerCall:
 func set_sim_authority(world_id: int, mode: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_sim_authority', [world_id, mode], [&'u32', &'u8'], &'')
 
+## 0. entity_id: int [br]
+## 1. status: int [br]
+## 2. lasts_ms: int [br]
+## 3. data: String [br]
+func set_status(entity_id: int, status: int, lasts_ms: int, data: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_status', [entity_id, status, lasts_ms, data], [&'u64', &'u8', &'u32', &'string'], &'')
+
 ## 0. team: int [br]
 func set_team(team: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_team', [team], [&'u8'], &'')

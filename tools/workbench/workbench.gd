@@ -6,18 +6,22 @@ class_name Workbench extends Node3D
 ## and no server. "No content type without a workbench": the `content` suite fails a type that has
 ## none and does not say why (`ContentDef.needs_workbench()`).
 ##
-## USING ONE. Open it (the Content dock's "Open workbench" opens it with the chosen piece loaded),
-## select the root node, and the Inspector has everything: `item` (the piece; edit it right there,
-## the bench follows every change), the `test` to run and **Run test**, **Previous** / **Next**
-## piece, **Save**, **Capture thumbnail** (the Catalog's picture), and `status` (what is wrong,
-## green / amber / red, and what the last test showed).
+## USING ONE (WORKBENCHES 2, DECISIONS #207). Open it (the Content dock's "Open workbench"): the
+## PIECE goes to the Inspector, where every field you change is the piece's own, and the bench's
+## controls are in the WORKBENCH panel (beside the Inspector): its tests, its settings (which
+## animation, which character it is tried on), and its actions (Save, Play as this, New from this,
+## Copy into a genre). The bench redraws as you edit. The bench keeps nothing in its own scene file:
+## using one never changes it.
 ##
 ## WRITING ONE. Subclass this as `<type>_workbench.gd`, scene `tools/workbench/<type>_workbench.tscn`
 ## (a genre's: `game/<genre>/workbench/`; both stay out of the builds). Implement `content_type()`,
 ## `load_item()` (show it), `test_actions()` and `run_test()` (play that moment and say what
-## happened). Optional: `fit_checks()` (amber warnings), `fill_from_file()` (a dropped file becomes a
-## piece: the base makes it in the right folder with the next free id), a `ThumbnailCamera`. The base does the listing, loading, live edits, saving, the badge
-## and thumbnails, so a workbench is mostly its tests.
+## happened). Optional: `test_label()`/`test_info()` (the button's words), `controls()` +
+## `set_control()` (its settings, drawn by the panel), `bench_actions()` + `do_action()` (its own
+## buttons), `play_args()` (Play as this), `fit_checks()` (amber warnings), `fill_from_file()` (a
+## dropped file becomes a piece: the base makes it in the right folder with the next free id), a
+## `ThumbnailCamera`. The base does the listing, loading, live edits, saving, the badge, thumbnails
+## and the common actions, so a workbench is mostly its tests.
 
 ## Handed over by the Content dock just before it opens this scene: the piece to load.
 static var pending: ContentDef = null
@@ -46,6 +50,23 @@ static var pending: ContentDef = null
 @export var intake_owner: String = ""
 @export_tool_button("New From File", "Add") var _intake_button: Callable = new_from_intake
 
+## Something the panel shows changed (the piece, a control's choices): it redraws.
+signal panel_changed
+
+const HUMANOID: String = "res://foundation/content/character/humanoid.tres"
+
+## THE CHARACTER A PIECE IS TRIED ON (the ability, movement and status benches; DECISIONS #207):
+## chosen in the panel ("Tried on"), by default the one that uses the piece (`default_character()`),
+## else the humanoid. Its model is the bench's `Mannequin`. Unused where the piece IS a character.
+var character: EntityDefinition = null:
+	set(v):
+		character = v
+		var m: Mannequin = get_node_or_null(^"Mannequin") as Mannequin
+		if m != null and m.definition != v:
+			m.definition = v
+## The panel chose `character`: a new piece keeps it rather than taking its own default.
+var _character_chosen: bool = false
+
 ## What the last test said.
 var last_result: String = ""
 var _item: ContentDef = null
@@ -71,6 +92,136 @@ const THUMB_SIZE: Vector2i = Vector2i(256, 256)
 @abstract func run_test(action: StringName) -> String
 
 
+## The words on a test's button ("Start and stop" for `accelerate`). Default: the name, spaced.
+func test_label(action: StringName) -> String:
+	return String(action).replace("_", " ").capitalize()
+
+
+## What a test plays, for its button's tooltip.
+func test_info(_action: StringName) -> String:
+	return ""
+
+
+## THE BENCH'S SETTINGS, for the Workbench panel: one Dictionary each, {name, label, kind ("choice",
+## "number", "toggle", "heading"), value, options (choice: Array of [value, label]), min, max, step
+## (number), tooltip}. Read again whenever `panel_changed` fires.
+func controls() -> Array[Dictionary]:
+	return []
+
+
+## A setting changed in the panel. A bench handles its own and passes the rest here (`character`).
+func set_control(n: StringName, value: Variant) -> void:
+	if n == &"character" and value is EntityDefinition:
+		character = value
+		_character_chosen = true
+		_refresh()
+
+
+## Whether this bench tries its piece on a character (the "Tried on" choice).
+func tries_on_character() -> bool:
+	return false
+
+
+## The character a piece is tried on until the panel says otherwise: one that uses it, else the
+## humanoid. A bench whose pieces a character links to finds that character here.
+func default_character() -> EntityDefinition:
+	return load(HUMANOID) as EntityDefinition
+
+
+## The first character (this game's, then the template's) for which `uses` is true, or null.
+static func character_using(uses: Callable) -> EntityDefinition:
+	var all: Array[ContentDef] = ContentLibrary.items(&"character")
+	all.sort_custom(func(a: ContentDef, b: ContentDef) -> bool: return a.id > b.id)   # a genre's first
+	for d: ContentDef in all:
+		if bool(uses.call(d)):
+			return d as EntityDefinition
+	return null
+
+
+## The "Tried on" choice: every character.
+func character_control() -> Dictionary:
+	var options: Array = []
+	for d: ContentDef in ContentLibrary.items(&"character"):
+		options.append([d, "%s  (%s)" % [d.display_name, ContentLibrary.owner_of_path(d.resource_path)]])
+	return {"name": &"character", "label": "Tried on", "kind": "choice", "value": character, "options": options,
+		"tooltip": "The character this is tried on: its model, its animations, its movement"}
+
+
+## The bench's own buttons beyond the tests and the common ones: [{name, label, tooltip}].
+func bench_actions() -> Array[Dictionary]:
+	return []
+
+
+## Play as this piece: the game's command line for it ("--character=res://..."), or empty when this
+## kind of piece is not played as.
+func play_args() -> PackedStringArray:
+	return PackedStringArray()
+
+
+## EVERY BUTTON THE PANEL SHOWS beside the tests: the bench's own, then the common ones that apply
+## to this piece. [{name, label, tooltip}]
+func actions() -> Array[Dictionary]:
+	var out: Array[Dictionary] = bench_actions()
+	if _item == null:
+		return out
+	if not play_args().is_empty():
+		out.append({"name": &"play_as", "label": "Play as this", "tooltip": "Run the game as this piece (publishing first when the server does not have it yet)"})
+	out.append({"name": &"save", "label": "Save", "tooltip": "Save the piece to its file"})
+	out.append({"name": &"duplicate", "label": "New from this", "tooltip": "A new piece that starts as a copy of this one (its own id and file)"})
+	if read_only_here():
+		for g: String in ContentLibrary.owners():
+			if g != ContentLibrary.FOUNDATION and ContentLibrary.may_own(content_type(), g):
+				out.append({"name": StringName("copy_into:" + g), "label": "Copy into %s" % g,
+					"tooltip": "The template's piece is read-only in a game: make %s's own copy and change that (it takes the template's place where the type allows: the same kind, the same status number)" % g})
+	out.append({"name": &"thumbnail", "label": "Capture thumbnail", "tooltip": "The Catalog's picture of this piece"})
+	return out
+
+
+## Press one of `actions()`. Returns what the editor should do, for the panel: {} (done here),
+## {"play": args}, {"edit": resource} (show it in the Inspector), {"open": piece} (on its own bench).
+func do_action(action: StringName) -> Dictionary:
+	match action:
+		&"save":
+			save()
+			return {}
+		&"duplicate":
+			var owner: String = ContentLibrary.owner_of_path(_item.resource_path) if not read_only_here() else _default_owner()
+			return {"edit": _item} if not duplicate_item(owner).is_empty() else {}
+		&"thumbnail":
+			capture_and_store_thumbnail()
+			return {}
+		&"play_as":
+			return {"play": play_args()}
+	if String(action).begins_with("copy_into:"):
+		return {"edit": _item} if not duplicate_item(String(action).get_slice(":", 1), true).is_empty() else {}
+	return {}
+
+
+## Whether the piece is the template's while this is a game (it lists genres): the template's files
+## are replaced on every update from it, so a game changes a copy of its own instead.
+func read_only_here() -> bool:
+	return _item != null and ContentLibrary.owner_of_path(_item.resource_path) == ContentLibrary.FOUNDATION \
+		and ContentLibrary.owners().size() > 1
+
+
+## NEW FROM THIS: a copy of the piece for `owner`, with its own id and file, put on the bench.
+## `same_name`: keep its name (Copy into a genre: it takes the template's piece's place). Returns
+## its path, or "" (and `last_result` says why).
+func duplicate_item(owner: String, same_name: bool = false) -> String:
+	if _item == null:
+		return ""
+	var errors: Array[String] = []
+	var made: String = ContentLibrary.create_copy(_item, owner, _item.display_name if same_name else "%s copy" % _item.display_name, errors, same_name)
+	if made.is_empty():
+		last_result = "could not copy it: %s" % "; ".join(errors)
+		_update_status()
+		return ""
+	_set_item(load(made) as ContentDef)
+	last_result = "made %s (%s's)" % [made.get_file(), owner]
+	_update_status()
+	return made
+
+
 ## Checks only a bench can make (the reel 2 cm clear of the thigh across the clip), one sentence
 ## each: an amber badge. Empty: none.
 func fit_checks() -> Array[String]:
@@ -86,6 +237,11 @@ func fill_from_file(_def: ContentDef, _path: String) -> String:
 ## NEW FROM A FILE: make a piece of this bench's type for `owner` (see `intake_owner`), fill it from
 ## `path`, save it, and put it on the bench. Returns its path, or "" (and `last_result` says why).
 func new_from_file(path: String, owner: String = "") -> String:
+	# A file dragged in from the FileSystem arrives as its uid ("uid://dd6y3..."): the new piece is
+	# named from the file's real name, never from that.
+	if path.begins_with("uid://"):
+		var uid: int = ResourceUID.text_to_id(path)
+		path = ResourceUID.get_id_path(uid) if ResourceUID.has_id(uid) else ""
 	if path.is_empty() or not ResourceLoader.exists(path):
 		last_result = "choose a file to make it from first"
 		_update_status()
@@ -106,6 +262,7 @@ func new_from_file(path: String, owner: String = "") -> String:
 		return ""
 	ResourceSaver.save(def, made)
 	_set_item(def)
+	intake_file = ""
 	last_result = "made %s from %s" % [made.get_file(), path.get_file()]
 	_update_status()
 	return made
@@ -305,6 +462,8 @@ func _set_item(v: ContentDef) -> void:
 	if _item != null:
 		_item.changed.connect(_refresh)
 		_seen = fields_of(_item)
+		if tries_on_character() and (character == null or not _character_chosen):
+			character = default_character()
 	last_result = ""
 	if _ready_done:
 		_refresh()
@@ -323,8 +482,11 @@ func _update_status() -> void:
 		lines.append("• " + s)
 	if not last_result.is_empty():
 		lines.append(last_result)
+	if read_only_here():
+		lines.insert(1, "the template's piece: read-only in this game (Copy into a genre to change it)")
 	status = "\n".join(lines)
 	notify_property_list_changed()
+	panel_changed.emit()
 
 
 func _step(by: int) -> void:
@@ -336,6 +498,11 @@ func _step(by: int) -> void:
 
 
 func _validate_property(p: Dictionary) -> void:
+	# A BENCH KEEPS NOTHING IN ITS SCENE (DECISIONS #207): what is on it, which test, which character
+	# it is tried on belong to the session, so opening and using one never changes its .tscn (a
+	# game's copy of the template's benches stays the template's).
+	if int(p["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE != 0:
+		p["usage"] = int(p["usage"]) & ~PROPERTY_USAGE_STORAGE
 	if p["name"] == "test":
 		p["hint"] = PROPERTY_HINT_ENUM
 		p["hint_string"] = ",".join(test_actions().map(func(a: StringName) -> String: return String(a)))

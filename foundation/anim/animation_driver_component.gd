@@ -81,6 +81,7 @@ var _pose_target: float = 0.0
 var _pose_weight: float = 0.0
 var _pose_at: float = -1.0
 var _pose_length: float = 0.0
+var _pose_while_moving: bool = false
 ## For `semantic_weights`: what the action one-shot and the landing were last asked to play, and
 ## the two one-shots' weights, eased over their own fades.
 var _action_semantic: StringName = AnimationSet.INTERACT
@@ -181,7 +182,10 @@ func pose_weight() -> float:
 ## same bargain an action strikes. Call it every frame the pose should hold, from state the
 ## caller READS (hard rule 11): a genre's presentation asks, and only this writes the tree. A set
 ## without the clip holds nothing.
-func hold_pose(semantic: StringName, weight: float = 1.0, at: float = -1.0) -> void:
+##
+## `while_moving`: the pose replaces walking rather than waiting for the body to stop (a status's
+## crawl, DECISIONS #206), so moving does not let it go.
+func hold_pose(semantic: StringName, weight: float = 1.0, at: float = -1.0, while_moving: bool = false) -> void:
 	if animation_set == null or not animation_set.has_exact(semantic) or _blend_tree == null:
 		return
 	if semantic != _pose_semantic:
@@ -193,6 +197,7 @@ func hold_pose(semantic: StringName, weight: float = 1.0, at: float = -1.0) -> v
 		_pose_length = AnimationTreeBuilder.clip_length(animation_set, semantic)
 	_pose_target = clampf(weight, 0.0, 1.0)
 	_pose_at = at
+	_pose_while_moving = while_moving
 
 
 ## Let the held pose go: it blends out.
@@ -459,7 +464,7 @@ func _ease_shot(weight: float, node_name: StringName, active_param: String, delt
 ## point in the clip (a scale of 0 and a seek each frame) or left to loop.
 func _update_pose(delta: float, speed: float) -> void:
 	var target: float = _pose_target
-	if action_cancel_speed > 0.0 and speed > action_cancel_speed:
+	if action_cancel_speed > 0.0 and speed > action_cancel_speed and not _pose_while_moving:
 		target = 0.0
 	_pose_weight = move_toward(_pose_weight, target, pose_blend_rate * delta)
 	_tree.set(AnimationTreeBuilder.P_POSE_BLEND, _pose_weight)

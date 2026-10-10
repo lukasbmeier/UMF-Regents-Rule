@@ -16,8 +16,6 @@ const LINGER_RULE: StringName = &"foundation.offline_linger_s"
 
 var _online: bool = true
 var _hidden: bool = false
-var _saved_layer: int = 0
-var _saved_mask: int = 0
 var _left_at_usec: int = -1
 
 
@@ -57,22 +55,13 @@ func _process(_delta: float) -> void:
 
 
 func _set_hidden(hide: bool) -> void:
-	var body: Node3D = entity as Node3D
-	if body == null or hide == _hidden:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if ent == null or hide == _hidden:
 		return
 	_hidden = hide
-	body.visible = not hide
+	# Through the entity: an out player (StatusComponent) who leaves stays hidden either way.
+	ent.set_hidden_by(&"offline", hide)
 	print("[Presence] entity %d %s" % [entity_id, "left the world" if hide else "is back"])
-	var col: CollisionObject3D = body as CollisionObject3D
-	if col != null:
-		if hide:
-			_saved_layer = col.collision_layer
-			_saved_mask = col.collision_mask
-			col.collision_layer = 0
-			col.collision_mask = 0
-		else:
-			col.collision_layer = _saved_layer
-			col.collision_mask = _saved_mask
 
 
 func _is_local() -> bool:

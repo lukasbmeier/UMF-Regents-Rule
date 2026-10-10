@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 4
+speed = 0.0
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+targetable = false
+spectate = true
+hide_body = true
+color = Color(0.6, 0.6, 0.6, 1)
+id = 4
+display_name = "Out"
+designer_notes = "Out of the round: not in the world any more, and watches a teammate."

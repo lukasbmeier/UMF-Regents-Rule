@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://tools/workbench/movement_workbench.gd" id="1_bench"]
+[ext_resource type="Script" path="res://tools/workbench/mannequin.gd" id="2_mannequin"]
 
 [sub_resource type="PlaneMesh" id="Floor_mesh"]
 size = Vector2(30, 30)
@@ -17,6 +18,9 @@ surface_material_override/0 = SubResource("Floor_mat")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 6, 0)
+
+[node name="Mannequin" type="Node3D" parent="."]
+script = ExtResource("2_mannequin")
 
 [node name="ThumbnailCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.94, 0.34, 0, -0.34, 0.94, 1.2, 2.2, 6.0)

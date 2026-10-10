@@ -24,11 +24,15 @@ pub mod challenge;
 /// Level bakes (spawn, water depth, named spots) compiled in from `shared/world/`. Pure.
 pub mod level;
 
+/// Statuses (DECISIONS #206): what each one lets an entity do, baked from `StatusDef` content. Pure.
+pub mod status;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {
     include!(concat!(env!("OUT_DIR"), "/content.rs"));
     include!(concat!(env!("OUT_DIR"), "/movement_limits.rs"));
+    include!(concat!(env!("OUT_DIR"), "/kind_abilities.rs"));
 }
 
 /// THE HOT RULES (DECISIONS #201): numbers the game is tuned by while it runs, declared in rule sets

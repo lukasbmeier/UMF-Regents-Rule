@@ -86,9 +86,15 @@ func catalog_rows(type_filter: StringName = &"", badge_filter: String = "") -> A
 
 ## Who may make a piece of `type`: the foundation and every genre for a foundation type, the genre
 ## alone for a genre's.
+## Who may make a new piece of `type` HERE: in the template (no genres) the foundation; in a game its
+## genres only, because the foundation's content is the template's and comes in with its updates
+## (DECISIONS #207: a game's foundation piece would collide with the template's).
 func owners_for(type: StringName) -> PackedStringArray:
 	var out := PackedStringArray()
+	var game: bool = ContentLibrary.owners().size() > 1
 	for o: String in ContentLibrary.owners():
+		if game and o == ContentLibrary.FOUNDATION:
+			continue
 		if ContentLibrary.may_own(type, o):
 			out.append(o)
 	return out

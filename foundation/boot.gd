@@ -350,12 +350,15 @@ const DEV_IDENTITY_SLOTS: int = 8
 ##   --character=<res path>  play as this character (an EntityDefinition): it replaces the scene's
 ##                     definition of the same kind, for this run. The character workbench's way to
 ##                     play what is on it; the movement playtest's way to play a movement profile.
+##   --movement=<res path>  the player's character moves by this movement profile, for this run (the
+##                     movement workbench's Play as this).
 ##   --first-person    swap the camera rig, to show that the view is a resource swap.
 ##   --third-person
 ##   --latency=<ms>    TESTING: add this much round trip (half each way) to all traffic.
 ##   --jitter=<ms>     TESTING: plus up to this much random delay per direction.
 func _apply_cli_overrides() -> void:
 	var explicit_identity: bool = false
+	var movement: String = ""
 	for arg: String in _cli_args():
 		if arg.begins_with("--host="):
 			var raw: String = arg.substr("--host=".length())
@@ -382,6 +385,8 @@ func _apply_cli_overrides() -> void:
 			print("[Boot] identity file: ", net_config.token_path)
 		elif arg.begins_with("--character="):
 			_use_character(arg.substr("--character=".length()))
+		elif arg.begins_with("--movement="):
+			movement = arg.substr("--movement=".length())
 		elif arg == "--first-person" or arg == "--third-person":
 			_set_camera_rig("first_person" if arg == "--first-person" else "third_person")
 		elif arg.begins_with("--latency="):
@@ -390,6 +395,8 @@ func _apply_cli_overrides() -> void:
 		elif arg.begins_with("--jitter="):
 			net_config.sim_jitter_ms = int(arg.substr("--jitter=".length()))
 			print("[Boot] simulated jitter: up to %d ms each way" % net_config.sim_jitter_ms)
+	if not movement.is_empty():
+		_use_movement(movement)
 	if not explicit_identity and OS.has_feature("editor"):
 		_claim_dev_identity()
 
@@ -407,6 +414,25 @@ func _use_character(path: String) -> void:
 			return
 	entity_definitions.append(def)
 	print("[Boot] playing as %s (%s)" % [def.display_name, path])
+
+
+## PLAY AS A MOVEMENT PROFILE (the movement workbench's Play as this, DECISIONS #207): the player's
+## character (kind 0) moves by the profile at `path` this run. Applied after the arguments, so it
+## also holds for a `--character=` given with it.
+func _use_movement(path: String) -> void:
+	var profile: MovementProfileDef = load(path) as MovementProfileDef if ResourceLoader.exists(path) else null
+	if profile == null:
+		push_warning("[Boot] --movement=%s is not a movement profile; ignoring it" % path)
+		return
+	for i: int in entity_definitions.size():
+		var d: EntityDefinition = entity_definitions[i]
+		if d != null and d.kind == 0:
+			var moved: EntityDefinition = d.duplicate() as EntityDefinition
+			moved.movement_profile = profile
+			entity_definitions[i] = moved
+			print("[Boot] moving by %s (%s)" % [profile.display_name, path])
+			return
+	push_warning("[Boot] --movement: there is no player character (kind 0) to move by it")
 
 
 ## The editor's per-instance arguments arrive on the raw command line; the launch scripts pass

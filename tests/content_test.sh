@@ -82,7 +82,7 @@ mov.write_bytes((json.dumps({"_comment": "test", "format": 1, "owner": "foundati
 chars = root / "shared/content/foundation/character.json"
 doc = json.loads(chars.read_text(encoding="utf-8"))
 for c in doc["items"]:
-    if c["name"] == "Player" and c["id"] == 2:
+    if c["name"] == "Humanoid" and c["id"] == 2:
         c["movement"] = 0
 chars.write_bytes((json.dumps(doc, indent="\t", sort_keys=True) + "\n").encode())
 m = root / "shared/content/manifest.json"
@@ -98,6 +98,85 @@ check "$(echo "$out" | grep -q 'test result: ok. 3 passed' && echo true || echo 
 out="$(cd server && UMF_EXPECT_KIND0_SPRINT=15 cargo test --test movement_limits 2>&1)"
 check "$(echo "$out" | grep -q 'test result: FAILED' && echo true || echo false)" \
   "(and the repo's own content, with no profile, does not give kind 0 that bound)"
+
+echo "== a character's abilities: only those, for its kind (DECISIONS #207) =="
+# The humanoid (kind 0) lists ability 0 (melee) only: the server built against it lets kind 0 use
+# 0 and not 7; a character listing an ability that is not baked stops the build.
+rechars() {   # rechars PYTHON_ON_items
+  "$PYTHON" - "$work/root" "$1" <<'PY'
+import json, sys, pathlib
+root = pathlib.Path(sys.argv[1])
+def fnv(b):
+    h = 2166136261
+    for x in b:
+        h = ((h ^ x) * 16777619) & 0xFFFFFFFF
+    return "%08x" % h
+f = root / "shared/content/foundation/character.json"
+doc = json.loads(f.read_text(encoding="utf-8"))
+items = doc["items"]
+exec(sys.argv[2])
+f.write_bytes((json.dumps(doc, indent="\t", sort_keys=True) + "\n").encode())
+m = root / "shared/content/manifest.json"
+man = json.loads(m.read_text(encoding="utf-8"))
+man["outputs"]["shared/content/foundation/character.json"]["hash"] = fnv(f.read_bytes())
+m.write_bytes((json.dumps(man, indent="\t", sort_keys=True) + "\n").encode())
+PY
+}
+fresh_copy
+rechars 'for c in items:
+    if c["id"] == 2: c["abilities"] = [0]'
+out="$(cd server && UMF_CONTENT_ROOT="$(cd "$work/root" && (pwd -W 2>/dev/null || pwd))" UMF_EXPECT_KIND0_ONLY_ABILITY_0=1 cargo test --test kind_abilities 2>&1)"
+check "$(echo "$out" | grep -q 'test result: ok. 2 passed' && echo true || echo false)" \
+  "kind 0, whose humanoid lists melee only, may use melee and nothing else; another kind is not limited"
+out="$(cd server && UMF_EXPECT_KIND0_ONLY_ABILITY_0=1 cargo test --test kind_abilities 2>&1)"
+check "$(echo "$out" | grep -q 'test result: FAILED' && echo true || echo false)" \
+  "(and the repo's own content, listing none, does not limit kind 0)"
+fresh_copy
+rechars 'for c in items:
+    if c["id"] == 2: c["abilities"] = [999]'
+out="$(build)"
+check "$(echo "$out" | grep -q "lists ability 999, which is not baked content" && echo true || echo false)" \
+  "a character listing an ability that is not content stops the build"
+
+echo "== statuses: the build holds their numbers (DECISIONS #206) =="
+# The baked status file edited as the bake would write it (the manifest's hash recomputed): a
+# foundation status numbered 150 stops the build, naming it; so does a game with no status 0. (The
+# rules for a genre's statuses, which the template has none of, are tests/status_rules.rs.)
+restatus() {   # restatus PYTHON_EXPR_ON_items
+  "$PYTHON" - "$work/root" "$1" <<'PY'
+import json, sys, pathlib
+root = pathlib.Path(sys.argv[1])
+def fnv(b):
+    h = 2166136261
+    for x in b:
+        h = ((h ^ x) * 16777619) & 0xFFFFFFFF
+    return "%08x" % h
+f = root / "shared/content/foundation/status.json"
+doc = json.loads(f.read_text(encoding="utf-8"))
+items = doc["items"]
+exec(sys.argv[2])
+doc["items"] = items
+f.write_bytes((json.dumps(doc, indent="\t", sort_keys=True) + "\n").encode())
+m = root / "shared/content/manifest.json"
+man = json.loads(m.read_text(encoding="utf-8"))
+man["outputs"]["shared/content/foundation/status.json"]["hash"] = fnv(f.read_bytes())
+m.write_bytes((json.dumps(man, indent="\t", sort_keys=True) + "\n").encode())
+PY
+}
+fresh_copy
+restatus 'items[1]["status"] = 150'
+out="$(build)"
+check "$(echo "$out" | grep -q "the foundation's status 'Injured' is number 150" && echo true || echo false)" \
+  "a foundation status numbered 150 stops the build, naming it"
+fresh_copy
+restatus 'items = [i for i in items if i["status"] != 0]'
+out="$(build)"
+check "$(echo "$out" | grep -q "there is no status 0" && echo true || echo false)" "a game without status 0 (normal) does not build"
+fresh_copy
+restatus 'items[2]["then"] = 999'
+out="$(build)"
+check "$(echo "$out" | grep -q "becomes content 999 when it ends, which is not a status" && echo true || echo false)" \
+  "a status that becomes something that is not a status stops the build"
 
 echo "== the real tree again =="
 out="$(cd server && cargo check 2>&1)"

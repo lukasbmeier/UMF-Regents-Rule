@@ -58,6 +58,13 @@ func on_created() -> void:
 	pass
 
 
+## Just copied from another piece for `owner` (New from this, Copy into a genre), before it is first
+## saved. `replacing`: it is to take the original's place (keep what makes it the same thing);
+## otherwise it is a new thing beside it (a status takes a free number).
+func on_copied(_owner: String, _replacing: bool) -> void:
+	pass
+
+
 ## A link to other content, as the bake writes it: its id, or -1 for none.
 static func ref(def: ContentDef) -> int:
 	return def.id if def != null else -1

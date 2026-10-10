@@ -24,6 +24,8 @@ var _boom_target: float = 0.0
 var _boom_ready: bool = false
 var _entity: SpaceTimeEntity
 var _movement: SpaceTimeMovementComponent
+## Someone else this camera follows instead of its own entity (spectating, DECISIONS #206), or null.
+var _follow: SpaceTimeEntity = null
 
 
 func _ready() -> void:
@@ -56,6 +58,17 @@ func activate() -> void:
 		_camera.current = true
 
 
+## FOLLOW ANOTHER ENTITY (a player who is out watches a teammate), or null for its own again. The
+## look is still this player's: they orbit whoever they watch.
+func follow(target: SpaceTimeEntity) -> void:
+	_follow = target
+
+
+## Whom it follows (null: its own entity).
+func following() -> SpaceTimeEntity:
+	return _follow if is_instance_valid(_follow) else null
+
+
 func _process(delta: float) -> void:
 	if _camera == null:
 		return
@@ -82,7 +95,10 @@ func _apply(delta: float) -> void:
 
 	# Anchor on where the body is DRAWN this frame, plus any correction glide still in progress,
 	# so the camera and the player model always move together.
-	if _entity != null:
+	var watched: SpaceTimeEntity = following()
+	if watched != null:
+		global_position = watched.get_global_transform_interpolated().origin + Vector3(0.0, config.pivot_height, 0.0)
+	elif _entity != null:
 		var anchor: Vector3 = _entity.get_global_transform_interpolated().origin
 		if _movement != null:
 			anchor += _movement.get_visual_offset()
@@ -159,7 +175,7 @@ func _pull_in(desired: Vector3) -> Vector3:
 	# walks behind you.
 	var query := PhysicsRayQueryParameters3D.create(from, to, SpaceTimeEntity.WORLD_MASK)
 	if _entity != null:
-		query.exclude = [_entity.get_rid()]
+		query.exclude = [_entity.get_rid()] if following() == null else [_entity.get_rid(), following().get_rid()]
 	var hit: Dictionary = world.direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return desired

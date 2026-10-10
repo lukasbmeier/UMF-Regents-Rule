@@ -69,4 +69,16 @@ else
   overall=1
 fi
 rm -f "$last_out"
+
+# PLAY AS A MOVEMENT PROFILE (the movement workbench's Play as this, DECISIONS #207): the game's own
+# character, moving by tests/fixtures/slow_movement.tres (run 3.5, sprint 5) for this run.
+echo "== the player's character moving by a profile (--movement=) =="
+run_pass 100 "--movement=res://tests/fixtures/slow_movement.tres"
+if grep -q "\[Boot\] moving by Slow walker" "$last_out" && grep -q "\[playtest\] moving by run 3.5 " "$last_out"; then
+  echo "  ok   the player moved by the profile given with --movement= (run 3.5 m/s)"
+else
+  echo "  FAIL the player did not move by the --movement= profile" >&2
+  overall=1
+fi
+rm -f "$last_out"
 exit "$overall"

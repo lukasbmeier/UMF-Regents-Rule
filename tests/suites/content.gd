@@ -108,8 +108,11 @@ func _run_library_tests() -> void:
 	dock.select_path(c)
 	_check(bridge.asked.has("edit " + c), "choosing one opens it in the Inspector %s" % str(bridge.asked))
 	var model: ContentDockModel = dock.model
-	_check(model.owners_for(&"ability") == PackedStringArray(["foundation", "testgenre"]),
-		"a foundation type may be made by any owner")
+	_check(model.owners_for(&"ability") == PackedStringArray(["testgenre"]),
+		"in a game, New makes a genre's piece only: the foundation's content is the template's (DECISIONS #207)")
+	ContentLibrary.genres_override = PackedStringArray()
+	_check(model.owners_for(&"ability") == PackedStringArray(["foundation"]), "and in the template, the foundation's")
+	ContentLibrary.genres_override = PackedStringArray(["testgenre"])
 	var made: String = model.create(&"ability", "testgenre", "  ", errors)
 	_check(made.is_empty() and errors[errors.size() - 1].contains("name"), "New wants a name")
 	(dock.find_child("New", true, false) as Button).disabled = false
@@ -123,6 +126,34 @@ func _run_library_tests() -> void:
 		"and marks its type and its piece")
 	_check(model.item_rows(&"ability", "10000").size() == 1 and model.item_rows(&"ability", "kick").size() == 2,
 		"search finds by id, name or file")
+
+	# PLAY AS THIS, THROUGH THE DOCK (DECISIONS #207): content with problems is not played; content
+	# changed since the bake is published first, then played.
+	dock.play_fresh(PackedStringArray(["--character=res://x.tres"]))
+	_check(dock.log_text().contains("Play: fix these first") and not bridge.asked.has("play --character=res://x.tres"),
+		"Play as this refuses content with problems, and says which")
+	bad.wind_up_ms = 200
+	ResourceSaver.save(bad, d)
+	var pdock := _NoPublishDock.new()
+	get_tree().root.add_child(pdock)
+	pdock.setup(ContentDockModel.new(), bridge)
+	pdock.play_fresh(PackedStringArray(["--character=res://x.tres"]))
+	_check(pdock.published and bridge.asked.has("play --character=res://x.tres") and pdock.log_text().contains("publishing first"),
+		"content changed since the bake is published first, then played")
+	pdock.queue_free()
+	# THE TEMPLATE'S CONTENT IN A GAME: saving it is said to be lost at the next update.
+	dock.warn_if_templates(ResourceLoader.load(a) as ContentDef)
+	_check(dock.log_text().contains("TEMPLATE'S content") and dock.log_text().contains("Copy into testgenre"),
+		"saving the template's piece in a game warns, and says what to do instead")
+	var rules_dir: String = root.path_join("foundation/content/rules")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(rules_dir))
+	var rs := RuleSetDef.new()
+	rs.display_name = "Some rules"
+	ResourceSaver.save(rs, rules_dir.path_join("some.tres"))
+	dock.refresh()
+	dock.select_path(rules_dir.path_join("some.tres"))
+	_check(dock._detail.text.contains("No workbench: rules are numbers to tune while the game runs") and dock._detail.text.contains("read-only in this game"),
+		"a rule set says where its values are changed, and that the template's is read-only here")
 	dock.queue_free()
 
 	# What the bake refuses, beyond validate(): links to content that is not baked content.
@@ -382,3 +413,14 @@ func _run_keep_live_tests() -> void:
 	ContentLibrary.genres_override = null
 	_wipe(root)
 	_wipe(template_root)
+
+
+## The dock with Publish replaced: what it would publish is recorded and the next step run at once
+## (no script, no server: the suite must never publish).
+class _NoPublishDock extends ContentDock:
+	var published: bool = false
+
+	func publish(then: Callable = Callable()) -> void:
+		published = true
+		if then.is_valid():
+			then.call()

@@ -64,8 +64,9 @@ Publish (`tools/publish.sh` streamed into the log), Play. Excluded from both exp
 |---|---|---|---|
 | ability | `AbilityDef` | `foundation/content/ability/` (melee), `game/<genre>/content/ability/` | `content::ABILITIES`, seeded into `ability_def` at init |
 | rules | `RuleSetDef` (`RuleEntry`, `RuleOverride`) | `foundation/content/rules/`, `game/<genre>/content/rules/` | `hot::ALL` and `hot::<owner>::<NAME>`, served live in `hot_rule` |
-| character | `EntityDefinition` | `foundation/content/character/` (player, npc, humanoid), `game/<genre>/content/character/` | its kind and movement profile: each kind's Tier A speed bound (`content::movement_limits`) |
-| movement | `MovementProfileDef` | `foundation/content/movement/`, `game/<genre>/content/movement/` | its sprint, dash and lift, for the kinds whose characters use it |
+| character | `EntityDefinition` | `foundation/content/character/` (player: a plain capsule, npc, humanoid), `game/<genre>/content/character/` | its kind, movement profile and abilities: each kind's Tier A speed bound (`content::movement_limits`) and what it may use (`content::kind_may_use`) |
+| movement | `MovementProfileDef` | `foundation/content/movement/`, `game/<genre>/content/movement/` | its run, sprint, dash and lift, for the kinds whose characters use it |
+| status | `StatusDef` | `foundation/content/status/` (normal, injured, downed, carried, out, hidden, escaped), `game/<genre>/content/status/` | `status::STATUSES`: its number, length, what it becomes, its movement and what it allows (a genre's replacing the foundation's of the same number) |
 
 ## Hot rules (DECISIONS #201, CONTENT_TOOLING_SPEC §4)
 A number the game is tuned by while it runs: a range, a health, a round's length, a price.
@@ -116,13 +117,25 @@ character, the real animations and the moment the content lives in, and no serve
   test checks). `ContentDef.workbench_scene()` finds it; override only to point elsewhere.
 - **Writing one:** extend `Workbench` (`tools/workbench/workbench.gd`): `content_type()`,
   `load_item()` (show the piece), `test_actions()` and `run_test()` (play the moment, return a
-  sentence). Optional: `fit_checks()` (amber warnings), `fill_from_file()` (New From File: the base
-  makes the piece in its folder with the next free id, the bench fills it from the dropped file), a
-  `ThumbnailCamera`. The base gives the Inspector controls (the piece, the test, Run test,
-  Previous, Next, Save, Capture thumbnail, status), follows edits to the piece (it watches the
-  piece's saved fields: a script's fields announce nothing), takes the piece the dock hands it
-  (`Workbench.pending`), and renders thumbnails. A character goes in with `Mannequin`: an
-  `EntityDefinition`'s model and its AnimationSet, played as the game plays it.
+  sentence). Optional: `test_label()`/`test_info()` (the button's words), `controls()` +
+  `set_control()` (its settings), `bench_actions()` + `do_action()` (its own buttons; return
+  `{"open": piece}` to open another piece on its bench, `{"edit": res}`, `{"play": args}`),
+  `play_args()` (Play as this), `tries_on_character()` + `default_character()` (the "Tried on"
+  choice), `fit_checks()` (amber warnings), `fill_from_file()` (New From File: the base makes the
+  piece in its folder with the next free id, the bench fills it), a `ThumbnailCamera`. The base gives
+  the common actions (Save, New from this, Copy into a genre, Capture thumbnail), follows edits to
+  the piece (it watches the piece's saved fields: a script's fields announce nothing), takes the
+  piece the dock hands it (`Workbench.pending`), and renders thumbnails. A character goes in with
+  `Mannequin`: an `EntityDefinition`'s model and its AnimationSet, played as the game plays it, and
+  any clip previewed (`preview`, speed, pause, scrub).
+- **WORKBENCHES 2 (DECISIONS #207): the piece in the Inspector, the bench in the Workbench panel**
+  (`addons/umf_content/workbench_panel.gd`, docked beside the Inspector), which draws what the bench
+  declares: no bench needs panel code. **A bench keeps nothing in its scene** (`_validate_property`
+  strips storage from every bench variable; the `Mannequin`'s too): opening one never dirties the
+  template's files in a game. **In a game, the template's content is read-only**: the dock makes a
+  genre's pieces only (`owners_for`), a bench offers Copy into a genre (`ContentLibrary.create_copy`,
+  `ContentDef.on_copied(owner, replacing)`: a status keeps its number when replacing, takes a free
+  one beside), and saving a template piece is warned about.
 - **A bench's judgement is the game's.** The ability bench's outcomes are `use_ability`'s Tier A
   rules (`AbilityWorkbench.judge`); a bench that predicted something the server would not do would
   teach the designer the wrong game. When the server's rule changes, the bench's does in the same change.
@@ -137,8 +150,34 @@ character, the real animations and the moment the content lives in, and no serve
 | Workbench | Tests | Where |
 |---|---|---|
 | ability | use in range (the wind-up plays, it lands), use out of range (refused), cooldown | `tools/workbench/ability_workbench.tscn` |
-| character | every clip (and which the game needs are missing), walk facing (read from a walk that travels; else the floor arrow), looks; fit: feet on the floor, height against its capsule; New From File (a rigged model) | `tools/workbench/character_workbench.tscn` |
-| movement | accelerate (time to run and sprint speed, slide to a stop), jump (height, air time), flaps (each flap's height), reverse (frames to turn a sprint round); the path drawn. Measured by the real model: its numbers match the movement playtest's | `tools/workbench/movement_workbench.tscn` |
+| character | every clip (and which the game needs are missing), walk facing (read from a walk that travels; else the floor arrow), looks; fit: feet on the floor, its body (`collision_*`, drawn around it) against the model; any clip previewed (speed, pause, scrub); each needed clip chosen; Animation set from the model (`ClipMatcher`); New movement / New ability for it; Play as this; New From File (a rigged model: its own set and fitted body when it has clips) | `tools/workbench/character_workbench.tscn` |
+| movement | Start and stop (time to run and sprint speed, slide to a stop), Jump (height, air time), Flaps (each flap's height), Turn around; PERFORMED by the character it is tried on (the one that moves by it), with a ruler, the moments labelled, its speed shown. Measured by the real model: its numbers match the movement playtest's. Play as this (`--movement=`) | `tools/workbench/movement_workbench.tscn` |
+| status | moves (run and sprint in it against the character's own, can it jump), burst (its speed, then after), pose (on the character, or amber: no clip for it), timeline (its length and what it becomes, to the end); measured by the real model with the status applied | `tools/workbench/status_workbench.tscn` |
+
+### Statuses (DECISIONS #206, docs/FOUNDATION_SYSTEMS.md milestone 2)
+A status is a `StatusDef`: its NUMBER (the foundation's 0-99: normal 0, injured 1, downed 2,
+carried 3, out 4, hidden 5, escaped 6; a genre's 100-255), how long it lasts on its own and what it
+becomes then (`then_status`), how an entity in it moves (a share of the character's speed, a burst
+at its start, no sprint, no jump, no dash), what it may do (`can_act`: use things and abilities;
+`targetable`: be used or aimed at) and how it shows (spectate, hide the body, a pose clip, a tag in
+its colour). A GENRE REPLACES one of the foundation's by giving its own the same number: the game
+uses the genre's, nobody edits the foundation's file (both the bake and the build refuse two genres
+with one number, or a genre's under 100 that replaces nothing).
+
+The server keeps who is in which: `status_state` (a side table; no row is normal), set by
+`set_status` (an authority; a player on themself while the dev tools are on) or a genre's
+`set_status_internal`, moved on by a timer (`status_expiry`) when its time is up: to what a genre's
+`on_status_expired` says, else its `then`. Every genre hears each change (`on_status_changed`).
+`use_ability` and `interact` hold to `can_act` and `targetable`; the Tier A bound applies the status
+(`status::bound`), with a grace after a change (`foundation.status_grace_ms`) so the player's own
+game, a round trip behind, is not pulled back. A new match puts everyone back to normal
+(`foundation.statuses_reset_each_match`).
+
+On the client every entity has a `StatusComponent` (added when its scene has none): its movement
+component steps in the status (the config and the presses it takes away: the same in prediction and
+on the sidecar), its body hides for it (`SpaceTimeEntity.set_hidden_by`, which a disconnect uses
+too), its pose is held, its tag shows; the local player in a `spectate` status watches a teammate
+(the lobby's team; Jump for the next). The movement numbers are PARITY numbers like a profile's.
 
 ### Movement profiles (DECISIONS #205, docs/FOUNDATION_SYSTEMS.md milestone 1)
 A character links to a `MovementProfileDef` (`EntityDefinition.movement_profile`): every

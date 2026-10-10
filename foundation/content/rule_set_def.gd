@@ -23,7 +23,7 @@ func content_type() -> StringName:
 
 
 func why_no_workbench() -> String:
-	return "rules are numbers with bounds and a description: they are edited in the Inspector and tried live in the game (Escape, Rules), which is their workbench"
+	return "rules are numbers to tune while the game runs, so the game is their workbench. Change a default here in the Inspector (Rules: open one); a game changes one of the template's with an entry in its genre's rule set (Overrides). Try values live as the admin (in game: Escape, Rules), then the Content panel's Keep live tuning writes them back here"
 
 
 func to_bake() -> Dictionary:

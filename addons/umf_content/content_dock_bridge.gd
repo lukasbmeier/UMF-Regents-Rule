@@ -35,6 +35,6 @@ func show_file(path: String) -> void:
 	asked.append("show " + path)
 
 
-## Run the game.
-func play() -> void:
-	asked.append("play")
+## Run the game, with `args` on its command line (Play as this: "--character=res://...").
+func play(args: PackedStringArray = PackedStringArray()) -> void:
+	asked.append("play" + ("" if args.is_empty() else " " + " ".join(args)))

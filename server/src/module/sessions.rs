@@ -318,8 +318,10 @@ pub(crate) fn begin_match(ctx: &ReducerContext, mut sess: Session) {
     } else {
         ctx.db.session_match().insert(row);
     }
+    let world = sess.world_id;
     ctx.db.session().id().update(sess);
     log::info!("session {id}: match {number} begins, its lobby waiting for players");
+    reset_statuses(ctx, world);
     if let Some(now) = ctx.db.session().id().find(id) {
         if from != PHASE_LOBBY {
             crate::game::on_phase_changed(ctx, &now, from);
@@ -511,6 +513,10 @@ pub(crate) fn move_entity_to_world(ctx: &ReducerContext, entity_id: u64, world_i
     if let Some(mut l) = ctx.db.lobby_member().entity_id().find(entity_id) {
         l.world_id = world_id;
         ctx.db.lobby_member().entity_id().update(l);
+    }
+    if let Some(mut s) = ctx.db.status_state().entity_id().find(entity_id) {
+        s.world_id = world_id;
+        ctx.db.status_state().entity_id().update(s);
     }
 }
 

@@ -30,6 +30,9 @@ signal session_score_changed(entity_id: int, score: int, coins: int)
 signal entity_health_changed(entity_id: int, current: float, max: float)
 signal entity_died(entity_id: int, killer_id: int)
 signal entity_revived(entity_id: int)
+## Its status changed (`StatusComponent`, DECISIONS #206): numbers, `from` == `to` when the same one
+## was set again.
+signal entity_status_changed(entity_id: int, from: int, to: int)
 
 # --- Movement (discrete events only) -----------------------------------------
 signal entity_jumped(entity_id: int)

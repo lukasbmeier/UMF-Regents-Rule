@@ -13,6 +13,8 @@ func run() -> void:
 	await _run_ability_bench()
 	await _run_character_bench()
 	await _run_movement_profiles()
+	await _run_status_bench()
+	await _run_workbenches_2()
 	await _run_catalog()
 
 
@@ -331,3 +333,314 @@ func _run_movement_profiles() -> void:
 	ContentLibrary.root_override = ""
 	ContentLibrary.genres_override = null
 	_wipe(root)
+
+
+const STATUS_BENCH: String = "res://tools/workbench/status_workbench.tscn"
+
+
+## THE STATUS BENCH (DECISIONS #206): a status measured on a real character by the real movement
+## model, as the game steps it: downed crawls and cannot jump; an injury bursts and the burst ends;
+## out cannot move; the timeline follows `then` to its end; a pose the character has no clip for is
+## said (amber); an edit is followed.
+func _run_status_bench() -> void:
+	print("== workbench: statuses ==")
+	StatusDef.clear_cache()
+	var bench: StatusWorkbench = (load(STATUS_BENCH) as PackedScene).instantiate() as StatusWorkbench
+	get_tree().root.add_child(bench)
+	var own: MovementConfig = bench.character.movement_config()
+	var downed: StatusDef = (StatusDef.find(StatusDef.DOWNED) as StatusDef).duplicate() as StatusDef
+	bench.item = downed
+	await get_tree().process_frame
+	var moves: String = await bench.run_named_test(&"moves")
+	_check(is_equal_approx(float(bench.last_measure["run"]), own.run_speed * 0.25)
+		and is_equal_approx(float(bench.last_measure["sprint"]), own.run_speed * 0.25)
+		and float(bench.last_measure["jump_m"]) == 0.0 and moves.contains("cannot jump"),
+		"downed on the humanoid: a crawl at a quarter of its run, sprint or not, and no jump: %s" % moves)
+	var timeline: String = await bench.run_named_test(&"timeline")
+	_check(timeline.contains("Downed for 60.0 s, then Out until something changes it"), "its timeline follows `then`: %s" % timeline)
+	var pose: String = await bench.run_named_test(&"pose")
+	_check(not bool(bench.last_measure["pose"]) and pose.contains("no 'status.downed' clip")
+		and bench.badge()["level"] == "amber", "a pose the character has no clip for is said, and the badge is amber: %s" % pose)
+	downed.speed = 0.5
+	await get_tree().create_timer(0.3).timeout
+	await bench.run_named_test(&"moves")
+	_check(is_equal_approx(float(bench.last_measure["run"]), own.run_speed * 0.5), "an edit is followed (speed 0.5: %.2f m/s)" % float(bench.last_measure["run"]))
+
+	bench.item = StatusDef.find(StatusDef.INJURED)
+	await get_tree().process_frame
+	var burst: String = await bench.run_named_test(&"burst")
+	_check(is_equal_approx(float(bench.last_measure["during"]), own.sprint_speed * 1.5)
+		and is_equal_approx(float(bench.last_measure["after"]), own.sprint_speed), "an injury's burst, then its sprint: %s" % burst)
+	bench.item = StatusDef.find(StatusDef.OUT)
+	await get_tree().process_frame
+	var out_moves: String = await bench.run_named_test(&"moves")
+	_check(out_moves.contains("cannot move") and not (bench.get_node(^"Mannequin") as Node3D).visible,
+		"out: it cannot move, and its body is not shown: %s" % out_moves)
+	bench.queue_free()
+	await get_tree().process_frame
+
+
+## A small model with clips of its own (a stand-in for a chicken: Idle, Walk, Jump on one bone, a
+## 0.4 m box for a body), saved as a scene under `dir`.
+func _clip_model(dir: String) -> PackedScene:
+	var root := Node3D.new()
+	root.name = "Hen"
+	var skel := Skeleton3D.new()
+	skel.name = "Skeleton3D"
+	skel.add_bone("root")
+	root.add_child(skel)
+	skel.owner = root
+	var body := MeshInstance3D.new()
+	body.name = "Body"
+	var box := BoxMesh.new()
+	box.size = Vector3(0.3, 0.5, 0.4)
+	body.mesh = box
+	body.position = Vector3(0, 0.25, 0)
+	root.add_child(body)
+	body.owner = root
+	var player := AnimationPlayer.new()
+	player.name = "AnimationPlayer"
+	var lib := AnimationLibrary.new()
+	for clip: String in ["Idle", "Walk", "Jump"]:
+		var a := Animation.new()
+		a.length = 1.0
+		var t: int = a.add_track(Animation.TYPE_POSITION_3D)
+		a.track_set_path(t, ^"Skeleton3D:root")
+		a.position_track_insert_key(t, 0.0, Vector3.ZERO)
+		a.position_track_insert_key(t, 1.0, Vector3(0, 0.1 if clip == "Jump" else 0.0, 0))
+		lib.add_animation(StringName(clip), a)
+	player.add_animation_library(&"", lib)
+	root.add_child(player)
+	player.owner = root
+	var scene := PackedScene.new()
+	scene.pack(root)
+	root.free()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+	var path: String = dir.path_join("hen_model.tscn")
+	ResourceSaver.save(scene, path)
+	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
+
+
+## The names of a packed node's stored properties.
+static func _stored(state: SceneState, node: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	for i: int in state.get_node_property_count(node):
+		out.append(String(state.get_node_property_name(node, i)))
+	return out
+
+
+## WORKBENCHES 2 (DECISIONS #207), from Luke's first real use: the piece in the Inspector and the
+## bench in its panel; a bench never changes its own scene; the character bench as the start of a
+## character (any clip played closely, a model's own clips made into its set and mapped, its body
+## fitted and drawn around it, its movement and abilities made from it); the movement bench
+## performing each test on a character; New from this, Copy into a genre, the template's content
+## read-only in a game; Play as this.
+func _run_workbenches_2() -> void:
+	print("== workbench: Workbenches 2 ==")
+	var root: String = "user://workbench2_test"
+	_wipe(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray()
+	StatusDef.clear_cache()
+
+	# A BENCH KEEPS NOTHING IN ITS SCENE: what is on it, the character it is tried on, the mannequin's
+	# model are the session's.
+	var hen_scene: PackedScene = _clip_model(root.path_join("models"))
+	var errors: Array[String] = []
+	var hen_path: String = ContentLibrary.create(&"character", "foundation", "Hen", errors)
+	var hen: EntityDefinition = load(hen_path) as EntityDefinition
+	hen.visual_scene = hen_scene
+	hen.scene = load("res://foundation/entities/player.tscn") as PackedScene
+	ResourceSaver.save(hen, hen_path)
+	var bench: CharacterWorkbench = (load(CHARACTER_BENCH) as PackedScene).instantiate() as CharacterWorkbench
+	get_tree().root.add_child(bench)
+	bench.item = hen
+	await get_tree().process_frame
+	var packed := PackedScene.new()
+	for c: Node in bench.get_children():
+		c.owner = bench
+	packed.pack(bench)
+	var state: SceneState = packed.get_state()
+	var leaked := PackedStringArray()
+	for i: int in state.get_node_count():
+		for p: String in _stored(state, i):
+			if p in ["item", "character", "definition", "look", "seconds_each", "preview_clip", "intake_file", "test", "status"]:
+				leaked.append("%s.%s" % [state.get_node_name(i), p])
+	_check(leaked.is_empty(), "a bench saved with a piece on it keeps none of it in its scene: %s" % str(leaked))
+
+	# ITS BODY, AROUND IT: the capsule drawn on the model, not beside it; fitted to the model.
+	var cap: MeshInstance3D = bench.get_node(^"Capsule") as MeshInstance3D
+	_check(is_zero_approx(cap.position.x) and is_zero_approx(cap.position.z), "the body is drawn around the model (at its feet), not beside it")
+	_check(bench.badge()["level"] == "amber" and str(bench.fit_checks()).contains("its body 1.80 m"),
+		"a 0.5 m hen in a person's 1.8 m body is amber, and says so: %s" % str(bench.fit_checks()))
+	bench.fit_body()
+	_check(is_equal_approx(hen.collision_height, 0.5) and is_equal_approx(hen.collision_radius, 0.2)
+		and is_equal_approx((cap.mesh as CapsuleMesh).height, 0.5),
+		"Fit the body to the model: 0.5 m tall, 0.2 m radius, and the drawn body follows (%.2f, %.2f)" % [hen.collision_height, hen.collision_radius])
+	hen.visual_scale = 2.0
+	await get_tree().create_timer(0.3).timeout
+	var m: Mannequin = bench.get_node(^"Mannequin") as Mannequin
+	_check(m.model != null and is_equal_approx(m.model.scale.x, 2.0), "visual_scale sizes the model on the bench")
+	# AND IN THE GAME: the entity a character spawns has its body and its model's size.
+	var ent: SpaceTimeEntity = (load("res://foundation/entities/player.tscn") as PackedScene).instantiate() as SpaceTimeEntity
+	ent.definition = hen
+	ent._apply_presentation()
+	var shape: CollisionShape3D = ent.get_node(^"CollisionShape3D") as CollisionShape3D
+	var body: CapsuleShape3D = shape.shape as CapsuleShape3D
+	var model: Node3D = ent.get_node_or_null(^"Visual/Model") as Node3D
+	_check(is_equal_approx(body.radius, 0.2) and is_equal_approx(body.height, 0.5) and is_equal_approx(shape.position.y, 0.25)
+		and model != null and is_equal_approx(model.scale.x, 2.0),
+		"the entity a character spawns has its body (0.5 m by 0.2 m, standing on the ground) and its model's scale")
+	var plain: SpaceTimeEntity = (load("res://foundation/entities/player.tscn") as PackedScene).instantiate() as SpaceTimeEntity
+	_check(is_equal_approx(((plain.get_node(^"CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D).height, 1.8),
+		"and resizing one character's body leaves the scene's own capsule as it was")
+	ent.free()
+	plain.free()
+	hen.visual_scale = 1.0
+	var thin_body := EntityDefinition.new()
+	thin_body.display_name = "Thin"
+	thin_body.scene = hen.scene
+	thin_body.collision_radius = 0.5
+	thin_body.collision_height = 0.6
+	_check(thin_body.validate().any(func(s: String) -> bool: return s.contains("at least as tall as it is wide")),
+		"a body wider than it is tall is refused")
+
+	# ITS OWN CLIPS: an animation set made from the model, each thing the game needs matched by name;
+	# the landing it lacks stood in for; every clip playable closely.
+	_check(bench.actions().any(func(a: Dictionary) -> bool: return a["name"] == &"make_set"), "a model with clips of its own offers \"Animation set from the model\"")
+	_check(bench.make_set_from_model(), "it makes one: %s" % bench.last_result)
+	var set: AnimationSet = hen.animation_set
+	_check(set != null and set.resource_path == root.path_join("game/anim/characters/hen.tres") and FileAccess.file_exists(set.resource_path),
+		"saved beside the owner's content, not in a content folder (%s)" % (set.resource_path if set != null else "none"))
+	var clip_of: Callable = func(semantic: StringName) -> StringName:
+		var ref: AnimationClipRef = set.clips.get(semantic) if set != null else null
+		return ref.anim_name if ref != null else &""
+	_check(set != null and clip_of.call(&"locomotion.idle") == &"Idle" and clip_of.call(&"locomotion.walk") == &"Walk"
+		and clip_of.call(&"jump.start") == &"Jump" and clip_of.call(&"jump.land") == &"Jump" and set.missing_required().is_empty(),
+		"Idle, Walk and Jump matched by name, the landing it lacks stood in by its jump: nothing the game needs is missing")
+	_check(bench.last_result.contains("stand-in"), "and it says which clips are stand-ins")
+	var choices: Array = m.clip_choices()
+	var names: Array = choices.map(func(c: Array) -> String: return String(c[0]))
+	_check(names.has("locomotion.walk") and names.has("Walk") and names.has("model/Walk"),
+		"ANY clip can be chosen: what the game plays, the set's clips, the model's own (%d choices)" % choices.size())
+	bench.set_control(&"paused", true)
+	bench.set_control(&"animation", &"model/Walk")
+	bench.set_control(&"position", 0.5)
+	await get_tree().create_timer(0.25).timeout
+	_check(m.playing() == &"model/Walk" and absf(m.preview_fraction() - 0.5) < 0.02, "a clip is held paused where it is scrubbed to (%.2f, a quarter second later)" % m.preview_fraction())
+	bench.set_control(&"paused", false)
+	bench.set_control(&"speed", 0.5)
+	_check(m.preview_speed == 0.5, "and played slower")
+	bench.set_control(&"map:jump.land", &"Idle")
+	bench.save()
+	var reread: AnimationSet = ResourceLoader.load(set.resource_path, "", ResourceLoader.CACHE_MODE_IGNORE) as AnimationSet
+	_check(reread.clips[&"jump.land"].anim_name == &"Idle", "each thing the game needs is a choice of clip, and Save keeps it")
+	_check(bench.controls().any(func(c: Dictionary) -> bool: return c.get("name") == &"map:jump.land"),
+		"the panel lists what the game needs to choose for")
+
+	# THE WORKBENCH PANEL: the bench's tests, settings and actions, drawn from what it declares.
+	var bridge := ContentDockBridge.new()
+	var panel := WorkbenchPanel.new()
+	get_tree().root.add_child(panel)
+	panel.setup(bridge)
+	panel.show_bench(bench)
+	var labels: PackedStringArray = panel.button_labels()
+	_check(labels.has("Play every clip") and labels.has("Play as this") and labels.has("New from this") and labels.has("New movement for it")
+		and panel.control(&"animation") != null, "the panel shows its tests, its actions and its settings: %s" % ", ".join(labels))
+	panel.press_action(&"play_as")
+	_check(bridge.asked.has("play --character=" + hen_path), "Play as this plays the game as it %s" % str(bridge.asked))
+	panel.press_action(&"new_movement")
+	var mv: MovementProfileDef = hen.movement_profile
+	_check(mv != null and mv.resource_path.begins_with(root.path_join("foundation/content/movement"))
+		and bridge.asked.has("open res://tools/workbench/movement_workbench.tscn"),
+		"New movement for it makes one, links it to the character, and opens it on its own bench %s" % str(bridge.asked))
+	panel.press_action(&"new_ability")
+	_check(hen.abilities.size() == 1 and bridge.asked.has("open res://tools/workbench/ability_workbench.tscn"),
+		"New ability for it: made, listed on the character, opened")
+	var reread_hen: EntityDefinition = ResourceLoader.load(hen_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EntityDefinition
+	_check(reread_hen.movement_profile != null and reread_hen.abilities.size() == 1, "and both links are saved")
+	var baked: Dictionary = hen.to_bake()
+	_check(baked["abilities"] == [hen.abilities[0].id], "the character's abilities are baked for the server (%s)" % str(baked["abilities"]))
+
+	# THE MOVEMENT BENCH: tried on the character that moves by it, and PERFORMED.
+	var mbench: MovementWorkbench = (load(MOVEMENT_BENCH) as PackedScene).instantiate() as MovementWorkbench
+	get_tree().root.add_child(mbench)
+	mbench.item = mv
+	await get_tree().process_frame
+	_check(mbench.character == hen, "a movement is tried on the character that moves by it (%s)" % (mbench.character.display_name if mbench.character != null else "none"))
+	panel.show_bench(mbench)
+	labels = panel.button_labels()
+	_check(labels.has("Start and stop") and labels.has("Turn around") and labels.has("Play as this") and panel.control(&"character") != null,
+		"its tests say what they play; it is tried on a character of your choice: %s" % ", ".join(labels))
+	panel.press_action(&"play_as")
+	_check(bridge.asked.has("play --movement=" + mv.resource_path), "Play as this: the game's character moving by it")
+	mbench.replay_speed = 2.0
+	await mbench.run_named_test(&"accelerate")
+	_check(mbench.performing(), "a test is performed by the character")
+	var hm: Mannequin = mbench.get_node(^"Mannequin") as Mannequin
+	var start_z: float = hm.position.z
+	await get_tree().create_timer(0.5).timeout
+	_check(hm.position.z < start_z - 1.0 and hm.definition == hen, "the hen runs along the path (%.2f m)" % (start_z - hm.position.z))
+	var marks: Node = mbench.get_node(^"Marks")
+	var texts: Array = marks.get_children().filter(func(n: Node) -> bool: return n is Label3D).map(func(n: Node) -> String: return (n as Label3D).text)
+	_check(texts.has("1 m") and texts.any(func(t: String) -> bool: return t.begins_with("stopped: slid")) and texts.any(func(t: String) -> bool: return t.begins_with("running speed")),
+		"with a ruler under it and the moments labelled where they happen (%d labels)" % texts.size())
+	var p: MovementProfileDef = mv
+	_check(MovementWorkbench.performance_clip({"vel": Vector3.ZERO, "grounded": true}, p) == AnimationSet.IDLE
+		and MovementWorkbench.performance_clip({"vel": Vector3(0, 0, -p.sprint_speed), "grounded": true}, p) == AnimationSet.SPRINT
+		and MovementWorkbench.performance_clip({"vel": Vector3(0, 0, -p.run_speed), "grounded": true}, p) == AnimationSet.RUN
+		and MovementWorkbench.performance_clip({"vel": Vector3(0, 3, 0), "grounded": false}, p) == AnimationSet.JUMP_START,
+		"it plays the gait its speed is (idle, run, sprint; a jump in the air)")
+	mbench.queue_free()
+
+	# NEW FROM THIS, COPY INTO A GENRE, THE TEMPLATE'S CONTENT READ-ONLY IN A GAME.
+	var sbench: StatusWorkbench = (load(STATUS_BENCH) as PackedScene).instantiate() as StatusWorkbench
+	get_tree().root.add_child(sbench)
+	var downed_path: String = ContentLibrary.create(&"status", "foundation", "Downed", errors)
+	var downed: StatusDef = load(downed_path) as StatusDef
+	downed.status = 2
+	downed.speed = 0.25
+	ResourceSaver.save(downed, downed_path)
+	sbench.item = downed
+	await get_tree().process_frame
+	var copy: String = sbench.duplicate_item("foundation")
+	var copied: StatusDef = load(copy) as StatusDef
+	_check(copied != null and copied.id != downed.id and copied.status != 2 and is_equal_approx(copied.speed, 0.25) and sbench.item == copied,
+		"New from this: its own id and file, a free status number, every other field copied, on the bench (status %d)" % (copied.status if copied != null else -1))
+	ContentLibrary.genres_override = PackedStringArray(["hens"])
+	sbench.item = downed
+	await get_tree().process_frame
+	_check(sbench.read_only_here() and sbench.actions().any(func(a: Dictionary) -> bool: return a["name"] == &"copy_into:hens")
+		and String(sbench.status).contains("read-only"), "in a game, the template's piece is read-only, and offers Copy into the genre")
+	sbench.do_action(&"copy_into:hens")
+	var theirs: StatusDef = sbench.item as StatusDef
+	_check(theirs != null and theirs.resource_path.begins_with(root.path_join("game/hens/content/status")) and theirs.status == 2
+		and theirs.display_name == "Downed", "Copy into hens: hens' own, the same number (so it takes the template's place), to change")
+	StatusDef.clear_cache()
+	_check(StatusDef.find(2) == theirs, "and the game now uses it")
+	_check(not bench.actions().any(func(a: Dictionary) -> bool: return a["name"] == &"new_movement"), "the template's character offers nothing that would change it")
+	ContentLibrary.genres_override = PackedStringArray()
+
+	# A FILE DRAGGED IN ARRIVES AS ITS UID: named from its real name.
+	var uid: int = ResourceLoader.get_resource_uid("res://game/characters/mannequin_f.glb")
+	var made: String = bench.new_from_file(ResourceUID.id_to_text(uid), "foundation")
+	_check(made.get_file() == "mannequin_f.tres", "a model dragged in (a uid) makes a character named after its file (%s)" % made.get_file())
+
+	panel.queue_free()
+	bench.queue_free()
+	sbench.queue_free()
+	await get_tree().process_frame
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = null
+	StatusDef.clear_cache()
+	_wipe(root)
+	# The humanoid's set is made by a tool for many characters (game/anim/humanoid.tres): shared, never
+	# offered as the humanoid's own to change clip by clip.
+	var cb: CharacterWorkbench = (load(CHARACTER_BENCH) as PackedScene).instantiate() as CharacterWorkbench
+	get_tree().root.add_child(cb)
+	cb.item = load(HUMANOID) as EntityDefinition
+	await get_tree().process_frame
+	_check(not cb._owns_set(cb.item as EntityDefinition) and not cb.controls().any(func(c: Dictionary) -> bool: return String(c.get("name", "")).begins_with("map:")),
+		"a set made for many characters (the humanoid's) is shared, not one character's to change here")
+	cb.queue_free()
+	await get_tree().process_frame

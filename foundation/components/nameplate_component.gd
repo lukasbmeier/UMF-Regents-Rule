@@ -26,6 +26,10 @@ const TABLE: StringName = &"player"
 @export var max_distance_m: float = 40.0
 
 var _label: Label3D = null
+## A second line under the name: the entity's status (`set_tag`), in its colour.
+var _tag: Label3D = null
+var _tag_text: String = ""
+var _tag_color: Color = Color.WHITE
 var _holder: Node3D = null
 ## THE NAME ARRIVES BEFORE THE LABEL DOES. `bind()` replays the rows that were already in the
 ## cache and only then calls `_on_bound()`, so a component that kept its state inside a node it
@@ -68,13 +72,16 @@ func _on_bound() -> void:
 	_label.visibility_range_end = max_distance_m
 	_holder.add_child(_label)
 	_refresh()
+	if not _tag_text.is_empty():
+		set_tag(_tag_text, _tag_color)
 
 
 ## What to show before a name arrives, or for something that will never have one. A definition's
-## `display_name` is how the rival angler is labelled without a player row.
+## `display_name` is how the rival angler is labelled without a player row; a player (kind 0) is
+## "Player <id>" until its name arrives, not its character's name ("Humanoid").
 func _fallback_name() -> String:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
-	if ent != null and ent.definition != null and not ent.definition.display_name.is_empty():
+	if ent != null and ent.definition != null and ent.definition.kind != 0 and not ent.definition.display_name.is_empty():
 		return ent.definition.display_name
 	return "Player %d" % entity_id
 
@@ -97,6 +104,34 @@ func _refresh() -> void:
 	# Printed because a nameplate is otherwise only verifiable by looking at a screen, and the
 	# thing worth verifying is that ANOTHER client's name arrived — which needs two processes.
 	print("[Nameplate] nameplate: %d = %s" % [entity_id, shown])
+
+
+## Show `text` under the name, in `color` (its status: "Downed"); "" for none.
+func set_tag(text: String, color: Color) -> void:
+	_tag_text = text
+	_tag_color = color
+	if _holder == null:
+		return   # the local player has no nameplate; its HUD says its status
+	if _tag == null and not text.is_empty():
+		_tag = Label3D.new()
+		_tag.name = "Tag"
+		_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_tag.font_size = int(font_size * 0.75)
+		_tag.outline_size = font_size / 8
+		_tag.outline_modulate = Color(0.0, 0.0, 0.0, 0.85)
+		_tag.pixel_size = text_scale
+		_tag.position = Vector3(0.0, height - 0.22, 0.0)
+		_tag.visibility_range_end = max_distance_m
+		_holder.add_child(_tag)
+	if _tag != null:
+		_tag.text = text
+		_tag.modulate = Color(color, 0.95)
+		_tag.visible = not text.is_empty()
+
+
+## The tag being shown ("" for none). For tests.
+func shown_tag() -> String:
+	return _tag_text
 
 
 ## What the nameplate is showing. For tests and the debug overlay.

@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -24,6 +24,7 @@ var player: UmfPlayerTable
 var session: UmfSessionTable
 var session_match: UmfSessionMatchTable
 var session_member: UmfSessionMemberTable
+var status_state: UmfStatusStateTable
 var world_config: UmfWorldConfigTable
 var world_level: UmfWorldLevelTable
 
@@ -48,5 +49,6 @@ func _init(p_local_db: LocalDatabase) -> void:
 	session = preload('res://spacetime_bindings/schema/tables/umf_session_table.gd').new(p_local_db)
 	session_match = preload('res://spacetime_bindings/schema/tables/umf_session_match_table.gd').new(p_local_db)
 	session_member = preload('res://spacetime_bindings/schema/tables/umf_session_member_table.gd').new(p_local_db)
+	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
 	world_config = preload('res://spacetime_bindings/schema/tables/umf_world_config_table.gd').new(p_local_db)
 	world_level = preload('res://spacetime_bindings/schema/tables/umf_world_level_table.gd').new(p_local_db)

@@ -31,6 +31,7 @@
 		"set_rule": "(key:String,number:F64,text:String)",
 		"set_session_phase": "(session_id:U64,phase:U8)",
 		"set_sim_authority": "(world_id:U32,mode:U8)",
+		"set_status": "(entity_id:U64,status:U8,lasts_ms:U32,data:String)",
 		"set_team": "(team:U8)",
 		"set_world_level": "(world_id:U32,level_id:U8)",
 		"set_world_spawn": "(world_id:U32,pos:Vector3(x:F32,y:F32,z:F32))",
@@ -64,6 +65,7 @@
 		"session": "Session(id:U64,world_id:U32,kind:U8,phase:U8,phase_ends_at:(__timestamp_micros_since_unix_epoch__:I64),seed:U64,max_members:U16,round:U32)",
 		"session_match": "SessionMatch(session_id:U64,world_id:U32,first_round:U32,started:Bool,number:U32)",
 		"session_member": "SessionMember(id:U64,session_id:U64,entity_id:U64,score:I64,coins:I64)",
+		"status_state": "StatusStateRow(entity_id:U64,world_id:U32,status:U8,prev_status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,data:String,serial:U32)",
 		"world_config": "WorldConfig(world_id:U32,sim_authority:U8,authority_online:Bool,server_tick:U64,server_ts:(__timestamp_micros_since_unix_epoch__:I64),spawn:Vector3(x:F32,y:F32,z:F32))",
 		"world_level": "WorldLevel(world_id:U32,level_id:U8)"
 	}

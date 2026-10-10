@@ -11,15 +11,9 @@ class_name AbilityWorkbench extends Workbench
 ##   use_out_of_range   the dummy just past the ring: refused, as the server would
 ##   cooldown           used twice at once: the second is refused until the cooldown is over
 
-## Who uses it.
-@export var character: EntityDefinition = preload("res://foundation/content/character/humanoid.tres"):
-	set(v):
-		character = v
-		var m: Mannequin = get_node_or_null(^"Mannequin") as Mannequin
-		if m != null:
-			m.definition = v
-## How fast the tests play (1: as in the game; lower to watch a wind-up closely).
-@export_range(0.1, 2.0, 0.05) var playback_speed: float = 1.0
+## How fast the tests play (1: as in the game; lower to watch a wind-up closely). Who uses it is the
+## base's `character` ("Tried on" in the panel): by default a character that lists this ability.
+var playback_speed: float = 1.0
 
 const RING_WIDTH: float = 0.05
 const READY: Color = Color(0.35, 0.85, 1.0)
@@ -42,6 +36,46 @@ func content_type() -> StringName:
 
 func test_actions() -> Array[StringName]:
 	return [&"use_in_range", &"use_out_of_range", &"cooldown"]
+
+
+func test_label(action: StringName) -> String:
+	match action:
+		&"use_in_range": return "Use in range"
+		&"use_out_of_range": return "Use out of range"
+		&"cooldown": return "Use twice"
+	return super(action)
+
+
+func test_info(action: StringName) -> String:
+	match action:
+		&"use_in_range": return "The wind-up plays, then it lands on the dummy, as the server would decide"
+		&"use_out_of_range": return "The dummy just past the ring: refused, as the server would"
+		&"cooldown": return "Used twice at once: the second is refused until the cooldown is over"
+	return ""
+
+
+func tries_on_character() -> bool:
+	return true
+
+
+## A character that lists this ability, else the humanoid.
+func default_character() -> EntityDefinition:
+	var a: ContentDef = item
+	var user: EntityDefinition = character_using(func(d: ContentDef) -> bool: return (d as EntityDefinition).abilities.has(a))
+	return user if user != null else super()
+
+
+func controls() -> Array[Dictionary]:
+	return [character_control(),
+		{"name": &"playback_speed", "label": "Test speed", "kind": "number", "value": playback_speed, "min": 0.1, "max": 2.0, "step": 0.05,
+			"tooltip": "1: as in the game; lower to watch a wind-up closely"}]
+
+
+func set_control(n: StringName, value: Variant) -> void:
+	if n == &"playback_speed":
+		playback_speed = float(value)
+		return
+	super(n, value)
 
 
 func load_item(def: ContentDef) -> void:

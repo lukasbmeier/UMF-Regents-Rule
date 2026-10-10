@@ -4,6 +4,10 @@ class_name RulesPanel extends PanelContainer
 ## does; a change goes to the server (`set_rule`) and reaches every player at once. Reset puts a
 ## rule back to this build's default. What is set here lives ON THIS SERVER until reset; to make a
 ## tuning the game's default, use the Content dock's "Keep live tuning" in the editor.
+##
+## Above the rules: TRY A STATUS on yourself (DECISIONS #206): pick one (downed, out, a genre's) and
+## the server puts you in it for its own length, so a designer feels a crawl or a spectate without
+## a script.
 
 signal closed
 
@@ -11,6 +15,7 @@ var _list: VBoxContainer
 var _status: Label
 var _rows: Dictionary = {}     # key -> { spin / check / edit, live: Label }
 var _built: bool = false
+var _statuses: OptionButton = null
 
 
 func _ready() -> void:
@@ -44,6 +49,7 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "Rules (admin) — live on THIS server, for every player"
 	box.add_child(title)
+	box.add_child(_status_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -62,6 +68,37 @@ func _build() -> void:
 	back.text = "Back"
 	back.pressed.connect(close)
 	box.add_child(back)
+
+
+## "Try a status": every status this game has, and a button that puts the admin's own player in it.
+func _status_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = "Try a status on yourself"
+	label.custom_minimum_size = Vector2(250, 0)
+	row.add_child(label)
+	_statuses = OptionButton.new()
+	var all: Dictionary = StatusDef.all()
+	var numbers: Array = all.keys()
+	numbers.sort()
+	for n: int in numbers:
+		_statuses.add_item("%d  %s" % [n, (all[n] as StatusDef).display_name], n)
+	row.add_child(_statuses)
+	var go := Button.new()
+	go.text = "Put me in it"
+	go.pressed.connect(func() -> void: try_status(_statuses.get_selected_id()))
+	row.add_child(go)
+	return row
+
+
+## Put the local player in status `n`, for its own length (the reducer: `set_status`).
+func try_status(n: int) -> ReducerRequest:
+	var me: int = SpaceTimeSync.get_local_entity_id()
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"set_status", [me, n, 0, ""], ["u64", "u8", "u32", "string"])
+	req.settled.connect(func(r: ReducerRequest) -> void:
+		if is_instance_valid(self) and _status != null:
+			_status.text = ("status %d set" % n) if r.is_ok() else ("status %d: %s" % [n, r.error_message]))
+	return req
 
 
 func _add_row(key: StringName, info: Dictionary) -> void:

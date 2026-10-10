@@ -53,6 +53,12 @@ var _rows: Dictionary[StringName, RefCounted] = {}
 var _history: Dictionary[StringName, Array] = {}
 var _required: Array[StringName] = []
 var _is_bound: bool = false
+## Every entity's status (`_ensure_status_component`).
+const STATUS_COMPONENT: String = "res://foundation/components/status_component.gd"
+## Why its body is hidden (`set_hidden_by`): reason -> true. Empty: shown.
+var _hidden_by: Dictionary = {}
+var _saved_layer: int = 0
+var _saved_mask: int = 0
 var _bind_timer: SceneTreeTimer = null
 
 ## THE LOOK THIS ENTITY WAS BUILT WEARING (DECISIONS #166): its `appearance` row's text when the
@@ -213,6 +219,7 @@ func _collect_components() -> void:
 	_required.clear()
 	if not has_node(^"Components"):
 		return
+	_ensure_status_component()
 	for child: Node in get_node(^"Components").get_children():
 		var c: SpaceTimeComponent = child as SpaceTimeComponent
 		if c == null:
@@ -228,6 +235,54 @@ func _collect_components() -> void:
 			# A table gates the bind if ANY component needs a row from it to be useful.
 			if not optional.has(t) and not _required.has(t):
 				_required.append(t)
+
+
+## EVERY ENTITY HAS A STATUS (DECISIONS #206): a scene that does not carry a `StatusComponent` (a
+## genre's own entity, one made before statuses) is given one, so statuses work everywhere.
+##
+## By PATH, not by class: StatusComponent names this class, and two scripts naming each other this
+## way were never freed at exit (the unit run's leak check caught it).
+func _ensure_status_component() -> void:
+	var script: Script = load(STATUS_COMPONENT) as Script
+	var holder: Node = get_node(^"Components")
+	for child: Node in holder.get_children():
+		if child.get_script() == script:
+			return
+	var c: Node = script.new() as Node
+	c.name = "Status"
+	holder.add_child(c)
+
+
+## HIDE THE BODY for a reason (`&"offline"`: PresenceComponent; `&"status"`: an out player), or show
+## it again. It is drawn and collides only while no reason holds, so two of them never undo each
+## other (a player who is out AND has left stays hidden when either ends).
+func set_hidden_by(reason: StringName, hide: bool) -> void:
+	var was: bool = not _hidden_by.is_empty()
+	if hide:
+		_hidden_by[reason] = true
+	else:
+		_hidden_by.erase(reason)
+	var now: bool = not _hidden_by.is_empty()
+	if now == was:
+		return
+	visible = not now
+	if now:
+		_saved_layer = collision_layer
+		_saved_mask = collision_mask
+		collision_layer = 0
+		collision_mask = 0
+	else:
+		collision_layer = _saved_layer
+		collision_mask = _saved_mask
+
+
+## Whether its body is hidden, and why (for tests and the debug overlay).
+func is_hidden() -> bool:
+	return not _hidden_by.is_empty()
+
+
+func hidden_reasons() -> Array:
+	return _hidden_by.keys()
 
 
 ## Keep only the rows that some component actually asked for; the rest would just be retained
@@ -320,6 +375,16 @@ func _apply_presentation() -> void:
 		if model3d != null:
 			model3d.position = definition.visual_offset
 			model3d.rotation.y = deg_to_rad(definition.visual_yaw_deg)
+			model3d.scale = Vector3.ONE * definition.visual_scale
+
+	# ITS BODY (DECISIONS #207): a character's own capsule size, standing on the ground as the
+	# scene's does. Before bind, so the first predicted (or simulated) step already collides as it.
+	if definition.collision_radius > 0.0 or definition.collision_height > 0.0:
+		var shape_node: CollisionShape3D = get_node_or_null(^"CollisionShape3D") as CollisionShape3D
+		var cap: CapsuleShape3D = definition.body_capsule()
+		if shape_node != null and cap != null and shape_node.shape is CapsuleShape3D:
+			shape_node.shape = cap
+			shape_node.position.y = cap.height * 0.5
 
 	if definition.camera_rig != null and has_node(^"CameraRig"):
 		var rig: CameraRig = get_node(^"CameraRig") as CameraRig

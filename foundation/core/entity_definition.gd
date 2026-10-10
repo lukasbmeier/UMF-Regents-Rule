@@ -50,17 +50,33 @@ class_name EntityDefinition extends ContentDef
 ## disagrees moonwalks. Measured, not guessed — a root-motion clip's travel says which way a
 ## rig faces (the Quaternius humanoids move +Z, hence 180 on their definitions).
 @export var visual_yaw_deg: float = 0.0
+## The model's size (1: as it was made). A model made at another scale (a chicken modelled 3 m tall)
+## is fitted here, not in the model file. Presentation only: its body is `collision_*` below.
+@export_range(0.01, 100.0, 0.01, "or_greater") var visual_scale: float = 1.0
 ## Which clips this character has, mapped onto semantic names (ANIMATION_SPEC §3). Handed to
 ## the entity's AnimationDriverComponent before bind. Null means the character does not animate,
 ## which is the right answer for a greybox capsule.
 @export var animation_set: AnimationSet
+## SWAP FIRST/THIRD PERSON HERE. Applied to the entity's CameraRig; null keeps the scene's own.
+## `foundation/camera/` ships `first_person.tres` and `third_person.tres`.
+@export var camera_rig: CameraRigConfig
+
+@export_group("Body")
+## ITS BODY: the capsule it moves and collides with, and that others bump into (DECISIONS #207). 0:
+## the entity scene's (foundation/entities/player.tscn: 0.35 m by 1.8 m, a person). A hen is a
+## smaller capsule. The character workbench draws it around the model.
+@export_range(0.0, 5.0, 0.01, "suffix:m") var collision_radius: float = 0.0
+@export_range(0.0, 10.0, 0.01, "suffix:m") var collision_height: float = 0.0
+
+@export_group("How it plays")
 ## HOW IT MOVES (DECISIONS #205): its speeds, jump, flaps, dash. Empty: the foundation's default
 ## (`shared/movement_config.json`). Predicted by its player's client and simulated by the sidecar
 ## with the same numbers.
 @export var movement_profile: MovementProfileDef
-## SWAP FIRST/THIRD PERSON HERE. Applied to the entity's CameraRig; null keeps the scene's own.
-## `foundation/camera/` ships `first_person.tres` and `third_person.tres`.
-@export var camera_rig: CameraRigConfig
+## WHAT IT CAN USE (DECISIONS #207): its abilities. The server refuses an ability its kind's
+## characters do not list; a kind none of whose characters list any may use every ability (as
+## before this existed).
+@export var abilities: Array[AbilityDef] = []
 
 
 ## The model entity `entity_id` wears: the variant its `appearance` names (DECISIONS #166), else
@@ -123,7 +139,11 @@ func content_type() -> StringName:
 
 ## What a server could check a game's kinds against (it compiles nothing from it yet).
 func to_bake() -> Dictionary:
-	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile)}
+	var ability_ids: Array = []
+	for a: AbilityDef in abilities:
+		ability_ids.append(ContentDef.ref(a))
+	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile),
+		"abilities": ability_ids}
 
 
 func validate() -> Array[String]:
@@ -134,4 +154,28 @@ func validate() -> Array[String]:
 		out.append("it has no scene: the entity it spawns (instance foundation/entities/player.tscn)")
 	if animation_set != null and visual_scene == null and visual_variants.is_empty():
 		out.append("it has an animation set but no model to play it on")
+	if collision_radius > 0.0 and collision_height > 0.0 and collision_height < collision_radius * 2.0:
+		out.append("its body is %.2f m tall but %.2f m wide: a capsule is at least as tall as it is wide (collision_height)" % [collision_height, collision_radius * 2.0])
+	if abilities.has(null):
+		out.append("its abilities list has an empty slot: pick an ability or remove the slot")
+	return out
+
+
+## The capsule its body is: the entity scene's, resized by `collision_radius`/`collision_height`.
+## Null when its scene has no capsule.
+func body_capsule() -> CapsuleShape3D:
+	if scene == null:
+		return null
+	var root: Node = scene.instantiate()
+	var out: CapsuleShape3D = null
+	for n: Node in root.find_children("*", "CollisionShape3D", true, false):
+		if (n as CollisionShape3D).shape is CapsuleShape3D:
+			out = ((n as CollisionShape3D).shape as CapsuleShape3D).duplicate() as CapsuleShape3D
+			break
+	root.free()
+	if out != null:
+		if collision_radius > 0.0:
+			out.radius = collision_radius
+		if collision_height > 0.0:
+			out.height = maxf(collision_height, out.radius * 2.0)
 	return out

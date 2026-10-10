@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 3
+speed = 0.0
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+color = Color(1, 0.55, 0.3, 1)
+id = 3
+display_name = "Carried"
+designer_notes = "Being carried by someone (milestone 6 moves it with its carrier). Cannot move or act on its own."

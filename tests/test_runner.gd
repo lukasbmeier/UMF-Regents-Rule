@@ -33,6 +33,7 @@ const SUITES: PackedStringArray = [
 	"version",
 	"content",
 	"presence",
+	"status",
 	"workbench",
 	"settings",
 	"music",
@@ -89,6 +90,12 @@ func _run_all() -> void:
 		if not _on(name):
 			continue
 		var script: GDScript = load(SUITE_DIR + name + ".gd") as GDScript
+		# A suite that does not compile fails the run and the rest go on: without this the runner
+		# called .new() on nothing, its coroutine died, and the run hung until killed.
+		if script == null or not script.can_instantiate():
+			printerr("  FAIL: suite '%s' does not compile (its errors are above)" % name)
+			SuiteBase._failures += 1
+			continue
 		var suite: SuiteBase = script.new() as SuiteBase
 		suite.name = name
 		add_child(suite)
@@ -106,6 +113,10 @@ func _run_all() -> void:
 			if not f.ends_with(".gd") or not _on(f.get_basename()):
 				continue
 			var gscript: GDScript = load(dir + f) as GDScript
+			if gscript == null or not gscript.can_instantiate():
+				printerr("  FAIL: suite '%s' does not compile (its errors are above)" % f)
+				SuiteBase._failures += 1
+				continue
 			var gsuite: SuiteBase = gscript.new() as SuiteBase
 			gsuite.name = f.get_basename()
 			add_child(gsuite)

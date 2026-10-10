@@ -111,6 +111,7 @@ pub(crate) fn tick_world_module(
     let rows: Vec<MovementStateRow> = ctx.db.movement_state().world_id().filter(world_id).collect();
     // Where a player may stand in this world's level (REVIEW B2); the greybox (0) has no bake.
     let level = crate::level::by_id(world_level_of(ctx, world_id));
+    let grace_ms = hot_number(ctx, crate::hot::foundation::STATUS_GRACE_MS) as i64;
     for row in rows {
         let mut inputs: Vec<InputQueueRow> = ctx.db.input_queue().entity_id().filter(row.entity_id).collect();
         inputs.sort_by_key(|q| q.frame.seq);
@@ -123,7 +124,9 @@ pub(crate) fn tick_world_module(
             move_state: row.move_state,
         };
         let mut last_seq = row.last_processed_seq;
-        let limits = crate::content::movement_limits(ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0));
+        // Its kind's bound (its characters' movement profiles, #205), as its status allows (#206).
+        let kind_limits = crate::content::movement_limits(ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0));
+        let limits = status_limits(ctx, row.entity_id, kind_limits, grace_ms);
         let mut epoch = row.correction_epoch;
 
         if inputs.is_empty() {
@@ -217,8 +220,8 @@ pub(crate) fn apply_client_trust(
 ) -> (MovementState, bool) {
     let claimed = frame.client_pos.sub(prev.pos);
     // The fastest a legitimate client OF THIS KIND can go (its characters' movement profiles,
-    // DECISIONS #205; the default's for a kind with none): a sprint, plus a dash burst when its
-    // dash is on; and upward, a jump or (when it flaps) a flap.
+    // DECISIONS #205; the default's for a kind with none) IN ITS STATUS (#206: a downed player
+    // crawls): a sprint, plus a dash burst when its dash is on; and upward, a jump or a flap.
     let _ = cfg;
     let max_h = (limits.sprint + limits.burst) * TRUST_SPEED_SLACK * CLIENT_DT * frames;
     let max_up = limits.lift * TRUST_SPEED_SLACK * CLIENT_DT * frames;

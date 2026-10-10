@@ -18,37 +18,9 @@ const LIBRARIES: Dictionary[StringName, String] = {
 }
 const OUT_DIR: String = "res://game/anim"
 
-## semantic -> clip names to look for, best first. An exact match always wins; otherwise the
-## SHORTEST name containing the pattern does, so `Idle` beats `Idle_LookAround` and a library
-## that only has flavoured variants still resolves to something sane.
-const CANDIDATES: Dictionary[StringName, Array] = {
-	&"locomotion.idle": ["Idle"],
-	&"locomotion.walk": ["Walk_Fwd", "Walk"],
-	&"locomotion.run": ["Jog_Fwd", "Run_Fwd", "Run", "Jog"],
-	&"locomotion.sprint": ["Sprint", "Run_Fast"],
-	&"locomotion.walk_back": ["Walk_Bwd", "Walk_Back"],
-	&"locomotion.walk_left": ["Walk_L", "Walk_Left"],
-	&"locomotion.walk_right": ["Walk_R", "Walk_Right"],
-	&"locomotion.run_back": ["Jog_Bwd", "Run_Bwd", "Run_Back"],
-	&"locomotion.run_left": ["Jog_Left", "Run_L", "Run_Left"],
-	&"locomotion.run_right": ["Jog_Right", "Run_R", "Run_Right"],
-	&"jump.start": ["Jump_Start", "Jump"],
-	&"jump.loop": ["Jump_Loop", "Jump_Idle", "Jump"],
-	&"jump.land": ["Jump_Land", "Land"],
-	&"jump.land_heavy": ["Jump_Land_Heavy", "Land_Heavy"],
-	&"react.hit": ["Hit_Chest", "HitReact", "Hit"],
-	&"react.death": ["Death01", "Death"],
-	&"react.revive": ["Revive", "GetUp", "KipUp"],
-	&"interact": ["Interact", "PickUp"],
-}
-
-## Clips that loop while they are the active state. The rest are one-shots.
-const LOOPING: Array[StringName] = [
-	&"locomotion.idle", &"locomotion.walk", &"locomotion.run", &"locomotion.sprint",
-	&"locomotion.walk_back", &"locomotion.walk_left", &"locomotion.walk_right",
-	&"locomotion.run_back", &"locomotion.run_left", &"locomotion.run_right",
-	&"jump.loop", &"fishing.wait",
-]
+## The names to look for and which clips loop: shared with the character workbench (`ClipMatcher`).
+const CANDIDATES: Dictionary[StringName, Array] = ClipMatcher.CANDIDATES
+const LOOPING: Array[StringName] = ClipMatcher.LOOPING
 
 ## What each locomotion clip is SUPPOSED to travel at in this game: a gait, and whether it is
 ## the sideways or backwards gear of it. The clip's own authored speed is measured off its
@@ -317,24 +289,7 @@ func _skeleton(n: Node) -> Skeleton3D:
 ## Exact match first, across libraries in declaration order; then the shortest name containing
 ## the pattern. Returns the mixer-qualified name (`Idle`, `extra/Fish_Cast`).
 func _match(patterns: Array, names: Dictionary[StringName, PackedStringArray]) -> StringName:
-	for pattern: String in patterns:
-		for lib: StringName in names:
-			for n: String in names[lib]:
-				if n == pattern:
-					return _qualify(lib, n)
-	for pattern: String in patterns:
-		var best: String = ""
-		var best_lib: StringName = &""
-		for lib: StringName in names:
-			for n: String in names[lib]:
-				if not n.to_lower().contains(pattern.to_lower()):
-					continue
-				if best.is_empty() or n.length() < best.length():
-					best = n
-					best_lib = lib
-		if not best.is_empty():
-			return _qualify(best_lib, best)
-	return &""
+	return ClipMatcher.match_one(patterns, names)
 
 
 func _exists(qualified: StringName, names: Dictionary[StringName, PackedStringArray]) -> bool:
@@ -346,4 +301,4 @@ func _exists(qualified: StringName, names: Dictionary[StringName, PackedStringAr
 
 
 func _qualify(lib: StringName, clip: String) -> StringName:
-	return StringName(clip) if lib.is_empty() else StringName("%s/%s" % [lib, clip])
+	return ClipMatcher.qualify(lib, clip)

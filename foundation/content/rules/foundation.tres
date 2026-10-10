@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -30,8 +30,27 @@ maximum = 600.0
 unit = "s"
 description = "How long a player who disconnects stays standing in the world before their character leaves it. Covers a dropped connection that comes straight back; 0 makes them vanish at once. Their progress is kept either way."
 
+[sub_resource type="Resource" id="Rule_status_grace"]
+script = ExtResource("2_rule")
+name = &"status_grace_ms"
+kind = 1
+number = 500.0
+minimum = 0.0
+maximum = 3000.0
+unit = "ms"
+description = "After a player's status changes (downed, carried), how long the server still allows the speed they had before. Their game hears of the change a round trip later and keeps moving as it was until then; without this the server would pull them back. Raise it for players far from the server."
+
+[sub_resource type="Resource" id="Rule_status_reset"]
+script = ExtResource("2_rule")
+name = &"statuses_reset_each_match"
+kind = 2
+number = 1.0
+minimum = 0.0
+maximum = 1.0
+description = "Whether everyone in a world goes back to normal (not downed, not out) when a new match begins there. Off for a game whose statuses last across matches."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset")])

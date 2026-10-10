@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 5
+speed = 0.0
+can_sprint = false
+can_jump = false
+can_dash = false
+targetable = false
+show_on_nameplate = false
+color = Color(0.5, 0.8, 1, 1)
+id = 5
+display_name = "Hidden"
+designer_notes = "Hiding in something (a bush, a box): holds still and cannot be aimed at. Its body is still drawn; a genre hides it if it should be."

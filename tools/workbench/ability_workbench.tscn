@@ -1,8 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://tools/workbench/ability_workbench.gd" id="1_bench"]
 [ext_resource type="Script" path="res://tools/workbench/mannequin.gd" id="2_mannequin"]
-[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="3_character"]
 
 [sub_resource type="PlaneMesh" id="Floor_mesh"]
 size = Vector2(16, 16)
@@ -30,7 +29,6 @@ shadow_enabled = true
 
 [node name="Mannequin" type="Node3D" parent="."]
 script = ExtResource("2_mannequin")
-definition = ExtResource("3_character")
 
 [node name="Dummy" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.6)

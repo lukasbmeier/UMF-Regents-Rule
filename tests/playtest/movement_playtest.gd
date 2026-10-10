@@ -58,6 +58,7 @@ func _run() -> void:
 	await _step_jumping()
 	await _step_correction_glide()
 	await _step_correction_while_moving()
+	await _step_status()
 	await _step_elevated()
 	_report_ack_latency()
 	_finish()
@@ -326,6 +327,50 @@ func _step_correction_while_moving() -> void:
 	_check(count == 1, "exactly one correction while walking, no chase (%d)" % count)
 	# Walking is ~0.08 m/frame; a pop would be the whole error in one frame.
 	_check(worst < 0.08 + err * 0.5, "the correction is drawn as a glide, not a pop (largest step %.3f m)" % worst)
+	await _frames(30)
+
+
+## IN A STATUS (DECISIONS #206): downed by the server (`set_status` on ourselves; the dev tools are
+## on here), the player crawls at a quarter of its run, sprinting or not, and cannot jump, all of it
+## predicted: the module takes every step (no correction). Normal again, it sprints.
+func _step_status() -> void:
+	print("-- downed: a crawl, predicted --")
+	var st: StatusComponent = _entity.find_component(StatusComponent) as StatusComponent
+	_check(st != null, "the local player has a status")
+	if st == null:
+		return
+	# Open floor first: the step before ends wherever its walk did, which may be against a wall.
+	var spot: Vector3 = Vector3(-4.0, 0.0, 0.8)
+	SpaceTimeSync.call_reducer(&"teleport", [spot], ["vector3[f32,f32,f32]"])
+	_check(await _until(func() -> bool: return _horizontal(_body.global_position - spot) < 0.2, "the teleport to open floor"),
+		"the player is on open floor")
+	await _frames(30)
+	SpaceTimeSync.call_reducer(&"set_status", [_entity.entity_id, StatusDef.DOWNED, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	_check(await _until(func() -> bool: return st.status() == StatusDef.DOWNED, "the downed row"), "the server downed the player")
+	await _frames(40)   # past the grace (foundation.status_grace_ms) and settled
+	var epoch: int = _movement.get_epoch()
+	var big_before: int = _reconciles.filter(func(e: float) -> bool: return e > 0.05).size()
+	_input.set_look(PI, 0.0)   # face +Z, across the open floor
+	await _frames(2)
+	var start: Vector3 = _body.global_position
+	var trace: Array[Vector3] = await _hold([&"move_forward", &"sprint", &"jump"], 120)
+	var moved: float = _horizontal(trace[-1] - start)
+	var crawl: float = _movement.config.run_speed * StatusDef.find(StatusDef.DOWNED).speed
+	var highest: float = -INF
+	for p: Vector3 in trace:
+		highest = maxf(highest, p.y - start.y)
+	print("   crawled %.2f m in 2 s (a crawl is %.2f m/s); rose %.3f m" % [moved, crawl, highest])
+	_check(moved > crawl * 2.0 * 0.85 and moved < crawl * 2.0 + 0.1, "downed, sprinting, it crawls (%.2f m in 2 s at %.2f m/s)" % [moved, crawl])
+	_check(highest < 0.05, "and does not jump (rose %.3f m)" % highest)
+	_check(_movement.get_epoch() == epoch, "the server took every crawling step it predicted (no clamp)")
+	var big_now: int = _reconciles.filter(func(e: float) -> bool: return e > 0.05).size()
+	_check(big_now == big_before, "and no correction over 5 cm (%d)" % (big_now - big_before))
+	SpaceTimeSync.call_reducer(&"set_status", [_entity.entity_id, StatusDef.NORMAL, 4294967295, ""], ["u64", "u8", "u32", "string"])
+	_check(await _until(func() -> bool: return st.status() == StatusDef.NORMAL, "the normal row"), "and back to normal")
+	await _frames(10)
+	start = _body.global_position
+	trace = await _hold([&"move_forward", &"sprint"], 30)
+	_check(_horizontal(trace[-1] - start) > crawl * 2.0, "it sprints again (%.2f m in 0.5 s; a crawl covers %.2f)" % [_horizontal(trace[-1] - start), crawl * 0.5])
 	await _frames(30)
 
 

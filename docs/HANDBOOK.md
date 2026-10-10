@@ -569,30 +569,70 @@ New mechanics (a table, a reducer, a rule), a new component, a new UI screen. Re
 
 ## 9. Adding things: recipes
 
-**Workbenches: make and try content without a server.** In the Content panel, pick a piece and
-press **Open workbench** (or click its card in the **Catalog** tab). The bench opens with the real
-character and that piece on it. Select the bench's top node: the Inspector shows the piece (edit it
-right there and the bench follows at once), a **test** to choose and **Run test** (for an ability:
-use it on the dummy, use it out of range, use it twice inside its cooldown; the bench says what the
-game would do), **Previous** / **Next**, **Save**, and **Capture thumbnail** (the picture on its
-Catalog card). The Catalog shows every piece with a coloured strip: red, something is wrong (hover
-for why); amber, fine but not yet looked at in its bench; green, done. **Regenerate thumbnails**
-redraws every picture.
+**Workbenches: make and try content without a server (DECISIONS #203, #207).** In the Content
+panel (bottom), pick a piece and press **Open workbench** (or click its card in the **Catalog** tab).
+Two things happen, and they never mix:
+- the **Inspector** shows the PIECE: every field you change there is the piece's own (the Hen's run
+  speed, the chicken's `visual_scale`);
+- the **Workbench** panel (beside the Inspector) shows the BENCH: the piece's badge (green, amber,
+  red, and why), the others of its type to switch to, its **tests** (buttons that say what they
+  play), its **settings** (which animation, which character it is tried on, how fast to replay) and
+  its **actions**: Play as this, Save, New from this, Copy into a genre, Capture thumbnail.
 
-**A new character (a chicken, a wolf, a knight): the character workbench.** Content panel, type
-`character`, open any one in its bench. Drag the rigged model (.glb) from the FileSystem onto the
-bench's **Intake File**, press **New From File**: a new character is made in the right folder, with
-the model on it (and the humanoid's animations, if it has the humanoid's skeleton). Then fit it in
-the Inspector: `visual_offset` until its feet are on the floor, `visual_yaw_deg` until it faces the
-yellow arrow (the game's forward). The pale capsule beside it is what other players bump into. Run
-**every_clip** to see each animation and hear which ones the game needs are missing.
+The bench redraws as you edit, and it keeps nothing in its own scene: using one never changes it. The
+Catalog shows every piece with a coloured strip (red: something is wrong; amber: fine but not yet
+looked at in its bench; green: done); **Regenerate thumbnails** redraws every picture.
 
-**How a character moves: a movement profile.** Content panel, type `movement`, New: a profile that
-starts as the game's default movement. Open it in its bench and press Run test (accelerate, jump,
-flaps, reverse): the bench measures it with the game's own movement and draws the path, so you see
-how high it jumps and how far it slides. Then link it from a character (the character's
-`movement_profile`). Play as that character with `--character=res://.../your_character.tres` on the
-command line (or in Debug, Customize Run Instances).
+**In a game, the template's content is read-only.** Fowl Play's Content panel makes new pieces for
+`chicken` only. A piece of the foundation's (the humanoid, `downed`) is the template's: the next
+update from the template replaces it, so its bench offers **Copy into chicken** instead, a copy
+that takes its place where the type allows (the same kind for a character, the same number for a
+status). Saving a template piece anyway is warned about in the Content panel's log.
+
+**Making a character, in order.** Dependent things are made from the thing they hang off:
+1. **The character.** Content panel, type `character`, open any one on its bench. Drag the rigged
+   model (.glb, .gltf) from the FileSystem onto the bench's **Intake File** (select the bench's top
+   node to see it), then **New From File**. The new character has the model, a body fitted to it,
+   and, when the model brings clips of its own (a chicken's Idle, Walk, Jump), an animation set made
+   from them (each clip matched to what the game plays; the ones it lacks stood in, and named).
+2. **Fit it.** In the Inspector: `visual_offset` until its feet are on the floor, `visual_yaw_deg`
+   until it faces the yellow arrow (the game's forward), `visual_scale` for a model made at another
+   size. The pale capsule drawn AROUND it is its body (`collision_radius`, `collision_height`: what
+   it collides with and others bump into); **Fit the body to the model** sets them. The badge goes
+   amber, with the number to set, while the feet float or the body does not fit.
+3. **Look at it.** The Workbench panel's **Animation** plays ANY clip: what the game plays for each
+   thing (`locomotion.walk`), any clip of its set, or the model's own (`model: Walk`), with
+   **Speed**, **Paused** and **Position** to hold or scrub a frame; **Look** wears any of its looks.
+   An edit keeps the frame you are on.
+4. **Its animations.** Under "Animations the game needs", each thing the game plays is a choice of
+   clip; Save keeps them. (A set made for many characters, like the humanoid's, is shared: change it
+   where it is made, or make the character its own with **Animation set from the model**.)
+5. **Its movement.** **New movement for it** makes a movement profile (starting as the game's
+   default), links it, and opens it on the movement bench. There, each test is PERFORMED by the
+   character: **Start and stop** (to a full sprint, let go, slide), **Jump**, **Flaps**, **Turn
+   around**, at real speed (or slower: Replay speed), with a ruler under it, the moments labelled
+   where they happen and its speed over its head. Change a number in the Inspector and it plays again.
+6. **Its abilities.** **New ability for it** makes one, lists it on the character (the server lets
+   a character use only the abilities its kind's characters list; a kind that lists none may use
+   any), and opens it on the ability bench, tried on that character.
+7. **Play as this.** On the character's bench (or a movement's) **Play as this** runs the game as it.
+   Content changed since the last bake is published first (the server needs a new speed or range);
+   content with a problem is not played until it is fixed.
+
+**Rules have no bench:** the running game is theirs. Change a default in the Inspector (Content
+panel, type `rules`); a game changes the template's with an entry in its genre's rule set
+(Overrides); try values live as the admin (in game: Escape, Rules), then **Keep live tuning** writes
+them back.
+
+**Statuses: downed, out, and a genre's own.** Content panel, type `status`. The foundation's seven
+(normal, injured, downed, carried, out, hidden, escaped) are the defaults; to change one for your
+game, make a status in your genre with the SAME number (Fowl Play's downed: number 2, crawling at
+0.1): the game uses yours. A new one of your own is numbered 100 or more (a stashed chicken). Open
+one in its bench and run **moves** (how fast a character crawls in it, whether it can jump),
+**burst**, **pose** (its clip on the character: amber when the character has none) and **timeline**
+(how long it lasts and what it becomes). To feel one in the game: play as the admin, Escape, Rules,
+**Try a status on yourself**. In code, a genre sets one with `set_status_internal` and hears changes
+in `on_status_changed`; when one runs out, `on_status_expired` may choose what it becomes.
 
 **Content (an ability; later items, species, levels): a resource, not a file of JSON.** Each kind
 of content is a type (`AbilityDef`); each piece is a `.tres` you edit in the Inspector. The

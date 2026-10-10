@@ -33,6 +33,24 @@
 					"number": 5.0,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "foundation.status_grace_ms",
+					"kind": "integer",
+					"max": 3000.0,
+					"min": 0.0,
+					"number": 500.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "foundation.statuses_reset_each_match",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": ""
 				}
 			]
 		}

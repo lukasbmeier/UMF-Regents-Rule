@@ -841,6 +841,85 @@
 							"elements": [
 								{
 									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "serial"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -987,7 +1066,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 18.0
+										"Ref": 19.0
 									}
 								},
 								{
@@ -1763,6 +1842,95 @@
 							"elements": [
 								{
 									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "status"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "prev_status"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "since"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "lasts_ms"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "by_entity"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "serial"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "scheduled_id"
 									},
 									"algebraic_type": {
@@ -1986,9 +2154,17 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "StatusExpiry"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 31.0,
+					"ty": 33.0,
 					"custom_ordering": true
 				},
 				{
@@ -1996,7 +2172,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 33.0,
+					"ty": 35.0,
 					"custom_ordering": true
 				},
 				{
@@ -2010,9 +2186,17 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "StatusStateRow"
+					},
+					"ty": 31.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "LobbyMember"
 					},
-					"ty": 21.0,
+					"ty": 22.0,
 					"custom_ordering": true
 				},
 				{
@@ -2020,7 +2204,7 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 19.0,
+					"ty": 20.0,
 					"custom_ordering": true
 				},
 				{
@@ -2028,7 +2212,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 32.0,
+					"ty": 34.0,
 					"custom_ordering": true
 				},
 				{
@@ -2044,7 +2228,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 25.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
@@ -2060,7 +2244,7 @@
 						"scope": [],
 						"source_name": "ItemDef"
 					},
-					"ty": 20.0,
+					"ty": 21.0,
 					"custom_ordering": true
 				},
 				{
@@ -2068,7 +2252,7 @@
 						"scope": [],
 						"source_name": "HotRuleRow"
 					},
-					"ty": 16.0,
+					"ty": 17.0,
 					"custom_ordering": true
 				},
 				{
@@ -2084,7 +2268,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 23.0,
+					"ty": 24.0,
 					"custom_ordering": true
 				},
 				{
@@ -2108,7 +2292,7 @@
 						"scope": [],
 						"source_name": "HealthStateRow"
 					},
-					"ty": 15.0,
+					"ty": 16.0,
 					"custom_ordering": true
 				},
 				{
@@ -2116,7 +2300,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 29.0,
+					"ty": 30.0,
 					"custom_ordering": true
 				},
 				{
@@ -2132,7 +2316,7 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 17.0,
+					"ty": 18.0,
 					"custom_ordering": true
 				},
 				{
@@ -2148,7 +2332,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 28.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -2164,7 +2348,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 26.0,
+					"ty": 27.0,
 					"custom_ordering": true
 				},
 				{
@@ -2188,7 +2372,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 22.0,
+					"ty": 23.0,
 					"custom_ordering": true
 				},
 				{
@@ -2204,7 +2388,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 30.0,
+					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -2212,7 +2396,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 27.0,
+					"ty": 28.0,
 					"custom_ordering": true
 				},
 				{
@@ -2228,7 +2412,7 @@
 						"scope": [],
 						"source_name": "Player"
 					},
-					"ty": 24.0,
+					"ty": 25.0,
 					"custom_ordering": true
 				},
 				{
@@ -2244,7 +2428,7 @@
 						"scope": [],
 						"source_name": "InputFrame"
 					},
-					"ty": 18.0,
+					"ty": 19.0,
 					"custom_ordering": true
 				},
 				{
@@ -2336,7 +2520,7 @@
 				},
 				{
 					"source_name": "hot_rule",
-					"product_type_ref": 16.0,
+					"product_type_ref": 17.0,
 					"primary_key": [
 						0.0
 					],
@@ -2381,7 +2565,7 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 22.0,
+					"product_type_ref": 23.0,
 					"primary_key": [
 						0.0
 					],
@@ -2439,7 +2623,7 @@
 				},
 				{
 					"source_name": "lobby_member",
-					"product_type_ref": 21.0,
+					"product_type_ref": 22.0,
 					"primary_key": [
 						0.0
 					],
@@ -2510,7 +2694,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 25.0,
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -2630,7 +2814,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 23.0,
+					"product_type_ref": 24.0,
 					"primary_key": [
 						0.0
 					],
@@ -2688,7 +2872,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 26.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -2775,7 +2959,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 30.0,
+					"product_type_ref": 32.0,
 					"primary_key": [
 						0.0
 					],
@@ -2836,8 +3020,83 @@
 					"is_event": false
 				},
 				{
+					"source_name": "status_expiry",
+					"product_type_ref": 15.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_expiry_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "world_level",
-					"product_type_ref": 32.0,
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
@@ -3064,7 +3323,7 @@
 				},
 				{
 					"source_name": "health_state",
-					"product_type_ref": 15.0,
+					"product_type_ref": 16.0,
 					"primary_key": [
 						0.0
 					],
@@ -3184,7 +3443,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 28.0,
+					"product_type_ref": 29.0,
 					"primary_key": [
 						0.0
 					],
@@ -3242,7 +3501,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 20.0,
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
@@ -3478,7 +3737,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 27.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -3522,8 +3781,66 @@
 					"is_event": false
 				},
 				{
-					"source_name": "world_config",
+					"source_name": "status_state",
 					"product_type_ref": 31.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "status_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "status_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "world_config",
+					"product_type_ref": 33.0,
 					"primary_key": [
 						0.0
 					],
@@ -3643,7 +3960,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 19.0,
+					"product_type_ref": 20.0,
 					"primary_key": [
 						0.0
 					],
@@ -3718,7 +4035,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 24.0,
+					"product_type_ref": 25.0,
 					"primary_key": [
 						0.0
 					],
@@ -3940,7 +4257,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 17.0,
+					"product_type_ref": 18.0,
 					"primary_key": [
 						0.0
 					],
@@ -4028,7 +4345,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 29.0,
+					"product_type_ref": 30.0,
 					"primary_key": [
 						0.0
 					],
@@ -4592,6 +4909,32 @@
 					}
 				},
 				{
+					"source_name": "expire_status",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "timer"
+								},
+								"algebraic_type": {
+									"Ref": 15.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "grant_item",
 					"params": {
 						"elements": [
@@ -4999,7 +5342,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 20.0
+										"Ref": 21.0
 									}
 								}
 							}
@@ -5292,6 +5635,56 @@
 					}
 				},
 				{
+					"source_name": "set_status",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "status"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "lasts_ms"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "data"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "set_team",
 					"params": {
 						"elements": [
@@ -5507,7 +5900,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 18.0
+										"Ref": 19.0
 									}
 								}
 							}
@@ -5560,7 +5953,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 30.0
+									"Ref": 32.0
 								}
 							}
 						]
@@ -5645,7 +6038,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 33.0
+										"Ref": 35.0
 									}
 								}
 							}
@@ -5740,6 +6133,14 @@
 					"table_name": "tick_schedule",
 					"schedule_at_col": 1.0,
 					"function_name": "tick_movement"
+				},
+				{
+					"source_name": {
+						"some": "status_expiry_sched"
+					},
+					"table_name": "status_expiry",
+					"schedule_at_col": 1.0,
+					"function_name": "expire_status"
 				},
 				{
 					"source_name": {
@@ -5861,6 +6262,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "status_expiry",
+							"canonical_name": "status_expiry"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "world_level",
 							"canonical_name": "world_level"
 						}
@@ -5929,6 +6336,12 @@
 						"Table": {
 							"source_name": "session_empty",
 							"canonical_name": "session_empty"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "status_state",
+							"canonical_name": "status_state"
 						}
 					},
 					{
@@ -6071,6 +6484,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "expire_status",
+							"canonical_name": "expire_status"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "grant_item",
 							"canonical_name": "grant_item"
 						}
@@ -6205,6 +6624,12 @@
 						"Function": {
 							"source_name": "set_sim_authority",
 							"canonical_name": "set_sim_authority"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_status",
+							"canonical_name": "set_status"
 						}
 					},
 					{

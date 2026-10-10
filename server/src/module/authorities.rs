@@ -240,6 +240,13 @@ pub fn use_ability(
 ) -> Result<(), String> {
     let actor = ctx.db.player().identity().find(ctx.sender()).ok_or("use_ability: no player")?.entity_id;
     let def = ctx.db.ability_def().ability_id().find(ability_id).ok_or("use_ability: unknown ability")?;
+    // A downed or carried player cannot (their status, DECISIONS #206).
+    require_can_act(ctx, actor, "use_ability")?;
+    // Nor an ability its character does not have (DECISIONS #207: a hen pecks, it does not pounce).
+    let kind = ctx.db.entity().entity_id().find(actor).map(|e| e.kind).unwrap_or(0);
+    if !crate::content::kind_may_use(kind, ability_id) {
+        return Err(format!("use_ability: this character cannot use ability {ability_id}"));
+    }
     if let Some(h) = ctx.db.health_state().entity_id().find(actor) {
         if h.is_dead {
             return Err("use_ability: the dead cannot act".into());
@@ -261,6 +268,10 @@ pub fn use_ability(
         // A player who is not connected is not in the world (DECISIONS #202).
         if ctx.db.player().entity_id().find(target_id).is_some_and(|p| !p.online) {
             return Err("use_ability: they are not here".into());
+        }
+        // Nor is one whose status takes them out of reach (escaped, out, hidden: DECISIONS #206).
+        if !is_targetable(ctx, target_id) {
+            return Err("use_ability: they cannot be reached".into());
         }
         if them.world_id != me.world_id {
             return Err("use_ability: target is in another world".into());
@@ -390,4 +401,5 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
         ctx.db.session_member().id().delete(id);
     }
     ctx.db.lobby_member().entity_id().delete(entity_id);
+    forget_status(ctx, entity_id);
 }

@@ -112,7 +112,8 @@ func bake() -> void:
 	refresh()
 
 
-func publish() -> void:
+## Run tools/publish.sh; `then` runs after it, when it worked.
+func publish(then: Callable = Callable()) -> void:
 	if _task != null and _task.is_running():
 		_say("Publish is already running")
 		return
@@ -122,10 +123,40 @@ func publish() -> void:
 		_say("Publish %s" % ("done" if code == 0 else "FAILED (exit %d): see above" % code))
 		_status.text = ""
 		bridge.files_changed()
-		refresh())
+		refresh()
+		if code == 0 and then.is_valid():
+			then.call())
 	_say("Publish: tools/publish.sh (bake, build, publish; keeps the data)")
 	if _task.start("tools/publish.sh"):
 		_status.text = "publishing…"
+
+
+## PLAY AS THIS (DECISIONS #207): run the game with `args`. Content changed since the last bake
+## is published first (the server must know a new character's speed bound or an ability's range);
+## content with problems is not played.
+func play_fresh(args: PackedStringArray) -> void:
+	var found: Array[Dictionary] = model.check()
+	if not found.is_empty():
+		_say("Play: fix these first")
+		_say_problems(found)
+		return
+	if model.stale.is_empty():
+		_say("Play: %s" % " ".join(args))
+		bridge.play(args)
+		return
+	_say("Play: the content changed (%s): publishing first" % ", ".join(model.stale))
+	publish(func() -> void: bridge.play(args))
+
+
+## A piece of the TEMPLATE'S content was saved in a game: it will be replaced by the next update from
+## the template. Said loudly, with what to do instead.
+func warn_if_templates(def: ContentDef) -> void:
+	if def == null or ContentLibrary.owners().size() <= 1:
+		return
+	if ContentLibrary.owner_of_path(def.resource_path) != ContentLibrary.FOUNDATION:
+		return
+	_say("⚠ %s is the TEMPLATE'S content: this change is lost at the next update from the template. Undo it, and change a copy instead (its workbench: Copy into %s)." % [
+		def.resource_path, ContentLibrary.owners()[1]])
 
 
 func keep_live_tuning() -> void:
@@ -435,8 +466,12 @@ func _select(path: String) -> void:
 	var lines: PackedStringArray = PackedStringArray([path])
 	for p: Dictionary in model.problems_for(path):
 		lines.append("⚠ " + String(p["text"]))
-	_detail.text = "\n".join(lines)
 	_workbench.disabled = _workbench_of(path).is_empty()
+	if def != null and _workbench.disabled and not def.why_no_workbench().is_empty():
+		lines.append("No workbench: " + def.why_no_workbench())
+	if def != null and ContentLibrary.owner_of_path(path) == ContentLibrary.FOUNDATION and ContentLibrary.owners().size() > 1:
+		lines.append("The template's: read-only in this game. Its workbench's \"Copy into %s\" makes one to change." % ContentLibrary.owners()[1])
+	_detail.text = "\n".join(lines)
 	_show_file.disabled = path.is_empty()
 	if def != null:
 		bridge.edit(def)

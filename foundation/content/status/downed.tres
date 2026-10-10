@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+[ext_resource type="Resource" path="res://foundation/content/status/out.tres" id="2_then"]
+
+[resource]
+script = ExtResource("1_status")
+status = 2
+lasts_s = 60.0
+then_status = ExtResource("2_then")
+speed = 0.25
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+pose = &"status.downed"
+color = Color(1, 0.35, 0.3, 1)
+id = 2
+display_name = "Downed"
+designer_notes = "Down but not out: crawls at a quarter speed, cannot use anything. Out after 60 s unless the game says otherwise (a teammate reviving)."

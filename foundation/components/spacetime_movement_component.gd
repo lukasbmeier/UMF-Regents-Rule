@@ -206,6 +206,11 @@ var _snap_render: bool = false
 ## Test seam. Empty in production, where the clock is `ClockSync`. Set to a Callable returning
 ## microseconds to drive interpolation deterministically.
 var _clock_override: Callable = Callable()
+## What the entity's status does to its movement (its `StatusComponent`, which hands itself over
+## when it binds): `movement_config(cfg)` and `filter_input(frame)`. Untyped on purpose: with this
+## class naming StatusComponent, the scripts naming each other were never freed at exit (the unit
+## run's leak check caught it). Null: moves as usual.
+var status_source: Object = null
 
 
 func required_tables() -> Array[StringName]:
@@ -353,7 +358,13 @@ func _step(from: MovementState, frame: InputFrame) -> MovementState:
 	# its flat ground plane — exactly what it does in the golden harness.
 	var b: CharacterBody3D = entity.body if entity != null else null
 	var resolver: Callable = _resolve_with_body if b != null and b.is_inside_tree() else Callable()
-	var next: MovementState = MovementModel.simulate(from, frame, _config(), _dt(), resolver)
+	# IN ITS STATUS (DECISIONS #206): a downed player crawls and cannot jump. The owner's prediction
+	# and the sidecar both step here, so both apply it; the module bounds by the same StatusDef.
+	var cfg: MovementConfig = _config()
+	if status_source != null and is_instance_valid(status_source):
+		cfg = status_source.call(&"movement_config", cfg) as MovementConfig
+		frame = status_source.call(&"filter_input", frame) as InputFrame
+	var next: MovementState = MovementModel.simulate(from, frame, cfg, _dt(), resolver)
 	# Facing follows the camera only while there is movement input: a body that turns while you
 	# stand still pirouettes as you look around. The exception is AIMING (`frame.face`): a cast
 	# thrown behind you has to be thrown by someone facing that way. `module.rs` applies the same
@@ -416,6 +427,8 @@ func _load_input_backlog() -> void:
 		return
 	for row: RefCounted in rows:
 		_enqueue_input(row)
+
+
 
 
 func _config() -> MovementConfig:

@@ -20,7 +20,7 @@
 //! widen a hook instead.
 
 use crate::genre::Claims;
-use crate::module::{Challenge, Entity, Session};
+use crate::module::{Challenge, Entity, Session, StatusStateRow};
 use spacetimedb::ReducerContext;
 
 /// A GENRE, as the foundation sees it: the numbers it takes, and the hooks it answers. Every hook
@@ -67,6 +67,16 @@ pub trait Genre: Sync {
     /// match ended a round. A genre resets what it keeps per match here (fishing: the time of day
     /// starts again at dawn).
     fn on_match_began(&self, _ctx: &ReducerContext, _sess: &Session) {}
+
+    /// An entity's status changed (DECISIONS #206), after its row is written: `from`, to `now.status`.
+    /// A genre reacts here (a downed hen drops what it carried, an escaped one scores).
+    fn on_status_changed(&self, _ctx: &ReducerContext, _entity_id: u64, _from: u8, _now: &StatusStateRow) {}
+
+    /// A status's time is up: what it becomes, or None to leave it to the status's own `then`. The
+    /// first genre to answer decides (a downed hen bleeds out unless a teammate is reviving it).
+    fn on_status_expired(&self, _ctx: &ReducerContext, _row: &StatusStateRow) -> Option<u8> {
+        None
+    }
 
     /// A player used an entity of one of this genre's entity kinds (range and world checked).
     fn on_interact(&self, _ctx: &ReducerContext, _player_entity_id: u64, _target: &Entity, _verb: u8)
@@ -168,4 +178,15 @@ pub fn on_level_changed(ctx: &ReducerContext, world_id: u32, level_id: u8) {
 /// An entity of a genre's own kind was used: the genre that claims the kind answers, or None.
 pub fn on_interact(ctx: &ReducerContext, player_entity_id: u64, target: &Entity, verb: u8) -> Option<Result<(), String>> {
     owner_of_entity(target.kind)?.on_interact(ctx, player_entity_id, target, verb)
+}
+
+pub fn on_status_changed(ctx: &ReducerContext, entity_id: u64, from: u8, now: &StatusStateRow) {
+    for g in GENRES {
+        g.on_status_changed(ctx, entity_id, from, now);
+    }
+}
+
+/// The first genre that decides what an expired status becomes; None: the status's own `then`.
+pub fn on_status_expired(ctx: &ReducerContext, row: &StatusStateRow) -> Option<u8> {
+    GENRES.iter().find_map(|g| g.on_status_expired(ctx, row))
 }
