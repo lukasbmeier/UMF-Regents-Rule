@@ -22,7 +22,8 @@ class_name InteractionComponent extends SpaceTimeComponent
 ## they act, and standing at a downed teammate, facing them, must be enough: Luke had to swing the
 ## camera onto one to see "Hold E: Help up". `targeting`: the crosshair's target, else the NEARBY one
 ## (within reach, inside `facing_cone_deg` of where the character or the camera faces, nearest
-## first). Nearby counts only what there is something to do with: an entity a hold applies to, or
+## first; within `close_m`, whichever way the player faces: standing beside a downed teammate while
+## looking away was still missed with the cone alone, Luke 2026-10-10). Nearby counts only what there is something to do with: an entity a hold applies to, or
 ## one `nearby_wanted` accepts (a genre's), so a crowd of players standing around is never "the
 ## target". The crosshair still wins when it is on something.
 ##
@@ -48,6 +49,8 @@ enum Targeting { CROSSHAIR, NEARBY, BOTH }
 @export var targeting: Targeting = Targeting.BOTH
 ## How far either side of where the character (or the camera) faces something nearby may be.
 @export_range(0.0, 180.0, 1.0, "suffix:deg") var facing_cone_deg: float = 70.0
+## This near, something counts whichever way the player faces (right beside them).
+@export_range(0.0, 5.0, 0.05, "suffix:m") var close_m: float = 1.5
 
 ## How far (m) the prompt reaches. 0 or less: the server's own range, `shared/rules.json`
 ## `interact_range_m` (DECISIONS #154). Never more than that, or prompts appear for things the
@@ -249,7 +252,7 @@ func nearby_target() -> int:
 			angle = INF
 			for f: Vector3 in facings:
 				angle = minf(angle, rad_to_deg(f.angle_to(flat)))
-		if angle > facing_cone_deg or not _wanted_nearby(id):
+		if (angle > facing_cone_deg and d > close_m) or not _wanted_nearby(id):
 			continue
 		var score: float = d + angle / 90.0
 		if score < best_score:

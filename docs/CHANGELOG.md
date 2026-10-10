@@ -534,3 +534,7 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **An out player no longer falls into the void**: hiding a body cleared its collision mask too, so its own game dropped it through the floor, and coming back in left it there. Hidden, nothing collides with it, but it still stands on the world.
 - **Rules (admin): Go to** the spawn or beside any player (stuck, lost, or to try something on someone).
 - To use the Rules page from the editor's players: they are not the admin (the identity that published is). Make one an admin with `spacetime call <database> register_authority <identity> 0 0`.
+
+## 0.37.2 — right beside them is enough
+- Standing right beside a downed teammate offers "Hold E: Help up" whichever way you face (within 1.5 m, `InteractionComponent.close_m`). 0.37.1 still needed them inside a 70-degree cone of where you or the camera face, and the character faces where the camera does: someone square to your side was missed (Luke). Further away, they still need to be roughly in front.
+- The two-player playtest now helps up from beside the downed player with the crosshair on nothing.

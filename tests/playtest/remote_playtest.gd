@@ -371,11 +371,11 @@ func _spectate(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
 
 # --- help up (DECISIONS #209) ------------------------------------------------------------------
 
-## Where the walker waits to be helped up, and where the observer stands to help: open floor, 1.6 m
-## apart along Z, the observer looking toward -Z at it. Half a metre to its left: the camera is over
-## the right shoulder, so that is where the crosshair lines up with it.
+## Where the walker waits to be helped up, and where the observer stands to help: open floor, a metre
+## to the walker's side, facing +Z (the walker square to its side, the crosshair nowhere near it): standing beside a downed
+## teammate is enough, the crosshair nowhere near them (Luke, 2026-10-10: DECISIONS #211).
 const DOWN_AT: Vector3 = Vector3(-4.0, 0.0, 0.8)
-const HELP_FROM: Vector3 = Vector3(-4.5, 0.0, 2.4)
+const HELP_FROM: Vector3 = Vector3(-3.0, 0.0, 0.8)
 
 
 ## THE WALKER: down on open floor, until someone helps it up.
@@ -419,17 +419,14 @@ func _help_up(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
 		await get_tree().physics_frame
 	_check(wst.status() == StatusDef.DOWNED, "the observer sees the walker downed")
 	SpaceTimeSync.call_reducer(&"teleport", [HELP_FROM], ["vector3[f32,f32,f32]"])
+	input.set_look(PI, 0.0)   # camera and character facing +Z: the walker square to the side
 	await get_tree().create_timer(1.5).timeout
-	# Look at it: down a little until the crosshair is on it (the camera sits above and behind).
-	var pitch: float = 0.0
-	while ic.get_target() != walker.entity_id and pitch > -0.8:
-		input.set_look(0.0, pitch)
-		await get_tree().physics_frame
-		await get_tree().physics_frame
-		pitch -= 0.05
 	var s: Dictionary = HoldPrompt.state_for(me)
+	var under_crosshair: int = ic._raycast_target()
+	print("   beside the downed walker, the crosshair on %d: \"%s\"" % [under_crosshair, s["text"]])
+	_check(under_crosshair != walker.entity_id, "the observer stands beside the walker, the crosshair not on it")
 	_check(ic.get_target() == walker.entity_id and String(s["text"]) == "Hold E: Help up",
-		"looking at the downed walker: \"%s\"" % s["text"])
+		"and is offered: \"%s\"" % s["text"])
 
 	# Let go early: the help is lost.
 	Input.action_press(&"interact")
