@@ -122,11 +122,17 @@ func _notification(what: int) -> void:
 		AppExit.quit(get_tree())
 
 
+## Whether the splash plays: a game that has one, a window to show it in, a player who has not turned
+## it off (Settings: "Splash screen at start"), and no harness connecting for them.
+func wants_splash(has_display: bool) -> bool:
+	return splash_screen != null and has_display and not _flag_no_splash and not _flag_autoconnect \
+		and _flag_host.is_empty() and bool(Settings.get_value(&"splash_at_start"))
+
+
 func _start() -> void:
 	var has_display: bool = DisplayServer.get_name() != "headless"
 	# The splash first, for a player: never for a harness that connects for them, nor headless.
-	if splash_screen != null and has_display and not _flag_no_splash and not _flag_autoconnect \
-			and _flag_host.is_empty():
+	if wants_splash(has_display):
 		var splash: SplashScreen = splash_screen.instantiate() as SplashScreen
 		if splash != null:
 			add_child(splash)

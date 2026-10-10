@@ -28,6 +28,7 @@ enum Kind { TOGGLE, SLIDER, CHOICE, KEY }
 const VIDEO: String = "Video"
 const AUDIO: String = "Audio"
 const CONTROLS: String = "Controls"
+const GAME: String = "Game"
 
 ## The buses sounds are sent to, by name (`res://default_bus_layout.tres`); each has a volume here.
 const BUS_MUSIC: StringName = &"Music"
@@ -356,6 +357,9 @@ func _define_foundation() -> void:
 	for k: Array in FOUNDATION_KEYS:
 		if InputMap.has_action(k[0]):
 			define_key(k[0], k[1])
+	define(&"splash_at_start", GAME, "Splash screen at start", Kind.TOGGLE, true, {
+		"tooltip": "The game's name and its tips for a few seconds before connecting. Off: straight to the connect screen (handy while testing).",
+	})
 
 
 func _volume_opts(bus: StringName) -> Dictionary:

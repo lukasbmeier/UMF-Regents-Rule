@@ -1,7 +1,8 @@
 class_name TimingBar extends Control
 ## THE TIMED PRESS ON SCREEN (DECISIONS #210): the bar, the target for this press, the marker sweeping
 ## by the server's clock, a pip per press (what this client predicted, then what the server judged),
-## and a word for the last one ("Great", "Good", "Miss"). It reads the local player's
+## a tick where the server judged each press (so a gap between what was seen and what was judged
+## shows: DECISIONS #213), and a word for the last one ("Great", "Good", "Miss"). It reads the local player's
 ## `TimedPressComponent` every frame and owns nothing. The foundation's HUD carries one; a genre's
 ## HUD adds its own with `TimingBar.new()`.
 
@@ -39,7 +40,7 @@ func _process(_delta: float) -> void:
 
 ## What the bar shows for `me`: {visible, text, marker, target, half, pips: [[predicted, judged]]}.
 static func state_for(me: SpaceTimeEntity) -> Dictionary:
-	var none: Dictionary = {"visible": false, "text": "", "marker": 0.0, "target": 0.5, "half": 0.0, "pips": []}
+	var none: Dictionary = {"visible": false, "text": "", "marker": 0.0, "target": 0.5, "half": 0.0, "pips": [], "judged": []}
 	if me == null or not is_instance_valid(me):
 		return none
 	var tp: TimedPressComponent = me.find_component(TimedPressComponent) as TimedPressComponent
@@ -52,11 +53,13 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 		if last.is_empty() or Time.get_ticks_msec() - int(last["at_msec"]) > RESULT_MSEC:
 			return none
 		return {"visible": true, "text": word, "marker": float(last["position"]), "target": tp.target(int(last["challenge_id"]), int(last["round"])),
-			"half": tp.half_width(int(last["challenge_id"])), "pips": _pips(tp, int(last["challenge_id"]))}
+			"half": tp.half_width(int(last["challenge_id"])), "pips": _pips(tp, int(last["challenge_id"])),
+			"judged": tp.judged_positions(int(last["challenge_id"]))}
 	var round: int = tp.presses_made(id)
 	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.key_name(), round + 1, tp.rounds(id),
 		("   " + word) if not word.is_empty() and int(last["challenge_id"]) == id else ""]
-	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id)}
+	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id),
+		"judged": tp.judged_positions(id)}
 
 
 static func _pips(tp: TimedPressComponent, id: int) -> Array:
@@ -93,6 +96,8 @@ func _draw() -> void:
 	var t: float = float(_state["target"])
 	draw_rect(Rect2(Vector2((t - half) * w, 0), Vector2(half * 2.0 * w, BAR_SIZE.y)), Color(0.3, 0.8, 0.4, 0.6))
 	draw_rect(Rect2(Vector2((t - half * 0.25) * w, 0), Vector2(half * 0.5 * w, BAR_SIZE.y)), Color(0.5, 1.0, 0.5, 0.8))
+	for j: Variant in _state.get("judged", []) as Array:
+		draw_rect(Rect2(Vector2(float(j) * w - 1.0, -2.0), Vector2(2.0, BAR_SIZE.y + 4.0)), Color(1.0, 0.6, 0.2, 0.9))
 	var m: float = float(_state["marker"]) * w
 	draw_rect(Rect2(Vector2(m - 2.0, -4.0), Vector2(4.0, BAR_SIZE.y + 8.0)), Color.WHITE)
 	var pips: Array = _state["pips"]

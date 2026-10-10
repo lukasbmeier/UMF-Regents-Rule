@@ -5,4 +5,4 @@
 [node name="SplashScreen" type="CanvasLayer"]
 layer = 110
 script = ExtResource("1_splash")
-subtitle = "cast a line, beat Old Barnaby"
+lines = PackedStringArray("Escape opens the menu: settings, your character, the rules (for the admin).", "F3 shows the network overlay; F11 switches fullscreen.", "Hold E beside a downed teammate to help them up. Together it is quicker.", "A skill check: press E while the marker is in the zone. The server judges where you saw it.", "Any key skips this screen; Settings, Game turns it off.")

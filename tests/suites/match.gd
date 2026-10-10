@@ -229,6 +229,9 @@ func _run_match_tests() -> void:
 	splash.finished.connect(func() -> void: done[0] = true)
 	_check((splash.find_child("Title", true, false) as Label).text == Genres.title() and not Genres.title().is_empty(),
 		"it says the game's name from shared/game.json (%s)" % Genres.title())
+	_check(not splash.lines.is_empty() and splash.lines.has(splash.shown_line()) and is_equal_approx(splash.hold_sec, 5.0),
+		"and a tip, one of its own (\"%s\"), for five seconds" % splash.shown_line())
+	_check(not splash.ripples and not splash._ripples.visible, "no water ripples unless the game wants them (a fishing game)")
 	splash.play()
 	splash._process(splash.fade_sec)
 	_check(splash.visible and is_equal_approx(splash._root.modulate.a, 1.0) and not done[0], "it fades in and holds")
@@ -248,9 +251,23 @@ func _run_match_tests() -> void:
 	whole.finished.connect(func() -> void: ended[0] = true)
 	whole.play()
 	var t: float = 0.0
+	var seen: Array[String] = []
 	while not ended[0] and t < 10.0:
 		whole._process(0.05)
 		t += 0.05
+		if not seen.has(whole.shown_line()):
+			seen.append(whole.shown_line())
+	_check(seen.size() >= 2 and seen.size() <= whole.lines.size(), "its lines change every %.1f s (%d shown in %.1f s)" % [whole.line_sec, seen.size(), t])
 	_check(ended[0] and absf(t - (whole.hold_sec + 2.0 * whole.fade_sec)) < 0.11,
 		"left alone, it is done after its fade in, hold and fade out (%.2f s)" % t)
 	whole.queue_free()
+	# Turned off in Settings (testing): Boot goes straight on.
+	var boot: Node = (load("res://foundation/boot.gd") as GDScript).new() as Node
+	boot.set(&"splash_screen", splash_scene)
+	var was: Variant = Settings.get_value(&"splash_at_start")
+	_check(bool(boot.call(&"wants_splash", true)) == bool(was), "Boot plays it when the setting is on (it is %s)" % str(was))
+	Settings.set_value(&"splash_at_start", false)
+	_check(not bool(boot.call(&"wants_splash", true)), "and not when a player turns it off (Settings, Game: Splash screen at start)")
+	Settings.set_value(&"splash_at_start", was)
+	_check(not bool(boot.call(&"wants_splash", false)), "nor without a window")
+	boot.free()

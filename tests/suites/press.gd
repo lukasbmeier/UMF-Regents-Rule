@@ -108,7 +108,8 @@ func _run_component() -> void:
 	var clock: Node = _autoload("ClockSync")
 	var was_offset: float = float(clock.get(&"_offset_usec"))
 	clock.set(&"_offset_usec", was_offset + 7_300_000.0)
-	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, _SweepRow.new(42, 9901, 0.5)))
+	var sweep := _SweepRow.new(42, 9901, 0.5)
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, sweep))
 	_check(absf(tp.marker(42) - 0.5) < 0.02, "half a second into a 2 s sweep by the server's clock (7.3 s from this one's): the marker half way (%.3f)" % tp.marker(42))
 	var centre: float = ChallengeModel.timing_centers(12345).x
 	_check(is_equal_approx(tp.target(42, 0), centre), "the first target is the seed's (as the server's)")
@@ -123,11 +124,23 @@ func _run_component() -> void:
 		"each press predicted at once, the next round up (%s)" % str(heard))
 	var judged: Array = []
 	tp.judged.connect(func(id: int, round: int, q: float, _pos: float, predicted: float) -> void: judged.append([id, round, q, predicted]))
-	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, _SweepRow.new(42, 9901, 0.6, [0.9])))
+	# The server took the first press to be 80 ms later than this client drew it (its clock estimate
+	# is behind): the bar is calibrated by that much.
+	var drawn_at: float = float((tp._pressed_at[42] as Array)[0])
+	var judged_row := _SweepRow.new(42, 9901, 0.6, [0.9])
+	judged_row.starts_at = sweep.starts_at
+	judged_row.at_ms = [roundi((drawn_at + 0.08) * 1000.0)]
+	var marker_before: float = tp.marker(42)
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, judged_row))
 	_check(judged.size() == 1 and int(judged[0][1]) == 0 and is_equal_approx(float(judged[0][2]), 0.9) and float(judged[0][3]) >= 0.0,
 		"the server's judgement of the first press replaces the guess (%s)" % str(judged))
-	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, _SweepRow.new(42, 9901, 0.7, [0.9])))
-	_check(judged.size() == 1, "the same row again is no news")
+	_check(absf(tp.calibration_s - 0.08) < 0.005, "the server judged it 80 ms later than it was drawn: the bar is calibrated by that (%+.3f s)" % tp.calibration_s)
+	_check(absf(tp.marker(42) - marker_before - 0.08) < 0.03, "and the marker drawn that much on (%.3f -> %.3f)" % [marker_before, tp.marker(42)])
+	_check(TimingBar.state_for(me)["judged"] == [0.5], "the bar marks where the server judged the press")
+	var again := _SweepRow.new(42, 9901, 0.7, [0.9])
+	again.at_ms = judged_row.at_ms
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, again))
+	_check(judged.size() == 1 and absf(tp.calibration_s - 0.08) < 0.005, "the same row again is no news")
 	tp.press()
 	_check(tp.current() == -1 and not tp.wants_press(), "three presses made: nothing left to press, the key is the interact key again")
 	_check(tp.press() == null, "a fourth is not sent")

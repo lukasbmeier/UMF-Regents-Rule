@@ -538,3 +538,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 ## 0.37.2 — right beside them is enough
 - Standing right beside a downed teammate offers "Hold E: Help up" whichever way you face (within 1.5 m, `InteractionComponent.close_m`). 0.37.1 still needed them inside a 70-degree cone of where you or the camera face, and the character faces where the camera does: someone square to your side was missed (Luke). Further away, they still need to be roughly in front.
 - The two-player playtest now helps up from beside the downed player with the crosshair on nothing.
+
+## 0.38.0 — a splash with tips and lore; the front of the character; a calibrated bar
+- **The splash is every game's** (DECISIONS #213): the game's name, a line under it, and its TIPS AND LORE one after another (`lines`, a new one every 3 s), for 5 s; a picture behind it, a logo, colours; water ripples only for a game that asks (Fishing). Any key skips it; **Settings, Game: "Splash screen at start"** turns it off for testing (`--no-splash` too). The template's lists its own controls; Fowl Play's tells of Hollow Hill Farm and GroMax; Fishing keeps Old Barnaby.
+- **The target in front of the character** replaces 0.37.2's 1.5 m all round (Luke: "not immersive"): within reach and inside a 120-degree arc across the front of the model (`InteractionComponent.front_arc_deg`), not beside, not behind. The crosshair still wins when it is on something.
+- **The skill check's bar calibrates itself** from the server's judgements: each judged press says when the server took it to be; the bar is drawn that much on (the median of the last few, at most 0.3 s), so a press on the line in Great is judged Great. Luke saw Great judged Good: the clock the bar is drawn by comes from row timestamps, which can arrive later than half a round trip. The bar also marks where the server judged each press.
+- No server change: nothing to republish.

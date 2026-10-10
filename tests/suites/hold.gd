@@ -282,7 +282,7 @@ func _run_key_and_prompt() -> void:
 
 
 func _run_nearby() -> void:
-	print("== hold: the target nearby, not only under the crosshair (DECISIONS #211) ==")
+	print("== hold: the target in front, not only under the crosshair (DECISIONS #211, #213) ==")
 	var me: SpaceTimeEntity = _registered(9811, "res://foundation/content/character/humanoid.tres", StatusDef.NORMAL, true)
 	var ic: InteractionComponent = me.find_component(InteractionComponent) as InteractionComponent
 	me.global_position = Vector3.ZERO   # facing -Z (no camera, no input here: the body's own way)
@@ -291,12 +291,15 @@ func _run_nearby() -> void:
 	ic.scan()
 	_check(ic.get_target() == 9812, "a downed teammate 1.5 m in front is the target with no crosshair on them (%d)" % ic.get_target())
 	_check(String(HoldPrompt.state_for(me)["text"]) == "Hold E: Help up", "and the prompt offers to help them up")
-	front.global_position = Vector3(1.0, 0.0, 0.2)
+	front.global_position = Vector3(1.0, 0.0, -0.9)
 	ic.scan()
-	_check(ic.get_target() == 9812, "right beside them (1 m, square to the side): the target, whichever way the player faces")
-	front.global_position = Vector3(0.0, 0.0, 2.2)
+	_check(ic.get_target() == 9812, "48 degrees off the front, inside the 120-degree arc: the target")
+	front.global_position = Vector3(1.0, 0.0, -0.3)
 	ic.scan()
-	_check(ic.get_target() == InteractionComponent.NO_TARGET, "2.2 m behind: not the target")
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "73 degrees off, at the shoulder (outside the arc, a metre away): not the target")
+	front.global_position = Vector3(0.0, 0.0, 1.0)
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "behind: not the target")
 	front.global_position = Vector3(0.0, 0.0, -4.0)
 	ic.scan()
 	_check(ic.get_target() == InteractionComponent.NO_TARGET, "out of reach (4 m, the reach is %.1f): not the target" % ic.range_m())

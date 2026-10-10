@@ -5,10 +5,13 @@ extends Node
 ## from the server's clock) and presses the interact key the frame the marker reaches the target's
 ## centre. What the server judges is the proof:
 ##   --expect=credited    (the rule's credit for the trip on): judged where the player saw it, so
-##                        three presses on the centre score well (mean quality at least 0.7)
+##                        three presses on the centre score well (mean quality at least 0.7), and the
+##                        bar needed next to no calibration
 ##   --expect=uncredited  (`foundation.press_credit_cap_ms` 0, set by tests/press_playtest.sh): the
-##                        same presses judged on arrival, a one-way trip late, and scored clearly worse
-## Exits 0/1; prints the mean for the script to compare.
+##                        first press judged on arrival, a one-way trip late, clearly worse; the bar
+##                        then calibrates by about that from the judgement (DECISIONS #213) and the
+##                        next presses are judged well again
+## Exits 0/1.
 
 const OVERALL_TIMEOUT_SEC: float = 60.0
 
@@ -55,10 +58,13 @@ func _run() -> void:
 		var centre: float = tp.target(id, round)
 		var was: float = tp.marker(id)
 		deadline = Time.get_ticks_msec() + 8_000
-		# The frame the marker, as drawn, reaches the centre (from either side), and is still before it.
+		# The frame BEFORE the marker, as drawn, reaches the centre (from either side): the key is read
+		# a physics frame after it goes down, as a player anticipates the marker by a moment.
+		var period: float = float((tp._sweeps[id] as Dictionary)["period_s"])
+		var frame_s: float = 1.0 / float(Engine.physics_ticks_per_second)
 		while Time.get_ticks_msec() < deadline:
 			await get_tree().physics_frame
-			var now: float = tp.marker(id)
+			var now: float = ChallengeModel.sweep_position(tp.elapsed(id) + frame_s, period)
 			if tp.elapsed(id) > 0.05 and ((was < centre and now >= centre) or (was > centre and now <= centre)):
 				break
 			was = now
@@ -76,10 +82,19 @@ func _run() -> void:
 	print("   MEAN %.3f (%s)" % [mean, _expect])
 	_check(judged.size() == 3, "the server judged all three presses (%d)" % judged.size())
 	_check(judged.all(func(j: Array) -> bool: return float(j[3]) > 0.7), "each was pressed on the centre as the player saw it (predicted)")
+	print("   bar calibrated %+d ms" % roundi(tp.calibration_s * 1000.0))
+	judged.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) < int(b[0]))
 	if _expect == "credited":
 		_check(mean >= 0.7, "credited for the trip, the server judges them where they were seen: %.2f" % mean)
-	else:
-		_check(mean <= 0.6, "judged on arrival, a one-way trip late: clearly worse (%.2f)" % mean)
+		_check(absf(tp.calibration_s) <= 0.04, "and the bar, drawn by the server's clock, needed next to no calibration (%+d ms)" % roundi(tp.calibration_s * 1000.0))
+	elif judged.size() == 3:
+		# Judged on arrival: the first press, made on the centre as drawn, is judged a one-way trip late;
+		# the bar calibrates by about that from the server's judgement (DECISIONS #213), and the presses
+		# after it, made on the centre as now drawn, are judged well again.
+		_check(float(judged[0][1]) <= 0.5, "judged on arrival, the first press is a one-way trip late: clearly worse (%.2f)" % float(judged[0][1]))
+		_check(tp.calibration_s >= 0.05, "the bar calibrates from that judgement by about a one-way trip (%+d ms)" % roundi(tp.calibration_s * 1000.0))
+		_check(float(judged[1][1]) >= 0.6 and float(judged[2][1]) >= 0.6,
+			"and the presses after it are judged where they were seen again (%.2f, %.2f)" % [float(judged[1][1]), float(judged[2][1])])
 	_finish()
 
 

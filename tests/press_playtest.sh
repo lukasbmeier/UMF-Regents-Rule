@@ -4,8 +4,10 @@
 # the marker on each target. Run twice:
 #   credited    the server credits each press with half the player's quickest measured round trip:
 #               judged where it was seen, it scores well
-#   uncredited  `foundation.press_credit_cap_ms` 0: the same play judged on arrival scores clearly worse
-# Together: the credit is what makes a press fair at a distance, and the client sent only "pressed".
+#   uncredited  `foundation.press_credit_cap_ms` 0: the first press judged on arrival scores clearly
+#               worse; the bar calibrates from that judgement and the next presses recover
+# Together: the credit makes the first press fair at a distance, the bar's calibration keeps what
+# the player sees in step with what the server judges, and the client sent only "pressed".
 #
 #   GODOT=/path/to/godot ./tests/press_playtest.sh              # 150 ms round trip, 20 ms jitter
 #
@@ -36,7 +38,7 @@ play() {   # play EXPECT
   "$GODOT" --headless --path . "$SCENE" -- --token=presser --expect="$1" --node="$NODE" \
     --latency="$LATENCY" --jitter="$JITTER" >"$log" 2>&1
   local s=$?
-  grep -E "^   |FAIL|passed," "$log"
+  grep -E "^   |FAIL|passed,|\[Press\]" "$log"
   if grep -E "SCRIPT ERROR" "$log" >/dev/null; then
     echo "VIOLATION: script errors:" >&2; grep -E "SCRIPT ERROR" "$log" | head -5 >&2; s=1
   fi

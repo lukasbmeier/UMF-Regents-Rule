@@ -19,7 +19,7 @@ func _run_settings_tests() -> void:
 	print("== settings ==")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS_TEST_FILE))
 	Settings.use_file(SETTINGS_TEST_FILE)
-	_check(Array(Settings.tabs()).slice(0, 3) == [Settings.VIDEO, Settings.AUDIO, Settings.CONTROLS],
+	_check(Array(Settings.tabs()).slice(0, 4) == [Settings.VIDEO, Settings.AUDIO, Settings.CONTROLS, Settings.GAME],
 		"the foundation's tabs, in order (%s)" % str(Settings.tabs()))
 	for bus: StringName in [&"Master", Settings.BUS_MUSIC, Settings.BUS_EFFECTS, Settings.BUS_AMBIENCE, Settings.BUS_VOICE]:
 		_check(AudioServer.get_bus_index(bus) >= 0, "the audio bus '%s' exists (default_bus_layout.tres)" % bus)

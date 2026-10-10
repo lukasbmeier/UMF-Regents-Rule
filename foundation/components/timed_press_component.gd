@@ -9,7 +9,13 @@ class_name TimedPressComponent extends SpaceTimeComponent
 ##   it draws the sweep from the server's clock (`ClockSync`), from the sweep frozen on its row
 ##   (`timed_press`), so the marker is where the server will judge it;
 ##   it PREDICTS each press's result at once (the same sums, `ChallengeModel`), and the server's
-##   judgement replaces it a round trip later (`judged`).
+##   judgement replaces it a round trip later (`judged`);
+##   it CALIBRATES the bar from those judgements (DECISIONS #213): each says when the server took the
+##   press to be, which this client compares with when it drew it; the median of the last few is how
+##   far its estimate of the server's clock is out, and the marker is drawn that much on (at most
+##   `MAX_CALIBRATION_S`). Luke saw a press on the line in Great judged Good: the clock this client
+##   draws by comes from row timestamps, which may arrive later than half a round trip. The server
+##   still judges every press; this only makes what the player sees agree with it.
 ## The interact key presses it while one is being played (`InteractionComponent`); the HUD's
 ## `TimingBar` draws it. Every entity has one (`SpaceTimeEntity`), only the local player's plays.
 
@@ -20,6 +26,9 @@ signal judged(challenge_id: int, round: int, quality: float, position: float, pr
 
 const TABLE_CHALLENGE: StringName = &"challenge"
 const TABLE_SWEEP: StringName = &"timed_press"
+## How far the calibration may move the bar, and how many judgements it is the median of.
+const MAX_CALIBRATION_S: float = 0.3
+const CALIBRATION_SAMPLES: int = 7
 
 ## challenge id -> {seed, difficulty}: this entity's timed-press challenges.
 var _challenges: Dictionary = {}
@@ -30,6 +39,12 @@ var _predicted: Dictionary = {}
 var _acked: Dictionary = {}
 ## The last press judged: {challenge_id, round, quality, position, predicted, at_msec}, or empty.
 var last_judged: Dictionary = {}
+## How far on (s) the bar is drawn from this client's estimate of the server's clock: the median of
+## `_offsets`, the server's judged time less the time each press was drawn at. Kept for the session.
+var calibration_s: float = 0.0
+var _offsets: Array[float] = []
+## challenge id -> the uncalibrated elapsed seconds each press was made at.
+var _pressed_at: Dictionary = {}
 
 
 func required_tables() -> Array[StringName]:
@@ -71,12 +86,23 @@ func rounds(id: int) -> int:
 	return int((_sweeps.get(id, {}) as Dictionary).get("rounds", 0))
 
 
-## Seconds since `id`'s marker began to move (negative: still to start), by the server's clock.
+## Seconds since `id`'s marker began to move (negative: still to start), by the server's clock as
+## calibrated by its own judgements (`calibration_s`).
 func elapsed(id: int) -> float:
+	return _raw_elapsed(id) + calibration_s
+
+
+## The same by this client's estimate of the server's clock alone.
+func _raw_elapsed(id: int) -> float:
 	var s: Dictionary = _sweeps.get(id, {})
 	if s.is_empty():
 		return 0.0
 	return float(ClockSync.server_usec() - int(s["starts_usec"])) / 1_000_000.0
+
+
+## Where the server judged each of `id`'s presses (0..1), in order.
+func judged_positions(id: int) -> Array:
+	return ((_sweeps.get(id, {}) as Dictionary).get("positions", []) as Array).duplicate()
 
 
 ## Where `id`'s marker is now (0..1).
@@ -123,6 +149,7 @@ func press() -> ReducerRequest:
 	var round: int = presses_made(id)
 	var predicted: float = ChallengeModel.press_quality(marker(id), target(id, round), half_width(id))
 	(_predicted.get_or_add(id, []) as Array).append(predicted)
+	(_pressed_at.get_or_add(id, []) as Array).append(_raw_elapsed(id))
 	pressed.emit(id, round, predicted)
 	return SpaceTimeSync.call_reducer(&"challenge_press", [id], ["u64"])
 
@@ -151,6 +178,20 @@ func _challenge_row(old: RefCounted, new: RefCounted) -> void:
 		SpaceTimeSync.call_reducer(&"challenge_seen", [id], ["u64"])
 
 
+## Press `round` of `id` was judged at `ats[round]` ms after the sweep began: against when this client
+## drew it, how far out its clock is. The median of the last few moves the bar.
+func _calibrate(id: int, round: int, ats: Array) -> void:
+	var made: Array = _pressed_at.get(id, [])
+	if round >= made.size() or round >= ats.size():
+		return
+	_offsets.append(float(ats[round]) / 1000.0 - float(made[round]))
+	while _offsets.size() > CALIBRATION_SAMPLES:
+		_offsets.pop_front()
+	var sorted: Array[float] = _offsets.duplicate()
+	sorted.sort()
+	calibration_s = clampf(sorted[sorted.size() / 2], -MAX_CALIBRATION_S, MAX_CALIBRATION_S)
+
+
 func _sweep_row(old: RefCounted, new: RefCounted) -> void:
 	if new == null:
 		if old != null:
@@ -158,11 +199,13 @@ func _sweep_row(old: RefCounted, new: RefCounted) -> void:
 			_sweeps.erase(gone)
 			_predicted.erase(gone)
 			_acked.erase(gone)
+			_pressed_at.erase(gone)
 		return
 	var id: int = int(new.get(&"challenge_id"))
 	var before: int = (( _sweeps.get(id, {}) as Dictionary).get("qualities", []) as Array).size()
 	var qs: Array = Array(new.get(&"qualities"))
 	var ps: Array = Array(new.get(&"positions"))
+	var ats: Array = Array(new.get(&"at_ms"))
 	_sweeps[id] = {
 		"starts_usec": int(new.get(&"starts_at")),
 		"period_s": float(int(new.get(&"period_ms"))) / 1000.0,
@@ -173,11 +216,12 @@ func _sweep_row(old: RefCounted, new: RefCounted) -> void:
 		"done": bool(new.get(&"done")),
 	}
 	for r: int in range(before, qs.size()):
+		_calibrate(id, r, ats)
 		var guess: Array = _predicted.get(id, [])
 		var predicted: float = float(guess[r]) if r < guess.size() else -1.0
 		last_judged = {"challenge_id": id, "round": r, "quality": float(qs[r]), "position": float(ps[r]) if r < ps.size() else 0.0,
 			"predicted": predicted, "at_msec": Time.get_ticks_msec()}
 		if is_bound():
-			print("[Press] challenge %d press %d: %.2f (predicted %.2f)" % [id, r + 1, float(qs[r]), predicted])
+			print("[Press] challenge %d press %d: %.2f (predicted %.2f; bar calibrated %+d ms)" % [id, r + 1, float(qs[r]), predicted, roundi(calibration_s * 1000.0)])
 			judged.emit(id, r, float(qs[r]), float(last_judged["position"]), predicted)
 			SignalBus.timed_press_judged.emit(entity_id, r, float(qs[r]))

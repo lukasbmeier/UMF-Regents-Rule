@@ -258,7 +258,8 @@ Step by step, from pressing Play:
 
 1. **Godot starts `lakeside_game.tscn`.** Its `Boot` node (`foundation/boot.gd`) hands the
    `EntitySpawner` the game's ENTITY DEFINITIONS (fisher, spot, rival), plays the SPLASH
-   (`game/splash_screen.tscn`: the game's name; any key skips it) and shows the connect screen.
+   (`game/splash_screen.tscn`: the game's name and its tips and lore for 5 s; any key skips it;
+   Settings, Game: "Splash screen at start" turns it off) and shows the connect screen.
 2. **Connect.** `SpaceTimeSync` (the only script that talks to the SDK) connects with this
    machine's identity token. Editor instances get their own token each (slot 1, 2...), so two
    instances are two players.
@@ -529,7 +530,7 @@ Around it:
 | round lengths and order, phase names | `shared/rules.json` → `sessions` | `./tools/publish.sh`, restart |
 | the lobby: start when everyone is ready, how many players, the teams | `shared/rules.json` → `sessions` → `lobby` | `./tools/publish.sh`, restart |
 | a match: how long its first lobby waits, how long an empty world keeps its match | `shared/rules.json` → `sessions` → `match` | `./tools/publish.sh`, restart |
-| the splash: its words, colours, a logo, how long it stays | `game/splash_screen.tscn` (Inspector) | restart |
+| the splash: its words, its tips and lore (`lines`, one every `line_sec`), colours, a logo, a picture behind it, water ripples, how long it stays | `game/splash_screen.tscn` (Inspector) | restart |
 | which genres the game is made of | `shared/game.json` → `genres` | `tools\publish.cmd --codegen`, restart (and export again) |
 | what each time of day and weather favours, how fast things bite in them, the weather's odds | `fishing.json` → `conditions` | republish, restart |
 | the rival: where he stands, which spots, how often he lands | `fishing.json` → `rival` (his name also on `rival_definition.tres`) | republish; `cargo test --test level` checks his reach |
@@ -648,8 +649,9 @@ is lost. A hold of your own: pick what it is done to (`done_to`: characters), wh
 (`done_by`; none: anyone), the target's status it needs (`only_when`), `seconds_with` (alone, then
 two, three together), what stops it, whether a half-done one keeps its progress (a nest), and the
 status the target is left in when done. Try it in the game with two players (one downed with **Try a
-status on yourself**; Rules also has **Go to** a player). Standing at the target and facing it is
-enough: the crosshair need not be on it (`InteractionComponent.targeting`). In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
+status on yourself**; Rules also has **Go to** a player). Facing the target within reach is enough
+(a 120-degree arc in front of the character: `InteractionComponent.front_arc_deg`): the crosshair
+need not be on it. In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
 (a nest cooling while nobody sits on it) and hears it done in `on_hold_completed`; its bots hold with
 `begin_interact_as`.
 
