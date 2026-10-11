@@ -30,6 +30,7 @@
 		"revoke_authority": "(identity:(__identity__:U256))",
 		"seed_item_defs": "(defs:[ItemDef(item_def_id:U32,kind:U8,max_stack:U32,data:String)])",
 		"set_appearance": "(look:String)",
+		"set_character_of": "(entity_id:U64,kind:U8)",
 		"set_dev_tools": "(enabled:Bool)",
 		"set_equip_state": "(state:U8)",
 		"set_item_slot": "(item_id:U64,slot:I16)",

@@ -6408,6 +6408,40 @@
 					}
 				},
 				{
+					"source_name": "set_character_of",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "set_dev_tools",
 					"params": {
 						"elements": [
@@ -7712,6 +7746,12 @@
 						"Function": {
 							"source_name": "set_appearance",
 							"canonical_name": "set_appearance"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_character_of",
+							"canonical_name": "set_character_of"
 						}
 					},
 					{

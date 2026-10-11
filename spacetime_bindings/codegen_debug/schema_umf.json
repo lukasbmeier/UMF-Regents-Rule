@@ -2131,6 +2131,24 @@
 			"return_data": {}
 		},
 		{
+			"name": "set_character_of",
+			"wire_name": "set_character_of",
+			"namespace": [],
+			"local_name": "set_character_of",
+			"params": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "kind",
+					"type": "U8"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "set_dev_tools",
 			"wire_name": "set_dev_tools",
 			"namespace": [],
