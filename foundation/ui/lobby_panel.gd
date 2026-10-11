@@ -1,6 +1,7 @@
 class_name LobbyPanel extends CanvasLayer
 ## THE LOBBY (DECISIONS #174): while a round's lobby is open, who is here, who is ready and which
-## team each is on, with the keys to say you are ready (R) and to change team (T). For a session kind
+## team each is on, with the keys to say you are ready (R), to change team (T) and, in a game with
+## characters to choose from, to play another (C, DECISIONS #217). For a session kind
 ## whose rules give it a lobby (`shared/rules.json`); otherwise it never shows.
 ##
 ## The cursor stays the game's: two keys, rather than a mouse UI that would take it away, like the
@@ -9,6 +10,7 @@ class_name LobbyPanel extends CanvasLayer
 
 const ACTION_READY: StringName = &"lobby_ready"
 const ACTION_TEAM: StringName = &"lobby_team"
+const ACTION_CHARACTER: StringName = &"lobby_character"
 
 var _panel: PanelContainer = null
 var _title: Label = null
@@ -128,6 +130,9 @@ func _process(_delta: float) -> void:
 		keys.append("%s: %s" % [_key_name(ACTION_READY), "not ready" if me.is_ready() else "ready"])
 	if teams.size() > 1:
 		keys.append("%s: change team" % _key_name(ACTION_TEAM))
+	var playing: EntityDefinition = my_character()
+	if EntitySpawner.playable_characters().size() > 1 and playing != null:
+		keys.append("%s: play another (%s)" % [_key_name(ACTION_CHARACTER), playing.display_name])
 	var waiting: String = ""
 	if bool(lobby.get("ready_up", false)):
 		var need: int = int(lobby.get("min_players", 1))
@@ -171,6 +176,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			and bool(Rules.lobby(me.get_session_kind()).get("ready_up", false)):
 		get_viewport().set_input_as_handled()
 		_ask(&"set_ready", [not me.is_ready()], ["bool"])
+	elif InputMap.has_action(ACTION_CHARACTER) and event.is_action_pressed(ACTION_CHARACTER):
+		var next: int = next_character()
+		if next >= 0:
+			get_viewport().set_input_as_handled()
+			_ask(&"choose_character", [next], ["u8"])
 	elif InputMap.has_action(ACTION_TEAM) and event.is_action_pressed(ACTION_TEAM):
 		var teams: PackedStringArray = Rules.teams(me.get_session_kind())
 		if teams.size() > 1:
@@ -189,6 +199,26 @@ func _ask(reducer: StringName, args: Array, types: Array[String]) -> void:
 
 func said() -> String:
 	return _said
+
+
+## The character the local player plays now (its entity's definition), or null.
+static func my_character() -> EntityDefinition:
+	var ent: SpaceTimeEntity = EntityRegistry.get_entity(EntityRegistry.local_entity_id) as SpaceTimeEntity
+	return ent.definition if ent != null else null
+
+
+## The kind after the one the local player plays, among the characters a player may choose (round
+## again from the first); -1 when there is no other to choose.
+static func next_character() -> int:
+	var all: Array[EntityDefinition] = EntitySpawner.playable_characters()
+	var me: EntityDefinition = my_character()
+	if all.size() < 2 or me == null:
+		return -1
+	var at: int = -1
+	for i: int in all.size():
+		if all[i].kind == me.kind:
+			at = i
+	return all[(at + 1) % all.size()].kind
 
 
 static func _key_name(action: StringName) -> String:

@@ -97,6 +97,9 @@ static func validate_challenge(kind: int, seed_value: int, difficulty: float,
 # server judges every press itself (`challenge_press`); this only says what the player will see.
 
 const KIND_TIMED_PRESS: int = 1
+## The quality from which a press is Great (above 0: Good; 0: a Miss). The server pays a genre's
+## check by the same number (`challenge::GREAT_FROM`, DECISIONS #219).
+const GREAT_FROM: float = 0.75
 
 
 ## Where the marker is `elapsed_s` after it began to sweep: 0 at the start, 1 half a period later,

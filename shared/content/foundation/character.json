@@ -8,7 +8,8 @@
 			"id": 0,
 			"kind": 0,
 			"movement": -1,
-			"name": "Player (plain capsule)"
+			"name": "Player (plain capsule)",
+			"playable": false
 		},
 		{
 			"abilities": [],
@@ -16,7 +17,8 @@
 			"id": 1,
 			"kind": 1,
 			"movement": -1,
-			"name": "NPC"
+			"name": "NPC",
+			"playable": false
 		},
 		{
 			"abilities": [],
@@ -24,7 +26,8 @@
 			"id": 2,
 			"kind": 0,
 			"movement": -1,
-			"name": "Humanoid"
+			"name": "Humanoid",
+			"playable": false
 		}
 	],
 	"owner": "foundation",

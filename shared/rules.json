@@ -9,6 +9,7 @@
     "set_player_name": { "burst": 4, "per_sec": 0.5 },
     "set_ready": { "burst": 6, "per_sec": 2 },
     "set_team": { "burst": 6, "per_sec": 2 },
+    "choose_character": { "burst": 6, "per_sec": 2 },
     "join_session": { "burst": 4, "per_sec": 0.25 },
     "leave_session": { "burst": 4, "per_sec": 0.25 }
   },

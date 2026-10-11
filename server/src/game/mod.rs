@@ -85,6 +85,16 @@ pub trait Genre: Sync {
         None
     }
 
+    /// CHARACTERS (DECISIONS #217). `entity_id`'s player asks to play `kind` (a playable character's;
+    /// in the lobby, unless an admin): Err refuses it, with the reason the player sees (there is
+    /// already a predator).
+    fn may_choose_character(&self, _ctx: &ReducerContext, _entity_id: u64, _kind: u8) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// `entity_id` now plays its entity's new kind (was `from`): a genre follows it (the predator's team).
+    fn on_character_changed(&self, _ctx: &ReducerContext, _entity_id: u64, _from: u8) {}
+
     /// HOLDS (DECISIONS #209). `actor_id` is about to begin `hold` on `target` (reach, status and kinds
     /// checked): Err refuses it, with the reason the player sees (a nest already full of eggs).
     fn may_hold(&self, _ctx: &ReducerContext, _actor_id: u64, _target: &Entity, _hold: &HoldSeed) -> Result<(), String> {
@@ -204,6 +214,20 @@ pub fn on_interact(ctx: &ReducerContext, player_entity_id: u64, target: &Entity,
 pub fn on_status_changed(ctx: &ReducerContext, entity_id: u64, from: u8, now: &StatusStateRow) {
     for g in GENRES {
         g.on_status_changed(ctx, entity_id, from, now);
+    }
+}
+
+/// Every genre may refuse a character: the first refusal stands.
+pub fn may_choose_character(ctx: &ReducerContext, entity_id: u64, kind: u8) -> Result<(), String> {
+    for g in GENRES {
+        g.may_choose_character(ctx, entity_id, kind)?;
+    }
+    Ok(())
+}
+
+pub fn on_character_changed(ctx: &ReducerContext, entity_id: u64, from: u8) {
+    for g in GENRES {
+        g.on_character_changed(ctx, entity_id, from);
     }
 }
 

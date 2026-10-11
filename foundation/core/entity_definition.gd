@@ -69,6 +69,10 @@ class_name EntityDefinition extends ContentDef
 @export_range(0.0, 10.0, 0.01, "suffix:m") var collision_height: float = 0.0
 
 @export_group("How it plays")
+## A PLAYER MAY CHOOSE TO PLAY IT (DECISIONS #217): it is offered in the lobby (Play as), and the
+## server lets a player become it (`choose_character`). Off: only the game puts an entity in it (an NPC,
+## a nest, the character a new player starts as).
+@export var playable: bool = false
 ## HOW IT MOVES (DECISIONS #205): its speeds, jump, flaps, dash. Empty: the foundation's default
 ## (`shared/movement_config.json`). Predicted by its player's client and simulated by the sidecar
 ## with the same numbers.
@@ -143,7 +147,7 @@ func to_bake() -> Dictionary:
 	for a: AbilityDef in abilities:
 		ability_ids.append(ContentDef.ref(a))
 	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile),
-		"abilities": ability_ids}
+		"abilities": ability_ids, "playable": playable}
 
 
 func validate() -> Array[String]:
@@ -156,6 +160,8 @@ func validate() -> Array[String]:
 		out.append("it has an animation set but no model to play it on")
 	if collision_radius > 0.0 and collision_height > 0.0 and collision_height < collision_radius * 2.0:
 		out.append("its body is %.2f m tall but %.2f m wide: a capsule is at least as tall as it is wide (collision_height)" % [collision_height, collision_radius * 2.0])
+	if playable and not brain.is_empty():
+		out.append("it is playable and has a brain (%s): a player plays it, so it needs none" % brain)
 	if abilities.has(null):
 		out.append("its abilities list has an empty slot: pick an ability or remove the slot")
 	return out

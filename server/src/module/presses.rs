@@ -58,6 +58,15 @@ pub struct ClientRtt {
     pub at: Timestamp,
 }
 
+/// A CHECK THAT SCORES NOTHING (DECISIONS #219): a genre's skill check whose result is the genre's to
+/// pay (an egg's wobble warms a nest, it is not points), so the foundation's award (score and coins
+/// for every check) leaves it alone. Private; gone when its challenge closes.
+#[table(accessor = unscored_press)]
+pub struct UnscoredPress {
+    #[primary_key]
+    pub challenge_id: u64,
+}
+
 /// How long a judged press row stays after its challenge ended.
 const PRESS_LINGER_MICROS: i64 = 5_000_000;
 /// A round trip longer than this is not a measurement (a client that acked hours later).
@@ -175,11 +184,23 @@ pub fn challenge_press(ctx: &ReducerContext, challenge_id: u64) -> Result<(), St
 /// A challenge is gone (scored, expired, its entity gone): its sweep goes too, after a moment if it
 /// was played to the end (so its player's game sees the last press judged).
 pub(crate) fn forget_press(ctx: &ReducerContext, challenge_id: u64) {
+    ctx.db.unscored_press().challenge_id().delete(challenge_id);
     if let Some(row) = ctx.db.timed_press().challenge_id().find(challenge_id) {
         if !row.done {
             ctx.db.timed_press().challenge_id().delete(challenge_id);
         }
     }
+}
+
+/// HOW A TIMED PRESS WENT (DECISIONS #219), for a genre hearing it close (`on_challenge_closed`): the
+/// mean quality of its presses when every one was made, None when it ended without them (it ran out of
+/// time, its player left). Grade it with `crate::challenge::grade`.
+pub fn press_result(ctx: &ReducerContext, challenge_id: u64) -> Option<f32> {
+    let row = ctx.db.timed_press().challenge_id().find(challenge_id)?;
+    if !row.done || row.qualities.is_empty() {
+        return None;
+    }
+    Some(row.qualities.iter().sum::<f32>() / row.qualities.len() as f32)
 }
 
 /// From the prune: sweeps whose challenge has gone, played to the end a few seconds ago, or never.

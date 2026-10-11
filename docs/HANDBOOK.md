@@ -131,6 +131,7 @@ need; leave the rest empty.
 | `on_player_created` | a new identity connects for the first time (its entity, health, movement and session rows already exist) | nothing (gear starts as the starting kit) |
 | `on_player_returned` | a known player connects again | nothing |
 | `on_player_left` | a player disconnects. The foundation keeps their entity; despawn it here if your game should not | nothing |
+| `may_choose_character`, `on_character_changed` | a player asks to play another character (Play as) / now plays it | nothing (one character) |
 | `on_interact` | someone uses an entity of a kind the foundation does not own (100 and up); range and world are already checked | nothing (it owns no kind) |
 | `resolve_challenge` | a minigame of the game's own kind is submitted: judge and pay out | the hook-set and THE FIGHT, replayed |
 | `on_challenge_succeeded`, `on_challenge_closed` | a challenge passed / ended in any way | the catch / clearing the line |
@@ -282,7 +283,8 @@ Step by step, from pressing Play:
    predicts its movement and owns the camera. Every other one is REMOTE: it is drawn ~100 ms in
    the past, smoothly interpolated between server updates.
 9. **The lobby screen** (`foundation/ui/lobby_screen.gd`) covers the game: everyone in the session
-   on a stage in their looks, Choose character (the picker), Ready (or R). When everyone here is
+   on a stage in their looks, Play as (which character, when the game has several: a hen or the
+   wolf; C in the in-world lobby), Choose look (the picker), Ready (or R). When everyone here is
    ready the match's first round starts and the screen goes. Arriving mid-match it offers Join.
    While it is up you are held still and have the cursor; Esc still opens the menu.
 
@@ -657,9 +659,22 @@ crosshair has no say, in first person it goes first (`targeting`, AUTO from the 
 
 **Skill checks: press when the marker is in the zone.** Server-timed (DECISIONS #210): the player's
 game says only "pressed" and the server works out where the marker was when they saw it, so lag does
-not cost a good press and a cheat cannot claim one. In code, `issue_challenge_for(entity, difficulty,
-payload)` starts one (the foundation's resource node does); the genre hears the result in
-`on_challenge_succeeded` (its quality, 0..1). Tune it live in the Rules page: how long the marker
+not cost a good press and a cheat cannot claim one. Its key is Space (Settings: Skill check), so a
+check can come up while E is held for something else (an egg wobbling under a sitting hen); E also
+presses one when nothing is held, and Space does not jump while one is up. In code,
+`issue_challenge_for(entity, difficulty, payload)` starts a scored three-press one; a genre's own
+(`issue_timed_press(entity, difficulty, rounds, scored, payload, ttl)`) can be one press, and
+unscored when what it pays is the genre's (warmth, not points). The genre hears it end in
+`on_challenge_closed` and reads how it went with `press_result` (None: it ran out of time), graded
+Great/Good/Miss by `challenge::grade`, the bar's own words; `close_if_expired` ends one on time from
+the genre's own tick.
+
+**Characters a player chooses.** Tick **Playable** on a character (its definition, How it plays) and
+the lobby offers it (Play as); the server lets a player become it (`choose_character`) in the lobby.
+The player's entity becomes that kind and every client builds it again as that character (its model,
+body, movement, camera). A genre caps who may be what (`may_choose_character`), follows a change
+(`on_character_changed`: a team), and starts a new player as its character (`set_character_internal`
+in `on_player_created`). The foundation's own characters are not playable; a game marks its own. Tune it live in the Rules page: how long the marker
 waits before moving (`press_lead_in_ms`), how fast it sweeps (`press_sweep_easy_s`, `_hard_s`), how
 much a player's lag is forgiven (`press_credit_cap_ms`). The HUD draws it (`TimingBar`).
 

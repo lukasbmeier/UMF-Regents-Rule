@@ -150,6 +150,30 @@ pub fn validate_challenge(kind: u8, seed: u64, difficulty: f32, result: &[f32]) 
 /// `challenge.kind` of a server-timed press.
 pub const KIND_TIMED_PRESS: u8 = 1;
 
+/// The quality from which a press is GREAT; above 0 and below it, GOOD; 0, a MISS. What the player is
+/// told (`TimingBar.word_for`, from `ChallengeModel.GREAT_FROM`, the same number) and what a genre
+/// pays out by (`grade`), so a press the bar called Great is never paid as Good (DECISIONS #219).
+pub const GREAT_FROM: f32 = 0.75;
+
+/// How a press went, in the words the player saw.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Grade {
+    Great,
+    Good,
+    Miss,
+}
+
+/// A press's (or a check's mean) quality, as the player was told it.
+pub fn grade(quality: f32) -> Grade {
+    if quality >= GREAT_FROM {
+        Grade::Great
+    } else if quality > 0.0 {
+        Grade::Good
+    } else {
+        Grade::Miss
+    }
+}
+
 /// Where the marker is `elapsed_s` after it began to sweep: 0 at the start, 1 half a period later,
 /// back to 0 at a full period (a triangle wave). 0 before it begins.
 pub fn sweep_position(elapsed_s: f32, period_s: f32) -> f32 {

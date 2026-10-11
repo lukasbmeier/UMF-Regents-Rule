@@ -19,6 +19,8 @@ extends Node
 ## Fired for rows in the `entity` table specifically — the spawner's trigger.
 signal entity_row_inserted(ev: RowEvent)
 signal entity_row_deleted(ev: RowEvent)
+## An entity's own row changed (its kind: the character its player now plays, DECISIONS #217).
+signal entity_row_updated(ev: RowEvent)
 ## Rows with no entity_id (world_config, session, item_def, …). World systems listen here.
 signal global_row_event(ev: RowEvent)
 
@@ -121,6 +123,7 @@ func _on_row_event(ev: RowEvent) -> void:
 		match ev.kind:
 			RowEvent.Kind.INSERTED: entity_row_inserted.emit(ev)
 			RowEvent.Kind.DELETED:  entity_row_deleted.emit(ev)
+			RowEvent.Kind.UPDATED:  entity_row_updated.emit(ev)
 			_: pass
 		# entity rows are also routed to the entity (kind changes, owner changes).
 

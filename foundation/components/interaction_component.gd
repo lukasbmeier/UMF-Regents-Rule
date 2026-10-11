@@ -47,6 +47,10 @@ const KIND_PLAYER: int = 0
 const KIND_NPC: int = 1
 const GROUP_INTERACTABLE: StringName = &"interactable"
 const ACTION_INTERACT: StringName = &"interact"
+## THE SKILL CHECK'S OWN KEY (DECISIONS #218, Space by default): a check comes up WHILE a hold is held
+## (an egg wobbles under a sitting hen), and the interact key is down, so it cannot press it. The
+## interact key still presses a check when nothing is being held (as before).
+const ACTION_SKILL_CHECK: StringName = &"skill_check"
 
 enum Targeting { CROSSHAIR, NEARBY, BOTH, AUTO }
 ## How the target is chosen: what the crosshair is on, what is in front of the character, the
@@ -140,6 +144,8 @@ func request_interact(override_verb: int = -1) -> ReducerRequest:
 
 func _physics_process(_delta: float) -> void:
 	scan()
+	if InputMap.has_action(ACTION_SKILL_CHECK) and Input.is_action_just_pressed(ACTION_SKILL_CHECK):
+		press_timed()
 	if not InputMap.has_action(ACTION_INTERACT):
 		return
 	if Input.is_action_just_pressed(ACTION_INTERACT) and not press_timed():

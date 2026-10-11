@@ -10,6 +10,7 @@ extends "res://tests/suite_base.gd"
 func run() -> void:
 	_run_model()
 	await _run_component()
+	await _run_check_key()
 	await _run_rules_page()
 	_run_every_entity_has_one()
 
@@ -114,7 +115,7 @@ func _run_component() -> void:
 	var centre: float = ChallengeModel.timing_centers(12345).x
 	_check(is_equal_approx(tp.target(42, 0), centre), "the first target is the seed's (as the server's)")
 	s = TimingBar.state_for(me)
-	_check(String(s["text"]) == "Press E  (1 of 3)" and absf(float(s["marker"]) - 0.5) < 0.02, "the bar: \"%s\"" % s["text"])
+	_check(String(s["text"]) == "Press Space  (1 of 3)" and absf(float(s["marker"]) - 0.5) < 0.02, "the bar names the skill check's own key: \"%s\"" % s["text"])
 	var heard: Array = []
 	tp.pressed.connect(func(id: int, round: int, predicted: float) -> void: heard.append([id, round, predicted]))
 	_check(ic.press_timed(), "the interact key presses it")
@@ -188,6 +189,57 @@ func _run_component() -> void:
 		"another check at once: its press at the top, the last three below it, newest first (%d)" % rolling.size())
 	clock.set(&"_offset_usec", was_offset)
 	EntityRegistry.unregister(9901)
+	me.queue_free()
+	await get_tree().process_frame
+
+
+## THE SKILL CHECK'S OWN KEY (DECISIONS #218): a check comes up while the interact key is held (an egg
+## wobbles under a sitting hen), so it has a key of its own, Space, which does not also jump; and a
+## check of one press (a genre's, DECISIONS #219).
+func _run_check_key() -> void:
+	print("== press: the skill check's own key ==")
+	_check(InputMap.has_action(InteractionComponent.ACTION_SKILL_CHECK) and HoldPrompt.check_key_name() == "Space",
+		"the project has a skill check key, Space by default (%s)" % HoldPrompt.check_key_name())
+	_check(InputMap.has_action(LobbyPanel.ACTION_CHARACTER) and Settings.entry(&"skill_check").size() > 0
+		and Settings.entry(&"lobby_character").size() > 0, "and both new keys are in Settings, to rebind")
+	var me: SpaceTimeEntity = _player(9902)
+	var tp: TimedPressComponent = me.find_component(TimedPressComponent) as TimedPressComponent
+	var ic: InteractionComponent = me.find_component(InteractionComponent) as InteractionComponent
+	var rig := Node3D.new()
+	rig.name = "CameraRig"
+	me.add_child(rig)
+	var input := LocalInputComponent.new()
+	input.send_to_server = false
+	me.add_runtime_component(input)   # bound with the entity (it is bound already)
+	input.set_physics_process(false)
+	_release_all_actions()
+	Input.action_press(&"jump")
+	_check(input.sample().jump, "no check up: Space jumps")
+	Input.action_release(&"jump")
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"challenge", null, _ChallengeRow.new(50, 9902)))
+	var one := _SweepRow.new(50, 9902, 0.5)
+	one.rounds = 1
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"timed_press", null, one))
+	_check(tp.wants_press() and String(TimingBar.state_for(me)["text"]).begins_with("Press Space  (1 of 1)"),
+		"a check of one press: \"%s\"" % TimingBar.state_for(me)["text"])
+	Input.action_press(&"jump")
+	_check(not input.sample().jump, "while it is up, Space does not jump (a hen would leave her nest)")
+	Input.action_press(InteractionComponent.ACTION_SKILL_CHECK)
+	ic._physics_process(0.0)
+	Input.action_release(InteractionComponent.ACTION_SKILL_CHECK)
+	_check(tp.presses_made(50) == 1, "the skill check key presses it (%d made)" % tp.presses_made(50))
+	_check(not tp.wants_press(), "one press, and it wants no more")
+	_check(not input.sample().jump, "Space still held after the check: still no jump")
+	Input.action_release(&"jump")
+	input.sample()
+	Input.action_press(&"jump")
+	_check(input.sample().jump, "let go and pressed again: it jumps")
+	Input.action_release(&"jump")
+	var src: String = FileAccess.get_file_as_string("res://server/src/challenge.rs")
+	_check(src.contains("pub const GREAT_FROM: f32 = %s;" % str(ChallengeModel.GREAT_FROM)) and TimingBar.word_for(ChallengeModel.GREAT_FROM) == "Great"
+		and TimingBar.word_for(ChallengeModel.GREAT_FROM - 0.01) == "Good",
+		"Great from %s, the same number the server pays a genre's check by (challenge::GREAT_FROM)" % ChallengeModel.GREAT_FROM)
+	EntityRegistry.unregister(9902)
 	me.queue_free()
 	await get_tree().process_frame
 

@@ -84,9 +84,9 @@ func show_state(s: Dictionary) -> void:
 
 
 ## The interact key's name ("E"), from the input map.
-static func key_name() -> String:
-	if InputMap.has_action(InteractionComponent.ACTION_INTERACT):
-		for ev: InputEvent in InputMap.action_get_events(InteractionComponent.ACTION_INTERACT):
+static func key_name(action: StringName = InteractionComponent.ACTION_INTERACT) -> String:
+	if InputMap.has_action(action):
+		for ev: InputEvent in InputMap.action_get_events(action):
 			var k: InputEventKey = ev as InputEventKey
 			if k == null:
 				continue
@@ -98,7 +98,16 @@ static func key_name() -> String:
 				code = k.physical_keycode if headless else DisplayServer.keyboard_get_keycode_from_physical(k.physical_keycode)
 			if code != KEY_NONE:
 				return OS.get_keycode_string(code)
-	return "E"
+	return "E" if action == InteractionComponent.ACTION_INTERACT else String(action)
+
+
+## The key that presses a skill check (DECISIONS #218): its own, else the interact key (a game made
+## before it had one).
+static func check_key_name() -> String:
+	if InputMap.has_action(InteractionComponent.ACTION_SKILL_CHECK) \
+			and not InputMap.action_get_events(InteractionComponent.ACTION_SKILL_CHECK).is_empty():
+		return key_name(InteractionComponent.ACTION_SKILL_CHECK)
+	return key_name()
 
 
 ## The label and bar, for tests.

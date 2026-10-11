@@ -8,6 +8,7 @@
 //   shared/content/<owner>/status.json  -> $OUT_DIR/statuses.rs (`status::STATUSES`, DECISIONS #206)
 //   movement profiles and characters    -> $OUT_DIR/movement_limits.rs (each kind's Tier A bound)
 //   characters' abilities               -> $OUT_DIR/kind_abilities.rs (what each kind may use)
+//   characters players may choose       -> $OUT_DIR/content.rs (`PLAYABLE_KINDS`, DECISIONS #217)
 //   shared/content/<owner>/hold.json    -> $OUT_DIR/holds.rs (`hold::HOLDS`, DECISIONS #209)
 //
 // The foundation's content always; a genre's only when shared/game.json lists it.
@@ -71,6 +72,8 @@ pub fn run(listed: &[String]) {
     let mut characters: Vec<(u64, i64)> = Vec::new();
     // Each character's kind and the ability ids it lists (DECISIONS #207).
     let mut kind_abilities: Vec<(u64, Vec<i64>)> = Vec::new();
+    // The kinds a player may choose to play (DECISIONS #217): a character marked `playable`.
+    let mut playable: Vec<u64> = Vec::new();
     for (out, info) in &outputs {
         let owner = info["owner"].as_str().unwrap_or("");
         if owner != "foundation" && !listed.iter().any(|g| g == owner) {
@@ -131,6 +134,11 @@ pub fn run(listed: &[String]) {
                 characters.push((c["kind"].as_u64().unwrap_or(0), c["movement"].as_i64().unwrap_or(-1)));
                 let listed: Vec<i64> = c["abilities"].as_array().cloned().unwrap_or_default().iter().filter_map(|a| a.as_i64()).collect();
                 kind_abilities.push((c["kind"].as_u64().unwrap_or(0), listed));
+                let kind = c["kind"].as_u64().unwrap_or(0);
+                if c["playable"].as_bool().unwrap_or(false) && !playable.contains(&kind) {
+                    assert!(kind <= 255, "a playable character has kind {kind}: kinds are 0-255");
+                    playable.push(kind);
+                }
             }
         }
         if info["type"] == "ability" {
@@ -175,6 +183,13 @@ pub fn run(listed: &[String]) {
         src.push_str(line);
     }
     src.push_str("];\n");
+    playable.sort();
+    src.push_str(&format!(
+        "/// The kinds a player may choose to play (DECISIONS #217): every character marked playable.\n\
+         pub const PLAYABLE_KINDS: &[u8] = &[{}];\n\
+         /// Whether a player may choose to be a `kind`.\n\
+         pub fn is_playable(kind: u8) -> bool {{ PLAYABLE_KINDS.contains(&kind) }}\n",
+        playable.iter().map(|k| k.to_string()).collect::<Vec<_>>().join(", ")));
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("content.rs"), src).unwrap();
 }
 

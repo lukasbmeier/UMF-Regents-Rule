@@ -60,7 +60,7 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 			"half": float(last.get("half", 0.0)), "pips": _pips(tp, int(last["challenge_id"])),
 			"judged": [], "history": newest_first(tp)}
 	var round: int = tp.presses_made(id)
-	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.key_name(), round + 1, tp.rounds(id),
+	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.check_key_name(), round + 1, tp.rounds(id),
 		("   " + word) if not word.is_empty() and int(last["challenge_id"]) == id else ""]
 	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id),
 		"judged": tp.judged_positions(id), "history": newest_first(tp)}
@@ -84,7 +84,7 @@ static func _pips(tp: TimedPressComponent, id: int) -> Array:
 
 ## "Great", "Good", "Miss": a word for a press's quality.
 static func word_for(q: float) -> String:
-	if q >= 0.75:
+	if q >= ChallengeModel.GREAT_FROM:
 		return "Great"
 	if q > 0.0:
 		return "Good"

@@ -175,7 +175,7 @@ func try_skill_check(difficulty: float) -> ReducerRequest:
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"issue_challenge", [me, ChallengeModel.KIND_TIMED_PRESS, difficulty], ["u64", "u8", "f32"])
 	req.settled.connect(func(r: ReducerRequest) -> void:
 		if is_instance_valid(self) and _status != null:
-			_status.text = "a skill check: press %s in the zone" % HoldPrompt.key_name() if r.is_ok() else "skill check: %s" % r.error_message)
+			_status.text = "a skill check: press %s in the zone" % HoldPrompt.check_key_name() if r.is_ok() else "skill check: %s" % r.error_message)
 	return req
 
 

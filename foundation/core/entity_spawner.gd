@@ -29,6 +29,7 @@ var _world_ready: bool = false
 func _ready() -> void:
 	EntityRegistry.entity_row_inserted.connect(_on_entity_inserted)
 	EntityRegistry.entity_row_deleted.connect(_on_entity_deleted)
+	EntityRegistry.entity_row_updated.connect(_on_entity_updated)
 	SpaceTimeSync.world_ready.connect(_on_world_ready)
 	SpaceTimeSync.connection_state_changed.connect(_on_connection_state)
 	get_tree().process_frame.connect(_flush_despawns)
@@ -122,6 +123,43 @@ func _on_entity_deleted(ev: RowEvent) -> void:
 	# camera and any component state. `_flush_despawns` commits the delete a frame later, by
 	# which point a matching re-insert has had its chance to cancel it.
 	_pending_despawn[eid] = _nodes[eid]
+
+
+## AN ENTITY BECAME ANOTHER KIND (DECISIONS #217): its player chose another character (a hen made a
+## wolf in the lobby). Its node is built again from the new kind's definition: model, body, movement,
+## camera, components, all the new character's, exactly as if it had just arrived.
+func _on_entity_updated(ev: RowEvent) -> void:
+	var row: RefCounted = ev.current()
+	var node: SpaceTimeEntity = _nodes.get(ev.entity_id) as SpaceTimeEntity
+	if row == null or node == null or node.definition == null or row.get(&"kind") == null:
+		return
+	var kind: int = int(row.get(&"kind"))
+	if kind == node.definition.kind:
+		return
+	print("[EntitySpawner] entity %d is now a kind %d (was %d)" % [ev.entity_id, kind, node.definition.kind])
+	respawn(ev.entity_id)
+
+
+## The characters a player may choose to play (DECISIONS #217): one definition per playable kind, the
+## one this game registered for it, by kind.
+func playable_characters() -> Array[EntityDefinition]:
+	var kinds: Array[int] = []
+	for k: int in _by_kind.keys():
+		if _by_kind[k] != null and _by_kind[k].playable:
+			kinds.append(k)
+	for d: EntityDefinition in definitions:
+		if d != null and d.playable and not kinds.has(d.kind) and not _by_kind.has(d.kind):
+			kinds.append(d.kind)
+	kinds.sort()
+	var out: Array[EntityDefinition] = []
+	for k: int in kinds:
+		var d: EntityDefinition = _by_kind.get(k, null)
+		if d == null:
+			for each: EntityDefinition in definitions:
+				if each != null and each.kind == k:
+					d = each
+		out.append(d)
+	return out
 
 
 ## Runs once per frame. Anything still pending was a real delete, not a reconnect.

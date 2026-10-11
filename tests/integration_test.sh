@@ -390,6 +390,12 @@ PY
 )
 assert_eq "$VERDICT" "ok" "each press judged where the sweep had the marker at its arrival less the credit, against the seed's target, and scored their mean"
 
+# CHOOSING A CHARACTER (DECISIONS #217): only a character marked playable; the template marks none
+# (a game marks its own: Fowl Play's suite makes a hen a wolf and back).
+assert_rejected "choose_character 1" "not a character you can play" "an NPC's kind is not a character a player may choose"
+assert_rejected "choose_character 0" "not a character you can play" "nor, in the bare template, anything: it offers no characters"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $MYENT" 1)" "0" "a refused choice changes nothing"
+
 # A press is for a timed press; a timed press is never submitted.
 assert_ok "issue_challenge $MYENT 0 0.5" "a timing bar (kind 0)"
 BAR=$(sql_first "SELECT id FROM challenge" 1)

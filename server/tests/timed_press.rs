@@ -2,7 +2,8 @@
 //! the server. The client's twin (`ChallengeModel.sweep_position`...) is checked against the same
 //! numbers in the `challenge` unit suite.
 
-use umf_module::challenge::{judged_position, press_credit_ms, press_quality, sweep_period_s, sweep_position, KIND_TIMED_PRESS};
+use umf_module::challenge::{grade, judged_position, press_credit_ms, press_quality, sweep_period_s, sweep_position, Grade, GREAT_FROM,
+    KIND_TIMED_PRESS};
 
 #[test]
 fn the_sweep_goes_there_and_back() {
@@ -37,4 +38,15 @@ fn quality_and_difficulty() {
         "easy sweeps slowly, hard quickly");
     assert!((sweep_period_s(5.0, 2.4, 1.2) - 1.2).abs() < 1e-6, "difficulty is held to 0..1");
     assert_eq!(KIND_TIMED_PRESS, 1);
+}
+
+#[test]
+fn a_press_is_paid_in_the_words_the_player_saw() {
+    // DECISIONS #219: a genre pays its check by the grade the bar showed (TimingBar.word_for).
+    assert_eq!(GREAT_FROM, 0.75);
+    assert_eq!(grade(1.0), Grade::Great, "dead centre");
+    assert_eq!(grade(GREAT_FROM), Grade::Great, "Great from its threshold");
+    assert_eq!(grade(GREAT_FROM - 0.01), Grade::Good, "just under it: Good");
+    assert_eq!(grade(0.01), Grade::Good, "anything inside the zone: Good");
+    assert_eq!(grade(0.0), Grade::Miss, "outside it: a Miss");
 }

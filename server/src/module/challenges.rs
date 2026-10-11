@@ -57,22 +57,63 @@ pub(crate) fn issue_challenge_internal(
 /// The genre layer's way to start a Challenge. Wraps the internal helper so `game/` never
 /// depends on module-private functions — the hook surface stays small and documented.
 ///
-/// A SERVER-TIMED PRESS since 0.37.0 (DECISIONS #210): the player presses, the server judges when.
-/// (The timing bar it used to issue was judged from where the client said it stopped: an outcome.)
+/// A SERVER-TIMED PRESS of three presses, scored (DECISIONS #210, #219): the player presses, the
+/// server judges when. Until 0.39.0 this still issued the timing bar, judged from where the client
+/// said it stopped (an outcome), whatever its comment said; nothing called it.
 pub fn issue_challenge_for(
     ctx: &ReducerContext,
     entity_id: u64,
     difficulty: f32,
     payload: String,
 ) -> Result<u64, String> {
-    issue_challenge_internal(
-        ctx,
-        entity_id,
-        crate::challenge::KIND_TIMING_BAR,
-        difficulty,
-        payload,
-        CHALLENGE_TTL_MICROS,
-    )
+    issue_timed_press(ctx, entity_id, difficulty, crate::challenge::TIMING_ROUNDS as u8, true, payload, CHALLENGE_TTL_MICROS)
+}
+
+/// A GENRE'S SKILL CHECK (DECISIONS #219): a server-timed press for `entity_id`'s player, of `rounds`
+/// presses (1 to 3: an egg's wobble is one), at `difficulty` (0 easy to 1 hard), lasting `ttl_micros`.
+/// `scored`: whether the foundation's award (score and coins for every check) applies; a check whose
+/// result is the genre's own to pay (warmth, not points) says false. `payload` is the genre's (what the
+/// check is about). The genre hears it end in `on_challenge_closed`, and reads how it went with
+/// `press_result` (None: it ran out of time, or its player left).
+pub fn issue_timed_press(
+    ctx: &ReducerContext,
+    entity_id: u64,
+    difficulty: f32,
+    rounds: u8,
+    scored: bool,
+    payload: String,
+    ttl_micros: i64,
+) -> Result<u64, String> {
+    if rounds == 0 || rounds as usize > crate::challenge::TIMING_ROUNDS {
+        return Err(format!("a skill check of {rounds} presses: 1 to {}", crate::challenge::TIMING_ROUNDS));
+    }
+    if ttl_micros <= 0 || ttl_micros > 600_000_000 {
+        return Err(format!("challenge lifetime {ttl_micros} us is out of range"));
+    }
+    let id = issue_challenge_internal(ctx, entity_id, crate::challenge::KIND_TIMED_PRESS, difficulty, payload, ttl_micros)?;
+    if let Some(row) = ctx.db.timed_press().challenge_id().find(id) {
+        if row.rounds != rounds {
+            ctx.db.timed_press().challenge_id().update(TimedPress { rounds, ..row });
+        }
+    }
+    if !scored {
+        ctx.db.unscored_press().insert(UnscoredPress { challenge_id: id });
+    }
+    Ok(id)
+}
+
+/// END A CHALLENGE WHOSE TIME IS UP NOW (DECISIONS #219), rather than at the next prune (every 5 s): a
+/// genre whose check must land on time (a missed wobble cracks at once) calls this from its own tick.
+/// The same as the prune does: gone, its sweep forgotten, `on_challenge_closed` heard. True when it was.
+pub fn close_if_expired(ctx: &ReducerContext, challenge_id: u64) -> bool {
+    let Some(ch) = ctx.db.challenge().id().find(challenge_id) else { return false };
+    if ctx.timestamp <= ch.expires_at {
+        return false;
+    }
+    ctx.db.challenge().id().delete(ch.id);
+    forget_press(ctx, ch.id);
+    crate::game::on_challenge_closed(ctx, &ch);
+    true
 }
 
 /// Score a played FOUNDATION challenge (a timing bar, a timed press) for its player, and hand it to the
@@ -83,6 +124,13 @@ pub(crate) fn award_foundation_challenge(ctx: &ReducerContext, ch: &Challenge, q
     // centre after a decimal round-trip — scored 99 instead of 100. Losing a whole
     // point to float noise is indistinguishable from a bug to a player.
     let score = (quality * 100.0f32).round() as i64;
+    // A genre's own check (DECISIONS #219): the genre pays it, not the scoreboard.
+    if ctx.db.unscored_press().challenge_id().find(ch.id).is_some() {
+        ctx.db.unscored_press().challenge_id().delete(ch.id);
+        log::info!("challenge {}: quality {quality:.4}, the genre's to pay (unscored)", ch.id);
+        crate::game::on_challenge_succeeded(ctx, ch, quality);
+        return;
+    }
     let members: Vec<SessionMember> = ctx.db.session_member().entity_id().filter(ch.entity_id).collect();
     for mut m in members {
         m.score += score;

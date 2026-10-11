@@ -1,8 +1,8 @@
 class_name LobbyScreen extends CanvasLayer
 ## THE LOBBY SCREEN (DECISIONS #182): where a player lands after connecting, before the game. Everyone
 ## in the session stands on a stage in the looks they chose, with their names and whether they are
-## ready; the player picks their character (Choose character opens the character picker) and says
-## they are ready. When the match's first round starts the screen goes and the game is there. A
+## ready; the player picks which character to play (Play as, when the game has several: DECISIONS
+## #217) and its look (Choose look opens the character picker) and says they are ready. When the match's first round starts the screen goes and the game is there. A
 ## player who arrives in the middle of a match sees it too, with Join instead of Ready.
 ##
 ## Between rounds the in-world `LobbyPanel` takes over (it stays hidden while this is open). What
@@ -37,6 +37,7 @@ var _ready_button: Button = null
 var _team_button: Button = null
 var _join_button: Button = null
 var _character_button: Button = null
+var _play_as_button: Button = null
 var _viewport: SubViewport = null
 var _stage: Node3D = null
 var _camera: Camera3D = null
@@ -190,11 +191,17 @@ func _refresh(me: SessionComponent) -> void:
 	_team_button.visible = teams.size() > 1 and not started
 	if _team_button.visible:
 		_team_button.text = "Team: %s" % (teams[me.team()] if me.team() < teams.size() else "?")
-	_character_button.visible = character_page != null
+	var playing: EntityDefinition = LobbyPanel.my_character()
+	_play_as_button.visible = not started and playing != null and EntitySpawner.playable_characters().size() > 1
+	if _play_as_button.visible:
+		_play_as_button.text = "Play as: %s" % playing.display_name
+	# The looks are the picker's character's: offered while playing it.
+	_character_button.visible = character_page != null and playing != null \
+		and (character_page.definition == null or character_page.definition.kind == playing.kind)
 	var sig: String = str(rows)
 	for r: Dictionary in rows:
 		var ent: SpaceTimeEntity = EntityRegistry.get_entity(int(r["id"])) as SpaceTimeEntity
-		sig += "|%s" % (ent.appearance if ent != null else "")
+		sig += "|%s|%d" % [ent.appearance if ent != null else "", ent.definition.kind if ent != null and ent.definition != null else -1]
 	if sig != _drawn:
 		_drawn = sig
 		_draw_stage(rows)
@@ -239,7 +246,8 @@ func _build() -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override(&"separation", 12)
 	_content.add_child(buttons)
-	_character_button = _button(buttons, "Character", "Choose character", func() -> void: character_requested.emit())
+	_play_as_button = _button(buttons, "PlayAs", "Play as", play_another)
+	_character_button = _button(buttons, "Character", "Choose look", func() -> void: character_requested.emit())
 	_team_button = _button(buttons, "Team", "Team", _change_team)
 	_ready_button = _button(buttons, "Ready", "Ready", _toggle_ready)
 	_join_button = _button(buttons, "Join", "Join the game", join)
@@ -359,12 +367,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if InputMap.has_action(LobbyPanel.ACTION_READY) and event.is_action_pressed(LobbyPanel.ACTION_READY):
 		get_viewport().set_input_as_handled()
 		_toggle_ready()
+	elif InputMap.has_action(LobbyPanel.ACTION_CHARACTER) and event.is_action_pressed(LobbyPanel.ACTION_CHARACTER) \
+			and _play_as_button.visible:
+		get_viewport().set_input_as_handled()
+		play_another()
 
 
 func _toggle_ready() -> void:
 	var me: SessionComponent = _mine()
 	if me != null:
 		_ask(&"set_ready", [not me.is_ready()], ["bool"])
+
+
+## Play the next character a player may choose (Play as; C in the in-world lobby).
+func play_another() -> void:
+	var next: int = LobbyPanel.next_character()
+	if next >= 0:
+		_ask(&"choose_character", [next], ["u8"])
 
 
 func _change_team() -> void:

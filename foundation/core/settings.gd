@@ -41,8 +41,9 @@ const FOUNDATION_KEYS: Array[Array] = [
 	[&"move_forward", "Move forward"], [&"move_back", "Move back"],
 	[&"move_left", "Move left"], [&"move_right", "Move right"],
 	[&"jump", "Jump"], [&"sprint", "Sprint"], [&"move_slow", "Walk slowly"],
-	[&"interact", "Interact"], [&"camera_freelook", "Look around (hold)"],
+	[&"interact", "Interact"], [&"skill_check", "Skill check"], [&"camera_freelook", "Look around (hold)"],
 	[&"lobby_ready", "Ready (lobby)"], [&"lobby_team", "Change team (lobby)"],
+	[&"lobby_character", "Play another character (lobby)"],
 ]
 
 ## "" while running on the defaults alone (tests): nothing is read or written.

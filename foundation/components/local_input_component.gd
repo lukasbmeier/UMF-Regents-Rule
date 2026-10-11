@@ -50,6 +50,8 @@ var look_scale: float = 1.0
 
 var _seq: int = 0
 var _first_seq: int = 0
+## Jump held off since a skill check came up, until the key is let go (DECISIONS #218).
+var _jump_held_off: bool = false
 var _client_tick: int = 0
 ## Where the CAMERA looks. Mouse motion always moves this one.
 var _look_yaw: float = 0.0
@@ -209,6 +211,13 @@ func first_seq() -> int:
 	return _first_seq
 
 
+## Whether a skill check is waiting for this player's press (their TimedPressComponent).
+func _check_up() -> bool:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var tp: TimedPressComponent = ent.find_component(TimedPressComponent) as TimedPressComponent if ent != null else null
+	return tp != null and tp.wants_press()
+
+
 ## Build one frame from the current input state and emit it. Called every physics tick, and
 ## directly by tests so they do not have to wait on frames.
 func sample() -> InputFrame:
@@ -236,7 +245,13 @@ func sample() -> InputFrame:
 	f.move_dir = Vector2.ZERO if still else _sample_move_dir()
 	f.look_yaw = _body_yaw
 	f.look_pitch = _look_pitch
-	f.jump = not still and Input.is_action_pressed(ACTION_JUMP)
+	# NO JUMP DURING A SKILL CHECK (DECISIONS #218): its key is Space too, and a hen that jumped off her
+	# nest to press it would let go of the nest. Held off until the key is let go after the check.
+	if _check_up():
+		_jump_held_off = true
+	elif not Input.is_action_pressed(ACTION_JUMP):
+		_jump_held_off = false
+	f.jump = not still and not _jump_held_off and Input.is_action_pressed(ACTION_JUMP)
 	f.sprint = not still and Input.is_action_pressed(ACTION_SPRINT)
 	f.dash = not still and Input.is_action_pressed(ACTION_DASH)
 	f.slow = not still and Input.is_action_pressed(ACTION_SLOW)
