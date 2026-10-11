@@ -265,6 +265,15 @@ func _run_key_and_prompt() -> void:
 	var s: Dictionary = HoldPrompt.state_for(me)
 	_check(bool(s["visible"]) and String(s["text"]) == "Hold E: Help up" and float(s["progress"]) < 0.0,
 		"looking at them: \"%s\", no bar yet" % s["text"])
+	# A genre's word on it (DECISIONS #220): why the server would refuse it, shown dimmed after it.
+	var note := func(_m: SpaceTimeEntity, target_id: int, hold: HoldDef) -> String:
+		return "not yet" if target_id == 9802 and hold == h else ""
+	HoldPrompt.add_note(note)
+	s = HoldPrompt.state_for(me)
+	_check(String(s["text"]) == "Hold E: Help up  ·  not yet" and String(s["note"]) == "not yet" and Color(s["color"]) != h.color,
+		"a genre's note follows the prompt, dimmed: \"%s\"" % s["text"])
+	HoldPrompt.remove_note(note)
+	_check(String(HoldPrompt.state_for(me)["text"]) == "Hold E: Help up", "taken away: the plain prompt again")
 	var on_down: HoldComponent = down.find_component(HoldComponent) as HoldComponent
 	on_down.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"hold_progress", null, _HoldRow.new(91, 9802, h.id, 0.5, 0.0, 0.0, 1)))
 	s = HoldPrompt.state_for(me)

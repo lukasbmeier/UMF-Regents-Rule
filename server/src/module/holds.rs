@@ -189,6 +189,29 @@ pub fn begin_hold(ctx: &ReducerContext, actor_id: u64, target_id: u64, verb: u8)
     Ok(())
 }
 
+/// A GENRE MOVES A HOLD ALONG, OR BACK (DECISIONS #220): `by` (a share of the whole: +0.03 for a great
+/// wobble, -0.25 for a raid) added to how far along it is now, held to 0..1, and the line drawn on from
+/// there at the same pace. Then settled as any change is: done when it reached 1 (its `then` status,
+/// `on_hold_completed`), gone when undone to nothing with nobody doing it. Nothing for a row that is not
+/// being done (gone, or shown done). True when it moved.
+pub fn nudge_hold(ctx: &ReducerContext, hold_id: u64, by: f32) -> bool {
+    let Some(row) = ctx.db.hold_progress().hold_id().find(hold_id) else { return false };
+    if row.state != GOING || !by.is_finite() {
+        return false;
+    }
+    let now = hold::progress_at(row.progress, row.rate, secs_since(ctx, row.at));
+    let moved = (now + by).clamp(0.0, 1.0);
+    log::info!("hold {} on {}: moved {by:+.3} by its genre ({now:.3} -> {moved:.3})", row.hold, row.entity_id);
+    ctx.db.hold_progress().hold_id().update(HoldProgress { progress: moved, at: ctx.timestamp, ..row });
+    settle(ctx, hold_id);
+    true
+}
+
+/// How far along `row` is now (0..1), from its line.
+pub fn hold_progress_now(ctx: &ReducerContext, row: &HoldProgress) -> f32 {
+    hold::progress_at(row.progress, row.rate, secs_since(ctx, row.at)).clamp(0.0, 1.0)
+}
+
 /// `actor_id` stops holding whatever it holds (`why`: `hold::left`), and what it held is settled again.
 pub fn let_go(ctx: &ReducerContext, actor_id: u64, why: u8) {
     let Some(m) = ctx.db.hold_member().entity_id().find(actor_id) else { return };

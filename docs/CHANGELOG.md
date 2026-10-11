@@ -568,3 +568,8 @@ What Fowl Play's nest needs from the foundation (DECISIONS #217, #218, #219).
 - **A genre's own skill checks** (DECISIONS #219): `issue_timed_press(entity, difficulty, rounds, scored, payload, ttl)`, with 1 to 3 presses and the choice not to score them (the foundation adds score and coins for every check; a wobble's result is warmth, not points); `press_result(challenge_id)` tells a genre how it went when it closes (None: it ran out of time); `close_if_expired` ends one on time from the genre's own tick, rather than at the next 5 s prune; `challenge::grade` gives Great/Good/Miss by the same threshold the bar shows (`GREAT_FROM`, 0.75, checked against the client's).
 - **Fixed**: `issue_challenge_for` (a genre's way to start a check) still issued the old timing bar, judged from where the client said it stopped, whatever its comment said; nothing called it. It issues a three-press timed press now.
 - Server change: republish (new reducer and private table; additive, old clients unaffected).
+
+## 0.39.1 — a genre moves a hold along; a word on the prompt
+- `nudge_hold(hold_id, by)` (DECISIONS #220): a genre adds to or takes from how far along a hold is (a great wobble warms a nest 3 %, a raid cools it 25 %), and it is settled as any change is: done at 1, gone when undone with nobody on it. `hold_progress_now` reads how far along one is.
+- `HoldPrompt.add_note(func(me, target_id, hold) -> String)`: a genre says why a hold would be refused before the player tries, shown dimmed after the prompt ("Hold E: Lay an egg  ·  you can lay again in 12 s").
+- Server change: republish (no new table or reducer).

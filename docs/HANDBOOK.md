@@ -655,7 +655,8 @@ status on yourself**; Rules also has **Go to** a player). What your character fa
 target (a 120-degree arc in front of it: `InteractionComponent.front_arc_deg`); in third person the
 crosshair has no say, in first person it goes first (`targeting`, AUTO from the camera rig). In code, a genre refuses one in `may_hold`, changes its speed in `hold_rate`
 (a nest cooling while nobody sits on it) and hears it done in `on_hold_completed`; its bots hold with
-`begin_interact_as`.
+`begin_interact_as`. It moves one along or back with `nudge_hold` (a raid cools a nest), and says why
+one would be refused, on the prompt, with `HoldPrompt.add_note`.
 
 **Skill checks: press when the marker is in the zone.** Server-timed (DECISIONS #210): the player's
 game says only "pressed" and the server works out where the marker was when they saw it, so lag does

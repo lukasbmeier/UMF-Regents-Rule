@@ -11,6 +11,35 @@ class_name HoldPrompt extends VBoxContainer
 var _label: Label
 var _bar: ProgressBar
 
+## A GENRE'S WORD ON A HOLD (DECISIONS #220): each `func(me: SpaceTimeEntity, target_id: int, hold:
+## HoldDef) -> String`, asked while the prompt offers a hold; the first that says something is shown
+## after it, dimmed ("Hold E: Lay an egg  ·  you can lay again in 12 s"): why the server would refuse
+## it, before the player tries. Added with `add_note`, from a genre's HUD.
+static var _notes: Array[Callable] = []
+
+
+## Add a genre's note (see `_notes`). Once per callable.
+static func add_note(note: Callable) -> void:
+	if note.is_valid() and not _notes.has(note):
+		_notes.append(note)
+
+
+## Take one away (a genre's HUD leaving the tree).
+static func remove_note(note: Callable) -> void:
+	_notes.erase(note)
+
+
+## What the genres say about `hold` on `target_id` for `me`: the first non-empty note, or "".
+static func note_for(me: SpaceTimeEntity, target_id: int, hold: HoldDef) -> String:
+	for n: Callable in _notes.duplicate():
+		if not n.is_valid():
+			_notes.erase(n)
+			continue
+		var said: String = String(n.call(me, target_id, hold))
+		if not said.is_empty():
+			return said
+	return ""
+
 
 func _init() -> void:
 	name = "HoldPrompt"
@@ -68,8 +97,10 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 	var there: SpaceTimeEntity = EntityRegistry.get_entity(ic.get_target()) as SpaceTimeEntity
 	var hc: HoldComponent = there.find_component(HoldComponent) as HoldComponent if there != null else null
 	var already: int = hc.hold_id_for(h.id) if hc != null else -1
-	return {"visible": true, "text": "Hold %s: %s" % [key_name(), h.prompt],
-		"progress": hc.progress(already) if already >= 0 else -1.0, "color": h.color}
+	var note: String = note_for(me, ic.get_target(), h)
+	return {"visible": true, "text": "Hold %s: %s" % [key_name(), h.prompt] + ("  ·  " + note if not note.is_empty() else ""),
+		"progress": hc.progress(already) if already >= 0 else -1.0,
+		"color": h.color if note.is_empty() else h.color.darkened(0.45), "note": note}
 
 
 func show_state(s: Dictionary) -> void:
