@@ -395,6 +395,9 @@ assert_eq "$VERDICT" "ok" "each press judged where the sweep had the marker at i
 assert_rejected "choose_character 1" "not a character you can play" "an NPC's kind is not a character a player may choose"
 assert_rejected "choose_character 0" "not a character you can play" "nor, in the bare template, anything: it offers no characters"
 assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $MYENT" 1)" "0" "a refused choice changes nothing"
+assert_ok "set_character_of $MYENT 1" "an authority may make any entity any kind (a bot a wolf; here, an NPC's)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $MYENT" 1)" "1" "and it is"
+assert_ok "set_character_of $MYENT 0" "and back"
 
 # A press is for a timed press; a timed press is never submitted.
 assert_ok "issue_challenge $MYENT 0 0.5" "a timing bar (kind 0)"

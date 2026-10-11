@@ -573,3 +573,7 @@ What Fowl Play's nest needs from the foundation (DECISIONS #217, #218, #219).
 - `nudge_hold(hold_id, by)` (DECISIONS #220): a genre adds to or takes from how far along a hold is (a great wobble warms a nest 3 %, a raid cools it 25 %), and it is settled as any change is: done at 1, gone when undone with nobody on it. `hold_progress_now` reads how far along one is.
 - `HoldPrompt.add_note(func(me, target_id, hold) -> String)`: a genre says why a hold would be refused before the player tries, shown dimmed after the prompt ("Hold E: Lay an egg  ·  you can lay again in 12 s").
 - Server change: republish (no new table or reducer).
+
+## 0.39.2 — an authority sets anyone's character
+- `set_character_of(entity_id, kind)` (DECISIONS #217): an authority (an admin, the world's sidecar) makes any entity any kind, playable or not: the sidecar making a bot the wolf, and a game whose players start as something else (Fowl Play's hens) handing the foundation's own suite a plain player in its `integration_init` hook.
+- Server change: republish (a new reducer; additive).

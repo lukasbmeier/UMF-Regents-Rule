@@ -30,6 +30,16 @@ pub fn choose_character(ctx: &ReducerContext, kind: u8) -> Result<(), String> {
     set_character_internal(ctx, player.entity_id, kind)
 }
 
+/// AUTHORITY: make `entity_id` (anyone's, a bot's) a `kind`, playable or not: the sidecar making a bot a
+/// wolf, an admin's tools, a game's suite handing the foundation's checks a plain player (kind 0) when
+/// the game starts its players as something else. A genre's `may_choose_character` is not asked.
+#[reducer]
+pub fn set_character_of(ctx: &ReducerContext, entity_id: u64, kind: u8) -> Result<(), String> {
+    let ent = ctx.db.entity().entity_id().find(entity_id).ok_or("set_character_of: no such entity")?;
+    require_authority(ctx, ent.world_id)?;
+    set_character_internal(ctx, entity_id, kind)
+}
+
 /// Make `entity_id` a `kind` (a genre's code: a new player starts as a hen; a bot is made a wolf). It
 /// lets go of what it was holding (a hen's nest is not a wolf's), and every genre hears it.
 pub fn set_character_internal(ctx: &ReducerContext, entity_id: u64, kind: u8) -> Result<(), String> {
