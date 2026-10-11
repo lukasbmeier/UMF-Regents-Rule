@@ -1,8 +1,8 @@
 class_name TimingBar extends Control
 ## THE TIMED PRESS ON SCREEN (DECISIONS #210): the bar, the target for this press, the marker sweeping
 ## by the server's clock, a pip per press (what this client predicted, then what the server judged),
-## and, under the bar, a strip for each RECENT press, across checks, oldest first (DECISIONS #214,
-## #215): that press's zone (lighter, its Great band brighter), a WHITE line where the marker was
+## and, under the bar, a strip for each RECENT press, across checks, NEWEST AT THE TOP, flowing down
+## as more are made (DECISIONS #214, #215, #216): that press's zone (lighter, its Great band brighter), a WHITE line where the marker was
 ## drawn when it was pressed and an ORANGE one where the server judged it, so a player can tell their
 ## timing from the game's. A word for the last press ("Great", "Good", "Miss"). After the last press
 ## it all stays until the player moves away, or 15 s (`TimedPressComponent.results_linger_s`). It reads the local player's
@@ -58,12 +58,19 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 			return none
 		return {"visible": true, "text": word, "marker": float(last["position"]), "target": float(last.get("target", 0.5)),
 			"half": float(last.get("half", 0.0)), "pips": _pips(tp, int(last["challenge_id"])),
-			"judged": [], "history": tp.recent_presses()}
+			"judged": [], "history": newest_first(tp)}
 	var round: int = tp.presses_made(id)
 	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.key_name(), round + 1, tp.rounds(id),
 		("   " + word) if not word.is_empty() and int(last["challenge_id"]) == id else ""]
 	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id),
-		"judged": tp.judged_positions(id), "history": tp.recent_presses()}
+		"judged": tp.judged_positions(id), "history": newest_first(tp)}
+
+
+## The recent presses as the strips show them: newest at the top (Luke: "like it's flowing down").
+static func newest_first(tp: TimedPressComponent) -> Array[Dictionary]:
+	var out: Array[Dictionary] = tp.recent_presses()
+	out.reverse()
+	return out
 
 
 static func _pips(tp: TimedPressComponent, id: int) -> Array:

@@ -556,3 +556,7 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The results stay until you move away** (half a metre), or 15 s (`TimedPressComponent.results_linger_s`, `results_move_m`), instead of 1.5 s.
 - **Rolling**: the last six presses stay listed, across checks, so a check started at once shows the previous one's presses above its own.
 - No server change: nothing to republish.
+
+## 0.38.3 — newest press at the top
+- The skill check's strips list the newest press at the top, the older ones flowing down beneath it (Luke), DECISIONS #216.
+- No server change: nothing to republish.

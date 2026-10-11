@@ -138,8 +138,8 @@ func _run_component() -> void:
 	_check(absf(tp.marker(42) - marker_before - 0.08) < 0.03, "and the marker drawn that much on (%.3f -> %.3f)" % [marker_before, tp.marker(42)])
 	_check(TimingBar.state_for(me)["judged"] == [0.5], "the bar marks where the server judged the press")
 	var hist: Array = TimingBar.state_for(me)["history"]
-	_check(hist.size() == 2 and is_equal_approx(float(hist[0]["target"]), centre) and is_equal_approx(float(hist[0]["judged"]), 0.5)
-		and float(hist[0]["pressed"]) > 0.0 and float(hist[1]["judged"]) < 0.0,
+	_check(hist.size() == 2 and is_equal_approx(float(hist[1]["target"]), centre) and is_equal_approx(float(hist[1]["judged"]), 0.5)
+		and float(hist[1]["pressed"]) > 0.0 and float(hist[0]["judged"]) < 0.0,
 		"and under it each press made: its zone, where it was drawn when pressed, where it was judged (the second still to be judged): %s" % str(hist))
 	var again := _SweepRow.new(42, 9901, 0.7, [0.9])
 	again.at_ms = judged_row.at_ms
@@ -156,8 +156,8 @@ func _run_component() -> void:
 	_check(judged.size() == 3 and bool(s["visible"]) and String(s["text"]) == "Miss", "every press judged; the last word shows: \"%s\"" % s["text"])
 	var centres: Vector3 = ChallengeModel.timing_centers(12345)
 	var strips: Array = s["history"]
-	_check(strips.size() == 3 and is_equal_approx(float(strips[0]["target"]), centres.x) and is_equal_approx(float(strips[1]["target"]), centres.y)
-		and is_equal_approx(float(strips[2]["target"]), centres.z) and is_equal_approx(float(s["target"]), centres.z),
+	_check(strips.size() == 3 and is_equal_approx(float(strips[2]["target"]), centres.x) and is_equal_approx(float(strips[1]["target"]), centres.y)
+		and is_equal_approx(float(strips[0]["target"]), centres.z) and is_equal_approx(float(s["target"]), centres.z),
 		"after the check, each press's strip keeps ITS zone, not the middle (Luke): %s" % str(strips.map(func(h: Dictionary) -> float: return h["target"])))
 	_check(tp.results_visible(), "the results stay while the player stands still")
 	me.global_position += Vector3(1.0, 0.0, 0.0)
@@ -183,8 +183,9 @@ func _run_component() -> void:
 	tp.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"timed_press", null, sweep43))
 	tp.press()
 	var rolling: Array = TimingBar.state_for(me)["history"]
-	_check(rolling.size() == 4 and int(rolling[0]["challenge_id"]) == 42 and int(rolling[3]["challenge_id"]) == 43
-		and float(rolling[3]["judged"]) < 0.0, "another check at once: the last three presses stay listed above the new one's (%d)" % rolling.size())
+	_check(rolling.size() == 4 and int(rolling[0]["challenge_id"]) == 43 and float(rolling[0]["judged"]) < 0.0
+		and int(rolling[1]["challenge_id"]) == 42 and int(rolling[1]["round"]) == 2 and int(rolling[3]["round"]) == 0,
+		"another check at once: its press at the top, the last three below it, newest first (%d)" % rolling.size())
 	clock.set(&"_offset_usec", was_offset)
 	EntityRegistry.unregister(9901)
 	me.queue_free()
