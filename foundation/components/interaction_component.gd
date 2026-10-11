@@ -18,15 +18,16 @@ class_name InteractionComponent extends SpaceTimeComponent
 ## then measured from the PLAYER to the target, which is the same distance the server checks
 ## (`INTERACT_RANGE` in module.rs) — the prompt has to promise only what the server will allow.
 ##
-## IN FRONT OF THE CHARACTER, NOT ONLY UNDER THE CROSSHAIR (DECISIONS #211, #213). In third person a
-## player looks around while they act (a predator scouting), and facing a downed teammate must be
-## enough: Luke had to swing the camera onto one to see "Hold E: Help up". `targeting`: the
-## crosshair's target, else the one in FRONT of the character: within reach, inside `front_arc_deg`
-## (120: a hitbox across the front of the model) of the way the character faces, nearest and most
-## squarely in front first. Not behind, not beside: someone at your shoulder is not what you are
-## looking at (Luke: "a full 1.5 m check is not immersive"). Only what there is something to do with
-## counts: an entity a hold applies to, or one `nearby_wanted` accepts (a genre's), so a crowd of
-## players is never "the target". The crosshair still wins when it is on something.
+## WHAT IS IN FRONT OF THE CHARACTER (DECISIONS #211, #213, #214). In third person a player looks
+## around while they act (a predator scouting), so the CHARACTER decides, not the camera: the target
+## is in FRONT of it, within reach and inside `front_arc_deg` (120: a hitbox across the front of the
+## model), nearest and most squarely in front first; never beside or behind. In third person the
+## crosshair has no say at all (Luke: the ray offered Help up for someone the character was not
+## facing); in first person, where the crosshair IS where the character looks, it goes first
+## (`targeting` AUTO, from the camera rig). Only what there is something to do with counts: an
+## entity a hold applies to (a downed teammate), anything that is not a person (a resource node, a
+## genre's own kinds), a prop in the `interactable` group, or what a genre's `nearby_wanted`
+## accepts, so a crowd of players standing about is never "the target".
 ##
 ## HOLDS (DECISIONS #209). Where a press would start a hold (`HoldDef.find`: the target's kind and
 ## status, this player's kind, the verb: helping a downed teammate up), the key is HELD: down begins
@@ -41,13 +42,17 @@ signal target_changed(entity_id: int)
 signal interact_requested(entity_id: int)
 
 const NO_TARGET: int = -1
+## People (module `entity_kind`): offered in front only when there is something to do with them.
+const KIND_PLAYER: int = 0
+const KIND_NPC: int = 1
 const GROUP_INTERACTABLE: StringName = &"interactable"
 const ACTION_INTERACT: StringName = &"interact"
 
-enum Targeting { CROSSHAIR, NEARBY, BOTH }
-## How the target is chosen: what the crosshair is on, what is in front of the character, or the
-## crosshair's and else the one in front.
-@export var targeting: Targeting = Targeting.BOTH
+enum Targeting { CROSSHAIR, NEARBY, BOTH, AUTO }
+## How the target is chosen: what the crosshair is on, what is in front of the character, the
+## crosshair's and else the one in front, or AUTO: in front only in third person, both in first
+## person (the camera rig's `first_person`).
+@export var targeting: Targeting = Targeting.AUTO
 ## The arc in front of the character (the whole of it, centred on where it faces) inside which
 ## something within reach is the target without the crosshair on it.
 @export_range(0.0, 360.0, 1.0, "suffix:deg") var front_arc_deg: float = 120.0
@@ -220,10 +225,20 @@ func announce_interact(target_id: int) -> void:
 
 ## Recompute the target. Split out of `_physics_process` so a test can step it deliberately.
 func scan() -> void:
-	var id: int = _raycast_target() if targeting != Targeting.NEARBY else NO_TARGET
-	if id == NO_TARGET and targeting != Targeting.CROSSHAIR:
+	var how: Targeting = effective_targeting()
+	var id: int = _raycast_target() if how == Targeting.CROSSHAIR or how == Targeting.BOTH else NO_TARGET
+	if id == NO_TARGET and how != Targeting.CROSSHAIR:
 		id = nearby_target()
 	_set_target(id)
+
+
+## How the target is chosen now: `targeting`, with AUTO settled by the camera: in front of the
+## character only in third person (or with no rig), the crosshair first in first person.
+func effective_targeting() -> Targeting:
+	if targeting != Targeting.AUTO:
+		return targeting
+	var rig: CameraRig = (entity as Node).get_node_or_null(^"CameraRig") as CameraRig if entity != null else null
+	return Targeting.BOTH if rig != null and rig.config != null and rig.config.first_person else Targeting.NEARBY
 
 
 ## THE TARGET IN FRONT: of the entities there is something to do with (`_wanted_nearby`), the one
@@ -236,11 +251,18 @@ func nearby_target() -> int:
 	var facing: Vector3 = facing()
 	var best: int = NO_TARGET
 	var best_score: float = INF
+	# Every entity, and every prop standing in for one (`interactable`, with an `entity_id`).
+	var candidates: Array = []
 	for id: int in EntityRegistry.all_entity_ids():
-		if id == entity_id:
-			continue
-		var node: Node3D = EntityRegistry.get_entity(id) as Node3D
-		if node == null or not node.is_inside_tree() or not node.visible:
+		candidates.append([id, EntityRegistry.get_entity(id) as Node3D, false])
+	if is_inside_tree():
+		for n: Node in get_tree().get_nodes_in_group(GROUP_INTERACTABLE):
+			if n is Node3D and n.has_meta(&"entity_id"):
+				candidates.append([int(n.get_meta(&"entity_id")), n as Node3D, true])
+	for c: Array in candidates:
+		var id: int = int(c[0])
+		var node: Node3D = c[1]
+		if id == entity_id or node == null or not node.is_inside_tree() or not node.visible:
 			continue
 		var to: Vector3 = node.global_position - body.global_position
 		var d: float = to.length()
@@ -248,7 +270,7 @@ func nearby_target() -> int:
 			continue
 		var flat: Vector3 = Vector3(to.x, 0.0, to.z)
 		var angle: float = rad_to_deg(facing.angle_to(flat)) if flat.length() > 0.05 else 0.0
-		if angle > front_arc_deg * 0.5 or not _wanted_nearby(id):
+		if angle > front_arc_deg * 0.5 or not (bool(c[2]) or _wanted_nearby(id)):
 			continue
 		var score: float = d + angle / 90.0
 		if score < best_score:
@@ -268,8 +290,13 @@ func facing() -> Vector3:
 	return -(entity as Node3D).global_transform.basis.z if entity is Node3D else Vector3.FORWARD
 
 
+## Whether entity `id` is something to offer when it is in front: a hold applies to it, it is not a
+## person (a resource node, a genre's own kind: what `interact` is for), or a genre says so.
 func _wanted_nearby(id: int) -> bool:
 	if hold_for(id) != null:
+		return true
+	var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+	if e != null and e.definition != null and e.definition.kind != KIND_PLAYER and e.definition.kind != KIND_NPC:
 		return true
 	return nearby_wanted.is_valid() and bool(nearby_wanted.call(id))
 

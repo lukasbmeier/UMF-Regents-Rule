@@ -233,6 +233,11 @@ func _run_match_tests() -> void:
 		"and a tip, one of its own (\"%s\"), for five seconds" % splash.shown_line())
 	_check(not splash.ripples and not splash._ripples.visible, "no water ripples unless the game wants them (a fishing game)")
 	splash.play()
+	splash._process(0.0)
+	_check(splash.visible and splash._root.modulate.a == 1.0 and (splash.find_child("Splash", true, false) as Control).get_child(0) is ColorRect
+		and ((splash.find_child("Splash", true, false) as Control).get_child(0) as ColorRect).color.a == 1.0,
+		"from its first frame an opaque background covers the level (nothing of it shows through)")
+	_check(splash._content.modulate.a < 0.05, "while the words start to fade in on it")
 	splash._process(splash.fade_sec)
 	_check(splash.visible and is_equal_approx(splash._root.modulate.a, 1.0) and not done[0], "it fades in and holds")
 	var click := InputEventMouseButton.new()

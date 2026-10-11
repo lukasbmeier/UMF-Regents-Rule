@@ -71,6 +71,13 @@ class _StatusRow extends RefCounted:
 		since = ClockSync.server_usec()
 
 
+## An interaction component whose crosshair is on whatever the test says (no camera needed).
+class _Aimed extends InteractionComponent:
+	var aimed: int = -1
+	func _raycast_target() -> int:
+		return aimed
+
+
 ## Records the poses asked of it instead of playing them.
 class _PoseRecorder extends AnimationDriverComponent:
 	var held: StringName = &""
@@ -322,8 +329,67 @@ func _run_nearby() -> void:
 	ic.targeting = InteractionComponent.Targeting.CROSSHAIR
 	ic.scan()
 	_check(ic.get_target() == InteractionComponent.NO_TARGET, "and with the crosshair only, nothing (none is under it)")
-	ic.targeting = InteractionComponent.Targeting.BOTH
+	ic.targeting = InteractionComponent.Targeting.AUTO
+	# Not a person: a resource node (or a genre's own kind) in front is offered without a hold.
+	var node_def := EntityDefinition.new()
+	node_def.kind = 2
+	var node := SpaceTimeEntity.new()
+	node.definition = node_def
+	get_tree().root.add_child(node)
+	node.entity_id = 9815
+	node._is_bound = true
+	EntityRegistry.register(9815, node)
+	near.visible = true
+	near.global_position = Vector3(0.0, 0.0, 2.0)   # behind
+	front.global_position = Vector3(0.0, 0.0, 2.5)
+	node.global_position = Vector3(0.2, 0.0, -1.2)
+	ic.scan()
+	_check(ic.get_target() == 9815, "a resource node in front (no hold, not a person): the target, to use")
+	EntityRegistry.unregister(9815)
+	node.queue_free()
+	var prop := StaticBody3D.new()
+	prop.add_to_group(InteractionComponent.GROUP_INTERACTABLE)
+	prop.set_meta(&"entity_id", 9816)
+	get_tree().root.add_child(prop)
+	prop.global_position = Vector3(-0.3, 0.0, -1.0)
+	ic.scan()
+	_check(ic.get_target() == 9816, "and a prop standing in for an entity (`interactable`), in front")
+	prop.queue_free()
+	await get_tree().process_frame
 	for e: SpaceTimeEntity in [me, front, standing, near]:
+		EntityRegistry.unregister(e.entity_id)
+		e.queue_free()
+	await get_tree().process_frame
+
+	# THE CROSSHAIR HAS NO SAY IN THIRD PERSON (DECISIONS #214): on a downed teammate the character is
+	# not facing, it offers nothing; in first person it goes first.
+	var aimer := SpaceTimeEntity.new()
+	aimer.definition = load("res://foundation/content/character/humanoid.tres") as EntityDefinition
+	get_tree().root.add_child(aimer)
+	aimer.entity_id = 9821
+	aimer.is_local_authority = true
+	var aim := _Aimed.new()
+	aimer.add_runtime_component(aim)
+	aim.bind(aimer, {})
+	aim.set_physics_process(false)
+	aimer._is_bound = true
+	EntityRegistry.register(9821, aimer)
+	aimer.global_position = Vector3.ZERO
+	var behind: SpaceTimeEntity = _registered(9822, "res://foundation/content/character/humanoid.tres", StatusDef.DOWNED, false)
+	behind.global_position = Vector3(1.2, 0.0, 0.6)   # beside and behind the character's front
+	aim.aimed = 9822
+	aim.scan()
+	_check(aim.effective_targeting() == InteractionComponent.Targeting.NEARBY and aim.get_target() == InteractionComponent.NO_TARGET,
+		"third person: the crosshair on a downed teammate the character is not facing offers nothing")
+	var rig := CameraRig.new()
+	rig.name = "CameraRig"
+	rig.config = CameraRigConfig.new()
+	rig.config.first_person = true
+	aimer.add_child(rig)
+	aim.scan()
+	_check(aim.effective_targeting() == InteractionComponent.Targeting.BOTH and aim.get_target() == 9822,
+		"first person: the crosshair is where the character looks, and goes first")
+	for e: SpaceTimeEntity in [aimer, behind]:
 		EntityRegistry.unregister(e.entity_id)
 		e.queue_free()
 	await get_tree().process_frame

@@ -1,12 +1,16 @@
 class_name TimingBar extends Control
 ## THE TIMED PRESS ON SCREEN (DECISIONS #210): the bar, the target for this press, the marker sweeping
 ## by the server's clock, a pip per press (what this client predicted, then what the server judged),
-## a tick where the server judged each press (so a gap between what was seen and what was judged
-## shows: DECISIONS #213), and a word for the last one ("Great", "Good", "Miss"). It reads the local player's
+## and, under the bar, a strip for each press made (DECISIONS #214): that press's zone (lighter, its
+## Great band brighter), a WHITE line where the marker was drawn when it was pressed and an ORANGE
+## one where the server judged it, so a player can tell their timing from the game's. A word for the
+## last press ("Great", "Good", "Miss"). It reads the local player's
 ## `TimedPressComponent` every frame and owns nothing. The foundation's HUD carries one; a genre's
 ## HUD adds its own with `TimingBar.new()`.
 
 const BAR_SIZE: Vector2 = Vector2(360, 18)
+## The height of each press's strip under the bar.
+const HISTORY_ROW: float = 10.0
 ## How long the last press's word stays once the challenge is over.
 const RESULT_MSEC: int = 1500
 
@@ -40,7 +44,7 @@ func _process(_delta: float) -> void:
 
 ## What the bar shows for `me`: {visible, text, marker, target, half, pips: [[predicted, judged]]}.
 static func state_for(me: SpaceTimeEntity) -> Dictionary:
-	var none: Dictionary = {"visible": false, "text": "", "marker": 0.0, "target": 0.5, "half": 0.0, "pips": [], "judged": []}
+	var none: Dictionary = {"visible": false, "text": "", "marker": 0.0, "target": 0.5, "half": 0.0, "pips": [], "judged": [], "history": []}
 	if me == null or not is_instance_valid(me):
 		return none
 	var tp: TimedPressComponent = me.find_component(TimedPressComponent) as TimedPressComponent
@@ -54,12 +58,24 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 			return none
 		return {"visible": true, "text": word, "marker": float(last["position"]), "target": tp.target(int(last["challenge_id"]), int(last["round"])),
 			"half": tp.half_width(int(last["challenge_id"])), "pips": _pips(tp, int(last["challenge_id"])),
-			"judged": tp.judged_positions(int(last["challenge_id"]))}
+			"judged": tp.judged_positions(int(last["challenge_id"])), "history": history(tp, int(last["challenge_id"]))}
 	var round: int = tp.presses_made(id)
 	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.key_name(), round + 1, tp.rounds(id),
 		("   " + word) if not word.is_empty() and int(last["challenge_id"]) == id else ""]
 	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id),
-		"judged": tp.judged_positions(id)}
+		"judged": tp.judged_positions(id), "history": history(tp, id)}
+
+
+## Each press made on `id`, in order: {target, half, pressed (drawn), judged (-1: not yet), quality (-1)}.
+static func history(tp: TimedPressComponent, id: int) -> Array:
+	var out: Array = []
+	var pressed: Array = tp.pressed_positions(id)
+	var judged: Array = tp.judged_positions(id)
+	var q: Array = tp.qualities(id)
+	for i: int in pressed.size():
+		out.append({"target": tp.target(id, i), "half": tp.half_width(id), "pressed": float(pressed[i]),
+			"judged": float(judged[i]) if i < judged.size() else -1.0, "quality": float(q[i]) if i < q.size() else -1.0})
+	return out
 
 
 static func _pips(tp: TimedPressComponent, id: int) -> Array:
@@ -96,10 +112,22 @@ func _draw() -> void:
 	var t: float = float(_state["target"])
 	draw_rect(Rect2(Vector2((t - half) * w, 0), Vector2(half * 2.0 * w, BAR_SIZE.y)), Color(0.3, 0.8, 0.4, 0.6))
 	draw_rect(Rect2(Vector2((t - half * 0.25) * w, 0), Vector2(half * 0.5 * w, BAR_SIZE.y)), Color(0.5, 1.0, 0.5, 0.8))
-	for j: Variant in _state.get("judged", []) as Array:
-		draw_rect(Rect2(Vector2(float(j) * w - 1.0, -2.0), Vector2(2.0, BAR_SIZE.y + 4.0)), Color(1.0, 0.6, 0.2, 0.9))
 	var m: float = float(_state["marker"]) * w
 	draw_rect(Rect2(Vector2(m - 2.0, -4.0), Vector2(4.0, BAR_SIZE.y + 8.0)), Color.WHITE)
+	# Each press made: its own zone, where it was drawn when pressed (white), where it was judged (orange).
+	var history: Array = _state.get("history", []) as Array
+	for i: int in history.size():
+		var h: Dictionary = history[i]
+		var y: float = BAR_SIZE.y + 6.0 + float(i) * (HISTORY_ROW + 2.0)
+		var hh: float = float(h["half"])
+		var ht: float = float(h["target"])
+		draw_rect(Rect2(Vector2(0, y), Vector2(w, HISTORY_ROW)), Color(0, 0, 0, 0.4))
+		draw_rect(Rect2(Vector2((ht - hh) * w, y), Vector2(hh * 2.0 * w, HISTORY_ROW)), Color(0.55, 0.95, 0.75, 0.35))
+		draw_rect(Rect2(Vector2((ht - hh * 0.25) * w, y), Vector2(hh * 0.5 * w, HISTORY_ROW)), Color(0.7, 1.0, 0.85, 0.6))
+		draw_rect(Rect2(Vector2(float(h["pressed"]) * w - 1.0, y - 1.0), Vector2(2.0, HISTORY_ROW + 2.0)), Color.WHITE)
+		if float(h["judged"]) >= 0.0:
+			draw_rect(Rect2(Vector2(float(h["judged"]) * w - 1.0, y - 1.0), Vector2(2.0, HISTORY_ROW + 2.0)), Color(1.0, 0.6, 0.2, 1.0))
+	var pip_y: float = float(history.size()) * (HISTORY_ROW + 2.0)
 	var pips: Array = _state["pips"]
 	for i: int in pips.size():
 		var judged_q: float = float(pips[i][1])
@@ -108,4 +136,4 @@ func _draw() -> void:
 		var c: Color = Color(0.4, 0.4, 0.4) if q < 0.0 else (Color(0.4, 1.0, 0.5) if q >= 0.75 else (Color(1.0, 0.85, 0.3) if q > 0.0 else Color(1.0, 0.35, 0.3)))
 		if judged_q < 0.0 and guess >= 0.0:
 			c.a = 0.5   # predicted, not yet judged
-		draw_circle(Vector2(w / 2.0 + (i - (pips.size() - 1) / 2.0) * 18.0, BAR_SIZE.y + 12.0), 5.0, c)
+		draw_circle(Vector2(w / 2.0 + (i - (pips.size() - 1) / 2.0) * 18.0, BAR_SIZE.y + 14.0 + pip_y), 5.0, c)

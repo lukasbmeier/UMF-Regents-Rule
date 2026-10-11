@@ -45,6 +45,8 @@ var calibration_s: float = 0.0
 var _offsets: Array[float] = []
 ## challenge id -> the uncalibrated elapsed seconds each press was made at.
 var _pressed_at: Dictionary = {}
+## challenge id -> where the marker was DRAWN when each press was made (0..1).
+var _pressed_pos: Dictionary = {}
 
 
 func required_tables() -> Array[StringName]:
@@ -100,6 +102,12 @@ func _raw_elapsed(id: int) -> float:
 	return float(ClockSync.server_usec() - int(s["starts_usec"])) / 1_000_000.0
 
 
+## Where the marker was drawn when each of `id`'s presses was made (0..1), in order: what the player
+## saw, beside where the server judged it (`judged_positions`).
+func pressed_positions(id: int) -> Array:
+	return (_pressed_pos.get(id, []) as Array).duplicate()
+
+
 ## Where the server judged each of `id`'s presses (0..1), in order.
 func judged_positions(id: int) -> Array:
 	return ((_sweeps.get(id, {}) as Dictionary).get("positions", []) as Array).duplicate()
@@ -150,6 +158,7 @@ func press() -> ReducerRequest:
 	var predicted: float = ChallengeModel.press_quality(marker(id), target(id, round), half_width(id))
 	(_predicted.get_or_add(id, []) as Array).append(predicted)
 	(_pressed_at.get_or_add(id, []) as Array).append(_raw_elapsed(id))
+	(_pressed_pos.get_or_add(id, []) as Array).append(marker(id))
 	pressed.emit(id, round, predicted)
 	return SpaceTimeSync.call_reducer(&"challenge_press", [id], ["u64"])
 
@@ -200,6 +209,7 @@ func _sweep_row(old: RefCounted, new: RefCounted) -> void:
 			_predicted.erase(gone)
 			_acked.erase(gone)
 			_pressed_at.erase(gone)
+			_pressed_pos.erase(gone)
 		return
 	var id: int = int(new.get(&"challenge_id"))
 	var before: int = (( _sweeps.get(id, {}) as Dictionary).get("qualities", []) as Array).size()

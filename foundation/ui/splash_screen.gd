@@ -34,6 +34,8 @@ signal finished()
 @export var fade_sec: float = 0.45
 
 var _root: Control = null
+## What fades IN (the words, the ripples); the background under it is opaque from the first frame.
+var _content: Control = null
 var _ripples: Control = null
 var _line: Label = null
 var _order: Array[int] = []
@@ -74,11 +76,18 @@ func _ready() -> void:
 	_ripples.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ripples.draw.connect(_draw_ripples)
 	_ripples.visible = ripples
-	_root.add_child(_ripples)
+	# The background (and picture) cover the level from the very first frame; only what is drawn on
+	# it fades in. Fading the whole thing in let a frame or two of the level show first (Luke).
+	_content = Control.new()
+	_content.name = "Content"
+	_content.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_content)
+	_content.add_child(_ripples)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(center)
+	_content.add_child(center)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override(&"separation", 14)
@@ -117,12 +126,12 @@ func _ready() -> void:
 	_line.offset_bottom = -50
 	_line.add_theme_font_size_override(&"font_size", 20)
 	_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_line)
+	_content.add_child(_line)
 	for i: int in lines.size():
 		_order.append(i)
 	_order.shuffle()
 	_show_line()
-	_root.modulate.a = 0.0
+	_content.modulate.a = 0.0
 	visible = false
 
 
@@ -153,12 +162,10 @@ func play() -> void:
 	visible = true
 
 
-## Go now: fade out from wherever it is.
+## Go now: fade out from here.
 func skip() -> void:
 	if _playing and _t < _fade_out_at:
-		_fade_out_at = maxf(_t, fade_sec * _root.modulate.a)
-		# Fade out from the alpha it has, not from full.
-		_t = _fade_out_at + fade_sec * (1.0 - _root.modulate.a)
+		_fade_out_at = _t
 
 
 func is_playing() -> bool:
@@ -169,14 +176,9 @@ func _process(delta: float) -> void:
 	if not _playing:
 		return
 	_t += delta
-	var a: float
-	if _t < fade_sec:
-		a = _t / maxf(fade_sec, 0.001)
-	elif _t < _fade_out_at:
-		a = 1.0
-	else:
-		a = 1.0 - (_t - _fade_out_at) / maxf(fade_sec, 0.001)
-	_root.modulate.a = clampf(a, 0.0, 1.0)
+	# The words fade in over the opaque background; then the whole of it fades out.
+	_content.modulate.a = clampf(_t / maxf(fade_sec, 0.001), 0.0, 1.0)
+	_root.modulate.a = 1.0 if _t < _fade_out_at else clampf(1.0 - (_t - _fade_out_at) / maxf(fade_sec, 0.001), 0.0, 1.0)
 	if ripples:
 		_ripples.queue_redraw()
 	# The next line every `line_sec`, fading through the change.

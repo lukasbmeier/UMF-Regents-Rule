@@ -137,6 +137,10 @@ func _run_component() -> void:
 	_check(absf(tp.calibration_s - 0.08) < 0.005, "the server judged it 80 ms later than it was drawn: the bar is calibrated by that (%+.3f s)" % tp.calibration_s)
 	_check(absf(tp.marker(42) - marker_before - 0.08) < 0.03, "and the marker drawn that much on (%.3f -> %.3f)" % [marker_before, tp.marker(42)])
 	_check(TimingBar.state_for(me)["judged"] == [0.5], "the bar marks where the server judged the press")
+	var hist: Array = TimingBar.state_for(me)["history"]
+	_check(hist.size() == 2 and is_equal_approx(float(hist[0]["target"]), centre) and is_equal_approx(float(hist[0]["judged"]), 0.5)
+		and float(hist[0]["pressed"]) > 0.0 and float(hist[1]["judged"]) < 0.0,
+		"and under it each press made: its zone, where it was drawn when pressed, where it was judged (the second still to be judged): %s" % str(hist))
 	var again := _SweepRow.new(42, 9901, 0.7, [0.9])
 	again.at_ms = judged_row.at_ms
 	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, again))
