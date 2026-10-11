@@ -29,6 +29,13 @@ const TABLE_SWEEP: StringName = &"timed_press"
 ## How far the calibration may move the bar, and how many judgements it is the median of.
 const MAX_CALIBRATION_S: float = 0.3
 const CALIBRATION_SAMPLES: int = 7
+## How many recent presses are kept for the bar's strips, across checks (DECISIONS #215).
+const RECENT_MAX: int = 6
+
+## How long the results stay after the last press, at most, while the player stands still. Moving
+## (`results_move_m`) puts them away sooner.
+@export_range(1.0, 120.0, 0.5, "suffix:s") var results_linger_s: float = 15.0
+@export_range(0.05, 5.0, 0.05, "suffix:m") var results_move_m: float = 0.5
 
 ## challenge id -> {seed, difficulty}: this entity's timed-press challenges.
 var _challenges: Dictionary = {}
@@ -47,6 +54,14 @@ var _offsets: Array[float] = []
 var _pressed_at: Dictionary = {}
 ## challenge id -> where the marker was DRAWN when each press was made (0..1).
 var _pressed_pos: Dictionary = {}
+## THE RECENT PRESSES, across checks, oldest first (at most RECENT_MAX): each {challenge_id, round,
+## target, half, pressed, judged (-1: not yet), quality (-1)}. Its zone is kept WITH it at the moment
+## of the press: the challenge (its seed, so its targets) is gone once its last press is scored, and
+## reading the targets afterwards put every strip in the middle (Luke).
+var _recent: Array[Dictionary] = []
+## When and where the last check was finished: its results stay until the player moves or a while.
+var _ended_msec: int = -1
+var _ended_at: Vector3 = Vector3.ZERO
 
 
 func required_tables() -> Array[StringName]:
@@ -108,6 +123,22 @@ func pressed_positions(id: int) -> Array:
 	return (_pressed_pos.get(id, []) as Array).duplicate()
 
 
+## The recent presses, across checks, oldest first (see `_recent`).
+func recent_presses() -> Array[Dictionary]:
+	return _recent.duplicate(true)
+
+
+## Whether a finished check's results are still worth showing: until the player moves away from
+## where they finished it, or `results_linger_s` passes.
+func results_visible() -> bool:
+	if _ended_msec < 0 or last_judged.is_empty():
+		return false
+	if Time.get_ticks_msec() - _ended_msec > int(results_linger_s * 1000.0):
+		return false
+	var me: Node3D = entity as Node3D
+	return me == null or not me.is_inside_tree() or me.global_position.distance_to(_ended_at) <= results_move_m
+
+
 ## Where the server judged each of `id`'s presses (0..1), in order.
 func judged_positions(id: int) -> Array:
 	return ((_sweeps.get(id, {}) as Dictionary).get("positions", []) as Array).duplicate()
@@ -159,6 +190,11 @@ func press() -> ReducerRequest:
 	(_predicted.get_or_add(id, []) as Array).append(predicted)
 	(_pressed_at.get_or_add(id, []) as Array).append(_raw_elapsed(id))
 	(_pressed_pos.get_or_add(id, []) as Array).append(marker(id))
+	_recent.append({"challenge_id": id, "round": round, "target": target(id, round), "half": half_width(id),
+		"pressed": marker(id), "judged": -1.0, "quality": -1.0})
+	while _recent.size() > RECENT_MAX:
+		_recent.pop_front()
+	_ended_msec = -1
 	pressed.emit(id, round, predicted)
 	return SpaceTimeSync.call_reducer(&"challenge_press", [id], ["u64"])
 
@@ -230,7 +266,16 @@ func _sweep_row(old: RefCounted, new: RefCounted) -> void:
 		var guess: Array = _predicted.get(id, [])
 		var predicted: float = float(guess[r]) if r < guess.size() else -1.0
 		last_judged = {"challenge_id": id, "round": r, "quality": float(qs[r]), "position": float(ps[r]) if r < ps.size() else 0.0,
-			"predicted": predicted, "at_msec": Time.get_ticks_msec()}
+			"predicted": predicted, "at_msec": Time.get_ticks_msec(), "target": target(id, r), "half": half_width(id)}
+		for rec: Dictionary in _recent:
+			if int(rec["challenge_id"]) == id and int(rec["round"]) == r:
+				rec["judged"] = float(last_judged["position"])
+				rec["quality"] = float(qs[r])
+				last_judged["target"] = rec["target"]
+				last_judged["half"] = rec["half"]
+		if r == int(_sweeps[id]["rounds"]) - 1:
+			_ended_msec = Time.get_ticks_msec()
+			_ended_at = (entity as Node3D).global_position if entity is Node3D and (entity as Node3D).is_inside_tree() else Vector3.ZERO
 		if is_bound():
 			print("[Press] challenge %d press %d: %.2f (predicted %.2f; bar calibrated %+d ms)" % [id, r + 1, float(qs[r]), predicted, roundi(calibration_s * 1000.0)])
 			judged.emit(id, r, float(qs[r]), float(last_judged["position"]), predicted)

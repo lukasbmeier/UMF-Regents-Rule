@@ -1,18 +1,17 @@
 class_name TimingBar extends Control
 ## THE TIMED PRESS ON SCREEN (DECISIONS #210): the bar, the target for this press, the marker sweeping
 ## by the server's clock, a pip per press (what this client predicted, then what the server judged),
-## and, under the bar, a strip for each press made (DECISIONS #214): that press's zone (lighter, its
-## Great band brighter), a WHITE line where the marker was drawn when it was pressed and an ORANGE
-## one where the server judged it, so a player can tell their timing from the game's. A word for the
-## last press ("Great", "Good", "Miss"). It reads the local player's
+## and, under the bar, a strip for each RECENT press, across checks, oldest first (DECISIONS #214,
+## #215): that press's zone (lighter, its Great band brighter), a WHITE line where the marker was
+## drawn when it was pressed and an ORANGE one where the server judged it, so a player can tell their
+## timing from the game's. A word for the last press ("Great", "Good", "Miss"). After the last press
+## it all stays until the player moves away, or 15 s (`TimedPressComponent.results_linger_s`). It reads the local player's
 ## `TimedPressComponent` every frame and owns nothing. The foundation's HUD carries one; a genre's
 ## HUD adds its own with `TimingBar.new()`.
 
 const BAR_SIZE: Vector2 = Vector2(360, 18)
 ## The height of each press's strip under the bar.
 const HISTORY_ROW: float = 10.0
-## How long the last press's word stays once the challenge is over.
-const RESULT_MSEC: int = 1500
 
 var _label: Label
 var _state: Dictionary = {}
@@ -54,28 +53,17 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 	var last: Dictionary = tp.last_judged
 	var word: String = word_for(float(last["quality"])) if not last.is_empty() else ""
 	if id < 0:
-		if last.is_empty() or Time.get_ticks_msec() - int(last["at_msec"]) > RESULT_MSEC:
+		# Finished: the results stay until the player moves away, or a while (`results_visible`).
+		if not tp.results_visible():
 			return none
-		return {"visible": true, "text": word, "marker": float(last["position"]), "target": tp.target(int(last["challenge_id"]), int(last["round"])),
-			"half": tp.half_width(int(last["challenge_id"])), "pips": _pips(tp, int(last["challenge_id"])),
-			"judged": tp.judged_positions(int(last["challenge_id"])), "history": history(tp, int(last["challenge_id"]))}
+		return {"visible": true, "text": word, "marker": float(last["position"]), "target": float(last.get("target", 0.5)),
+			"half": float(last.get("half", 0.0)), "pips": _pips(tp, int(last["challenge_id"])),
+			"judged": [], "history": tp.recent_presses()}
 	var round: int = tp.presses_made(id)
 	var text: String = "Get ready…" if tp.elapsed(id) < 0.0 else "Press %s  (%d of %d)%s" % [HoldPrompt.key_name(), round + 1, tp.rounds(id),
 		("   " + word) if not word.is_empty() and int(last["challenge_id"]) == id else ""]
 	return {"visible": true, "text": text, "marker": tp.marker(id), "target": tp.target(id, round), "half": tp.half_width(id), "pips": _pips(tp, id),
-		"judged": tp.judged_positions(id), "history": history(tp, id)}
-
-
-## Each press made on `id`, in order: {target, half, pressed (drawn), judged (-1: not yet), quality (-1)}.
-static func history(tp: TimedPressComponent, id: int) -> Array:
-	var out: Array = []
-	var pressed: Array = tp.pressed_positions(id)
-	var judged: Array = tp.judged_positions(id)
-	var q: Array = tp.qualities(id)
-	for i: int in pressed.size():
-		out.append({"target": tp.target(id, i), "half": tp.half_width(id), "pressed": float(pressed[i]),
-			"judged": float(judged[i]) if i < judged.size() else -1.0, "quality": float(q[i]) if i < q.size() else -1.0})
-	return out
+		"judged": tp.judged_positions(id), "history": tp.recent_presses()}
 
 
 static func _pips(tp: TimedPressComponent, id: int) -> Array:

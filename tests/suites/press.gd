@@ -148,16 +148,43 @@ func _run_component() -> void:
 	tp.press()
 	_check(tp.current() == -1 and not tp.wants_press(), "three presses made: nothing left to press, the key is the interact key again")
 	_check(tp.press() == null, "a fourth is not sent")
-	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, _SweepRow.new(42, 9901, 0.9, [0.9, 0.4, 0.0], true)))
+	# The last press scored: the server closes the challenge (its seed, so its targets, gone) as the
+	# sweep's last judgement arrives.
 	tp.receive_row_event(RowEvent.make(RowEvent.Kind.DELETED, &"challenge", _ChallengeRow.new(42, 9901), null))
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"timed_press", null, _SweepRow.new(42, 9901, 0.9, [0.9, 0.4, 0.0], true)))
 	s = TimingBar.state_for(me)
-	_check(judged.size() == 3 and bool(s["visible"]) and String(s["text"]) == "Miss", "every press judged; the last word stays a moment: \"%s\"" % s["text"])
+	_check(judged.size() == 3 and bool(s["visible"]) and String(s["text"]) == "Miss", "every press judged; the last word shows: \"%s\"" % s["text"])
+	var centres: Vector3 = ChallengeModel.timing_centers(12345)
+	var strips: Array = s["history"]
+	_check(strips.size() == 3 and is_equal_approx(float(strips[0]["target"]), centres.x) and is_equal_approx(float(strips[1]["target"]), centres.y)
+		and is_equal_approx(float(strips[2]["target"]), centres.z) and is_equal_approx(float(s["target"]), centres.z),
+		"after the check, each press's strip keeps ITS zone, not the middle (Luke): %s" % str(strips.map(func(h: Dictionary) -> float: return h["target"])))
+	_check(tp.results_visible(), "the results stay while the player stands still")
+	me.global_position += Vector3(1.0, 0.0, 0.0)
+	_check(not tp.results_visible() and not bool(TimingBar.state_for(me)["visible"]), "and go when they move away")
+	me.global_position -= Vector3(1.0, 0.0, 0.0)
+	var linger: float = tp.results_linger_s
+	tp.results_linger_s = 0.02
+	var until: int = Time.get_ticks_msec() + 60
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	_check(not tp.results_visible(), "or after their time (%.0f s by default)" % linger)
+	tp.results_linger_s = linger
+	s = TimingBar.state_for(me)
 	_check(TimingBar.word_for(0.9) == "Great" and TimingBar.word_for(0.4) == "Good" and TimingBar.word_for(0.0) == "Miss", "Great, Good, Miss")
 	var bar := TimingBar.new()
 	get_tree().root.add_child(bar)
 	bar.show_state(s)
 	_check(bar.visible, "and drawn")
 	bar.queue_free()
+	# ROLLING: another check at once keeps the last presses listed above the new one's.
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"challenge", null, _ChallengeRow.new(43, 9901, 1, 999)))
+	var sweep43 := _SweepRow.new(43, 9901, 0.4)
+	tp.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"timed_press", null, sweep43))
+	tp.press()
+	var rolling: Array = TimingBar.state_for(me)["history"]
+	_check(rolling.size() == 4 and int(rolling[0]["challenge_id"]) == 42 and int(rolling[3]["challenge_id"]) == 43
+		and float(rolling[3]["judged"]) < 0.0, "another check at once: the last three presses stay listed above the new one's (%d)" % rolling.size())
 	clock.set(&"_offset_usec", was_offset)
 	EntityRegistry.unregister(9901)
 	me.queue_free()

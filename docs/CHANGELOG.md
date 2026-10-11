@@ -550,3 +550,9 @@ Reported: "movement is very laggy locally, we spawn in the ground, jumping is re
 - **The skill check shows each press under the bar**: that press's zone (lighter, its Great band brighter), a white line where the marker was drawn when you pressed, and an orange one where the server judged it: whether it is your timing or the game's, at a glance.
 - **No frame of the level before the splash**: its background is opaque from the first frame and only its words fade in (it used to fade in whole, so the level showed through for its first frames; a capture of a real launch showed the grey level, now the splash's colour).
 - No server change: nothing to republish.
+
+## 0.38.2 — the skill check's results stay, in their places
+- **Each press's strip keeps its own zone after the check** (DECISIONS #215): the last press closes the challenge on the server, and the bar read the zones from it afterwards, so all three strips jumped to the middle (Luke). Each press now keeps its zone from the moment it is made.
+- **The results stay until you move away** (half a metre), or 15 s (`TimedPressComponent.results_linger_s`, `results_move_m`), instead of 1.5 s.
+- **Rolling**: the last six presses stay listed, across checks, so a check started at once shows the previous one's presses above its own.
+- No server change: nothing to republish.
