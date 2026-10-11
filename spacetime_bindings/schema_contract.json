@@ -8,6 +8,7 @@
 		"begin_interact_as": "(actor_id:U64,target_id:U64,verb:U8)",
 		"challenge_press": "(challenge_id:U64)",
 		"challenge_seen": "(challenge_id:U64)",
+		"choose_character": "(kind:U8)",
 		"compat_generation_1": "()",
 		"consume_item": "(item_id:U64,qty:U32)",
 		"create_session": "(world_id:U32,kind:U8,max_members:U16)",

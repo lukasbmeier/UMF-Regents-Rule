@@ -37,6 +37,10 @@ func challenge_press(challenge_id: int) -> SpacetimeDBReducerCall:
 func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('challenge_seen', [challenge_id], [&'u64'], &'')
 
+## 0. kind: int [br]
+func choose_character(kind: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('choose_character', [kind], [&'u8'], &'')
+
 
 func compat_generation_1() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('compat_generation_1', [], [], &'')

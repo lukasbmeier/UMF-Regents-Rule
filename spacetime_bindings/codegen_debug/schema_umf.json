@@ -1448,6 +1448,26 @@
 			]
 		},
 		{
+			"name": "UnscoredPress",
+			"namespace": [],
+			"source_name": "UnscoredPress",
+			"struct": [
+				{
+					"name": "challenge_id",
+					"type": "U64"
+				}
+			],
+			"table_names": [
+				"unscored_press"
+			],
+			"table_name": "unscored_press",
+			"primary_key": 0,
+			"primary_key_name": "challenge_id",
+			"is_public": [
+				false
+			]
+		},
+		{
 			"name": "WorldConfig",
 			"namespace": [],
 			"source_name": "WorldConfig",
@@ -1698,6 +1718,20 @@
 			"return_type": "",
 			"return_data": {},
 			"is_scheduled": true
+		},
+		{
+			"name": "choose_character",
+			"wire_name": "choose_character",
+			"namespace": [],
+			"local_name": "choose_character",
+			"params": [
+				{
+					"name": "kind",
+					"type": "U8"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
 		},
 		{
 			"name": "compat_generation_1",
@@ -2479,7 +2513,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 40
+					"type_idx": 41
 				}
 			],
 			"return_type": "",
@@ -3366,11 +3400,30 @@
 			"is_public": true
 		},
 		{
+			"name": "unscored_press",
+			"wire_name": "unscored_press",
+			"namespace": [],
+			"local_name": "unscored_press",
+			"type_idx": 38,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "challenge_id",
+			"unique_indexes": [
+				{
+					"name": "challenge_id",
+					"type": "U64",
+					"constraint_name": "unscored_press_challenge_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false
+		},
+		{
 			"name": "world_config",
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 38,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3389,7 +3442,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 39,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3474,6 +3527,7 @@
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
+		"UnscoredPress": "UmfUnscoredPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"MovementWrite": "UmfMovementWrite"
@@ -3547,6 +3601,7 @@
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
+		"UnscoredPress": "UmfUnscoredPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"MovementWrite": "UmfMovementWrite"
@@ -5926,6 +5981,20 @@
 						},
 						"algebraic_type": {
 							"Bool": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "challenge_id"
+						},
+						"algebraic_type": {
+							"U64": []
 						}
 					}
 				]
