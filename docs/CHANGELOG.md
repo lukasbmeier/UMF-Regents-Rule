@@ -577,3 +577,10 @@ What Fowl Play's nest needs from the foundation (DECISIONS #217, #218, #219).
 ## 0.39.2 — an authority sets anyone's character
 - `set_character_of(entity_id, kind)` (DECISIONS #217): an authority (an admin, the world's sidecar) makes any entity any kind, playable or not: the sidecar making a bot the wolf, and a game whose players start as something else (Fowl Play's hens) handing the foundation's own suite a plain player in its `integration_init` hook.
 - Server change: republish (a new reducer; additive).
+
+## 0.39.3 — three foundation checks that only passed by luck
+Found running the foundation's integration suite inside Fowl Play (its nests are ten more entities):
+- **The interact check took the wrong resource node**: it picked "the last row" of a query for the node it had just spawned, and the server does not promise row order (with Fowl Play's entities it returned the far node, so "in range" was refused). Every such pick (seven) now takes the highest id, which is the newest.
+- **The timed press's verdict was flaky**: it recomputed each press's quality from the marker and target the log prints to three places, which over a 0.1 half-width moves a quality by up to 0.005; the tolerance was 0.002. Now 0.011. Its "scored their mean" check, from those rounded qualities, now allows the mean to round either way (one point).
+- **The content suite's hand-edit check edited nothing** in a game with a genre's content: it changed an ability's `damage` in the first baked file, which in Fowl Play is the hens' `character.json`. It now changes the file whatever it holds.
+- No server change.

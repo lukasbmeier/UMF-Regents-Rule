@@ -59,6 +59,12 @@ server's own private record (`client_rtt`). The sweep's numbers are hot rules fr
 issued. Fishing's hook-set (a reaction time the client reports, bounded by the server's clock) is the
 next to move to it: a Fishing change, with its own compatibility step.
 
+Between milestones 4 and 5, Fowl Play's first loop (the nest) asked for five small pieces (0.39.0-0.39.2,
+DECISIONS #217-#220): choosing a character (Play as: `EntityDefinition.playable`, `choose_character`,
+`set_character_of`), the skill check's own key (Space: a check comes up while E is held), a genre's own
+checks (`issue_timed_press` with one to three presses, unscored; `press_result`; `close_if_expired`;
+`challenge::grade`), a genre moving a hold along (`nudge_hold`), and a genre's word on the hold prompt.
+
 Between milestones 2 and 3, Workbenches 2 (0.35.0, DECISIONS #207) reworked the benches after
 Luke's first real use of them, so every bench from milestone 3 on is built the new way.
 

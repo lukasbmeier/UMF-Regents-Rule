@@ -52,7 +52,9 @@ check "$(echo "$out" | grep -q 'brand_new.tres is content that was never baked' 
 echo "== a baked file edited by hand =="
 fresh_copy
 j="$(find "$work/root/shared/content" -name '*.json' ! -name manifest.json | sort | head -1)"
-sed -i 's/"damage": [0-9.]*/"damage": 9999.0/' "$j"
+# Any change at all (a space at the end): the first baked file is a genre's in a game with one, and
+# the number this used to change (an ability's damage) is not in every file.
+printf ' ' >> "$j"
 out="$(build)"
 check "$(echo "$out" | grep -q 'was edited by hand' && echo true || echo false)" \
   "the build stops, naming $(basename "$j")"

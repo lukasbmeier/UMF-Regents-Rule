@@ -381,10 +381,12 @@ for i, l in enumerate(lines):
     if abs(marker - sweep(at / 1000.0, 1.8)) > 0.002: bad.append("press %d marker %.3f, the sweep says %.3f" % (n, marker, sweep(at / 1000.0, 1.8)))
     if abs(target - centers[n - 1]) > 0.002: bad.append("press %d target %.3f, the seed says %.3f" % (n, target, centers[n - 1]))
     want_q = max(0.0, min(1.0, 1 - abs(marker - target) / 0.1))
-    if abs(q - want_q) > 0.002: bad.append("press %d quality %.3f, want %.3f" % (n, q, want_q))
+    # The log prints the marker and target to 3 places; over a 0.1 half-width each rounding moves the
+    # quality by up to 0.005, so 0.002 failed now and then on a correct judgement.
+    if abs(q - want_q) > 0.011: bad.append("press %d quality %.3f, want %.3f" % (n, q, want_q))
     qs.append(q)
 if len(qs) != 3: bad.append("%d presses judged" % len(qs))
-elif gained != round(sum(qs) / 3 * 100): bad.append("scored %d, the presses say %d" % (gained, round(sum(qs) / 3 * 100)))
+elif abs(gained - round(sum(qs) / 3 * 100)) > 1: bad.append("scored %d, the presses say %d" % (gained, round(sum(qs) / 3 * 100)))   # 3-place qualities: the mean can round either way
 print("ok" if not bad else "; ".join(bad))
 PY
 )
@@ -427,15 +429,16 @@ assert_eq "$(row_count 'SELECT * FROM challenge')" "0" "no challenges outstandin
 echo "== interact: the SERVER decides range, not the client raycast =="
 # Put a resource node far away, then next to the player, and check both answers.
 assert_ok 'spawn_resource_node 0 {"x":100.0,"y":0.0,"z":100.0}' "spawn a distant resource node"
-# The last kind-2 row is the one just inserted. Taking the FIRST would pick a seeded pond spot,
-# and this assertion would pass for the wrong reason.
-FAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | tail -1 | awk '{print $1}')
+# The newest kind-2 entity (the highest id) is the one just inserted: not the last row, whose order
+# the server does not promise (in Fowl Play, with its nests, it gave the far node). Taking the FIRST
+# would pick a seeded pond spot, and this assertion would pass for the wrong reason.
+FAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | awk '{print $1}' | sort -n | tail -1)
 assert_rejected "interact $FAR 0" "out of range" "interacting at 100 m is refused"
 assert_eq "$(row_count 'SELECT * FROM challenge')" "0" "a refused interact issues no challenge"
 
 # Now one within reach. The player sits at the origin, so 1 m away is inside the 3 m check.
 assert_ok 'spawn_resource_node 0 {"x":1.0,"y":0.0,"z":0.0}' "spawn a nearby resource node"
-NEAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | tail -1 | awk '{print $1}')
+NEAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | awk '{print $1}' | sort -n | tail -1)
 assert_ok "interact $NEAR 0" "interacting in range is accepted"
 assert_eq "$(row_count 'SELECT * FROM challenge')" "1" "a successful interact issues a challenge"
 assert_eq "$(sql_first 'SELECT kind FROM challenge' 1)" "1" "the issued challenge is a timed press (judged by the server's clock, DECISIONS #210)"
@@ -751,9 +754,9 @@ echo "== actions: use_ability (PHASE3_SPEC Task 12, PHASE4_SPEC §3) =="
 AIM='{"x":0.0,"y":0.0,"z":0.0}'
 assert_eq "$(row_count 'SELECT * FROM ability_def WHERE ability_id = 0')" "1" "init ships the built-in ability 0 (melee, 2 m, 10 damage)"
 assert_ok 'spawn_npc 0 1 {"x":1.0,"y":0.0,"z":0.0}' "a target NPC 1 m away"
-NEAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+NEAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 assert_ok 'spawn_npc 0 1 {"x":5.0,"y":0.0,"z":0.0}' "another 5 m away"
-FAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+FAR=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 HP0=$(sql_first "SELECT current FROM health_state WHERE entity_id = $NEAR" 1)
 
 assert_ok "use_ability 0 $NEAR $AIM 41" "melee on a target in range is accepted"
@@ -887,11 +890,11 @@ move_npc() {   # move_npc ID X Z: the authority puts an NPC there
   spacetime call "$DB" write_movement_batch 0 "[{\"entity_id\":$1,\"pos\":{\"x\":$2,\"y\":0.0,\"z\":$3},\"vel\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"yaw\":0.0,\"grounded\":true,\"move_state\":0,\"last_processed_seq\":0,\"teleport_flag\":true}]" >/dev/null 2>&1
 }
 assert_ok 'spawn_npc 0 1 {"x":1.5,"y":0.0,"z":0.8}' "a helper NPC beside the target"
-H1=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+H1=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 assert_ok 'spawn_npc 0 1 {"x":0.5,"y":0.0,"z":0.8}' "and another"
-H2=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+H2=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 assert_ok 'spawn_npc 0 1 {"x":1.0,"y":0.0,"z":-0.8}' "and a third"
-H3=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | tail -1 | awk '{print $1}')
+H3=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 
 assert_rejected "begin_interact_as $H1 $NEAR 0" "nothing to hold there" "nothing to hold on someone standing (Help up is for the downed)"
 assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "the target NPC is downed"
