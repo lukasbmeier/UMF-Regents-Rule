@@ -584,3 +584,6 @@ Found running the foundation's integration suite inside Fowl Play (its nests are
 - **The timed press's verdict was flaky**: it recomputed each press's quality from the marker and target the log prints to three places, which over a 0.1 half-width moves a quality by up to 0.005; the tolerance was 0.002. Now 0.011. Its "scored their mean" check, from those rounded qualities, now allows the mean to round either way (one point).
 - **The content suite's hand-edit check edited nothing** in a game with a genre's content: it changed an ability's `damage` in the first baked file, which in Fowl Play is the hens' `character.json`. It now changes the file whatever it holds.
 - No server change.
+
+## 0.39.4 — the splash's ripples, checked in a game that wants them
+- The match suite asserted the splash shows no water ripples, which fails in any game whose splash asks for them (Fishing's does). It now checks they show exactly when the game's splash asks, and that the default does not. Found running Fishing's suites on 0.39 (they had not run since 0.37). No server change.
