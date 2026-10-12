@@ -28,6 +28,9 @@ fn downed_crawls_and_ends_in_out() {
     assert_eq!(b.burst, 0.0, "no dash");
     assert_eq!(b.lift, b.sprint, "no jump: it climbs only what it crawls up");
     assert!(!d.can_act && d.targetable);
+    assert!(!d.hittable, "a downed player is not hit again (DECISIONS #226), though they can be helped up");
+    assert!(find(status::NORMAL).unwrap().hittable && find(status::INJURED).unwrap().hittable, "a standing one is");
+    assert!(!find(status::CARRIED).unwrap().hittable, "nor one being carried");
     assert_eq!((d.lasts_ms, d.then), (60_000, status::OUT));
 }
 

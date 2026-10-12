@@ -251,6 +251,27 @@ Each world picks one:
   authority. For games where the server must see walls (NPCs, survival). The fishing rival angler
   NPC is driven by a sidecar brain.
 
+### Who judges an attack (the referee)
+An ability marked **Judged by a referee** (its `.tres`: `judged`, with its reach, width and height) is
+not decided by the server's coarse range check. It goes to the world's **referee**: a sidecar that
+looks at the level's real walls and at everyone where the attacker saw them (rewound by what that
+player's screen showed, at most `foundation.rewind_max_ms`, 150 ms, favouring the attacker), as the
+ability lands (its wind-up after the press). It answers hit or miss; what a hit does is the genre's
+(Fowl Play: a hen injured, then downed), or the ability's damage. DECISIONS #226.
+
+- **A sidecar's jobs, per world.** In a MODULE world it only judges (players still move themselves);
+  in a SIDECAR world the same process moves everyone and judges. Driving NPCs while players move
+  themselves is the next job it takes on (bots, FOUNDATION_SYSTEMS milestone 7). Which a world runs is
+  `world_config.sim_authority`; switching later does not change how attacks are judged.
+- **You start nothing.** Pressing Play in the editor, the admin's instance starts the referee in the
+  background if the game has a judged ability and the world has no referee (`RefereeLauncher`): it
+  hands it a one-time code (`offer_referee`), the sidecar presents it (`claim_referee`) and is
+  registered, and it stops when your game does. A host starts it beside the server
+  (`godot --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee`, registered once).
+- **No referee, no guess.** While none is online a judged ability is refused ("no referee"); one
+  that lands with nobody to answer is a miss.
+- **Hitboxes** are each character's body (`collision_radius`, `collision_height` on its definition).
+
 ---
 
 ## 4. How a player gets into the world
@@ -542,7 +563,7 @@ Around it:
 |---|---|---|
 | tune the game WHILE IT RUNS (the interact range, a new player's health; more to come): every player follows at once, no republish, no re-download | as the admin (the PC that publishes), in game: Escape, **Rules (admin)**. To keep the values: the Content panel's **Keep live tuning**, then Publish | nothing else: it is live. Reset puts a rule back |
 | change a hot rule's default, or add one | the Content panel, type `rules`: `foundation.tres` (the foundation's) or your genre's rule set; a genre sets ITS game's value for a foundation rule under `overrides` | `tools\publish.cmd` |
-| change an ability (cooldown, range, wind-up, damage) or add one | the **Content** panel at the bottom of the editor: pick `ability`, pick the piece (it opens in the Inspector, whose tooltips say what each number does), or type a name and press New | `tools\publish.cmd` (it bakes first, `docs/rules/content.md`); a fresh database seeds them (`--fresh`), an existing one keeps its rows |
+| change an ability (cooldown, range, wind-up, damage) or add one | the **Content** panel at the bottom of the editor: pick `ability`, pick the piece (it opens in the Inspector, whose tooltips say what each number does), or type a name and press New | `tools\publish.cmd` (it bakes first, `docs/rules/content.md`); the next connection brings an existing database's abilities in step with the build, no `--fresh` (DECISIONS #226) |
 | change how the rod sits in the hand, for one animation or all | `game/fishing/rod_grip_preview.tscn`: pick an Animation and a Body (both, female, male), drag the Grip node until the labels are green | restart |
 | swap a character model or the camera | the definition `.tres` (`game/fishing/fisher_definition.tres`) | restart |
 | change key bindings | Project → Project Settings → Input Map | restart (and restart the editor if `project.godot` was edited outside it) |

@@ -369,7 +369,7 @@ func _run_status_bench() -> void:
 	bench.item = StatusDef.find(StatusDef.INJURED)
 	await get_tree().process_frame
 	var burst: String = await bench.run_named_test(&"burst")
-	_check(is_equal_approx(float(bench.last_measure["during"]), own.sprint_speed * 1.5)
+	_check(is_equal_approx(float(bench.last_measure["during"]), own.sprint_speed * StatusDef.find(StatusDef.INJURED).burst)
 		and is_equal_approx(float(bench.last_measure["after"]), own.sprint_speed), "an injury's burst, then its sprint: %s" % burst)
 	bench.item = StatusDef.find(StatusDef.OUT)
 	await get_tree().process_frame

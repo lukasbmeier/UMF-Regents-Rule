@@ -24,6 +24,9 @@ var _deferred_inserts: Array[RowEvent] = []
 ## Deletes seen this frame, not yet acted on — see `_flush_despawns`.
 var _pending_despawn: Dictionary[int, Node] = {}
 var _world_ready: bool = false
+## Whether entity rows become nodes. A sidecar that only REFEREES a world (DECISIONS #226: players
+## move themselves, it judges abilities) reads the rows and builds nothing.
+var spawning: bool = true
 
 
 func _ready() -> void:
@@ -196,6 +199,8 @@ func _spawn_from(ev: RowEvent) -> void:
 
 	if _nodes.has(eid):
 		return   # duplicate insert; the row cache is the truth and it has not changed identity
+	if not spawning:
+		return
 
 	var kind: int = int(row.get(&"kind") if row.get(&"kind") != null else -1)
 	var defn: EntityDefinition = _by_kind.get(kind, null)

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=13 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -105,8 +105,18 @@ maximum = 10.0
 unit = "s"
 description = "How long the marker of a HARD timed press takes to sweep across and back. A press of middling difficulty is between this and the easy one."
 
+[sub_resource type="Resource" id="Rule_rewind"]
+script = ExtResource("2_rule")
+name = &"rewind_max_ms"
+kind = 1
+number = 150.0
+minimum = 0.0
+maximum = 300.0
+unit = "ms"
+description = "How far back the referee may look when it judges an ability (a pounce): it sees everyone where the user saw them, up to this long ago. Favours the attacker by up to this much; 0 judges everything as it is when it lands."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind")])

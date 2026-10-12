@@ -72,10 +72,11 @@ func _run_content() -> void:
 	_check(not g.jump and not g.sprint and not g.dash and g.move_dir == f.move_dir and f.jump,
 		"its presses are taken out (jump, sprint, dash), the move kept, the frame sent left alone")
 	_check(StatusDef.normal().filter_input(f) == f, "normal leaves the frame as it is")
+	# Injured as THIS game has it (a genre may replace a foundation status: Fowl Play's hen bursts 1.3x).
 	var injured: StatusDef = StatusDef.find(StatusDef.INJURED)
-	_check(injured.bursting_at(0.5) and not injured.bursting_at(1.6)
-		and is_equal_approx(injured.apply_to(base, true).sprint_speed, base.sprint_speed * 1.5),
-		"injured bursts half as fast again for 1.5 s, then not")
+	_check(injured.burst > 1.0 and injured.bursting_at(injured.burst_s * 0.5) and not injured.bursting_at(injured.burst_s + 0.1)
+		and is_equal_approx(injured.apply_to(base, true).sprint_speed, base.sprint_speed * injured.burst),
+		"injured bursts %.1fx for %.1f s, then not" % [injured.burst, injured.burst_s])
 	var out: StatusDef = StatusDef.find(StatusDef.OUT)
 	_check(out.spectate and out.hide_body and not out.targetable and not out.can_act, "out: watches a teammate, hidden, out of reach")
 	var bad := StatusDef.new()
@@ -203,7 +204,8 @@ func _run_movement() -> void:
 	_drive(hurt[1], 50, true, false)
 	var burst: float = Vector2((hurt[1] as SpaceTimeMovementComponent).get_predicted_state().vel.x,
 		(hurt[1] as SpaceTimeMovementComponent).get_predicted_state().vel.z).length()
-	_check(burst > cfg.sprint_speed * 1.4, "injured, just now: its burst carries it past its sprint (%.2f m/s)" % burst)
+	var by: float = StatusDef.find(StatusDef.INJURED).burst
+	_check(burst > cfg.sprint_speed * (1.0 + (by - 1.0) * 0.8), "injured, just now: its burst (%.1fx) carries it past its sprint (%.2f m/s)" % [by, burst])
 	for e: Array in [normal, down, hurt]:
 		(e[0] as Node).free()
 	await get_tree().process_frame

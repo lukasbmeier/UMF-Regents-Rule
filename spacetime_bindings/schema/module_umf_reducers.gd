@@ -41,6 +41,11 @@ func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
 func choose_character(kind: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('choose_character', [kind], [&'u8'], &'')
 
+## 0. world_id: int [br]
+## 1. code: String [br]
+func claim_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('claim_referee', [world_id, code], [&'u32', &'string'], &'')
+
 
 func compat_generation_1() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('compat_generation_1', [], [], &'')
@@ -119,6 +124,11 @@ func leave_session() -> SpacetimeDBReducerCall:
 func new_match(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('new_match', [session_id], [&'u64'], &'')
 
+## 0. world_id: int [br]
+## 1. code: String [br]
+func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('offer_referee', [world_id, code], [&'u32', &'string'], &'')
+
 ## 0. identity: PackedByteArray [br]
 ## 1. role: int [br]
 ## 2. world_id: int [br]
@@ -128,6 +138,11 @@ func register_authority(identity: PackedByteArray, role: int, world_id: int) -> 
 ## 0. key: String [br]
 func reset_rule(key: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('reset_rule', [key], [&'string'], &'')
+
+## 0. request_id: int [br]
+## 1. hit_id: int [br]
+func resolve_action(request_id: int, hit_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('resolve_action', [request_id, hit_id], [&'u64', &'u64'], &'')
 
 ## 0. identity: PackedByteArray [br]
 func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
@@ -234,6 +249,22 @@ func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 ## 3. predicted_id: int [br]
 func use_ability(ability_id: int, target_id: int, aim: Vector3, predicted_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability', [ability_id, target_id, aim, predicted_id], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32'], &'')
+
+## 0. actor_id: int [br]
+## 1. ability_id: int [br]
+## 2. target_id: int [br]
+## 3. aim: Vector3 [br]
+## 4. view_delay_ms: int [br]
+func use_ability_as(actor_id: int, ability_id: int, target_id: int, aim: Vector3, view_delay_ms: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('use_ability_as', [actor_id, ability_id, target_id, aim, view_delay_ms], [&'u64', &'u32', &'u64', &'vector3[f32,f32,f32]', &'u32'], &'')
+
+## 0. ability_id: int [br]
+## 1. target_id: int [br]
+## 2. aim: Vector3 [br]
+## 3. predicted_id: int [br]
+## 4. view_delay_ms: int [br]
+func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_id: int, view_delay_ms: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('use_ability_seen', [ability_id, target_id, aim, predicted_id, view_delay_ms], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32', &'u32'], &'')
 
 ## 0. world_id: int [br]
 ## 1. writes: Array of UmfMovementWrite [br]

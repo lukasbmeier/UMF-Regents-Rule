@@ -145,7 +145,15 @@ pub fn run(listed: &[String]) {
             for it in doc["items"].as_array().cloned().unwrap_or_default() {
                 let id = it["ability_id"].as_u64().expect("an ability without an ability_id");
                 let f = |k: &str| it[k].as_f64().unwrap_or_else(|| panic!("{out}: ability {id} has no {k}"));
-                let data = serde_json::json!({ "name": it["name"].as_str().unwrap_or("") }).to_string();
+                // A judged ability (DECISIONS #226) says so in its row, with its sweep: the module and
+                // the referee both read it there (and an admin's `define_ability` can make one).
+                let data = if it["judged"].as_bool().unwrap_or(false) {
+                    serde_json::json!({ "name": it["name"].as_str().unwrap_or(""), "judged": true,
+                        "reach": it["reach"].as_f64().unwrap_or(0.0), "radius": it["radius"].as_f64().unwrap_or(0.35),
+                        "height": it["height"].as_f64().unwrap_or(0.6) }).to_string()
+                } else {
+                    serde_json::json!({ "name": it["name"].as_str().unwrap_or("") }).to_string()
+                };
                 abilities.push((id, format!(
                     "    AbilitySeed {{ ability_id: {id}, cooldown_ms: {}, range: {:?}f32, wind_up_ms: {}, damage: {:?}f32, data: {data:?} }},\n",
                     f("cooldown_ms") as u32, f("range") as f32, f("wind_up_ms") as u32, f("damage") as f32
@@ -317,10 +325,11 @@ fn status_table(all: Vec<(String, i64, serde_json::Value)>, listed: &[String]) {
         let f = |k: &str| v[k].as_f64().unwrap_or_else(|| panic!("{owner}'s status {n} has no {k}: bake again"));
         let b = |k: &str| v[k].as_bool().unwrap_or_else(|| panic!("{owner}'s status {n} has no {k}: bake again"));
         src.push_str(&format!(
-            "    StatusSeed {{ status: {n}, name: {:?}, lasts_ms: {}, then: {then}, speed: {:?}f32, burst: {:?}f32, burst_ms: {}, can_sprint: {}, can_jump: {}, can_dash: {}, can_act: {}, targetable: {} }},
+            "    StatusSeed {{ status: {n}, name: {:?}, lasts_ms: {}, then: {then}, speed: {:?}f32, burst: {:?}f32, burst_ms: {}, can_sprint: {}, can_jump: {}, can_dash: {}, can_act: {}, targetable: {}, hittable: {} }},
 ",
             v["name"].as_str().unwrap_or(""), f("lasts_ms") as u32, f("speed") as f32, f("burst") as f32, f("burst_ms") as u32,
-            b("can_sprint"), b("can_jump"), b("can_dash"), b("can_act"), b("targetable")));
+            b("can_sprint"), b("can_jump"), b("can_dash"), b("can_act"), b("targetable"),
+            v["hittable"].as_bool().unwrap_or(true)));
     }
     src.push_str("];
 ");

@@ -242,6 +242,51 @@ pub fn use_ability(
     predicted_id: u32,
 ) -> Result<(), String> {
     let actor = ctx.db.player().identity().find(ctx.sender()).ok_or("use_ability: no player")?.entity_id;
+    use_ability_from(ctx, actor, ability_id, target_id, aim, predicted_id, 0)
+}
+
+/// `use_ability`, saying how far behind the server this client sees everyone else (`view_delay_ms`:
+/// its interpolation delay and half its round trip), so the referee can judge a judged ability as it
+/// saw things (DECISIONS #226). A client from before it calls `use_ability`: judged as things are.
+#[reducer]
+pub fn use_ability_seen(
+    ctx: &ReducerContext,
+    ability_id: u32,
+    target_id: u64,
+    aim: Vector3,
+    predicted_id: u32,
+    view_delay_ms: u32,
+) -> Result<(), String> {
+    let actor = ctx.db.player().identity().find(ctx.sender()).ok_or("use_ability: no player")?.entity_id;
+    use_ability_from(ctx, actor, ability_id, target_id, aim, predicted_id, view_delay_ms)
+}
+
+/// AUTHORITY: `actor_id` (an NPC, a bot) uses an ability, as a player's `use_ability_seen`.
+#[reducer]
+pub fn use_ability_as(
+    ctx: &ReducerContext,
+    actor_id: u64,
+    ability_id: u32,
+    target_id: u64,
+    aim: Vector3,
+    view_delay_ms: u32,
+) -> Result<(), String> {
+    let ent = ctx.db.entity().entity_id().find(actor_id).ok_or("use_ability_as: no such entity")?;
+    require_authority(ctx, ent.world_id)?;
+    use_ability_from(ctx, actor_id, ability_id, target_id, aim, 0, view_delay_ms)
+}
+
+/// A use, by whoever asked: the checks every use makes, then the referee's queue (a judged ability)
+/// or the module's coarse resolution.
+pub fn use_ability_from(
+    ctx: &ReducerContext,
+    actor: u64,
+    ability_id: u32,
+    target_id: u64,
+    aim: Vector3,
+    predicted_id: u32,
+    view_delay_ms: u32,
+) -> Result<(), String> {
     let def = ctx.db.ability_def().ability_id().find(ability_id).ok_or("use_ability: unknown ability")?;
     // A downed or carried player cannot (their status, DECISIONS #206).
     require_can_act(ctx, actor, "use_ability")?;
@@ -262,6 +307,12 @@ pub fn use_ability(
         }
     }
     let me = ctx.db.movement_state().entity_id().find(actor).ok_or("use_ability: actor has no movement_state")?;
+
+    if is_judged(&def) {
+        queue_judged(ctx, actor, me.world_id, &def, target_id, aim, predicted_id, view_delay_ms)?;
+        set_cooldown(ctx, actor, &def, state);
+        return Ok(());
+    }
 
     // Tier A resolution is coarse: a targeted ability hits if the target is in range. The
     // sidecar (Task 13) replaces this with a real hit test against the level.
@@ -288,16 +339,7 @@ pub fn use_ability(
         outcome = OUTCOME_HIT;
     }
 
-    let until = ctx.timestamp + TimeDuration::from_micros(def.cooldown_ms as i64 * 1000);
-    match state {
-        Some(mut st) => {
-            st.cooldown_until = until;
-            ctx.db.ability_state().id().update(st);
-        }
-        None => {
-            ctx.db.ability_state().insert(AbilityState { id: 0, entity_id: actor, ability_id, cooldown_until: until, charges: 0 });
-        }
-    }
+    set_cooldown(ctx, actor, &def, state);
     ctx.db.action_event().insert(ActionEvent {
         id: 0,
         world_id: me.world_id,
@@ -312,7 +354,22 @@ pub fn use_ability(
     Ok(())
 }
 
-/// Scheduled 1 Hz: drop action events older than ACTION_EVENT_TTL_MICROS.
+/// `actor` may next use `def` its cooldown from now.
+fn set_cooldown(ctx: &ReducerContext, actor: u64, def: &AbilityDef, state: Option<AbilityState>) {
+    let until = ctx.timestamp + TimeDuration::from_micros(def.cooldown_ms as i64 * 1000);
+    match state {
+        Some(mut st) => {
+            st.cooldown_until = until;
+            ctx.db.ability_state().id().update(st);
+        }
+        None => {
+            ctx.db.ability_state().insert(AbilityState { id: 0, entity_id: actor, ability_id: def.ability_id, cooldown_until: until, charges: 0 });
+        }
+    }
+}
+
+/// Scheduled 1 Hz: drop action events older than ACTION_EVENT_TTL_MICROS, and end the referee's
+/// requests nobody answered (DECISIONS #226).
 #[reducer]
 pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) -> Result<(), String> {
     if ctx.sender() != ctx.database_identity() {
@@ -323,6 +380,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     for id in stale {
         ctx.db.action_event().id().delete(id);
     }
+    expire_requests(ctx);
     Ok(())
 }
 

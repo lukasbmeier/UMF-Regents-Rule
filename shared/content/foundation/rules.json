@@ -105,6 +105,15 @@
 					"number": 1.2,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "foundation.rewind_max_ms",
+					"kind": "integer",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 150.0,
+					"text": "",
+					"unit": "ms"
 				}
 			]
 		}

@@ -206,5 +206,25 @@ func _def(ability_id: int) -> RefCounted:
 func _call(ability_id: int, target_id: int, aim: Vector3, pid: int) -> ReducerRequest:
 	if _reducer_override.is_valid():
 		return _reducer_override.call(ability_id, target_id, aim, pid) as ReducerRequest
-	return SpaceTimeSync.call_reducer(&"use_ability", [ability_id, target_id, aim, pid],
-		["u32", "u64", "vector3[f32,f32,f32]", "u32"])
+	# With how far behind the server this client sees everyone (DECISIONS #226): an ability the
+	# world's referee judges is judged as the player saw it.
+	return SpaceTimeSync.call_reducer(&"use_ability_seen", [ability_id, target_id, aim, pid, view_delay_ms()],
+		["u32", "u64", "vector3[f32,f32,f32]", "u32", "u32"])
+
+
+## HOW FAR BEHIND THE SERVER THIS CLIENT SEES EVERYONE ELSE, in ms: the delay it draws other
+## entities at (their interpolation, on average) and the half round trip a row took to reach it. What
+## the referee rewinds by when it judges this player's ability (capped by `foundation.rewind_max_ms`).
+static func view_delay_ms() -> int:
+	var total: float = 0.0
+	var n: int = 0
+	for node: Node in EntitySpawner.entity_nodes():
+		var ent: SpaceTimeEntity = node as SpaceTimeEntity
+		if ent == null:
+			continue
+		var mv: SpaceTimeMovementComponent = ent.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+		if mv != null and mv.mode == SpaceTimeMovementComponent.Mode.REMOTE_INTERPOLATED:
+			total += mv.get_interp_delay_sec()
+			n += 1
+	var interp: float = total / n if n > 0 else 0.1
+	return maxi(0, roundi(interp * 1000.0 + float(ClockSync.rtt_usec()) / 2000.0))

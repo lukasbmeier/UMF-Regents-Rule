@@ -28,6 +28,7 @@ const SUITES: PackedStringArray = [
 	"inventory",
 	"interaction",
 	"action",
+	"referee",
 	"mouse_capture",
 	"connect",
 	"version",

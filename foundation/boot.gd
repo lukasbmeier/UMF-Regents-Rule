@@ -153,6 +153,12 @@ func _start_game(has_display: bool) -> void:
 		var notices := Notices.new()
 		notices.name = "Notices"
 		add_child(notices)
+	# An editor run starts the world's referee if the game needs one and it is not running
+	# (DECISIONS #226): pressing Play is all a designer does.
+	if has_display:
+		var referee := RefereeLauncher.new()
+		referee.name = "RefereeLauncher"
+		add_child(referee)
 	if pause_menu != null:
 		_menu = pause_menu.instantiate() as PauseMenu
 		add_child(_menu)

@@ -4,7 +4,7 @@
 	"outputs": {
 		"shared/content/foundation/ability.json": {
 			"count": 1,
-			"hash": "169111f8",
+			"hash": "0f6e6ab1",
 			"owner": "foundation",
 			"sources": {
 				"foundation/content/ability/melee.tres": "29e165b2"
@@ -33,20 +33,20 @@
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
-			"hash": "93106d7e",
+			"hash": "c732e2dd",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "227953ad"
+				"foundation/content/rules/foundation.tres": "d84654f6"
 			},
 			"type": "rules"
 		},
 		"shared/content/foundation/status.json": {
 			"count": 7,
-			"hash": "a6c63ad9",
+			"hash": "6ca31bed",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/status/carried.tres": "582656a4",
-				"foundation/content/status/downed.tres": "2acf7afe",
+				"foundation/content/status/carried.tres": "3094695b",
+				"foundation/content/status/downed.tres": "c7938d5b",
 				"foundation/content/status/escaped.tres": "25bf340c",
 				"foundation/content/status/hidden.tres": "9f99c08a",
 				"foundation/content/status/injured.tres": "e9cb2d8d",

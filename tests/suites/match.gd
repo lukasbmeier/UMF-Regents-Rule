@@ -231,8 +231,10 @@ func _run_match_tests() -> void:
 		"it says the game's name from shared/game.json (%s)" % Genres.title())
 	_check(not splash.lines.is_empty() and splash.lines.has(splash.shown_line()) and is_equal_approx(splash.hold_sec, 5.0),
 		"and a tip, one of its own (\"%s\"), for five seconds" % splash.shown_line())
-	_check(splash._ripples.visible == splash.ripples and not SplashScreen.new().ripples,
+	var plain := SplashScreen.new()
+	_check(splash._ripples.visible == splash.ripples and not plain.ripples,
 		"water ripples only when the game's splash asks for them (a fishing game's does; the default does not)")
+	plain.free()
 	splash.play()
 	splash._process(0.0)
 	_check(splash.visible and splash._root.modulate.a == 1.0 and (splash.find_child("Splash", true, false) as Control).get_child(0) is ColorRect

@@ -116,6 +116,18 @@ pub fn close_if_expired(ctx: &ReducerContext, challenge_id: u64) -> bool {
     true
 }
 
+/// END A CHALLENGE NOW, BEFORE ITS TIME (DECISIONS #227): a genre's check that no longer means anything
+/// (a hard egg laid, or let go of, before its press), so it does not stay on the player's screen and
+/// take their next press. Gone, its sweep forgotten, `on_challenge_closed` heard (a genre that withdrew
+/// its own has let go of it first, and ignores it). True when there was one.
+pub fn withdraw_challenge(ctx: &ReducerContext, challenge_id: u64) -> bool {
+    let Some(ch) = ctx.db.challenge().id().find(challenge_id) else { return false };
+    ctx.db.challenge().id().delete(ch.id);
+    forget_press(ctx, ch.id);
+    crate::game::on_challenge_closed(ctx, &ch);
+    true
+}
+
 /// Score a played FOUNDATION challenge (a timing bar, a timed press) for its player, and hand it to the
 /// genres (`on_challenge_succeeded`). After the challenge is closed.
 pub(crate) fn award_foundation_challenge(ctx: &ReducerContext, ch: &Challenge, quality: f32) {

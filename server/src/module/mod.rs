@@ -50,3 +50,5 @@ mod presses;
 pub use presses::*;
 mod characters;
 pub use characters::*;
+mod referee;
+pub use referee::*;

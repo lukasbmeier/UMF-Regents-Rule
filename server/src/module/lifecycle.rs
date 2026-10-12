@@ -46,16 +46,7 @@ pub fn init(ctx: &ReducerContext) {
     // The abilities, as baked from their .tres (foundation/content/abilities/, a genre's
     // content/; DECISIONS #199). The foundation's own, `melee`, makes the action path work out of
     // the box (PHASE3_SPEC Task 12).
-    for a in crate::content::ABILITIES {
-        ctx.db.ability_def().insert(AbilityDef {
-            ability_id: a.ability_id,
-            cooldown_ms: a.cooldown_ms,
-            range: a.range,
-            wind_up_ms: a.wind_up_ms,
-            damage: a.damage,
-            data: a.data.to_string(),
-        });
-    }
+    sync_abilities(ctx);
     // A default session on the default world, so a client that just connects lands somewhere
     // with a phase machine already running rather than in a null session.
     let sess = ctx.db.session().insert(Session {
@@ -146,8 +137,10 @@ fn free_name(ctx: &ReducerContext, name: &str, me: Identity) -> String {
 /// `online` back on for a returning identity.
 #[reducer(client_connected)]
 pub fn client_connected(ctx: &ReducerContext) {
-    // A republish does not run init: the first connect after one brings the hot rules up to date.
+    // A republish does not run init: the first connect after one brings the hot rules up to date,
+    // and the abilities (DECISIONS #226: a new one, the Pounce, reached a world made before it).
     sync_hot_rules(ctx);
+    sync_abilities(ctx);
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
         p.online = true;
         // A name shared with an OLDER player (from before names were unique, #202) becomes free:
@@ -227,5 +220,34 @@ pub fn client_disconnected(ctx: &ReducerContext) {
         // Persistence policy is the genre's: the foundation keeps the entity, and the hook may
         // despawn it (a party game) or keep it (an MMO).
         crate::game::on_player_left(ctx, entity_id);
+    }
+}
+
+
+/// THE ABILITIES FOLLOW THE BUILD (DECISIONS #226): every ability in this build's content has its row,
+/// as its content says (a new one added, a changed one rewritten). Seeded once at `init` before, so a
+/// world made before an ability was added never had it, and an edited cooldown waited for `--fresh`.
+/// Rows content does not name (an admin's `define_ability`) are left alone.
+pub(crate) fn sync_abilities(ctx: &ReducerContext) {
+    for a in crate::content::ABILITIES {
+        let row = AbilityDef {
+            ability_id: a.ability_id,
+            cooldown_ms: a.cooldown_ms,
+            range: a.range,
+            wind_up_ms: a.wind_up_ms,
+            damage: a.damage,
+            data: a.data.to_string(),
+        };
+        match ctx.db.ability_def().ability_id().find(a.ability_id) {
+            None => {
+                ctx.db.ability_def().insert(row);
+            }
+            Some(old) => {
+                if old.cooldown_ms != row.cooldown_ms || old.range != row.range || old.wind_up_ms != row.wind_up_ms
+                    || old.damage != row.damage || old.data != row.data {
+                    ctx.db.ability_def().ability_id().update(row);
+                }
+            }
+        }
     }
 }

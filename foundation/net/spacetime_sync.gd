@@ -351,6 +351,14 @@ func get_row(table: StringName, pk: Variant) -> RefCounted:
 	return _sdk_get_row_by_pk(table, pk)
 
 
+## Every cached row of `table` that `pred` (row -> bool) accepts: the cache's own instances, read-only.
+func find_rows(table: StringName, pred: Callable) -> Array:
+	if _sdk == null:
+		return []
+	var ldb: Object = _sdk.call(&"get_local_database")
+	return ldb.call(&"find_where", table, pred) if ldb != null else []
+
+
 ## Every cached row of `tables` that belongs to entity `eid` (by RowEvent's own rule: `entity_id`,
 ## else `owner_entity_id`), as INSERTED events: what an entity is built from again when it
 ## respawns (DECISIONS #166).

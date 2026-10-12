@@ -32,6 +32,8 @@ pub struct StatusSeed {
     pub can_act: bool,
     /// May be the target of someone else's use or ability.
     pub targetable: bool,
+    /// May be HIT by an ability a referee judges (DECISIONS #226): a downed player is not hit again.
+    pub hittable: bool,
 }
 
 include!(concat!(env!("OUT_DIR"), "/statuses.rs"));

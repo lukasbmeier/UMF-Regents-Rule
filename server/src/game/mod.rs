@@ -114,6 +114,16 @@ pub trait Genre: Sync {
 
     /// `actor_id` let go of `row` before it was done (`why`: `hold::left`, released, out of range, hurt...).
     fn on_hold_left(&self, _ctx: &ReducerContext, _actor_id: u64, _row: &HoldProgress, _why: u8) {}
+
+    /// ABILITIES A REFEREE JUDGES (DECISIONS #226). `actor_id`'s ability hit `target` (already hurt:
+    /// what it held that a hurt stops, it let go of). True when the genre did what the hit does (a hen
+    /// injured, then downed); false leaves the ability's damage. Asked of the genre of the target's kind.
+    fn on_ability_hit(&self, _ctx: &ReducerContext, _actor_id: u64, _target: &Entity, _ability_id: u32) -> bool {
+        false
+    }
+
+    /// `actor_id`'s ability, judged, hit nothing (a predator slowed). Asked of the genre of its kind.
+    fn on_ability_missed(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) {}
 }
 
 // EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order: build.rs declares each one's
@@ -253,6 +263,18 @@ pub fn on_hold_completed(ctx: &ReducerContext, row: &HoldProgress, hold: &HoldSe
 pub fn on_hold_left(ctx: &ReducerContext, actor_id: u64, row: &HoldProgress, why: u8) {
     for g in GENRES {
         g.on_hold_left(ctx, actor_id, row, why);
+    }
+}
+
+/// A judged ability hit `target`: the genre of its kind says what that does (true), or nobody does.
+pub fn on_ability_hit(ctx: &ReducerContext, actor_id: u64, target: &Entity, ability_id: u32) -> bool {
+    owner_of_entity(target.kind).is_some_and(|g| g.on_ability_hit(ctx, actor_id, target, ability_id))
+}
+
+/// A judged ability missed: the genre of its user's kind hears it.
+pub fn on_ability_missed(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32) {
+    if let Some(g) = owner_of_entity(actor_kind) {
+        g.on_ability_missed(ctx, actor_id, ability_id);
     }
 }
 

@@ -14,6 +14,12 @@ extends Node
 ## a sidecar that came back with a new identity would no longer be an authority for its world
 ## and every write would be refused.
 ##
+## TWO JOBS (DECISIONS #226). In a SIDECAR world it moves everyone and judges abilities; started with
+## `--referee` it only JUDGES (`ActionReferee`): the world's players move themselves (a MODULE world),
+## it builds no entities, and reads the rows it judges by. `--claim=CODE` presents an admin's
+## one-time code (`offer_referee`) to be registered for the world, and `--parent-pid=N` ends it when
+## the game that started it does (`RefereeLauncher`, an editor run).
+##
 ## ONE WORLD PER PROCESS. The spec allows `--world=1,2,3` for small party worlds, but
 ## `InterestManager` subscribes to one world at a time and `EntitySpawner` has one world root,
 ## so a second world would need both to become per-world. `--world=` takes the first and says so.
@@ -33,11 +39,22 @@ extends Node
 @export var load_genres: bool = true
 
 var world: SimWorld = null
+var referee: ActionReferee = null
+## Started with `--referee`: judging only.
+var referee_only: bool = false
+
+var _claim: String = ""
+var _parent_pid: int = 0
+var _watch: float = 0.0
 
 
 func _ready() -> void:
 	var cfg: NetConfig = (net_config if net_config != null else NetConfig.new()).duplicate()
-	cfg.authority_process = true
+	referee_only = _flag("--referee")
+	_claim = _value("--claim=")
+	_parent_pid = int(_value("--parent-pid=")) if _value("--parent-pid=").is_valid_int() else 0
+	cfg.authority_process = not referee_only
+	EntitySpawner.spawning = not referee_only
 	if cfg.token_path.is_empty() or cfg.token_path == NetConfig.new().token_path:
 		cfg.token_path = "user://sidecar_token.dat"
 	var world_id: int = _world_from_cli()
@@ -45,6 +62,11 @@ func _ready() -> void:
 	world = SimWorld.new()
 	add_child(world)
 	world.setup(world_id, level_scene, float(cfg.server_tick_hz))
+	world.follow_level()
+	referee = ActionReferee.new()
+	referee.name = "Referee"
+	referee.world_id = world_id
+	world.add_child(referee)
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	if load_genres:
@@ -56,6 +78,7 @@ func _ready() -> void:
 		print("[Sidecar] genres: ", ", ".join(Genres.listed()))
 	for defn: EntityDefinition in defs:
 		EntitySpawner.register_definition(defn)
+		referee.know(defn)
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
 
 	# The frames to replay. `input_queue` is already in InterestManager's world-filtered list, so
@@ -65,6 +88,10 @@ func _ready() -> void:
 	# And the brains it left behind the last time it ran, so an NPC resumes instead of restarting.
 	if not InterestManager.extra_tables.has(&"npc_brain"):
 		InterestManager.extra_tables.append(&"npc_brain")
+	# What it judges, and the level it judges against (DECISIONS #226).
+	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player"]:
+		if not InterestManager.extra_tables.has(t):
+			InterestManager.extra_tables.append(t)
 	InterestManager.world_id = world_id
 
 	SpaceTimeSync.identity_ready.connect(func(id: PackedByteArray) -> void:
@@ -75,13 +102,41 @@ func _ready() -> void:
 	SpaceTimeSync.connection_state_changed.connect(func(s: SpaceTimeSync.ConnectionState) -> void:
 		print("[Sidecar] connection: ", SpaceTimeSync.ConnectionState.keys()[s]))
 	SignalBus.world_ready.connect(func() -> void:
-		print("[Sidecar] authoritative for world ", world_id))
+		print("[Sidecar] %s world %d" % ["refereeing" if referee_only else "authoritative for", world_id])
+		if not _claim.is_empty():
+			var req: ReducerRequest = SpaceTimeSync.call_reducer(&"claim_referee", [world_id, _claim], ["u32", "String"])
+			req.settled.connect(func(r: ReducerRequest) -> void:
+				print("[Sidecar] claim_referee: ", "registered" if r.outcome == ReducerRequest.Outcome.OK else r.error_message)))
 	SignalBus.entity_spawned.connect(func(eid: int, kind: int) -> void:
 		print("[Sidecar] simulating entity ", eid, " kind ", kind)
 		attach_brain(eid))
 	SignalBus.entity_despawned.connect(func(eid: int) -> void:
 		print("[Sidecar] released entity ", eid))
 	SpaceTimeSync.connect_to_server(cfg)
+
+
+## The game that started it has gone (`--parent-pid`): so does it.
+func _process(delta: float) -> void:
+	if _parent_pid <= 0:
+		return
+	_watch += delta
+	if _watch < 1.0:
+		return
+	_watch = 0.0
+	if not OS.is_process_running(_parent_pid):
+		print("[Sidecar] the game that started it (pid %d) has gone: stopping" % _parent_pid)
+		AppExit.quit(get_tree())
+
+
+func _flag(name: String) -> bool:
+	return (OS.get_cmdline_user_args() + OS.get_cmdline_args()).has(name)
+
+
+func _value(prefix: String) -> String:
+	for arg: String in OS.get_cmdline_user_args() + OS.get_cmdline_args():
+		if arg.begins_with(prefix):
+			return arg.substr(prefix.length())
+	return ""
 
 
 ## Give an entity whose definition names a brain something to drive it.

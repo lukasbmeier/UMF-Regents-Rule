@@ -67,8 +67,10 @@ echo "ok"
 
 echo "== architecture lint: authority code stays under sidecar/ =="
 if lint_code 'res://sidecar' foundation game tests --include='*.gd' --include='*.tscn' \
-     | grep -v '^foundation/boot.gd'; then
-  echo "VIOLATION: res://sidecar referenced outside sidecar/ (boot.gd branch excepted)." >&2
+     | grep -v '^foundation/boot.gd' | grep -v '^foundation/net/referee_launcher.gd:[0-9]*:const SIDECAR_SCENE'; then
+  # Excepted: boot.gd's dedicated-server branch, and the one constant RefereeLauncher starts as a
+  # separate process in an editor run (DECISIONS #226): neither uses the sidecar's code.
+  echo "VIOLATION: res://sidecar referenced outside sidecar/ (boot.gd branch and RefereeLauncher.SIDECAR_SCENE excepted)." >&2
   exit 1
 fi
 echo "ok"

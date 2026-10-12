@@ -24,6 +24,8 @@ const ACTION_SPRINT: StringName = &"sprint"
 ## Only matters when MovementConfig.dash_impulse > 0. Bound to Q here if the project has not
 ## mapped it, so turning dash on in the config is the only step a genre needs.
 const ACTION_DASH: StringName = &"dash"
+## Use the character's first ability (DECISIONS #226: the wolf's Pounce). The left mouse button.
+const ACTION_ATTACK: StringName = &"attack"
 ## The slow-walk modifier: a plain key press RUNS (DECISIONS #100).
 const ACTION_SLOW: StringName = &"move_slow"
 ## Held: the camera keeps turning but the character does not, so you can look around while
@@ -92,6 +94,11 @@ func _on_bound() -> void:
 		var q := InputEventKey.new()
 		q.physical_keycode = KEY_Q
 		InputMap.action_add_event(ACTION_DASH, q)
+	if not InputMap.has_action(ACTION_ATTACK):
+		InputMap.add_action(ACTION_ATTACK)
+		var lmb := InputEventMouseButton.new()
+		lmb.button_index = MOUSE_BUTTON_LEFT
+		InputMap.action_add_event(ACTION_ATTACK, lmb)
 	if not InputMap.has_action(ACTION_SLOW):
 		InputMap.add_action(ACTION_SLOW)
 		var ctrl := InputEventKey.new()
@@ -125,6 +132,9 @@ func _exit_tree() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local_authority:
 		return
+	if event.is_action_pressed(ACTION_ATTACK) and (not capture_mouse or MouseCapture.is_captured()) and not is_held_still():
+		use_first_ability()
+		return
 	var motion: InputEventMouseMotion = event as InputEventMouseMotion
 	if motion == null:
 		return
@@ -141,6 +151,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	_look_yaw = wrapf(_look_yaw - motion.relative.x * sens, -PI, PI)
 	var limit: float = deg_to_rad(pitch_limit_deg)
 	_look_pitch = clampf(_look_pitch - motion.relative.y * sens * up, -limit, limit)
+
+
+## The character's first ability, used now, ahead in the way it faces: the predicted id, or -1 (it has
+## none, it is cooling down).
+func use_first_ability() -> int:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if ent == null or ent.definition == null or ent.definition.abilities.is_empty() or ent.definition.abilities[0] == null:
+		return -1
+	var act: SpaceTimeActionComponent = ent.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	if act == null:
+		return -1
+	return act.request_use(ent.definition.abilities[0].id, 0, Vector3(-sin(_body_yaw), 0.0, -cos(_body_yaw)))
 
 
 func _physics_process(_delta: float) -> void:

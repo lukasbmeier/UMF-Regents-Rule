@@ -816,7 +816,9 @@ echo "== statuses and their timers (DECISIONS #206) =="
 # in which (`status_state`), moves it on when its time is up, and holds every rule to it.
 UNTIL_CHANGED=4294967295
 status_of() { sql_first "SELECT status FROM status_state WHERE entity_id = $1" 1; }
-assert_eq "$(row_count "SELECT * FROM status_state WHERE entity_id = $MYENT")" "0" "a player starts with no status row: normal"
+# Normal is no row, or a row saying 0 (a genre's section before this one may have set and reset it:
+# Fowl Play's wolf recovers from a missed pounce).
+check "$(case "$(status_of $MYENT)" in ""|0) echo true;; *) echo false;; esac)" "a player in no status is normal ($(status_of $MYENT))"
 out="$(spacetime call --anonymous "$DB" set_status "$NEAR" 2 0 '""' 2>&1)"
 check "$(echo "$out" | grep -qi "only an authority" && echo true || echo false)" "a player cannot set someone else's status"
 assert_rejected "set_status $NEAR 77 0 \"\"" "no status 77" "a status this game does not have is refused, naming the ones it has"
@@ -878,6 +880,96 @@ EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY 
 SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
 assert_eq "$(field correction_epoch)" "$EPOCH" "and running, the same step is taken"
+
+echo "== the referee: abilities a sidecar judges (DECISIONS #226) =="
+# The module's side. A judged ability is queued for its world's referee, not resolved; with nobody
+# judging it is refused; a referee is registered by presenting an admin's one-time code; its answer is
+# a hit or a miss every client sees; a request nobody answers in time is a miss. The CLI's admin plays
+# the referee here (`resolve_action` is an authority's, and an admin is one for every world); a real
+# sidecar judging against a real level: tests/sidecar_test.sh.
+JUDGED='"{\"name\":\"lunge\",\"judged\":true,\"reach\":1.4,\"radius\":0.35,\"height\":0.6}"'
+assert_ok "define_ability 9 0 0.0 400 25.0 $JUDGED" "admin defines a judged ability (a lunge: 400 ms wind-up, 25 damage)"
+assert_ok "define_ability 10 0 0.0 20000 25.0 $JUDGED" "and a slow one (20 s wind-up: each use waits for its referee while it is checked, a CLI call a second)"
+# THE ABILITIES FOLLOW THE BUILD: content's abilities are brought up to date on every connection (they
+# were seeded once, at init: a world from before an ability was added never had it).
+assert_ok 'define_ability 0 5000 2.0 150 10.0 {}' "an admin changes the built-in melee by hand (a 5 s cooldown)"
+assert_eq "$(sql_first 'SELECT cooldown_ms FROM ability_def WHERE ability_id = 0' 1)" "800" "the next connection puts content's back (800 ms)"
+assert_eq "$(sql_first 'SELECT cooldown_ms FROM ability_def WHERE ability_id = 9' 1)" "0" "an ability content does not name is left as the admin made it"
+assert_ok 'spawn_npc 0 1 {"x":1.0,"y":0.0,"z":-1.0}' "someone to hit"
+VICTIM=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+REF_CODE='"refereecodeforthetestsuite"'
+anon_call() { spacetime call --anonymous "$DB" "$@" 2>&1; }
+
+assert_rejected "use_ability_seen 10 0 $AIM 60 100" "no referee" "with nobody judging the world, a judged ability is refused (said, not guessed at)"
+assert_eq "$(row_count 'SELECT * FROM action_request')" "0" "and nothing is queued"
+assert_rejected "offer_referee 0 \"short\"" "at least 16" "an offer's code is long enough not to be guessed"
+assert_rejected "offer_referee 77 $REF_CODE" "no world 77" "an offer is for a world that exists"
+assert_ok "offer_referee 0 $REF_CODE" "the admin offers a code for world 0 (as its client does before starting a referee)"
+assert_rejected "offer_referee 0 $REF_CODE" "already being started" "a second offer while one stands is refused (two instances do not start two referees)"
+out="$(anon_call claim_referee 0 '"notthecodethatwasoffered"')"
+check "$(echo "$out" | grep -q "not the code offered" && echo true || echo false)" "another code is refused"
+assert_rejected "claim_referee 0 $REF_CODE" "an admin cannot be a referee" "the admin cannot claim it (it would stop being an admin)"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+# Online for 5 s from its claim (its heartbeat would keep it so; the CLI's anonymous identity cannot
+# beat): queue two at once, and check after.
+assert_ok "use_ability_seen 10 0 $AIM 61 400" "a judged use, seen 400 ms behind: queued"
+assert_ok "use_ability_seen 10 0 $AIM 63 20" "a slow one, seen 20 ms behind"
+check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "a sidecar presenting the code is registered ($(echo "$out" | grep -i error | head -1))"
+assert_eq "$(row_count 'SELECT * FROM authority WHERE role = 1 AND world_id = 0')" "1" "as world 0's authority: its referee"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+check "$(echo "$out" | grep -q "nothing was offered" && echo true || echo false)" "the code is used up"
+R61=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 61" 1)
+R63=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 63" 1)
+assert_eq "$(row_count 'SELECT * FROM action_request')" "2" "both wait for the referee"
+assert_eq "$(row_count 'SELECT * FROM action_event WHERE predicted_id = 61')" "0" "nothing has happened yet: no event"
+assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R61" 1)" "150" "seen 400 ms behind, rewound the cap's 150 (favouring the attacker, no further)"
+assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R63" 1)" "20" "under the cap, what it saw"
+DUE_MS=$(python -c "
+import re,sys
+rows='''$(spacetime sql "$DB" "SELECT issued_at, due_at FROM action_request WHERE id = $R61" 2>/dev/null | tail -n +3)'''
+from datetime import datetime
+ts=re.findall(r'\d{4}-\d\d-\d\dT[\d:.]+', rows)
+f=lambda s: datetime.fromisoformat(s[:26])
+print(round((f(ts[1])-f(ts[0])).total_seconds()*1000) if len(ts)==2 else -1)")
+assert_eq "$DUE_MS" "20000" "it lands its wind-up after it was used: when the referee judges it"
+check "$([ "$(spacetime sql --anonymous "$DB" 'SELECT * FROM action_request' 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" = "0" ] && echo true || echo false)" \
+  "a player cannot read them: only the world's authority (no early look at an attacker's aim)"
+
+HPV=$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)
+assert_ok "resolve_action $R61 $VICTIM" "the referee: request 61 hit"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 61" 1)" "0" "every client sees a HIT"
+assert_eq "$(sql_first "SELECT target_id FROM action_event WHERE predicted_id = 61" 1)" "$VICTIM" "on whom the referee said"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)" "$(python -c "print(int(float('$HPV') - 25))")" \
+  "with no genre to say otherwise, the ability's 25 damage"
+assert_eq "$(row_count "SELECT * FROM action_request WHERE id = $R61")" "0" "answered: gone"
+assert_rejected "resolve_action $R61 $VICTIM" "no such request" "and answered once"
+assert_rejected "resolve_action $R63 $MYENT" "not itself" "a referee cannot have it hit its own user"
+assert_ok "set_status $VICTIM 2 $UNTIL_CHANGED \"\"" "the one it would hit goes down"
+assert_rejected "resolve_action $R63 $VICTIM" "cannot be hit" "a downed one is not hit again (downed: not hittable)"
+assert_ok "set_status $VICTIM 0 $UNTIL_CHANGED \"\"" "(up again)"
+assert_ok 'spawn_npc 0 77 {"x":3.0,"y":0.0,"z":0.0}' "a thing, not a person (a kind no character is)"
+THING=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 77 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+assert_rejected "resolve_action $R63 $THING" "not someone" "a thing is not hit"
+assert_ok "despawn_entity $THING" "(gone)"
+# Left unanswered, 63 runs out: the 1 Hz prune, its landing time (20 s) and 3 s on.
+for _ in $(seq 1 40); do [ "$(row_count "SELECT * FROM action_request WHERE id = $R63")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM action_request WHERE id = $R63")" "0" "nobody answered it: it ran out"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 63" 1)" "1" "as a miss (the referee went away; not the user's)"
+assert_rejected "use_ability_seen 10 0 $AIM 64 100" "no referee" "a referee that stopped beating is not judging: refused again"
+# The cap is a live rule: a second referee, the cap at 50 ms first.
+assert_ok "set_rule foundation.rewind_max_ms 50 \"\"" "the rewind's cap at 50 ms"
+assert_ok "offer_referee 0 $REF_CODE" "another offer, now nobody is judging"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+assert_ok "use_ability_seen 10 0 $AIM 62 400" "a use seen 400 ms behind"
+assert_ok "reset_rule foundation.rewind_max_ms" "(the cap back to 150)"
+R62=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 62" 1)
+assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R62" 1)" "50" "rewound the live cap's 50"
+assert_ok "resolve_action $R62 0" "the referee: nothing in its way"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 62" 1)" "1" "a MISS"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "a test referee unregistered"
+done
+assert_ok "despawn_entity $VICTIM" "(the one it hit gone)"
 
 echo "== holds: hold to interact (DECISIONS #209) =="
 # What a hold IS is content (foundation/content/hold/: Help up, 4 s alone, 2.5 with two, 2 with three,

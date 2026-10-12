@@ -39,6 +39,9 @@ class_name StatusDef extends ContentDef
 @export var can_act: bool = true
 ## May be used or aimed at by others (an escaped player is not there to hit).
 @export var targetable: bool = true
+## May be HIT by an ability its referee judges (DECISIONS #226): a downed player is not hit again,
+## a pounce passes over them, though a teammate can still help them up (that is `targetable`).
+@export var hittable: bool = true
 
 @export_group("How it shows")
 ## The player watches a teammate instead of themself (out, escaped). Jump picks the next one.
@@ -93,6 +96,7 @@ func to_bake() -> Dictionary:
 		"can_dash": can_dash,
 		"can_act": can_act,
 		"targetable": targetable,
+		"hittable": hittable,
 	}
 
 

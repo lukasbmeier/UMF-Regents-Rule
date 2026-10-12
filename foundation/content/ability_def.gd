@@ -18,6 +18,19 @@ class_name AbilityDef extends ContentDef
 ## `ability.3`...). Presentation only: not baked, the server does not know it.
 @export var animation: StringName = &"interact"
 
+@export_group("Judged by a referee")
+## JUDGED BY THE WORLD'S REFEREE (DECISIONS #226): a sidecar decides what it hits, against the
+## level's walls and everyone where its user saw them (rewound by what they saw, at most
+## `foundation.rewind_max_ms`), as it lands (`wind_up_ms` after the use). Untargeted: it hits the
+## first thing in its path. Off: the module's own coarse test (its target in `range_m`).
+@export var judged: bool = false
+## How far its sweep goes, along the user's heading (a pounce's lunge).
+@export_range(0.0, 20.0, 0.05, "suffix:m") var reach_m: float = 1.4
+## How wide the sweep is: a ball of this radius, carried along it.
+@export_range(0.05, 3.0, 0.01, "suffix:m") var radius_m: float = 0.35
+## How high above the user's feet it sweeps.
+@export_range(0.0, 3.0, 0.05, "suffix:m") var height_m: float = 0.6
+
 ## The shortest wind-up the network allows (ARCHITECTURE: the RTT floor).
 const MIN_WIND_UP_MS: int = 100
 
@@ -34,11 +47,17 @@ func to_bake() -> Dictionary:
 		"wind_up_ms": wind_up_ms,
 		"damage": damage,
 		"name": display_name,
+		"judged": judged,
+		"reach": reach_m,
+		"radius": radius_m,
+		"height": height_m,
 	}
 
 
 func validate() -> Array[String]:
 	var out: Array[String] = super()
+	if judged and reach_m <= 0.0:
+		out.append("it is judged by the referee but reaches nowhere: give it a reach")
 	if wind_up_ms < MIN_WIND_UP_MS:
 		out.append("its wind-up (%d ms) is under the %d ms a round trip needs: players would see it land before it starts" % [wind_up_ms, MIN_WIND_UP_MS])
 	return out
