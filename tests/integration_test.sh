@@ -910,26 +910,26 @@ assert_rejected "begin_interact_as $H1 $NEAR 9" "nothing to hold there" "another
 
 # Each CLI call takes about half a second, longer than Help up gives: the game's pace rule slows every
 # hold to a tenth while the rates are read (40 s alone), which is also how a designer slows them live.
-assert_ok "set_rule foundation.hold_speed 0.02 \"\"" "every hold at a fiftieth of its speed (so a run of slow CLI calls cannot finish it)"
+assert_ok "set_rule foundation.hold_speed 0.05 \"\"" "every hold at a twentieth of its speed, the rule's least (so a run of slow CLI calls cannot finish it)"
 assert_ok "begin_interact_as $H1 $NEAR 0" "one helper holds Help up"
 assert_eq "$(hold_rows $NEAR)" "1" "one thing held on the target"
 assert_eq "$(hold_field $NEAR doers)" "1" "by one"
-check "$(near_rate "$(hold_field $NEAR rate)" 0.005)" "a two-hundredth a second: 4 s alone, at a fiftieth of the pace ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.0125)" "an eightieth a second: 4 s alone, at a twentieth of the pace ($(hold_field $NEAR rate))"
 assert_eq "$(sql_first "SELECT target_id FROM hold_member WHERE entity_id = $H1" 1)" "$NEAR" "the helper holds it"
 assert_eq "$(sql_rows_anon "SELECT * FROM hold_progress WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client draws the bar"
 assert_ok "begin_interact_as $H1 $NEAR 0" "holding it again changes nothing"
 assert_eq "$(doer_count $NEAR)" "1" "(still one)"
 assert_ok "begin_interact_as $H2 $NEAR 0" "a second joins"
-check "$(near_rate "$(hold_field $NEAR rate)" 0.008)" "faster together: 2.5 s with two ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.02)" "faster together: 2.5 s with two ($(hold_field $NEAR rate))"
 assert_ok "begin_interact_as $H3 $NEAR 0" "a third"
-check "$(near_rate "$(hold_field $NEAR rate)" 0.01)" "2 s with three ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.025)" "2 s with three ($(hold_field $NEAR rate))"
 assert_ok "end_interact_as $H3" "the third lets go"
-check "$([ "$(doer_count $NEAR)" = "2" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.008)" = "true" ] && echo true || echo false)" "two again, at two's rate"
+check "$([ "$(doer_count $NEAR)" = "2" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.02)" = "true" ] && echo true || echo false)" "two again, at two's rate"
 assert_ok "apply_damage $H2 1 0" "the second is hurt"
-check "$([ "$(doer_count $NEAR)" = "1" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.005)" = "true" ] && echo true || echo false)" "and lets go (Help up stops when its doer is hurt)"
-assert_ok "set_rule foundation.hold_speed 0.04 \"\"" "the pace changed while it is held (doubled)"
+check "$([ "$(doer_count $NEAR)" = "1" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.0125)" = "true" ] && echo true || echo false)" "and lets go (Help up stops when its doer is hurt)"
+assert_ok "set_rule foundation.hold_speed 0.1 \"\"" "the pace changed while it is held (doubled)"
 sleep 0.5
-check "$(near_rate "$(hold_field $NEAR rate)" 0.01)" "takes effect at once ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.025)" "takes effect at once ($(hold_field $NEAR rate))"
 move_npc "$H1" 0.5 0.3
 sleep 0.5
 assert_eq "$(doer_count $NEAR)" "0" "the last helper moved 1.1 m from where it began, still in reach (Help up lets go past 0.75 m): let go by the tick"
@@ -951,7 +951,7 @@ assert_eq "$(row_count "SELECT * FROM hold_member")" "0" "everyone let go"
 assert_eq "$(row_count "SELECT * FROM hold_tick")" "0" "and nothing held: the tick stopped itself"
 
 # A doer who cannot act lets go; a target that is no longer downed ends it; a player offline lets go.
-assert_ok "set_rule foundation.hold_speed 0.02 \"\"" "slow again, so nothing finishes while it is checked"
+assert_ok "set_rule foundation.hold_speed 0.05 \"\"" "slow again, so nothing finishes while it is checked"
 assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "downed again"
 assert_ok "begin_interact_as $H1 $NEAR 0" "a helper"
 assert_ok "begin_interact_as $H2 $NEAR 0" "and another"

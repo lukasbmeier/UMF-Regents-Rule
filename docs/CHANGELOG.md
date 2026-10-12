@@ -599,3 +599,6 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - The integration suite has an end hook (`integration_end`), for a genre's checks that end a match.
 - **Two integration checks raced the CLI**, which now takes a second or more a call on this machine: Help up ran at a tenth of its pace so the CLI could look at it mid-way, and a run of slow calls finished it first; the status grace was entered three reads before the step it covers. Help up now runs at a fiftieth (its rates compared within 5 %), and the reads come before the grace begins.
 - Server change: republish (who a new match resets; no table changed).
+
+## 0.39.6 — the hold checks, at a pace the rule allows
+- 0.39.5 slowed the integration suite's Help up to a fiftieth of its pace so slow CLI calls could not finish it, but `foundation.hold_speed`'s least is a twentieth, so the server refused it and the hold ran at full speed (the checks failed the same way as before). It runs at a twentieth now, its rates compared at that pace. Fowl Play's nest checks hold the nest's cooling off while a raid is measured. Test-only: no game change, nothing to republish.
