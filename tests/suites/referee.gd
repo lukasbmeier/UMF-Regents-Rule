@@ -246,6 +246,14 @@ func _run_client_side() -> void:
 	_check(RefereeLauncher.is_local_host("http://127.0.0.1:3000") and RefereeLauncher.is_local_host("localhost:3000")
 		and not RefereeLauncher.is_local_host("http://friend.example:3000"),
 		"a referee is started only for a server on this machine")
+	# THE GAME IS STILL HERE (not a process id: on Windows Godot sees only processes it started).
+	var alive: String = ProjectSettings.globalize_path("user://referee_suite.alive")
+	DirAccess.remove_absolute(alive)
+	_check(not RefereeLauncher.is_alive(alive), "no file: the game that started it is gone")
+	RefereeLauncher.touch_alive(alive)
+	_check(RefereeLauncher.is_alive(alive), "touched just now: still here")
+	_check(not RefereeLauncher.is_alive(alive, -1.0), "touched longer ago than it waits: gone")
+	DirAccess.remove_absolute(alive)
 	var launcher := RefereeLauncher.new()
 	_check(not launcher.why_not().is_empty(), "and not by a client that is not the admin of a connected game (\"%s\")" % launcher.why_not())
 	launcher.free()

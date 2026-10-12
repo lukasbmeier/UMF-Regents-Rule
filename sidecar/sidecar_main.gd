@@ -17,8 +17,9 @@ extends Node
 ## TWO JOBS (DECISIONS #226). In a SIDECAR world it moves everyone and judges abilities; started with
 ## `--referee` it only JUDGES (`ActionReferee`): the world's players move themselves (a MODULE world),
 ## it builds no entities, and reads the rows it judges by. `--claim=CODE` presents an admin's
-## one-time code (`offer_referee`) to be registered for the world, and `--parent-pid=N` ends it when
-## the game that started it does (`RefereeLauncher`, an editor run).
+## one-time code (`offer_referee`) to be registered for the world, and `--parent-alive=FILE` ends it
+## when the game that started it does (`RefereeLauncher`, an editor run: the game keeps the file
+## touched; stale or gone, the game is gone).
 ##
 ## ONE WORLD PER PROCESS. The spec allows `--world=1,2,3` for small party worlds, but
 ## `InterestManager` subscribes to one world at a time and `EntitySpawner` has one world root,
@@ -44,7 +45,7 @@ var referee: ActionReferee = null
 var referee_only: bool = false
 
 var _claim: String = ""
-var _parent_pid: int = 0
+var _parent_alive: String = ""
 var _watch: float = 0.0
 
 
@@ -52,7 +53,7 @@ func _ready() -> void:
 	var cfg: NetConfig = (net_config if net_config != null else NetConfig.new()).duplicate()
 	referee_only = _flag("--referee")
 	_claim = _value("--claim=")
-	_parent_pid = int(_value("--parent-pid=")) if _value("--parent-pid=").is_valid_int() else 0
+	_parent_alive = _value("--parent-alive=")
 	cfg.authority_process = not referee_only
 	EntitySpawner.spawning = not referee_only
 	if cfg.token_path.is_empty() or cfg.token_path == NetConfig.new().token_path:
@@ -115,16 +116,16 @@ func _ready() -> void:
 	SpaceTimeSync.connect_to_server(cfg)
 
 
-## The game that started it has gone (`--parent-pid`): so does it.
+## The game that started it has gone (`--parent-alive`: its file stale or removed): so does it.
 func _process(delta: float) -> void:
-	if _parent_pid <= 0:
+	if _parent_alive.is_empty():
 		return
 	_watch += delta
 	if _watch < 1.0:
 		return
 	_watch = 0.0
-	if not OS.is_process_running(_parent_pid):
-		print("[Sidecar] the game that started it (pid %d) has gone: stopping" % _parent_pid)
+	if not RefereeLauncher.is_alive(_parent_alive):
+		print("[Sidecar] the game that started it has gone (%s): stopping" % _parent_alive)
 		AppExit.quit(get_tree())
 
 

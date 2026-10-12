@@ -3,8 +3,11 @@ class_name RefereeLauncher extends Node
 ## nothing else: when this client is the admin, run from the editor against a server on this machine,
 ## and the game has an ability a referee judges but the world has no referee online, it offers the
 ## module a one-time code (`offer_referee`) and starts the project's sidecar headless beside it
-## (`--referee --claim=<code> --parent-pid=<this>`), which presents the code and is registered. The
-## sidecar ends when this game does. It looks again every few seconds, so a referee that went away
+## (`--referee --claim=<code> --parent-alive=<file>`), which presents the code and is registered. The
+## sidecar ends when this game does: this game touches the file every second (`touch_alive`), and the
+## sidecar stops once it goes stale (`is_alive`). Not a process id: on Windows Godot can only ask
+## after processes it started itself, so the sidecar saw the game that started it as gone at once
+## (Luke's first try: each referee quit a second after it claimed the farm). It looks again every few seconds, so a referee that went away
 ## (the last run's, quitting just as this one started) is replaced; a second instance finds the
 ## referee online, or the offer standing, and starts nothing.
 ##
@@ -19,6 +22,9 @@ const SETTLE_S: float = 3.0
 const LOOK_EVERY_S: float = 5.0
 ## The least time between two starts (an offer stands 30 s).
 const RESTART_S: float = 30.0
+## The game touches its alive file this often; the sidecar gives up on it this long after the last.
+const ALIVE_EVERY_S: float = 1.0
+const ALIVE_STALE_S: float = 6.0
 
 ## Off: never starts one (a test, a game that runs its referee itself).
 @export var enabled: bool = true
@@ -33,9 +39,17 @@ var reason: String = ""
 var _wait: float = 0.0
 var _since_start: float = INF
 var _said: String = ""
+## The file this game keeps touching while a referee it started runs ("" until it starts one).
+var _alive_path: String = ""
+var _alive_t: float = 0.0
 
 
 func _process(delta: float) -> void:
+	if not _alive_path.is_empty():
+		_alive_t += delta
+		if _alive_t >= ALIVE_EVERY_S:
+			_alive_t = 0.0
+			touch_alive(_alive_path)
 	if not enabled:
 		return
 	if not SpaceTimeSync.is_connected_to_server() or not InterestManager.has_world():
@@ -75,6 +89,28 @@ func why_not() -> String:
 	return ""
 
 
+## A clean exit takes the file with it: the referee stops at its next look, not 6 s later.
+func _exit_tree() -> void:
+	if not _alive_path.is_empty():
+		DirAccess.remove_absolute(_alive_path)
+
+
+## THE GAME IS STILL HERE: `path` touched now.
+static func touch_alive(path: String) -> void:
+	var f: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if f != null:
+		f.store_string(str(Time.get_unix_time_from_system()))
+		f.close()
+
+
+## Whether the game that keeps `path` touched is still there: it exists and was touched in the last
+## `stale_s` seconds (the sidecar's question, every second).
+static func is_alive(path: String, stale_s: float = ALIVE_STALE_S) -> bool:
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return false
+	return Time.get_unix_time_from_system() - float(FileAccess.get_modified_time(path)) <= stale_s
+
+
 ## Offer a code and start the sidecar with it.
 func start() -> void:
 	var world: int = InterestManager.world_id
@@ -86,12 +122,14 @@ func start() -> void:
 			reason = r.error_message
 			print("[Referee] not starting one: ", r.error_message)
 			return
+		_alive_path = ProjectSettings.globalize_path("user://referee_parent_%d.alive" % OS.get_process_id())
+		touch_alive(_alive_path)
 		# The sidecar reads the database name the way this client did (UMF_DB, else shared/game.json).
 		OS.set_environment("UMF_DB", SpaceTimeSync.database_name(SpaceTimeSync.config))
 		# Its log where the game's is (user://referee.log): it has no window to show it.
 		var args: PackedStringArray = ["--headless", "--log-file", ProjectSettings.globalize_path("user://referee.log"),
 			"--path", ProjectSettings.globalize_path("res://"), SIDECAR_SCENE,
-			"--", "--world=%d" % world, "--referee", "--claim=" + code, "--parent-pid=%d" % OS.get_process_id()]
+			"--", "--world=%d" % world, "--referee", "--claim=" + code, "--parent-alive=" + _alive_path]
 		started_pid = OS.create_process(OS.get_executable_path(), args)
 		print("[Referee] started the referee for world %d (pid %d)" % [world, started_pid]))
 
