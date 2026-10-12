@@ -825,7 +825,16 @@ assert_rejected "set_status $NEAR 77 0 \"\"" "no status 77" "a status this game 
 assert_rejected "set_status $NEAR 2 0 $(python -c "print('x' * 300)")" "at most 256 bytes" "a status's data is kept short"
 assert_ok "set_status $NEAR 2 0 \"\"" "an authority downs the NPC, for the status's own length"
 assert_eq "$(status_of $NEAR)" "2" "it is downed"
-assert_eq "$(sql_first "SELECT lasts_ms FROM status_state WHERE entity_id = $NEAR" 1)" "60000" "for downed's own 60 s (its StatusDef)"
+# Downed's own length in THIS game: a genre's Downed replaces the foundation's (Fowl Play's: 120 s).
+OWN_DOWNED_MS=$(python -c "
+import json, glob, os
+own = None
+for f in sorted(glob.glob('shared/content/*/status.json')):
+    for i in json.load(open(f))['items']:
+        if i['status'] == 2 and (own is None or os.path.basename(os.path.dirname(f)) != 'foundation'):
+            own = i['lasts_ms']
+print(own)")
+assert_eq "$(sql_first "SELECT lasts_ms FROM status_state WHERE entity_id = $NEAR" 1)" "$OWN_DOWNED_MS" "for downed's own length, as this game has it ($OWN_DOWNED_MS ms: its StatusDef)"
 assert_eq "$(sql_first "SELECT by_entity FROM status_state WHERE entity_id = $NEAR" 1)" "$MYENT" "and says who did it"
 assert_eq "$(sql_rows_anon "SELECT * FROM status_state WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client shows it"
 
@@ -970,6 +979,56 @@ for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND worl
   assert_ok "revoke_authority $REF_ID" "a test referee unregistered"
 done
 assert_ok "despawn_entity $VICTIM" "(the one it hit gone)"
+
+echo "== carry: one entity carried by another (DECISIONS #228) =="
+# The module's half of milestone 6: who may carry whom; a carried entity is CARRIED, kept at its
+# carrier every tick whatever its own client claims; put down at its carrier's feet in the status it
+# had; a carrier that goes drops what it carried. A genre decides WHEN (Fowl Play's pick up and stash).
+pos_e() {   # pos_e ID -> "x y z"
+  sql_first "SELECT pos FROM movement_state WHERE entity_id = $1" 1 \
+    | python -c "import re,sys; v=re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.stdin.read()); print(' '.join(v[:3]))"
+}
+move_e() {   # move_e ID X Z: the authority puts it there
+  spacetime call "$DB" write_movement_batch 0 "[{\"entity_id\":$1,\"pos\":{\"x\":$2,\"y\":0.0,\"z\":$3},\"vel\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"yaw\":0.0,\"grounded\":true,\"move_state\":0,\"last_processed_seq\":0,\"teleport_flag\":true}]" >/dev/null 2>&1
+}
+assert_ok 'spawn_npc 0 1 {"x":2.0,"y":0.0,"z":2.0}' "a carrier"
+CARRIER=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+assert_ok 'spawn_npc 0 1 {"x":4.0,"y":0.0,"z":4.0}' "and someone to carry"
+LOAD=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+assert_ok "set_status $LOAD 2 $UNTIL_CHANGED \"\"" "who is down"
+assert_rejected "attach_as $LOAD $LOAD \"\"" "not itself" "nothing carries itself"
+assert_ok "attach_as $LOAD $CARRIER \"\"" "the carrier picks it up"
+assert_eq "$(sql_first "SELECT carrier_id FROM attachment WHERE entity_id = $LOAD" 1)" "$CARRIER" "the row says who carries it"
+assert_eq "$(status_of $LOAD)" "3" "it is CARRIED (cannot move or act, nor be hit)"
+assert_eq "$(sql_first "SELECT prev_status FROM attachment WHERE entity_id = $LOAD" 1)" "2" "and the row remembers it was down"
+assert_rejected "attach_as $LOAD $CARRIER \"\"" "already carried" "it cannot be picked up twice"
+assert_rejected "attach_as $CARRIER $LOAD \"\"" "carrying while carried" "nor carry its carrier"
+sleep 0.3
+check "$(close_to "$(pos_e $LOAD)" 2.0 0.0 2.0 0.01)" "from the next tick it is where its carrier is ($(pos_e $LOAD))"
+move_e "$CARRIER" 9.0 -6.0
+sleep 0.3
+check "$(close_to "$(pos_e $LOAD)" 9.0 0.0 -6.0 0.01)" "the carrier moves: it comes along ($(pos_e $LOAD))"
+# A carried PLAYER's own claims are dropped: the CLI's player, carried, says it ran off.
+assert_ok 'spawn_npc 0 1 {"x":-3.0,"y":0.0,"z":-3.0}' "a second carrier"
+CARRIER2=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+assert_ok "attach_as $MYENT $CARRIER2 \"\"" "it picks up the CLI's player"
+sleep 0.3
+EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq)
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ 30.0 0.0 30.0 "$EPOCH")]"
+check "$(close_to "$(pos_of)" -3.0 0.0 -3.0 0.01)" "a carried player claiming it ran 33 m off stays where it is carried ($(pos_of))"
+assert_eq "$(field last_processed_seq)" "$SEQ" "its frame consumed (its client is not left waiting for it)"
+assert_ok "despawn_entity $CARRIER2" "its carrier is gone"
+assert_eq "$(row_count "SELECT * FROM attachment WHERE entity_id = $MYENT")" "0" "so it is carried no more"
+check "$(case "$(status_of $MYENT)" in ""|0) echo true;; *) echo false;; esac)" "put down in the status it had (normal)"
+check "$(close_to "$(pos_of)" -3.0 0.0 -3.0 0.01)" "where its carrier was"
+assert_ok "detach_as $LOAD" "the first carrier puts its load down"
+assert_eq "$(row_count "SELECT * FROM attachment WHERE entity_id = $LOAD")" "0" "carried no more"
+assert_eq "$(status_of $LOAD)" "2" "down again, as it was when picked up"
+check "$(close_to "$(pos_e $LOAD)" 9.0 0.0 -6.0 0.01)" "at its carrier's feet"
+assert_rejected "detach_as $LOAD" "not carried" "and it cannot be put down twice"
+for e in "$CARRIER" "$LOAD"; do assert_ok "despawn_entity $e" "(gone)"; done
+move_e "$MYENT" 0.0 0.0   # the CLI's player back at the origin
 
 echo "== holds: hold to interact (DECISIONS #209) =="
 # What a hold IS is content (foundation/content/hold/: Help up, 4 s alone, 2.5 with two, 2 with three,

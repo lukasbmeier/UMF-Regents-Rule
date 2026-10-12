@@ -57,6 +57,7 @@ var _is_bound: bool = false
 const STATUS_COMPONENT: String = "res://foundation/components/status_component.gd"
 const HOLD_COMPONENT: String = "res://foundation/components/hold_component.gd"
 const TIMED_PRESS_COMPONENT: String = "res://foundation/components/timed_press_component.gd"
+const CARRY_COMPONENT: String = "res://foundation/components/carry_component.gd"
 ## Why its body is hidden (`set_hidden_by`): reason -> true. Empty: shown.
 var _hidden_by: Dictionary = {}
 var _saved_layer: int = 0
@@ -238,14 +239,14 @@ func _collect_components() -> void:
 				_required.append(t)
 
 
-## EVERY ENTITY HAS A STATUS, HOLDS AND TIMED PRESSES (DECISIONS #206, #209, #210): a scene that does
-## not carry a `StatusComponent`, `HoldComponent` or `TimedPressComponent` (a genre's own entity, one
-## made before them) is given one, so they work everywhere.
+## EVERY ENTITY HAS A STATUS, HOLDS, TIMED PRESSES AND CAN BE CARRIED (DECISIONS #206, #209, #210,
+## #228): a scene that does not carry a `StatusComponent`, `HoldComponent`, `TimedPressComponent` or
+## `CarryComponent` (a genre's own entity, one made before them) is given one, so they work everywhere.
 ##
 ## By PATH, not by class: those components name this class, and two scripts naming each other this
 ## way were never freed at exit (the unit run's leak check caught it).
 func _ensure_status_component() -> void:
-	for pair: Array in [[STATUS_COMPONENT, "Status"], [HOLD_COMPONENT, "Holds"], [TIMED_PRESS_COMPONENT, "TimedPress"]]:
+	for pair: Array in [[STATUS_COMPONENT, "Status"], [HOLD_COMPONENT, "Holds"], [TIMED_PRESS_COMPONENT, "TimedPress"], [CARRY_COMPONENT, "Carry"]]:
 		var script: Script = load(String(pair[0])) as Script
 		var holder: Node = get_node(^"Components")
 		if holder.get_children().any(func(child: Node) -> bool: return child.get_script() == script):

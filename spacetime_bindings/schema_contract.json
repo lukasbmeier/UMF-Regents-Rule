@@ -4,6 +4,7 @@
 	"reducers": {
 		"add_score": "(entity_id:U64,score:I64,coins:I64)",
 		"apply_damage": "(target_id:U64,amount:F32,source_id:U64)",
+		"attach_as": "(entity_id:U64,carrier_id:U64,socket:String)",
 		"begin_interact": "(target_id:U64,verb:U8)",
 		"begin_interact_as": "(actor_id:U64,target_id:U64,verb:U8)",
 		"challenge_press": "(challenge_id:U64)",
@@ -16,6 +17,7 @@
 		"create_world": "(world_id:U32,sim_authority:U8)",
 		"define_ability": "(ability_id:U32,cooldown_ms:U32,range:F32,wind_up_ms:U32,damage:F32,data:String)",
 		"despawn_entity": "(entity_id:U64)",
+		"detach_as": "(entity_id:U64)",
 		"dev_nudge": "(offset:Vector3(x:F32,y:F32,z:F32))",
 		"end_interact": "()",
 		"end_interact_as": "(actor_id:U64)",
@@ -63,6 +65,7 @@
 		"action_event": "ActionEvent(id:U64,world_id:U32,actor_id:U64,ability_id:U32,target_id:U64,aim:Vector3(x:F32,y:F32,z:F32),outcome:U8,predicted_id:U32,server_ts:(__timestamp_micros_since_unix_epoch__:I64))",
 		"action_request": "ActionRequest(id:U64,world_id:U32,actor_id:U64,ability_id:U32,target_id:U64,aim:Vector3(x:F32,y:F32,z:F32),predicted_id:U32,rewind_ms:U32,issued_at:(__timestamp_micros_since_unix_epoch__:I64),due_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"appearance": "AppearanceRow(entity_id:U64,world_id:U32,look:String)",
+		"attachment": "Attachment(entity_id:U64,world_id:U32,carrier_id:U64,socket:String,since:(__timestamp_micros_since_unix_epoch__:I64),prev_status:U8)",
 		"authority": "Authority(identity:(__identity__:U256),role:U8,world_id:U32,last_seen:(__timestamp_micros_since_unix_epoch__:I64))",
 		"challenge": "Challenge(id:U64,entity_id:U64,kind:U8,seed:U64,difficulty:F32,issued_at:(__timestamp_micros_since_unix_epoch__:I64),expires_at:(__timestamp_micros_since_unix_epoch__:I64),payload:String)",
 		"entity": "Entity(entity_id:U64,world_id:U32,kind:U8,owner:(__identity__:U256),spawned_at:(__timestamp_micros_since_unix_epoch__:I64))",

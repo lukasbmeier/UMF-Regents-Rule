@@ -7,6 +7,7 @@ const AbilityState = preload('res://spacetime_bindings/schema/types/umf_ability_
 const ActionEvent = preload('res://spacetime_bindings/schema/types/umf_action_event.gd')
 const ActionRequest = preload('res://spacetime_bindings/schema/types/umf_action_request.gd')
 const AppearanceRow = preload('res://spacetime_bindings/schema/types/umf_appearance_row.gd')
+const Attachment = preload('res://spacetime_bindings/schema/types/umf_attachment.gd')
 const Authority = preload('res://spacetime_bindings/schema/types/umf_authority.gd')
 const Challenge = preload('res://spacetime_bindings/schema/types/umf_challenge.gd')
 const Entity = preload('res://spacetime_bindings/schema/types/umf_entity.gd')

@@ -109,10 +109,16 @@ pub(crate) fn tick_world_module(
     cfg: &crate::sim::MovementConfig,
 ) {
     let rows: Vec<MovementStateRow> = ctx.db.movement_state().world_id().filter(world_id).collect();
+    // Carried entities are not moved by their own frames: they are put on their carriers once the
+    // carriers have moved (below, DECISIONS #228).
+    let carried = carried_rows(ctx, world_id);
     // Where a player may stand in this world's level (REVIEW B2); the greybox (0) has no bake.
     let level = crate::level::by_id(world_level_of(ctx, world_id));
     let grace_ms = hot_number(ctx, crate::hot::foundation::STATUS_GRACE_MS) as i64;
     for row in rows {
+        if carried.iter().any(|(e, _)| *e == row.entity_id) {
+            continue;
+        }
         let mut inputs: Vec<InputQueueRow> = ctx.db.input_queue().entity_id().filter(row.entity_id).collect();
         inputs.sort_by_key(|q| q.frame.seq);
 
@@ -195,6 +201,37 @@ pub(crate) fn tick_world_module(
                 correction_epoch: epoch,
             });
         }
+    }
+    place_carried(ctx, &carried, tick);
+}
+
+/// A CARRIED ENTITY IS WHERE ITS CARRIER IS (DECISIONS #228): its own frames are consumed and dropped
+/// (it is not moving itself; its seq still advances, so its client's reconciliation keeps up), and it
+/// takes its carrier's place, heading and speed, written every tick so every client follows it.
+fn place_carried(ctx: &ReducerContext, carried: &[(u64, u64)], tick: u64) {
+    for &(entity_id, carrier_id) in carried {
+        let (Some(row), Some(carrier)) = (ctx.db.movement_state().entity_id().find(entity_id),
+            ctx.db.movement_state().entity_id().find(carrier_id)) else { continue };
+        let mut last_seq = row.last_processed_seq;
+        let inputs: Vec<InputQueueRow> = ctx.db.input_queue().entity_id().filter(entity_id).collect();
+        for q in inputs {
+            last_seq = last_seq.max(q.frame.seq);
+            ctx.db.input_queue().id().delete(q.id);
+        }
+        if row.pos == carrier.pos && row.yaw == carrier.yaw && last_seq == row.last_processed_seq && !row.teleport_flag {
+            continue;
+        }
+        ctx.db.movement_state().entity_id().update(MovementStateRow {
+            pos: carrier.pos,
+            vel: carrier.vel,
+            yaw: carrier.yaw,
+            grounded: carrier.grounded,
+            last_processed_seq: last_seq,
+            server_tick: tick,
+            server_ts: ctx.timestamp,
+            teleport_flag: false,
+            ..row
+        });
     }
 }
 

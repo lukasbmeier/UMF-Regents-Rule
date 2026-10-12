@@ -55,14 +55,18 @@ func _run_content() -> void:
 		"the foundation has its seven, numbered 0-6: %s" % ", ".join(names))
 	_check(StatusDef.normal().moves_as_usual() and StatusDef.find(StatusDef.NORMAL).apply_to(MovementConfig.shared()) == MovementConfig.shared(),
 		"normal changes nothing (the same config, not a copy)")
+	# Downed as THIS game has it (a genre may replace it: Fowl Play's hen crawls at 30 % for 120 s).
 	var downed: StatusDef = StatusDef.find(StatusDef.DOWNED)
 	var base: MovementConfig = MovementConfig.shared()
 	var c: MovementConfig = downed.apply_to(base)
-	_check(is_equal_approx(c.run_speed, base.run_speed * 0.25) and is_equal_approx(c.sprint_speed, c.run_speed)
+	_check(downed.speed < 1.0 and is_equal_approx(c.run_speed, base.run_speed * downed.speed) and is_equal_approx(c.sprint_speed, c.run_speed)
 		and c.flap_charges == 0 and c.dash_impulse == 0.0,
-		"downed crawls at a quarter of the character's run, with no sprint, flaps or dash (run %.2f)" % c.run_speed)
-	_check(downed.then_status == StatusDef.find(StatusDef.OUT) and is_equal_approx(downed.lasts_s, 60.0),
-		"and after 60 s it is out")
+		"downed crawls at %.0f %% of the character's run, with no sprint, flaps or dash (run %.2f)" % [downed.speed * 100.0, c.run_speed])
+	_check(downed.then_status != null and downed.then_status.status == StatusDef.OUT and downed.lasts_s > 0.0,
+		"and after %.0f s it is out" % downed.lasts_s)
+	_check(is_equal_approx((load("res://foundation/content/status/downed.tres") as StatusDef).lasts_s, 60.0)
+		and is_equal_approx((load("res://foundation/content/status/downed.tres") as StatusDef).speed, 0.25),
+		"(the foundation's own: a quarter, 60 s)")
 	var f := InputFrame.new()
 	f.jump = true
 	f.sprint = true
@@ -183,7 +187,7 @@ func _run_movement() -> void:
 		highest = maxf(highest, dm.get_predicted_state().pos.y)
 	var s: MovementState = dm.get_predicted_state()
 	var crawl: float = Vector2(s.vel.x, s.vel.z).length()
-	_check(is_equal_approx(crawl, cfg.run_speed * 0.25), "downed: sprinting and jumping, it crawls at %.2f m/s (a quarter of its run)" % crawl)
+	_check(is_equal_approx(crawl, cfg.run_speed * StatusDef.find(StatusDef.DOWNED).speed), "downed: sprinting and jumping, it crawls at %.2f m/s (its Downed's share of its run)" % crawl)
 	_check(highest == 0.0 and s.move_state != MovementState.Move.SPRINT and s.move_state != MovementState.Move.AIR,
 		"and never leaves the ground, nor shows a sprint (state %d)" % s.move_state)
 

@@ -272,6 +272,14 @@ ability lands (its wind-up after the press). It answers hit or miss; what a hit 
   that lands with nobody to answer is a miss.
 - **Hitboxes** are each character's body (`collision_radius`, `collision_height` on its definition).
 
+### Carrying (attach and carry)
+One entity can carry another (a wolf, a downed hen). A genre decides when, from its own rules, and
+calls `attach` / `detach` (`server/src/module/carry.rs`); the foundation does the rest: the carried
+one is CARRIED (it cannot move, act or be hit), the server keeps it where its carrier is, and every
+client draws it at the carrier's **carry point**: `carry_offset` and `carry_yaw_deg` on the carrier's
+character `.tres` (in its own terms: x right, y up, -z ahead). Put down, it stands where the genre
+says, in the status the genre says (else the one it had before). DECISIONS #228.
+
 ---
 
 ## 4. How a player gets into the world

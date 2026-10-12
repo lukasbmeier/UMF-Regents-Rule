@@ -18,6 +18,12 @@ func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall
 func apply_damage(target_id: int, amount: float, source_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('apply_damage', [target_id, amount, source_id], [&'u64', &'f32', &'u64'], &'')
 
+## 0. entity_id: int [br]
+## 1. carrier_id: int [br]
+## 2. socket: String [br]
+func attach_as(entity_id: int, carrier_id: int, socket: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('attach_as', [entity_id, carrier_id, socket], [&'u64', &'u64', &'string'], &'')
+
 ## 0. target_id: int [br]
 ## 1. verb: int [br]
 func begin_interact(target_id: int, verb: int) -> SpacetimeDBReducerCall:
@@ -78,6 +84,10 @@ func define_ability(ability_id: int, cooldown_ms: int, range: float, wind_up_ms:
 ## 0. entity_id: int [br]
 func despawn_entity(entity_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('despawn_entity', [entity_id], [&'u64'], &'')
+
+## 0. entity_id: int [br]
+func detach_as(entity_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('detach_as', [entity_id], [&'u64'], &'')
 
 ## 0. offset: Vector3 [br]
 func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:

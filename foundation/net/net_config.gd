@@ -84,4 +84,6 @@ class_name NetConfig extends Resource
 	# What is being held on each entity, and who holds what (HoldComponent, DECISIONS #209)
 	&"hold_progress",
 	&"hold_member",
+	# Who carries whom (CarryComponent, DECISIONS #228)
+	&"attachment",
 ]

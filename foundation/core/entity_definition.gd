@@ -67,6 +67,12 @@ class_name EntityDefinition extends ContentDef
 ## smaller capsule. The character workbench draws it around the model.
 @export_range(0.0, 5.0, 0.01, "suffix:m") var collision_radius: float = 0.0
 @export_range(0.0, 10.0, 0.01, "suffix:m") var collision_height: float = 0.0
+## WHERE IT CARRIES SOMETHING (DECISIONS #228): the point, from its feet, in its own terms (x right,
+## y up, -z ahead), that something it carries is drawn at (a hen in the wolf's mouth), and that
+## thing's turn from its own heading. Only the drawing: the server keeps the carried thing at the
+## carrier's place.
+@export var carry_offset: Vector3 = Vector3(0.0, 0.8, -0.6)
+@export_range(-180.0, 180.0, 1.0, "suffix:°") var carry_yaw_deg: float = 0.0
 
 @export_group("How it plays")
 ## A PLAYER MAY CHOOSE TO PLAY IT (DECISIONS #217): it is offered in the lobby (Play as), and the

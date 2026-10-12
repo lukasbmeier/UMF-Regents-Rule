@@ -307,6 +307,8 @@ pub fn use_ability_from(
         }
     }
     let me = ctx.db.movement_state().entity_id().find(actor).ok_or("use_ability: actor has no movement_state")?;
+    // The game's own word (DECISIONS #228: a predator carrying a hen does not pounce).
+    crate::game::may_use_ability(ctx, actor, ability_id)?;
 
     if is_judged(&def) {
         queue_judged(ctx, actor, me.world_id, &def, target_id, aim, predicted_id, view_delay_ms)?;
@@ -440,6 +442,8 @@ pub fn despawn_entity(ctx: &ReducerContext, entity_id: u64) -> Result<(), String
 /// Every row of an entity, for code that has already decided it may (an authority above, a genre
 /// taking its own NPC away).
 pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
+    // What it carried is put down where it is, while its row still says where that is (DECISIONS #228).
+    forget_carry(ctx, entity_id);
     ctx.db.entity().entity_id().delete(entity_id);
     ctx.db.movement_state().entity_id().delete(entity_id);
     ctx.db.health_state().entity_id().delete(entity_id);

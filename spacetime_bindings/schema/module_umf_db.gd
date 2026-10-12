@@ -2,13 +2,14 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
 var action_event: UmfActionEventTable
 var action_request: UmfActionRequestTable
 var appearance: UmfAppearanceTable
+var attachment: UmfAttachmentTable
 var authority: UmfAuthorityTable
 var challenge: UmfChallengeTable
 var entity: UmfEntityTable
@@ -38,6 +39,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	action_event = preload('res://spacetime_bindings/schema/tables/umf_action_event_table.gd').new(p_local_db)
 	action_request = preload('res://spacetime_bindings/schema/tables/umf_action_request_table.gd').new(p_local_db)
 	appearance = preload('res://spacetime_bindings/schema/tables/umf_appearance_table.gd').new(p_local_db)
+	attachment = preload('res://spacetime_bindings/schema/tables/umf_attachment_table.gd').new(p_local_db)
 	authority = preload('res://spacetime_bindings/schema/tables/umf_authority_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)

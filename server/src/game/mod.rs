@@ -124,6 +124,13 @@ pub trait Genre: Sync {
 
     /// `actor_id`'s ability, judged, hit nothing (a predator slowed). Asked of the genre of its kind.
     fn on_ability_missed(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) {}
+
+    /// `actor_id` is about to use `ability_id` (its kind may, it may act, it is not cooling down): Err
+    /// refuses it, with the reason its player sees (a predator carrying a hen does not pounce). Every
+    /// genre is asked; the first refusal stands.
+    fn may_use_ability(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 // EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order: build.rs declares each one's
@@ -264,6 +271,14 @@ pub fn on_hold_left(ctx: &ReducerContext, actor_id: u64, row: &HoldProgress, why
     for g in GENRES {
         g.on_hold_left(ctx, actor_id, row, why);
     }
+}
+
+/// Every genre may refuse a use: the first refusal stands.
+pub fn may_use_ability(ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> Result<(), String> {
+    for g in GENRES {
+        g.may_use_ability(ctx, actor_id, ability_id).map_err(|e| format!("use_ability: {e}"))?;
+    }
+    Ok(())
 }
 
 /// A judged ability hit `target`: the genre of its kind says what that does (true), or nobody does.

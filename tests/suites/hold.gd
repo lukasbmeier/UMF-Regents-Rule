@@ -109,7 +109,7 @@ func _run_content() -> void:
 		"4 s alone, 2.5 with two, 2 with three or more; nobody, nothing")
 	_check(h.summary() == "Takes 4.0 s alone, 2.5 s with 2, 2.0 s with 3+", "its line in the Content panel: %s" % h.summary())
 	var baked: Dictionary = h.to_bake()
-	_check(baked["targets"] == [0, 1] and baked["doers"] == [] and baked["when"] == StatusDef.find(StatusDef.DOWNED).id
+	_check(baked["targets"] == [0, 1] and baked["doers"] == [] and baked["when"] == (load("res://foundation/content/status/downed.tres") as StatusDef).id
 		and baked["then"] == StatusDef.find(StatusDef.NORMAL).id and baked["seconds_with"] == [4.0, 2.5, 2.0],
 		"baked: the kinds it is done to, anyone may, while downed, back to normal: %s" % str(baked))
 	_check(h.validate().is_empty(), "and nothing wrong with it: %s" % str(h.validate()))

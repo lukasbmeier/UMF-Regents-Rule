@@ -33,7 +33,7 @@ needs, then the objective loop, then the match around it.
 | 3 ✔ 0.36.0 | **Hold to interact** (§3.5) | table `interaction {id, world_id, actor_id, target_id, verb, started_at, progress}`; `begin_interact` / `end_interact`; a 10 Hz tick (range, status interrupts) and genre hooks for the RATE (by participants) and COMPLETION; the prompt shows progress | three bots lay a nest in ~6 s, one in ~58 s (genre data); a hit interrupts |
 | 4 ✔ 0.37.0 | **Server-timed skill checks** (A4, also fixes fishing's timing bar) | challenge kind 0 becomes a press judged by the server's clock (issued_at, measured RTT credit), the client sends only the press | a press with simulated 150 ms latency is judged as the player saw it; a client-reported result is impossible |
 | 5 ✔ 0.40.0 | **Abilities on the sidecar, lag-compensated** (A1) | `use_ability` -> `action_request` for SIDECAR worlds; sidecar resolution with a 300 ms ring of transforms, rewound by the attacker's RTT, capped by a hot rule (150 ms, favour attacker) | a pounce issued at t-100 ms hits a chicken that entered a gap at t; one at t+50 ms misses |
-| 6 | **Attach and carry** (C1) | table `attachment {entity_id, carrier_id, socket, since}`; CARRIED movement mode (the carried entity renders from its carrier); the character bench fits the socket | a carried entity rides its carrier on every client, late joiners included |
+| 6 ✔ 0.41.0 | **Attach and carry** (C1) | table `attachment {entity_id, carrier_id, socket, since}`; CARRIED movement mode (the carried entity renders from its carrier); the character bench fits the socket | a carried entity rides its carrier on every client, late joiners included |
 | 7 | **Bots in the lobby** (B3) | a bot is an entity with an `npc_brain` row and a `session_member` row (no new column: membership + brain says bot); fill empty slots on ready (hot rule) | a 1v4 match with 3 bots runs headless to results |
 | 8 | **A world per match** (B1) | table `world_state {world_id, state (pending, live, closing)}`; `destroy_world` (cascades); the sidecar hosts several worlds | lobby start makes a world the sidecar loads; results destroy it; the next match reuses the process |
 | 9 | **Noise and pings** (C2) | tables `noise {id, world_id, pos, radius, kind, until, source_team}`, `ping {id, world_id, entity_id, kind, pos, until}`; the client turns them into sound and markers (`FeedbackSet` later) | a crack is heard across the farm; a ping shows to its team only |
@@ -72,6 +72,12 @@ What is judged is content (`AbilityDef.judged`: reach, radius, height), carried 
 `ability_def` row. The client sends its view delay (`use_ability_seen`), the module caps it, and the
 referee rewinds everyone but the user by it. An editor run starts the referee itself (`RefereeLauncher`,
 a one-time code). Driving NPCs from the referee while players move themselves is milestone 7's.
+
+As built, milestone 6 has no new movement mode: the module keeps a carried entity's row at its
+carrier (its own frames consumed), and `CarryComponent` draws it at the carrier's carry point
+(`EntityDefinition.carry_offset`) every frame after movement (DECISIONS #228). The carry point is a
+field on the carrier's definition, edited in the Inspector; a marker for it in the character bench is
+still to come. SIDECAR worlds are not handled yet.
 
 Between milestones 2 and 3, Workbenches 2 (0.35.0, DECISIONS #207) reworked the benches after
 Luke's first real use of them, so every bench from milestone 3 on is built the new way.

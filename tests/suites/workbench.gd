@@ -352,12 +352,12 @@ func _run_status_bench() -> void:
 	bench.item = downed
 	await get_tree().process_frame
 	var moves: String = await bench.run_named_test(&"moves")
-	_check(is_equal_approx(float(bench.last_measure["run"]), own.run_speed * 0.25)
-		and is_equal_approx(float(bench.last_measure["sprint"]), own.run_speed * 0.25)
+	_check(is_equal_approx(float(bench.last_measure["run"]), own.run_speed * downed.speed)
+		and is_equal_approx(float(bench.last_measure["sprint"]), own.run_speed * downed.speed)
 		and float(bench.last_measure["jump_m"]) == 0.0 and moves.contains("cannot jump"),
-		"downed on the humanoid: a crawl at a quarter of its run, sprint or not, and no jump: %s" % moves)
+		"downed on the humanoid: a crawl at its Downed's share of its run, sprint or not, and no jump: %s" % moves)
 	var timeline: String = await bench.run_named_test(&"timeline")
-	_check(timeline.contains("Downed for 60.0 s, then Out until something changes it"), "its timeline follows `then`: %s" % timeline)
+	_check(timeline.contains("Downed for %.1f s, then Out until something changes it" % downed.lasts_s), "its timeline follows `then`: %s" % timeline)
 	var pose: String = await bench.run_named_test(&"pose")
 	_check(not bool(bench.last_measure["pose"]) and pose.contains("no 'status.downed' clip")
 		and bench.badge()["level"] == "amber", "a pose the character has no clip for is said, and the badge is amber: %s" % pose)
