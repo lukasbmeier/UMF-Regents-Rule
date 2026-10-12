@@ -602,3 +602,12 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 
 ## 0.39.6 — the hold checks, at a pace the rule allows
 - 0.39.5 slowed the integration suite's Help up to a fiftieth of its pace so slow CLI calls could not finish it, but `foundation.hold_speed`'s least is a twentieth, so the server refused it and the hold ran at full speed (the checks failed the same way as before). It runs at a twentieth now, its rates compared at that pace. Fowl Play's nest checks hold the nest's cooling off while a raid is measured. Test-only: no game change, nothing to republish.
+
+## 0.39.7 — the hen's frame rate: holds and statuses kept loaded
+- **Holds and statuses are kept loaded while the game runs** (DECISIONS #224). `HoldDef.find` loaded each hold from its path, and once nothing else held one, Godot's cache let it go: the next lookup read the .tres and what it links from disk again, 1.07 ms a call in Luke's profiler (a few microseconds kept). The front arc asks it for every entity in reach every physics frame, and the prompt every frame, so a hen beside a nest with the wolf near fell to 10-20 fps. `StatusDef.find` did the same. Both keep what they load (the editor still reads afresh); `AppExit` lets them go on quitting.
+- No server change: nothing to republish.
+
+## 0.39.8 — the hold prompt says what just happened
+- **A genre's note while the player holds** (DECISIONS #225). `HoldPrompt.add_note` was asked only while a hold was offered (why the server would refuse it, dimmed); it is now asked while one is held too, and shown after it in the hold's own colour: what just happened to it ("Sit on the nest  ·  an egg cracked: -8 % warmth"). Luke missed a crack in a playtest: the warmth was taken, but nothing on his prompt said so.
+- **The bar flashes red when it goes back** at once by 1 % or more (a raid, a missed check); a slow undoing (a rate) does not. `HoldPrompt.is_flashing()`.
+- No server change: nothing to republish.

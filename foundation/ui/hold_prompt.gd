@@ -5,16 +5,29 @@ class_name HoldPrompt extends VBoxContainer
 ##                                             done (a half-laid nest someone left)
 ##   holding it                                "Help up", the bar filling, how many are doing it
 ##
+## The bar flashes red when it goes back: a genre took some of it away (a raid, a missed check).
+##
 ## It reads what the components know (`InteractionComponent`, `HoldComponent`) every frame and owns
 ## nothing. The foundation's HUD carries one; a genre's HUD adds its own with `HoldPrompt.new()`.
 
 var _label: Label
 var _bar: ProgressBar
 
+## The bar goes back by at least this much at once (not a slow undoing, which is a rate): it flashes
+## `DROP_COLOR` for `DROP_FLASH_S`.
+const DROP_MIN: float = 0.01
+const DROP_FLASH_S: float = 0.8
+const DROP_COLOR: Color = Color(1.0, 0.3, 0.25)
+var _last_hold: int = -1
+var _last_progress: float = -1.0
+var _flash_until_msec: int = 0
+
 ## A GENRE'S WORD ON A HOLD (DECISIONS #220): each `func(me: SpaceTimeEntity, target_id: int, hold:
 ## HoldDef) -> String`, asked while the prompt offers a hold; the first that says something is shown
 ## after it, dimmed ("Hold E: Lay an egg  ·  you can lay again in 12 s"): why the server would refuse
-## it, before the player tries. Added with `add_note`, from a genre's HUD.
+## it, before the player tries. Asked too while the player holds it, and shown after it, not dimmed:
+## what just happened to it ("Sit on the nest  ·  an egg cracked: -8 % warmth"). Added with `add_note`,
+## from a genre's HUD.
 static var _notes: Array[Callable] = []
 
 
@@ -86,8 +99,9 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 			return none
 		var hid: int = int(doing["hold_id"])
 		var n: int = on_it.doers(hid)
-		return {"visible": true, "text": d.prompt + ("  (%d together)" % n if n > 1 else ""),
-			"progress": on_it.progress(hid), "color": d.color}
+		var said: String = note_for(me, int(doing["target_id"]), d)
+		return {"visible": true, "text": d.prompt + ("  (%d together)" % n if n > 1 else "") + ("  ·  " + said if not said.is_empty() else ""),
+			"progress": on_it.progress(hid), "color": d.color, "hold_id": hid, "note": said}
 	var ic: InteractionComponent = me.find_component(InteractionComponent) as InteractionComponent
 	if ic == null or not ic.has_target():
 		return none
@@ -100,7 +114,7 @@ static func state_for(me: SpaceTimeEntity) -> Dictionary:
 	var note: String = note_for(me, ic.get_target(), h)
 	return {"visible": true, "text": "Hold %s: %s" % [key_name(), h.prompt] + ("  ·  " + note if not note.is_empty() else ""),
 		"progress": hc.progress(already) if already >= 0 else -1.0,
-		"color": h.color if note.is_empty() else h.color.darkened(0.45), "note": note}
+		"color": h.color if note.is_empty() else h.color.darkened(0.45), "note": note, "hold_id": already}
 
 
 func show_state(s: Dictionary) -> void:
@@ -111,7 +125,19 @@ func show_state(s: Dictionary) -> void:
 	var p: float = float(s["progress"])
 	_bar.visible = p >= 0.0
 	_bar.value = maxf(p, 0.0)
-	_bar.modulate = s["color"]
+	var hid: int = int(s.get("hold_id", -1))
+	if hid >= 0 and hid == _last_hold and p >= 0.0 and p < _last_progress - DROP_MIN:
+		_flash_until_msec = Time.get_ticks_msec() + int(DROP_FLASH_S * 1000.0)
+	elif hid != _last_hold:
+		_flash_until_msec = 0
+	_last_hold = hid
+	_last_progress = p
+	_bar.modulate = DROP_COLOR if is_flashing() else s["color"]
+
+
+## The bar flashing for going back.
+func is_flashing() -> bool:
+	return Time.get_ticks_msec() < _flash_until_msec
 
 
 ## The interact key's name ("E"), from the input map.

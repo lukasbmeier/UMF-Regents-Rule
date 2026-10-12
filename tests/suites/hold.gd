@@ -9,6 +9,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	HoldDef.clear_cache()
+	_run_kept()
 	_run_content()
 	await _run_genre()
 	await _run_component()
@@ -242,6 +243,29 @@ func _registered(eid: int, def_path: String, status: int, local: bool) -> SpaceT
 	return ent
 
 
+## KEPT, NOT RELOADED (DECISIONS #224): a hold looked up again is the same object, even when nothing
+## else held on to it (it used to be read from disk again: 1 ms a call, every entity in reach, every
+## frame), and looking one up is cheap.
+func _run_kept() -> void:
+	print("== hold: the holds kept loaded while the game runs ==")
+	HoldDef.clear_cache()
+	var first: HoldDef = HoldDef.find(0, 0, StatusDef.DOWNED, 0)
+	var first_id: int = first.get_instance_id() if first != null else 0
+	first = null   # nobody else holds it now
+	var again: HoldDef = HoldDef.find(0, 0, StatusDef.DOWNED, 0)
+	_check(again != null and again.get_instance_id() == first_id, "looked up again with nobody else holding it: the same object, not read again from disk")
+	StatusDef.clear_cache()
+	var st_first: int = StatusDef.find(StatusDef.ESCAPED).get_instance_id()   # one no hold links to
+	_check(StatusDef.find(StatusDef.ESCAPED).get_instance_id() == st_first, "and a status the same")
+	var t0: int = Time.get_ticks_usec()
+	for i: int in 1000:
+		HoldDef.find(0, 0, StatusDef.DOWNED, 0)
+	var each_us: float = float(Time.get_ticks_usec() - t0) / 1000.0
+	_check(each_us < 50.0, "a lookup is cheap: %.1f us (a reload was about 1000)" % each_us)
+	HoldDef.clear_cache()
+	StatusDef.clear_cache()
+
+
 func _run_key_and_prompt() -> void:
 	print("== hold: the key held and let go; the prompt and its bar ==")
 	var h: HoldDef = _help_up()
@@ -286,6 +310,27 @@ func _run_key_and_prompt() -> void:
 	get_tree().root.add_child(prompt)
 	prompt.show_state(s)
 	_check(prompt.visible and prompt.text() == "Help up  (2 together)" and prompt.bar_value() >= 0.5, "and drawn so")
+	# While it is held, a genre's word on what just happened to it, not dimmed (Luke missed a crack).
+	var happened := func(_m: SpaceTimeEntity, target_id: int, hold: HoldDef) -> String:
+		return "an egg cracked" if target_id == 9802 and hold == h else ""
+	HoldPrompt.add_note(happened)
+	var with_note: Dictionary = HoldPrompt.state_for(me)
+	HoldPrompt.remove_note(happened)
+	_check(String(with_note["text"]) == "Help up  (2 together)  ·  an egg cracked" and Color(with_note["color"]) == h.color,
+		"holding it, a genre's note follows, in the hold's own colour: \"%s\"" % with_note["text"])
+	# THE BAR GOES BACK: it flashes red (a raid, a missed check), and only then.
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.50, "color": h.color, "hold_id": 91})
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.505, "color": h.color, "hold_id": 91})
+	_check(not prompt.is_flashing(), "filling: no flash")
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.503, "color": h.color, "hold_id": 91})
+	_check(not prompt.is_flashing(), "a hair back (a slow cooling, a frame's rounding): no flash")
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.42, "color": h.color, "hold_id": 91})
+	_check(prompt.is_flashing() and prompt._bar.modulate == HoldPrompt.DROP_COLOR, "8 % taken at once: the bar flashes red")
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.43, "color": h.color, "hold_id": 91})
+	_check(prompt.is_flashing(), "and keeps flashing a moment as it fills again")
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.9, "color": h.color, "hold_id": 92})
+	prompt.show_state({"visible": true, "text": "x", "progress": 0.2, "color": h.color, "hold_id": 93})
+	_check(not prompt.is_flashing() and prompt._bar.modulate == h.color, "another hold, lower: not a drop, no flash")
 	ic._set_target(9803)
 	(me.find_component(HoldComponent) as HoldComponent).receive_row_event(RowEvent.make(RowEvent.Kind.DELETED, &"hold_member", _MemberRow.new(9801, 91, 9802, h.id), null))
 	prompt.show_state(HoldPrompt.state_for(me))

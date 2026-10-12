@@ -52,6 +52,12 @@ class_name HoldDef extends ContentDef
 
 ## Folder name -> paths, the genres' first (see `_table`): filled on first use while the game runs.
 static var _paths: Array[String] = []
+## The holds themselves, while the game runs (DECISIONS #224): each `find` used to `load()` its path,
+## and once nothing else referenced a hold Godot's cache let it go, so the next `find` read the .tres
+## and everything it links from disk again: 1 ms a call in Luke's game, asked for every entity in
+## reach every physics frame and by the prompt every frame (the hen's frame rate fell with a wolf
+## and a nest beside her). Dropped on `clear_cache` and at exit (`AppExit`); the editor reads afresh.
+static var _held: Array[HoldDef] = []
 
 
 func content_type() -> StringName:
@@ -180,8 +186,7 @@ func timing_note() -> String:
 ## The hold a press of `p_verb` by a `doer_kind` on a `target_kind` in `target_status` starts, or
 ## null: a genre's before the foundation's, as the server matches them (`hold::find`).
 static func find(target_kind: int, p_verb: int, target_status: int, doer_kind: int) -> HoldDef:
-	for path: String in _table():
-		var h: HoldDef = load(path) as HoldDef
+	for h: HoldDef in _loaded():
 		if h != null and h.applies(target_kind, p_verb, target_status, doer_kind):
 			return h
 	return null
@@ -189,16 +194,28 @@ static func find(target_kind: int, p_verb: int, target_status: int, doer_kind: i
 
 ## The hold with content id `hold_id` (what `hold_progress.hold` names), or null.
 static func by_id(hold_id: int) -> HoldDef:
-	for path: String in _table():
-		var h: HoldDef = load(path) as HoldDef
+	for h: HoldDef in _loaded():
 		if h != null and h.id == hold_id:
 			return h
 	return null
 
 
-## Forget what was read (a suite that changes the content, or the genres).
+## Forget what was read (a suite that changes the content, or the genres; the game quitting).
 static func clear_cache() -> void:
 	_paths.clear()
+	_held.clear()
+
+
+## Every hold, loaded: kept while the game runs, read afresh in the editor.
+static func _loaded() -> Array[HoldDef]:
+	if not _held.is_empty() and not Engine.is_editor_hint():
+		return _held
+	var out: Array[HoldDef] = []
+	for path: String in _table():
+		out.append(load(path) as HoldDef)
+	if not Engine.is_editor_hint():
+		_held = out
+	return out
 
 
 ## Every hold's path: each genre's in the game's order, then the foundation's. Paths, not resources,

@@ -69,6 +69,9 @@ const GENRE_FROM: int = 100
 ## edited there). Paths, not the resources, so this static never keeps a status alive on its own:
 ## Godot's resource cache holds each one while anything uses it.
 static var _by_number: Dictionary = {}
+## The statuses themselves, by number, while the game runs: kept, not loaded from their path on every
+## `find` (DECISIONS #224, as `HoldDef._held`). Dropped on `clear_cache` and at exit.
+static var _held: Dictionary = {}
 
 
 func content_type() -> StringName:
@@ -185,8 +188,13 @@ func bursting_at(elapsed_s: float) -> bool:
 
 ## The status this game has for number `n` (a genre's over the foundation's), or null.
 static func find(n: int) -> StatusDef:
+	if not Engine.is_editor_hint() and _held.has(n):
+		return _held[n]
 	var path: String = String(_table().get(n, ""))
-	return load(path) as StatusDef if not path.is_empty() else null
+	var s: StatusDef = load(path) as StatusDef if not path.is_empty() else null
+	if s != null and not Engine.is_editor_hint():
+		_held[n] = s
+	return s
 
 
 ## Normal (status 0): what an entity with no status is in, and what an unknown number shows as.
@@ -211,6 +219,7 @@ static func all() -> Dictionary:
 ## Forget what was read (a suite that changes the content, or the genres).
 static func clear_cache() -> void:
 	_by_number.clear()
+	_held.clear()
 
 
 static func _table() -> Dictionary:
