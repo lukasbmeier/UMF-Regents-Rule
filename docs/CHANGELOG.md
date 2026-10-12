@@ -587,3 +587,15 @@ Found running the foundation's integration suite inside Fowl Play (its nests are
 
 ## 0.39.4 — the splash's ripples, checked in a game that wants them
 - The match suite asserted the splash shows no water ripples, which fails in any game whose splash asks for them (Fishing's does). It now checks they show exactly when the game's splash asks, and that the default does not. Found running Fishing's suites on 0.39 (they had not run since 0.37). No server change.
+
+## 0.39.5 — in front of the character, not the camera; people of any kind; a new match from the Rules page
+From Luke's first try of Fowl Play (DECISIONS #221):
+- **What is in front of the character is in front of its BODY.** The front arc read the input's heading, which follows the camera even standing still, so in third person you still had to aim the camera at a nest the hen already faced. It reads the body's heading now, which turns to the camera only while moving or aiming. The remote playtest faced the downed walker the old way (camera only): it now turns the body, and checks the camera alone offers nothing.
+- **A person is a person whatever kind they play.** The front arc offered anything not kind 0 or 1 as a thing to use, so a hen beside a nest (kind 100) could be the target instead of the nest. A person is now a foundation person kind, a playable character, or anyone with a player row; the lobby, the Rules page's Go to and the net overlay find players by their player row, not kind 0.
+- **Play as whenever the server would take it**: in the lobby phase (between rounds too, not only before a match's first round), or any time for an admin. Luke came back to the lobby screen after a round and had no way to switch.
+- **New match** on the Rules page (admin): everyone back to the lobby, the rounds from 1; a game resets what it keeps per match (Fowl Play: its nests).
+- **A new match resets PEOPLE's statuses, not things'** (DECISIONS #222). It reset every entity's, so Fowl Play's nests (whose stage is their status) were left in no stage after a new match began, and nothing could be done to them: no "Sit on the nest". A person is a player, a brained NPC, a foundation people kind or a playable character; a game resets its things when it means to (`on_match_began`).
+- **First person** (DECISIONS #223): your own model is not drawn for you (its shadow is), and your body faces where you look, standing still too. The wolf's own greybox sat in front of the camera, and the view swung while the body stayed put until it moved.
+- The integration suite has an end hook (`integration_end`), for a genre's checks that end a match.
+- **Two integration checks raced the CLI**, which now takes a second or more a call on this machine: Help up ran at a tenth of its pace so the CLI could look at it mid-way, and a run of slow calls finished it first; the status grace was entered three reads before the step it covers. Help up now runs at a fiftieth (its rates compared within 5 %), and the reads come before the grace begins.
+- Server change: republish (who a new match resets; no table changed).

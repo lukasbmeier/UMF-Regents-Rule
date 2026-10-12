@@ -26,6 +26,8 @@ var _entity: SpaceTimeEntity
 var _movement: SpaceTimeMovementComponent
 ## Someone else this camera follows instead of its own entity (spectating, DECISIONS #206), or null.
 var _follow: SpaceTimeEntity = null
+## The first-person set-up has been made for this entity (its own body hidden, facing held).
+var _first_person_done: bool = false
 
 
 func _ready() -> void:
@@ -86,6 +88,24 @@ func _resolve_siblings() -> void:
 		return
 	_input = _entity.find_component(LocalInputComponent) as LocalInputComponent
 	_movement = _entity.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	apply_first_person()
+
+
+## IN FIRST PERSON (DECISIONS #223), for the player's own entity: its own model is not drawn for them
+## (it casts its shadow still; everyone else sees it whole), and its body faces where they look,
+## standing still too, as in any first-person game. (Luke: the wolf's own greybox sat in front of the
+## camera, and the view swung while the body stayed put until he moved.) Once per entity: a new look
+## or character builds a new entity and a new rig.
+func apply_first_person() -> void:
+	if _first_person_done or config == null or not config.first_person or _entity == null or not _entity.is_local_authority:
+		return
+	_first_person_done = true
+	if _input != null:
+		_input.hold_facing(&"first_person", true)
+	var visual: Node = _entity.get_node_or_null(^"Visual")
+	if visual != null:
+		for g: Node in visual.find_children("*", "GeometryInstance3D", true, false):
+			(g as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 
 
 func _apply(delta: float) -> void:

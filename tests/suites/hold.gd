@@ -307,6 +307,36 @@ func _run_nearby() -> void:
 	ic.scan()
 	_check(ic.get_target() == 9812, "a downed teammate 1.5 m in front is the target with no crosshair on them (%d)" % ic.get_target())
 	_check(String(HoldPrompt.state_for(me)["text"]) == "Hold E: Help up", "and the prompt offers to help them up")
+	# THE BODY'S HEADING, NOT THE CAMERA'S (DECISIONS #221): standing still, the body does not turn as
+	# the camera looks round, so neither does what is in front of it (Luke had to aim the camera at a
+	# nest his hen already faced).
+	var input := LocalInputComponent.new()
+	input.send_to_server = false
+	me.add_runtime_component(input)
+	input.set_physics_process(false)
+	input.set_look(PI, 0.0)   # the camera turned right round behind her
+	ic.scan()
+	_check(ic.get_target() == 9812, "the camera turned away, the body not: what is in front of the BODY is the target (%d)" % ic.get_target())
+	me.rotation.y = PI   # the body itself turned round
+	ic.scan()
+	_check(ic.get_target() == InteractionComponent.NO_TARGET, "the body turned round: it is behind her now, wherever the camera looks")
+	me.rotation.y = 0.0
+	# A PERSON whatever kind they are: a hen (a playable character of a genre's kind) standing nearer
+	# is passed over for what there is something to do with.
+	var hen_def := EntityDefinition.new()
+	hen_def.kind = 120
+	hen_def.playable = true
+	var hen := SpaceTimeEntity.new()
+	hen.definition = hen_def
+	get_tree().root.add_child(hen)
+	hen.entity_id = 9819
+	EntityRegistry.register(9819, hen)
+	hen.global_position = Vector3(0.0, 0.0, -0.8)
+	ic.scan()
+	_check(ic.get_target() == 9812, "another hen standing nearer, in front: not the target (a person, nothing to do with them) (%d)" % ic.get_target())
+	_check(InteractionComponent.is_person(hen) and not InteractionComponent.is_person(null), "a playable character of any kind is a person")
+	EntityRegistry.unregister(9819)
+	hen.queue_free()
 	front.global_position = Vector3(1.0, 0.0, -0.9)
 	ic.scan()
 	_check(ic.get_target() == 9812, "48 degrees off the front, inside the 120-degree arc: the target")

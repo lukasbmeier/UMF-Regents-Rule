@@ -256,6 +256,8 @@ func _run_rules_page() -> void:
 	_check(req != null and req.reducer_name == &"issue_challenge" and req.args.size() == 3 and int(req.args[1]) == ChallengeModel.KIND_TIMED_PRESS
 		and is_equal_approx(float(req.args[2]), 0.5), "a skill check is a timed press for yourself: issue_challenge(me, 1, 0.5)")
 	_check(labels.has("Go"), "and Go to: the spawn or beside a player")
+	_check(labels.has("New match"), "and New match: everyone back to the lobby, to choose again (Luke: a reset for testing)")
+	_check(page.new_match() == null, "(outside a session it has nothing to start again, and says so)")
 	req = page.go_to(-1)
 	_check(req != null and req.reducer_name == &"teleport", "Go to the spawn teleports the admin there")
 	req = page.try_status(StatusDef.DOWNED)

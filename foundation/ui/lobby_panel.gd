@@ -96,8 +96,8 @@ static func members_of(me: SessionComponent) -> Array[Dictionary]:
 		var plate: NameplateComponent = ent.find_component(NameplateComponent) as NameplateComponent
 		var local: bool = EntityRegistry.is_local(id)
 		var player: bool = local or (plate != null and plate.is_online())
-		if not player and ent.definition != null and ent.definition.kind == 0:
-			continue   # a player who left: not waited for, not listed
+		if not player and plate != null and plate.is_player():
+			continue   # a player who left: not waited for, not listed (whatever character they play)
 		out.append({"id": id, "name": plate.display_name() if plate != null else "Player %d" % id,
 			"ready": sess.is_ready(), "team": sess.team(), "player": player, "is_local": local})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:

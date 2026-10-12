@@ -55,6 +55,7 @@ func _build() -> void:
 	box.add_child(_status_row())
 	box.add_child(_press_row())
 	box.add_child(_go_row())
+	box.add_child(_match_row())
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -134,6 +135,37 @@ func _go_row() -> HBoxContainer:
 	return row
 
 
+## "New match": the match starts again, its rounds from 1, everyone back to its lobby (where a player
+## chooses another character, and a game resets what it keeps per match: Fowl Play's nests).
+func _match_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = "This match"
+	label.custom_minimum_size = Vector2(250, 0)
+	row.add_child(label)
+	var b := Button.new()
+	b.text = "New match"
+	b.tooltip_text = "End this match now and start the next: everyone back to the lobby, its rounds from 1"
+	b.pressed.connect(new_match)
+	row.add_child(b)
+	return row
+
+
+## Start the local player's session's match again (the reducer: `new_match`).
+func new_match() -> ReducerRequest:
+	var me: SpaceTimeEntity = EntityRegistry.get_entity(SpaceTimeSync.get_local_entity_id()) as SpaceTimeEntity
+	var sess: SessionComponent = me.find_component(SessionComponent) as SessionComponent if me != null else null
+	if sess == null or not sess.is_in_session():
+		if _status != null:
+			_status.text = "new match: you are not in a session"
+		return null
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"new_match", [sess.get_session_id()], ["u64"])
+	req.settled.connect(func(r: ReducerRequest) -> void:
+		if is_instance_valid(self) and _status != null:
+			_status.text = "a new match: everyone to the lobby" if r.is_ok() else "new match: %s" % r.error_message)
+	return req
+
+
 ## The places to go: the spawn (-1), then every other player here, by name.
 func _fill_places() -> void:
 	var keep: int = _places.get_selected_id() if _places.item_count > 0 else -1
@@ -142,9 +174,9 @@ func _fill_places() -> void:
 	var me: int = SpaceTimeSync.get_local_entity_id()
 	for id: int in EntityRegistry.all_entity_ids():
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
-		if id == me or e == null or e.definition == null or e.definition.kind != 0:
-			continue
-		var plate: NameplateComponent = e.find_component(NameplateComponent) as NameplateComponent
+		var plate: NameplateComponent = e.find_component(NameplateComponent) as NameplateComponent if e != null else null
+		if id == me or plate == null or not plate.is_player():
+			continue   # players only, whatever character they play (a hen, the wolf)
 		_places.add_item("beside %s" % (plate.shown_name() if plate != null else "player %d" % id), id)
 	var at: int = _places.get_item_index(keep)
 	_places.select(at if at >= 0 else 0)

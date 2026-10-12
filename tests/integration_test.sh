@@ -864,8 +864,11 @@ read -r CX CY CZ <<< "$(pos_of)"
 check "$(python -c "print('true' if 0.0 < $CX - $SX < 0.04 else 'false')")" "to a crawl's step ($(python -c "print(round($CX - $SX, 4))") m)"
 assert_ok "set_rule foundation.status_grace_ms 3000 \"\"" "a long grace, so the CLI can beat it"
 assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "back to normal"
-assert_ok "set_status $MYENT 2 $UNTIL_CHANGED \"\"" "and downed at once"
+# Everything the step needs is read BEFORE going down (going down changes none of it), so only the
+# one call that sends it is inside the grace: CLI calls take a second each on some machines, and
+# three reads after going down missed a 3 s grace.
 EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY SZ <<< "$(pos_of)"
+assert_ok "set_status $MYENT 2 $UNTIL_CHANGED \"\"" "and downed at once"
 SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
 assert_eq "$(field correction_epoch)" "$EPOCH" "inside the grace the step it could make a moment ago is still taken"
@@ -886,6 +889,7 @@ hold_rows() { row_count "SELECT * FROM hold_progress WHERE entity_id = $1"; }
 hold_field() { sql_first "SELECT $2 FROM hold_progress WHERE entity_id = $1" 1; }
 doer_count() { row_count "SELECT * FROM hold_member WHERE target_id = $1"; }
 near() { python -c "print('true' if abs(float('$1') - $2) < 0.01 else 'false')"; }
+near_rate() { python -c "print('true' if abs(float('${1:-nan}') - $2) <= abs($2) * 0.05 else 'false')"; }   # within 5 %
 move_npc() {   # move_npc ID X Z: the authority puts an NPC there
   spacetime call "$DB" write_movement_batch 0 "[{\"entity_id\":$1,\"pos\":{\"x\":$2,\"y\":0.0,\"z\":$3},\"vel\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"yaw\":0.0,\"grounded\":true,\"move_state\":0,\"last_processed_seq\":0,\"teleport_flag\":true}]" >/dev/null 2>&1
 }
@@ -906,26 +910,26 @@ assert_rejected "begin_interact_as $H1 $NEAR 9" "nothing to hold there" "another
 
 # Each CLI call takes about half a second, longer than Help up gives: the game's pace rule slows every
 # hold to a tenth while the rates are read (40 s alone), which is also how a designer slows them live.
-assert_ok "set_rule foundation.hold_speed 0.1 \"\"" "every hold at a tenth of its speed"
+assert_ok "set_rule foundation.hold_speed 0.02 \"\"" "every hold at a fiftieth of its speed (so a run of slow CLI calls cannot finish it)"
 assert_ok "begin_interact_as $H1 $NEAR 0" "one helper holds Help up"
 assert_eq "$(hold_rows $NEAR)" "1" "one thing held on the target"
 assert_eq "$(hold_field $NEAR doers)" "1" "by one"
-check "$(near "$(hold_field $NEAR rate)" 0.025)" "a fortieth a second: 4 s alone, at a tenth of the pace ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.005)" "a two-hundredth a second: 4 s alone, at a fiftieth of the pace ($(hold_field $NEAR rate))"
 assert_eq "$(sql_first "SELECT target_id FROM hold_member WHERE entity_id = $H1" 1)" "$NEAR" "the helper holds it"
 assert_eq "$(sql_rows_anon "SELECT * FROM hold_progress WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client draws the bar"
 assert_ok "begin_interact_as $H1 $NEAR 0" "holding it again changes nothing"
 assert_eq "$(doer_count $NEAR)" "1" "(still one)"
 assert_ok "begin_interact_as $H2 $NEAR 0" "a second joins"
-check "$(near "$(hold_field $NEAR rate)" 0.04)" "faster together: 2.5 s with two ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.008)" "faster together: 2.5 s with two ($(hold_field $NEAR rate))"
 assert_ok "begin_interact_as $H3 $NEAR 0" "a third"
-check "$(near "$(hold_field $NEAR rate)" 0.05)" "2 s with three ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.01)" "2 s with three ($(hold_field $NEAR rate))"
 assert_ok "end_interact_as $H3" "the third lets go"
-check "$([ "$(doer_count $NEAR)" = "2" ] && [ "$(near "$(hold_field $NEAR rate)" 0.04)" = "true" ] && echo true || echo false)" "two again, at two's rate"
+check "$([ "$(doer_count $NEAR)" = "2" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.008)" = "true" ] && echo true || echo false)" "two again, at two's rate"
 assert_ok "apply_damage $H2 1 0" "the second is hurt"
-check "$([ "$(doer_count $NEAR)" = "1" ] && [ "$(near "$(hold_field $NEAR rate)" 0.025)" = "true" ] && echo true || echo false)" "and lets go (Help up stops when its doer is hurt)"
-assert_ok "set_rule foundation.hold_speed 0.2 \"\"" "the pace changed while it is held"
+check "$([ "$(doer_count $NEAR)" = "1" ] && [ "$(near_rate "$(hold_field $NEAR rate)" 0.005)" = "true" ] && echo true || echo false)" "and lets go (Help up stops when its doer is hurt)"
+assert_ok "set_rule foundation.hold_speed 0.04 \"\"" "the pace changed while it is held (doubled)"
 sleep 0.5
-check "$(near "$(hold_field $NEAR rate)" 0.05)" "takes effect at once ($(hold_field $NEAR rate))"
+check "$(near_rate "$(hold_field $NEAR rate)" 0.01)" "takes effect at once ($(hold_field $NEAR rate))"
 move_npc "$H1" 0.5 0.3
 sleep 0.5
 assert_eq "$(doer_count $NEAR)" "0" "the last helper moved 1.1 m from where it began, still in reach (Help up lets go past 0.75 m): let go by the tick"
@@ -947,7 +951,7 @@ assert_eq "$(row_count "SELECT * FROM hold_member")" "0" "everyone let go"
 assert_eq "$(row_count "SELECT * FROM hold_tick")" "0" "and nothing held: the tick stopped itself"
 
 # A doer who cannot act lets go; a target that is no longer downed ends it; a player offline lets go.
-assert_ok "set_rule foundation.hold_speed 0.1 \"\"" "slow again, so nothing finishes while it is checked"
+assert_ok "set_rule foundation.hold_speed 0.02 \"\"" "slow again, so nothing finishes while it is checked"
 assert_ok "set_status $NEAR 2 $UNTIL_CHANGED \"\"" "downed again"
 assert_ok "begin_interact_as $H1 $NEAR 0" "a helper"
 assert_ok "begin_interact_as $H2 $NEAR 0" "and another"
@@ -1064,13 +1068,21 @@ assert_eq "$(sql_first 'SELECT phase FROM session WHERE id = 1' 1)" "1" "and, ev
 # A NEW MATCH, NEW STATUSES (DECISIONS #206): everyone in the world back to normal, unless the
 # game's rule says statuses last across matches.
 assert_ok "set_status $MYENT 1 4294967295 \"\"" "the player is injured"
+assert_ok 'spawn_resource_node 0 {"x":30.0,"y":0.0,"z":30.0}' "a thing in the world"
+THING=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 2" | awk '{print $1}' | sort -n | tail -1)
+assert_ok "set_status $THING 5 4294967295 \"\"" "in a status of its own (a nest's stage, a gate's state)"
 assert_ok "new_match 1" "a new match"
 assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $MYENT" 1)" "0" "and they begin it normal"
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $THING" 1)" "5" \
+  "a thing keeps its status: only people are reset (DECISIONS #222; its game resets it if it means to)"
+assert_ok "despawn_entity $THING" "(the thing gone)"
 assert_ok "set_rule foundation.statuses_reset_each_match 0 \"\"" "a game whose statuses last"
 assert_ok "set_status $MYENT 1 4294967295 \"\"" "injured again"
 assert_ok "new_match 1" "another match"
 assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $MYENT" 1)" "1" "keeps them injured"
 assert_ok "reset_rule foundation.statuses_reset_each_match" "the rule back"
+
+run_genre_hooks integration_end   # a genre's checks that end a match or change what follows (Fowl Play: a new match is a new night)
 
 echo
 echo "$passes passed, $failures failed"

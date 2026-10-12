@@ -178,17 +178,33 @@ pub fn expire_status(ctx: &ReducerContext, timer: StatusExpiry) -> Result<(), St
     Ok(())
 }
 
-/// A new match begins in `world_id`: everyone in it back to normal, when the game's rule says so
-/// (`foundation.statuses_reset_each_match`).
+/// A new match begins in `world_id`: every PERSON in it back to normal, when the game's rule says so
+/// (`foundation.statuses_reset_each_match`). Not things (DECISIONS #222): a nest's stage or a gate's
+/// state is its game's, which resets it when it means to (`on_match_began`). Resetting everything
+/// left Fowl Play's nests in no stage at all after a new match, so nothing could be done to them.
 pub(crate) fn reset_statuses(ctx: &ReducerContext, world_id: u32) {
     if !hot_flag(ctx, crate::hot::foundation::STATUSES_RESET_EACH_MATCH) {
         return;
     }
     let ids: Vec<u64> = ctx.db.status_state().world_id().filter(world_id)
-        .filter(|r| r.status != NORMAL || r.lasts_ms > 0).map(|r| r.entity_id).collect();
+        .filter(|r| r.status != NORMAL || r.lasts_ms > 0)
+        .filter(|r| is_person(ctx, r.entity_id))
+        .map(|r| r.entity_id).collect();
     for id in ids {
         let _ = set_status_internal(ctx, id, NORMAL, LASTS_UNTIL_CHANGED, 0, String::new());
     }
+}
+
+/// Whether `entity_id` is a PERSON: a player's (it has a player row), an NPC driven by a brain, one of
+/// the foundation's people kinds, or a character a player may choose (a bot hen). Not a thing: a
+/// resource node, a nest, a gate.
+pub fn is_person(ctx: &ReducerContext, entity_id: u64) -> bool {
+    if ctx.db.player().entity_id().find(entity_id).is_some() || ctx.db.npc_brain().entity_id().find(entity_id).is_some() {
+        return true;
+    }
+    ctx.db.entity().entity_id().find(entity_id).is_some_and(|e| {
+        e.kind == entity_kind::PLAYER || e.kind == entity_kind::NPC || crate::content::is_playable(e.kind)
+    })
 }
 
 /// An entity is gone: its status and timers with it.

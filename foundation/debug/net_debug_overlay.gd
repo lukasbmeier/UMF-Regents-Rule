@@ -143,8 +143,9 @@ func _remote_summary() -> String:
 		if id == EntityRegistry.local_entity_id:
 			continue
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
-		if e == null or e.definition == null or e.definition.kind != 0:
-			continue
+		var plate: NameplateComponent = e.find_component(NameplateComponent) as NameplateComponent if e != null else null
+		if plate == null or not plate.is_player():
+			continue   # other players, whatever character they play
 		var m: SpaceTimeMovementComponent = e.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
 		if m == null:
 			continue

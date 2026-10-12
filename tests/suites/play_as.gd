@@ -59,6 +59,10 @@ func _run_content() -> void:
 	spawner.definitions.assign(spawner.definitions.filter(func(e: EntityDefinition) -> bool: return e.kind != WOLF_KIND))
 	me.definition = spawner._by_kind[HEN_KIND]
 	_check(LobbyPanel.next_character() == -1, "only one to choose from: nothing to change to (no Play as)")
+	_check(LobbyScreen.offers_play_as(2, SessionComponent.Phase.LOBBY, false) and not LobbyScreen.offers_play_as(2, SessionComponent.Phase.PLAYING, false),
+		"Play as is offered in the lobby phase, whether or not the match has started (between its rounds: Luke came back to it and could not switch), not mid-round")
+	_check(LobbyScreen.offers_play_as(2, SessionComponent.Phase.PLAYING, true), "an admin, any time (the server lets them)")
+	_check(not LobbyScreen.offers_play_as(1, SessionComponent.Phase.LOBBY, true), "and never with one character to choose")
 	reg.unregister(7101)
 	reg.local_entity_id = prev_local
 	me.queue_free()

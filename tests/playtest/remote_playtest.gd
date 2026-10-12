@@ -407,6 +407,16 @@ func _be_helped_up(me: SpaceTimeEntity) -> void:
 		"and is back on its feet, helped up by the other player (%s, by %d)" % [str(finished), st.by_entity()])
 
 
+## Turn the body to `yaw` standing still, as a player does by aiming (the camera's way, held a
+## moment: `hold_facing`, which the server applies too), then let go.
+func _turn_body(input: LocalInputComponent, yaw: float) -> void:
+	input.set_look(yaw, 0.0)
+	input.hold_facing(&"playtest", true)
+	await get_tree().create_timer(0.5).timeout
+	input.hold_facing(&"playtest", false)
+	await get_tree().create_timer(0.5).timeout
+
+
 ## THE OBSERVER: walk up to the downed walker, look at it, hold the interact key.
 func _help_up(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
 	var wst: StatusComponent = walker.find_component(StatusComponent) as StatusComponent
@@ -419,11 +429,14 @@ func _help_up(me: SpaceTimeEntity, walker: SpaceTimeEntity) -> void:
 		await get_tree().physics_frame
 	_check(wst.status() == StatusDef.DOWNED, "the observer sees the walker downed")
 	SpaceTimeSync.call_reducer(&"teleport", [HELP_FROM], ["vector3[f32,f32,f32]"])
-	input.set_look(PI, 0.0)   # facing +Z, the walker square to the side: outside the front arc
-	await get_tree().create_timer(1.0).timeout
+	await _turn_body(input, PI)   # facing +Z, the walker square to the side: outside the front arc
 	_check(ic.get_target() != walker.entity_id, "beside the walker, facing away to the side: not offered (the front arc only)")
-	input.set_look(PI * 0.5, 0.0)   # facing -X: the walker in front
-	await get_tree().create_timer(1.0).timeout
+	# Standing still, the camera alone turned to look at the walker: the body did not turn, so the
+	# walker is still beside it, not in front (DECISIONS #221).
+	input.set_look(PI * 0.5, 0.0)
+	await get_tree().create_timer(0.6).timeout
+	_check(ic.get_target() != walker.entity_id, "the camera alone turned to the walker: still not offered (the body faces where it did)")
+	await _turn_body(input, PI * 0.5)   # the body turned to face -X: the walker in front
 	var s: Dictionary = HoldPrompt.state_for(me)
 	var under_crosshair: int = ic._raycast_target()
 	print("   facing the downed walker, the crosshair on %d: \"%s\"" % [under_crosshair, s["text"]])

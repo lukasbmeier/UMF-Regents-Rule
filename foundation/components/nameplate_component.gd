@@ -39,6 +39,8 @@ var _holder: Node3D = null
 var _given_name: String = ""
 ## `player.online`. False for an entity with no player row, which is never a person.
 var _online: bool = false
+## Whether a `player` row has arrived for it: a person, whatever kind of character it plays.
+var _is_player: bool = false
 
 
 func required_tables() -> Array[StringName]:
@@ -81,7 +83,8 @@ func _on_bound() -> void:
 ## "Player <id>" until its name arrives, not its character's name ("Humanoid").
 func _fallback_name() -> String:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
-	if ent != null and ent.definition != null and ent.definition.kind != 0 and not ent.definition.display_name.is_empty():
+	if ent != null and ent.definition != null and not _is_player and not ent.definition.playable \
+			and ent.definition.kind != 0 and not ent.definition.display_name.is_empty():
 		return ent.definition.display_name
 	return "Player %d" % entity_id
 
@@ -91,6 +94,7 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 		return
 	_given_name = "" if new == null else String(new.get(&"name")).strip_edges()
 	_online = new != null and bool(new.get(&"online"))
+	_is_player = new != null
 	_refresh()
 
 
@@ -143,6 +147,12 @@ func shown_name() -> String:
 ## entity (and their round's score), so a scoreboard needs this to tell them from someone here.
 func is_online() -> bool:
 	return _online
+
+
+## Whether this entity is a player's (it has a `player` row), online or not, whatever character it
+## plays: not the kind, which a game may give its players (DECISIONS #217).
+func is_player() -> bool:
+	return _is_player
 
 
 ## What to call this entity anywhere else — a scoreboard, a kill feed. The same answer the label

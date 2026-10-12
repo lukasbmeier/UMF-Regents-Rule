@@ -285,15 +285,18 @@ func nearby_target() -> int:
 	return best
 
 
-## The way the character faces (the front of its model), flat: where its input turns it, else its
-## body's own forward.
+## The way the character faces (the front of its model), flat: its BODY's heading (DECISIONS #221).
+## The body turns to the camera only while it moves or aims (DECISIONS #100), so standing still and
+## looking round does not swing what is in front of it. (This read the input's yaw, which follows
+## the camera even standing still: in front of the character meant where the camera looked, and Luke
+## had to aim the camera at a nest the hen was already facing.)
 func facing() -> Vector3:
-	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
-	var input: LocalInputComponent = ent.find_component(LocalInputComponent) as LocalInputComponent if ent != null else null
-	if input != null:
-		var yaw: float = input.get_body_yaw()
-		return Vector3(-sin(yaw), 0.0, -cos(yaw))
-	return -(entity as Node3D).global_transform.basis.z if entity is Node3D else Vector3.FORWARD
+	var body: Node3D = entity.body if entity != null and entity.body != null else entity as Node3D
+	if body == null:
+		return Vector3.FORWARD
+	var f: Vector3 = -body.global_transform.basis.z
+	f.y = 0.0
+	return f.normalized() if f.length() > 0.01 else Vector3.FORWARD
 
 
 ## Whether entity `id` is something to offer when it is in front: a hold applies to it, it is not a
@@ -302,9 +305,23 @@ func _wanted_nearby(id: int) -> bool:
 	if hold_for(id) != null:
 		return true
 	var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
-	if e != null and e.definition != null and e.definition.kind != KIND_PLAYER and e.definition.kind != KIND_NPC:
+	if e != null and e.definition != null and not is_person(e):
 		return true
 	return nearby_wanted.is_valid() and bool(nearby_wanted.call(id))
+
+
+## Whether `e` is a PERSON (a player, an NPC, a hen: offered in front only when there is something to
+## do with them), not a thing (a resource node, a nest: offered to be used). By the foundation's
+## people kinds, a character a player may choose (DECISIONS #217), or a player row: a game whose
+## players are another kind (Fowl Play's hens, 100) counts them as people too, or a hen crowding a
+## nest would be the target instead of the nest.
+static func is_person(e: SpaceTimeEntity) -> bool:
+	if e == null or e.definition == null:
+		return false
+	if e.definition.kind == KIND_PLAYER or e.definition.kind == KIND_NPC or e.definition.playable:
+		return true
+	var plate: NameplateComponent = e.find_component(NameplateComponent) as NameplateComponent
+	return plate != null and plate.is_player()
 
 
 func _raycast_target() -> int:

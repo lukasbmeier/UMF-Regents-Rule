@@ -192,7 +192,11 @@ func _refresh(me: SessionComponent) -> void:
 	if _team_button.visible:
 		_team_button.text = "Team: %s" % (teams[me.team()] if me.team() < teams.size() else "?")
 	var playing: EntityDefinition = LobbyPanel.my_character()
-	_play_as_button.visible = not started and playing != null and EntitySpawner.playable_characters().size() > 1
+	# Whenever the server would take it: in the lobby phase (before the match, or between its rounds),
+	# or any time for an admin. Hidden once a match had started, it left a player who came back to the
+	# lobby screen between rounds with no way to switch (Luke, 2026-10-11).
+	_play_as_button.visible = playing != null and offers_play_as(EntitySpawner.playable_characters().size(),
+		me.get_phase(), Roles.is_local_admin())
 	if _play_as_button.visible:
 		_play_as_button.text = "Play as: %s" % playing.display_name
 	# The looks are the picker's character's: offered while playing it.
@@ -377,6 +381,12 @@ func _toggle_ready() -> void:
 	var me: SessionComponent = _mine()
 	if me != null:
 		_ask(&"set_ready", [not me.is_ready()], ["bool"])
+
+
+## Whether Play as is offered: there are characters to choose between, and the server would take a
+## change now (the lobby phase, before the match or between its rounds; an admin at any time).
+static func offers_play_as(playable: int, phase: int, admin: bool) -> bool:
+	return playable > 1 and (phase == SessionComponent.Phase.LOBBY or admin)
 
 
 ## Play the next character a player may choose (Play as; C in the in-world lobby).

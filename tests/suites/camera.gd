@@ -65,3 +65,34 @@ func _run_camera_tests() -> void:
 	_check(is_equal_approx(rig._zoom(0.016), before), "a first-person rig has no boom to zoom")
 	rig._input.free()
 	rig.queue_free()
+
+	# IN FIRST PERSON, ONE'S OWN BODY (DECISIONS #223): not drawn for its player (its shadow still
+	# is), and it faces where they look, standing still too. Third person: drawn, facing free.
+	for fp: bool in [true, false]:
+		var ent := SpaceTimeEntity.new()
+		ent.is_local_authority = true
+		var visual := Node3D.new()
+		visual.name = "Visual"
+		ent.add_child(visual)
+		var mesh := MeshInstance3D.new()
+		mesh.mesh = BoxMesh.new()
+		visual.add_child(mesh)
+		get_tree().root.add_child(ent)
+		var input := LocalInputComponent.new()
+		ent.add_runtime_component(input)
+		input.set_physics_process(false)
+		var own := CameraRig.new()
+		var own_cfg := CameraRigConfig.new()
+		own_cfg.first_person = fp
+		own.config = own_cfg
+		own._entity = ent
+		own._input = input
+		own.apply_first_person()
+		if fp:
+			_check(mesh.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "first person: its own model is not drawn for its player, only its shadow")
+			_check(input.sample().face, "and its body faces where they look, standing still (the frame says face)")
+		else:
+			_check(mesh.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON and not input.sample().face,
+				"third person: its model drawn, its facing its own")
+		own.free()
+		ent.queue_free()
