@@ -136,8 +136,8 @@ func _run_walls_and_rewind() -> void:
 	var space: PhysicsDirectSpaceState3D = ref.get_world_3d().direct_space_state
 	var hen := func(z: float, x: float = 0.0) -> Array: return [{"id": 2, "pos": Vector3(x, 0, z), "radius": 0.4, "height": 1.8, "center_y": 0.9}]
 	var through: Dictionary = LungeJudge.judge(space, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, hen.call(-1.0))
-	_check(float(through["reach"]) < 0.8 and float(through["reach"]) > 0.5,
-		"the ball stops at the gap's posts: it does not fit (%.2f m of 1.4)" % float(through["reach"]))
+	_check(float(through["reach"]) < 0.9 and float(through["reach"]) > 0.5,
+		"the ball stops at the gap's posts, met head on: it does not fit (%.2f m of 1.4)" % float(through["reach"]))
 	_check(int(through["hit_id"]) == 2, "a hen IN the gap, within reach of where it stopped: hit")
 	_check(int(LungeJudge.judge(space, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, hen.call(-1.6))["hit_id"]) == 0,
 		"a hen through it: missed, though the open-ground reach is 2.15 m")
@@ -146,6 +146,26 @@ func _run_walls_and_rewind() -> void:
 	var behind: Dictionary = LungeJudge.judge(space, Vector3(1.5, 0, 0), 0.0, 1.4, 0.35, 0.6, hen.call(-1.25, 1.5))
 	_check(int(behind["hit_id"]) == 0,
 		"a hen pressed to the far side of a solid board, within a ball's reach of where it stopped: not hit through it")
+
+	# A WALL IT GRAZES IT SLIDES ALONG (Luke, 0.40.1): beside a bale and angled a little into it, the
+	# ball caught its corner and stopped 0.1 m out; a hen just ahead was missed.
+	var bale := StaticBody3D.new()
+	var bshape := CollisionShape3D.new()
+	var bbox := BoxShape3D.new()
+	bbox.size = Vector3(1.0, 1.0, 2.0)
+	bshape.shape = bbox
+	bale.add_child(bshape)
+	root.add_child(bale)
+	bale.global_position = Vector3(-6.0, 0.5, -0.5)   # its face at x = -5.5, the wolf at x = -5.1
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var by_bale: Dictionary = LungeJudge.judge(space, Vector3(-5.1, 0, 0), 0.25, 1.4, 0.35, 0.6,
+		[{"id": 3, "pos": Vector3(-5.1, 0, -1.3), "radius": 0.28, "height": 0.7, "center_y": 0.35}])
+	_check(float(by_bale["reach"]) > 1.2, "angled into the bale it grazes, the lunge slides along it (%.2f m of 1.4)" % float(by_bale["reach"]))
+	_check(int(by_bale["hit_id"]) == 3, "and the hen just ahead by the bale is hit")
+	_check(LungeJudge.path(space, Vector3(-5.1, 0.6, 0), Vector3(-1.4, 0, 0), 0.35).size() == 2
+		and (LungeJudge.path(space, Vector3(-5.1, 0.6, 0), Vector3(-1.4, 0, 0), 0.35)[1] as Vector3).x > -5.2,
+		"(straight into its side it stops: nothing to slide along)")
 
 	# THE PROOF. A hen runs -Z through the gap at 4 m/s, and is out of reach (through it) at T. The
 	# wolf stands facing her; its view of others is 150 ms behind the server.

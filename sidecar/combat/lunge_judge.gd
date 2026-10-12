@@ -3,8 +3,10 @@ class_name LungeJudge extends RefCounted
 ## `height` above the user's feet, stopped by the level's walls, and the first body in its way.
 ##
 ##   the walls     a shape cast against the level (`cast_motion`, the space's static geometry on
-##                 `mask`): a fence stops the sweep, so a hen through a gap the ball cannot fit is out
-##                 of reach, however close
+##                 `mask`). A wall met head on stops it, so a hen through a gap the ball cannot fit
+##                 is out of reach, however close; one it GRAZES it slides along, as a lunge does
+##                 (Luke, 0.40.1: beside a hay bale and angled a little into it, the ball caught the
+##                 corner and stopped 0.1 m out, and a hen right there was missed)
 ##   the bodies    each target a vertical capsule (its character's own collision shape) where the
 ##                 referee says it was (rewound); the sweep hits the one its path meets first, if
 ##                 nothing of the level is between the ball and it (never through a wall: a hen pressed
@@ -29,8 +31,14 @@ static func forward(yaw: float) -> Vector3:
 ## nothing stops it.
 static func clear_share(space: PhysicsDirectSpaceState3D, start: Vector3, motion: Vector3, radius: float,
 		mask: int = LEVEL_MASK, exclude: Array[RID] = []) -> float:
+	return float(_cast(space, start, motion, radius, mask, exclude)[0])
+
+
+## [safe share, the wall's normal where it stopped (zero: it did not)].
+static func _cast(space: PhysicsDirectSpaceState3D, start: Vector3, motion: Vector3, radius: float,
+		mask: int, exclude: Array[RID]) -> Array:
 	if space == null or motion.length_squared() < 1e-8:
-		return 1.0
+		return [1.0, Vector3.ZERO]
 	var ball := SphereShape3D.new()
 	ball.radius = radius
 	var q := PhysicsShapeQueryParameters3D.new()
@@ -41,7 +49,48 @@ static func clear_share(space: PhysicsDirectSpaceState3D, start: Vector3, motion
 	q.exclude = exclude
 	q.collide_with_areas = false
 	var r: PackedFloat32Array = space.cast_motion(q)
-	return clampf(r[0], 0.0, 1.0) if r.size() >= 1 else 1.0
+	var safe: float = clampf(r[0], 0.0, 1.0) if r.size() >= 1 else 1.0
+	if safe >= 1.0:
+		return [1.0, Vector3.ZERO]
+	# Touching it: where, and which way the wall faces.
+	q.transform = Transform3D(Basis.IDENTITY, start + motion * clampf(r[1], 0.0, 1.0))
+	q.motion = Vector3.ZERO
+	var info: Dictionary = space.get_rest_info(q)
+	var n: Vector3 = info.get("normal", Vector3.ZERO)
+	return [safe, n]
+
+
+## THE PATH A LUNGE TAKES: from `start` along `motion`, stopped by walls met head on, sliding along
+## ones it grazes (up to three walls). Points, start first.
+static func path(space: PhysicsDirectSpaceState3D, start: Vector3, motion: Vector3, radius: float,
+		mask: int = LEVEL_MASK, exclude: Array[RID] = []) -> PackedVector3Array:
+	var out := PackedVector3Array([start])
+	var dir: Vector3 = motion.normalized()
+	var pos: Vector3 = start
+	var left: Vector3 = motion
+	for i: int in 4:
+		if left.length() < 0.01:
+			break
+		var c: Array = _cast(space, pos, left, radius, mask, exclude)
+		var share: float = float(c[0])
+		pos += left * share
+		out.append(pos)
+		if share >= 1.0:
+			break
+		var n: Vector3 = c[1]
+		n.y = 0.0
+		if n.length_squared() < 1e-6:
+			break
+		n = n.normalized()
+		var rest: Vector3 = left * (1.0 - share)
+		rest -= n * rest.dot(n)   # along the wall
+		rest.y = 0.0
+		# Only what still carries it forward: a wall met head on leaves nothing (a gap's posts, a fence).
+		var ahead: float = rest.dot(dir)
+		if ahead <= 0.05 * left.length():
+			break
+		left = rest
+	return out
 
 
 ## JUDGE ONE SWEEP. `targets`: [{id, pos (feet), radius, height, center_y}], where each was. Returns
@@ -51,8 +100,10 @@ static func judge(space: PhysicsDirectSpaceState3D, feet: Vector3, yaw: float, r
 		height: float, targets: Array, mask: int = LEVEL_MASK, exclude: Array[RID] = []) -> Dictionary:
 	var dir: Vector3 = forward(yaw)
 	var start: Vector3 = feet + Vector3.UP * height
-	var got: float = reach * clear_share(space, start, dir * reach, radius, mask, exclude)
-	var end: Vector3 = start + dir * got
+	var way: PackedVector3Array = path(space, start, dir * reach, radius, mask, exclude)
+	var got: float = 0.0
+	for i: int in range(1, way.size()):
+		got += way[i - 1].distance_to(way[i])
 	var best_id: int = 0
 	var best_along: float = INF
 	for t: Dictionary in targets:
@@ -63,13 +114,17 @@ static func judge(space: PhysicsDirectSpaceState3D, feet: Vector3, yaw: float, r
 		var half: float = maxf(h * 0.5 - r, 0.0)
 		var a: Vector3 = p + Vector3.UP * (cy - half)
 		var b: Vector3 = p + Vector3.UP * (cy + half)
-		var c: Array = closest_between(start, end, a, b)
-		if (c[0] as Vector3).distance_to(c[1] as Vector3) > radius + r:
-			continue
-		var along: float = start.distance_to(c[0] as Vector3)
-		if along < best_along and _in_sight(space, c[0] as Vector3, c[1] as Vector3, mask, exclude):
-			best_along = along
-			best_id = int(t["id"])
+		var so_far: float = 0.0
+		for i: int in range(1, way.size()):
+			var c: Array = closest_between(way[i - 1], way[i], a, b)
+			var along: float = so_far + way[i - 1].distance_to(c[0] as Vector3)
+			so_far += way[i - 1].distance_to(way[i])
+			if (c[0] as Vector3).distance_to(c[1] as Vector3) > radius + r:
+				continue
+			if along < best_along and _in_sight(space, c[0] as Vector3, c[1] as Vector3, mask, exclude):
+				best_along = along
+				best_id = int(t["id"])
+			break
 	return {"hit_id": best_id, "reach": got, "along": best_along if best_id != 0 else -1.0}
 
 
