@@ -55,6 +55,9 @@ pub fn register_authority(
     } else {
         ctx.db.authority().insert(Authority { identity, role, world_id, last_seen: ctx.timestamp });
     }
+    if role == ROLE_SIDECAR {
+        drop_sidecar_player(ctx, identity);
+    }
     Ok(())
 }
 

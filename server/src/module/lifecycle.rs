@@ -141,6 +141,12 @@ pub fn client_connected(ctx: &ReducerContext) {
     // and the abilities (DECISIONS #226: a new one, the Pounce, reached a world made before it).
     sync_hot_rules(ctx);
     sync_abilities(ctx);
+    // A SIDECAR IS NOT A PLAYER (0.41.1): a referee or a world's authority gets no entity (Luke saw a
+    // stranger standing at the spawn: his referee, made a player on its first connection).
+    if ctx.db.authority().identity().find(ctx.sender()).is_some_and(|a| a.role == ROLE_SIDECAR) {
+        drop_sidecar_player(ctx, ctx.sender());
+        return;
+    }
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
         p.online = true;
         // A name shared with an OLDER player (from before names were unique, #202) becomes free:

@@ -73,6 +73,16 @@ enum Targeting { CROSSHAIR, NEARBY, BOTH, AUTO }
 func range_m() -> float:
 	return interaction_range if interaction_range > 0.0 else Rules.interact_range()
 
+
+## How near `target_id` must be to be offered: a hold's own reach (`HoldDef.range_m`, as the server
+## measures it), else `range_m()`. Offering a hold from further than its reach promised what the
+## server then refused ("out of range": Luke's wolf, offered a larder's Stash at 2.9 m of its 2.2).
+func reach_for(target_id: int) -> float:
+	var h: HoldDef = hold_for(target_id)
+	if h != null and h.range_m > 0.0:
+		return h.range_m
+	return range_m()
+
 var _target: int = NO_TARGET
 ## A hold was asked for and not yet let go of: the key's release lets go.
 var _holding_sent: bool = false
@@ -272,7 +282,7 @@ func nearby_target() -> int:
 			continue
 		var to: Vector3 = node.global_position - body.global_position
 		var d: float = to.length()
-		if d > range_m():
+		if d > range_m() or (not bool(c[2]) and d > reach_for(id)):
 			continue
 		var flat: Vector3 = Vector3(to.x, 0.0, to.z)
 		var angle: float = rad_to_deg(facing.angle_to(flat)) if flat.length() > 0.05 else 0.0
@@ -348,8 +358,8 @@ func _raycast_target() -> int:
 	var has_point: bool = hit.has("position")
 	if has_point:
 		point = hit["position"]
-	if body != null and _distance_to(id, point, has_point) > range_m():
-		return NO_TARGET   # in view but out of reach: the server would refuse it
+	if body != null and _distance_to(id, point, has_point) > reach_for(id):
+		return NO_TARGET   # in view but out of reach (a hold's own reach): the server would refuse it
 	return id
 
 

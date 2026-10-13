@@ -925,6 +925,8 @@ assert_ok "use_ability_seen 10 0 $AIM 61 400" "a judged use, seen 400 ms behind:
 assert_ok "use_ability_seen 10 0 $AIM 63 20" "a slow one, seen 20 ms behind"
 check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "a sidecar presenting the code is registered ($(echo "$out" | grep -i error | head -1))"
 assert_eq "$(row_count 'SELECT * FROM authority WHERE role = 1 AND world_id = 0')" "1" "as world 0's authority: its referee"
+REF_IDENT=$(sql_first 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' 1)
+assert_eq "$(row_count "SELECT * FROM player WHERE identity = $REF_IDENT")" "0" "and not a player: the player its first connection made is taken away (0.41.1)"
 out="$(anon_call claim_referee 0 "$REF_CODE")"
 check "$(echo "$out" | grep -q "nothing was offered" && echo true || echo false)" "the code is used up"
 R61=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 61" 1)

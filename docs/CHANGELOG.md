@@ -637,3 +637,8 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - **`Genre::may_use_ability`**: a genre refuses a use with a reason (Fowl Play: a predator carrying a hen does not pounce).
 - **Not yet:** a world a sidecar moves (SIDECAR) would still simulate a carried entity by its own frames; that part waits for a SIDECAR game that carries.
 - New table `attachment` and reducers (`attach_as`, `detach_as`): **republish with `--codegen`** (keeps data). Old clients keep working (they draw a carried entity where its row puts it: at its carrier, 20 times a second).
+
+## 0.41.1 — a sidecar is not a player; a hold is offered only within its own reach
+- **A sidecar gets no player** (Luke saw a stranger standing at the spawn: his referee). It connects as anyone does before it is registered, and a first connection made it a player (an entity, online, in every world view). Registering it (`claim_referee`, `register_authority` as a sidecar) takes that player away, and a registered sidecar's connection makes none.
+- **A hold is offered only as near as the server takes it** (`InteractionComponent.reach_for`): its own reach (`HoldDef.range_m`), not the 3 m any use reaches. Luke's wolf was offered a larder's Stash at 2.9 m of its 2.2, and refused. Both the in-front targeting and the crosshair.
+- No table changed: republish (keeps data), no codegen.

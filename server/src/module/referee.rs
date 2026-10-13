@@ -122,7 +122,20 @@ pub fn claim_referee(ctx: &ReducerContext, world_id: u32, code: String) -> Resul
         ctx.db.authority().insert(row);
     }
     log::info!("world {world_id}: a referee claimed it ({})", ctx.sender());
+    // It connected before it was registered, so it was made a player: it is not one.
+    drop_sidecar_player(ctx, ctx.sender());
     Ok(())
+}
+
+/// A SIDECAR'S PLAYER, IF IT WAS GIVEN ONE, IS TAKEN AWAY (0.41.1): it connected as anyone does, before
+/// it was registered, and a first connection makes a player (an entity standing at the spawn, online,
+/// in every client's world). Its entity, and its player row, gone.
+pub(crate) fn drop_sidecar_player(ctx: &ReducerContext, identity: Identity) {
+    if let Some(p) = ctx.db.player().identity().find(identity) {
+        despawn_entity_internal(ctx, p.entity_id);
+        ctx.db.player().identity().delete(identity);
+        log::info!("{identity}: a sidecar, not a player: its player {} taken away", p.entity_id);
+    }
 }
 
 /// Queue a judged use for the referee (the checks a use makes are done: `use_ability_from`).

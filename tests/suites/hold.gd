@@ -352,6 +352,18 @@ func _run_nearby() -> void:
 	ic.scan()
 	_check(ic.get_target() == 9812, "a downed teammate 1.5 m in front is the target with no crosshair on them (%d)" % ic.get_target())
 	_check(String(HoldPrompt.state_for(me)["text"]) == "Hold E: Help up", "and the prompt offers to help them up")
+	# A HOLD'S OWN REACH (0.41.1): offered only as near as the server will take it, not the 3 m any
+	# use reaches (Luke's wolf was offered a larder's Stash at 2.9 m of its 2.2, and refused).
+	var help: HoldDef = HoldDef.by_id(0)
+	var was_reach: float = help.range_m
+	help.range_m = 1.0
+	ic.scan()
+	_check(ic.get_target() != 9812 and ic.reach_for(9812) == 1.0, "Help up reaching 1 m: the teammate 1.5 m off is not offered (%d)" % ic.get_target())
+	help.range_m = 2.0
+	ic.scan()
+	_check(ic.get_target() == 9812, "reaching 2 m, they are")
+	help.range_m = was_reach
+	ic.scan()
 	# THE BODY'S HEADING, NOT THE CAMERA'S (DECISIONS #221): standing still, the body does not turn as
 	# the camera looks round, so neither does what is in front of it (Luke had to aim the camera at a
 	# nest his hen already faced).
