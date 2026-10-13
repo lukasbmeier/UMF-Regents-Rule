@@ -73,6 +73,13 @@ class_name EntityDefinition extends ContentDef
 ## carrier's place.
 @export var carry_offset: Vector3 = Vector3(0.0, 0.8, -0.6)
 @export_range(-180.0, 180.0, 1.0, "suffix:°") var carry_yaw_deg: float = 0.0
+## A WALL IT PUTS UP (DECISIONS #229): a box (size, and its centre from its feet in its own terms:
+## x right, y up, -z ahead) that stops bodies, and a referee's sweeps and sight, while it is in one of
+## `blocks_in` (a gate while shut; empty: always). Zero size: none. Others are kept out of it by the
+## level's layer, as by a fence (`EntityBlocker`).
+@export var blocker_size: Vector3 = Vector3.ZERO
+@export var blocker_offset: Vector3 = Vector3.ZERO
+@export var blocks_in: Array[StatusDef] = []
 
 @export_group("How it plays")
 ## A PLAYER MAY CHOOSE TO PLAY IT (DECISIONS #217): it is offered in the lobby (Play as), and the
@@ -168,9 +175,30 @@ func validate() -> Array[String]:
 		out.append("its body is %.2f m tall but %.2f m wide: a capsule is at least as tall as it is wide (collision_height)" % [collision_height, collision_radius * 2.0])
 	if playable and not brain.is_empty():
 		out.append("it is playable and has a brain (%s): a player plays it, so it needs none" % brain)
+	if has_blocker() and (blocker_size.x <= 0.0 or blocker_size.y <= 0.0 or blocker_size.z <= 0.0):
+		out.append("its blocker is %s: give it a size in all three, or none (zero)" % blocker_size)
+	if blocks_in.has(null):
+		out.append("its blocks_in list has an empty slot: pick a status or remove the slot")
 	if abilities.has(null):
 		out.append("its abilities list has an empty slot: pick an ability or remove the slot")
 	return out
+
+
+## Whether it puts up a wall (`blocker_size`).
+func has_blocker() -> bool:
+	return blocker_size != Vector3.ZERO
+
+
+## Whether its wall is up in status `status` (always, when `blocks_in` is empty).
+func blocks_when(status: int) -> bool:
+	if not has_blocker():
+		return false
+	if blocks_in.is_empty():
+		return true
+	for st: StatusDef in blocks_in:
+		if st != null and st.status == status:
+			return true
+	return false
 
 
 ## The capsule its body is: the entity scene's, resized by `collision_radius`/`collision_height`.

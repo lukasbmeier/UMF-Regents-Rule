@@ -1,0 +1,1360 @@
+{
+ "name": "turn_rate",
+ "frozen_twin": false,
+ "asserts_move_state": true,
+ "model_version": "a2-turn-rate",
+ "dt": 0.016666666666666666,
+ "tolerance": 1e-05,
+ "config": {
+  "_comment": "Single source of truth for movement tunables. Godot imports this via foundation/tools/movement_config_codegen.gd; the Rust module bakes it in via build.rs. Never edit MovementConfig.tres or movement_config.rs by hand.",
+  "schema_version": 1,
+  "walk_speed": 1.6,
+  "run_speed": 4.6,
+  "sprint_speed": 4.6,
+  "strafe_speed_mult": 1.0,
+  "back_speed_mult": 1.0,
+  "acceleration": 9.2,
+  "friction": 9.2,
+  "air_control": 0.3,
+  "jump_velocity": 8.0,
+  "gravity": 20.0,
+  "max_slope_deg": 45.0,
+  "coyote_time_sec": 0.0,
+  "ground_y": 0.0,
+  "client_tick_hz": 60,
+  "server_tick_hz": 20,
+  "input_batch_size": 3,
+  "reconcile_accept_epsilon": 0.02,
+  "reconcile_snap_threshold": 1.0,
+  "reconcile_smooth_time": 0.1,
+  "remote_interp_delay": 0.1,
+  "flap_charges": 0,
+  "flap_velocity": 6.0,
+  "dash_impulse": 0.0,
+  "dash_cooldown_ticks": 45,
+  "dash_ticks": 10,
+  "turn_rate_full": 180.0,
+  "turn_rate_slow": 360.0,
+  "turn_slow_speed": 3.0
+ },
+ "note": "The limited turn (OPEN_ITEMS A2): a body at speed swings its velocity round at turn_rate_full deg/s (turn_rate_slow at and under turn_slow_speed) and brakes while it points away from the wish. NumPy float32 mirroring movement_model.gd's turn_toward (Godot's vectors f32, GDScript's scalars f64), generated with a wolf's numbers. GDScript-only: the frozen twin has no horizontal movement.",
+ "cases": [
+  {
+   "name": "straight_run_from_rest",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    },
+    {
+     "move_y": -1.0
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.0,
+     0.0,
+     -1.955000638961792
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -4.599999904632568
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "5": {
+     "pos": [
+      0.0,
+      0.0,
+      -0.05366666615009308
+     ],
+     "vel": [
+      0.0,
+      0.0,
+      -0.9199999570846558
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "20": {
+     "pos": [
+      0.0,
+      0.0,
+      -0.5903333425521851
+     ],
+     "vel": [
+      0.0,
+      0.0,
+      -3.2200005054473877
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "quarter_turn_at_speed_swings_wide",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -4.599999904632568
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     2.73565411567688,
+     0.0,
+     -0.7845705151557922
+    ],
+    "vel": [
+     4.599999904632568,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "1": {
+     "pos": [
+      0.011715259402990341,
+      0.0,
+      -0.14513468742370605
+     ],
+     "vel": [
+      0.4701949656009674,
+      0.0,
+      -4.267508506774902
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "10": {
+     "pos": [
+      0.24802947044372559,
+      0.0,
+      -0.6122759580612183
+     ],
+     "vel": [
+      2.468809127807617,
+      0.0,
+      -2.1698830127716064
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "20": {
+     "pos": [
+      0.8956542611122131,
+      0.0,
+      -0.7845705151557922
+     ],
+     "vel": [
+      4.59999942779541,
+      0.0,
+      -3.4272670035306874e-08
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "30": {
+     "pos": [
+      1.6623213291168213,
+      0.0,
+      -0.7845705151557922
+     ],
+     "vel": [
+      4.599999904632568,
+      0.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "reversal_at_speed_brakes_round",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -4.599999904632568
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    },
+    {
+     "move_y": 1.0
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.7844306230545044,
+     0.0,
+     1.729338526725769
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     4.599999904632568
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "1": {
+     "pos": [
+      0.011715259402990341,
+      0.0,
+      -0.14513468742370605
+     ],
+     "vel": [
+      0.4701949656009674,
+      0.0,
+      -4.267508506774902
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "15": {
+     "pos": [
+      0.4274924397468567,
+      0.0,
+      -0.6893334984779358
+     ],
+     "vel": [
+      2.1058738231658936,
+      0.0,
+      -0.4164968729019165
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "30": {
+     "pos": [
+      0.779624879360199,
+      0.0,
+      -0.3704494833946228
+     ],
+     "vel": [
+      0.5853025913238525,
+      0.0,
+      2.959381341934204
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "45": {
+     "pos": [
+      0.7844306230545044,
+      0.0,
+      0.656004786491394
+     ],
+     "vel": [
+      0.0,
+      0.0,
+      4.599999904632568
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "slow_body_turns_sharper",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -2.5
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     1.5716683864593506,
+     0.0,
+     -0.35690099000930786
+    ],
+    "vel": [
+     4.599999904632568,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "1": {
+     "pos": [
+      0.011688550934195518,
+      0.0,
+      -0.07465358078479767
+     ],
+     "vel": [
+      0.4560196101665497,
+      0.0,
+      -2.1454036235809326
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "10": {
+     "pos": [
+      0.251961886882782,
+      0.0,
+      -0.3211277723312378
+     ],
+     "vel": [
+      2.704094886779785,
+      0.0,
+      -1.203940987586975
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "20": {
+     "pos": [
+      0.8816680908203125,
+      0.0,
+      -0.35690099000930786
+     ],
+     "vel": [
+      4.4933342933654785,
+      0.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "below_half_a_metre_turns_freely",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -0.4000000059604645
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    },
+    {
+     "move_x": 1.0
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.14951199293136597,
+     0.0,
+     -0.04674914479255676
+    ],
+    "vel": [
+     1.656188726425171,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "0": {
+     "pos": [
+      0.002545948140323162,
+      0.0,
+      -0.006445280276238918
+     ],
+     "vel": [
+      0.15275688469409943,
+      0.0,
+      -0.3867167830467224
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "1": {
+     "pos": [
+      0.0076378448866307735,
+      0.0,
+      -0.012669173069298267
+     ],
+     "vel": [
+      0.30551379919052124,
+      0.0,
+      -0.37343356013298035
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "5": {
+     "pos": [
+      0.055284544825553894,
+      0.0,
+      -0.03773153945803642
+     ],
+     "vel": [
+      0.9789419770240784,
+      0.0,
+      -0.35947170853614807
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "shallow_turn_keeps_speed",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     -4.599999904632568
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    },
+    {
+     "move_x": 0.38268343,
+     "move_y": -0.92387953
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.7907208800315857,
+     0.0,
+     -2.140306234359741
+    ],
+    "vel": [
+     1.7603436708450317,
+     0.0,
+     -4.249845504760742
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 7,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "1": {
+     "pos": [
+      0.01194111630320549,
+      0.0,
+      -0.1471845805644989
+     ],
+     "vel": [
+      0.48374634981155396,
+      0.0,
+      -4.390501499176025
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "10": {
+     "pos": [
+      0.23327845335006714,
+      0.0,
+      -0.7945207953453064
+     ],
+     "vel": [
+      1.7603436708450317,
+      0.0,
+      -4.249845504760742
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 7,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  }
+ ]
+}

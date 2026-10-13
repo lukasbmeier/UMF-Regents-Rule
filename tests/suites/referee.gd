@@ -14,6 +14,7 @@ func run() -> void:
 	_run_history()
 	_run_sweep()
 	await _run_walls_and_rewind()
+	await _run_walls_put_up()
 	_run_who()
 	_run_rows()
 	await _run_client_side()
@@ -199,6 +200,83 @@ func _run_walls_and_rewind() -> void:
 	_check(ref.settle(due + 1_000_000 + ActionReferee.SETTLE_USEC).size() == 1, "then it is judged")
 	root.queue_free()
 	await get_tree().process_frame
+
+
+## A GATE (DECISIONS #229): a character whose wall, 2 m wide across the path, is up only while it is
+## shut (a status of its own, 150 here).
+func _gate_def() -> EntityDefinition:
+	var shut := StatusDef.new()
+	shut.status = 150
+	var gate := EntityDefinition.new()
+	gate.kind = 50
+	gate.blocker_size = Vector3(2.0, 1.5, 0.2)
+	gate.blocker_offset = Vector3(0.0, 0.75, 0.0)
+	gate.blocks_in = [shut]
+	return gate
+
+
+func _run_walls_put_up() -> void:
+	print("== referee: walls entities put up (a shut gate) ==")
+	var gate: EntityDefinition = _gate_def()
+	_check(gate.has_blocker() and gate.blocks_when(150) and not gate.blocks_when(0), "a gate's wall is up only while it is shut")
+	var always := EntityDefinition.new()
+	always.blocker_size = Vector3.ONE
+	_check(always.blocks_when(0) and always.blocks_when(7), "one with no statuses named: always")
+	_check(not EntityDefinition.new().has_blocker() and EntityBlocker.make(EntityDefinition.new(), 1) == null, "a character with no size: no wall")
+	var flat := EntityDefinition.new()
+	flat.blocker_size = Vector3(2.0, 0.0, 0.2)
+	_check(", ".join(flat.validate()).contains("give it a size in all three"), "a wall with no height is refused by validate")
+	var b: EntityBlocker = EntityBlocker.make(gate, 9)
+	b.follow_status(0)
+	_check(b.collision_layer == 0 and not b.is_blocking(), "open: on no layer")
+	b.follow_status(150)
+	_check(b.collision_layer == SpaceTimeEntity.WORLD_MASK and b.is_blocking(), "shut: on the level's layer, as a fence")
+	_check(LungeJudge.LEVEL_MASK & b.collision_layer != 0, "(which a pounce's sweep is stopped by)")
+	var ic := InteractionComponent.new()
+	_check(ic._target_id_of(b) == 9, "aimed at, the wall is its gate")
+	ic.free()
+	b.free()
+
+	var root := Node3D.new()
+	add_child(root)
+	var ref := ActionReferee.new()
+	ref.send = false
+	root.add_child(ref)
+	ref.know(gate)
+	await get_tree().physics_frame
+	var space: PhysicsDirectSpaceState3D = ref.get_world_3d().direct_space_state
+	var hen: Array = [{"id": 2, "pos": Vector3(0, 0, -1.6), "radius": 0.28, "height": 0.7, "center_y": 0.35}]
+	var pounce := func() -> Dictionary: return LungeJudge.judge(space, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, hen)
+	# The gate, a metre ahead across the wolf's path, open.
+	ref.set_entity(9, 50, 0)
+	ref.record(9, BASE, Vector3(0, 0, -1.0), 0.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(ref.wall_of(9) != null and not ref.wall_of(9).is_blocking(), "the referee builds the gate's wall where it stands, down while it is open")
+	_check(int(pounce.call()["hit_id"]) == 2, "open, a hen through it is pounced")
+	var st := _StatusRow.new(9, 150)
+	ref.on_row(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", null, st))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var shut: Dictionary = pounce.call()
+	_check(ref.wall_of(9).is_blocking() and int(shut["hit_id"]) == 0 and float(shut["reach"]) < 0.9,
+		"shut (its status row), the pounce stops at it and she is safe (%.2f m of 1.4)" % float(shut["reach"]))
+	ref.record(9, BASE + 50_000, Vector3(0, 0, -1.0), PI / 2.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(int(pounce.call()["hit_id"]) == 2, "turned along the path (its heading), it no longer stands across it")
+	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"entity", _EntityRow.new(9, 50), null))
+	_check(ref.wall_of(9) == null, "the gate gone, its wall goes with it")
+	root.queue_free()
+	await get_tree().process_frame
+
+
+class _StatusRow extends RefCounted:
+	var entity_id: int = 0
+	var status: int = 0
+	func _init(eid: int, s: int) -> void:
+		entity_id = eid
+		status = s
 
 
 func _run_who() -> void:

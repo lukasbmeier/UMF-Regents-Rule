@@ -12,6 +12,9 @@ class_name ActionReferee extends Node3D
 ##      the user saw: its view delay, capped by `foundation.rewind_max_ms`, favouring the attacker), the
 ##      ability's sweep (`LungeJudge`) against the level
 ##
+## Walls entities put up (DECISIONS #229: a shut gate) are in its space as they are now, built from
+## their characters' `blocker_size` (`EntityBlocker`), so a pounce through a shut gate stops at it.
+##
 ## Who can be hit: people (a player, an NPC person, any playable character), not a nest or a prop;
 ## and only in a status that is targetable and hittable (a downed hen is not hit again). The module
 ## checks the same again: this only proposes.
@@ -41,6 +44,8 @@ var _defs_by_kind: Dictionary[int, EntityDefinition] = {}
 var _hitboxes: Dictionary[int, Dictionary] = {}
 ## ability id -> {reach, radius, height}: its sweep, from its `ability_def` row (or `set_sweep`).
 var _sweeps: Dictionary[int, Dictionary] = {}
+## entity id -> the wall it puts up, here (DECISIONS #229).
+var _walls: Dictionary[int, EntityBlocker] = {}
 
 
 func _ready() -> void:
@@ -79,6 +84,7 @@ func on_row(ev: RowEvent) -> void:
 				return
 			if ev.kind == RowEvent.Kind.DELETED:
 				_histories.erase(eid)
+				_drop_wall(eid)
 				return
 			record(eid, int(row.get(&"server_ts")), row.get(&"pos") as Vector3, float(row.get(&"yaw")))
 		&"action_request":
@@ -94,13 +100,16 @@ func on_row(ev: RowEvent) -> void:
 			if ev.kind == RowEvent.Kind.DELETED:
 				_kinds.erase(eid)
 				_histories.erase(eid)
+				_drop_wall(eid)
 			else:
 				_kinds[eid] = int(row.get(&"kind"))
+				_place_wall(eid)
 		&"status_state":
 			if ev.kind == RowEvent.Kind.DELETED:
 				_statuses.erase(eid)
 			else:
 				_statuses[eid] = int(row.get(&"status"))
+			_place_wall(eid)
 		&"player":
 			if ev.kind == RowEvent.Kind.DELETED:
 				_players.erase(eid)
@@ -117,6 +126,8 @@ func record(entity_id: int, ts_usec: int, pos: Vector3, yaw: float) -> void:
 		h = TransformHistory.new()
 		_histories[entity_id] = h
 	h.push(ts_usec, pos, yaw)
+	if _walls.has(entity_id) or _wall_kind(entity_id):
+		_place_wall(entity_id)
 
 
 ## What it knows of an entity, set directly (tests; and a sidecar that already has it).
@@ -126,6 +137,44 @@ func set_entity(entity_id: int, kind: int, status: int = 0, player: bool = false
 	if player:
 		_players[entity_id] = true
 		_offline[entity_id] = not online
+	_place_wall(entity_id)
+
+
+# --- walls entities put up (DECISIONS #229) ------------------------------------------------
+
+## The wall entity `entity_id` puts up here, if its character has one (null: none, or not yet placed).
+func wall_of(entity_id: int) -> EntityBlocker:
+	return _walls.get(entity_id, null)
+
+
+func _wall_kind(entity_id: int) -> bool:
+	var defn: EntityDefinition = _defs_by_kind.get(int(_kinds.get(entity_id, -1)), null)
+	return defn != null and defn.has_blocker()
+
+
+## Its wall where the entity stands now (its newest row), up or down as its status says.
+func _place_wall(entity_id: int) -> void:
+	if not _wall_kind(entity_id):
+		_drop_wall(entity_id)
+		return
+	var h: TransformHistory = _histories.get(entity_id, null)
+	if h == null or h.is_empty():
+		return
+	var wall: EntityBlocker = _walls.get(entity_id, null)
+	if wall == null:
+		wall = EntityBlocker.make(_defs_by_kind[int(_kinds[entity_id])], entity_id)
+		add_child(wall)
+		_walls[entity_id] = wall
+	var at: Dictionary = h.at(h.newest_usec())
+	wall.global_transform = Transform3D(Basis(Vector3.UP, float(at["yaw"])), at["pos"] as Vector3)
+	wall.follow_status(int(_statuses.get(entity_id, StatusDef.NORMAL)))
+
+
+func _drop_wall(entity_id: int) -> void:
+	var wall: EntityBlocker = _walls.get(entity_id, null)
+	if wall != null:
+		_walls.erase(entity_id)
+		wall.queue_free()
 
 
 func add_request(request_id: int, actor_id: int, ability_id: int, rewind_ms: int, due_usec: int) -> void:

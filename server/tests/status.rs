@@ -23,7 +23,9 @@ fn normal_changes_nothing() {
 fn downed_crawls_and_ends_in_out() {
     let d = find(status::DOWNED).unwrap();
     let b = applied(KIND, d, false);
-    assert_eq!(b.run, 5.0 * 0.25);
+    // A game may replace Downed with its own (Fowl Play's crawls at 0.3 for 120 s): its own numbers.
+    assert_eq!(b.run, KIND.run * d.speed);
+    assert!(d.speed < 1.0, "a crawl");
     assert_eq!(b.sprint, b.run, "no sprint: bounded by its crawl");
     assert_eq!(b.burst, 0.0, "no dash");
     assert_eq!(b.lift, b.sprint, "no jump: it climbs only what it crawls up");
@@ -31,7 +33,7 @@ fn downed_crawls_and_ends_in_out() {
     assert!(!d.hittable, "a downed player is not hit again (DECISIONS #226), though they can be helped up");
     assert!(find(status::NORMAL).unwrap().hittable && find(status::INJURED).unwrap().hittable, "a standing one is");
     assert!(!find(status::CARRIED).unwrap().hittable, "nor one being carried");
-    assert_eq!((d.lasts_ms, d.then), (60_000, status::OUT));
+    assert!(d.lasts_ms > 0 && d.then == status::OUT, "it ends, in out");
 }
 
 #[test]
@@ -48,9 +50,10 @@ fn out_and_escaped_cannot_move_or_be_reached() {
 fn an_injury_bursts_then_ends() {
     let inj = find(status::INJURED).unwrap();
     let start = bound(KIND, inj, inj, 0, 0);
-    assert_eq!(start.sprint, 8.0 * 1.5, "a hit player runs for it");
+    assert!(inj.burst > 1.0 && inj.burst_ms > 0, "a hit player runs for it");
+    assert_eq!(start.sprint, KIND.sprint * inj.burst);
     let mid = bound(KIND, inj, inj, inj.burst_ms as i64 - 1, 0);
-    assert_eq!(mid.sprint, 12.0);
+    assert_eq!(mid.sprint, KIND.sprint * inj.burst);
     let after = bound(KIND, inj, inj, inj.burst_ms as i64, 0);
     assert_eq!(after, KIND, "and the burst ends on time");
 }

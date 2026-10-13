@@ -280,6 +280,15 @@ client draws it at the carrier's **carry point**: `carry_offset` and `carry_yaw_
 character `.tres` (in its own terms: x right, y up, -z ahead). Put down, it stands where the genre
 says, in the status the genre says (else the one it had before). DECISIONS #228.
 
+### Walls an entity puts up (a gate, a haystack)
+A character can be a wall while it is in some statuses: `blocker_size` and `blocker_offset` (a box,
+from its feet, in its own terms) and `blocks_in` (the statuses it blocks in; empty: always) on its
+`.tres`. Fowl Play's gate blocks while Shut; its haystack always. Every client builds the box
+(`EntityBlocker`, on the level's layer: bodies stop at it as at a fence), and the referee builds its
+own, so a pounce stops at it too. The server's module never sees it: a genre that raises one keeps
+people out of it first. A genre moves an entity at once (a vault, into a hiding place) with
+`place_entity`. DECISIONS #229.
+
 ---
 
 ## 4. How a player gets into the world
@@ -381,7 +390,10 @@ triggered must show its error to the player.
 ### Movement
 One model (`foundation/sim/movement_model.gd`) runs on the client for prediction, and in the
 sidecar for authority. Tuning is `shared/movement_config.json` (speeds, jump, gravity,
-acceleration, reconciliation). Gaits: a plain key RUNS, Shift sprints, Ctrl walks.
+acceleration, reconciliation). Gaits: a plain key RUNS, Shift sprints, Ctrl walks. A character's
+own numbers are its movement profile (`content/movement/*.tres`); `turn_rate_full` there makes a
+heavy body swing round slowly at speed (Fowl Play's wolf: 180 degrees a second, 360 when slow), and
+0 turns at once. Changing the model means new golden vectors (`shared/golden/GENERATE.md`).
 
 ### Animation
 Characters animate from a SET (`game/anim/fisher.tres`) mapping SEMANTIC names

@@ -445,10 +445,21 @@ pub(crate) fn require_dev_tools(ctx: &ReducerContext, verb: &str) -> Result<(), 
 pub fn teleport(ctx: &ReducerContext, pos: Vector3) -> Result<(), String> {
     require_dev_tools(ctx, "teleport")?;
     let p = ctx.db.player().identity().find(ctx.sender()).ok_or("no player")?;
-    let mut m = ctx.db.movement_state().entity_id().find(p.entity_id).ok_or("no movement_state")?;
+    place_entity(ctx, p.entity_id, pos, None)
+}
+
+/// PUT AN ENTITY SOMEWHERE, AT ONCE (a genre's vault over a fence, a hen into a hiding place): it is
+/// at `pos`, facing `yaw` when given, still. A teleport: every client snaps it there rather than
+/// gliding, and frames its own client sent before it saw this (from the old place) move nothing,
+/// because its correction epoch moves on (DECISIONS #229). Err when it has no movement row.
+pub fn place_entity(ctx: &ReducerContext, entity_id: u64, pos: Vector3, yaw: Option<f32>) -> Result<(), String> {
+    let mut m = ctx.db.movement_state().entity_id().find(entity_id).ok_or("no movement_state")?;
     m.pos = pos;
     m.vel = Vector3::ZERO;
     m.grounded = false;
+    if let Some(y) = yaw {
+        m.yaw = y;
+    }
     m.teleport_flag = true;
     // An override: frames the client sends before it sees this row are from the old position.
     m.correction_epoch = m.correction_epoch.wrapping_add(1);

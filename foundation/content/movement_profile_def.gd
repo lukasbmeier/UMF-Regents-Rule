@@ -40,12 +40,19 @@ class_name MovementProfileDef extends ContentDef
 @export_range(0.0, 40.0, 0.1, "suffix:m/s") var dash_impulse: float = 0.0
 @export_range(0, 600) var dash_cooldown_ticks: int = 45
 @export_range(0, 120) var dash_ticks: int = 10
+## TURNING AT SPEED (OPEN_ITEMS A2): how fast its run swings round, degrees a second, at full speed
+## and at `turn_slow_speed` and under (0: the full rate). 0 turns at once. A heavy predator at
+## 180 overshoots a chicken's sharp turn; its look is never slowed, only its body.
+@export_range(0.0, 1440.0, 1.0, "suffix:°/s") var turn_rate_full: float = 0.0
+@export_range(0.0, 1440.0, 1.0, "suffix:°/s") var turn_rate_slow: float = 0.0
+@export_range(0.0, 20.0, 0.05, "suffix:m/s") var turn_slow_speed: float = 3.0
 
 ## The numbers a profile carries (all of `MovementConfig`'s that belong to a character).
 const PROFILE_FIELDS: Array[StringName] = [
 	&"walk_speed", &"run_speed", &"sprint_speed", &"strafe_speed_mult", &"back_speed_mult",
 	&"acceleration", &"friction", &"air_control", &"jump_velocity", &"gravity", &"max_slope_deg",
 	&"coyote_time_sec", &"flap_charges", &"flap_velocity", &"dash_impulse", &"dash_cooldown_ticks", &"dash_ticks",
+	&"turn_rate_full", &"turn_rate_slow", &"turn_slow_speed",
 ]
 
 
@@ -71,6 +78,8 @@ func validate() -> Array[String]:
 		out.append("its gaits are out of order: walk %s, run %s, sprint %s (each at least the one before)" % [walk_speed, run_speed, sprint_speed])
 	if flap_charges > 0 and flap_velocity <= 0.0:
 		out.append("it has %d flap(s) of no lift: give flap_velocity a value, or no flaps" % flap_charges)
+	if turn_rate_slow > 0.0 and turn_rate_full > 0.0 and turn_rate_slow < turn_rate_full:
+		out.append("it turns slower slow (%s°/s) than at speed (%s°/s): a body turns sharper when it is slower" % [turn_rate_slow, turn_rate_full])
 	if dash_impulse > 0.0 and dash_ticks <= 0:
 		out.append("its dash lasts no time: give dash_ticks a value")
 	return out

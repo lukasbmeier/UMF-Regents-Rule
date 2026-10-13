@@ -395,8 +395,8 @@ func _target_id_of(node: Variant) -> int:
 	var as_entity: SpaceTimeEntity = n as SpaceTimeEntity
 	if as_entity != null:
 		return as_entity.entity_id
-	if n.is_in_group(GROUP_INTERACTABLE) and n.has_meta(&"entity_id"):
-		return int(n.get_meta(&"entity_id"))
+	if (n.is_in_group(GROUP_INTERACTABLE) or n is EntityBlocker) and n.has_meta(&"entity_id"):
+		return int(n.get_meta(&"entity_id"))   # a prop for it, or a wall it put up (a shut gate)
 	return NO_TARGET
 
 

@@ -256,6 +256,12 @@ func _ensure_status_component() -> void:
 		holder.add_child(c)
 
 
+func _on_blocker_status(_from: int, to: int) -> void:
+	var wall: EntityBlocker = get_node_or_null(^"Blocker") as EntityBlocker
+	if wall != null:
+		wall.follow_status(to)
+
+
 ## HIDE THE BODY for a reason (`&"offline"`: PresenceComponent; `&"status"`: an out player), or show
 ## it again. It is drawn, and others collide with it, only while no reason holds, so two of them never
 ## undo each other (a player who is out AND has left stays hidden when either ends).
@@ -350,6 +356,14 @@ func _finish_bind() -> void:
 	for c: SpaceTimeComponent in _components:
 		c.bind(self, _rows, _history)
 
+	var wall: EntityBlocker = get_node_or_null(^"Blocker") as EntityBlocker
+	if wall != null:
+		var sc: StatusComponent = find_component(StatusComponent) as StatusComponent
+		if sc != null:
+			wall.follow_status(sc.status())
+			if not sc.status_changed.is_connected(_on_blocker_status):
+				sc.status_changed.connect(_on_blocker_status)
+
 	EntityRegistry.register(entity_id, self)
 	bound.emit()
 	SignalBus.entity_spawned.emit(entity_id, definition.kind if definition != null else -1)
@@ -389,6 +403,12 @@ func _apply_presentation() -> void:
 		if shape_node != null and cap != null and shape_node.shape is CapsuleShape3D:
 			shape_node.shape = cap
 			shape_node.position.y = cap.height * 0.5
+
+	# A WALL IT PUTS UP (DECISIONS #229): built now, raised by its status once bound.
+	if definition.has_blocker() and get_node_or_null(^"Blocker") == null:
+		var wall: EntityBlocker = EntityBlocker.make(definition, entity_id)
+		add_child(wall)
+		wall.follow_status(StatusDef.NORMAL)
 
 	if definition.camera_rig != null and has_node(^"CameraRig"):
 		var rig: CameraRig = get_node(^"CameraRig") as CameraRig

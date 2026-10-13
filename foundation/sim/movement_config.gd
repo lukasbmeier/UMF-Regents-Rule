@@ -39,6 +39,12 @@ static func shared() -> MovementConfig:
 @export var max_slope_deg: float = 45.0
 @export var ground_y: float = 0.0
 
+## A LIMITED TURN (OPEN_ITEMS A2), degrees a second: at run speed and over, and at `turn_slow_speed`
+## and under (0: the full rate). `turn_rate_full` 0 turns at once (most characters).
+@export var turn_rate_full: float = 0.0
+@export var turn_rate_slow: float = 0.0
+@export var turn_slow_speed: float = 3.0
+
 @export_group("Air")
 @export var air_control: float = 0.3
 @export var jump_velocity: float = 8.0
@@ -66,6 +72,7 @@ const FIELDS: Array[StringName] = [
 	&"air_control", &"jump_velocity", &"gravity", &"coyote_time_sec",
 	&"reconcile_accept_epsilon", &"reconcile_snap_threshold", &"reconcile_smooth_time", &"remote_interp_delay",
 	&"flap_charges", &"flap_velocity", &"dash_impulse", &"dash_cooldown_ticks", &"dash_ticks",
+	&"turn_rate_full", &"turn_rate_slow", &"turn_slow_speed",
 ]
 
 static func from_dict(d: Dictionary) -> MovementConfig:

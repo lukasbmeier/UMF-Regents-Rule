@@ -52,7 +52,12 @@ static func simulate(state: MovementState, input: InputFrame, cfg: MovementConfi
 	var horizontal: Vector3 = Vector3(s.vel.x, 0.0, s.vel.z)
 	# Airborne steering is deliberately weak; you commit to a jump.
 	var control: float = 1.0 if s.grounded else cfg.air_control
-	if wish.length_squared() > 0.0:
+	if wish.length_squared() > 0.0 and cfg.turn_rate_full > 0.0 and s.grounded 			and horizontal.length_squared() > TURN_FROM_SPEED_SQ:
+		# A LIMITED TURN (OPEN_ITEMS A2): a heavy body at speed swings its velocity round at
+		# `turn_rate_full` degrees a second, and slows while it points away from where it is told to
+		# go. The look is never clamped (a clamped camera is nauseating): the overshoot is the body's.
+		horizontal = turn_toward(horizontal, wish, cfg, dt)
+	elif wish.length_squared() > 0.0:
 		# Pushing AGAINST your own momentum brakes as hard as letting go and pushing the other
 		# way together. Without this a reversal takes (2 x speed) / acceleration — 0.4 s from a
 		# sprint at the old tuning — which is what "glidy" felt like. A quarter turn (dot = 0)
@@ -123,6 +128,39 @@ static func simulate(state: MovementState, input: InputFrame, cfg: MovementConfi
 
 ## Below this horizontal speed an entity is standing still. 0.1 m/s, squared.
 const IDLE_SPEED_SQ: float = 0.01
+## Below this horizontal speed a turn-limited body turns freely (it starts off any way it is told).
+## 0.5 m/s, squared.
+const TURN_FROM_SPEED_SQ: float = 0.25
+
+
+## THE LIMITED TURN (OPEN_ITEMS A2; FOWL_PLAY_CHASE 1.2: "sharp chicken turns make them overshoot").
+## `h` is the body's horizontal velocity, `wish` where the input asks it to go (and how fast). The
+## heading swings toward the wish by at most `turn_rate_at` degrees a second; the speed heads for
+## the wish's speed times the cosine of the angle still to turn (none once it is a quarter turn or
+## more away), so a body asked to go back the way it came brakes as it comes round, by `friction`,
+## and gathers speed again by `acceleration`. Slower, it turns sharper (`turn_rate_slow`).
+## The scalars are GDScript's (f64) and the vectors Godot's (f32): shared/golden/movement/
+## turn_rate.json mirrors them op for op.
+static func turn_toward(h: Vector3, wish: Vector3, cfg: MovementConfig, dt: float) -> Vector3:
+	var heading: Vector2 = Vector2(h.x, h.z)
+	var want: Vector2 = Vector2(wish.x, wish.z)
+	var speed: float = heading.length()
+	var off: float = heading.angle_to(want)
+	var max_step: float = deg_to_rad(turn_rate_at(cfg, speed)) * dt
+	var turn: float = clampf(off, -max_step, max_step)
+	var dir: Vector2 = heading.normalized().rotated(turn)
+	var aim: float = want.length() * maxf(cos(absf(off - turn)), 0.0)
+	speed = move_toward(speed, aim, (cfg.acceleration if aim > speed else cfg.friction) * dt)
+	return Vector3(dir.x, 0.0, dir.y) * speed
+
+
+## How fast a turn-limited body turns at `speed` (degrees a second): `turn_rate_slow` at or below
+## `turn_slow_speed`, `turn_rate_full` at its run speed and over, in a straight line between.
+static func turn_rate_at(cfg: MovementConfig, speed: float) -> float:
+	var slow: float = cfg.turn_rate_slow if cfg.turn_rate_slow > 0.0 else cfg.turn_rate_full
+	if speed <= cfg.turn_slow_speed or cfg.run_speed <= cfg.turn_slow_speed:
+		return slow
+	return lerpf(slow, cfg.turn_rate_full, clampf((speed - cfg.turn_slow_speed) / (cfg.run_speed - cfg.turn_slow_speed), 0.0, 1.0))
 
 ## The foundation's movement states, from the post-step state and the input that produced it.
 static func classify(s: MovementState, input: InputFrame) -> int:

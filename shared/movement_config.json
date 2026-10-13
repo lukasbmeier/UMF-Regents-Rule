@@ -25,5 +25,8 @@
   "flap_velocity": 6.0,
   "dash_impulse": 0.0,
   "dash_cooldown_ticks": 45,
-  "dash_ticks": 10
+  "dash_ticks": 10,
+  "turn_rate_full": 0.0,
+  "turn_rate_slow": 0.0,
+  "turn_slow_speed": 3.0
 }
