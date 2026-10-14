@@ -146,6 +146,11 @@ func new_match(session_id: int) -> SpacetimeDBReducerCall:
 func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('offer_referee', [world_id, code], [&'u32', &'string'], &'')
 
+## 0. pos: Vector3 [br]
+## 1. target_id: int [br]
+func ping(pos: Vector3, target_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('ping', [pos, target_id], [&'vector3[f32,f32,f32]', &'u64'], &'')
+
 ## 0. identity: PackedByteArray [br]
 ## 1. role: int [br]
 ## 2. world_id: int [br]

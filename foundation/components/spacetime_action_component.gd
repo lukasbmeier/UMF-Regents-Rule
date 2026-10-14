@@ -24,6 +24,10 @@ signal action_revoked(ability_id: int, predicted_id: int, reason: String)
 signal action_observed(actor_id: int, ability_id: int, target_id: int, outcome: int)
 ## A cooldown ran out.
 signal ability_ready(ability_id: int)
+## SOMEONE ELSE'S ENTITY BEGAN AN ABILITY (DECISIONS #232): its cooldown row started a new cooldown.
+## What a remote character's animation plays its start from (its own client predicted it; nobody else
+## hears of a use until it lands).
+signal started_elsewhere(ability_id: int)
 
 const STATE_TABLE: StringName = &"ability_state"
 const EVENT_TABLE: StringName = &"action_event"
@@ -81,6 +85,7 @@ func request_use(ability_id: int, target_id: int = 0, aim: Vector3 = Vector3.ZER
 	}
 	_set_ready_at(ability_id, now + int(def.get(&"cooldown_ms")) * 1000)
 	action_started.emit(ability_id, pid)
+	_lunge_after_wind_up(ability_id, pid)
 	var req: ReducerRequest = _call(ability_id, target_id, aim, pid)
 	if req == null:
 		_revoke(pid, "the request could not be sent")
@@ -105,6 +110,10 @@ func pending_count() -> int:
 
 # --- rows ----------------------------------------------------------------------------------
 
+## Uses taken back (refused, no answer), newest last: their lunges do not happen.
+var _revoked_pids: Dictionary[int, bool] = {}
+
+
 func _on_bound() -> void:
 	# Guarded: rebind() calls bind() again on reconnect (DECISIONS #48).
 	if not EntityRegistry.global_row_event.is_connected(_on_global_row):
@@ -112,11 +121,13 @@ func _on_bound() -> void:
 
 
 ## The server's word on a cooldown, converted to our clock.
-func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> void:
+func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> void:
 	if table != STATE_TABLE or new == null:
 		return
 	var ability_id: int = int(new.get(&"ability_id"))
 	var remaining_usec: int = int(new.get(&"cooldown_until")) - ClockSync.server_usec()
+	if not is_local_authority and remaining_usec > 0 and (old == null or int(old.get(&"cooldown_until")) != int(new.get(&"cooldown_until"))):
+		started_elsewhere.emit(ability_id)
 	_set_ready_at(ability_id, _now() + maxi(0, remaining_usec))
 
 
@@ -162,6 +173,9 @@ func _revoke(pid: int, reason: String) -> void:
 		return
 	var p: Dictionary = _pending[pid]
 	_pending.erase(pid)
+	_revoked_pids[pid] = true   # a lunge still to come does not (`_lunge_after_wind_up`)
+	if _revoked_pids.size() > 32:
+		_revoked_pids.erase(_revoked_pids.keys()[0])
 	var ability_id: int = int(p["ability_id"])
 	# Hand the cooldown back: the use never happened.
 	_set_ready_at(ability_id, int(p["ready_before"]))
@@ -195,6 +209,32 @@ func _set_ready_at(ability_id: int, usec: int) -> void:
 
 func _now() -> int:
 	return int(_clock_override.call()) if _clock_override.is_valid() else Time.get_ticks_usec()
+
+
+## THE BODY LUNGES (DECISIONS #232): an ability whose content `lunges` dashes its user as its wind-up
+## ends, unless it was taken back before (refused, revoked).
+func _lunge_after_wind_up(ability_id: int, pid: int) -> void:
+	var wind_up: int = lunge_wind_up_ms(_def(ability_id))
+	if wind_up < 0 or not is_inside_tree():
+		return
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var input: LocalInputComponent = ent.find_component(LocalInputComponent) as LocalInputComponent if ent != null else null
+	if input == null:
+		return
+	get_tree().create_timer(float(wind_up) / 1000.0, true, true).timeout.connect(func() -> void:
+		if is_instance_valid(input) and not _revoked_pids.has(pid):
+			input.dash_once())
+
+
+## How long after its use an ability's user lunges (its wind-up), from its `ability_def` row; -1 when it
+## does not lunge.
+static func lunge_wind_up_ms(def: RefCounted) -> int:
+	if def == null:
+		return -1
+	var data: Variant = JSON.parse_string(String(def.get(&"data"))) if def.get(&"data") != null else null
+	if not (data is Dictionary) or not bool((data as Dictionary).get("lunges", false)):
+		return -1
+	return int(def.get(&"wind_up_ms"))
 
 
 func _def(ability_id: int) -> RefCounted:

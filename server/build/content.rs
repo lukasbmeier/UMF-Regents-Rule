@@ -147,13 +147,19 @@ pub fn run(listed: &[String]) {
                 let f = |k: &str| it[k].as_f64().unwrap_or_else(|| panic!("{out}: ability {id} has no {k}"));
                 // A judged ability (DECISIONS #226) says so in its row, with its sweep: the module and
                 // the referee both read it there (and an admin's `define_ability` can make one).
-                let data = if it["judged"].as_bool().unwrap_or(false) {
+                let mut data = if it["judged"].as_bool().unwrap_or(false) {
                     serde_json::json!({ "name": it["name"].as_str().unwrap_or(""), "judged": true,
                         "reach": it["reach"].as_f64().unwrap_or(0.0), "radius": it["radius"].as_f64().unwrap_or(0.35),
-                        "height": it["height"].as_f64().unwrap_or(0.6) }).to_string()
+                        "height": it["height"].as_f64().unwrap_or(0.6) })
                 } else {
-                    serde_json::json!({ "name": it["name"].as_str().unwrap_or("") }).to_string()
+                    serde_json::json!({ "name": it["name"].as_str().unwrap_or("") })
                 };
+                // One that throws its user's body forward (DECISIONS #232) says so too: the user's
+                // client, and a referee driving a bot, dash it as the wind-up ends.
+                if it["lunges"].as_bool().unwrap_or(false) {
+                    data["lunges"] = serde_json::Value::Bool(true);
+                }
+                let data = data.to_string();
                 abilities.push((id, format!(
                     "    AbilitySeed {{ ability_id: {id}, cooldown_ms: {}, range: {:?}f32, wind_up_ms: {}, damage: {:?}f32, data: {data:?} }},\n",
                     f("cooldown_ms") as u32, f("range") as f32, f("wind_up_ms") as u32, f("damage") as f32

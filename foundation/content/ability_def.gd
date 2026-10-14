@@ -31,6 +31,12 @@ class_name AbilityDef extends ContentDef
 ## How high above the user's feet it sweeps.
 @export_range(0.0, 3.0, 0.05, "suffix:m") var height_m: float = 0.6
 
+@export_group("The user's body")
+## IT LUNGES (DECISIONS #232): as its wind-up ends the user's body is thrown forward by its movement
+## profile's dash (`dash_impulse`, along where it is going or facing), so others see a pounce, not a
+## swipe. A character with an ability that lunges dashes only so: its dash key does nothing.
+@export var lunges: bool = false
+
 ## The shortest wind-up the network allows (ARCHITECTURE: the RTT floor).
 const MIN_WIND_UP_MS: int = 100
 
@@ -51,6 +57,7 @@ func to_bake() -> Dictionary:
 		"reach": reach_m,
 		"radius": radius_m,
 		"height": height_m,
+		"lunges": lunges,
 	}
 
 

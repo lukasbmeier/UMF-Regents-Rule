@@ -141,10 +141,17 @@ func _physics_process(delta: float) -> void:
 			state_changed.emit(brain.state)
 		_send_acts(brain.take_acts())
 		_maybe_persist()
-	_movement.push_authority_input(brain.frame(me))
+	var f: InputFrame = brain.frame(me)
+	if _lunge_at_msec > 0 and Time.get_ticks_msec() >= _lunge_at_msec:
+		_lunge_at_msec = 0
+		f.dash = true   # its ability's lunge (DECISIONS #232), as a player's client presses it
+	_movement.push_authority_input(f)
 
 
 # --- doing things (DECISIONS #230) ----------------------------------------------------------------
+
+## When its last ability's lunge is due (ticks msec; 0: none).
+var _lunge_at_msec: int = 0
 
 ## What the brain asked to do, as the authority's reducers: the server judges each as a player's.
 ## Sent, never waited for: a refusal (out of reach, already held) is the brain's to notice by what
@@ -159,6 +166,9 @@ func _send_acts(acts: Array[Dictionary]) -> void:
 			"ability":
 				SpaceTimeSync.call_reducer(&"use_ability_as", [entity_id, int(a["ability"]), int(a.get("target", 0)), a["aim"] as Vector3, 0],
 					["u64", "u32", "u64", "vector3[f32,f32,f32]", "u32"])
+				var wind_up: int = SpaceTimeActionComponent.lunge_wind_up_ms(SpaceTimeSync.get_row(&"ability_def", int(a["ability"])))
+				if wind_up >= 0:
+					_lunge_at_msec = Time.get_ticks_msec() + wind_up
 		sent.emit(a)
 
 

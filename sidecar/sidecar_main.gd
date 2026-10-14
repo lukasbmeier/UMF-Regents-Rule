@@ -42,6 +42,8 @@ extends Node
 
 var world: SimWorld = null
 var referee: ActionReferee = null
+## Its world's rounds, written down (DECISIONS #235); off with `--no-record`.
+var recorder: SessionRecorder = null
 ## Started with `--referee`: judging only.
 var referee_only: bool = false
 
@@ -81,9 +83,18 @@ func _ready() -> void:
 				defs.append(d)
 		Genres.merge_tables(cfg, mods)
 		print("[Sidecar] genres: ", ", ".join(Genres.listed()))
+	# A RECORDING OF EVERY ROUND (DECISIONS #235): this process sees every row of its world.
+	if not _flag("--no-record"):
+		recorder = SessionRecorder.new()
+		recorder.name = "Recorder"
+		recorder.world_id = world_id
+		recorder.level_of = func() -> String: return world.level().scene_file_path if world.level() != null else ""
+		add_child(recorder)
 	for defn: EntityDefinition in defs:
 		EntitySpawner.register_definition(defn)
 		referee.know(defn)
+		if recorder != null:
+			recorder.kind_names[defn.kind] = defn.display_name
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
 
 	# The frames to replay. `input_queue` is already in InterestManager's world-filtered list, so

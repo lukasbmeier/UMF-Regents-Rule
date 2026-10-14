@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="NoiseDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/noise_def.gd" id="1_noise"]
+[ext_resource type="AudioStream" path="res://foundation/audio/sounds/ping.wav" id="2_sound"]
+
+[resource]
+script = ExtResource("1_noise")
+kind = 1
+sound = ExtResource("2_sound")
+volume_db = -4.0
+heard_within_m = 60.0
+marker_for = 1
+marker_s = 4.0
+color = Color(0.45, 0.85, 1, 1)
+id = 1
+display_name = "Ping"
+designer_notes = "A player's ping (the ping key, DECISIONS #233): a chime where they point, heard within 60 m, and a marker there for their own kind (their side) for 4 s, saying what they pointed at. A genre gives its characters their own (Fowl Play's hen bawks) with the same kind."

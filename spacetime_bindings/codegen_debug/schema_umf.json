@@ -1137,6 +1137,51 @@
 			]
 		},
 		{
+			"name": "Noise",
+			"namespace": [],
+			"source_name": "Noise",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "kind",
+					"type": "U16"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "source_id",
+					"type": "U64"
+				},
+				{
+					"name": "target_id",
+					"type": "U64"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"noise"
+			],
+			"table_name": "noise",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "NpcBrainRow",
 			"namespace": [],
 			"source_name": "NpcBrainRow",
@@ -2240,6 +2285,25 @@
 			"return_data": {}
 		},
 		{
+			"name": "ping",
+			"wire_name": "ping",
+			"namespace": [],
+			"local_name": "ping",
+			"params": [
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "target_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "prune_action_events",
 			"wire_name": "prune_action_events",
 			"namespace": [],
@@ -2736,7 +2800,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 39
+					"type_idx": 40
 				}
 			],
 			"return_type": "",
@@ -2849,7 +2913,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 44
+					"type_idx": 45
 				}
 			],
 			"return_type": "",
@@ -3499,11 +3563,35 @@
 			"is_public": true
 		},
 		{
+			"name": "noise",
+			"wire_name": "noise",
+			"namespace": [],
+			"local_name": "noise",
+			"type_idx": 30,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "noise_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "npc_brain",
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 30,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3550,7 +3638,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 31,
+			"type_idx": 32,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -3574,7 +3662,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 32,
+			"type_idx": 33,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -3598,7 +3686,7 @@
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 33,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3617,7 +3705,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 34,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3641,7 +3729,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 35,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3660,7 +3748,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 36,
+			"type_idx": 37,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -3684,7 +3772,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 37,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3740,7 +3828,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 38,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3764,7 +3852,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 39,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3787,7 +3875,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 40,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -3811,7 +3899,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 41,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -3830,7 +3918,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 42,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3849,7 +3937,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 43,
+			"type_idx": 44,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -3926,6 +4014,7 @@
 		"ItemDef": "UmfItemDef",
 		"LobbyMember": "UmfLobbyMember",
 		"MovementStateRow": "UmfMovementStateRow",
+		"Noise": "UmfNoise",
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
@@ -4003,6 +4092,7 @@
 		"ItemDef": "UmfItemDef",
 		"LobbyMember": "UmfLobbyMember",
 		"MovementStateRow": "UmfMovementStateRow",
+		"Noise": "UmfNoise",
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
@@ -5919,6 +6009,79 @@
 						},
 						"algebraic_type": {
 							"U32": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "kind"
+						},
+						"algebraic_type": {
+							"U16": []
+						}
+					},
+					{
+						"name": {
+							"some": "pos"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "source_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "target_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
 						}
 					}
 				]

@@ -22,6 +22,8 @@ func _ready() -> void:
 	add_child(HoldPrompt.new())
 	# The timed press's bar (DECISIONS #210), likewise.
 	add_child(TimingBar.new())
+	# What the world makes heard, and the ping key (DECISIONS #233).
+	add_child(NoiseFeedback.new())
 	SignalBus.entity_spawned.connect(_on_entity_spawned)
 	SignalBus.entity_despawned.connect(_on_entity_despawned)
 	_status.text = connection_line()

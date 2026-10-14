@@ -8,6 +8,7 @@
 			"damage": 10.0,
 			"height": 0.6,
 			"judged": false,
+			"lunges": false,
 			"name": "melee",
 			"radius": 0.35,
 			"range": 2.0,

@@ -5,7 +5,59 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_action_tests()
+	_run_lunge_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
+
+
+class FakeLungeDef extends RefCounted:
+	var ability_id: int = 3
+	var wind_up_ms: int = 450
+	var data: String = ""
+
+
+## A LUNGE (DECISIONS #232): an ability whose content `lunges` throws its user's body forward by its
+## movement profile's dash as the wind-up ends: the client presses dash for one frame, and a character
+## that lunges so does not dash by its key.
+func _run_lunge_tests() -> void:
+	print("== action: a lunge (DECISIONS #232) ==")
+	var row := FakeLungeDef.new()
+	row.data = JSON.stringify({"name": "Pounce", "judged": true, "lunges": true})
+	_check(SpaceTimeActionComponent.lunge_wind_up_ms(row) == 450, "an ability whose row says it lunges: its user lunges 450 ms in (its wind-up)")
+	row.data = JSON.stringify({"name": "Swipe", "judged": true})
+	_check(SpaceTimeActionComponent.lunge_wind_up_ms(row) == -1 and SpaceTimeActionComponent.lunge_wind_up_ms(null) == -1,
+		"one that does not (or no row): no lunge")
+	var pounce := AbilityDef.new()
+	pounce.lunges = true
+	_check(bool(pounce.to_bake().get("lunges", false)), "the bake says it lunges (the server puts it in the row's data)")
+	var defn := EntityDefinition.new()
+	_check(not LocalInputComponent.lunges_by_ability(defn) and not LocalInputComponent.lunges_by_ability(null), "a character with no lunging ability dashes by its key")
+	defn.abilities = [pounce]
+	_check(LocalInputComponent.lunges_by_ability(defn), "one with one dashes only by it")
+	var c: LocalInputComponent = _make_input_component(true)
+	if not InputMap.has_action(&"dash"):
+		InputMap.add_action(&"dash")
+	c.dash_key = false
+	Input.action_press(&"dash")
+	var held: InputFrame = c.sample()
+	c.dash_once()
+	var lunge: InputFrame = c.sample()
+	var after: InputFrame = c.sample()
+	_check(not held.dash, "its dash key held: no dash (it lunges only by its ability)")
+	_check(lunge.dash and not after.dash, "the lunge: dash pressed on one frame, and only one")
+	c.dash_key = true
+	_check(c.sample().dash, "a character that dashes by its key: the key dashes")
+	Input.action_release(&"dash")
+	c.queue_free()
+	# The model: one dash press on a profile with a dash throws the body forward.
+	var cfg := MovementConfig.new()
+	cfg.dash_impulse = 4.5
+	var s := MovementState.new()
+	s.grounded = true
+	var f := InputFrame.new()
+	f.look_yaw = 0.0
+	f.dash = true
+	var thrown: MovementState = MovementModel.simulate(s, f, cfg, 1.0 / 60.0, Callable())
+	_check(thrown.vel.z < -4.0, "a dash press: the body is thrown forward (%.2f m/s along its facing)" % -thrown.vel.z)
 
 
 

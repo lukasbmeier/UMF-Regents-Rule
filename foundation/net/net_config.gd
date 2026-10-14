@@ -86,4 +86,6 @@ class_name NetConfig extends Resource
 	&"hold_member",
 	# Who carries whom (CarryComponent, DECISIONS #228)
 	&"attachment",
+	# What the world makes heard: a crack, a ping (NoiseFeedback, DECISIONS #233)
+	&"noise",
 ]

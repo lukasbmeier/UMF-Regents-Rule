@@ -41,7 +41,7 @@ const FOUNDATION_KEYS: Array[Array] = [
 	[&"move_forward", "Move forward"], [&"move_back", "Move back"],
 	[&"move_left", "Move left"], [&"move_right", "Move right"],
 	[&"jump", "Jump"], [&"sprint", "Sprint"], [&"move_slow", "Walk slowly"],
-	[&"interact", "Interact"], [&"skill_check", "Skill check"], [&"camera_freelook", "Look around (hold)"],
+	[&"interact", "Interact"], [&"skill_check", "Skill check"], [&"ping", "Ping"], [&"camera_freelook", "Look around (hold)"],
 	[&"lobby_ready", "Ready (lobby)"], [&"lobby_team", "Change team (lobby)"],
 	[&"lobby_character", "Play another character (lobby)"],
 ]
@@ -351,6 +351,11 @@ func _define_foundation() -> void:
 	define(&"effects_volume", AUDIO, "Sound effects", Kind.SLIDER, 100.0, _volume_opts(BUS_EFFECTS))
 	define(&"ambience_volume", AUDIO, "Ambience", Kind.SLIDER, 100.0, _volume_opts(BUS_AMBIENCE))
 	define(&"voice_volume", AUDIO, "Voices", Kind.SLIDER, 100.0, _volume_opts(BUS_VOICE))
+	# FIRST-PERSON COMFORT (DECISIONS #234): the view's width (and, under Game, the stride's bob and a carrier's view).
+	define(&"fov_offset", VIDEO, "Field of view", Kind.SLIDER, 0.0, {
+		"min": -20.0, "max": 20.0, "step": 1.0, "format": "%+d°",
+		"tooltip": "Wider or narrower than each character's own view (its camera's field of view).",
+	})
 	define(&"mouse_sensitivity", CONTROLS, "Mouse sensitivity", Kind.SLIDER, 1.0, {
 		"min": 0.1, "max": 3.0, "step": 0.05, "format": "%.2f×",
 	})
@@ -358,6 +363,12 @@ func _define_foundation() -> void:
 	for k: Array in FOUNDATION_KEYS:
 		if InputMap.has_action(k[0]):
 			define_key(k[0], k[1])
+	define(&"head_bob", GAME, "Head bob in first person", Kind.TOGGLE, false, {
+		"tooltip": "The view rises and falls with a first-person character's stride. Off is easier on the stomach.",
+	})
+	define(&"third_person_carrying", GAME, "Third person while carrying", Kind.TOGGLE, true, {
+		"tooltip": "A first-person character carrying someone (the wolf with a hen) sees itself from behind until it puts them down.",
+	})
 	define(&"splash_at_start", GAME, "Splash screen at start", Kind.TOGGLE, true, {
 		"tooltip": "The game's name and its tips for a few seconds before connecting. Off: straight to the connect screen (handy while testing).",
 	})

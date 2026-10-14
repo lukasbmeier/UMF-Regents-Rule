@@ -652,6 +652,7 @@ func _connect_siblings() -> void:
 		SpaceTimeActionComponent) as SpaceTimeActionComponent
 	if action != null:
 		action.action_started.connect(_on_action_started)
+		action.started_elsewhere.connect(func(ability_id: int) -> void: _on_action_started(ability_id, 0))
 	var interaction: InteractionComponent = ent.find_component(
 		InteractionComponent) as InteractionComponent
 	if interaction != null:

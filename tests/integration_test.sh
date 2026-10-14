@@ -1032,6 +1032,38 @@ assert_rejected "detach_as $LOAD" "not carried" "and it cannot be put down twice
 for e in "$CARRIER" "$LOAD"; do assert_ok "despawn_entity $e" "(gone)"; done
 move_e "$MYENT" 0.0 0.0   # the CLI's player back at the origin
 
+echo "== pings and noises: what a world hears (DECISIONS #233) =="
+# A player pings where they look (`ping`): a noise of kind 1 there, about what they pointed at, for
+# everyone in the world. Not further than 80 m from them, not about something that is not here, and
+# no faster than shared/rules.json's `ping` (two at once, one about every three seconds after). A
+# noise's row goes a few seconds after it was made (it is heard as it is made).
+xyz() { python -c "import re,sys; v=re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.stdin.read()); print(' '.join(v[:3]))"; }
+sleep 6   # the ping allowance full again (the moves above did not spend it: each reducer has its own)
+assert_ok 'ping {"x":3.0,"y":0.0,"z":4.0} 0' "the CLI's player pings a place 5 m off"
+assert_eq "$(sql_first "SELECT kind FROM noise WHERE source_id = $MYENT" 1)" "1" "a noise of kind 1 (a ping), made by them"
+check "$(close_to "$(sql_first "SELECT pos FROM noise WHERE source_id = $MYENT" 1 | xyz)" 3 0 4 0.01)" "where they pointed"
+assert_rejected 'ping {"x":200.0,"y":0.0,"z":0.0} 0' "further than" "a place 200 m off: refused"
+assert_rejected 'ping {"x":1.0,"y":0.0,"z":1.0} 999999' "nothing like that" "about something not here: refused"
+assert_eq "$(row_count "SELECT * FROM noise WHERE source_id = $MYENT")" "1" "(neither made a noise)"
+sleep 6
+PG_DIR="$(mktemp -d)"
+for i in $(seq 1 6); do
+  ( spacetime call "$DB" ping '{"x":1.0,"y":0.0,"z":1.0}' 0 > "$PG_DIR/$i" 2>&1 ) &
+done
+wait
+PG_OK=0; PG_REFUSED=0
+for i in $(seq 1 6); do
+  if grep -qi "too many calls" "$PG_DIR/$i"; then PG_REFUSED=$((PG_REFUSED + 1));
+  elif ! grep -qiE "^error|error:" "$PG_DIR/$i"; then PG_OK=$((PG_OK + 1)); fi
+done
+rm -rf "$PG_DIR"
+check "$([ "$PG_OK" -ge 2 ] && [ "$PG_OK" -le 3 ] && [ $((PG_OK + PG_REFUSED)) -eq 6 ] && echo true || echo false)"   "six pings at once: two or three taken, the rest too many ($PG_OK taken, $PG_REFUSED refused)"
+sleep 12
+assert_eq "$(row_count "SELECT * FROM noise WHERE source_id = $MYENT")" "0" "ten seconds on, the noises are gone"
+assert_ok "set_status $MYENT 4 $UNTIL_CHANGED \"\"" "(the CLI's player out)"
+assert_rejected 'ping {"x":1.0,"y":0.0,"z":1.0} 0' "watching" "out of the game: no ping"
+assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "(the CLI's player back)"
+
 echo "== holds: hold to interact (DECISIONS #209) =="
 # What a hold IS is content (foundation/content/hold/: Help up, 4 s alone, 2.5 with two, 2 with three,
 # on a downed player or NPC, back to normal when done); the module keeps who holds what and how far

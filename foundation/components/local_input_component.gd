@@ -54,6 +54,10 @@ var _seq: int = 0
 var _first_seq: int = 0
 ## Jump held off since a skill check came up, until the key is let go (DECISIONS #218).
 var _jump_held_off: bool = false
+## Frames still to press dash for (`dash_once`: an ability's lunge), and whether the dash key itself
+## dashes (not for a character whose ability lunges: DECISIONS #232).
+var _dash_frames: int = 0
+var dash_key: bool = true
 var _client_tick: int = 0
 ## Where the CAMERA looks. Mouse motion always moves this one.
 var _look_yaw: float = 0.0
@@ -104,6 +108,7 @@ func _on_bound() -> void:
 		var ctrl := InputEventKey.new()
 		ctrl.physical_keycode = KEY_CTRL
 		InputMap.action_add_event(ACTION_SLOW, ctrl)
+	dash_key = not lunges_by_ability((entity as SpaceTimeEntity).definition if entity is SpaceTimeEntity else null)
 	# A remote entity's scene carries this component too; it just never runs.
 	set_physics_process(is_local_authority)
 	set_process_unhandled_input(is_local_authority)
@@ -279,7 +284,8 @@ func sample() -> InputFrame:
 		_jump_held_off = false
 	f.jump = not still and not _jump_held_off and Input.is_action_pressed(ACTION_JUMP)
 	f.sprint = not still and Input.is_action_pressed(ACTION_SPRINT)
-	f.dash = not still and Input.is_action_pressed(ACTION_DASH)
+	f.dash = not still and ((dash_key and Input.is_action_pressed(ACTION_DASH)) or _dash_frames > 0)
+	_dash_frames = maxi(_dash_frames - 1, 0)
 	f.slow = not still and Input.is_action_pressed(ACTION_SLOW)
 	f.client_pos = _body_position()
 
@@ -292,6 +298,21 @@ func sample() -> InputFrame:
 	input_sampled.emit(f)
 	_queue_for_send(f)
 	return f
+
+
+## Press dash on the next frame sampled: an ability's lunge (`SpaceTimeActionComponent`, DECISIONS #232).
+func dash_once() -> void:
+	_dash_frames = 1
+
+
+## Whether a character dashes only by an ability (one of its abilities lunges).
+static func lunges_by_ability(defn: EntityDefinition) -> bool:
+	if defn == null:
+		return false
+	for a: AbilityDef in defn.abilities:
+		if a != null and a.lunges:
+			return true
+	return false
 
 
 ## Batch frames to the server. One reducer call per `input_batch_size` frames rather than per

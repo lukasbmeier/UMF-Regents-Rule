@@ -4,7 +4,7 @@
 	"outputs": {
 		"shared/content/foundation/ability.json": {
 			"count": 1,
-			"hash": "0f6e6ab1",
+			"hash": "86874175",
 			"owner": "foundation",
 			"sources": {
 				"foundation/content/ability/melee.tres": "29e165b2"
@@ -30,6 +30,15 @@
 				"foundation/content/hold/help_up.tres": "def9d807"
 			},
 			"type": "hold"
+		},
+		"shared/content/foundation/noise.json": {
+			"count": 1,
+			"hash": "198d7a44",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/noise/ping.tres": "fa2357e0"
+			},
+			"type": "noise"
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,

@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_camera_tests()
+	_run_comfort_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -96,3 +97,77 @@ func _run_camera_tests() -> void:
 				"third person: its model drawn, its facing its own")
 		own.free()
 		ent.queue_free()
+
+
+## FIRST-PERSON COMFORT (DECISIONS #234): the player's field of view, the head bob (off unless they
+## turn it on), and a first-person character's view while it carries someone (its own body drawn, its
+## facing its own), back again when it puts them down.
+func _run_comfort_tests() -> void:
+	print("== camera: first-person comfort ==")
+	var settings: Node = _autoload("Settings")
+	var was_fov: Variant = settings.get_value(&"fov_offset")
+	var was_bob: Variant = settings.get_value(&"head_bob")
+	var was_carry: Variant = settings.get_value(&"third_person_carrying")
+	_check(not bool(settings.get_value(&"head_bob")) and bool(settings.get_value(&"third_person_carrying")) and is_equal_approx(float(settings.get_value(&"fov_offset")), 0.0),
+		"by default: no head bob, third person while carrying, each character's own field of view")
+	var eyes := CameraRigConfig.new()
+	eyes.first_person = true
+	eyes.fov = 85.0
+	var behind := CameraRigConfig.new()
+	behind.first_person = false
+	behind.fov = 80.0
+	eyes.while_carrying = behind
+	settings.set_value(&"fov_offset", 10.0)
+	_check(is_equal_approx(CameraRig.fov_for(eyes), 95.0), "the player's +10: 85 becomes 95")
+	settings.set_value(&"fov_offset", 0.0)
+	var ent := SpaceTimeEntity.new()
+	ent.is_local_authority = true
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	ent.add_child(visual)
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = BoxMesh.new()
+	visual.add_child(mesh)
+	get_tree().root.add_child(ent)
+	var input := LocalInputComponent.new()
+	ent.add_runtime_component(input)
+	input.set_physics_process(false)
+	var rig := CameraRig.new()
+	rig.config = eyes
+	rig._entity = ent
+	rig._input = input
+	rig.apply_first_person()
+	rig.follow_carrying(false)
+	_check(rig.config == eyes and not rig.in_carrying_view(), "not carrying: its own view")
+	rig.follow_carrying(true)
+	_check(rig.config == behind and rig.in_carrying_view() and mesh.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON and not input.sample().face,
+		"it picks someone up: its rig's while_carrying, third person, its own body drawn, its facing its own")
+	rig.follow_carrying(true)
+	_check(rig.config == behind, "carrying on: it stays so")
+	rig.follow_carrying(false)
+	_check(rig.config == eyes and mesh.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY and input.sample().face,
+		"put down: first person again")
+	var other := CameraRigConfig.new()
+	rig.config = other
+	rig.follow_carrying(false)
+	_check(rig.config == other, "a view set from outside meanwhile stays (only carrying's start and end change it)")
+	rig.config = eyes
+	settings.set_value(&"third_person_carrying", false)
+	rig.follow_carrying(true)
+	_check(rig.config == eyes, "the player turned it off: its own view, carrying or not")
+	rig.follow_carrying(false)
+	settings.set_value(&"third_person_carrying", true)
+	ent.velocity = Vector3(0, 0, -4.0)   # the entity is its body
+	_check(rig._bob(0.1) == Vector3.ZERO, "head bob off: the view does not rise and fall")
+	settings.set_value(&"head_bob", true)
+	var most: float = 0.0
+	for i: int in 20:
+		most = maxf(most, absf(rig._bob(0.05).y))
+	_check(most > 0.01 and most <= CameraRig.BOB_M + 0.0001, "on: it rises and falls with the stride (%.3f m at most)" % most)
+	ent.velocity = Vector3.ZERO
+	_check(rig._bob(0.05) == Vector3.ZERO, "standing: still")
+	settings.set_value(&"head_bob", was_bob)
+	settings.set_value(&"fov_offset", was_fov)
+	settings.set_value(&"third_person_carrying", was_carry)
+	rig.free()
+	ent.queue_free()

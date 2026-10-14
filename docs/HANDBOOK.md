@@ -290,6 +290,20 @@ baked from the level's collision), and holds, lets go or uses an ability the way
 the server judges a bot as it judges a player. A genre's brains are scripts in
 `sidecar/npc/brains/<genre>/` (Fowl Play's `chicken/hen`, `chicken/wolf`). DECISIONS #230.
 
+### What a world hears (noises and pings)
+A noise is a row everyone in a world receives as it is made: an egg cracking, a raid, a player's
+ping. The server says what happened and where (`make_noise` in a genre's rules, numbered from 100;
+the `ping` reducer for a player, kind 1); what it sounds like, how far it carries and who sees a
+marker is content (`content/noise/*.tres`, a `NoiseDef`). One kind can sound different for each
+character that makes it (`made_by`: Fowl Play's hen bawks, its wolf growls). The ping key (`ping`)
+pings where the player looks; a genre says what the marker reads (`NoiseFeedback.callout`). DECISIONS #233.
+
+### A recording of every round
+Every sidecar, the referee too, writes each round of its world to `user://recordings/` (Esc menu,
+Open log folder, then up one): where everyone was, ten times a second, and what happened. Open
+`tools/replay/replay_viewer.tscn` and press F6 to watch the newest; `[` and `]` step through the
+others, H shows where people were hurt and where pounces landed or missed. DECISIONS #235.
+
 ### Walls an entity puts up (a gate, a haystack)
 A character can be a wall while it is in some statuses: `blocker_size` and `blocker_offset` (a box,
 from its feet, in its own terms) and `blocks_in` (the statuses it blocks in; empty: always) on its
@@ -404,6 +418,9 @@ acceleration, reconciliation). Gaits: a plain key RUNS, Shift sprints, Ctrl walk
 own numbers are its movement profile (`content/movement/*.tres`); `turn_rate_full` there makes a
 heavy body swing round slowly at speed (Fowl Play's wolf: 180 degrees a second, 360 when slow), and
 0 turns at once. Changing the model means new golden vectors (`shared/golden/GENERATE.md`).
+A SLOW PLACE in a level (a hedge's hole, mud) is a `LevelSpeedZone`: a box with a pace (0.4: 40 % of
+anyone's speed in it), on top of their status (DECISIONS #231). An ability that `lunges` (a pounce)
+throws its user forward by their movement profile's dash as its wind-up ends (DECISIONS #232).
 
 ### Animation
 Characters animate from a SET (`game/anim/fisher.tres`) mapping SEMANTIC names
@@ -489,7 +506,10 @@ says. Nothing in code tells an item how to be held.
   client sends each change to the server (`equip_state`), so everyone sees the draw as it starts.
 
 ### Camera, UI, debug
-- Camera: `foundation/camera/third_person.tres` / `first_person.tres`, chosen per definition.
+- Camera: `foundation/camera/third_person.tres` / `first_person.tres`, chosen per definition. A rig's
+  `while_carrying` is the view while its entity carries someone (the wolf with a hen: third person).
+  The player's comfort settings sit on top: Field of view (wider or narrower than the rig's), Head bob
+  in first person (off by default), Third person while carrying (on). DECISIONS #234.
 - The HUD: `foundation/ui/hud.tscn`, one status line (connection, then the round). The greybox game
   carries it as `HUD`; a genre's own `HUD` scene (its `genre.tres` `scenes`) replaces it, and any
   genre scene named like one of the game scene's children replaces that child the same way.

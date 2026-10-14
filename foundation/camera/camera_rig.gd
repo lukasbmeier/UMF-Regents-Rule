@@ -28,6 +28,20 @@ var _movement: SpaceTimeMovementComponent
 var _follow: SpaceTimeEntity = null
 ## The first-person set-up has been made for this entity (its own body hidden, facing held).
 var _first_person_done: bool = false
+## WHERE A GENRE MOVES THE VIEW (DECISIONS #232): world metres added to where the camera sits, every
+## frame, by presentation that owns a motion the body does not make itself (a vault's arc over a fence
+## the server put it across; a pounce's crouch). Zero: where the body is.
+var offset: Vector3 = Vector3.ZERO
+## The view it had before it took up its carrying view (`while_carrying`), to go back to; and whether
+## it is in that view now.
+var _own_config: CameraRigConfig = null
+var _carry_swapped: bool = false
+## Where the head bob is in the stride (radians).
+var _bob_phase: float = 0.0
+
+## How far the view rises and falls in a stride, and how many strides a metre.
+const BOB_M: float = 0.035
+const BOB_STRIDES_PER_M: float = 0.9
 
 
 func _ready() -> void:
@@ -95,20 +109,84 @@ func _resolve_siblings() -> void:
 ## (it casts its shadow still; everyone else sees it whole), and its body faces where they look,
 ## standing still too, as in any first-person game. (Luke: the wolf's own greybox sat in front of the
 ## camera, and the view swung while the body stayed put until he moved.) Once per entity: a new look
-## or character builds a new entity and a new rig.
+## or character builds a new entity and a new rig. Out of first person again (carrying: DECISIONS #234),
+## the model is drawn and the body turns as it goes.
 func apply_first_person() -> void:
-	if _first_person_done or config == null or not config.first_person or _entity == null or not _entity.is_local_authority:
+	if _first_person_done or config == null or _entity == null or not _entity.is_local_authority:
 		return
 	_first_person_done = true
+	_show_own_body(not config.first_person)
+
+
+func _show_own_body(shown: bool) -> void:
 	if _input != null:
-		_input.hold_facing(&"first_person", true)
-	var visual: Node = _entity.get_node_or_null(^"Visual")
+		_input.hold_facing(&"first_person", not shown)
+	var visual: Node = _entity.get_node_or_null(^"Visual") if _entity != null else null
 	if visual != null:
 		for g: Node in visual.find_children("*", "GeometryInstance3D", true, false):
-			(g as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+			(g as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shown 				else GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+
+
+## THE VIEW WHILE CARRYING (DECISIONS #234): as its entity starts carrying someone (`carrying_now`), into
+## its view's `while_carrying` (unless the player turned that off); as it puts them down, back to the view
+## it had. Only on those changes: a view set from outside at any other time stays.
+func follow_carrying(carrying_now: bool) -> void:
+	var want: bool = carrying_now and bool(Settings.get_value(&"third_person_carrying"))
+	if want and not _carry_swapped:
+		if config == null or config.while_carrying == null:
+			return
+		_own_config = config
+		_carry_swapped = true
+		use_config(config.while_carrying)
+	elif not want and _carry_swapped:
+		_carry_swapped = false
+		use_config(_own_config)
+
+
+## Whether it is in its carrying view now.
+func in_carrying_view() -> bool:
+	return _carry_swapped
+
+
+## Whether entity `entity_id` carries someone (an `attachment` row names it the carrier).
+static func carrying(entity_id: int) -> bool:
+	return not SpaceTimeSync.find_rows(&"attachment", func(r: RefCounted) -> bool: return int(r.get(&"carrier_id")) == entity_id).is_empty()
+
+
+## Change the view: `c`'s framing, and the player's own body shown or not as it is first person.
+func use_config(c: CameraRigConfig) -> void:
+	if c == null or c == config:
+		return
+	var was_first: bool = config != null and config.first_person
+	config = c
+	_boom_ready = false
+	if _entity != null and _entity.is_local_authority and was_first != c.first_person:
+		_show_own_body(not c.first_person)
+
+
+## The width of the view: the rig's, wider or narrower by the player's setting.
+static func fov_for(c: CameraRigConfig) -> float:
+	return clampf(c.fov + float(Settings.get_value(&"fov_offset")), 30.0, 150.0)
+
+
+## The head bob now, `speed` m/s along the ground: up and down twice a stride, its height growing with
+## speed to `BOB_M` at a run. None unless the player turned it on, and only in first person.
+func _bob(delta: float) -> Vector3:
+	if config == null or not config.first_person or not bool(Settings.get_value(&"head_bob")) or _entity == null:
+		return Vector3.ZERO
+	var b: CharacterBody3D = _entity.body
+	var speed: float = Vector2(b.velocity.x, b.velocity.z).length() if b != null else 0.0
+	if speed < 0.3:
+		_bob_phase = 0.0
+		return Vector3.ZERO
+	_bob_phase = fmod(_bob_phase + speed * delta * BOB_STRIDES_PER_M * TAU, TAU)
+	return Vector3(0.0, sin(_bob_phase * 2.0) * BOB_M * minf(speed / 4.0, 1.0), 0.0)
 
 
 func _apply(delta: float) -> void:
+	if _entity != null and _entity.is_local_authority and _first_person_done:
+		follow_carrying(carrying(_entity.entity_id))
+	_camera.fov = fov_for(config)
 	var yaw: float = _input.get_look_yaw() if _input != null else global_rotation.y
 	var pitch: float = _input.get_look_pitch() if _input != null else 0.0
 	pitch = clampf(pitch, deg_to_rad(config.pitch_min_deg), deg_to_rad(config.pitch_max_deg))
@@ -122,7 +200,7 @@ func _apply(delta: float) -> void:
 		var anchor: Vector3 = _entity.get_global_transform_interpolated().origin
 		if _movement != null:
 			anchor += _movement.get_visual_offset()
-		global_position = anchor + Vector3(0.0, config.pivot_height, 0.0)
+		global_position = anchor + Vector3(0.0, config.pivot_height, 0.0) + offset + _bob(delta)
 	else:
 		position = Vector3(0.0, config.pivot_height, 0.0)
 

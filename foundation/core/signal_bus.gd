@@ -46,6 +46,9 @@ signal timed_press_judged(entity_id: int, round: int, quality: float)
 signal entity_jumped(entity_id: int)
 signal entity_landed(entity_id: int, impact_speed: float)
 signal entity_teleported(entity_id: int)
+## A noise this player heard (`NoiseFeedback`, DECISIONS #233): its kind, where, who made it (0: the
+## world), what it was about (0: a place).
+signal noise_heard(kind: int, pos: Vector3, source_id: int, target_id: int)
 
 # --- Inventory ---------------------------------------------------------------
 ## Something in this entity's inventory changed. Deliberately coarse: the component holds the

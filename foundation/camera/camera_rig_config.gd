@@ -30,5 +30,10 @@ class_name CameraRigConfig extends Resource
 @export var pitch_min_deg: float = -80.0
 @export var pitch_max_deg: float = 70.0
 @export_range(1.0, 179.0) var fov: float = 75.0
+## THE VIEW WHILE CARRYING SOMEONE (DECISIONS #234, first-person comfort): a first-person character
+## with someone in its mouth or arms (the wolf with a hen) sees itself and them from this rig instead,
+## until it puts them down. Empty: its own view throughout. The player's "Third person while
+## carrying" setting turns it off.
+@export var while_carrying: CameraRigConfig
 ## 0 snaps the camera to the entity; higher values trail it. First person should stay 0.
 @export var follow_smoothing: float = 0.0

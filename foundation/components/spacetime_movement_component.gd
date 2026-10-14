@@ -181,6 +181,8 @@ var _newest_seq: int = 0
 ## at once (it is the simulation) and let the visual catch up, so a correction is a glide rather
 ## than a pop. Applied to the `Visual` node and the camera pivot; never to the body.
 var _visual_offset: Vector3 = Vector3.ZERO
+## The configs it has stepped by in a slow place (`_in_zone`), by [config, pace].
+var _zone_cfgs: Dictionary = {}
 var _offset_decay_per_sec: float = 0.0
 var _reconcile_count: int = 0
 var _snap_count: int = 0
@@ -364,6 +366,9 @@ func _step(from: MovementState, frame: InputFrame) -> MovementState:
 	if status_source != null and is_instance_valid(status_source):
 		cfg = status_source.call(&"movement_config", cfg) as MovementConfig
 		frame = status_source.call(&"filter_input", frame) as InputFrame
+	# IN A SLOW PLACE (a hedge's hole, mud: `LevelSpeedZone`, DECISIONS #231), on top of the status.
+	if b != null and b.is_inside_tree():
+		cfg = _in_zone(cfg, LevelSpeedZone.speed_at(b.get_world_3d().direct_space_state, from.pos))
 	var next: MovementState = MovementModel.simulate(from, frame, cfg, _dt(), resolver)
 	# Facing follows the camera only while there is movement input: a body that turns while you
 	# stand still pirouettes as you look around. The exception is AIMING (`frame.face`): a cast
@@ -372,6 +377,20 @@ func _step(from: MovementState, frame: InputFrame) -> MovementState:
 	if frame.face or frame.move_dir.length_squared() > 0.0:
 		next.yaw = frame.look_yaw
 	return next
+
+
+## `cfg` at `k` of its pace, the same object frame after frame while neither changes.
+func _in_zone(cfg: MovementConfig, k: float) -> MovementConfig:
+	if is_equal_approx(k, 1.0):
+		return cfg
+	var key: Array = [cfg.get_instance_id(), snappedf(k, 0.001)]
+	var c: MovementConfig = _zone_cfgs.get(key) as MovementConfig
+	if c == null:
+		if _zone_cfgs.size() > 16:
+			_zone_cfgs.clear()
+		c = LevelSpeedZone.scaled(cfg, k)
+		_zone_cfgs[key] = c
+	return c
 
 
 ## Collision resolver handed to the model. Client and sidecar both pass a CharacterBody3D-backed
