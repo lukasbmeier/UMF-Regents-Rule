@@ -128,6 +128,10 @@ pub trait Genre: Sync {
     /// `actor_id` is about to use `ability_id` (its kind may, it may act, it is not cooling down): Err
     /// refuses it, with the reason its player sees (a predator carrying a hen does not pounce). Every
     /// genre is asked; the first refusal stands.
+    /// An ability was used (DECISIONS #237: a howl, a sprint, a decoy put down; a judged one as it is
+    /// queued for its referee, before it lands): what using it does is the genre's. After its cooldown
+    /// is set.
+    fn on_ability_used(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32, _aim: crate::sim::Vector3) {}
     fn may_use_ability(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) -> Result<(), String> {
         Ok(())
     }
@@ -279,6 +283,13 @@ pub fn may_use_ability(ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> 
         g.may_use_ability(ctx, actor_id, ability_id).map_err(|e| format!("use_ability: {e}"))?;
     }
     Ok(())
+}
+
+/// An unjudged ability was used: the genre of its user's kind hears it.
+pub fn on_ability_used(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32, aim: crate::sim::Vector3) {
+    if let Some(g) = owner_of_entity(actor_kind) {
+        g.on_ability_used(ctx, actor_id, ability_id, aim);
+    }
 }
 
 /// A judged ability hit `target`: the genre of its kind says what that does (true), or nobody does.

@@ -316,6 +316,7 @@ pub fn use_ability_from(
     if is_judged(&def) {
         queue_judged(ctx, actor, me.world_id, &def, target_id, aim, predicted_id, view_delay_ms)?;
         set_cooldown(ctx, actor, &def, state);
+        crate::game::on_ability_used(ctx, actor, kind, ability_id, aim);
         return Ok(());
     }
 
@@ -356,6 +357,7 @@ pub fn use_ability_from(
         predicted_id,
         server_ts: ctx.timestamp,
     });
+    crate::game::on_ability_used(ctx, actor, kind, ability_id, aim);
     Ok(())
 }
 

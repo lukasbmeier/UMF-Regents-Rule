@@ -86,7 +86,22 @@ static func simulate(state: MovementState, input: InputFrame, cfg: MovementConfi
 		s.dash_left = cfg.dash_ticks
 	s.dash_held = input.dash
 
-	# 1. Jump from the ground; FLAP in the air (config-gated, §2.4, one per fresh press).
+	# 1. HOVER (config-gated, DECISIONS #236): a body on the wing holds itself at `hover_height`, rising or
+	#    falling to it at `hover_climb` at most, steering as on the ground: no jump, no gravity.
+	if cfg.hover_height > 0.0:
+		var to: Vector3 = Vector3(0.0, cfg.hover_height, 0.0) - Vector3(0.0, s.pos.y, 0.0)
+		var climb: Vector3 = (to * Vector3(4.0, 4.0, 4.0)).clamp(Vector3(0.0, -cfg.hover_climb, 0.0), Vector3(0.0, cfg.hover_climb, 0.0))
+		s.vel = Vector3(s.vel.x, climb.y, s.vel.z)
+		s.grounded = false
+		s.jump_held = input.jump
+		s.pos = s.pos + s.vel * dt
+		if resolve_collision.is_valid():
+			s = resolve_collision.call(state, s)
+			s.grounded = false
+		s.move_state = classify(s, input)
+		return s
+
+	# 1b. Jump from the ground; FLAP in the air (config-gated, §2.4, one per fresh press).
 	if s.grounded:
 		s.flaps_used = 0
 		if input.jump:
@@ -100,6 +115,11 @@ static func simulate(state: MovementState, input: InputFrame, cfg: MovementConfi
 	# 2. Gravity (airborne only)
 	if not s.grounded:
 		s.vel = s.vel - Vector3(0.0, cfg.gravity, 0.0) * dt
+	# 2b. GLIDE (config-gated, DECISIONS #236): holding jump after a flap, it falls no faster than
+	#     `glide_fall_speed`; its way forward is its own.
+	if cfg.glide_fall_speed > 0.0 and not s.grounded and input.jump and s.flaps_used > 0 \
+			and s.vel.y < Vector3(0.0, -cfg.glide_fall_speed, 0.0).y:
+		s.vel = Vector3(s.vel.x, Vector3(0.0, -cfg.glide_fall_speed, 0.0).y, s.vel.z)
 
 	# 3. Integrate
 	s.pos = s.pos + s.vel * dt

@@ -77,6 +77,11 @@ class_name EntityDefinition extends ContentDef
 ## x right, y up, -z ahead) that stops bodies, and a referee's sweeps and sight, while it is in one of
 ## `blocks_in` (a gate while shut; empty: always). Zero size: none. Others are kept out of it by the
 ## level's layer, as by a fence (`EntityBlocker`).
+## FRIENDLY COLLISION (DECISIONS #238): a physics layer (5-32) this character's bodies share with
+## their own kind, solid to each other when the rule `foundation.friendly_collision` is on (a lobby's
+## griefing toggle: hens blocking a gap for each other). 0: never (they pass through each other, as
+## every body does by default).
+@export_range(0, 32) var kin_layer: int = 0
 @export var blocker_size: Vector3 = Vector3.ZERO
 @export var blocker_offset: Vector3 = Vector3.ZERO
 @export var blocks_in: Array[StatusDef] = []

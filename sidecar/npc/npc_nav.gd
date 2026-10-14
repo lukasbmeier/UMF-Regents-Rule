@@ -66,6 +66,7 @@ static func map_for(level: Node3D, radius: float, height: float) -> RID:
 		mesh.filter_baking_aabb = bounds
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, level)
+	add_ground(level, bounds, source)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
 	var map: RID = NavigationServer3D.map_create()
 	NavigationServer3D.map_set_cell_size(map, mesh.cell_size)
@@ -78,6 +79,21 @@ static func map_for(level: Node3D, radius: float, height: float) -> RID:
 	_regions[key] = region
 	print("[Sidecar] a walk map for bodies %.2f m by %.2f m: %d polygons" % [radius, height, mesh.get_polygon_count()])
 	return map
+
+
+## GROUND THAT MAKES ITS OWN COLLISION (DECISIONS #240: a Terrain3D, whose collision is a heightmap
+## made in the physics server, not a node the parser finds): every node of the level that can give its
+## walkable faces (`generate_nav_mesh_source_geometry(aabb, require_nav)`) adds them. The number added.
+static func add_ground(level: Node3D, bounds: AABB, source: NavigationMeshSourceGeometryData3D) -> int:
+	var added: int = 0
+	var area: AABB = bounds if bounds.size != Vector3.ZERO else AABB(Vector3(-512, -64, -512), Vector3(1024, 128, 1024))
+	for n: Node in level.find_children("*", "", true, false):
+		if n.has_method(&"generate_nav_mesh_source_geometry"):
+			var faces: Variant = n.call(&"generate_nav_mesh_source_geometry", area, false)
+			if faces is PackedVector3Array and not (faces as PackedVector3Array).is_empty():
+				source.add_faces(faces, Transform3D.IDENTITY)
+				added += (faces as PackedVector3Array).size() / 3
+	return added
 
 
 static func _key(level: Node3D, radius: float, height: float) -> String:

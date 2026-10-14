@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_entity_tests()
+	_run_kin_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -135,3 +136,43 @@ func _run_entity_tests() -> void:
 	_check(quick.is_bound(), "an empty OPTIONAL table (no inventory rows) does not delay bind")
 	reg.unregister(9)
 	quick.queue_free()
+
+
+## FRIENDLY COLLISION (DECISIONS #238): a character's kin layer; solid to its kin only while the rule is on.
+func _run_kin_tests() -> void:
+	print("== entity: friendly collision ==")
+	var hot: Node = _autoload("HotRules")
+	var defn := EntityDefinition.new()
+	defn.kin_layer = 6
+	var ent := SpaceTimeEntity.new()
+	ent.definition = defn
+	ent.collision_layer = 2
+	ent.collision_mask = 5
+	var bit: int = 1 << 5
+	ent.apply_kin_collision()
+	_check(ent.collision_layer & bit != 0 and ent.collision_mask & bit == 0 and ent.collision_mask & 5 == 5,
+		"the rule off (by default): on its kin layer, solid to nothing more")
+	var on := _HotRow.new(&"foundation.friendly_collision", 1.0)
+	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, on))
+	ent.apply_kin_collision()
+	_check(ent.collision_mask & bit != 0, "the rule on: solid to its kin")
+	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.DELETED, &"hot_rule", on, null))
+	ent.apply_kin_collision()
+	_check(ent.collision_mask & bit == 0 and ent.collision_layer & 2 != 0, "off again: they pass through each other; its own layer kept")
+	var none := SpaceTimeEntity.new()
+	none.definition = EntityDefinition.new()
+	none.collision_mask = 5
+	none.apply_kin_collision()
+	_check(none.collision_mask == 5, "a character with no kin layer: untouched")
+	ent.free()
+	none.free()
+
+
+class _HotRow extends RefCounted:
+	var key: String
+	var number: float
+	var text: String = ""
+	var overridden: bool = true
+	func _init(k: StringName, n: float) -> void:
+		key = String(k)
+		number = n

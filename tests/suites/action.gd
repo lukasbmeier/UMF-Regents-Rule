@@ -6,6 +6,7 @@ extends "res://tests/suite_base.gd"
 func run() -> void:
 	_run_action_tests()
 	_run_lunge_tests()
+	_run_key_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -227,3 +228,38 @@ func _run_action_tests() -> void:
 	_check(rlog == ["observed"], "a remote player's action is observed (for its animation), not resolved (%s)" % str(rlog))
 	remote.entity.queue_free()
 	remote.queue_free()
+
+
+## AN ABILITY ON ITS OWN KEY (DECISIONS #237): the wolf's Howl on the right mouse button; its Pounce on
+## the attack key still (its first, keyed nothing).
+func _run_key_tests() -> void:
+	print("== action: abilities on their own keys ==")
+	if not InputMap.has_action(&"power"):
+		InputMap.add_action(&"power")
+	var rmb := InputEventMouseButton.new()
+	rmb.button_index = MOUSE_BUTTON_RIGHT
+	InputMap.action_add_event(&"power", rmb)
+	var pounce := AbilityDef.new()
+	pounce.id = 7101
+	var howl := AbilityDef.new()
+	howl.id = 7102
+	howl.key = &"power"
+	var defn := EntityDefinition.new()
+	defn.abilities = [pounce, howl]
+	var ent := SpaceTimeEntity.new()
+	ent.definition = defn
+	var c := LocalInputComponent.new()
+	c.entity = ent
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_RIGHT
+	press.pressed = true
+	_check(c.keyed_ability(press) == howl, "the right mouse button: the ability keyed to `power` (the Howl)")
+	var other := InputEventKey.new()
+	other.physical_keycode = KEY_K
+	other.pressed = true
+	_check(c.keyed_ability(other) == null, "a key nothing is on: none (the first ability is the attack key's, not a key's)")
+	press.pressed = false
+	_check(c.keyed_ability(press) == null, "let go: none")
+	InputMap.action_erase_event(&"power", rmb)
+	c.free()
+	ent.free()

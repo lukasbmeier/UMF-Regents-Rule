@@ -17,6 +17,10 @@ class_name AbilityDef extends ContentDef
 ## The animation the user plays (a semantic name from the character's AnimationSet: `interact`,
 ## `ability.3`...). Presentation only: not baked, the server does not know it.
 @export var animation: StringName = &"interact"
+## THE KEY THAT USES IT (DECISIONS #237): an input action (`power`: the right mouse button). Empty:
+## the attack key, for a character's first ability; a genre may use it from its own keys (a hen's
+## two picked abilities on 1 and 2).
+@export var key: StringName = &""
 
 @export_group("Judged by a referee")
 ## JUDGED BY THE WORLD'S REFEREE (DECISIONS #226): a sidecar decides what it hits, against the

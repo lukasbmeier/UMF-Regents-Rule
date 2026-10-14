@@ -404,6 +404,12 @@ func _apply_presentation() -> void:
 			shape_node.shape = cap
 			shape_node.position.y = cap.height * 0.5
 
+	# SOLID TO ITS KIN when the rule says (DECISIONS #238), from now and as the rule changes.
+	if definition.kin_layer > 0:
+		apply_kin_collision()
+		if not HotRules.changed.is_connected(_on_rule_changed):
+			HotRules.changed.connect(_on_rule_changed)
+
 	# A WALL IT PUTS UP (DECISIONS #229): built now, raised by its status once bound.
 	if definition.has_blocker() and get_node_or_null(^"Blocker") == null:
 		var wall: EntityBlocker = EntityBlocker.make(definition, entity_id)
@@ -427,6 +433,21 @@ func _apply_presentation() -> void:
 			AnimationDriverComponent) as AnimationDriverComponent
 		if driver != null:
 			driver.animation_set = definition.animation_set
+
+
+## FRIENDLY COLLISION (DECISIONS #238): on its character's `kin_layer` always (so others of its kind
+## can be solid to it), and solid to that layer itself only while `foundation.friendly_collision` is on.
+func apply_kin_collision() -> void:
+	if definition == null or definition.kin_layer <= 0:
+		return
+	var bit: int = 1 << (definition.kin_layer - 1)
+	collision_layer = collision_layer | bit
+	collision_mask = (collision_mask | bit) if HotRules.flag(&"foundation.friendly_collision") else (collision_mask & ~bit)
+
+
+func _on_rule_changed(key: StringName) -> void:
+	if key == &"foundation.friendly_collision":
+		apply_kin_collision()
 
 
 ## Free the half of the rig this instance will never use. A remote entity has no camera; the

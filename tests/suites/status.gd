@@ -10,6 +10,7 @@ func run() -> void:
 	StatusDef.clear_cache()
 	_run_content()
 	await _run_genre_replaces()
+	_run_hover()
 	await _run_movement()
 	await _run_presentation()
 	await _run_spectate()
@@ -332,3 +333,16 @@ func _wipe(dir: String) -> void:
 	for f: String in d.get_files():
 		d.remove(f)
 	DirAccess.remove_absolute(dir)
+
+
+## ON THE WING (DECISIONS #236): a status may hold its body at a height (an eagle's Take wing).
+func _run_hover() -> void:
+	print("== status: on the wing ==")
+	var flying := StatusDef.new()
+	flying.status = 150
+	flying.hover_height = 7.0
+	var cfg := MovementConfig.new()
+	_check(not flying.moves_as_usual() and is_equal_approx(flying.apply_to(cfg).hover_height, 7.0) and is_zero_approx(cfg.hover_height),
+		"a status that flies: its body held 7 m up (on a copy of the config)")
+	var walking := StatusDef.new()
+	_check(walking.moves_as_usual() and walking.apply_to(cfg) == cfg, "one that does not: as it was")

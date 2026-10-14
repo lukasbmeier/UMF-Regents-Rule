@@ -173,6 +173,12 @@ func use_ability(ability_id: int, aim: Vector3, target_id: int = 0) -> void:
 	_acts.append({"do": "ability", "ability": ability_id, "aim": aim, "target": target_id})
 
 
+## Call `reducer` as this bot (DECISIONS #239): a genre's own `<verb>_as(entity, ...)` (a hen comes out
+## of hiding, wiggles), its first argument this entity, then `args` of `types`.
+func call_as(reducer: StringName, args: Array = [], types: Array[String] = []) -> void:
+	_acts.append({"do": "reducer", "reducer": reducer, "args": args, "types": types})
+
+
 ## What it asked to do since the last call, oldest first; the list is emptied.
 func take_acts() -> Array[Dictionary]:
 	var out: Array[Dictionary] = _acts

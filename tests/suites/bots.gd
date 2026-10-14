@@ -15,6 +15,7 @@ func run() -> void:
 	_run_acts()
 	_run_route()
 	await _run_nav()
+	_run_ground()
 
 
 func _run_filter() -> void:
@@ -70,6 +71,11 @@ func _run_acts() -> void:
 		and acts[1]["do"] == "let_go" and acts[2]["do"] == "ability" and int(acts[2]["ability"]) == 10000 and int(acts[2]["target"]) == 5,
 		"hold, let go, an ability: asked in order")
 	_check(b.take_acts().is_empty(), "and each is taken once")
+	b.call_as(&"wiggle_as")
+	b.call_as(&"come_out_as", [3], ["u8"])
+	var genre: Array[Dictionary] = b.take_acts()
+	_check(genre.size() == 2 and genre[0]["do"] == "reducer" and genre[0]["reducer"] == &"wiggle_as" and (genre[1]["args"] as Array) == [3]
+		and (genre[1]["types"] as Array) == ["u8"], "a genre's own reducer, as the bot (DECISIONS #239): its name, its arguments")
 
 
 class _Paths extends NpcWorldView:
@@ -145,3 +151,25 @@ func _run_nav() -> void:
 	NpcNav.clear()
 	level.queue_free()
 	await get_tree().process_frame
+
+
+class _Ground extends Node3D:
+	func generate_nav_mesh_source_geometry(_aabb: AABB, _require_nav: bool) -> PackedVector3Array:
+		return PackedVector3Array([Vector3(0, 0, 0), Vector3(0, 0, 4), Vector3(4, 0, 0), Vector3(4, 0, 0), Vector3(0, 0, 4), Vector3(4, 0, 4)])
+
+
+## GROUND THAT MAKES ITS OWN COLLISION (DECISIONS #240: Terrain3D): its faces go into the walk map.
+func _run_ground() -> void:
+	print("== bots: ground that makes its own collision ==")
+	var level := Node3D.new()
+	var g := _Ground.new()
+	level.add_child(g)
+	var plain := Node3D.new()
+	level.add_child(plain)
+	var source := NavigationMeshSourceGeometryData3D.new()
+	var n: int = NpcNav.add_ground(level, AABB(), source)
+	_check(n == 2 and source.get_vertices().size() == 18, "a node that gives its faces: its two triangles are added (%d)" % n)
+	var none := NavigationMeshSourceGeometryData3D.new()
+	_check(NpcNav.add_ground(plain, AABB(), none) == 0 and none.get_vertices().is_empty(), "a level without such a node: nothing")
+	level.free()
+	plain = null

@@ -33,6 +33,9 @@ class_name StatusDef extends ContentDef
 ## Jumps and flaps.
 @export var can_jump: bool = true
 @export var can_dash: bool = true
+## ON THE WING (DECISIONS #236): in this status a body holds itself this high (m) and flies there (an
+## eagle's Take wing). 0: it walks. Presentation of the model's own branch: not baked to the server.
+@export_range(0.0, 50.0, 0.1, "suffix:m") var hover_height: float = 0.0
 
 @export_group("Play")
 ## May use things and abilities.
@@ -152,7 +155,7 @@ func on_copied(owner: String, replacing: bool) -> void:
 
 ## Whether it changes nothing about how its entity moves.
 func moves_as_usual() -> bool:
-	return is_equal_approx(speed, 1.0) and (burst_s <= 0.0 or burst <= 1.0) and can_sprint and can_jump and can_dash
+	return is_equal_approx(speed, 1.0) and (burst_s <= 0.0 or burst <= 1.0) and can_sprint and can_jump and can_dash and hover_height <= 0.0
 
 
 ## The movement config an entity in this status moves by: `cfg` with its speeds scaled (by the
@@ -168,6 +171,8 @@ func apply_to(cfg: MovementConfig, bursting: bool = false) -> MovementConfig:
 	c.dash_impulse = cfg.dash_impulse * k if can_dash else 0.0
 	if not can_jump:
 		c.flap_charges = 0
+	if hover_height > 0.0:
+		c.hover_height = hover_height
 	return c
 
 

@@ -421,6 +421,10 @@ heavy body swing round slowly at speed (Fowl Play's wolf: 180 degrees a second, 
 A SLOW PLACE in a level (a hedge's hole, mud) is a `LevelSpeedZone`: a box with a pace (0.4: 40 % of
 anyone's speed in it), on top of their status (DECISIONS #231). An ability that `lunges` (a pounce)
 throws its user forward by their movement profile's dash as its wind-up ends (DECISIONS #232).
+A character GLIDES (`glide_fall_speed`: holding jump after a flap it falls slowly) or FLIES (a status
+with `hover_height`: held that high, steering as on the ground) by numbers in the same model (DECISIONS
+#236). An ability can have its own KEY (`AbilityDef.key`: an input action, e.g. `power` on the right
+mouse button); without one, a character's first ability is on the attack key (DECISIONS #237).
 
 ### Animation
 Characters animate from a SET (`game/anim/fisher.tres`) mapping SEMANTIC names

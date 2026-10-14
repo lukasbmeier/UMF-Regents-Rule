@@ -1,0 +1,883 @@
+{
+ "name": "glide_hover_glide",
+ "frozen_twin": false,
+ "asserts_move_state": false,
+ "model_version": "236-glide-hover",
+ "dt": 0.016666666666666666,
+ "tolerance": 1e-05,
+ "config": {
+  "_comment": "Single source of truth for movement tunables. Godot imports this via foundation/tools/movement_config_codegen.gd; the Rust module bakes it in via build.rs. Never edit MovementConfig.tres or movement_config.rs by hand.",
+  "schema_version": 1,
+  "walk_speed": 1.2,
+  "run_speed": 5.0,
+  "sprint_speed": 8.0,
+  "strafe_speed_mult": 1.0,
+  "back_speed_mult": 1.0,
+  "acceleration": 70.0,
+  "friction": 60.0,
+  "air_control": 0.3,
+  "jump_velocity": 5.0,
+  "gravity": 20.0,
+  "max_slope_deg": 45.0,
+  "coyote_time_sec": 0.0,
+  "ground_y": 0.0,
+  "client_tick_hz": 60,
+  "server_tick_hz": 20,
+  "input_batch_size": 3,
+  "reconcile_accept_epsilon": 0.02,
+  "reconcile_snap_threshold": 1.0,
+  "reconcile_smooth_time": 0.1,
+  "remote_interp_delay": 0.1,
+  "flap_charges": 2,
+  "flap_velocity": 4.5,
+  "dash_impulse": 0.0,
+  "dash_cooldown_ticks": 45,
+  "dash_ticks": 10,
+  "turn_rate_full": 0.0,
+  "turn_rate_slow": 0.0,
+  "turn_slow_speed": 3.0,
+  "glide_fall_speed": 1.6,
+  "hover_height": 0.0,
+  "hover_climb": 4.0
+ },
+ "note": "GLIDE and HOVER (DECISIONS #236): holding jump after a flap a body falls no faster than glide_fall_speed; with hover_height a body holds itself at that height, rising and falling at hover_climb at most, neither jumping nor falling. NumPy float32 mirroring movement_model.gd (Godot's vectors f32). GDScript-only: the frozen twin has neither.",
+ "cases": [
+  {
+   "name": "glide_holding_jump_after_a_flap",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "jump": true
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.0,
+     0.583333432674408,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     5.960464477539063e-08,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": false,
+    "move_state": 4,
+    "jump_held": true,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "0": {
+     "pos": [
+      0.0,
+      0.07777778059244156,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      4.666666507720947,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "15": {
+     "pos": [
+      0.0,
+      0.652777910232544,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      4.166666507720947,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "30": {
+     "pos": [
+      0.0,
+      1.027777910232544,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -0.8333332538604736,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "45": {
+     "pos": [
+      0.0,
+      0.6366671323776245,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -1.600000023841858,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "60": {
+     "pos": [
+      0.0,
+      0.2366672158241272,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -1.600000023841858,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "84": {
+     "pos": [
+      0.0,
+      0.583333432674408,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      5.960464477539063e-08,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "let_go_after_the_flap_it_falls",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "jump": true
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+     "jump": true
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+   ],
+   "expected_final": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "15": {
+     "pos": [
+      0.0,
+      0.652777910232544,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      4.166666507720947,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "30": {
+     "pos": [
+      0.0,
+      1.027777910232544,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -0.8333332538604736,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "45": {
+     "pos": [
+      0.0,
+      0.15277791023254395,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -5.833333969116211,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 1,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "60": {
+     "pos": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": true,
+     "move_state": 0,
+     "jump_held": false,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  },
+  {
+   "name": "holding_jump_from_the_ground_is_no_glide",
+   "initial": {
+    "pos": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": true,
+    "move_state": 0,
+    "jump_held": false,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "inputs": [
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    },
+    {
+     "jump": true
+    }
+   ],
+   "expected_final": {
+    "pos": [
+     0.0,
+     0.5277778506278992,
+     0.0
+    ],
+    "vel": [
+     0.0,
+     1.666666865348816,
+     0.0
+    ],
+    "yaw": 0.0,
+    "grounded": false,
+    "move_state": 4,
+    "jump_held": true,
+    "dash_held": false,
+    "flaps_used": 0,
+    "dash_cooldown": 0,
+    "dash_left": 0
+   },
+   "expected_at": {
+    "10": {
+     "pos": [
+      0.0,
+      0.5500000715255737,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      1.3333334922790527,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "20": {
+     "pos": [
+      0.0,
+      0.46666672825813293,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      -2.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    },
+    "39": {
+     "pos": [
+      0.0,
+      0.5277778506278992,
+      0.0
+     ],
+     "vel": [
+      0.0,
+      1.666666865348816,
+      0.0
+     ],
+     "yaw": 0.0,
+     "grounded": false,
+     "move_state": 4,
+     "jump_held": true,
+     "dash_held": false,
+     "flaps_used": 0,
+     "dash_cooldown": 0,
+     "dash_left": 0
+    }
+   }
+  }
+ ]
+}

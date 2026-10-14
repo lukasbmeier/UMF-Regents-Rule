@@ -163,6 +163,10 @@ func _send_acts(acts: Array[Dictionary]) -> void:
 				SpaceTimeSync.call_reducer(&"begin_interact_as", [entity_id, int(a["target"]), int(a.get("verb", 0))], ["u64", "u64", "u8"])
 			"let_go":
 				SpaceTimeSync.call_reducer(&"end_interact_as", [entity_id], ["u64"])
+			"reducer":
+				var types: Array[String] = ["u64"]
+				types.append_array(a.get("types", []) as Array)
+				SpaceTimeSync.call_reducer(StringName(a["reducer"]), [entity_id] + (a.get("args", []) as Array), types)
 			"ability":
 				SpaceTimeSync.call_reducer(&"use_ability_as", [entity_id, int(a["ability"]), int(a.get("target", 0)), a["aim"] as Vector3, 0],
 					["u64", "u32", "u64", "vector3[f32,f32,f32]", "u32"])

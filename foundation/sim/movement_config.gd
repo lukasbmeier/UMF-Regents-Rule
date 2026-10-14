@@ -51,6 +51,15 @@ static func shared() -> MovementConfig:
 @export var gravity: float = 20.0
 @export var coyote_time_sec: float = 0.0
 
+## GLIDING (DECISIONS #236): airborne, holding jump after a flap, a body falls no faster than this
+## (m/s), keeping its way forward. 0: no glide (most characters; a hen with Glide picked has it).
+@export var glide_fall_speed: float = 0.0
+## HOVERING (DECISIONS #236): a body that flies at a height (an eagle on the wing) holds itself this
+## high (m, the world's), rising and falling to it no faster than `hover_climb` m/s, and neither
+## jumps nor falls. 0: it walks (everyone; a status such as Flying sets it).
+@export var hover_height: float = 0.0
+@export var hover_climb: float = 4.0
+
 @export_group("Flap and dash (PHASE4_SPEC §2.4, off by default)")
 ## Mid-air jumps allowed before landing. 0 disables flapping.
 @export var flap_charges: int = 0
@@ -73,6 +82,7 @@ const FIELDS: Array[StringName] = [
 	&"reconcile_accept_epsilon", &"reconcile_snap_threshold", &"reconcile_smooth_time", &"remote_interp_delay",
 	&"flap_charges", &"flap_velocity", &"dash_impulse", &"dash_cooldown_ticks", &"dash_ticks",
 	&"turn_rate_full", &"turn_rate_slow", &"turn_slow_speed",
+	&"glide_fall_speed", &"hover_height", &"hover_climb",
 ]
 
 static func from_dict(d: Dictionary) -> MovementConfig:

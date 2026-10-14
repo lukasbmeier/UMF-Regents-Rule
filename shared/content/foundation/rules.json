@@ -114,6 +114,15 @@
 					"number": 150.0,
 					"text": "",
 					"unit": "ms"
+				},
+				{
+					"key": "foundation.friendly_collision",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.0,
+					"text": "",
+					"unit": ""
 				}
 			]
 		}

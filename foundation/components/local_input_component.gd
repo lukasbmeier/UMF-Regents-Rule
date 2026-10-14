@@ -140,6 +140,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(ACTION_ATTACK) and (not capture_mouse or MouseCapture.is_captured()) and not is_held_still():
 		use_first_ability()
 		return
+	# An ability on its own key (DECISIONS #237: the wolf's Howl on the right mouse button).
+	if event is InputEventKey or event is InputEventMouseButton:
+		var keyed: AbilityDef = keyed_ability(event)
+		if keyed != null and (not capture_mouse or MouseCapture.is_captured()) and not is_held_still():
+			use_ability(keyed.id)
+			return
 	var motion: InputEventMouseMotion = event as InputEventMouseMotion
 	if motion == null:
 		return
@@ -158,16 +164,36 @@ func _unhandled_input(event: InputEvent) -> void:
 	_look_pitch = clampf(_look_pitch - motion.relative.y * sens * up, -limit, limit)
 
 
-## The character's first ability, used now, ahead in the way it faces: the predicted id, or -1 (it has
-## none, it is cooling down).
-func use_first_ability() -> int:
+## The ability of this character's whose `key` `event` presses, or null.
+func keyed_ability(event: InputEvent) -> AbilityDef:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
-	if ent == null or ent.definition == null or ent.definition.abilities.is_empty() or ent.definition.abilities[0] == null:
-		return -1
-	var act: SpaceTimeActionComponent = ent.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	if ent == null or ent.definition == null:
+		return null
+	for a: AbilityDef in ent.definition.abilities:
+		if a != null and not a.key.is_empty() and InputMap.has_action(a.key) and event.is_action_pressed(a.key) and not event.is_echo():
+			return a
+	return null
+
+
+## Use ability `ability_id` now, ahead in the way it faces: the predicted id, or -1.
+func use_ability(ability_id: int) -> int:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var act: SpaceTimeActionComponent = ent.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent if ent != null else null
 	if act == null:
 		return -1
-	return act.request_use(ent.definition.abilities[0].id, 0, Vector3(-sin(_body_yaw), 0.0, -cos(_body_yaw)))
+	return act.request_use(ability_id, 0, Vector3(-sin(_body_yaw), 0.0, -cos(_body_yaw)))
+
+
+## The character's attack-key ability (its first with no `key` of its own), used now, ahead in the way it
+## faces: the predicted id, or -1 (it has none, it is cooling down).
+func use_first_ability() -> int:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if ent == null or ent.definition == null:
+		return -1
+	for a: AbilityDef in ent.definition.abilities:
+		if a != null and a.key.is_empty():
+			return use_ability(a.id)
+	return -1
 
 
 func _physics_process(_delta: float) -> void:
