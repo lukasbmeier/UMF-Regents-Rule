@@ -13,6 +13,7 @@ const SUITES: PackedStringArray = [
 	"interest",
 	"authority",
 	"npc",
+	"bots",
 	"entity_registry",
 	"component",
 	"challenge",

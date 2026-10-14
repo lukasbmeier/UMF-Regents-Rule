@@ -1701,6 +1701,33 @@
 	],
 	"reducers": [
 		{
+			"name": "add_bot",
+			"wire_name": "add_bot",
+			"namespace": [],
+			"local_name": "add_bot",
+			"params": [
+				{
+					"name": "session_id",
+					"type": "U64"
+				},
+				{
+					"name": "kind",
+					"type": "U8"
+				},
+				{
+					"name": "brain",
+					"type": "String"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "add_score",
 			"wire_name": "add_score",
 			"namespace": [],
@@ -2261,6 +2288,20 @@
 				{
 					"name": "world_id",
 					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "remove_bots",
+			"wire_name": "remove_bots",
+			"namespace": [],
+			"local_name": "remove_bots",
+			"params": [
+				{
+					"name": "session_id",
+					"type": "U64"
 				}
 			],
 			"return_type": "",

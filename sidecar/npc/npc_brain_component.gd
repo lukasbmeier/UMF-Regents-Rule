@@ -19,6 +19,8 @@ class_name NpcBrainComponent extends SpaceTimeComponent
 signal state_changed(state: StringName)
 ## A write to `npc_brain` settled. For tests: persistence is otherwise invisible until a restart.
 signal persisted(ok: bool)
+## Something the brain asked to do was sent ({do: hold|let_go|ability, ...}). For tests and the log.
+signal sent(act: Dictionary)
 
 const TABLE: StringName = &"npc_brain"
 ## The spec's ceiling on how often a brain is written (SIDECAR_SPEC §2: "on change, <= 1 Hz").
@@ -63,18 +65,27 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 	_restore(new)
 
 
-## Name -> brain. A genre adds its own by extending this file's table; the name is what an
-## `EntityDefinition` carries, so a designer picks behaviour in a `.tres` without touching code.
+## Name -> brain: the foundation's by name, else the script `res://sidecar/npc/brains/<name>.gd` (a
+## genre's in its own folder: `chicken/hen`), made with the seed. The name is what an
+## `EntityDefinition` or a bot's `npc_brain` row carries, so a designer picks behaviour without code.
 static func make_brain(name: StringName, seed_value: int) -> NpcBrain:
 	match name:
 		&"wander":
 			return WanderBrain.new(seed_value)
 		&"chase":
 			return ChaseBrain.new(seed_value)
-		_:
-			push_warning("NpcBrainComponent: no brain named '%s'; the entity will stand still."
-				% name)
-			return null
+	var path: String = BRAINS_DIR + String(name) + ".gd"
+	if not String(name).contains("..") and ResourceLoader.exists(path):
+		var script: GDScript = load(path) as GDScript
+		var made: Variant = script.new(seed_value) if script != null else null
+		if made is NpcBrain:
+			return made as NpcBrain
+	push_warning("NpcBrainComponent: no brain named '%s'; the entity will stand still." % name)
+	return null
+
+
+## Where a genre's brains are (`make_brain`).
+const BRAINS_DIR: String = "res://sidecar/npc/brains/"
 
 
 func _on_bound() -> void:
@@ -94,6 +105,10 @@ func _on_bound() -> void:
 	if brain == null:
 		return
 	brain.self_id = entity_id
+	var cap: CapsuleShape3D = ent.definition.body_capsule() if ent.definition != null else null
+	if cap != null:
+		brain.body_radius = cap.radius
+		brain.body_height = cap.height
 	var here: MovementState = _movement.get_authority_state()
 	var wander: WanderBrain = brain as WanderBrain
 	if wander != null and here != null:
@@ -120,12 +135,41 @@ func _physics_process(delta: float) -> void:
 	var period: float = 1.0 / maxf(think_hz, 1.0)
 	if _accum >= period:
 		_accum = minf(_accum - period, period)
-		brain.think(me, NpcWorldView.current(_space()))
+		brain.think(me, NpcWorldView.current(_space(), _level()))
 		if brain.state != _last_state:
 			_last_state = brain.state
 			state_changed.emit(brain.state)
+		_send_acts(brain.take_acts())
 		_maybe_persist()
 	_movement.push_authority_input(brain.frame(me))
+
+
+# --- doing things (DECISIONS #230) ----------------------------------------------------------------
+
+## What the brain asked to do, as the authority's reducers: the server judges each as a player's.
+## Sent, never waited for: a refusal (out of reach, already held) is the brain's to notice by what
+## happens (or does not), as a player notices.
+func _send_acts(acts: Array[Dictionary]) -> void:
+	for a: Dictionary in acts:
+		match String(a.get("do", "")):
+			"hold":
+				SpaceTimeSync.call_reducer(&"begin_interact_as", [entity_id, int(a["target"]), int(a.get("verb", 0))], ["u64", "u64", "u8"])
+			"let_go":
+				SpaceTimeSync.call_reducer(&"end_interact_as", [entity_id], ["u64"])
+			"ability":
+				SpaceTimeSync.call_reducer(&"use_ability_as", [entity_id, int(a["ability"]), int(a.get("target", 0)), a["aim"] as Vector3, 0],
+					["u64", "u32", "u64", "vector3[f32,f32,f32]", "u32"])
+		sent.emit(a)
+
+
+## The level this entity's world runs (for paths): the SimWorld it is simulated in.
+func _level() -> Node3D:
+	var n: Node = entity as Node
+	while n != null:
+		if n.has_method(&"level"):
+			return n.call(&"level") as Node3D
+		n = n.get_parent()
+	return null
 
 
 # --- persistence ------------------------------------------------------------------------------

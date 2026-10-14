@@ -27,6 +27,10 @@ var _world_ready: bool = false
 ## Whether entity rows become nodes. A sidecar that only REFEREES a world (DECISIONS #226: players
 ## move themselves, it judges abilities) reads the rows and builds nothing.
 var spawning: bool = true
+## WHICH rows become nodes, when not all of them: Callable(entity_id: int, kind: int) -> bool. A referee
+## builds only the bots it drives (DECISIONS #230). An entity it turns away is built later by
+## `spawn_now`, once the filter lets it in.
+var spawn_filter: Callable = Callable()
 
 
 func _ready() -> void:
@@ -203,6 +207,8 @@ func _spawn_from(ev: RowEvent) -> void:
 		return
 
 	var kind: int = int(row.get(&"kind") if row.get(&"kind") != null else -1)
+	if spawn_filter.is_valid() and not bool(spawn_filter.call(eid, kind)):
+		return
 	var defn: EntityDefinition = _by_kind.get(kind, null)
 	if defn == null:
 		push_error("EntitySpawner: no EntityDefinition registered for entity.kind %d (entity %d)"
@@ -227,6 +233,34 @@ func _spawn_from(ev: RowEvent) -> void:
 	# ends by calling `EntityRegistry.register()`, which replays anything still buffered, and
 	# peeking made every component receive its first row twice.
 	entity.bind(eid, world_id, owner_bytes, EntityRegistry.take_buffered(eid))
+
+
+## BUILD AN ENTITY THE FILTER TURNED AWAY, now that it lets it in (a bot's brain row arrived after its
+## entity), from the rows the cache holds. True when it has a node.
+func spawn_now(eid: int) -> bool:
+	if _nodes.has(eid):
+		return true
+	var row: RefCounted = SpaceTimeSync.get_row(&"entity", eid)
+	if row == null:
+		return false
+	EntityRegistry.take_buffered(eid)
+	EntityRegistry.rebuffer(eid, SpaceTimeSync.entity_rows_as_events(eid, InterestManager.subscribed_tables()))
+	_spawn_from(RowEvent.make(RowEvent.Kind.INSERTED, &"entity", null, row))
+	return _nodes.has(eid)
+
+
+## LET GO OF AN ENTITY'S NODE, its rows still there (a bot no longer this process's to drive).
+func release(eid: int) -> void:
+	var node: Node = _nodes.get(eid, null)
+	if node == null:
+		return
+	_nodes.erase(eid)
+	_pending_despawn.erase(eid)
+	EntityRegistry.unregister(eid)
+	if node.get_parent() != null:
+		node.get_parent().remove_child(node)
+	node.queue_free()
+	SignalBus.entity_despawned.emit(eid)
 
 
 ## BUILD AN ENTITY AGAIN from the rows the cache holds now (DECISIONS #166). Its node is freed and

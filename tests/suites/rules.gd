@@ -30,7 +30,14 @@ func _run_rules_tests() -> void:
 	for p: Variant in Rules.phases(0):
 		names.append(Rules.phase_name(0, int((p as Dictionary)["phase"])))
 		total += Rules.phase_seconds(0, int((p as Dictionary)["phase"]))
-	_check(names == (["lobby", "playing", "results", "shop"] as Array[String]) and total > 0.0,
+	# The file's own plan for kind 0 (a game sets its own: Fowl Play's night is lobby, night, dawn, results).
+	var file_names: Array[String] = []
+	var file: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://shared/rules.json"))
+	for kind: Variant in ((file as Dictionary).get("sessions", []) as Array) if file is Dictionary else []:
+		if int((kind as Dictionary).get("kind", -1)) == 0:
+			for ph: Variant in (kind as Dictionary).get("phases", []):
+				file_names.append(String((ph as Dictionary)["name"]))
+	_check(not names.is_empty() and names == file_names and total > 0.0,
 		"session kind 0 goes round its phases in the file's order: %s (%.0f s a round)" % [", ".join(names), total])
 	_check(Rules.phase_name(0, 42).is_empty() and Rules.phases(77).is_empty() and is_zero_approx(Rules.phase_seconds(77, 1)),
 		"a phase or a kind the file does not plan has no name and no length")

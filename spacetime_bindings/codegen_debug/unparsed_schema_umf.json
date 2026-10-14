@@ -5747,6 +5747,56 @@
 		{
 			"Reducers": [
 				{
+					"source_name": "add_bot",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "session_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "kind"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "brain"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "add_score",
 					"params": {
 						"elements": [
@@ -6839,6 +6889,32 @@
 								},
 								"algebraic_type": {
 									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "remove_bots",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "session_id"
+								},
+								"algebraic_type": {
+									"U64": []
 								}
 							}
 						]
@@ -8270,6 +8346,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "add_bot",
+							"canonical_name": "add_bot"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "add_score",
 							"canonical_name": "add_score"
 						}
@@ -8482,6 +8564,12 @@
 						"Function": {
 							"source_name": "register_authority",
 							"canonical_name": "register_authority"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "remove_bots",
+							"canonical_name": "remove_bots"
 						}
 					},
 					{

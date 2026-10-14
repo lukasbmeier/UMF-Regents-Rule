@@ -280,6 +280,16 @@ client draws it at the carrier's **carry point**: `carry_offset` and `carry_yaw_
 character `.tres` (in its own terms: x right, y up, -z ahead). Put down, it stands where the genre
 says, in the status the genre says (else the one it had before). DECISIONS #228.
 
+### Bots
+A bot is an NPC that plays: a member of a session (it scores, it is in the standings) with an
+`npc_brain` row naming its brain. A genre adds them (`add_bot_internal`, from its rules: Fowl Play
+fills each night to one wolf and four hens) and they go with `remove_bots_internal` or a despawn; an
+admin can add one by hand (`add_bot`). The world's referee builds and drives every bot (players still
+move themselves): its brain thinks a few times a second and walks a path its body fits (a walk map
+baked from the level's collision), and holds, lets go or uses an ability the way a player would, so
+the server judges a bot as it judges a player. A genre's brains are scripts in
+`sidecar/npc/brains/<genre>/` (Fowl Play's `chicken/hen`, `chicken/wolf`). DECISIONS #230.
+
 ### Walls an entity puts up (a gate, a haystack)
 A character can be a wall while it is in some statuses: `blocker_size` and `blocker_offset` (a box,
 from its feet, in its own terms) and `blocks_in` (the statuses it blocks in; empty: always) on its

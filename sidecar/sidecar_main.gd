@@ -15,8 +15,9 @@ extends Node
 ## and every write would be refused.
 ##
 ## TWO JOBS (DECISIONS #226). In a SIDECAR world it moves everyone and judges abilities; started with
-## `--referee` it only JUDGES (`ActionReferee`): the world's players move themselves (a MODULE world),
-## it builds no entities, and reads the rows it judges by. `--claim=CODE` presents an admin's
+## `--referee` it JUDGES (`ActionReferee`): the world's players move themselves (a MODULE world), and
+## it builds only the world's BOTS (an entity with an `npc_brain` row and no player: DECISIONS #230),
+## driving each by its brain, with the walls of the level it loaded, as it would in a SIDECAR world. `--claim=CODE` presents an admin's
 ## one-time code (`offer_referee`) to be registered for the world, and `--parent-alive=FILE` ends it
 ## when the game that started it does (`RefereeLauncher`, an editor run: the game keeps the file
 ## touched; stale or gone, the game is gone).
@@ -54,8 +55,11 @@ func _ready() -> void:
 	referee_only = _flag("--referee")
 	_claim = _value("--claim=")
 	_parent_alive = _value("--parent-alive=")
-	cfg.authority_process = not referee_only
-	EntitySpawner.spawning = not referee_only
+	# A referee is the authority for the bots it drives, and builds nothing else.
+	cfg.authority_process = true
+	EntitySpawner.spawning = true
+	if referee_only:
+		EntitySpawner.spawn_filter = is_bot
 	if cfg.token_path.is_empty() or cfg.token_path == NetConfig.new().token_path:
 		cfg.token_path = "user://sidecar_token.dat"
 	var world_id: int = _world_from_cli()
@@ -108,6 +112,7 @@ func _ready() -> void:
 			var req: ReducerRequest = SpaceTimeSync.call_reducer(&"claim_referee", [world_id, _claim], ["u32", "String"])
 			req.settled.connect(func(r: ReducerRequest) -> void:
 				print("[Sidecar] claim_referee: ", "registered" if r.outcome == ReducerRequest.Outcome.OK else r.error_message)))
+	SpaceTimeSync.row_event.connect(_on_brain_row)
 	SignalBus.entity_spawned.connect(func(eid: int, kind: int) -> void:
 		print("[Sidecar] simulating entity ", eid, " kind ", kind)
 		attach_brain(eid))
@@ -140,23 +145,48 @@ func _value(prefix: String) -> String:
 	return ""
 
 
-## Give an entity whose definition names a brain something to drive it.
+## A BOT: an entity with an `npc_brain` row and no player row (DECISIONS #230). A referee drives these.
+static func is_bot(entity_id: int, _kind: int = -1) -> bool:
+	return SpaceTimeSync.get_row(&"npc_brain", entity_id) != null and SpaceTimeSync.get_row(&"player", entity_id) == null
+
+
+## A bot's brain row came (a bot added to the world after its entity row): a referee builds it now; its
+## row gone, it lets it go.
+func _on_brain_row(ev: RowEvent) -> void:
+	if ev.table != &"npc_brain" or not referee_only:
+		return
+	if ev.kind == RowEvent.Kind.DELETED:
+		if SpaceTimeSync.get_row(&"npc_brain", ev.entity_id) == null:
+			EntitySpawner.release(ev.entity_id)
+		return
+	if is_bot(ev.entity_id) and EntitySpawner.get_entity_node(ev.entity_id) == null:
+		EntitySpawner.spawn_now(ev.entity_id)
+
+
+## Give an entity whose definition names a brain, or whose `npc_brain` row does (a bot), something to
+## drive it.
 ##
 ## Attached here rather than in the entity scene because nothing in `foundation/` or `game/` may
 ## reference `res://sidecar` (hard rule 7b) — so the scene cannot name the component and the
 ## authority has to add it and bind it by hand. Public so the scene test can call it.
 func attach_brain(entity_id: int) -> NpcBrainComponent:
 	var ent: SpaceTimeEntity = EntitySpawner.get_entity_node(entity_id) as SpaceTimeEntity
-	if ent == null or ent.definition == null or String(ent.definition.brain).is_empty():
+	if ent == null or ent.definition == null:
+		return null
+	var named: StringName = ent.definition.brain
+	var row: RefCounted = SpaceTimeSync.get_row(&"npc_brain", entity_id)
+	if String(named).is_empty() and row != null:
+		named = StringName(String(row.get(&"brain")))
+	if String(named).is_empty():
 		return null
 	var existing: SpaceTimeComponent = ent.find_component(NpcBrainComponent)
 	if existing != null:
 		return existing as NpcBrainComponent
 	var brain := NpcBrainComponent.new()
 	brain.name = "NpcBrain"
-	brain.brain_name = ent.definition.brain
+	brain.brain_name = named
 	ent.add_runtime_component(brain)
-	print("[Sidecar] entity %d is driven by brain '%s'" % [entity_id, ent.definition.brain])
+	print("[Sidecar] entity %d is driven by brain '%s'" % [entity_id, named])
 	return brain
 
 

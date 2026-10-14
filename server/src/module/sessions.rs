@@ -562,6 +562,73 @@ pub fn write_npc_brain(
     Ok(())
 }
 
+// --- bots (milestone 7, DECISIONS #230) -----------------------------------------------------------
+
+/// A BOT: an NPC of `kind` in `sess`'s world at `pos`, a member of the session (it scores, it is in the
+/// standings, on the smallest team), driven by brain `brain` (its `npc_brain` row: the world's referee,
+/// or its sidecar, builds every entity with one and runs that brain on it). A genre decides when and
+/// how many (Fowl Play fills a night to one wolf and four hens). Returns its entity id.
+pub fn add_bot_internal(ctx: &ReducerContext, sess: &Session, kind: u8, brain: &str, pos: Vector3) -> Result<u64, String> {
+    if brain.is_empty() || brain.len() > MAX_BRAIN_NAME {
+        return Err(format!("add_bot: a brain's name is 1-{MAX_BRAIN_NAME} bytes"));
+    }
+    let id = spawn_npc_internal(ctx, sess.world_id, kind, pos, 0.0);
+    if let Err(e) = add_member(ctx, sess, id) {
+        despawn_entity_internal(ctx, id);
+        return Err(format!("add_bot: {e}"));
+    }
+    ctx.db.npc_brain().insert(NpcBrainRow {
+        entity_id: id,
+        world_id: sess.world_id,
+        brain: brain.to_string(),
+        state: String::new(),
+        target_id: 0,
+        data: "{}".into(),
+        updated_at: ctx.timestamp,
+    });
+    log::info!("session {}: bot {id} (kind {kind}, brain '{brain}') joins", sess.id);
+    Ok(id)
+}
+
+/// Whether `entity_id` is a bot: it has a brain row and is not a player.
+pub fn is_bot(ctx: &ReducerContext, entity_id: u64) -> bool {
+    ctx.db.npc_brain().entity_id().find(entity_id).is_some() && ctx.db.player().entity_id().find(entity_id).is_none()
+}
+
+/// The bots in `sess`, by entity id.
+pub fn bots_of(ctx: &ReducerContext, sess: &Session) -> Vec<u64> {
+    ctx.db.session_member().session_id().filter(sess.id).map(|m| m.entity_id).filter(|&e| is_bot(ctx, e)).collect()
+}
+
+/// Every bot in `sess` gone (its entity and every row of it). Returns how many.
+pub fn remove_bots_internal(ctx: &ReducerContext, sess: &Session) -> usize {
+    let bots = bots_of(ctx, sess);
+    for &b in &bots {
+        despawn_entity_internal(ctx, b);
+    }
+    if !bots.is_empty() {
+        log::info!("session {}: {} bot(s) leave", sess.id, bots.len());
+    }
+    bots.len()
+}
+
+/// ADMIN: a bot in session `session_id` (a test; a designer filling a lobby by hand).
+#[reducer]
+pub fn add_bot(ctx: &ReducerContext, session_id: u64, kind: u8, brain: String, pos: Vector3) -> Result<(), String> {
+    require_admin(ctx)?;
+    let sess = ctx.db.session().id().find(session_id).ok_or("add_bot: no such session")?;
+    add_bot_internal(ctx, &sess, kind, &brain, pos).map(|_| ())
+}
+
+/// ADMIN: every bot in session `session_id` gone.
+#[reducer]
+pub fn remove_bots(ctx: &ReducerContext, session_id: u64) -> Result<(), String> {
+    require_admin(ctx)?;
+    let sess = ctx.db.session().id().find(session_id).ok_or("remove_bots: no such session")?;
+    remove_bots_internal(ctx, &sess);
+    Ok(())
+}
+
 /// Authority-only score/coin write. Genres award through this so the client never owns score.
 #[reducer]
 pub fn add_score(ctx: &ReducerContext, entity_id: u64, score: i64, coins: i64) -> Result<(), String> {

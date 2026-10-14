@@ -6,6 +6,13 @@ var _client: SpacetimeDBClient
 
 func _init(p_client: SpacetimeDBClient) -> void:
 	_client = p_client
+## 0. session_id: int [br]
+## 1. kind: int [br]
+## 2. brain: String [br]
+## 3. pos: Vector3 [br]
+func add_bot(session_id: int, kind: int, brain: String, pos: Vector3) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('add_bot', [session_id, kind, brain, pos], [&'u64', &'u8', &'string', &'vector3[f32,f32,f32]'], &'')
+
 ## 0. entity_id: int [br]
 ## 1. score: int [br]
 ## 2. coins: int [br]
@@ -144,6 +151,10 @@ func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 ## 2. world_id: int [br]
 func register_authority(identity: PackedByteArray, role: int, world_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('register_authority', [identity, role, world_id], [&'identity', &'u8', &'u32'], &'')
+
+## 0. session_id: int [br]
+func remove_bots(session_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('remove_bots', [session_id], [&'u64'], &'')
 
 ## 0. key: String [br]
 func reset_rule(key: String) -> SpacetimeDBReducerCall:

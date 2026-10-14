@@ -1174,6 +1174,48 @@ ok_call "despawn the NPC" despawn_entity "$NPC"
 assert_eq "$(row_count "SELECT * FROM npc_brain WHERE entity_id = $NPC")" "0" \
   "and its brain goes with it"
 
+echo "== bots: a member with a brain, driven by the world's referee (DECISIONS #230) =="
+# Milestone 7. A bot is an NPC that is a session member and has an `npc_brain` row; the world's referee
+# (a MODULE world: its players move themselves) builds and drives only its bots, through the same
+# movement model and the level's walls, and writes where they went.
+out="$(anon_call add_bot "$SESS0" 1 '"wander"' '{"x":6.0,"y":0.0,"z":6.0}')"
+check "$(echo "$out" | grep -qi "admin" && echo true || echo false)" "a player cannot add a bot"
+refused_call "a brain's name" "a bot needs a brain" add_bot "$SESS0" 1 '""' '{"x":6.0,"y":0.0,"z":6.0}'
+refused_call "no such session" "nor to a session that is not there" add_bot 999999 1 '"wander"' '{"x":6.0,"y":0.0,"z":6.0}'
+ok_call "a bot that wanders, in world 0's session (open ground: not under the greybox's platform)" add_bot "$SESS0" 1 '"wander"' '{"x":-4.0,"y":0.0,"z":4.0}'
+BOT="$(sql_rows "SELECT entity_id FROM npc_brain WHERE brain = 'wander'" | awk '{print $1}' | sort -n | tail -1)"
+check "$([ -n "$BOT" ] && echo true || echo false)" "it has a brain row ($BOT)"
+assert_eq "$(row_count "SELECT * FROM session_member WHERE entity_id = $BOT AND session_id = $SESS0")" "1" "and is a member of the session"
+assert_eq "$(row_count "SELECT * FROM player WHERE entity_id = $BOT")" "0" "and is nobody's player"
+BOT_AT="$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $BOT" 1)"
+BOT_CODE='"refereeforthebotsinthesuite"'
+assert_ok "offer_referee 0 $BOT_CODE" "a referee for world 0 is offered"
+BOT_LOG="$(mktemp)"
+"$GODOT" --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim=refereeforthebotsinthesuite > "$BOT_LOG" 2>&1 &
+BOT_PID=$!
+for _ in $(seq 1 60); do grep -q "is driven by brain 'wander'" "$BOT_LOG" && break; sleep 1; done
+check "$(grep -q "claim_referee: registered" "$BOT_LOG" && echo true || echo false)" "a real referee claimed the world"
+check "$(grep -q "entity $BOT is driven by brain 'wander'" "$BOT_LOG" && echo true || echo false)" "it builds the bot and drives it by its row's brain"
+check "$(grep -q "simulating entity $MYENT " "$BOT_LOG" && echo false || echo true)" "and not the CLI's player (players move themselves)"
+sleep 6
+BOT_NOW="$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $BOT" 1)"
+check "$(python -c "
+import re
+a=[float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', '''$BOT_AT''')][:3]
+b=[float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', '''$BOT_NOW''')][:3]
+print('true' if ((a[0]-b[0])**2+(a[2]-b[2])**2) ** 0.5 > 0.5 else 'false')")" "it wanders: the server has it somewhere else ($BOT_AT -> $BOT_NOW)"
+check "$(sql_first "SELECT state FROM npc_brain WHERE entity_id = $BOT" 1 | grep -qE "wander|rest" && echo true || echo false)" "and its brain keeps its row ($(sql_first "SELECT state FROM npc_brain WHERE entity_id = $BOT" 1))"
+ok_call "every bot leaves the session" remove_bots "$SESS0"
+assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $BOT")" "0" "the bot is gone, every row of it"
+assert_eq "$(row_count "SELECT * FROM npc_brain WHERE entity_id = $BOT")" "0" "its brain too"
+sleep 1.5
+check "$(grep -q "released entity $BOT" "$BOT_LOG" && echo true || echo false)" "and the referee let it go"
+kill "$BOT_PID" 2>/dev/null; wait "$BOT_PID" 2>/dev/null
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the bots' referee unregistered"
+done
+rm -f "$BOT_LOG"
+
 # =============================================================================
 # THE MATCH (DECISIONS #182): rounds count from 1 per match; a world nobody is in stops
 # =============================================================================
