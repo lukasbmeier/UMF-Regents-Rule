@@ -166,6 +166,10 @@ func use_first_ability() -> int:
 
 
 func _physics_process(_delta: float) -> void:
+	# Not before it is bound and known to be this player's own: a bot's (a sidecar builds one from the
+	# same scene) waited on its rows sampling a keyboard nobody has, an error a frame.
+	if not is_local_authority:
+		return
 	sample()
 
 

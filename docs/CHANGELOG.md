@@ -656,3 +656,7 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - **Brains do things**: `hold(target, verb)`, `let_go()`, `use_ability(id, aim, target)` from `think`, sent as the authority's reducers (`begin_interact_as`, `end_interact_as`, `use_ability_as`), judged as a player's are. **Brains go round things**: `go_to(p, me, world)` walks a path its body fits, from a walk map baked from the level's collision per body size (`NpcNav`: a hen is routed under a hedge's low hole a wolf is not). **A genre's brains** are found by name at `res://sidecar/npc/brains/<name>.gd` (`chicken/hen`); the foundation adds `stand`. The world view a brain thinks with now has everyone (the rows of those it does not simulate), their statuses, and who is a player.
 - Tested: the `bots` suite (the filter, brains by name, the acts, a route walked, the walk map round and under a hedge), the integration suite (a real referee drives a wandering bot in a MODULE world, builds nobody else, lets it go when it leaves).
 - Two reducers added (`add_bot`, `remove_bots`): republish with codegen (keeps data). Milestone 8 (a world per match) is not built: one world plays one match at a time.
+
+## 0.43.1 — a bot's input waits for its own
+- `LocalInputComponent` samples only once it is bound as its player's own: a bot (built by a referee from the same scene) waited on its rows sampling a keyboard nobody has, and logged an error a frame for two seconds.
+- No table or reducer changed: republish (keeps data).
