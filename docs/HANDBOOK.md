@@ -224,14 +224,22 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
    Every GDExtension a game uses needs its Mac library on THIS machine for that (the export test
    says which one is missing), and the macOS export template installed (Editor > Manage Export
    Templates).
-2. **Let them reach your server.** `spacetime start` only listens on your own machine. Start it
-   with `spacetime start --listen-addr 0.0.0.0:3000` instead, then:
-   - **Same house:** allow it through Windows Firewall once (an admin PowerShell:
-     `New-NetFirewallRule -DisplayName "SpacetimeDB" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow`)
-     and give them your LAN address (`ipconfig`, the IPv4 one, like 192.168.1.20).
+2. **Host it: double-click `tools\host.cmd`** and leave its window open while you play. It starts
+   SpacetimeDB listening for other machines (`--listen-addr 0.0.0.0:3000`; a plain `spacetime start`
+   only listens on your own PC) and the world's REFEREE, which drives every bot and judges attacks.
+   Without one the bots stand where they spawned: pressing Play in the editor starts a referee for
+   you, but a friend's build (or your Mac) cannot, and nothing else does. Closing the window stops
+   both. Then let them reach it:
+   - **Windows Firewall, once** (an admin Terminal: right-click Start, Terminal (Admin)):
+     `New-NetFirewallRule -DisplayName "SpacetimeDB 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private,Public`
+     By PORT, not by program: SpacetimeDB's own rules name one version's exe, which an update moves.
+   - **Same house:** give them your LAN address (`ipconfig`, the IPv4 one, like 192.168.1.20).
    - **Over the internet:** the easiest is Tailscale on both machines (they type your 100.x
-     address; no router changes). Or forward TCP 3000 on your router to your PC and give them
-     your public address.
+     address; no router changes). Or forward TCP 3000 on your router to your PC (give the PC a
+     reserved address in the router so the forward keeps pointing at it) and give them your public
+     address. A port forward lets anyone on the internet reach the server; Tailscale only your
+     friends. To check from their machine: `curl -s -o /dev/null -w "%{http_code}" http://<address>:3000/v1/ping`
+     prints 200.
 3. **They run it.** Windows SmartScreen says "Windows protected your PC" for an unsigned game:
    More info, then Run anyway. On a Mac (it is signed ad hoc, not by an Apple developer ID, so
    macOS says it "could not verify" it the first time): unzip it and open it once (Done), then System

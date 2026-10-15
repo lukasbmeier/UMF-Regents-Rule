@@ -696,3 +696,8 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 ## 0.46.2 — opening the Mac app; CI by hand
 - **Opening the Mac app the first time** (Luke, on his M1: "could not verify it is free of malware"): macOS 15 and later no longer let right-click > Open pass an app signed ad hoc. The handbook, `tools/release.sh` and `tools/mac_export.sh` now say System Settings > Privacy & Security > Open Anyway, or `xattr -dr com.apple.quarantine` on the app. The build is unchanged; a developer ID and notarization (for selling) is what makes the message go away.
 - **CI runs only by hand** (Luke: an email that it failed on every ship): `.github/workflows/ci.yml` is `workflow_dispatch` only until it has passed on GitHub once; the suites run before every ship are the gate.
+
+## 0.46.3 — hosting without the editor
+- **`tools\host.cmd`** (`tools/host.sh`): hosts a game for players on other machines with no editor open (Luke, playing on his Mac across town: the bot hens stood still and the wolf never came, because only an editor run starts the world's referee). It starts SpacetimeDB listening for other machines if it is not running (and refuses one listening only on this PC), offers the world a referee code and runs the referee, starts it again if it stops, and stops it when its window closes. Logs in `build/host/`.
+- The handbook's "Playing with a friend": host with it; the Windows Firewall rule by port (SpacetimeDB's own rules name one version's exe and one network profile); a reserved address for a port forward; checking from the friend's machine.
+- Tested: Fowl Play's `game/chicken/tests/host_playtest.sh` (a night nobody hosts: its wolf stands; hosted: every bot driven, the wolf hunting; the referee killed: back; the host closed: its referee gone).
