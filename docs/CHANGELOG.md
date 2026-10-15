@@ -677,3 +677,7 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - **A bot calls its genre's reducers** (DECISIONS #239): `NpcBrain.call_as(reducer, args, types)`, sent as the bot (a hen coming out of hiding, wiggling free).
 - **Ground that makes its own collision** (DECISIONS #240): the bots' walk maps take the faces of any level node that gives them (`generate_nav_mesh_source_geometry`: Terrain3D).
 - Tested: the `golden`, `status`, `action`, `bots` and `entity` suites. No table changed; Fowl Play's own tables did.
+
+## 0.45.1 — a sweep begun against a wall
+- **A referee's sweep with its back to a wall goes its whole way** (`LungeJudge`): a ball cast from touching a wall it moves away from was stopped where it stood (a box) or a couple of metres on in the open (a mesh's faces, the farm's CSG): Fowl Play's egg thrown by a hen backed onto a hay stack went 2.3 m of 9 and missed the wolf (Luke's playtest of step 7). Set off the wall by `CONTACT_SLOP_M` (2 cm) before it is cast.
+- Tested: the `referee` suite (a throw with its back to a bale: 0 m before, 9 after); Fowl Play's `walk` suite (the farm's own stack).

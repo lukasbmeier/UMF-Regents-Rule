@@ -20,6 +20,8 @@ class_name LungeJudge extends RefCounted
 ## The level's layers a sweep is stopped by: what characters collide with (foundation/entities/
 ## player.tscn: mask 5, the level and its props). Characters themselves are on layer 2, not in it.
 const LEVEL_MASK: int = 5
+## How far a ball begun touching a wall behind it is set off it before it is cast.
+const CONTACT_SLOP_M: float = 0.02
 
 
 ## Forward for a heading (the movement model's: yaw 0 faces -Z).
@@ -44,10 +46,19 @@ static func _cast(space: PhysicsDirectSpaceState3D, start: Vector3, motion: Vect
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = ball
 	q.transform = Transform3D(Basis.IDENTITY, start)
-	q.motion = motion
+	q.motion = Vector3.ZERO
 	q.collision_mask = mask
 	q.exclude = exclude
 	q.collide_with_areas = false
+	# ITS BACK TO A WALL (Luke's playtest of Fowl Play's step 7): a ball cast from touching a wall it is
+	# moving away from was stopped where it stood (a box) or a couple of metres on in the open (a mesh's
+	# faces): an egg thrown by a hen backed onto a hay stack went 2.3 m of 9. Off it a hair first.
+	var touching: Dictionary = space.get_rest_info(q)
+	var n0: Vector3 = touching.get("normal", Vector3.ZERO)
+	if n0.dot(motion) > 0.0:
+		start += n0 * CONTACT_SLOP_M
+		q.transform = Transform3D(Basis.IDENTITY, start)
+	q.motion = motion
 	var r: PackedFloat32Array = space.cast_motion(q)
 	var safe: float = clampf(r[0], 0.0, 1.0) if r.size() >= 1 else 1.0
 	if safe >= 1.0:

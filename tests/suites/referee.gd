@@ -167,6 +167,11 @@ func _run_walls_and_rewind() -> void:
 	_check(LungeJudge.path(space, Vector3(-5.1, 0.6, 0), Vector3(-1.4, 0, 0), 0.35).size() == 2
 		and (LungeJudge.path(space, Vector3(-5.1, 0.6, 0), Vector3(-1.4, 0, 0), 0.35)[1] as Vector3).x > -5.2,
 		"(straight into its side it stops: nothing to slide along)")
+	# WITH ITS BACK TO A WALL (Luke's playtest of Fowl Play's step 7: an egg thrown by a hen backed onto a
+	# hay stack went 2.3 m of 9 and missed the wolf): a ball cast from touching a wall it moves away from
+	# was stopped where it stood. (The farm's own stack, a mesh's faces: Fowl Play's `walk` suite.)
+	var back_to_bale: Dictionary = LungeJudge.judge(space, Vector3(-5.5 + 0.35, 0, -0.5), -PI / 2.0, 9.0, 0.35, 0.6, [])
+	_check(float(back_to_bale["reach"]) > 8.9, "its back to the bale, a throw goes its whole way ahead (%.2f m of 9)" % float(back_to_bale["reach"]))
 
 	# THE PROOF. A hen runs -Z through the gap at 4 m/s, and is out of reach (through it) at T. The
 	# wolf stands facing her; its view of others is 150 ms behind the server.
