@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjl7aam6n88jw"
 path.s3tc="res://.godot/imported/T_Ranger_BaseColor.png-ede8f9a3eb00688600af337ae667163e.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Ranger_BaseColor.png-ede8f9a3eb00688600af337ae667163e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Ranger_BaseColor.png"
-dest_files=["res://.godot/imported/T_Ranger_BaseColor.png-ede8f9a3eb00688600af337ae667163e.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Ranger_BaseColor.png-ede8f9a3eb00688600af337ae667163e.s3tc.ctex", "res://.godot/imported/T_Ranger_BaseColor.png-ede8f9a3eb00688600af337ae667163e.etc2.ctex"]
 
 [params]
 

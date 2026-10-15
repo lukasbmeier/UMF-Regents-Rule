@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# THE BUILDS, EXPORTED AND RUN. Exports both presets in export_presets.cfg, checks what each pack
+# THE BUILDS, EXPORTED AND RUN. Exports the presets in export_presets.cfg (the Windows client and
+# server, and the Mac client), checks what each pack
 # actually contains, then runs them: the client against the live module, and the server as a real
 # sidecar through the whole of tests/sidecar_test.sh.
 #
 #   GODOT=/path/to/godot ./tests/export_test.sh
 #
-# Needs the Windows export templates for this Godot version, a local server (`spacetime start`),
+# Needs the Windows and macOS export templates for this Godot version, a local server (`spacetime start`),
 # and Python. sidecar_test.sh republishes the TEST database (umf-test) with --delete-data. Builds go to build/
 # (gitignored).
 #
@@ -104,6 +105,41 @@ check "$([ "$(count $SPCK '^shared/movement_config\.json$')" = "1" ] && echo tru
   "and the same movement tunables, or it would simulate different physics from its players"
 check "$([ -f build/server/umf_server.console.exe ] && echo true || echo false)" \
   "a console wrapper exists, so a host can see its log"
+
+echo "== the MAC client =="
+# A universal app (Intel and Apple Silicon), signed ad hoc (Apple Silicon runs nothing unsigned), as this
+# game's own app, carrying what the Windows client carries and the Mac libraries of every GDExtension the
+# game uses. It cannot be run here: it is played on a Mac (Luke's M1; right-click, Open).
+rm -rf build/mac
+if GODOT="$GODOT" PYTHON="$PYTHON" ./tools/mac_export.sh build/mac/umf.zip >/dev/null 2>&1 && [ -f build/mac/umf.zip ]; then
+  pass; echo "   macOS Client -> build/mac/umf.zip"
+  MPCK=build/mac/umf.pck
+  MAC="$("$PYTHON" tools/mac_bundle.py build/mac/umf.zip "$MPCK" 2>&1)"
+  mac() { printf '%s\n' "$MAC" | sed -n "s/^$1: //p" | tr -d '\r'; }
+  TITLE="$("$PYTHON" -c "import json; print(json.load(open('shared/game.json')).get('title', 'game'))" | tr -d '\r')"
+  check "$([ "$(mac universal)" = "yes" ] && [ "$(mac executable)" = "yes" ] && echo true || echo false)" "a universal app: Intel and Apple Silicon ($(mac app))"
+  check "$([ "$(mac signed)" = "yes" ] && echo true || echo false)" "signed (ad hoc), or Apple Silicon will not open it"
+  BUNDLE="$("$PYTHON" tools/mac_bundle.py --bundle-id shared/game.json | tr -d '\r')"
+  check "$([ "$(mac bundle_id)" = "$BUNDLE" ] && [ "$(mac name)" = "$TITLE" ] && echo true || echo false)" \
+    "this game's own app: $(mac bundle_id), \"$(mac name)\""
+  check "$(grep -q 'application/bundle_identifier="com.umf.game"' export_presets.cfg && [ ! -f export_presets.cfg.mac_export_hold ] && echo true || echo false)" \
+    "and the shared preset is the template's again after it (com.umf.game)"
+  check "$([ "$(count $MPCK '^sidecar/')" = "0" ] && [ "$(count $MPCK '^(tests/(test_runner|suite_base|suites/|e2e/|playtest/|render/|fight_bot)|game/[a-z_]+/(tests|workbench)/|tools/)')" = "0" ] && [ "$(count $MPCK '^addons/(godot_ai|umf_export|umf_content)/')" = "0" ] && echo true || echo false)" \
+    "its pack: no sidecar, test code, tools or editor tooling"
+  check "$([ "$(count $MPCK '^shared/movement_config\.json$')" = "1" ] && [ "$(count $MPCK '^tests/levels/greybox\.tscn')" -ge 1 ] && echo true || echo false)" \
+    "and the runtime files and the level, as the Windows client"
+  # Every GDExtension the game uses (LimboAI, Terrain3D) has its Mac library in the app: one left out (a
+  # .gitignore keeping it off the machine) is a game that will not start on a Mac.
+  for ext in $(grep -rl "^macos.release" --include=*.gdextension addons 2>/dev/null | grep -v "addons/godot_ai/"); do
+    lib="$(sed -n 's/^macos.release *= *"\(.*\)".*/\1/p' "$ext" | head -1 | tr -d '\r')"; lib="${lib##*/}"
+    check "$([ -n "$lib" ] && printf '%s\n' "$(mac frameworks)" | tr ' ' '\n' | grep -qx "$lib" && echo true || echo false)" "$ext's Mac library ($lib) is in the app"
+  done
+  CPCK_WIN="$CPCK"; CPCK="$MPCK"
+  run_genre_hooks export_client   # what a genre's client must carry, in the Mac one too
+  CPCK="$CPCK_WIN"
+else
+  fail "the 'macOS Client' preset exports (tools/mac_export.sh; the macOS export template installed?)"
+fi
 
 echo "== run the exported CLIENT =="
 # Headless: no connect screen (nobody to ask), so it connects to the shipped default server —

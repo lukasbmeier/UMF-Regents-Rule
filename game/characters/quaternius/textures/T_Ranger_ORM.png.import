@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg46ifyw5ji7e"
 path.s3tc="res://.godot/imported/T_Ranger_ORM.png-ff55d5392dbdd2c6212e91c63ead0ccd.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Ranger_ORM.png-ff55d5392dbdd2c6212e91c63ead0ccd.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Ranger_ORM.png"
-dest_files=["res://.godot/imported/T_Ranger_ORM.png-ff55d5392dbdd2c6212e91c63ead0ccd.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Ranger_ORM.png-ff55d5392dbdd2c6212e91c63ead0ccd.s3tc.ctex", "res://.godot/imported/T_Ranger_ORM.png-ff55d5392dbdd2c6212e91c63ead0ccd.etc2.ctex"]
 
 [params]
 

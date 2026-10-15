@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ga3lo838x3ds"
 path.s3tc="res://.godot/imported/T_Peasant_BaseColor.png-f5c9abc6216b751af0396e14a7b33858.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Peasant_BaseColor.png-f5c9abc6216b751af0396e14a7b33858.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Peasant_BaseColor.png"
-dest_files=["res://.godot/imported/T_Peasant_BaseColor.png-f5c9abc6216b751af0396e14a7b33858.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Peasant_BaseColor.png-f5c9abc6216b751af0396e14a7b33858.s3tc.ctex", "res://.godot/imported/T_Peasant_BaseColor.png-f5c9abc6216b751af0396e14a7b33858.etc2.ctex"]
 
 [params]
 

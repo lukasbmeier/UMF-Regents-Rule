@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://6stdqhc1weah"
 path.s3tc="res://.godot/imported/T_Regular_Female_Roughness.png-25bb25c85e2ac8c3e700c11a3b0a526e.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Regular_Female_Roughness.png-25bb25c85e2ac8c3e700c11a3b0a526e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Regular_Female_Roughness.png"
-dest_files=["res://.godot/imported/T_Regular_Female_Roughness.png-25bb25c85e2ac8c3e700c11a3b0a526e.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Regular_Female_Roughness.png-25bb25c85e2ac8c3e700c11a3b0a526e.s3tc.ctex", "res://.godot/imported/T_Regular_Female_Roughness.png-25bb25c85e2ac8c3e700c11a3b0a526e.etc2.ctex"]
 
 [params]
 

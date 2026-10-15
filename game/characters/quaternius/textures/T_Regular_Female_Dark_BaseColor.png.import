@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c4ekgsg1bijgd"
 path.s3tc="res://.godot/imported/T_Regular_Female_Dark_BaseColor.png-275ab6dbee00d13ff111bea195ab3527.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Regular_Female_Dark_BaseColor.png-275ab6dbee00d13ff111bea195ab3527.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Regular_Female_Dark_BaseColor.png"
-dest_files=["res://.godot/imported/T_Regular_Female_Dark_BaseColor.png-275ab6dbee00d13ff111bea195ab3527.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Regular_Female_Dark_BaseColor.png-275ab6dbee00d13ff111bea195ab3527.s3tc.ctex", "res://.godot/imported/T_Regular_Female_Dark_BaseColor.png-275ab6dbee00d13ff111bea195ab3527.etc2.ctex"]
 
 [params]
 

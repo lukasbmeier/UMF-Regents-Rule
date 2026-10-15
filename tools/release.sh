@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MAKE A BUILD TO SEND TO FRIENDS (DECISIONS #198). Exports and tests both builds
+# MAKE A BUILD TO SEND TO FRIENDS (DECISIONS #198). Exports and tests the builds (Windows, and the Mac app)
 # (tests/export_test.sh, which also plays this build against a newer server), saves this build's
 # contract as a release snapshot (shared/compat/<database>/<fingerprint>.json: commit it), and zips
 # the client to build/releases/<title>-<fingerprint>.zip, ready to send.
@@ -33,6 +33,10 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
             p = os.path.join(root, f)
             z.write(p, os.path.relpath(p, "build/client"))
 PY
+# The Mac app (tests/export_test.sh exported it: a universal app, signed ad hoc): its zip as Godot wrote it.
+MACZIP="build/releases/${TITLE// /_}-$FP-mac.zip"
+cp build/mac/umf.zip "$MACZIP"
 echo
-echo "release: $ZIP"
-echo "Send that zip. Then commit shared/compat/ (the snapshot), so later changes are held to this build."
+echo "release: $ZIP (Windows)"
+echo "         $MACZIP (Mac: unzip, then right-click the app, Open, the first time)"
+echo "Send those. Then commit shared/compat/ (the snapshot), so later changes are held to this build."

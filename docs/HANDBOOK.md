@@ -217,7 +217,13 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
 1. **Make the build:** double-click `tools\release.cmd`. It exports and tests both builds, records
    what this build needs from a server (`shared/compat/`: commit it, so later changes are checked
    against this build), and zips the client to `build\releases\<game>-<version>.zip`. Send that:
-   `umf.exe` holds the whole game, and `libterrain...dll` (Terrain3D) sits beside it.
+   `umf.exe` holds the whole game, and `libterrain...dll` (Terrain3D) sits beside it. For a Mac it
+   also makes `<game>-<version>-mac.zip`: one app for Intel and Apple Silicon Macs (the "macOS
+   Client" preset, through `tools/mac_export.sh`, which gives it this game's own bundle identifier,
+   `com.umf.<title>`). A Mac build is only a player: your PC still runs the server and the referee.
+   Every GDExtension a game uses needs its Mac library on THIS machine for that (the export test
+   says which one is missing), and the macOS export template installed (Editor > Manage Export
+   Templates).
 2. **Let them reach your server.** `spacetime start` only listens on your own machine. Start it
    with `spacetime start --listen-addr 0.0.0.0:3000` instead, then:
    - **Same house:** allow it through Windows Firewall once (an admin PowerShell:
@@ -227,7 +233,11 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
      address; no router changes). Or forward TCP 3000 on your router to your PC and give them
      your public address.
 3. **They run it.** Windows SmartScreen says "Windows protected your PC" for an unsigned game:
-   More info, then Run anyway. They type your address on the connect screen, pick a name and a
+   More info, then Run anyway. On a Mac: unzip it, then right-click the app and Open, and Open again
+   in the box that asks (it is signed ad hoc, not by an Apple developer ID; only the first time). If
+   macOS says it is damaged, run `xattr -cr "<the app>"` in Terminal. Selling on Steam or anywhere
+   else wants an Apple Developer ID ($99 a year) to sign and notarize it: the preset's codesign and
+   notarization settings, which Godot can do from Windows. They type your address on the connect screen, pick a name and a
    character, and connect.
 4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`.
 5. **After you change the server**, publish with `--codegen`. Their build keeps working unless you

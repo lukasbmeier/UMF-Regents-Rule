@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dry8fs7nv8agl"
 path.s3tc="res://.godot/imported/T_Noble_ORM.png-57766800b566f454fcee9c773b5b0b3c.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Noble_ORM.png-57766800b566f454fcee9c773b5b0b3c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Noble_ORM.png"
-dest_files=["res://.godot/imported/T_Noble_ORM.png-57766800b566f454fcee9c773b5b0b3c.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Noble_ORM.png-57766800b566f454fcee9c773b5b0b3c.s3tc.ctex", "res://.godot/imported/T_Noble_ORM.png-57766800b566f454fcee9c773b5b0b3c.etc2.ctex"]
 
 [params]
 

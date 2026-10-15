@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b7j4xi2x5d6f2"
 path.s3tc="res://.godot/imported/T_Wizard_ORM.png-372c62f43006f88f3762039873d3f013.s3tc.ctex"
+path.etc2="res://.godot/imported/T_Wizard_ORM.png-372c62f43006f88f3762039873d3f013.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://game/characters/quaternius/textures/T_Wizard_ORM.png"
-dest_files=["res://.godot/imported/T_Wizard_ORM.png-372c62f43006f88f3762039873d3f013.s3tc.ctex"]
+dest_files=["res://.godot/imported/T_Wizard_ORM.png-372c62f43006f88f3762039873d3f013.s3tc.ctex", "res://.godot/imported/T_Wizard_ORM.png-372c62f43006f88f3762039873d3f013.etc2.ctex"]
 
 [params]
 
