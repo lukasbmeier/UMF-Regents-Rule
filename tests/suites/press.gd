@@ -9,10 +9,40 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_model()
+	_run_clock()
 	await _run_component()
 	await _run_check_key()
 	await _run_rules_page()
 	_run_every_entity_has_one()
+
+
+## THE SERVER'S CLOCK FROM STAMPS (ClockSync; Luke on his Mac, a database kept for days: a night's clock
+## read 5000 minutes and no egg could be laid). A stamp is when its row was WRITTEN: a nest placed three
+## days ago hands over its stamp first.
+func _run_clock() -> void:
+	print("== press: the server's clock, from stamps old and new ==")
+	var clock: Node = _autoload("ClockSync")
+	var kept: Array = [clock.get(&"_offset_usec"), clock.get(&"_has_sample"), clock.get(&"_rtt_usec")]
+	clock.call(&"reset")
+	var ahead: int = 5_000_000_000   # the server's clock is this far ahead of this machine's ticks
+	var now := func() -> int: return int(clock.call(&"local_usec")) + ahead
+	var three_days: int = 3 * 24 * 3600 * 1_000_000
+	clock.call(&"observe_server_timestamp", int(now.call()) - three_days)
+	var behind: float = float(int(now.call()) - int(clock.call(&"server_usec"))) / 1_000_000.0
+	_check(behind > 3600.0, "a nest's stamp from three days ago first: taken as now, the clock is days behind (%.0f s)" % behind)
+	clock.call(&"observe_server_timestamp", int(now.call()))
+	var off: float = absf(float(int(clock.call(&"server_usec")) - int(now.call()))) / 1_000_000.0
+	_check(off < 0.1, "the next fresh stamp (a moving body's) puts it right at once, not 50 ms a sample (%.3f s off)" % off)
+	clock.call(&"observe_server_timestamp", int(now.call()) - three_days)
+	off = absf(float(int(clock.call(&"server_usec")) - int(now.call()))) / 1_000_000.0
+	_check(off < 0.1, "and an old row's stamp after that says nothing about now (%.3f s off)" % off)
+	var before: int = int(clock.call(&"server_usec"))
+	clock.call(&"observe_server_timestamp", int(now.call()) + 200_000)
+	var moved: float = float(int(clock.call(&"server_usec")) - before) / 1_000.0
+	_check(moved > 0.0 and moved < 60.0, "a stamp a little ahead (200 ms: jitter) moves it a little, as ever (%.1f ms)" % moved)
+	clock.set(&"_offset_usec", kept[0])
+	clock.set(&"_has_sample", kept[1])
+	clock.set(&"_rtt_usec", kept[2])
 
 
 class _ChallengeRow extends RefCounted:
