@@ -15,7 +15,8 @@ class_name ActionReferee extends Node3D
 ## Walls entities put up (DECISIONS #229: a shut gate) are in its space as they are now, built from
 ## their characters' `blocker_size` (`EntityBlocker`), so a pounce through a shut gate stops at it.
 ##
-## Who can be hit: people (a player, an NPC person, any playable character), not a nest or a prop;
+## Who can be hit: people (a player, an NPC person, any playable character, anything a brain drives:
+## Fowl Play's decoy hens), not a nest or a prop;
 ## and only in a status that is targetable and hittable (a downed hen is not hit again). The module
 ## checks the same again: this only proposes.
 ##
@@ -24,7 +25,7 @@ class_name ActionReferee extends Node3D
 ## How long after a use lands it is judged: the user's own row from that moment has to have come.
 const SETTLE_USEC: int = 80_000
 ## The tables it reads.
-const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"player", &"ability_def"]
+const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"player", &"ability_def", &"npc_brain"]
 
 var world_id: int = 0
 ## Off in tests: judged, not sent.
@@ -38,6 +39,8 @@ var _kinds: Dictionary[int, int] = {}
 var _statuses: Dictionary[int, int] = {}
 var _offline: Dictionary[int, bool] = {}
 var _players: Dictionary[int, bool] = {}
+## Entities a brain drives (an `npc_brain` row): people, as the module counts them (`is_person`).
+var _brained: Dictionary[int, bool] = {}
 ## request id -> {actor_id, ability_id, rewind_ms, due_usec}
 var _pending: Dictionary[int, Dictionary] = {}
 var _defs_by_kind: Dictionary[int, EntityDefinition] = {}
@@ -117,6 +120,11 @@ func on_row(ev: RowEvent) -> void:
 			else:
 				_players[eid] = true
 				_offline[eid] = not bool(row.get(&"online"))
+		&"npc_brain":
+			if ev.kind == RowEvent.Kind.DELETED:
+				_brained.erase(eid)
+			else:
+				_brained[eid] = true
 
 
 ## Where `entity_id` was at server time `ts_usec` (its movement row).
@@ -131,8 +139,10 @@ func record(entity_id: int, ts_usec: int, pos: Vector3, yaw: float) -> void:
 
 
 ## What it knows of an entity, set directly (tests; and a sidecar that already has it).
-func set_entity(entity_id: int, kind: int, status: int = 0, player: bool = false, online: bool = true) -> void:
+func set_entity(entity_id: int, kind: int, status: int = 0, player: bool = false, online: bool = true, brained: bool = false) -> void:
 	_kinds[entity_id] = kind
+	if brained:
+		_brained[entity_id] = true
 	_statuses[entity_id] = status
 	if player:
 		_players[entity_id] = true
@@ -240,14 +250,14 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 	return verdict
 
 
-## Someone it may hit: a person (a player, kinds 0 and 1, a playable character) who is here, in a
-## status that is targetable and hittable.
+## Someone it may hit: a person (a player, kinds 0 and 1, a playable character, anything a brain drives:
+## the module's `is_person`) who is here, in a status that is targetable and hittable.
 func may_be_hit(eid: int) -> bool:
 	if not _kinds.has(eid):
 		return false
 	var kind: int = _kinds[eid]
 	var defn: EntityDefinition = _defs_by_kind.get(kind, null)
-	var person: bool = kind <= 1 or _players.has(eid) or (defn != null and defn.playable)
+	var person: bool = kind <= 1 or _players.has(eid) or _brained.has(eid) or (defn != null and defn.playable)
 	if not person or bool(_offline.get(eid, false)):
 		return false
 	var st: StatusDef = StatusDef.find(int(_statuses.get(eid, StatusDef.NORMAL)))

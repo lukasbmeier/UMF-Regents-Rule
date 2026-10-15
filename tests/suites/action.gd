@@ -48,6 +48,24 @@ func _run_lunge_tests() -> void:
 	c.dash_key = true
 	_check(c.sample().dash, "a character that dashes by its key: the key dashes")
 	Input.action_release(&"dash")
+	# A GENRE WALKS THE PLAYER (`force_move`: a hen slipping off a roof): its direction, not the keys, for
+	# its frames; then the keys again.
+	if not InputMap.has_action(&"move_forward"):
+		InputMap.add_action(&"move_forward")
+	if not InputMap.has_action(&"jump"):
+		InputMap.add_action(&"jump")
+	Input.action_press(&"move_forward")
+	Input.action_press(&"jump")
+	var keys: Vector2 = c.sample().move_dir
+	c.force_move(Vector2(1, 0), 2.0 / float(Engine.physics_ticks_per_second))
+	var pushed: Array[InputFrame] = [c.sample(), c.sample(), c.sample()]
+	_check(pushed[0].move_dir.is_equal_approx(Vector2(1, 0)) and pushed[1].move_dir.is_equal_approx(Vector2(1, 0)) and not pushed[0].jump,
+		"walked: the genre's direction, not the keys' (%s), and no jump, for its two frames" % str(keys))
+	_check(pushed[2].move_dir.is_equal_approx(keys) and pushed[2].jump and not c.is_forced(), "then the keys again")
+	c.force_move(Vector2.ZERO, 5.0)
+	_check(not c.is_forced(), "a zero direction walks nowhere")
+	Input.action_release(&"move_forward")
+	Input.action_release(&"jump")
 	c.queue_free()
 	# The model: one dash press on a profile with a dash throws the body forward.
 	var cfg := MovementConfig.new()

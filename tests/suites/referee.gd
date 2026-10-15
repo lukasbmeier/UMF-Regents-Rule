@@ -307,6 +307,12 @@ func _run_who() -> void:
 	_check(ref.may_be_hit(15), "a playable character of a genre's kind is a person")
 	ref.set_entity(16, 1)
 	_check(ref.may_be_hit(16), "and an NPC person (kind 1)")
+	ref.set_entity(17, 117)
+	_check(not ref.may_be_hit(17), "a genre's NPC of no playable kind, with no brain: a thing")
+	ref.set_entity(18, 117, 0, false, true, true)
+	_check(ref.may_be_hit(18), "the same with a brain driving it (Fowl Play's decoy hen): a person, as the module says (is_person)")
+	var brain_row := ActionReferee.TABLES.has(&"npc_brain")
+	_check(brain_row, "(it hears who has a brain: npc_brain is one of its tables)")
 	ref.know(load("res://foundation/content/character/player.tres") as EntityDefinition)
 	var box: Dictionary = ref.hitbox(0)
 	_check(is_equal_approx(float(box["radius"]), 0.4) and is_equal_approx(float(box["height"]), 1.8) and is_equal_approx(float(box["center_y"]), 0.9),

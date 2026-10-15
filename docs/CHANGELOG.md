@@ -681,3 +681,8 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 ## 0.45.1 — a sweep begun against a wall
 - **A referee's sweep with its back to a wall goes its whole way** (`LungeJudge`): a ball cast from touching a wall it moves away from was stopped where it stood (a box) or a couple of metres on in the open (a mesh's faces, the farm's CSG): Fowl Play's egg thrown by a hen backed onto a hay stack went 2.3 m of 9 and missed the wolf (Luke's playtest of step 7). Set off the wall by `CONTACT_SLOP_M` (2 cm) before it is cast.
 - Tested: the `referee` suite (a throw with its back to a bale: 0 m before, 9 after); Fowl Play's `walk` suite (the farm's own stack).
+
+## 0.46.0 — a genre walks the player; anything a brain drives can be hit
+- **A genre walks the player** (DECISIONS #241): `LocalInputComponent.force_move(dir, seconds)`, its stick pushed a world direction for a while whatever keys are held, without jumping (`is_forced()`). Frames as the player's own, bounded by the server as any. Fowl Play: a hen slipping off a roof no predator can reach her on.
+- **The referee hits what the module would** (DECISIONS #242): anything a brain drives (an `npc_brain` row) is a person to `ActionReferee.may_be_hit`, as it always was to the module's `is_person`; before, a genre's brain-driven NPC of no playable kind was hit by the server's rules but never proposed by the referee (Fowl Play's decoy hens).
+- Tested: the `action` suite (walked two frames, then the keys again; a zero direction walks nowhere) and the `referee` suite (a genre NPC: a thing without a brain, a person with one).

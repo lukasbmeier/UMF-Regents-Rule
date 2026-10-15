@@ -57,6 +57,9 @@ var _jump_held_off: bool = false
 ## Frames still to press dash for (`dash_once`: an ability's lunge), and whether the dash key itself
 ## dashes (not for a character whose ability lunges: DECISIONS #232).
 var _dash_frames: int = 0
+## A genre walking the player (`force_move`): the world direction, and for how many more frames.
+var _forced_dir: Vector2 = Vector2.ZERO
+var _forced_frames: int = 0
 var dash_key: bool = true
 var _client_tick: int = 0
 ## Where the CAMERA looks. Mouse motion always moves this one.
@@ -313,6 +316,11 @@ func sample() -> InputFrame:
 	f.dash = not still and ((dash_key and Input.is_action_pressed(ACTION_DASH)) or _dash_frames > 0)
 	_dash_frames = maxi(_dash_frames - 1, 0)
 	f.slow = not still and Input.is_action_pressed(ACTION_SLOW)
+	if _forced_frames > 0:
+		f.move_dir = _forced_dir
+		f.jump = false
+		f.slow = false
+		_forced_frames -= 1
 	f.client_pos = _body_position()
 
 	# Drive the local player. The movement component stamps the frame with where this step put
@@ -329,6 +337,20 @@ func sample() -> InputFrame:
 ## Press dash on the next frame sampled: an ability's lunge (`SpaceTimeActionComponent`, DECISIONS #232).
 func dash_once() -> void:
 	_dash_frames = 1
+
+
+## WALK THE PLAYER `dir` (a world direction, as `InputFrame.move_dir`: -Z is north) for `seconds`, whatever
+## keys they hold, and without jumping: the stick a genre pushes (Fowl Play: a hen slipping off a roof
+## nothing can reach her on). Frames as a player's own, so the server bounds them as it bounds any.
+## A zero direction or no time lets go.
+func force_move(dir: Vector2, seconds: float) -> void:
+	_forced_dir = dir.normalized() if dir.length_squared() > 0.0 else Vector2.ZERO
+	_forced_frames = ceili(maxf(seconds, 0.0) * float(Engine.physics_ticks_per_second)) if _forced_dir != Vector2.ZERO else 0
+
+
+## Whether a genre is walking the player now.
+func is_forced() -> bool:
+	return _forced_frames > 0
 
 
 ## Whether a character dashes only by an ability (one of its abilities lunges).
