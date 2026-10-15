@@ -233,9 +233,12 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
      address; no router changes). Or forward TCP 3000 on your router to your PC and give them
      your public address.
 3. **They run it.** Windows SmartScreen says "Windows protected your PC" for an unsigned game:
-   More info, then Run anyway. On a Mac: unzip it, then right-click the app and Open, and Open again
-   in the box that asks (it is signed ad hoc, not by an Apple developer ID; only the first time). If
-   macOS says it is damaged, run `xattr -cr "<the app>"` in Terminal. Selling on Steam or anywhere
+   More info, then Run anyway. On a Mac (it is signed ad hoc, not by an Apple developer ID, so
+   macOS says it "could not verify" it the first time): unzip it and open it once (Done), then System
+   Settings > Privacy & Security, scroll to Security, "Fowl Play was blocked...": Open Anyway, your
+   password, Open Anyway again. Or in Terminal, once: `xattr -dr com.apple.quarantine "<the app>"`
+   (drag the app onto the Terminal window for its path). Right-click > Open no longer does it on
+   macOS 15 and later. Selling on Steam or anywhere
    else wants an Apple Developer ID ($99 a year) to sign and notarize it: the preset's codesign and
    notarization settings, which Godot can do from Windows. They type your address on the connect screen, pick a name and a
    character, and connect.

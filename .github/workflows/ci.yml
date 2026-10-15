@@ -5,14 +5,14 @@
 # Versions are pinned to what the repo is verified on: Godot 4.7.1, SpacetimeDB 2.10.1
 # (server/Cargo.toml pins the crate to the same patch, DECISIONS #190).
 #
-# NOT YET RUN ON GITHUB: written on the owner's Windows machine, where every suite it calls is
-# green (docs/CHANGELOG.md 0.24.0). Expect the first runs to need path or install fixes; the
-# server job is manual (Actions tab, "Run workflow") until it has passed once.
+# NOT YET PASSED ON GITHUB: written on the owner's Windows machine, where every suite it calls is
+# green (docs/CHANGELOG.md 0.24.0). Expect the first runs to need path or install fixes.
 name: ci
 
+# MANUAL ONLY (Luke 2026-10-15: an email saying it failed on every ship). It has never passed on GitHub,
+# and the suites run on the owner's machine before every ship are what gate a release. Run it by hand
+# (Actions tab, ci, "Run workflow") while making it pass; put `push:` back once it does.
 on:
-  push:
-  pull_request:
   workflow_dispatch:
     inputs:
       server:

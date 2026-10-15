@@ -692,3 +692,7 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - Projects import textures for Apple Silicon too (`rendering/textures/vram_compression/import_etc2_astc`): the Mac export needs them.
 - The export presets leave out `demo/` (an add-on's demo folder unpacked beside the project: LimboAI's put 150 files into Fowl Play's builds).
 - Tested: `tests/export_test.sh` exports the Mac app too and checks it from Windows (`tools/mac_bundle.py`): universal, signed, this game's own bundle identifier and name, the preset left as it was, a pack with no sidecar, tests, tools or editor tooling but the runtime files and the level, and the Mac library of every GDExtension the game uses (Terrain3D's hidden: caught). It cannot run the app: a Mac does.
+
+## 0.46.2 — opening the Mac app; CI by hand
+- **Opening the Mac app the first time** (Luke, on his M1: "could not verify it is free of malware"): macOS 15 and later no longer let right-click > Open pass an app signed ad hoc. The handbook, `tools/release.sh` and `tools/mac_export.sh` now say System Settings > Privacy & Security > Open Anyway, or `xattr -dr com.apple.quarantine` on the app. The build is unchanged; a developer ID and notarization (for selling) is what makes the message go away.
+- **CI runs only by hand** (Luke: an email that it failed on every ship): `.github/workflows/ci.yml` is `workflow_dispatch` only until it has passed on GitHub once; the suites run before every ship are the gate.

@@ -8,7 +8,8 @@
 #   GODOT=<path> ./tools/mac_export.sh [out.zip]        (default build/mac/umf.zip)
 #
 # Needs the macOS export template for this Godot version (Editor > Manage Export Templates).
-# Opening it on the Mac: right-click the app, Open (it is signed ad hoc, not by a developer ID).
+# Opening it on the Mac the first time (it is signed ad hoc, not by a developer ID): System Settings >
+# Privacy & Security > Open Anyway, or `xattr -dr com.apple.quarantine "<the app>"` (docs/HANDBOOK.md).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"

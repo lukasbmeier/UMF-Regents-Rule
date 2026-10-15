@@ -109,7 +109,7 @@ check "$([ -f build/server/umf_server.console.exe ] && echo true || echo false)"
 echo "== the MAC client =="
 # A universal app (Intel and Apple Silicon), signed ad hoc (Apple Silicon runs nothing unsigned), as this
 # game's own app, carrying what the Windows client carries and the Mac libraries of every GDExtension the
-# game uses. It cannot be run here: it is played on a Mac (Luke's M1; right-click, Open).
+# game uses. It cannot be run here: it is played on a Mac (Luke's M1; the first time, Privacy & Security > Open Anyway).
 rm -rf build/mac
 if GODOT="$GODOT" PYTHON="$PYTHON" ./tools/mac_export.sh build/mac/umf.zip >/dev/null 2>&1 && [ -f build/mac/umf.zip ]; then
   pass; echo "   macOS Client -> build/mac/umf.zip"

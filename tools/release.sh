@@ -38,5 +38,5 @@ MACZIP="build/releases/${TITLE// /_}-$FP-mac.zip"
 cp build/mac/umf.zip "$MACZIP"
 echo
 echo "release: $ZIP (Windows)"
-echo "         $MACZIP (Mac: unzip, then right-click the app, Open, the first time)"
+echo "         $MACZIP (Mac: unzip; the first time, System Settings > Privacy & Security > Open Anyway: docs/HANDBOOK.md)"
 echo "Send those. Then commit shared/compat/ (the snapshot), so later changes are held to this build."
