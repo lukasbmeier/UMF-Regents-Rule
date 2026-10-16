@@ -85,6 +85,7 @@ func _ready() -> void:
 	_appearance = ConnectSettings.appearance()
 	if load_genres:
 		_load_genres()
+	EntityDefinition.add_foundation_kinds(entity_definitions)
 	for defn: EntityDefinition in entity_definitions:
 		EntitySpawner.register_definition(defn)
 	if not world_root.is_empty():

@@ -95,6 +95,13 @@ const RENDER_CLOCK_SLEW_USEC: int = 1_000
 const HERMITE_MAX_SPAN_USEC: int = 250_000
 
 @export var mode: Mode = Mode.REMOTE_INTERPOLATED
+## How far past its newest row a remote entity is guessed ahead with its last velocity (a body that
+## bounces off walls guesses ahead less: DECISIONS #246).
+var max_extrapolation_usec: int = MAX_EXTRAPOLATION_USEC
+## Rows go on its timeline by when the server wrote them, not by their seq (a body, DECISIONS #246: its
+## seq is its physics frames since the referee began flying it, which began a referee's round trip after
+## the launch, so by seq every row sat that much early and its watchers drew it guessing ahead).
+var timeline_by_server_ts: bool = false
 @export var config: MovementConfig
 
 ## Ascending by `t`: [{t: int (server usec), state: MovementState}]
@@ -156,6 +163,9 @@ var _drawn_step: Vector3 = Vector3.ZERO
 var _drawn_valid: bool = false
 var _render_t: int = 0
 var _render_t_valid: bool = false
+## The instant on its timeline this entity was last drawn at (REMOTE_INTERPOLATED), for `get_render_seq`.
+var _drawn_t: int = 0
+var _drawn_t_valid: bool = false
 ## Per-frame diagnostics for the frame just drawn (remote): which branch drew it and what it
 ## spanned. OFF by default — it would build a Dictionary per remote entity per tick; the remote
 ## playtest switches it on for the entity it watches, to explain any discontinuity it measures.
@@ -284,6 +294,16 @@ func get_reconcile_stats() -> Dictionary:
 ## REMOTE: the delay this entity is currently rendered behind the server, in seconds.
 func get_interp_delay_sec() -> float:
 	return _interp_delay_sec()
+
+
+## WHERE ON ITS OWN CLOCK IT IS DRAWN NOW (REMOTE_INTERPOLATED), as a `last_processed_seq`: the rows'
+## seq this frame's interpolation stands at, between two of them. A body's rows carry its physics frames
+## since launch there (DECISIONS #246), so its turn is drawn at the very moment its place is. -1 before
+## it has been drawn.
+func get_render_seq() -> float:
+	if not _drawn_t_valid or _tl_last_lps < 0:
+		return -1.0
+	return float(_tl_last_lps) + float(_drawn_t - _tl_last_t) / float(_seq_usec())
 
 
 ## REMOTE: what is left of a rejoin glide (world space). Zero unless the buffer just ran dry.
@@ -682,8 +702,8 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 ## Place a row on this entity's timeline and learn how that timeline lines up with our clock.
 func _timeline_t(lps: int, server_ts: int) -> int:
 	var t: int
-	if _tl_last_lps < 0:
-		t = server_ts                                          # anchor
+	if _tl_last_lps < 0 or timeline_by_server_ts:
+		t = server_ts                                          # anchor (or, for a body, every row)
 	elif lps > _tl_last_lps:
 		t = _tl_last_t + (lps - _tl_last_lps) * _seq_usec()   # the client's own 60 Hz
 	else:
@@ -992,6 +1012,8 @@ func _update_interpolated() -> void:
 	if _ring.is_empty():
 		return
 	var render_t: int = _render_time_usec()
+	_drawn_t = render_t
+	_drawn_t_valid = true
 	var oldest: Dictionary = _ring[0]
 	var newest: Dictionary = _ring[_ring.size() - 1]
 	if diagnostics_enabled:
@@ -1014,7 +1036,7 @@ func _update_interpolated() -> void:
 		if not _was_dry:
 			_dry_events += 1
 		_was_dry = true
-		var dt_usec: int = mini(render_t - int(newest["t"]), MAX_EXTRAPOLATION_USEC)
+		var dt_usec: int = mini(render_t - int(newest["t"]), max_extrapolation_usec)
 		var s: MovementState = (newest["state"] as MovementState).duplicate()
 		s.pos = s.pos + s.vel * (float(dt_usec) / 1_000_000.0)
 		_draw_remote(s, false)

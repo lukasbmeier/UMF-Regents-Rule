@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/spacetime_entity.gd" id="1_entity"]
+[ext_resource type="Script" path="res://foundation/components/spacetime_movement_component.gd" id="2_move"]
+[ext_resource type="Script" path="res://foundation/components/body_component.gd" id="3_body"]
+
+[node name="Body" type="CharacterBody3D"]
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("1_entity")
+
+[node name="Components" type="Node" parent="."]
+
+[node name="Movement" type="Node" parent="Components"]
+script = ExtResource("2_move")
+
+[node name="Body" type="Node" parent="Components"]
+script = ExtResource("3_body")
+
+[node name="Visual" type="Node3D" parent="."]

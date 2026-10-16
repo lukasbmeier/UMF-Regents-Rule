@@ -89,6 +89,11 @@ foundation/anim/               AnimationSet · AnimationClipRef · AnimationTree
 sidecar/                       SERVER-ONLY: sidecar_main · sim_world · authority_sync · sidecar_net_config.tres
 sidecar/npc/                   NpcBrain (and its behaviour tree: run_tree) · BrainTask · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd
 addons/limboai/                LimboAI 1.8.1 (GDExtension): bots' behaviour trees (DECISIONS #245); Windows, Linux, macOS libraries only
+foundation/physics/            FlyingBody (the one flight) · BodyForces (a genre's flight hook) · BodyLaunch (the thrower's view) (DECISIONS #246)
+foundation/content/body_def.gd BodyDef; foundation/content/body/ball.tres (the greybox's ball); foundation/entities/body.tscn + content/character/body.tres (kind 3)
+foundation/components/body_component.gd  a body on screen: its look, its turn, the thrower's flight kept near the referee's
+sidecar/physics/body_referee.gd          the world's bodies flown, written, their hits reported
+server/src/body.rs + module/bodies.rs    what the module checks of a throw; body_state, body_contact, launch_body, write_body_batch, report_body_contacts
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
                                and a restart (the NPC's brain resumes); SIDECAR_BIN= points it at a build
 tests/connect_playtest.sh      the connect screen + Esc menu, driven like a player (fresh install)

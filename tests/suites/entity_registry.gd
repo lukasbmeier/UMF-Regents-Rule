@@ -44,6 +44,27 @@ func _run_entity_registry_tests() -> void:
 	reg._on_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"world_config", null, FakeGlobalRow.new()))
 	_check(got_global.size() == 1, "non-entity rows go to global_row_event")
 
+	# AN ENTITY STILL BINDING (0.49.0): a row that arrives after its `entity` row goes straight to it,
+	# not into the buffer it would only be given once bound (a thrown body waited out its 2 s timeout).
+	var waiting := FakeEntity.new()
+	get_tree().root.add_child(waiting)
+	reg.await_rows(44, waiting)
+	var after: RowEvent = RowEvent.make(RowEvent.Kind.INSERTED, &"health_state", null, FakeRow.new(44, 100.0))
+	reg._on_row_event(after)
+	_check(waiting.received.size() == 1 and waiting.received[0] == after and reg.peek_buffered(44).is_empty(),
+		"an entity waiting to bind is handed its rows as they come, not buffered")
+	reg.register(44, waiting)
+	_check(waiting.received.size() == 1, "and registering it replays nothing twice")
+	reg.unregister(44)
+	waiting.free()
+	var gone := FakeEntity.new()
+	get_tree().root.add_child(gone)
+	reg.await_rows(4601, gone)
+	gone.free()
+	reg._on_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"health_state", null, FakeRow.new(4601, 100.0)))
+	_check(reg.peek_buffered(4601).size() == 1, "one that went before binding: its rows are buffered again")
+	reg.take_buffered(4601)
+
 	var orphan_delete: RowEvent = RowEvent.make(RowEvent.Kind.DELETED, &"health_state", FakeRow.new(99, 0.0), null)
 	reg._on_row_event(orphan_delete)
 	_check(reg.peek_buffered(99).is_empty(), "delete for unknown entity is not buffered")

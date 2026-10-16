@@ -119,6 +119,10 @@ pub(crate) fn tick_world_module(
         if carried.iter().any(|(e, _)| *e == row.entity_id) {
             continue;
         }
+        // A body is the referee's to move (DECISIONS #246): the gravity twin would fight its writes.
+        if is_body(ctx, row.entity_id) {
+            continue;
+        }
         let mut inputs: Vec<InputQueueRow> = ctx.db.input_queue().entity_id().filter(row.entity_id).collect();
         inputs.sort_by_key(|q| q.frame.seq);
 

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=17 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -143,8 +143,35 @@ maximum = 2000.0
 unit = "ms"
 description = "TELEMETRY: a frame slower than this is a SPIKE, reported with the server time it happened (a lag a player felt). 50 ms is three frames at 60 Hz."
 
+[sub_resource type="Resource" id="Rule_body_launch_lag"]
+script = ExtResource("2_rule")
+name = &"body_launch_lag_s"
+number = 0.35
+minimum = 0.0
+maximum = 1.0
+unit = "s"
+description = "BODIES (DECISIONS #246): a thrower's game throws from where IT has them; the server's newest row of them may be this much older. The server lets a throw start this long times the thrower's own sprint further than the body's reach. 0: only the reach."
+
+[sub_resource type="Resource" id="Rule_body_snap"]
+script = ExtResource("2_rule")
+name = &"body_snap_m"
+number = 2.0
+minimum = 0.1
+maximum = 20.0
+unit = "m"
+description = "BODIES: the thrower's own flight of what it threw is moved toward the referee's a share at a time (body_correct_share); one this far out (a hit the thrower's game did not see) is put where the referee says at once."
+
+[sub_resource type="Resource" id="Rule_body_correct"]
+script = ExtResource("2_rule")
+name = &"body_correct_share"
+number = 0.3
+minimum = 0.0
+maximum = 1.0
+unit = ""
+description = "BODIES: how much of the gap between the thrower's flight and the referee's is closed with each row the referee writes (twenty a second). Higher: it follows the referee more tightly and shows its corrections; 0: it never corrects short of the snap."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct")])

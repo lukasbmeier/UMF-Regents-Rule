@@ -28,6 +28,15 @@
 			"movement": -1,
 			"name": "Humanoid",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "",
+			"id": 3,
+			"kind": 3,
+			"movement": -1,
+			"name": "Body",
+			"playable": false
 		}
 	],
 	"owner": "foundation",

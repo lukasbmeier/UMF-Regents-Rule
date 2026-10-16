@@ -393,6 +393,114 @@
 			}
 		},
 		{
+			"name": "BodyContact",
+			"namespace": [],
+			"source_name": "BodyContact",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "body_id",
+					"type": "U64"
+				},
+				{
+					"name": "other_id",
+					"type": "U64"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "normal",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "speed",
+					"type": "F32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"body_contact"
+			],
+			"table_name": "body_contact",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
+			"name": "BodyState",
+			"namespace": [],
+			"source_name": "BodyState",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "def_id",
+					"type": "U32"
+				},
+				{
+					"name": "owner_id",
+					"type": "U64"
+				},
+				{
+					"name": "launch_id",
+					"type": "U32"
+				},
+				{
+					"name": "launched_at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "rot",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "spin",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "at_rest",
+					"type": "Bool"
+				},
+				{
+					"name": "frames",
+					"type": "U32"
+				}
+			],
+			"table_names": [
+				"body_state"
+			],
+			"table_name": "body_state",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "Challenge",
 			"namespace": [],
 			"source_name": "Challenge",
@@ -974,7 +1082,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 26
+					"type_idx": 28
 				},
 				{
 					"name": "received_at",
@@ -1519,6 +1627,35 @@
 			]
 		},
 		{
+			"name": "BodyContactWrite",
+			"namespace": [],
+			"source_name": "BodyContactWrite",
+			"struct": [
+				{
+					"name": "body_id",
+					"type": "U64"
+				},
+				{
+					"name": "other_id",
+					"type": "U64"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "normal",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "speed",
+					"type": "F32"
+				}
+			]
+		},
+		{
 			"name": "Session",
 			"namespace": [],
 			"source_name": "Session",
@@ -1901,6 +2038,45 @@
 			"primary_key_name": "world_id",
 			"is_public": [
 				true
+			]
+		},
+		{
+			"name": "BodyWrite",
+			"namespace": [],
+			"source_name": "BodyWrite",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "vel",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "rot",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "spin",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "at_rest",
+					"type": "Bool"
+				},
+				{
+					"name": "frames",
+					"type": "U32"
+				}
 			]
 		},
 		{
@@ -2347,7 +2523,7 @@
 				{
 					"name": "timer",
 					"type": "StatusExpiry",
-					"type_idx": 18
+					"type_idx": 20
 				}
 			],
 			"return_type": "",
@@ -2445,6 +2621,44 @@
 			"return_data": {}
 		},
 		{
+			"name": "launch_body",
+			"wire_name": "launch_body",
+			"namespace": [],
+			"local_name": "launch_body",
+			"params": [
+				{
+					"name": "def_id",
+					"type": "U32"
+				},
+				{
+					"name": "launch_id",
+					"type": "U32"
+				},
+				{
+					"name": "origin",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "vel",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "rot",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "spin",
+					"type": "Vector3",
+					"type_idx": 3
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "leave_session",
 			"wire_name": "leave_session",
 			"namespace": [],
@@ -2529,7 +2743,7 @@
 				{
 					"name": "_sched",
 					"type": "ChallengePruneSchedule",
-					"type_idx": 12
+					"type_idx": 14
 				}
 			],
 			"return_type": "",
@@ -2567,6 +2781,29 @@
 				{
 					"name": "session_id",
 					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "report_body_contacts",
+			"wire_name": "report_body_contacts",
+			"namespace": [],
+			"local_name": "report_body_contacts",
+			"params": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "contacts",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "BodyContactWrite",
+					"type_idx": 39
 				}
 			],
 			"return_type": "",
@@ -2701,7 +2938,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 28
+					"type_idx": 30
 				}
 			],
 			"return_type": "",
@@ -3059,7 +3296,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 26
+					"type_idx": 28
 				}
 			],
 			"return_type": "",
@@ -3089,7 +3326,7 @@
 				{
 					"name": "_tick",
 					"type": "HoldTick",
-					"type_idx": 23
+					"type_idx": 25
 				}
 			],
 			"return_type": "",
@@ -3105,7 +3342,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 42
+					"type_idx": 45
 				}
 			],
 			"return_type": "",
@@ -3202,6 +3439,29 @@
 			"return_data": {}
 		},
 		{
+			"name": "write_body_batch",
+			"wire_name": "write_body_batch",
+			"namespace": [],
+			"local_name": "write_body_batch",
+			"params": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "writes",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "BodyWrite",
+					"type_idx": 50
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "write_movement_batch",
 			"wire_name": "write_movement_batch",
 			"namespace": [],
@@ -3218,7 +3478,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 47
+					"type_idx": 51
 				}
 			],
 			"return_type": "",
@@ -3471,11 +3731,63 @@
 			}
 		},
 		{
+			"name": "body_contact",
+			"wire_name": "body_contact",
+			"namespace": [],
+			"local_name": "body_contact",
+			"type_idx": 11,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "body_contact_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "body_state",
+			"wire_name": "body_state",
+			"namespace": [],
+			"local_name": "body_state",
+			"type_idx": 12,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "body_state_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "owner_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "challenge",
 			"wire_name": "challenge",
 			"namespace": [],
 			"local_name": "challenge",
-			"type_idx": 11,
+			"type_idx": 13,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3499,7 +3811,7 @@
 			"wire_name": "challenge_prune_schedule",
 			"namespace": [],
 			"local_name": "challenge_prune_schedule",
-			"type_idx": 12,
+			"type_idx": 14,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3522,7 +3834,7 @@
 			"wire_name": "client_rtt",
 			"namespace": [],
 			"local_name": "client_rtt",
-			"type_idx": 13,
+			"type_idx": 15,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3541,7 +3853,7 @@
 			"wire_name": "correction",
 			"namespace": [],
 			"local_name": "correction",
-			"type_idx": 14,
+			"type_idx": 16,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3560,7 +3872,7 @@
 			"wire_name": "dev_tools",
 			"namespace": [],
 			"local_name": "dev_tools",
-			"type_idx": 15,
+			"type_idx": 17,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3579,7 +3891,7 @@
 			"wire_name": "entity",
 			"namespace": [],
 			"local_name": "entity",
-			"type_idx": 16,
+			"type_idx": 18,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3603,7 +3915,7 @@
 			"wire_name": "equip_state",
 			"namespace": [],
 			"local_name": "equip_state",
-			"type_idx": 17,
+			"type_idx": 19,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3627,7 +3939,7 @@
 			"wire_name": "feedback",
 			"namespace": [],
 			"local_name": "feedback",
-			"type_idx": 19,
+			"type_idx": 21,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3651,7 +3963,7 @@
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 20,
+			"type_idx": 22,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3675,7 +3987,7 @@
 			"wire_name": "hold_member",
 			"namespace": [],
 			"local_name": "hold_member",
-			"type_idx": 21,
+			"type_idx": 23,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3703,7 +4015,7 @@
 			"wire_name": "hold_progress",
 			"namespace": [],
 			"local_name": "hold_progress",
-			"type_idx": 22,
+			"type_idx": 24,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "hold_id",
@@ -3731,7 +4043,7 @@
 			"wire_name": "hold_tick",
 			"namespace": [],
 			"local_name": "hold_tick",
-			"type_idx": 23,
+			"type_idx": 25,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -3754,7 +4066,7 @@
 			"wire_name": "hot_rule",
 			"namespace": [],
 			"local_name": "hot_rule",
-			"type_idx": 24,
+			"type_idx": 26,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -3773,7 +4085,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 25,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3801,7 +4113,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 27,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3825,7 +4137,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 28,
+			"type_idx": 30,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -3844,7 +4156,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 29,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3872,7 +4184,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 30,
+			"type_idx": 32,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3896,7 +4208,7 @@
 			"wire_name": "noise",
 			"namespace": [],
 			"local_name": "noise",
-			"type_idx": 31,
+			"type_idx": 33,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3920,7 +4232,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 32,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -3944,7 +4256,7 @@
 			"wire_name": "perf_report",
 			"namespace": [],
 			"local_name": "perf_report",
-			"type_idx": 33,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -3991,7 +4303,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 34,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -4015,7 +4327,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 35,
+			"type_idx": 37,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -4039,7 +4351,7 @@
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 36,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4058,7 +4370,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 37,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4082,7 +4394,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 38,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4101,7 +4413,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 39,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4125,7 +4437,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 40,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4153,7 +4465,7 @@
 			"wire_name": "status_expiry",
 			"namespace": [],
 			"local_name": "status_expiry",
-			"type_idx": 18,
+			"type_idx": 20,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4181,7 +4493,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 41,
+			"type_idx": 44,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4205,7 +4517,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 42,
+			"type_idx": 45,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4228,7 +4540,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 43,
+			"type_idx": 46,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4252,7 +4564,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 44,
+			"type_idx": 47,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4271,7 +4583,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 45,
+			"type_idx": 48,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4290,7 +4602,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 46,
+			"type_idx": 49,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4348,6 +4660,8 @@
 		"Attachment": "UmfAttachment",
 		"Authority": "UmfAuthority",
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
+		"BodyContact": "UmfBodyContact",
+		"BodyState": "UmfBodyState",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"ClientRtt": "UmfClientRtt",
@@ -4374,6 +4688,7 @@
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
+		"BodyContactWrite": "UmfBodyContactWrite",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -4384,6 +4699,7 @@
 		"UnscoredPress": "UmfUnscoredPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
+		"BodyWrite": "UmfBodyWrite",
 		"MovementWrite": "UmfMovementWrite"
 	},
 	"meta_type_map": {
@@ -4428,6 +4744,8 @@
 		"Attachment": "UmfAttachment",
 		"Authority": "UmfAuthority",
 		"AuthorityCheckSchedule": "UmfAuthorityCheckSchedule",
+		"BodyContact": "UmfBodyContact",
+		"BodyState": "UmfBodyState",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
 		"ClientRtt": "UmfClientRtt",
@@ -4454,6 +4772,7 @@
 		"Player": "UmfPlayer",
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
+		"BodyContactWrite": "UmfBodyContactWrite",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -4464,6 +4783,7 @@
 		"UnscoredPress": "UmfUnscoredPress",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
+		"BodyWrite": "UmfBodyWrite",
 		"MovementWrite": "UmfMovementWrite"
 	},
 	"typespace": [
@@ -5144,6 +5464,184 @@
 									}
 								]
 							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "body_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "other_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "pos"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "normal"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "speed"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "def_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "owner_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "launch_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "launched_at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "rot"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "spin"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "at_rest"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "frames"
+						},
+						"algebraic_type": {
+							"U32": []
 						}
 					}
 				]
@@ -6168,7 +6666,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 26.0
+							"Ref": 28.0
 						}
 					},
 					{
@@ -7064,6 +7562,52 @@
 				"elements": [
 					{
 						"name": {
+							"some": "body_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "other_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "pos"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "normal"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "speed"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "id"
 						},
 						"algebraic_type": {
@@ -7632,6 +8176,68 @@
 						},
 						"algebraic_type": {
 							"U8": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "pos"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "vel"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "rot"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "spin"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "at_rest"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "frames"
+						},
+						"algebraic_type": {
+							"U32": []
 						}
 					}
 				]

@@ -147,3 +147,13 @@ if grep -E "SCRIPT ERROR|^ERROR:" "$out_file" | grep -vE "$expected_errors"; the
   exit 1
 fi
 echo "ok"
+
+# Nothing a suite made is left at exit (0.49.0): a node made and never freed (a check that built one
+# inline) printed one warning at the end of every run, read as noise until it was 1 of many. Find
+# which suite with `-- --only=<suite>` and `--verbose`.
+echo "== nothing left over at exit =="
+if grep -E "ObjectDB instances? (was|were) leaked|Leaked instance" "$out_file"; then
+  echo "VIOLATION: the suites left objects alive at exit (listed above): a node made and not freed." >&2
+  exit 1
+fi
+echo "ok"

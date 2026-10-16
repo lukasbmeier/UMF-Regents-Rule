@@ -135,6 +135,23 @@ pub trait Genre: Sync {
     fn may_use_ability(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) -> Result<(), String> {
         Ok(())
     }
+
+    /// BODIES THE REFEREE MOVES (DECISIONS #246). `launcher_id` is about to throw body `def_id` with
+    /// `launch_body` (its kind may, the throw is inside the body's bounds): Err refuses it, with the reason
+    /// its player sees (a disc golfer too far from their lie). Every genre is asked; the first refusal stands.
+    fn may_launch(&self, _ctx: &ReducerContext, _launcher_id: u64, _def_id: u32) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// A body was launched (a player's throw, or a genre's own `launch_body_internal`): every genre hears it.
+    fn on_body_launched(&self, _ctx: &ReducerContext, _body_id: u64, _owner_id: u64, _def_id: u32) {}
+
+    /// A body hit something faster than its def's contact speed (`other_id`: an entity, 0 for the level),
+    /// as the referee saw it: a disc in the chains, a tree kicked, a person hit. Every genre hears it.
+    fn on_body_contact(&self, _ctx: &ReducerContext, _body_id: u64, _other_id: u64, _speed: f32, _pos: crate::sim::Vector3) {}
+
+    /// A body came to rest (its lie). Every genre hears it.
+    fn on_body_rest(&self, _ctx: &ReducerContext, _body_id: u64) {}
 }
 
 // EVERY GENRE THIS BUILD IS MADE OF, in `shared/game.json`'s order: build.rs declares each one's
@@ -307,4 +324,33 @@ pub fn on_ability_missed(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ab
 /// The first genre that decides what an expired status becomes; None: the status's own `then`.
 pub fn on_status_expired(ctx: &ReducerContext, row: &StatusStateRow) -> Option<u8> {
     GENRES.iter().find_map(|g| g.on_status_expired(ctx, row))
+}
+
+/// Whether every genre lets `launcher_id` throw body `def_id`: the first refusal stands.
+pub fn may_launch(ctx: &ReducerContext, launcher_id: u64, def_id: u32) -> Result<(), String> {
+    for g in GENRES {
+        g.may_launch(ctx, launcher_id, def_id).map_err(|e| format!("launch_body: {e}"))?;
+    }
+    Ok(())
+}
+
+/// A body was launched: every genre hears it.
+pub fn on_body_launched(ctx: &ReducerContext, body_id: u64, owner_id: u64, def_id: u32) {
+    for g in GENRES {
+        g.on_body_launched(ctx, body_id, owner_id, def_id);
+    }
+}
+
+/// A body hit something: every genre hears it.
+pub fn on_body_contact(ctx: &ReducerContext, body_id: u64, other_id: u64, speed: f32, pos: crate::sim::Vector3) {
+    for g in GENRES {
+        g.on_body_contact(ctx, body_id, other_id, speed, pos);
+    }
+}
+
+/// A body came to rest: every genre hears it.
+pub fn on_body_rest(ctx: &ReducerContext, body_id: u64) {
+    for g in GENRES {
+        g.on_body_rest(ctx, body_id);
+    }
 }

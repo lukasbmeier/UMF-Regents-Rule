@@ -28,6 +28,10 @@ pub mod level;
 pub mod status;
 pub mod hold;
 
+/// Bodies the referee moves (DECISIONS #246): who may throw each, how hard, how many, how long it
+/// lasts, baked from `BodyDef` content. Pure.
+pub mod body;
+
 /// Telemetry's rules (DECISIONS #244): what a performance report or feedback may hold. Pure.
 pub mod telemetry;
 

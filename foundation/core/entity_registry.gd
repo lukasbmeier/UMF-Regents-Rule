@@ -32,6 +32,11 @@ const SWEEP_INTERVAL_SEC: float = 5.0
 var local_entity_id: int = -1
 
 var _entities: Dictionary[int, Node] = {}
+## Entities built but still waiting for a row they need to bind (0.49.0): their rows go straight to them.
+## A new entity's other rows can arrive just AFTER its `entity` row (a thrown body: `movement_state`);
+## held in the buffer, which is replayed only on `register()` after the bind, they reached it only when
+## its bind gave up waiting, 2 s later, drawn at the origin until then.
+var _binding: Dictionary[int, Node] = {}
 ## entity_id -> {row: RowEvent}, in arrival order, keyed by the row the event leaves current.
 var _buffers: Dictionary[int, Dictionary] = {}
 var _buffer_touched_usec: Dictionary[int, int] = {}
@@ -57,6 +62,7 @@ func _process(delta: float) -> void:
 func register(entity_id: int, node: Node) -> void:
 	assert(node.has_method(&"receive_row_event"), "Entity node must implement receive_row_event(ev)")
 	assert(not _entities.has(entity_id), "entity %d already registered" % entity_id)
+	_binding.erase(entity_id)
 	_entities[entity_id] = node
 	node.tree_exiting.connect(unregister.bind(entity_id), CONNECT_ONE_SHOT)
 	for ev: RowEvent in take_buffered(entity_id):
@@ -65,6 +71,18 @@ func register(entity_id: int, node: Node) -> void:
 
 func unregister(entity_id: int) -> void:
 	_entities.erase(entity_id)
+	_binding.erase(entity_id)
+
+
+## An entity built and waiting for a row it needs: what arrives for it from now goes to it directly (it
+## absorbs it, and binds once nothing is missing), not into the buffer. `register()` ends the wait.
+func await_rows(entity_id: int, node: Node) -> void:
+	if _entities.has(entity_id) or not node.has_method(&"receive_row_event") or _binding.get(entity_id) == node:
+		return
+	_binding[entity_id] = node
+	node.tree_exiting.connect(func() -> void:
+		if _binding.get(entity_id) == node:
+			_binding.erase(entity_id), CONNECT_ONE_SHOT)
 
 
 func get_entity(entity_id: int) -> Node:
@@ -135,6 +153,8 @@ func _on_row_event(ev: RowEvent) -> void:
 		return
 
 	var node: Node = _entities.get(ev.entity_id)
+	if node == null:
+		node = _binding.get(ev.entity_id)
 	if node != null:
 		node.call(&"receive_row_event", ev)
 	else:
@@ -209,4 +229,5 @@ func _on_connection_state(s: SpaceTimeSync.ConnectionState) -> void:
 	if s == SpaceTimeSync.ConnectionState.DISCONNECTED or s == SpaceTimeSync.ConnectionState.FAILED:
 		_buffers.clear()
 		_buffer_touched_usec.clear()
+		_binding.clear()
 		local_entity_id = -1

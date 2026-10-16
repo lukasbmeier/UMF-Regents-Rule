@@ -141,6 +141,33 @@
 					"number": 50.0,
 					"text": "",
 					"unit": "ms"
+				},
+				{
+					"key": "foundation.body_launch_lag_s",
+					"kind": "number",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.35,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.body_snap_m",
+					"kind": "number",
+					"max": 20.0,
+					"min": 0.1,
+					"number": 2.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "foundation.body_correct_share",
+					"kind": "number",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.3,
+					"text": "",
+					"unit": ""
 				}
 			]
 		}

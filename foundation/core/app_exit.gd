@@ -32,6 +32,7 @@ static func quit(tree: SceneTree, code: int = 0) -> void:
 	# The content the game kept loaded (DECISIONS #224), let go so nothing is still held at exit.
 	HoldDef.clear_cache()
 	StatusDef.clear_cache()
+	BodyDef.clear_cache()
 	await tree.create_timer(AUDIO_RELEASE_SEC, true, false, true).timeout
 	tree.quit(code)
 

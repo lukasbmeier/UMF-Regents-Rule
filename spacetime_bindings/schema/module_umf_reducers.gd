@@ -133,6 +133,15 @@ func issue_challenge(entity_id: int, kind: int, difficulty: float) -> SpacetimeD
 func join_session(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('join_session', [session_id], [&'u64'], &'')
 
+## 0. def_id: int [br]
+## 1. launch_id: int [br]
+## 2. origin: Vector3 [br]
+## 3. vel: Vector3 [br]
+## 4. rot: Vector3 [br]
+## 5. spin: Vector3 [br]
+func launch_body(def_id: int, launch_id: int, origin: Vector3, vel: Vector3, rot: Vector3, spin: Vector3) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('launch_body', [def_id, launch_id, origin, vel, rot, spin], [&'u32', &'u32', &'vector3[f32,f32,f32]', &'vector3[f32,f32,f32]', &'vector3[f32,f32,f32]', &'vector3[f32,f32,f32]'], &'')
+
 
 func leave_session() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('leave_session', [], [], &'')
@@ -160,6 +169,11 @@ func register_authority(identity: PackedByteArray, role: int, world_id: int) -> 
 ## 0. session_id: int [br]
 func remove_bots(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('remove_bots', [session_id], [&'u64'], &'')
+
+## 0. world_id: int [br]
+## 1. contacts: Array of UmfBodyContactWrite [br]
+func report_body_contacts(world_id: int, contacts: Array[UmfBodyContactWrite]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('report_body_contacts', [world_id, contacts], [&'u32', &'UmfBodyContactWrite'], &'')
 
 ## 0. build: String [br]
 ## 1. platform: String [br]
@@ -318,6 +332,11 @@ func use_ability_as(actor_id: int, ability_id: int, target_id: int, aim: Vector3
 ## 4. view_delay_ms: int [br]
 func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_id: int, view_delay_ms: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability_seen', [ability_id, target_id, aim, predicted_id, view_delay_ms], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32', &'u32'], &'')
+
+## 0. world_id: int [br]
+## 1. writes: Array of UmfBodyWrite [br]
+func write_body_batch(world_id: int, writes: Array[UmfBodyWrite]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('write_body_batch', [world_id, writes], [&'u32', &'UmfBodyWrite'], &'')
 
 ## 0. world_id: int [br]
 ## 1. writes: Array of UmfMovementWrite [br]

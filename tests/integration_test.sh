@@ -982,6 +982,77 @@ for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND worl
 done
 assert_ok "despawn_entity $VICTIM" "(the one it hit gone)"
 
+echo "== bodies: things the referee flies (DECISIONS #246) =="
+# The module's half of milestone 13: a player's throw, bounded; nothing thrown without a referee; the
+# thrower's oldest goes past the body's limit; the module never moves a body (the referee does); the
+# referee's writes and contacts; a body's rows go with it. A real referee flying a real ball:
+# tests/bodies_playtest.sh.
+v3() { echo "{\"x\":$1,\"y\":$2,\"z\":$3}"; }
+read BMX BMY BMZ <<< "$(pos_of)"
+BODY_HAND="$(v3 "$BMX" "$(python -c "print($BMY + 1.4)")" "$BMZ")"
+BODY_FAR="$(v3 "$(python -c "print($BMX + 10.0)")" "$BMY" "$BMZ")"
+BODY_SOFT="$(v3 0.0 2.0 -10.0)"
+BODY_NOSPIN="$(v3 0.0 0.0 0.0)"
+body_count() { row_count "SELECT * FROM body_state WHERE owner_id = $MYENT"; }
+assert_rejected "launch_body 1 7 $BODY_HAND $BODY_SOFT $BODY_NOSPIN $BODY_NOSPIN" "no referee" "with no referee nothing thrown would fly: refused (said)"
+assert_eq "$(body_count)" "0" "and nothing was made"
+assert_rejected "launch_body 9999 7 $BODY_HAND $BODY_SOFT $BODY_NOSPIN $BODY_NOSPIN" "no body 9999" "a body the game does not have"
+assert_rejected "launch_body 1 7 $BODY_HAND $(v3 0.0 0.0 -30.0) $BODY_NOSPIN $BODY_NOSPIN" "faster than" "faster than the ball may be thrown (25 m/s)"
+assert_rejected "launch_body 1 7 $BODY_HAND $BODY_SOFT $BODY_NOSPIN $(v3 0.0 50.0 0.0)" "spin" "spun harder than it may be"
+assert_rejected "launch_body 1 7 $BODY_FAR $BODY_SOFT $BODY_NOSPIN $BODY_NOSPIN" "within" "from 10 m away: out of the thrower's reach"
+# The bounds are checked before the referee is looked for; the throws below need one online.
+assert_ok "offer_referee 0 $REF_CODE" "a referee for world 0 (online 5 s from its claim)"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+# Four throws at once: the anonymous referee is online for only 5 s from its claim, and a CLI call takes
+# most of a second (more on a busy server). The ball's limit is three a thrower, so one goes.
+BODY_DIR="$(mktemp -d)"
+for L in 7 8 9 10; do
+  ( spacetime call "$DB" launch_body 1 "$L" "$BODY_HAND" "$BODY_SOFT" "$BODY_NOSPIN" "$BODY_NOSPIN" > "$BODY_DIR/$L" 2>&1 ) &
+done
+wait
+for L in 7 8 9 10; do
+  check "$(grep -qiE "^error|error:" "$BODY_DIR/$L" && echo false || echo true)" "throw $L inside the bounds ($(grep -i error "$BODY_DIR/$L" | head -1))"
+done
+rm -rf "$BODY_DIR"
+assert_eq "$(body_count)" "3" "three at most: the fourth took the oldest away"
+B1=$(sql_first "SELECT entity_id FROM body_state WHERE owner_id = $MYENT" 1)
+check "$([ -n "$B1" ] && echo true || echo false)" "a body, with the thrower's own number for it"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = ${B1:-0}" 1)" "3" "an entity of kind 3 (a body)"
+assert_eq "$(sql_first "SELECT def_id FROM body_state WHERE entity_id = ${B1:-0}" 1)" "1" "which body: the ball"
+assert_eq "$(sql_first "SELECT frames FROM body_state WHERE entity_id = ${B1:-0}" 1)" "0" "no frames flown yet"
+check "$(close_to "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = ${B1:-0}" 1 | python -c "import re,sys; v=re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.stdin.read()); print(' '.join(v[:3]))")" "$BMX" "$(python -c "print($BMY + 1.4)")" "$BMZ" 0.01)" "its movement row: where it left the hand"
+check "$([ "$(row_count "SELECT * FROM entity WHERE kind = 3")" = "3" ] && echo true || echo false)" "the one taken away went with all its rows (three bodies, three entities)"
+B10="$B1"
+BODY_P0="$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $B10" 1)"
+sleep 1
+assert_eq "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $B10" 1)" "$BODY_P0" "a second of ticks: the module never moved it (no gravity of its own: the referee's)"
+# The referee's write (the admin is an authority for every world).
+BW="[{\"entity_id\":$B10,\"pos\":$(v3 1.5 0.11 -4.0),\"vel\":$(v3 0.0 0.0 0.0),\"rot\":$(v3 0.0 1.0 0.0),\"spin\":$(v3 0.0 0.0 0.0),\"at_rest\":true,\"frames\":95}]"
+out="$(spacetime call "$DB" write_body_batch 0 "$BW" 2>&1)"
+check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "the referee writes a body ($(echo "$out" | head -1))"
+assert_eq "$(sql_first "SELECT last_processed_seq FROM movement_state WHERE entity_id = $B10" 1)" "95" "its movement row: the referee's frame, its timeline"
+assert_eq "$(sql_first "SELECT grounded FROM movement_state WHERE entity_id = $B10" 1)" "true" "at rest: grounded"
+assert_eq "$(sql_first "SELECT at_rest FROM body_state WHERE entity_id = $B10" 1)" "true" "its body row: at rest"
+assert_eq "$(sql_first "SELECT frames FROM body_state WHERE entity_id = $B10" 1)" "95" "with its frames"
+out="$(spacetime call "$DB" write_body_batch 1 "$BW" 2>&1)"
+assert_eq "$(sql_first "SELECT frames FROM body_state WHERE entity_id = $B10" 1)" "95" "a write for it as if in world 1: passed over"
+BC="[{\"body_id\":$B10,\"other_id\":$MYENT,\"pos\":$(v3 1.5 1.0 -4.0),\"normal\":$(v3 0.0 0.0 1.0),\"speed\":7.5}]"
+out="$(spacetime call "$DB" report_body_contacts 0 "$BC" 2>&1)"
+check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "the referee reports a hit ($(echo "$out" | head -1))"
+assert_eq "$(sql_first "SELECT other_id FROM body_contact WHERE body_id = $B10" 1)" "$MYENT" "a row everyone in the world gets: what it hit"
+assert_eq "$(row_count "SELECT * FROM body_contact WHERE body_id = $B10")" "1" "once"
+check "$([ "$(sql_rows_anon "SELECT * FROM body_state WHERE entity_id = $B10" | wc -l | tr -d ' ')" = "1" ] && echo true || echo false)" "a body's row is public: any player draws it"
+for _ in $(seq 1 12); do [ "$(row_count "SELECT * FROM body_contact WHERE body_id = $B10")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM body_contact WHERE body_id = $B10")" "0" "a few seconds on, the contact's row is gone (heard as it is made)"
+assert_ok "despawn_entity $B10" "an authority takes a body away"
+assert_eq "$(row_count "SELECT * FROM body_state WHERE entity_id = $B10")" "0" "its body row with it"
+for B in $(sql_rows "SELECT entity_id FROM body_state WHERE owner_id = $MYENT" | awk '{print $1}'); do
+  assert_ok "despawn_entity $B" "(a ball put away)"
+done
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
+
 echo "== carry: one entity carried by another (DECISIONS #228) =="
 # The module's half of milestone 6: who may carry whom; a carried entity is CARRIED, kept at its
 # carrier every tick whatever its own client claims; put down at its carrier's feet in the status it

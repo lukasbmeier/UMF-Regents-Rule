@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/body_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="4_entdef"]
+[ext_resource type="Resource" path="res://foundation/content/character/player.tres" id="2_player"]
+[ext_resource type="Resource" path="res://foundation/content/character/humanoid.tres" id="3_humanoid"]
+
+[resource]
+script = ExtResource("1_def")
+id = 1
+display_name = "Ball"
+designer_notes = "The template's own body (DECISIONS #246): a rubber ball a player throws in the greybox (G), to try bodies the referee moves with no genre in the game."
+shape = 0
+radius_m = 0.11
+mass_kg = 0.4
+bounce = 0.55
+friction = 0.7
+linear_damp = 0.05
+angular_damp = 0.4
+launched_by = Array[ExtResource("4_entdef")]([ExtResource("2_player"), ExtResource("3_humanoid")])
+max_speed_mps = 25.0
+max_spin_rps = 40.0
+reach_m = 2.0
+max_per_owner = 3
+lifetime_s = 60.0

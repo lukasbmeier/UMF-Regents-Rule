@@ -432,6 +432,62 @@ func write_movement_batch(world_id: int, writes: Array[Dictionary]) -> ReducerRe
 	return req
 
 
+## THE REFEREE'S BODIES, one call a server tick for its world (DECISIONS #246): `writes` are
+## {entity_id, pos, vel, rot, spin, at_rest, frames}, as `BodyWrite` in server/src/module/bodies.rs.
+func write_body_batch(world_id: int, writes: Array[Dictionary]) -> ReducerRequest:
+	return _struct_batch(&"write_body_batch", &"BodyWrite", world_id, writes,
+		[[&"entity_id", TYPE_INT], [&"pos", TYPE_VECTOR3], [&"vel", TYPE_VECTOR3], [&"rot", TYPE_VECTOR3],
+		[&"spin", TYPE_VECTOR3], [&"at_rest", TYPE_BOOL], [&"frames", TYPE_INT]])
+
+
+## WHAT THE REFEREE'S BODIES HIT (DECISIONS #246): `contacts` are {body_id, other_id, pos, normal,
+## speed}, as `BodyContactWrite`.
+func report_body_contacts(world_id: int, contacts: Array[Dictionary]) -> ReducerRequest:
+	return _struct_batch(&"report_body_contacts", &"BodyContactWrite", world_id, contacts,
+		[[&"body_id", TYPE_INT], [&"other_id", TYPE_INT], [&"pos", TYPE_VECTOR3], [&"normal", TYPE_VECTOR3],
+		[&"speed", TYPE_FLOAT]])
+
+
+## A reducer taking (world_id: u32, Vec<a generated struct>): each dictionary becomes one `type_name`,
+## its `fields` set in order with their Godot types.
+func _struct_batch(reducer: StringName, type_name: StringName, world_id: int, items: Array[Dictionary], fields: Array) -> ReducerRequest:
+	var req := ReducerRequest.new()
+	req.reducer_name = reducer
+	req.sent_usec = Time.get_ticks_usec()
+	var local_id: int = _next_local_req_id
+	_next_local_req_id += 1
+	_pending[local_id] = req
+	if state != ConnectionState.CONNECTED:
+		_settle(local_id, ReducerRequest.Outcome.DISCONNECTED, "not connected")
+		return req
+	if _sdk == null:
+		_settle(local_id, ReducerRequest.Outcome.FAILED, "SDK client missing — run codegen")
+		return req
+	var wire: Array = []
+	for it: Dictionary in items:
+		var m: Resource = _new_generated_type(type_name)
+		if m == null:
+			_settle(local_id, ReducerRequest.Outcome.FAILED, "generated %s type missing — run codegen" % type_name)
+			return req
+		for f: Array in fields:
+			var key: StringName = f[0]
+			match int(f[1]):
+				TYPE_INT:
+					m.set(key, int(it[key]))
+				TYPE_FLOAT:
+					m.set(key, float(it[key]))
+				TYPE_BOOL:
+					m.set(key, bool(it[key]))
+				_:
+					m.set(key, it[key])
+		wire.append(m)
+	var elem_type: StringName = StringName(config.module_alias + String(type_name))
+	_latency.send(func() -> void:
+		var call: RefCounted = _sdk.call(&"call_reducer", String(reducer), [world_id, wire], ["u32", elem_type], &"")
+		_track_call(local_id, req, call))
+	return req
+
+
 # =============================================================================
 # INTERNAL
 # =============================================================================

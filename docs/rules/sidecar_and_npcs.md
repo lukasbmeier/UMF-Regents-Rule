@@ -32,6 +32,21 @@ SERVER_AUTHORITY worlds, the headless authority process, and the brains it runs.
   brain WEAKLY (`brain` is a WeakRef): the tree is the brain's, not the other way round. Trees and
   tasks live under `sidecar/` like every brain (hard rule 7b).
 
+## BODIES (DECISIONS #246)
+- A body (kind 3) is flown ONLY by `BodyReferee`, in both of a sidecar's jobs; the spawner never builds
+  one there (`is_not_body`, `is_bot_not_body`), so no movement component simulates it as a character,
+  and the module's tick passes bodies over.
+- `FlyingBody` is the one flight: the referee's, the thrower's prediction and the bench use the same
+  script and def. `BodyForces.apply` may read only the body's state, its def and the frame's length.
+- Its `movement_state.last_processed_seq` is its physics frames since launch; a client compares the
+  referee's frame N with its own frame N. Never write a body's movement row any other way than
+  `write_body_batch` (or `place_entity`, a teleport the referee adopts).
+- Hits come from a cast ahead along the frame's motion, not Godot's contact list (a fast hit is gone by
+  the end of the step). People are stand-ins (`AnimatableBody3D`, layer 21) at their newest row; a body
+  passes through its own thrower's for its first `CLEAR_OWNER_FRAMES`.
+- On clients a body's rows are timed by `server_ts` (`timeline_by_server_ts`), never by seq: its seq starts
+  when the referee picked it up, not at the launch.
+
 ## NPC BRAIN MEMORY (DECISIONS #135)
 - A brain's `save_state()`/`load_state()` hold DECISIONS (home, goal, target), not countdowns.
 - `npc_brain` is visible only to the world's authority; the publisher (world 0) cannot read a

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="1_level"]
 [ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://foundation/level/level_loader.gd" id="16_loader"]
 [ext_resource type="PackedScene" path="res://game/splash_screen.tscn" id="18_splash"]
 [ext_resource type="PackedScene" path="res://foundation/ui/hud.tscn" id="19_hud"]
+[ext_resource type="Script" path="res://game/greybox_thrower.gd" id="20_thrower"]
 
 [node name="GreyboxGame" type="Node3D"]
 
@@ -34,3 +35,6 @@ level_scenes = Dictionary[int, PackedScene]({
 [node name="NetDebugOverlay" parent="." instance=ExtResource("7_net")]
 
 [node name="HUD" parent="." instance=ExtResource("19_hud")]
+
+[node name="Thrower" type="Node" parent="."]
+script = ExtResource("20_thrower")

@@ -81,8 +81,10 @@ func _run_words() -> void:
 	wall.set_meta(&"entity_id", 4242)
 	var child := CollisionShape3D.new()
 	wall.add_child(child)
-	_check(NoiseFeedback.target_of(wall) == 4242 and NoiseFeedback.target_of(child) == 4242 and NoiseFeedback.target_of(Node3D.new()) == 0 and NoiseFeedback.target_of(null) == 0,
+	var other := Node3D.new()
+	_check(NoiseFeedback.target_of(wall) == 4242 and NoiseFeedback.target_of(child) == 4242 and NoiseFeedback.target_of(other) == 0 and NoiseFeedback.target_of(null) == 0,
 		"a ping at a wall or prop of an entity is about that entity; at anything else, a place")
+	other.free()
 	wall.free()
 
 

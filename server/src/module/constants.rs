@@ -88,6 +88,9 @@ pub mod entity_kind {
     /// Something you walk up to and use: a fishing spot, an ore vein, a chest. Interacting
     /// with one issues a Challenge. Genres number their own kinds from 100.
     pub const RESOURCE_NODE: u8 = 2;
+    /// Something thrown that the world's referee flies (DECISIONS #246): a disc, a ball. Its own row
+    /// (`body_state`) says which body it is.
+    pub const BODY: u8 = 3;
 }
 
 // How close a player must be to interact is a hot rule now: `hot::foundation::INTERACT_RANGE_M`

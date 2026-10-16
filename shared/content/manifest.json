@@ -11,11 +11,21 @@
 			},
 			"type": "ability"
 		},
-		"shared/content/foundation/character.json": {
-			"count": 3,
-			"hash": "50cd7d32",
+		"shared/content/foundation/body.json": {
+			"count": 1,
+			"hash": "256eda73",
 			"owner": "foundation",
 			"sources": {
+				"foundation/content/body/ball.tres": "dfc60b9d"
+			},
+			"type": "body"
+		},
+		"shared/content/foundation/character.json": {
+			"count": 4,
+			"hash": "7327c511",
+			"owner": "foundation",
+			"sources": {
+				"foundation/content/character/body.tres": "bdf8a899",
 				"foundation/content/character/humanoid.tres": "6b99d034",
 				"foundation/content/character/npc.tres": "15c3329a",
 				"foundation/content/character/player.tres": "525b7730"
@@ -42,10 +52,10 @@
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
-			"hash": "4811f45d",
+			"hash": "fb4bdf30",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "2031e93d"
+				"foundation/content/rules/foundation.tres": "29d95fb8"
 			},
 			"type": "rules"
 		},

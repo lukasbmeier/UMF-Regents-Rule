@@ -340,6 +340,29 @@ drag tasks to reorder them. A genre's tasks extend `BrainTask` (`sidecar/npc/bra
 `brain()` is the bot that runs it. Nothing to republish: a tree is the referee's, and a restarted
 referee (Play again) reads it. The add-on ships libraries for Windows, Linux and macOS only.
 
+### Bodies: things thrown that the referee flies
+A disc, a ball, an egg: something thrown that then flies by real physics is a BODY (DECISIONS #246).
+What it is is content, `BodyDef` (`foundation/content/body/`, a genre's `game/<genre>/content/body/`):
+its shape and size, mass, bounce, friction, drag in the air and on the ground, gravity, who may throw it
+and how hard, how many each, how long it lasts, its look, and what else pushes it in flight (`forces`, a
+`BodyForces` a genre writes: a disc's lift and fade). Open one in its bench (`tools/workbench/
+body_workbench.tscn`: its size by the character, its hardest throw's arc, its bounce, its limits). A
+change to "Launching" needs a bake and a publish (`tools\publish.cmd`); the rest is read by the game and
+the referee as they start.
+
+In the world a body is an entity (kind 3) the world's REFEREE flies: Play in the editor starts one when
+the game has bodies (or a judged ability). Nothing thrown flies without one, so a throw is refused while
+none is running. The thrower sees it leave the hand at once (their game flies its own copy and is kept
+near the referee's: `foundation.body_correct_share`, `foundation.body_snap_m` on the Rules page);
+everyone else sees the referee's. What a body hits fast is said to everyone (a `body_contact` row) and to
+the genre (`on_body_contact`: a disc in the chains, a ball to the face), and so is its coming to rest.
+
+To try it in the template: the greybox game, G (hold for a harder throw) throws the foundation's ball
+where you look. A genre throws its own with `BodyLaunch.throw_body` (or its own reducer calling
+`launch_body_internal`, beside `BodyLaunch.fly` for the thrower's view). Tested by the `bodies` suite, the
+integration suite's bodies section and `tools\run.cmd tests\bodies_playtest.sh` (a real referee and two
+clients at 150 ms).
+
 ### What a world hears (noises and pings)
 A noise is a row everyone in a world receives as it is made: an egg cracking, a raid, a player's
 ping. The server says what happened and where (`make_noise` in a genre's rules, numbered from 100;

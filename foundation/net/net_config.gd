@@ -88,4 +88,6 @@ class_name NetConfig extends Resource
 	&"attachment",
 	# What the world makes heard: a crack, a ping (NoiseFeedback, DECISIONS #233)
 	&"noise",
+	# Bodies the referee moves: each one's turn and rest, and what they hit (BodyComponent, DECISIONS #246)
+	&"body_state", &"body_contact",
 ]

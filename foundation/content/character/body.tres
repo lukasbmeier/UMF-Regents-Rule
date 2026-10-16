@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://foundation/entities/body.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_def")
+id = 3
+kind = 3
+scene = ExtResource("2_scene")
+display_name = "Body"
+designer_notes = "Every thrown body (DECISIONS #246): a disc, a ball. Its look, shape and flight are its BodyDef's (foundation/content/body/, a genre's), named by its body_state row; this only says which scene draws one."

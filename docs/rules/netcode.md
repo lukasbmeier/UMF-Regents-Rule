@@ -6,6 +6,11 @@ How entities are shaped and bound, what the client subscribes to, and how it con
   collision shape centred on the origin puts the body half inside the floor.
 - Entity bodies: `collision_layer = SpaceTimeEntity.ENTITY_MASK`, `collision_mask =
   SpaceTimeEntity.WORLD_MASK`. Level geometry stays on layer 1. Entities never collide with each other.
+- Bodies the referee flies (DECISIONS #246) are on layer 20 and meet layer 1, each other and layer 21 (the
+  referee's stand-ins for people); a body's entity node on a client has no collision at all. Layers 5-19
+  are left to the games (Fowl Play's hens' kin layer is 6).
+- An entity still binding is handed its rows directly (`EntityRegistry.await_rows`, DECISIONS #247); only an
+  entity not yet built has its rows buffered.
 - A component whose table may legitimately have NO rows for an entity (a collection) lists it in
   `optional_tables()` as well as `required_tables()`, or every spawn waits out `bind_timeout_sec`.
 - `InputFrame` and `movement_state` changed shape (`epoch`, `correction_epoch`, `move_state`,

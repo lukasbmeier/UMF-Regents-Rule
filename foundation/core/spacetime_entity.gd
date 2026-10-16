@@ -145,9 +145,11 @@ func bind(p_entity_id: int, p_world_id: int, p_owner: PackedByteArray,
 	if _missing_tables().is_empty():
 		_finish_bind()
 	else:
-		# Wait for the stragglers rather than binding components to nothing.
+		# Wait for the stragglers rather than binding components to nothing; they come to us as they
+		# arrive, not into the registry's buffer (which only a bound entity is given).
 		_bind_timer = get_tree().create_timer(bind_timeout_sec)
 		_bind_timer.timeout.connect(_on_bind_timeout)
+		EntityRegistry.await_rows(entity_id, self)
 
 
 ## Reconnect path: the SDK deletes every row and re-inserts it, and the spawner recognises that

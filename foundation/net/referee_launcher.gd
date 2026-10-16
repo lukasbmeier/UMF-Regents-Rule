@@ -134,11 +134,18 @@ func start() -> void:
 		print("[Referee] started the referee for world %d (pid %d)" % [world, started_pid]))
 
 
-## Whether any ability in this game's content is judged by a referee.
+## Whether this game needs a referee: an ability in its content is judged by one, or it has bodies the
+## referee flies (DECISIONS #246): a genre's own, or the foundation's ball in a game with no genre (the
+## template's greybox, where G throws it). A game whose genres have none starts no referee for the ball.
 static func wants_referee() -> bool:
 	for d: ContentDef in ContentLibrary.items(&"ability"):
 		var a: AbilityDef = d as AbilityDef
 		if a != null and a.judged:
+			return true
+	var no_genres: bool = Genres.listed().is_empty()
+	for e: Dictionary in ContentLibrary.load_all():
+		var b: BodyDef = e["def"] as BodyDef
+		if b != null and (no_genres or String(e["owner"]) != ContentLibrary.FOUNDATION):
 			return true
 	return false
 

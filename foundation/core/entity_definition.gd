@@ -224,3 +224,17 @@ func body_capsule() -> CapsuleShape3D:
 		if collision_height > 0.0:
 			out.height = maxf(collision_height, out.radius * 2.0)
 	return out
+
+
+## The foundation's own kinds (`add_foundation_kinds`).
+const FOUNDATION_KINDS: Array[String] = ["res://foundation/content/character/body.tres"]
+
+
+## THE KINDS EVERY GAME DRAWS WHATEVER ITS SCENE LISTS: a thrown body (kind 3, DECISIONS #246), whose
+## look is its BodyDef's. A game's own definition for the kind (listed, or a genre's) is kept. Boot
+## calls it before registering a game's definitions.
+static func add_foundation_kinds(defs: Array[EntityDefinition]) -> void:
+	for path: String in FOUNDATION_KINDS:
+		var d: EntityDefinition = load(path) as EntityDefinition
+		if d != null and not defs.any(func(x: EntityDefinition) -> bool: return x != null and x.kind == d.kind):
+			defs.append(d)

@@ -390,6 +390,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     expire_requests(ctx);
     prune_noise(ctx);
     prune_perf(ctx);
+    prune_bodies(ctx);
     Ok(())
 }
 
@@ -477,4 +478,5 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.lobby_member().entity_id().delete(entity_id);
     forget_status(ctx, entity_id);
     forget_holds(ctx, entity_id);
+    forget_body(ctx, entity_id);
 }

@@ -117,7 +117,7 @@ AGENTS.md  docs/            this file; ARCHITECTURE, HANDBOOK, DECISIONS, CHANGE
 foundation/                 THE CORE: content/ (ContentDef, ContentLibrary, AbilityDef, the content) · core/ (SignalBus, EntityRegistry, EntitySpawner, SpaceTimeEntity,
                             SpaceTimeComponent, Settings, AppExit) · net/ (SpaceTimeSync, NetConfig,
                             InterestManager, SchemaFingerprint) · components/ · sim/ (MovementModel,
-                            InputFrame, ChallengeModel, LevelBake) · anim/ · held/ · camera/ · level/ ·
+                            InputFrame, ChallengeModel, LevelBake) · physics/ (FlyingBody, BodyLaunch) · anim/ · held/ · camera/ · level/ ·
                             ui/ · audio/ · debug/
 game/                       THE GAME: <genre>/ (each genre's client half, its tests in tests/) ·
                             characters/ + anim/ (the reference humanoid's looks and animations; its definition is foundation/content/character/humanoid.tres) ·

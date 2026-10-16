@@ -34,6 +34,7 @@ const SUITES: PackedStringArray = [
 	"interaction",
 	"action",
 	"referee",
+	"bodies",
 	"carry",
 	"mouse_capture",
 	"connect",

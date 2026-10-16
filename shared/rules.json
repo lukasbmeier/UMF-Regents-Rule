@@ -14,7 +14,8 @@
     "leave_session": { "burst": 4, "per_sec": 0.25 },
     "ping": { "burst": 2, "per_sec": 0.34 },
     "report_perf": { "burst": 3, "per_sec": 0.5 },
-    "send_feedback": { "burst": 3, "per_sec": 0.05 }
+    "send_feedback": { "burst": 3, "per_sec": 0.05 },
+    "launch_body": { "burst": 4, "per_sec": 2 }
   },
   "sessions": [
     {

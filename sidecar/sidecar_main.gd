@@ -40,8 +40,13 @@ extends Node
 ## way Boot does, so the sidecar knows the game's kinds without its scene naming a genre.
 @export var load_genres: bool = true
 
+## `entity_kind::BODY` (server/src/module/constants.rs).
+const BODY_KIND: int = 3
+
 var world: SimWorld = null
 var referee: ActionReferee = null
+## Flies the world's bodies (DECISIONS #246), in both jobs.
+var bodies: BodyReferee = null
 ## Its world's rounds, written down (DECISIONS #235); off with `--no-record`.
 var recorder: SessionRecorder = null
 ## Started with `--referee`: judging only.
@@ -60,8 +65,8 @@ func _ready() -> void:
 	# A referee is the authority for the bots it drives, and builds nothing else.
 	cfg.authority_process = true
 	EntitySpawner.spawning = true
-	if referee_only:
-		EntitySpawner.spawn_filter = is_bot
+	# A body is flown by the body referee, never simulated as a character (DECISIONS #246).
+	EntitySpawner.spawn_filter = is_bot_not_body if referee_only else is_not_body
 	if cfg.token_path.is_empty() or cfg.token_path == NetConfig.new().token_path:
 		cfg.token_path = "user://sidecar_token.dat"
 	var world_id: int = _world_from_cli()
@@ -74,6 +79,11 @@ func _ready() -> void:
 	referee.name = "Referee"
 	referee.world_id = world_id
 	world.add_child(referee)
+	bodies = BodyReferee.new()
+	bodies.name = "Bodies"
+	bodies.world_id = world_id
+	bodies.tick_hz = float(cfg.server_tick_hz)
+	world.add_child(bodies)
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	if load_genres:
@@ -93,6 +103,7 @@ func _ready() -> void:
 	for defn: EntityDefinition in defs:
 		EntitySpawner.register_definition(defn)
 		referee.know(defn)
+		bodies.know(defn)
 		if recorder != null:
 			recorder.kind_names[defn.kind] = defn.display_name
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
@@ -105,7 +116,7 @@ func _ready() -> void:
 	if not InterestManager.extra_tables.has(&"npc_brain"):
 		InterestManager.extra_tables.append(&"npc_brain")
 	# What it judges, and the level it judges against (DECISIONS #226).
-	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player"]:
+	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player", &"body_state"]:
 		if not InterestManager.extra_tables.has(t):
 			InterestManager.extra_tables.append(t)
 	InterestManager.world_id = world_id
@@ -159,6 +170,19 @@ func _value(prefix: String) -> String:
 ## A BOT: an entity with an `npc_brain` row and no player row (DECISIONS #230). A referee drives these.
 static func is_bot(entity_id: int, _kind: int = -1) -> bool:
 	return SpaceTimeSync.get_row(&"npc_brain", entity_id) != null and SpaceTimeSync.get_row(&"player", entity_id) == null
+
+
+## A BODY (kind 3, DECISIONS #246): flown by the body referee, so no entity node simulates it.
+static func is_body(entity_id: int, kind: int = -1) -> bool:
+	return kind == BODY_KIND or SpaceTimeSync.get_row(&"body_state", entity_id) != null
+
+
+static func is_not_body(entity_id: int, kind: int = -1) -> bool:
+	return not is_body(entity_id, kind)
+
+
+static func is_bot_not_body(entity_id: int, kind: int = -1) -> bool:
+	return is_bot(entity_id, kind) and not is_body(entity_id, kind)
 
 
 ## A bot's brain row came (a bot added to the world after its entity row): a referee builds it now; its

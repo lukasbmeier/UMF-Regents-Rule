@@ -90,7 +90,72 @@ baked from the level's collision per body size, and act through the authority's 
 8 (a world per match) is not built yet: one world plays one match at a time.
 
 Milestones 1-4 are the chase and the nest; 5-6 the hunt; 7-8 the match; 9-12 the polish a first human
-playtest needs (12 before it, per A5).
+playtest needs (12 before it, per A5). Milestones 9-12 were built in 0.44.0-0.45.0 (noise and pings,
+friendly collision as a kin layer, first-person comfort, recording).
+
+## The next milestones (DiscGolf, game 3: `docs/discgolf/DISCGOLF_DESIGN.md` in that repo)
+Disc golf is the first game whose world has things in it that the SERVER moves: discs and items in
+flight and at rest, hitting trees, each other and people. Players still move themselves (Tier A, as
+Fowl Play's farm); the world's referee moves the things.
+
+| # | System | Adds | Proves it |
+|---|---|---|---|
+| 13 ✔ 0.49.0 | **Bodies the referee moves** (projectiles and physics) | `BodyDef` content; a thrown thing is an ENTITY (kind 3, `body`) with a `movement_state` row like anyone's and a `body_state` side row (its spin, its turn, at rest); `launch_body` (a player's, bounded) and `launch_body_internal` (a genre's); the referee flies each one as a `RigidBody3D` (`FlyingBody`) against the level, the other bodies and stand-ins for the people (`write_body_batch`, `report_body_contacts`); the thrower's game flies its own at once and is corrected toward the referee's | a ball thrown at 150 ms flies on the thrower's screen from the click and lands where the referee says, a second client draws it smoothly, it hits a wall, a person and another ball |
+| 14 | **A camera on any entity** | the follow rig for an entity you do not control (your disc in flight); spectating reuses it | the flight cam follows a disc and comes back |
+| 15 | **The server pushes people; statuses from collisions** | `push` rows a client applies inside its own prediction, the module widening that entity's bound for those frames; a body's contact may set a status (knocked down) | a blower pushes a player who is never corrected for it |
+| 16 | **Items** | pick one up, hold one, use it up; thrown or placed ones fly on 13 | a pad thrown, armed, launching what touches it |
+| 17 | **Joining between rounds** | a player who arrives mid-round joins at the next one | a drop-in at the next tee |
+Beside them: the aim-and-charge input (Fishing's cast, made the foundation's) and a level change with a
+short fade, everyone put at the new level's start.
+
+## Milestone 13: bodies the referee moves (the design)
+**A thrown thing is an entity.** `entity` (kind 3, `entity_kind::BODY`), `movement_state` (its place and
+velocity: written by the referee, so every client's spawner, interest, interpolation, spectate and the
+round's recording take it as they take anyone), and a side row `body_state {entity_id, world_id, def_id,
+owner_id, launch_id, launched_at, rot, spin, at_rest}` (no table changes shape: rule 1). Its look is its
+`BodyDef`'s, not a character's: one `EntityDefinition` (`body.tres`, `body.tscn`) draws every body.
+- **Content**: `BodyDef` (`foundation/content/body_def.gd`, its bench `tools/workbench/body_workbench.tscn`):
+  its shape and size, mass, bounce, friction, damping, gravity scale, the fastest it may be launched and
+  spun, how far from its launcher it may start, when it is at rest, how long it lasts, how many one
+  launcher may have, who may launch it, its look, and its FORCES (`BodyForces`, a resource a genre
+  extends: a disc's lift, turn and fade). The module compiles in what it checks (`body.rs`, from the bake).
+- **Launching** (rule 13: the client sends the throw, the server bounds it, as Tier A bounds a step):
+  `launch_body(def_id, launch_id, origin, vel, spin)`: the launcher's kind may launch it, the origin is
+  within its reach of where the server last had the launcher, the speed and spin within the def's, at the
+  rate `rules.json` allows, with a referee online (a body no referee moves would hang in the air: said,
+  not guessed), and the genre agrees (`may_launch`). Over `max_per_owner`, the launcher's oldest goes. A
+  genre launches its own with `launch_body_internal` (a disc thrown from the lie, its speed from the
+  disc's numbers). The genre hears every launch (`on_body_launched`).
+- **The referee flies them** (`sidecar/physics/body_referee.gd`, in both of a sidecar's jobs): a
+  `FlyingBody` (`foundation/physics/flying_body.gd`: a `RigidBody3D` built from the def, its forces
+  applied every physics frame) per body, from its rows, against the level it loaded, the other bodies,
+  and STAND-INS for the people (a capsule per person, where their newest row puts them). Each server tick
+  one `write_body_batch` (movement and body rows of every body that moved; `last_processed_seq` is its
+  physics frames since launch, so every client's timeline is the referee's own 60 Hz). A body slower than
+  its def's rest speed for its rest time is at rest: written once, and it stops costing anything. A
+  contact faster than the def's contact speed is reported (`report_body_contacts`: a row everyone gets
+  for a few seconds, what it hit, where, how fast) and the genre hears it (`on_body_contact`); so is a
+  body coming to rest (`on_body_rest`). A body the server moves (`place_entity`: a disc put back at its
+  lie) is taken from its row.
+- **The thrower sees it at once** (`BodyComponent`, `BodyLaunch`): the thrower's game launches the same
+  `FlyingBody` locally the moment it throws, with the same def and forces, and draws that; when the
+  referee's rows come it compares each with its own flight at the same frame since launch and moves its
+  flight toward them (a share of the difference each row, all of it beyond a snap distance: hot rules),
+  so the two agree without a pop. At rest, it glides to where the referee put it. Everyone else
+  interpolates the rows (and the turn, from `body_state`), behind as they see everyone.
+- **What it does not do**: push people (15: a body hits a person and the genre hears it; nobody is
+  moved), let a client say where a body landed, or run in a SIDECAR world's own entity simulation (the
+  body referee is the one place bodies move, in both kinds of world).
+
+As built (0.49.0, DECISIONS #246): as designed, with three findings from its tests. Godot reports only the
+contacts still there after a physics step, and a fast hit bounces clear within it, so a body finds what it
+hits by casting its own shape along each frame's motion. Godot's physics has no rolling resistance, so a
+body has a `ground_drag` while it touches something. `Engine.time_scale` makes physics frames longer
+rather than more of them, so the physics tests run in real time. Its playtest found two more: a new
+entity's rows that came just after its `entity` row waited 2 s for its bind to give up (DECISIONS #247,
+every entity's, fixed in the registry), and a body's rows placed on its watchers' timeline by seq sat a
+referee's round trip early (they are placed by when the server wrote them). Proved by the `bodies` suite, the
+integration suite and `tests/bodies_playtest.sh` (a real referee, a thrower and a watcher at 150 ms).
 
 ## Owner decisions in force (2026-10-07)
 Lag compensation capped at 150 ms, favouring the attacker; hosting a friend-hosted bundle first; the
