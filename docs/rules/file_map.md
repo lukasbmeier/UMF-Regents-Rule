@@ -84,7 +84,8 @@ server/src/challenge.rs        pure challenge validators; GDScript twin + golden
 server/src/module/             tables + reducers, one file per system (mod.rs re-exports them) — wasm32-gated (DECISIONS #27)
 server/src/game/               THE GENRE LAYER, server half. Foundation never imports from here
 game/fishing/                  THE GENRE LAYER, client half: fisher.tscn, HUD, play_local.sh
-foundation/camera/             CameraRig + first_person.tres / third_person.tres
+foundation/camera/             CameraRig (and `watch`) + first_person.tres / third_person.tres · FollowCamConfig + follow_cam.tres · FlightCam (DECISIONS #248)
+foundation/input/              ChargeMeter · AimCharge (DECISIONS #249); foundation/ui/charge_bar.gd draws one
 foundation/anim/               AnimationSet · AnimationClipRef · AnimationTreeBuilder · AnimationDriverComponent
 sidecar/                       SERVER-ONLY: sidecar_main · sim_world · authority_sync · sidecar_net_config.tres
 sidecar/npc/                   NpcBrain (and its behaviour tree: run_tree) · BrainTask · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd

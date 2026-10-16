@@ -38,10 +38,24 @@ var _own_config: CameraRigConfig = null
 var _carry_swapped: bool = false
 ## Where the head bob is in the stride (radians).
 var _bob_phase: float = 0.0
+## WHAT IT WATCHES INSTEAD OF ITS PLAYER (DECISIONS #248: a thrown disc), how, and where the camera is
+## on its way behind it; and the view it is gliding back from once it stops (`return_s`).
+var _watch: Node3D = null
+var _watch_cfg: FollowCamConfig = null
+var _watch_pos: Vector3 = Vector3.ZERO
+var _watch_dir: Vector3 = Vector3.FORWARD
+var _watch_last: Vector3 = Vector3.ZERO
+var _watch_fresh: bool = false
+var _return_from: Transform3D = Transform3D.IDENTITY
+var _return_fov: float = 0.0
+var _return_left: float = 0.0
+var _return_cfg: FollowCamConfig = null
 
 ## How far the view rises and falls in a stride, and how many strides a metre.
 const BOB_M: float = 0.035
 const BOB_STRIDES_PER_M: float = 0.9
+## How it watches what is not its player, unless told otherwise.
+const DEFAULT_FOLLOW: FollowCamConfig = preload("res://foundation/camera/follow_cam.tres")
 
 
 func _ready() -> void:
@@ -83,6 +97,46 @@ func follow(target: SpaceTimeEntity) -> void:
 ## Whom it follows (null: its own entity).
 func following() -> SpaceTimeEntity:
 	return _follow if is_instance_valid(_follow) else null
+
+
+## WATCH SOMETHING THAT IS NOT A PLAYER (FOUNDATION_SYSTEMS milestone 14, DECISIONS #248): a thrown
+## disc, a ball, someone else's throw. The camera goes behind `target` along where it is going, above
+## it, trailing it, looking at it (`cfg`, or the foundation's `follow_cam.tres`), until `stop_watching`
+## (or `target` goes): then it glides back to the player's own view. The player's look is untouched
+## while it watches: they come back to where they were looking. Presentation only (hard rule 11).
+func watch(target: Node3D, cfg: FollowCamConfig = null) -> void:
+	if target == null:
+		stop_watching()
+		return
+	_watch_cfg = cfg if cfg != null else DEFAULT_FOLLOW
+	if _watch == null and _camera != null and _camera.is_inside_tree():
+		_watch_pos = _camera.global_position
+		_watch_fresh = false
+	_watch = target
+	_watch_last = target.global_position
+	_return_left = 0.0
+
+
+## Back to the player's own view, gliding there over the follow's `return_s`.
+func stop_watching() -> void:
+	if _watch == null:
+		return
+	_watch = null
+	if _camera != null and _camera.is_inside_tree():
+		_return_from = _camera.global_transform
+		_return_fov = _camera.fov
+		_return_cfg = _watch_cfg
+		_return_left = _watch_cfg.return_s if _watch_cfg != null else 0.0
+
+
+## What it watches (null: its player, or whom it follows).
+func watching() -> Node3D:
+	return _watch if is_instance_valid(_watch) else null
+
+
+## Whether it is gliding back from watching something.
+func returning() -> bool:
+	return _return_left > 0.0
 
 
 func _process(delta: float) -> void:
@@ -184,6 +238,50 @@ func _bob(delta: float) -> Vector3:
 
 
 func _apply(delta: float) -> void:
+	if _watch != null and not is_instance_valid(_watch):
+		stop_watching()
+	if watching() != null:
+		_apply_watch(delta)
+		return
+	_apply_own(delta)
+	if _return_left > 0.0 and _camera != null and _camera.is_inside_tree():
+		var total: float = _return_cfg.return_s if _return_cfg != null else 0.0
+		_return_left = maxf(0.0, _return_left - delta)
+		var w: float = 1.0 - (_return_left / total if total > 0.0 else 0.0)
+		w = w * w * (3.0 - 2.0 * w)
+		var own: Transform3D = _camera.global_transform
+		_camera.global_transform = _return_from.interpolate_with(own, w)
+		_camera.fov = lerpf(_return_fov, _camera.fov, w)
+
+
+## Behind what it watches, along where it is going, looking at it.
+func _apply_watch(delta: float) -> void:
+	var c: FollowCamConfig = _watch_cfg if _watch_cfg != null else DEFAULT_FOLLOW
+	var at: Vector3 = _watch.get_global_transform_interpolated().origin if _watch.is_inside_tree() else _watch.global_position
+	var vel: Vector3 = (_watch as RigidBody3D).linear_velocity if _watch is RigidBody3D 		else (at - _watch_last) / maxf(delta, 1e-4)
+	_watch_last = at
+	var flat := Vector3(vel.x, 0.0, vel.z)
+	if flat.length() > c.turn_from_speed:
+		_watch_dir = flat.normalized()
+	var desired: Vector3 = at - _watch_dir * c.distance + Vector3.UP * c.height
+	if not _watch_fresh:
+		_watch_fresh = true
+		if _watch_pos == Vector3.ZERO:
+			_watch_pos = desired
+	_watch_pos = _watch_pos.lerp(desired, 1.0 - exp(-c.follow_rate * delta))
+	if _camera == null:
+		return
+	var look: Transform3D = Transform3D(Basis.IDENTITY, _watch_pos)
+	var to: Vector3 = at - _watch_pos
+	if to.length() > 0.01:
+		# Straight down on it (a follow with no distance), "up" is the way it was going.
+		look = look.looking_at(at, Vector3.UP if absf(to.normalized().dot(Vector3.UP)) < 0.99 else _watch_dir)
+	_camera.global_transform = look
+	if c.fov > 0.0:
+		_camera.fov = c.fov
+
+
+func _apply_own(delta: float) -> void:
 	if _entity != null and _entity.is_local_authority and _first_person_done:
 		follow_carrying(carrying(_entity.entity_id))
 	_camera.fov = fov_for(config)

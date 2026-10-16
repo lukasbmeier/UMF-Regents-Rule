@@ -54,6 +54,7 @@ const SUITES: PackedStringArray = [
 	"lobby",
 	"levels",
 	"camera",
+	"aim",
 	"animation",
 	"character",
 	"pose",

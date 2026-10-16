@@ -81,6 +81,9 @@ var _face_holds: Dictionary[StringName, bool] = {}
 ## Reasons the player is held still (`hold_still`): a page over the game (the lobby screen) that
 ## the movement keys must not walk them out from under.
 var _still_holds: Dictionary[StringName, bool] = {}
+## Who has borrowed the mouse's up and down, and what it has added up to since last taken (DECISIONS #249).
+var _y_borrows: Dictionary[StringName, bool] = {}
+var _borrowed_y: float = 0.0
 
 
 ## No tables: this component produces input, it does not mirror server state.
@@ -163,6 +166,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	var sens: float = mouse_sensitivity * look_scale * Settings.look_sensitivity()
 	var up: float = -1.0 if Settings.invert_look() else 1.0
 	_look_yaw = wrapf(_look_yaw - motion.relative.x * sens, -PI, PI)
+	if not _y_borrows.is_empty():
+		# Lent to a genre (a throw's release angle): the view holds its pitch.
+		_borrowed_y -= motion.relative.y * sens * up
+		return
 	var limit: float = deg_to_rad(pitch_limit_deg)
 	_look_pitch = clampf(_look_pitch - motion.relative.y * sens * up, -limit, limit)
 
@@ -245,6 +252,26 @@ func hold_facing(reason: StringName, on: bool) -> void:
 
 func is_facing_held() -> bool:
 	return not _face_holds.is_empty()
+
+
+## LEND THE MOUSE'S UP AND DOWN (DECISIONS #249): while any reason holds it, moving the mouse up and
+## down does not tilt the view but adds up for whoever borrowed it (`take_borrowed_y`: radians, as the
+## view would have turned, up positive). Side to side still turns the view. A throw's release angle is
+## set this way while it charges. Each holder releases only its own reason.
+func borrow_mouse_y(reason: StringName, on: bool) -> void:
+	if on:
+		_y_borrows[reason] = true
+	else:
+		_y_borrows.erase(reason)
+	if _y_borrows.is_empty():
+		_borrowed_y = 0.0
+
+
+## What the mouse's up and down added since the last call, while lent (radians, up positive).
+func take_borrowed_y() -> float:
+	var y: float = _borrowed_y
+	_borrowed_y = 0.0
+	return y
 
 
 ## HOLD THE PLAYER STILL while a page covers the game (DECISIONS #182: the lobby screen): the

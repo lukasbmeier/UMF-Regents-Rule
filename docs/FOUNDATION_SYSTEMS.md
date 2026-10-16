@@ -101,12 +101,18 @@ Fowl Play's farm); the world's referee moves the things.
 | # | System | Adds | Proves it |
 |---|---|---|---|
 | 13 ✔ 0.49.0 | **Bodies the referee moves** (projectiles and physics) | `BodyDef` content; a thrown thing is an ENTITY (kind 3, `body`) with a `movement_state` row like anyone's and a `body_state` side row (its spin, its turn, at rest); `launch_body` (a player's, bounded) and `launch_body_internal` (a genre's); the referee flies each one as a `RigidBody3D` (`FlyingBody`) against the level, the other bodies and stand-ins for the people (`write_body_batch`, `report_body_contacts`); the thrower's game flies its own at once and is corrected toward the referee's | a ball thrown at 150 ms flies on the thrower's screen from the click and lands where the referee says, a second client draws it smoothly, it hits a wall, a person and another ball |
-| 14 | **A camera on any entity** | the follow rig for an entity you do not control (your disc in flight); spectating reuses it | the flight cam follows a disc and comes back |
+| 14 ✔ 0.50.0 | **A camera on any entity** | the follow rig for an entity you do not control (your disc in flight); spectating reuses it | the flight cam follows a disc and comes back |
 | 15 | **The server pushes people; statuses from collisions** | `push` rows a client applies inside its own prediction, the module widening that entity's bound for those frames; a body's contact may set a status (knocked down) | a blower pushes a player who is never corrected for it |
 | 16 | **Items** | pick one up, hold one, use it up; thrown or placed ones fly on 13 | a pad thrown, armed, launching what touches it |
 | 17 | **Joining between rounds** | a player who arrives mid-round joins at the next one | a drop-in at the next tee |
-Beside them: the aim-and-charge input (Fishing's cast, made the foundation's) and a level change with a
-short fade, everyone put at the new level's start.
+Beside them: the aim-and-charge input (Fishing's cast, made the foundation's: 0.50.0, DECISIONS #249) and a
+level change with a short fade, everyone put at the new level's start.
+
+As built, milestone 14 (0.50.0, DECISIONS #248) is `CameraRig.watch` with a `FollowCamConfig`, and a
+`FlightCam` that follows a throw from the hand to its rest and comes back (or at once when the player
+runs), off by the player's setting; with the aim and charge (`AimCharge`, `ChargeMeter`, `ChargeBar`, the
+mouse's up and down lent for a release angle). Proved by the `aim` suite and `tests/bodies_playtest.sh`
+(the flight cam on a real throw: from the click, through the body taking over, holding at rest, back).
 
 ## Milestone 13: bodies the referee moves (the design)
 **A thrown thing is an entity.** `entity` (kind 3, `entity_kind::BODY`), `movement_state` (its place and

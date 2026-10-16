@@ -357,11 +357,25 @@ near the referee's: `foundation.body_correct_share`, `foundation.body_snap_m` on
 everyone else sees the referee's. What a body hits fast is said to everyone (a `body_contact` row) and to
 the genre (`on_body_contact`: a disc in the chains, a ball to the face), and so is its coming to rest.
 
-To try it in the template: the greybox game, G (hold for a harder throw) throws the foundation's ball
+To try it in the template: the greybox game, hold G and let go to throw the foundation's ball
 where you look. A genre throws its own with `BodyLaunch.throw_body` (or its own reducer calling
 `launch_body_internal`, beside `BodyLaunch.fly` for the thrower's view). Tested by the `bodies` suite, the
 integration suite's bodies section and `tools\run.cmd tests\bodies_playtest.sh` (a real referee and two
 clients at 150 ms).
+
+### Aiming, charging and the flight cam
+A throw that is held to charge and let go (a disc, a ball, a cast) is `AimCharge` (`foundation/input/`):
+add one to the game scene and give it its keys (`actions`: each a style, a disc golfer's backhand on one
+and forehand on another), how long a full charge takes and where overcharging starts. While a key is
+held the body faces where the player looks and moving the mouse up and down sets the release angle (the
+view's tilt is held); letting go says what was thrown (`released`), and the genre throws it
+(`BodyLaunch.throw_body`, its own reducer). `ChargeBar` (`foundation/ui/`) draws the charge: put one in the
+HUD and point it at the AimCharge; give it the band you call good.
+
+`FlightCam` (`foundation/camera/`) makes the camera follow what was thrown: call `follow_throw` as you
+throw. It follows the ball from the hand, holds on it a moment where it lands, and comes back (at once
+if the player runs). How it frames it is a `FollowCamConfig` (`foundation/camera/follow_cam.tres`);
+players turn it off in Settings, Game, "Follow what you throw". In the greybox: hold G and let go.
 
 ### What a world hears (noises and pings)
 A noise is a row everyone in a world receives as it is made: an egg cracking, a raid, a player's

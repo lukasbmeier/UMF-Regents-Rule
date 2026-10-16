@@ -27,6 +27,9 @@ The movement model, Tier A trust, gaits, facing and the input path. Moved verbat
   `move_dir` is relative to the heading, never to the camera.
 
 ## INPUT AND AIMING RULES (DECISIONS #89-#93)
+- The mouse's up and down may be LENT (`LocalInputComponent.borrow_mouse_y`, DECISIONS #249): while any
+  reason holds it the view's pitch does not change and the borrower takes the turn (`take_borrowed_y`).
+  Each holder releases only its own reason, as `hold_facing`.
 - `MouseCapture` (autoload) is the ONLY thing that writes `Input.mouse_mode`. Gameplay states an
   intent (`want_capture`); Escape, clicks and focus decide the rest. Never set the mode directly.
 - The interaction ray starts at the camera and is extended by the camera's setback from the

@@ -369,6 +369,9 @@ func _define_foundation() -> void:
 	define(&"third_person_carrying", GAME, "Third person while carrying", Kind.TOGGLE, true, {
 		"tooltip": "A first-person character carrying someone (the wolf with a hen) sees itself from behind until it puts them down.",
 	})
+	define(&"flight_cam", GAME, "Follow what you throw", Kind.TOGGLE, true, {
+		"tooltip": "The camera follows a thrown disc or ball through the air, and comes back as it lands or you move. Off: it stays with you.",
+	})
 	define(&"splash_at_start", GAME, "Splash screen at start", Kind.TOGGLE, true, {
 		"tooltip": "The game's name and its tips for a few seconds before connecting. Off: straight to the connect screen (handy while testing).",
 	})

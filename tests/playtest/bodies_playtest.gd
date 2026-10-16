@@ -58,6 +58,13 @@ func _throw(me: SpaceTimeEntity) -> void:
 	var launch_id: int = BodyLaunch.throw_body(me.get_parent(), def, origin, THROW_VEL)
 	var mine: FlyingBody = me.get_parent().get_node_or_null(NodePath("Throw%d" % launch_id)) as FlyingBody
 	_check(mine != null and BodyLaunch.waiting() == 1, "it leaves the hand on the throw: the thrower's own flight, this frame")
+	var thrower: GreyboxThrower = get_node_or_null(^"../Game/Thrower") as GreyboxThrower
+	var cam: FlightCam = thrower.flight_cam if thrower != null else null
+	if cam != null:
+		cam.obey_setting = false
+	var rig: CameraRig = me.get_node_or_null(^"CameraRig") as CameraRig
+	_check(cam != null and cam.follow_throw(launch_id, mine) and rig != null and rig.watching() == mine,
+		"the flight cam follows it from the throw (DECISIONS #248)")
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_check(mine != null and mine.global_position.x > origin.x, "and it is moving already, before the server has heard")
@@ -66,6 +73,7 @@ func _throw(me: SpaceTimeEntity) -> void:
 	if body == null:
 		return
 	_check(body.flight() == mine and BodyLaunch.waiting() == 0, "and takes the thrower's flight over (no second ball)")
+	_check(rig != null and rig.watching() == mine and cam.body_id() == body.entity_id, "the flight cam is on its body now, the same flight")
 	var max_gap: float = 0.0
 	var deadline: int = Time.get_ticks_msec() + 15_000
 	while not body.at_rest and Time.get_ticks_msec() < deadline:
@@ -77,6 +85,9 @@ func _throw(me: SpaceTimeEntity) -> void:
 	_check(max_gap < 0.3, "at 150 ms the two flights stayed within %.2f m of each other through the wall's bounce" % max_gap)
 	_check(body.at_rest, "it came to rest")
 	await get_tree().create_timer(0.6).timeout   # the settle glide
+	_check(rig.watching() == (body.entity.get_node(^"Visual") as Node3D), "at rest, the flight cam holds on where it lies")
+	await get_tree().create_timer(cam.hold_s + 0.2).timeout
+	_check(not cam.is_following() and rig.watching() == null, "and then the camera comes back to the thrower")
 	var drawn: Vector3 = (body.entity.get_node(^"Visual") as Node3D).global_position
 	var server: Vector3 = (body.entity as Node3D).global_position
 	print("   at rest: drawn %s, the referee's %s" % [drawn, server])

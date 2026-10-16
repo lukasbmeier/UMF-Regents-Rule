@@ -16,6 +16,12 @@ What presentation may and may not decide, the foliage and lake shaders, what the
 - Retuning `timing_half_width` regenerates `shared/golden/challenge/challenge_timing.json` with
   the NumPy generator; presses are multiples of the half-width so cases keep their intent.
 
+## WATCHING SOMETHING ELSE (DECISIONS #248)
+- `CameraRig.watch` is presentation: it never changes the player's look, so the view comes back to where
+  they were looking. A `FlightCam` decides when (a throw, its rest, the player running); a genre never
+  places the camera itself.
+- Whatever is watched may be freed at any time (a body despawned): the rig stops watching on its own.
+
 ## THE NATURE KIT (DECISIONS #137, #141, #146)
 - Every leaf, petal and grass blade is `nature_foliage.gdshader`, swapped in at import by
   `quaternius_import.gd` (`FoliageMaterial`): it lights a back face by the kit's own normal. A
