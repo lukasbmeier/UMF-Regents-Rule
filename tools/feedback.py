@@ -154,7 +154,7 @@ def main():
         rtts = [r["rtt_ms"] for r in rs if r["rtt_ms"] > 0]
         print("\n%s (%s) on %s" % (names.get(eid, "entity %d" % eid) if eid else "the referee", ROLE[role] if role < 2 else "?", platform))
         print("    %d reports, %.0f min: %.0f fps; frames 99th worst %.1f ms, worst %.1f ms; %d spikes (%d network stalls); ping %.0f ms avg, %.0f worst; %d corrections" % (
-            len(rs), secs / 60, frames / secs if secs else 0, max(r["frame_ms_p99"] for r in rs), max(r["frame_ms_max"] for r in rs),
+            len(rs), secs / 60, frames / secs if secs else 0, max(r["frame_ms_p_99"] for r in rs), max(r["frame_ms_max"] for r in rs),
             sum(r["spikes"] for r in rs), stalls, sum(rtts) / len(rtts) if rtts else 0, max(r["rtt_ms_max"] for r in rs), sum(r["corrections"] for r in rs)))
         for ms, t, cause in worst[:3]:
             print("    a %s spike of %.0f ms at %s" % ("network" if cause == "net" else "frame", ms, when(int(t * 1e6))))
