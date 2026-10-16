@@ -60,6 +60,8 @@ func _run_recording() -> void:
 	rec.kind_names = {100: "Hen", 101: "Wolf"}
 	rec.rows_of = func(t: StringName) -> Array: return _tables.get(t, [])
 	rec.clock = func() -> float: return _now
+	var brains: Array = []
+	rec.brains_of = func() -> Array: return brains
 	add_child(rec)
 	rec.set_process(false)
 	_set_rows(&"entity", [{"entity_id": 1, "world_id": 0, "kind": 100}, {"entity_id": 2, "world_id": 0, "kind": 101}])
@@ -74,6 +76,7 @@ func _run_recording() -> void:
 	rec.tick()
 	_check(not rec.is_recording(), "in the lobby: nothing written")
 	_session(1)
+	brains.assign([[2, "patrol", Vector3(0, 0, 0)]])
 	rec.tick()
 	_path = rec.path()
 	_check(rec.is_recording() and _path.begins_with(SessionRecorder.DIR) and _path.ends_with("_w0_s7_r3.jsonl"), "the round starts: a file for it (%s)" % _path.get_file())
@@ -84,10 +87,13 @@ func _run_recording() -> void:
 	_set_rows(&"noise", [{"id": 5, "world_id": 0, "kind": 100, "pos": Vector3(3, 0, 3), "source_id": 1, "target_id": 12}])
 	_set_rows(&"hold_progress", [{"hold_id": 9, "world_id": 0, "entity_id": 12, "hold": 10001, "state": 1, "doers": 2}])
 	_set_rows(&"movement_state", [{"entity_id": 1, "world_id": 0, "pos": Vector3(2, 0, 2), "yaw": 0.5}, {"entity_id": 2, "world_id": 0, "pos": Vector3(4, 0, 4), "yaw": 0.0}])
+	brains.assign([[2, "patrol", Vector3(1, 0, 0)]])   # the same goal, moved a metre: no new decision
 	rec.tick()
-	rec.tick()   # nothing new: written once
+	brains.assign([[2, "chase", Vector3(1, 0, 0)]])
+	rec.tick()   # nothing new but the bot's step: written once
 	_now = 101.0
 	_session(2)
+	brains.assign([[2, "chase", Vector3(10, 0, 0)]])   # its goal somewhere else: a new decision
 	rec.tick()
 	_session(0, 4)
 	rec.tick()
@@ -110,6 +116,10 @@ func _run_recording() -> void:
 	var standings: Array = evs.filter(func(e: Dictionary) -> bool: return e["ev"] == "standings")
 	_check(kinds.has("phase") and standings.size() == 1 and int((standings[0]["scores"] as Dictionary).get("2", -1)) == 9
 		and not (standings[0]["scores"] as Dictionary).has("3"), "the results: the phase, and this session's standings")
+	var decided: Array = evs.filter(func(e: Dictionary) -> bool: return e["ev"] == "brain")
+	_check(decided.size() == 3 and String(decided[0]["state"]) == "patrol" and String(decided[1]["state"]) == "chase"
+		and is_equal_approx(float((decided[2]["goal"] as Array)[0]), 10.0) and int(decided[0]["id"]) == 2,
+		"what each bot decided: its step as it changes, its goal as it jumps, not as it moves a metre (%s)" % str(decided.map(func(e: Dictionary) -> String: return "%s %s" % [e["state"], str(e["goal"])])))
 	var act: Array = evs.filter(func(e: Dictionary) -> bool: return e["ev"] == "action")
 	_check(not act.is_empty() and is_equal_approx(float(act[0]["t"]), 0.5), "times from the round's start (%.1f s)" % (float(act[0]["t"]) if not act.is_empty() else -1.0))
 	rec.queue_free()

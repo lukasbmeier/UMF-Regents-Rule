@@ -161,6 +161,24 @@ func register_authority(identity: PackedByteArray, role: int, world_id: int) -> 
 func remove_bots(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('remove_bots', [session_id], [&'u64'], &'')
 
+## 0. build: String [br]
+## 1. platform: String [br]
+## 2. window_s: float [br]
+## 3. frames: int [br]
+## 4. frame_ms_p50: float [br]
+## 5. frame_ms_p95: float [br]
+## 6. frame_ms_p99: float [br]
+## 7. frame_ms_max: float [br]
+## 8. spikes: int [br]
+## 9. rtt_ms: float [br]
+## 10. rtt_ms_max: float [br]
+## 11. corrections: int [br]
+## 12. memory_mb: float [br]
+## 13. entities: int [br]
+## 14. detail: String [br]
+func report_perf(build: String, platform: String, window_s: float, frames: int, frame_ms_p50: float, frame_ms_p95: float, frame_ms_p99: float, frame_ms_max: float, spikes: int, rtt_ms: float, rtt_ms_max: float, corrections: int, memory_mb: float, entities: int, detail: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('report_perf', [build, platform, window_s, frames, frame_ms_p50, frame_ms_p95, frame_ms_p99, frame_ms_max, spikes, rtt_ms, rtt_ms_max, corrections, memory_mb, entities, detail], [&'string', &'string', &'f32', &'u32', &'f32', &'f32', &'f32', &'f32', &'u32', &'f32', &'f32', &'u32', &'f32', &'u32', &'string'], &'')
+
 ## 0. key: String [br]
 func reset_rule(key: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('reset_rule', [key], [&'string'], &'')
@@ -177,6 +195,15 @@ func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 ## 0. defs: Array of UmfItemDef [br]
 func seed_item_defs(defs: Array[UmfItemDef]) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('seed_item_defs', [defs], [&'UmfItemDef'], &'')
+
+## 0. noticed_usec: int [br]
+## 1. category: int [br]
+## 2. text: String [br]
+## 3. build: String [br]
+## 4. platform: String [br]
+## 5. context: String [br]
+func send_feedback(noticed_usec: int, category: int, text: String, build: String, platform: String, context: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('send_feedback', [noticed_usec, category, text, build, platform, context], [&'i64', &'u8', &'string', &'string', &'string', &'string'], &'')
 
 ## 0. look: String [br]
 func set_appearance(look: String) -> SpacetimeDBReducerCall:

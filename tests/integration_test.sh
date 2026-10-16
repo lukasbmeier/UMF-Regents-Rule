@@ -1064,6 +1064,46 @@ assert_ok "set_status $MYENT 4 $UNTIL_CHANGED \"\"" "(the CLI's player out)"
 assert_rejected 'ping {"x":1.0,"y":0.0,"z":1.0} 0' "watching" "out of the game: no ping"
 assert_ok "set_status $MYENT 0 $UNTIL_CHANGED \"\"" "(the CLI's player back)"
 
+echo "== telemetry: how a game ran, and what a player said (DECISIONS #244) =="
+# A player's game reports each window (report_perf), at most at shared/rules.json's rate; the server
+# says whose, in what world and level. Feedback (send_feedback) is stamped by the server with who,
+# where, and in what part of the game, from its own rows; the moment they marked is theirs unless their
+# clock is off. Neither table reaches a client: only the database's owner reads them.
+tm_report() { spacetime call "$DB" report_perf '"itest"' '"Windows | itest"' 30.0 1800 6.9 8.1 12.5 70.2 2 35.0 80.0 1 512.5 12 '"{\"spikes\":[[1.5,70.2,\"frame\"]]}"' 2>&1; }
+check "$(tm_report | grep -qiE "^error|error:" && echo false || echo true)" "a player's game reports a window"
+TM_Q="SELECT entity_id, role, frames FROM perf_report WHERE build = 'itest'"
+assert_eq "$(sql_first "$TM_Q" 1) $(sql_first "$TM_Q" 2) $(sql_first "$TM_Q" 3)" "$MYENT 0 1800" "kept: theirs (the server's word for whose), a game's, its frames"
+check "$(python -c "print('true' if abs(float('$(sql_first "SELECT fps FROM perf_report WHERE build = 'itest'" 1)') - 60.0) < 0.01 else 'false')")" "its frame rate worked out by the server (1800 in 30 s: 60)"
+sleep 8   # its allowance full again (three at once, one every 2 s)
+TM_DIR="$(mktemp -d)"
+for i in $(seq 1 6); do ( tm_report > "$TM_DIR/$i" 2>&1 ) & done
+wait
+TM_OK=0; TM_REFUSED=0
+for i in $(seq 1 6); do
+  if grep -qi "too many calls" "$TM_DIR/$i"; then TM_REFUSED=$((TM_REFUSED + 1)); elif ! grep -qiE "^error|error:" "$TM_DIR/$i"; then TM_OK=$((TM_OK + 1)); fi
+done
+rm -rf "$TM_DIR"
+check "$([ "$TM_OK" -ge 3 ] && [ "$TM_OK" -le 4 ] && [ "$TM_REFUSED" -ge 2 ] && [ $((TM_OK + TM_REFUSED)) = 6 ] && echo true || echo false)" "six at once: three taken (its burst; a fourth if a second passed), the rest too many (report_perf: shared/rules.json; $TM_OK taken, $TM_REFUSED refused)"
+sleep 11
+spacetime call "$DB" report_perf '"itest3"' "\"$(python -c "print('x' * 900)")\"" 9999.0 10 1.0 1.0 1.0 1.0 0 1.0 1.0 0 1.0 1 '""' >/dev/null 2>&1
+TM_W=$(sql_first "SELECT window_s FROM perf_report WHERE build = 'itest3'" 1)
+TM_P=$(spacetime sql "$DB" --format json "SELECT platform FROM perf_report WHERE build = 'itest3'" 2>/dev/null | python -c "import json,sys; t=sys.stdin.read(); print(len(json.loads(t[t.find('['):])[0]['rows'][0][0]))")
+assert_eq "$TM_W $TM_P" "600 200" "a window out of sense stored as its most (600 s), a 900-byte platform cut to 200"
+NOW_US=$(python -c "import time; print(int(time.time() * 1e6))")
+FB_OUT=$(spacetime call "$DB" send_feedback "$((NOW_US - 20000000))" 9 '"  the wolf went through the gate  "' '"itest"' '"Windows | itest"' '"{\"perf\":{}}"' 2>&1)
+check "$(echo "$FB_OUT" | grep -qiE "^error|error:" && echo false || echo true)" "a player sends feedback ($(echo "$FB_OUT" | head -1))"
+FB_Q="SELECT entity_id, category, text FROM feedback WHERE build = 'itest'"
+assert_eq "$(sql_first "$FB_Q" 1)|$(sql_first "$FB_Q" 2)|$(sql_first "$FB_Q" 3)" "$MYENT|3|\"the wolf went through the gate\"" \
+  "kept as theirs (the server's), an unknown category as Other, their words trimmed"
+fb_gap() { spacetime sql "$DB" --format json "SELECT noticed_at, at FROM feedback WHERE build = '$1'" 2>/dev/null | python -c "import json,sys; t=sys.stdin.read(); r=json.loads(t[t.find('['):])[0]['rows'][0]; print(round((r[1][0]-r[0][0])/1e6))"; }
+FB_GAP=$(fb_gap itest)
+check "$([ "$FB_GAP" -ge 18 ] && [ "$FB_GAP" -le 30 ] && echo true || echo false)" "the moment they marked kept: 20 s before the server heard it ($FB_GAP s)"
+spacetime call "$DB" send_feedback "$((NOW_US - 86400000000))" 0 '"clock off"' '"itest-off"' '"x"' '"{}"' >/dev/null 2>&1
+assert_eq "$(fb_gap itest-off)" "0" "a moment a day before (a clock that is off): the server's own"
+check "$([ -z "$(sql_rows_anon "SELECT * FROM feedback")" ] && [ -z "$(sql_rows_anon "SELECT * FROM perf_report")" ] && echo true || echo false)" \
+  "and neither table reaches anyone but the database's owner (private)"
+check "$(spacetime logs "$DB" 2>/dev/null | grep -q "FEEDBACK .*the wolf went through the gate" && echo true || echo false)" "feedback is in the server's log as it arrives"
+
 echo "== holds: hold to interact (DECISIONS #209) =="
 # What a hold IS is content (foundation/content/hold/: Help up, 4 s alone, 2.5 with two, 2 with three,
 # on a downed player or NPC, back to normal when done); the module keeps who holds what and how far

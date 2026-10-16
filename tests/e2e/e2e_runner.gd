@@ -47,6 +47,7 @@ func _run() -> void:
 	await _step_teleport_round_trip(entity, eid)
 	await _step_input_round_trip(entity)
 	await _step_action_round_trip(entity)
+	await _step_telemetry()
 	_finish()
 
 
@@ -293,6 +294,19 @@ func _step_action_round_trip(entity: Node) -> void:
 	_check(refused and revoked[0].contains("no such target"),
 		"a server refusal revokes the predicted action with the module's reason (%s)" % str(revoked))
 	_check(not action.is_on_cooldown(0), "and hands the cooldown back")
+
+## HOW IT RAN, REPORTED (DECISIONS #244): this game's own telemetry reaches the host (the suite sets the
+## window to 2 s, and reads the row the server keeps).
+func _step_telemetry() -> void:
+	print("== telemetry ==")
+	var t: Telemetry = SpaceTimeSync.telemetry
+	_check(t != null, "the game keeps its telemetry")
+	if t == null:
+		return
+	var sent: bool = await _until(func() -> bool: return t.sent >= 1, "a performance report")
+	_check(sent, "and reports a window of how it ran (%d sent)" % t.sent)
+	await get_tree().create_timer(1.0).timeout
+
 
 func _find_movement(entity: Node) -> SpaceTimeMovementComponent:
 	for c: SpaceTimeComponent in entity.get_components():

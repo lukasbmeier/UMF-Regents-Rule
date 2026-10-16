@@ -26,6 +26,7 @@ const SUITES: PackedStringArray = [
 	"zones",
 	"noise",
 	"record",
+	"telemetry",
 	"prediction",
 	"input",
 	"session",

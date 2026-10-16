@@ -27,7 +27,9 @@ up() { curl -s -m 2 -o /dev/null http://127.0.0.1:3000/v1/ping; }
 
 st_pid=""
 ref_pid=""
+watch_pid=""
 cleanup() {
+  [ -n "$watch_pid" ] && kill "$watch_pid" 2>/dev/null
   [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null
   [ -n "$st_pid" ] && kill "$st_pid" 2>/dev/null
   echo "host: stopped"
@@ -51,6 +53,10 @@ else
 fi
 spacetime sql "$DB" "SELECT * FROM world_config" >/dev/null 2>&1 \
   || { echo "host: there is no '$DB' database on this server: publish it first (tools\\publish.cmd)" >&2; exit 1; }
+
+# FEEDBACK AS IT ARRIVES (DECISIONS #244): a player's F8 shows up here, with a bell, while you host.
+"$PYTHON" tools/feedback.py --db "$DB" --watch &
+watch_pid=$!
 
 # The referee: offered a code (the CLI is the database's owner, its admin), started with it, and started
 # again whenever it stops (a crash, a sleep), until this window closes.

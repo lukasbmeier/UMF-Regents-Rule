@@ -29,6 +29,9 @@ spacetime call "$DB" set_world_level 0 0 >/dev/null 2>&1 \
 # Its clients teleport (and nudge) themselves: dev tools, off on any other database (REVIEW B1).
 spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 \
   || { echo "set_dev_tools failed" >&2; exit 1; }
+# Its game reports how it ran every 2 s, not 30 (DECISIONS #244), so a run this short sends some.
+spacetime call "$DB" set_rule foundation.telemetry_window_s 2 '""' >/dev/null 2>&1 \
+  || { echo "set_rule telemetry_window_s failed" >&2; exit 1; }
 sleep 3
 echo "ok"
 
@@ -46,6 +49,17 @@ if grep -E "SCRIPT ERROR" "$out_file" >/dev/null; then
   exit 1
 fi
 [ "$status" -eq 0 ] || exit "$status"
+
+# HOW IT RAN, REPORTED (DECISIONS #244): the real client's own windows reached the host, its own (an
+# entity that is a player's, not the CLI's), with frames counted and a frame rate.
+REPORTS=$(spacetime sql "$DB" --format json "SELECT entity_id, role, frames, fps, build FROM perf_report" 2>/dev/null \
+  | python -c "import json,sys; t=sys.stdin.read(); rows=json.loads(t[t.find('['):])[0]['rows'] if '[' in t else []; ok=[r for r in rows if r[0] > 0 and r[1] == 0 and r[2] > 0 and r[3] > 0 and len(r[4]) > 0]; print(len(ok))")
+if [ "${REPORTS:-0}" -ge 1 ]; then
+  echo "  telemetry: the real client reported $REPORTS window(s) of how it ran"
+else
+  echo "  FAIL: the real client sent no performance report (perf_report: ${REPORTS:-none})" >&2
+  exit 1
+fi
 
 # THE SAME PLAYER, RESTARTED (DECISIONS #149): a second client with the first one's identity
 # (its token persisted in user://). The server still holds the first run's input count for the

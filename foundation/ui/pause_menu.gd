@@ -41,6 +41,7 @@ const GROUP: StringName = &"pause_menu"
 
 var _rules: RulesPanel = null
 var _rules_button: Button = null
+var _feedback: FeedbackPage = null
 
 
 func _ready() -> void:
@@ -62,6 +63,14 @@ func _ready() -> void:
 	_rules_button = add_button("Rules (admin)", "Rules")
 	_rules_button.pressed.connect(func() -> void: open_page(_rules))
 	_rules_button.visible = false
+	# FEEDBACK (DECISIONS #244): F8 at any moment, or this button; the moment is marked as it is asked for.
+	FeedbackPage.ensure_action()
+	_feedback = FeedbackPage.new()
+	add_child(_feedback)
+	var send: Button = add_button("Send feedback  (F8)", "Feedback")
+	send.pressed.connect(func() -> void:
+		_feedback.mark()
+		open_page(_feedback))
 
 
 ## The settings screen, in place of the menu.
@@ -109,6 +118,10 @@ func add_button(text: String, button_name: String = "") -> Button:
 
 func rules_panel() -> RulesPanel:
 	return _rules
+
+
+func feedback_page() -> FeedbackPage:
+	return _feedback
 
 
 func settings_panel() -> SettingsPanel:
@@ -181,6 +194,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if WindowMode.is_toggle_key(event):
 		get_viewport().set_input_as_handled()
 		toggle_fullscreen()
+		return
+	# F8: this moment marked, then the feedback page over the game (the cursor freed for it).
+	if event.is_action_pressed(FeedbackPage.ACTION) and not event.is_echo() and _open_page != _feedback \
+			and SpaceTimeSync.is_connected_to_server():
+		get_viewport().set_input_as_handled()
+		_feedback.mark()
+		show_page(_feedback)
+		return
+	if _open_page == _feedback and _feedback.visible and event.is_action_pressed(MouseCapture.RELEASE_ACTION):
+		get_viewport().set_input_as_handled()
+		_feedback.close()
 		return
 	# Escape again closes it. MouseCapture only acts on Escape while it HAS the cursor, so the
 	# second press arrives here rather than there. With a page open, Escape is the page's (it goes

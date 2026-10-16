@@ -41,6 +41,8 @@ signal connection_error(code: int, reason: String)
 enum ConnectionState { DISCONNECTED, CONNECTING, CONNECTED, RECONNECTING, FAILED }
 
 var config: NetConfig
+## This game's performance reports to the host (`Telemetry`, DECISIONS #244); null without the SDK.
+var telemetry: Telemetry = null
 var state: ConnectionState = ConnectionState.DISCONNECTED:
 	set(v):
 		if v == state:
@@ -114,6 +116,10 @@ func _ready() -> void:
 		set_process(false)
 		return
 	_bind_sdk_signals()
+	# HOW THIS GAME RUNS, REPORTED TO THE HOST (DECISIONS #244): in every player's game and every referee.
+	telemetry = Telemetry.new()
+	telemetry.name = "Telemetry"
+	add_child(telemetry)
 
 
 func _process(_delta: float) -> void:

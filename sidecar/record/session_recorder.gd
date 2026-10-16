@@ -13,6 +13,7 @@ class_name SessionRecorder extends Node
 ##   {"t": 12.3, "ev": "hold", "hold": 10001, "target": 12, "doers": 2}
 ##   {"t": 12.3, "ev": "noise", "kind": 100, "pos": [x, y, z], "source": 9, "target": 12}
 ##   {"t": 12.3, "ev": "phase", "phase": 4}
+##   {"t": 12.3, "ev": "brain", "id": 9, "state": "flee", "goal": [x, z]}         what a bot decided
 ##   {"t": 30.0, "ev": "standings", "scores": {"<entity>": 12, ...}}
 ##
 ## A round starts when its session leaves the lobby and ends when it comes back to it (or the round's
@@ -40,6 +41,11 @@ var kind_names: Dictionary = {}
 var rows_of: Callable = Callable()
 ## TESTING: the clock, in seconds (default: the engine's).
 var clock: Callable = Callable()
+## TESTING: the bots' brains, [[id, state, goal or null], ...] (default: every bot this sidecar drives).
+var brains_of: Callable = Callable()
+## A goal further than this from the last one written is a new decision.
+const GOAL_JUMP_M: float = 3.0
+var _brain_seen: Dictionary[int, Array] = {}
 
 var _file: FileAccess = null
 var _path: String = ""
@@ -236,6 +242,32 @@ func _events(t: float) -> void:
 			continue
 		_seen_holds[id] = true
 		_line({"t": t, "ev": "hold", "hold": int(r.get(&"hold")), "target": int(r.get(&"entity_id")), "doers": int(r.get(&"doers"))})
+	# WHAT EACH BOT DECIDED (Luke, after watching bot hens "go back and forth without clear directions and
+	# goals"): its brain's step whenever it changes, and its goal whenever it jumps somewhere new (not a
+	# goal that moves with what it follows).
+	for b: Array in _brains():
+		var id: int = int(b[0])
+		var state: String = String(b[1])
+		var goal: Variant = b[2]
+		var was: Array = _brain_seen.get(id, ["", null])
+		var jumped: bool = goal is Vector3 and (not (was[1] is Vector3) or (goal as Vector3).distance_to(was[1] as Vector3) > GOAL_JUMP_M)
+		if state != String(was[0]) or jumped or (goal == null) != (was[1] == null):
+			var g: Variant = [snappedf((goal as Vector3).x, 0.1), snappedf((goal as Vector3).z, 0.1)] if goal is Vector3 else null
+			_line({"t": t, "ev": "brain", "id": id, "state": state, "goal": g})
+			_brain_seen[id] = [state, goal]
+
+
+## [entity id, its brain's state, its goal (null: none)] for every bot this sidecar drives.
+func _brains() -> Array:
+	if brains_of.is_valid():
+		return brains_of.call() as Array
+	var out: Array = []
+	for n: Node in EntitySpawner.entity_nodes():
+		var e: SpaceTimeEntity = n as SpaceTimeEntity
+		var c: NpcBrainComponent = e.find_component(NpcBrainComponent) as NpcBrainComponent if e != null else null
+		if c != null and c.brain != null:
+			out.append([e.entity_id, c.brain.state, c.brain.goal() if c.brain.has_goal() else null])
+	return out
 
 
 func _scores(sid: int) -> Dictionary:

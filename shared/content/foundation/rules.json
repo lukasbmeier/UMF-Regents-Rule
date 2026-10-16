@@ -123,6 +123,24 @@
 					"number": 0.0,
 					"text": "",
 					"unit": ""
+				},
+				{
+					"key": "foundation.telemetry_window_s",
+					"kind": "number",
+					"max": 600.0,
+					"min": 1.0,
+					"number": 30.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.telemetry_spike_ms",
+					"kind": "number",
+					"max": 2000.0,
+					"min": 10.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "ms"
 				}
 			]
 		}

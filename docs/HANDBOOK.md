@@ -261,6 +261,28 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
 
 Voice: use Discord alongside for now (the roadmap has voice chat later).
 
+### How it ran for them, and what they said (telemetry and feedback)
+Every player's game and every referee reports to the HOST how it ran (DECISIONS #244), always, in
+every game and genre: once a window (`foundation.telemetry_window_s`, 30 s) one small call with its
+frame times (median, 95th, 99th, worst), each SPIKE with the moment it happened (a frame slower than
+`foundation.telemetry_spike_ms`, or the server's rows stopping for 0.4 s: a network stall), ping,
+corrections, memory, entities, and the machine coarsely (OS, CPU, GPU, memory). Nothing personal, and
+nothing a client receives: the tables are private, read by the database's owner.
+- **Feedback: F8** (or Send feedback in the Escape menu). The moment is marked as the key is pressed;
+  they pick Bug, Lag, Idea or Other and write. The server adds who, where (their position), the level,
+  the round and the phase from its own rows. While you host, it shows up in `tools\host.cmd`'s window
+  with a bell.
+- **To read it all: double-click `tools\feedback.cmd`** on the machine that hosts: each piece of
+  feedback (when, who, what, where, how their game was running then, and the referee's recording of the
+  round with the second it happened at), then performance per player and per referee (frames, worst
+  frame times, spikes and stalls with their times, ping, corrections).
+- **What the bots did: `python tools/replay/analyze.py [recording]`** (the newest recording on this
+  machine by default): per bot, how far it walked and how straight, reversals a minute, its time in each
+  step of its brain and its flip-flops (a step, another and back within 3 s). The recordings write each
+  bot's decisions (`"ev": "brain"`) beside where everyone was.
+- Adding a number: put it in the report's `detail` JSON (`Telemetry.send_window`): the table never
+  needs reshaping.
+
 ### Who moves things (motion authority)
 Each world picks one:
 - **MODULE (Tier A, what fishing uses):** your client simulates your movement and tells the

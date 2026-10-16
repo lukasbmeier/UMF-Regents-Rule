@@ -28,6 +28,9 @@ pub mod level;
 pub mod status;
 pub mod hold;
 
+/// Telemetry's rules (DECISIONS #244): what a performance report or feedback may hold. Pure.
+pub mod telemetry;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {

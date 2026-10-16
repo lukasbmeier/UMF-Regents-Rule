@@ -389,6 +389,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     }
     expire_requests(ctx);
     prune_noise(ctx);
+    prune_perf(ctx);
     Ok(())
 }
 
