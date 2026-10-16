@@ -55,7 +55,7 @@ jobs:
           curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip -d "$HOME/godot"
           echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
-      - name: import (twice: the second registers the generated class_names)
+      - name: "import (twice: the second registers the generated class_names)"
         run: |
           "$GODOT" --headless --path . --import || true
           "$GODOT" --headless --path . --import
