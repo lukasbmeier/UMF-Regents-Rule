@@ -87,7 +87,8 @@ game/fishing/                  THE GENRE LAYER, client half: fisher.tscn, HUD, p
 foundation/camera/             CameraRig + first_person.tres / third_person.tres
 foundation/anim/               AnimationSet · AnimationClipRef · AnimationTreeBuilder · AnimationDriverComponent
 sidecar/                       SERVER-ONLY: sidecar_main · sim_world · authority_sync · sidecar_net_config.tres
-sidecar/npc/                   NpcBrain · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd
+sidecar/npc/                   NpcBrain (and its behaviour tree: run_tree) · BrainTask · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd
+addons/limboai/                LimboAI 1.8.1 (GDExtension): bots' behaviour trees (DECISIONS #245); Windows, Linux, macOS libraries only
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
                                and a restart (the NPC's brain resumes); SIDECAR_BIN= points it at a build
 tests/connect_playtest.sh      the connect screen + Esc menu, driven like a player (fresh install)

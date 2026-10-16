@@ -333,6 +333,13 @@ baked from the level's collision), and holds, lets go or uses an ability the way
 the server judges a bot as it judges a player. A genre's brains are scripts in
 `sidecar/npc/brains/<genre>/` (Fowl Play's `chicken/hen`, `chicken/wolf`). DECISIONS #230.
 
+A brain may run a **behaviour tree** (LimboAI, in `addons/limboai`, DECISIONS #245): its `think`
+calls `run_tree("res://sidecar/npc/brains/<genre>/<name>_tree.tres", me, world)`. Open the tree in
+the LimboAI tab (the editor's main screen tabs): each step is a task, its numbers in the Inspector;
+drag tasks to reorder them. A genre's tasks extend `BrainTask` (`sidecar/npc/brain_task.gd`), whose
+`brain()` is the bot that runs it. Nothing to republish: a tree is the referee's, and a restarted
+referee (Play again) reads it. The add-on ships libraries for Windows, Linux and macOS only.
+
 ### What a world hears (noises and pings)
 A noise is a row everyone in a world receives as it is made: an egg cracking, a raid, a player's
 ping. The server says what happened and where (`make_noise` in a genre's rules, numbered from 100;

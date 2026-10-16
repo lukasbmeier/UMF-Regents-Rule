@@ -16,6 +16,7 @@ func run() -> void:
 	_run_route()
 	await _run_nav()
 	_run_ground()
+	_run_tree()
 
 
 func _run_filter() -> void:
@@ -173,3 +174,39 @@ func _run_ground() -> void:
 	_check(NpcNav.add_ground(plain, AABB(), none) == 0 and none.get_vertices().is_empty(), "a level without such a node: nothing")
 	level.free()
 	plain = null
+
+
+func _run_tree() -> void:
+	print("== bots: a brain runs a behaviour tree (LimboAI, DECISIONS #245) ==")
+	var task_script: Script = load("res://tests/fixtures/brain_step_task.gd") as Script
+	var task: BTAction = task_script.new() as BTAction
+	var tree := BehaviorTree.new()
+	tree.root_task = task
+	var path: String = "user://tests/brain_tree.tres"
+	DirAccess.make_dir_recursive_absolute("user://tests")
+	_check(ResourceSaver.save(tree, path) == OK, "a tree saved to a file, as a genre's are")
+	var b := StandBrain.new()
+	var t: Array[int] = [1000]
+	b.clock = func() -> int: return t[0]
+	_check(b.tree_status() == -1, "before its first step: no word")
+	var me := MovementState.new()
+	var world := NpcWorldView.new()
+	_check(b.run_tree(path, me, world), "a step of it")
+	_check(String(b.state) == "step me=true world=true dt=0.20" and b.tree_status() == BT.SUCCESS,
+		"its task reached the brain, with this think's me and world, the first step 0.2 s (%s)" % b.state)
+	t[0] += 350
+	b.run_tree(path, me, world)
+	_check(String(b.state).ends_with("dt=0.35"), "the next step's time is the brain's clock's (%s)" % b.state)
+	var failing := BehaviorTree.new()
+	var no: BTAction = task_script.new() as BTAction
+	no.set(&"succeed", false)
+	failing.root_task = no
+	var path2: String = "user://tests/brain_tree_fails.tres"
+	ResourceSaver.save(failing, path2)
+	b.run_tree(path2, me, world)
+	_check(b.tree_status() == BT.FAILURE, "another tree in its place: its own word (failure)")
+	var agent: Node = b._tree_agent
+	b = null
+	_check(not is_instance_valid(agent), "the brain gone: its tree's agent too")
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path2)

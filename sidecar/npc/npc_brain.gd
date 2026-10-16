@@ -192,3 +192,58 @@ func has_goal() -> bool:
 
 func goal() -> Vector3:
 	return _goal
+
+
+# --- its clock --------------------------------------------------------------------------------
+
+## The clock it thinks by, in milliseconds: the engine's, unless a test walks it faster than real time.
+var clock: Callable = Time.get_ticks_msec
+
+
+func now_ms() -> int:
+	return int(clock.call())
+
+
+# --- a behaviour tree (LimboAI, DECISIONS #245) ----------------------------------------------
+
+## The tree it runs (a LimboAI `BehaviorTree`), made once for this brain from its file. Its blackboard
+## holds `brain` (this, weakly), `me` and `world` (this think's); its tasks (`BrainTask`) call this
+## brain's steps with the numbers set on them in the Inspector.
+var _tree: BTInstance = null
+var _tree_agent: Node = null
+var _tree_path: String = ""
+var _tree_thought_at: int = 0
+
+
+## One step of the tree at `path`, with this think's `me` and `world`: call it from `think`. False:
+## there is no such tree.
+func run_tree(path: String, me: MovementState, world: NpcWorldView) -> bool:
+	if _tree == null or path != _tree_path:
+		var tree: BehaviorTree = load(path) as BehaviorTree if ResourceLoader.exists(path) else null
+		if tree == null:
+			push_error("NpcBrain %d: no behaviour tree at %s" % [self_id, path])
+			return false
+		if _tree_agent == null:
+			_tree_agent = Node.new()
+			_tree_agent.name = "Brain%d" % self_id
+		_tree = tree.instantiate(_tree_agent, Blackboard.new(), _tree_agent, _tree_agent)
+		_tree_path = path
+	var bb: Blackboard = _tree.get_blackboard()
+	bb.set_var(&"brain", weakref(self))   # weak: the tree is the brain's, not the other way round
+	bb.set_var(&"me", me)
+	bb.set_var(&"world", world)
+	var now: int = now_ms()
+	var dt: float = 0.2 if _tree_thought_at == 0 else float(now - _tree_thought_at) / 1000.0
+	_tree_thought_at = now
+	_tree.update(dt)
+	return true
+
+
+## The tree's last word (for tests and the log): its status after the last step; -1 before any.
+func tree_status() -> int:
+	return _tree.get_last_status() if _tree != null else -1
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and _tree_agent != null:
+		_tree_agent.free()

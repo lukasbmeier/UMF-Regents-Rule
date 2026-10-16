@@ -26,6 +26,11 @@ SERVER_AUTHORITY worlds, the headless authority process, and the brains it runs.
 - `EntityDefinition.brain` is a STRING resolved only in the sidecar (`NpcBrainComponent.make_brain`),
   because `game/` may not reference `res://sidecar`. The sidecar attaches the component with
   `SpaceTimeEntity.add_runtime_component`.
+- A BEHAVIOUR TREE (LimboAI, DECISIONS #245) is stepped from `think` with `run_tree(path, me, world)`,
+  never from `frame`. Its tasks extend `BrainTask` and act only through the brain's own steps
+  (`go_to`, `hold`, `use_ability`...): a task never moves anything itself. The blackboard holds the
+  brain WEAKLY (`brain` is a WeakRef): the tree is the brain's, not the other way round. Trees and
+  tasks live under `sidecar/` like every brain (hard rule 7b).
 
 ## NPC BRAIN MEMORY (DECISIONS #135)
 - A brain's `save_state()`/`load_state()` hold DECISIONS (home, goal, target), not countdowns.

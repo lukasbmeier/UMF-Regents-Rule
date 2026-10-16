@@ -45,3 +45,14 @@ addons/terrain_3d/bin/~*
 # Workbench thumbnails: a cache the Catalog regenerates (DECISIONS #203); the .gdignore keeps them out of the import.
 tools/workbench/thumbnails/*
 !tools/workbench/thumbnails/.gdignore
+
+# LimboAI (the bots' behaviour trees): only the Windows, Linux and macOS libraries are committed (39 MB: the
+# editor, the game, a Linux server, the Mac app). The others (Android, iOS, web: 49 MB) stay on the machine
+# they were unpacked on; exporting for one of those needs them put back (addons/limboai's release zip).
+addons/limboai/bin/*android*
+addons/limboai/bin/*ios*
+addons/limboai/bin/*web*
+# The copy Godot keeps of a library while it is loaded.
+addons/limboai/bin/~*
+# The add-ons' own demos (LimboAI's agents, Sky3D's scene): local, to look at.
+/demo/

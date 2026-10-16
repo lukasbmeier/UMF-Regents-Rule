@@ -134,7 +134,7 @@ tests/                      test_runner.tscn/.gd + suites/ (one file per suite, 
 tools/                      publish.sh/.cmd, release.sh/.cmd (a build for friends), run.cmd, codegen, world/ (bakes), held/, characters/ ·
                             workbench/ (Workbench base, Mannequin, a bench per content type, thumbnails cache) ·
                             template/ (genre manifests, strip_genre.py)
-addons/                     SpacetimeDB (vendored SDK, v2.8.0) · terrain_3d · godot_ai (editor only) ·
+addons/                     SpacetimeDB (vendored SDK, v2.8.0) · terrain_3d · limboai (bots' behaviour trees) · godot_ai (editor only) ·
                             umf_export (keeps editor tooling out of exports) · umf_content (the Content Dock)
 ```
 
