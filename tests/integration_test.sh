@@ -324,15 +324,18 @@ print(' '.join('%.6f' % c for c in out))
 "
 }
 SCORE_P0=$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)
+# The game acknowledges it straight after the issue, with only the read of its id between: the server
+# keeps a round trip only under 5 s (RTT_SANE_MS), and on a busy machine the reads below, a CLI call
+# each, took longer than that, so no round trip was kept and the presses were judged with no credit.
 assert_ok "issue_challenge $MYENT 1 0.5" "issue a timed press (kind 1)"
 TP=$(sql_first "SELECT id FROM challenge" 1)
+assert_ok "challenge_seen $TP" "the player's game acknowledges it"
 TP_SEED=$(sql_first "SELECT seed FROM challenge WHERE id = $TP" 1)
 assert_eq "$(sql_first "SELECT kind FROM challenge WHERE id = $TP" 1)" "1" "it is a timed press"
 assert_eq "$(sql_first "SELECT period_ms FROM timed_press WHERE challenge_id = $TP" 1)" "1800" \
   "its sweep frozen on its row: 1.8 s at difficulty 0.5 (between the rules' 2.4 s easy and 1.2 s hard)"
 assert_eq "$(sql_first "SELECT rounds FROM timed_press WHERE challenge_id = $TP" 1)" "3" "three presses"
 assert_eq "$(sql_rows_anon "SELECT * FROM timed_press" | wc -l | tr -d ' ')" "0" "private to its player (row-level security)"
-assert_ok "challenge_seen $TP" "the player's game acknowledges it"
 SEEN=$(sql_first "SELECT seen_ms FROM timed_press WHERE challenge_id = $TP" 1)
 check "$([ "$SEEN" -gt 0 ] && echo true || echo false)" "the server timed that round trip itself ($SEEN ms)"
 assert_ok "challenge_seen $TP" "a second acknowledgement"
@@ -906,6 +909,8 @@ assert_eq "$(sql_first 'SELECT cooldown_ms FROM ability_def WHERE ability_id = 0
 assert_eq "$(sql_first 'SELECT cooldown_ms FROM ability_def WHERE ability_id = 9' 1)" "0" "an ability content does not name is left as the admin made it"
 assert_ok 'spawn_npc 0 1 {"x":1.0,"y":0.0,"z":-1.0}' "someone to hit"
 VICTIM=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 1 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
+assert_ok 'spawn_npc 0 77 {"x":3.0,"y":0.0,"z":0.0}' "and a thing, not a person (a kind no character is)"
+THING=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 77 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
 REF_CODE='"refereecodeforthetestsuite"'
 anon_call() { spacetime call --anonymous "$DB" "$@" 2>&1; }
 
@@ -924,27 +929,30 @@ out="$(anon_call claim_referee 0 "$REF_CODE")"
 assert_ok "use_ability_seen 10 0 $AIM 61 400" "a judged use, seen 400 ms behind: queued"
 assert_ok "use_ability_seen 10 0 $AIM 63 20" "a slow one, seen 20 ms behind"
 check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "a sidecar presenting the code is registered ($(echo "$out" | grep -i error | head -1))"
-assert_eq "$(row_count 'SELECT * FROM authority WHERE role = 1 AND world_id = 0')" "1" "as world 0's authority: its referee"
-REF_IDENT=$(sql_first 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' 1)
-assert_eq "$(row_count "SELECT * FROM player WHERE identity = $REF_IDENT")" "0" "and not a player: the player its first connection made is taken away (0.41.1)"
-out="$(anon_call claim_referee 0 "$REF_CODE")"
-check "$(echo "$out" | grep -q "nothing was offered" && echo true || echo false)" "the code is used up"
-R61=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 61" 1)
-R63=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 63" 1)
-assert_eq "$(row_count 'SELECT * FROM action_request')" "2" "both wait for the referee"
-assert_eq "$(row_count 'SELECT * FROM action_event WHERE predicted_id = 61')" "0" "nothing has happened yet: no event"
-assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R61" 1)" "150" "seen 400 ms behind, rewound the cap's 150 (favouring the attacker, no further)"
-assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R63" 1)" "20" "under the cap, what it saw"
-DUE_MS=$(python -c "
-import re,sys
-rows='''$(spacetime sql "$DB" "SELECT issued_at, due_at FROM action_request WHERE id = $R61" 2>/dev/null | tail -n +3)'''
-from datetime import datetime
-ts=re.findall(r'\d{4}-\d\d-\d\dT[\d:.]+', rows)
-f=lambda s: datetime.fromisoformat(s[:26])
-print(round((f(ts[1])-f(ts[0])).total_seconds()*1000) if len(ts)==2 else -1)")
+# Both run out 23 s after they were used (the 20 s wind-up, then REQUEST_GRACE_MICROS' 3 s), so what
+# needs them waiting comes first, from ONE read of them: a CLI call takes about a second on a busy
+# machine, and the two dozen this once made before 63's last refusal outlasted it ("no such request").
+REQS=$(spacetime sql "$DB" --format json "SELECT id, predicted_id, rewind_ms, issued_at, due_at FROM action_request" 2>/dev/null | python -c "
+import json, sys
+t = sys.stdin.read()
+rows = json.loads(t[t.find('['):])[0]['rows'] if '[' in t else []
+by = {r[1]: r for r in rows}
+r61, r63 = by.get(61), by.get(63)
+print(r61[0] if r61 else '-', r63[0] if r63 else '-', len(rows), r61[2] if r61 else '-', r63[2] if r63 else '-',
+      round((r61[4][0] - r61[3][0]) / 1000) if r61 else -1)")
+read -r R61 R63 NREQ RW61 RW63 DUE_MS <<< "$REQS"
+assert_eq "$NREQ" "2" "both wait for the referee"
+assert_eq "$RW61" "150" "seen 400 ms behind, rewound the cap's 150 (favouring the attacker, no further)"
+assert_eq "$RW63" "20" "under the cap, what it saw"
 assert_eq "$DUE_MS" "20000" "it lands its wind-up after it was used: when the referee judges it"
 check "$([ "$(spacetime sql --anonymous "$DB" 'SELECT * FROM action_request' 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" = "0" ] && echo true || echo false)" \
   "a player cannot read them: only the world's authority (no early look at an attacker's aim)"
+assert_eq "$(row_count 'SELECT * FROM action_event WHERE predicted_id = 61')" "0" "nothing has happened yet: no event"
+assert_rejected "resolve_action $R63 $MYENT" "not itself" "a referee cannot have it hit its own user"
+assert_ok "set_status $VICTIM 2 $UNTIL_CHANGED \"\"" "the one it would hit goes down"
+assert_rejected "resolve_action $R63 $VICTIM" "cannot be hit" "a downed one is not hit again (downed: not hittable)"
+assert_ok "set_status $VICTIM 0 $UNTIL_CHANGED \"\"" "(up again)"
+assert_rejected "resolve_action $R63 $THING" "not someone" "a thing is not hit"
 
 HPV=$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)
 assert_ok "resolve_action $R61 $VICTIM" "the referee: request 61 hit"
@@ -954,18 +962,24 @@ assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICT
   "with no genre to say otherwise, the ability's 25 damage"
 assert_eq "$(row_count "SELECT * FROM action_request WHERE id = $R61")" "0" "answered: gone"
 assert_rejected "resolve_action $R61 $VICTIM" "no such request" "and answered once"
-assert_rejected "resolve_action $R63 $MYENT" "not itself" "a referee cannot have it hit its own user"
-assert_ok "set_status $VICTIM 2 $UNTIL_CHANGED \"\"" "the one it would hit goes down"
-assert_rejected "resolve_action $R63 $VICTIM" "cannot be hit" "a downed one is not hit again (downed: not hittable)"
-assert_ok "set_status $VICTIM 0 $UNTIL_CHANGED \"\"" "(up again)"
-assert_ok 'spawn_npc 0 77 {"x":3.0,"y":0.0,"z":0.0}' "a thing, not a person (a kind no character is)"
-THING=$(sql_rows "SELECT entity_id FROM entity WHERE kind = 77 AND world_id = 0" | awk '{print $1}' | sort -n | tail -1)
-assert_rejected "resolve_action $R63 $THING" "not someone" "a thing is not hit"
+# The referee's registration, now nothing is waiting on the clock (its row stays after it stops beating).
+assert_eq "$(row_count 'SELECT * FROM authority WHERE role = 1 AND world_id = 0')" "1" "as world 0's authority: its referee"
+REF_IDENT=$(sql_first 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' 1)
+assert_eq "$(row_count "SELECT * FROM player WHERE identity = $REF_IDENT")" "0" "and not a player: the player its first connection made is taken away (0.41.1)"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+check "$(echo "$out" | grep -q "nothing was offered" && echo true || echo false)" "the code is used up"
 assert_ok "despawn_entity $THING" "(gone)"
-# Left unanswered, 63 runs out: the 1 Hz prune, its landing time (20 s) and 3 s on.
-for _ in $(seq 1 40); do [ "$(row_count "SELECT * FROM action_request WHERE id = $R63")" = "0" ] && break; sleep 1; done
+# Left unanswered, 63 runs out: the 1 Hz prune, its landing time (20 s) and 3 s on. Its miss is an
+# action_event, pruned 5 s after it (ACTION_EVENT_TTL_MICROS), so the wait watches for that event and
+# keeps its outcome as it appears, rather than reading it after the wait has looked twice more.
+OUT63=""
+deadline=$((SECONDS + 45))
+while [ -z "$OUT63" ] && [ "$SECONDS" -lt "$deadline" ]; do
+  OUT63=$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 63" 1)
+  [ -z "$OUT63" ] && sleep 0.5
+done
 assert_eq "$(row_count "SELECT * FROM action_request WHERE id = $R63")" "0" "nobody answered it: it ran out"
-assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 63" 1)" "1" "as a miss (the referee went away; not the user's)"
+assert_eq "$OUT63" "1" "as a miss (the referee went away; not the user's)"
 assert_rejected "use_ability_seen 10 0 $AIM 64 100" "no referee" "a referee that stopped beating is not judging: refused again"
 # The cap is a live rule: a second referee, the cap at 50 ms first.
 assert_ok "set_rule foundation.rewind_max_ms 50 \"\"" "the rewind's cap at 50 ms"
