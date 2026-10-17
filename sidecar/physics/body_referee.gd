@@ -13,7 +13,7 @@ class_name BodyReferee extends Node3D
 ##
 ## SERVER-ONLY (hard rule 7b).
 
-const TABLES: Array[StringName] = [&"body_state", &"movement_state", &"entity", &"player", &"status_state", &"npc_brain"]
+const TABLES: Array[StringName] = [&"body_state", &"movement_state", &"entity", &"player", &"status_state", &"npc_brain", &"push"]
 ## A body's write echoed back puts it where it already is; a teleport row further than this is the
 ## server moving it.
 const ADOPT_M: float = 0.05
@@ -129,6 +129,20 @@ func on_row(ev: RowEvent) -> void:
 				_brained.erase(eid)
 			else:
 				_brained[eid] = true
+		&"push":
+			# THE SERVER PUSHED A BODY (DECISIONS #251: a blower on a disc): its velocity changes now, at
+			# rest or not; its rows say so from the next write.
+			if ev.kind == RowEvent.Kind.INSERTED and int(row.get(&"world_id")) == world_id and _bodies.has(eid):
+				push_body(eid, row.get(&"vel") as Vector3)
+
+
+## Body `eid`'s velocity changed by `vel` (a push), woken if it was at rest.
+func push_body(eid: int, vel: Vector3) -> void:
+	var b: FlyingBody = _bodies.get(eid, null)
+	if b == null:
+		return
+	b.wake()
+	b.linear_velocity = b.linear_velocity + vel
 
 
 ## What it knows of an entity, set directly (tests).

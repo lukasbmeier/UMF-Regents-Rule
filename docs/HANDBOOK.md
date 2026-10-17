@@ -363,6 +363,14 @@ where you look. A genre throws its own with `BodyLaunch.throw_body` (or its own 
 integration suite's bodies section and `tools\run.cmd tests\bodies_playtest.sh` (a real referee and two
 clients at 150 ms).
 
+### The server pushes people (and bodies)
+A genre's rule that moves someone (a leaf blower, a bounce pad, a hit) writes a push:
+`push_entity(ctx, entity, vel, by)` (DECISIONS #251). Players still move themselves: the pushed player's
+own game adds the push to their speed, at once, and carries it a while; the server, which wrote it, lets
+them move that fast meanwhile (`foundation.push_grace_s` on the Rules page is its allowance for lag). A
+pushed body (a disc) is moved by the world's referee. `dev_push <entity> <vel>` (with the dev tools on)
+tries it; `toolsun.cmd testsodies_playtest.sh` proves it at 150 ms.
+
 ### Aiming, charging and the flight cam
 A throw that is held to charge and let go (a disc, a ball, a cast) is `AimCharge` (`foundation/input/`):
 add one to the game scene and give it its keys (`actions`: each a style, a disc golfer's backhand on one

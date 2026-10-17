@@ -27,6 +27,7 @@ const MovementStateRow = preload('res://spacetime_bindings/schema/types/umf_move
 const Noise = preload('res://spacetime_bindings/schema/types/umf_noise.gd')
 const NpcBrainRow = preload('res://spacetime_bindings/schema/types/umf_npc_brain_row.gd')
 const Player = preload('res://spacetime_bindings/schema/types/umf_player.gd')
+const Push = preload('res://spacetime_bindings/schema/types/umf_push.gd')
 const BodyContactWrite = preload('res://spacetime_bindings/schema/types/umf_body_contact_write.gd')
 const Session = preload('res://spacetime_bindings/schema/types/umf_session.gd')
 const SessionMatch = preload('res://spacetime_bindings/schema/types/umf_session_match.gd')

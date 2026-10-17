@@ -116,7 +116,7 @@ func _ready() -> void:
 	if not InterestManager.extra_tables.has(&"npc_brain"):
 		InterestManager.extra_tables.append(&"npc_brain")
 	# What it judges, and the level it judges against (DECISIONS #226).
-	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player", &"body_state"]:
+	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player", &"body_state", &"push"]:
 		if not InterestManager.extra_tables.has(t):
 			InterestManager.extra_tables.append(t)
 	InterestManager.world_id = world_id

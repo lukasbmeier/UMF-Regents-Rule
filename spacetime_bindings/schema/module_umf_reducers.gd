@@ -100,6 +100,11 @@ func detach_as(entity_id: int) -> SpacetimeDBReducerCall:
 func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('dev_nudge', [offset], [&'vector3[f32,f32,f32]'], &'')
 
+## 0. entity_id: int [br]
+## 1. vel: Vector3 [br]
+func dev_push(entity_id: int, vel: Vector3) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('dev_push', [entity_id, vel], [&'u64', &'vector3[f32,f32,f32]'], &'')
+
 
 func end_interact() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('end_interact', [], [], &'')

@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -28,6 +28,7 @@ var movement_state: UmfMovementStateTable
 var noise: UmfNoiseTable
 var npc_brain: UmfNpcBrainTable
 var player: UmfPlayerTable
+var push: UmfPushTable
 var session: UmfSessionTable
 var session_match: UmfSessionMatchTable
 var session_member: UmfSessionMemberTable
@@ -61,6 +62,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	noise = preload('res://spacetime_bindings/schema/tables/umf_noise_table.gd').new(p_local_db)
 	npc_brain = preload('res://spacetime_bindings/schema/tables/umf_npc_brain_table.gd').new(p_local_db)
 	player = preload('res://spacetime_bindings/schema/tables/umf_player_table.gd').new(p_local_db)
+	push = preload('res://spacetime_bindings/schema/tables/umf_push_table.gd').new(p_local_db)
 	session = preload('res://spacetime_bindings/schema/tables/umf_session_table.gd').new(p_local_db)
 	session_match = preload('res://spacetime_bindings/schema/tables/umf_session_match_table.gd').new(p_local_db)
 	session_member = preload('res://spacetime_bindings/schema/tables/umf_session_member_table.gd').new(p_local_db)

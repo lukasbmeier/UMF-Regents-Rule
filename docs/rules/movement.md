@@ -13,6 +13,9 @@ The movement model, Tier A trust, gaits, facing and the input path. Moved verbat
   `last_processed_seq` its row holds, because `submit_input` drops anything at or below it.
   Nothing may ever LOWER that count, or a live client's frames drop the same way.
 - A claim outside the trust envelope is clamped AS A WHOLE: height scales with distance (#149).
+- THE SERVER'S PUSHES (#251) are applied by the pushed client at a numbered frame (`_pushes[seq]`) and
+  carried outside the model (`PUSH_DRAG_MPS2`, the same number as `crate::push::PUSH_DRAG_MPS2`); the
+  module's envelope widens by `crate::push::widened`. Change the drag on one side and change the other.
   Clamped apart, a far claim's drop was taken almost in full, and a player stood inside the ground.
 
 ## GAITS AND FACING (DECISIONS #100-#102)

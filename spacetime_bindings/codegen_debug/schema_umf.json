@@ -1567,6 +1567,47 @@
 			]
 		},
 		{
+			"name": "Push",
+			"namespace": [],
+			"source_name": "Push",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "vel",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "by_id",
+					"type": "U64"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"push"
+			],
+			"table_name": "push",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "RateBudget",
 			"namespace": [],
 			"source_name": "RateBudget",
@@ -2492,6 +2533,25 @@
 			"return_data": {}
 		},
 		{
+			"name": "dev_push",
+			"wire_name": "dev_push",
+			"namespace": [],
+			"local_name": "dev_push",
+			"params": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "vel",
+					"type": "Vector3",
+					"type_idx": 3
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "end_interact",
 			"wire_name": "end_interact",
 			"namespace": [],
@@ -2803,7 +2863,7 @@
 					],
 					"is_array": true,
 					"type": "BodyContactWrite",
-					"type_idx": 39
+					"type_idx": 40
 				}
 			],
 			"return_type": "",
@@ -3342,7 +3402,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 45
+					"type_idx": 46
 				}
 			],
 			"return_type": "",
@@ -3455,7 +3515,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 50
+					"type_idx": 51
 				}
 			],
 			"return_type": "",
@@ -3478,7 +3538,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 51
+					"type_idx": 52
 				}
 			],
 			"return_type": "",
@@ -4323,11 +4383,39 @@
 			"is_public": true
 		},
 		{
+			"name": "push",
+			"wire_name": "push",
+			"namespace": [],
+			"local_name": "push",
+			"type_idx": 37,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "push_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "rate_budget",
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 37,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -4351,7 +4439,7 @@
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 38,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4370,7 +4458,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 40,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4394,7 +4482,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 41,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4413,7 +4501,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 42,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4437,7 +4525,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 43,
+			"type_idx": 44,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4493,7 +4581,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 44,
+			"type_idx": 45,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4517,7 +4605,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 45,
+			"type_idx": 46,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4540,7 +4628,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 46,
+			"type_idx": 47,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4564,7 +4652,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 47,
+			"type_idx": 48,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4583,7 +4671,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 48,
+			"type_idx": 49,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4602,7 +4690,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 49,
+			"type_idx": 50,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4686,6 +4774,7 @@
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"PerfReport": "UmfPerfReport",
 		"Player": "UmfPlayer",
+		"Push": "UmfPush",
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
@@ -4770,6 +4859,7 @@
 		"NpcBrainRow": "UmfNpcBrainRow",
 		"PerfReport": "UmfPerfReport",
 		"Player": "UmfPlayer",
+		"Push": "UmfPush",
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
@@ -7462,6 +7552,71 @@
 						},
 						"algebraic_type": {
 							"Bool": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "vel"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "by_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
 						}
 					}
 				]

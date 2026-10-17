@@ -35,6 +35,10 @@ pub mod body;
 /// Telemetry's rules (DECISIONS #244): what a performance report or feedback may hold. Pure.
 pub mod telemetry;
 
+/// The server pushes people (DECISIONS #251): a push's bound, and a player's bound widened by the pushes
+/// they are under. Pure.
+pub mod push;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {

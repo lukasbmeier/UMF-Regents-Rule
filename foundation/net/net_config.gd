@@ -90,4 +90,6 @@ class_name NetConfig extends Resource
 	&"noise",
 	# Bodies the referee moves: each one's turn and rest, and what they hit (BodyComponent, DECISIONS #246)
 	&"body_state", &"body_contact",
+	# The server's pushes, applied by the pushed player's own client (the movement component, DECISIONS #251)
+	&"push",
 ]

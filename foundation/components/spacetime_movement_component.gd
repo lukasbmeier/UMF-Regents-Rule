@@ -47,6 +47,13 @@ enum Mode {
 const TABLE: StringName = &"movement_state"
 ## SERVER_AUTHORITY only: the frames a client submitted, waiting to be simulated.
 const INPUT_TABLE: StringName = &"input_queue"
+## Pushes the server wrote (DECISIONS #251: a blower, a pad): this entity's own client applies them.
+const PUSH_TABLE: StringName = &"push"
+## A push's sideways speed is CARRIED: for a while after it the body goes at least that fast along it,
+## slowing by this much a second (the model's own friction would take it in a third of a second in the
+## air, a tenth on the ground: a blower would barely move anyone). Inside the module's widened bound
+## (`foundation.push_window_s`) for any push under 9 m/s at its default.
+const PUSH_DRAG_MPS2: float = 6.0
 ## SERVER_AUTHORITY: most input frames replayed in one physics tick. A client that stalled and
 ## reconnected arrives with a backlog; replaying all of it at once would fling the entity across
 ## the level in a single step, and replaying it a few frames per tick would take a minute of
@@ -179,6 +186,9 @@ var _predicted: MovementState = null
 var _history: Dictionary[int, MovementState] = {}
 ## Frames the server has not acknowledged yet, oldest first. Replayed after a correction.
 var _pending: Array[InputFrame] = []
+## Pushes the server wrote, not yet in a predicted frame; and those that are, by the frame's seq.
+var _push_waiting: Vector3 = Vector3.ZERO
+var _pushes: Dictionary[int, Vector3] = {}
 ## The server's correction epoch we have applied; stamped onto every frame we send. The server
 ## bumps it when it overrides us, and consumes frames from an older epoch without moving —
 ## that is what stops our in-flight frames dragging it back to the path it just rejected.
@@ -229,14 +239,15 @@ func required_tables() -> Array[StringName]:
 	# The mode is chosen in `SpaceTimeEntity._finish_bind()`, which runs AFTER routing is set up,
 	# so this cannot ask `mode`. It asks the same question the entity will: is this an authority?
 	if is_authority_process():
-		return [TABLE, INPUT_TABLE]
-	return [TABLE]
+		return [TABLE, INPUT_TABLE, PUSH_TABLE]
+	return [TABLE, PUSH_TABLE]
 
 
 ## `input_queue` is a collection, and an entity nobody is driving legitimately has no rows in it.
 ## Without this, every spawn in the sidecar would sit out its whole bind timeout (DECISIONS #69).
+## Routed, never waited for: an entity has no push until the server pushes it.
 func optional_tables() -> Array[StringName]:
-	return [INPUT_TABLE]
+	return [INPUT_TABLE, PUSH_TABLE]
 
 
 ## True when this process simulates worlds instead of watching one. Set by the NetConfig the
@@ -345,6 +356,11 @@ func push_input(frame: InputFrame) -> void:
 		return
 	if _predicted == null:
 		_predicted = _auth.duplicate() if _auth != null else MovementState.new()
+	# A push that arrived since the last frame goes into this one, by its number, so a replay of this
+	# frame (a correction) is pushed again exactly as it was the first time.
+	if _push_waiting != Vector3.ZERO:
+		_pushes[frame.seq] = _push_waiting
+		_push_waiting = Vector3.ZERO
 	var before: MovementState = _predicted
 	_predicted = _step(_predicted, frame)
 	frame.epoch = _epoch
@@ -374,7 +390,61 @@ func on_input_batch_failed(seq_from: int, seq_to: int) -> void:
 
 ## One predicted step. Yaw follows the look direction, exactly as the module sets it from the
 ## frame, so a replayed history and the server agree about facing as well as position.
+## THE SERVER PUSHED THIS ENTITY (DECISIONS #251): `vel` added to its velocity. The local player's
+## prediction takes it at its next frame (and the module, which wrote it, lets it move that fast for
+## `foundation.push_window_s`); an entity this process is the authority for takes it now; one drawn from
+## rows moves as its rows say. Upward, it leaves the ground.
+func push(vel: Vector3) -> void:
+	match mode:
+		Mode.LOCAL_PREDICTED:
+			_push_waiting += vel
+		Mode.SERVER_AUTHORITY:
+			if _sim != null:
+				_sim = _pushed(_sim, vel)
+				_sim_dirty = true
+		_:
+			pass
+
+
+## The pushes before frame `seq` still carrying the body (each its sideways speed less `PUSH_DRAG_MPS2`
+## for every frame since): it goes at least that fast along each. Worked out from the frame's number,
+## so a replay carries it the same.
+func _carried(from: MovementState, seq: int) -> MovementState:
+	if _pushes.is_empty():
+		return from
+	var dt: float = _dt()
+	var s: MovementState = from
+	for at: int in _pushes.keys():
+		if at >= seq:
+			continue
+		var p: Vector3 = _pushes[at]
+		var h := Vector3(p.x, 0.0, p.z)
+		var left: float = h.length() - PUSH_DRAG_MPS2 * dt * float(seq - at)
+		if left <= 0.0:
+			continue
+		var dir: Vector3 = h.normalized()
+		var along: float = s.vel.dot(dir)
+		if along < left:
+			if s == from:
+				s = from.duplicate()
+			s.vel = s.vel + dir * (left - along)
+	return s
+
+
+static func _pushed(from: MovementState, vel: Vector3) -> MovementState:
+	var s: MovementState = from.duplicate()
+	s.vel = s.vel + vel
+	if vel.y > 0.0:
+		s.grounded = false
+	return s
+
+
 func _step(from: MovementState, frame: InputFrame) -> MovementState:
+	var kick: Vector3 = _pushes.get(frame.seq, Vector3.ZERO)
+	if kick != Vector3.ZERO:
+		from = _pushed(from, kick)
+	else:
+		from = _carried(from, frame.seq)
 	# A resolver means "there is a world": the model then lets move_and_slide decide the ground
 	# (DECISIONS #80). With no body in a world to resolve against, pass none, and the model uses
 	# its flat ground plane — exactly what it does in the golden harness.
@@ -488,6 +558,11 @@ func _trim_prediction_buffers() -> void:
 		for s: int in _history.keys():
 			if s <= floor_seq:
 				_history.erase(s)
+	if not _pushes.is_empty():
+		var oldest: int = _pending[0].seq if not _pending.is_empty() else _newest_seq
+		for s: int in _pushes.keys():
+			if s < oldest - MAX_HISTORY:
+				_pushes.erase(s)
 
 
 # --- SERVER_AUTHORITY: being the server ------------------------------------------------
@@ -626,7 +701,12 @@ func _on_bound() -> void:
 		_reset_interpolation()
 
 
-func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> void:
+func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> void:
+	if table == PUSH_TABLE:
+		# A push is a moment: applied once, as it arrives (not one that was already there at bind).
+		if old == null and new != null and is_bound():
+			push(new.get(&"vel") as Vector3)
+		return
 	if table == INPUT_TABLE:
 		# Deletes arrive too: `write_movement_batch` prunes the rows we told it we had consumed.
 		# Those are already folded into `_sim`, so there is nothing to undo.

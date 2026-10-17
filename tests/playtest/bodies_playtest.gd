@@ -8,6 +8,9 @@ extends Node
 ##                    referee put it
 ##   --role=watcher   sees the same ball fly from the referee's rows (no flight of its own), smoothly,
 ##                    and come to rest in the same place
+## Then THE SERVER PUSHES (DECISIONS #251, `dev_push`, as a genre's blower would): the watcher pushes
+## itself up and along and must fly that way with no correction from the server (its own client applied
+## it, the server let it); the thrower pushes the ball at rest and the referee must send it rolling.
 ## Exits 0/1.
 
 const OVERALL_TIMEOUT_SEC: float = 50.0
@@ -43,7 +46,30 @@ func _run() -> void:
 		# is a ball that hits them.
 		SpaceTimeSync.call_reducer(&"teleport", [Vector3(0.0, 0.0, -6.0)], ["vector3[f32,f32,f32]"])
 		await _watch()
+		await _pushed(me)
 	_finish()
+
+
+## Push ourselves through the server: up and along, flown by our own prediction, never corrected.
+func _pushed(me: SpaceTimeEntity) -> void:
+	await get_tree().create_timer(1.0).timeout
+	var m: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	var epoch: int = m._epoch
+	var from: Vector3 = me.global_position
+	var top: float = from.y
+	SpaceTimeSync.call_reducer(&"dev_push", [me.entity_id, Vector3(0.0, 7.0, 8.0)], ["u64", "vector3[f32,f32,f32]"])
+	var deadline: int = Time.get_ticks_msec() + 3000
+	while Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+		top = maxf(top, me.global_position.y)
+	var went: Vector3 = me.global_position - from
+	print("   pushed: up %.2f m at the top, %.2f m along (z), epoch %d -> %d" % [top - from.y, went.z, epoch, m._epoch])
+	_check(top - from.y > 0.8, "the push threw us up (%.2f m)" % (top - from.y))
+	_check(went.z > 3.0, "and along, carried (%.2f m)" % went.z)
+	_check(m._epoch == epoch, "and the server never corrected us for it: it let the push through (epoch %d -> %d)" % [epoch, m._epoch])
+	var srow: RefCounted = SpaceTimeSync.get_row(&"movement_state", me.entity_id)
+	var spos: Vector3 = srow.get(&"pos") if srow != null else Vector3.INF
+	_check(spos.distance_to(me.global_position) < 0.5, "the server has us where we are (%s, drawn %s)" % [spos, me.global_position])
 
 
 func _throw(me: SpaceTimeEntity) -> void:
@@ -96,6 +122,19 @@ func _throw(me: SpaceTimeEntity) -> void:
 	_check(server.x < 9.4 and server.x > -9.4 and server.y < 0.3, "back off the wall, on the floor (%s)" % server)
 	_check(contacts.any(func(c: Dictionary) -> bool: return int(c["other_id"]) == 0 and float(c["speed"]) > 5.0),
 		"the wall's hit arrived as a contact, fast (%s)" % [contacts])
+	# THE SERVER PUSHES THE BALL AT REST: the referee wakes it and sends it on.
+	var lay: Vector3 = server
+	SpaceTimeSync.call_reducer(&"dev_push", [body.entity_id, Vector3(0.0, 3.0, -6.0)], ["u64", "vector3[f32,f32,f32]"])
+	var moved_deadline: int = Time.get_ticks_msec() + 4000
+	while Time.get_ticks_msec() < moved_deadline and (body.entity as Node3D).global_position.distance_to(lay) < 1.0:
+		await get_tree().physics_frame
+	var pushed_to: Vector3 = (body.entity as Node3D).global_position
+	print("   the ball pushed from %s to %s" % [lay, pushed_to])
+	_check(pushed_to.distance_to(lay) >= 1.0 and pushed_to.z < lay.z, "pushed at rest, the referee sends it on (%s)" % pushed_to)
+	var rest_deadline: int = Time.get_ticks_msec() + 10_000
+	while not body.at_rest and Time.get_ticks_msec() < rest_deadline:
+		await get_tree().physics_frame
+	_check(body.at_rest, "and it comes to rest again")
 
 
 func _watch() -> void:

@@ -137,6 +137,8 @@ pub(crate) fn tick_world_module(
         // Its kind's bound (its characters' movement profiles, #205), as its status allows (#206).
         let kind_limits = crate::content::movement_limits(ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0));
         let limits = status_limits(ctx, row.entity_id, kind_limits, grace_ms);
+        // And as fast as the pushes it is under make it go (DECISIONS #251: a blower, a pad).
+        let limits = push_limits(ctx, row.entity_id, limits);
         let mut epoch = row.correction_epoch;
 
         if inputs.is_empty() {

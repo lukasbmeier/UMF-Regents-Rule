@@ -391,6 +391,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     prune_noise(ctx);
     prune_perf(ctx);
     prune_bodies(ctx);
+    prune_pushes(ctx);
     Ok(())
 }
 

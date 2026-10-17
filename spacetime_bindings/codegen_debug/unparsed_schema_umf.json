@@ -2688,6 +2688,71 @@
 							"elements": [
 								{
 									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "vel"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "by_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "key"
 									},
 									"algebraic_type": {
@@ -3563,7 +3628,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 42.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -3579,7 +3644,7 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 47.0,
+					"ty": 48.0,
 					"custom_ordering": true
 				},
 				{
@@ -3595,7 +3660,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 38.0,
+					"ty": 39.0,
 					"custom_ordering": true
 				},
 				{
@@ -3603,7 +3668,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 41.0,
+					"ty": 42.0,
 					"custom_ordering": true
 				},
 				{
@@ -3611,7 +3676,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 43.0,
+					"ty": 44.0,
 					"custom_ordering": true
 				},
 				{
@@ -3619,7 +3684,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 40.0,
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -3721,9 +3786,17 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Push"
+					},
+					"ty": 37.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 39.0,
+					"ty": 40.0,
 					"custom_ordering": true
 				},
 				{
@@ -3731,7 +3804,7 @@
 						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 46.0,
+					"ty": 47.0,
 					"custom_ordering": true
 				},
 				{
@@ -3739,7 +3812,7 @@
 						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 48.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -3779,7 +3852,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 49.0,
+					"ty": 50.0,
 					"custom_ordering": true
 				},
 				{
@@ -3875,7 +3948,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 44.0,
+					"ty": 45.0,
 					"custom_ordering": true
 				},
 				{
@@ -3915,7 +3988,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 45.0,
+					"ty": 46.0,
 					"custom_ordering": true
 				},
 				{
@@ -3931,7 +4004,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 37.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
@@ -3939,7 +4012,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 50.0,
+					"ty": 51.0,
 					"custom_ordering": true
 				},
 				{
@@ -3947,7 +4020,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 51.0,
+					"ty": 52.0,
 					"custom_ordering": true
 				}
 			]
@@ -4026,7 +4099,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 41.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -4797,18 +4870,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "timed_press",
-					"product_type_ref": 46.0,
+					"source_name": "push",
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "timed_press_challenge_id_idx_btree"
+								"some": "push_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "challenge_id"
+								"some": "id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -4818,14 +4891,27 @@
 						},
 						{
 							"source_name": {
-								"some": "timed_press_entity_id_idx_btree"
+								"some": "push_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "push_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
-									1.0
+									2.0
 								]
 							}
 						}
@@ -4833,7 +4919,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "timed_press_challenge_id_key"
+								"some": "push_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -4844,7 +4930,24 @@
 							}
 						}
 					],
-					"sequences": [],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "push_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
 					"table_type": {
 						"User": []
 					},
@@ -4926,8 +5029,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "timed_press",
+					"product_type_ref": 47.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "timed_press_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "world_level",
-					"product_type_ref": 49.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -5060,7 +5221,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 45.0,
+					"product_type_ref": 46.0,
 					"primary_key": [
 						0.0
 					],
@@ -5272,7 +5433,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 38.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -5780,7 +5941,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 37.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -5838,7 +5999,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 44.0,
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
@@ -5896,7 +6057,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 43.0,
+					"product_type_ref": 44.0,
 					"primary_key": [
 						0.0
 					],
@@ -6357,7 +6518,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 42.0,
+					"product_type_ref": 43.0,
 					"primary_key": [
 						0.0
 					],
@@ -6415,7 +6576,7 @@
 				},
 				{
 					"source_name": "unscored_press",
-					"product_type_ref": 47.0,
+					"product_type_ref": 48.0,
 					"primary_key": [
 						0.0
 					],
@@ -6576,7 +6737,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 48.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -6709,7 +6870,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 40.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
@@ -7657,6 +7818,40 @@
 					}
 				},
 				{
+					"source_name": "dev_push",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "vel"
+								},
+								"algebraic_type": {
+									"Ref": 3.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "end_interact",
 					"params": {
 						"elements": []
@@ -8238,7 +8433,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 39.0
+										"Ref": 40.0
 									}
 								}
 							}
@@ -9238,7 +9433,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 45.0
+									"Ref": 46.0
 								}
 							}
 						]
@@ -9439,7 +9634,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 50.0
+										"Ref": 51.0
 									}
 								}
 							}
@@ -9475,7 +9670,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 51.0
+										"Ref": 52.0
 									}
 								}
 							}
@@ -9737,14 +9932,20 @@
 					},
 					{
 						"Table": {
-							"source_name": "timed_press",
-							"canonical_name": "timed_press"
+							"source_name": "push",
+							"canonical_name": "push"
 						}
 					},
 					{
 						"Table": {
 							"source_name": "attachment",
 							"canonical_name": "attachment"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "timed_press",
+							"canonical_name": "timed_press"
 						}
 					},
 					{
@@ -10069,6 +10270,12 @@
 						"Function": {
 							"source_name": "dev_nudge",
 							"canonical_name": "dev_nudge"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "dev_push",
+							"canonical_name": "dev_push"
 						}
 					},
 					{

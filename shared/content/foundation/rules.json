@@ -168,6 +168,15 @@
 					"number": 0.3,
 					"text": "",
 					"unit": ""
+				},
+				{
+					"key": "foundation.push_grace_s",
+					"kind": "number",
+					"max": 3.0,
+					"min": 0.0,
+					"number": 0.5,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

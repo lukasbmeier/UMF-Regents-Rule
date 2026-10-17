@@ -5,7 +5,33 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_prediction_tests()
+	_run_push_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
+
+
+## THE SERVER PUSHES THE PLAYER (DECISIONS #251): the push goes into their next predicted frame, by its
+## number, so a correction's replay pushes them again exactly as the first time.
+func _run_push_tests() -> void:
+	print("== a push from the server ==")
+	var m := _make_predicted()
+	var still: Array[InputFrame] = _walk_frames(m, 1, 20, Vector2.ZERO)
+	var before: MovementState = m.get_predicted_state().duplicate()
+	m.push(Vector3(0.0, 8.0, -6.0))
+	_check(m.get_predicted_state().vel == before.vel, "a push waits for the next frame (nothing moves between frames)")
+	var pushed: Array[InputFrame] = _walk_frames(m, 21, 1, Vector2.ZERO)
+	var after: MovementState = m.get_predicted_state()
+	_check(after.vel.y > 7.0 and after.vel.z < -5.0 and not after.grounded,
+		"the next frame is pushed: up and along, off the ground (vel %s)" % after.vel)
+	var flown: Array[InputFrame] = _walk_frames(m, 22, 15, Vector2.ZERO)
+	var now: Vector3 = m.get_predicted_state().pos
+	_check(now.y > before.pos.y + 1.0 and now.z < before.pos.z - 1.0, "and flies with it (%s from %s)" % [now, before.pos])
+	# A correction at seq 20 (a new epoch: the server overrode us there, at the place we predicted):
+	# everything since is replayed, the push with it.
+	_ack(m, 20, still[19].client_pos, 1)
+	var replayed: Vector3 = m.get_predicted_state().pos
+	_check(replayed.distance_to(now) < 0.001, "a correction's replay pushes again: the same flight (%.4f m apart)" % replayed.distance_to(now))
+	_free_predicted(m)
+	_check(pushed.size() == 1 and flown.size() == 15, "setup: the frames were predicted")
 
 
 

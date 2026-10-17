@@ -670,6 +670,8 @@ for verb in teleport dev_nudge; do
   out="$(spacetime call --anonymous "$DB" $verb '{"x":0.0,"y":0.0,"z":0.0}' 2>&1)"
   check "$(echo "$out" | grep -qi "dev tool" && echo true || echo false)" "a player's $verb is refused while the dev tools are off ($(echo "$out" | tail -1))"
 done
+out="$(spacetime call --anonymous "$DB" dev_push "$MYENT" '{"x":0.0,"y":5.0,"z":0.0}' 2>&1)"
+check "$(echo "$out" | grep -qi "dev tool" && echo true || echo false)" "a player's dev_push is refused while the dev tools are off ($(echo "$out" | tail -1))"
 out="$(spacetime call --anonymous "$DB" set_dev_tools true 2>&1)"
 check "$(echo "$out" | grep -qi "admin only" && echo true || echo false)" "only an admin turns the dev tools on"
 assert_ok "set_dev_tools true" "an admin turns the dev tools on"
@@ -678,6 +680,13 @@ check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "w
 assert_ok "set_dev_tools false" "and off again"
 out="$(spacetime call --anonymous "$DB" teleport '{"x":0.0,"y":0.0,"z":0.0}' 2>&1)"
 check "$(echo "$out" | grep -qi "dev tool" && echo true || echo false)" "off means off again"
+
+# 9b. THE SERVER PUSHES (DECISIONS #251): a push is a row the pushed player's client applies (its bound
+#     widened meanwhile: server/tests/push.rs, and tests/bodies_playtest.sh flies one uncorrected).
+assert_ok "dev_push $MYENT {\"x\":0.0,\"y\":6.0,\"z\":200.0}" "an admin pushes their own player"
+assert_eq "$(sql_first "SELECT vel FROM push WHERE entity_id = $MYENT" 1 | grep -c "39.9")" "1" "a push as hard as 200 m/s is written at the most (40, along itself)"
+out="$(spacetime call "$DB" dev_push 987654321 '{"x":0.0,"y":5.0,"z":0.0}' 2>&1)"
+check "$(echo "$out" | grep -qi "no such entity" && echo true || echo false)" "a push for nobody is refused ($(echo "$out" | tail -1))"
 
 # 9. Overrides from reducers bump the epoch too (the admin's own, with the dev tools off).
 assert_ok 'dev_nudge {"x":0.4,"y":0.0,"z":0.0}' "dev_nudge applies a correction"
