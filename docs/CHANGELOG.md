@@ -734,11 +734,10 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - The greybox game: **hold G** to charge the ball, let go to throw it; the bar shows the charge, mouse up and down spins it, the camera follows it.
 - Tested: the `aim` suite (the meter, the lent mouse, a charge thrown and put down, the camera watching and coming back, the flight cam, the bar), and `tests/bodies_playtest.sh` (the flight cam on a real throw with a real referee at 150 ms).
 
-## 0.50.2 — a level changed with players in it keeps them
-- **A level change keeps every entity receiving its rows** (DECISIONS #250): `LevelLoader` registers each entity it moves into the new level again (leaving the tree had unregistered it, so the local player stopped following the server); `LocalInputComponent` takes the cursor back as it enters the tree again; `BodyComponent` frees its flight only when deleted, not when moved.
-- Found by DiscGolf's three-hole race playtest. Tested: the `levels` suite (a registered entity moved with the level is still registered; it fails without the fix).
-
-## 0.51.0 — the server pushes people (milestone 15, pushes)
+## 0.51.0 — the server pushes people (milestone 15, pushes); a level change keeps its players
 - **A genre pushes a person or a body** (DECISIONS #251): `push_entity(entity, vel, by)` writes a `push` row (public, per world, gone after 5 s). The pushed player's own client applies it inside its prediction at its next frame (by the frame's number, so a correction's replay pushes again) and carries its sideways speed a while; the module widens that player's Tier A bound by the push while it lasts (`foundation.push_grace_s` for lag); the world's referee pushes a body (woken if at rest).
 - `dev_push` (the dev tools), for tests. The `push` table is a core, per-world table: every game runs `tools/publish.sh --codegen` after this.
 - Tested: `server/tests/push.rs`, the `prediction` suite (a push flies, and a replay is the same flight), the integration suite (gated, clamped, nobody refused), `tests/bodies_playtest.sh` (a pushed player uncorrected at 150 ms; a ball at rest pushed on).
+- **A level change keeps every entity receiving its rows** (DECISIONS #250): `LevelLoader` registers each entity it moves into the new level again (leaving the tree had unregistered it, so the local player stopped following the server); `LocalInputComponent` takes the cursor back as it enters the tree again; `BodyComponent` frees its flight only when deleted, not when moved.
+- Found by DiscGolf's three-hole race playtest. Tested: the `levels` suite (a registered entity moved with the level is still registered; it fails without the fix).
+- The integration suite's timed checks hold on a busy machine (the press acknowledged straight after its issue, the referee's waiting request read once).
