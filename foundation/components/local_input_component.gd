@@ -75,6 +75,9 @@ var _movement: SpaceTimeMovementComponent = null
 var _outbox: Array[InputFrame] = []
 ## True while this component is the one holding MouseCapture's standing request.
 var _wants_cursor: bool = false
+## It held it when it left the tree: moved, not gone (a level change reparents every entity), it takes
+## it back as it enters again.
+var _regain_cursor: bool = false
 ## Why the body is being held facing the camera while it stands still (`hold_facing`). A set
 ## rather than a flag so two things aiming at once cannot switch each other off.
 var _face_holds: Dictionary[StringName, bool] = {}
@@ -135,9 +138,17 @@ func _on_bound() -> void:
 ## A disconnect, a despawn or a scene change must give the cursor back, or the player is left
 ## with no pointer and no window to press Escape in.
 func _exit_tree() -> void:
+	_regain_cursor = _wants_cursor
 	if _wants_cursor:
 		_wants_cursor = false
 		MouseCapture.want_capture(false)
+
+
+func _enter_tree() -> void:
+	if _regain_cursor:
+		_regain_cursor = false
+		_wants_cursor = true
+		MouseCapture.want_capture(true)
 
 
 func _unhandled_input(event: InputEvent) -> void:

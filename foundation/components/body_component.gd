@@ -205,7 +205,8 @@ func _turn_at(seq: float) -> Quaternion:
 	return _turns[keys.back()]
 
 
-func _exit_tree() -> void:
-	if _flight != null and is_instance_valid(_flight):
+## Its flight goes with it, when it goes: not when it only moves (a level change reparents every entity).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and _flight != null and is_instance_valid(_flight):
 		_flight.queue_free()
 		_flight = null

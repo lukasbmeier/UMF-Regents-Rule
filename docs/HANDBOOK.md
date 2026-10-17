@@ -141,7 +141,7 @@ need; leave the rest empty.
 A world's level is the foundation's `world_level` row: level 1 is the lakeside, 2 the meadow,
 0 the greybox test level. `spacetime call umf set_world_level 0 2` (as the publisher) switches
 world 0; the game swaps the scene on screen (`LevelLoader`, in the game scene) and moves everyone
-into it. Fishing's own `use_level` does the same through the same record. Each genre hears
+into it, players and all, while they play (DECISIONS #250: DiscGolf's holes are levels). Fishing's own `use_level` does the same through the same record. Each genre hears
 `on_level_changed` and sets itself up (fishing stocks the greybox's ponds and places the rival).
 
 ### Rules a game sets without code: `shared/rules.json`

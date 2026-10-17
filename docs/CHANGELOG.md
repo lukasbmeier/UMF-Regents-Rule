@@ -733,3 +733,7 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 - **Aim and charge** (DECISIONS #249): `ChargeMeter` (fills in its time, overcharged past its mark, holds or bounces at the top); `AimCharge`, the input a genre adds (each key a style; while held the body faces the aim and the mouse's up and down sets a release angle, the view's tilt held: `LocalInputComponent.borrow_mouse_y`; let go: `released(style, power, over, aim, angle)`; another style, a cancel or Escape puts it down); `ChargeBar` draws it.
 - The greybox game: **hold G** to charge the ball, let go to throw it; the bar shows the charge, mouse up and down spins it, the camera follows it.
 - Tested: the `aim` suite (the meter, the lent mouse, a charge thrown and put down, the camera watching and coming back, the flight cam, the bar), and `tests/bodies_playtest.sh` (the flight cam on a real throw with a real referee at 150 ms).
+
+## 0.50.2 — a level changed with players in it keeps them
+- **A level change keeps every entity receiving its rows** (DECISIONS #250): `LevelLoader` registers each entity it moves into the new level again (leaving the tree had unregistered it, so the local player stopped following the server); `LocalInputComponent` takes the cursor back as it enters the tree again; `BodyComponent` frees its flight only when deleted, not when moved.
+- Found by DiscGolf's three-hole race playtest. Tested: the `levels` suite (a registered entity moved with the level is still registered; it fails without the fix).

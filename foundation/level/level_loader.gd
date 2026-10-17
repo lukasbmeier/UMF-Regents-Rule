@@ -7,6 +7,10 @@ class_name LevelLoader extends Node
 ## Put one in the game scene, pointed at the level the scene starts with (`current`, `current_id`):
 ## a scene that is always the same level never swaps. Nothing decides here: the server chose the
 ## level (`set_world_level`, a genre's set-up) and this only shows it.
+##
+## Moving an entity leaves the tree and enters it again: what leaving does (`EntityRegistry` forgets
+## it, its input gives the cursor back) is put right as it arrives, so a level changed with players
+## in it keeps every one of them receiving its rows (a disc golf course's next hole).
 
 signal level_changed(level_id: int)
 
@@ -65,8 +69,14 @@ func show_level(level_id: int) -> bool:
 		var e: Node3D = n as Node3D
 		if e != null and e.get_parent() != world_root:
 			var at: Transform3D = e.global_transform
+			var eid: int = int(e.get(&"entity_id")) if e.get(&"entity_id") != null else -1
+			var registered: bool = eid >= 0 and EntityRegistry.get_entity(eid) == e
 			e.reparent(world_root, false)
 			e.global_transform = at
+			# Leaving the tree unregistered it (that is how a despawned entity is forgotten): moved, it
+			# is still the entity, and its rows must keep reaching it.
+			if registered and not EntityRegistry.has_entity(eid):
+				EntityRegistry.register(eid, e)
 	if _level != null:
 		parent.remove_child(_level)
 		_level.queue_free()

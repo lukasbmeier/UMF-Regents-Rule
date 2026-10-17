@@ -74,6 +74,13 @@ func _run_level_build_tests() -> void:
 	grey.get_node(^"WorldRoot").add_child(walker)
 	walker.global_position = Vector3(2, 0, 3)
 	EntitySpawner._nodes[987654] = walker
+	# A registered entity (a player): moved into the new level, it must still receive its rows.
+	var player := SpaceTimeEntity.new()
+	player.name = "Mover"
+	grey.get_node(^"WorldRoot").add_child(player)
+	player.entity_id = 987655   # after it is in the tree: the spawner's order (hard rule 8)
+	EntitySpawner._nodes[987655] = player
+	EntityRegistry.register(987655, player)
 	await get_tree().process_frame
 	EntityRegistry.global_row_event.emit(RowEvent.make(RowEvent.Kind.INSERTED, LevelLoader.TABLE, null, FakeWorldLevelRow.new(0)))
 	_check(loader.level() == grey and loader.level_id() == 0, "the level the world already runs is left as it is")
@@ -86,8 +93,12 @@ func _run_level_build_tests() -> void:
 	_check(walker.get_parent() == shown.get_node(^"WorldRoot") and walker.global_position.is_equal_approx(Vector3(2, 0, 3))
 		and EntitySpawner.get_node(EntitySpawner.world_root_path) == shown.get_node(^"WorldRoot"),
 		"and the entities move into its WorldRoot, where they were, where new ones will spawn")
+	_check(player.get_parent() == shown.get_node(^"WorldRoot") and EntityRegistry.get_entity(987655) == player,
+		"a registered entity moved with them is still registered: its rows still reach it")
 	_check(not loader.show_level(77) and loader.level_id() == EXAMPLE_ID, "a level nothing can show is said, and the current one stays")
 	EntitySpawner._nodes.erase(987654)
+	EntitySpawner._nodes.erase(987655)
+	EntityRegistry.unregister(987655)
 	EntitySpawner.world_root_path = prev_root
 	game.queue_free()
 	await get_tree().process_frame
