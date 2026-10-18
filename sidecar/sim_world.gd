@@ -75,15 +75,10 @@ func show_level(id: int) -> bool:
 	_level = fresh
 	add_child(_level)
 	move_child(_level, 0)
-	# Everyone it simulates moves into the new level's root, where they stood (as LevelLoader).
-	var root: Node3D = entity_root()
-	EntitySpawner.world_root_path = EntitySpawner.get_path_to(root)
-	for n: Node in EntitySpawner.entity_nodes():
-		var e: Node3D = n as Node3D
-		if e != null and e.get_parent() != root:
-			var at: Transform3D = e.global_transform
-			e.reparent(root, false)
-			e.global_transform = at
+	# Everyone it simulates moves into the new level's root, where they stood, still hearing their rows
+	# (DECISIONS #253: as the client's LevelLoader; before, a bot the server put on the next hole's tee
+	# never heard of it, and walked back from the last basket, or fell where the new level has no ground).
+	EntitySpawner.move_entities_to(entity_root())
 	if old != null:
 		remove_child(old)
 		old.queue_free()

@@ -142,6 +142,10 @@ pub fn write_movement_batch(
         if row.world_id != world_id {
             continue;   // authority for one world may not move an entity in another
         }
+        let age_us = ctx.timestamp.to_micros_since_unix_epoch() - row.server_ts.to_micros_since_unix_epoch();
+        if crate::placed::stale(row.teleport_flag, row.pos, age_us, w.teleport_flag, w.pos) {
+            continue;   // from before it saw the server move this entity: that move stands (#252)
+        }
         ctx.db.movement_state().entity_id().update(MovementStateRow {
             entity_id: w.entity_id,
             world_id,

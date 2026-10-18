@@ -64,19 +64,8 @@ func show_level(level_id: int) -> bool:
 	var world_root: Node = fresh.get_node_or_null(^"WorldRoot")
 	if world_root == null:
 		world_root = fresh
-	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world_root)
-	for n: Node in EntitySpawner.entity_nodes():
-		var e: Node3D = n as Node3D
-		if e != null and e.get_parent() != world_root:
-			var at: Transform3D = e.global_transform
-			var eid: int = int(e.get(&"entity_id")) if e.get(&"entity_id") != null else -1
-			var registered: bool = eid >= 0 and EntityRegistry.get_entity(eid) == e
-			e.reparent(world_root, false)
-			e.global_transform = at
-			# Leaving the tree unregistered it (that is how a despawned entity is forgotten): moved, it
-			# is still the entity, and its rows must keep reaching it.
-			if registered and not EntityRegistry.has_entity(eid):
-				EntityRegistry.register(eid, e)
+	# Everyone moves into it, where they stood, still hearing their rows (#250).
+	EntitySpawner.move_entities_to(world_root)
 	if _level != null:
 		parent.remove_child(_level)
 		_level.queue_free()

@@ -65,6 +65,25 @@ func entity_nodes() -> Array[Node]:
 	return out
 
 
+## A LEVEL CHANGE'S MOVE (DECISIONS #250, #253): every entity into `root`, where it stood, and new ones
+## spawned there too. Leaving the tree unregisters an entity (that is how a despawned one is forgotten):
+## moved, it is still the entity, and its rows must keep reaching it, so each is registered again. The one
+## way entities are moved between levels, the client's (`LevelLoader`) and the referee's (its world) alike.
+func move_entities_to(root: Node) -> void:
+	world_root_path = get_path_to(root)
+	for n: Node in entity_nodes():
+		var e: Node3D = n as Node3D
+		if e == null or e.get_parent() == root:
+			continue
+		var at: Transform3D = e.global_transform
+		var eid: int = int(e.get(&"entity_id")) if e.get(&"entity_id") != null else -1
+		var registered: bool = eid >= 0 and EntityRegistry.get_entity(eid) == e
+		e.reparent(root, false)
+		e.global_transform = at
+		if registered and not EntityRegistry.has_entity(eid):
+			EntityRegistry.register(eid, e)
+
+
 func spawned_count() -> int:
 	return _nodes.size()
 

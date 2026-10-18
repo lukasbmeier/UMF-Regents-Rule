@@ -96,6 +96,15 @@ func _run_level_build_tests() -> void:
 	_check(player.get_parent() == shown.get_node(^"WorldRoot") and EntityRegistry.get_entity(987655) == player,
 		"a registered entity moved with them is still registered: its rows still reach it")
 	_check(not loader.show_level(77) and loader.level_id() == EXAMPLE_ID, "a level nothing can show is said, and the current one stays")
+	# The referee's world moves its entities the same way, through the same call (DECISIONS #253): moved
+	# anywhere, an entity still hears its rows.
+	var elsewhere := Node3D.new()
+	get_tree().root.add_child(elsewhere)
+	EntitySpawner.move_entities_to(elsewhere)
+	_check(player.get_parent() == elsewhere and walker.get_parent() == elsewhere and EntityRegistry.get_entity(987655) == player
+		and walker.global_position.is_equal_approx(Vector3(2, 0, 3)) and EntitySpawner.get_node(EntitySpawner.world_root_path) == elsewhere,
+		"the one way entities move between levels (the client's and the referee's): where they stood, still registered")
+	elsewhere.queue_free()
 	EntitySpawner._nodes.erase(987654)
 	EntitySpawner._nodes.erase(987655)
 	EntityRegistry.unregister(987655)

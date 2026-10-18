@@ -39,6 +39,9 @@ pub mod telemetry;
 /// they are under. Pure.
 pub mod push;
 
+/// A place the server put someone is not undone by their authority's last write (DECISIONS #252). Pure.
+pub mod placed;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {
