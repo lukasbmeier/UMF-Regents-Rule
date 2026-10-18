@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Resource_2hsi6"]
 script = ExtResource("1_v3040")
-name = "umf-template"
+name = "regents-rule"
 alias = "Umf"
 
 [resource]
