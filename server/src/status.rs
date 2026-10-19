@@ -77,10 +77,14 @@ pub fn bound(kind: MovementLimits, cur: &StatusSeed, prev: &StatusSeed, since_ms
         sprint: now.sprint.max(before.sprint),
         burst: now.burst.max(before.burst),
         lift: now.lift.max(before.lift),
+        dash: now.dash.max(before.dash),
+        ..now
     }
 }
 
-/// A kind's bound in one status, bursting or not.
+/// A kind's bound in one status, bursting or not. Its speed scales the gaits, NOT the dash
+/// (DECISIONS #256): a status allows a dash or does not, and one it allows is the whole dash. A slow
+/// status (a committed swing) can then roll out at full length while its walk stays bounded.
 pub fn applied(kind: MovementLimits, s: &StatusSeed, bursting: bool) -> MovementLimits {
     let speed = s.speed.max(0.0) * if bursting { s.burst.max(1.0) } else { 1.0 };
     let run = kind.run * speed;
@@ -88,8 +92,35 @@ pub fn applied(kind: MovementLimits, s: &StatusSeed, bursting: bool) -> Movement
     MovementLimits {
         run,
         sprint,
-        burst: if s.can_dash { kind.burst * speed } else { 0.0 },
+        burst: kind.burst * speed,
         // Without a jump it still climbs what it walks up: a slope rises no faster than it moves.
         lift: if s.can_jump { kind.lift } else { sprint },
+        dash: if s.can_dash { kind.dash } else { 0.0 },
+        ..kind
+    }
+}
+
+/// A player's dash as the module has seen it in their frames (DECISIONS #256): how many client frames
+/// its burst may still show, and how many before the next press opens another.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct DashWindow {
+    pub open_frames: f32,
+    pub cooldown_frames: f32,
+}
+
+impl DashWindow {
+    /// One input frame worth `frames` client frames, its dash key `pressed`: whether this frame may
+    /// carry the dash's burst. A press opens the window when the cooldown is over (the client's own
+    /// rule, `MovementModel`: the press's frame and `dash_frames` - 1 after it); the window and the
+    /// cooldown then count down.
+    pub fn step(&mut self, pressed: bool, frames: f32, limits: &MovementLimits) -> bool {
+        if pressed && limits.dash > 0.0 && self.cooldown_frames <= 0.0 {
+            self.open_frames = limits.dash_frames;
+            self.cooldown_frames = limits.dash_cooldown_frames;
+        }
+        let open = self.open_frames > 0.0;
+        self.open_frames = (self.open_frames - frames).max(0.0);
+        self.cooldown_frames = (self.cooldown_frames - frames).max(0.0);
+        open
     }
 }

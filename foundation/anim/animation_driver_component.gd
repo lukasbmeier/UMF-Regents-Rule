@@ -69,6 +69,8 @@ var _airborne_since_jump: bool = false
 ## the state we just left — long enough for the next frame's decision to undo it.
 var _asked: StringName = &""
 var _asked_age: float = 0.0
+## Until when (msec) moving does not cut the action one-shot: `commit_action`.
+var _action_committed_until: int = 0
 
 ## If the machine has not reached what we asked for by now, it went somewhere else on its own
 ## (an auto transition) and its word is the truth again.
@@ -203,6 +205,17 @@ func hold_pose(semantic: StringName, weight: float = 1.0, at: float = -1.0, whil
 ## Let the held pose go: it blends out.
 func release_pose() -> void:
 	_pose_target = 0.0
+
+
+## COMMIT the action one-shot for `seconds`: moving does not cut it until then (a committed swing's
+## wind-up, which the server lands whatever the legs do, DECISIONS #256). After, `action_cancel_speed`
+## applies again; 0 ends a commitment early (a roll that cancelled the swing).
+func commit_action(seconds: float) -> void:
+	_action_committed_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
+
+
+func action_committed() -> bool:
+	return Time.get_ticks_msec() < _action_committed_until
 
 
 ## Fire `semantic` as the action one-shot: a genre's reaction that is neither an interact nor an
@@ -484,7 +497,7 @@ func _update_pose(delta: float, speed: float) -> void:
 func _cancel_action_if_moving(s: MovementState) -> void:
 	if action_cancel_speed <= 0.0 or _tree == null:
 		return
-	if not bool(_tree.get(AnimationTreeBuilder.P_ACTION_ACTIVE)):
+	if not bool(_tree.get(AnimationTreeBuilder.P_ACTION_ACTIVE)) or action_committed():
 		return
 	if Vector2(s.vel.x, s.vel.z).length() <= action_cancel_speed:
 		return
@@ -628,6 +641,8 @@ func _install() -> bool:
 	_blend_tree = _tree.tree_root as AnimationNodeBlendTree
 	model.add_child(_tree)
 	_tree.root_node = _tree.get_path_to(skel.get_parent())
+	if not animation_set.root_motion_bone.is_empty():
+		_tree.root_motion_track = NodePath("%s:%s" % [skel.name, animation_set.root_motion_bone])
 	_tree.active = true
 	_playback = _tree.get(AnimationTreeBuilder.P_PLAYBACK) as AnimationNodeStateMachinePlayback
 	return _playback != null

@@ -5,7 +5,9 @@ use umf_module::content::MovementLimits;
 use umf_module::push::{bounded, widened, MAX_PUSH_MPS, PUSH_DRAG_MPS2};
 use umf_module::sim::Vector3;
 
-const RUNNER: MovementLimits = MovementLimits { run: 5.5, sprint: 8.0, burst: 0.0, lift: 5.0 };
+const RUNNER: MovementLimits = MovementLimits {
+    run: 5.5, sprint: 8.0, burst: 0.0, lift: 5.0, dash: 0.0, dash_frames: 0.0, dash_cooldown_frames: 0.0,
+};
 
 #[test]
 fn a_push_is_finite_and_no_harder_than_the_most() {

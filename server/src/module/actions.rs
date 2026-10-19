@@ -90,6 +90,17 @@ pub struct Correction {
     pub at: Timestamp,
 }
 
+/// A player's dash as the module has seen it in their input frames (`crate::status::DashWindow`,
+/// DECISIONS #256): the Tier A bound counts a kind's dash only inside a dash's window, so a client
+/// that never dashes is held to its sprint. Written only while a window or a cooldown runs.
+#[table(accessor = dash_window)]
+pub struct DashWindowRow {
+    #[primary_key]
+    pub entity_id: u64,
+    pub open_frames: f32,
+    pub cooldown_frames: f32,
+}
+
 /// Record that the module just overrode `entity_id`, starting `epoch` at input `from_seq`.
 pub(crate) fn record_correction(ctx: &ReducerContext, entity_id: u64, epoch: u32, from_seq: u32) {
     let c = Correction { entity_id, epoch, from_seq, at: ctx.timestamp };

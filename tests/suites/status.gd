@@ -82,6 +82,13 @@ func _run_content() -> void:
 	_check(injured.burst > 1.0 and injured.bursting_at(injured.burst_s * 0.5) and not injured.bursting_at(injured.burst_s + 0.1)
 		and is_equal_approx(injured.apply_to(base, true).sprint_speed, base.sprint_speed * injured.burst),
 		"injured bursts %.1fx for %.1f s, then not" % [injured.burst, injured.burst_s])
+	var slow := StatusDef.new()
+	slow.speed = 0.25
+	var dasher: MovementConfig = base.duplicate() as MovementConfig
+	dasher.dash_impulse = 16.0
+	var sc: MovementConfig = slow.apply_to(dasher)
+	_check(is_equal_approx(sc.run_speed, dasher.run_speed * 0.25) and is_equal_approx(sc.dash_impulse, 16.0),
+		"a slow status that allows the dash bounds the run, not the dash (DECISIONS #256): run %.2f, dash %.1f" % [sc.run_speed, sc.dash_impulse])
 	var out: StatusDef = StatusDef.find(StatusDef.OUT)
 	_check(out.spectate and out.hide_body and not out.targetable and not out.can_act, "out: watches a teammate, hidden, out of reach")
 	var bad := StatusDef.new()

@@ -220,6 +220,17 @@ func _run_animation_scene_tests() -> void:
 	_check(not driver.action_playing(),
 		"walking away cancels it instead of sliding through the rest of it")
 	await _anim_frames(movement, seq, 20, Vector2.ZERO)
+	# A COMMITTED action (DECISIONS #256: a swing's wind-up, which lands whatever the legs do) plays on
+	# while the body walks; let go, walking cuts it again.
+	driver._on_interact_requested(0)
+	driver.commit_action(2.0)
+	await _anim_frames(movement, seq, 4, Vector2.ZERO)
+	await _anim_frames(movement, seq, 20, Vector2(0.0, -1.0))
+	_check(driver.action_playing() and driver.action_committed(), "a committed action plays on while the body walks")
+	driver.commit_action(0.0)
+	await _anim_frames(movement, seq, 15, Vector2(0.0, -1.0))
+	_check(not driver.action_playing(), "and once it is let go, walking cuts it as before")
+	await _anim_frames(movement, seq, 20, Vector2.ZERO)
 
 	# --- the jump arc ----------------------------------------------------------------------
 	var states: Array[String] = []
