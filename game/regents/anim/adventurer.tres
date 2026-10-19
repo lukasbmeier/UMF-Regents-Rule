@@ -1,0 +1,139 @@
+[gd_resource type="Resource" script_class="AnimationSet" format=3]
+
+[ext_resource type="Script" path="res://foundation/anim/animation_clip_ref.gd" id="1_qscmp"]
+[ext_resource type="AnimationLibrary" path="res://game/anim/humanoid_core.res" id="2_e3hlo"]
+[ext_resource type="AnimationLibrary" path="res://game/anim/humanoid_extra.res" id="3_kjpji"]
+[ext_resource type="Script" path="res://foundation/anim/animation_set.gd" id="4_hpq5n"]
+
+[sub_resource type="Resource" id="Resource_20w4r"]
+script = ExtResource("1_qscmp")
+anim_name = &"Idle"
+loop = true
+
+[sub_resource type="Resource" id="Resource_7dn8b"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Walk_Fwd"
+loop = true
+speed_scale = 1.25
+
+[sub_resource type="Resource" id="Resource_776x5"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jog_Fwd"
+loop = true
+speed_scale = 0.97
+
+[sub_resource type="Resource" id="Resource_10228"]
+script = ExtResource("1_qscmp")
+anim_name = &"Sprint"
+loop = true
+speed_scale = 1.02
+
+[sub_resource type="Resource" id="Resource_ci3hj"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Walk_Bwd"
+loop = true
+speed_scale = 0.6
+
+[sub_resource type="Resource" id="Resource_ccsxd"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Walk_L"
+loop = true
+speed_scale = 1.17
+
+[sub_resource type="Resource" id="Resource_m8n37"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Walk_R"
+loop = true
+speed_scale = 1.16
+
+[sub_resource type="Resource" id="Resource_gpw3t"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jog_Bwd"
+loop = true
+speed_scale = 0.76
+
+[sub_resource type="Resource" id="Resource_awqpr"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jog_Left"
+loop = true
+speed_scale = 1.36
+
+[sub_resource type="Resource" id="Resource_6gyr4"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jog_Right"
+loop = true
+speed_scale = 1.37
+
+[sub_resource type="Resource" id="Resource_c7ehk"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jump_Start"
+speed_scale = 4.17
+
+[sub_resource type="Resource" id="Resource_ki18h"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jump"
+loop = true
+
+[sub_resource type="Resource" id="Resource_dpo5l"]
+script = ExtResource("1_qscmp")
+anim_name = &"Jump_Land"
+speed_scale = 2.64
+
+[sub_resource type="Resource" id="Resource_c3sdk"]
+script = ExtResource("1_qscmp")
+anim_name = &"Hit_Chest"
+
+[sub_resource type="Resource" id="Resource_p0gq0"]
+script = ExtResource("1_qscmp")
+anim_name = &"Death01"
+
+[sub_resource type="Resource" id="Resource_82rw1"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/KipUp"
+
+[sub_resource type="Resource" id="Resource_lhmxf"]
+script = ExtResource("1_qscmp")
+anim_name = &"Interact"
+
+[sub_resource type="Resource" id="Resource_k8ku3"]
+script = ExtResource("1_qscmp")
+anim_name = &"Sword_Enter"
+
+[sub_resource type="Resource" id="Resource_5hufo"]
+script = ExtResource("1_qscmp")
+anim_name = &"Sword_Exit"
+
+[sub_resource type="Resource" id="Clip_chop"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/TreeChopping"
+loop = true
+
+[resource]
+script = ExtResource("4_hpq5n")
+libraries = Dictionary[StringName, AnimationLibrary]({
+&"": ExtResource("2_e3hlo"),
+&"extra": ExtResource("3_kjpji")
+})
+strafe = true
+clips = Dictionary[StringName, ExtResource("1_qscmp")]({
+&"interact": SubResource("Resource_lhmxf"),
+&"item.draw": SubResource("Resource_k8ku3"),
+&"item.stow": SubResource("Resource_5hufo"),
+&"jump.land": SubResource("Resource_dpo5l"),
+&"pose.chop": SubResource("Clip_chop"),
+&"jump.loop": SubResource("Resource_ki18h"),
+&"jump.start": SubResource("Resource_c7ehk"),
+&"locomotion.idle": SubResource("Resource_20w4r"),
+&"locomotion.run": SubResource("Resource_776x5"),
+&"locomotion.run_back": SubResource("Resource_gpw3t"),
+&"locomotion.run_left": SubResource("Resource_awqpr"),
+&"locomotion.run_right": SubResource("Resource_6gyr4"),
+&"locomotion.sprint": SubResource("Resource_10228"),
+&"locomotion.walk": SubResource("Resource_7dn8b"),
+&"locomotion.walk_back": SubResource("Resource_ci3hj"),
+&"locomotion.walk_left": SubResource("Resource_ccsxd"),
+&"locomotion.walk_right": SubResource("Resource_m8n37"),
+&"react.death": SubResource("Resource_p0gq0"),
+&"react.hit": SubResource("Resource_c3sdk"),
+&"react.revive": SubResource("Resource_82rw1")
+})

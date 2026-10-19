@@ -34,6 +34,7 @@ The minigame alone: `game/regents/skilling/woodcutting/chop_lab.tscn` (F6), Tree
 | The player's half: tap or hold E, rounds, harvest news | `SkillingComponent` (on `game/regents/adventurer.tscn`) |
 | A tree drawn: its look, falling, its stump, growing back | `TreeNodeComponent` (`skilling/woodcutting/tree_node.tscn`) |
 | The prompt, the round over the game, "+3 Logs", the bag | `RegentsHud` |
+| Chopping, shown on every client: the swing (UAL's TreeChopping as the set's `pose.chop`, `game/regents/anim/adventurer.tres`) and the Bronze axe in hand (a `HeldItem`, `skilling/woodcutting/axe.tscn`, its grips fitted in `axe_grip_preview.tscn`) | `SkillingLook` |
 | The numbers tuned live (the Rules page) | `regents.active_yield_mult` 1.25, `active_rare_mult` 1.3, `chop_reach_m` 3, `afk_stop_moving_m` 1 |
 
 Foundation pieces it rides on, unchanged: a genre challenge kind (`issue_genre_challenge`,
@@ -54,11 +55,10 @@ timers (Felled), `InteractionComponent.interact_handler` (the genre claims E on 
   change takes the trees away.
 - `game/regents/tests/chop_playtest.sh`: two real clients at 150 ms: tap E (AFK logs come, walking away
   stops it), hold E (a round played with A and D while held still, paid by the server), a buddy chopping
-  the same tree.
+  the same tree; the axe and the swing while chopping (AFK and in a round), gone when it stops, and the
+  other player's swing drawn on each client.
 
 ### Left for later (named, not forgotten)
-- **A chop animation.** The humanoid's set has no axe swing; UAL2 has melee and farming clips to fit.
-  Until then the character stands still while chopping. The axe is not drawn in the hand either.
 - **Gathering mastery** (XP and ranks, design #3) and what a better axe does (round speed): items and
   numbers exist, the progression does not.
 - **The other tiers' minigames** (woodcutting 4-5 and 6: owner, 2026-10-18) and the other skills (mining,

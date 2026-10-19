@@ -17,6 +17,7 @@ func run() -> void:
 	_run_golden()
 	_run_chops()
 	_run_perfect_and_replay()
+	_run_chop_look()
 	await _run_minigame()
 
 
@@ -192,6 +193,30 @@ func _run_perfect_and_replay() -> void:
 	# The stagger puts every later swing off the perfect player's timing, so the hits go on from there.
 	_check(flip >= 0 and pr["hits"] == 0 and int(tr["hits"]) >= 1 and tr["clean"] < pr["clean"],
 		"one swing moved under a branch: the replay scores the hit and what it cost (%s vs %s)" % [str(tr), str(pr)])
+
+
+## Chopping, shown: the adventurer's set swings an axe, and the axe is a held item fitted to the swing.
+func _run_chop_look() -> void:
+	print("== regents: chopping, shown ==")
+	var adv: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
+	var aset: AnimationSet = adv.animation_set if adv != null else null
+	var ref: AnimationClipRef = aset.clip(SkillingLook.POSE_CHOP) if aset != null and aset.has_exact(SkillingLook.POSE_CHOP) else null
+	_check(ref != null and ref.anim_name == &"extra/TreeChopping" and ref.loop, "the adventurer's set has pose.chop: UAL's TreeChopping, looping")
+	var lib: AnimationLibrary = aset.libraries.get(&"extra", null) if aset != null else null
+	_check(lib != null and lib.has_animation(&"TreeChopping"), "and the clip is in its extra library")
+	_check(aset != null and aset.missing_required().is_empty(), "the set still drives a tree (nothing required missing)")
+	var axe: Node = (load("res://game/regents/skilling/woodcutting/axe.tscn") as PackedScene).instantiate()
+	var held: HeldItem = axe as HeldItem
+	var fitted: bool = false
+	if held != null and held.grip != null:
+		for e: GripEntry in held.grip.entries:
+			fitted = fitted or e.animation == SkillingLook.POSE_CHOP
+	_check(held != null and held.grip != null and held.grip.hand == &"hand_r" and fitted, "the axe is a held item in the right hand, with a grip fitted to the chop")
+	axe.free()
+	var player: Node = (load("res://game/regents/adventurer.tscn") as PackedScene).instantiate()
+	_check(player.get_node_or_null(^"Components/SkillingLook") is SkillingLook and player.get_node_or_null(^"Components/Skilling") is SkillingComponent,
+		"the adventurer carries its skilling and the look of it")
+	player.free()
 
 
 func _run_minigame() -> void:

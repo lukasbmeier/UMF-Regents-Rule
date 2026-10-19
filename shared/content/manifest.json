@@ -79,7 +79,7 @@
 			"hash": "2c69e69a",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/character/adventurer.tres": "05320fc6",
+				"game/regents/content/character/adventurer.tres": "40311b84",
 				"game/regents/content/character/tree.tres": "b015a4e6"
 			},
 			"type": "character"

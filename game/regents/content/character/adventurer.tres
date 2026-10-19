@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" path="res://game/characters/looks/peasant_f.tscn" id="look_5"]
 [ext_resource type="PackedScene" path="res://game/characters/looks/noble_m.tscn" id="look_6"]
 [ext_resource type="PackedScene" path="res://game/characters/looks/wizard_f.tscn" id="look_7"]
-[ext_resource type="Resource" path="res://game/anim/humanoid.tres" id="5_anim"]
+[ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="5_anim"]
 
 [resource]
 script = ExtResource("1_def")

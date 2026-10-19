@@ -63,6 +63,11 @@ func _chopper(me: SpaceTimeEntity, skilling: SkillingComponent, inv: SpaceTimeIn
 	await _until(func() -> bool: return skilling.afk_tree == tree_id, 3.0)
 	_check(skilling.afk_tree == tree_id, "a tap of E: chopping it AFK (the server's afk_chop row)")
 	_check(hud._prompt.text.begins_with("Chopping"), "the prompt says so: \"%s\"" % hud._prompt.text)
+	var look: SkillingLook = me.find_component(SkillingLook) as SkillingLook
+	var driver: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	await _until(func() -> bool: return look.axe != null and driver.pose_weight() > 0.6, 2.0)
+	_check(look.axe != null and driver.pose_clip() == &"extra/TreeChopping" and driver.pose_weight() > 0.6,
+		"chopping AFK, the character swings an axe (%s at %.2f) with the axe in hand" % [driver.pose_clip(), driver.pose_weight()])
 	var logs0: int = inv.count(LOGS)
 	var tree: TreeNodeComponent = SkillingComponent.tree_of(tree_id)
 	# The buddy chops this tree too, and any log may fell it (1 in 4 for a Tree): if it falls before ours
@@ -86,6 +91,10 @@ func _chopper(me: SpaceTimeEntity, skilling: SkillingComponent, inv: SpaceTimeIn
 		await _until(func() -> bool: return skilling.afk_tree == -1, 2.0)
 		_check(skilling.afk_tree == -1, "walking away stops AFK chopping")
 
+	await _until(func() -> bool: return skilling.afk_tree == -1 and look.axe == null, 4.0)
+	_check(skilling.afk_tree == -1 and look.axe == null and driver.pose_weight() < 0.2,
+		"not chopping any more: the axe goes and the swing blends out (%.2f)" % driver.pose_weight())
+
 	# HOLD E: a round, on a tree that stands.
 	tree_id = await _standing_tree()
 	_check(tree_id > 0, "a tree that stands to play a round on")
@@ -102,6 +111,8 @@ func _chopper(me: SpaceTimeEntity, skilling: SkillingComponent, inv: SpaceTimeIn
 	if hud.game.state != ChopMinigame.State.PLAYING:
 		return
 	var stood: Vector3 = me.global_position
+	await _until(func() -> bool: return look.axe != null, 2.0)
+	_check(look.axe != null and driver.pose_clip() == &"extra/TreeChopping", "playing a round, the character swings the axe too")
 	# Play it through the keys: a press every swing, from the side the next branch is not on.
 	var m: ChopModel = hud.game.model
 	while hud.game.state == ChopMinigame.State.PLAYING:
@@ -124,6 +135,20 @@ func _buddy(me: SpaceTimeEntity, skilling: SkillingComponent, inv: SpaceTimeInve
 	skilling.chop(tree_id, false)
 	await _until(func() -> bool: return skilling.afk_tree == tree_id, 3.0)
 	_check(skilling.afk_tree == tree_id, "the buddy chops the same tree AFK")
+	# The chopper beside us, as WE draw them: their afk_chop row reaches us, and their axe swings here too.
+	var seen: Array[bool] = [false]
+	await _until(func() -> bool:
+		for id: int in EntityRegistry.all_entity_ids():
+			var other: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+			if other == null or other == me:
+				continue
+			var s: SkillingComponent = other.find_component(SkillingComponent) as SkillingComponent
+			var l: SkillingLook = other.find_component(SkillingLook) as SkillingLook
+			var d: AnimationDriverComponent = other.find_component(AnimationDriverComponent) as AnimationDriverComponent
+			if s != null and s.afk_tree >= 0 and l != null and l.axe != null and d != null and d.pose_clip() == &"extra/TreeChopping":
+				seen[0] = true
+		return seen[0], 8.0)
+	_check(seen[0], "the other player chopping is drawn swinging an axe on this client too")
 	var tree: TreeNodeComponent = SkillingComponent.tree_of(tree_id)
 	await _until(func() -> bool: return inv.count(LOGS) > 0 or tree.felled, 9.0)
 	print("   buddy: %d logs, the tree %s" % [inv.count(LOGS), "fell" if tree.felled else "stands"])
