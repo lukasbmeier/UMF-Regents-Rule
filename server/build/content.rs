@@ -64,8 +64,8 @@ pub fn run(listed: &[String]) {
     // Hot rules: (key, kind, number, text, min, max) as declared, then this game's overrides.
     let mut rules: Vec<(String, String, f64, String, f64, f64)> = Vec::new();
     let mut overrides: Vec<(String, f64, String, String)> = Vec::new();
-    // Movement profiles by id: (run, sprint, dash burst, lift); characters: (kind, profile id or -1).
-    let mut profiles: Vec<(i64, f64, f64, f64, f64)> = Vec::new();
+    // Movement profiles by id; characters: (kind, profile id or -1).
+    let mut profiles: Vec<Profile> = Vec::new();
     // Statuses: (owner, content id, the baked item).
     let mut statuses: Vec<(String, i64, serde_json::Value)> = Vec::new();
     // Holds: (owner, the baked item).
@@ -119,7 +119,9 @@ pub fn run(listed: &[String]) {
             for p in doc["items"].as_array().cloned().unwrap_or_default() {
                 let f = |k: &str| p[k].as_f64().unwrap_or(0.0);
                 let lift = if f("flap_charges") > 0.0 { f("jump_velocity").max(f("flap_velocity")) } else { f("jump_velocity") };
-                profiles.push((p["id"].as_i64().unwrap_or(-1), f("run_speed"), f("sprint_speed"), f("dash_impulse").max(0.0), lift));
+                profiles.push(Profile { id: p["id"].as_i64().unwrap_or(-1), run: f("run_speed"), sprint: f("sprint_speed"),
+                    dash: f("dash_impulse").max(0.0), lift, accel: f("acceleration"), dash_ticks: f("dash_ticks"),
+                    dash_cooldown: f("dash_cooldown_ticks") });
             }
         }
         if info["type"] == "status" {
@@ -265,25 +267,41 @@ fn hot_rules(mut rules: Vec<(String, String, f64, String, f64, f64)>, overrides:
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("hot_rules.rs"), src).unwrap();
 }
 
+/// A movement profile, as a kind's Tier A bound needs it.
+struct Profile { id: i64, run: f64, sprint: f64, dash: f64, lift: f64, accel: f64, dash_ticks: f64, dash_cooldown: f64 }
+
+/// A kind's bound: (run, sprint, dash, lift, dash window, dash cooldown). The dash's WINDOW is the client
+/// frames its burst may show: it lasts `dash_ticks`, and its extra speed bleeds off at the acceleration's
+/// rate, whichever is longer; its cooldown, the frames before the next (DECISIONS #256).
+fn bound_of(p: &Profile, hz: f64) -> (f64, f64, f64, f64, f64, f64) {
+    if p.dash <= 0.0 {
+        return (p.run, p.sprint, 0.0, p.lift, 0.0, 0.0);
+    }
+    (p.run, p.sprint, p.dash, p.lift, p.dash_ticks.max((p.dash / p.accel.max(1.0) * hz).ceil()), p.dash_cooldown)
+}
+
 /// How fast a kind of entity may claim to move in a Tier A world (DECISIONS #205) -> $OUT_DIR/
 /// movement_limits.rs. A kind's bound is the widest of its characters': a character with a movement
 /// profile brings the profile's run, sprint, dash and lift; one without brings the default's
-/// (shared/movement_config.json). A kind no character with a profile uses keeps the default.
-fn movement_limits(root: &Path, profiles: &[(i64, f64, f64, f64, f64)], characters: &[(u64, i64)]) {
+/// (shared/movement_config.json). A kind no character with a profile uses keeps the default. Its dash
+/// counts only inside a dash's window (#256): the longest of its characters', after the shortest cooldown.
+fn movement_limits(root: &Path, profiles: &[Profile], characters: &[(u64, i64)]) {
     let cfg_path = root.join("shared/movement_config.json");
     println!("cargo:rerun-if-changed={}", cfg_path.display());
     let cfg: serde_json::Value = serde_json::from_str(&fs::read_to_string(&cfg_path).expect("shared/movement_config.json"))
         .expect("shared/movement_config.json is not JSON");
     let g = |k: &str| cfg[k].as_f64().unwrap_or(0.0);
-    let default = (g("run_speed"), g("sprint_speed"), g("dash_impulse").max(0.0),
-        if g("flap_charges") > 0.0 { g("jump_velocity").max(g("flap_velocity")) } else { g("jump_velocity") });
-    let mut kinds: Vec<(u64, (f64, f64, f64, f64))> = Vec::new();
+    let hz = g("client_tick_hz");
+    let default = bound_of(&Profile { id: -1, run: g("run_speed"), sprint: g("sprint_speed"), dash: g("dash_impulse").max(0.0),
+        lift: if g("flap_charges") > 0.0 { g("jump_velocity").max(g("flap_velocity")) } else { g("jump_velocity") },
+        accel: g("acceleration"), dash_ticks: g("dash_ticks"), dash_cooldown: g("dash_cooldown_ticks") }, hz);
+    let mut kinds: Vec<(u64, (f64, f64, f64, f64, f64, f64))> = Vec::new();
     let mut profiled: Vec<u64> = Vec::new();
     for (kind, pid) in characters {
-        let lim = match profiles.iter().find(|p| p.0 == *pid) {
+        let lim = match profiles.iter().find(|p| p.id == *pid) {
             Some(p) => {
                 profiled.push(*kind);
-                (p.1, p.2, p.3, p.4)
+                bound_of(p, hz)
             }
             None => {
                 assert!(*pid < 0, "a character links to movement profile {pid}, which is not baked content");
@@ -291,27 +309,47 @@ fn movement_limits(root: &Path, profiles: &[(i64, f64, f64, f64, f64)], characte
             }
         };
         match kinds.iter_mut().find(|k| k.0 == *kind) {
-            Some(k) => k.1 = (k.1 .0.max(lim.0), k.1 .1.max(lim.1), k.1 .2.max(lim.2), k.1 .3.max(lim.3)),
+            Some(k) => {
+                // The shortest cooldown among those that dash at all.
+                let cool = match (k.1 .2 > 0.0, lim.2 > 0.0) {
+                    (true, true) => k.1 .5.min(lim.5),
+                    (false, true) => lim.5,
+                    _ => k.1 .5,
+                };
+                k.1 = (k.1 .0.max(lim.0), k.1 .1.max(lim.1), k.1 .2.max(lim.2), k.1 .3.max(lim.3), k.1 .4.max(lim.4), cool)
+            }
             None => kinds.push((*kind, lim)),
         }
     }
     kinds.retain(|k| profiled.contains(&k.0));
     kinds.sort_by_key(|k| k.0);
+    let lit = |l: &(f64, f64, f64, f64, f64, f64)| format!(
+        "MovementLimits {{ run: {:?}f32, sprint: {:?}f32, burst: 0.0f32, lift: {:?}f32, dash: {:?}f32, dash_frames: {:?}f32, dash_cooldown_frames: {:?}f32 }}",
+        l.0 as f32, l.1 as f32, l.3 as f32, l.2 as f32, l.4 as f32, l.5 as f32);
     let mut src = format!(
-        "// @generated by build.rs from shared/content (movement profiles, characters) - do not edit.\n\
-         /// A kind's Tier A movement bound: the fastest a client of it may claim to go.\n\
-         #[derive(Clone, Copy, Debug, PartialEq)]\n\
-         pub struct MovementLimits {{ pub run: f32, pub sprint: f32, pub burst: f32, pub lift: f32 }}\n\
-         /// The default's (shared/movement_config.json): every kind no profiled character uses.\n\
-         pub const DEFAULT_LIMITS: MovementLimits = MovementLimits {{ run: {:?}f32, sprint: {:?}f32, burst: {:?}f32, lift: {:?}f32 }};\n\
-         /// Kinds with a movement profile, by kind.\n\
-         pub const KIND_LIMITS: &[(u8, MovementLimits)] = &[\n",
-        default.0 as f32, default.1 as f32, default.2 as f32, default.3 as f32
+        "// @generated by build.rs from shared/content (movement profiles, characters) - do not edit.
+         /// A kind's Tier A movement bound: the fastest a client of it may claim to go. `burst` is what
+         /// pushes add (0 here); `dash` is its dash's, which counts only for `dash_frames` client frames
+         /// after a dash press, and a press only `dash_cooldown_frames` after the last (DECISIONS #256).
+         #[derive(Clone, Copy, Debug, PartialEq)]
+         pub struct MovementLimits {{ pub run: f32, pub sprint: f32, pub burst: f32, pub lift: f32, pub dash: f32, pub dash_frames: f32, pub dash_cooldown_frames: f32 }}
+         /// The default's (shared/movement_config.json): every kind no profiled character uses.
+         pub const DEFAULT_LIMITS: MovementLimits = {};
+         /// Kinds with a movement profile, by kind.
+         pub const KIND_LIMITS: &[(u8, MovementLimits)] = &[
+",
+        lit(&default)
     );
     for (kind, l) in &kinds {
-        src.push_str(&format!("    ({kind}, MovementLimits {{ run: {:?}f32, sprint: {:?}f32, burst: {:?}f32, lift: {:?}f32 }}),\n", l.0 as f32, l.1 as f32, l.2 as f32, l.3 as f32));
+        src.push_str(&format!("    ({kind}, {}),
+", lit(l)));
     }
-    src.push_str("];\n/// A kind's bound.\npub fn movement_limits(kind: u8) -> MovementLimits {\n    KIND_LIMITS.iter().find(|k| k.0 == kind).map(|k| k.1).unwrap_or(DEFAULT_LIMITS)\n}\n");
+    src.push_str("];
+/// A kind's bound.
+pub fn movement_limits(kind: u8) -> MovementLimits {
+    KIND_LIMITS.iter().find(|k| k.0 == kind).map(|k| k.1).unwrap_or(DEFAULT_LIMITS)
+}
+");
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("movement_limits.rs"), src).unwrap();
 }
 

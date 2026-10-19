@@ -582,11 +582,12 @@ sleep 1.5   # thirty ticks with nobody driving: long enough for any gravity to w
 assert_eq "$(close_to "$(pos_of)" "$X1" 1.75 "$Z1" 1e-6)" "true"   "an undriven entity resting on raised geometry is NOT pulled through it by the module"
 
 # 3. A SPEED HACK is clamped to the envelope and starts a correction epoch. THE ENVELOPE IS THE
-#    PLAYER'S KIND'S (DECISIONS #205, #255): a frame's worth of its fastest character's sprint and dash
-#    (x1.5 slack), worked out here as build.rs works it out from the game's content. The foundation's
-#    humanoid: 8 m/s, no dash, 0.2 m; a game whose player rolls (Regent's Rule) allows its dash too.
+#    PLAYER'S KIND'S (DECISIONS #205, #255): a frame's worth of its fastest character's sprint (x1.5
+#    slack), worked out here as build.rs works it out from the game's content; its dash counts only in
+#    a dash's window (#256). The foundation's humanoid: 8 m/s, no dash, 0.2 m; a game whose player rolls
+#    (Regent's Rule) allows its dash on a dash press, and only then.
 KIND0=$(sql_first "SELECT kind FROM entity WHERE entity_id = $MYENT" 1)
-STEP=$(python - "$KIND0" <<'PYEOF'
+read -r STEP DSTEP <<< "$(python - "$KIND0" <<'PYEOF'
 import glob, json, sys
 kind = int(sys.argv[1])
 cfg = json.load(open("shared/movement_config.json"))
@@ -605,9 +606,25 @@ for f in glob.glob("shared/content/*/character.json"):
         best = lim if best is None else (max(best[0], lim[0]), max(best[1], lim[1]))
 if best is None or not profiled:
     best = default
-print(round((best[0] + best[1]) * 1.5 / 60.0, 6))
+print(round(best[0] * 1.5 / 60.0, 6), round((best[0] + best[1]) * 1.5 / 60.0, 6))
 PYEOF
-)
+)"
+if python -c "import sys; sys.exit(0 if $DSTEP > $STEP else 1)"; then
+  # A DASH PRESS opens its window: that frame and the next may claim the dash's speed, unclamped.
+  read -r XA YA ZA <<< "$(pos_of)"
+  DX=$(python -c "print(round($DSTEP * 0.9, 4))")
+  SEQ=$((SEQ + 1)); S2=$((SEQ + 1))
+  send_frames "[$(frame $SEQ "$(python -c "print($XA + $DX)")" "$YA" "$ZA" "$EPOCH" 0 0.0 false true),$(frame $S2 "$(python -c "print($XA + 2 * $DX)")" "$YA" "$ZA" "$EPOCH")]"
+  SEQ=$S2
+  read -r XB YB ZB <<< "$(pos_of)"
+  assert_eq "$(python -c "print('true' if abs(($XB - $XA) - 2 * $DX) < 1e-3 else 'false')")" "true"     "a dash press lets its frame and the next claim the dash's speed ($DX m a frame, past the sprint's $STEP; moved $(python -c "print(round($XB - $XA, 4))"))"
+  assert_eq "$(field correction_epoch)" "$EPOCH" "unclamped: no correction"
+  # Its window shuts (stand still a while); the speed hack below has no dash press, so only the sprint.
+  F=""; for i in $(seq 1 10); do SEQ=$((SEQ + 1)); F="$F${F:+,}$(frame $SEQ "$XB" "$YB" "$ZB" "$EPOCH")"; done
+  send_frames "[$F]"
+  F=""; for i in $(seq 1 10); do SEQ=$((SEQ + 1)); F="$F${F:+,}$(frame $SEQ "$XB" "$YB" "$ZB" "$EPOCH")"; done
+  send_frames "[$F]"
+fi
 read -r XA YA ZA <<< "$(pos_of)"
 SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($XA + 5.0)")" "$YA" "$ZA" "$EPOCH")]"

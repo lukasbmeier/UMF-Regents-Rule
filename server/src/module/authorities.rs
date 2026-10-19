@@ -462,6 +462,7 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.health_state().entity_id().delete(entity_id);
     ctx.db.input_queue().entity_id().delete(entity_id);
     ctx.db.correction().entity_id().delete(entity_id);
+    ctx.db.dash_window().entity_id().delete(entity_id);
     ctx.db.ability_state().entity_id().delete(entity_id);
     ctx.db.inventory_item().owner_entity_id().delete(entity_id);
     ctx.db.npc_brain().entity_id().delete(entity_id);

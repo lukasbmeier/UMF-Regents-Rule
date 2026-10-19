@@ -168,7 +168,9 @@ func apply_to(cfg: MovementConfig, bursting: bool = false) -> MovementConfig:
 	c.walk_speed = cfg.walk_speed * k
 	c.run_speed = cfg.run_speed * k
 	c.sprint_speed = cfg.sprint_speed * k if can_sprint else c.run_speed
-	c.dash_impulse = cfg.dash_impulse * k if can_dash else 0.0
+	# Its speed scales the gaits, not the dash (DECISIONS #256): a dash it allows is the whole dash, so a
+	# slow status (a committed swing) can still roll out of it at full length.
+	c.dash_impulse = cfg.dash_impulse if can_dash else 0.0
 	if not can_jump:
 		c.flap_charges = 0
 	if hover_height > 0.0:

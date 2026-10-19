@@ -140,6 +140,10 @@ pub(crate) fn tick_world_module(
         // And as fast as the pushes it is under make it go (DECISIONS #251: a blower, a pad).
         let limits = push_limits(ctx, row.entity_id, limits);
         let mut epoch = row.correction_epoch;
+        // Its dash counts only inside a dash's window (DECISIONS #256), opened by the frames' own presses.
+        let dash_row = ctx.db.dash_window().entity_id().find(row.entity_id);
+        let mut dash = dash_row.as_ref().map(|d| crate::status::DashWindow { open_frames: d.open_frames, cooldown_frames: d.cooldown_frames })
+            .unwrap_or_default();
 
         if inputs.is_empty() {
             // Nobody's frames landed this tick. For a CONNECTED player that only means batching
@@ -177,7 +181,12 @@ pub(crate) fn tick_world_module(
                     }
                     ctx.db.correction().entity_id().delete(row.entity_id);
                 }
-                let (next, clamped) = apply_client_trust(&s, &q.frame, cfg, frames, level, &limits);
+                let dashing = dash.step(q.frame.dash, frames, &limits);
+                let bound = crate::content::MovementLimits {
+                    burst: limits.burst + if dashing { limits.dash } else { 0.0 },
+                    ..limits
+                };
+                let (next, clamped) = apply_client_trust(&s, &q.frame, cfg, frames, level, &bound);
                 s = next;
                 if clamped {
                     // We just overrode the client. Everything it sends until it has seen this
@@ -186,6 +195,16 @@ pub(crate) fn tick_world_module(
                     record_correction(ctx, row.entity_id, epoch, q.frame.seq);
                     correction = ctx.db.correction().entity_id().find(row.entity_id);
                 }
+            }
+        }
+
+        let saved = dash_row.as_ref().map(|d| (d.open_frames, d.cooldown_frames)).unwrap_or((0.0, 0.0));
+        if (dash.open_frames, dash.cooldown_frames) != saved {
+            let r = DashWindowRow { entity_id: row.entity_id, open_frames: dash.open_frames, cooldown_frames: dash.cooldown_frames };
+            match (dash_row.is_some(), dash == crate::status::DashWindow::default()) {
+                (true, true) => { ctx.db.dash_window().entity_id().delete(row.entity_id); }
+                (true, false) => { ctx.db.dash_window().entity_id().update(r); }
+                (false, _) => { ctx.db.dash_window().insert(r); }
             }
         }
 

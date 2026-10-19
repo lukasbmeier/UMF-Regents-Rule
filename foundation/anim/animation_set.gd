@@ -74,6 +74,11 @@ const FALLBACKS: Dictionary[StringName, Array] = {
 ## family does not match, because the failure mode otherwise is a silent T-pose or a folded-up
 ## character — bone names that half-match are worse than bone names that do not.
 @export var skeleton_family: StringName = &"humanoid"
+## The bone a clip's ROOT MOTION travels on (the humanoid's `root`). Set, the tree takes that travel out
+## of the pose (the AnimationTree's root motion track, DECISIONS #256): a swing that steps forward plays
+## in place, instead of walking the model off its body and snapping it back when the clip ends. The
+## body's movement is the server's to bound; a clip never moves it. Empty: clips play as authored.
+@export var root_motion_bone: StringName = &""
 ## semantic name -> clip
 @export var clips: Dictionary[StringName, AnimationClipRef] = {}
 ## Bones the UPPER-BODY one-shot plays (drawing or stowing an item while walking, DECISIONS #158).

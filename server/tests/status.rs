@@ -4,7 +4,9 @@
 use umf_module::content::{MovementLimits, DEFAULT_LIMITS};
 use umf_module::status::{self, applied, bound, find, normal};
 
-const KIND: MovementLimits = MovementLimits { run: 5.0, sprint: 8.0, burst: 3.0, lift: 8.0 };
+const KIND: MovementLimits = MovementLimits {
+    run: 5.0, sprint: 8.0, burst: 0.0, lift: 8.0, dash: 3.0, dash_frames: 14.0, dash_cooldown_frames: 54.0,
+};
 
 #[test]
 fn the_foundation_has_its_seven() {
@@ -27,7 +29,7 @@ fn downed_crawls_and_ends_in_out() {
     assert_eq!(b.run, KIND.run * d.speed);
     assert!(d.speed < 1.0, "a crawl");
     assert_eq!(b.sprint, b.run, "no sprint: bounded by its crawl");
-    assert_eq!(b.burst, 0.0, "no dash");
+    assert_eq!(b.dash, 0.0, "no dash");
     assert_eq!(b.lift, b.sprint, "no jump: it climbs only what it crawls up");
     assert!(!d.can_act && d.targetable);
     assert!(!d.hittable, "a downed player is not hit again (DECISIONS #226), though they can be helped up");
@@ -41,7 +43,7 @@ fn out_and_escaped_cannot_move_or_be_reached() {
     for n in [status::OUT, status::ESCAPED] {
         let s = find(n).unwrap();
         let b = applied(KIND, s, false);
-        assert_eq!((b.run, b.sprint, b.burst, b.lift), (0.0, 0.0, 0.0, 0.0), "{}", s.name);
+        assert_eq!((b.run, b.sprint, b.burst, b.lift, b.dash), (0.0, 0.0, 0.0, 0.0, 0.0), "{}", s.name);
         assert!(!s.can_act && !s.targetable, "{}", s.name);
     }
 }
@@ -68,4 +70,37 @@ fn the_grace_after_a_change_is_the_wider_and_ends() {
     assert_eq!(late, applied(KIND, d, false), "after it, a crawl");
     let none = bound(KIND, d, n, 0, 0);
     assert_eq!(none, applied(KIND, d, false), "no grace: the change binds at once");
+}
+
+#[test]
+fn a_status_speed_leaves_the_dash_whole() {
+    // DECISIONS #256: a slow status that allows the dash allows all of it (a committed swing rolls out at
+    // full length), while its gaits are bounded; one that forbids it has none.
+    let inj = find(status::INJURED).unwrap();
+    let slow = status::StatusSeed { speed: 0.25, burst: 1.0, burst_ms: 0, can_dash: true, ..*inj };
+    let b = applied(KIND, &slow, false);
+    assert_eq!((b.run, b.dash, b.dash_frames, b.dash_cooldown_frames), (KIND.run * 0.25, KIND.dash, KIND.dash_frames, KIND.dash_cooldown_frames));
+    let none = status::StatusSeed { can_dash: false, ..slow };
+    assert_eq!(applied(KIND, &none, false).dash, 0.0);
+}
+
+#[test]
+fn a_dash_counts_only_inside_its_window() {
+    // DECISIONS #256: the press's frame and dash_frames - 1 after it carry the burst; the next press counts
+    // once the cooldown is over (the client's own rule), not before.
+    let mut w = status::DashWindow::default();
+    assert!(!w.step(false, 1.0, &KIND), "no press, no dash");
+    assert!(w.step(true, 1.0, &KIND), "a press opens it");
+    let open: usize = (0..20).map(|_| w.step(false, 1.0, &KIND)).filter(|o| *o).count();
+    assert_eq!(open, KIND.dash_frames as usize - 1, "for its window, then shut");
+    // 21 frames since the press: a press inside the cooldown opens nothing.
+    assert!(!w.step(true, 1.0, &KIND), "a press inside the cooldown");
+    for _ in 0..(KIND.dash_cooldown_frames as usize - 23) {
+        w.step(false, 1.0, &KIND);
+    }
+    assert!(!w.step(true, 1.0, &KIND), "one frame short of the cooldown");
+    assert!(w.step(true, 1.0, &KIND), "and on its frame, it opens");
+    let mut none = status::DashWindow::default();
+    let no_dash = MovementLimits { dash: 0.0, ..KIND };
+    assert!(!none.step(true, 1.0, &no_dash), "a kind with no dash never opens one");
 }

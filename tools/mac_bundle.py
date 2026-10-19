@@ -9,7 +9,8 @@ the app is signed (a _CodeSignature), and the frameworks it carries (GDExtension
 second argument, writes the app's .pck there, for tools/pck_list.py. Used by tests/export_test.sh.
 
 `--bundle-id` prints the bundle identifier a game's app is exported with: `com.umf.` and its
-title, lower case, anything but letters and digits a hyphen (tools/mac_export.sh).
+title, lower case, apostrophes dropped, anything else but letters and digits a hyphen
+(tools/mac_export.sh).
 """
 import json
 import plistlib
@@ -23,7 +24,9 @@ CPU_ARM64 = 0x0100000C
 
 
 def bundle_id(title):
-    slug = re.sub(r"[^a-z0-9]+", "-", title.strip().lower()).strip("-")
+    # An apostrophe joins its word rather than splitting it: "Regent's Rule" is regents-rule.
+    slug = re.sub(r"['’]", "", title.strip().lower())
+    slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
     return "com.umf." + (slug or "game")
 
 
