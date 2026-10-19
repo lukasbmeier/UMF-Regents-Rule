@@ -39,21 +39,51 @@ class_name GripEntry extends Resource
 	set(value):
 		steady = value
 		emit_changed()
+## A SPOT FIX on the universal grip (`ItemGrip.universal`, DECISIONS #257): `position` and
+## `rotation_degrees` are then a NUDGE from the idle's grip (moved this far in the hand, turned this
+## much more), so moving the universal grip moves every spot fix with it. Steady as the idle is.
+@export var relative: bool = false:
+	set(value):
+		relative = value
+		emit_changed()
+
+## The grip a spot fix sits on (the idle's, for its body): set by `ItemGrip` as it hands the entry
+## out. Never saved.
+var base: GripEntry = null
 
 
-## The grip's turn as a basis: from the hand, or from the body when steady.
+## The grip's turn as a basis: from the hand, or from the body when steady. A spot fix's is its
+## base's, turned by its own.
 func basis() -> Basis:
+	if _on_base():
+		return base.basis() * _own_basis()
+	return _own_basis()
+
+
+func _own_basis() -> Basis:
 	var r: Vector3 = Vector3(deg_to_rad(rotation_degrees.x), deg_to_rad(rotation_degrees.y),
 		deg_to_rad(rotation_degrees.z))
 	return Basis.from_euler(r, EULER_ORDER_YXZ)
 
 
+## Whether the item keeps its direction to the body: a spot fix is as steady as its base.
+func is_steady() -> bool:
+	return base.is_steady() if _on_base() else steady
+
+
+func _on_base() -> bool:
+	return relative and base != null and base != self
+
+
 ## The item in the HAND'S frame, for a hand and a body (the skeleton's) as they are right now.
 ## Scale is the hand's own business: the item is parented to it.
 func in_hand(hand: Transform3D, body: Basis) -> Transform3D:
+	if _on_base():
+		var b: Transform3D = base.in_hand(hand, body)
+		return Transform3D((b.basis * _own_basis()).orthonormalized(), b.origin + position)
 	if not steady:
-		return Transform3D(basis(), position)
-	var turn: Basis = hand.basis.orthonormalized().inverse() * body.orthonormalized() * basis()
+		return Transform3D(_own_basis(), position)
+	var turn: Basis = hand.basis.orthonormalized().inverse() * body.orthonormalized() * _own_basis()
 	return Transform3D(turn.orthonormalized(), position)
 
 
@@ -63,8 +93,14 @@ func in_hand(hand: Transform3D, body: Basis) -> Transform3D:
 func set_held(held: Transform3D, hand: Transform3D, body: Basis) -> bool:
 	var local: Vector3 = hand.affine_inverse() * held.origin
 	var turn: Basis = held.basis.orthonormalized()
-	turn = (body.orthonormalized().inverse() * turn) if steady \
-		else (hand.basis.orthonormalized().inverse() * turn)
+	if _on_base():
+		# A spot fix keeps the nudge from its base: from where the base would put it, to here.
+		var b: Transform3D = base.in_hand(hand, body)
+		local -= b.origin
+		turn = b.basis.orthonormalized().inverse() * hand.basis.orthonormalized().inverse() * turn
+	else:
+		turn = (body.orthonormalized().inverse() * turn) if steady \
+			else (hand.basis.orthonormalized().inverse() * turn)
 	var e: Vector3 = turn.orthonormalized().get_euler(EULER_ORDER_YXZ)
 	var deg: Vector3 = Vector3(rad_to_deg(e.x), rad_to_deg(e.y), rad_to_deg(e.z))
 	var moved: bool = not local.is_equal_approx(position)
@@ -79,9 +115,11 @@ func set_held(held: Transform3D, hand: Transform3D, body: Basis) -> bool:
 ## Make this grip steady or not WITHOUT moving the item: its turn is restated in the other frame,
 ## for a hand and a body as they are now (the preview's frame on screen).
 func set_steady(on: bool, hand: Transform3D, body: Basis) -> void:
-	if on == steady:
+	if on == is_steady():
 		return
 	var held: Transform3D = hand * in_hand(hand, body)
+	# A spot fix made steady on its own is its own grip: it stops following the universal one.
+	relative = false
 	steady = on
 	set_held(Transform3D(held.basis.orthonormalized(), held.origin), hand, body)
 
@@ -90,6 +128,7 @@ func copy_from(other: GripEntry) -> void:
 	position = other.position
 	rotation_degrees = other.rotation_degrees
 	steady = other.steady
+	relative = other.relative
 
 
 ## Two Euler triples that turn the same way (a gizmo can hand back either of two spellings).

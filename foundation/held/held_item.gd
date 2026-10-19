@@ -289,7 +289,7 @@ func wrist_turn_now(skeleton: Skeleton3D) -> Basis:
 		if e == null:
 			continue
 		total += w
-		if e.steady:
+		if e.is_steady():
 			steady += w
 			# A steady grip's turn is in the body's frame, which is the skeleton's own.
 			want += (e.basis() * Vector3.UP) * w

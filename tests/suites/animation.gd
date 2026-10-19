@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_animation_tests()
+	_run_universal_grip_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -391,3 +392,39 @@ func _check_upper_body_filter(set: AnimationSet) -> void:
 			% [arm, legs])
 	for m: Node3D in models:
 		m.free()
+
+
+## ONE GRIP FOR ALL, AND SPOT FIXES (DECISIONS #257): an item placed once, the animations that need it
+## nudged, and the nudges follow the universal grip when it moves.
+func _run_universal_grip_tests() -> void:
+	print("== animation: one grip for all, and spot fixes ==")
+	var hand := Transform3D(Basis.from_euler(Vector3(0.3, -0.7, 0.2)), Vector3(0.4, 1.1, 0.1))
+	var body := Basis.from_euler(Vector3(0.0, 0.5, 0.0))
+	var g := ItemGrip.new()
+	g.entries.append(_grip_entry(AnimationSet.IDLE, Vector3(0.0, 0.08, 0.01), Vector3(60, 40, 30), false))
+	g.entries.append(_grip_entry(AnimationSet.RUN, Vector3(0.5, 0.5, 0.5), Vector3(0, 0, 0), true))
+	_check(g.make_universal() == 1 and g.universal and g.entries.size() == 1, "Use One Grip For All: the run's own grip goes, the idle's stays")
+	var idle: GripEntry = g.find(AnimationSet.IDLE)
+	_check(g.resolve(AnimationSet.RUN) == idle, "and the run uses the universal grip")
+	var fix: GripEntry = g.ensure(AnimationSet.RUN)
+	_check(fix.relative and fix.in_hand(hand, body).is_equal_approx(idle.in_hand(hand, body)),
+		"a grip made for the run is a spot fix, starting on the universal grip (nothing moves)")
+	var nudged: Transform3D = hand * Transform3D(idle.in_hand(hand, body).basis.rotated(Vector3.UP, 0.4), idle.position + Vector3(0.0, 0.03, 0.0))
+	fix.set_held(nudged, hand, body)
+	_check((hand * fix.in_hand(hand, body)).is_equal_approx(nudged) and fix.position.is_equal_approx(Vector3(0.0, 0.03, 0.0)),
+		"a drag on it keeps where it was put, stored as a nudge (%s)" % fix.position)
+	idle.position += Vector3(0.02, 0.0, 0.0)
+	var moved: Transform3D = g.resolve(AnimationSet.RUN).in_hand(hand, body)
+	_check(moved.origin.is_equal_approx(idle.position + Vector3(0.0, 0.03, 0.0)),
+		"move the universal grip and the spot fix moves with it (%s)" % moved.origin)
+	idle.rotation_degrees += Vector3(0.0, 10.0, 0.0)
+	_check(g.resolve(AnimationSet.RUN).in_hand(hand, body).basis.is_equal_approx((idle.in_hand(hand, body).basis * fix._own_basis()).orthonormalized()),
+		"and turns with it")
+	var walk: GripEntry = g.ensure(AnimationSet.WALK)
+	_check(walk.relative and walk.position.is_zero_approx(), "every grip made after is a spot fix too")
+	var plain := ItemGrip.new()
+	plain.entries.append(_grip_entry(AnimationSet.IDLE, Vector3(0.0, 0.08, 0.01), Vector3(60, 40, 30), false))
+	var own: GripEntry = plain.ensure(AnimationSet.RUN)
+	_check(not own.relative and own.position.is_equal_approx(Vector3(0.0, 0.08, 0.01)),
+		"without it, a new grip is its own, copied from the idle's (as before)")
+	idle.position -= Vector3(0.02, 0.0, 0.0)
