@@ -145,9 +145,10 @@ assert_eq "$(sql_first 'SELECT authority_online FROM world_config WHERE world_id
 echo "== items and inventory =="
 assert_ok 'seed_item_defs [{"item_def_id":1,"kind":0,"max_stack":20,"data":""},{"item_def_id":2,"kind":1,"max_stack":1,"data":""}]' \
   "catalogue seeds"
-assert_eq "$(row_count 'SELECT * FROM item_def')" "2" "two item defs"
+# Counted by id: a genre may seed items of its own at init (Regent's Rule's axe and logs).
+assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id = 1 OR item_def_id = 2')" "2" "two item defs"
 assert_ok 'seed_item_defs [{"item_def_id":1,"kind":0,"max_stack":20,"data":"v2"}]' "seeding is idempotent"
-assert_eq "$(row_count 'SELECT * FROM item_def')" "2" "re-seeding updates rather than duplicates"
+assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id = 1 OR item_def_id = 2')" "2" "re-seeding updates rather than duplicates"
 assert_rejected 'seed_item_defs [{"item_def_id":3,"kind":0,"max_stack":0,"data":""}]' "max_stack must" \
   "max_stack 0 is refused"
 
