@@ -11,6 +11,8 @@
 		"challenge_press": "(challenge_id:U64)",
 		"challenge_seen": "(challenge_id:U64)",
 		"choose_character": "(kind:U8)",
+		"chop": "(tree_id:U64,active:Bool)",
+		"chop_stop": "()",
 		"claim_referee": "(world_id:U32,code:String)",
 		"compat_generation_1": "()",
 		"consume_item": "(item_id:U64,qty:U32)",
@@ -73,6 +75,7 @@
 		"ability_state": "AbilityState(id:U64,entity_id:U64,ability_id:U32,cooldown_until:(__timestamp_micros_since_unix_epoch__:I64),charges:U8)",
 		"action_event": "ActionEvent(id:U64,world_id:U32,actor_id:U64,ability_id:U32,target_id:U64,aim:Vector3(x:F32,y:F32,z:F32),outcome:U8,predicted_id:U32,server_ts:(__timestamp_micros_since_unix_epoch__:I64))",
 		"action_request": "ActionRequest(id:U64,world_id:U32,actor_id:U64,ability_id:U32,target_id:U64,aim:Vector3(x:F32,y:F32,z:F32),predicted_id:U32,rewind_ms:U32,issued_at:(__timestamp_micros_since_unix_epoch__:I64),due_at:(__timestamp_micros_since_unix_epoch__:I64))",
+		"afk_chop": "AfkChop(entity_id:U64,world_id:U32,tree_id:U64,def_id:U32,started_at:(__timestamp_micros_since_unix_epoch__:I64),next_at:(__timestamp_micros_since_unix_epoch__:I64),from:Vector3(x:F32,y:F32,z:F32),logs:U32)",
 		"appearance": "AppearanceRow(entity_id:U64,world_id:U32,look:String)",
 		"attachment": "Attachment(entity_id:U64,world_id:U32,carrier_id:U64,socket:String,since:(__timestamp_micros_since_unix_epoch__:I64),prev_status:U8)",
 		"authority": "Authority(identity:(__identity__:U256),role:U8,world_id:U32,last_seen:(__timestamp_micros_since_unix_epoch__:I64))",
@@ -81,6 +84,7 @@
 		"challenge": "Challenge(id:U64,entity_id:U64,kind:U8,seed:U64,difficulty:F32,issued_at:(__timestamp_micros_since_unix_epoch__:I64),expires_at:(__timestamp_micros_since_unix_epoch__:I64),payload:String)",
 		"entity": "Entity(entity_id:U64,world_id:U32,kind:U8,owner:(__identity__:U256),spawned_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"equip_state": "EquipStateRow(entity_id:U64,world_id:U32,state:U8)",
+		"harvest": "Harvest(id:U64,entity_id:U64,world_id:U32,tree_id:U64,item_id:U32,qty:U32,rare_item:U32,felled:Bool,active:Bool,score_pm:I32,at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"health_state": "HealthStateRow(entity_id:U64,world_id:U32,current:F32,max:F32,is_dead:Bool,last_damage_source:U64,last_change_server_tick:U64)",
 		"hold_member": "HoldMember(entity_id:U64,world_id:U32,hold_id:U64,target_id:U64,hold:U32,since:(__timestamp_micros_since_unix_epoch__:I64),from:Vector3(x:F32,y:F32,z:F32))",
 		"hold_progress": "HoldProgress(hold_id:U64,entity_id:U64,world_id:U32,hold:U32,progress:F32,rate:F32,at:(__timestamp_micros_since_unix_epoch__:I64),doers:U8,state:U8)",
@@ -99,6 +103,7 @@
 		"session_member": "SessionMember(id:U64,session_id:U64,entity_id:U64,score:I64,coins:I64)",
 		"status_state": "StatusStateRow(entity_id:U64,world_id:U32,status:U8,prev_status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,data:String,serial:U32)",
 		"timed_press": "TimedPress(challenge_id:U64,entity_id:U64,starts_at:(__timestamp_micros_since_unix_epoch__:I64),period_ms:U32,half_width:F32,rounds:U8,seen_ms:U32,at_ms:[I32],positions:[F32],qualities:[F32],credit_ms:U32,done:Bool)",
+		"tree_node": "TreeNode(entity_id:U64,world_id:U32,def_id:U32,point_id:String)",
 		"world_config": "WorldConfig(world_id:U32,sim_authority:U8,authority_online:Bool,server_tick:U64,server_ts:(__timestamp_micros_since_unix_epoch__:I64),spawn:Vector3(x:F32,y:F32,z:F32))",
 		"world_level": "WorldLevel(world_id:U32,level_id:U8)"
 	}

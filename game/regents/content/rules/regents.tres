@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -21,9 +21,27 @@ maximum = 3.0
 unit = "x"
 description = "DUAL-MODE SKILLING: active play is this many times as likely to find a rare material as AFK. AFK can find rares too."
 
+[sub_resource type="Resource" id="Rule_reach"]
+script = ExtResource("2_rule")
+name = &"chop_reach_m"
+number = 3.0
+minimum = 1.0
+maximum = 10.0
+unit = "m"
+description = "How close to a tree a player must stand to chop it, AFK or in a round. The server checks it when the chop starts and again when a round is scored."
+
+[sub_resource type="Resource" id="Rule_afk_move"]
+script = ExtResource("2_rule")
+name = &"afk_stop_moving_m"
+number = 1.0
+minimum = 0.1
+maximum = 10.0
+unit = "m"
+description = "AFK chopping stops when the player moves this far from where they started."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

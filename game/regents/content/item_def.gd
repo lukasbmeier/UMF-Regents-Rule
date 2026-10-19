@@ -1,0 +1,70 @@
+@tool
+class_name ItemDef extends ContentDef
+## AN ITEM (Regent's Rule): something in a bag. A material (logs, ore, a bird's nest) or a TOOL (an
+## axe, a pick), which works a node of its `tool_tag` up to its `tool_tier` from the bag, never from a
+## slot (owner, 2026-10-18, design #15: the best matching tool in the bag is used). The server seeds an
+## `item_def` row from each (`game/regents.rs`), and stacks and grants by it.
+##
+## The genre's own for now: items become the foundation's with modular gear (design §7.3-§7.4, M16/M24),
+## and this moves down then.
+
+## How many fit in one bag slot (1: does not stack: a tool).
+@export_range(1, 100000) var max_stack: int = 1000
+@export_group("As a tool")
+## What it works: "axe" (trees), "pick" (veins). Empty: not a tool.
+@export var tool_tag: StringName = &""
+## The highest node tier it works.
+@export_range(0, 20) var tool_tier: int = 0
+@export_group("How it shows")
+## Its colour in the bag until it has an icon.
+@export var color: Color = Color(0.75, 0.6, 0.4)
+@export_multiline var description: String = ""
+
+static var _by_id: Dictionary[int, ItemDef] = {}
+
+
+func content_type() -> StringName:
+	return &"item"
+
+
+func why_no_workbench() -> String:
+	return "a few numbers for now; items get their bench with modular gear (a core and a handle on the character)"
+
+
+func summary() -> String:
+	if tool_tag != &"":
+		return "A tool: %s, tier %d" % [tool_tag, tool_tier]
+	return "Stacks to %d" % max_stack
+
+
+func to_bake() -> Dictionary:
+	return {
+		"id": id,
+		"name": display_name,
+		"max_stack": max_stack,
+		"tool_tag": String(tool_tag),
+		"tool_tier": tool_tier,
+	}
+
+
+func validate() -> Array[String]:
+	var out: Array[String] = super()
+	if tool_tag != &"" and tool_tier < 1:
+		out.append("a tool works tier 1 at least: set `tool_tier`")
+	if tool_tag != &"" and max_stack != 1:
+		out.append("a tool does not stack: `max_stack` 1")
+	return out
+
+
+## The item with content id `item_id`, or null.
+static func by_id(item_id: int) -> ItemDef:
+	if Engine.is_editor_hint() or _by_id.is_empty():
+		var all: Dictionary[int, ItemDef] = {}
+		for d: ContentDef in ContentLibrary.items(&"item"):
+			var it: ItemDef = d as ItemDef
+			if it != null:
+				all[it.id] = it
+		if Engine.is_editor_hint():
+			return all.get(item_id, null)
+		_by_id = all
+	return _by_id.get(item_id, null)

@@ -1,0 +1,38 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/levels/frontier.tscn" id="1_level"]
+[ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
+[ext_resource type="Resource" path="res://game/regents/content/character/adventurer.tres" id="4_character"]
+[ext_resource type="PackedScene" path="res://foundation/debug/net_debug_overlay.tscn" id="7_net"]
+[ext_resource type="PackedScene" path="res://foundation/ui/connect_screen.tscn" id="9_connect"]
+[ext_resource type="PackedScene" path="res://foundation/ui/pause_menu.tscn" id="10_menu"]
+[ext_resource type="Script" path="res://foundation/level/level_loader.gd" id="16_loader"]
+[ext_resource type="PackedScene" path="res://game/splash_screen.tscn" id="18_splash"]
+[ext_resource type="PackedScene" path="res://foundation/ui/hud.tscn" id="19_hud"]
+
+[node name="RegentsGame" type="Node3D"]
+
+[node name="Frontier" parent="." instance=ExtResource("1_level")]
+
+[node name="Boot" type="Node" parent="."]
+script = ExtResource("2_boot")
+entity_definitions = Array[Resource]([ExtResource("4_character")])
+world_root = NodePath("../Frontier/WorldRoot")
+connect_screen = ExtResource("9_connect")
+pause_menu = ExtResource("10_menu")
+load_genres = true
+splash_screen = ExtResource("18_splash")
+lobby_panel = false
+lobby_screen = false
+
+[node name="LevelLoader" type="Node" parent="."]
+script = ExtResource("16_loader")
+current = NodePath("../Frontier")
+current_id = 20
+level_scenes = Dictionary[int, PackedScene]({
+20: ExtResource("1_level")
+})
+
+[node name="NetDebugOverlay" parent="." instance=ExtResource("7_net")]
+
+[node name="HUD" parent="." instance=ExtResource("19_hud")]

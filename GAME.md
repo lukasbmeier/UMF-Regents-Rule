@@ -13,7 +13,7 @@ built in the TEMPLATE and pulled.
 |---|---|
 | Genres | `regents` (`shared/game.json`): its client in `game/regents/` (content id base 40000), its server in `server/src/game/regents.rs` |
 | Database | `regents-rule`; the suites use `regents-rule-test` |
-| Main scene | `res://game/greybox_game.tscn` (the template's, until step 1) |
+| Main scene | `res://game/regents/regents_game.tscn` (the frontier glade, level 20) |
 | Genre rules files | the hot rules `game/regents/content/rules/regents.tres` (the Rules page, `regents.*`) |
 | Genre manifest | `tools/template/genres/regents.paths` (AGENTS.md rule 16) |
 | Genre suites | `game/regents/tests/suites/regents.gd` (`-- --only=regents`) |
@@ -41,13 +41,17 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   or an immersive minigame worth 1.25x yield and 1.3x rares (hot rules); woodcutting is branch dodge;
   gear is modular (Tinkers'-style core + handle, gear XP, durability and repair). Design doc §7.4.
 - Still open: #7 loot, #10 hosting (after measuring Maincloud round trips), #12 day/night, #22 handles
-  and kits, #23 how a score maps to yield; the other skills' minigames.
+  and kits; the other skills' minigames. Decided since: yield = AFK x 1.25 x score; tap E = AFK,
+  hold E = minigame; tier bands (1-3, 4-5, 6) each get a harder minigame.
 
-## Current state (2026-10-18): the genre, and woodcutting's minigame to play
-A fork of the template at 0.51.2. The `regents` genre (no tables yet) and **woodcutting's branch dodge**,
-played on its own with no server: open `game/regents/skilling/woodcutting/chop_lab.tscn` and press F6.
-Space starts a round, A/D or the arrows or a click on either side chops, 1-3 pick the tree (Tree, Oak,
-Yew: `trees/*.tres`, edit them in the Inspector). `ChopModel` is the pure model (seed + inputs -> score,
-integers only) that the server will replay; its Rust twin and the server's half (a challenge kind of
-this genre's, a node you press E on, AFK and active yield) come once the feel is right. Next: Luke's
-playtest of the chop, then mining, smelting and smithing to the same pattern.
+## Current state (2026-10-18): woodcutting in the frontier glade
+A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade
+(`game/regents/levels/frontier.tscn`, level 20), a Bronze axe in your bag, 17 trees (Tree, Oak, Yew).
+**Tap E** at a tree to chop it AFK; **hold E** to play a round of branch dodge, which the server replays
+from your inputs and pays (AFK rate x 1.25 x score). Trees fall to stumps for everyone and grow back.
+How to play it, what makes it, how it is tested and what is left: **`docs/regents_rule/PROGRESS.md`**.
+The minigame alone: `game/regents/skilling/woodcutting/chop_lab.tscn` (F6).
+
+```bash
+GODOT=<path> ./game/regents/tests/chop_playtest.sh   # two clients chop at 150 ms
+```

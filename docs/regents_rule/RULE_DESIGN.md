@@ -159,13 +159,18 @@ mine, smelt, smith a weapon, fight a wolf with it), ahead of §12's combat-first
 - **Minigames are immersive to the skill**, not a charge bar or a QTE. **Woodcutting is branch dodge**
   (built, `game/regents/skilling/woodcutting/`): a 2D trunk you chop from the left or the right; a
   branch at your head on your side hits you and staggers you; tiers are branchier and want more logs.
+  **Tier bands get their own minigames** (owner, 2026-10-18): woodcutting tiers 1-3 (Tree, Oak, Yew)
+  are branch dodge; tiers 4-5 a harder minigame; tier 6 another again, so mastering a skill keeps
+  opening more demanding and more rewarding ways to play it. The same for every skill.
   Mining's, Herbalism's, smelting's and smithing's minigames are to be designed to the same bar
   (the Trace and Tension proposals in §7.2 are starting points, not decisions).
 - **Every skill is dual-mode**, gathering and processing alike (smelting and smithing too): **AFK**
   (passive, slower, every material including rares) or **active** (the minigame). Active is a modest
   edge so AFK is never a non-option: **1.25x the yield and 1.3x the rare chance** at a good score
-  (hot rules `regents.active_yield_mult`, `regents.active_rare_mult`). How a score maps to yield (is a
-  poor active round worse than AFK?) is to playtest. No separate meter for active play yet.
+  (hot rules `regents.active_yield_mult`, `regents.active_rare_mult`). **Yield = the AFK rate x
+  `active_yield_mult` x the round's score** (owner, #23): a good round beats AFK, a poor one falls short.
+  **At a node, tap E to work it AFK; hold E to open its minigame** (owner, 2026-10-18). No separate
+  meter for active play yet.
 - **Gear is modular, Tinkers'-style**: weapons and tools are crafted, not dropped whole, from a **core**
   (axe head, blade: base stats and tier) and a **handle or hilt** (its trait or combat ability). **Gear
   gains XP through use.** **Durability and repair** are the material sink; ways to lose gear (PvP,
@@ -260,7 +265,7 @@ The owner went through #1, #2, #3, #13, #15, #17 and the chunk schema (#21) on 2
 | 20 | Duel area | 30 m radius at the accept midpoint; 3 s grace outside | Agent (owner set the rule) |
 | 21 | `chunk` on the template's existing positional tables (`movement_state` and the others that place an entity), which rule 17 forbids reshaping within a major version | **a template 1.0 reshape**: add the column, wipe every game's database once, older builds stop connecting; chosen over an `entity_chunk` side table joined into each subscription. When, and what else 1.0 folds in, is still to plan (around Fowl Play's and DiscGolf's playtests) | **Owner — decided 2026-10-18** |
 | 22 | Modular gear and the kits: does a handle's ability replace, add to, or choose among a kit's ranked abilities; how gear XP sits beside per-kit mastery | to propose with the combat round | **Owner — open** |
-| 23 | AFK and active: how a minigame score maps to yield (a poor active round below AFK or not); whether active play needs a meter | playtest first: yield = AFK rate x `active_yield_mult` x score | **Owner — open** |
+| 23 | AFK and active: how a minigame score maps to yield; how a player picks the mode | **yield = AFK rate x `active_yield_mult` x score** (a poor round falls below AFK); **tap E = AFK, hold E = the minigame**; no meter yet | **Owner — decided 2026-10-18** |
 
 ## 14. Assets (CC0 only unless noted; verified items are from the 2026-10-13 pass, others marked **verify**)
 | Need | Source | Note |

@@ -1,0 +1,213 @@
+{
+  "_comment": "BAKED from res://game/regents/levels/frontier.tscn by tools/world/bake_level.gd (LevelInfo, DECISIONS #175). The server compiles this in (build.rs); the client's LevelBake reads it. Do not edit: move the markers in the scene and bake again.",
+  "level": "frontier",
+  "id": 20,
+  "scene": "res://game/regents/levels/frontier.tscn",
+  "water_y": -100.0,
+  "spawn": [
+    0.0,
+    0.0,
+    8.0
+  ],
+  "wade_depth": 0.7,
+  "min_cast_depth": 0.5,
+  "depth_grid": {
+    "file": "frontier_depth.bin",
+    "origin_x": -50.0,
+    "origin_z": -50.0,
+    "spacing": 1.0,
+    "width": 3,
+    "height": 3,
+    "unit": "decimetres of water, 0 = dry"
+  },
+  "spots": [],
+  "points": [
+    {
+      "id": "tree_1",
+      "kind": "tree",
+      "x": -9.0,
+      "y": 0.0,
+      "z": -6.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_2",
+      "kind": "tree",
+      "x": -3.0,
+      "y": 0.0,
+      "z": -11.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_3",
+      "kind": "tree",
+      "x": 5.0,
+      "y": 0.0,
+      "z": -8.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_4",
+      "kind": "tree",
+      "x": 11.0,
+      "y": 0.0,
+      "z": -14.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_5",
+      "kind": "tree",
+      "x": -12.0,
+      "y": 0.0,
+      "z": -16.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_6",
+      "kind": "tree",
+      "x": 2.0,
+      "y": 0.0,
+      "z": -19.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_7",
+      "kind": "tree",
+      "x": 8.0,
+      "y": 0.0,
+      "z": -24.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "tree_8",
+      "kind": "tree",
+      "x": -6.0,
+      "y": 0.0,
+      "z": -24.0,
+      "radius": 0.6,
+      "tags": [
+        "Tree"
+      ]
+    },
+    {
+      "id": "oak_1",
+      "kind": "tree",
+      "x": 20.0,
+      "y": 0.0,
+      "z": -10.0,
+      "radius": 0.6,
+      "tags": [
+        "Oak"
+      ]
+    },
+    {
+      "id": "oak_2",
+      "kind": "tree",
+      "x": 27.0,
+      "y": 0.0,
+      "z": -16.0,
+      "radius": 0.6,
+      "tags": [
+        "Oak"
+      ]
+    },
+    {
+      "id": "oak_3",
+      "kind": "tree",
+      "x": 22.0,
+      "y": 0.0,
+      "z": -24.0,
+      "radius": 0.6,
+      "tags": [
+        "Oak"
+      ]
+    },
+    {
+      "id": "oak_4",
+      "kind": "tree",
+      "x": 31.0,
+      "y": 0.0,
+      "z": -27.0,
+      "radius": 0.6,
+      "tags": [
+        "Oak"
+      ]
+    },
+    {
+      "id": "oak_5",
+      "kind": "tree",
+      "x": 17.0,
+      "y": 0.0,
+      "z": -32.0,
+      "radius": 0.6,
+      "tags": [
+        "Oak"
+      ]
+    },
+    {
+      "id": "yew_1",
+      "kind": "tree",
+      "x": -25.0,
+      "y": 0.0,
+      "z": -30.0,
+      "radius": 0.6,
+      "tags": [
+        "Yew"
+      ]
+    },
+    {
+      "id": "yew_2",
+      "kind": "tree",
+      "x": -32.0,
+      "y": 0.0,
+      "z": -36.0,
+      "radius": 0.6,
+      "tags": [
+        "Yew"
+      ]
+    },
+    {
+      "id": "yew_3",
+      "kind": "tree",
+      "x": -22.0,
+      "y": 0.0,
+      "z": -41.0,
+      "radius": 0.6,
+      "tags": [
+        "Yew"
+      ]
+    },
+    {
+      "id": "yew_4",
+      "kind": "tree",
+      "x": -35.0,
+      "y": 0.0,
+      "z": -26.0,
+      "radius": 0.6,
+      "tags": [
+        "Yew"
+      ]
+    }
+  ]
+}

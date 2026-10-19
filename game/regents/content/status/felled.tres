@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 100
+speed = 0.0
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+targetable = false
+hittable = false
+show_on_nameplate = false
+color = Color(0.55, 0.4, 0.25, 1)
+id = 40001
+display_name = "Felled"
+designer_notes = "A tree that fell: a stump until it grows back (its TreeDef's regrow_s, given by the server when it falls). Nothing to chop, so nothing to target."

@@ -24,6 +24,24 @@
 					"number": 1.3,
 					"text": "",
 					"unit": "x"
+				},
+				{
+					"key": "regents.chop_reach_m",
+					"kind": "number",
+					"max": 10.0,
+					"min": 1.0,
+					"number": 3.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "regents.afk_stop_moving_m",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.1,
+					"number": 1.0,
+					"text": "",
+					"unit": "m"
 				}
 			]
 		}

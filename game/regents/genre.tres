@@ -1,13 +1,16 @@
-[gd_resource type="Resource" script_class="GenreModule" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="GenreModule" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://foundation/core/genre_module.gd" id="1_genre"]
+[ext_resource type="Resource" path="res://game/regents/content/character/adventurer.tres" id="2_adventurer"]
+[ext_resource type="Resource" path="res://game/regents/content/character/tree.tres" id="3_tree"]
+[ext_resource type="PackedScene" path="res://game/regents/regents_hud.tscn" id="4_hud"]
 
 [resource]
 script = ExtResource("1_genre")
 id = &"regents"
 display_name = "Regent's Rule"
-entity_definitions = Array[Resource]([])
-tables = Array[StringName]([])
-world_tables = Array[StringName]([])
-scenes = Array[PackedScene]([])
+entity_definitions = Array[Resource]([ExtResource("2_adventurer"), ExtResource("3_tree")])
+tables = Array[StringName]([&"tree_node", &"afk_chop", &"harvest"])
+world_tables = Array[StringName]([&"tree_node", &"afk_chop", &"harvest"])
+scenes = Array[PackedScene]([ExtResource("4_hud")])
 content_id_base = 40000

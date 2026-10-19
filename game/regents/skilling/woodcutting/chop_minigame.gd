@@ -75,6 +75,18 @@ func begin(s: int, p: ChopParams) -> void:
 	queue_redraw()
 
 
+## Show tree `p`'s trunk from `s` without starting a round: what a lab shows when the tree changes.
+func preview(s: int, p: ChopParams) -> void:
+	if state == State.PLAYING:
+		return
+	seed_value = s
+	tree = p
+	model = ChopModel.start(s, p)
+	state = State.READY
+	_flying.clear()
+	queue_redraw()
+
+
 ## Milliseconds since the round began.
 func elapsed_ms() -> int:
 	return int((Time.get_ticks_usec() - _started_usec) / 1000)

@@ -2,12 +2,13 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_chop", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"harvest", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"tree_node", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
 var action_event: UmfActionEventTable
 var action_request: UmfActionRequestTable
+var afk_chop: UmfAfkChopTable
 var appearance: UmfAppearanceTable
 var attachment: UmfAttachmentTable
 var authority: UmfAuthorityTable
@@ -16,6 +17,7 @@ var body_state: UmfBodyStateTable
 var challenge: UmfChallengeTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
+var harvest: UmfHarvestTable
 var health_state: UmfHealthStateTable
 var hold_member: UmfHoldMemberTable
 var hold_progress: UmfHoldProgressTable
@@ -34,6 +36,7 @@ var session_match: UmfSessionMatchTable
 var session_member: UmfSessionMemberTable
 var status_state: UmfStatusStateTable
 var timed_press: UmfTimedPressTable
+var tree_node: UmfTreeNodeTable
 var world_config: UmfWorldConfigTable
 var world_level: UmfWorldLevelTable
 
@@ -42,6 +45,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	ability_state = preload('res://spacetime_bindings/schema/tables/umf_ability_state_table.gd').new(p_local_db)
 	action_event = preload('res://spacetime_bindings/schema/tables/umf_action_event_table.gd').new(p_local_db)
 	action_request = preload('res://spacetime_bindings/schema/tables/umf_action_request_table.gd').new(p_local_db)
+	afk_chop = preload('res://spacetime_bindings/schema/tables/umf_afk_chop_table.gd').new(p_local_db)
 	appearance = preload('res://spacetime_bindings/schema/tables/umf_appearance_table.gd').new(p_local_db)
 	attachment = preload('res://spacetime_bindings/schema/tables/umf_attachment_table.gd').new(p_local_db)
 	authority = preload('res://spacetime_bindings/schema/tables/umf_authority_table.gd').new(p_local_db)
@@ -50,6 +54,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
+	harvest = preload('res://spacetime_bindings/schema/tables/umf_harvest_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
 	hold_member = preload('res://spacetime_bindings/schema/tables/umf_hold_member_table.gd').new(p_local_db)
 	hold_progress = preload('res://spacetime_bindings/schema/tables/umf_hold_progress_table.gd').new(p_local_db)
@@ -68,5 +73,6 @@ func _init(p_local_db: LocalDatabase) -> void:
 	session_member = preload('res://spacetime_bindings/schema/tables/umf_session_member_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
 	timed_press = preload('res://spacetime_bindings/schema/tables/umf_timed_press_table.gd').new(p_local_db)
+	tree_node = preload('res://spacetime_bindings/schema/tables/umf_tree_node_table.gd').new(p_local_db)
 	world_config = preload('res://spacetime_bindings/schema/tables/umf_world_config_table.gd').new(p_local_db)
 	world_level = preload('res://spacetime_bindings/schema/tables/umf_world_level_table.gd').new(p_local_db)

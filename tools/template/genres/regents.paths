@@ -8,3 +8,8 @@ server/src/game/regents.rs
 server/src/genre/regents/
 docs/regents_rule/
 tools/template/genres/regents.paths
+server/build/regents.rs
+server/tests/regents.rs
+shared/golden/regents/
+shared/world/frontier.json
+shared/world/frontier_depth.bin

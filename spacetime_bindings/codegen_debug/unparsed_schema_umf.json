@@ -488,6 +488,98 @@
 								},
 								{
 									"name": {
+										"some": "tree_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "def_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "started_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "next_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "from"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "logs"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "look"
 									},
 									"algebraic_type": {
@@ -950,6 +1042,69 @@
 									},
 									"algebraic_type": {
 										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "scheduled_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "scheduled_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "Interval"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__time_duration_micros__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "Time"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												}
+											]
+										}
 									}
 								}
 							]
@@ -1511,6 +1666,111 @@
 							"elements": [
 								{
 									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "tree_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "item_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "qty"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "rare_item"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "felled"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "active"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "score_pm"
+									},
+									"algebraic_type": {
+										"I32": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -1882,7 +2142,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 28.0
+										"Ref": 31.0
 									}
 								},
 								{
@@ -3103,6 +3363,39 @@
 								},
 								{
 									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
 										"some": "world_id"
 									},
 									"algebraic_type": {
@@ -3366,6 +3659,44 @@
 							"elements": [
 								{
 									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "def_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "point_id"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "challenge_id"
 									},
 									"algebraic_type": {
@@ -3602,9 +3933,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "AbilityDef"
+						"source_name": "MovementWrite"
 					},
-					"ty": 0.0,
+					"ty": 57.0,
 					"custom_ordering": true
 				},
 				{
@@ -3612,95 +3943,7 @@
 						"scope": [],
 						"source_name": "ItemDef"
 					},
-					"ty": 30.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementWrite"
-					},
-					"ty": 52.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "PhaseSchedule"
-					},
-					"ty": 6.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DevTools"
-					},
-					"ty": 17.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Attachment"
-					},
-					"ty": 8.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementStateRow"
-					},
-					"ty": 32.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Noise"
-					},
 					"ty": 33.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Player"
-					},
-					"ty": 36.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RefereeOffer"
-					},
-					"ty": 39.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Session"
-					},
-					"ty": 41.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ClientRtt"
-					},
-					"ty": 15.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionRequest"
-					},
-					"ty": 5.0,
 					"custom_ordering": true
 				},
 				{
@@ -3708,87 +3951,7 @@
 						"scope": [],
 						"source_name": "HealthStateRow"
 					},
-					"ty": 22.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Correction"
-					},
-					"ty": 16.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionEvent"
-					},
-					"ty": 2.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "LobbyMember"
-					},
-					"ty": 31.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyContact"
-					},
-					"ty": 11.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HoldTick"
-					},
 					"ty": 25.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Entity"
-					},
-					"ty": 18.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RateBudget"
-					},
-					"ty": 38.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionEmpty"
-					},
-					"ty": 42.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMatch"
-					},
-					"ty": 43.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InventoryItem"
-					},
-					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -3796,23 +3959,23 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 44.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TickSchedule"
-					},
-					"ty": 46.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TimedPress"
-					},
 					"ty": 47.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Entity"
+					},
+					"ty": 20.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "UnscoredPress"
+					},
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -3828,7 +3991,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 40.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -3836,31 +3999,7 @@
 						"scope": [],
 						"source_name": "HotRuleRow"
 					},
-					"ty": 26.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "UnscoredPress"
-					},
-					"ty": 48.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorldConfig"
-					},
-					"ty": 49.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyWrite"
-					},
-					"ty": 51.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -3868,7 +4007,7 @@
 						"scope": [],
 						"source_name": "Authority"
 					},
-					"ty": 9.0,
+					"ty": 10.0,
 					"custom_ordering": true
 				},
 				{
@@ -3876,15 +4015,7 @@
 						"scope": [],
 						"source_name": "StatusExpiry"
 					},
-					"ty": 20.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Feedback"
-					},
-					"ty": 21.0,
+					"ty": 22.0,
 					"custom_ordering": true
 				},
 				{
@@ -3898,9 +4029,281 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "InputFrame"
+						"source_name": "AuthorityCheckSchedule"
+					},
+					"ty": 11.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ChallengePruneSchedule"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AppearanceRow"
+					},
+					"ty": 8.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Challenge"
+					},
+					"ty": 14.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PerfReport"
+					},
+					"ty": 38.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldProgress"
+					},
+					"ty": 27.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Push"
+					},
+					"ty": 40.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityDef"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PhaseSchedule"
+					},
+					"ty": 6.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DevTools"
+					},
+					"ty": 19.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Attachment"
+					},
+					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementStateRow"
+					},
+					"ty": 35.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Noise"
+					},
+					"ty": 36.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 39.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RefereeOffer"
+					},
+					"ty": 42.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Session"
+					},
+					"ty": 44.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ClientRtt"
+					},
+					"ty": 17.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionRequest"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LobbyMember"
+					},
+					"ty": 34.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Correction"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMatch"
+					},
+					"ty": 46.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "BodyContact"
+					},
+					"ty": 12.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AfkChop"
+					},
+					"ty": 7.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldTick"
 					},
 					"ty": 28.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RateBudget"
+					},
+					"ty": 41.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionEmpty"
+					},
+					"ty": 45.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StarterKitGiven"
+					},
+					"ty": 48.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InventoryItem"
+					},
+					"ty": 32.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TickSchedule"
+					},
+					"ty": 50.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TimedPress"
+					},
+					"ty": 51.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "BodyWrite"
+					},
+					"ty": 56.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldConfig"
+					},
+					"ty": 54.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Feedback"
+					},
+					"ty": 23.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 31.0,
 					"custom_ordering": true
 				},
 				{
@@ -3916,7 +4319,7 @@
 						"scope": [],
 						"source_name": "BodyState"
 					},
-					"ty": 12.0,
+					"ty": 13.0,
 					"custom_ordering": true
 				},
 				{
@@ -3924,7 +4327,7 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 27.0,
+					"ty": 30.0,
 					"custom_ordering": true
 				},
 				{
@@ -3932,15 +4335,15 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 50.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "AuthorityCheckSchedule"
+						"source_name": "ChopSchedule"
 					},
-					"ty": 10.0,
+					"ty": 16.0,
 					"custom_ordering": true
 				},
 				{
@@ -3948,7 +4351,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 45.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -3956,31 +4359,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 34.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ChallengePruneSchedule"
-					},
-					"ty": 14.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AppearanceRow"
-					},
-					"ty": 7.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Challenge"
-					},
-					"ty": 13.0,
+					"ty": 37.0,
 					"custom_ordering": true
 				},
 				{
@@ -3988,13 +4367,13 @@
 						"scope": [],
 						"source_name": "EquipStateRow"
 					},
-					"ty": 19.0,
+					"ty": 21.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "HoldProgress"
+						"source_name": "Harvest"
 					},
 					"ty": 24.0,
 					"custom_ordering": true
@@ -4002,25 +4381,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "PerfReport"
-					},
-					"ty": 35.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "HoldMember"
 					},
-					"ty": 23.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Push"
+						"source_name": "TreeNode"
 					},
-					"ty": 37.0,
+					"ty": 52.0,
 					"custom_ordering": true
 				}
 			]
@@ -4029,7 +4400,7 @@
 			"Tables": [
 				{
 					"source_name": "noise",
-					"product_type_ref": 33.0,
+					"product_type_ref": 36.0,
 					"primary_key": [
 						0.0
 					],
@@ -4104,7 +4475,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 50.0,
+					"product_type_ref": 55.0,
 					"primary_key": [
 						0.0
 					],
@@ -4149,7 +4520,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 30.0,
+					"product_type_ref": 33.0,
 					"primary_key": [
 						0.0
 					],
@@ -4193,35 +4564,22 @@
 					"is_event": false
 				},
 				{
-					"source_name": "movement_state",
-					"product_type_ref": 32.0,
+					"source_name": "chop_schedule",
+					"product_type_ref": 16.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "movement_state_entity_id_idx_btree"
+								"some": "chop_schedule_scheduled_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "entity_id"
+								"some": "scheduled_id"
 							},
 							"algorithm": {
 								"BTree": [
 									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "movement_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
 								]
 							}
 						}
@@ -4229,7 +4587,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "movement_state_entity_id_key"
+								"some": "chop_schedule_scheduled_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -4240,19 +4598,36 @@
 							}
 						}
 					],
-					"sequences": [],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "chop_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
 					"table_type": {
 						"User": []
 					},
 					"table_access": {
-						"Public": []
+						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
 				},
 				{
 					"source_name": "hold_tick",
-					"product_type_ref": 25.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -4314,7 +4689,7 @@
 				},
 				{
 					"source_name": "challenge",
-					"product_type_ref": 13.0,
+					"product_type_ref": 14.0,
 					"primary_key": [
 						0.0
 					],
@@ -4364,6 +4739,317 @@
 						{
 							"source_name": {
 								"some": "challenge_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "movement_state",
+					"product_type_ref": 35.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "movement_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority_check_schedule",
+					"product_type_ref": 11.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "afk_chop",
+					"product_type_ref": 7.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "afk_chop_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "afk_chop_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "afk_chop_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "appearance",
+					"product_type_ref": 8.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "appearance_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "harvest",
+					"product_type_ref": 24.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "harvest_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "harvest_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "harvest_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "harvest_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -4450,128 +5136,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "authority_check_schedule",
-					"product_type_ref": 10.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "appearance",
-					"product_type_ref": 7.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "appearance_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "appearance_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "appearance_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "session_member",
-					"product_type_ref": 44.0,
+					"product_type_ref": 47.0,
 					"primary_key": [
 						0.0
 					],
@@ -4658,128 +5224,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "unscored_press",
-					"product_type_ref": 48.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "unscored_press_challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "challenge_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "unscored_press_challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "status_expiry",
-					"product_type_ref": 20.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "status_expiry_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "feedback",
-					"product_type_ref": 21.0,
+					"product_type_ref": 23.0,
 					"primary_key": [
 						0.0
 					],
@@ -4854,7 +5300,7 @@
 				},
 				{
 					"source_name": "attachment",
-					"product_type_ref": 8.0,
+					"product_type_ref": 9.0,
 					"primary_key": [
 						0.0
 					],
@@ -4925,7 +5371,7 @@
 				},
 				{
 					"source_name": "entity",
-					"product_type_ref": 18.0,
+					"product_type_ref": 20.0,
 					"primary_key": [
 						0.0
 					],
@@ -4999,8 +5445,83 @@
 					"is_event": false
 				},
 				{
+					"source_name": "status_expiry",
+					"product_type_ref": 22.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "status_expiry_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "client_rtt",
-					"product_type_ref": 15.0,
+					"product_type_ref": 17.0,
 					"primary_key": [
 						0.0
 					],
@@ -5045,7 +5566,7 @@
 				},
 				{
 					"source_name": "push",
-					"product_type_ref": 37.0,
+					"product_type_ref": 40.0,
 					"primary_key": [
 						0.0
 					],
@@ -5132,8 +5653,154 @@
 					"is_event": false
 				},
 				{
+					"source_name": "tree_node",
+					"product_type_ref": 52.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "tree_node_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "tree_node_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "tree_node_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "input_queue",
+					"product_type_ref": 30.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "input_queue_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "input_queue_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "input_queue_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "body_contact",
-					"product_type_ref": 11.0,
+					"product_type_ref": 12.0,
 					"primary_key": [
 						0.0
 					],
@@ -5357,96 +6024,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "input_queue",
-					"product_type_ref": 27.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "input_queue_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "input_queue_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "input_queue_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "input_queue_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "input_queue_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "lobby_member",
-					"product_type_ref": 31.0,
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
@@ -5517,7 +6096,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 34.0,
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
@@ -5575,7 +6154,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 39.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -5620,7 +6199,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 38.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
@@ -5678,7 +6257,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 45.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -5736,7 +6315,7 @@
 				},
 				{
 					"source_name": "correction",
-					"product_type_ref": 16.0,
+					"product_type_ref": 18.0,
 					"primary_key": [
 						0.0
 					],
@@ -5781,7 +6360,7 @@
 				},
 				{
 					"source_name": "hold_progress",
-					"product_type_ref": 24.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -5869,7 +6448,7 @@
 				},
 				{
 					"source_name": "dev_tools",
-					"product_type_ref": 17.0,
+					"product_type_ref": 19.0,
 					"primary_key": [
 						0.0
 					],
@@ -5914,7 +6493,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 29.0,
+					"product_type_ref": 32.0,
 					"primary_key": [
 						0.0
 					],
@@ -5989,7 +6568,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 46.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -6051,7 +6630,7 @@
 				},
 				{
 					"source_name": "equip_state",
-					"product_type_ref": 19.0,
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
@@ -6184,7 +6763,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 42.0,
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
@@ -6229,7 +6808,7 @@
 				},
 				{
 					"source_name": "body_state",
-					"product_type_ref": 12.0,
+					"product_type_ref": 13.0,
 					"primary_key": [
 						0.0
 					],
@@ -6300,7 +6879,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 49.0,
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
@@ -6407,7 +6986,7 @@
 				},
 				{
 					"source_name": "health_state",
-					"product_type_ref": 22.0,
+					"product_type_ref": 25.0,
 					"primary_key": [
 						0.0
 					],
@@ -6465,7 +7044,7 @@
 				},
 				{
 					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 14.0,
+					"product_type_ref": 15.0,
 					"primary_key": [
 						0.0
 					],
@@ -6527,7 +7106,7 @@
 				},
 				{
 					"source_name": "authority",
-					"product_type_ref": 9.0,
+					"product_type_ref": 10.0,
 					"primary_key": [
 						0.0
 					],
@@ -6585,7 +7164,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 36.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -6654,8 +7233,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "starter_kit_given",
+					"product_type_ref": 48.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "starter_kit_given_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "starter_kit_given_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "hold_member",
-					"product_type_ref": 23.0,
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -6726,7 +7350,7 @@
 				},
 				{
 					"source_name": "perf_report",
-					"product_type_ref": 35.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -6801,7 +7425,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 43.0,
+					"product_type_ref": 46.0,
 					"primary_key": [
 						0.0
 					],
@@ -6904,7 +7528,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 41.0,
+					"product_type_ref": 44.0,
 					"primary_key": [
 						0.0
 					],
@@ -6991,7 +7615,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 47.0,
+					"product_type_ref": 51.0,
 					"primary_key": [
 						0.0
 					],
@@ -7048,8 +7672,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "unscored_press",
+					"product_type_ref": 53.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "unscored_press_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "unscored_press_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "hot_rule",
-					"product_type_ref": 26.0,
+					"product_type_ref": 29.0,
 					"primary_key": [
 						0.0
 					],
@@ -7435,7 +8104,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 10.0
+									"Ref": 11.0
 								}
 							}
 						]
@@ -7468,6 +8137,83 @@
 					},
 					"visibility": {
 						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "chop",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "tree_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "active"
+								},
+								"algebraic_type": {
+									"Bool": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "chop_stop",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "chop_tick",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "_sched"
+								},
+								"algebraic_type": {
+									"Ref": 16.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"Private": []
 					},
 					"ok_return_type": {
 						"Product": {
@@ -7903,7 +8649,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 20.0
+									"Ref": 22.0
 								}
 							}
 						]
@@ -8319,7 +9065,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 14.0
+									"Ref": 15.0
 								}
 							}
 						]
@@ -8433,7 +9179,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 40.0
+										"Ref": 43.0
 									}
 								}
 							}
@@ -8696,7 +9442,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 30.0
+										"Ref": 33.0
 									}
 								}
 							}
@@ -9354,7 +10100,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 28.0
+										"Ref": 31.0
 									}
 								}
 							}
@@ -9407,7 +10153,7 @@
 									"some": "_tick"
 								},
 								"algebraic_type": {
-									"Ref": 25.0
+									"Ref": 28.0
 								}
 							}
 						]
@@ -9433,7 +10179,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 46.0
+									"Ref": 50.0
 								}
 							}
 						]
@@ -9634,7 +10380,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 51.0
+										"Ref": 56.0
 									}
 								}
 							}
@@ -9670,7 +10416,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 52.0
+										"Ref": 57.0
 									}
 								}
 							}
@@ -9752,6 +10498,14 @@
 			"Schedules": [
 				{
 					"source_name": {
+						"some": "chop_schedule_sched"
+					},
+					"table_name": "chop_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "chop_tick"
+				},
+				{
+					"source_name": {
 						"some": "hold_tick_sched"
 					},
 					"table_name": "hold_tick",
@@ -9760,19 +10514,19 @@
 				},
 				{
 					"source_name": {
-						"some": "phase_schedule_sched"
-					},
-					"table_name": "phase_schedule",
-					"schedule_at_col": 1.0,
-					"function_name": "advance_phases"
-				},
-				{
-					"source_name": {
 						"some": "authority_check_schedule_sched"
 					},
 					"table_name": "authority_check_schedule",
 					"schedule_at_col": 1.0,
 					"function_name": "check_authorities"
+				},
+				{
+					"source_name": {
+						"some": "phase_schedule_sched"
+					},
+					"table_name": "phase_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "advance_phases"
 				},
 				{
 					"source_name": {
@@ -9872,8 +10626,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "movement_state",
-							"canonical_name": "movement_state"
+							"source_name": "chop_schedule",
+							"canonical_name": "chop_schedule"
 						}
 					},
 					{
@@ -9890,8 +10644,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "phase_schedule",
-							"canonical_name": "phase_schedule"
+							"source_name": "movement_state",
+							"canonical_name": "movement_state"
 						}
 					},
 					{
@@ -9902,26 +10656,32 @@
 					},
 					{
 						"Table": {
+							"source_name": "afk_chop",
+							"canonical_name": "afk_chop"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "appearance",
 							"canonical_name": "appearance"
 						}
 					},
 					{
 						"Table": {
+							"source_name": "harvest",
+							"canonical_name": "harvest"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "phase_schedule",
+							"canonical_name": "phase_schedule"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "session_member",
 							"canonical_name": "session_member"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "unscored_press",
-							"canonical_name": "unscored_press"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "status_expiry",
-							"canonical_name": "status_expiry"
 						}
 					},
 					{
@@ -9944,6 +10704,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "status_expiry",
+							"canonical_name": "status_expiry"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "client_rtt",
 							"canonical_name": "client_rtt"
 						}
@@ -9952,6 +10718,18 @@
 						"Table": {
 							"source_name": "push",
 							"canonical_name": "push"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "tree_node",
+							"canonical_name": "tree_node"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "input_queue",
+							"canonical_name": "input_queue"
 						}
 					},
 					{
@@ -9970,12 +10748,6 @@
 						"Table": {
 							"source_name": "ability_state",
 							"canonical_name": "ability_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "input_queue",
-							"canonical_name": "input_queue"
 						}
 					},
 					{
@@ -10100,6 +10872,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "starter_kit_given",
+							"canonical_name": "starter_kit_given"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "hold_member",
 							"canonical_name": "hold_member"
 						}
@@ -10132,6 +10910,12 @@
 						"Table": {
 							"source_name": "timed_press",
 							"canonical_name": "timed_press"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "unscored_press",
+							"canonical_name": "unscored_press"
 						}
 					},
 					{
@@ -10204,6 +10988,24 @@
 						"Function": {
 							"source_name": "choose_character",
 							"canonical_name": "choose_character"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "chop",
+							"canonical_name": "chop"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "chop_stop",
+							"canonical_name": "chop_stop"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "chop_tick",
+							"canonical_name": "chop_tick"
 						}
 					},
 					{

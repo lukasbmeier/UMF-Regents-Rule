@@ -74,14 +74,57 @@
 			},
 			"type": "status"
 		},
-		"shared/content/regents/rules.json": {
-			"count": 1,
-			"hash": "cfd46af6",
+		"shared/content/regents/character.json": {
+			"count": 2,
+			"hash": "2c69e69a",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "22bf9896"
+				"game/regents/content/character/adventurer.tres": "05320fc6",
+				"game/regents/content/character/tree.tres": "b015a4e6"
+			},
+			"type": "character"
+		},
+		"shared/content/regents/item.json": {
+			"count": 5,
+			"hash": "007155c1",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/item/birds_nest.tres": "858c0b68",
+				"game/regents/content/item/bronze_axe.tres": "18f7457f",
+				"game/regents/content/item/logs.tres": "a43783c0",
+				"game/regents/content/item/oak_logs.tres": "de9da362",
+				"game/regents/content/item/yew_logs.tres": "0025f870"
+			},
+			"type": "item"
+		},
+		"shared/content/regents/rules.json": {
+			"count": 1,
+			"hash": "ac52d25a",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/rules/regents.tres": "0a68840c"
 			},
 			"type": "rules"
+		},
+		"shared/content/regents/status.json": {
+			"count": 1,
+			"hash": "c4c45bc0",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/status/felled.tres": "33fcc597"
+			},
+			"type": "status"
+		},
+		"shared/content/regents/tree.json": {
+			"count": 3,
+			"hash": "532be7eb",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/tree/oak.tres": "c700bc85",
+				"game/regents/content/tree/tree.tres": "c3843771",
+				"game/regents/content/tree/yew.tres": "a5f1442b"
+			},
+			"type": "tree"
 		}
 	}
 }

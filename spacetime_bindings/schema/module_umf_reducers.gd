@@ -54,6 +54,15 @@ func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
 func choose_character(kind: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('choose_character', [kind], [&'u8'], &'')
 
+## 0. tree_id: int [br]
+## 1. active: bool [br]
+func chop(tree_id: int, active: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('chop', [tree_id, active], [&'u64', &'bool'], &'')
+
+
+func chop_stop() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('chop_stop', [], [], &'')
+
 ## 0. world_id: int [br]
 ## 1. code: String [br]
 func claim_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:

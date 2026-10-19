@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Regent's Rule"
-run/main_scene="res://game/greybox_game.tscn"
+run/main_scene="res://game/regents/regents_game.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 run/main_scene.dedicated_server="res://sidecar/sidecar_main.tscn"

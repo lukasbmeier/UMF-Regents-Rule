@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+tool_tag = &"axe"
+tool_tier = 1
+color = Color(0.80, 0.55, 0.30, 1)
+description = "A starter's axe: fells Tree, Oak and Yew."
+id = 40001
+display_name = "Bronze axe"

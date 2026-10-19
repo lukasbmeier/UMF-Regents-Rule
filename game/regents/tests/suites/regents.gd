@@ -7,11 +7,6 @@ extends "res://tests/suite_base.gd"
 ##   - the minigame (`ChopMinigame`): keeps every press, plays through the model, and its end says the
 ##     replay agrees; the lab opens it
 
-const TREES: Array[String] = [
-	"res://game/regents/skilling/woodcutting/trees/tree.tres",
-	"res://game/regents/skilling/woodcutting/trees/oak.tres",
-	"res://game/regents/skilling/woodcutting/trees/yew.tres",
-]
 const L: int = ChopModel.SIDE_LEFT
 const R: int = ChopModel.SIDE_RIGHT
 
@@ -19,6 +14,7 @@ const R: int = ChopModel.SIDE_RIGHT
 func run() -> void:
 	_run_trees()
 	_run_trunk()
+	_run_golden()
 	_run_chops()
 	_run_perfect_and_replay()
 	await _run_minigame()
@@ -47,10 +43,13 @@ func _model_with(p: ChopParams, trunk: Array[int]) -> ChopModel:
 
 func _run_trees() -> void:
 	print("== regents: the trees ==")
+	var defs: Array[TreeDef] = TreeDef.all_by_tier()
+	_check(defs.size() == 3 and defs[0].display_name == "Tree" and defs[1].display_name == "Oak" and defs[2].display_name == "Yew",
+		"three trees, lowest tier first: Tree, Oak, Yew")
 	var prev: ChopParams = null
-	for path: String in TREES:
-		var t: ChopParams = load(path) as ChopParams
-		_check(t != null and not t.display_name.is_empty(), "%s is a tree" % path.get_file())
+	for d: TreeDef in defs:
+		_check(d.validate().is_empty(), "%s is valid (%s)" % [d.display_name, str(d.validate())])
+		var t: ChopParams = d.chop
 		if t == null:
 			continue
 		_check(t.target_chops <= ChopModel.max_chops(t), "%s: a full score is reachable (%d of at most %d)" % [t.display_name, t.target_chops, ChopModel.max_chops(t)])
@@ -84,6 +83,43 @@ func _run_trunk() -> void:
 	_check(absf(float(left) / float(left + right) - 0.5) < 0.03, "left and right alike (%d / %d)" % [left, right])
 	_check(ChopModel.branches(7, _params(0), 500).count(ChopModel.BRANCH_NONE) == 500, "0 ‰: no branches")
 	_check(ChopModel.branches(7, _params(1000), 500).count(ChopModel.BRANCH_NONE) == 2, "1000 ‰: every piece above the safe ones")
+
+
+## The golden rounds (made by a third, Python version: `game/regents/tests/make_chop_golden.py`), which the
+## server's Rust twin is held to as well (`server/tests/regents.rs`).
+func _run_golden() -> void:
+	print("== regents: the golden rounds ==")
+	var f: FileAccess = FileAccess.open("res://shared/golden/regents/chop.json", FileAccess.READ)
+	_check(f != null, "shared/golden/regents/chop.json is there")
+	if f == null:
+		return
+	var doc: Dictionary = JSON.parse_string(f.get_as_text()) as Dictionary
+	var cases: Array = doc.get("cases", []) as Array
+	_check(cases.size() >= 10, "it has its cases (%d)" % cases.size())
+	var bad: Array[String] = []
+	for c: Dictionary in cases:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var pp: Dictionary = c["params"]
+		var p: ChopParams = ChopParams.new()
+		p.duration_ms = int(pp["duration_ms"])
+		p.swing_ms = int(pp["swing_ms"])
+		p.stagger_ms = int(pp["stagger_ms"])
+		p.branch_permille = int(pp["branch_permille"])
+		p.safe_segments = int(pp["safe_segments"])
+		p.target_chops = int(pp["target_chops"])
+		var want_seg: PackedInt32Array = PackedInt32Array()
+		for v: Variant in c["segments"]:
+			want_seg.append(int(v))
+		var inputs: PackedInt32Array = PackedInt32Array()
+		for pair: Array in c["inputs"]:
+			inputs.append(int(pair[0]))
+			inputs.append(int(pair[1]))
+		var e: Dictionary = c["expected"]
+		var want: Dictionary = {"clean": int(e["clean"]), "hits": int(e["hits"]), "best_combo": int(e["best_combo"]), "score_pm": int(e["score_pm"])}
+		var got: Dictionary = ChopModel.play(seed_value, p, inputs)
+		if ChopModel.branches(seed_value, p, want_seg.size()) != want_seg or got != want:
+			bad.append("%s: %s, wanted %s" % [c["name"], str(got), str(want)])
+	_check(bad.is_empty(), "the GDScript twin plays every golden round exactly%s" % ("" if bad.is_empty() else ": " + "; ".join(bad)))
 
 
 func _run_chops() -> void:
@@ -126,8 +162,8 @@ func _perfect_inputs(seed_value: int, p: ChopParams) -> PackedInt32Array:
 
 func _run_perfect_and_replay() -> void:
 	print("== regents: a perfect round, and a replay ==")
-	for path: String in TREES:
-		var t: ChopParams = load(path) as ChopParams
+	for d: TreeDef in TreeDef.all_by_tier():
+		var t: ChopParams = d.chop
 		var r: Dictionary = ChopModel.play(99, t, _perfect_inputs(99, t))
 		_check(r["hits"] == 0 and r["clean"] == ChopModel.max_chops(t) and r["score_pm"] == 1000,
 			"%s: never under a branch, every swing on time: %d logs, no hits, a full score" % [t.display_name, r["clean"]])
@@ -196,6 +232,24 @@ func _run_minigame() -> void:
 	for c: Node in lab.get_children():
 		if c is ChopMinigame:
 			inner = c as ChopMinigame
-	_check(inner != null and inner.tree != null and inner.tree.display_name == "Tree", "the lab opens on the first tree, ready to play")
+	_check(inner != null and inner.tree != null and inner.tree.display_name == "Tree" and inner.model != null,
+		"the lab opens on the first tree, its trunk showing, ready to play")
+	var buttons: Array[Button] = []
+	buttons.assign(lab.get("tree_buttons"))
+	if inner != null and buttons.size() == 3:
+		var tree_trunk: PackedInt32Array = inner.model.segments
+		buttons[2].pressed.emit()
+		_check(inner.tree.display_name == "Yew" and buttons[2].button_pressed and not buttons[0].button_pressed
+			and inner.model.segments != tree_trunk and inner.state == ChopMinigame.State.READY,
+			"the Yew button picks the yew, lit alone, and shows its trunk at once")
+		inner.begin(1, inner.tree)
+		buttons[0].pressed.emit()
+		_check(inner.tree.display_name == "Yew" and inner.state == ChopMinigame.State.PLAYING,
+			"mid-round, the tree stays as it is")
+		inner.finish()
+		buttons[1].pressed.emit()
+		_check(inner.tree.display_name == "Oak", "after the round, the Oak button picks the oak")
+	else:
+		_check(false, "the lab has a button per tree (%d)" % buttons.size())
 	lab.queue_free()
 	await get_tree().process_frame
