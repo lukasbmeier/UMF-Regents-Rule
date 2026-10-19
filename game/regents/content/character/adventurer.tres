@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EntityDefinition" load_steps=13 format=3]
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
 [ext_resource type="PackedScene" path="res://game/regents/adventurer.tscn" id="2_scene"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://game/characters/looks/noble_m.tscn" id="look_6"]
 [ext_resource type="PackedScene" path="res://game/characters/looks/wizard_f.tscn" id="look_7"]
 [ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="5_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/adventurer.tres" id="6_move"]
 
 [resource]
 script = ExtResource("1_def")
@@ -25,3 +26,4 @@ visual_offset = Vector3(0, 0, 0)
 visual_yaw_deg = 180.0
 animation_set = ExtResource("5_anim")
 camera_rig = ExtResource("3_cam")
+movement_profile = ExtResource("6_move")

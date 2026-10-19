@@ -186,6 +186,33 @@
 					"number": 4.0,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "regents.flinch_ms",
+					"kind": "number",
+					"max": 2000.0,
+					"min": 0.0,
+					"number": 350.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.swing_hold_ms",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 80.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.swing_slack_ms",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 120.0,
+					"text": "",
+					"unit": "ms"
 				}
 			]
 		}

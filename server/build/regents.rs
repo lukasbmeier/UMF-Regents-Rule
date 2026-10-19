@@ -168,9 +168,15 @@ pub fn regents_data() {
         assert!(!light.is_empty(), "regents content: the {name} kit has no light combo");
         let skills: Vec<(u32, u32)> = k["skills"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no skills list"))
             .iter().map(|p| (p[0].as_i64().unwrap() as u32, p[1].as_i64().unwrap() as u32)).collect();
+        let locks: Vec<(u32, u32)> = k["locks"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no locks (re-bake)"))
+            .iter().map(|p| (p[0].as_i64().unwrap() as u32, p[1].as_i64().unwrap() as u32)).collect();
+        for a in light.iter().chain(skills.iter().map(|(a, _)| a)) {
+            assert!(locks.iter().any(|(l, ms)| l == a && *ms > 0), "regents content: the {name} kit's ability {a} has no lock");
+        }
         kit_keys.push(key.clone());
-        out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, heavy: {}, skills: &{skills:?}, combo_window_ms: {} }},\n",
-            int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name)));
+        out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, heavy: {}, skills: &{skills:?}, combo_window_ms: {}, \
+             chain_ms: {}, locks: &{locks:?} }},\n",
+            int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name), int(k, "chain_ms", &name)));
     }
     for (item, kit) in &weapon_kits {
         assert!(kit_keys.contains(kit), "regents content: the weapon {item} fights with kit '{kit}', which is no kit");

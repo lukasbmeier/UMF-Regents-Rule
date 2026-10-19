@@ -85,7 +85,9 @@ func _run() -> void:
 	var feed: HitFeedbackComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(HitFeedbackComponent) as HitFeedbackComponent
 
 	# --- THE LIGHT COMBO, AND A HEAVY ---
+	var driver: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
 	await _click(0.06)
+	_check(driver.action_clip() == &"extra/Sword_Regular_A", "a chop plays its own swing, not Interact (%s)" % driver.action_clip())
 	await _until(func() -> bool: return dh.get_current() < 500.0, 3.0)
 	var hit1: float = 500.0 - dh.get_current()
 	_check(is_equal_approx(snappedf(hit1, 0.01), 7.7), "a tap of the left button: a chop the referee judged a hit, 11 at the bronze axe's 70 %% (%.2f)" % hit1)
@@ -104,12 +106,70 @@ func _run() -> void:
 	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
 	_check(is_equal_approx(dh.get_current(), 500.0), "the dummy is whole again a few seconds on")
 
+	# --- SPAM: held to the animation, every press kept ---
+	var starts: Array[int] = []
+	var on_swing: Callable = func(_a: int) -> void: starts.append(Time.get_ticks_msec())
+	combat.swung.connect(on_swing)
+	var refusals: Array[String] = []
+	var on_refused: Callable = func(why: String) -> void: refusals.append(why)
+	combat.refused.connect(on_refused)
+	var t0: int = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 1500:
+		await _click(0.03)
+		await get_tree().create_timer(0.03).timeout
+	await get_tree().create_timer(1.2).timeout
+	combat.swung.disconnect(on_swing)
+	combat.refused.disconnect(on_refused)
+	var gaps: Array[int] = []
+	for i: int in range(1, starts.size()):
+		gaps.append(starts[i] - starts[i - 1])
+	var axe: KitDef = combat.kit
+	var least: int = axe.light[0].wind_up_ms + axe.chain_ms
+	_check(starts.size() >= 3 and starts.size() <= 5 and gaps.all(func(g: int) -> bool: return g >= least - 20),
+		"mashing for 1.5 s swings %d times, never faster than a swing lands and chains (gaps %s ms, at least %d)" % [starts.size(), str(gaps), least])
+	_check(refusals.is_empty(), "and the server took every one: the client's timeline is the server's (%s)" % str(refusals))
+	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
+
+	# --- A ROLL IN A HEAVY'S WIND-UP: the swing never lands ---
+	var before_roll: float = dh.get_current()
+	await _click(0.45)   # held: the overhead (its wind-up 600 ms)
+	await _key(KEY_CTRL)
+	_check(combat.swing_cancelled, "Ctrl in the overhead's wind-up cancels it here")
+	await _until(func() -> bool: return driver.action_clip() == &"Roll", 1.0)
+	_check(driver.action_clip() == &"Roll", "and the roll plays its Roll (%s)" % driver.action_clip())
+	await get_tree().create_timer(1.5).timeout
+	_check(is_equal_approx(dh.get_current(), before_roll), "the cancelled overhead never landed on the dummy (%.1f)" % dh.get_current())
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
+
+	# --- A COMMITTED SWING: you walk until it lands ---
+	await get_tree().create_timer(1.0).timeout
+	await _stand_at(DUMMY_1 + Vector3(-4.0, 0.05, 3.0), DUMMY_1 + Vector3(-4.0, 0.0, -6.0))
+	Input.action_press(&"move_forward")
+	await get_tree().create_timer(0.5).timeout
+	await _click(0.03)
+	await get_tree().create_timer(0.08).timeout   # slowing from a run to a walk
+	var p0: Vector3 = me.global_position
+	await get_tree().create_timer(0.15).timeout
+	var walked: float = Vector2(me.global_position.x - p0.x, me.global_position.z - p0.z).length() / 0.15
+	await get_tree().create_timer(0.8).timeout
+	var p1: Vector3 = me.global_position
+	await get_tree().create_timer(0.3).timeout
+	var ran_after: float = Vector2(me.global_position.x - p1.x, me.global_position.z - p1.z).length() / 0.3
+	Input.action_release(&"move_forward")
+	_check(walked < 2.0 and ran_after > 3.5, "running into a swing: %.1f m/s until it lands, then %.1f m/s again" % [walked, ran_after])
+
 	# --- THE ROLL: further than a run in the same time ---
-	await _stand_at(DUMMY_1 + Vector3(-6.0, 0.05, 4.0), DUMMY_1 + Vector3(-6.0, 0.0, -6.0))
-	# The Rolling status comes a round trip after Ctrl, and bursts for half a second: measured over 0.7 s.
+	# Open ground by the spawn, running north: nothing in the way for 6 m (the camp's stall stopped it).
+	await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+	# The roll is the dash, moved by this client at once; the server only bounds it.
 	var ran: float = await _run_for(0.7, false)
+	var mv0: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	var before_roll_fixes: int = int(mv0.get_reconcile_stats()["reconciles"])
 	var rolled: float = await _run_for(0.7, true)
-	_check(rolled > ran + 1.0, "Ctrl while running: the roll carries %.2f m against a run's %.2f" % [rolled, ran])
+	var mv: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	var fixed: int = before_roll_fixes
+	_check(rolled > ran + 1.2 and int(mv.get_reconcile_stats()["reconciles"]) == fixed,
+		"Ctrl while running: the predicted dash carries %.2f m against a run's %.2f, and the server corrected none of it" % [rolled, ran])
 
 	# --- THE BLOCK ---
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)

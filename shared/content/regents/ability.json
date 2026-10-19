@@ -43,7 +43,7 @@
 		},
 		{
 			"ability_id": 40004,
-			"cooldown_ms": 1200,
+			"cooldown_ms": 900,
 			"damage": 24.0,
 			"height": 0.9,
 			"judged": true,
@@ -69,7 +69,7 @@
 		},
 		{
 			"ability_id": 40006,
-			"cooldown_ms": 650,
+			"cooldown_ms": 550,
 			"damage": 11.0,
 			"height": 0.9,
 			"judged": true,
@@ -82,7 +82,7 @@
 		},
 		{
 			"ability_id": 40007,
-			"cooldown_ms": 900,
+			"cooldown_ms": 650,
 			"damage": 15.0,
 			"height": 0.9,
 			"judged": true,
@@ -95,7 +95,7 @@
 		},
 		{
 			"ability_id": 40008,
-			"cooldown_ms": 1500,
+			"cooldown_ms": 900,
 			"damage": 32.0,
 			"height": 0.9,
 			"judged": true,

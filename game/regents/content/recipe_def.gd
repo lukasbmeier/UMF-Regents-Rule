@@ -37,6 +37,8 @@ enum Quality { NONE, FROM_ROUND, FROM_INPUTS }
 @export_range(-1, 8) var part_slot: int = -1
 
 static var _all: Array[RecipeDef] = []
+## `work_xp` worked out once per item in a running game (content does not change there).
+static var _work_xp: Dictionary[int, int] = {}
 
 
 func content_type() -> StringName:
@@ -78,8 +80,17 @@ func to_bake() -> Dictionary:
 static func work_xp(item: ItemDef, depth: int = 0) -> int:
 	if item == null or depth > 8:
 		return 0
+	if depth == 0 and not Engine.is_editor_hint() and _work_xp.has(item.id):
+		return _work_xp[item.id]
+	var w: int = _work_xp_of(item, depth)
+	if depth == 0 and not Engine.is_editor_hint():
+		_work_xp[item.id] = w
+	return w
+
+
+static func _work_xp_of(item: ItemDef, depth: int) -> int:
 	var best: int = -1
-	for d: ContentDef in ContentLibrary.items(&"node"):
+	for d: ContentDef in RegentsContent.items(&"node"):
 		var n: NodeDef = d as NodeDef
 		if n != null and n.yield_item == item:
 			best = n.xp if best < 0 else mini(best, n.xp)
@@ -109,7 +120,7 @@ func part_choices() -> Array[ItemDef]:
 		return out
 	var kind: StringName = inputs[part_slot].part_tag
 	out.append(inputs[part_slot])
-	for d: ContentDef in ContentLibrary.items(&"item"):
+	for d: ContentDef in RegentsContent.items(&"item"):
 		var it: ItemDef = d as ItemDef
 		if it != null and it != inputs[part_slot] and it.part_tag == kind:
 			out.append(it)
@@ -159,7 +170,7 @@ static func at(station_key: StringName) -> Array[RecipeDef]:
 static func all() -> Array[RecipeDef]:
 	if Engine.is_editor_hint() or _all.is_empty():
 		var out: Array[RecipeDef] = []
-		for d: ContentDef in ContentLibrary.items(&"recipe"):
+		for d: ContentDef in RegentsContent.items(&"recipe"):
 			var r: RecipeDef = d as RecipeDef
 			if r != null:
 				out.append(r)

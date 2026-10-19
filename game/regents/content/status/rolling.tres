@@ -6,8 +6,6 @@
 script = ExtResource("1_status")
 status = 101
 lasts_s = 0.55
-burst = 2.2
-burst_s = 0.5
 can_sprint = false
 can_jump = false
 hittable = false
@@ -15,4 +13,4 @@ show_on_nameplate = false
 color = Color(0.8, 0.9, 1, 1)
 id = 40002
 display_name = "Rolling"
-designer_notes = "A dodge roll's moment: nothing hits you (owner, 2026-10-19). Given by the server as the Dodge roll is used (its length is regents.roll_ms); its BURST is the roll: for burst_s the body moves burst times as fast the way it is going. Back to normal after."
+designer_notes = "A dodge roll's moment: nothing hits you (owner, 2026-10-19). Given by the server as the Dodge roll is used (its length is regents.roll_ms); the roll's movement is the adventurer's DASH (its movement profile), which the client predicts the moment Ctrl is pressed. Back to normal after."

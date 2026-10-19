@@ -40,9 +40,6 @@ const RESULT_TTL_MICROS: i64 = 10_000_000;
 const CLOCK_SLACK_MS: i64 = 1_500;
 /// A round may be submitted this long after its own time is up.
 const ROUND_GRACE_MICROS: i64 = 20_000_000;
-/// The combo's window, as the server measures it: the kit's, and this much for the network (the client
-/// times it by its own presses, the server by when they arrive).
-const COMBO_SLACK_MS: u32 = 300;
 /// A round is scored only while its player is within this many times the reach of its node or station.
 const RESOLVE_REACH_MULT: f32 = 1.5;
 
@@ -956,6 +953,21 @@ pub struct CombatState {
     pub block_since: Timestamp,
 }
 
+/// A fighter's swing (owner, 2026-10-19: animation-locked): when it began, when it lands (its wind-up),
+/// how long it holds them (its clip's length: the kit's lock), its light step (-1: not a light), and
+/// whether a roll or a heavy hit cancelled it (it never lands). Public: tests and tools read it.
+#[table(accessor = swing, public)]
+pub struct Swing {
+    #[primary_key]
+    pub entity_id: u64,
+    pub ability_id: u32,
+    pub at: Timestamp,
+    pub wind_up_ms: u32,
+    pub lock_ms: u32,
+    pub light_step: i32,
+    pub cancelled: bool,
+}
+
 /// A training dummy, on a level point.
 #[table(accessor = dummy, public)]
 #[derive(Clone)]
@@ -1077,15 +1089,26 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
     if s.blocking {
         return Err("lower your block to swing".into());
     }
-    match slot {
-        rules::KitSlot::Light(step) => {
-            let since = (micros(ctx.timestamp) - micros(s.combo_at)) / 1000;
-            if !rules::combo_allows(step, s.combo, since, kit.combo_window_ms + COMBO_SLACK_MS) {
-                return Err("out of the combo's order".into());
-            }
+    let slack = hot_number(ctx, hot::SWING_SLACK_MS).max(0.0) as i64;
+    let sw = ctx.db.swing().entity_id().find(actor);
+    let (lock, last_step) = sw.as_ref().map_or((0i64, -1), |w| (w.lock_ms as i64, if w.cancelled { -1 } else { w.light_step }));
+    if let rules::KitSlot::Light(step) = slot {
+        let since = (micros(ctx.timestamp) - micros(s.combo_at)) / 1000;
+        // The combo's next step: right after the step before, until the window after its lock.
+        let prev = if sw.is_some() { last_step } else { s.combo };
+        if !rules::combo_allows(step, prev, since, (lock + kit.combo_window_ms as i64 + slack) as u32) {
+            return Err("out of the combo's order".into());
         }
-        rules::KitSlot::Skill(_, rank) => need_rank(ctx, actor, kit.skill, rank, what)?,
-        rules::KitSlot::Heavy => {}
+    }
+    if let Some(w) = &sw {
+        let t = (micros(ctx.timestamp) - micros(w.at)) / 1000;
+        let chain = matches!(slot, rules::KitSlot::Light(step) if step > 0 && w.light_step == step as i32 - 1);
+        if !rules::swing_allows(chain, t, w.wind_up_ms as i64, kit.chain_ms as i64, w.lock_ms as i64, slack, w.cancelled) {
+            return Err("still swinging".into());
+        }
+    }
+    if let rules::KitSlot::Skill(_, rank) = slot {
+        need_rank(ctx, actor, kit.skill, rank, what)?;
     }
     Ok(())
 }
@@ -1094,23 +1117,70 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
 fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     if ability_id == rules::ABILITY_DODGE {
         stop_block(ctx, actor);
+        // A ROLL CANCELS A SWING (owner, 2026-10-19): in its wind-up it never lands; in its recovery the
+        // recovery ends. Either way the fighter is free, and the combo is over.
+        if let Some(mut w) = ctx.db.swing().entity_id().find(actor) {
+            let t = ((micros(ctx.timestamp) - micros(w.at)) / 1000).max(0);
+            if t < w.lock_ms as i64 && !w.cancelled {
+                w.cancelled = t < w.wind_up_ms as i64;
+                w.lock_ms = t as u32;
+                ctx.db.swing().entity_id().update(w);
+            }
+        }
+        let mut cs = combat_state_of(ctx, actor);
+        cs.combo = -1;
+        save_combat_state(ctx, cs);
         let ms = (hot_number(ctx, hot::ROLL_MS).max(0.0)) as u32;
         if let Err(e) = crate::module::set_status_internal(ctx, actor, rules::STATUS_ROLLING, ms, actor, String::new()) {
             log::warn!("regents: {actor} rolled, but: {e}");
         }
         return;
     }
-    let Some((_, slot)) = rules::kit_of_ability(ability_id) else { return };
+    let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return };
     let mut s = combat_state_of(ctx, actor);
     s.combo = if let rules::KitSlot::Light(step) = slot { step as i32 } else { -1 };
     s.combo_at = ctx.timestamp;
     save_combat_state(ctx, s);
+    let wind_up = ctx.db.ability_def().ability_id().find(ability_id).map_or(0, |d| d.wind_up_ms);
+    let w = Swing {
+        entity_id: actor, ability_id, at: ctx.timestamp, wind_up_ms: wind_up, lock_ms: kit.lock_ms(ability_id).max(wind_up),
+        light_step: if let rules::KitSlot::Light(step) = slot { step as i32 } else { -1 }, cancelled: false,
+    };
+    if ctx.db.swing().entity_id().find(actor).is_some() {
+        ctx.db.swing().entity_id().update(w);
+    } else {
+        ctx.db.swing().insert(w);
+    }
+    // A COMMITTED SWING: slowed from its start until just after it lands.
+    let hold = wind_up + hot_number(ctx, hot::SWING_HOLD_MS).max(0.0) as u32;
+    if let Err(e) = crate::module::set_status_internal(ctx, actor, rules::STATUS_SWINGING, hold, actor, String::new()) {
+        log::warn!("regents: {actor} swings, but: {e}");
+    }
 }
 
 /// What a hit by `actor` with `ability_id` on `target` does (true: done here). Ours when it is a kit's.
 fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
-    let Some((kit, _)) = rules::kit_of_ability(ability_id) else { return false };
+    let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return false };
     let Some(def) = ctx.db.ability_def().ability_id().find(ability_id) else { return false };
+    // A swing a roll (or a flinch) cancelled in its wind-up never lands.
+    if ctx.db.swing().entity_id().find(actor).is_some_and(|w| w.ability_id == ability_id && w.cancelled) {
+        log::info!("regents: {actor}'s {} was cancelled before it landed", def.ability_id);
+        return true;
+    }
+    // HEAVIES FLINCH LIGHTS: a heavy hit in a light swing's wind-up cancels it (a heavy's wind-up has armor).
+    if slot == rules::KitSlot::Heavy {
+        if let Some(mut w) = ctx.db.swing().entity_id().find(target.entity_id) {
+            let t = (micros(ctx.timestamp) - micros(w.at)) / 1000;
+            if w.light_step >= 0 && !w.cancelled && t < w.wind_up_ms as i64 {
+                w.cancelled = true;
+                w.lock_ms = t.max(0) as u32;
+                ctx.db.swing().entity_id().update(w);
+                let ms = hot_number(ctx, hot::FLINCH_MS).max(0.0) as u32;
+                let _ = crate::module::set_status_internal(ctx, target.entity_id, rules::STATUS_FLINCHED, ms, actor, String::new());
+                log::info!("regents: {actor}'s heavy flinched {}", target.entity_id);
+            }
+        }
+    }
     let (pct, quality) = wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q));
     let mut dmg = rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill));
     let t = combat_state_of(ctx, target.entity_id);

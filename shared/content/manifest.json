@@ -76,28 +76,28 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 10,
-			"hash": "70ed577e",
+			"hash": "5655dd86",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/ability/axe_chop_a.tres": "be693a57",
-				"game/regents/content/ability/axe_chop_b.tres": "8caa2636",
-				"game/regents/content/ability/axe_cleave.tres": "e5c9eb73",
-				"game/regents/content/ability/axe_heavy.tres": "bb2c4356",
-				"game/regents/content/ability/dodge.tres": "abd33f5f",
-				"game/regents/content/ability/sword_heavy.tres": "5808a911",
-				"game/regents/content/ability/sword_lunge.tres": "dae740ed",
-				"game/regents/content/ability/sword_slash_a.tres": "3798ad89",
-				"game/regents/content/ability/sword_slash_b.tres": "f6bd58db",
-				"game/regents/content/ability/sword_slash_c.tres": "34c58cef"
+				"game/regents/content/ability/axe_chop_a.tres": "4fe376bc",
+				"game/regents/content/ability/axe_chop_b.tres": "ef47c2e2",
+				"game/regents/content/ability/axe_cleave.tres": "af886adf",
+				"game/regents/content/ability/axe_heavy.tres": "d336b065",
+				"game/regents/content/ability/dodge.tres": "3b7754ed",
+				"game/regents/content/ability/sword_heavy.tres": "422d6c72",
+				"game/regents/content/ability/sword_lunge.tres": "d82d59f5",
+				"game/regents/content/ability/sword_slash_a.tres": "061e36ab",
+				"game/regents/content/ability/sword_slash_b.tres": "a417d955",
+				"game/regents/content/ability/sword_slash_c.tres": "3b20ef37"
 			},
 			"type": "ability"
 		},
 		"shared/content/regents/character.json": {
 			"count": 4,
-			"hash": "fa48fb35",
+			"hash": "ea35be5e",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/character/adventurer.tres": "33410ce3",
+				"game/regents/content/character/adventurer.tres": "82e9c25f",
 				"game/regents/content/character/dummy.tres": "f90a4f6b",
 				"game/regents/content/character/node.tres": "aa7b11b6",
 				"game/regents/content/character/station.tres": "61228266"
@@ -133,13 +133,22 @@
 		},
 		"shared/content/regents/kit.json": {
 			"count": 2,
-			"hash": "8e2b70a3",
+			"hash": "8350c44a",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/kit/axe.tres": "b72fd591",
 				"game/regents/content/kit/sword.tres": "b29cb0ef"
 			},
 			"type": "kit"
+		},
+		"shared/content/regents/movement.json": {
+			"count": 1,
+			"hash": "4776fc76",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/movement/adventurer.tres": "3f889dc2"
+			},
+			"type": "movement"
 		},
 		"shared/content/regents/node.json": {
 			"count": 5,
@@ -174,10 +183,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "8f2a29e3",
+			"hash": "f434f77d",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "8f4c0015"
+				"game/regents/content/rules/regents.tres": "2f0017c5"
 			},
 			"type": "rules"
 		},
@@ -209,14 +218,16 @@
 			"type": "station"
 		},
 		"shared/content/regents/status.json": {
-			"count": 4,
-			"hash": "2369ea4b",
+			"count": 6,
+			"hash": "ede9a4b4",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/status/blocking.tres": "57ae99ea",
+				"game/regents/content/status/blocking.tres": "96e8aa81",
 				"game/regents/content/status/depleted.tres": "812b8cf4",
-				"game/regents/content/status/rolling.tres": "30905380",
-				"game/regents/content/status/staggered.tres": "ffd05989"
+				"game/regents/content/status/flinched.tres": "5f4168e4",
+				"game/regents/content/status/rolling.tres": "bf803c94",
+				"game/regents/content/status/staggered.tres": "ffd05989",
+				"game/regents/content/status/swinging.tres": "9c658cee"
 			},
 			"type": "status"
 		}

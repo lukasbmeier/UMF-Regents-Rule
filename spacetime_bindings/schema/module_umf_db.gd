@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -41,6 +41,7 @@ var session_member: UmfSessionMemberTable
 var skill_xp: UmfSkillXpTable
 var station: UmfStationTable
 var status_state: UmfStatusStateTable
+var swing: UmfSwingTable
 var timed_press: UmfTimedPressTable
 var wielded: UmfWieldedTable
 var work_order: UmfWorkOrderTable
@@ -86,6 +87,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	skill_xp = preload('res://spacetime_bindings/schema/tables/umf_skill_xp_table.gd').new(p_local_db)
 	station = preload('res://spacetime_bindings/schema/tables/umf_station_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
+	swing = preload('res://spacetime_bindings/schema/tables/umf_swing_table.gd').new(p_local_db)
 	timed_press = preload('res://spacetime_bindings/schema/tables/umf_timed_press_table.gd').new(p_local_db)
 	wielded = preload('res://spacetime_bindings/schema/tables/umf_wielded_table.gd').new(p_local_db)
 	work_order = preload('res://spacetime_bindings/schema/tables/umf_work_order_table.gd').new(p_local_db)

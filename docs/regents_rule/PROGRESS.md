@@ -206,3 +206,42 @@ dummy, which so has none: you can walk through it): a foundation bug to fix in t
 hits on players reach our block and parry now (#254), but no creature hits yet.
 Next: wild creatures (Quaternius' Ultimate Animated Animals), the yew bow, the sword's E/R/F, the station
 UI the owner asked for in place of Q at stations.
+
+## Step 5: combat timing, and two fixes (2026-10-19)
+After the owner's first combat playtest ("I can spam attack... the attack should be synced to the
+animation"; the visuals must match the server). His four calls, each enforced by the server and played
+the same by the client:
+
+- **Animation-locked, with a buffer.** A swing lands at its wind-up and holds its fighter for its CLIP'S
+  LENGTH (`KitDef.lock_ms`: the clip in `timing_set` at its speed, baked for the server). A press while
+  it holds you is queued (the latest wins; it lapses after the combo's window) and fires the moment it
+  may: the combo's next light step from just after the hit (`chain_ms`), anything else once the lock is
+  over. Mashing swings one swing per animation, never faster, and no press is lost. Change a clip's
+  speed in the animation set and the swing's timing follows, on both sides.
+- **Committed swings.** From a swing's start until just after it lands (`regents.swing_hold_ms`) you walk
+  (the server's Swinging status bounds you at 30 %), so the whole swing plays; in the recovery you move
+  freely, and running cuts the swing's tail (the adventurer's animation cancels above 1.6 m/s).
+- **A roll cancels.** In a swing's wind-up the roll cancels it: it never lands, on screen or on the
+  server (`swing.cancelled`). In its recovery the roll ends it.
+- **Heavies flinch lights.** A heavy hit in a light swing's wind-up cancels it and flinches its fighter
+  (`regents.flinch_ms`, the Flinched status); a heavy's own wind-up has armor; lights never interrupt;
+  a parry still staggers. (Needs a second fighter to see: creatures, or a duel.)
+- Server: the `swing` table, `game/regents.rs` `may_fight` / `fought` / `hit`; `regents.swing_slack_ms`
+  forgives the network. Light and heavy cooldowns never outlast their locks.
+
+Fixed: every swing played Interact (the foundation plays an ability's clip under `ability.<id>`; the set
+had other names: now `ability.40001`... and the light swings slowed to readable speeds); the lag near
+the workbench (the station prompt re-read every content file dozens of times a frame: content is now
+looked up once, `RegentsContent`, and a recipe's work-XP worked out once).
+
+**The roll is a predicted dash** (owner, 2026-10-19). The first roll was a server status that burst you
+forward: right locally, but at 150 ms the server checked each frame a round trip late, found the burst
+over and corrected the player back (the combat playtest caught it). Now Ctrl is the foundation's DASH
+(the adventurer's movement profile: a 16 m/s impulse, 0.9 s apart), moved by the client the moment
+it is pressed and bounded by the server like any movement; the Dodge roll ability still gives the
+i-frames (Rolling) and cancels a swing. Ctrl is the `dash` action (the foundation binds Q when a game has
+not; Q is a skill here). A status's speed scales the dash too, so the Swinging status forbids sprint and
+jump but no longer caps speed (a roll in a wind-up must be a full roll); the committed walk is the
+client's. A cheating client could run while swinging: closing that is a foundation tweak (a status's
+speed not scaling the dash). For the dash the template's own integration test learned to take the
+player's kind as the game made it (DECISIONS #255, made in the template too).

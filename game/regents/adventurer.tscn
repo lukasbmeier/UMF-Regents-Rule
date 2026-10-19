@@ -23,3 +23,6 @@ script = ExtResource("5_combat_look")
 
 [node name="HitFeedback" type="Node" parent="Components"]
 script = ExtResource("6_hits")
+
+[node name="Animation" parent="Components" index="7"]
+action_cancel_speed = 1.6

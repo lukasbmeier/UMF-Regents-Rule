@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1_ability")
-cooldown_ms = 650
+cooldown_ms = 550
 range_m = 1.6
 wind_up_ms = 260
 damage = 11.0
-animation = &"attack.axe_a"
+animation = &"ability.40006"
 key = &"regents.combat"
 judged = true
 reach_m = 1.6

@@ -19,8 +19,8 @@
 			"then": -1
 		},
 		{
-			"burst": 2.2,
-			"burst_ms": 500,
+			"burst": 1.0,
+			"burst_ms": 0,
 			"can_act": true,
 			"can_dash": true,
 			"can_jump": false,
@@ -38,7 +38,7 @@
 			"burst": 1.0,
 			"burst_ms": 0,
 			"can_act": true,
-			"can_dash": false,
+			"can_dash": true,
 			"can_jump": false,
 			"can_sprint": false,
 			"hittable": true,
@@ -63,6 +63,38 @@
 			"name": "Staggered",
 			"speed": 0.4,
 			"status": 103,
+			"targetable": true,
+			"then": -1
+		},
+		{
+			"burst": 1.0,
+			"burst_ms": 0,
+			"can_act": true,
+			"can_dash": false,
+			"can_jump": false,
+			"can_sprint": false,
+			"hittable": true,
+			"id": 40005,
+			"lasts_ms": 0,
+			"name": "Swinging",
+			"speed": 1.0,
+			"status": 104,
+			"targetable": true,
+			"then": -1
+		},
+		{
+			"burst": 1.0,
+			"burst_ms": 0,
+			"can_act": false,
+			"can_dash": false,
+			"can_jump": false,
+			"can_sprint": false,
+			"hittable": true,
+			"id": 40006,
+			"lasts_ms": 0,
+			"name": "Flinched",
+			"speed": 0.5,
+			"status": 105,
 			"targetable": true,
 			"then": -1
 		}

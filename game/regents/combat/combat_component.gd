@@ -7,23 +7,37 @@ class_name CombatComponent extends SpaceTimeComponent
 ##   LMB tap    the kit's light combo: each tap the next step, inside its `combo_window_ms`
 ##   LMB hold   its heavy (fires once held `heavy_hold_ms`)
 ##   RMB hold   block (raised inside `regents.parry_ms` of a hit: a parry)
-##   Ctrl       the dodge roll (the `dodge` action; slow-walk moves to Alt): the server's Rolling status
-##              bursts you forward, and nothing hits you while it lasts
+##   Ctrl       the dodge roll (the foundation's `dash` action; slow-walk moves to Alt): the dash moves you
+##              at once, predicted here; the Dodge roll ability's Rolling status means nothing hits you
 ##   Q E R F    the kit's skills, unlocked at its mastery ranks (1, 3, 6, 9): IN STANCE only, else E
 ##              works what is in front of you and Q picks at a station as before
 ##   Tab        the next target in front of you: a ring under it, its health at the top. For reference,
 ##              not aim: a swing hits what it sweeps.
 ##   Esc        drops the target
 ## STANCE: a target picked, or a swing in the last `stance_s`: the body faces where the camera looks.
+##
+## THE SWING'S TIMELINE (owner, 2026-10-19), the same here as on the server (`game/regents.rs`): a swing
+## lands at its wind-up and holds you for its clip's length (`KitDef.lock_ms`). A press while it holds you
+## is QUEUED (the latest wins; it lapses after the combo's window) and fires the moment it may: the combo's
+## next light step from just after the hit (`chain_ms`), anything else once the lock is over. From the
+## start to just after the hit the swing is COMMITTED (you walk, facing the aim: the server's Swinging
+## status bounds the same); in the recovery you move freely and moving cuts the swing's tail. A ROLL in the
+## wind-up cancels the swing (it never lands), in the recovery ends it. A heavy hit in a light's wind-up
+## FLINCHES you (the server cancels it; the Flinched status shows here and clears the queue).
 
 const TABLE_WIELDED: StringName = &"wielded"
 const TABLE_STATE: StringName = &"combat_state"
-const ACTION_DODGE: StringName = &"dodge"
+## The roll: the foundation's dash action (the client predicts its movement), on Ctrl.
+const ACTION_DODGE: StringName = &"dash"
 const ACTION_SLOW: StringName = &"move_slow"
 const FACING: StringName = &"regents_combat"
 const SKILL_KEYS: Array[Key] = [KEY_Q, KEY_E, KEY_R, KEY_F]
 ## The dodge roll (`content/ability/dodge.tres`): everyone's, wielding or not.
 const DODGE_ID: int = 40010
+## The Flinched status (`content/status/flinched.tres`).
+const STATUS_FLINCHED: int = 105
+## How long after a swing lands it is still committed (the server's `regents.swing_hold_ms`).
+const COMMIT_AFTER_HIT_MS: int = 80
 
 ## The ability use asked of the server: (ability id, target) -> the predicted id. Tests replace it.
 signal swung(ability_id: int)
@@ -46,9 +60,19 @@ var weapon_row: int = -1
 var blocking: bool = false
 ## The local player's target (an entity id), or -1.
 var target_id: int = -1
-## The light combo as this client swung it: the step last asked for, and when (msec).
+## The light combo as this client swung it: the step last swung, and when its lock ended (msec).
 var combo_step: int = -1
 var combo_ms: int = -100000
+## The swing now (or last): its ability, when it began, lands and lets go (msec), and whether it was
+## cancelled (a roll, a flinch).
+var swing_ability: AbilityDef = null
+var swing_at_ms: int = -100000
+var swing_hit_ms: int = -100000
+var swing_lock_ms: int = -100000
+var swing_cancelled: bool = false
+## The press waiting for the swing to let go: {"kind": light/heavy/skill, "slot", "at"}; {} for none.
+var queued: Dictionary = {}
+var _slowing: bool = false
 var _last_swing_ms: int = -100000
 var _lmb_down_ms: int = -1
 var _heavy_fired: bool = false
@@ -74,16 +98,18 @@ func _on_bound() -> void:
 	if is_local_authority:
 		bind_keys()
 		if _action != null:
-			_action.action_revoked.connect(func(_a: int, _p: int, why: String) -> void: refused.emit(why))
+			_action.action_revoked.connect(_on_revoked)
 
 
-## The dodge on Ctrl, slow-walk moved to Alt (owner, 2026-10-19: "Ctrl to roll is fine for now").
+## The roll on Ctrl (owner, 2026-10-19: "Ctrl to roll is fine for now"): the foundation's dash action
+## (it binds Q when a game has not: Q is a skill here), and slow-walk moved to Alt.
 static func bind_keys() -> void:
 	if not InputMap.has_action(ACTION_DODGE):
 		InputMap.add_action(ACTION_DODGE)
-		var ctrl: InputEventKey = InputEventKey.new()
-		ctrl.physical_keycode = KEY_CTRL
-		InputMap.action_add_event(ACTION_DODGE, ctrl)
+	InputMap.action_erase_events(ACTION_DODGE)
+	var ctrl: InputEventKey = InputEventKey.new()
+	ctrl.physical_keycode = KEY_CTRL
+	InputMap.action_add_event(ACTION_DODGE, ctrl)
 	if InputMap.has_action(ACTION_SLOW):
 		for e: InputEvent in InputMap.action_get_events(ACTION_SLOW):
 			var k: InputEventKey = e as InputEventKey
@@ -112,7 +138,7 @@ func in_stance() -> bool:
 	return target_id >= 0 or Time.get_ticks_msec() - _last_swing_ms < int(stance_s * 1000.0)
 
 
-## The light step a tap now swings: the next after the last inside the window, else the first.
+## The light step a tap now swings: the next after the last, until the window after its lock, else the first.
 func next_light_step(now_ms: int) -> int:
 	if kit == null or kit.light.is_empty():
 		return -1
@@ -121,60 +147,115 @@ func next_light_step(now_ms: int) -> int:
 	return 0
 
 
-## Swing ability `a` now, aimed where the camera looks: the predicted id, or -1.
-func swing(a: AbilityDef) -> int:
+## Whether a swing holds us at `now_ms` (between its start and its lock, not cancelled).
+func swinging(now_ms: int) -> bool:
+	return swing_ability != null and not swing_cancelled and now_ms < swing_lock_ms
+
+
+## Whether ability `a` (a light step `step`, -1 for anything else) may start at `now_ms`: the swing
+## before it lets go (the combo's next step from just after its hit), and its cooldown is over.
+func may_start(a: AbilityDef, step: int, now_ms: int) -> bool:
+	if a == null or kit == null:
+		return false
+	if swinging(now_ms):
+		var chain: bool = step > 0 and step == combo_step + 1
+		var from: int = mini(swing_hit_ms + kit.chain_ms, swing_lock_ms) if chain else swing_lock_ms
+		if now_ms < from:
+			return false
+	return _action == null or _action.cooldown_remaining_sec(a.id) <= 0.0
+
+
+## Swing ability `a` now, aimed where the camera looks, its timeline begun: the predicted id, or -1.
+func swing(a: AbilityDef, step: int = -1) -> int:
 	if a == null or _action == null:
 		return -1
-	_last_swing_ms = Time.get_ticks_msec()
+	var now: int = Time.get_ticks_msec()
+	_last_swing_ms = now
 	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
 	var pid: int = _action.request_use(a.id, 0, Vector3(-sin(yaw), 0.0, -cos(yaw)))
-	if pid >= 0:
-		swung.emit(a.id)
-	return pid
-
-
-## A light tap: the next step of the combo.
-func light() -> int:
-	var now: int = Time.get_ticks_msec()
-	var step: int = next_light_step(now)
-	if step < 0:
+	if pid < 0:
 		return -1
-	var pid: int = swing(kit.light[step])
-	if pid >= 0:
-		combo_step = step
-		combo_ms = now
+	swing_ability = a
+	swing_at_ms = now
+	swing_hit_ms = now + a.wind_up_ms
+	swing_lock_ms = now + (kit.lock_ms(a) if kit != null else a.wind_up_ms)
+	swing_cancelled = false
+	combo_step = step
+	combo_ms = swing_lock_ms
+	swung.emit(a.id)
 	return pid
 
 
-## Ctrl: the dodge roll, the way you are moving.
+## A press: `kind` "light", "heavy" or "skill" (`slot` 0 Q .. 3 F). It swings now when it may, else it is
+## queued (the latest press wins) and swings the moment it may. True when it swung now.
+func press(kind: String, slot: int = 0) -> bool:
+	if kit == null:
+		return false
+	if kind == "skill":
+		if slot >= kit.skills.size():
+			refused.emit("No skill on that key yet")
+			return false
+		var sk: SkillingComponent = (entity as SpaceTimeEntity).find_component(SkillingComponent) as SkillingComponent
+		if (sk.rank_in(kit.skill) if sk != null else 1) < kit.rank_for(slot):
+			refused.emit("%s needs %s rank %d" % [kit.skills[slot].display_name, kit.skill.display_name, kit.rank_for(slot)])
+			return false
+	if _try(kind, slot):
+		queued = {}
+		return true
+	queued = {"kind": kind, "slot": slot, "at": Time.get_ticks_msec()}
+	return false
+
+
+func _try(kind: String, slot: int) -> bool:
+	var now: int = Time.get_ticks_msec()
+	match kind:
+		"light":
+			var step: int = next_light_step(now)
+			return step >= 0 and may_start(kit.light[step], step, now) and swing(kit.light[step], step) >= 0
+		"heavy":
+			return kit.heavy != null and may_start(kit.heavy, -1, now) and swing(kit.heavy) >= 0
+		"skill":
+			return slot < kit.skills.size() and may_start(kit.skills[slot], -1, now) and swing(kit.skills[slot]) >= 0
+	return false
+
+
+## A light tap; the heavy; a skill key (each queued when it may not swing yet).
+func light() -> bool:
+	return press("light")
+
+
+func heavy() -> bool:
+	return press("heavy")
+
+
+func skill(slot: int) -> bool:
+	return press("skill", slot)
+
+
+## Ctrl: the dodge roll, the way you are moving. In a swing's wind-up it cancels the swing (it never
+## lands); in its recovery it ends it; the queue and the combo are over.
 func dodge() -> int:
 	if _action == null:
 		return -1
-	for d: ContentDef in ContentLibrary.items(&"ability"):
-		if d.id == DODGE_ID and d is AbilityDef:
-			return _action.request_use(DODGE_ID, 0, Vector3.ZERO)
-	return -1
-
-
-func heavy() -> int:
-	if kit == null or kit.heavy == null:
+	var pid: int = _action.request_use(DODGE_ID, 0, Vector3.ZERO)
+	if pid < 0:
 		return -1
+	var now: int = Time.get_ticks_msec()
+	if swinging(now):
+		swing_cancelled = now < swing_hit_ms
+		swing_lock_ms = now
+	queued = {}
 	combo_step = -1
-	return swing(kit.heavy)
+	return pid
 
 
-## Skill key `slot` (0 Q .. 3 F): its ability when the kit has it and our mastery unlocks it.
-func skill(slot: int) -> int:
-	if kit == null or slot >= kit.skills.size():
-		refused.emit("No skill on that key yet")
-		return -1
-	var sk: SkillingComponent = (entity as SpaceTimeEntity).find_component(SkillingComponent) as SkillingComponent
-	var rank: int = sk.rank_in(kit.skill) if sk != null else 1
-	if rank < kit.rank_for(slot):
-		refused.emit("%s needs %s rank %d" % [kit.skills[slot].display_name, kit.skill.display_name, kit.rank_for(slot)])
-		return -1
-	combo_step = -1
-	return swing(kit.skills[slot])
+## The server refused a use: a swing it refused never began (its timeline is undone).
+func _on_revoked(ability_id: int, _predicted_id: int, why: String) -> void:
+	if swing_ability != null and swing_ability.id == ability_id and swinging(Time.get_ticks_msec()):
+		swing_lock_ms = Time.get_ticks_msec()
+		swing_cancelled = true
+		combo_step = -1
+	refused.emit(why)
 
 
 ## Raise or lower the block (the server's say: its row comes back).
@@ -244,9 +325,31 @@ func _input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if not is_bound():
 		return
-	if _lmb_down_ms >= 0 and not _heavy_fired and kit != null and Time.get_ticks_msec() - _lmb_down_ms >= kit.heavy_hold_ms:
+	var now: int = Time.get_ticks_msec()
+	if _lmb_down_ms >= 0 and not _heavy_fired and kit != null and now - _lmb_down_ms >= kit.heavy_hold_ms:
 		_heavy_fired = true
 		heavy()
+	# Flinched by the server: the swing is over, and so is what was queued.
+	var st: StatusComponent = (entity as SpaceTimeEntity).find_component(StatusComponent) as StatusComponent
+	if st != null and st.status() == STATUS_FLINCHED and swinging(now):
+		swing_cancelled = true
+		swing_lock_ms = now
+		queued = {}
+		combo_step = -1
+	# The queue: fire when it may, or let it lapse.
+	if not queued.is_empty() and kit != null:
+		if now - int(queued["at"]) > kit.combo_window_ms:
+			queued = {}
+		elif _try(String(queued["kind"]), int(queued["slot"])):
+			queued = {}
+	# THE COMMITTED SWING: walk from its start until just after it lands.
+	var commit: bool = swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS
+	if commit != _slowing:
+		_slowing = commit
+		if commit:
+			Input.action_press(ACTION_SLOW)
+		else:
+			Input.action_release(ACTION_SLOW)
 	if _rmb and not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and DisplayServer.get_name() != "headless":
 		set_block(false)
 	if target_id >= 0 and not _target_ok(target_id):

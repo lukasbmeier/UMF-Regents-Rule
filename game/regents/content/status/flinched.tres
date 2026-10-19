@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 105
+speed = 0.5
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+pose = &"react.hit"
+show_on_nameplate = false
+color = Color(1, 0.7, 0.5, 1)
+id = 40006
+display_name = "Flinched"
+designer_notes = "HEAVIES FLINCH LIGHTS (owner, 2026-10-19): a heavy hit during a light swing's wind-up cancels the swing (it never lands) and flinches its fighter for regents.flinch_ms. A heavy's own wind-up has armor: it is not flinched."

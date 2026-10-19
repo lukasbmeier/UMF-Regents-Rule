@@ -2214,6 +2214,50 @@
 			]
 		},
 		{
+			"name": "Swing",
+			"namespace": [],
+			"source_name": "Swing",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "ability_id",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "wind_up_ms",
+					"type": "U32"
+				},
+				{
+					"name": "lock_ms",
+					"type": "U32"
+				},
+				{
+					"name": "light_step",
+					"type": "I32"
+				},
+				{
+					"name": "cancelled",
+					"type": "Bool"
+				}
+			],
+			"table_names": [
+				"swing"
+			],
+			"table_name": "swing",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "TickSchedule",
 			"namespace": [],
 			"source_name": "TickSchedule",
@@ -4009,7 +4053,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 55
+					"type_idx": 56
 				}
 			],
 			"return_type": "",
@@ -4146,7 +4190,7 @@
 				{
 					"name": "_sched",
 					"type": "WorkSchedule",
-					"type_idx": 61
+					"type_idx": 62
 				}
 			],
 			"return_type": "",
@@ -4170,7 +4214,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 64
+					"type_idx": 65
 				}
 			],
 			"return_type": "",
@@ -4193,7 +4237,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 65
+					"type_idx": 66
 				}
 			],
 			"return_type": "",
@@ -5462,11 +5506,30 @@
 			"is_public": true
 		},
 		{
+			"name": "swing",
+			"wire_name": "swing",
+			"namespace": [],
+			"local_name": "swing",
+			"type_idx": 55,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "swing_entity_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": true
+		},
+		{
 			"name": "tick_schedule",
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 55,
+			"type_idx": 56,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -5489,7 +5552,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 56,
+			"type_idx": 57,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5513,7 +5576,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 57,
+			"type_idx": 58,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5532,7 +5595,7 @@
 			"wire_name": "wielded",
 			"namespace": [],
 			"local_name": "wielded",
-			"type_idx": 58,
+			"type_idx": 59,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5551,7 +5614,7 @@
 			"wire_name": "work_order",
 			"namespace": [],
 			"local_name": "work_order",
-			"type_idx": 59,
+			"type_idx": 60,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5575,7 +5638,7 @@
 			"wire_name": "work_result",
 			"namespace": [],
 			"local_name": "work_result",
-			"type_idx": 60,
+			"type_idx": 61,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5599,7 +5662,7 @@
 			"wire_name": "work_schedule",
 			"namespace": [],
 			"local_name": "work_schedule",
-			"type_idx": 61,
+			"type_idx": 62,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -5622,7 +5685,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 62,
+			"type_idx": 63,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5641,7 +5704,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 63,
+			"type_idx": 64,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5743,6 +5806,7 @@
 		"StarterKitGiven": "UmfStarterKitGiven",
 		"Station": "UmfStation",
 		"StatusStateRow": "UmfStatusStateRow",
+		"Swing": "UmfSwing",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
 		"UnscoredPress": "UmfUnscoredPress",
@@ -5841,6 +5905,7 @@
 		"StarterKitGiven": "UmfStarterKitGiven",
 		"Station": "UmfStation",
 		"StatusStateRow": "UmfStatusStateRow",
+		"Swing": "UmfSwing",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
 		"UnscoredPress": "UmfUnscoredPress",
@@ -9508,6 +9573,79 @@
 						},
 						"algebraic_type": {
 							"U32": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "ability_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "wind_up_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "lock_ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "light_step"
+						},
+						"algebraic_type": {
+							"I32": []
+						}
+					},
+					{
+						"name": {
+							"some": "cancelled"
+						},
+						"algebraic_type": {
+							"Bool": []
 						}
 					}
 				]

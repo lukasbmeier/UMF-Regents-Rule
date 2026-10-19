@@ -7,7 +7,7 @@
 			"brain": "",
 			"id": 40001,
 			"kind": 0,
-			"movement": -1,
+			"movement": 40001,
 			"name": "Adventurer",
 			"playable": false
 		},

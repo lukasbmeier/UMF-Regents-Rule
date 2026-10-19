@@ -100,7 +100,7 @@ func validate() -> Array[String]:
 static func by_id(item_id: int) -> ItemDef:
 	if Engine.is_editor_hint() or _by_id.is_empty():
 		var all: Dictionary[int, ItemDef] = {}
-		for d: ContentDef in ContentLibrary.items(&"item"):
+		for d: ContentDef in RegentsContent.items(&"item"):
 			var it: ItemDef = d as ItemDef
 			if it != null:
 				all[it.id] = it

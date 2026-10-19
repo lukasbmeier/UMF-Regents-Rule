@@ -88,7 +88,7 @@ static func _fill() -> void:
 		return
 	_by_key.clear()
 	_by_id.clear()
-	for d: ContentDef in ContentLibrary.items(&"skill"):
+	for d: ContentDef in RegentsContent.items(&"skill"):
 		var s: SkillDef = d as SkillDef
 		if s != null:
 			_by_key[s.key] = s

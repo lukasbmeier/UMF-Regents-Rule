@@ -42,7 +42,7 @@ func validate() -> Array[String]:
 static func by_key(station_key: StringName) -> StationDef:
 	if Engine.is_editor_hint() or _by_key.is_empty():
 		var all: Dictionary[StringName, StationDef] = {}
-		for d: ContentDef in ContentLibrary.items(&"station"):
+		for d: ContentDef in RegentsContent.items(&"station"):
 			var s: StationDef = d as StationDef
 			if s != null:
 				all[s.key] = s

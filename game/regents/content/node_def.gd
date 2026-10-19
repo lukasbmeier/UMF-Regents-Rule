@@ -103,7 +103,7 @@ func validate() -> Array[String]:
 static func by_id(node_id: int) -> NodeDef:
 	if Engine.is_editor_hint() or _by_id.is_empty():
 		var all: Dictionary[int, NodeDef] = {}
-		for d: ContentDef in ContentLibrary.items(&"node"):
+		for d: ContentDef in RegentsContent.items(&"node"):
 			var n: NodeDef = d as NodeDef
 			if n != null:
 				all[n.id] = n
@@ -116,7 +116,7 @@ static func by_id(node_id: int) -> NodeDef:
 ## Every node, by skill then tier.
 static func all_by_tier() -> Array[NodeDef]:
 	var out: Array[NodeDef] = []
-	for d: ContentDef in ContentLibrary.items(&"node"):
+	for d: ContentDef in RegentsContent.items(&"node"):
 		var n: NodeDef = d as NodeDef
 		if n != null:
 			out.append(n)

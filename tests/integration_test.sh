@@ -581,14 +581,40 @@ assert_eq "$(field grounded)" "true" "standing still on it reads as grounded"
 sleep 1.5   # thirty ticks with nobody driving: long enough for any gravity to win
 assert_eq "$(close_to "$(pos_of)" "$X1" 1.75 "$Z1" 1e-6)" "true"   "an undriven entity resting on raised geometry is NOT pulled through it by the module"
 
-# 3. A SPEED HACK is clamped to the envelope and starts a correction epoch.
+# 3. A SPEED HACK is clamped to the envelope and starts a correction epoch. THE ENVELOPE IS THE
+#    PLAYER'S KIND'S (DECISIONS #205, #255): a frame's worth of its fastest character's sprint and dash
+#    (x1.5 slack), worked out here as build.rs works it out from the game's content. The foundation's
+#    humanoid: 8 m/s, no dash, 0.2 m; a game whose player rolls (Regent's Rule) allows its dash too.
+KIND0=$(sql_first "SELECT kind FROM entity WHERE entity_id = $MYENT" 1)
+STEP=$(python - "$KIND0" <<'PYEOF'
+import glob, json, sys
+kind = int(sys.argv[1])
+cfg = json.load(open("shared/movement_config.json"))
+default = (cfg["sprint_speed"], max(cfg.get("dash_impulse", 0.0), 0.0))
+profiles = {}
+for f in glob.glob("shared/content/*/movement.json"):
+    for p in json.load(open(f))["items"]:
+        profiles[p["id"]] = (p["sprint_speed"], max(p.get("dash_impulse", 0.0), 0.0))
+best, profiled = None, False
+for f in glob.glob("shared/content/*/character.json"):
+    for c in json.load(open(f))["items"]:
+        if c.get("kind", 0) != kind:
+            continue
+        lim = profiles.get(c.get("movement", -1), default)
+        profiled = profiled or c.get("movement", -1) in profiles
+        best = lim if best is None else (max(best[0], lim[0]), max(best[1], lim[1]))
+if best is None or not profiled:
+    best = default
+print(round((best[0] + best[1]) * 1.5 / 60.0, 6))
+PYEOF
+)
 read -r XA YA ZA <<< "$(pos_of)"
 SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($XA + 5.0)")" "$YA" "$ZA" "$EPOCH")]"
 read -r XB YB ZB <<< "$(pos_of)"
 MOVED=$(python -c "print(round($XB - $XA, 4))")
-assert_eq "$(python -c "print('true' if 0.19 < $MOVED <= 0.2001 else 'false')")" "true" \
-  "a 5 m claim in one frame moves only the envelope's 0.2 m (moved $MOVED)"
+assert_eq "$(python -c "print('true' if $STEP * 0.95 < $MOVED <= $STEP + 0.0001 else 'false')")" "true" \
+  "a 5 m claim in one frame moves only the envelope's $STEP m (moved $MOVED)"
 NEW_EPOCH=$((EPOCH + 1))
 assert_eq "$(field correction_epoch)" "$NEW_EPOCH" "the clamp starts a new correction epoch"
 assert_eq "$(row_count "SELECT * FROM correction WHERE entity_id = $MYENT AND from_seq = $SEQ")" "1" \
@@ -626,17 +652,17 @@ send_frames "[$(frame $SEQ "$(python -c "print($XC + 5.0)")" "$YC" "$ZC" "$NEW_E
 E3=$(field correction_epoch)
 read -r XD YD ZD <<< "$(pos_of)"
 SEQ=$((SEQ + 1000))
-# The allowance IS elapsed real time (frames = elapsed/CLIENT_DT * 1.5 + 6, each worth
-# sprint * 1.5 * dt = 0.2 m), so both the claim and the bound are computed from the clock rather
+# The allowance IS elapsed real time (frames = elapsed/CLIENT_DT * 1.5 + 6, each worth the frame's
+# envelope, $STEP m), so both the claim and the bound are computed from the clock rather
 # than hardcoded. With a fixed 100 m claim and a fixed 20 m bound this assertion passed or
 # failed on how quick the CLI felt that minute: a slow run spent 2.2 s here, which legitimately
 # allows 40 m, and the test called that a violation.
 E_LOW=$(python -c "import time; print(round(time.time() - $T_CORRECTION, 3))")
-ALLOWED_LOW=$(python -c "print(round(18.0 * $E_LOW + 1.2, 2))")
+ALLOWED_LOW=$(python -c "print(round($STEP * 90.0 * $E_LOW + $STEP * 6.0, 2))")
 CLAIM=$(python -c "print(round(max(100.0, $ALLOWED_LOW * 4.0), 2))")
 send_frames "[$(frame $SEQ "$(python -c "print($XD + $CLAIM)")" "$YD" "$ZD" "$E3")]"
 E_HIGH=$(python -c "import time; print(round(time.time() - $T_CORRECTION, 3))")
-ALLOWED_HIGH=$(python -c "print(round(18.0 * $E_HIGH + 1.2, 2))")
+ALLOWED_HIGH=$(python -c "print(round($STEP * 90.0 * $E_HIGH + $STEP * 6.0, 2))")
 JUMP=$(python -c "print(round($(pos_of | awk '{print $1}') - $XD, 2))")
 assert_eq "$(python -c "print('true' if 0 < $JUMP < $CLAIM * 0.5 else 'false')")" "true" \
   "a thousand-seq gap does not buy a thousand frames: $CLAIM m claimed, $JUMP m taken"
@@ -727,8 +753,8 @@ send_frames "[$(frame $SEQ "$(python -c "print($XG + 5000.0)")" "$(python -c "pr
 read -r XH YH ZH <<< "$(pos_of)"
 MOVED_H=$(python -c "print(round($XH - $XG, 4))")
 DROP=$(python -c "print(round($YG - $YH, 6))")
-assert_eq "$(python -c "print('true' if 0 < $MOVED_H < 1.0 else 'false')")" "true" \
-  "a claim 5 km off and 1.35 m lower is clamped (moved $MOVED_H m)"
+assert_eq "$(python -c "print('true' if 0 < $MOVED_H < $STEP * 5.0 else 'false')")" "true" \
+  "a claim 5 km off and 1.35 m lower is clamped to a few frames' envelope (moved $MOVED_H m, under 5 frames' $STEP m)"
 assert_eq "$(python -c "print('true' if 0 <= $DROP < 0.001 else 'false')")$(field grounded)" "truetrue" \
   "and takes only its share of the drop ($DROP m): the player keeps their footing instead of sinking"
 

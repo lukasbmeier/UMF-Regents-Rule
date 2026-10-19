@@ -183,9 +183,36 @@ maximum = 120.0
 unit = "s"
 description = "COMBAT: a training dummy is whole again this long after its last hit."
 
+[sub_resource type="Resource" id="Rule_flinch"]
+script = ExtResource("2_rule")
+name = &"flinch_ms"
+number = 350.0
+minimum = 0.0
+maximum = 2000.0
+unit = "ms"
+description = "COMBAT TIMING (owner, 2026-10-19): a heavy hit during a light swing's wind-up cancels it and flinches its fighter this long."
+
+[sub_resource type="Resource" id="Rule_swing_hold"]
+script = ExtResource("2_rule")
+name = &"swing_hold_ms"
+number = 80.0
+minimum = 0.0
+maximum = 1000.0
+unit = "ms"
+description = "COMBAT TIMING: a swing slows its fighter (the Swinging status) from its start until this long after it lands."
+
+[sub_resource type="Resource" id="Rule_swing_slack"]
+script = ExtResource("2_rule")
+name = &"swing_slack_ms"
+number = 120.0
+minimum = 0.0
+maximum = 1000.0
+unit = "ms"
+description = "COMBAT TIMING: the server takes a swing this much before its lock ends (the network: the client times the lock by its own presses)."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

@@ -219,6 +219,7 @@ assert_ok "offer_referee 0 $C_CODE" "a referee for world 0 (the admin judges her
 spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE" >/dev/null 2>&1
 HP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
 assert_ok "use_ability_seen 40006 0 $C_AIM 905 100" "a chop: queued for the referee"
+assert_rejected "use_ability_seen 40008 0 $C_AIM 9050 100" "still swinging" "the overhead while the chop holds you (its clip's 578 ms): refused"
 R905="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 905" 1)"
 assert_ok "use_ability_seen 40007 0 $C_AIM 906 100" "the combo's second, right after: allowed"
 R906="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 906" 1)"
@@ -242,6 +243,21 @@ check "$(logged "client_disconnected .*entity $MYENT: status 102 -> 0")" "and ca
 assert_eq "$(sql_first "SELECT blocking FROM combat_state WHERE entity_id = $MYENT" 1)" "false" "the server's record agrees"
 sleep 5
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" "500" "the dummy is whole again a few seconds after its last hit"
+# A ROLL CANCELS A SWING: in the overhead's wind-up (600 ms) the roll; the referee finds the dummy, and
+# the hit never lands.
+C_CODE2='"regentscombatrefereecodetwo"'
+assert_ok "offer_referee 0 $C_CODE2" "a referee again"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE2" >/dev/null 2>&1
+HPC="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_ok "use_ability_seen 40008 0 $C_AIM 911 100" "the overhead: queued (its wind-up 600 ms)"
+assert_ok "use_ability_seen 40010 0 $C_AIM 912 100" "Ctrl in its wind-up: the roll"
+assert_eq "$(sql_first "SELECT cancelled FROM swing WHERE entity_id = $MYENT" 1)" "true" "the overhead is cancelled"
+R911="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 911" 1)"
+assert_ok "resolve_action $R911 $DUMMY" "the referee: its sweep found the dummy"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" "$HPC" "but a cancelled swing never lands: no damage"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
 assert_ok "unwield" "put the axe away"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"
 assert_rejected "block true" "wield a weapon" "and nothing to block with"

@@ -334,3 +334,23 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     let assembled = rules::RECIPES.iter().find(|r| r.name == "Iron sword").unwrap();
     assert!(assembled.part_slot >= 0 && assembled.quality == rules::QUALITY_FROM_INPUTS, "the sword takes any handle, as good as its blade");
 }
+
+#[test]
+fn a_swing_holds_its_fighter_for_its_clip_and_the_combo_chains_from_its_hit() {
+    let axe = rules::kit_keyed("axe").unwrap();
+    for (a, lock) in axe.locks {
+        let def = rules::kit_of_ability(*a).map(|(k, _)| k.key);
+        assert_eq!(def, Some("axe"), "ability {a} is the axe's");
+        assert!(*lock >= 200 && *lock <= 2500, "a lock from a clip's length, not a placeholder ({a}: {lock} ms)");
+    }
+    assert!(axe.lock_ms(axe.light[0]) > 0 && axe.lock_ms(99) == 0, "a lock for each of its abilities; none for another's");
+    // Chop: lands at 260 ms, holds 578 ms (its clip), the combo may chain 60 ms after the hit.
+    let (wind, chain, lock, slack) = (260, 60, 578, 120);
+    assert!(!rules::swing_allows(false, 300, wind, chain, lock, slack, false), "a heavy 300 ms in: still swinging");
+    assert!(rules::swing_allows(false, lock - slack, wind, chain, lock, slack, false), "the lock's end (less the network's slack): free");
+    assert!(!rules::swing_allows(true, 150, wind, chain, lock, slack, false), "the next combo step before the hit lands: not yet");
+    assert!(rules::swing_allows(true, wind + chain - slack, wind, chain, lock, slack, false), "from just after the hit: the combo chains");
+    assert!(rules::swing_allows(false, 10, wind, chain, lock, slack, true), "a swing a roll cancelled holds nothing");
+    assert!(!rules::swing_allows(true, 50, 500, 60, 400, 0, false) && rules::swing_allows(true, 400, 500, 60, 400, 0, false),
+        "a chain is never later than the lock");
+}

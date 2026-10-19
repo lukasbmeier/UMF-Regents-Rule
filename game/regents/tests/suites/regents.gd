@@ -72,12 +72,53 @@ func _run_combat() -> void:
 	c.free()
 	CombatComponent.bind_keys()
 	var ctrl_dodges: bool = false
-	for e: InputEvent in InputMap.action_get_events(&"dodge"):
+	for e: InputEvent in InputMap.action_get_events(&"dash"):
 		ctrl_dodges = ctrl_dodges or (e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_CTRL)
 	var slow_ctrl: bool = false
 	for e: InputEvent in InputMap.action_get_events(&"move_slow"):
 		slow_ctrl = slow_ctrl or (e is InputEventKey and ((e as InputEventKey).physical_keycode == KEY_CTRL or (e as InputEventKey).keycode == KEY_CTRL))
-	_check(ctrl_dodges and not slow_ctrl, "Ctrl rolls; slow-walk is on Alt")
+	var dash_q: bool = false
+	for e: InputEvent in InputMap.action_get_events(&"dash"):
+		dash_q = dash_q or (e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_Q)
+	_check(ctrl_dodges and not slow_ctrl and not dash_q, "Ctrl rolls (the foundation's dash), not Q (a skill here); slow-walk is on Alt")
+	_run_swing_timeline()
+
+
+## The swing's timeline on the client (owner, 2026-10-19: animation-locked, a buffer, committed, cancels).
+func _run_swing_timeline() -> void:
+	var axe: KitDef = KitDef.by_key(&"axe")
+	var aset: AnimationSet = axe.timing_set
+	for a: AbilityDef in axe.abilities():
+		var sem: StringName = StringName("ability.%d" % a.id)
+		var clip_ms: int = roundi(AnimationTreeBuilder.clip_length(aset, sem) / aset.clip(sem).speed_scale * 1000.0)
+		_check(axe.lock_ms(a) == maxi(clip_ms, a.wind_up_ms + KitDef.MIN_RECOVERY_MS) and axe.lock_ms(a) > a.wind_up_ms,
+			"%s locks for its clip's length (%d ms), past its wind-up (%d)" % [a.display_name, axe.lock_ms(a), a.wind_up_ms])
+		_check(a.cooldown_ms <= axe.lock_ms(a) or axe.skills.has(a), "%s: its cooldown (%d) never outlasts its lock: a queued swing is never refused for it" % [a.display_name, a.cooldown_ms])
+	var c: CombatComponent = CombatComponent.new()
+	c.kit = axe
+	var chop: AbilityDef = axe.light[0]
+	c.swing_ability = chop
+	c.swing_at_ms = 0
+	c.swing_hit_ms = chop.wind_up_ms
+	c.swing_lock_ms = axe.lock_ms(chop)
+	c.combo_step = 0
+	_check(c.swinging(10) and not c.may_start(axe.heavy, -1, 300), "a chop just begun holds you: no heavy 300 ms in")
+	_check(c.may_start(axe.heavy, -1, axe.lock_ms(chop)), "free when its clip ends (%d ms)" % axe.lock_ms(chop))
+	_check(not c.may_start(axe.light[1], 1, chop.wind_up_ms), "the combo's second waits for the first to land")
+	_check(c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.chain_ms), "and chains just after it lands (%d ms)" % (chop.wind_up_ms + axe.chain_ms))
+	c.swing_cancelled = true
+	_check(not c.swinging(10) and c.may_start(axe.heavy, -1, 10), "a swing a roll cancelled holds nothing")
+	c.free()
+	var adv: PackedScene = load("res://game/regents/adventurer.tscn") as PackedScene
+	var body: Node = adv.instantiate()
+	var drv: AnimationDriverComponent = body.get_node_or_null(^"Components/Animation") as AnimationDriverComponent
+	var cfg: MovementConfig = MovementConfig.shared()
+	_check(drv != null and drv.action_cancel_speed > cfg.walk_speed and drv.action_cancel_speed < cfg.run_speed,
+		"a committed swing walks (%.1f m/s) under the speed that cuts it (%.1f); running (%.1f) cuts its recovery" % [cfg.walk_speed, drv.action_cancel_speed if drv != null else 0.0, cfg.run_speed])
+	body.free()
+	var swinging_status: StatusDef = load("res://game/regents/content/status/swinging.tres") as StatusDef
+	_check(swinging_status.speed * cfg.run_speed >= cfg.walk_speed and not swinging_status.can_sprint,
+		"the server's Swinging bound (%.1f m/s) lets the client's committed walk through" % (swinging_status.speed * cfg.run_speed))
 
 
 ## The recipe bench: a recipe's numbers worked out from the content and the hot rules' defaults.
@@ -454,8 +495,10 @@ func _run_looks() -> void:
 		abilities.assign(k.light + k.skills)
 		abilities.append(k.heavy)
 		for a: AbilityDef in abilities:
-			_check(aset.has_exact(a.animation), "the %s kit's %s plays the set's %s" % [k.key, a.display_name, a.animation])
-	_check(aset.has_exact(&"dodge.roll") and aset.has_exact(&"pose.block"), "the roll and the block are in the set")
+			# The driver plays an ability as `ability.<id>` (anything else falls back to Interact: owner, 2026-10-19).
+			_check(a.animation == StringName("ability.%d" % a.id) and aset.has_exact(a.animation) and aset.clip(a.animation).anim_name != aset.clip(&"interact").anim_name,
+				"the %s kit's %s plays the set's ability.%d, its own clip (%s)" % [k.key, a.display_name, a.id, aset.clip(a.animation).anim_name if aset.has_exact(a.animation) else "none"])
+	_check(aset.has_exact(&"ability.40010") and aset.clip(&"ability.40010").anim_name == &"Roll" and aset.has_exact(&"pose.block"), "the roll plays Roll; the block is in the set")
 	var tools: Dictionary[String, StringName] = {"res://game/regents/skilling/woodcutting/axe.tscn": &"pose.chop",
 		"res://game/regents/skilling/woodcutting/iron_axe.tscn": &"pose.chop", "res://game/regents/skilling/mining/pickaxe.tscn": &"pose.mine",
 		"res://game/regents/skilling/smithing/hammer.tscn": &"pose.smith"}

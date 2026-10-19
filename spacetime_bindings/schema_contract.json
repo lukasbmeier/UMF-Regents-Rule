@@ -114,6 +114,7 @@
 		"skill_xp": "SkillXp(id:U64,entity_id:U64,skill_id:U32,xp:U32)",
 		"station": "Station(entity_id:U64,world_id:U32,key:String,point_id:String)",
 		"status_state": "StatusStateRow(entity_id:U64,world_id:U32,status:U8,prev_status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,data:String,serial:U32)",
+		"swing": "Swing(entity_id:U64,ability_id:U32,at:(__timestamp_micros_since_unix_epoch__:I64),wind_up_ms:U32,lock_ms:U32,light_step:I32,cancelled:Bool)",
 		"timed_press": "TimedPress(challenge_id:U64,entity_id:U64,starts_at:(__timestamp_micros_since_unix_epoch__:I64),period_ms:U32,half_width:F32,rounds:U8,seen_ms:U32,at_ms:[I32],positions:[F32],qualities:[F32],credit_ms:U32,done:Bool)",
 		"wielded": "Wielded(entity_id:U64,item_row:U64,item_id:U32,kit:String)",
 		"work_order": "WorkOrder(id:U64,world_id:U32,slot:U32,item_id:U32,qty:U32,skill_id:U32,xp:U32,expires_at:(__timestamp_micros_since_unix_epoch__:I64))",

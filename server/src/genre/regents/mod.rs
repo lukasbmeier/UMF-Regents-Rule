@@ -232,6 +232,17 @@ pub struct KitSeed {
     /// Q, E, R, F: (ability, the mastery rank it unlocks at).
     pub skills: &'static [(u32, u32)],
     pub combo_window_ms: u32,
+    /// After a light swing lands, this long before the combo's next step may start.
+    pub chain_ms: u32,
+    /// Each ability's lock: how long a swing holds its fighter (its clip's length, baked).
+    pub locks: &'static [(u32, u32)],
+}
+
+impl KitSeed {
+    /// How long `ability_id` locks its fighter (0: not this kit's).
+    pub fn lock_ms(&self, ability_id: u32) -> u32 {
+        self.locks.iter().find(|(a, _)| *a == ability_id).map_or(0, |(_, ms)| *ms)
+    }
 }
 
 /// Where an ability sits in its kit.
@@ -252,6 +263,8 @@ pub const ABILITY_DODGE: u32 = 40010;
 pub const STATUS_ROLLING: u8 = 101;
 pub const STATUS_BLOCKING: u8 = 102;
 pub const STATUS_STAGGERED: u8 = 103;
+pub const STATUS_SWINGING: u8 = 104;
+pub const STATUS_FLINCHED: u8 = 105;
 /// The training dummy's entity kind (`content/character/dummy.tres`) and its level points.
 pub const ENTITY_DUMMY: u8 = 102;
 pub const DUMMY_POINT: &str = "dummy";
@@ -288,6 +301,18 @@ pub fn hit_damage(ability_damage: f32, weapon_damage_pct: u32, quality_pm: u32, 
 /// before it, inside the kit's window (`last_step` -1: no combo going).
 pub fn combo_allows(step: u32, last_step: i32, since_ms: i64, window_ms: u32) -> bool {
     step == 0 || (last_step == step as i32 - 1 && since_ms >= 0 && since_ms <= window_ms as i64)
+}
+
+/// THE SWING'S TIMELINE (owner, 2026-10-19: animation-locked, with a buffer): a swing used at 0 lands at
+/// `wind_up` and holds its fighter until `lock`. May a new swing start `t` ms after the last began?
+/// The combo's next light step from `wind_up + chain` (the recovery cancels into it); anything else
+/// once the lock is over. `slack` forgives the network; a cancelled swing (a roll) holds nothing.
+pub fn swing_allows(next_is_chain: bool, t: i64, wind_up: i64, chain: i64, lock: i64, slack: i64, cancelled: bool) -> bool {
+    if cancelled {
+        return true;
+    }
+    let from = if next_is_chain { (wind_up + chain).min(lock) } else { lock };
+    t >= from - slack
 }
 
 pub fn item(id: u32) -> Option<&'static ItemSeed> {

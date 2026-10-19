@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 104
+can_sprint = false
+can_jump = false
+can_dash = false
+show_on_nameplate = false
+color = Color(1, 0.9, 0.6, 1)
+id = 40005
+display_name = "Swinging"
+designer_notes = "A COMMITTED SWING (owner, 2026-10-19): from a swing's start until it lands (its wind-up, and regents.swing_hold_ms), the fighter cannot sprint or jump (the server bounds it) and the client walks (the combat component), so the full swing plays. Free again in the recovery. Its speed is not capped here: a status's speed also scales the dash, and a roll in a wind-up must be a full roll."

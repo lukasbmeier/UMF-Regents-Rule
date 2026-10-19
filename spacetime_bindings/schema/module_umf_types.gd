@@ -41,6 +41,7 @@ const SessionMember = preload('res://spacetime_bindings/schema/types/umf_session
 const SkillXp = preload('res://spacetime_bindings/schema/types/umf_skill_xp.gd')
 const Station = preload('res://spacetime_bindings/schema/types/umf_station.gd')
 const StatusStateRow = preload('res://spacetime_bindings/schema/types/umf_status_state_row.gd')
+const Swing = preload('res://spacetime_bindings/schema/types/umf_swing.gd')
 const TimedPress = preload('res://spacetime_bindings/schema/types/umf_timed_press.gd')
 const Wielded = preload('res://spacetime_bindings/schema/types/umf_wielded.gd')
 const WorkOrder = preload('res://spacetime_bindings/schema/types/umf_work_order.gd')
