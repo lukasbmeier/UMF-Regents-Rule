@@ -26,7 +26,7 @@
 					"unit": "x"
 				},
 				{
-					"key": "regents.chop_reach_m",
+					"key": "regents.work_reach_m",
 					"kind": "number",
 					"max": 10.0,
 					"min": 1.0,
@@ -42,6 +42,78 @@
 					"number": 1.0,
 					"text": "",
 					"unit": "m"
+				},
+				{
+					"key": "regents.craft_work_share_pct",
+					"kind": "number",
+					"max": 200.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.variety_drain_pm_per_min",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "permille/min"
+				},
+				{
+					"key": "regents.variety_recover_pm_per_min",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 30.0,
+					"text": "",
+					"unit": "permille/min"
+				},
+				{
+					"key": "regents.variety_floor_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.first_make_mult",
+					"kind": "number",
+					"max": 50.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "x"
+				},
+				{
+					"key": "regents.order_minutes",
+					"kind": "number",
+					"max": 60.0,
+					"min": 0.5,
+					"number": 3.0,
+					"text": "",
+					"unit": "min"
+				},
+				{
+					"key": "regents.order_rotate_min",
+					"kind": "number",
+					"max": 1440.0,
+					"min": 1.0,
+					"number": 20.0,
+					"text": "",
+					"unit": "min"
+				},
+				{
+					"key": "regents.order_bonus_pct",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 100.0,
+					"text": "",
+					"unit": "%"
 				}
 			]
 		}

@@ -265,9 +265,9 @@
 			}
 		},
 		{
-			"name": "AfkChop",
+			"name": "AfkWork",
 			"namespace": [],
-			"source_name": "AfkChop",
+			"source_name": "AfkWork",
 			"struct": [
 				{
 					"name": "entity_id",
@@ -278,11 +278,27 @@
 					"type": "U32"
 				},
 				{
-					"name": "tree_id",
+					"name": "target_id",
 					"type": "U64"
 				},
 				{
 					"name": "def_id",
+					"type": "U32"
+				},
+				{
+					"name": "craft",
+					"type": "Bool"
+				},
+				{
+					"name": "skill_id",
+					"type": "U32"
+				},
+				{
+					"name": "tool_item",
+					"type": "U32"
+				},
+				{
+					"name": "speed_pct",
 					"type": "U32"
 				},
 				{
@@ -299,14 +315,14 @@
 					"type_idx": 3
 				},
 				{
-					"name": "logs",
+					"name": "count",
 					"type": "U32"
 				}
 			],
 			"table_names": [
-				"afk_chop"
+				"afk_work"
 			],
-			"table_name": "afk_chop",
+			"table_name": "afk_work",
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
 			"is_public": [
@@ -626,34 +642,6 @@
 			}
 		},
 		{
-			"name": "ChopSchedule",
-			"namespace": [],
-			"source_name": "ChopSchedule",
-			"struct": [
-				{
-					"name": "scheduled_id",
-					"type": "U64"
-				},
-				{
-					"name": "scheduled_at",
-					"type": "__schedule_at__"
-				}
-			],
-			"table_names": [
-				"chop_schedule"
-			],
-			"table_name": "chop_schedule",
-			"primary_key": 0,
-			"primary_key_name": "scheduled_id",
-			"is_public": [
-				false
-			],
-			"schedule": {
-				"reducer_name": "chop_tick",
-				"schedule_at_col": 1.0
-			}
-		},
-		{
 			"name": "ClientRtt",
 			"namespace": [],
 			"source_name": "ClientRtt",
@@ -935,14 +923,10 @@
 			]
 		},
 		{
-			"name": "Harvest",
+			"name": "GatherNode",
 			"namespace": [],
-			"source_name": "Harvest",
+			"source_name": "GatherNode",
 			"struct": [
-				{
-					"name": "id",
-					"type": "U64"
-				},
 				{
 					"name": "entity_id",
 					"type": "U64"
@@ -952,44 +936,20 @@
 					"type": "U32"
 				},
 				{
-					"name": "tree_id",
-					"type": "U64"
-				},
-				{
-					"name": "item_id",
+					"name": "def_id",
 					"type": "U32"
 				},
 				{
-					"name": "qty",
-					"type": "U32"
-				},
-				{
-					"name": "rare_item",
-					"type": "U32"
-				},
-				{
-					"name": "felled",
-					"type": "Bool"
-				},
-				{
-					"name": "active",
-					"type": "Bool"
-				},
-				{
-					"name": "score_pm",
-					"type": "I32"
-				},
-				{
-					"name": "at",
-					"type": "__timestamp_micros_since_unix_epoch__"
+					"name": "point_id",
+					"type": "String"
 				}
 			],
 			"table_names": [
-				"harvest"
+				"gather_node"
 			],
-			"table_name": "harvest",
+			"table_name": "gather_node",
 			"primary_key": 0,
-			"primary_key_name": "id",
+			"primary_key_name": "entity_id",
 			"is_public": [
 				true
 			]
@@ -1219,7 +1179,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 31
+					"type_idx": 30
 				},
 				{
 					"name": "received_at",
@@ -1564,6 +1524,34 @@
 			]
 		},
 		{
+			"name": "OrderFilled",
+			"namespace": [],
+			"source_name": "OrderFilled",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "order_id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"table_names": [
+				"order_filled"
+			],
+			"table_name": "order_filled",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "PerfReport",
 			"namespace": [],
 			"source_name": "PerfReport",
@@ -1777,6 +1765,46 @@
 			]
 		},
 		{
+			"name": "RecipeLog",
+			"namespace": [],
+			"source_name": "RecipeLog",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "recipe_id",
+					"type": "U32"
+				},
+				{
+					"name": "made",
+					"type": "U32"
+				},
+				{
+					"name": "fresh_pm",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"recipe_log"
+			],
+			"table_name": "recipe_log",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "RefereeOffer",
 			"namespace": [],
 			"source_name": "RefereeOffer",
@@ -1978,6 +2006,38 @@
 			]
 		},
 		{
+			"name": "SkillXp",
+			"namespace": [],
+			"source_name": "SkillXp",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "skill_id",
+					"type": "U32"
+				},
+				{
+					"name": "xp",
+					"type": "U32"
+				}
+			],
+			"table_names": [
+				"skill_xp"
+			],
+			"table_name": "skill_xp",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "StarterKitGiven",
 			"namespace": [],
 			"source_name": "StarterKitGiven",
@@ -1999,6 +2059,38 @@
 			"primary_key_name": "entity_id",
 			"is_public": [
 				false
+			]
+		},
+		{
+			"name": "Station",
+			"namespace": [],
+			"source_name": "Station",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "key",
+					"type": "String"
+				},
+				{
+					"name": "point_id",
+					"type": "String"
+				}
+			],
+			"table_names": [
+				"station"
+			],
+			"table_name": "station",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
 			]
 		},
 		{
@@ -2158,38 +2250,6 @@
 			]
 		},
 		{
-			"name": "TreeNode",
-			"namespace": [],
-			"source_name": "TreeNode",
-			"struct": [
-				{
-					"name": "entity_id",
-					"type": "U64"
-				},
-				{
-					"name": "world_id",
-					"type": "U32"
-				},
-				{
-					"name": "def_id",
-					"type": "U32"
-				},
-				{
-					"name": "point_id",
-					"type": "String"
-				}
-			],
-			"table_names": [
-				"tree_node"
-			],
-			"table_name": "tree_node",
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"is_public": [
-				true
-			]
-		},
-		{
 			"name": "UnscoredPress",
 			"namespace": [],
 			"source_name": "UnscoredPress",
@@ -2208,6 +2268,162 @@
 			"is_public": [
 				false
 			]
+		},
+		{
+			"name": "WorkOrder",
+			"namespace": [],
+			"source_name": "WorkOrder",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "slot",
+					"type": "U32"
+				},
+				{
+					"name": "item_id",
+					"type": "U32"
+				},
+				{
+					"name": "qty",
+					"type": "U32"
+				},
+				{
+					"name": "skill_id",
+					"type": "U32"
+				},
+				{
+					"name": "xp",
+					"type": "U32"
+				},
+				{
+					"name": "expires_at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"work_order"
+			],
+			"table_name": "work_order",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
+			"name": "WorkResult",
+			"namespace": [],
+			"source_name": "WorkResult",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "target_id",
+					"type": "U64"
+				},
+				{
+					"name": "skill_id",
+					"type": "U32"
+				},
+				{
+					"name": "item_id",
+					"type": "U32"
+				},
+				{
+					"name": "qty",
+					"type": "U32"
+				},
+				{
+					"name": "rare_item",
+					"type": "U32"
+				},
+				{
+					"name": "depleted",
+					"type": "Bool"
+				},
+				{
+					"name": "ran_out",
+					"type": "Bool"
+				},
+				{
+					"name": "active",
+					"type": "Bool"
+				},
+				{
+					"name": "score_pm",
+					"type": "I32"
+				},
+				{
+					"name": "quality",
+					"type": "I32"
+				},
+				{
+					"name": "xp",
+					"type": "U32"
+				},
+				{
+					"name": "rank",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"work_result"
+			],
+			"table_name": "work_result",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
+			"name": "WorkSchedule",
+			"namespace": [],
+			"source_name": "WorkSchedule",
+			"struct": [
+				{
+					"name": "scheduled_id",
+					"type": "U64"
+				},
+				{
+					"name": "scheduled_at",
+					"type": "__schedule_at__"
+				}
+			],
+			"table_names": [
+				"work_schedule"
+			],
+			"table_name": "work_schedule",
+			"primary_key": 0,
+			"primary_key_name": "scheduled_id",
+			"is_public": [
+				false
+			],
+			"schedule": {
+				"reducer_name": "work_tick",
+				"schedule_at_col": 1.0
+			}
 		},
 		{
 			"name": "WorldConfig",
@@ -2564,49 +2780,6 @@
 			"return_data": {}
 		},
 		{
-			"name": "chop",
-			"wire_name": "chop",
-			"namespace": [],
-			"local_name": "chop",
-			"params": [
-				{
-					"name": "tree_id",
-					"type": "U64"
-				},
-				{
-					"name": "active",
-					"type": "Bool"
-				}
-			],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
-			"name": "chop_stop",
-			"wire_name": "chop_stop",
-			"namespace": [],
-			"local_name": "chop_stop",
-			"params": [],
-			"return_type": "",
-			"return_data": {}
-		},
-		{
-			"name": "chop_tick",
-			"wire_name": "chop_tick",
-			"namespace": [],
-			"local_name": "chop_tick",
-			"params": [
-				{
-					"name": "_sched",
-					"type": "ChopSchedule",
-					"type_idx": 16
-				}
-			],
-			"return_type": "",
-			"return_data": {},
-			"is_scheduled": true
-		},
-		{
 			"name": "claim_referee",
 			"wire_name": "claim_referee",
 			"namespace": [],
@@ -2645,6 +2818,54 @@
 				},
 				{
 					"name": "qty",
+					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "craft",
+			"wire_name": "craft",
+			"namespace": [],
+			"local_name": "craft",
+			"params": [
+				{
+					"name": "station_id",
+					"type": "U64"
+				},
+				{
+					"name": "recipe_id",
+					"type": "U32"
+				},
+				{
+					"name": "active",
+					"type": "Bool"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "craft_with",
+			"wire_name": "craft_with",
+			"namespace": [],
+			"local_name": "craft_with",
+			"params": [
+				{
+					"name": "station_id",
+					"type": "U64"
+				},
+				{
+					"name": "recipe_id",
+					"type": "U32"
+				},
+				{
+					"name": "active",
+					"type": "Bool"
+				},
+				{
+					"name": "part",
 					"type": "U32"
 				}
 			],
@@ -2819,12 +3040,48 @@
 				{
 					"name": "timer",
 					"type": "StatusExpiry",
-					"type_idx": 22
+					"type_idx": 21
 				}
 			],
 			"return_type": "",
 			"return_data": {},
 			"is_scheduled": true
+		},
+		{
+			"name": "fill_order",
+			"wire_name": "fill_order",
+			"namespace": [],
+			"local_name": "fill_order",
+			"params": [
+				{
+					"name": "board_id",
+					"type": "U64"
+				},
+				{
+					"name": "order_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "gather",
+			"wire_name": "gather",
+			"namespace": [],
+			"local_name": "gather",
+			"params": [
+				{
+					"name": "node_id",
+					"type": "U64"
+				},
+				{
+					"name": "active",
+					"type": "Bool"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
 		},
 		{
 			"name": "grant_item",
@@ -3099,7 +3356,7 @@
 					],
 					"is_array": true,
 					"type": "BodyContactWrite",
-					"type_idx": 43
+					"type_idx": 44
 				}
 			],
 			"return_type": "",
@@ -3234,7 +3491,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 33
+					"type_idx": 32
 				}
 			],
 			"return_type": "",
@@ -3592,7 +3849,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 31
+					"type_idx": 30
 				}
 			],
 			"return_type": "",
@@ -3622,7 +3879,7 @@
 				{
 					"name": "_tick",
 					"type": "HoldTick",
-					"type_idx": 28
+					"type_idx": 27
 				}
 			],
 			"return_type": "",
@@ -3638,7 +3895,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 50
+					"type_idx": 53
 				}
 			],
 			"return_type": "",
@@ -3735,6 +3992,31 @@
 			"return_data": {}
 		},
 		{
+			"name": "work_stop",
+			"wire_name": "work_stop",
+			"namespace": [],
+			"local_name": "work_stop",
+			"params": [],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "work_tick",
+			"wire_name": "work_tick",
+			"namespace": [],
+			"local_name": "work_tick",
+			"params": [
+				{
+					"name": "_sched",
+					"type": "WorkSchedule",
+					"type_idx": 58
+				}
+			],
+			"return_type": "",
+			"return_data": {},
+			"is_scheduled": true
+		},
+		{
 			"name": "write_body_batch",
 			"wire_name": "write_body_batch",
 			"namespace": [],
@@ -3751,7 +4033,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 56
+					"type_idx": 61
 				}
 			],
 			"return_type": "",
@@ -3774,7 +4056,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 57
+					"type_idx": 62
 				}
 			],
 			"return_type": "",
@@ -3928,10 +4210,10 @@
 			"is_public": true
 		},
 		{
-			"name": "afk_chop",
-			"wire_name": "afk_chop",
+			"name": "afk_work",
+			"wire_name": "afk_work",
 			"namespace": [],
-			"local_name": "afk_chop",
+			"local_name": "afk_work",
 			"type_idx": 7,
 			"is_event": false,
 			"primary_key": 0,
@@ -3940,7 +4222,7 @@
 				{
 					"name": "entity_id",
 					"type": "U64",
-					"constraint_name": "afk_chop_entity_id_key"
+					"constraint_name": "afk_work_entity_id_key"
 				}
 			],
 			"btree_indexes": [
@@ -4150,34 +4432,11 @@
 			}
 		},
 		{
-			"name": "chop_schedule",
-			"wire_name": "chop_schedule",
-			"namespace": [],
-			"local_name": "chop_schedule",
-			"type_idx": 16,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "scheduled_id",
-			"unique_indexes": [
-				{
-					"name": "scheduled_id",
-					"type": "U64",
-					"constraint_name": "chop_schedule_scheduled_id_key"
-				}
-			],
-			"btree_indexes": [],
-			"is_public": false,
-			"schedule": {
-				"reducer_name": "chop_tick",
-				"schedule_at_col": 1.0
-			}
-		},
-		{
 			"name": "client_rtt",
 			"wire_name": "client_rtt",
 			"namespace": [],
 			"local_name": "client_rtt",
-			"type_idx": 17,
+			"type_idx": 16,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4196,7 +4455,7 @@
 			"wire_name": "correction",
 			"namespace": [],
 			"local_name": "correction",
-			"type_idx": 18,
+			"type_idx": 17,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4215,7 +4474,7 @@
 			"wire_name": "dev_tools",
 			"namespace": [],
 			"local_name": "dev_tools",
-			"type_idx": 19,
+			"type_idx": 18,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4234,7 +4493,7 @@
 			"wire_name": "entity",
 			"namespace": [],
 			"local_name": "entity",
-			"type_idx": 20,
+			"type_idx": 19,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4258,7 +4517,7 @@
 			"wire_name": "equip_state",
 			"namespace": [],
 			"local_name": "equip_state",
-			"type_idx": 21,
+			"type_idx": 20,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4282,7 +4541,7 @@
 			"wire_name": "feedback",
 			"namespace": [],
 			"local_name": "feedback",
-			"type_idx": 23,
+			"type_idx": 22,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4302,25 +4561,25 @@
 			"is_public": false
 		},
 		{
-			"name": "harvest",
-			"wire_name": "harvest",
+			"name": "gather_node",
+			"wire_name": "gather_node",
 			"namespace": [],
-			"local_name": "harvest",
-			"type_idx": 24,
+			"local_name": "gather_node",
+			"type_idx": 23,
 			"is_event": false,
 			"primary_key": 0,
-			"primary_key_name": "id",
+			"primary_key_name": "entity_id",
 			"unique_indexes": [
 				{
-					"name": "id",
+					"name": "entity_id",
 					"type": "U64",
-					"constraint_name": "harvest_id_key"
+					"constraint_name": "gather_node_entity_id_key"
 				}
 			],
 			"btree_indexes": [
 				{
-					"name": "entity_id",
-					"type": "U64"
+					"name": "world_id",
+					"type": "U32"
 				}
 			],
 			"is_public": true
@@ -4330,7 +4589,7 @@
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 25,
+			"type_idx": 24,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4354,7 +4613,7 @@
 			"wire_name": "hold_member",
 			"namespace": [],
 			"local_name": "hold_member",
-			"type_idx": 26,
+			"type_idx": 25,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4382,7 +4641,7 @@
 			"wire_name": "hold_progress",
 			"namespace": [],
 			"local_name": "hold_progress",
-			"type_idx": 27,
+			"type_idx": 26,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "hold_id",
@@ -4410,7 +4669,7 @@
 			"wire_name": "hold_tick",
 			"namespace": [],
 			"local_name": "hold_tick",
-			"type_idx": 28,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4433,7 +4692,7 @@
 			"wire_name": "hot_rule",
 			"namespace": [],
 			"local_name": "hot_rule",
-			"type_idx": 29,
+			"type_idx": 28,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -4452,7 +4711,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 30,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4480,7 +4739,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 32,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4504,7 +4763,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 33,
+			"type_idx": 32,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -4523,7 +4782,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 34,
+			"type_idx": 33,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4551,7 +4810,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 35,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4575,7 +4834,7 @@
 			"wire_name": "noise",
 			"namespace": [],
 			"local_name": "noise",
-			"type_idx": 36,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4599,7 +4858,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 37,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4614,6 +4873,30 @@
 				{
 					"name": "world_id",
 					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "order_filled",
+			"wire_name": "order_filled",
+			"namespace": [],
+			"local_name": "order_filled",
+			"type_idx": 37,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "order_filled_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "order_id",
+					"type": "U64"
 				}
 			],
 			"is_public": true
@@ -4742,11 +5025,35 @@
 			"is_public": false
 		},
 		{
+			"name": "recipe_log",
+			"wire_name": "recipe_log",
+			"namespace": [],
+			"local_name": "recipe_log",
+			"type_idx": 42,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "recipe_log_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "referee_offer",
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 42,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4765,7 +5072,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 44,
+			"type_idx": 45,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4789,7 +5096,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 45,
+			"type_idx": 46,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4808,7 +5115,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 46,
+			"type_idx": 47,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4832,7 +5139,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 47,
+			"type_idx": 48,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4856,11 +5163,35 @@
 			"is_public": true
 		},
 		{
+			"name": "skill_xp",
+			"wire_name": "skill_xp",
+			"namespace": [],
+			"local_name": "skill_xp",
+			"type_idx": 49,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "skill_xp_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "starter_kit_given",
 			"wire_name": "starter_kit_given",
 			"namespace": [],
 			"local_name": "starter_kit_given",
-			"type_idx": 48,
+			"type_idx": 50,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4875,11 +5206,35 @@
 			"is_public": false
 		},
 		{
+			"name": "station",
+			"wire_name": "station",
+			"namespace": [],
+			"local_name": "station",
+			"type_idx": 51,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "station_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "status_expiry",
 			"wire_name": "status_expiry",
 			"namespace": [],
 			"local_name": "status_expiry",
-			"type_idx": 22,
+			"type_idx": 21,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4907,7 +5262,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 49,
+			"type_idx": 52,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4931,7 +5286,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 50,
+			"type_idx": 53,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4954,7 +5309,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 51,
+			"type_idx": 54,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4974,35 +5329,11 @@
 			"is_public": true
 		},
 		{
-			"name": "tree_node",
-			"wire_name": "tree_node",
-			"namespace": [],
-			"local_name": "tree_node",
-			"type_idx": 52,
-			"is_event": false,
-			"primary_key": 0,
-			"primary_key_name": "entity_id",
-			"unique_indexes": [
-				{
-					"name": "entity_id",
-					"type": "U64",
-					"constraint_name": "tree_node_entity_id_key"
-				}
-			],
-			"btree_indexes": [
-				{
-					"name": "world_id",
-					"type": "U32"
-				}
-			],
-			"is_public": true
-		},
-		{
 			"name": "unscored_press",
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 53,
+			"type_idx": 55,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5017,11 +5348,82 @@
 			"is_public": false
 		},
 		{
+			"name": "work_order",
+			"wire_name": "work_order",
+			"namespace": [],
+			"local_name": "work_order",
+			"type_idx": 56,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "work_order_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "work_result",
+			"wire_name": "work_result",
+			"namespace": [],
+			"local_name": "work_result",
+			"type_idx": 57,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "work_result_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				}
+			],
+			"is_public": true
+		},
+		{
+			"name": "work_schedule",
+			"wire_name": "work_schedule",
+			"namespace": [],
+			"local_name": "work_schedule",
+			"type_idx": 58,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "scheduled_id",
+			"unique_indexes": [
+				{
+					"name": "scheduled_id",
+					"type": "U64",
+					"constraint_name": "work_schedule_scheduled_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false,
+			"schedule": {
+				"reducer_name": "work_tick",
+				"schedule_at_col": 1.0
+			}
+		},
+		{
 			"name": "world_config",
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 54,
+			"type_idx": 59,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5040,7 +5442,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 55,
+			"type_idx": 60,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5094,7 +5496,7 @@
 		"ActionPruneSchedule": "UmfActionPruneSchedule",
 		"ActionRequest": "UmfActionRequest",
 		"PhaseSchedule": "UmfPhaseSchedule",
-		"AfkChop": "UmfAfkChop",
+		"AfkWork": "UmfAfkWork",
 		"AppearanceRow": "UmfAppearanceRow",
 		"Attachment": "UmfAttachment",
 		"Authority": "UmfAuthority",
@@ -5103,7 +5505,6 @@
 		"BodyState": "UmfBodyState",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
-		"ChopSchedule": "UmfChopSchedule",
 		"ClientRtt": "UmfClientRtt",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
@@ -5111,7 +5512,7 @@
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"Feedback": "UmfFeedback",
-		"Harvest": "UmfHarvest",
+		"GatherNode": "UmfGatherNode",
 		"HealthStateRow": "UmfHealthStateRow",
 		"HoldMember": "UmfHoldMember",
 		"HoldProgress": "UmfHoldProgress",
@@ -5125,22 +5526,28 @@
 		"MovementStateRow": "UmfMovementStateRow",
 		"Noise": "UmfNoise",
 		"NpcBrainRow": "UmfNpcBrainRow",
+		"OrderFilled": "UmfOrderFilled",
 		"PerfReport": "UmfPerfReport",
 		"Player": "UmfPlayer",
 		"Push": "UmfPush",
 		"RateBudget": "UmfRateBudget",
+		"RecipeLog": "UmfRecipeLog",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
 		"SessionMember": "UmfSessionMember",
+		"SkillXp": "UmfSkillXp",
 		"StarterKitGiven": "UmfStarterKitGiven",
+		"Station": "UmfStation",
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
-		"TreeNode": "UmfTreeNode",
 		"UnscoredPress": "UmfUnscoredPress",
+		"WorkOrder": "UmfWorkOrder",
+		"WorkResult": "UmfWorkResult",
+		"WorkSchedule": "UmfWorkSchedule",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"BodyWrite": "UmfBodyWrite",
@@ -5184,7 +5591,7 @@
 		"ActionPruneSchedule": "UmfActionPruneSchedule",
 		"ActionRequest": "UmfActionRequest",
 		"PhaseSchedule": "UmfPhaseSchedule",
-		"AfkChop": "UmfAfkChop",
+		"AfkWork": "UmfAfkWork",
 		"AppearanceRow": "UmfAppearanceRow",
 		"Attachment": "UmfAttachment",
 		"Authority": "UmfAuthority",
@@ -5193,7 +5600,6 @@
 		"BodyState": "UmfBodyState",
 		"Challenge": "UmfChallenge",
 		"ChallengePruneSchedule": "UmfChallengePruneSchedule",
-		"ChopSchedule": "UmfChopSchedule",
 		"ClientRtt": "UmfClientRtt",
 		"Correction": "UmfCorrection",
 		"DevTools": "UmfDevTools",
@@ -5201,7 +5607,7 @@
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"Feedback": "UmfFeedback",
-		"Harvest": "UmfHarvest",
+		"GatherNode": "UmfGatherNode",
 		"HealthStateRow": "UmfHealthStateRow",
 		"HoldMember": "UmfHoldMember",
 		"HoldProgress": "UmfHoldProgress",
@@ -5215,22 +5621,28 @@
 		"MovementStateRow": "UmfMovementStateRow",
 		"Noise": "UmfNoise",
 		"NpcBrainRow": "UmfNpcBrainRow",
+		"OrderFilled": "UmfOrderFilled",
 		"PerfReport": "UmfPerfReport",
 		"Player": "UmfPlayer",
 		"Push": "UmfPush",
 		"RateBudget": "UmfRateBudget",
+		"RecipeLog": "UmfRecipeLog",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
 		"SessionMember": "UmfSessionMember",
+		"SkillXp": "UmfSkillXp",
 		"StarterKitGiven": "UmfStarterKitGiven",
+		"Station": "UmfStation",
 		"StatusStateRow": "UmfStatusStateRow",
 		"TickSchedule": "UmfTickSchedule",
 		"TimedPress": "UmfTimedPress",
-		"TreeNode": "UmfTreeNode",
 		"UnscoredPress": "UmfUnscoredPress",
+		"WorkOrder": "UmfWorkOrder",
+		"WorkResult": "UmfWorkResult",
+		"WorkSchedule": "UmfWorkSchedule",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
 		"BodyWrite": "UmfBodyWrite",
@@ -5722,7 +6134,7 @@
 					},
 					{
 						"name": {
-							"some": "tree_id"
+							"some": "target_id"
 						},
 						"algebraic_type": {
 							"U64": []
@@ -5731,6 +6143,38 @@
 					{
 						"name": {
 							"some": "def_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "craft"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "skill_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "tool_item"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "speed_pct"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -5784,7 +6228,7 @@
 					},
 					{
 						"name": {
-							"some": "logs"
+							"some": "count"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -6349,69 +6793,6 @@
 				"elements": [
 					{
 						"name": {
-							"some": "scheduled_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "scheduled_at"
-						},
-						"algebraic_type": {
-							"Sum": {
-								"variants": [
-									{
-										"name": {
-											"some": "Interval"
-										},
-										"algebraic_type": {
-											"Product": {
-												"elements": [
-													{
-														"name": {
-															"some": "__time_duration_micros__"
-														},
-														"algebraic_type": {
-															"I64": []
-														}
-													}
-												]
-											}
-										}
-									},
-									{
-										"name": {
-											"some": "Time"
-										},
-										"algebraic_type": {
-											"Product": {
-												"elements": [
-													{
-														"name": {
-															"some": "__timestamp_micros_since_unix_epoch__"
-														},
-														"algebraic_type": {
-															"I64": []
-														}
-													}
-												]
-											}
-										}
-									}
-								]
-							}
-						}
-					}
-				]
-			}
-		},
-		{
-			"Product": {
-				"elements": [
-					{
-						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -6900,14 +7281,6 @@
 				"elements": [
 					{
 						"name": {
-							"some": "id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -6924,15 +7297,7 @@
 					},
 					{
 						"name": {
-							"some": "tree_id"
-						},
-						"algebraic_type": {
-							"U64": []
-						}
-					},
-					{
-						"name": {
-							"some": "item_id"
+							"some": "def_id"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -6940,61 +7305,10 @@
 					},
 					{
 						"name": {
-							"some": "qty"
+							"some": "point_id"
 						},
 						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "rare_item"
-						},
-						"algebraic_type": {
-							"U32": []
-						}
-					},
-					{
-						"name": {
-							"some": "felled"
-						},
-						"algebraic_type": {
-							"Bool": []
-						}
-					},
-					{
-						"name": {
-							"some": "active"
-						},
-						"algebraic_type": {
-							"Bool": []
-						}
-					},
-					{
-						"name": {
-							"some": "score_pm"
-						},
-						"algebraic_type": {
-							"I32": []
-						}
-					},
-					{
-						"name": {
-							"some": "at"
-						},
-						"algebraic_type": {
-							"Product": {
-								"elements": [
-									{
-										"name": {
-											"some": "__timestamp_micros_since_unix_epoch__"
-										},
-										"algebraic_type": {
-											"I64": []
-										}
-									}
-								]
-							}
+							"String": []
 						}
 					}
 				]
@@ -7376,7 +7690,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 31.0
+							"Ref": 30.0
 						}
 					},
 					{
@@ -7929,6 +8243,36 @@
 					},
 					{
 						"name": {
+							"some": "order_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
 							"some": "at"
 						},
 						"algebraic_type": {
@@ -8296,6 +8640,71 @@
 				"elements": [
 					{
 						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "recipe_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "made"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "fresh_pm"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "world_id"
 						},
 						"algebraic_type": {
@@ -8589,6 +8998,44 @@
 				"elements": [
 					{
 						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "skill_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "xp"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -8612,6 +9059,44 @@
 									}
 								]
 							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "key"
+						},
+						"algebraic_type": {
+							"String": []
+						}
+					},
+					{
+						"name": {
+							"some": "point_id"
+						},
+						"algebraic_type": {
+							"String": []
 						}
 					}
 				]
@@ -8893,6 +9378,109 @@
 				"elements": [
 					{
 						"name": {
+							"some": "challenge_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "slot"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "item_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "qty"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "skill_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "xp"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "expires_at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -8909,7 +9497,15 @@
 					},
 					{
 						"name": {
-							"some": "def_id"
+							"some": "target_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "skill_id"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -8917,10 +9513,101 @@
 					},
 					{
 						"name": {
-							"some": "point_id"
+							"some": "item_id"
 						},
 						"algebraic_type": {
-							"String": []
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "qty"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "rare_item"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "depleted"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "ran_out"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "active"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "score_pm"
+						},
+						"algebraic_type": {
+							"I32": []
+						}
+					},
+					{
+						"name": {
+							"some": "quality"
+						},
+						"algebraic_type": {
+							"I32": []
+						}
+					},
+					{
+						"name": {
+							"some": "xp"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "rank"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
 						}
 					}
 				]
@@ -8931,10 +9618,59 @@
 				"elements": [
 					{
 						"name": {
-							"some": "challenge_id"
+							"some": "scheduled_id"
 						},
 						"algebraic_type": {
 							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "scheduled_at"
+						},
+						"algebraic_type": {
+							"Sum": {
+								"variants": [
+									{
+										"name": {
+											"some": "Interval"
+										},
+										"algebraic_type": {
+											"Product": {
+												"elements": [
+													{
+														"name": {
+															"some": "__time_duration_micros__"
+														},
+														"algebraic_type": {
+															"I64": []
+														}
+													}
+												]
+											}
+										}
+									},
+									{
+										"name": {
+											"some": "Time"
+										},
+										"algebraic_type": {
+											"Product": {
+												"elements": [
+													{
+														"name": {
+															"some": "__timestamp_micros_since_unix_epoch__"
+														},
+														"algebraic_type": {
+															"I64": []
+														}
+													}
+												]
+											}
+										}
+									}
+								]
+							}
 						}
 					}
 				]

@@ -1,0 +1,435 @@
+extends Node
+## THE SKILLING CHAIN, PLAYED (game/regents/tests/skilling_playtest.sh starts two of these): a real client
+## through the latency simulator, in the frontier glade, through the real keys and clicks.
+##   `--role=chopper`  chops tree_1 AFK (tap E; walking away stops it) and a round (hold E, A and D, the
+##                     player held still); mines a round at a copper rock (clicks on the glow); smelts a round
+##                     of copper bars (the bellows, the pour); makes rivets AFK at the anvil; asks the shell
+##                     for what a fresh character cannot reach in a test (two logs, two iron bars); carves a
+##                     handle AFK; picks the axe head with Q and shapes it in a round; assembles an Iron axe;
+##                     chops again with the iron axe in the hand, at its speed
+##   `--role=buddy`    chops tree_1 AFK beside them, gets logs too (or sees it fall), and sees them swing
+## Every step checks what the server paid, the skill's XP, and how it looks. Exits 0/1.
+
+const OVERALL_TIMEOUT_SEC: float = 260.0
+const TREE_1: Vector3 = Vector3(-9.0, 0.0, -6.0)
+const COPPER_1: Vector3 = Vector3(14.0, 0.0, 16.0)
+const FURNACE: Vector3 = Vector3(-6.0, 0.0, 14.0)
+const ANVIL: Vector3 = Vector3(-2.0, 0.0, 16.5)
+const BENCH: Vector3 = Vector3(4.0, 0.0, 15.0)
+const LOGS: int = 40002
+const AXE: int = 40001
+const PICK: int = 40006
+const COPPER_ORE: int = 40007
+const COPPER_BAR: int = 40010
+const IRON_BAR: int = 40011
+const RIVETS: int = 40012
+const HANDLE: int = 40013
+const HEAD: int = 40014
+const IRON_AXE: int = 40015
+const OAK_LOGS: int = 40003
+const OAK_HANDLE: int = 40016
+const SKILL_WOODCUTTING: int = 40001
+const SKILL_MINING: int = 40002
+const SKILL_SMELTING: int = 40003
+const SKILL_SMITHING: int = 40004
+const SKILL_CRAFTING: int = 40005
+
+var _passes: int = 0
+var _failures: int = 0
+var _finished: bool = false
+var _role: String = "chopper"
+var me: SpaceTimeEntity
+var skilling: SkillingComponent
+var inv: SpaceTimeInventoryComponent
+var hud: RegentsHud
+var interaction: InteractionComponent
+var look: SkillingLook
+## The axe head's round score (its quality).
+var shaped_q: int = 0
+var driver: AnimationDriverComponent
+
+
+func _ready() -> void:
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--role="):
+			_role = a.trim_prefix("--role=")
+	_run.call_deferred()
+
+
+func _run() -> void:
+	get_tree().create_timer(OVERALL_TIMEOUT_SEC).timeout.connect(_on_watchdog)
+	me = await _local_entity()
+	if me == null:
+		_finish()
+		return
+	skilling = me.find_component(SkillingComponent) as SkillingComponent
+	inv = me.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent
+	hud = get_tree().current_scene.find_child("HUD", true, false) as RegentsHud
+	interaction = me.find_component(InteractionComponent) as InteractionComponent
+	look = me.find_component(SkillingLook) as SkillingLook
+	driver = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	_check(skilling != null and inv != null and hud != null and look != null, "the adventurer has skilling, a bag and its look; the genre's HUD is up")
+	if skilling == null or inv == null or hud == null:
+		_finish()
+		return
+	await _until(func() -> bool: return inv.count(AXE) == 1 and inv.count(PICK) == 1, 5.0)
+	_check(inv.count(AXE) == 1 and inv.count(PICK) == 1, "a Bronze axe and a Bronze pickaxe in the bag")
+	var tree_id: int = await _node_at(TREE_1)
+	_check(tree_id > 0, "tree_1 is a node, drawn as a Tree")
+	if tree_id <= 0:
+		_finish()
+		return
+	if _role == "buddy":
+		await _buddy(tree_id)
+	else:
+		await _chopper(tree_id)
+	_finish()
+
+
+func _chopper(tree_id: int) -> void:
+	# --- WOODCUTTING: tap E (AFK), then hold E (a round, A and D) ---
+	await _stand_by(TREE_1)
+	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
+	_check(interaction.get_target() == tree_id, "facing it, the tree is the target (got %d)" % interaction.get_target())
+	_check(hud._prompt.text.contains("Hold E"), "the prompt says tap or hold: \"%s\"" % hud._prompt.text)
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == tree_id, 3.0)
+	_check(skilling.afk_target == tree_id and hud._prompt.text.contains("(AFK)"), "a tap of E: working the tree AFK (\"%s\")" % hud._prompt.text)
+	await _until(func() -> bool: return look.tool != null and driver.pose_weight() > 0.6, 2.0)
+	_check(look.tool != null and driver.pose_clip() == &"extra/TreeChopping", "chopping AFK, the character swings the bronze axe (%s)" % driver.pose_clip())
+	var logs0: int = inv.count(LOGS)
+	var node: NodeComponent = SkillingComponent.node_of(tree_id)
+	for attempt: int in 3:
+		await _until(func() -> bool: return (inv.count(LOGS) > logs0 and int(skilling.xp.get(SKILL_WOODCUTTING, 0)) >= 10) or node.depleted, 7.0)
+		print("   AFK, tree %d: %d -> %d logs%s" % [attempt + 1, logs0, inv.count(LOGS), " (it fell)" if node.depleted else ""])
+		if inv.count(LOGS) > logs0:
+			break
+		tree_id = await _standing_node(1, &"axe")
+		node = SkillingComponent.node_of(tree_id)
+		await _stand_by((EntityRegistry.get_entity(tree_id) as Node3D).global_position)
+		await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
+		await _tap(&"interact", 0.08)
+	_check(inv.count(LOGS) > logs0 and int(skilling.xp.get(SKILL_WOODCUTTING, 0)) >= 10, "a log comes AFK, and woodcutting XP with it")
+	if not node.depleted:
+		await _stand_at((EntityRegistry.get_entity(tree_id) as Node3D).global_position + Vector3(0, 0.05, 4.0), Vector3.ZERO)
+		await _until(func() -> bool: return skilling.afk_target == -1 and look.tool == null, 3.0)
+		_check(skilling.afk_target == -1 and look.tool == null, "walking away stops it; the axe goes")
+	tree_id = await _standing_node(1, &"axe")
+	await _stand_by((EntityRegistry.get_entity(tree_id) as Node3D).global_position)
+	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
+	var logs1: int = inv.count(LOGS)
+	if await _hold_for_round():
+		var stood: Vector3 = me.global_position
+		var chop: ChopMinigame = hud.game as ChopMinigame
+		while chop.state == SkillMinigame.State.PLAYING:
+			var m: ChopModel = chop.model
+			var side: int = ChopModel.SIDE_RIGHT if m.head_branch() == ChopModel.BRANCH_LEFT else (ChopModel.SIDE_LEFT if m.head_branch() == ChopModel.BRANCH_RIGHT else m.side)
+			await _key(KEY_A if side == ChopModel.SIDE_LEFT else KEY_D)
+			await get_tree().create_timer(0.33).timeout
+		print("   the chop as played: %s" % str(chop.live_result))
+		_check(int(chop.live_result.get("hits", -1)) == 0 and int(chop.live_result.get("clean", 0)) >= 20, "played well through A and D")
+		_check(me.global_position.distance_to(stood) < 0.2, "A and D chopped and did not walk")
+		await _until(func() -> bool: return inv.count(LOGS) > logs1, 5.0)
+		_check(inv.count(LOGS) > logs1, "the server replayed the chop and paid %d logs" % (inv.count(LOGS) - logs1))
+		await _round_closed()
+
+	# --- MINING: hold E at a copper rock (crack the rock, clicks on the glow) ---
+	var rock_id: int = await _node_at(COPPER_1)
+	await _stand_by(COPPER_1)
+	await _until(func() -> bool: return interaction.get_target() == rock_id, 3.0)
+	_check(interaction.get_target() == rock_id and hud._prompt.text.contains("mine"), "at the copper rock: \"%s\"" % hud._prompt.text)
+	if await _hold_for_round():
+		var crack: CrackMinigame = hud.game as CrackMinigame
+		_check(crack != null, "holding E at a rock deals crack the rock")
+		await _until(func() -> bool: return look.tool != null, 2.0)
+		_check(look.tool != null and driver.pose_clip() == &"extra/Mining", "mining a round, the character swings the pickaxe (%s)" % driver.pose_clip())
+		while crack != null and crack.state == SkillMinigame.State.PLAYING:
+			var t: int = crack.elapsed_ms()
+			if t >= crack.model.next_ok_ms + 200 and not crack.model.held:
+				_click(crack, crack.from_face(crack.model.notch(crack.model.k)))
+			await get_tree().process_frame
+		print("   the crack as played: %s" % str(crack.live_result))
+		_check(int(crack.live_result.get("hits", 0)) >= 8 and int(crack.live_result.get("splits", 0)) >= 1,
+			"followed the seam by clicking its notches, and split the rock")
+		await _until(func() -> bool: return inv.count(COPPER_ORE) > 0 and int(skilling.xp.get(SKILL_MINING, 0)) >= 10, 5.0)
+		_check(inv.count(COPPER_ORE) > 0 and int(skilling.xp.get(SKILL_MINING, 0)) >= 10, "the server replayed the strikes: %d copper ore, and mining XP" % inv.count(COPPER_ORE))
+		await _round_closed()
+
+	# --- SMELTING: hold E at the furnace (bellows, then pour); two ores to a bar, so the shell tops it up ---
+	print("GRANT_ORE %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(COPPER_ORE) >= 2, 20.0)
+	var furnace: int = await _station_at(FURNACE)
+	await _stand_by(FURNACE)
+	await _until(func() -> bool: return interaction.get_target() == furnace, 3.0)
+	_check(hud._prompt.text.contains("Copper bar"), "at the furnace, copper bars picked: \"%s\"" % hud._prompt.text.replace("\n", " / "))
+	if inv.count(COPPER_ORE) > 0 and await _hold_for_round():
+		var smelt: SmeltMinigame = hud.game as SmeltMinigame
+		while smelt != null and smelt.state == SkillMinigame.State.PLAYING:
+			var t: int = smelt.elapsed_ms()
+			smelt.model.advance_to(t)
+			# As a person plays it: a press per pump (down, then up), then hold to pour and let go at the line.
+			if smelt.model.in_heat():
+				smelt.button(not smelt._down and smelt.model.heat < smelt.model.band(smelt.model.tick).x)
+			elif not smelt.model.pouring and not smelt.model.poured:
+				smelt.button(not smelt._down)
+			elif smelt.model.pouring:
+				smelt.button(smelt.model.fill < smelt.model.target - (smelt.params as SmeltParams).pour_rate / 2)
+			await get_tree().process_frame
+		print("   the smelt as played: %s" % str(smelt.live_result))
+		await _until(func() -> bool: return inv.count(COPPER_BAR) > 0 and int(skilling.xp.get(SKILL_SMELTING, 0)) >= 6, 5.0)
+		_check(inv.count(COPPER_BAR) > 0 and int(skilling.xp.get(SKILL_SMELTING, 0)) >= 6, "smelted %d copper bars (the bellows, the pour), and smelting XP" % inv.count(COPPER_BAR))
+		await _round_closed()
+
+	# --- THE SHELL'S GIFT: two logs and two iron bars (a fresh character's iron needs mining rank 2) ---
+	print("GRANT_ME %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(IRON_BAR) >= 2 and inv.count(LOGS) >= 2 and inv.count(OAK_LOGS) >= 2, 20.0)
+	_check(inv.count(IRON_BAR) >= 2 and inv.count(LOGS) >= 2 and inv.count(OAK_LOGS) >= 2, "the shell gave two iron bars, two logs and two oak logs")
+
+	# --- THE ANVIL: rivets AFK (tap E), then the axe head (Q, hold E: shape to the outline) ---
+	var anvil: int = await _station_at(ANVIL)
+	await _stand_by(ANVIL)
+	await _until(func() -> bool: return interaction.get_target() == anvil, 3.0)
+	_check(hud._prompt.text.contains("Copper rivets"), "at the anvil, rivets picked: \"%s\"" % hud._prompt.text.replace("\n", " / "))
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return inv.count(RIVETS) >= 4, 6.0)
+	_check(inv.count(RIVETS) >= 4, "a tap of E: rivets made AFK (%d)" % inv.count(RIVETS))
+	await _until(func() -> bool: return skilling.afk_target == -1, 15.0)
+	_check(skilling.afk_target == -1 and inv.count(COPPER_BAR) == 0, "out of copper bars, the work stops by itself (%d rivets)" % inv.count(RIVETS))
+	_check(await _q_until("Iron axe head"), "Q picks the axe head: \"%s\"" % hud._prompt.text.replace("\n", " / "))
+	if await _hold_for_round():
+		var shape: ShapeMinigame = hud.game as ShapeMinigame
+		await _until(func() -> bool: return look.tool != null, 2.0)
+		_check(look.tool != null and look.tool_scene == SkillDef.by_key(&"smithing").tool_scene, "smithing, the hammer is in the hand")
+		var outline: PackedInt32Array = (shape.params as ShapeParams).outline
+		while shape != null and shape.state == SkillMinigame.State.PLAYING:
+			var t: int = shape.elapsed_ms()
+			if t >= shape.model.next_ok_ms:
+				if shape.model.hot_until_ms - t < 500:
+					_click(shape, Vector2(10, 10), MOUSE_BUTTON_RIGHT)
+				else:
+					var c: int = 0
+					for i: int in shape.model.heights.size():
+						if shape.model.heights[i] - outline[i] > shape.model.heights[c] - outline[c]:
+							c = i
+					if shape.model.heights[c] - outline[c] > 0:
+						var r: Rect2 = shape.bar_rect()
+						_click(shape, Vector2(r.position.x + (c + 0.5) * r.size.x / outline.size(), r.position.y + r.size.y * 0.5))
+			await get_tree().process_frame
+		print("   the head as shaped: %s" % str(shape.live_result))
+		shaped_q = int(shape.live_result.get("score_pm", 0))
+		await _until(func() -> bool: return inv.count(HEAD) == 1 and int(skilling.xp.get(SKILL_SMITHING, 0)) >= 30, 5.0)
+		_check(inv.count(HEAD) == 1 and int(skilling.xp.get(SKILL_SMITHING, 0)) >= 30, "an iron axe head, shaped by clicks, and smithing XP (%d heads, %d XP)" % [inv.count(HEAD), int(skilling.xp.get(SKILL_SMITHING, 0))])
+		await _round_closed()
+
+	# --- THE WORKBENCH: a handle AFK, then the iron axe ---
+	var bench: int = await _station_at(BENCH)
+	await _stand_by(BENCH)
+	await _until(func() -> bool: return interaction.get_target() == bench, 3.0)
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return inv.count(HANDLE) >= 1, 6.0)
+	_check(inv.count(HANDLE) >= 1, "a handle carved from logs, AFK")
+	if skilling.afk_target == bench:
+		await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == -1, 4.0)
+	_check(skilling.afk_target == -1, "a second tap stops the carving")
+	_check(skilling.rank_in(SkillDef.by_key(&"crafting")) >= 2, "the first handle's first-make bonus: crafting rank %d" % skilling.rank_in(SkillDef.by_key(&"crafting")))
+	_check(await _q_until("Oak handle  <-"), "Q picks the oak handle: \"%s\"" % hud._prompt.text.replace("
+", " / "))
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return inv.count(OAK_HANDLE) >= 1 and skilling.afk_target == -1, 12.0)
+	_check(inv.count(OAK_HANDLE) == 1 and inv.count(OAK_LOGS) == 0, "an oak handle carved from oak logs; out of them, it stops by itself")
+	_check(await _q_until("Iron axe with oak handle"), "Q picks the iron axe with the oak handle: \"%s\"" % hud._prompt.text.replace("
+", " / "))
+	_check(hud._prompt.text.contains("+15 quality") and hud._prompt.text.contains("1 Oak handle (1)"), "the prompt says its trait and takes the oak handle")
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return inv.count(IRON_AXE) == 1 and inv.count(HEAD) == 0, 8.0)
+	_check(inv.count(IRON_AXE) == 1 and inv.count(HEAD) == 0 and inv.count(OAK_HANDLE) == 0 and inv.count(HANDLE) == 1,
+		"the head, the oak handle and two rivets become an Iron axe (the plain handle is left)")
+	var quality: String = ""
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == IRON_AXE:
+			quality = s.instance_data
+	var head_q: int = int(shaped_q)
+	_check(quality == "{\"q\":%d,\"h\":%d}" % [mini(1000, head_q + 150), OAK_HANDLE],
+		"the iron axe is its head's quality and the oak's +15, and remembers its handle (%s, head %d)" % [quality, head_q])
+	await _until(func() -> bool: return skilling.afk_target == -1, 6.0)
+
+	# --- THE IRON AXE AT WORK ---
+	tree_id = await _standing_node(1, &"axe")
+	await _stand_by((EntityRegistry.get_entity(tree_id) as Node3D).global_position)
+	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == tree_id and look.tool != null, 3.0)
+	_check(int(skilling.afk.get("tool_item", 0)) == IRON_AXE and look.tool_scene == ItemDef.by_id(IRON_AXE).held_scene,
+		"chopping now, it is with the iron axe, and the iron axe is what is in the hand")
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
+	_check(skilling.afk_target == -1, "a second tap stops the work")
+
+
+## Press Q until the prompt says `text` (at most a lap of the choices), each press waiting for the prompt
+## to show its new choice (the HUD redraws it a frame later).
+func _q_until(text: String) -> bool:
+	for i: int in 8:
+		if hud._prompt.text.contains(text):
+			return true
+		var before: String = hud._prompt.text
+		await _key(KEY_Q)
+		await _until(func() -> bool: return hud._prompt.text != before, 1.0)
+	return hud._prompt.text.contains(text)
+
+
+func _buddy(tree_id: int) -> void:
+	await _stand_at(TREE_1 + Vector3(1.6, 0.05, 0.0), TREE_1)
+	skilling.work(tree_id, false)
+	await _until(func() -> bool: return skilling.afk_target == tree_id, 3.0)
+	_check(skilling.afk_target == tree_id, "the buddy chops the same tree AFK")
+	# The chopper beside us, as WE draw them: their afk_work row reaches us, and their axe swings here too.
+	var seen: Array[bool] = [false]
+	await _until(func() -> bool:
+		for id: int in EntityRegistry.all_entity_ids():
+			var other: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+			if other == null or other == me:
+				continue
+			var s: SkillingComponent = other.find_component(SkillingComponent) as SkillingComponent
+			var l: SkillingLook = other.find_component(SkillingLook) as SkillingLook
+			var d: AnimationDriverComponent = other.find_component(AnimationDriverComponent) as AnimationDriverComponent
+			if s != null and s.afk_target >= 0 and l != null and l.tool != null and d != null and d.pose_clip() == &"extra/TreeChopping":
+				seen[0] = true
+		return seen[0], 8.0)
+	_check(seen[0], "the other player chopping is drawn swinging an axe on this client too")
+	var node: NodeComponent = SkillingComponent.node_of(tree_id)
+	await _until(func() -> bool: return inv.count(LOGS) > 0 or node.depleted, 9.0)
+	print("   buddy: %d logs, the tree %s" % [inv.count(LOGS), "fell" if node.depleted else "stands"])
+	_check(inv.count(LOGS) > 0 or node.depleted, "two at one tree: the buddy gets logs too (or sees it fall)")
+
+
+## Hold E on the target until the server deals its round and the HUD shows it. True when it did.
+func _hold_for_round() -> bool:
+	Input.action_press(&"interact")
+	await _until(func() -> bool: return hud._round_box.visible and hud.game != null and hud.game.state == SkillMinigame.State.PLAYING, 4.0)
+	Input.action_release(&"interact")
+	var ok: bool = hud._round_box.visible and hud.game != null
+	_check(ok, "holding E: the server deals a round, and it is on screen (%s)" % (hud.game.get_class() if hud.game != null else "none"))
+	return ok
+
+
+func _round_closed() -> void:
+	await _until(func() -> bool: return not hud._round_box.visible, 4.0)
+	_check(not hud._round_box.visible and not MouseCapture.is_held_free(), "the round closes and the game comes back")
+
+
+## A click on the minigame `game` at `at` (its own coordinates), as the mouse sends it.
+func _click(game: Control, at: Vector2, button: MouseButton = MOUSE_BUTTON_LEFT) -> void:
+	var e: InputEventMouseButton = InputEventMouseButton.new()
+	e.button_index = button
+	e.position = at
+	e.pressed = true
+	game._gui_input(e)
+
+
+## The standing node of `tier` with tool `tag` nearest the spawn, or -1.
+func _standing_node(tier: int, tag: StringName) -> int:
+	var best: int = -1
+	var best_d: float = INF
+	for id: int in EntityRegistry.all_entity_ids():
+		var n: NodeComponent = SkillingComponent.node_of(id)
+		if n == null or n.depleted or n.def == null or n.def.tier != tier or n.def.tool_tag != tag:
+			continue
+		var d: float = (EntityRegistry.get_entity(id) as Node3D).global_position.distance_to(Vector3(0, 0, 8))
+		if d < best_d:
+			best_d = d
+			best = id
+	return best
+
+
+func _node_at(at: Vector3) -> int:
+	return await _entity_at(at, func(id: int) -> bool: return SkillingComponent.node_of(id) != null and SkillingComponent.node_of(id).def != null)
+
+
+func _station_at(at: Vector3) -> int:
+	return await _entity_at(at, func(id: int) -> bool: return SkillingComponent.station_of(id) != null and SkillingComponent.station_of(id).def != null)
+
+
+func _entity_at(at: Vector3, wanted: Callable) -> int:
+	var found: int = -1
+	var deadline: int = Time.get_ticks_msec() + 8000
+	while found < 0 and Time.get_ticks_msec() < deadline:
+		for id: int in EntityRegistry.all_entity_ids():
+			if bool(wanted.call(id)) and (EntityRegistry.get_entity(id) as Node3D).global_position.distance_to(at) < 0.5:
+				found = id
+		await get_tree().process_frame
+	return found
+
+
+## Stand 1.5 m south of `target`, facing it.
+func _stand_by(target: Vector3) -> void:
+	await _stand_at(target + Vector3(0, 0.05, 1.5), target)
+
+
+func _stand_at(at: Vector3, face: Vector3) -> void:
+	SpaceTimeSync.call_reducer(&"teleport", [at], ["vector3[f32,f32,f32]"])
+	await _until(func() -> bool: return me.global_position.distance_to(at) < 0.4, 4.0)
+	var to: Vector3 = face - at
+	(me.find_component(LocalInputComponent) as LocalInputComponent).set_look(atan2(-to.x, -to.z) if to.length() > 0.01 else 0.0, 0.0)
+	await get_tree().create_timer(0.5).timeout
+
+
+func _tap(action: StringName, hold_s: float) -> void:
+	Input.action_press(action)
+	await get_tree().create_timer(hold_s).timeout
+	Input.action_release(action)
+	await get_tree().physics_frame
+
+
+func _key(code: Key) -> void:
+	for down: bool in [true, false]:
+		var e: InputEventKey = InputEventKey.new()
+		e.keycode = code
+		e.physical_keycode = code
+		e.pressed = down
+		Input.parse_input_event(e)
+		await get_tree().physics_frame
+
+
+func _until(cond: Callable, timeout_s: float) -> void:
+	var deadline: int = Time.get_ticks_msec() + int(timeout_s * 1000.0)
+	while not bool(cond.call()) and Time.get_ticks_msec() < deadline:
+		await get_tree().physics_frame
+
+
+func _local_entity() -> SpaceTimeEntity:
+	var deadline: int = Time.get_ticks_msec() + 30_000
+	while Time.get_ticks_msec() < deadline:
+		var id: int = EntityRegistry.local_entity_id
+		if id >= 0:
+			var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+			if e != null and e.is_bound():
+				return e
+		await get_tree().process_frame
+	_check(false, "local player spawned and bound")
+	return null
+
+
+func _check(cond: bool, msg: String) -> void:
+	if cond:
+		_passes += 1
+	else:
+		_failures += 1
+		printerr("  FAIL: ", msg)
+
+
+func _on_watchdog() -> void:
+	if _finished:
+		return
+	printerr("  FAIL: skilling playtest (%s) exceeded %.0fs" % [_role, OVERALL_TIMEOUT_SEC])
+	_failures += 1
+	_finish()
+
+
+func _finish() -> void:
+	if _finished:
+		return
+	_finished = true
+	print("\nskilling (%s): %d passed, %d failed" % [_role, _passes, _failures])
+	AppExit.quit(get_tree(), 1 if _failures > 0 else 0)

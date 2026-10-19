@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -23,12 +23,12 @@ description = "DUAL-MODE SKILLING: active play is this many times as likely to f
 
 [sub_resource type="Resource" id="Rule_reach"]
 script = ExtResource("2_rule")
-name = &"chop_reach_m"
+name = &"work_reach_m"
 number = 3.0
 minimum = 1.0
 maximum = 10.0
 unit = "m"
-description = "How close to a tree a player must stand to chop it, AFK or in a round. The server checks it when the chop starts and again when a round is scored."
+description = "How close to a node (a tree, a rock) or a station a player must stand to work it, AFK or in a round. The server checks it when the work starts and again when a round is scored."
 
 [sub_resource type="Resource" id="Rule_afk_move"]
 script = ExtResource("2_rule")
@@ -37,11 +37,83 @@ number = 1.0
 minimum = 0.1
 maximum = 10.0
 unit = "m"
-description = "AFK chopping stops when the player moves this far from where they started."
+description = "AFK work (gathering, crafting) stops when the player moves this far from where they started."
+
+[sub_resource type="Resource" id="Rule_craft_share"]
+script = ExtResource("2_rule")
+name = &"craft_work_share_pct"
+number = 60.0
+minimum = 0.0
+maximum = 200.0
+unit = "%"
+description = "CRAFT XP (owner, 2026-10-19): a batch pays its own XP plus this share of the XP its inputs took to gather and make, so an hour at the anvil keeps pace with an hour at the rocks."
+
+[sub_resource type="Resource" id="Rule_variety_drain"]
+script = ExtResource("2_rule")
+name = &"variety_drain_pm_per_min"
+number = 60.0
+minimum = 0.0
+maximum = 1000.0
+unit = "permille/min"
+description = "VARIETY: each minute of work on one recipe drains its freshness this much (thousandths); its XP falls with it, down to variety_floor_pct. Against one-recipe grinds."
+
+[sub_resource type="Resource" id="Rule_variety_recover"]
+script = ExtResource("2_rule")
+name = &"variety_recover_pm_per_min"
+number = 30.0
+minimum = 0.0
+maximum = 1000.0
+unit = "permille/min"
+description = "VARIETY: a recipe's freshness comes back this much a minute (thousandths), whatever you are doing."
+
+[sub_resource type="Resource" id="Rule_variety_floor"]
+script = ExtResource("2_rule")
+name = &"variety_floor_pct"
+number = 50.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "VARIETY: a recipe worn fully stale still pays this share of its XP."
+
+[sub_resource type="Resource" id="Rule_first_make"]
+script = ExtResource("2_rule")
+name = &"first_make_mult"
+number = 5.0
+minimum = 0.0
+maximum = 50.0
+unit = "x"
+description = "FIRST MAKE: the first batch a character ever makes of a recipe pays this many times a batch's XP on top."
+
+[sub_resource type="Resource" id="Rule_order_minutes"]
+script = ExtResource("2_rule")
+name = &"order_minutes"
+number = 3.0
+minimum = 0.5
+maximum = 60.0
+unit = "min"
+description = "WORK ORDERS: an order wants about this many minutes of AFK work of its recipe."
+
+[sub_resource type="Resource" id="Rule_order_rotate"]
+script = ExtResource("2_rule")
+name = &"order_rotate_min"
+number = 20.0
+minimum = 1.0
+maximum = 1440.0
+unit = "min"
+description = "WORK ORDERS: each order on the board is replaced this often."
+
+[sub_resource type="Resource" id="Rule_order_bonus"]
+script = ExtResource("2_rule")
+name = &"order_bonus_pct"
+number = 100.0
+minimum = 0.0
+maximum = 1000.0
+unit = "%"
+description = "WORK ORDERS: filling one pays this share of the XP its batches paid, again, on top."
 
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

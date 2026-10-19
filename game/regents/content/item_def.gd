@@ -15,7 +15,20 @@ class_name ItemDef extends ContentDef
 @export var tool_tag: StringName = &""
 ## The highest node tier it works.
 @export_range(0, 20) var tool_tier: int = 0
+## How long its work takes, in percent of the base (a better axe: 85). A crafted tool's quality takes up
+## to a tenth more off.
+@export_range(10, 200, 1, "suffix:%") var tool_speed_pct: int = 100
+@export_group("As a part")
+## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
+## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
+@export var part_tag: StringName = &""
+## As a tool's HANDLE, its trait (Tinkers'-style: the handle's wood): the tool's swing, in percent (yew:
+## lighter, faster), and quality it adds to the tool (oak: sturdier), in thousandths.
+@export_range(50, 150, 1, "suffix:%") var handle_speed_pct: int = 100
+@export_range(0, 1000, 10, "suffix:‰") var handle_quality_pm: int = 0
 @export_group("How it shows")
+## What a tool looks like in the hand while it works (a `HeldItem` scene), if it is a tool.
+@export var held_scene: PackedScene
 ## Its colour in the bag until it has an icon.
 @export var color: Color = Color(0.75, 0.6, 0.4)
 @export_multiline var description: String = ""
@@ -44,7 +57,21 @@ func to_bake() -> Dictionary:
 		"max_stack": max_stack,
 		"tool_tag": String(tool_tag),
 		"tool_tier": tool_tier,
+		"tool_speed_pct": tool_speed_pct,
+		"part_tag": String(part_tag),
+		"handle_speed_pct": handle_speed_pct,
+		"handle_quality_pm": handle_quality_pm,
 	}
+
+
+## What its handle trait does, in words ("" when it has none worth saying).
+func handle_trait() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	if handle_speed_pct != 100:
+		parts.append("%d%% %s swing" % [absi(100 - handle_speed_pct), "faster" if handle_speed_pct < 100 else "slower"])
+	if handle_quality_pm > 0:
+		parts.append("+%d quality" % (handle_quality_pm / 10))
+	return ", ".join(parts)
 
 
 func validate() -> Array[String]:
@@ -53,6 +80,8 @@ func validate() -> Array[String]:
 		out.append("a tool works tier 1 at least: set `tool_tier`")
 	if tool_tag != &"" and max_stack != 1:
 		out.append("a tool does not stack: `max_stack` 1")
+	if part_tag == &"" and (handle_speed_pct != 100 or handle_quality_pm != 0):
+		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
 	return out
 
 

@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Script" path="res://game/regents/skilling/mining/crack_params.gd" id="2_params"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/mining.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_ore.tres" id="4_yield"]
+[ext_resource type="Resource" path="res://game/regents/content/item/uncut_gem.tres" id="5_rare"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="m0"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="m1"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("2_params")
+display_name = "Copper rock"
+duration_ms = 10000
+swing_ms = 260
+stagger_ms = 700
+split_ms = 600
+notches = 7
+bend_pm = 120
+radius_pm = 80
+margin_pm = 120
+reveal_ahead = 6
+target_hits = 16
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("3_skill")
+tier = 1
+minigame = SubResource("Round")
+yield_item = ExtResource("4_yield")
+tool_tag = &"pick"
+min_tool_tier = 1
+min_rank = 1
+xp = 10
+afk_ms_per_item = 4500
+deplete_permille = 300
+regrow_s = 25.0
+rare_item = ExtResource("5_rare")
+rare_permille = 5
+models = Array[PackedScene]([ExtResource("m0"), ExtResource("m1")])
+model_scale = 1.1
+depleted = 1
+depleted_color = Color(0.40, 0.38, 0.36, 1)
+ore_color = Color(0.85, 0.48, 0.22, 1)
+id = 40004
+display_name = "Copper rock"
+designer_notes = "Mining tier 1: needs mining rank 1 and a pick of tier 1. Its round is played in the skilling lab."

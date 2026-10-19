@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StationDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/station_def.gd" id="1_station"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Workbench.gltf" id="p0"]
+
+[resource]
+script = ExtResource("1_station")
+key = &"workbench"
+pieces = Array[PackedScene]([ExtResource("p0")])
+piece_transforms = Array[Transform3D]([Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)])
+glow_color = Color(0, 0, 0, 0)
+body_size = Vector3(0, 0, 0)
+body_color = Color(0.4, 0.4, 0.4, 1)
+id = 40003
+display_name = "Workbench"

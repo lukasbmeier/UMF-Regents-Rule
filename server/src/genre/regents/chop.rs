@@ -72,36 +72,73 @@ pub fn branches(seed: u64, p: &ChopParams, n: usize) -> Vec<i32> {
     out
 }
 
-/// A whole round replayed from its inputs, (time since the round began, side) in the order sent.
+struct Run<'a> {
+    p: &'a ChopParams,
+    seg: Vec<i32>,
+    cut: usize,
+    r: ChopResult,
+    combo: i64,
+    next_ok: i64,
+    staggered: bool,
+}
+
+impl Run<'_> {
+    fn swing(&mut self, t: i64, side: i32) {
+        let head = self.seg.get(self.cut + 1).copied().unwrap_or(BRANCH_NONE);
+        if head == side {
+            self.r.hits += 1;
+            self.combo = 0;
+            self.next_ok = t + self.p.stagger_ms;
+            self.staggered = true;
+            return;
+        }
+        self.cut += 1;
+        self.r.clean += 1;
+        self.combo += 1;
+        self.r.best_combo = self.r.best_combo.max(self.combo);
+        self.next_ok = t + self.p.swing_ms;
+        self.staggered = false;
+    }
+
+    /// Swing a held press whose swing ended by `t`.
+    fn settle(&mut self, held: &mut Option<(i64, i32)>, t: i64) {
+        if let Some((at, side)) = *held {
+            if at <= t {
+                *held = None;
+                if at <= self.p.duration_ms {
+                    self.swing(at, side);
+                }
+            }
+        }
+    }
+}
+
+/// A whole round replayed from its inputs, (time since the round began, side) in the order sent. A press
+/// mid-swing is held (the latest) and swung when the swing ends; one while staggered is lost.
 pub fn play(seed: u64, p: &ChopParams, inputs: &[(i64, i32)]) -> ChopResult {
     let seg = branches(seed, p, (max_chops(p) as usize) + 2 + VIEW_SEGMENTS);
-    let (mut cut, mut r, mut combo, mut next_ok, mut last_t) = (0usize, ChopResult::default(), 0i64, 0i64, -1i64);
+    let mut run = Run { p, seg, cut: 0, r: ChopResult::default(), combo: 0, next_ok: 0, staggered: false };
+    let (mut held, mut last_t): (Option<(i64, i32)>, i64) = (None, -1);
     for &(t, side) in inputs {
         if t < last_t {
             continue;
         }
         last_t = t;
-        if t < 0 || t > p.duration_ms || t < next_ok {
+        run.settle(&mut held, t);
+        if t < 0 || t > p.duration_ms || (side != BRANCH_LEFT && side != BRANCH_RIGHT) {
             continue;
         }
-        if side != BRANCH_LEFT && side != BRANCH_RIGHT {
+        if t < run.next_ok {
+            if !run.staggered {
+                held = Some((run.next_ok, side));
+            }
             continue;
         }
-        let head = seg.get(cut + 1).copied().unwrap_or(BRANCH_NONE);
-        if head == side {
-            r.hits += 1;
-            combo = 0;
-            next_ok = t + p.stagger_ms;
-            continue;
-        }
-        cut += 1;
-        r.clean += 1;
-        combo += 1;
-        r.best_combo = r.best_combo.max(combo);
-        next_ok = t + p.swing_ms;
+        run.swing(t, side);
     }
-    r.score_pm = (r.clean * 1000 / p.target_chops).min(1000);
-    r
+    run.settle(&mut held, p.duration_ms);
+    run.r.score_pm = (run.r.clean * 1000 / p.target_chops).min(1000);
+    run.r
 }
 
 /// A submission as the challenge carries it: flat (time, side) pairs as f32. None when it is not one:

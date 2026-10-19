@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/woodcutting/iron_axe.tscn" id="2_held"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+tool_tag = &"axe"
+tool_tier = 2
+tool_speed_pct = 85
+held_scene = ExtResource("2_held")
+color = Color(0.70, 0.72, 0.76, 1)
+description = "Fells yews, and faster."
+id = 40015
+display_name = "Iron axe"

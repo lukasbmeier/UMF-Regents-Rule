@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1000
+color = Color(0.65, 0.66, 0.70, 1)
+description = "Parts at the anvil."
+id = 40011
+display_name = "Iron bar"

@@ -1,24 +1,65 @@
 extends "res://tests/suite_base.gd"
 ## REGENT'S RULE'S `regents` suite (`-- --only=regents` runs it alone), with no server:
-##   - woodcutting's branch dodge (`ChopModel`): the trees; the trunk from a seed (the same every time,
-##     the challenge's own generator, safe pieces at the bottom, as branchy as the tree says); a branch
-##     at your head on your side hits you and staggers you; the swing and the round bound every press;
-##     a perfect player scores in full; a replay of the inputs scores what was played
-##   - the minigame (`ChopMinigame`): keeps every press, plays through the model, and its end says the
-##     replay agrees; the lab opens it
+##   - the skilling chain's content: skills and their curves, nodes, recipes, stations, items, all valid
+##     and linked as the chain needs (logs -> handle, ore -> bar -> head, head + handle + rivets -> axe)
+##   - woodcutting's branch dodge (`ChopModel`): the trunk from a seed (the challenge's own generator);
+##     every chop rule; a perfect player scores in full; a replay of the inputs scores what was played
+##   - every model against its golden file (the Rust twins are held to the same files)
+##   - the minigames (`SkillMinigames`, each `SkillMinigame`): keep every input, play through the model,
+##     and their end says the replay agrees; a faster tool swings faster; the skilling lab opens them all
+##   - working, shown: each skill's pose in the adventurer's set, each tool a held item fitted to it
 
 const L: int = ChopModel.SIDE_LEFT
 const R: int = ChopModel.SIDE_RIGHT
 
 
 func run() -> void:
-	_run_trees()
+	_run_content()
 	_run_trunk()
 	_run_golden()
+	_run_skill_goldens()
 	_run_chops()
 	_run_perfect_and_replay()
-	_run_chop_look()
+	_run_looks()
+	_run_registry()
 	await _run_minigame()
+	await _run_chain_minigames()
+	await _run_lab()
+	await _run_recipe_bench()
+
+
+## The recipe bench: a recipe's numbers worked out from the content and the hot rules' defaults.
+func _run_recipe_bench() -> void:
+	print("== regents: the recipe bench ==")
+	var bar: RecipeDef = RecipeDef.by_id(40001)
+	_check(bar.workbench_scene() == "res://game/regents/workbench/recipe_workbench.tscn", "a recipe has its bench (%s)" % bar.workbench_scene())
+	var bench: RecipeWorkbench = (load(bar.workbench_scene()) as PackedScene).instantiate() as RecipeWorkbench
+	add_child(bench)
+	bench.item = bar
+	await get_tree().process_frame
+	var share: int = int(RecipeWorkbench.rule(&"craft_work_share_pct"))
+	_check(share == 60 and RecipeWorkbench.batch_xp(bar) == bar.craft_xp(share), "it reads the hot rules' defaults (a %d %% share)" % share)
+	var sheet: String = await bench.run_named_test(&"sheet")
+	_check(sheet.contains("2 Copper ore") and sheet.contains("1 Copper bar") and sheet.contains("XP a batch: %d" % RecipeWorkbench.batch_xp(bar)), "the sheet: %s" % sheet)
+	await bench.run_named_test(&"per_hour")
+	var afk: Dictionary = bench.last_measure.get("afk", {})
+	_check(int(afk.get("batches", 0)) == 3_600_000 / bar.afk_ms and int((afk.get("eats", {}) as Dictionary).get("Copper ore", 0)) == 2 * int(afk.get("batches", 0)),
+		"an hour AFK: %d bars, eating twice as much ore" % int(afk.get("batches", 0)))
+	_check(int(afk.get("xp_hour", 0)) < int(afk.get("xp_fresh", 0)) and int(afk.get("xp_hour", 0)) > int(afk.get("xp_fresh", 0)) / 2,
+		"an hour of one recipe wears stale: %d XP, not %d" % [int(afk.get("xp_hour", 0)), int(afk.get("xp_fresh", 0))])
+	await bench.run_named_test(&"chain")
+	var raw: Dictionary = bench.last_measure.get("raw", {})
+	_check(is_equal_approx(float(raw.get("Copper ore", 0.0)), 2.0) and float(bench.last_measure.get("minutes", 0.0)) > 0.0, "a bar's chain: two copper ore")
+	var axe: RecipeDef = RecipeDef.by_id(40006)
+	bench.item = axe
+	await get_tree().process_frame
+	await bench.run_named_test(&"chain")
+	var axe_raw: Dictionary = bench.last_measure.get("raw", {})
+	_check(axe_raw.has("Iron ore") and axe_raw.has("Copper ore") and axe_raw.has("Logs"), "the axe's chain goes back to iron ore, copper ore and logs: %s" % str(axe_raw))
+	bench.item = bar
+	_check((await bench.run_named_test(&"against")).contains("gathering Copper ore"), "against gathering: %s" % bench.last_result)
+	bench.queue_free()
+	await get_tree().process_frame
 
 
 func _params(permille: int = 450) -> ChopParams:
@@ -42,22 +83,78 @@ func _model_with(p: ChopParams, trunk: Array[int]) -> ChopModel:
 	return m
 
 
-func _run_trees() -> void:
-	print("== regents: the trees ==")
-	var defs: Array[TreeDef] = TreeDef.all_by_tier()
-	_check(defs.size() == 3 and defs[0].display_name == "Tree" and defs[1].display_name == "Oak" and defs[2].display_name == "Yew",
-		"three trees, lowest tier first: Tree, Oak, Yew")
+## The chain's content: valid, linked as the chain needs, the gathering tiers in order.
+func _run_content() -> void:
+	print("== regents: the chain's content ==")
+	var bad: Array[String] = []
+	for type: StringName in [&"skill", &"node", &"recipe", &"station", &"item"]:
+		for d: ContentDef in ContentLibrary.items(type):
+			if not d.validate().is_empty():
+				bad.append("%s %s: %s" % [type, d.display_name, str(d.validate())])
+	_check(bad.is_empty(), "every skill, node, recipe, station and item is valid%s" % ("" if bad.is_empty() else ": " + "; ".join(bad)))
+	var keys: Array[StringName] = []
+	for sk: SkillDef in SkillDef.all():
+		keys.append(sk.key)
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting"], "five skills: %s" % str(keys))
+	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
+	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
+		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
+	var names: Array[String] = []
+	for n: NodeDef in NodeDef.all_by_tier():
+		names.append(n.display_name)
+	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock"], "five nodes, by skill then tier: %s" % str(names))
 	var prev: ChopParams = null
-	for d: TreeDef in defs:
-		_check(d.validate().is_empty(), "%s is valid (%s)" % [d.display_name, str(d.validate())])
-		var t: ChopParams = d.chop
-		if t == null:
+	for n: NodeDef in NodeDef.all_by_tier():
+		if not (n.minigame is ChopParams):
 			continue
-		_check(t.target_chops <= ChopModel.max_chops(t), "%s: a full score is reachable (%d of at most %d)" % [t.display_name, t.target_chops, ChopModel.max_chops(t)])
+		var t: ChopParams = n.minigame as ChopParams
+		_check(t.target_chops <= ChopModel.max_chops(t), "%s: a full score is reachable (%d of at most %d)" % [n.display_name, t.target_chops, ChopModel.max_chops(t)])
 		if prev != null:
-			_check(t.branch_permille > prev.branch_permille and t.target_chops > prev.target_chops,
-				"%s is harder than %s: branchier, more logs for a full score" % [t.display_name, prev.display_name])
+			_check(t.branch_permille > prev.branch_permille and t.target_chops > prev.target_chops, "%s is a harder round than the tier below" % n.display_name)
 		prev = t
+	var yew: NodeDef = NodeDef.by_id(40003)
+	_check(yew.min_tool_tier == 2 and yew.min_rank == 4, "a yew needs a tier 2 axe and woodcutting rank 4")
+	# The chain, by what each recipe takes and makes.
+	var made: Dictionary[String, Array] = {}
+	for r: RecipeDef in RecipeDef.all():
+		var ins: Array[String] = []
+		for i: ItemDef in r.inputs:
+			ins.append(i.display_name)
+		made[r.output.display_name] = [String(r.station), ins]
+	_check(made.get("Copper bar", []) == ["furnace", ["Copper ore"]] and made.get("Iron bar", []) == ["furnace", ["Iron ore"]],
+		"the furnace: ore into bars")
+	_check(made.get("Iron axe head", []) == ["anvil", ["Iron bar"]] and made.get("Copper rivets", []) == ["anvil", ["Copper bar"]], "the anvil: bars into a head, rivets")
+	_check(made.get("Handle", []) == ["workbench", ["Logs"]] and made.get("Iron axe", []) == ["workbench", ["Iron axe head", "Handle", "Copper rivets"]],
+		"the workbench: logs into a handle; a head, a handle and rivets into an iron axe")
+	var head: RecipeDef = RecipeDef.by_id(40004)
+	var axe: RecipeDef = RecipeDef.by_id(40006)
+	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
+		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
+	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 2 and RecipeDef.at(&"workbench").size() == 4 and RecipeDef.at(&"orders").is_empty(),
+		"two recipes at the furnace and the anvil, four at the workbench (three handles and the axe), none at the order board")
+	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
+		"oak and yew logs carve into their handles")
+	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
+	var choices: Array[String] = []
+	for it: ItemDef in axe.part_choices():
+		choices.append(it.display_name)
+	_check(axe.part_slot == 1 and choices == ["Handle", "Oak handle", "Yew handle"], "the iron axe's handle slot takes any handle, plain first: %s" % str(choices))
+	_check(RecipeDef.by_id(40001).part_choices().is_empty(), "a recipe with no part slot has no choices")
+	var oak_h: ItemDef = ItemDef.by_id(40016)
+	var yew_h: ItemDef = ItemDef.by_id(40017)
+	_check(oak_h.handle_trait() == "+15 quality" and yew_h.handle_trait() == "10% faster swing" and ItemDef.by_id(40013).handle_trait() == "",
+		"the handles' traits, in words: %s / %s" % [oak_h.handle_trait(), yew_h.handle_trait()])
+	var bar: RecipeDef = RecipeDef.by_id(40001)
+	var ore_xp: int = (NodeDef.by_id(40004)).xp
+	_check(RecipeDef.work_xp(bar.inputs[0]) == ore_xp and bar.craft_xp(100) == bar.xp + 2 * ore_xp and bar.craft_xp(0) == bar.xp,
+		"craft XP pays for the work in the inputs (the server's numbers: genre::regents::craft_xp)")
+	var bad_part: RecipeDef = axe.duplicate() as RecipeDef
+	bad_part.part_slot = 0
+	_check(bad_part.validate().any(func(e: String) -> bool: return e.contains("no part")), "a part slot on an item that is no part is refused")
+	for key: StringName in [&"furnace", &"anvil", &"workbench"]:
+		_check(StationDef.by_key(key) != null, "the %s is a station" % key)
+	var iron: ItemDef = ItemDef.by_id(40015)
+	_check(iron.tool_tag == &"axe" and iron.tool_tier == 2 and iron.tool_speed_pct == 85 and iron.held_scene != null, "the iron axe: tier 2, 85 % of the time, held as its own")
 
 
 func _run_trunk() -> void:
@@ -123,6 +220,84 @@ func _run_golden() -> void:
 	_check(bad.is_empty(), "the GDScript twin plays every golden round exactly%s" % ("" if bad.is_empty() else ": " + "; ".join(bad)))
 
 
+## A params resource from a golden case's numbers (an outline becomes a PackedInt32Array).
+func _params_from(res: Resource, pp: Dictionary) -> Resource:
+	for key: String in pp:
+		var v: Variant = pp[key]
+		if v is Array:
+			var arr: PackedInt32Array = PackedInt32Array()
+			for x: Variant in v:
+				arr.append(int(x))
+			res.set(key, arr)
+		else:
+			res.set(key, int(v))
+	return res
+
+
+func _golden_cases(name: String) -> Array:
+	var f: FileAccess = FileAccess.open("res://shared/golden/regents/%s.json" % name, FileAccess.READ)
+	if f == null:
+		_check(false, "shared/golden/regents/%s.json is there" % name)
+		return []
+	var doc: Dictionary = JSON.parse_string(f.get_as_text()) as Dictionary
+	return doc.get("cases", []) as Array
+
+
+## The flat inputs of a golden case (rows of 2 or 3).
+func _flat(rows: Array) -> PackedInt32Array:
+	var out: PackedInt32Array = PackedInt32Array()
+	for r: Array in rows:
+		for v: Variant in r:
+			out.append(int(v))
+	return out
+
+
+func _ints(d: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for k: String in d:
+		out[k] = int(d[k])
+	return out
+
+
+## Crack the rock, bellows then pour, shape to the outline: the GDScript models against the golden files a
+## third (Python) version made, which their Rust twins are held to as well.
+func _run_skill_goldens() -> void:
+	print("== regents: the chain's golden rounds ==")
+	var bad: Array[String] = []
+	var crack: Array = _golden_cases("crack")
+	for c: Dictionary in crack:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: CrackParams = _params_from(CrackParams.new(), c["params"]) as CrackParams
+		var pts: PackedInt32Array = CrackModel.seams(seed_value, p, 3)
+		var got: Dictionary = CrackModel.play(seed_value, p, _flat(c["inputs"]))
+		if pts != _flat([c["points"]]) or got != _ints(c["expected"]):
+			bad.append("crack %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
+	var smelt: Array = _golden_cases("smelt")
+	for c: Dictionary in smelt:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: SmeltParams = _params_from(SmeltParams.new(), c["params"]) as SmeltParams
+		var m: SmeltModel = SmeltModel.start(seed_value, p)
+		var bands_ok: bool = true
+		var i: int = 0
+		for b: Array in c["bands"]:
+			bands_ok = bands_ok and m.band(i * 7) == Vector2i(int(b[0]), int(b[1]))
+			i += 1
+		var got: Dictionary = SmeltModel.play(seed_value, p, _flat(c["inputs"]))
+		if not bands_ok or got != _ints(c["expected"]):
+			bad.append("smelt %s: %s, wanted %s (bands %s)" % [c["name"], str(got), str(c["expected"]), bands_ok])
+	var shape: Array = _golden_cases("shape")
+	for c: Dictionary in shape:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: ShapeParams = _params_from(ShapeParams.new(), c["params"]) as ShapeParams
+		var start: PackedInt32Array = ShapeModel.start(seed_value, p).heights
+		var got: Dictionary = ShapeModel.play(seed_value, p, _flat(c["inputs"]))
+		if start != _flat([c["start"]]) or got != _ints(c["expected"]):
+			bad.append("shape %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
+	_check(crack.size() >= 6 and smelt.size() >= 6 and shape.size() >= 6 and bad.is_empty(),
+		"the GDScript models play every golden round exactly (%d crack, %d smelt, %d shape)%s" % [crack.size(), smelt.size(), shape.size(),
+			"" if bad.is_empty() else ": " + "; ".join(bad)])
+
+
 func _run_chops() -> void:
 	print("== regents: chopping ==")
 	var p: ChopParams = _params()
@@ -131,10 +306,18 @@ func _run_chops() -> void:
 	_check(m.chop(0, L) == ChopModel.HIT and m.cut == 0 and m.hits == 1 and m.combo == 0, "chopping from the branch's side: hit, the trunk does not drop")
 	_check(m.chop(799, R) == ChopModel.IGNORED and m.cut == 0, "staggered: a swing 799 ms after the hit is not swung")
 	_check(m.chop(800, R) == ChopModel.CLEAN and m.cut == 1 and m.clean == 1, "at 800 ms (stagger_ms), from the other side: clean, the trunk drops")
-	_check(m.head_branch() == ChopModel.BRANCH_NONE and m.chop(1099, R) == ChopModel.IGNORED, "mid-swing (299 ms after a chop): not swung")
-	_check(m.chop(1100, R) == ChopModel.CLEAN and m.head_branch() == R, "a swing later: clean, and the next branch is on your side")
+	_check(m.head_branch() == ChopModel.BRANCH_NONE and m.chop(1099, R) == ChopModel.HELD and m.cut == 1, "mid-swing (299 ms after a chop): held, not dropped")
+	_check(m.settle(1099) == ChopModel.IGNORED and m.settle(1100) == ChopModel.CLEAN and m.cut == 2 and m.head_branch() == R,
+		"it swings the moment the swing ends (1100): clean, and the next branch is on your side")
 	_check(m.chop(1400, R) == ChopModel.HIT and m.chop(2200, L) == ChopModel.CLEAN, "stay under it and it hits; step across and chop")
 	_check(m.best_combo == 2 and m.combo == 1, "a hit ends a combo (best 2, now 1)")
+	var q: ChopModel = _model_with(p, [])
+	_check(q.chop(0, L) == ChopModel.CLEAN and q.chop(100, L) == ChopModel.HELD and q.chop(200, R) == ChopModel.HELD
+		and q.chop(300, R) == ChopModel.HELD and q.side == R and q.clean == 2, "quick side switches: the latest held press swings when the swing ends")
+	var e: ChopModel = _model_with(p, [])
+	e.chop(9800, L)
+	_check(e.chop(9900, R) == ChopModel.HELD and ChopModel.play(1, p, PackedInt32Array([9800, L, 9900, R]))["clean"] == 1,
+		"a press held past the round's end never swings")
 	var o: ChopModel = _model_with(p, [])
 	_check(o.chop(-1, L) == ChopModel.IGNORED and o.chop(0, 0) == ChopModel.IGNORED and o.chop(0, 3) == ChopModel.IGNORED,
 		"before the round, or no side: nothing")
@@ -163,11 +346,13 @@ func _perfect_inputs(seed_value: int, p: ChopParams) -> PackedInt32Array:
 
 func _run_perfect_and_replay() -> void:
 	print("== regents: a perfect round, and a replay ==")
-	for d: TreeDef in TreeDef.all_by_tier():
-		var t: ChopParams = d.chop
+	for n: NodeDef in NodeDef.all_by_tier():
+		if not (n.minigame is ChopParams):
+			continue
+		var t: ChopParams = n.minigame as ChopParams
 		var r: Dictionary = ChopModel.play(99, t, _perfect_inputs(99, t))
 		_check(r["hits"] == 0 and r["clean"] == ChopModel.max_chops(t) and r["score_pm"] == 1000,
-			"%s: never under a branch, every swing on time: %d logs, no hits, a full score" % [t.display_name, r["clean"]])
+			"%s: never under a branch, every swing on time: %d logs, no hits, a full score" % [n.display_name, r["clean"]])
 	# Pressing blind (always left) on a branchy tree: hit, staggered, far short.
 	var p: ChopParams = _params(600)
 	var blind: PackedInt32Array = PackedInt32Array()
@@ -195,28 +380,53 @@ func _run_perfect_and_replay() -> void:
 		"one swing moved under a branch: the replay scores the hit and what it cost (%s vs %s)" % [str(tr), str(pr)])
 
 
-## Chopping, shown: the adventurer's set swings an axe, and the axe is a held item fitted to the swing.
-func _run_chop_look() -> void:
-	print("== regents: chopping, shown ==")
+## Working, shown: each skill's pose in the adventurer's set (UAL clips), each tool a held item fitted to its
+## skill's pose, and the adventurer carries the skilling and the look of it.
+func _run_looks() -> void:
+	print("== regents: working, shown ==")
 	var adv: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
 	var aset: AnimationSet = adv.animation_set if adv != null else null
-	var ref: AnimationClipRef = aset.clip(SkillingLook.POSE_CHOP) if aset != null and aset.has_exact(SkillingLook.POSE_CHOP) else null
-	_check(ref != null and ref.anim_name == &"extra/TreeChopping" and ref.loop, "the adventurer's set has pose.chop: UAL's TreeChopping, looping")
-	var lib: AnimationLibrary = aset.libraries.get(&"extra", null) if aset != null else null
-	_check(lib != null and lib.has_animation(&"TreeChopping"), "and the clip is in its extra library")
+	var clips: Dictionary[StringName, StringName] = {&"pose.chop": &"extra/TreeChopping", &"pose.mine": &"extra/Mining", &"pose.smith": &"extra/Mining",
+		&"pose.smelt": &"Push", &"pose.craft": &"Interact"}
+	for pose: StringName in clips:
+		var ref: AnimationClipRef = aset.clip(pose) if aset != null and aset.has_exact(pose) else null
+		_check(ref != null and ref.anim_name == clips[pose] and ref.loop, "the set's %s is %s, looping" % [pose, clips[pose]])
 	_check(aset != null and aset.missing_required().is_empty(), "the set still drives a tree (nothing required missing)")
-	var axe: Node = (load("res://game/regents/skilling/woodcutting/axe.tscn") as PackedScene).instantiate()
-	var held: HeldItem = axe as HeldItem
-	var fitted: bool = false
-	if held != null and held.grip != null:
-		for e: GripEntry in held.grip.entries:
-			fitted = fitted or e.animation == SkillingLook.POSE_CHOP
-	_check(held != null and held.grip != null and held.grip.hand == &"hand_r" and fitted, "the axe is a held item in the right hand, with a grip fitted to the chop")
-	axe.free()
+	for sk: SkillDef in SkillDef.all():
+		_check(aset.has_exact(sk.pose), "%s works in the set's %s" % [sk.display_name, sk.pose])
+	var tools: Dictionary[String, StringName] = {"res://game/regents/skilling/woodcutting/axe.tscn": &"pose.chop",
+		"res://game/regents/skilling/woodcutting/iron_axe.tscn": &"pose.chop", "res://game/regents/skilling/mining/pickaxe.tscn": &"pose.mine",
+		"res://game/regents/skilling/smithing/hammer.tscn": &"pose.smith"}
+	for path: String in tools:
+		var node: Node = (load(path) as PackedScene).instantiate()
+		var held: HeldItem = node as HeldItem
+		var fitted: bool = false
+		if held != null and held.grip != null:
+			for e: GripEntry in held.grip.entries:
+				fitted = fitted or e.animation == tools[path]
+		_check(held != null and held.grip.hand == &"hand_r" and fitted, "%s is a held item, its grip fitted to %s" % [path.get_file(), tools[path]])
+		node.free()
+	_check(ItemDef.by_id(40001).held_scene != null and ItemDef.by_id(40006).held_scene != null and SkillDef.by_key(&"smithing").tool_scene != null,
+		"the bronze axe and pickaxe show as themselves; the smith holds a hammer")
 	var player: Node = (load("res://game/regents/adventurer.tscn") as PackedScene).instantiate()
 	_check(player.get_node_or_null(^"Components/SkillingLook") is SkillingLook and player.get_node_or_null(^"Components/Skilling") is SkillingComponent,
 		"the adventurer carries its skilling and the look of it")
 	player.free()
+
+
+## The minigames in one place: their kinds, the server's challenge kinds, a faster tool's swing.
+func _run_registry() -> void:
+	print("== regents: the minigames' registry ==")
+	_check(SkillMinigames.CHALLENGE == {&"chop": 100, &"crack": 101, &"smelt": 102, &"shape": 103}, "the challenge kinds the server deals them as")
+	var chop: ChopParams = _params()
+	var fast: ChopParams = SkillMinigames.with_speed(chop, 85) as ChopParams
+	_check(fast != chop and fast.swing_ms == 255 and chop.swing_ms == 300, "a tool at 85 %% swings in 255 ms, and the content is left as it was")
+	_check(SkillMinigames.with_speed(chop, 100) == chop and SkillMinigames.with_speed(SmeltParams.new(), 50) is SmeltParams,
+		"as authored at 100 %%; a station round has no swing to speed")
+	_check(SkillMinigames.arity(SkillMinigames.CRACK) == 3 and SkillMinigames.arity(SkillMinigames.SHAPE) == 2, "a strike on the rock is (time, x, y)")
+	var baked: Dictionary = SkillMinigames.bake((RecipeDef.by_id(40004)).minigame)
+	_check(baked.get("kind", "") == "shape" and (baked.get("outline", []) as Array).size() == 16 and not baked.has("display_name"),
+		"a round bakes as its kind and its numbers")
 
 
 func _run_minigame() -> void:
@@ -250,31 +460,134 @@ func _run_minigame() -> void:
 		"the round's end: what was played is what a replay of its inputs scores (%s)" % (str(seen[0]) if seen.size() > 0 else "none"))
 	_check(g.press_at(t, L) == ChopModel.IGNORED and g.inputs.size() == 240, "after the round, presses are nothing")
 	g.queue_free()
-	var lab: Node = (load("res://game/regents/skilling/woodcutting/chop_lab.tscn") as PackedScene).instantiate()
+	await get_tree().process_frame
+
+
+## Crack the rock, bellows then pour, shape to the outline: played through their UIs, every input kept, and
+## what was played is what a replay of the inputs scores.
+func _run_chain_minigames() -> void:
+	print("== regents: the chain's minigames, played ==")
+	var crack: CrackMinigame = CrackMinigame.new()
+	crack.size = Vector2(960, 620)
+	add_child(crack)
+	var rock: CrackParams = (NodeDef.by_id(40004)).minigame as CrackParams
+	crack.begin(11, rock)
+	var t: int = 0
+	var hits: int = 0
+	while t < rock.duration_ms:
+		if t >= crack.model.next_ok_ms + 250:
+			var g: Vector2i = crack.model.notch(crack.model.k)
+			hits += int(crack.strike_at(t, g.x, g.y) == CrackModel.HIT)
+		t += 10
+	crack.strike_at(t, 0, 0)
+	crack.finish()
+	_check(hits >= 12 and crack.model.splits >= 1 and crack.live_result == crack.replayed_result and crack.inputs.size() % 3 == 0,
+		"follow the seam: %d notches struck in order, %d split, every strike kept as (t, x, y), the replay agrees" % [hits, crack.model.splits])
+	_check(crack.to_face(crack.from_face(Vector2i(300, 700))).distance_to(Vector2i(300, 700)) <= 1, "a click on the face is where the strike lands")
+	crack.queue_free()
+	# The seam's rules, one strike at a time.
+	var cm: CrackModel = CrackModel.start(11, rock)
+	var n0: Vector2i = cm.notch(0)
+	var n1: Vector2i = cm.notch(1)
+	var first: Vector2i = cm.notch(0)
+	var across: bool = true
+	for i: int in rock.notches - 1:
+		across = across and absi(cm.notch(i + 1).x - cm.notch(i).x) <= rock.bend_pm and cm.notch(i + 1).y > cm.notch(i).y
+	_check(first.y == rock.margin_pm and cm.notch(rock.notches - 1).y == 1000 - rock.margin_pm and across,
+		"the first seam runs top to bottom, each notch within %d‰ across of the last" % rock.bend_pm)
+	_check(cm.notch(rock.notches).x == rock.margin_pm and cm.notch(2 * rock.notches - 1).x == 1000 - rock.margin_pm,
+		"the second runs left to right")
+	_check(cm.strike(0, n1.x, n1.y) == CrackModel.JAR and cm.jars == 1, "a notch out of order is off the seam: the pick jars")
+	_check(cm.strike(100, n0.x, n0.y) == CrackModel.IGNORED and cm.k == 0, "staggered: a strike then is lost")
+	_check(cm.strike(rock.stagger_ms, n0.x + rock.radius_pm, n0.y) == CrackModel.HIT and cm.k == 1, "the next notch, at its radius's edge: the crack opens")
+	_check(cm.strike(rock.stagger_ms + 10, n1.x, n1.y) == CrackModel.HELD and cm.k == 1, "mid-swing, the next strike is held")
+	_check(cm.settle(rock.stagger_ms + rock.swing_ms) == CrackModel.HIT and cm.k == 2, "and lands the moment the pick is back up")
+	var full: CrackModel = CrackModel.start(11, rock)
+	var tt: int = 0
+	for i: int in rock.notches:
+		full.strike(tt, full.notch(i).x, full.notch(i).y)
+		tt += rock.swing_ms
+	_check(full.splits == 1 and full.next_ok_ms == tt - rock.swing_ms + rock.split_ms, "the whole seam opened: the rock splits, and the next seam waits %d ms" % rock.split_ms)
+	var smelt: SmeltMinigame = SmeltMinigame.new()
+	add_child(smelt)
+	var bar: SmeltParams = (RecipeDef.by_id(40001)).minigame as SmeltParams
+	smelt.begin(12, bar)
+	t = 0
+	while t < bar.heat_ms:
+		smelt.model.advance_to(t)
+		if smelt.model.heat < smelt.model.band(smelt.model.tick).x:
+			smelt.press_at(t, SmeltModel.PUMP)
+		t += 20
+	_check(smelt.press_at(bar.heat_ms + 50, SmeltModel.POUR) == SmeltModel.IGNORED and not smelt.model.pouring,
+		"mashing into the pour does not tilt the crucible (%d ms to be ready)" % bar.pour_ready_ms)
+	_check(smelt.press_at(bar.heat_ms + 80, SmeltModel.STOP) == SmeltModel.IGNORED, "nor does letting go stop a pour that never began")
+	t = bar.heat_ms + bar.pour_ready_ms
+	_check(smelt.press_at(t, SmeltModel.POUR) == SmeltModel.DONE and smelt.model.pouring, "ready: holding tilts it")
+	while smelt.model.fill < smelt.model.target and t < bar.heat_ms + bar.pour_ms - 100:
+		t += 10
+		smelt.model.advance_to(t)
+	smelt.press_at(t, SmeltModel.STOP)
+	smelt.finish()
+	var top: SmeltModel = SmeltModel.start(12, bar)
+	var ready: int = bar.heat_ms + bar.pour_ready_ms
+	top.press(ready, SmeltModel.POUR)
+	top.press(ready + 500, SmeltModel.STOP)
+	var fill_once: int = top.fill
+	_check(fill_once == 10 * bar.pour_rate and top.press(ready + 700, SmeltModel.POUR) == SmeltModel.DONE
+		and top.press(ready + 750, SmeltModel.STOP) == SmeltModel.DONE and top.fill == fill_once + bar.pour_rate,
+		"a pour stops when let go; tilting again tops it up (one tick: %d)" % bar.pour_rate)
+	var sr: Dictionary = smelt.live_result
+	_check(int(sr["heat_pm"]) > 600 and int(sr["pour_pm"]) > 800 and smelt.live_result == smelt.replayed_result,
+		"bellows then pour: a steady hand keeps the heat (%d) and pours to the line (%d), the replay agrees" % [sr["heat_pm"], sr["pour_pm"]])
+	smelt.queue_free()
+	var shape: ShapeMinigame = ShapeMinigame.new()
+	add_child(shape)
+	var part: ShapeParams = (RecipeDef.by_id(40004)).minigame as ShapeParams
+	shape.begin(13, part)
+	t = 0
+	while t < part.duration_ms:
+		if t >= shape.model.next_ok_ms:
+			if shape.model.hot_until_ms - t < 400:
+				shape.strike_at(t, ShapeModel.REHEAT_COLUMN)
+			else:
+				var best: int = 0
+				for i: int in shape.model.heights.size():
+					if shape.model.heights[i] - part.outline[i] > shape.model.heights[best] - part.outline[best]:
+						best = i
+				if shape.model.heights[best] - part.outline[best] <= 0:
+					break
+				shape.strike_at(t, best)
+		t += 10
+	shape.finish()
+	_check(int(shape.live_result["score_pm"]) > 600 and shape.live_result == shape.replayed_result,
+		"shape to the outline: a careful smith comes close (%d), the replay agrees" % shape.live_result["score_pm"])
+	shape.queue_free()
+	await get_tree().process_frame
+
+
+## The skilling lab: a button per round in the content; picking one shows that minigame, ready to play.
+func _run_lab() -> void:
+	print("== regents: the skilling lab ==")
+	var lab: Node = (load("res://game/regents/skilling/skilling_lab.tscn") as PackedScene).instantiate()
 	add_child(lab)
 	await get_tree().process_frame
-	var inner: ChopMinigame = null
-	for c: Node in lab.get_children():
-		if c is ChopMinigame:
-			inner = c as ChopMinigame
-	_check(inner != null and inner.tree != null and inner.tree.display_name == "Tree" and inner.model != null,
-		"the lab opens on the first tree, its trunk showing, ready to play")
 	var buttons: Array[Button] = []
-	buttons.assign(lab.get("tree_buttons"))
-	if inner != null and buttons.size() == 3:
-		var tree_trunk: PackedInt32Array = inner.model.segments
-		buttons[2].pressed.emit()
-		_check(inner.tree.display_name == "Yew" and buttons[2].button_pressed and not buttons[0].button_pressed
-			and inner.model.segments != tree_trunk and inner.state == ChopMinigame.State.READY,
-			"the Yew button picks the yew, lit alone, and shows its trunk at once")
-		inner.begin(1, inner.tree)
-		buttons[0].pressed.emit()
-		_check(inner.tree.display_name == "Yew" and inner.state == ChopMinigame.State.PLAYING,
-			"mid-round, the tree stays as it is")
-		inner.finish()
-		buttons[1].pressed.emit()
-		_check(inner.tree.display_name == "Oak", "after the round, the Oak button picks the oak")
-	else:
-		_check(false, "the lab has a button per tree (%d)" % buttons.size())
+	buttons.assign(lab.get("buttons"))
+	var game: SkillMinigame = lab.get("game") as SkillMinigame
+	_check(buttons.size() == 8 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"eight rounds to play (five nodes, three recipes), the first, a tree's, on show (%d)" % buttons.size())
+	if buttons.size() == 8:
+		buttons[3].pressed.emit()
+		game = lab.get("game") as SkillMinigame
+		_check(game is CrackMinigame and buttons[3].button_pressed and not buttons[0].button_pressed, "the copper rock's button shows crack the rock, lit alone")
+		buttons[5].pressed.emit()
+		game = lab.get("game") as SkillMinigame
+		_check(game is SmeltMinigame, "a bar's shows bellows then pour")
+		game.begin(1, game.params)
+		buttons[7].pressed.emit()
+		_check(lab.get("game") == game, "mid-round, the round stays as it is")
+		game.finish()
+		buttons[7].pressed.emit()
+		_check(lab.get("game") is ShapeMinigame, "after it, the axe head's button shows shape to the outline")
 	lab.queue_free()
 	await get_tree().process_frame

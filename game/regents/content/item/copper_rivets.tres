@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1000
+color = Color(0.90, 0.60, 0.35, 1)
+description = "Fix a head to a handle."
+id = 40012
+display_name = "Copper rivets"

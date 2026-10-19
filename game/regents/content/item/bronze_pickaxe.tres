@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/mining/pickaxe.tscn" id="2_held"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+tool_tag = &"pick"
+tool_tier = 1
+tool_speed_pct = 100
+held_scene = ExtResource("2_held")
+color = Color(0.80, 0.55, 0.30, 1)
+description = "A starter's pick."
+id = 40006
+display_name = "Bronze pickaxe"

@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Script" path="res://game/regents/skilling/mining/crack_params.gd" id="2_params"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/mining.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_ore.tres" id="4_yield"]
+[ext_resource type="Resource" path="res://game/regents/content/item/uncut_gem.tres" id="5_rare"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="m0"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="m1"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("2_params")
+display_name = "Iron rock"
+duration_ms = 10000
+swing_ms = 260
+stagger_ms = 800
+split_ms = 600
+notches = 8
+bend_pm = 190
+radius_pm = 60
+margin_pm = 120
+reveal_ahead = 2
+target_hits = 17
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("3_skill")
+tier = 2
+minigame = SubResource("Round")
+yield_item = ExtResource("4_yield")
+tool_tag = &"pick"
+min_tool_tier = 1
+min_rank = 2
+xp = 20
+afk_ms_per_item = 6500
+deplete_permille = 200
+regrow_s = 45.0
+rare_item = ExtResource("5_rare")
+rare_permille = 8
+models = Array[PackedScene]([ExtResource("m0"), ExtResource("m1")])
+model_scale = 0.9
+depleted = 1
+depleted_color = Color(0.34, 0.32, 0.31, 1)
+ore_color = Color(0.55, 0.30, 0.25, 1)
+id = 40005
+display_name = "Iron rock"
+designer_notes = "Mining tier 2: needs mining rank 2 and a pick of tier 1. Its round is played in the skilling lab."

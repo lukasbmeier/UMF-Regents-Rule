@@ -103,6 +103,21 @@ anim_name = &"Sword_Enter"
 script = ExtResource("1_qscmp")
 anim_name = &"Sword_Exit"
 
+[sub_resource type="Resource" id="Clip_mine"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Mining"
+loop = true
+
+[sub_resource type="Resource" id="Clip_smelt"]
+script = ExtResource("1_qscmp")
+anim_name = &"Push"
+loop = true
+
+[sub_resource type="Resource" id="Clip_craft"]
+script = ExtResource("1_qscmp")
+anim_name = &"Interact"
+loop = true
+
 [sub_resource type="Resource" id="Clip_chop"]
 script = ExtResource("1_qscmp")
 anim_name = &"extra/TreeChopping"
@@ -121,6 +136,10 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"item.stow": SubResource("Resource_5hufo"),
 &"jump.land": SubResource("Resource_dpo5l"),
 &"pose.chop": SubResource("Clip_chop"),
+&"pose.craft": SubResource("Clip_craft"),
+&"pose.mine": SubResource("Clip_mine"),
+&"pose.smelt": SubResource("Clip_smelt"),
+&"pose.smith": SubResource("Clip_mine"),
 &"jump.loop": SubResource("Resource_ki18h"),
 &"jump.start": SubResource("Resource_c7ehk"),
 &"locomotion.idle": SubResource("Resource_20w4r"),

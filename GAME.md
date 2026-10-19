@@ -44,14 +44,18 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   and kits; the other skills' minigames. Decided since: yield = AFK x 1.25 x score; tap E = AFK,
   hold E = minigame; tier bands (1-3, 4-5, 6) each get a harder minigame.
 
-## Current state (2026-10-18): woodcutting in the frontier glade
-A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade
-(`game/regents/levels/frontier.tscn`, level 20), a Bronze axe in your bag, 17 trees (Tree, Oak, Yew).
-**Tap E** at a tree to chop it AFK; **hold E** to play a round of branch dodge, which the server replays
-from your inputs and pays (AFK rate x 1.25 x score). Trees fall to stumps for everyone and grow back.
-How to play it, what makes it, how it is tested and what is left: **`docs/regents_rule/PROGRESS.md`**.
-The minigame alone: `game/regents/skilling/woodcutting/chop_lab.tscn` (F6).
+## Current state (2026-10-19): the skilling chain in the frontier glade
+A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade (level 20):
+trees (Tree, Oak, Yew), copper and iron rocks, and a camp with a furnace, an anvil, a workbench and an order board.
+Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**: at a node or a
+station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, bellows then
+pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). The
+camp's **order board** wants rotating batches for bonus XP; crafting pays for the work in its inputs, a
+first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**. The server replays every round from its
+inputs; mastery ranks 1-10 per skill gate the better nodes. How to play it, what makes it, how it is
+tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alone:
+`game/regents/skilling/skilling_lab.tscn` (F6).
 
 ```bash
-GODOT=<path> ./game/regents/tests/chop_playtest.sh   # two clients chop at 150 ms
+GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms
 ```

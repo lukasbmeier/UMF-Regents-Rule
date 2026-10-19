@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/node.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40002
+kind = 100
+scene = ExtResource("2_scene")
+display_name = "Gathering node"
+designer_notes = "A tree, a rock: placed by a level (a LevelPoint of kind node, tagged with its NodeDef's name). Which node it is, and whether it is worked out, are its rows (gather_node, status Depleted); its look is its NodeDef's."

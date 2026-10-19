@@ -54,15 +54,6 @@ func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
 func choose_character(kind: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('choose_character', [kind], [&'u8'], &'')
 
-## 0. tree_id: int [br]
-## 1. active: bool [br]
-func chop(tree_id: int, active: bool) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('chop', [tree_id, active], [&'u64', &'bool'], &'')
-
-
-func chop_stop() -> SpacetimeDBReducerCall:
-	return _client.call_reducer('chop_stop', [], [], &'')
-
 ## 0. world_id: int [br]
 ## 1. code: String [br]
 func claim_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
@@ -76,6 +67,19 @@ func compat_generation_1() -> SpacetimeDBReducerCall:
 ## 1. qty: int [br]
 func consume_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('consume_item', [item_id, qty], [&'u64', &'u32'], &'')
+
+## 0. station_id: int [br]
+## 1. recipe_id: int [br]
+## 2. active: bool [br]
+func craft(station_id: int, recipe_id: int, active: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('craft', [station_id, recipe_id, active], [&'u64', &'u32', &'bool'], &'')
+
+## 0. station_id: int [br]
+## 1. recipe_id: int [br]
+## 2. active: bool [br]
+## 3. part: int [br]
+func craft_with(station_id: int, recipe_id: int, active: bool, part: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('craft_with', [station_id, recipe_id, active, part], [&'u64', &'u32', &'bool', &'u32'], &'')
 
 ## 0. world_id: int [br]
 ## 1. kind: int [br]
@@ -121,6 +125,16 @@ func end_interact() -> SpacetimeDBReducerCall:
 ## 0. actor_id: int [br]
 func end_interact_as(actor_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('end_interact_as', [actor_id], [&'u64'], &'')
+
+## 0. board_id: int [br]
+## 1. order_id: int [br]
+func fill_order(board_id: int, order_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('fill_order', [board_id, order_id], [&'u64', &'u64'], &'')
+
+## 0. node_id: int [br]
+## 1. active: bool [br]
+func gather(node_id: int, active: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('gather', [node_id, active], [&'u64', &'bool'], &'')
 
 ## 0. entity_id: int [br]
 ## 1. item_def_id: int [br]
@@ -346,6 +360,10 @@ func use_ability_as(actor_id: int, ability_id: int, target_id: int, aim: Vector3
 ## 4. view_delay_ms: int [br]
 func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_id: int, view_delay_ms: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability_seen', [ability_id, target_id, aim, predicted_id, view_delay_ms], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32', &'u32'], &'')
+
+
+func work_stop() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('work_stop', [], [], &'')
 
 ## 0. world_id: int [br]
 ## 1. writes: Array of UmfBodyWrite [br]

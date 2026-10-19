@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Script" path="res://game/regents/skilling/woodcutting/chop_params.gd" id="2_params"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/woodcutting.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/logs.tres" id="4_yield"]
+[ext_resource type="Resource" path="res://game/regents/content/item/birds_nest.tres" id="5_rare"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/CommonTree_1.gltf" id="m0"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/CommonTree_2.gltf" id="m1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/CommonTree_3.gltf" id="m2"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("2_params")
+display_name = "Tree"
+duration_ms = 10000
+swing_ms = 300
+stagger_ms = 800
+branch_permille = 400
+safe_segments = 2
+target_chops = 20
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("3_skill")
+tier = 1
+minigame = SubResource("Round")
+yield_item = ExtResource("4_yield")
+tool_tag = &"axe"
+min_tool_tier = 1
+min_rank = 1
+xp = 10
+afk_ms_per_item = 4000
+deplete_permille = 250
+regrow_s = 30.0
+rare_item = ExtResource("5_rare")
+rare_permille = 5
+models = Array[PackedScene]([ExtResource("m0"), ExtResource("m1"), ExtResource("m2")])
+model_scale = 1.0
+depleted = 0
+depleted_color = Color(0.48, 0.34, 0.20, 1)
+id = 40001
+display_name = "Tree"
+designer_notes = "Woodcutting tier 1: needs woodcutting rank 1 and a axe of tier 1. Its round is played in the skilling lab."

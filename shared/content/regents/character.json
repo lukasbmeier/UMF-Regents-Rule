@@ -17,7 +17,16 @@
 			"id": 40002,
 			"kind": 100,
 			"movement": -1,
-			"name": "Tree",
+			"name": "Gathering node",
+			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "",
+			"id": 40003,
+			"kind": 101,
+			"movement": -1,
+			"name": "Station",
 			"playable": false
 		}
 	],

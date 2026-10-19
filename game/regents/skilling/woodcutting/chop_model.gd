@@ -24,10 +24,10 @@ const SIDE_RIGHT: int = BRANCH_RIGHT
 const IGNORED: int = 0   # outside the round, out of order, mid-swing or staggered: nothing happens
 const CLEAN: int = 1     # the bottom piece is off; the trunk dropped one piece
 const HIT: int = 2       # a branch on that side: no chop, staggered
+const HELD: int = 3      # pressed mid-swing: held, and swung the moment the swing ends (the latest press wins)
 
 ## Pieces of trunk generated beyond the most a round can chop, for the view above the cut.
 const VIEW_SEGMENTS: int = 8
-const M32: int = 0xFFFFFFFF
 
 var params: ChopParams
 ## Every piece of trunk, bottom first: BRANCH_NONE, BRANCH_LEFT or BRANCH_RIGHT.
@@ -44,6 +44,16 @@ var best_combo: int = 0
 var next_ok_ms: int = 0
 ## The latest input's time: an earlier one after it is out of order.
 var last_t_ms: int = -1
+## Whether `next_ok_ms` is a stagger (a press then is lost) rather than a swing (a press then is held).
+var staggered: bool = false
+## A press held through a swing: whether there is one, when it lands (the swing's end) and its side.
+var held: bool = false
+var held_at_ms: int = 0
+var held_side: int = 0
+## Swings landed, counted, and the latest's outcome and time: the live view follows these.
+var acts: int = 0
+var last_act: int = IGNORED
+var last_act_ms: int = 0
 
 
 ## A round of tree `p` from `seed_value`.
@@ -82,26 +92,61 @@ func head_branch() -> int:
 	return segments[cut + 1] if cut + 1 < segments.size() else BRANCH_NONE
 
 
-## One swing at `t_ms` (milliseconds since the round began) from side `at_side`. Returns what it did.
+## One press at `t_ms` (milliseconds since the round began) from side `at_side`. Returns what it did.
+## Mid-swing it is HELD and swung the moment the swing ends (a later press replaces it); while
+## staggered it is lost. So quick side switches never drop a press (owner, 2026-10-19).
 func chop(t_ms: int, at_side: int) -> int:
 	if t_ms < last_t_ms:
 		return IGNORED
 	last_t_ms = t_ms
-	if t_ms < 0 or t_ms > params.duration_ms or t_ms < next_ok_ms:
+	settle(t_ms)
+	if t_ms < 0 or t_ms > params.duration_ms:
 		return IGNORED
 	if at_side != SIDE_LEFT and at_side != SIDE_RIGHT:
 		return IGNORED
+	if t_ms < next_ok_ms:
+		if staggered:
+			return IGNORED
+		held = true
+		held_at_ms = next_ok_ms
+		held_side = at_side
+		return HELD
+	return _swing(t_ms, at_side)
+
+
+## Swing a held press whose swing ended by `t_ms`. Returns what it did (IGNORED: nothing landed).
+func settle(t_ms: int) -> int:
+	if not held or held_at_ms > t_ms:
+		return IGNORED
+	held = false
+	if held_at_ms > params.duration_ms:
+		return IGNORED
+	return _swing(held_at_ms, held_side)
+
+
+## The round to its end: a press still held swings if its swing ends in time.
+func finish() -> void:
+	settle(params.duration_ms)
+
+
+func _swing(t_ms: int, at_side: int) -> int:
 	side = at_side
+	acts += 1
+	last_act_ms = t_ms
 	if head_branch() == at_side:
 		hits += 1
 		combo = 0
 		next_ok_ms = t_ms + params.stagger_ms
+		staggered = true
+		last_act = HIT
 		return HIT
 	cut += 1
 	clean += 1
 	combo += 1
 	best_combo = maxi(best_combo, combo)
 	next_ok_ms = t_ms + params.swing_ms
+	staggered = false
+	last_act = CLEAN
 	return CLEAN
 
 
@@ -122,19 +167,14 @@ static func play(seed_value: int, p: ChopParams, inputs: PackedInt32Array) -> Di
 	while i + 1 < inputs.size():
 		m.chop(inputs[i], inputs[i + 1])
 		i += 2
+	m.finish()
 	return m.result()
 
 
-# challenge.rs's xorshift32 and its seed fold (ChallengeModel has the same): every shift masked to 32
-# bits, since GDScript's `>>` on a negative int is arithmetic and Rust's on a u64 is logical.
+# The shared generator (SkillRandom: challenge.rs's xorshift32), kept under these names for the tests.
 static func _next_u32(state: int) -> int:
-	var x: int = state & M32
-	x = (x ^ ((x << 13) & M32)) & M32
-	x = x ^ (x >> 17)
-	x = (x ^ ((x << 5) & M32)) & M32
-	return x
+	return SkillRandom.next_u32(state)
 
 
 static func _seed_state(seed_value: int) -> int:
-	var s: int = ((seed_value & M32) ^ ((seed_value >> 32) & M32)) & M32
-	return 1 if s == 0 else s
+	return SkillRandom.seed_state(seed_value)

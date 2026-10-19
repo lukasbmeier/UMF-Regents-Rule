@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 100
+part_tag = &"handle"
+handle_quality_pm = 150
+color = Color(0.55, 0.38, 0.20, 1)
+description = "A heavy oak handle: a sturdier tool (+15 quality)."
+id = 40016
+display_name = "Oak handle"

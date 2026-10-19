@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/workbench/recipe_workbench.gd" id="1_bench"]
+
+[sub_resource type="PlaneMesh" id="Floor_mesh"]
+size = Vector2(30, 30)
+
+[sub_resource type="StandardMaterial3D" id="Floor_mat"]
+albedo_color = Color(0.32, 0.34, 0.36, 1)
+
+[node name="RecipeWorkbench" type="Node3D"]
+script = ExtResource("1_bench")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("Floor_mesh")
+surface_material_override/0 = SubResource("Floor_mat")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 6, 0)
+shadow_enabled = true
+
+[node name="ThumbnailCamera" type="Camera3D" parent="."]
+transform = Transform3D(0.707, -0.29, 0.645, 0, 0.912, 0.41, -0.707, -0.29, 0.645, 3.6, 2.8, 2.2)
+fov = 50.0

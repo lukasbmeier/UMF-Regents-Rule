@@ -50,31 +50,63 @@ def branches(seed, p, n):
     return out
 
 
-def play(seed, p, inputs):
-    seg = branches(seed, p, max_chops(p) + 2 + VIEW_SEGMENTS)
-    cut, side, clean, hits, combo, best, next_ok, last_t = 0, LEFT, 0, 0, 0, 0, 0, -1
-    for t, s in inputs:
-        if t < last_t:
-            continue
-        last_t = t
-        if t < 0 or t > p["duration_ms"] or t < next_ok:
-            continue
-        if s not in (LEFT, RIGHT):
-            continue
-        side = s
-        head = seg[cut + 1] if cut + 1 < len(seg) else NONE
+class Chop:
+    """A press during a swing is HELD (the latest one) and lands the moment the swing ends; a press while
+    staggered is lost."""
+
+    def __init__(self, seed, p):
+        self.p = p
+        self.seg = branches(seed, p, max_chops(p) + 2 + VIEW_SEGMENTS)
+        self.cut = self.clean = self.hits = self.combo = self.best = 0
+        self.next_ok, self.last_t, self.staggered, self.held = 0, -1, False, None
+
+    def act(self, t, s):
+        head = self.seg[self.cut + 1] if self.cut + 1 < len(self.seg) else NONE
         if head == s:
-            hits += 1
-            combo = 0
-            next_ok = t + p["stagger_ms"]
-            continue
-        cut += 1
-        clean += 1
-        combo += 1
-        best = max(best, combo)
-        next_ok = t + p["swing_ms"]
-    score = min(1000, clean * 1000 // p["target_chops"])
-    return {"clean": clean, "hits": hits, "best_combo": best, "score_pm": score}, seg
+            self.hits += 1
+            self.combo = 0
+            self.next_ok, self.staggered = t + self.p["stagger_ms"], True
+            return 2
+        self.cut += 1
+        self.clean += 1
+        self.combo += 1
+        self.best = max(self.best, self.combo)
+        self.next_ok, self.staggered = t + self.p["swing_ms"], False
+        return 1
+
+    def settle(self, t):
+        if self.held is not None and self.held[0] <= t:
+            at, s = self.held
+            self.held = None
+            if at <= self.p["duration_ms"]:
+                return self.act(at, s)
+        return 0
+
+    def chop(self, t, s):
+        if t < self.last_t:
+            return 0
+        self.last_t = t
+        self.settle(t)
+        if t < 0 or t > self.p["duration_ms"] or s not in (LEFT, RIGHT):
+            return 0
+        if t < self.next_ok:
+            if self.staggered:
+                return 0
+            self.held = (self.next_ok, s)
+            return 3
+        return self.act(t, s)
+
+    def result(self):
+        self.settle(self.p["duration_ms"])
+        return {"clean": self.clean, "hits": self.hits, "best_combo": self.best,
+                "score_pm": min(1000, self.clean * 1000 // self.p["target_chops"])}
+
+
+def play(seed, p, inputs):
+    m = Chop(seed, p)
+    for t, s in inputs:
+        m.chop(t, s)
+    return m.result(), m.seg
 
 
 def perfect(seed, p):
@@ -123,6 +155,12 @@ def main():
         perfect(31337, params(branch_permille=620, target_chops=28, swing_ms=220, stagger_ms=1000)))
     add("the round's last millisecond and after", 11, params(branch_permille=0, duration_ms=1000, swing_ms=100),
         [[1000, LEFT], [1001, LEFT], [999, RIGHT]])
+    add("quick side switches: presses mid-swing land when it ends", 2024, params(branch_permille=0),
+        [[k * 120, LEFT if k % 2 == 0 else RIGHT] for k in range(60)])
+    add("a press mid-swing after a stagger is lost; the latest held press wins", 77, params(branch_permille=700),
+        [[0, LEFT], [40, RIGHT], [90, LEFT], [400, RIGHT], [450, LEFT], [460, RIGHT], [2000, LEFT], [2100, RIGHT]])
+    add("a press held past the round's end never lands", 12, params(branch_permille=0, duration_ms=1000, swing_ms=300),
+        [[0, LEFT], [300, LEFT], [600, LEFT], [900, RIGHT], [950, LEFT]])
     add("nothing pressed", 42, p, [])
 
     here = os.path.dirname(os.path.abspath(__file__))

@@ -171,6 +171,26 @@ mine, smelt, smith a weapon, fight a wolf with it), ahead of §12's combat-first
   `active_yield_mult` x the round's score** (owner, #23): a good round beats AFK, a poor one falls short.
   **At a node, tap E to work it AFK; hold E to open its minigame** (owner, 2026-10-18). No separate
   meter for active play yet.
+- **The chain's minigames** (owner, 2026-10-19): **mining is crack the rock** (weak points glow
+  briefly on a 2D rock face; strike them before they fade, solid rock jars the pick; the rock splits);
+  **smelting is bellows, then pour** (keep the heat in a drifting band, then pour the crucible to the
+  line); **smithing is shape to the outline** (strike where the hot bar bulges past the part's
+  silhouette; the closer the match, the better the part). Built as one chain before the next playtest:
+  mine, smelt, smith a head, carve a handle from logs, assemble a better axe. Trees and rocks are one
+  content type, a gathering node that names its skill and its minigame (and so a tier band its own).
+- **After the first chain playtest** (owner, 2026-10-19, fifth pass): no press is ever dropped (a press
+  mid-swing is held and lands when the swing ends; the bellows take every press, the pour waits a moment
+  and may top up); **mining is FOLLOW THE SEAM** (a faint crack outline, strike its notches in order,
+  replacing glowing weak points); ore to bar is never 1:1 (2:1, tuned on the recipe bench); **oak and yew
+  become handles** (the handle's wood is the tool's trait: oak quality, yew speed), bows and staves later;
+  **crafting keeps pace with gathering** by all four of: XP for the work in the inputs, variety (a repeated
+  recipe wears stale), a first-make bonus, and rotating work orders. Next after these: **combat**.
+- **Combat, first shape** (owner, 2026-10-19): **hybrid** control (aimed light and heavy attacks, a dodge
+  roll, a block, plus two or three skill-bar abilities aimed at the crosshair), with **Tab (or a click)
+  picking a target shown by a ring under it**, for reference, not auto-aim; **abilities come from the
+  weapon type** (the weapon is the kit), unlocked at mastery 1/3/6/9, the smithed handle or hilt adding a
+  trait (#22 settled); the first slice is a **training dummy and wild creatures** (PvE, drops, respawns)
+  with an **iron sword** (smithed like the axe), a **yew bow** and **the axe as a weapon**.
 - **Gear is modular, Tinkers'-style**: weapons and tools are crafted, not dropped whole, from a **core**
   (axe head, blade: base stats and tier) and a **handle or hilt** (its trait or combat ability). **Gear
   gains XP through use.** **Durability and repair** are the material sink; ways to lose gear (PvP,

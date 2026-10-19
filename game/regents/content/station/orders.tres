@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StationDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/station_def.gd" id="1_station"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Stall_Empty.gltf" id="p0"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Parchment.gltf" id="p1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Scroll_1.gltf" id="p2"]
+
+[resource]
+script = ExtResource("1_station")
+key = &"orders"
+pieces = Array[PackedScene]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+piece_transforms = Array[Transform3D]([Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 1.0, 0.2), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1.0, 0.2)])
+glow_color = Color(0, 0, 0, 0)
+body_size = Vector3(0, 0, 0)
+body_color = Color(0.4, 0.4, 0.4, 1)
+id = 40004
+display_name = "Order board"

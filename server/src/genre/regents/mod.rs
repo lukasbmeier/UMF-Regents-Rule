@@ -1,28 +1,40 @@
-//! REGENT'S RULE'S PURE RULES (docs/regents_rule/RULE_DESIGN.md). No `spacetimedb` dependency, so
+//! REGENT'S RULE'S PURE RULES (docs/regents_rule/RULE_DESIGN.md §7.4). No `spacetimedb` dependency, so
 //! native tests check them (`server/tests/regents.rs`); `game/regents.rs` applies them: the skilling
-//! loop's numbers, what a round or an AFK log yields, and the rolls that decide rares and felling.
+//! chain's content (compiled in from game/regents/content/ by `server/build/regents.rs`), its four
+//! minigames' replays, mastery ranks, a tool's speed, what a round or an AFK item yields, and the rolls.
 
 pub mod chop;
+pub mod crack;
+pub mod rng;
+pub mod shape;
+pub mod smelt;
 
-/// A tree to chop (`TreeSeed`, from its `TreeDef`): an entity of this kind (`content/character/tree.tres`).
-pub const ENTITY_TREE: u8 = 100;
-/// A round of woodcutting's branch dodge: the challenge a held E deals.
+/// A gathering node (a tree, a rock: `NodeSeed`), an entity of this kind (`content/character/node.tres`).
+pub const ENTITY_NODE: u8 = 100;
+/// A station (a furnace, an anvil, a workbench: `StationSeed`).
+pub const ENTITY_STATION: u8 = 101;
+/// The challenge kinds the minigames are dealt as (`SkillMinigames.CHALLENGE` on the client).
 pub const CHALLENGE_CHOP: u8 = 100;
-/// A tree that fell: a stump until it grows back (`content/status/felled.tres`).
-pub const STATUS_FELLED: u8 = 100;
+pub const CHALLENGE_CRACK: u8 = 101;
+pub const CHALLENGE_SMELT: u8 = 102;
+pub const CHALLENGE_SHAPE: u8 = 103;
+/// A node worked out: a stump, rubble, until it comes back (`content/status/depleted.tres`).
+pub const STATUS_DEPLETED: u8 = 100;
 /// The frontier glade (`game/regents/levels/frontier.tscn`, its `LevelInfo`).
 pub const LEVEL_FRONTIER: u8 = 20;
-/// A level point's kind for a tree; its first tag names its TreeDef (case does not matter).
-pub const TREE_POINT: &str = "tree";
-/// What a tool works: an axe fells trees.
-pub const TOOL_AXE: &str = "axe";
-/// The axe a new player starts with (`content/item/bronze_axe.tres`).
-pub const STARTER_AXE: u32 = 40001;
+/// A level point's kinds; its first tag names the node (by name) or the station (by key), any case.
+pub const NODE_POINT: &str = "node";
+pub const STATION_POINT: &str = "station";
+/// The order board's station key (`content/station/`), and how many orders it shows.
+pub const ORDER_BOARD: &str = "orders";
+pub const ORDER_SLOTS: u32 = 3;
+/// What a new character is given, once (`content/item/`): a Bronze axe and a Bronze pickaxe.
+pub const STARTER_KIT: &[u32] = &[40001, 40006];
 
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     name: "regents",
-    challenge_kinds: &[CHALLENGE_CHOP],
-    entity_kinds: &[ENTITY_TREE],
+    challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE],
+    entity_kinds: &[ENTITY_NODE, ENTITY_STATION],
     phases: &[],
     session_kinds: &[],
 };
@@ -35,22 +47,173 @@ pub struct ItemSeed {
     pub max_stack: u32,
     pub tool_tag: &'static str,
     pub tool_tier: u32,
+    pub tool_speed_pct: u32,
+    /// A part's kind ("handle"): a recipe's part slot takes any item of the same kind.
+    pub part_tag: &'static str,
+    /// As a tool's handle: its swing (percent) and the quality it adds (thousandths).
+    pub handle_speed_pct: u32,
+    pub handle_quality_pm: u32,
 }
 
-/// A tree, as the server keeps it (`TreeDef`).
+/// A skill (`SkillDef`): XP to reach each rank from 2 up.
 #[derive(Debug)]
-pub struct TreeSeed {
+pub struct SkillSeed {
+    pub id: u32,
+    pub key: &'static str,
+    pub name: &'static str,
+    pub xp_to_rank: &'static [u32],
+}
+
+/// Smithing's shape params as content keeps them (its outline a static slice).
+#[derive(Debug)]
+pub struct ShapeSeed {
+    pub duration_ms: i64,
+    pub swing_ms: i64,
+    pub heat_ms: i64,
+    pub reheat_ms: i64,
+    pub start_height: i64,
+    pub start_jitter: i64,
+    pub hammer_drop: i64,
+    pub spread_pct: i64,
+    pub outline: &'static [i64],
+    pub error_scale: i64,
+}
+
+impl ShapeSeed {
+    pub fn params(&self) -> shape::ShapeParams {
+        shape::ShapeParams {
+            duration_ms: self.duration_ms,
+            swing_ms: self.swing_ms,
+            heat_ms: self.heat_ms,
+            reheat_ms: self.reheat_ms,
+            start_height: self.start_height,
+            start_jitter: self.start_jitter,
+            hammer_drop: self.hammer_drop,
+            spread_pct: self.spread_pct,
+            outline: self.outline.to_vec(),
+            error_scale: self.error_scale,
+        }
+    }
+}
+
+/// A node's or a recipe's round (`SkillMinigames` on the client).
+#[derive(Debug)]
+pub enum Minigame {
+    None,
+    Chop(chop::ChopParams),
+    Crack(crack::CrackParams),
+    Smelt(smelt::SmeltParams),
+    Shape(ShapeSeed),
+}
+
+impl Minigame {
+    /// The challenge kind it is dealt as (0: none).
+    pub fn challenge_kind(&self) -> u8 {
+        match self {
+            Minigame::None => 0,
+            Minigame::Chop(_) => CHALLENGE_CHOP,
+            Minigame::Crack(_) => CHALLENGE_CRACK,
+            Minigame::Smelt(_) => CHALLENGE_SMELT,
+            Minigame::Shape(_) => CHALLENGE_SHAPE,
+        }
+    }
+
+    /// How long a round lasts.
+    pub fn duration_ms(&self) -> i64 {
+        match self {
+            Minigame::None => 0,
+            Minigame::Chop(p) => p.duration_ms,
+            Minigame::Crack(p) => p.duration_ms,
+            Minigame::Smelt(p) => p.heat_ms + p.pour_ms,
+            Minigame::Shape(p) => p.duration_ms,
+        }
+    }
+
+    /// A round REPLAYED from what the client sent, at tool speed `speed_pct` (a gathering round's swing:
+    /// `SkillMinigames.with_speed`): its score in thousandths, or None when the submission is not a round.
+    pub fn score(&self, seed: u64, speed_pct: i64, result: &[f32]) -> Option<i64> {
+        let groups = (self.duration_ms() / 50 + 64) as usize;
+        let swing = |s: i64| (s * speed_pct / 100).max(50);
+        match self {
+            Minigame::None => None,
+            Minigame::Chop(p) => {
+                let p = chop::ChopParams { swing_ms: swing(p.swing_ms), ..*p };
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i32)> = ins.iter().map(|g| (g[0], g[1] as i32)).collect();
+                Some(chop::play(seed, &p, &ins).score_pm)
+            }
+            Minigame::Crack(p) => {
+                let p = crack::CrackParams { swing_ms: swing(p.swing_ms), ..*p };
+                let ins = rng::decode_groups(result, 3, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64, i64)> = ins.iter().map(|g| (g[0], g[1], g[2])).collect();
+                Some(crack::play(seed, &p, &ins).score_pm)
+            }
+            Minigame::Smelt(p) => {
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
+                Some(smelt::play(seed, p, &ins).score_pm)
+            }
+            Minigame::Shape(s) => {
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
+                Some(shape::play(seed, &s.params(), &ins).score_pm)
+            }
+        }
+    }
+}
+
+/// A gathering node (`NodeDef`).
+#[derive(Debug)]
+pub struct NodeSeed {
     pub id: u32,
     pub name: &'static str,
+    pub skill: u32,
     pub tier: u32,
-    pub chop: chop::ChopParams,
-    pub log_item: u32,
-    pub min_axe_tier: u32,
-    pub afk_ms_per_log: u32,
-    pub fell_permille: u32,
+    pub minigame: Minigame,
+    pub yield_item: u32,
+    pub tool_tag: &'static str,
+    pub min_tool_tier: u32,
+    pub min_rank: u32,
+    pub xp: u32,
+    pub afk_ms: u32,
+    pub deplete_permille: u32,
     pub regrow_ms: u32,
     pub rare_item: u32,
     pub rare_permille: u32,
+}
+
+/// A station (`StationDef`).
+#[derive(Debug)]
+pub struct StationSeed {
+    pub id: u32,
+    pub key: &'static str,
+    pub name: &'static str,
+}
+
+/// Where a recipe's output's quality comes from (`RecipeDef.Quality`).
+pub const QUALITY_NONE: u8 = 0;
+pub const QUALITY_FROM_ROUND: u8 = 1;
+pub const QUALITY_FROM_INPUTS: u8 = 2;
+
+/// A recipe (`RecipeDef`).
+#[derive(Debug)]
+pub struct RecipeSeed {
+    pub id: u32,
+    pub name: &'static str,
+    pub station: &'static str,
+    pub skill: u32,
+    pub inputs: &'static [(u32, u32)],
+    pub output: u32,
+    pub output_qty: u32,
+    pub xp: u32,
+    pub min_rank: u32,
+    pub afk_ms: u32,
+    pub minigame: Minigame,
+    pub quality: u8,
+    pub afk_quality: u32,
+    /// The input that is the tool's HANDLE (-1: none): any item of that input's `part_tag` may take its
+    /// place, at the player's choice, and its trait goes on the tool.
+    pub part_slot: i32,
 }
 
 include!(concat!(env!("OUT_DIR"), "/regents_data.rs"));
@@ -59,13 +222,65 @@ pub fn item(id: u32) -> Option<&'static ItemSeed> {
     ITEMS.iter().find(|i| i.id == id)
 }
 
-pub fn tree(id: u32) -> Option<&'static TreeSeed> {
-    TREES.iter().find(|t| t.id == id)
+pub fn skill(id: u32) -> Option<&'static SkillSeed> {
+    SKILLS.iter().find(|s| s.id == id)
 }
 
-/// The tree a level point names (its first tag, any case), or None.
-pub fn tree_named(name: &str) -> Option<&'static TreeSeed> {
-    TREES.iter().find(|t| t.name.eq_ignore_ascii_case(name))
+pub fn node(id: u32) -> Option<&'static NodeSeed> {
+    NODES.iter().find(|n| n.id == id)
+}
+
+pub fn recipe(id: u32) -> Option<&'static RecipeSeed> {
+    RECIPES.iter().find(|r| r.id == id)
+}
+
+/// The node a level point names (its first tag, any case), or None.
+pub fn node_named(name: &str) -> Option<&'static NodeSeed> {
+    NODES.iter().find(|n| n.name.eq_ignore_ascii_case(name))
+}
+
+/// The station a level point names (its first tag: a key, any case), or None.
+pub fn station_keyed(key: &str) -> Option<&'static StationSeed> {
+    STATIONS.iter().find(|s| s.key.eq_ignore_ascii_case(key))
+}
+
+/// The rank `xp` reaches in skill `s` (1 with none).
+pub fn rank_of(s: &SkillSeed, xp: u32) -> u32 {
+    1 + s.xp_to_rank.iter().filter(|need| xp >= **need).count() as u32
+}
+
+/// How long work takes, in percent of the base: the tool's speed, up to a tenth off for its quality
+/// (thousandths), and 3 % off per rank above the first (at most 27 %). Never under 10 %.
+pub fn speed_pct(tool_speed_pct: u32, quality_pm: u32, rank: u32) -> u32 {
+    let q = quality_pm.min(1000) as u64;
+    let with_quality = tool_speed_pct as u64 * (10_000 - q) / 10_000;
+    let rank_off = (3 * rank.saturating_sub(1)).min(27) as u64;
+    ((with_quality * (100 - rank_off) / 100) as u32).max(10)
+}
+
+/// AFK's interval at speed `speed_pct`.
+pub fn afk_interval_ms(afk_ms: u32, speed_pct: u32) -> u32 {
+    (afk_ms as u64 * speed_pct as u64 / 100).max(100) as u32
+}
+
+/// How much a round yields, in thousandths: what AFK makes in the round's time (at its interval),
+/// times `active_mult`, times the round's score (owner, 2026-10-18, design #23: a poor round falls short).
+pub fn active_yield_milli(afk_interval_ms: u32, round_ms: i64, active_mult: f64, score_pm: i64) -> u64 {
+    let afk_milli = round_ms as f64 * 1000.0 / afk_interval_ms.max(1) as f64;
+    (afk_milli * active_mult * score_pm.clamp(0, 1000) as f64 / 1000.0).floor().max(0.0) as u64
+}
+
+/// Thousandths of an item into whole items: the whole part, and one more when `roll` (0..1000) falls
+/// under the fraction.
+pub fn whole_items(milli: u64, roll: u32) -> u32 {
+    (milli / 1000) as u32 + u32::from(((milli % 1000) as u32) > roll)
+}
+
+/// One gathered item's outcome: whether it brings the node's rare find (its chance, times `rare_mult`
+/// when played) and whether it is the last (the node is worked out), from two rolls.
+pub fn item_outcome(n: &NodeSeed, rare_mult: f64, rare_roll: u32, deplete_roll: u32) -> (bool, bool) {
+    let rare_pm = (n.rare_permille as f64 * rare_mult).round() as u32;
+    (n.rare_item != 0 && rare_roll < rare_pm, deplete_roll < n.deplete_permille)
 }
 
 /// A roll: a number 0..1000 from `salt` (splitmix64), so a result is reproducible in a test and still
@@ -78,23 +293,93 @@ pub fn roll_permille(salt: u64) -> u32 {
     (z % 1000) as u32
 }
 
-/// How many logs an active round yields, in thousandths of a log: what AFK makes in the round's time,
-/// times `active_mult`, times the round's score (owner, 2026-10-18, design #23: a poor round falls
-/// short of AFK).
-pub fn active_yield_milli(t: &TreeSeed, active_mult: f64, score_pm: i64) -> u64 {
-    let afk_milli = t.chop.duration_ms as f64 * 1000.0 / t.afk_ms_per_log as f64;
-    (afk_milli * active_mult * score_pm.clamp(0, 1000) as f64 / 1000.0).floor().max(0.0) as u64
+/// An item's quality in thousandths, from its row's `instance_data` (`{"q":734}`); None for none.
+pub fn quality_of(instance_data: &str) -> Option<u32> {
+    field_of(instance_data, "q").map(|q| q.min(1000))
 }
 
-/// Thousandths of a log into whole logs: the whole part, and one more when `roll` (0..1000) falls under
-/// the fraction.
-pub fn whole_logs(milli: u64, roll: u32) -> u32 {
-    (milli / 1000) as u32 + u32::from(((milli % 1000) as u32) > roll)
+/// The handle a made tool was assembled with (an item id), from its `instance_data` (`"h":N`).
+pub fn handle_of(instance_data: &str) -> Option<u32> {
+    field_of(instance_data, "h")
 }
 
-/// One log's outcome: whether it brings the rare find (its chance, times `rare_mult` when played) and
-/// whether it is the last (the tree falls), from two rolls.
-pub fn log_outcome(t: &TreeSeed, rare_mult: f64, rare_roll: u32, fell_roll: u32) -> (bool, bool) {
-    let rare_pm = (t.rare_permille as f64 * rare_mult).round() as u32;
-    (t.rare_item != 0 && rare_roll < rare_pm, fell_roll < t.fell_permille)
+fn field_of(instance_data: &str, key: &str) -> Option<u32> {
+    let at = instance_data.find(&format!("\"{key}\":"))? + key.len() + 3;
+    let digits: String = instance_data[at..].trim_start().chars().take_while(|c| c.is_ascii_digit()).collect();
+    digits.parse().ok()
+}
+
+/// The `instance_data` an item of quality `q` carries.
+pub fn quality_data(q: u32) -> String {
+    format!("{{\"q\":{}}}", q.min(1000))
+}
+
+/// The `instance_data` of a tool of quality `q` assembled with handle `handle` (an item id).
+pub fn tool_data(q: u32, handle: u32) -> String {
+    format!("{{\"q\":{},\"h\":{handle}}}", q.min(1000))
+}
+
+/// A tool's speed with its handle's trait (owner, 2026-10-19: the handle's wood is the tool's trait; a
+/// tool with no handle on record, like the starter kit's, is as authored).
+pub fn tool_speed_with(tool: &ItemSeed, handle: Option<u32>) -> u32 {
+    let h = handle.and_then(item).map_or(100, |h| h.handle_speed_pct);
+    (tool.tool_speed_pct * h / 100).max(10)
+}
+
+/// The XP of the work that went into one `item_id`: a gathered item, its node's XP; a made one, its
+/// recipe's XP and its inputs' work, shared over the batch. The cheapest way to it counts; nothing makes
+/// it: 0. (Owner, 2026-10-19: crafting pays for the work in what it uses, so it keeps pace with gathering.)
+pub fn work_xp(item_id: u32) -> u32 {
+    work_xp_at(item_id, 0)
+}
+
+fn work_xp_at(item_id: u32, depth: u32) -> u32 {
+    if depth > 8 {
+        return 0;
+    }
+    let gathered = NODES.iter().filter(|n| n.yield_item == item_id).map(|n| n.xp);
+    let made = RECIPES.iter().filter(|r| r.output == item_id).map(|r| {
+        let ins: u32 = r.inputs.iter().map(|(i, q)| q * work_xp_at(*i, depth + 1)).sum();
+        (r.xp + ins) / r.output_qty.max(1)
+    });
+    gathered.chain(made).min().unwrap_or(0)
+}
+
+/// A batch of `r`'s XP before variety and first-make: its own XP plus `share_pct` of its inputs' work.
+pub fn craft_xp(r: &RecipeSeed, share_pct: u32) -> u32 {
+    let ins: u32 = r.inputs.iter().map(|(i, q)| q * work_xp(*i)).sum();
+    r.xp + ins * share_pct / 100
+}
+
+/// VARIETY (owner, 2026-10-19): a recipe's freshness (thousandths) `secs` seconds after it was last left
+/// at `fresh_pm`, recovering `recover_pm_per_min` a minute, never above 1000.
+pub fn freshness_now(fresh_pm: u32, secs: u32, recover_pm_per_min: u32) -> u32 {
+    (fresh_pm as u64 + secs as u64 * recover_pm_per_min as u64 / 60).min(1000) as u32
+}
+
+/// XP at freshness `fresh_pm`: full when fresh, down to `floor_pct` when worn out.
+pub fn xp_at_freshness(xp: u32, fresh_pm: u32, floor_pct: u32) -> u32 {
+    let floor_pm = floor_pct.min(100) * 10;
+    let mult_pm = floor_pm + (1000 - floor_pm) * fresh_pm.min(1000) / 1000;
+    (xp as u64 * mult_pm as u64 / 1000) as u32
+}
+
+/// What a round's challenge carries: "<target entity> <node or recipe> <speed %>".
+pub fn payload(target: u64, def_id: u32, speed_pct: u32) -> String {
+    format!("{target} {def_id} {speed_pct}")
+}
+
+/// A station round's payload with the part it is made with: "<target> <recipe> <speed %> <part item>".
+pub fn payload_with_part(target: u64, def_id: u32, speed_pct: u32, part: u32) -> String {
+    if part == 0 { payload(target, def_id, speed_pct) } else { format!("{target} {def_id} {speed_pct} {part}") }
+}
+
+/// The part a payload names (its fourth field), or 0.
+pub fn parse_part(payload: &str) -> u32 {
+    payload.split(' ').nth(3).and_then(|p| p.parse().ok()).unwrap_or(0)
+}
+
+pub fn parse_payload(payload: &str) -> Option<(u64, u32, u32)> {
+    let mut p = payload.split(' ');
+    Some((p.next()?.parse().ok()?, p.next()?.parse().ok()?, p.next()?.parse().ok()?))
 }

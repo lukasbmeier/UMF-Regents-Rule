@@ -6,6 +6,6 @@
 script = ExtResource("1_item")
 max_stack = 1000
 color = Color(0.62, 0.45, 0.28, 1)
-description = "Plain logs."
+description = "Plain logs: handles at the workbench."
 id = 40002
 display_name = "Logs"

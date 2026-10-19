@@ -24,7 +24,7 @@
   "points": [
     {
       "id": "tree_1",
-      "kind": "tree",
+      "kind": "node",
       "x": -9.0,
       "y": 0.0,
       "z": -6.0,
@@ -35,7 +35,7 @@
     },
     {
       "id": "tree_2",
-      "kind": "tree",
+      "kind": "node",
       "x": -3.0,
       "y": 0.0,
       "z": -11.0,
@@ -46,7 +46,7 @@
     },
     {
       "id": "tree_3",
-      "kind": "tree",
+      "kind": "node",
       "x": 5.0,
       "y": 0.0,
       "z": -8.0,
@@ -57,7 +57,7 @@
     },
     {
       "id": "tree_4",
-      "kind": "tree",
+      "kind": "node",
       "x": 11.0,
       "y": 0.0,
       "z": -14.0,
@@ -68,7 +68,7 @@
     },
     {
       "id": "tree_5",
-      "kind": "tree",
+      "kind": "node",
       "x": -12.0,
       "y": 0.0,
       "z": -16.0,
@@ -79,7 +79,7 @@
     },
     {
       "id": "tree_6",
-      "kind": "tree",
+      "kind": "node",
       "x": 2.0,
       "y": 0.0,
       "z": -19.0,
@@ -90,7 +90,7 @@
     },
     {
       "id": "tree_7",
-      "kind": "tree",
+      "kind": "node",
       "x": 8.0,
       "y": 0.0,
       "z": -24.0,
@@ -101,7 +101,7 @@
     },
     {
       "id": "tree_8",
-      "kind": "tree",
+      "kind": "node",
       "x": -6.0,
       "y": 0.0,
       "z": -24.0,
@@ -112,7 +112,7 @@
     },
     {
       "id": "oak_1",
-      "kind": "tree",
+      "kind": "node",
       "x": 20.0,
       "y": 0.0,
       "z": -10.0,
@@ -123,7 +123,7 @@
     },
     {
       "id": "oak_2",
-      "kind": "tree",
+      "kind": "node",
       "x": 27.0,
       "y": 0.0,
       "z": -16.0,
@@ -134,7 +134,7 @@
     },
     {
       "id": "oak_3",
-      "kind": "tree",
+      "kind": "node",
       "x": 22.0,
       "y": 0.0,
       "z": -24.0,
@@ -145,7 +145,7 @@
     },
     {
       "id": "oak_4",
-      "kind": "tree",
+      "kind": "node",
       "x": 31.0,
       "y": 0.0,
       "z": -27.0,
@@ -156,7 +156,7 @@
     },
     {
       "id": "oak_5",
-      "kind": "tree",
+      "kind": "node",
       "x": 17.0,
       "y": 0.0,
       "z": -32.0,
@@ -167,7 +167,7 @@
     },
     {
       "id": "yew_1",
-      "kind": "tree",
+      "kind": "node",
       "x": -25.0,
       "y": 0.0,
       "z": -30.0,
@@ -178,7 +178,7 @@
     },
     {
       "id": "yew_2",
-      "kind": "tree",
+      "kind": "node",
       "x": -32.0,
       "y": 0.0,
       "z": -36.0,
@@ -189,7 +189,7 @@
     },
     {
       "id": "yew_3",
-      "kind": "tree",
+      "kind": "node",
       "x": -22.0,
       "y": 0.0,
       "z": -41.0,
@@ -200,13 +200,156 @@
     },
     {
       "id": "yew_4",
-      "kind": "tree",
+      "kind": "node",
       "x": -35.0,
       "y": 0.0,
       "z": -26.0,
       "radius": 0.6,
       "tags": [
         "Yew"
+      ]
+    },
+    {
+      "id": "copper_1",
+      "kind": "node",
+      "x": 14.0,
+      "y": 0.0,
+      "z": 16.0,
+      "radius": 0.6,
+      "tags": [
+        "Copper rock"
+      ]
+    },
+    {
+      "id": "copper_2",
+      "kind": "node",
+      "x": 19.0,
+      "y": 0.0,
+      "z": 20.0,
+      "radius": 0.6,
+      "tags": [
+        "Copper rock"
+      ]
+    },
+    {
+      "id": "copper_3",
+      "kind": "node",
+      "x": 23.0,
+      "y": 0.0,
+      "z": 14.0,
+      "radius": 0.6,
+      "tags": [
+        "Copper rock"
+      ]
+    },
+    {
+      "id": "copper_4",
+      "kind": "node",
+      "x": 17.0,
+      "y": 0.0,
+      "z": 25.0,
+      "radius": 0.6,
+      "tags": [
+        "Copper rock"
+      ]
+    },
+    {
+      "id": "copper_5",
+      "kind": "node",
+      "x": 25.0,
+      "y": 0.0,
+      "z": 22.0,
+      "radius": 0.6,
+      "tags": [
+        "Copper rock"
+      ]
+    },
+    {
+      "id": "iron_1",
+      "kind": "node",
+      "x": -18.0,
+      "y": 0.0,
+      "z": 18.0,
+      "radius": 0.6,
+      "tags": [
+        "Iron rock"
+      ]
+    },
+    {
+      "id": "iron_2",
+      "kind": "node",
+      "x": -23.0,
+      "y": 0.0,
+      "z": 22.0,
+      "radius": 0.6,
+      "tags": [
+        "Iron rock"
+      ]
+    },
+    {
+      "id": "iron_3",
+      "kind": "node",
+      "x": -15.0,
+      "y": 0.0,
+      "z": 24.0,
+      "radius": 0.6,
+      "tags": [
+        "Iron rock"
+      ]
+    },
+    {
+      "id": "iron_4",
+      "kind": "node",
+      "x": -25.0,
+      "y": 0.0,
+      "z": 15.0,
+      "radius": 0.6,
+      "tags": [
+        "Iron rock"
+      ]
+    },
+    {
+      "id": "furnace",
+      "kind": "station",
+      "x": -6.0,
+      "y": 0.0,
+      "z": 14.0,
+      "radius": 1.0,
+      "tags": [
+        "furnace"
+      ]
+    },
+    {
+      "id": "anvil",
+      "kind": "station",
+      "x": -2.0,
+      "y": 0.0,
+      "z": 16.5,
+      "radius": 1.0,
+      "tags": [
+        "anvil"
+      ]
+    },
+    {
+      "id": "workbench",
+      "kind": "station",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 15.0,
+      "radius": 1.0,
+      "tags": [
+        "workbench"
+      ]
+    },
+    {
+      "id": "orders",
+      "kind": "station",
+      "x": 1.0,
+      "y": 0.0,
+      "z": 19.0,
+      "radius": 1.2,
+      "tags": [
+        "orders"
       ]
     }
   ]

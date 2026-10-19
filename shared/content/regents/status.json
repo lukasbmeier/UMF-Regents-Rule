@@ -12,7 +12,7 @@
 			"hittable": false,
 			"id": 40001,
 			"lasts_ms": 0,
-			"name": "Felled",
+			"name": "Depleted",
 			"speed": 0.0,
 			"status": 100,
 			"targetable": false,
