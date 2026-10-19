@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://game/regents/skilling/skilling_component.gd" id="2_skilling"]
 [ext_resource type="Script" path="res://game/regents/skilling/skilling_look.gd" id="3_look"]
+[ext_resource type="Script" path="res://game/regents/combat/combat_component.gd" id="4_combat"]
+[ext_resource type="Script" path="res://game/regents/combat/combat_look.gd" id="5_combat_look"]
+[ext_resource type="Script" path="res://game/regents/combat/hit_feedback_component.gd" id="6_hits"]
 
 [node name="Adventurer" instance=ExtResource("1_player")]
 
@@ -11,3 +14,12 @@ script = ExtResource("2_skilling")
 
 [node name="SkillingLook" type="Node" parent="Components"]
 script = ExtResource("3_look")
+
+[node name="Combat" type="Node" parent="Components"]
+script = ExtResource("4_combat")
+
+[node name="CombatLook" type="Node" parent="Components"]
+script = ExtResource("5_combat_look")
+
+[node name="HitFeedback" type="Node" parent="Components"]
+script = ExtResource("6_hits")

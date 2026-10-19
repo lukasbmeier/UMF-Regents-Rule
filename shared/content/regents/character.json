@@ -28,6 +28,15 @@
 			"movement": -1,
 			"name": "Station",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "",
+			"id": 40004,
+			"kind": 102,
+			"movement": -1,
+			"name": "Training dummy",
+			"playable": false
 		}
 	],
 	"owner": "regents",

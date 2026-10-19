@@ -42,6 +42,10 @@ func begin_interact(target_id: int, verb: int) -> SpacetimeDBReducerCall:
 func begin_interact_as(actor_id: int, target_id: int, verb: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('begin_interact_as', [actor_id, target_id, verb], [&'u64', &'u64', &'u8'], &'')
 
+## 0. on: bool [br]
+func block(on: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('block', [on], [&'bool'], &'')
+
 ## 0. challenge_id: int [br]
 func challenge_press(challenge_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('challenge_press', [challenge_id], [&'u64'], &'')
@@ -338,6 +342,10 @@ func submit_input(frames: Array[UmfInputFrame]) -> SpacetimeDBReducerCall:
 func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('teleport', [pos], [&'vector3[f32,f32,f32]'], &'')
 
+
+func unwield() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('unwield', [], [], &'')
+
 ## 0. ability_id: int [br]
 ## 1. target_id: int [br]
 ## 2. aim: Vector3 [br]
@@ -360,6 +368,10 @@ func use_ability_as(actor_id: int, ability_id: int, target_id: int, aim: Vector3
 ## 4. view_delay_ms: int [br]
 func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_id: int, view_delay_ms: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability_seen', [ability_id, target_id, aim, predicted_id, view_delay_ms], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32', &'u32'], &'')
+
+## 0. item_row: int [br]
+func wield(item_row: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('wield', [item_row], [&'u64'], &'')
 
 
 func work_stop() -> SpacetimeDBReducerCall:

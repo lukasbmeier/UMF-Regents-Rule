@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 1200
+range_m = 2.0
+wind_up_ms = 450
+damage = 24.0
+animation = &"attack.sword_heavy"
+key = &"regents.combat"
+judged = true
+reach_m = 2.0
+radius_m = 0.55
+height_m = 0.9
+lunges = false
+id = 40004
+display_name = "Heavy cut"
+designer_notes = "Hold the left button: a slow, heavy cut. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."

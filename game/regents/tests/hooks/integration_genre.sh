@@ -197,8 +197,58 @@ assert_rejected "gather $TREE3 false" "need an axe" "with no axe, nothing is cho
 assert_eq "$(qty_of 40001)" "0" "and the starter kit is not handed out again (once per character)"
 assert_ok "grant_item $MYENT 40001 1" "an admin gives the axe back"
 
+# --- combat: the weapon is the kit; the training dummy ---
+C_AIM='{"x":0.0,"y":0.0,"z":-1.0}'
+assert_eq "$(row_count 'SELECT * FROM dummy WHERE world_id = 0')" "2" "two training dummies at camp"
+DUMMY="$(sql_first "SELECT entity_id FROM dummy WHERE point_id = 'dummy_1'" 1)"
+assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $DUMMY" 1)" "500" "a dummy has 500 health (regents.dummy_hp)"
+assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = $DUMMY" 1)" "\"stand\"" "and a stand-still brain (so the referee counts it as someone to hit)"
+assert_ok 'teleport {"x":7.0,"y":0.0,"z":21.5}' "stand by the dummy"
+AXE_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40001" 1)"
+PICK_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)"
+assert_rejected "use_ability_seen 40006 0 $C_AIM 901 100" "wield an axe first" "nothing wielded: an axe's chop is refused"
+assert_rejected "wield $PICK_ROW" "is no weapon" "a pickaxe is no weapon"
+assert_rejected "wield 999999" "not in your bag" "nor is what is not in the bag"
+assert_ok "wield $AXE_ROW" "wield the bronze axe"
+assert_eq "$(sql_first "SELECT kit FROM wielded WHERE entity_id = $MYENT" 1)" "\"axe\"" "it fights with the axe kit"
+assert_rejected "use_ability_seen 40001 0 $C_AIM 902 100" "that is a sword move" "a sword's slash, with an axe: refused"
+assert_rejected "use_ability_seen 40007 0 $C_AIM 903 100" "out of the combo's order" "the combo's second swing first: refused"
+assert_rejected "use_ability_seen 40009 0 $C_AIM 904 100" "no referee" "Cleave (Q, rank 1) passes the game's checks; with nobody judging, the foundation refuses it"
+C_CODE='"regentscombatrefereecode"'
+assert_ok "offer_referee 0 $C_CODE" "a referee for world 0 (the admin judges here)"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE" >/dev/null 2>&1
+HP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_ok "use_ability_seen 40006 0 $C_AIM 905 100" "a chop: queued for the referee"
+R905="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 905" 1)"
+assert_ok "use_ability_seen 40007 0 $C_AIM 906 100" "the combo's second, right after: allowed"
+R906="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 906" 1)"
+assert_ok "resolve_action $R905 $DUMMY" "the referee: the chop hit the dummy"
+assert_ok "resolve_action $R906 $DUMMY" "and the second"
+HP1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_eq "$(python -c "print(round($HP0 - $HP1, 2))")" "18.2" "11 + 15 damage at the bronze axe's 70 %: 18.2 off the dummy"
+assert_eq "$(xp_of 40007)" "5" "axemanship XP: half a point a damage, half again on a dummy (2 + 3)"
+assert_ok "use_ability_seen 40010 0 $C_AIM 907 100" "Ctrl: the dodge roll"
+logged() { spacetime logs "$DB" 2>/dev/null | tail -60 | grep -qE "$1" && echo true || echo false; }
+check "$(logged "entity $MYENT: status [0-9]+ -> 101 \(Rolling\) for 550 ms")" "rolling for regents.roll_ms: nothing hits you, and its burst carries you"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
+sleep 0.6
+# A CLI call leaves at once, and leaving lowers a block: what it did is in the log; a block HELD by a
+# connected player (and no swing behind it) is the playtest's.
+assert_ok "block true" "hold the right button: block"
+check "$(logged "block .*entity $MYENT: status 0 -> 102 \(Blocking\)")" "the block went up (Blocking: half speed, no sprint)"
+check "$(logged "client_disconnected .*entity $MYENT: status 102 -> 0")" "and came down as the player left"
+assert_eq "$(sql_first "SELECT blocking FROM combat_state WHERE entity_id = $MYENT" 1)" "false" "the server's record agrees"
+sleep 5
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" "500" "the dummy is whole again a few seconds after its last hit"
+assert_ok "unwield" "put the axe away"
+assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"
+assert_rejected "block true" "wield a weapon" "and nothing to block with"
+
 assert_ok "set_world_level 0 0" "back to the greybox"
 assert_eq "$(row_count 'SELECT * FROM gather_node')" "0" "a level change takes the glade's nodes away"
 assert_eq "$(row_count 'SELECT * FROM station')" "0" "and its stations"
 assert_eq "$(row_count 'SELECT * FROM work_order')" "0" "and its board's orders"
+assert_eq "$(row_count 'SELECT * FROM dummy')" "0" "and its dummies"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100 OR kind = 101')" "0" "and their entities"

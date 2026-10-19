@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="1_recipe"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_sword.tres" id="3_out"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_sword_blade.tres" id="in0"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="in1"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="in2"]
+
+[resource]
+script = ExtResource("1_recipe")
+station = &"workbench"
+skill = ExtResource("2_skill")
+inputs = Array[Resource]([ExtResource("in0"), ExtResource("in1"), ExtResource("in2")])
+input_qty = PackedInt32Array(1, 1, 2)
+output = ExtResource("3_out")
+output_qty = 1
+xp = 25
+min_rank = 1
+afk_ms = 4000
+quality = 2
+afk_quality = 350
+part_slot = 1
+id = 40010
+display_name = "Iron sword"

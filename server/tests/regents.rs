@@ -63,7 +63,7 @@ fn the_chain_is_compiled_in() {
         assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)), "{}'s round is a gathering round", n.name);
     }
     let skills: Vec<&str> = rules::SKILLS.iter().map(|s| s.key).collect();
-    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting"]);
+    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
     assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD]);
     for bar in ["Copper bar", "Iron bar"] {
@@ -302,4 +302,35 @@ fn a_submission_of_groups_is_whole_values_in_range_or_nothing() {
     assert_eq!(decode_groups(&[0.0, 1.0, 2.0, 3.0, 4.0, 5.0], 3, 1, -1.0, 1e6), None, "more groups than allowed");
     assert_eq!(decode_groups(&[0.0, -5.0], 2, 10, -1.0, 1e6), None, "a value under the range");
     assert_eq!(decode_groups(&[0.0, 2.5], 2, 10, -1.0, 1e6), None, "not a whole number");
+}
+
+#[test]
+fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
+    let sword = rules::kit_keyed("sword").expect("the sword kit");
+    let axe = rules::kit_keyed("axe").expect("the axe kit");
+    assert_eq!(rules::skill(sword.skill).map(|s| s.key), Some("swordsmanship"), "a sword trains swordsmanship");
+    assert_eq!(rules::skill(axe.skill).map(|s| s.key), Some("axemanship"));
+    assert_eq!(sword.light.len(), 3, "the sword's light combo: three swings");
+    assert_eq!(rules::kit_of_ability(sword.light[1]).map(|(k, s)| (k.key, s)), Some(("sword", rules::KitSlot::Light(1))));
+    assert_eq!(rules::kit_of_ability(sword.heavy).map(|(_, s)| s), Some(rules::KitSlot::Heavy));
+    assert_eq!(rules::kit_of_ability(sword.skills[0].0).map(|(_, s)| s), Some(rules::KitSlot::Skill(0, 1)), "Q unlocks at rank 1");
+    assert!(rules::kit_of_ability(rules::ABILITY_DODGE).is_none(), "the roll is everyone's: no kit");
+    let iron_sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").unwrap();
+    assert_eq!((iron_sword.weapon_kit, iron_sword.weapon_damage_pct), ("sword", 100));
+    let bronze_axe = rules::item(40001).unwrap();
+    assert_eq!((bronze_axe.weapon_kit, bronze_axe.tool_tag), ("axe", "axe"), "the axe is a tool and a weapon");
+    assert!(rules::item(40002).unwrap().weapon_kit.is_empty(), "logs are no weapon");
+    assert_eq!(rules::hit_damage(10.0, 100, 0, 1), 10.0, "as authored: no quality, rank 1");
+    assert_eq!(rules::hit_damage(10.0, 70, 0, 1), 7.0, "a bronze axe at 70 %");
+    assert!((rules::hit_damage(10.0, 100, 1000, 1) - 12.0).abs() < 1e-4, "a perfect weapon: a fifth more");
+    assert!((rules::hit_damage(10.0, 100, 0, 4) - 10.9).abs() < 1e-4, "rank 4: 9 % more");
+    assert!((rules::hit_damage(10.0, 100, 0, 99) - 12.7).abs() < 1e-4, "mastery's share stops at 27 %");
+    assert!(rules::combo_allows(0, -1, 0, 900) && rules::combo_allows(0, 2, 5000, 900), "the first swing always");
+    assert!(rules::combo_allows(1, 0, 400, 900) && rules::combo_allows(2, 1, 900, 900), "the next step, inside the window");
+    assert!(!rules::combo_allows(1, 0, 901, 900), "too late: the combo is over");
+    assert!(!rules::combo_allows(2, 0, 100, 900) && !rules::combo_allows(1, -1, 100, 900), "out of order: refused");
+    let blade = rules::RECIPES.iter().find(|r| r.name == "Iron sword blade").unwrap();
+    assert!(matches!(blade.minigame, rules::Minigame::Shape(_)) && blade.quality == rules::QUALITY_FROM_ROUND, "the blade is shaped at the anvil");
+    let assembled = rules::RECIPES.iter().find(|r| r.name == "Iron sword").unwrap();
+    assert!(assembled.part_slot >= 0 && assembled.quality == rules::QUALITY_FROM_INPUTS, "the sword takes any handle, as good as its blade");
 }

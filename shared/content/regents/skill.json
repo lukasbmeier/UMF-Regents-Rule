@@ -81,6 +81,38 @@
 				1800,
 				2400
 			]
+		},
+		{
+			"id": 40006,
+			"key": "swordsmanship",
+			"name": "Swordsmanship",
+			"xp_to_rank": [
+				60,
+				150,
+				280,
+				450,
+				680,
+				980,
+				1350,
+				1800,
+				2400
+			]
+		},
+		{
+			"id": 40007,
+			"key": "axemanship",
+			"name": "Axemanship",
+			"xp_to_rank": [
+				60,
+				150,
+				280,
+				450,
+				680,
+				980,
+				1350,
+				1800,
+				2400
+			]
 		}
 	],
 	"owner": "regents",

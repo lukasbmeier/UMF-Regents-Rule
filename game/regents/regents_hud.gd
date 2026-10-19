@@ -26,6 +26,15 @@ var _round_box: Control
 var _inventory: SpaceTimeInventoryComponent = null
 var _interaction: InteractionComponent = null
 var _input: LocalInputComponent = null
+var combat: CombatComponent = null
+var _target_box: VBoxContainer
+var _target_label: Label
+var _target_bar: ProgressBar
+var _skillbar: Label
+## The bag panel (I): every item, a Wield button on each weapon. Null while closed.
+var bag_panel: PanelContainer = null
+const BAG_REASON: StringName = &"regents_bag"
+var _bag_weapon_row: int = -2
 
 
 func _ready() -> void:
@@ -66,6 +75,29 @@ func _ready() -> void:
 	_round_box.visible = false
 	_round_box.clip_contents = true
 	base.add_child(_round_box)
+	_target_box = VBoxContainer.new()
+	_target_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_target_box.offset_top = 16.0
+	_target_box.offset_left = -160.0
+	_target_box.offset_right = 160.0
+	_target_box.visible = false
+	_target_label = Label.new()
+	_target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_outline(_target_label, 20)
+	_target_box.add_child(_target_label)
+	_target_bar = ProgressBar.new()
+	_target_bar.custom_minimum_size = Vector2(320, 18)
+	_target_bar.show_percentage = false
+	_target_box.add_child(_target_bar)
+	base.add_child(_target_box)
+	_skillbar = Label.new()
+	_skillbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_skillbar.offset_top = -44.0
+	_skillbar.offset_left = -600.0
+	_skillbar.offset_right = 600.0
+	_skillbar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_outline(_skillbar, 17)
+	base.add_child(_skillbar)
 
 
 func _label(parent: Control, at: Vector2, font_size: int) -> Label:
@@ -87,6 +119,7 @@ func _process(_delta: float) -> void:
 		_find_player()
 	_status.text = FoundationHud.connection_line() if skilling == null else ""
 	_update_prompt()
+	_update_combat()
 
 
 func _find_player() -> void:
@@ -106,6 +139,9 @@ func _find_player() -> void:
 	s.worked.connect(_on_worked)
 	s.xp_changed.connect(func(_id: int, _xp: int) -> void: _show_skills())
 	s.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
+	combat = me.find_component(CombatComponent) as CombatComponent
+	if combat != null:
+		combat.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
 	if _inventory != null:
 		_inventory.inventory_changed.connect(_show_bag)
 	_show_bag()
@@ -250,6 +286,100 @@ func _on_worked(r: Dictionary) -> void:
 		notice("Timber!" if node == null or not node.is_rock() else "The rock is worked out", Color(0.9, 1, 0.7))
 
 
+## The target frame (name, health) and the skill bar (what each key does with the wielded weapon).
+func _update_combat() -> void:
+	if combat == null or not is_instance_valid(combat):
+		_target_box.visible = false
+		_skillbar.text = ""
+		return
+	var t: SpaceTimeEntity = EntityRegistry.get_entity(combat.target_id) as SpaceTimeEntity if combat.target_id >= 0 else null
+	var h: SpaceTimeHealthComponent = t.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent if t != null else null
+	_target_box.visible = h != null
+	if h != null:
+		_target_label.text = "%s   %d / %d" % [t.definition.display_name if t.definition != null else "?", roundi(h.get_current()), roundi(h.get_max())]
+		_target_bar.max_value = h.get_max()
+		_target_bar.value = h.get_current()
+	_skillbar.text = skill_bar(combat, skilling)
+	if bag_panel != null and combat.weapon_row != _bag_weapon_row:
+		_bag_weapon_row = combat.weapon_row
+		_fill_bag()
+
+
+## What the skill bar says: the weapon, its moves, each skill key (locked ones with the rank they need).
+static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
+	if c.kit == null:
+		return "No weapon wielded:  I  opens the bag"
+	var keys: PackedStringArray = PackedStringArray(["Q", "E", "R", "F"])
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append("%s:  LMB %s   hold LMB %s   RMB block   Ctrl roll   Tab target" % [c.weapon.display_name if c.weapon != null else "?",
+		c.kit.light[0].display_name, c.kit.heavy.display_name if c.kit.heavy != null else "-"])
+	var rank: int = sk.rank_in(c.kit.skill) if sk != null else 1
+	for i: int in 4:
+		if i < c.kit.skills.size():
+			var locked: bool = rank < c.kit.rank_for(i)
+			parts.append("%s %s%s" % [keys[i], c.kit.skills[i].display_name, " (rank %d)" % c.kit.rank_for(i) if locked else ""])
+	return "   |   ".join(parts) + ("" if c.in_stance() else "   (skills in stance)")
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k: InputEventKey = event as InputEventKey
+	if k != null and k.pressed and not k.echo and k.physical_keycode == KEY_I and skilling != null and not _round_box.visible:
+		toggle_bag()
+		get_viewport().set_input_as_handled()
+
+
+## Open or close the bag panel.
+func toggle_bag() -> void:
+	if bag_panel != null:
+		bag_panel.queue_free()
+		bag_panel = null
+		MouseCapture.hold_free(BAG_REASON, false)
+		return
+	bag_panel = PanelContainer.new()
+	bag_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	bag_panel.offset_left = -380.0
+	bag_panel.offset_right = -24.0
+	bag_panel.offset_top = -260.0
+	bag_panel.offset_bottom = 260.0
+	_layer.add_child(bag_panel)
+	MouseCapture.hold_free(BAG_REASON, true)
+	_fill_bag()
+
+
+## The bag panel's rows: each item, and a Wield (or Put away) button on a weapon.
+func _fill_bag() -> void:
+	if bag_panel == null or _inventory == null:
+		return
+	for c: Node in bag_panel.get_children():
+		c.queue_free()
+	var scroll: ScrollContainer = ScrollContainer.new()
+	var list: VBoxContainer = VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	bag_panel.add_child(scroll)
+	var title: Label = Label.new()
+	title.text = "Bag   (I to close)"
+	list.add_child(title)
+	for st: SpaceTimeInventoryComponent.Stack in _inventory.items():
+		var row: HBoxContainer = HBoxContainer.new()
+		var it: ItemDef = ItemDef.by_id(st.item_def_id)
+		var l: Label = Label.new()
+		l.text = "%s  x%d" % [item_name(st.item_def_id), st.qty]
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if it != null:
+			l.add_theme_color_override(&"font_color", it.color.lightened(0.3))
+		row.add_child(l)
+		if it != null and it.weapon_kit != &"" and combat != null:
+			var b: Button = Button.new()
+			var held: bool = combat.weapon_row == st.id
+			b.text = "Put away" if held else "Wield"
+			b.name = "Wield_%d" % st.id
+			var row_id: int = st.id
+			b.pressed.connect(func() -> void: combat.wield(-1 if held else row_id))
+			row.add_child(b)
+		list.add_child(row)
+
+
 func notice(text: String, color: Color = Color.WHITE) -> void:
 	var l: Label = Label.new()
 	l.text = text
@@ -279,6 +409,7 @@ func _show_bag() -> void:
 		lines.append("%s  x%d%s" % [item_name(s.item_def_id), s.qty, q])
 	_bag.text = "\n".join(lines)
 	_skills.position.y = 44.0 + 24.0 * (lines.size() + 1)
+	_fill_bag()
 
 
 func _show_skills() -> void:

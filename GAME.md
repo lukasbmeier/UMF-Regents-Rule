@@ -51,7 +51,10 @@ Gather (woodcutting, mining), smelt, smith and craft your way from a log to an *
 station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, bellows then
 pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). The
 camp's **order board** wants rotating batches for bonus XP; crafting pays for the work in its inputs, a
-first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**. The server replays every round from its
+first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**.
+**Combat, the first slice**: wield a weapon from the bag (I), Tab onto one of camp's training dummies (a
+ring under it), LMB for the light combo, hold LMB for a heavy, hold RMB to block, Ctrl to roll, Q for the
+kit's first skill; the world's referee judges every swing (an editor run starts it). The server replays every round from its
 inputs; mastery ranks 1-10 per skill gate the better nodes. How to play it, what makes it, how it is
 tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alone:
 `game/regents/skilling/skilling_lab.tscn` (F6).

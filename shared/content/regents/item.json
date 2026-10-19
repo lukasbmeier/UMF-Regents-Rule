@@ -11,7 +11,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "axe",
-			"tool_tier": 1
+			"tool_tier": 1,
+			"weapon_damage_pct": 70,
+			"weapon_kit": "axe"
 		},
 		{
 			"handle_quality_pm": 0,
@@ -22,7 +24,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -33,7 +37,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -44,7 +50,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -55,7 +63,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -66,7 +76,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "pick",
-			"tool_tier": 1
+			"tool_tier": 1,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -77,7 +89,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -88,7 +102,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -99,7 +115,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -110,7 +128,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -121,7 +141,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -132,7 +154,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -143,7 +167,9 @@
 			"part_tag": "handle",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -154,7 +180,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -165,7 +193,9 @@
 			"part_tag": "",
 			"tool_speed_pct": 85,
 			"tool_tag": "axe",
-			"tool_tier": 2
+			"tool_tier": 2,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "axe"
 		},
 		{
 			"handle_quality_pm": 150,
@@ -176,7 +206,9 @@
 			"part_tag": "handle",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
 		},
 		{
 			"handle_quality_pm": 0,
@@ -187,7 +219,35 @@
 			"part_tag": "handle",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
-			"tool_tier": 0
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
+		},
+		{
+			"handle_quality_pm": 0,
+			"handle_speed_pct": 100,
+			"id": 40018,
+			"max_stack": 1,
+			"name": "Iron sword blade",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": ""
+		},
+		{
+			"handle_quality_pm": 0,
+			"handle_speed_pct": 100,
+			"id": 40019,
+			"max_stack": 1,
+			"name": "Iron sword",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "sword"
 		}
 	],
 	"owner": "regents",

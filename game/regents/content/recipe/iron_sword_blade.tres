@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="1_recipe"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_sword_blade.tres" id="3_out"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_bar.tres" id="in0"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="4_params"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("4_params")
+display_name = "Iron sword blade"
+duration_ms = 15000
+swing_ms = 280
+heat_ms = 5000
+reheat_ms = 1500
+start_height = 20
+start_jitter = 2
+hammer_drop = 4
+spread_pct = 20
+outline = PackedInt32Array(6, 10, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 10, 4)
+error_scale = 100
+
+[resource]
+script = ExtResource("1_recipe")
+station = &"anvil"
+skill = ExtResource("2_skill")
+inputs = Array[Resource]([ExtResource("in0")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("3_out")
+output_qty = 1
+xp = 32
+min_rank = 2
+afk_ms = 8000
+minigame = SubResource("Round")
+quality = 1
+afk_quality = 350
+id = 40009
+display_name = "Iron sword blade"

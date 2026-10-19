@@ -68,6 +68,7 @@ pub fn regents_data() {
     out.push_str("pub static ITEMS: &[ItemSeed] = &[\n");
     let mut item_ids: Vec<i64> = Vec::new();
     let mut part_items: Vec<(i64, String)> = Vec::new();
+    let mut weapon_kits: Vec<(String, String)> = Vec::new();
     for it in &items {
         let name = text(it, "name", "an item");
         let tag = text(it, "tool_tag", &name);
@@ -78,9 +79,13 @@ pub fn regents_data() {
         if !part.is_empty() {
             part_items.push((int(it, "id", &name), part.clone()));
         }
+        let kit = text(it, "weapon_kit", &name);
+        if !kit.is_empty() {
+            weapon_kits.push((name.clone(), kit.clone()));
+        }
         out.push_str(&format!("    ItemSeed {{ id: {}, name: {name:?}, max_stack: {}, tool_tag: {tag:?}, tool_tier: {tier}, tool_speed_pct: {}, \
-             part_tag: {part:?}, handle_speed_pct: {}, handle_quality_pm: {} }},\n",
-            int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name),
+             weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_speed_pct: {}, handle_quality_pm: {} }},\n",
+            int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name), int(it, "weapon_damage_pct", &name),
             int(it, "handle_speed_pct", &name), int(it, "handle_quality_pm", &name)));
     }
     let item = |id: i64, what: &str| assert!(item_ids.contains(&id), "regents content: {what} names item {id}, which is not an item");
@@ -150,6 +155,25 @@ pub fn regents_data() {
              afk_ms: {}, minigame: {mg}, quality: {quality}, afk_quality: {}, part_slot: {slot} }},\n",
             int(r, "id", &name), ins.iter().map(|(a, b)| (*a as u32, *b as u32)).collect::<Vec<_>>(), int(r, "output_qty", &name), int(r, "xp", &name),
             int(r, "min_rank", &name), int(r, "afk_ms", &name), int(r, "afk_quality", &name)));
+    }
+    out.push_str("];\n\npub static KITS: &[KitSeed] = &[\n");
+    let mut kit_keys: Vec<String> = Vec::new();
+    for k in &baked("kit") {
+        let name = text(k, "name", "a kit");
+        let key = text(k, "key", &name);
+        let sk = int(k, "skill", &name);
+        skill(sk, &name);
+        let light: Vec<u32> = k["light"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no light combo"))
+            .iter().map(|v| v.as_i64().unwrap() as u32).collect();
+        assert!(!light.is_empty(), "regents content: the {name} kit has no light combo");
+        let skills: Vec<(u32, u32)> = k["skills"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no skills list"))
+            .iter().map(|p| (p[0].as_i64().unwrap() as u32, p[1].as_i64().unwrap() as u32)).collect();
+        kit_keys.push(key.clone());
+        out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, heavy: {}, skills: &{skills:?}, combo_window_ms: {} }},\n",
+            int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name)));
+    }
+    for (item, kit) in &weapon_kits {
+        assert!(kit_keys.contains(kit), "regents content: the weapon {item} fights with kit '{kit}', which is no kit");
     }
     out.push_str("];\n");
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("regents_data.rs"), out).unwrap();

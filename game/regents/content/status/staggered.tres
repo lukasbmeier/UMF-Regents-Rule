@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 103
+speed = 0.4
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+pose = &"react.hit"
+color = Color(1, 0.6, 0.4, 1)
+id = 40004
+display_name = "Staggered"
+designer_notes = "Parried (owner, 2026-10-19): a moment you cannot act (regents.stagger_ms)."

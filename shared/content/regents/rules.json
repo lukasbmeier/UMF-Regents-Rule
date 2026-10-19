@@ -114,6 +114,78 @@
 					"number": 100.0,
 					"text": "",
 					"unit": "%"
+				},
+				{
+					"key": "regents.roll_ms",
+					"kind": "number",
+					"max": 2000.0,
+					"min": 100.0,
+					"number": 550.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.parry_ms",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 200.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.stagger_ms",
+					"kind": "number",
+					"max": 3000.0,
+					"min": 0.0,
+					"number": 800.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.block_damage_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 25.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.combat_xp_per_damage",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.0,
+					"number": 0.5,
+					"text": "",
+					"unit": "xp"
+				},
+				{
+					"key": "regents.dummy_xp_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.dummy_hp",
+					"kind": "number",
+					"max": 100000.0,
+					"min": 10.0,
+					"number": 500.0,
+					"text": "",
+					"unit": "hp"
+				},
+				{
+					"key": "regents.dummy_reset_s",
+					"kind": "number",
+					"max": 120.0,
+					"min": 0.5,
+					"number": 4.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

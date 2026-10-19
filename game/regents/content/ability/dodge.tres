@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 900
+range_m = 0.0
+wind_up_ms = 100
+damage = 0.0
+animation = &"dodge.roll"
+key = &"dodge"
+judged = false
+reach_m = 0.0
+radius_m = 0.35
+height_m = 0.9
+lunges = false
+id = 40010
+display_name = "Dodge roll"
+designer_notes = "Ctrl: a roll the way you are moving; you cannot be hit for a moment, and the Rolling status bursts you forward. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."

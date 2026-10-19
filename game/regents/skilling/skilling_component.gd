@@ -189,6 +189,8 @@ func claim_press(target: int) -> bool:
 	var station: StationComponent = station_of(target)
 	if node == null and station == null:
 		return false
+	if _in_combat():
+		return true   # in combat stance E is a skill (CombatComponent): claimed, and nothing worked
 	if node != null and node.depleted:
 		refused.emit("Worked out: it comes back soon")
 		return true
@@ -214,12 +216,19 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k: InputEventKey = event as InputEventKey
-	if not is_local_authority or k == null or not k.pressed or k.echo or k.physical_keycode != KEY_Q or _interaction == null:
+	if not is_local_authority or k == null or not k.pressed or k.echo or k.physical_keycode != KEY_Q or _interaction == null or _in_combat():
 		return
 	var st: StationComponent = station_of(_interaction.get_target())
 	if st != null:
 		next_recipe(st)
 		get_viewport().set_input_as_handled()
+
+
+## Whether this player is in combat stance (Q E R F are skills then).
+func _in_combat() -> bool:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var c: CombatComponent = ent.find_component(CombatComponent) as CombatComponent if ent != null else null
+	return c != null and c.in_stance()
 
 
 ## A tap on `target`: work it AFK, or stop if that is what we are doing.

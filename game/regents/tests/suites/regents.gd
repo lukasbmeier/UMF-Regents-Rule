@@ -26,6 +26,58 @@ func run() -> void:
 	await _run_chain_minigames()
 	await _run_lab()
 	await _run_recipe_bench()
+	_run_combat()
+
+
+## Combat's client side, with no server: kits, the combo's steps, the stance, the keys, the skill bar.
+func _run_combat() -> void:
+	print("== regents: combat ==")
+	var sword: KitDef = KitDef.by_key(&"sword")
+	var axe: KitDef = KitDef.by_key(&"axe")
+	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
+	_check(sword.light.size() == 3 and sword.heavy != null and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 3,
+		"the sword: a three-swing combo, a heavy, Lunge on Q at rank 1 (E would be 3)")
+	for a: AbilityDef in sword.light + axe.light + [sword.heavy, axe.heavy]:
+		_check(a.judged and a.reach_m > 1.0 and a.wind_up_ms >= AbilityDef.MIN_WIND_UP_MS and a.key == &"regents.combat",
+			"%s: judged by the referee along the body's facing, reaching %.1f m, on the combat component's keys" % [a.display_name, a.reach_m])
+	var iron_sword: ItemDef = ItemDef.by_id(40019)
+	_check(iron_sword.weapon_kit == &"sword" and iron_sword.held_scene != null and ItemDef.by_id(40001).weapon_kit == &"axe",
+		"the iron sword fights as a sword; the bronze axe is a weapon too")
+	var bad: ItemDef = iron_sword.duplicate() as ItemDef
+	bad.max_stack = 5
+	_check(bad.validate().any(func(e: String) -> bool: return e.contains("weapon does not stack")), "a stacking weapon is refused")
+	var dummy: EntityDefinition = load("res://game/regents/content/character/dummy.tres") as EntityDefinition
+	# No blocker: a referee drives the dummy (its stand-still brain makes it someone to hit), and a body the
+	# referee simulates with a blocker of its own is pushed away by it (found 2026-10-19; a template fix).
+	_check(dummy.kind == 102 and dummy.visual_scene != null and dummy.blocker_size == Vector3.ZERO, "the training dummy: kind 102, its model, no blocker")
+	var c: CombatComponent = CombatComponent.new()
+	_check(not c.in_stance() and c.next_light_step(0) == -1, "nothing wielded: no stance, no swing")
+	c.kit = sword
+	var now: int = 100000
+	_check(c.next_light_step(now) == 0, "the first tap: the combo's first swing")
+	c.combo_step = 0
+	c.combo_ms = now - 300
+	_check(c.next_light_step(now) == 1, "inside the window: the second")
+	c.combo_step = 2
+	_check(c.next_light_step(now) == 0, "after the third: the first again")
+	c.combo_step = 0
+	c.combo_ms = now - sword.combo_window_ms - 1
+	_check(c.next_light_step(now) == 0, "too late: the combo starts over")
+	_check(not c.in_stance(), "a weapon, no target, no swing: no stance (Q and E work stations)")
+	c.target_id = 7
+	_check(c.in_stance(), "a target picked: in stance (Q E R F are skills)")
+	c.weapon = iron_sword
+	var bar: String = RegentsHud.skill_bar(c, null)
+	_check(bar.contains("Iron sword") and bar.contains("LMB Slash") and bar.contains("Q Lunge") and bar.contains("RMB block"), "the skill bar: %s" % bar)
+	c.free()
+	CombatComponent.bind_keys()
+	var ctrl_dodges: bool = false
+	for e: InputEvent in InputMap.action_get_events(&"dodge"):
+		ctrl_dodges = ctrl_dodges or (e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_CTRL)
+	var slow_ctrl: bool = false
+	for e: InputEvent in InputMap.action_get_events(&"move_slow"):
+		slow_ctrl = slow_ctrl or (e is InputEventKey and ((e as InputEventKey).physical_keycode == KEY_CTRL or (e as InputEventKey).keycode == KEY_CTRL))
+	_check(ctrl_dodges and not slow_ctrl, "Ctrl rolls; slow-walk is on Alt")
 
 
 ## The recipe bench: a recipe's numbers worked out from the content and the hot rules' defaults.
@@ -95,7 +147,8 @@ func _run_content() -> void:
 	var keys: Array[StringName] = []
 	for sk: SkillDef in SkillDef.all():
 		keys.append(sk.key)
-	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting"], "five skills: %s" % str(keys))
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship"],
+		"five working skills and two weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
 	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
 		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
@@ -130,8 +183,8 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 2 and RecipeDef.at(&"workbench").size() == 4 and RecipeDef.at(&"orders").is_empty(),
-		"two recipes at the furnace and the anvil, four at the workbench (three handles and the axe), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 5 and RecipeDef.at(&"orders").is_empty(),
+		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), five at the workbench (three handles, the axe, the sword), none at the order board")
 	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -393,7 +446,16 @@ func _run_looks() -> void:
 		_check(ref != null and ref.anim_name == clips[pose] and ref.loop, "the set's %s is %s, looping" % [pose, clips[pose]])
 	_check(aset != null and aset.missing_required().is_empty(), "the set still drives a tree (nothing required missing)")
 	for sk: SkillDef in SkillDef.all():
+		if KitDef.all().any(func(k: KitDef) -> bool: return k.skill == sk):
+			continue   # a weapon mastery: trained by fighting, no working pose
 		_check(aset.has_exact(sk.pose), "%s works in the set's %s" % [sk.display_name, sk.pose])
+	for k: KitDef in KitDef.all():
+		var abilities: Array[AbilityDef] = []
+		abilities.assign(k.light + k.skills)
+		abilities.append(k.heavy)
+		for a: AbilityDef in abilities:
+			_check(aset.has_exact(a.animation), "the %s kit's %s plays the set's %s" % [k.key, a.display_name, a.animation])
+	_check(aset.has_exact(&"dodge.roll") and aset.has_exact(&"pose.block"), "the roll and the block are in the set")
 	var tools: Dictionary[String, StringName] = {"res://game/regents/skilling/woodcutting/axe.tscn": &"pose.chop",
 		"res://game/regents/skilling/woodcutting/iron_axe.tscn": &"pose.chop", "res://game/regents/skilling/mining/pickaxe.tscn": &"pose.mine",
 		"res://game/regents/skilling/smithing/hammer.tscn": &"pose.smith"}
@@ -574,9 +636,9 @@ func _run_lab() -> void:
 	var buttons: Array[Button] = []
 	buttons.assign(lab.get("buttons"))
 	var game: SkillMinigame = lab.get("game") as SkillMinigame
-	_check(buttons.size() == 8 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
-		"eight rounds to play (five nodes, three recipes), the first, a tree's, on show (%d)" % buttons.size())
-	if buttons.size() == 8:
+	_check(buttons.size() == 9 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"nine rounds to play (five nodes, four recipes), the first, a tree's, on show (%d)" % buttons.size())
+	if buttons.size() == 9:
 		buttons[3].pressed.emit()
 		game = lab.get("game") as SkillMinigame
 		_check(game is CrackMinigame and buttons[3].button_pressed and not buttons[0].button_pressed, "the copper rock's button shows crack the rock, lit alone")

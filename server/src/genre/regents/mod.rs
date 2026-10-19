@@ -34,7 +34,7 @@ pub const STARTER_KIT: &[u32] = &[40001, 40006];
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     name: "regents",
     challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE],
-    entity_kinds: &[ENTITY_NODE, ENTITY_STATION],
+    entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY],
     phases: &[],
     session_kinds: &[],
 };
@@ -48,6 +48,9 @@ pub struct ItemSeed {
     pub tool_tag: &'static str,
     pub tool_tier: u32,
     pub tool_speed_pct: u32,
+    /// The kit it fights with ("sword", "axe"; empty: not a weapon), and its damage in percent.
+    pub weapon_kit: &'static str,
+    pub weapon_damage_pct: u32,
     /// A part's kind ("handle"): a recipe's part slot takes any item of the same kind.
     pub part_tag: &'static str,
     /// As a tool's handle: its swing (percent) and the quality it adds (thousandths).
@@ -216,7 +219,76 @@ pub struct RecipeSeed {
     pub part_slot: i32,
 }
 
+/// A weapon kit (`KitDef`): what a weapon of its key fights with.
+#[derive(Debug)]
+pub struct KitSeed {
+    pub id: u32,
+    pub key: &'static str,
+    /// Its mastery skill.
+    pub skill: u32,
+    /// The light combo, in order.
+    pub light: &'static [u32],
+    pub heavy: u32,
+    /// Q, E, R, F: (ability, the mastery rank it unlocks at).
+    pub skills: &'static [(u32, u32)],
+    pub combo_window_ms: u32,
+}
+
+/// Where an ability sits in its kit.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KitSlot {
+    /// The light combo's step (0 first).
+    Light(u32),
+    Heavy,
+    /// A skill key (0 Q .. 3 F) and the rank it needs.
+    Skill(u32, u32),
+}
+
 include!(concat!(env!("OUT_DIR"), "/regents_data.rs"));
+
+/// The dodge roll (`content/ability/dodge.tres`): everyone's, whatever they wield.
+pub const ABILITY_DODGE: u32 = 40010;
+/// Statuses (`content/status/`): a roll's moment (nothing hits), holding a block, staggered by a parry.
+pub const STATUS_ROLLING: u8 = 101;
+pub const STATUS_BLOCKING: u8 = 102;
+pub const STATUS_STAGGERED: u8 = 103;
+/// The training dummy's entity kind (`content/character/dummy.tres`) and its level points.
+pub const ENTITY_DUMMY: u8 = 102;
+pub const DUMMY_POINT: &str = "dummy";
+
+pub fn kit_keyed(key: &str) -> Option<&'static KitSeed> {
+    KITS.iter().find(|k| k.key == key)
+}
+
+/// The kit `ability_id` is part of, and where in it; None for an ability no kit has (the dodge).
+pub fn kit_of_ability(ability_id: u32) -> Option<(&'static KitSeed, KitSlot)> {
+    for k in KITS {
+        if let Some(i) = k.light.iter().position(|a| *a == ability_id) {
+            return Some((k, KitSlot::Light(i as u32)));
+        }
+        if k.heavy == ability_id {
+            return Some((k, KitSlot::Heavy));
+        }
+        if let Some(i) = k.skills.iter().position(|(a, _)| *a == ability_id) {
+            return Some((k, KitSlot::Skill(i as u32, k.skills[i].1)));
+        }
+    }
+    None
+}
+
+/// A hit's damage (owner, 2026-10-19): the ability's, times the weapon's `weapon_damage_pct`, its
+/// quality adding up to a fifth more, and 3 % a mastery rank past the first (at most 27 %).
+pub fn hit_damage(ability_damage: f32, weapon_damage_pct: u32, quality_pm: u32, rank: u32) -> f32 {
+    let quality = 1.0 + quality_pm.min(1000) as f32 / 5000.0;
+    let mastery = 1.0 + (3 * rank.saturating_sub(1)).min(27) as f32 / 100.0;
+    ability_damage * weapon_damage_pct as f32 / 100.0 * quality * mastery
+}
+
+/// Whether a light step `step` may follow: the first always; a later one only right after the step
+/// before it, inside the kit's window (`last_step` -1: no combo going).
+pub fn combo_allows(step: u32, last_step: i32, since_ms: i64, window_ms: u32) -> bool {
+    step == 0 || (last_step == step as i32 - 1 && since_ms >= 0 && since_ms <= window_ms as i64)
+}
 
 pub fn item(id: u32) -> Option<&'static ItemSeed> {
     ITEMS.iter().find(|i| i.id == id)

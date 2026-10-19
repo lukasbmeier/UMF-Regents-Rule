@@ -351,6 +351,24 @@
       "tags": [
         "orders"
       ]
+    },
+    {
+      "id": "dummy_1",
+      "kind": "dummy",
+      "x": 7.0,
+      "y": 0.0,
+      "z": 20.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "dummy_2",
+      "kind": "dummy",
+      "x": 9.5,
+      "y": 0.0,
+      "z": 21.0,
+      "radius": 0.5,
+      "tags": []
     }
   ]
 }

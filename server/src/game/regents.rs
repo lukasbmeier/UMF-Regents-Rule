@@ -26,8 +26,8 @@ use spacetimedb::{reducer, table, ReducerContext, ScheduleAt, Table, TimeDuratio
 use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTITY_NODE, ENTITY_STATION, LEVEL_FRONTIER, STATUS_DEPLETED};
 use crate::hot::regents as hot;
 use crate::module::{
-    challenge, entity, hot_number, inventory_item, item_def, movement_state, player, status_state, world_level, Challenge,
-    InventoryItem, ItemDef, DEFAULT_WORLD,
+    ability_def, challenge, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
+    world_level, Challenge, InventoryItem, ItemDef, DEFAULT_WORLD,
 };
 use crate::sim::Vector3;
 
@@ -40,6 +40,9 @@ const RESULT_TTL_MICROS: i64 = 10_000_000;
 const CLOCK_SLACK_MS: i64 = 1_500;
 /// A round may be submitted this long after its own time is up.
 const ROUND_GRACE_MICROS: i64 = 20_000_000;
+/// The combo's window, as the server measures it: the kit's, and this much for the network (the client
+/// times it by its own presses, the server by when they arrive).
+const COMBO_SLACK_MS: u32 = 300;
 /// A round is scored only while its player is within this many times the reach of its node or station.
 const RESOLVE_REACH_MULT: f32 = 1.5;
 
@@ -504,12 +507,14 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
         let id = crate::module::spawn_npc_internal(ctx, world_id, ENTITY_STATION, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
         ctx.db.station().insert(Station { entity_id: id, world_id, key: st.key.to_string(), point_id: p.id.to_string() });
     }
+    populate_dummies(ctx, world_id);
 }
 
 /// Every node and station of world `world_id` taken away (its level changed).
 fn clear_world(ctx: &ReducerContext, world_id: u32) {
     let ids: Vec<u64> = ctx.db.gather_node().world_id().filter(world_id).map(|n| n.entity_id)
-        .chain(ctx.db.station().world_id().filter(world_id).map(|s| s.entity_id)).collect();
+        .chain(ctx.db.station().world_id().filter(world_id).map(|s| s.entity_id))
+        .chain(ctx.db.dummy().world_id().filter(world_id).map(|d| d.entity_id)).collect();
     let orders: Vec<u64> = ctx.db.work_order().world_id().filter(world_id).map(|o| o.id).collect();
     for id in orders {
         for f in ctx.db.order_filled().order_id().filter(id).map(|f| f.id).collect::<Vec<_>>() {
@@ -518,6 +523,7 @@ fn clear_world(ctx: &ReducerContext, world_id: u32) {
         ctx.db.work_order().id().delete(id);
     }
     for id in ids {
+        ctx.db.dummy().entity_id().delete(id);
         ctx.db.gather_node().entity_id().delete(id);
         ctx.db.station().entity_id().delete(id);
         if ctx.db.entity().entity_id().find(id).is_some() {
@@ -845,6 +851,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
         row.next_at = row.next_at + TimeDuration::from_micros(interval as i64 * 1000);
         ctx.db.afk_work().entity_id().update(row);
     }
+    reset_dummies(ctx);
     let mut boards: Vec<u32> = ctx.db.station().iter().filter(|s| s.key == rules::ORDER_BOARD).map(|s| s.world_id).collect();
     boards.dedup();
     for w in boards {
@@ -915,9 +922,285 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
     Some(score as f32 / 1000.0)
 }
 
+// --- combat (owner, 2026-10-19: the first slice) -------------------------------------------------------
+//
+// THE WEAPON IS THE KIT. A player WIELDS one weapon from the bag (`wield`); its `ItemDef.weapon_kit`
+// names the KitDef whose light combo, heavy and skills (Q E R F, at mastery 1/3/6/9) they may use: every
+// other kit's ability is refused (`may_use_ability`). A swing is a foundation ability the world's REFEREE
+// judges (a sweep along the way the body faces: aimed, never auto-hit; the client's target ring is for
+// reference). What a hit does is ours (`on_ability_hit`): the ability's damage x the weapon x its
+// quality x the mastery rank; a BLOCK takes `regents.block_damage_pct` of it, a block raised within
+// `regents.parry_ms` of the hit takes none and STAGGERS the attacker; a dodge roll (`Rolling`) is not hit
+// at all. Every hit pays mastery XP in the kit's skill. The training DUMMY (camp's `dummy` points) never
+// falls and is whole again `regents.dummy_reset_s` after its last hit.
+
+/// What a player fights with: a row of their bag (its item and kit). Public: everyone draws it.
+#[table(accessor = wielded, public)]
+pub struct Wielded {
+    #[primary_key]
+    pub entity_id: u64,
+    pub item_row: u64,
+    pub item_id: u32,
+    pub kit: String,
+}
+
+/// A fighter's moment: the light combo's last step and when, and when the block went up.
+#[table(accessor = combat_state, public)]
+pub struct CombatState {
+    #[primary_key]
+    pub entity_id: u64,
+    /// The light step last swung (-1: no combo going).
+    pub combo: i32,
+    pub combo_at: Timestamp,
+    pub blocking: bool,
+    pub block_since: Timestamp,
+}
+
+/// A training dummy, on a level point.
+#[table(accessor = dummy, public)]
+#[derive(Clone)]
+pub struct Dummy {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub point_id: String,
+    pub last_hit_at: Timestamp,
+}
+
+fn combat_state_of(ctx: &ReducerContext, entity_id: u64) -> CombatState {
+    ctx.db.combat_state().entity_id().find(entity_id).unwrap_or(CombatState {
+        entity_id, combo: -1, combo_at: ctx.timestamp, blocking: false, block_since: ctx.timestamp,
+    })
+}
+
+fn save_combat_state(ctx: &ReducerContext, s: CombatState) {
+    if ctx.db.combat_state().entity_id().find(s.entity_id).is_some() {
+        ctx.db.combat_state().entity_id().update(s);
+    } else {
+        ctx.db.combat_state().insert(s);
+    }
+}
+
+/// The weapon `entity_id` wields, while it is still in their bag: (its item, its quality).
+fn wielded_weapon(ctx: &ReducerContext, entity_id: u64) -> Option<(&'static rules::ItemSeed, u32)> {
+    let w = ctx.db.wielded().entity_id().find(entity_id)?;
+    let row = ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == entity_id && r.qty > 0)?;
+    rules::item(row.item_def_id).filter(|i| !i.weapon_kit.is_empty()).map(|i| (i, rules::quality_of(&row.instance_data).unwrap_or(0)))
+}
+
+/// WIELD the weapon in bag row `item_row` (an axe, a sword): its kit is what you fight with.
+#[reducer]
+pub fn wield(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "wield")?;
+    let row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me).ok_or("wield: that is not in your bag")?;
+    let it = rules::item(row.item_def_id).ok_or("wield: that is no item")?;
+    if it.weapon_kit.is_empty() {
+        return Err(format!("wield: a {} is no weapon", it.name.to_lowercase()));
+    }
+    let w = Wielded { entity_id: me, item_row, item_id: it.id, kit: it.weapon_kit.to_string() };
+    if ctx.db.wielded().entity_id().find(me).is_some() {
+        ctx.db.wielded().entity_id().update(w);
+    } else {
+        ctx.db.wielded().insert(w);
+    }
+    log::info!("regents: {me} wields a {}", it.name);
+    Ok(())
+}
+
+/// Put the weapon away.
+#[reducer]
+pub fn unwield(ctx: &ReducerContext) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "wield")?;
+    ctx.db.wielded().entity_id().delete(me);
+    stop_block(ctx, me);
+    Ok(())
+}
+
+/// BLOCK: raise it (`on`, holding the right button) or lower it. Raised, hits take
+/// `regents.block_damage_pct`; one within `regents.parry_ms` of raising it is parried.
+#[reducer]
+pub fn block(ctx: &ReducerContext, on: bool) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "block")?;
+    if !on {
+        stop_block(ctx, me);
+        return Ok(());
+    }
+    crate::module::require_can_act(ctx, me, "block")?;
+    if wielded_weapon(ctx, me).is_none() {
+        return Err("block: wield a weapon to block".into());
+    }
+    let mut s = combat_state_of(ctx, me);
+    if !s.blocking {
+        s.blocking = true;
+        s.block_since = ctx.timestamp;
+        s.combo = -1;
+        save_combat_state(ctx, s);
+        crate::module::set_status_internal(ctx, me, rules::STATUS_BLOCKING, 0, me, String::new())?;
+    }
+    Ok(())
+}
+
+fn stop_block(ctx: &ReducerContext, entity_id: u64) {
+    let mut s = combat_state_of(ctx, entity_id);
+    if s.blocking {
+        s.blocking = false;
+        save_combat_state(ctx, s);
+        if ctx.db.status_state().entity_id().find(entity_id).is_some_and(|st| st.status == rules::STATUS_BLOCKING) {
+            let _ = crate::module::set_status_internal(ctx, entity_id, crate::status::NORMAL, 0, entity_id, String::new());
+        }
+    }
+}
+
+/// Whether `actor` may use `ability_id` now: everyone may roll; a kit's ability needs its kit wielded,
+/// and a skill its mastery rank; a light step must follow the one before it; nobody swings while blocking.
+fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), String> {
+    if ability_id == rules::ABILITY_DODGE {
+        return Ok(());
+    }
+    let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return Ok(()) };   // not ours
+    if ctx.db.player().entity_id().find(actor).is_none() {
+        return Ok(());   // a creature's own ability: its brain's to choose
+    }
+    let what = rules::skill(kit.skill).map_or("that", |s| s.name);
+    let Some((weapon, _)) = wielded_weapon(ctx, actor) else {
+        let article = if kit.key.starts_with(['a', 'e', 'i', 'o', 'u']) { "an" } else { "a" };
+        return Err(format!("wield {article} {} first", kit.key));
+    };
+    if weapon.weapon_kit != kit.key {
+        return Err(format!("that is a {} move; you wield a {}", kit.key, weapon.name.to_lowercase()));
+    }
+    let s = combat_state_of(ctx, actor);
+    if s.blocking {
+        return Err("lower your block to swing".into());
+    }
+    match slot {
+        rules::KitSlot::Light(step) => {
+            let since = (micros(ctx.timestamp) - micros(s.combo_at)) / 1000;
+            if !rules::combo_allows(step, s.combo, since, kit.combo_window_ms + COMBO_SLACK_MS) {
+                return Err("out of the combo's order".into());
+            }
+        }
+        rules::KitSlot::Skill(_, rank) => need_rank(ctx, actor, kit.skill, rank, what)?,
+        rules::KitSlot::Heavy => {}
+    }
+    Ok(())
+}
+
+/// A use, recorded: the combo moves on (or starts over), a roll lowers the block and cannot be hit.
+fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
+    if ability_id == rules::ABILITY_DODGE {
+        stop_block(ctx, actor);
+        let ms = (hot_number(ctx, hot::ROLL_MS).max(0.0)) as u32;
+        if let Err(e) = crate::module::set_status_internal(ctx, actor, rules::STATUS_ROLLING, ms, actor, String::new()) {
+            log::warn!("regents: {actor} rolled, but: {e}");
+        }
+        return;
+    }
+    let Some((_, slot)) = rules::kit_of_ability(ability_id) else { return };
+    let mut s = combat_state_of(ctx, actor);
+    s.combo = if let rules::KitSlot::Light(step) = slot { step as i32 } else { -1 };
+    s.combo_at = ctx.timestamp;
+    save_combat_state(ctx, s);
+}
+
+/// What a hit by `actor` with `ability_id` on `target` does (true: done here). Ours when it is a kit's.
+fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
+    let Some((kit, _)) = rules::kit_of_ability(ability_id) else { return false };
+    let Some(def) = ctx.db.ability_def().ability_id().find(ability_id) else { return false };
+    let (pct, quality) = wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q));
+    let mut dmg = rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill));
+    let t = combat_state_of(ctx, target.entity_id);
+    if t.blocking {
+        let since_ms = (micros(ctx.timestamp) - micros(t.block_since)) / 1000;
+        if since_ms <= hot_number(ctx, hot::PARRY_MS) as i64 {
+            dmg = 0.0;
+            let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
+            let _ = crate::module::set_status_internal(ctx, actor, rules::STATUS_STAGGERED, ms, target.entity_id, String::new());
+            log::info!("regents: {} parried {actor}'s {}", target.entity_id, def.ability_id);
+        } else {
+            dmg *= hot_number(ctx, hot::BLOCK_DAMAGE_PCT) as f32 / 100.0;
+        }
+    }
+    let dummy = ctx.db.dummy().entity_id().find(target.entity_id);
+    if dmg > 0.0 {
+        if let Some(mut d) = dummy.clone() {
+            // A dummy never falls: it keeps a sliver, and is whole again soon.
+            let left = ctx.db.health_state().entity_id().find(target.entity_id).map_or(0.0, |h| h.current);
+            dmg = dmg.min((left - 1.0).max(0.0));
+            d.last_hit_at = ctx.timestamp;
+            ctx.db.dummy().entity_id().update(d);
+        }
+        if let Err(e) = crate::module::damage_entity(ctx, target.entity_id, dmg, actor) {
+            log::warn!("regents: {actor}'s hit on {}: {e}", target.entity_id);
+        }
+    }
+    if ctx.db.player().entity_id().find(actor).is_some() && dmg > 0.0 {
+        let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { 1.0 };
+        let xp = (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32;
+        add_xp(ctx, actor, kit.skill, xp);
+    }
+    true
+}
+
+/// World `world_id`'s dummies whole again `regents.dummy_reset_s` after their last hit.
+fn reset_dummies(ctx: &ReducerContext) {
+    let after = (hot_number(ctx, hot::DUMMY_RESET_S) * 1_000_000.0) as i64;
+    for d in ctx.db.dummy().iter() {
+        if micros(ctx.timestamp) - micros(d.last_hit_at) < after {
+            continue;
+        }
+        if let Some(mut h) = ctx.db.health_state().entity_id().find(d.entity_id) {
+            if h.current < h.max {
+                h.current = h.max;
+                h.is_dead = false;
+                ctx.db.health_state().entity_id().update(h);
+            }
+        }
+    }
+}
+
+/// A dummy on every `dummy` point of world `world_id`'s level that has none yet: an entity a stand-still
+/// brain "drives" (so the referee counts it as someone to hit), with `regents.dummy_hp` health.
+fn populate_dummies(ctx: &ReducerContext, world_id: u32) {
+    let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
+    let have: Vec<String> = ctx.db.dummy().world_id().filter(world_id).map(|d| d.point_id).collect();
+    let hp = hot_number(ctx, hot::DUMMY_HP) as f32;
+    for p in level.points_of(rules::DUMMY_POINT) {
+        if have.iter().any(|id| id == p.id) {
+            continue;
+        }
+        let id = crate::module::spawn_npc_internal(ctx, world_id, rules::ENTITY_DUMMY, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
+        if let Some(mut h) = ctx.db.health_state().entity_id().find(id) {
+            h.current = hp;
+            h.max = hp;
+            ctx.db.health_state().entity_id().update(h);
+        }
+        ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
+            entity_id: id, world_id, brain: "stand".into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
+        });
+        ctx.db.dummy().insert(Dummy { entity_id: id, world_id, point_id: p.id.to_string(), last_hit_at: ctx.timestamp });
+    }
+}
+
 impl crate::game::Genre for Regents {
     fn claims(&self) -> &'static crate::genre::Claims {
         &rules::CLAIMS
+    }
+
+    fn may_use_ability(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> Result<(), String> {
+        may_fight(ctx, actor_id, ability_id)
+    }
+
+    fn on_ability_used(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32, _aim: Vector3) {
+        fought(ctx, actor_id, ability_id);
+    }
+
+    fn on_ability_hit(&self, ctx: &ReducerContext, actor_id: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
+        hit(ctx, actor_id, target, ability_id)
     }
 
     fn on_init(&self, ctx: &ReducerContext) {
@@ -944,6 +1227,7 @@ impl crate::game::Genre for Regents {
 
     fn on_player_left(&self, ctx: &ReducerContext, entity_id: u64) {
         ctx.db.afk_work().entity_id().delete(entity_id);
+        stop_block(ctx, entity_id);
     }
 
     fn on_level_changed(&self, ctx: &ReducerContext, world_id: u32, _level_id: u8) {

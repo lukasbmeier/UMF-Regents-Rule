@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_item")
 max_stack = 1
+weapon_kit = &"axe"
+weapon_damage_pct = 70
 tool_tag = &"axe"
 tool_tier = 1
 tool_speed_pct = 100

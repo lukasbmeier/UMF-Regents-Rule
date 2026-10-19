@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+color = Color(0.72, 0.74, 0.78, 1)
+description = "A sword's blade, shaped at the anvil: as good as its smith."
+id = 40018
+display_name = "Iron sword blade"

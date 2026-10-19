@@ -164,3 +164,45 @@ New server pieces: `craft_with` (a part chosen; `craft` unchanged), `fill_order`
 `work_order`, `order_filled`; tests: 13 Rust (handles, craft XP, variety), the unit suite, the
 integration hook (ratios, first make, refusals of a wrong part, the board end to end), the playtest (the
 seam, an oak handle carved and an Iron axe assembled with it).
+
+## Step 4: combat, the first slice (2026-10-19)
+The owner's calls (RULE_DESIGN §7.4): hybrid action combat, the weapon is the kit, Tab targeting with a
+ring for reference, a training dummy first, then wild creatures. In this slice:
+
+- **Wield a weapon from the bag** (I opens the bag panel; Wield / Put away on each weapon). The bronze and
+  iron axes are weapons as well as tools (the axe kit); the **Iron sword** is smithed like the axe: a blade
+  shaped at the anvil (smithing rank 2, its own outline), assembled at the workbench with any handle.
+- **The keys** (owner, 2026-10-19): LMB tap the light combo (the sword's three slashes, the axe's two
+  chops; each tap the next inside `combo_window_ms`), LMB held the heavy, RMB held block (a hit within
+  `regents.parry_ms` of raising it is parried: none, and the attacker staggered; else `block_damage_pct`),
+  Ctrl the dodge roll (the Rolling status: nothing hits you, and its burst carries you; slow-walk is now
+  Alt), Q E R F the kit's skills at mastery 1/3/6/9 (Lunge, Cleave on Q so far), Tab the next target in
+  front (a ring under it, its health at the top), Esc drops it. In stance (a target, or a swing in the
+  last 5 s) Q and E are skills; out of it E works stations and Q picks there, as before.
+- **Aimed, judged**: every swing is a foundation ability the world's referee judges along the way the body
+  faces (the body faces the camera in stance). The server says what a hit does: the ability's damage x
+  the weapon (`weapon_damage_pct`) x its quality (up to +20 %) x the mastery (3 % a rank). Every hit pays
+  mastery XP in the kit's skill (Swordsmanship, Axemanship; `combat_xp_per_damage`).
+- **The training dummies** at camp (two, on `dummy` points): hit them, the numbers float up; they never
+  fall and are whole again `dummy_reset_s` after the last hit; they pay `dummy_xp_pct` of the XP.
+- Content: `KitDef` (`content/kit/`), the abilities (`content/ability/`), statuses Rolling, Blocking,
+  Staggered, the dummy (`content/character/dummy.tres`); every number above a hot rule or the content's.
+
+**A foundation change came with it** (DECISIONS #254, made in the template too, commit 7334ba6 there,
+not yet shipped): a player is the foundation's kind 0, and the ability hooks went only to the genre that
+claims a kind, so our players' swings never reached us. Now every genre hears a foundation kind's.
+
+Tested: Rust 14 (kits, the damage formula, the combo's order), the unit suite (the combo's steps, stance,
+the bar, the keys, the content), the integration hook (wield refusals, a kit's ability with the wrong
+weapon or out of the combo's order, two chops judged on the dummy with their exact damage and XP, the
+roll, the block, the dummy whole again), and `game/regents/tests/combat_playtest.sh`: a real client with
+the world's real referee wields from the bag panel, Tabs onto a dummy, chops, combos, holds a heavy, rolls,
+blocks, lets go.
+
+Known, for the next slice: the roll's burst begins when its status arrives (a round trip after Ctrl);
+a predicted dash needs the foundation's own tests to stop assuming kind 0 moves by the default
+(template). An entity a referee drives that has a `blocker_size` pushes itself away (found with the
+dummy, which so has none: you can walk through it): a foundation bug to fix in the template. Creatures'
+hits on players reach our block and parry now (#254), but no creature hits yet.
+Next: wild creatures (Quaternius' Ultimate Animated Animals), the yew bow, the sword's E/R/F, the station
+UI the owner asked for in place of Q at stations.

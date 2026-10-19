@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 700
+range_m = 1.9
+wind_up_ms = 220
+damage = 13.0
+animation = &"attack.sword_c"
+key = &"regents.combat"
+judged = true
+reach_m = 1.9
+radius_m = 0.5
+height_m = 0.9
+lunges = false
+id = 40003
+display_name = "Slash (finisher)"
+designer_notes = "The light combo's third: harder, slower. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."

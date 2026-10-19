@@ -111,9 +111,81 @@ maximum = 1000.0
 unit = "%"
 description = "WORK ORDERS: filling one pays this share of the XP its batches paid, again, on top."
 
+[sub_resource type="Resource" id="Rule_roll"]
+script = ExtResource("2_rule")
+name = &"roll_ms"
+number = 550.0
+minimum = 100.0
+maximum = 2000.0
+unit = "ms"
+description = "COMBAT (owner, 2026-10-19): a dodge roll cannot be hit for this long (the Rolling status)."
+
+[sub_resource type="Resource" id="Rule_parry"]
+script = ExtResource("2_rule")
+name = &"parry_ms"
+number = 200.0
+minimum = 0.0
+maximum = 1000.0
+unit = "ms"
+description = "COMBAT: a hit this soon after a block went up is PARRIED: no damage, and the attacker is staggered."
+
+[sub_resource type="Resource" id="Rule_stagger"]
+script = ExtResource("2_rule")
+name = &"stagger_ms"
+number = 800.0
+minimum = 0.0
+maximum = 3000.0
+unit = "ms"
+description = "COMBAT: how long a parried attacker cannot act."
+
+[sub_resource type="Resource" id="Rule_block_pct"]
+script = ExtResource("2_rule")
+name = &"block_damage_pct"
+number = 25.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "COMBAT: a blocked hit takes this share of its damage."
+
+[sub_resource type="Resource" id="Rule_xp_dmg"]
+script = ExtResource("2_rule")
+name = &"combat_xp_per_damage"
+number = 0.5
+minimum = 0.0
+maximum = 10.0
+unit = "xp"
+description = "COMBAT: mastery XP a hit pays for each point of damage it does (in the wielded weapon's kit's skill)."
+
+[sub_resource type="Resource" id="Rule_dummy_xp"]
+script = ExtResource("2_rule")
+name = &"dummy_xp_pct"
+number = 50.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "COMBAT: hits on a training dummy pay this share of their mastery XP."
+
+[sub_resource type="Resource" id="Rule_dummy_hp"]
+script = ExtResource("2_rule")
+name = &"dummy_hp"
+number = 500.0
+minimum = 10.0
+maximum = 100000.0
+unit = "hp"
+description = "COMBAT: a training dummy's health (it never falls: it keeps one point)."
+
+[sub_resource type="Resource" id="Rule_dummy_reset"]
+script = ExtResource("2_rule")
+name = &"dummy_reset_s"
+number = 4.0
+minimum = 0.5
+maximum = 120.0
+unit = "s"
+description = "COMBAT: a training dummy is whole again this long after its last hit."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

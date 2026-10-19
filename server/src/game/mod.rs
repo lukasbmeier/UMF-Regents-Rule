@@ -302,21 +302,33 @@ pub fn may_use_ability(ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> 
     Ok(())
 }
 
-/// An unjudged ability was used: the genre of its user's kind hears it.
+/// The genres that hear about an entity of `kind`: the one that claims it, or, for a kind no genre
+/// claims (the foundation's own: a player, kind 0, or a plain NPC), every genre (DECISIONS #254: a
+/// game whose players are the foundation's kind fights with them: Regent's Rule's combo, roll and
+/// block). A genre that has nothing to say about it leaves the default.
+fn genres_for(kind: u8) -> Vec<&'static dyn Genre> {
+    match owner_of_entity(kind) {
+        Some(g) => vec![g],
+        None => GENRES.to_vec(),
+    }
+}
+
+/// An ability was used: the genre of its user's kind hears it (every genre, for a foundation kind).
 pub fn on_ability_used(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32, aim: crate::sim::Vector3) {
-    if let Some(g) = owner_of_entity(actor_kind) {
+    for g in genres_for(actor_kind) {
         g.on_ability_used(ctx, actor_id, ability_id, aim);
     }
 }
 
-/// A judged ability hit `target`: the genre of its kind says what that does (true), or nobody does.
+/// A judged ability hit `target`: the genre of its kind says what that does (true), or nobody does. For a
+/// foundation kind, the first genre that says.
 pub fn on_ability_hit(ctx: &ReducerContext, actor_id: u64, target: &Entity, ability_id: u32) -> bool {
-    owner_of_entity(target.kind).is_some_and(|g| g.on_ability_hit(ctx, actor_id, target, ability_id))
+    genres_for(target.kind).into_iter().any(|g| g.on_ability_hit(ctx, actor_id, target, ability_id))
 }
 
-/// A judged ability missed: the genre of its user's kind hears it.
+/// A judged ability missed: the genre of its user's kind hears it (every genre, for a foundation kind).
 pub fn on_ability_missed(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32) {
-    if let Some(g) = owner_of_entity(actor_kind) {
+    for g in genres_for(actor_kind) {
         g.on_ability_missed(ctx, actor_id, ability_id);
     }
 }

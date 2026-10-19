@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/axemanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_chop_a.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_chop_b.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_heavy.tres" id="a2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_cleave.tres" id="a3"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"axe"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1")])
+heavy = ExtResource("a2")
+skills = Array[Resource]([ExtResource("a3")])
+skill_ranks = PackedInt32Array(1, 3, 6, 9)
+id = 40002
+display_name = "Axe"

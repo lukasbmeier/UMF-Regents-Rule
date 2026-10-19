@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 102
+speed = 0.5
+can_sprint = false
+can_jump = false
+can_dash = false
+pose = &"pose.block"
+show_on_nameplate = false
+color = Color(0.75, 0.8, 0.95, 1)
+id = 40003
+display_name = "Blocking"
+designer_notes = "Holding the right button: hits take regents.block_damage_pct of their damage; one inside regents.parry_ms of raising it is a PARRY (none, and the attacker is staggered). Half speed, no sprint or jump."

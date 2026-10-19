@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_a.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_b.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_c.tres" id="a2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_heavy.tres" id="a3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_lunge.tres" id="a4"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"sword"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
+heavy = ExtResource("a3")
+skills = Array[Resource]([ExtResource("a4")])
+skill_ranks = PackedInt32Array(1, 3, 6, 9)
+id = 40001
+display_name = "Sword"

@@ -334,6 +334,24 @@ kind = "station"
 radius = 1.2
 tags = PackedStringArray("orders")
 
+[node name="Dummies" type="Node3D" parent="."]
+
+[node name="dummy_1" type="Marker3D" parent="Dummies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0, 0, 20.0)
+gizmo_extents = 0.6
+script = ExtResource("s_point")
+point_id = "dummy_1"
+kind = "dummy"
+radius = 0.5
+
+[node name="dummy_2" type="Marker3D" parent="Dummies"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0, 21.0)
+gizmo_extents = 0.6
+script = ExtResource("s_point")
+point_id = "dummy_2"
+kind = "dummy"
+radius = 0.5
+
 [node name="Decor" type="Node3D" parent="."]
 
 [node name="rock_1" parent="Decor" instance=ExtResource("m_Rock_Big_1")]

@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"timed_press", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -15,6 +15,8 @@ var authority: UmfAuthorityTable
 var body_contact: UmfBodyContactTable
 var body_state: UmfBodyStateTable
 var challenge: UmfChallengeTable
+var combat_state: UmfCombatStateTable
+var dummy: UmfDummyTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
 var gather_node: UmfGatherNodeTable
@@ -40,6 +42,7 @@ var skill_xp: UmfSkillXpTable
 var station: UmfStationTable
 var status_state: UmfStatusStateTable
 var timed_press: UmfTimedPressTable
+var wielded: UmfWieldedTable
 var work_order: UmfWorkOrderTable
 var work_result: UmfWorkResultTable
 var world_config: UmfWorldConfigTable
@@ -57,6 +60,8 @@ func _init(p_local_db: LocalDatabase) -> void:
 	body_contact = preload('res://spacetime_bindings/schema/tables/umf_body_contact_table.gd').new(p_local_db)
 	body_state = preload('res://spacetime_bindings/schema/tables/umf_body_state_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
+	combat_state = preload('res://spacetime_bindings/schema/tables/umf_combat_state_table.gd').new(p_local_db)
+	dummy = preload('res://spacetime_bindings/schema/tables/umf_dummy_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
 	gather_node = preload('res://spacetime_bindings/schema/tables/umf_gather_node_table.gd').new(p_local_db)
@@ -82,6 +87,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	station = preload('res://spacetime_bindings/schema/tables/umf_station_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
 	timed_press = preload('res://spacetime_bindings/schema/tables/umf_timed_press_table.gd').new(p_local_db)
+	wielded = preload('res://spacetime_bindings/schema/tables/umf_wielded_table.gd').new(p_local_db)
 	work_order = preload('res://spacetime_bindings/schema/tables/umf_work_order_table.gd').new(p_local_db)
 	work_result = preload('res://spacetime_bindings/schema/tables/umf_work_result_table.gd').new(p_local_db)
 	world_config = preload('res://spacetime_bindings/schema/tables/umf_world_config_table.gd').new(p_local_db)

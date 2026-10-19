@@ -18,6 +18,13 @@ class_name ItemDef extends ContentDef
 ## How long its work takes, in percent of the base (a better axe: 85). A crafted tool's quality takes up
 ## to a tenth more off.
 @export_range(10, 200, 1, "suffix:%") var tool_speed_pct: int = 100
+@export_group("As a weapon")
+## The kit it fights with (a `KitDef`'s key: "sword", "axe", "bow"): wielded, it gives that kit's
+## combo, heavy and skills. Empty: not a weapon. A tool may be one too (the axe, owner 2026-10-19).
+@export var weapon_kit: StringName = &""
+## Its damage, in percent of what its kit's abilities do (100: as authored; a better weapon higher).
+## A smithed weapon's quality adds up to a fifth more.
+@export_range(10, 500, 1, "suffix:%") var weapon_damage_pct: int = 100
 @export_group("As a part")
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
@@ -58,6 +65,8 @@ func to_bake() -> Dictionary:
 		"tool_tag": String(tool_tag),
 		"tool_tier": tool_tier,
 		"tool_speed_pct": tool_speed_pct,
+		"weapon_kit": String(weapon_kit),
+		"weapon_damage_pct": weapon_damage_pct,
 		"part_tag": String(part_tag),
 		"handle_speed_pct": handle_speed_pct,
 		"handle_quality_pm": handle_quality_pm,
@@ -80,6 +89,8 @@ func validate() -> Array[String]:
 		out.append("a tool works tier 1 at least: set `tool_tier`")
 	if tool_tag != &"" and max_stack != 1:
 		out.append("a tool does not stack: `max_stack` 1")
+	if weapon_kit != &"" and max_stack != 1:
+		out.append("a weapon does not stack: `max_stack` 1")
 	if part_tag == &"" and (handle_speed_pct != 100 or handle_quality_pm != 0):
 		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
 	return out

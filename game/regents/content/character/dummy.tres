@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/dummy.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Dummy.gltf" id="3_look"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40004
+kind = 102
+scene = ExtResource("2_scene")
+visual_scene = ExtResource("3_look")
+display_name = "Training dummy"
+designer_notes = "A training dummy at camp (owner, 2026-10-19): placed on a level's `dummy` points; hit it to try a weapon, its numbers float up; it never falls, and is whole again a few seconds after the last hit (regents.dummy_reset_s). Hits on it pay regents.dummy_xp_pct of their mastery XP."
