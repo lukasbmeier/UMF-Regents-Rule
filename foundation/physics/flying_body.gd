@@ -186,7 +186,8 @@ func _contacts(state: PhysicsDirectBodyState3D) -> void:
 		_query.collision_mask = collision_mask
 	var exclude: Array[RID] = [get_rid()]
 	for n: PhysicsBody3D in get_collision_exceptions():
-		exclude.append(n.get_rid())   # what it passes through (its thrower, as it leaves the hand)
+		if is_instance_valid(n):   # one freed since (a referee's stand-in for someone who left, or turned untouchable)
+			exclude.append(n.get_rid())   # what it passes through (its thrower, as it leaves the hand)
 	for rid: RID in _hit_at.keys():
 		if frames - int(_hit_at[rid]) <= REHIT_FRAMES:
 			exclude.append(rid)
