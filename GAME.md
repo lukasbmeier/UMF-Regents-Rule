@@ -11,11 +11,12 @@ built in the TEMPLATE and pulled.
 
 | | |
 |---|---|
-| Genres | none yet (`shared/game.json` `genres: []`); the genre is added with step 1 |
+| Genres | `regents` (`shared/game.json`): its client in `game/regents/` (content id base 40000), its server in `server/src/game/regents.rs` |
 | Database | `regents-rule`; the suites use `regents-rule-test` |
 | Main scene | `res://game/greybox_game.tscn` (the template's, until step 1) |
-| Genre rules files | none yet |
-| Genre manifest | none yet (`tools/template/genres/<genre>.paths` once the genre exists: AGENTS.md rule 16) |
+| Genre rules files | the hot rules `game/regents/content/rules/regents.tres` (the Rules page, `regents.*`) |
+| Genre manifest | `tools/template/genres/regents.paths` (AGENTS.md rule 16) |
+| Genre suites | `game/regents/tests/suites/regents.gd` (`-- --only=regents`) |
 
 ## The design
 | File | What it is |
@@ -32,13 +33,21 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **#13 Accounts**: SpacetimeAuth, an account that several identities link to (Steam later).
 - **#15 Tools**: no tool slot; the best matching tool in the bag is used (OSRS-style). Five
   equipment slots: weapon, head, chest, legs, trinket.
-- **#17 Minigames**: Rhythm (Woodcutting), Trace (Mining), Tension (Herbalism).
+- **#17 Minigames**: immersive to their skill (revised the same day): woodcutting is branch dodge; the
+  others (mining, herbalism, smelting, smithing) are designed to that bar with Luke.
 - **`chunk`**: added to the template's existing positional tables in a **template 1.0** (a reshape:
   every game's database wiped once, older builds stop connecting), not a side table.
-- Still open: #7 loot, #10 hosting (after measuring Maincloud round trips), #12 day/night.
+- **The skilling loop comes first** (gather, refine, smith, then fun combat): every skill is dual-mode, AFK
+  or an immersive minigame worth 1.25x yield and 1.3x rares (hot rules); woodcutting is branch dodge;
+  gear is modular (Tinkers'-style core + handle, gear XP, durability and repair). Design doc §7.4.
+- Still open: #7 loot, #10 hosting (after measuring Maincloud round trips), #12 day/night, #22 handles
+  and kits, #23 how a score maps to yield; the other skills' minigames.
 
-## Current state (2026-10-18): forked, nothing built
-A fork of the template at 0.51.1 (title, database `regents-rule`, this file, the design in
-`docs/regents_rule/`, bindings regenerated). No genre yet. Next: step 1 of the design's §12 (the
-fight), which needs the template's ability/effect pipeline and cast queue (M20) and stats (M21); the
-template 1.0 is planned before step 3.
+## Current state (2026-10-18): the genre, and woodcutting's minigame to play
+A fork of the template at 0.51.2. The `regents` genre (no tables yet) and **woodcutting's branch dodge**,
+played on its own with no server: open `game/regents/skilling/woodcutting/chop_lab.tscn` and press F6.
+Space starts a round, A/D or the arrows or a click on either side chops, 1-3 pick the tree (Tree, Oak,
+Yew: `trees/*.tres`, edit them in the Inspector). `ChopModel` is the pure model (seed + inputs -> score,
+integers only) that the server will replay; its Rust twin and the server's half (a challenge kind of
+this genre's, a node you press E on, AFK and active yield) come once the feel is right. Next: Luke's
+playtest of the chop, then mining, smelting and smithing to the same pattern.

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
+[ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
+
+[sub_resource type="Resource" id="Rule_active_yield"]
+script = ExtResource("2_rule")
+name = &"active_yield_mult"
+number = 1.25
+minimum = 1.0
+maximum = 3.0
+unit = "x"
+description = "DUAL-MODE SKILLING (owner, 2026-10-18): a skill played actively (its minigame, played well) yields this many times what AFK yields in the same time. AFK stays a real option: keep this small."
+
+[sub_resource type="Resource" id="Rule_active_rare"]
+script = ExtResource("2_rule")
+name = &"active_rare_mult"
+number = 1.3
+minimum = 1.0
+maximum = 3.0
+unit = "x"
+description = "DUAL-MODE SKILLING: active play is this many times as likely to find a rare material as AFK. AFK can find rares too."
+
+[resource]
+script = ExtResource("1_set")
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare")])
+id = 40000
+display_name = "Regent's Rule rules"
+designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

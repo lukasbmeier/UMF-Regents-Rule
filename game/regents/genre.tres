@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GenreModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/genre_module.gd" id="1_genre"]
+
+[resource]
+script = ExtResource("1_genre")
+id = &"regents"
+display_name = "Regent's Rule"
+entity_definitions = Array[Resource]([])
+tables = Array[StringName]([])
+world_tables = Array[StringName]([])
+scenes = Array[PackedScene]([])
+content_id_base = 40000

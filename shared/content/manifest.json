@@ -73,6 +73,15 @@
 				"foundation/content/status/out.tres": "f63e33d4"
 			},
 			"type": "status"
+		},
+		"shared/content/regents/rules.json": {
+			"count": 1,
+			"hash": "cfd46af6",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/rules/regents.tres": "22bf9896"
+			},
+			"type": "rules"
 		}
 	}
 }

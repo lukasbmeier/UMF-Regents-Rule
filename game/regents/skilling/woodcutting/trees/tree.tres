@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChopParams" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/woodcutting/chop_params.gd" id="1_chop"]
+
+[resource]
+script = ExtResource("1_chop")
+display_name = "Tree"
+duration_ms = 10000
+swing_ms = 300
+stagger_ms = 800
+branch_permille = 400
+safe_segments = 2
+target_chops = 20

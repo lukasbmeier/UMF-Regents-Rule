@@ -1,0 +1,10 @@
+# THE REGENTS GENRE'S FILES (Regent's Rule, game 4): everything here is regents', and nothing outside it
+# is (AGENTS.md rule 16). A game made without it is this repo with these paths removed:
+#   python tools/template/strip_genre.py regents
+# Directories end in /. Globs are git pathspecs. The bindings (spacetime_bindings/) regenerate at codegen.
+game/regents/
+shared/content/regents/
+server/src/game/regents.rs
+server/src/genre/regents/
+docs/regents_rule/
+tools/template/genres/regents.paths

@@ -151,6 +151,28 @@ A node is a **static world object** — a tree, a vein, an herb patch — placed
 - **Economy**: **marks** are the only currency; vendors buy at 25% and sell at list; prices are a hot table. No player market, no trade window in v1.
 - **Potions**: `ItemDef.on_use` is an `AbilityDef` (TARGETED, self, `queueable`) — the pipeline again.
 
+### 7.4 The skilling loop first: dual-mode skills and modular gear (owner, 2026-10-18)
+The owner's priority: **nail the workflow from gathering to refining to smithing, then make the combat
+really fun.** Reference points he named: OSRS's skilling, Farever's combat, Titanreach's audience, the
+best of Albion Online's PvP, Cube World's openness. So the build starts with the skilling loop (chop,
+mine, smelt, smith a weapon, fight a wolf with it), ahead of §12's combat-first order.
+- **Minigames are immersive to the skill**, not a charge bar or a QTE. **Woodcutting is branch dodge**
+  (built, `game/regents/skilling/woodcutting/`): a 2D trunk you chop from the left or the right; a
+  branch at your head on your side hits you and staggers you; tiers are branchier and want more logs.
+  Mining's, Herbalism's, smelting's and smithing's minigames are to be designed to the same bar
+  (the Trace and Tension proposals in §7.2 are starting points, not decisions).
+- **Every skill is dual-mode**, gathering and processing alike (smelting and smithing too): **AFK**
+  (passive, slower, every material including rares) or **active** (the minigame). Active is a modest
+  edge so AFK is never a non-option: **1.25x the yield and 1.3x the rare chance** at a good score
+  (hot rules `regents.active_yield_mult`, `regents.active_rare_mult`). How a score maps to yield (is a
+  poor active round worse than AFK?) is to playtest. No separate meter for active play yet.
+- **Gear is modular, Tinkers'-style**: weapons and tools are crafted, not dropped whole, from a **core**
+  (axe head, blade: base stats and tier) and a **handle or hilt** (its trait or combat ability). **Gear
+  gains XP through use.** **Durability and repair** are the material sink; ways to lose gear (PvP,
+  NPC quests) come later. Active smithing raises the crafted part's quality.
+- **Open with this**: how a handle's ability sits with "the weapon is the class" and per-kit mastery
+  (§4.4, #3), and gear XP beside character mastery (#22).
+
 ## 8. Accounts, persistence, social
 - **Accounts** (owner, 2026-10-18, #13): **SpacetimeAuth**. An `account` row that several sign-in identities link to (so Steam, through a ticket-to-token bridge, is a link later, not a migration); one account → up to three `character` rows, and the sidecar and admin tools keep their own authority identities. Identity-per-device, as in games 1–3, is not enough once characters outlive devices.
 - **Persistence**: `character` (name, account, created, duel_wins, duel_losses), `character_state` (world_id, position, hp, res, kit, weakened_until), `equipment`, `inventory`, `mastery` (per kit and per skill), `writ_progress`. Written on change, not on a timer; the module is the source of truth, so a crash loses nothing committed.
@@ -232,11 +254,13 @@ The owner went through #1, #2, #3, #13, #15, #17 and the chunk schema (#21) on 2
 | 14 | Inventory | the template's `inventory_item` (stacks, slots); Fishing's bank if it generalises; rebuild once as foundation if not | Agent |
 | 15 | Tool slot | **no tool slot: the best matching tool in the bag is used** (OSRS-style), shown in the hand only during the minigame; five equipment slots | **Owner — decided 2026-10-18** |
 | 16 | Cast queue depth and replace rule | depth 1; a new press replaces the queued ability; dodge and stuns clear it | Agent |
-| 17 | v1 minigame models | **three shapes: Rhythm (Woodcutting), Trace (Mining), Tension (Herbalism)**; Fishing's model a fourth later | **Owner — decided 2026-10-18** |
+| 17 | v1 minigame models | first answer: three shapes, Rhythm (Woodcutting), Trace (Mining), Tension (Herbalism). **Revised the same day: minigames are immersive to their skill; Woodcutting is branch dodge** (built); Mining, Herbalism, smelting and smithing are to design to that bar (§7.4) | **Owner — decided 2026-10-18 (woodcutting); the rest open** |
 | 18 | Dungeon generator approach | socket-stitch on a 4 m grid with a graph recipe and backtracking; affixes and a daily seed later | Agent |
 | 19 | Minigame cheat posture | accept scripted play in v1; bound by yield caps, depletion, mastery curves; revisit if it shows | Agent |
 | 20 | Duel area | 30 m radius at the accept midpoint; 3 s grace outside | Agent (owner set the rule) |
 | 21 | `chunk` on the template's existing positional tables (`movement_state` and the others that place an entity), which rule 17 forbids reshaping within a major version | **a template 1.0 reshape**: add the column, wipe every game's database once, older builds stop connecting; chosen over an `entity_chunk` side table joined into each subscription. When, and what else 1.0 folds in, is still to plan (around Fowl Play's and DiscGolf's playtests) | **Owner — decided 2026-10-18** |
+| 22 | Modular gear and the kits: does a handle's ability replace, add to, or choose among a kit's ranked abilities; how gear XP sits beside per-kit mastery | to propose with the combat round | **Owner — open** |
+| 23 | AFK and active: how a minigame score maps to yield (a poor active round below AFK or not); whether active play needs a meter | playtest first: yield = AFK rate x `active_yield_mult` x score | **Owner — open** |
 
 ## 14. Assets (CC0 only unless noted; verified items are from the 2026-10-13 pass, others marked **verify**)
 | Need | Source | Note |
