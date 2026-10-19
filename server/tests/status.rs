@@ -104,3 +104,18 @@ fn a_dash_counts_only_inside_its_window() {
     let no_dash = MovementLimits { dash: 0.0, ..KIND };
     assert!(!none.step(true, 1.0, &no_dash), "a kind with no dash never opens one");
 }
+
+#[test]
+fn a_replay_may_hold_one_dash() {
+    // DECISIONS #256: the first frame after a correction stands for many and carries no presses; a dash
+    // that could have begun in it is allowed as one dash's distance over the span, not its speed throughout.
+    let mut w = status::DashWindow::default();
+    let extra = w.replay(30.0, &KIND);
+    assert!((extra - KIND.dash * KIND.dash_frames / 30.0).abs() < 1e-5, "one dash's worth over 30 frames: {extra}");
+    let mut cooling = status::DashWindow { open_frames: 0.0, cooldown_frames: 40.0 };
+    assert_eq!(cooling.replay(30.0, &KIND), 0.0, "none while the cooldown outlasts the span");
+    let mut open = status::DashWindow { open_frames: 5.0, cooldown_frames: 49.0 };
+    assert!(open.replay(30.0, &KIND) > 0.0, "a window still open counts");
+    let no_dash = MovementLimits { dash: 0.0, ..KIND };
+    assert_eq!(status::DashWindow::default().replay(30.0, &no_dash), 0.0, "a kind with no dash: none");
+}

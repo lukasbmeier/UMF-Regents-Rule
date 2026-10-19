@@ -100,6 +100,10 @@ const STOW_AIR: float = 0.01
 @export_tool_button("Fit This Grip", "Edit") var fit_grip: Callable = fit_this_grip
 ## Fit a grip for every animation in the set, for the body chosen.
 @export_tool_button("Fit Every Animation", "Edit") var fit_all: Callable = fit_every_animation
+## ONE GRIP FOR ALL (DECISIONS #257): every animation's own grip goes, and they all use the idle's,
+## the UNIVERSAL grip. Move it with the animation on `locomotion.idle`; then spot-check the others,
+## and a drag on one makes a spot fix that keeps following the universal grip. Undo: git.
+@export_tool_button("Use One Grip For All", "Reload") var one_grip: Callable = use_one_grip
 ## Photograph every animation into res://grip_pictures/, to check the fits by eye.
 @export_tool_button("Save Pictures", "Image") var save_pictures: Callable = save_pictures_now
 ## Show the item put away, on its stow bone (move the Stow node to place it).
@@ -189,7 +193,7 @@ func _get_property_list() -> Array[Dictionary]:
 func _get(property: StringName) -> Variant:
 	if property == &"steady":
 		var e: GripEntry = _shown_for_edit()
-		return e != null and e.steady
+		return e != null and e.is_steady()
 	return null
 
 
@@ -231,6 +235,15 @@ func _validate_property(property: Dictionary) -> void:
 func clear_this_grip() -> void:
 	if grip != null:
 		grip.remove(_anim(), _body_key())
+	_posed = false
+
+
+## USE ONE GRIP FOR ALL (`ItemGrip.make_universal`): only the idle's grips stay.
+func use_one_grip() -> void:
+	if grip == null:
+		return
+	var gone: int = grip.make_universal()
+	_fit_said = "One grip for all: %d animation grip(s) cleared. Move the idle's grip; a drag on another animation is a spot fix on it." % gone
 	_posed = false
 
 
@@ -364,6 +377,8 @@ func _fit(anim: StringName) -> Dictionary:
 	if r.is_empty():
 		return r
 	var e: GripEntry = grip.ensure(anim, _body_key())
+	# A fit is a grip of its own, not a spot fix (it says where the item sits, not a nudge).
+	e.relative = false
 	e.steady = bool(r["steady"])
 	e.position = r["position"]
 	e.rotation_degrees = r["rotation_degrees"]
@@ -881,7 +896,7 @@ func _turn_wrist(i: int, anim: StringName) -> void:
 	if not h.is_empty() and bool(h["fist"]):
 		_fist_axis[i] = h["axis"]
 	var e: GripEntry = grip.resolve(anim, _body_types[i])
-	if e == null or not e.steady or grip.wrist_turn_deg <= 0.0 or _fist_axis[i] == Vector3.ZERO \
+	if e == null or not e.is_steady() or grip.wrist_turn_deg <= 0.0 or _fist_axis[i] == Vector3.ZERO \
 			or (show_stowed and grip.stows()):
 		return
 	var hand: Transform3D = sk.get_bone_global_pose(bone)
@@ -1014,16 +1029,20 @@ func _editing_text() -> String:
 	var line: String = "%s · %s" % [_anim(), BOTH if key.is_empty() else String(key)]
 	var own: GripEntry = grip.find(_anim(), key)
 	if own == null:
-		return line + "\n(not set: a drag sets it, from here)"
-	return line + (" · steady" if own.steady else "")
+		return line + ("\n(not set: uses the universal grip; a drag makes a spot fix)" if grip.universal
+			else "\n(not set: a drag sets it, from here)")
+	if own.relative:
+		return line + " · spot fix on the universal grip"
+	return line + (" · universal" if grip.universal and own.animation == AnimationSet.IDLE else "") \
+		+ (" · steady" if own.steady else "")
 
 
 ## A grip as a label names it: its animation and its body, and steady when it is.
 static func _grip_name(e: GripEntry) -> String:
 	if e == null:
 		return "no grip"
-	return "%s · %s%s" % [e.animation, BOTH if e.body.is_empty() else String(e.body),
-		" · steady" if e.steady else ""]
+	return "%s · %s%s%s" % [e.animation, BOTH if e.body.is_empty() else String(e.body),
+		" · spot fix" if e.relative else "", " · steady" if e.is_steady() else ""]
 
 
 static func _air_text(air: float) -> String:
@@ -1032,12 +1051,12 @@ static func _air_text(air: float) -> String:
 
 ## Every grip's numbers (and the file's own settings), so a change from anywhere is seen.
 func _signature() -> String:
-	var parts: PackedStringArray = ["%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [grip.carry_point, grip.fit_face,
+	var parts: PackedStringArray = ["%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [grip.universal, grip.carry_point, grip.fit_face,
 		grip.fit_cone_deg, grip.wrist_turn_deg, grip.stow_bone, grip.stow_position,
 		grip.stow_rotation_degrees, grip.draw_swap_at, grip.stow_swap_at, grip.stow_point, grip.stow_face]]
 	for e: GripEntry in grip.entries:
 		if e != null:
-			parts.append("%s|%s|%s|%s|%s" % [e.animation, e.body, e.position, e.rotation_degrees, e.steady])
+			parts.append("%s|%s|%s|%s|%s|%s" % [e.animation, e.body, e.position, e.rotation_degrees, e.steady, e.relative])
 	return ";".join(parts)
 
 

@@ -181,11 +181,16 @@ pub(crate) fn tick_world_module(
                     }
                     ctx.db.correction().entity_id().delete(row.entity_id);
                 }
-                let dashing = dash.step(q.frame.dash, frames, &limits);
-                let bound = crate::content::MovementLimits {
-                    burst: limits.burst + if dashing { limits.dash } else { 0.0 },
-                    ..limits
+                // A dash counts inside its window (#256); a replay frame cannot show its presses, so it is
+                // allowed a dash's worth when one could have happened in it.
+                let extra = if frames > 1.0 {
+                    dash.replay(frames, &limits)
+                } else if dash.step(q.frame.dash, frames, &limits) {
+                    limits.dash
+                } else {
+                    0.0
                 };
+                let bound = crate::content::MovementLimits { burst: limits.burst + extra, ..limits };
                 let (next, clamped) = apply_client_trust(&s, &q.frame, cfg, frames, level, &bound);
                 s = next;
                 if clamped {

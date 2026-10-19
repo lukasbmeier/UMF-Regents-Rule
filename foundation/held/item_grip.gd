@@ -35,6 +35,12 @@ const STOW: StringName = &"item.stow"
 @export var hand: StringName = &"hand_r"
 ## Every grip. Edit them in the preview; typing here works too.
 @export var entries: Array[GripEntry] = []
+## ONE GRIP FOR EVERY ANIMATION, AND SPOT FIXES (DECISIONS #257): the idle's grip is the UNIVERSAL
+## one, which every animation uses, and a grip made for an animation (a drag in the preview) is a
+## spot fix on it (`GripEntry.relative`): a nudge from the universal grip, so moving the universal
+## grip moves the fixes with it. The preview's Use One Grip For All turns it on. Off: every grip is
+## its own (an item fitted per animation, like the rod).
+@export var universal: bool = false
 ## How far the WRIST may turn to keep an item carried steady in the fist, in degrees (DECISIONS
 ## #158, `HoldWrist`): the arm swings, the item keeps its direction, and the hand bends to stay
 ## round its handle. 0: the hand never turns, and the handle turns in the fist instead.
@@ -151,12 +157,41 @@ func bodies() -> Array[StringName]:
 	return out
 
 
-## The entry for exactly this animation and body (empty: every body), or null.
+## The entry for exactly this animation and body (empty: every body), or null. A spot fix comes
+## with its base (the idle's grip for its body) set.
 func find(animation: StringName, body: StringName = &"") -> GripEntry:
 	for e: GripEntry in entries:
 		if e != null and e.animation == animation and e.body == body:
+			if e.relative:
+				e.base = _idle_of(body)
 			return e
 	return null
+
+
+## The idle's own grip for a body, else the shared one: what a spot fix for that body sits on.
+func _idle_of(body: StringName) -> GripEntry:
+	var shared: GripEntry = null
+	for e: GripEntry in entries:
+		if e != null and e.animation == AnimationSet.IDLE and not e.relative:
+			if e.body == body:
+				return e
+			if e.body.is_empty():
+				shared = e
+	return shared
+
+
+## USE ONE GRIP FOR ALL: every animation's own grip goes, the idle's stay (for every body), and a
+## grip made from now on is a spot fix on them. Returns how many grips went.
+func make_universal() -> int:
+	var kept: Array[GripEntry] = []
+	for e: GripEntry in entries:
+		if e != null and e.animation == AnimationSet.IDLE and not e.relative:
+			kept.append(e)
+	var gone: int = entries.size() - kept.size()
+	entries = kept
+	universal = true
+	emit_changed()
+	return gone
 
 
 ## The entry an animation USES, for a body (empty: one with no grips of its own): see the header.
@@ -202,8 +237,13 @@ func ensure(animation: StringName, body: StringName = &"") -> GripEntry:
 	e.animation = animation
 	e.body = body
 	var was: GripEntry = resolve(animation, body)
-	if was != null:
+	if universal and animation != AnimationSet.IDLE and (was == null or not was.relative):
+		# A new spot fix, starting on the universal grip: no nudge yet, so nothing moves.
+		e.relative = true
+	elif was != null:
 		e.copy_from(was)
+	if e.relative:
+		e.base = _idle_of(body)
 	entries.append(e)
 	emit_changed()
 	return e

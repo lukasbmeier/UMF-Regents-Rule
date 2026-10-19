@@ -123,4 +123,20 @@ impl DashWindow {
         self.cooldown_frames = (self.cooldown_frames - frames).max(0.0);
         open
     }
+
+    /// A REPLAY frame (the first after a correction, worth `frames` client frames): the presses inside
+    /// it are not in it, so a dash it may hold is allowed as a dash's worth of distance over the span
+    /// (the dash's speed for its window, spread over `frames`) when one could have begun in it: a window
+    /// still open, or the cooldown over inside the span. Without it, a correction during a roll cleared
+    /// the roll from the replay, which was clamped and corrected again, and again. Returns the extra
+    /// speed the span may claim; the window and cooldown are then forgotten (the generous reading).
+    pub fn replay(&mut self, frames: f32, limits: &MovementLimits) -> f32 {
+        let possible = limits.dash > 0.0 && (self.open_frames > 0.0 || self.cooldown_frames < frames);
+        *self = DashWindow::default();
+        if possible {
+            limits.dash * limits.dash_frames.min(frames) / frames.max(1.0)
+        } else {
+            0.0
+        }
+    }
 }

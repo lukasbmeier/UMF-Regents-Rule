@@ -71,6 +71,8 @@ var _asked: StringName = &""
 var _asked_age: float = 0.0
 ## Until when (msec) moving does not cut the action one-shot: `commit_action`.
 var _action_committed_until: int = 0
+## Until when (msec) the model faces the way the body moves: `face_motion`.
+var _face_motion_until: int = 0
 
 ## If the machine has not reached what we asked for by now, it went somewhere else on its own
 ## (an auto transition) and its word is the truth again.
@@ -216,6 +218,13 @@ func commit_action(seconds: float) -> void:
 
 func action_committed() -> bool:
 	return Time.get_ticks_msec() < _action_committed_until
+
+
+## FACE THE WAY IT MOVES for `seconds` (DECISIONS #257): the MODEL turns to the body's motion instead of
+## the way the body faces, while it moves. A dodge roll to the side while facing a target is a roll to
+## the side, not a forward roll sliding sideways. Presentation only: the body's yaw is untouched.
+func face_motion(seconds: float) -> void:
+	_face_motion_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
 
 
 ## Fire `semantic` as the action one-shot: a genre's reaction that is neither an interact nor an
@@ -516,11 +525,14 @@ func _turn_model(s: MovementState, delta: float) -> void:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	if ent != null and ent.definition != null:
 		offset = deg_to_rad(ent.definition.visual_yaw_deg)
+	var yaw: float = s.yaw
+	if Time.get_ticks_msec() < _face_motion_until and Vector2(s.vel.x, s.vel.z).length() > 0.5:
+		yaw = atan2(-s.vel.x, -s.vel.z)
 	if not _shown_yaw_valid or turn_smoothing <= 0.0:
-		_shown_yaw = s.yaw
+		_shown_yaw = yaw
 		_shown_yaw_valid = true
 	else:
-		_shown_yaw = lerp_angle(_shown_yaw, s.yaw, 1.0 - exp(-turn_smoothing * delta))
+		_shown_yaw = lerp_angle(_shown_yaw, yaw, 1.0 - exp(-turn_smoothing * delta))
 	_model.global_rotation = Vector3(0.0, _shown_yaw + offset, 0.0)
 
 
