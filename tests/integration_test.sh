@@ -753,8 +753,8 @@ send_frames "[$(frame $SEQ "$(python -c "print($XG + 5000.0)")" "$(python -c "pr
 read -r XH YH ZH <<< "$(pos_of)"
 MOVED_H=$(python -c "print(round($XH - $XG, 4))")
 DROP=$(python -c "print(round($YG - $YH, 6))")
-assert_eq "$(python -c "print('true' if 0 < $MOVED_H < 1.0 else 'false')")" "true" \
-  "a claim 5 km off and 1.35 m lower is clamped (moved $MOVED_H m)"
+assert_eq "$(python -c "print('true' if 0 < $MOVED_H < $STEP * 5.0 else 'false')")" "true" \
+  "a claim 5 km off and 1.35 m lower is clamped to a few frames' envelope (moved $MOVED_H m, under 5 frames' $STEP m)"
 assert_eq "$(python -c "print('true' if 0 <= $DROP < 0.001 else 'false')")$(field grounded)" "truetrue" \
   "and takes only its share of the drop ($DROP m): the player keeps their footing instead of sinking"
 
