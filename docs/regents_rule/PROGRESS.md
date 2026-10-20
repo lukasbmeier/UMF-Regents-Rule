@@ -320,3 +320,12 @@ combat playtest wields the axe from the bag window.
 health a second, until you are whole. Foes too: one led off and left heals as it walks home. Both are
 hot rules. Proven: native test (the step), the combat playtest (after the skeleton fight your health
 climbs back; without the tick it does not).
+
+**The foe bench** (`game/regents/workbench/foe_workbench.tscn`, opened from a FoeDef in the Content Dock):
+the foe's model playing its swings, and its fight worked out from the content: its swings' damage, its
+damage a second over its whole rhythm, how long it takes to kill a player, the XP a kill pays; how long
+each weapon in the game takes to kill it (rank 1, its light combo); what a kill drops on average. Amber
+when nothing kills it in a minute or it kills a player in under 3 s. Today: the warrior (120 health) dies
+in 4.6 s to the iron axe, 5.6 s to the iron sword, 6.5 s to the bronze axe, and kills you in 14 s; the
+axeman (150) in 5.7 / 7.0 / 8.1 s, you in 12 s. (The sword's light combo is slower to kill than the
+axe's: a balance question.)

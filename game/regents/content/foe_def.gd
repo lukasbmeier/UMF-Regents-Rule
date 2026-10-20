@@ -46,10 +46,6 @@ func content_type() -> StringName:
 	return &"foe"
 
 
-func why_no_workbench() -> String:
-	return "it is tried in the frontier's skeleton camp, east of the spawn (a foe bench comes with the fight's tuning)"
-
-
 func summary() -> String:
 	return "%s: %d hp, %s at %d%%, %d drops" % [key, hp, kit.key if kit != null else "?", damage_pct, loot.size()]
 

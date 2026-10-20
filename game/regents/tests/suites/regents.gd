@@ -26,6 +26,7 @@ func run() -> void:
 	await _run_chain_minigames()
 	await _run_lab()
 	await _run_recipe_bench()
+	await _run_foe_bench()
 	_run_combat()
 
 
@@ -150,6 +151,44 @@ func _run_swing_timeline() -> void:
 
 
 ## The recipe bench: a recipe's numbers worked out from the content and the hot rules' defaults.
+## The foe bench: a foe's fight worked out from the content, the server's damage rule mirrored.
+func _run_foe_bench() -> void:
+	print("== regents: the foe bench ==")
+	var warrior: FoeDef = FoeDef.by_kind(103)
+	_check(ContentLibrary.workbench_for(&"foe") == "res://game/regents/workbench/foe_workbench.tscn", "a foe has its bench")
+	var bench: FoeWorkbench = (load(ContentLibrary.workbench_for(&"foe")) as PackedScene).instantiate() as FoeWorkbench
+	add_child(bench)
+	bench.item = warrior
+	await get_tree().process_frame
+	# The server's rule, mirrored: native tests hold the Rust; these the same numbers here.
+	_check(is_equal_approx(FoeWorkbench.hit_damage(11.0, 70, 0, 1), 7.7) and is_equal_approx(FoeWorkbench.hit_damage(10.0, 100, 1000, 10), 10.0 * 1.2 * 1.27),
+		"its damage rule is the server's: a chop at 70 %% is 7.7; quality and rank 10 add a fifth and 27 %%")
+	var sheet: String = await bench.run_named_test(&"sheet")
+	var r: Dictionary = FoeWorkbench.rhythm(warrior)
+	_check(sheet.contains("120 health") and int(bench.last_measure["swings"]) == maxi(warrior.heavy_every, warrior.kit.light.size()) and float(bench.last_measure["dps"]) > 0.0,
+		"the sheet: %s" % sheet)
+	var slash: float = FoeWorkbench.hit_damage(warrior.kit.light[0].damage, warrior.damage_pct, 0, 1)
+	_check(is_equal_approx(float((r["swings"] as Array)[0]["damage"]), slash) and int(r["ms"]) >= warrior.rest_ms,
+		"its first swing does its slash at %d %% (%.1f), and its rhythm rests %d ms" % [warrior.damage_pct, slash, warrior.rest_ms])
+	await bench.run_named_test(&"versus")
+	var rows: Array = bench.last_measure["weapons"]
+	_check(rows.size() >= 3 and float(rows[0]["seconds"]) <= float(rows[rows.size() - 1]["seconds"]),
+		"versus: every weapon, fastest first (%s %.1f s ... %s %.1f s)" % [rows[0]["weapon"], float(rows[0]["seconds"]), rows[rows.size() - 1]["weapon"], float(rows[rows.size() - 1]["seconds"])])
+	await bench.run_named_test(&"loot")
+	_check(is_equal_approx(float(bench.last_measure.get("Copper ore", 0.0)), 0.6 * 1.5) and is_equal_approx(float(bench.last_measure.get("Uncut gem", 0.0)), 0.04),
+		"loot: 0.9 copper ore a kill (60 %% of 1-2), 0.04 gems")
+	_check(bench.fit_checks().is_empty(), "the warrior fits: %s" % str(bench.fit_checks()))
+	var brute := FoeDef.new()
+	brute.kit = warrior.kit
+	brute.character = warrior.character
+	brute.hp = 100000
+	brute.damage_pct = 1000
+	bench.item = brute
+	_check(bench.fit_checks().size() == 2, "a foe nothing kills in a minute, that kills you in seconds, is flagged: %s" % str(bench.fit_checks()))
+	bench.queue_free()
+	await get_tree().process_frame
+
+
 func _run_recipe_bench() -> void:
 	print("== regents: the recipe bench ==")
 	var bar: RecipeDef = RecipeDef.by_id(40001)
