@@ -958,6 +958,67 @@
 			]
 		},
 		{
+			"name": "GroundItem",
+			"namespace": [],
+			"source_name": "GroundItem",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "item_def_id",
+					"type": "U32"
+				},
+				{
+					"name": "qty",
+					"type": "U32"
+				},
+				{
+					"name": "instance_data",
+					"type": "String"
+				},
+				{
+					"name": "pos",
+					"type": "Vector3",
+					"type_idx": 3
+				},
+				{
+					"name": "owner_id",
+					"type": "U64"
+				},
+				{
+					"name": "anyone",
+					"type": "Bool"
+				},
+				{
+					"name": "owner_until",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "despawn_at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"ground_item"
+			],
+			"table_name": "ground_item",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "HealthStateRow",
 			"namespace": [],
 			"source_name": "HealthStateRow",
@@ -1182,7 +1243,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 31
+					"type_idx": 32
 				},
 				{
 					"name": "received_at",
@@ -1794,6 +1855,46 @@
 					"name": "speed",
 					"type": "F32"
 				}
+			]
+		},
+		{
+			"name": "ResourceState",
+			"namespace": [],
+			"source_name": "ResourceState",
+			"struct": [
+				{
+					"name": "id",
+					"type": "U64"
+				},
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "resource_id",
+					"type": "U32"
+				},
+				{
+					"name": "stored",
+					"type": "F32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"resource_state"
+			],
+			"table_name": "resource_state",
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"is_public": [
+				true
 			]
 		},
 		{
@@ -2652,6 +2753,24 @@
 			"return_data": {}
 		},
 		{
+			"name": "drop_item",
+			"wire_name": "drop_item",
+			"namespace": [],
+			"local_name": "drop_item",
+			"params": [
+				{
+					"name": "item_id",
+					"type": "U64"
+				},
+				{
+					"name": "qty",
+					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "end_interact",
 			"wire_name": "end_interact",
 			"namespace": [],
@@ -2860,6 +2979,20 @@
 			"return_data": {}
 		},
 		{
+			"name": "pick_up",
+			"wire_name": "pick_up",
+			"namespace": [],
+			"local_name": "pick_up",
+			"params": [
+				{
+					"name": "ground_id",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "ping",
 			"wire_name": "ping",
 			"namespace": [],
@@ -2963,7 +3096,7 @@
 					],
 					"is_array": true,
 					"type": "BodyContactWrite",
-					"type_idx": 43
+					"type_idx": 44
 				}
 			],
 			"return_type": "",
@@ -3098,7 +3231,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 33
+					"type_idx": 34
 				}
 			],
 			"return_type": "",
@@ -3456,7 +3589,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 31
+					"type_idx": 32
 				}
 			],
 			"return_type": "",
@@ -3486,7 +3619,7 @@
 				{
 					"name": "_tick",
 					"type": "HoldTick",
-					"type_idx": 28
+					"type_idx": 29
 				}
 			],
 			"return_type": "",
@@ -3502,7 +3635,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 49
+					"type_idx": 51
 				}
 			],
 			"return_type": "",
@@ -3615,7 +3748,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 54
+					"type_idx": 56
 				}
 			],
 			"return_type": "",
@@ -3638,7 +3771,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 55
+					"type_idx": 57
 				}
 			],
 			"return_type": "",
@@ -4186,11 +4319,35 @@
 			"is_public": false
 		},
 		{
+			"name": "ground_item",
+			"wire_name": "ground_item",
+			"namespace": [],
+			"local_name": "ground_item",
+			"type_idx": 25,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "ground_item_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "health_state",
 			"wire_name": "health_state",
 			"namespace": [],
 			"local_name": "health_state",
-			"type_idx": 25,
+			"type_idx": 26,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4214,7 +4371,7 @@
 			"wire_name": "hold_member",
 			"namespace": [],
 			"local_name": "hold_member",
-			"type_idx": 26,
+			"type_idx": 27,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4242,7 +4399,7 @@
 			"wire_name": "hold_progress",
 			"namespace": [],
 			"local_name": "hold_progress",
-			"type_idx": 27,
+			"type_idx": 28,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "hold_id",
@@ -4270,7 +4427,7 @@
 			"wire_name": "hold_tick",
 			"namespace": [],
 			"local_name": "hold_tick",
-			"type_idx": 28,
+			"type_idx": 29,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4293,7 +4450,7 @@
 			"wire_name": "hot_rule",
 			"namespace": [],
 			"local_name": "hot_rule",
-			"type_idx": 29,
+			"type_idx": 30,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -4312,7 +4469,7 @@
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 30,
+			"type_idx": 31,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4340,7 +4497,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 32,
+			"type_idx": 33,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4364,7 +4521,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 33,
+			"type_idx": 34,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -4383,7 +4540,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 34,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4411,7 +4568,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 35,
+			"type_idx": 36,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4435,7 +4592,7 @@
 			"wire_name": "noise",
 			"namespace": [],
 			"local_name": "noise",
-			"type_idx": 36,
+			"type_idx": 37,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4459,7 +4616,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 37,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4483,7 +4640,7 @@
 			"wire_name": "perf_report",
 			"namespace": [],
 			"local_name": "perf_report",
-			"type_idx": 38,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4530,7 +4687,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 39,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -4554,7 +4711,7 @@
 			"wire_name": "push",
 			"namespace": [],
 			"local_name": "push",
-			"type_idx": 40,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4582,7 +4739,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 41,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -4606,7 +4763,7 @@
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 42,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4621,11 +4778,39 @@
 			"is_public": false
 		},
 		{
+			"name": "resource_state",
+			"wire_name": "resource_state",
+			"namespace": [],
+			"local_name": "resource_state",
+			"type_idx": 45,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "id",
+			"unique_indexes": [
+				{
+					"name": "id",
+					"type": "U64",
+					"constraint_name": "resource_state_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "session",
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 44,
+			"type_idx": 46,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4649,7 +4834,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 45,
+			"type_idx": 47,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4668,7 +4853,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 46,
+			"type_idx": 48,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -4692,7 +4877,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 47,
+			"type_idx": 49,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -4748,7 +4933,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 48,
+			"type_idx": 50,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -4772,7 +4957,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 49,
+			"type_idx": 51,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -4795,7 +4980,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 50,
+			"type_idx": 52,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4819,7 +5004,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 51,
+			"type_idx": 53,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -4838,7 +5023,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 52,
+			"type_idx": 54,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4857,7 +5042,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 53,
+			"type_idx": 55,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -4929,6 +5114,7 @@
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"Feedback": "UmfFeedback",
+		"GroundItem": "UmfGroundItem",
 		"HealthStateRow": "UmfHealthStateRow",
 		"HoldMember": "UmfHoldMember",
 		"HoldProgress": "UmfHoldProgress",
@@ -4948,6 +5134,7 @@
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
+		"ResourceState": "UmfResourceState",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -5017,6 +5204,7 @@
 		"EquipStateRow": "UmfEquipStateRow",
 		"StatusExpiry": "UmfStatusExpiry",
 		"Feedback": "UmfFeedback",
+		"GroundItem": "UmfGroundItem",
 		"HealthStateRow": "UmfHealthStateRow",
 		"HoldMember": "UmfHoldMember",
 		"HoldProgress": "UmfHoldProgress",
@@ -5036,6 +5224,7 @@
 		"RateBudget": "UmfRateBudget",
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
+		"ResourceState": "UmfResourceState",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -6702,6 +6891,122 @@
 				"elements": [
 					{
 						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "item_def_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "qty"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "instance_data"
+						},
+						"algebraic_type": {
+							"String": []
+						}
+					},
+					{
+						"name": {
+							"some": "pos"
+						},
+						"algebraic_type": {
+							"Ref": 3.0
+						}
+					},
+					{
+						"name": {
+							"some": "owner_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "anyone"
+						},
+						"algebraic_type": {
+							"Bool": []
+						}
+					},
+					{
+						"name": {
+							"some": "owner_until"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "despawn_at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "entity_id"
 						},
 						"algebraic_type": {
@@ -7073,7 +7378,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 31.0
+							"Ref": 32.0
 						}
 					},
 					{
@@ -8070,6 +8375,71 @@
 						},
 						"algebraic_type": {
 							"F32": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "resource_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "stored"
+						},
+						"algebraic_type": {
+							"F32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
 						}
 					}
 				]

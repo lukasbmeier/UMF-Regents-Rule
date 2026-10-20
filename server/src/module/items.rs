@@ -96,6 +96,21 @@ pub(crate) fn grant_item_internal(
     Ok(())
 }
 
+/// `grant_item_internal`, for a stack that carries `instance_data` (a made item's quality): each one its
+/// own row with it, as it was made. Empty data stacks as usual.
+pub(crate) fn grant_stack_internal(ctx: &ReducerContext, entity_id: u64, item_def_id: u32, qty: u32, instance_data: &str) -> Result<(), String> {
+    if instance_data.is_empty() {
+        return grant_item_internal(ctx, entity_id, item_def_id, qty);
+    }
+    ctx.db.item_def().item_def_id().find(item_def_id).ok_or(format!("unknown item_def {item_def_id}"))?;
+    for _ in 0..qty {
+        ctx.db.inventory_item().insert(InventoryItem {
+            id: 0, owner_entity_id: entity_id, item_def_id, qty: 1, slot: -1, instance_data: instance_data.to_string(),
+        });
+    }
+    Ok(())
+}
+
 /// Player intent: spend part of a stack. The caller must own the row — this is the one
 /// inventory reducer a client may call, so ownership is checked against `player`, not
 /// `authority`.

@@ -105,6 +105,11 @@ func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:
 func dev_push(entity_id: int, vel: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('dev_push', [entity_id, vel], [&'u64', &'vector3[f32,f32,f32]'], &'')
 
+## 0. item_id: int [br]
+## 1. qty: int [br]
+func drop_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('drop_item', [item_id, qty], [&'u64', &'u32'], &'')
+
 
 func end_interact() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('end_interact', [], [], &'')
@@ -159,6 +164,10 @@ func new_match(session_id: int) -> SpacetimeDBReducerCall:
 ## 1. code: String [br]
 func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('offer_referee', [world_id, code], [&'u32', &'string'], &'')
+
+## 0. ground_id: int [br]
+func pick_up(ground_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('pick_up', [ground_id], [&'u64'], &'')
 
 ## 0. pos: Vector3 [br]
 ## 1. target_id: int [br]

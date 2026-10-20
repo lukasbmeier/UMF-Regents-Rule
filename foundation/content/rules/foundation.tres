@@ -215,8 +215,35 @@ maximum = 100.0
 unit = "x"
 description = "LOOT, PITY: a pity line is certain once a player has missed it this many times its usual run (5: never more than five times the usual number of kills). 0: never certain."
 
+[sub_resource type="Resource" id="Rule_ground_owner"]
+script = ExtResource("2_rule")
+name = &"ground_owner_s"
+number = 60.0
+minimum = 0.0
+maximum = 3600.0
+unit = "s"
+description = "GROUND ITEMS (DECISIONS #269): a kill's drop, or a dropped stack, is its owner's alone this long (nobody else even sees it), then anyone's."
+
+[sub_resource type="Resource" id="Rule_ground_public"]
+script = ExtResource("2_rule")
+name = &"ground_public_s"
+number = 60.0
+minimum = 0.0
+maximum = 3600.0
+unit = "s"
+description = "GROUND ITEMS: once anyone's, it lies this long, then is gone."
+
+[sub_resource type="Resource" id="Rule_ground_pickup"]
+script = ExtResource("2_rule")
+name = &"ground_pickup_m"
+number = 2.5
+minimum = 0.5
+maximum = 10.0
+unit = "m"
+description = "GROUND ITEMS: how near a player must be to pick one up (the server's check, from where it last saw them). Walking over one picks it up a little inside this."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup")])

@@ -384,6 +384,29 @@ decides something is slain; it gives each player theirs (into the bag until grou
 who got what. A new or changed table needs a bake and a publish. Tested by the `loot` suite,
 `server/tests/loot.rs` and a genre's integration hook.
 
+**Where it lands: on the ground** (DECISIONS #269). A line marked `to_bag` (marks, a quest item) goes
+straight into the bag; everything else falls where the thing died, a SACK with a ring glowing in its
+grade's colour and its name above it. It is its player's ALONE for `foundation.ground_owner_s` (60 s:
+nobody else is even sent it), then ANYONE's for `foundation.ground_public_s` (60 s), then gone. Walk over
+it to pick it up (`foundation.ground_pickup_m`: the server checks the distance). A player can drop a stack
+from their bag too (`drop_item`; the inventory component's `request_drop`): theirs for a minute, then
+anyone's: a way to give a friend something. Boot shows the sacks in every game (`GroundItems`); a game
+tells it what its items are called and their grade (`GroundItems.name_of`, `GroundItems.grade_of`).
+Server code lays something down itself with `crate::module::drop_to_ground`. Tested by the
+`ground_items` suite, `server/tests/ground.rs` and the integration suite's ground section.
+
+### Resources: mana, stamina, focus
+A pool an entity spends to act and that fills by itself is a RESOURCE, content (`ResourceDef`, a genre's
+`game/<genre>/content/resource/`; DECISIONS #270): its key ("mana"), how much it holds, how fast it fills
+out of a fight and in one, and how long after a spend counts as "in a fight". An entity has a pool only
+when the game gives it one: server code calls `crate::module::ensure_resource(ctx, entity, id)` (Regent's
+Rule's staff gives mana when wielded) and `spend_resource(ctx, entity, id, amount)` when it acts, which
+refuses what the pool cannot pay. On the client, an entity's `ResourceComponent` says what each pool holds
+now (`level(id)`, `max_of(id)`, `can_pay(id, n)`) for a bar. Nothing ticks: a row keeps what a pool held
+after its last spend and when, and the server and every client work out the rest by one rule
+(`ResourceDef.level`, `resource::level`). A change to a resource needs a bake and a publish. Tested by
+the `resources` suite, `server/tests/resource.rs` and a genre's integration hook.
+
 ### The server pushes people (and bodies)
 A genre's rule that moves someone (a leaf blower, a bounce pad, a hit) writes a push:
 `push_entity(ctx, entity, vel, by)` (DECISIONS #251). Players still move themselves: the pushed player's

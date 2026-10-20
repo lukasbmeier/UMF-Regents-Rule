@@ -3,7 +3,8 @@
 //! that decides something is slain calls `drop_loot`, which rolls the table once for each PLAYER who
 //! dealt at least `foundation.loot_share_min_pct` of the recent damage (hits older than
 //! `foundation.loot_share_forget_s` do not count), with that player's own pity (`drop_pity`, kept by
-//! identity), and gives each what they rolled. Until the ground items, every drop goes to the bag.
+//! identity), and gives each what they rolled: a line marked `to_bag` into their bag, the rest on the
+//! ground where it fell, theirs alone for a while (`ground.rs`, DECISIONS #269).
 
 use super::*;
 
@@ -66,7 +67,8 @@ pub fn loot_contributors(ctx: &ReducerContext, target_id: u64) -> Vec<u64> {
 }
 
 /// `target_id` IS SLAIN: roll loot table `table_id` once for each player who earned it (a personal roll,
-/// their own pity), give each theirs, and forget the tally. Returns (player entity, what they got).
+/// their own pity), give each theirs (to the bag, or on the ground where it fell: theirs alone for a
+/// while), and forget the tally. Returns (player entity, what they got).
 /// A table this game does not have, or nobody who earned it: nothing.
 pub fn drop_loot(ctx: &ReducerContext, target_id: u64, table_id: u32) -> Vec<(u64, Vec<crate::loot::Drop>)> {
     let who = loot_contributors(ctx, target_id);
@@ -77,6 +79,8 @@ pub fn drop_loot(ctx: &ReducerContext, target_id: u64, table_id: u32) -> Vec<(u6
     let ramp = hot_number(ctx, crate::hot::foundation::LOOT_PITY_RAMP_X);
     let cap = hot_number(ctx, crate::hot::foundation::LOOT_PITY_CAP_X);
     let now = ctx.timestamp.to_micros_since_unix_epoch() as u64;
+    // Where it fell (no place: everything to the bag).
+    let at: Option<(u32, Vector3)> = ctx.db.movement_state().entity_id().find(target_id).map(|m| (m.world_id, m.pos));
     let mut out = Vec::new();
     for player_entity in who {
         let Some(p) = ctx.db.player().entity_id().find(player_entity) else { continue };
@@ -100,11 +104,16 @@ pub fn drop_loot(ctx: &ReducerContext, target_id: u64, table_id: u32) -> Vec<(u6
                 }
             }
         }
-        // ASSUMPTION: until the ground items (LOOT_AND_STYLES order 3), a line not marked to_bag goes to
-        // the bag too.
+        let on_ground = drops.iter().filter(|d| !d.to_bag).count();
+        let mut i = 0;
         for d in &drops {
-            if let Err(e) = grant_item_internal(ctx, player_entity, d.item, d.qty) {
-                log::warn!("drop_loot: {player_entity} rolled {} x{} but: {e}", d.item, d.qty);
+            if d.to_bag || at.is_none() {
+                if let Err(e) = grant_item_internal(ctx, player_entity, d.item, d.qty) {
+                    log::warn!("drop_loot: {player_entity} rolled {} x{} but: {e}", d.item, d.qty);
+                }
+            } else if let Some((world_id, pos)) = at {
+                drop_to_ground(ctx, world_id, crate::ground::scatter(pos, i, on_ground), d.item, d.qty, String::new(), player_entity);
+                i += 1;
             }
         }
         out.push((player_entity, drops));

@@ -518,6 +518,10 @@ pub(crate) fn move_entity_to_world(ctx: &ReducerContext, entity_id: u64, world_i
         s.world_id = world_id;
         ctx.db.status_state().entity_id().update(s);
     }
+    for mut r in ctx.db.resource_state().entity_id().filter(entity_id).collect::<Vec<_>>() {
+        r.world_id = world_id;
+        ctx.db.resource_state().id().update(r);
+    }
 }
 
 /// Persist what an NPC's brain needs to resume after a restart (see `NpcBrainRow`). Authority

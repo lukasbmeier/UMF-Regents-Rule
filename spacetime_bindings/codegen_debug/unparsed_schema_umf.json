@@ -1655,6 +1655,122 @@
 							"elements": [
 								{
 									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "item_def_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "qty"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "instance_data"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "owner_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "anyone"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								},
+								{
+									"name": {
+										"some": "owner_until"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "despawn_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -2026,7 +2142,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 31.0
+										"Ref": 32.0
 									}
 								},
 								{
@@ -3041,6 +3157,71 @@
 								},
 								{
 									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "resource_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "stored"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
 										"some": "world_id"
 									},
 									"algebraic_type": {
@@ -3748,15 +3929,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 37.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StatusExpiry"
-					},
-					"ty": 23.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
@@ -3780,15 +3953,15 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 32.0,
+					"ty": 33.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "LobbyMember"
+						"source_name": "Session"
 					},
-					"ty": 34.0,
+					"ty": 46.0,
 					"custom_ordering": true
 				},
 				{
@@ -3810,9 +3983,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "HoldMember"
+						"source_name": "MovementStateRow"
 					},
-					"ty": 26.0,
+					"ty": 36.0,
 					"custom_ordering": true
 				},
 				{
@@ -3820,15 +3993,199 @@
 						"scope": [],
 						"source_name": "HoldTick"
 					},
-					"ty": 28.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "MovementStateRow"
+						"source_name": "BodyContactWrite"
+					},
+					"ty": 44.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionEmpty"
+					},
+					"ty": 47.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputQueueRow"
+					},
+					"ty": 31.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RefereeOffer"
+					},
+					"ty": 43.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ClientRtt"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HotRuleRow"
+					},
+					"ty": 30.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StatusStateRow"
+					},
+					"ty": 50.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DamageShare"
+					},
+					"ty": 17.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMatch"
+					},
+					"ty": 48.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMember"
+					},
+					"ty": 49.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DevTools"
+					},
+					"ty": 19.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Authority"
+					},
+					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DashWindowRow"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ResourceState"
+					},
+					"ty": 45.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldConfig"
+					},
+					"ty": 54.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionPruneSchedule"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AuthorityCheckSchedule"
+					},
+					"ty": 10.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TimedPress"
+					},
+					"ty": 52.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 40.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StatusExpiry"
+					},
+					"ty": 23.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LobbyMember"
 					},
 					"ty": 35.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementWrite"
+					},
+					"ty": 57.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldMember"
+					},
+					"ty": 27.0,
 					"custom_ordering": true
 				},
 				{
@@ -3842,57 +4199,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "BodyContactWrite"
-					},
-					"ty": 43.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Session"
-					},
-					"ty": 44.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InputQueueRow"
-					},
-					"ty": 30.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionEmpty"
-					},
-					"ty": 45.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ItemDef"
 					},
-					"ty": 33.0,
+					"ty": 34.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "TickSchedule"
+						"source_name": "WorldLevel"
 					},
-					"ty": 49.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TimedPress"
-					},
-					"ty": 50.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
@@ -3922,9 +4239,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "RateBudget"
+						"source_name": "GroundItem"
 					},
-					"ty": 41.0,
+					"ty": 25.0,
 					"custom_ordering": true
 				},
 				{
@@ -3938,23 +4255,15 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ClientRtt"
-					},
-					"ty": 15.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "HoldProgress"
 					},
-					"ty": 27.0,
+					"ty": 28.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "RefereeOffer"
+						"source_name": "RateBudget"
 					},
 					"ty": 42.0,
 					"custom_ordering": true
@@ -3962,41 +4271,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WorldLevel"
-					},
-					"ty": 53.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementWrite"
-					},
-					"ty": 55.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HotRuleRow"
-					},
-					"ty": 29.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "Push"
 					},
-					"ty": 40.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StatusStateRow"
-					},
-					"ty": 48.0,
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -4004,15 +4281,7 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 51.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DamageShare"
-					},
-					"ty": 17.0,
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -4020,7 +4289,7 @@
 						"scope": [],
 						"source_name": "Noise"
 					},
-					"ty": 36.0,
+					"ty": 37.0,
 					"custom_ordering": true
 				},
 				{
@@ -4052,31 +4321,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 54.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMatch"
-					},
-					"ty": 46.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMember"
-					},
-					"ty": 47.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionEvent"
-					},
-					"ty": 2.0,
+					"ty": 56.0,
 					"custom_ordering": true
 				},
 				{
@@ -4092,7 +4337,7 @@
 						"scope": [],
 						"source_name": "HealthStateRow"
 					},
-					"ty": 25.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
@@ -4106,49 +4351,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Authority"
-					},
-					"ty": 9.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DashWindowRow"
-					},
-					"ty": 18.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DevTools"
-					},
-					"ty": 19.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorldConfig"
-					},
-					"ty": 52.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionPruneSchedule"
-					},
-					"ty": 4.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "InputFrame"
 					},
-					"ty": 31.0,
+					"ty": 32.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PerfReport"
+					},
+					"ty": 39.0,
 					"custom_ordering": true
 				},
 				{
@@ -4162,14 +4375,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "AuthorityCheckSchedule"
-					},
-					"ty": 10.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "EquipStateRow"
 					},
 					"ty": 22.0,
@@ -4178,17 +4383,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "PerfReport"
+						"source_name": "TickSchedule"
 					},
-					"ty": 38.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Player"
-					},
-					"ty": 39.0,
+					"ty": 51.0,
 					"custom_ordering": true
 				}
 			]
@@ -4259,7 +4456,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 39.0,
+					"product_type_ref": 40.0,
 					"primary_key": [
 						0.0
 					],
@@ -4329,7 +4526,7 @@
 				},
 				{
 					"source_name": "hold_member",
-					"product_type_ref": 26.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -4520,7 +4717,7 @@
 				},
 				{
 					"source_name": "hold_tick",
-					"product_type_ref": 28.0,
+					"product_type_ref": 29.0,
 					"primary_key": [
 						0.0
 					],
@@ -4582,7 +4779,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 41.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -4981,7 +5178,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 33.0,
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
@@ -5026,7 +5223,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 37.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -5129,7 +5326,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 45.0,
+					"product_type_ref": 47.0,
 					"primary_key": [
 						0.0
 					],
@@ -5174,7 +5371,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 46.0,
+					"product_type_ref": 48.0,
 					"primary_key": [
 						0.0
 					],
@@ -5335,7 +5532,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 47.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -5467,15 +5664,28 @@
 					"is_event": false
 				},
 				{
-					"source_name": "session",
-					"product_type_ref": 44.0,
+					"source_name": "resource_state",
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "session_id_idx_btree"
+								"some": "resource_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "resource_state_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "id"
@@ -5488,10 +5698,10 @@
 						},
 						{
 							"source_name": {
-								"some": "session_world_id_idx_btree"
+								"some": "resource_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "world_id"
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -5503,7 +5713,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "session_id_key"
+								"some": "resource_state_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -5512,24 +5722,12 @@
 									]
 								}
 							}
-						},
-						{
-							"source_name": {
-								"some": "session_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										1.0
-									]
-								}
-							}
 						}
 					],
 					"sequences": [
 						{
 							"source_name": {
-								"some": "session_id_seq"
+								"some": "resource_state_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -5617,7 +5815,7 @@
 				},
 				{
 					"source_name": "noise",
-					"product_type_ref": 36.0,
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
@@ -5667,6 +5865,93 @@
 						{
 							"source_name": {
 								"some": "noise_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session",
+					"product_type_ref": 46.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "session_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -5766,64 +6051,6 @@
 					"is_event": false
 				},
 				{
-					"source_name": "timed_press",
-					"product_type_ref": 50.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "timed_press_challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "challenge_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "timed_press_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "timed_press_challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "feedback",
 					"product_type_ref": 24.0,
 					"primary_key": [
@@ -5900,7 +6127,7 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 35.0,
+					"product_type_ref": 36.0,
 					"primary_key": [
 						0.0
 					],
@@ -6029,7 +6256,7 @@
 				},
 				{
 					"source_name": "health_state",
-					"product_type_ref": 25.0,
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -6144,8 +6371,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "timed_press",
+					"product_type_ref": 52.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "timed_press_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "unscored_press",
-					"product_type_ref": 51.0,
+					"product_type_ref": 53.0,
 					"primary_key": [
 						0.0
 					],
@@ -6184,51 +6469,6 @@
 					},
 					"table_access": {
 						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "world_config",
-					"product_type_ref": 52.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "world_config_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "world_config_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -6309,15 +6549,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "world_level",
-					"product_type_ref": 53.0,
+					"source_name": "world_config",
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "world_level_world_id_idx_btree"
+								"some": "world_config_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -6332,7 +6572,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "world_level_world_id_key"
+								"some": "world_config_world_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -6355,7 +6595,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 49.0,
+					"product_type_ref": 51.0,
 					"primary_key": [
 						0.0
 					],
@@ -6416,6 +6656,51 @@
 					"is_event": false
 				},
 				{
+					"source_name": "world_level",
+					"product_type_ref": 55.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "dev_tools",
 					"product_type_ref": 19.0,
 					"primary_key": [
@@ -6462,7 +6747,7 @@
 				},
 				{
 					"source_name": "hold_progress",
-					"product_type_ref": 27.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -6612,7 +6897,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 42.0,
+					"product_type_ref": 43.0,
 					"primary_key": [
 						0.0
 					],
@@ -6657,7 +6942,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 32.0,
+					"product_type_ref": 33.0,
 					"primary_key": [
 						0.0
 					],
@@ -6732,7 +7017,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 30.0,
+					"product_type_ref": 31.0,
 					"primary_key": [
 						0.0
 					],
@@ -6820,7 +7105,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 48.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -6878,7 +7163,7 @@
 				},
 				{
 					"source_name": "push",
-					"product_type_ref": 40.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
@@ -7040,8 +7325,83 @@
 					"is_event": false
 				},
 				{
+					"source_name": "ground_item",
+					"product_type_ref": 25.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "ground_item_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ground_item_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ground_item_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "ground_item_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "perf_report",
-					"product_type_ref": 38.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -7191,7 +7551,7 @@
 				},
 				{
 					"source_name": "lobby_member",
-					"product_type_ref": 34.0,
+					"product_type_ref": 35.0,
 					"primary_key": [
 						0.0
 					],
@@ -7337,7 +7697,7 @@
 				},
 				{
 					"source_name": "hot_rule",
-					"product_type_ref": 29.0,
+					"product_type_ref": 30.0,
 					"primary_key": [
 						0.0
 					],
@@ -8215,6 +8575,40 @@
 					}
 				},
 				{
+					"source_name": "drop_item",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "qty"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "end_interact",
 					"params": {
 						"elements": []
@@ -8614,6 +9008,32 @@
 					}
 				},
 				{
+					"source_name": "pick_up",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "ground_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "ping",
 					"params": {
 						"elements": [
@@ -8796,7 +9216,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 43.0
+										"Ref": 44.0
 									}
 								}
 							}
@@ -9059,7 +9479,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 33.0
+										"Ref": 34.0
 									}
 								}
 							}
@@ -9717,7 +10137,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 31.0
+										"Ref": 32.0
 									}
 								}
 							}
@@ -9770,7 +10190,7 @@
 									"some": "_tick"
 								},
 								"algebraic_type": {
-									"Ref": 28.0
+									"Ref": 29.0
 								}
 							}
 						]
@@ -9796,7 +10216,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 49.0
+									"Ref": 51.0
 								}
 							}
 						]
@@ -9997,7 +10417,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 54.0
+										"Ref": 56.0
 									}
 								}
 							}
@@ -10033,7 +10453,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 55.0
+										"Ref": 57.0
 									}
 								}
 							}
@@ -10199,6 +10619,9 @@
 					"sql": "SELECT c.* FROM challenge c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
 				},
 				{
+					"sql": "SELECT * FROM ground_item WHERE anyone = true"
+				},
+				{
 					"sql": "SELECT b.* FROM npc_brain b JOIN authority a ON a.world_id = b.world_id WHERE a.identity = :sender"
 				},
 				{
@@ -10209,6 +10632,9 @@
 				},
 				{
 					"sql": "SELECT r.* FROM action_request r JOIN authority a ON a.world_id = r.world_id WHERE a.identity = :sender"
+				},
+				{
+					"sql": "SELECT g.* FROM ground_item g JOIN player p ON g.owner_id = p.entity_id WHERE p.identity = :sender"
 				}
 			]
 		},
@@ -10343,8 +10769,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "session",
-							"canonical_name": "session"
+							"source_name": "resource_state",
+							"canonical_name": "resource_state"
 						}
 					},
 					{
@@ -10361,14 +10787,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "status_expiry",
-							"canonical_name": "status_expiry"
+							"source_name": "session",
+							"canonical_name": "session"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "timed_press",
-							"canonical_name": "timed_press"
+							"source_name": "status_expiry",
+							"canonical_name": "status_expiry"
 						}
 					},
 					{
@@ -10403,14 +10829,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "unscored_press",
-							"canonical_name": "unscored_press"
+							"source_name": "timed_press",
+							"canonical_name": "timed_press"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "world_config",
-							"canonical_name": "world_config"
+							"source_name": "unscored_press",
+							"canonical_name": "unscored_press"
 						}
 					},
 					{
@@ -10421,14 +10847,20 @@
 					},
 					{
 						"Table": {
-							"source_name": "world_level",
-							"canonical_name": "world_level"
+							"source_name": "world_config",
+							"canonical_name": "world_config"
 						}
 					},
 					{
 						"Table": {
 							"source_name": "tick_schedule",
 							"canonical_name": "tick_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_level",
+							"canonical_name": "world_level"
 						}
 					},
 					{
@@ -10483,6 +10915,12 @@
 						"Table": {
 							"source_name": "drop_pity",
 							"canonical_name": "drop_pity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ground_item",
+							"canonical_name": "ground_item"
 						}
 					},
 					{
@@ -10661,6 +11099,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "drop_item",
+							"canonical_name": "drop_item"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "end_interact",
 							"canonical_name": "end_interact"
 						}
@@ -10735,6 +11179,12 @@
 						"Function": {
 							"source_name": "offer_referee",
 							"canonical_name": "offer_referee"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "pick_up",
+							"canonical_name": "pick_up"
 						}
 					},
 					{

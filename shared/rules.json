@@ -15,7 +15,9 @@
     "ping": { "burst": 2, "per_sec": 0.34 },
     "report_perf": { "burst": 3, "per_sec": 0.5 },
     "send_feedback": { "burst": 3, "per_sec": 0.05 },
-    "launch_body": { "burst": 4, "per_sec": 2 }
+    "launch_body": { "burst": 4, "per_sec": 2 },
+    "pick_up": { "burst": 8, "per_sec": 6 },
+    "drop_item": { "burst": 4, "per_sec": 2 }
   },
   "sessions": [
     {

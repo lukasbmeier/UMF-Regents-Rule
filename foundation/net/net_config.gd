@@ -92,4 +92,8 @@ class_name NetConfig extends Resource
 	&"body_state", &"body_contact",
 	# The server's pushes, applied by the pushed player's own client (the movement component, DECISIONS #251)
 	&"push",
+	# Items on the ground: a kill's drops, a dropped stack (GroundItems, DECISIONS #269)
+	&"ground_item",
+	# An entity's pools: mana (ResourceComponent, DECISIONS #270)
+	&"resource_state",
 ]

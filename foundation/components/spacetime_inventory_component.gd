@@ -100,6 +100,11 @@ func request_consume(item_id: int, qty: int) -> ReducerRequest:
 	return SpaceTimeSync.call_reducer(&"consume_item", [item_id, qty], ["u64", "u32"])
 
 
+## Drop `qty` of stack `item_id` at your feet (DECISIONS #269): yours a while, then anyone's.
+func request_drop(item_id: int, qty: int) -> ReducerRequest:
+	return SpaceTimeSync.call_reducer(&"drop_item", [item_id, qty], ["u64", "u32"])
+
+
 func request_set_slot(item_id: int, slot: int) -> ReducerRequest:
 	return SpaceTimeSync.call_reducer(&"set_item_slot", [item_id, slot], ["u64", "i16"])
 
