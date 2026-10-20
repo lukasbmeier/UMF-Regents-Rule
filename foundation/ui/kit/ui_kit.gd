@@ -36,6 +36,15 @@ static func line(text: String, role: StringName = &"text") -> Label:
 	return l
 
 
+## A line in grade `grade`'s colour (an item's name: "Fine iron axe"); the text colour for none (-1).
+static func grade_line(text: String, grade: int) -> Label:
+	var l: Label = line(text)
+	var c: Color = UiStyle.current().grade_color(grade)
+	if c.a > 0.0:
+		l.add_theme_color_override(&"font_color", c)
+	return l
+
+
 ## A role's colour in the game's style.
 static func colour(role: StringName) -> Color:
 	var s: UiStyle = UiStyle.current()

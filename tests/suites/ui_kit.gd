@@ -76,5 +76,20 @@ func run() -> void:
 	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(style.slot_selected), "picked: the style's picked edge")
 	s.selected = false
 	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(Color(0.8, 0.5, 0.3)), "not: the item's own colour")
+	# Its grade (#267): the edge is the grade's colour, thicker; none (or one the style lacks) is as before.
+	s.grade = 2
+	var graded: StyleBoxFlat = s.get_theme_stylebox(&"normal") as StyleBoxFlat
+	_check(graded.border_color.is_equal_approx(style.grade_colors[2]) and graded.border_width_left == 2,
+		"graded 2: the edge is the style's third grade colour, two wide")
+	s.grade = 1
+	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(style.grade_colors[1]), "graded 1: the second")
+	s.grade = 9
+	var lacking: StyleBoxFlat = s.get_theme_stylebox(&"normal") as StyleBoxFlat
+	_check(lacking.border_color.is_equal_approx(Color(0.8, 0.5, 0.3)) and lacking.border_width_left == 1, "a grade the style has no colour for: the item's own edge")
+	s.grade = -1
+	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(Color(0.8, 0.5, 0.3)), "no grade: the item's own again")
+	var gl: Label = UiKit.grade_line("Fine iron axe", 1)
+	_check(gl.get_theme_color(&"font_color").is_equal_approx(style.grade_colors[1]), "a grade line: its name in the grade's colour")
+	gl.free()
 	holder.queue_free()
 	await get_tree().process_frame

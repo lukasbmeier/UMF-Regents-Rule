@@ -63,6 +63,9 @@ const SETTING: String = "umf/ui/style"
 @export var slot_border: Color = Color(0.25, 0.32, 0.4, 0.8)
 @export var slot_selected: Color = Color(0.55, 0.78, 1.0, 1.0)
 @export var slot_size: int = 56
+## An item's GRADE, as a colour (DECISIONS #267): the edge of its slot and its name. Index 0 is the lowest
+## grade (a game's Common), each next one better; a game with more grades lists more.
+@export var grade_colors: PackedColorArray = PackedColorArray([Color(0.72, 0.74, 0.78), Color(0.4, 0.85, 0.45), Color(1.0, 0.76, 0.28)])
 
 static var _current: UiStyle = null
 var _theme: Theme = null
@@ -170,10 +173,16 @@ func tooltip_style() -> StyleBoxFlat:
 	return s
 
 
-## An item slot's square, picked or not, its edge in `edge` when given (an item's own colour).
-func slot_style(selected: bool, edge: Color = Color(0, 0, 0, 0)) -> StyleBoxFlat:
+## An item slot's square, picked or not, its edge in `edge` when given (an item's own colour, or its
+## grade's: then `width` 2, so a grade reads at a glance).
+func slot_style(selected: bool, edge: Color = Color(0, 0, 0, 0), width: int = 1) -> StyleBoxFlat:
 	var border: Color = slot_selected if selected else (edge if edge.a > 0.0 else slot_border)
-	return _flat(slot_bg, border, 2 if selected else 1, button_radius)
+	return _flat(slot_bg, border, 2 if selected else width, button_radius)
+
+
+## Grade `grade`'s colour (0 the lowest); transparent for none (-1) or one this style has no colour for.
+func grade_color(grade: int) -> Color:
+	return grade_colors[grade] if grade >= 0 and grade < grade_colors.size() else Color(0, 0, 0, 0)
 
 
 func _button(bg: Color) -> StyleBoxFlat:

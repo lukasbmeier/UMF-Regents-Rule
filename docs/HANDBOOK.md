@@ -643,8 +643,10 @@ says. Nothing in code tells an item how to be held.
   bar you can drag, a ✕, Escape closes it, and it frees the cursor while it is open. Put it on your HUD's
   CanvasLayer. For its rows: `UiKit.heading`, `UiKit.note` (small, dim), `UiKit.line(text, role)` (a
   line in the style's good / warn / bad / accent colour), `UiKit.button`, `UiKit.slot_grid`; an item is a
-  `UiSlot` (its colour or picture, its initials, a count, picked or not, a tooltip). Never type a colour
-  into a screen: ask `UiKit.colour(role)`, so a reskin reaches it.
+  `UiSlot` (its colour or picture, its initials, a count, picked or not, a tooltip, and its `grade`: the
+  edge in the grade's colour). An item's name in its grade's colour: `UiKit.grade_line(text, grade)`; the
+  grade colours (lowest first) are the style's `grade_colors`. Never type a colour into a screen: ask
+  `UiKit.colour(role)`, so a reskin reaches it.
 - Connect screen and Esc menu: `foundation/ui/`. F11 or Alt+Enter: fullscreen. The menu also has
   Settings, Open log folder, Character, and whatever a game adds (`PauseMenu.add_button`,
   `open_page`: fishing's Journal).
