@@ -174,8 +174,11 @@ func tooltip_style() -> StyleBoxFlat:
 
 
 ## An item slot's square, picked or not, its edge in `edge` when given (an item's own colour, or its
-## grade's: then `width` 2, so a grade reads at a glance).
+## grade's: then `width` 2, so a grade reads at a glance). Picked, a plain slot's edge is `slot_selected`;
+## a graded one keeps its grade's edge (a grade never hides) and is picked by a lighter fill.
 func slot_style(selected: bool, edge: Color = Color(0, 0, 0, 0), width: int = 1) -> StyleBoxFlat:
+	if selected and width > 1 and edge.a > 0.0:
+		return _flat(slot_bg.lerp(slot_selected, 0.25), edge, width + 1, button_radius)
 	var border: Color = slot_selected if selected else (edge if edge.a > 0.0 else slot_border)
 	return _flat(slot_bg, border, 2 if selected else width, button_radius)
 
