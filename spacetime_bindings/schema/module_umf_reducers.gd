@@ -122,6 +122,10 @@ func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:
 func dev_push(entity_id: int, vel: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('dev_push', [entity_id, vel], [&'u64', &'vector3[f32,f32,f32]'], &'')
 
+## 0. on: bool [br]
+func draw_bow(on: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('draw_bow', [on], [&'bool'], &'')
+
 
 func end_interact() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('end_interact', [], [], &'')
@@ -177,6 +181,11 @@ func launch_body(def_id: int, launch_id: int, origin: Vector3, vel: Vector3, rot
 
 func leave_session() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('leave_session', [], [], &'')
+
+## 0. target_id: int [br]
+## 1. aim: Vector3 [br]
+func loose_arrow(target_id: int, aim: Vector3) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('loose_arrow', [target_id, aim], [&'u64', &'vector3[f32,f32,f32]'], &'')
 
 ## 0. session_id: int [br]
 func new_match(session_id: int) -> SpacetimeDBReducerCall:
