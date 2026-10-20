@@ -54,6 +54,12 @@ const NODE_POSE: StringName = &"pose"
 const NODE_POSE_CLIP: StringName = &"pose_clip"
 const NODE_POSE_SCALE: StringName = &"pose_scale"
 const NODE_POSE_SEEK: StringName = &"pose_seek"
+## THE UPPER-BODY POSE (DECISIONS #266): a held pose that moves only `upper_body(set)`, over the pose, so
+## the legs keep walking under it (a bow drawn and aimed on the move).
+const NODE_UPPER_POSE: StringName = &"upper_pose"
+const NODE_UPPER_POSE_CLIP: StringName = &"upper_pose_clip"
+const NODE_UPPER_POSE_SCALE: StringName = &"upper_pose_scale"
+const NODE_UPPER_POSE_SEEK: StringName = &"upper_pose_seek"
 const NODE_UPPER: StringName = &"upper"
 const NODE_UPPER_CLIP: StringName = &"upper_clip"
 const NODE_OUTPUT: StringName = &"output"
@@ -67,6 +73,9 @@ const P_ACTION_ACTIVE: String = "parameters/action/active"
 const P_POSE_BLEND: String = "parameters/pose/blend_amount"
 const P_POSE_SCALE: String = "parameters/pose_scale/scale"
 const P_POSE_SEEK: String = "parameters/pose_seek/seek_request"
+const P_UPPER_POSE_BLEND: String = "parameters/upper_pose/blend_amount"
+const P_UPPER_POSE_SCALE: String = "parameters/upper_pose_scale/scale"
+const P_UPPER_POSE_SEEK: String = "parameters/upper_pose_seek/seek_request"
 const P_UPPER_REQUEST: String = "parameters/upper/request"
 const P_UPPER_ACTIVE: String = "parameters/upper/active"
 
@@ -118,6 +127,10 @@ static func build(set: AnimationSet, cfg: MovementConfig = null) -> AnimationTre
 	root.add_node(NODE_POSE_SCALE, AnimationNodeTimeScale.new(), Vector2(-400.0, 260.0))
 	root.add_node(NODE_POSE_SEEK, AnimationNodeTimeSeek.new(), Vector2(-280.0, 260.0))
 	root.add_node(NODE_POSE, AnimationNodeBlend2.new(), Vector2(-200.0, 0.0))
+	root.add_node(NODE_UPPER_POSE_CLIP, _clip_node(set, AnimationSet.IDLE, true), Vector2(-540.0, 380.0))
+	root.add_node(NODE_UPPER_POSE_SCALE, AnimationNodeTimeScale.new(), Vector2(-400.0, 380.0))
+	root.add_node(NODE_UPPER_POSE_SEEK, AnimationNodeTimeSeek.new(), Vector2(-280.0, 380.0))
+	root.add_node(NODE_UPPER_POSE, _upper_blend(set), Vector2(-160.0, 0.0))
 	# THE UPPER BODY: a one-shot over the pose that moves only `upper_body(set)`. Starts on the
 	# interact clip, like the action, until the driver points it at one.
 	root.add_node(NODE_UPPER_CLIP, _clip_node(set, AnimationSet.INTERACT), Vector2(-200.0, 140.0))
@@ -132,7 +145,11 @@ static func build(set: AnimationSet, cfg: MovementConfig = null) -> AnimationTre
 	# is the clip it fires.
 	root.connect_node(NODE_POSE, 0, NODE_BODY)
 	root.connect_node(NODE_POSE, 1, NODE_POSE_SEEK)
-	root.connect_node(NODE_UPPER, 0, NODE_POSE)
+	root.connect_node(NODE_UPPER_POSE_SCALE, 0, NODE_UPPER_POSE_CLIP)
+	root.connect_node(NODE_UPPER_POSE_SEEK, 0, NODE_UPPER_POSE_SCALE)
+	root.connect_node(NODE_UPPER_POSE, 0, NODE_POSE)
+	root.connect_node(NODE_UPPER_POSE, 1, NODE_UPPER_POSE_SEEK)
+	root.connect_node(NODE_UPPER, 0, NODE_UPPER_POSE)
 	root.connect_node(NODE_UPPER, 1, NODE_UPPER_CLIP)
 	root.connect_node(NODE_HIT, 0, NODE_UPPER)
 	root.connect_node(NODE_HIT, 1, NODE_HIT_CLIP)
@@ -369,6 +386,15 @@ static func _upper_shot(set: AnimationSet) -> AnimationNodeOneShot:
 	for bone: StringName in upper_body(set):
 		one.set_filter_path(NodePath("Skeleton3D:%s" % bone), true)
 	return one
+
+
+## The upper-body pose's blend: filtered to `upper_body(set)`, as the upper-body one-shot is.
+static func _upper_blend(set: AnimationSet) -> AnimationNodeBlend2:
+	var b := AnimationNodeBlend2.new()
+	b.filter_enabled = true
+	for bone: StringName in upper_body(set):
+		b.set_filter_path(NodePath("Skeleton3D:%s" % bone), true)
+	return b
 
 
 static func _one_shot(set: AnimationSet, semantic: StringName) -> AnimationNodeOneShot:

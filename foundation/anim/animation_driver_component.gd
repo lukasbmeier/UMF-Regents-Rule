@@ -86,6 +86,12 @@ var _pose_weight: float = 0.0
 var _pose_at: float = -1.0
 var _pose_length: float = 0.0
 var _pose_while_moving: bool = false
+## The upper-body pose (`hold_upper_pose`): its clip, the weight asked and shown, where in it.
+var _upper_pose_semantic: StringName = &""
+var _upper_pose_target: float = 0.0
+var _upper_pose_weight: float = 0.0
+var _upper_pose_at: float = -1.0
+var _upper_pose_length: float = 0.0
 ## For `semantic_weights`: what the action one-shot and the landing were last asked to play, and
 ## the two one-shots' weights, eased over their own fades.
 var _action_semantic: StringName = AnimationSet.INTERACT
@@ -209,6 +215,42 @@ func release_pose() -> void:
 	_pose_target = 0.0
 
 
+## HOLD A POSE ON THE UPPER BODY ONLY (DECISIONS #266): `semantic`'s clip on the chest, arms and fingers
+## (`AnimationTreeBuilder.upper_body`), looping when `at` < 0, or frozen at `at` (0..1 of its length: how
+## far a bow is drawn), while the legs keep doing what they do: walking does not let it go. Call it every
+## frame it should hold, as `hold_pose`.
+func hold_upper_pose(semantic: StringName, weight: float = 1.0, at: float = -1.0) -> void:
+	if animation_set == null or not animation_set.has_exact(semantic) or _blend_tree == null:
+		return
+	if semantic != _upper_pose_semantic:
+		var node: AnimationNodeAnimation = _blend_tree.get_node(
+			AnimationTreeBuilder.NODE_UPPER_POSE_CLIP) as AnimationNodeAnimation
+		if not AnimationTreeBuilder.apply_clip(node, animation_set, semantic, at < 0.0):
+			return
+		_upper_pose_semantic = semantic
+		_upper_pose_length = AnimationTreeBuilder.clip_length(animation_set, semantic)
+	_upper_pose_target = clampf(weight, 0.0, 1.0)
+	_upper_pose_at = at
+
+
+## Let the upper-body pose go: it blends out.
+func release_upper_pose() -> void:
+	_upper_pose_target = 0.0
+
+
+## How much of the upper-body pose is showing, 0..1, and its clip.
+func upper_pose_weight() -> float:
+	return _upper_pose_weight
+
+
+func upper_pose_clip() -> StringName:
+	if _blend_tree == null or _upper_pose_semantic.is_empty():
+		return &""
+	var node: AnimationNodeAnimation = _blend_tree.get_node(
+		AnimationTreeBuilder.NODE_UPPER_POSE_CLIP) as AnimationNodeAnimation
+	return node.animation if node != null else &""
+
+
 ## COMMIT the action one-shot for `seconds`: moving does not cut it until then (a committed swing's
 ## wind-up, which the server lands whatever the legs do, DECISIONS #256). After, `action_cancel_speed`
 ## applies again; 0 ends a commitment early (a roll that cancelled the swing).
@@ -318,6 +360,7 @@ func _process(delta: float) -> void:
 	_turn_model(s, delta)
 	_cancel_action_if_moving(s)
 	_update_pose(delta, speed)
+	_update_upper_pose(delta)
 	_follow_state(s, delta)
 	_action_weight = _ease_shot(_action_weight, AnimationTreeBuilder.NODE_ACTION,
 		AnimationTreeBuilder.P_ACTION_ACTIVE, delta)
@@ -361,6 +404,7 @@ func semantic_weights() -> Dictionary[StringName, float]:
 		_:
 			out = {AnimationSet.IDLE: 1.0}
 	_layer(out, _pose_semantic, _pose_weight)
+	_layer(out, _upper_pose_semantic, _upper_pose_weight)
 	_layer(out, _upper_semantic, _upper_weight)
 	_layer(out, AnimationSet.HIT, _hit_weight)
 	_layer(out, _action_semantic, _action_weight)
@@ -495,6 +539,17 @@ func _update_pose(delta: float, speed: float) -> void:
 		_tree.set(AnimationTreeBuilder.P_POSE_SEEK, clampf(_pose_at, 0.0, 1.0) * _pose_length)
 	else:
 		_tree.set(AnimationTreeBuilder.P_POSE_SCALE, 1.0)
+
+
+## The upper-body pose, eased toward what was asked (moving never lets it go) and scrubbed or looped.
+func _update_upper_pose(delta: float) -> void:
+	_upper_pose_weight = move_toward(_upper_pose_weight, _upper_pose_target, pose_blend_rate * delta)
+	_tree.set(AnimationTreeBuilder.P_UPPER_POSE_BLEND, _upper_pose_weight)
+	if _upper_pose_at >= 0.0 and _upper_pose_length > 0.0:
+		_tree.set(AnimationTreeBuilder.P_UPPER_POSE_SCALE, 0.0)
+		_tree.set(AnimationTreeBuilder.P_UPPER_POSE_SEEK, clampf(_upper_pose_at, 0.0, 1.0) * _upper_pose_length)
+	else:
+		_tree.set(AnimationTreeBuilder.P_UPPER_POSE_SCALE, 1.0)
 
 
 ## An action one-shot plays over whatever the body is doing, which is right for a hit reaction

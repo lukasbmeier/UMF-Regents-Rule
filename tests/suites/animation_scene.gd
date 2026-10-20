@@ -231,6 +231,19 @@ func _run_animation_scene_tests() -> void:
 	await _anim_frames(movement, seq, 15, Vector2(0.0, -1.0))
 	_check(not driver.action_playing(), "and once it is let go, walking cuts it as before")
 	await _anim_frames(movement, seq, 20, Vector2.ZERO)
+	# AN UPPER-BODY POSE (DECISIONS #266: a bow drawn on the move): it holds while the body walks, and it
+	# moves only the chest, arms and fingers.
+	var up_blend: AnimationNodeBlend2 = (driver.animation_tree().tree_root as AnimationNodeBlendTree).get_node(AnimationTreeBuilder.NODE_UPPER_POSE) as AnimationNodeBlend2
+	_check(up_blend != null and up_blend.is_path_filtered(^"Skeleton3D:upperarm_r") and not up_blend.is_path_filtered(^"Skeleton3D:thigh_l"),
+		"the upper-body pose moves the arms, not the legs")
+	for i: int in range(40):
+		driver.hold_upper_pose(AnimationSet.INTERACT, 1.0, 0.5)
+		await _anim_frames(movement, seq, 1, Vector2(0.0, -1.0))
+	_check(driver.upper_pose_weight() > 0.95 and driver.upper_pose_clip() == defn.animation_set.anim_name(AnimationSet.INTERACT),
+		"held while walking, it stays (%.2f)" % driver.upper_pose_weight())
+	driver.release_upper_pose()
+	await _anim_frames(movement, seq, 30, Vector2.ZERO)
+	_check(driver.upper_pose_weight() < 0.05, "let go, it blends out")
 
 	# --- the jump arc ----------------------------------------------------------------------
 	var states: Array[String] = []
