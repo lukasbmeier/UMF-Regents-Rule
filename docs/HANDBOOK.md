@@ -553,7 +553,8 @@ says. Nothing in code tells an item how to be held.
   Every animation now uses that one grip. Step through the other animations; where one looks wrong,
   type or drag it right there: that saves a small fix on the one grip, which keeps following it if
   you move the one grip later. **Clear This Grip** puts an animation back on the one grip. The grip
-  file is at the bottom of the Inspector; you never need to open its list.
+  file is at the bottom of the Inspector; you never need to open its list. Changes are written to
+  the grip file when you **save the scene** (Ctrl+S; the tab shows `*` until then), not on every move.
 - **Line it up in the editor**: a preview scene using `foundation/held/held_item_preview.gd`
   (the rod's is `game/fishing/rod_grip_preview.tscn`). Pick an **Animation** and a **Body**
   (`both`, `female` or `male`), then drag the **Grip** node: that sets the grip for exactly that

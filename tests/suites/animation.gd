@@ -430,6 +430,9 @@ func _run_universal_grip_tests() -> void:
 	idle.position -= Vector3(0.02, 0.0, 0.0)
 
 
+const GRIP_TEST_PATH: String = "user://grip_preview_test.tres"
+
+
 ## THE GRIP PREVIEW'S QUICK WAY (DECISIONS #259), driven as the Inspector drives it: type a Hold, Use This
 ## Grip For All, step to another animation and fix it; move the one grip and the fix follows.
 func _run_grip_preview_tests() -> void:
@@ -449,6 +452,9 @@ func _run_grip_preview_tests() -> void:
 	var prev: Node3D = (load("res://foundation/held/held_item_preview.gd") as GDScript).new() as Node3D
 	prev.set("definition", load(CHARACTER_DEF))
 	prev.set("item", packed)
+	if FileAccess.file_exists(GRIP_TEST_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(GRIP_TEST_PATH))
+	g.resource_path = GRIP_TEST_PATH
 	prev.set("grip", g)
 	prev.set("beside", -1)
 	add_child(prev)
@@ -477,5 +483,13 @@ func _run_grip_preview_tests() -> void:
 	prev.set("animation", "interact")
 	await get_tree().process_frame
 	_check((prev.get("hold_position") as Vector3).is_equal_approx(want + Vector3(0.03, 0.02, 0.0)), "move the one grip and the fix follows (%s)" % prev.get("hold_position"))
+	# SAVED WITH THE SCENE (DECISIONS #260): nothing is written while it is moved; the scene's save writes it.
+	_check(not FileAccess.file_exists(GRIP_TEST_PATH) and bool(prev.call("grip_unsaved")),
+		"every move above wrote nothing: the grip waits for the scene's save")
+	prev.notification(Node.NOTIFICATION_EDITOR_PRE_SAVE)
+	var written: ItemGrip = ResourceLoader.load(GRIP_TEST_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as ItemGrip 		if FileAccess.file_exists(GRIP_TEST_PATH) else null
+	_check(written != null and written.universal and written.entries.size() == 2 and not bool(prev.call("grip_unsaved")),
+		"saving the scene writes it: one grip and its fix")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(GRIP_TEST_PATH))
 	prev.queue_free()
 	await get_tree().process_frame
