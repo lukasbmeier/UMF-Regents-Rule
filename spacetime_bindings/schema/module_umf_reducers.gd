@@ -46,6 +46,17 @@ func begin_interact_as(actor_id: int, target_id: int, verb: int) -> SpacetimeDBR
 func block(on: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('block', [on], [&'bool'], &'')
 
+
+func cancel_cast() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('cancel_cast', [], [], &'')
+
+## 0. ability_id: int [br]
+## 1. target_id: int [br]
+## 2. aim: Vector3 [br]
+## 3. at: Vector3 [br]
+func cast_spell(ability_id: int, target_id: int, aim: Vector3, at: Vector3) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('cast_spell', [ability_id, target_id, aim, at], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'vector3[f32,f32,f32]'], &'')
+
 ## 0. challenge_id: int [br]
 func challenge_press(challenge_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('challenge_press', [challenge_id], [&'u64'], &'')
@@ -126,6 +137,11 @@ func dev_push(entity_id: int, vel: Vector3) -> SpacetimeDBReducerCall:
 func draw_bow(on: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('draw_bow', [on], [&'bool'], &'')
 
+## 0. item_id: int [br]
+## 1. qty: int [br]
+func drop_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('drop_item', [item_id, qty], [&'u64', &'u32'], &'')
+
 
 func end_interact() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('end_interact', [], [], &'')
@@ -149,6 +165,12 @@ func gather(node_id: int, active: bool) -> SpacetimeDBReducerCall:
 ## 2. qty: int [br]
 func grant_item(entity_id: int, item_def_id: int, qty: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('grant_item', [entity_id, item_def_id, qty], [&'u64', &'u32', &'u32'], &'')
+
+## 0. entity_id: int [br]
+## 1. skill_id: int [br]
+## 2. xp: int [br]
+func grant_xp(entity_id: int, skill_id: int, xp: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('grant_xp', [entity_id, skill_id, xp], [&'u64', &'u32', &'u32'], &'')
 
 ## 0. world_id: int [br]
 func heartbeat(world_id: int) -> SpacetimeDBReducerCall:
@@ -195,6 +217,10 @@ func new_match(session_id: int) -> SpacetimeDBReducerCall:
 ## 1. code: String [br]
 func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('offer_referee', [world_id, code], [&'u32', &'string'], &'')
+
+## 0. ground_id: int [br]
+func pick_up(ground_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('pick_up', [ground_id], [&'u64'], &'')
 
 ## 0. pos: Vector3 [br]
 ## 1. target_id: int [br]

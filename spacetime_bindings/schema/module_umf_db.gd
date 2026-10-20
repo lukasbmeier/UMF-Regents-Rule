@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -14,6 +14,8 @@ var attachment: UmfAttachmentTable
 var authority: UmfAuthorityTable
 var body_contact: UmfBodyContactTable
 var body_state: UmfBodyStateTable
+var burning: UmfBurningTable
+var casting: UmfCastingTable
 var challenge: UmfChallengeTable
 var combat_state: UmfCombatStateTable
 var dummy: UmfDummyTable
@@ -22,6 +24,7 @@ var equip_state: UmfEquipStateTable
 var foe: UmfFoeTable
 var foe_kill: UmfFoeKillTable
 var gather_node: UmfGatherNodeTable
+var ground_item: UmfGroundItemTable
 var health_state: UmfHealthStateTable
 var hold_member: UmfHoldMemberTable
 var hold_progress: UmfHoldProgressTable
@@ -37,10 +40,13 @@ var order_filled: UmfOrderFilledTable
 var player: UmfPlayerTable
 var push: UmfPushTable
 var recipe_log: UmfRecipeLogTable
+var resource_state: UmfResourceStateTable
 var session: UmfSessionTable
 var session_match: UmfSessionMatchTable
 var session_member: UmfSessionMemberTable
 var skill_xp: UmfSkillXpTable
+var spell_area: UmfSpellAreaTable
+var spell_cooldown: UmfSpellCooldownTable
 var station: UmfStationTable
 var status_state: UmfStatusStateTable
 var swing: UmfSwingTable
@@ -62,6 +68,8 @@ func _init(p_local_db: LocalDatabase) -> void:
 	authority = preload('res://spacetime_bindings/schema/tables/umf_authority_table.gd').new(p_local_db)
 	body_contact = preload('res://spacetime_bindings/schema/tables/umf_body_contact_table.gd').new(p_local_db)
 	body_state = preload('res://spacetime_bindings/schema/tables/umf_body_state_table.gd').new(p_local_db)
+	burning = preload('res://spacetime_bindings/schema/tables/umf_burning_table.gd').new(p_local_db)
+	casting = preload('res://spacetime_bindings/schema/tables/umf_casting_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
 	combat_state = preload('res://spacetime_bindings/schema/tables/umf_combat_state_table.gd').new(p_local_db)
 	dummy = preload('res://spacetime_bindings/schema/tables/umf_dummy_table.gd').new(p_local_db)
@@ -70,6 +78,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	foe = preload('res://spacetime_bindings/schema/tables/umf_foe_table.gd').new(p_local_db)
 	foe_kill = preload('res://spacetime_bindings/schema/tables/umf_foe_kill_table.gd').new(p_local_db)
 	gather_node = preload('res://spacetime_bindings/schema/tables/umf_gather_node_table.gd').new(p_local_db)
+	ground_item = preload('res://spacetime_bindings/schema/tables/umf_ground_item_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
 	hold_member = preload('res://spacetime_bindings/schema/tables/umf_hold_member_table.gd').new(p_local_db)
 	hold_progress = preload('res://spacetime_bindings/schema/tables/umf_hold_progress_table.gd').new(p_local_db)
@@ -85,10 +94,13 @@ func _init(p_local_db: LocalDatabase) -> void:
 	player = preload('res://spacetime_bindings/schema/tables/umf_player_table.gd').new(p_local_db)
 	push = preload('res://spacetime_bindings/schema/tables/umf_push_table.gd').new(p_local_db)
 	recipe_log = preload('res://spacetime_bindings/schema/tables/umf_recipe_log_table.gd').new(p_local_db)
+	resource_state = preload('res://spacetime_bindings/schema/tables/umf_resource_state_table.gd').new(p_local_db)
 	session = preload('res://spacetime_bindings/schema/tables/umf_session_table.gd').new(p_local_db)
 	session_match = preload('res://spacetime_bindings/schema/tables/umf_session_match_table.gd').new(p_local_db)
 	session_member = preload('res://spacetime_bindings/schema/tables/umf_session_member_table.gd').new(p_local_db)
 	skill_xp = preload('res://spacetime_bindings/schema/tables/umf_skill_xp_table.gd').new(p_local_db)
+	spell_area = preload('res://spacetime_bindings/schema/tables/umf_spell_area_table.gd').new(p_local_db)
+	spell_cooldown = preload('res://spacetime_bindings/schema/tables/umf_spell_cooldown_table.gd').new(p_local_db)
 	station = preload('res://spacetime_bindings/schema/tables/umf_station_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)
 	swing = preload('res://spacetime_bindings/schema/tables/umf_swing_table.gd').new(p_local_db)
