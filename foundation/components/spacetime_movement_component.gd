@@ -838,9 +838,11 @@ func _reconcile(state: MovementState, lps: int, row_epoch: int, teleport: bool) 
 	if row_epoch != _epoch:
 		_epoch = row_epoch
 		_epoch_floor_seq = _newest_seq
+		# What this client knew at that seq (a dash's cooldown): the row does not carry it (#264).
+		var own: MovementState = _history.get(lps, _predicted) as MovementState
 		_history.clear()
 		var drawn_at: Vector3 = _predicted.pos + _visual_offset
-		_predicted = state.duplicate()
+		_predicted = state.duplicate().take_bookkeeping(own)
 		if teleport:
 			_pending.clear()
 			_revoke_events_after(-1)   # everything predicted belongs to the place we left
@@ -887,7 +889,7 @@ func _reconcile(state: MovementState, lps: int, row_epoch: int, teleport: bool) 
 	var drawn: Vector3 = _predicted.pos + _visual_offset
 	if error >= cfg.reconcile_snap_threshold:
 		_snap_count += 1
-		_predicted = state.duplicate()
+		_predicted = state.duplicate().take_bookkeeping(hist)
 		_pending.clear()
 		_history.clear()
 		_revoke_events_after(lps)
@@ -899,7 +901,7 @@ func _reconcile(state: MovementState, lps: int, row_epoch: int, teleport: bool) 
 
 	# Smooth band: rewind to the server's state and replay what it has not seen yet. The body
 	# jumps to the corrected present; the visual glides there from where it was drawn.
-	_predicted = _replay_pending(state.duplicate(), lps, true)
+	_predicted = _replay_pending(state.duplicate().take_bookkeeping(hist), lps, true)
 	_set_render(_predicted)
 	_set_visual_offset(drawn - _predicted.pos)
 	reconciled.emit(error)

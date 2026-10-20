@@ -125,6 +125,31 @@ func _run_prediction_tests() -> void:
 		"the glide completes within reconcile_smooth_time (%.5f m left)" % m.get_visual_offset().length())
 	_free_predicted(m)
 
+	# --- (b2) a correction keeps the dash's cooldown (DECISIONS #264) ----------------------
+	# Reported from play: roll, Ctrl again at once, and the body dashed though the roll was cooling down.
+	# The rewind took the server's row, which has no cooldown, so the next press dashed.
+	m = _make_predicted()
+	m.config.dash_impulse = 16.0
+	m.config.dash_cooldown_ticks = 90
+	var dash_frames: Array[InputFrame] = _walk_frames(m, 1, 5, forward)
+	var press := InputFrame.new()
+	press.seq = 6
+	press.move_dir = forward
+	press.dash = true
+	m.push_input(press)
+	dash_frames = _walk_frames(m, 7, 20, forward)
+	_check(m.get_predicted_state().dash_cooldown > 0, "setup: a dash, cooling down (%d ticks left)" % m.get_predicted_state().dash_cooldown)
+	_ack(m, 15, m._history[15].pos + Vector3(0.1, 0.0, 0.0))
+	_check(m.get_reconcile_stats()["reconciles"] == 1 and m.get_predicted_state().dash_cooldown > 0,
+		"a correction after it keeps the cooldown (%d ticks left)" % m.get_predicted_state().dash_cooldown)
+	var again := InputFrame.new()
+	again.seq = 27
+	again.move_dir = forward
+	again.dash = true
+	m.push_input(again)
+	_check(m.get_predicted_state().dash_left == 0, "so Ctrl again inside it does not dash")
+	_free_predicted(m)
+
 	# --- (c) large error: snap ---------------------------------------------------------
 	m = _make_predicted()
 	frames = _walk_frames(m, 1, 30, forward)
