@@ -228,6 +228,24 @@ maximum = 3600.0
 unit = "s"
 description = "FOES: a slain foe comes back at its point this long after it fell."
 
+[sub_resource type="Resource" id="Rule_regen_delay"]
+script = ExtResource("2_rule")
+name = &"regen_delay_s"
+number = 8.0
+minimum = 0.0
+maximum = 120.0
+unit = "s"
+description = "HEALTH (2026-10-20): out of the fight this long after your last hurt (no hit landing on you), your health starts to come back. Foes too."
+
+[sub_resource type="Resource" id="Rule_regen_pct"]
+script = ExtResource("2_rule")
+name = &"regen_pct_per_s"
+number = 4.0
+minimum = 0.0
+maximum = 100.0
+unit = "%/s"
+description = "HEALTH: then this much of your health comes back a second (4: empty to whole in 25 s)."
+
 [sub_resource type="Resource" id="Rule_player_respawn"]
 script = ExtResource("2_rule")
 name = &"player_respawn_s"
@@ -239,7 +257,7 @@ description = "FOES: a slain player gets up at the spawn, whole, this long after
 
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

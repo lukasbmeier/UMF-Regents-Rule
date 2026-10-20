@@ -2315,6 +2315,47 @@
 							"elements": [
 								{
 									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "id"
 									},
 									"algebraic_type": {
@@ -2342,7 +2383,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 35.0
+										"Ref": 36.0
 									}
 								},
 								{
@@ -4676,7 +4717,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 41.0,
+					"ty": 42.0,
 					"custom_ordering": true
 				},
 				{
@@ -4700,7 +4741,7 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 36.0,
+					"ty": 37.0,
 					"custom_ordering": true
 				},
 				{
@@ -4708,7 +4749,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 50.0,
+					"ty": 51.0,
 					"custom_ordering": true
 				},
 				{
@@ -4732,7 +4773,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 39.0,
+					"ty": 40.0,
 					"custom_ordering": true
 				},
 				{
@@ -4748,7 +4789,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 49.0,
+					"ty": 50.0,
 					"custom_ordering": true
 				},
 				{
@@ -4756,7 +4797,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 51.0,
+					"ty": 52.0,
 					"custom_ordering": true
 				},
 				{
@@ -4764,7 +4805,7 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 34.0,
+					"ty": 35.0,
 					"custom_ordering": true
 				},
 				{
@@ -4772,7 +4813,7 @@
 						"scope": [],
 						"source_name": "Swing"
 					},
-					"ty": 58.0,
+					"ty": 59.0,
 					"custom_ordering": true
 				},
 				{
@@ -4780,7 +4821,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 48.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -4796,7 +4837,7 @@
 						"scope": [],
 						"source_name": "Station"
 					},
-					"ty": 56.0,
+					"ty": 57.0,
 					"custom_ordering": true
 				},
 				{
@@ -4812,7 +4853,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 57.0,
+					"ty": 58.0,
 					"custom_ordering": true
 				},
 				{
@@ -4828,7 +4869,7 @@
 						"scope": [],
 						"source_name": "OrderFilled"
 					},
-					"ty": 42.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -4836,7 +4877,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 52.0,
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -4844,7 +4885,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 53.0,
+					"ty": 54.0,
 					"custom_ordering": true
 				},
 				{
@@ -4884,7 +4925,7 @@
 						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 66.0,
+					"ty": 67.0,
 					"custom_ordering": true
 				},
 				{
@@ -4908,7 +4949,7 @@
 						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 60.0,
+					"ty": 61.0,
 					"custom_ordering": true
 				},
 				{
@@ -4916,7 +4957,7 @@
 						"scope": [],
 						"source_name": "Player"
 					},
-					"ty": 44.0,
+					"ty": 45.0,
 					"custom_ordering": true
 				},
 				{
@@ -4924,7 +4965,7 @@
 						"scope": [],
 						"source_name": "WorkOrder"
 					},
-					"ty": 63.0,
+					"ty": 64.0,
 					"custom_ordering": true
 				},
 				{
@@ -4948,7 +4989,7 @@
 						"scope": [],
 						"source_name": "LobbyMember"
 					},
-					"ty": 38.0,
+					"ty": 39.0,
 					"custom_ordering": true
 				},
 				{
@@ -4956,7 +4997,7 @@
 						"scope": [],
 						"source_name": "SkillXp"
 					},
-					"ty": 54.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
@@ -4964,7 +5005,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 69.0,
+					"ty": 70.0,
 					"custom_ordering": true
 				},
 				{
@@ -4996,7 +5037,7 @@
 						"scope": [],
 						"source_name": "ItemDef"
 					},
-					"ty": 37.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
@@ -5004,7 +5045,15 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 67.0,
+					"ty": 68.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Hurt"
+					},
+					"ty": 34.0,
 					"custom_ordering": true
 				},
 				{
@@ -5036,7 +5085,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 46.0,
+					"ty": 47.0,
 					"custom_ordering": true
 				},
 				{
@@ -5060,7 +5109,7 @@
 						"scope": [],
 						"source_name": "WorkSchedule"
 					},
-					"ty": 65.0,
+					"ty": 66.0,
 					"custom_ordering": true
 				},
 				{
@@ -5068,7 +5117,7 @@
 						"scope": [],
 						"source_name": "Push"
 					},
-					"ty": 45.0,
+					"ty": 46.0,
 					"custom_ordering": true
 				},
 				{
@@ -5076,7 +5125,7 @@
 						"scope": [],
 						"source_name": "StarterKitGiven"
 					},
-					"ty": 55.0,
+					"ty": 56.0,
 					"custom_ordering": true
 				},
 				{
@@ -5084,7 +5133,7 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 61.0,
+					"ty": 62.0,
 					"custom_ordering": true
 				},
 				{
@@ -5108,7 +5157,7 @@
 						"scope": [],
 						"source_name": "RecipeLog"
 					},
-					"ty": 47.0,
+					"ty": 48.0,
 					"custom_ordering": true
 				},
 				{
@@ -5116,7 +5165,7 @@
 						"scope": [],
 						"source_name": "WorkResult"
 					},
-					"ty": 64.0,
+					"ty": 65.0,
 					"custom_ordering": true
 				},
 				{
@@ -5124,7 +5173,7 @@
 						"scope": [],
 						"source_name": "Noise"
 					},
-					"ty": 40.0,
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -5156,7 +5205,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 68.0,
+					"ty": 69.0,
 					"custom_ordering": true
 				},
 				{
@@ -5180,7 +5229,7 @@
 						"scope": [],
 						"source_name": "Wielded"
 					},
-					"ty": 62.0,
+					"ty": 63.0,
 					"custom_ordering": true
 				},
 				{
@@ -5196,7 +5245,7 @@
 						"scope": [],
 						"source_name": "InputFrame"
 					},
-					"ty": 35.0,
+					"ty": 36.0,
 					"custom_ordering": true
 				},
 				{
@@ -5204,7 +5253,7 @@
 						"scope": [],
 						"source_name": "PerfReport"
 					},
-					"ty": 43.0,
+					"ty": 44.0,
 					"custom_ordering": true
 				},
 				{
@@ -5220,7 +5269,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 59.0,
+					"ty": 60.0,
 					"custom_ordering": true
 				}
 			]
@@ -5644,6 +5693,64 @@
 					"is_event": false
 				},
 				{
+					"source_name": "hurt",
+					"product_type_ref": 34.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hurt_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hurt_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hurt_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "challenge",
 					"product_type_ref": 14.0,
 					"primary_key": [
@@ -5720,7 +5827,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 37.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -5765,7 +5872,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 41.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -5823,7 +5930,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 53.0,
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
@@ -5956,7 +6063,7 @@
 				},
 				{
 					"source_name": "skill_xp",
-					"product_type_ref": 54.0,
+					"product_type_ref": 55.0,
 					"primary_key": [
 						0.0
 					],
@@ -6031,7 +6138,7 @@
 				},
 				{
 					"source_name": "station",
-					"product_type_ref": 56.0,
+					"product_type_ref": 57.0,
 					"primary_key": [
 						0.0
 					],
@@ -6147,7 +6254,7 @@
 				},
 				{
 					"source_name": "unscored_press",
-					"product_type_ref": 61.0,
+					"product_type_ref": 62.0,
 					"primary_key": [
 						0.0
 					],
@@ -6267,7 +6374,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 50.0,
+					"product_type_ref": 51.0,
 					"primary_key": [
 						0.0
 					],
@@ -6416,7 +6523,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 60.0,
+					"product_type_ref": 61.0,
 					"primary_key": [
 						0.0
 					],
@@ -6474,7 +6581,7 @@
 				},
 				{
 					"source_name": "recipe_log",
-					"product_type_ref": 47.0,
+					"product_type_ref": 48.0,
 					"primary_key": [
 						0.0
 					],
@@ -6549,7 +6656,7 @@
 				},
 				{
 					"source_name": "starter_kit_given",
-					"product_type_ref": 55.0,
+					"product_type_ref": 56.0,
 					"primary_key": [
 						0.0
 					],
@@ -6856,7 +6963,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 59.0,
+					"product_type_ref": 60.0,
 					"primary_key": [
 						0.0
 					],
@@ -7096,7 +7203,7 @@
 				},
 				{
 					"source_name": "swing",
-					"product_type_ref": 58.0,
+					"product_type_ref": 59.0,
 					"primary_key": [
 						0.0
 					],
@@ -7199,7 +7306,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 57.0,
+					"product_type_ref": 58.0,
 					"primary_key": [
 						0.0
 					],
@@ -7257,7 +7364,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 34.0,
+					"product_type_ref": 35.0,
 					"primary_key": [
 						0.0
 					],
@@ -7345,7 +7452,7 @@
 				},
 				{
 					"source_name": "work_order",
-					"product_type_ref": 63.0,
+					"product_type_ref": 64.0,
 					"primary_key": [
 						0.0
 					],
@@ -7420,7 +7527,7 @@
 				},
 				{
 					"source_name": "push",
-					"product_type_ref": 45.0,
+					"product_type_ref": 46.0,
 					"primary_key": [
 						0.0
 					],
@@ -7508,7 +7615,7 @@
 				},
 				{
 					"source_name": "perf_report",
-					"product_type_ref": 43.0,
+					"product_type_ref": 44.0,
 					"primary_key": [
 						0.0
 					],
@@ -7583,7 +7690,7 @@
 				},
 				{
 					"source_name": "order_filled",
-					"product_type_ref": 42.0,
+					"product_type_ref": 43.0,
 					"primary_key": [
 						0.0
 					],
@@ -8014,7 +8121,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 46.0,
+					"product_type_ref": 47.0,
 					"primary_key": [
 						0.0
 					],
@@ -8072,7 +8179,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 52.0,
+					"product_type_ref": 53.0,
 					"primary_key": [
 						0.0
 					],
@@ -8250,7 +8357,7 @@
 				},
 				{
 					"source_name": "work_schedule",
-					"product_type_ref": 65.0,
+					"product_type_ref": 66.0,
 					"primary_key": [
 						0.0
 					],
@@ -8370,7 +8477,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 66.0,
+					"product_type_ref": 67.0,
 					"primary_key": [
 						0.0
 					],
@@ -8415,7 +8522,7 @@
 				},
 				{
 					"source_name": "work_result",
-					"product_type_ref": 64.0,
+					"product_type_ref": 65.0,
 					"primary_key": [
 						0.0
 					],
@@ -8535,7 +8642,7 @@
 				},
 				{
 					"source_name": "wielded",
-					"product_type_ref": 62.0,
+					"product_type_ref": 63.0,
 					"primary_key": [
 						0.0
 					],
@@ -8625,7 +8732,7 @@
 				},
 				{
 					"source_name": "noise",
-					"product_type_ref": 40.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
@@ -8775,7 +8882,7 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 39.0,
+					"product_type_ref": 40.0,
 					"primary_key": [
 						0.0
 					],
@@ -8833,7 +8940,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 67.0,
+					"product_type_ref": 68.0,
 					"primary_key": [
 						0.0
 					],
@@ -8940,7 +9047,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 48.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -8985,7 +9092,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 36.0,
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
@@ -9060,7 +9167,7 @@
 				},
 				{
 					"source_name": "lobby_member",
-					"product_type_ref": 38.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -9131,7 +9238,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 44.0,
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
@@ -9201,7 +9308,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 51.0,
+					"product_type_ref": 52.0,
 					"primary_key": [
 						0.0
 					],
@@ -10846,7 +10953,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 49.0
+										"Ref": 50.0
 									}
 								}
 							}
@@ -11109,7 +11216,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 37.0
+										"Ref": 38.0
 									}
 								}
 							}
@@ -11767,7 +11874,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 35.0
+										"Ref": 36.0
 									}
 								}
 							}
@@ -11846,7 +11953,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 59.0
+									"Ref": 60.0
 								}
 							}
 						]
@@ -12098,7 +12205,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 65.0
+									"Ref": 66.0
 								}
 							}
 						]
@@ -12133,7 +12240,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 68.0
+										"Ref": 69.0
 									}
 								}
 							}
@@ -12169,7 +12276,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 69.0
+										"Ref": 70.0
 									}
 								}
 							}
@@ -12393,6 +12500,12 @@
 						"Table": {
 							"source_name": "entity",
 							"canonical_name": "entity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "hurt",
+							"canonical_name": "hurt"
 						}
 					},
 					{

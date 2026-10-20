@@ -853,6 +853,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
     }
     reset_dummies(ctx);
     tick_foes(ctx);
+    tick_regen(ctx, WORK_TICK_MICROS as f32 / 1_000_000.0);
     let mut boards: Vec<u32> = ctx.db.station().iter().filter(|s| s.key == rules::ORDER_BOARD).map(|s| s.world_id).collect();
     boards.dedup();
     for w in boards {
@@ -990,6 +991,17 @@ pub struct Foe {
     pub foe_id: u32,
     pub fell_at: Option<Timestamp>,
     pub gone: bool,
+}
+
+/// When an entity was last hurt (a hit landed on it): its health comes back `regents.regen_delay_s` after.
+/// No row: whole, or never hurt.
+#[table(accessor = hurt)]
+pub struct Hurt {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub at: Timestamp,
 }
 
 /// A foe slain by a player, and what they got (`item:qty,...`): the HUD's line. Kept a few seconds.
@@ -1265,6 +1277,9 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         if let Err(e) = crate::module::damage_entity(ctx, target.entity_id, dmg, actor) {
             log::warn!("regents: {actor}'s hit on {}: {e}", target.entity_id);
         }
+        if dummy.is_none() {
+            hurt_now(ctx, target.entity_id, target.world_id);
+        }
     }
     if ctx.db.player().entity_id().find(actor).is_some() && dmg > 0.0 {
         let share = if dummy.is_some() {
@@ -1364,6 +1379,7 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
 
 /// A slain player's time is up: whole again, at the spawn.
 fn get_up(ctx: &ReducerContext, entity_id: u64) {
+    ctx.db.hurt().entity_id().delete(entity_id);
     if let Some(mut h) = ctx.db.health_state().entity_id().find(entity_id) {
         h.current = h.max;
         h.is_dead = false;
@@ -1404,8 +1420,44 @@ fn tick_foes(ctx: &ReducerContext) {
     }
 }
 
+/// Entity `entity_id` was hurt now: its health waits `regents.regen_delay_s` before it comes back.
+fn hurt_now(ctx: &ReducerContext, entity_id: u64, world_id: u32) {
+    let row = Hurt { entity_id, world_id, at: ctx.timestamp };
+    if ctx.db.hurt().entity_id().find(entity_id).is_some() {
+        ctx.db.hurt().entity_id().update(row);
+    } else {
+        ctx.db.hurt().insert(row);
+    }
+}
+
+/// OUT OF THE FIGHT, HEALTH COMES BACK (2026-10-20): `regents.regen_delay_s` after its last hurt, a player
+/// or a foe gets `regents.regen_pct_per_s` % of its health back a second (a foe led off and left walks
+/// home whole), until it is whole. Not while it is slain.
+fn tick_regen(ctx: &ReducerContext, dt_s: f32) {
+    let now = micros(ctx.timestamp);
+    let delay = (hot_number(ctx, hot::REGEN_DELAY_S).max(0.0) * 1_000_000.0) as i64;
+    let pct = hot_number(ctx, hot::REGEN_PCT_PER_S) as f32;
+    let rows: Vec<Hurt> = ctx.db.hurt().iter().filter(|h| now - micros(h.at) >= delay).collect();
+    for r in rows {
+        let Some(mut h) = ctx.db.health_state().entity_id().find(r.entity_id) else {
+            ctx.db.hurt().entity_id().delete(r.entity_id);
+            continue;
+        };
+        if h.is_dead {
+            continue;
+        }
+        h.current = rules::regen_step(h.current, h.max, pct, dt_s);
+        let whole = h.current >= h.max;
+        ctx.db.health_state().entity_id().update(h);
+        if whole {
+            ctx.db.hurt().entity_id().delete(r.entity_id);
+        }
+    }
+}
+
 /// A fallen foe's body goes: its entity and what this genre kept about it.
 fn forget_body(ctx: &ReducerContext, entity_id: u64) {
+    ctx.db.hurt().entity_id().delete(entity_id);
     crate::module::despawn_entity_internal(ctx, entity_id);
     ctx.db.combat_state().entity_id().delete(entity_id);
     ctx.db.swing().entity_id().delete(entity_id);

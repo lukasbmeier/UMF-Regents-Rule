@@ -388,3 +388,18 @@ fn a_foes_loot_is_rolled_per_drop() {
     assert_eq!(counts[1] + counts[2] + counts[3], 600, "{counts:?}");
     assert!(counts[1..].iter().all(|c| *c == 200), "evenly: {counts:?}");
 }
+
+#[test]
+fn health_comes_back_out_of_the_fight() {
+    // 4 % a second of 100: a quarter-second tick gives 1; never past whole; nothing at 0 %.
+    assert!((rules::regen_step(50.0, 100.0, 4.0, 0.25) - 51.0).abs() < 1e-5);
+    assert_eq!(rules::regen_step(99.5, 100.0, 4.0, 0.25), 100.0, "never past whole");
+    assert_eq!(rules::regen_step(50.0, 100.0, 0.0, 0.25), 50.0, "a rule of 0: none");
+    let mut h = 0.0;
+    let mut ticks = 0;
+    while h < 100.0 {
+        h = rules::regen_step(h, 100.0, 4.0, 0.25);
+        ticks += 1;
+    }
+    assert_eq!(ticks, 100, "empty to whole in 25 s at 4 %");
+}

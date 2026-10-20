@@ -1340,6 +1340,34 @@
 			]
 		},
 		{
+			"name": "Hurt",
+			"namespace": [],
+			"source_name": "Hurt",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"hurt"
+			],
+			"table_name": "hurt",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				false
+			]
+		},
+		{
 			"name": "InputQueueRow",
 			"namespace": [],
 			"source_name": "InputQueueRow",
@@ -1359,7 +1387,7 @@
 				{
 					"name": "frame",
 					"type": "InputFrame",
-					"type_idx": 35
+					"type_idx": 36
 				},
 				{
 					"name": "received_at",
@@ -3626,7 +3654,7 @@
 					],
 					"is_array": true,
 					"type": "BodyContactWrite",
-					"type_idx": 49
+					"type_idx": 50
 				}
 			],
 			"return_type": "",
@@ -3761,7 +3789,7 @@
 					],
 					"is_array": true,
 					"type": "ItemDef",
-					"type_idx": 37
+					"type_idx": 38
 				}
 			],
 			"return_type": "",
@@ -4119,7 +4147,7 @@
 					],
 					"is_array": true,
 					"type": "InputFrame",
-					"type_idx": 35
+					"type_idx": 36
 				}
 			],
 			"return_type": "",
@@ -4165,7 +4193,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 59
+					"type_idx": 60
 				}
 			],
 			"return_type": "",
@@ -4302,7 +4330,7 @@
 				{
 					"name": "_sched",
 					"type": "WorkSchedule",
-					"type_idx": 65
+					"type_idx": 66
 				}
 			],
 			"return_type": "",
@@ -4326,7 +4354,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 68
+					"type_idx": 69
 				}
 			],
 			"return_type": "",
@@ -4349,7 +4377,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 69
+					"type_idx": 70
 				}
 			],
 			"return_type": "",
@@ -5110,11 +5138,35 @@
 			"is_public": true
 		},
 		{
+			"name": "hurt",
+			"wire_name": "hurt",
+			"namespace": [],
+			"local_name": "hurt",
+			"type_idx": 34,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "hurt_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": false
+		},
+		{
 			"name": "input_queue",
 			"wire_name": "input_queue",
 			"namespace": [],
 			"local_name": "input_queue",
-			"type_idx": 34,
+			"type_idx": 35,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5142,7 +5194,7 @@
 			"wire_name": "inventory_item",
 			"namespace": [],
 			"local_name": "inventory_item",
-			"type_idx": 36,
+			"type_idx": 37,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5166,7 +5218,7 @@
 			"wire_name": "item_def",
 			"namespace": [],
 			"local_name": "item_def",
-			"type_idx": 37,
+			"type_idx": 38,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "item_def_id",
@@ -5185,7 +5237,7 @@
 			"wire_name": "lobby_member",
 			"namespace": [],
 			"local_name": "lobby_member",
-			"type_idx": 38,
+			"type_idx": 39,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5213,7 +5265,7 @@
 			"wire_name": "movement_state",
 			"namespace": [],
 			"local_name": "movement_state",
-			"type_idx": 39,
+			"type_idx": 40,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5237,7 +5289,7 @@
 			"wire_name": "noise",
 			"namespace": [],
 			"local_name": "noise",
-			"type_idx": 40,
+			"type_idx": 41,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5261,7 +5313,7 @@
 			"wire_name": "npc_brain",
 			"namespace": [],
 			"local_name": "npc_brain",
-			"type_idx": 41,
+			"type_idx": 42,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5285,7 +5337,7 @@
 			"wire_name": "order_filled",
 			"namespace": [],
 			"local_name": "order_filled",
-			"type_idx": 42,
+			"type_idx": 43,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5309,7 +5361,7 @@
 			"wire_name": "perf_report",
 			"namespace": [],
 			"local_name": "perf_report",
-			"type_idx": 43,
+			"type_idx": 44,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5356,7 +5408,7 @@
 			"wire_name": "player",
 			"namespace": [],
 			"local_name": "player",
-			"type_idx": 44,
+			"type_idx": 45,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "identity",
@@ -5380,7 +5432,7 @@
 			"wire_name": "push",
 			"namespace": [],
 			"local_name": "push",
-			"type_idx": 45,
+			"type_idx": 46,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5408,7 +5460,7 @@
 			"wire_name": "rate_budget",
 			"namespace": [],
 			"local_name": "rate_budget",
-			"type_idx": 46,
+			"type_idx": 47,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "key",
@@ -5432,7 +5484,7 @@
 			"wire_name": "recipe_log",
 			"namespace": [],
 			"local_name": "recipe_log",
-			"type_idx": 47,
+			"type_idx": 48,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5456,7 +5508,7 @@
 			"wire_name": "referee_offer",
 			"namespace": [],
 			"local_name": "referee_offer",
-			"type_idx": 48,
+			"type_idx": 49,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5475,7 +5527,7 @@
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 50,
+			"type_idx": 51,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5499,7 +5551,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 51,
+			"type_idx": 52,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -5518,7 +5570,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 52,
+			"type_idx": 53,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -5542,7 +5594,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 53,
+			"type_idx": 54,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5570,7 +5622,7 @@
 			"wire_name": "skill_xp",
 			"namespace": [],
 			"local_name": "skill_xp",
-			"type_idx": 54,
+			"type_idx": 55,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5594,7 +5646,7 @@
 			"wire_name": "starter_kit_given",
 			"namespace": [],
 			"local_name": "starter_kit_given",
-			"type_idx": 55,
+			"type_idx": 56,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5613,7 +5665,7 @@
 			"wire_name": "station",
 			"namespace": [],
 			"local_name": "station",
-			"type_idx": 56,
+			"type_idx": 57,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5665,7 +5717,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 57,
+			"type_idx": 58,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5689,7 +5741,7 @@
 			"wire_name": "swing",
 			"namespace": [],
 			"local_name": "swing",
-			"type_idx": 58,
+			"type_idx": 59,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5708,7 +5760,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 59,
+			"type_idx": 60,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -5731,7 +5783,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 60,
+			"type_idx": 61,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5755,7 +5807,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 61,
+			"type_idx": 62,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5774,7 +5826,7 @@
 			"wire_name": "wielded",
 			"namespace": [],
 			"local_name": "wielded",
-			"type_idx": 62,
+			"type_idx": 63,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5793,7 +5845,7 @@
 			"wire_name": "work_order",
 			"namespace": [],
 			"local_name": "work_order",
-			"type_idx": 63,
+			"type_idx": 64,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5817,7 +5869,7 @@
 			"wire_name": "work_result",
 			"namespace": [],
 			"local_name": "work_result",
-			"type_idx": 64,
+			"type_idx": 65,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5841,7 +5893,7 @@
 			"wire_name": "work_schedule",
 			"namespace": [],
 			"local_name": "work_schedule",
-			"type_idx": 65,
+			"type_idx": 66,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -5864,7 +5916,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 66,
+			"type_idx": 67,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5883,7 +5935,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 67,
+			"type_idx": 68,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5964,6 +6016,7 @@
 		"HoldProgress": "UmfHoldProgress",
 		"HoldTick": "UmfHoldTick",
 		"HotRuleRow": "UmfHotRuleRow",
+		"Hurt": "UmfHurt",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
 		"InventoryItem": "UmfInventoryItem",
@@ -6066,6 +6119,7 @@
 		"HoldProgress": "UmfHoldProgress",
 		"HoldTick": "UmfHoldTick",
 		"HotRuleRow": "UmfHotRuleRow",
+		"Hurt": "UmfHurt",
 		"InputQueueRow": "UmfInputQueueRow",
 		"InputFrame": "UmfInputFrame",
 		"InventoryItem": "UmfInventoryItem",
@@ -8416,6 +8470,47 @@
 				"elements": [
 					{
 						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
 							"some": "id"
 						},
 						"algebraic_type": {
@@ -8443,7 +8538,7 @@
 							"some": "frame"
 						},
 						"algebraic_type": {
-							"Ref": 35.0
+							"Ref": 36.0
 						}
 					},
 					{

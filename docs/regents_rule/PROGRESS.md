@@ -314,3 +314,9 @@ Code: `game/regents/ui/` (`RegentsStationWindow`, `RegentsBagWindow`, `RegentsSk
 works the anvil and the workbench through the window (MAKE, STOP, picking the axe head for a round, the
 iron axe with the oak handle) and, with `SHOTS=<dir>`, plays in a window and saves pictures of them; the
 combat playtest wields the axe from the bag window.
+
+**Health comes back out of the fight** (2026-10-20, a placeholder until you decide food or potions):
+`regents.regen_delay_s` (8 s) after the last hit that landed on you, `regents.regen_pct_per_s` (4 %) of your
+health a second, until you are whole. Foes too: one led off and left heals as it walks home. Both are
+hot rules. Proven: native test (the step), the combat playtest (after the skeleton fight your health
+climbs back; without the tick it does not).

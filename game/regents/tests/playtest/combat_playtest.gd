@@ -295,14 +295,19 @@ func _run() -> void:
 	if foe_ent != null:
 		var home: Vector3 = foe_ent.global_position
 		var hp0: float = my_hp.get_current()
-		await _until(func() -> bool: return foe_ent.global_position.distance_to(me.global_position) < 2.6, 10.0)
-		_check(foe_ent.global_position.distance_to(me.global_position) < 2.6, "it noticed you and came (%.1f m away now)" % foe_ent.global_position.distance_to(me.global_position))
+		# Its swings are watched from now: one may start the moment it arrives.
 		var sdrv: AnimationDriverComponent = foe_ent.find_component(AnimationDriverComponent) as AnimationDriverComponent
 		var swung_clip: Array[StringName] = []
-		await _until(func() -> bool:
+		var watch: Callable = func() -> void:
 			if sdrv != null and sdrv.action_playing() and String(sdrv.action_clip()).contains("Sword"):
 				swung_clip.append(sdrv.action_clip())
-			return my_hp.get_current() < hp0, 8.0)
+		await _until(func() -> bool:
+			watch.call()
+			return foe_ent.global_position.distance_to(me.global_position) < 2.6, 10.0)
+		_check(foe_ent.global_position.distance_to(me.global_position) < 2.6, "it noticed you and came (%.1f m away now)" % foe_ent.global_position.distance_to(me.global_position))
+		await _until(func() -> bool:
+			watch.call()
+			return my_hp.get_current() < hp0 and not swung_clip.is_empty(), 8.0)
 		_check(my_hp.get_current() < hp0 and not swung_clip.is_empty(),
 			"it swung its sword (%s) and hit you: %.1f -> %.1f" % [swung_clip[0] if not swung_clip.is_empty() else &"no swing seen", hp0, my_hp.get_current()])
 		var shp: SpaceTimeHealthComponent = foe_ent.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
@@ -317,6 +322,10 @@ func _run() -> void:
 		await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
 		await _until(func() -> bool: return foe_ent.global_position.distance_to(home) < 2.0, 20.0)
 		_check(foe_ent.global_position.distance_to(home) < 2.0, "out of its reach, it walked home (%.1f m from its point)" % foe_ent.global_position.distance_to(home))
+		# Out of the fight, health comes back (regents.regen_delay_s, then regen_pct_per_s).
+		var hurt_hp: float = my_hp.get_current()
+		await _until(func() -> bool: return my_hp.get_current() > hurt_hp + 3.0 or my_hp.get_current() >= my_hp.get_max(), 20.0)
+		_check(my_hp.get_current() > hurt_hp, "out of the fight, your health comes back: %.1f -> %.1f" % [hurt_hp, my_hp.get_current()])
 
 	# --- LET THE TARGET GO ---
 	await _key(KEY_ESCAPE)

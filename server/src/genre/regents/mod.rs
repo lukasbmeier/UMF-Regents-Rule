@@ -318,6 +318,12 @@ pub fn foe_loot(foe: &FoeSeed, roll: impl Fn(usize) -> u32) -> Vec<(u32, u32)> {
     out
 }
 
+/// OUT OF THE FIGHT, HEALTH COMES BACK (2026-10-20): `pct_per_s` % of `max` a second, over `dt_s`, never
+/// past `max`.
+pub fn regen_step(current: f32, max: f32, pct_per_s: f32, dt_s: f32) -> f32 {
+    (current + max * pct_per_s.max(0.0) / 100.0 * dt_s.max(0.0)).min(max)
+}
+
 pub fn kit_keyed(key: &str) -> Option<&'static KitSeed> {
     KITS.iter().find(|k| k.key == key)
 }
