@@ -260,16 +260,16 @@ Rides on `FOUNDATION_SYSTEMS` M1–M7 and M9–M15 (built, 0.51.1); **M8** (a wo
 - **Reducers (player)**: `set_target`, `cast(ability_id, target_id?, aim_origin?, aim_dir?)` (queues when busy), `cancel_cast`, `dodge`, `equip`, `unequip`, `interact(point_id)` (opens a minigame or a plain hold), `minigame_input_batch(session_id, inputs[])`, `minigame_leave`, `craft`, `buy`, `sell`, `accept_writ`, `turn_in_writ`, `release` (respawn), `revive`, `party_*`, `chat`, `duel_request`, `duel_accept`, `enter_dungeon`, `leave_dungeon`. **Authority-only**: `npc_cast`, `npc_state_batch`, `hit`, `apply_effect`, `spawn_npc`, `despawn`, `promote_tier`. **Scheduled**: `cast_complete` (queue + timed casts), `spawner_sweep` (1 Hz; NPCs and nodes), `tier0_wander`, `status_expiry` (M2), `linger_despawn`, `minigame_deadline`, `duel_boundary_check` (1 Hz while any duel is live), `dungeon_timer`.
 
 ## 13. Open items
-The owner went through #1, #2, #3, #13, #15, #17 and the chunk schema (#21) on 2026-10-18; the body says the decision where it applies. Still open: #7, #10, #12. Where the body needs one of those, it uses the recommendation and marks it *pending*; nothing pending is assumed.
+The owner went through #1, #2, #3, #13, #15, #17 and the chunk schema (#21) on 2026-10-18, and #2 (changed), #7 and the loot, items, combat styles, spells, summons and crafting on 2026-10-20 (**`LOOT_AND_STYLES.md`, which overrides this doc where they differ**: no global cooldown, melee never rolls to hit, durability an option); the body says the decision where it applies. Still open: #10, #12. Where the body needs one of those, it uses the recommendation and marks it *pending*; nothing pending is assumed.
 | # | Item | Recommendation, or the decision | Decides |
 |---|---|---|---|
 | 1 | **Universe**: Hollow Hill or new | **a new fantasy setting**; Hollow Hill animals reused as assets, not lore | **Owner — decided 2026-10-18** |
-| 2 | Resource model | **one 100-point pool, the same rules for every kit, named by the kit** (stamina / focus / mana); a weapon swap keeps the value | **Owner — decided 2026-10-18** |
+| 2 | Resource model | ~~one 100-point pool for every kit~~ **changed 2026-10-20: a generic resource, mana on the Staff only**; melee and the bow stay cooldown-paced (`LOOT_AND_STYLES.md`, amendment 3) | **Owner — decided 2026-10-20** |
 | 3 | Mastery: ranks, unlock placement, gathering curve | **v1: 10 ranks per kit and per skill** (15 acceptable; production will go higher, so XP is stored and the rank comes from a content curve); **abilities at 1/3/6/9**; **node tiers need both a gathering rank and a tool tier** | **Owner — decided 2026-10-18** |
 | 4 | Dodge i-frames | Evading 0.3 s as a status the referee checks at rewound time; dodge interrupts and clears the queue | Agent |
 | 5 | Views | verify sender-aware subscribable views in the pinned version for `stats` and a `nearby` view; fall back to a `stats` row + client-side subscription swapping | Agent |
 | 6 | LoS | none for TARGETED in v1; `needs_los` referee-judged when an ability wants it | Agent |
-| 7 | Loot | personal, per contributing player | **Owner — open** |
+| 7 | Loot | **personal rolls per contributor (≥ 5 % of the damage), on the ground, owner-only 60 s then public 60 s; nested `each` / `one-of` tables with pity** (`LOOT_AND_STYLES.md`) | **Owner — decided 2026-10-20** |
 | 8 | Logout linger | 10 s, 30 s in combat | Agent |
 | 9 | Chunk size and ring | 64 m, 3 × 3 subscribed, 5 × 5 streamed; tune with the 300-bot harness | Agent |
 | 10 | Hosting gate | measure Maincloud RTT from candidate VPS regions; < 5 ms → option 1, else self-host both | **Owner — after measurement** |
