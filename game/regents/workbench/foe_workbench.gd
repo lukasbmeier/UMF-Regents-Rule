@@ -105,7 +105,7 @@ static func rule(name: StringName) -> float:
 ## THE SERVER'S DAMAGE RULE (`genre::regents::hit_damage`): an ability's damage, at a weapon's %, its
 ## quality (thousandths) adding up to a fifth, its fighter's mastery rank adding 3 % a rank past the first.
 static func hit_damage(ability_damage: float, weapon_pct: int, quality_pm: int, rank: int) -> float:
-	var quality: float = 1.0 + float(mini(quality_pm, 1000)) / 5000.0
+	var quality: float = RegentsGrade.quality_mult(quality_pm)
 	var mastery: float = 1.0 + float(mini(3 * maxi(rank - 1, 0), 27)) / 100.0
 	return ability_damage * float(weapon_pct) / 100.0 * quality * mastery
 

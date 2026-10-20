@@ -366,6 +366,24 @@
 					"number": 40.0,
 					"text": "",
 					"unit": "%"
+				},
+				{
+					"key": "regents.grade_fine_q",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 1.0,
+					"number": 400.0,
+					"text": "",
+					"unit": "‰"
+				},
+				{
+					"key": "regents.grade_masterwork_q",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 1.0,
+					"number": 800.0,
+					"text": "",
+					"unit": "‰"
 				}
 			]
 		}

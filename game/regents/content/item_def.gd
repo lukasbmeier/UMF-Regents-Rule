@@ -101,6 +101,14 @@ func validate() -> Array[String]:
 		out.append("a weapon does not stack: `max_stack` 1")
 	if part_tag == &"" and (handle_speed_pct != 100 or handle_quality_pm != 0):
 		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
+	if weapon_kit != &"":
+		# Tier dominates (owner, 2026-10-20): against every other weapon of its kit.
+		var kin: Array[ItemDef] = [self]
+		for d: ContentDef in RegentsContent.items(&"item"):
+			var other: ItemDef = d as ItemDef
+			if other != null and other.id != id and other.weapon_kit == weapon_kit:
+				kin.append(other)
+		out.append_array(RegentsGrade.tier_overlaps(kin).duplicate())
 	return out
 
 

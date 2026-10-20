@@ -27,7 +27,7 @@ func run() -> void:
 	await _run_lab()
 	await _run_recipe_bench()
 	await _run_foe_bench()
-	_run_combat()
+	await _run_combat()
 
 
 ## Combat's client side, with no server: kits, the combo's steps, the stance, the keys, the skill bar.
@@ -85,6 +85,78 @@ func _run_combat() -> void:
 	_run_swing_timeline()
 	_run_foes()
 	_run_bow()
+	await _run_grades()
+
+
+## GRADES AND POWER (owner, 2026-10-20, LOOT_AND_STYLES.md): quality bands, graded names, Power from tier
+## and quality, tier dominating, and the bag showing them.
+func _run_grades() -> void:
+	print("== regents: grades and Power ==")
+	_check(RegentsGrade.of_quality(-1) == -1 and RegentsGrade.of_quality(0) == 0 and RegentsGrade.of_quality(399) == 0
+		and RegentsGrade.of_quality(400) == 1 and RegentsGrade.of_quality(799) == 1 and RegentsGrade.of_quality(800) == 2
+		and RegentsGrade.of_quality(1000) == 2, "bands: Common under 400, Fine from 400, Masterwork from 800 (hot rules); none without a quality")
+	var iron_axe: ItemDef = ItemDef.by_id(40015)
+	var bronze_axe: ItemDef = ItemDef.by_id(40001)
+	_check(RegentsGrade.quality_of("{\"q\":850,\"h\":40016}") == 850 and RegentsGrade.quality_of("{\"q\":300}") == 300
+		and RegentsGrade.quality_of("") == -1, "a row's quality: 850 beside its handle, 300 alone, none for a plain item")
+	_check(RegentsGrade.item_name(iron_axe, 734) == "Fine iron axe" and RegentsGrade.item_name(iron_axe, 900) == "Masterwork iron axe"
+		and RegentsGrade.item_name(iron_axe, 100) == "Iron axe" and RegentsGrade.item_name(iron_axe, -1) == "Iron axe",
+		"names: Fine iron axe, Masterwork iron axe; a Common or ungraded one as it is")
+	_check(RegentsGrade.power(iron_axe, 0) == 100 and RegentsGrade.power(iron_axe, 1000) == 120 and RegentsGrade.power(iron_axe, 734) == 115
+		and RegentsGrade.power(bronze_axe, 0) == 70 and RegentsGrade.power(bronze_axe, 1000) == 84,
+		"Power: iron 100 to 120, bronze 70 to 84, by quality")
+	_check(RegentsGrade.power(iron_axe, 734) == roundi(FoeWorkbench.hit_damage(100.0, iron_axe.weapon_damage_pct, 734, 1)),
+		"Power is the hit the server deals: the kit's 100 through the weapon and its quality (hit_damage)")
+	_check(RegentsGrade.power(ItemDef.by_id(40022), -1) == 100 and RegentsGrade.power(ItemDef.by_id(40002), -1) == -1,
+		"copper arrows: Power 100; logs: none")
+	var all: Array[ItemDef] = []
+	for d: ContentDef in RegentsContent.items(&"item"):
+		if d is ItemDef:
+			all.append(d as ItemDef)
+	_check(RegentsGrade.tier_overlaps(all).is_empty(), "every tier dominates the one below it (%s)" % "; ".join(RegentsGrade.tier_overlaps(all)))
+	var close: ItemDef = bronze_axe.duplicate() as ItemDef
+	close.weapon_damage_pct = 90
+	var said: PackedStringArray = PackedStringArray(close.validate())
+	_check(said.size() > 0 and "; ".join(said).contains("reaches Iron axe at its worst (Power 100): tier must dominate"),
+		"a bronze axe at 90 %% would reach the iron axe: its check says so (%s)" % "; ".join(said))
+	# The bag: graded edges, the graded name, Power against the weapon wielded.
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var inv := SpaceTimeInventoryComponent.new()
+	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40015, 1, 0, "{\"q\":850,\"h\":40016}")
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, 40001, 1, 1, "{\"q\":300}")
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40002, 5, 2)
+	var cc := CombatComponent.new()
+	cc.weapon_row = 2
+	var bag := RegentsBagWindow.new()
+	bag.inventory = inv
+	bag.combat = cc
+	layer.add_child(bag)
+	bag.picked_row = 1
+	bag.open()
+	await get_tree().process_frame
+	var s1: UiSlot = bag.find_child("Slot_1", true, false) as UiSlot
+	var s2: UiSlot = bag.find_child("Slot_2", true, false) as UiSlot
+	var s3: UiSlot = bag.find_child("Slot_3", true, false) as UiSlot
+	_check(s1 != null and s2 != null and s3 != null and s1.grade == 2 and s2.grade == 0 and s3.grade == -1,
+		"slots: the iron axe Masterwork, the bronze Common, the logs ungraded")
+	var title: Label = bag.find_child("ItemName", true, false) as Label
+	_check(title != null and title.text == "Masterwork iron axe" and title.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().grade_colors[2]),
+		"its name: Masterwork iron axe, in the Masterwork colour")
+	var pw: Label = bag.find_child("Power", true, false) as Label
+	_check(pw != null and pw.text == "Power 117  (+43 on your Bronze axe)" and pw.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().good),
+		"Power 117, 43 over the bronze axe you wield, in the good colour (%s)" % (pw.text if pw != null else "none"))
+	bag.picked_row = 2
+	bag.refresh()
+	await get_tree().process_frame
+	pw = bag.find_child("Power", true, false) as Label
+	_check(pw != null and pw.text == "Power 74  (wielded)", "the wielded one: Power 74, wielded (%s)" % (pw.text if pw != null else "none"))
+	bag.close()
+	layer.queue_free()
+	cc.free()
+	inv.free()
+	close = null
+	await get_tree().process_frame
 
 
 ## The swing's timeline on the client (owner, 2026-10-19: animation-locked, a buffer, committed, cancels).

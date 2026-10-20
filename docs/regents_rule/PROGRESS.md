@@ -375,3 +375,28 @@ go). Negative: with the referee's contacts ignored, the playtest's hit checks fa
 
 Left for later: bow skills (skill shots), more arrow kinds, an arrow model on the string while drawn, a
 quiver slot (arrows come from the bag), the draw-scales-damage question.
+
+## Step 9: grades and Power (owner, 2026-10-20, `LOOT_AND_STYLES.md` order item 1)
+
+- **Grades are bands of quality.** A made item keeps its 0-1000 quality; **Common** under
+  `regents.grade_fine_q` (400), **Fine** from it, **Masterwork** from `regents.grade_masterwork_q` (800).
+  Both are hot rules. A material has no grade.
+- **The grade is a colour**: a slot's edge (two wide; a picked slot keeps it) and the item's name. The
+  colours are the game's style (`UiStyle.grade_colors`: grey, green, gold), so a fantasy reskin recolours
+  them (template DECISIONS #267).
+- **Names**: "Fine iron axe", "Masterwork iron sword"; a Common one keeps its plain name.
+- **Power**: the one number to compare, the weapon's damage in percent of its kit's with its quality in:
+  an iron weapon 100 to 120, a bronze one 70 to 84; arrows their own percent. It is exactly the hit
+  the server deals. Tools show their tier and work instead (a node asks for a tier).
+- **The bag** shows it all: the graded name, "Masterwork · quality 85% · oak handle", and
+  "Power 117 (+6 on your Fine iron sword)" in green (red when worse) against the weapon you wield. A
+  crafted item's notice is in its grade's colour.
+- **Tier dominates**, checked: an item's check in the Content Dock (and the bake) refuses a weapon whose
+  best reaches the next tier's worst in its kit.
+- Fixed on the way: a made item with a handle showed a garbage quality in the bag (`"q":850,"h":40016`
+  read as 85040016); quality is now read as JSON.
+
+Code: `content/item_grade.gd` (`RegentsGrade`), the bag window, the HUD's notice. Proven: the regents
+suite (bands, names, Power against the server's damage rule, tier dominance and a bronze axe at 90 %
+caught, the bag window's slots, name colour and Power lines); negative: Power ignoring quality and the
+bag ignoring grades fail six checks.

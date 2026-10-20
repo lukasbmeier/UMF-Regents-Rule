@@ -298,9 +298,12 @@ func _on_worked(r: Dictionary) -> void:
 	elif board != null and board.key == SkillingComponent.ORDER_BOARD:
 		notice("Order filled: %d %s" % [int(r["qty"]), item_name(int(r["item_id"]))], Color(1, 0.9, 0.5))
 	elif int(r["qty"]) > 0:
-		var quality: String = "  (quality %d%%)" % (int(r["quality"]) / 10) if int(r["quality"]) >= 0 else ""
+		var q: int = int(r["quality"])
+		var quality: String = "  (quality %d%%)" % (q / 10) if q >= 0 else ""
 		var round_note: String = "   (round %d%%)" % (int(r["score_pm"]) / 10) if bool(r["active"]) else ""
-		notice("+%d %s%s%s" % [int(r["qty"]), item_name(int(r["item_id"])), quality, round_note], colour)
+		var graded: Color = UiStyle.current().grade_color(RegentsGrade.of_quality(q))
+		notice("+%d %s%s%s" % [int(r["qty"]), RegentsGrade.item_name(item, q) if item != null else item_name(int(r["item_id"])), quality, round_note],
+			graded if graded.a > 0.0 else colour)
 	elif bool(r["active"]):
 		notice("Nothing from that round (%d%%)" % (int(r["score_pm"]) / 10), Color(1, 0.75, 0.5))
 	var skill: SkillDef = SkillDef.by_id(int(r["skill_id"]))
