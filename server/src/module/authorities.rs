@@ -209,6 +209,7 @@ pub(crate) fn damage_entity(ctx: &ReducerContext, target_id: u64, amount: f32, s
     ctx.db.health_state().entity_id().update(h);
     if amount > 0.0 {
         hurt(ctx, target_id);   // a hold that stops when its doer is hurt (DECISIONS #209)
+        record_damage(ctx, target_id, source_id, amount);   // who earned its loot (DECISIONS #268)
     }
     Ok(())
 }
@@ -396,6 +397,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     prune_perf(ctx);
     prune_bodies(ctx);
     prune_pushes(ctx);
+    prune_damage_shares(ctx);
     Ok(())
 }
 
@@ -468,6 +470,7 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.npc_brain().entity_id().delete(entity_id);
     ctx.db.equip_state().entity_id().delete(entity_id);
     ctx.db.appearance().entity_id().delete(entity_id);
+    forget_damage(ctx, entity_id);
     ctx.db.rate_budget().entity_id().delete(entity_id);
     let open: Vec<Challenge> = ctx.db.challenge().entity_id().filter(entity_id).collect();
     for ch in open {

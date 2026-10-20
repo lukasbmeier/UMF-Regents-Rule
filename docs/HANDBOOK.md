@@ -363,6 +363,27 @@ where you look. A genre throws its own with `BodyLaunch.throw_body` (or its own 
 integration suite's bodies section and `tools\run.cmd tests\bodies_playtest.sh` (a real referee and two
 clients at 150 ms).
 
+### Loot: what a kill drops, and who gets it
+What a thing drops is a LOOT TABLE, content (`LootTableDef`, a genre's `game/<genre>/content/loot_table/`;
+DECISIONS #268). A table is lines; a line is an item (the genre's item content) or another table, with a
+chance and a from..to count. Two kinds:
+- **Each** (the usual): every line rolls its own chance, so several can drop, 100 % always does, and adding a
+  line never changes another's odds.
+- **One of**: exactly one line wins. Type each line's share as a plain percentage (50, 35, 15); whatever is
+  left of 100 is nothing. Over 100 is refused.
+
+A line can be a shared table ("undead common", "a few marks"), so foes share their commons. Mark a rare
+line **pity** (each tables only) and a player who keeps missing it gets likelier each kill, and certain
+after enough (`foundation.loot_pity_ramp_x`, `foundation.loot_pity_cap_x` on the Rules page, in units of
+the line's own odds). A table's summary in the Content Dock says what one roll gives on average.
+
+Every player who did at least `foundation.loot_share_min_pct` (5 %) of the recent damage gets their OWN
+roll (a personal roll: no need/greed, no stealing a kill; a hit older than `foundation.loot_share_forget_s`
+does not count). A genre's server code calls `crate::module::drop_loot(ctx, target, table_id)` when it
+decides something is slain; it gives each player theirs (into the bag until ground items exist) and says
+who got what. A new or changed table needs a bake and a publish. Tested by the `loot` suite,
+`server/tests/loot.rs` and a genre's integration hook.
+
 ### The server pushes people (and bodies)
 A genre's rule that moves someone (a leaf blower, a bounce pad, a hit) writes a push:
 `push_entity(ctx, entity, vel, by)` (DECISIONS #251). Players still move themselves: the pushed player's

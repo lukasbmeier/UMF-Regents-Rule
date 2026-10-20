@@ -31,6 +31,7 @@ const SUITES: PackedStringArray = [
 	"input",
 	"session",
 	"inventory",
+	"loot",
 	"interaction",
 	"action",
 	"referee",
