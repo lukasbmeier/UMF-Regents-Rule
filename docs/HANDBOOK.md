@@ -627,6 +627,20 @@ says. Nothing in code tells an item how to be held.
 - The HUD: `foundation/ui/hud.tscn`, one status line (connection, then the round). The greybox game
   carries it as `HUD`; a genre's own `HUD` scene (its `genre.tres` `scenes`) replaces it, and any
   genre scene named like one of the game scene's children replaces that child the same way.
+- **The game's look: one style file** (`foundation/ui/kit/`, DECISIONS #265). Every control in the game
+  (the Esc menu, settings, a genre's windows and buttons) is drawn with the game's `UiStyle`: its colours
+  (panel, edge, title bar, text, accent, good / warn / bad, buttons, slots), sizes (corners, padding,
+  button height, slot size, font sizes) and fonts. **To reskin a game** (a fantasy look): make a `.tres`
+  of `UiStyle` (in the FileSystem dock: New Resource, UiStyle), change it in the Inspector, and set the
+  project setting `umf/ui/style` to it. Nothing else changes; every screen follows. Without it a game has
+  the foundation's dark blue.
+- **Building a window for your game** (an inventory, a crafting station, a journal): `UiWindow.new()`, set
+  `title` and `place` (center, right, left), add your rows to its `content`, `open()` it. It has a title
+  bar you can drag, a ✕, Escape closes it, and it frees the cursor while it is open. Put it on your HUD's
+  CanvasLayer. For its rows: `UiKit.heading`, `UiKit.note` (small, dim), `UiKit.line(text, role)` (a
+  line in the style's good / warn / bad / accent colour), `UiKit.button`, `UiKit.slot_grid`; an item is a
+  `UiSlot` (its colour or picture, its initials, a count, picked or not, a tooltip). Never type a colour
+  into a screen: ask `UiKit.colour(role)`, so a reskin reaches it.
 - Connect screen and Esc menu: `foundation/ui/`. F11 or Alt+Enter: fullscreen. The menu also has
   Settings, Open log folder, Character, and whatever a game adds (`PauseMenu.add_button`,
   `open_page`: fishing's Journal).

@@ -62,6 +62,7 @@ const SUITES: PackedStringArray = [
 	"remote_animation",
 	"greybox",
 	"equip",
+	"ui_kit",
 ]
 
 

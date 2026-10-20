@@ -65,6 +65,8 @@ var _flag_lobby_screen: bool = false
 
 
 func _ready() -> void:
+	# THE GAME'S LOOK (DECISIONS #265): every window, menu and button in it is drawn with its UiStyle.
+	UiStyle.apply(get_tree().root)
 	# The window's close button quits through AppExit like everything else: sounds stopped and
 	# released first (DECISIONS #151).
 	AppExit.hold_close_request(get_tree())
