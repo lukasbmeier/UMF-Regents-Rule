@@ -131,8 +131,8 @@ func _run_animation_tests() -> void:
 	if tree == null:
 		return
 	var root: AnimationNodeBlendTree = tree.tree_root as AnimationNodeBlendTree
-	_check(root != null and root.get_node_list().size() == 12,
-		"the graph is the twelve documented nodes: body, pose (+ its clip, scale, seek), upper, hit, action (%s)"
+	_check(root != null and root.get_node_list().size() == 16,
+		"the graph is the sixteen documented nodes: body, pose and the upper-body pose (each + its clip, scale, seek), upper, hit, action (%s)"
 			% str(root.get_node_list()))
 	# THE UPPER BODY (DECISIONS #158): a one-shot that moves the chest, arms and hands and leaves
 	# the hips and legs to the body under it.

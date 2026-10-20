@@ -527,6 +527,10 @@ Characters animate from a SET (`game/anim/fisher.tres`) mapping SEMANTIC names
 (`locomotion.run`, `interact`, `fishing.heave`) to clips. The AnimationTree is GENERATED from the
 set; never build one by hand. Gameplay asks for semantic names only.
 
+- **A pose on the arms only** (DECISIONS #266): `driver.hold_upper_pose(semantic, weight, at)` every frame
+  it should hold (a bow drawn: `at` how far), `release_upper_pose()` to let it go. The legs keep walking
+  under it; `hold_pose` is the whole body.
+
 ### Held items: rods, swords, shields, bows (`foundation/held/`)
 An item held in a hand is a `HeldItem` scene (its root at the item's grip point) with an
 `ItemGrip` file saying where it sits in the hand. A grip is set for two things only: an
