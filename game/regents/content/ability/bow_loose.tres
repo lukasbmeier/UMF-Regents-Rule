@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 0
+range_m = 40.0
+wind_up_ms = 100
+damage = 14.0
+animation = &"ability.40011"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40011
+display_name = "Loose"
+designer_notes = "The bow's shot (owner, 2026-10-20): its damage at a full draw; an arrow flies (the arrow body), and what it hits is this, by the draw, the bow, the arrow and the mastery. Never used as an ability (the draw and loose reducers): the bow kit's light, for its damage and its clip."

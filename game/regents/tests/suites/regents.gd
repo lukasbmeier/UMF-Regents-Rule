@@ -84,9 +84,33 @@ func _run_combat() -> void:
 	_check(ctrl_dodges and not slow_ctrl and not dash_q, "Ctrl rolls (the foundation's dash), not Q (a skill here); slow-walk is on Alt")
 	_run_swing_timeline()
 	_run_foes()
+	_run_bow()
 
 
 ## The swing's timeline on the client (owner, 2026-10-19: animation-locked, a buffer, committed, cancels).
+## THE YEW BOW (owner, 2026-10-20): its content holds together, and the client's draw.
+func _run_bow() -> void:
+	print("== regents: the bow ==")
+	var bow: KitDef = KitDef.by_key(&"bow")
+	_check(bow != null and bow.draws and bow.draw_full_ms == 800 and bow.heavy == null and bow.light.size() == 1, "the bow kit: drawn, full at 800 ms, one shot")
+	var aset: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
+	_check(aset.has_exact(&"pose.bow_draw") and aset.has_exact(&"pose.bow_aim") and aset.clip(&"ability.40011").anim_name == &"extra/Bow_Shoot",
+		"the set draws, aims and looses (Bow_Notch, Bow_Aim_Neutral, Bow_Shoot)")
+	var yew: ItemDef = ItemDef.by_id(40020)
+	var arrows: ItemDef = ItemDef.by_id(40022)
+	_check(yew.weapon_kit == &"bow" and arrows.ammo_for == &"bow" and arrows.max_stack >= 100, "a yew bow fights with it; copper arrows are its ammo")
+	var held: HeldItem = yew.held_scene.instantiate() as HeldItem
+	_check(held != null and held.grip.hand == &"hand_l", "the bow is held in the left hand")
+	held.free()
+	var drawing: StatusDef = load("res://game/regents/content/status/drawing.tres") as StatusDef
+	_check(drawing.status == 107 and drawing.speed <= 0.3 and not drawing.can_sprint and not drawing.can_jump and drawing.can_dash,
+		"drawn, you walk: no sprint or jump; the roll is whole")
+	_check(RecipeDef.by_id(40012).output_qty == 15 and RecipeDef.by_id(40013).input_qty[0] == 15 and RecipeDef.by_id(40011).output == yew,
+		"the workbench: a log to 15 shafts, 15 shafts and a bar to 15 arrows, yew logs to a bow")
+	var body: BodyDef = load("res://game/regents/content/body/arrow.tres") as BodyDef
+	_check(body.forces is ArrowFlight and body.launched_by.is_empty() and body.lifetime_s > 0.0, "the arrow: flown nose-first, never thrown by hand, gone in time")
+
+
 ## THE FIRST ENEMIES (owner, 2026-10-19): the skeleton camp's content holds together.
 func _run_foes() -> void:
 	print("== regents: foes ==")
@@ -255,8 +279,8 @@ func _run_content() -> void:
 	var keys: Array[StringName] = []
 	for sk: SkillDef in SkillDef.all():
 		keys.append(sk.key)
-	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship"],
-		"five working skills and two weapon masteries: %s" % str(keys))
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery"],
+		"five working skills and three weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
 	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
 		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
@@ -291,8 +315,8 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 5 and RecipeDef.at(&"orders").is_empty(),
-		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), five at the workbench (three handles, the axe, the sword), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 8 and RecipeDef.at(&"orders").is_empty(),
+		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), eight at the workbench (three handles, the axe, the sword, the yew bow, arrow shafts, copper arrows), none at the order board")
 	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -560,7 +584,8 @@ func _run_looks() -> void:
 	for k: KitDef in KitDef.all():
 		var abilities: Array[AbilityDef] = []
 		abilities.assign(k.light + k.skills)
-		abilities.append(k.heavy)
+		if k.heavy != null:
+			abilities.append(k.heavy)   # a bow has none
 		for a: AbilityDef in abilities:
 			# The driver plays an ability as `ability.<id>` (anything else falls back to Interact: owner, 2026-10-19).
 			_check(a.animation == StringName("ability.%d" % a.id) and aset.has_exact(a.animation) and aset.clip(a.animation).anim_name != aset.clip(&"interact").anim_name,

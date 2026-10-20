@@ -42,8 +42,20 @@ if ! grep -q "claim_referee: registered" "$ref_log"; then
 fi
 
 echo "== a fighter at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
-timeout 300 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
+timeout 400 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
 fight_pid=$!
+bow_given=""
+while kill -0 "$fight_pid" 2>/dev/null; do
+  if [ -z "$bow_given" ]; then
+    ent="$(grep -oE '^GRANT_BOW [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      spacetime call "$DB" grant_item "$ent" 40020 1 >/dev/null 2>&1
+      spacetime call "$DB" grant_item "$ent" 40022 10 >/dev/null 2>&1
+      bow_given=1
+    fi
+  fi
+  sleep 0.3
+done
 wait "$fight_pid"; status=$?; fight_pid=""
 grep -E "^   |FAIL|passed," "$fight_log"
 if grep -E "SCRIPT ERROR" "$fight_log" >/dev/null; then

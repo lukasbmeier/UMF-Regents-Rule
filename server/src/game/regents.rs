@@ -993,6 +993,35 @@ pub struct Foe {
     pub gone: bool,
 }
 
+/// AN ARROW IN FLIGHT (owner, 2026-10-20): who loosed it, what it does when it hits (worked out as it was
+/// loosed: the draw, the bow, the arrow, the mastery), where it left the bow (point blank is near it),
+/// which arrows it was (recovered from a kill) and the mastery it trains. Gone once it hits.
+#[table(accessor = arrow)]
+pub struct Arrow {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub owner: u64,
+    pub damage: f32,
+    pub from: Vector3,
+    pub item_id: u32,
+    pub skill_id: u32,
+}
+
+/// Arrows stuck in a foe: whose, and which; a share comes back to their owners when it falls.
+#[table(accessor = stuck_arrow)]
+pub struct StuckArrow {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    #[index(btree)]
+    pub foe: u64,
+    pub owner: u64,
+    pub item_id: u32,
+    pub count: u32,
+}
+
 /// When an entity was last hurt (a hit landed on it): its health comes back `regents.regen_delay_s` after.
 /// No row: whole, or never hurt.
 #[table(accessor = hurt)]
@@ -1050,6 +1079,156 @@ fn wielded_weapon(ctx: &ReducerContext, entity_id: u64) -> Option<(&'static rule
     let w = ctx.db.wielded().entity_id().find(entity_id)?;
     let row = ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == entity_id && r.qty > 0)?;
     rules::item(row.item_def_id).filter(|i| !i.weapon_kit.is_empty()).map(|i| (i, rules::quality_of(&row.instance_data).unwrap_or(0)))
+}
+
+// --- the bow (owner, 2026-10-20) ---------------------------------------------------------------------
+
+/// DRAW the bow (`on`) or let the draw go: Drawing (a walk, no sprint or jump) from now; how long it lasts
+/// is the draw `loose_arrow` pays. Needs a drawn kit wielded and its ammo in the bag.
+#[reducer]
+pub fn draw_bow(ctx: &ReducerContext, on: bool) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "bow")?;
+    let drawing = ctx.db.status_state().entity_id().find(me).is_some_and(|s| s.status == rules::STATUS_DRAWING);
+    if !on {
+        if drawing {
+            crate::module::set_status_internal(ctx, me, crate::status::NORMAL, crate::module::LASTS_UNTIL_CHANGED, me, String::new())?;
+        }
+        return Ok(());
+    }
+    let (bow, _) = wielded_weapon(ctx, me).ok_or("draw_bow: wield a bow first")?;
+    let kit = rules::kit_keyed(bow.weapon_kit).filter(|k| k.draw_full_ms > 0).ok_or("draw_bow: that is not a bow")?;
+    ammo_in_bag(ctx, me, kit.key).ok_or("draw_bow: no arrows")?;
+    // Not mid-roll or mid-swing, nor in a status that cannot act (slain, flinched): any other is fine.
+    let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
+    if now_status == rules::STATUS_ROLLING || now_status == rules::STATUS_SWINGING
+        || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
+        return Err("draw_bow: not now".into());
+    }
+    if !drawing {
+        stop_block(ctx, me);
+        crate::module::set_status_internal(ctx, me, rules::STATUS_DRAWING, crate::module::LASTS_UNTIL_CHANGED, me, String::new())?;
+    }
+    Ok(())
+}
+
+/// The first ammo for kit `kit` in the bag: (item, its seed).
+fn ammo_in_bag(ctx: &ReducerContext, entity_id: u64, kit: &str) -> Option<(u32, &'static rules::ItemSeed)> {
+    ctx.db.inventory_item().owner_entity_id().filter(entity_id)
+        .filter(|r| r.qty > 0)
+        .find_map(|r| rules::item(r.item_def_id).filter(|i| i.ammo_for == kit).map(|i| (r.item_def_id, i)))
+}
+
+/// LOOSE: the drawn arrow flies. At `target_id` (a Tab target) it is aimed by the server, which rolls the hit
+/// (`regents.hit_*`: near, far, moving) and aims a miss wide; with no target, along `aim` (where you look).
+/// Its power is the draw the server saw (Drawing's length), to full at the kit's `draw_full_ms`. Takes an
+/// arrow from the bag. Needs the world's referee (it flies the arrow).
+#[reducer]
+pub fn loose_arrow(ctx: &ReducerContext, target_id: u64, aim: Vector3) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "bow")?;
+    let st = ctx.db.status_state().entity_id().find(me).filter(|s| s.status == rules::STATUS_DRAWING).ok_or("loose_arrow: draw first")?;
+    let (bow, quality) = wielded_weapon(ctx, me).ok_or("loose_arrow: wield a bow first")?;
+    let kit = rules::kit_keyed(bow.weapon_kit).filter(|k| k.draw_full_ms > 0).ok_or("loose_arrow: that is not a bow")?;
+    let ent = ctx.db.entity().entity_id().find(me).ok_or("loose_arrow: no entity")?;
+    if !crate::module::referee_online(ctx, ent.world_id) {
+        return Err("loose_arrow: no referee is running this world, so no arrow would fly".into());
+    }
+    let (ammo_id, ammo) = ammo_in_bag(ctx, me, kit.key).ok_or("loose_arrow: no arrows")?;
+    let at = ctx.db.movement_state().entity_id().find(me).ok_or("loose_arrow: you are nowhere")?;
+    let draw_ms = (micros(ctx.timestamp) - micros(st.since)) / 1000;
+    let power = rules::draw_power(draw_ms, kit.draw_full_ms, hot_number(ctx, hot::DRAW_MIN_POWER_PCT) as f32);
+    let speed = hot_number(ctx, hot::ARROW_SPEED_MIN) as f32 + (hot_number(ctx, hot::ARROW_SPEED_MAX) - hot_number(ctx, hot::ARROW_SPEED_MIN)) as f32 * power;
+    let from = Vector3::new(at.pos.x, at.pos.y + 1.45, at.pos.z);
+    // Where it flies: the target (auto-aimed, the hit rolled), else where the player looks.
+    let target = (target_id != 0).then(|| ctx.db.movement_state().entity_id().find(target_id)).flatten()
+        .filter(|t| t.world_id == ent.world_id && t.entity_id != me)
+        .filter(|t| { let (dx, dz) = (t.pos.x - from.x, t.pos.z - from.z); (dx * dx + dz * dz).sqrt() <= hot_number(ctx, hot::BOW_RANGE_M) as f32 });
+    let mut taken = Vec::new();
+    take_items(ctx, me, ammo_id, 1, &mut taken);
+    let vel = match target {
+        Some(t) => {
+            let aim_at = Vector3::new(t.pos.x, t.pos.y + 1.1, t.pos.z);
+            let (dx, dz) = (aim_at.x - from.x, aim_at.z - from.z);
+            let dist = (dx * dx + dz * dz).sqrt();
+            let moving = (t.vel.x * t.vel.x + t.vel.z * t.vel.z).sqrt() > 1.5;
+            let chance = rules::hit_chance_pct(dist, moving, hot_number(ctx, hot::HIT_NEAR_M) as f32, hot_number(ctx, hot::HIT_FAR_M) as f32,
+                hot_number(ctx, hot::HIT_NEAR_PCT) as f32, hot_number(ctx, hot::HIT_FAR_PCT) as f32, hot_number(ctx, hot::HIT_MOVING_PCT) as f32);
+            let roll = rules::roll_permille((micros(ctx.timestamp) as u64) ^ me.rotate_left(29) ^ t.entity_id.rotate_left(11));
+            let hit = (roll as f32) < chance * 10.0;
+            // A hit leads a moving target by its flight time; a miss flies wide of where it stands.
+            let lead = dist / (speed * 0.9).max(1.0);
+            let point = if hit { Vector3::new(aim_at.x + t.vel.x * lead, aim_at.y, aim_at.z + t.vel.z * lead) }
+                else { rules::miss_point(from, aim_at, roll, 1.6) };
+            log::info!("regents: {me} looses at {} ({:.1} m, {:.0} % to hit): {}", t.entity_id, dist, chance, if hit { "on target" } else { "wide" });
+            rules::aim_velocity(from, point, speed, rules::ARROW_GRAVITY)
+        }
+        None => {
+            let len = (aim.x * aim.x + aim.y * aim.y + aim.z * aim.z).sqrt();
+            if !len.is_finite() || len < 0.001 {
+                return Err("loose_arrow: aim somewhere".into());
+            }
+            Vector3::new(aim.x / len * speed, aim.y / len * speed, aim.z / len * speed)
+        }
+    };
+    let h = (vel.x * vel.x + vel.z * vel.z).sqrt();
+    let rot = Vector3::new(vel.y.atan2(h), (-vel.x).atan2(-vel.z), 0.0);
+    let start = Vector3::new(from.x + vel.x / speed * 0.6, from.y + vel.y / speed * 0.6, from.z + vel.z / speed * 0.6);
+    let shot = ctx.db.ability_def().ability_id().find(kit.light[0]).map_or(10.0, |d| d.damage);
+    let damage = rules::arrow_damage(shot, power, bow.weapon_damage_pct, ammo.ammo_damage_pct, quality, rank_in(ctx, me, rules::kit_keyed(kit.key).map_or(0, |k| k.skill)), false, 100.0);
+    let id = crate::module::launch_body_internal(ctx, ent.world_id, rules::BODY_ARROW, me, 0, start, vel, rot, Vector3::new(0.0, 0.0, 0.0));
+    ctx.db.arrow().insert(Arrow { entity_id: id, world_id: ent.world_id, owner: me, damage, from, item_id: ammo_id, skill_id: kit.skill });
+    crate::module::set_status_internal(ctx, me, crate::status::NORMAL, crate::module::LASTS_UNTIL_CHANGED, me, String::new())?;
+    Ok(())
+}
+
+/// AN ARROW HIT SOMETHING: a person or a foe it hurts once (point blank, `regents.point_blank_pct` of it),
+/// a dummy as a dummy; whatever it hit, it is gone. Its owner's mastery trains on the damage.
+fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
+    let Some(a) = ctx.db.arrow().entity_id().find(body_id) else { return };
+    ctx.db.arrow().entity_id().delete(body_id);
+    if other_id != 0 && other_id != a.owner {
+        let hittable = ctx.db.status_state().entity_id().find(other_id)
+            .and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
+        if let (true, Some(h)) = (hittable, ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead)) {
+            let (dx, dz) = (pos.x - a.from.x, pos.z - a.from.z);
+            let point_blank = (dx * dx + dz * dz).sqrt() < hot_number(ctx, hot::POINT_BLANK_M) as f32;
+            let mut dmg = if point_blank { a.damage * hot_number(ctx, hot::POINT_BLANK_PCT) as f32 / 100.0 } else { a.damage };
+            let dummy = ctx.db.dummy().entity_id().find(other_id);
+            if let Some(mut d) = dummy.clone() {
+                dmg = dmg.min((h.current - 1.0).max(0.0));
+                d.last_hit_at = ctx.timestamp;
+                ctx.db.dummy().entity_id().update(d);
+            }
+            if dmg > 0.0 {
+                let _ = crate::module::damage_entity(ctx, other_id, dmg, a.owner);
+                if dummy.is_none() {
+                    hurt_now(ctx, other_id, a.world_id);
+                }
+                if ctx.db.player().entity_id().find(a.owner).is_some() {
+                    let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 }
+                        else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
+                    add_xp(ctx, a.owner, a.skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+                }
+                if ctx.db.foe().entity_id().find(other_id).is_some() {
+                    match ctx.db.stuck_arrow().foe().filter(other_id).find(|s| s.owner == a.owner && s.item_id == a.item_id) {
+                        Some(mut s) => {
+                            s.count += 1;
+                            ctx.db.stuck_arrow().id().update(s);
+                        }
+                        None => {
+                            ctx.db.stuck_arrow().insert(StuckArrow { id: 0, foe: other_id, owner: a.owner, item_id: a.item_id, count: 1 });
+                        }
+                    }
+                }
+                log::info!("regents: {}'s arrow hit {other_id} for {dmg:.1}{}", a.owner, if point_blank { " (point blank)" } else { "" });
+                if ctx.db.health_state().entity_id().find(other_id).is_some_and(|h| h.is_dead) {
+                    fell(ctx, other_id, a.owner);
+                }
+            }
+        }
+    }
+    crate::module::despawn_entity_internal(ctx, body_id);
 }
 
 /// WIELD the weapon in bag row `item_row` (an axe, a sword): its kit is what you fight with.
@@ -1354,6 +1533,15 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
         if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_SLAIN, crate::module::LASTS_UNTIL_CHANGED, killer, String::new()) {
             log::warn!("regents: foe {entity_id} fell, but: {e}");
         }
+        let stuck: Vec<StuckArrow> = ctx.db.stuck_arrow().foe().filter(entity_id).collect();
+        let recover = hot_number(ctx, hot::ARROW_RECOVER_PCT).clamp(0.0, 100.0);
+        for s in stuck {
+            let back = (s.count as f64 * recover / 100.0).round() as u32;
+            if back > 0 && ctx.db.entity().entity_id().find(s.owner).is_some() {
+                give_items(ctx, s.owner, s.item_id, back, None);
+            }
+            ctx.db.stuck_arrow().id().delete(s.id);
+        }
         let Some(seed) = rules::FOES.iter().find(|s| s.id == f.foe_id) else { return };
         if ctx.db.player().entity_id().find(killer).is_none() {
             return;
@@ -1458,6 +1646,9 @@ fn tick_regen(ctx: &ReducerContext, dt_s: f32) {
 /// A fallen foe's body goes: its entity and what this genre kept about it.
 fn forget_body(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.hurt().entity_id().delete(entity_id);
+    for s in ctx.db.stuck_arrow().foe().filter(entity_id).map(|s| s.id).collect::<Vec<_>>() {
+        ctx.db.stuck_arrow().id().delete(s);
+    }
     crate::module::despawn_entity_internal(ctx, entity_id);
     ctx.db.combat_state().entity_id().delete(entity_id);
     ctx.db.swing().entity_id().delete(entity_id);
@@ -1518,6 +1709,11 @@ impl crate::game::Genre for Regents {
 
     fn on_ability_hit(&self, ctx: &ReducerContext, actor_id: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
         hit(ctx, actor_id, target, ability_id)
+    }
+
+    /// An arrow hit something (the referee saw it).
+    fn on_body_contact(&self, ctx: &ReducerContext, body_id: u64, other_id: u64, _speed: f32, pos: Vector3) {
+        arrow_hit(ctx, body_id, other_id, pos);
     }
 
     /// A slain player's time is up: up again, whole, at the spawn. (A foe's Slain lasts until it is gone.)

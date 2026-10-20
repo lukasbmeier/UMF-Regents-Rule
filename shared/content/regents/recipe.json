@@ -325,6 +325,73 @@
 			"skill": 40005,
 			"station": "workbench",
 			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40011,
+			"inputs": [
+				[
+					40004,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Yew bow",
+			"output": 40020,
+			"output_qty": 1,
+			"part_slot": -1,
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 30
+		},
+		{
+			"afk_ms": 2500,
+			"afk_quality": 350,
+			"id": 40012,
+			"inputs": [
+				[
+					40002,
+					1
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Arrow shafts",
+			"output": 40021,
+			"output_qty": 15,
+			"part_slot": -1,
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 5
+		},
+		{
+			"afk_ms": 3000,
+			"afk_quality": 350,
+			"id": 40013,
+			"inputs": [
+				[
+					40021,
+					15
+				],
+				[
+					40010,
+					1
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper arrows",
+			"output": 40022,
+			"output_qty": 15,
+			"part_slot": -1,
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 10
 		}
 	],
 	"owner": "regents",

@@ -63,7 +63,7 @@ fn the_chain_is_compiled_in() {
         assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)), "{}'s round is a gathering round", n.name);
     }
     let skills: Vec<&str> = rules::SKILLS.iter().map(|s| s.key).collect();
-    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship"]);
+    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
     assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD]);
     for bar in ["Copper bar", "Iron bar"] {
@@ -402,4 +402,83 @@ fn health_comes_back_out_of_the_fight() {
         ticks += 1;
     }
     assert_eq!(ticks, 100, "empty to whole in 25 s at 4 %");
+}
+
+#[test]
+fn the_bow_is_content() {
+    let kit = rules::kit_keyed("bow").expect("a bow kit");
+    assert_eq!(kit.draw_full_ms, 800, "a drawn kit, full at 800 ms");
+    assert!(rules::kit_keyed("sword").is_some_and(|k| k.draw_full_ms == 0), "a sword is not drawn");
+    let arrows = rules::ITEMS.iter().find(|i| i.name == "Copper arrows").expect("copper arrows");
+    assert_eq!((arrows.ammo_for, arrows.ammo_damage_pct), ("bow", 100));
+    assert!(rules::ITEMS.iter().any(|i| i.name == "Yew bow" && i.weapon_kit == "bow"));
+}
+
+#[test]
+fn a_draw_scales_the_shot() {
+    assert!((rules::draw_power(0, 800, 30.0) - 0.3).abs() < 1e-6, "a quick release: 30 %");
+    assert!((rules::draw_power(400, 800, 30.0) - 0.65).abs() < 1e-6, "half a draw: half way");
+    assert_eq!(rules::draw_power(800, 800, 30.0), 1.0);
+    assert_eq!(rules::draw_power(5000, 800, 30.0), 1.0, "held past full: full");
+}
+
+#[test]
+fn an_auto_aimed_arrow_hits_less_far_off_and_on_the_move() {
+    let c = |d: f32, m: bool| rules::hit_chance_pct(d, m, 8.0, 40.0, 95.0, 55.0, 15.0);
+    assert_eq!(c(5.0, false), 95.0, "close: 95 %");
+    assert!((c(24.0, false) - 75.0).abs() < 1e-4, "half way: 75 %");
+    assert_eq!(c(60.0, false), 55.0, "past far: 55 %");
+    assert!((c(24.0, true) - 60.0).abs() < 1e-4, "on the move: 15 less");
+}
+
+#[test]
+fn the_aim_lands_where_it_was_aimed() {
+    use umf_module::sim::Vector3;
+    // Fly the velocity under gravity (small steps) and see where it crosses the target's distance.
+    let fly = |from: Vector3, v: Vector3, x_goal: f32| -> f32 {
+        let (mut p, mut vel, dt) = (from, v, 0.0005f32);
+        for _ in 0..200000 {
+            if ((p.x - from.x).powi(2) + (p.z - from.z).powi(2)).sqrt() >= x_goal {
+                return p.y;
+            }
+            vel = Vector3::new(vel.x, vel.y - rules::ARROW_GRAVITY * dt, vel.z);
+            p = Vector3::new(p.x + vel.x * dt, p.y + vel.y * dt, p.z + vel.z * dt);
+        }
+        f32::NAN
+    };
+    let from = Vector3::new(0.0, 1.45, 0.0);
+    for (to, speed) in [(Vector3::new(0.0, 1.1, -20.0), 50.0), (Vector3::new(15.0, 2.0, 25.0), 30.0), (Vector3::new(-5.0, 0.5, 3.0), 20.0)] {
+        let v = rules::aim_velocity(from, to, speed, rules::ARROW_GRAVITY);
+        assert!(((v.x * v.x + v.y * v.y + v.z * v.z).sqrt() - speed).abs() < 1e-3, "at its speed");
+        let dist = ((to.x - from.x).powi(2) + (to.z - from.z).powi(2)).sqrt();
+        let y = fly(from, v, dist);
+        assert!((y - to.y).abs() < 0.05, "it arrives at the target's height: {y} vs {} ({dist:.1} m at {speed})", to.y);
+    }
+    // Out of reach: the farthest arc, 45 degrees.
+    let v = rules::aim_velocity(from, Vector3::new(0.0, 1.0, -500.0), 20.0, rules::ARROW_GRAVITY);
+    assert!((v.y - (v.x * v.x + v.z * v.z).sqrt()).abs() < 1e-3, "out of reach: 45 degrees");
+}
+
+#[test]
+fn a_miss_flies_wide_and_point_blank_costs() {
+    use umf_module::sim::Vector3;
+    let (from, target) = (Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 1.0, -20.0));
+    for roll in [0u32, 1, 500, 999] {
+        let m = rules::miss_point(from, target, roll, 1.6);
+        let side = (m.x - target.x).abs();
+        assert!((side - 1.6).abs() < 1e-4, "a miss is 1.6 m to the side ({roll}: {m:?})");
+    }
+    assert!((rules::miss_point(from, target, 0, 1.6).x - rules::miss_point(from, target, 1, 1.6).x).abs() > 3.0, "either side");
+    let full = rules::arrow_damage(14.0, 1.0, 100, 100, 0, 1, false, 60.0);
+    assert!((full - 14.0).abs() < 1e-4);
+    assert!((rules::arrow_damage(14.0, 1.0, 100, 100, 0, 1, true, 60.0) - 14.0 * 0.6).abs() < 1e-4, "point blank: 60 %");
+    assert!((rules::arrow_damage(14.0, 0.3, 100, 100, 0, 1, false, 60.0) - 14.0 * 0.3).abs() < 1e-4, "a quick release: 30 %");
+}
+
+#[test]
+fn a_kit_with_no_heavy_claims_no_ability_0() {
+    // The bow bakes its heavy as 0; ability 0 is the foundation's melee, no kit's (found by the integration suite).
+    assert!(rules::kit_keyed("bow").is_some_and(|k| k.heavy == 0));
+    assert!(rules::kit_of_ability(0).is_none(), "ability 0 is no kit's");
+    assert!(matches!(rules::kit_of_ability(40011), Some((k, rules::KitSlot::Light(0))) if k.key == "bow"));
 }

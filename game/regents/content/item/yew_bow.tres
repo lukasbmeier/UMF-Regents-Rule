@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/yew_bow.tscn" id="2_held"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+weapon_kit = &"bow"
+weapon_damage_pct = 100
+held_scene = ExtResource("2_held")
+color = Color(0.72, 0.5, 0.3, 1)
+description = "A yew bow: draw and loose arrows, best at range."
+id = 40020
+display_name = "Yew bow"

@@ -177,6 +177,20 @@ anim_name = &"Hit_Chest"
 script = ExtResource("1_qscmp")
 anim_name = &"extra/KipUp"
 
+[sub_resource type="Resource" id="Clip_bow_loose"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Shoot"
+speed_scale = 1.2
+
+[sub_resource type="Resource" id="Clip_bow_draw"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Notch"
+
+[sub_resource type="Resource" id="Clip_bow_aim"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Aim_Neutral"
+loop = true
+
 [resource]
 script = ExtResource("4_hpq5n")
 libraries = Dictionary[StringName, AnimationLibrary]({
@@ -196,6 +210,9 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"ability.40008": SubResource("Clip_attack_axe_heavy"),
 &"ability.40009": SubResource("Clip_attack_axe_cleave"),
 &"ability.40010": SubResource("Clip_dodge_roll"),
+&"ability.40011": SubResource("Clip_bow_loose"),
+&"pose.bow_draw": SubResource("Clip_bow_draw"),
+&"pose.bow_aim": SubResource("Clip_bow_aim"),
 &"interact": SubResource("Resource_lhmxf"),
 &"item.draw": SubResource("Resource_k8ku3"),
 &"item.stow": SubResource("Resource_5hufo"),

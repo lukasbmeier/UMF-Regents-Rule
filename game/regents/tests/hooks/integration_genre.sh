@@ -334,6 +334,78 @@ assert_ok 'reset_rule "regents.foe_corpse_s"' "(test) rules back"
 assert_ok 'reset_rule "regents.foe_respawn_s"' "(test) rules back"
 assert_ok 'reset_rule "regents.player_respawn_s"' "(test) rules back"
 
+# --- THE YEW BOW (owner, 2026-10-20): draw, loose at a target (the server aims and rolls), what an arrow
+# hits (the referee reports it), point blank, the arrows used and the share back from a kill ---
+assert_ok "grant_item $MYENT 40020 1" "an admin gives a yew bow"
+assert_ok "grant_item $MYENT 40022 3" "and three copper arrows"
+BOW_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40020" 1)"
+assert_ok "wield $BOW_ROW" "wield the bow"
+assert_rejected "loose_arrow 0 {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "draw first" "a loose with no draw is refused"
+SKB="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
+assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten metres from skeleton_1"
+C_CODE4='"regentsbowrefereecode"'
+bow_referee() {   # the stand-in referee leaves with each CLI call: claimed again before a shot
+  # (setup: refused while the last one still counts as running; the shot after says whether one is)
+  spacetime call "$DB" offer_referee 0 "$C_CODE4" >/dev/null 2>&1
+  spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE4" >/dev/null 2>&1
+}
+newest_arrow() { sql_rows "SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = 40001" | tr -d ' ' | sort -n | tail -1; }
+hit_report() {   # hit_report ARROW TARGET Z: the referee says the arrow hit TARGET at (33, 1, Z)
+  assert_ok "report_body_contacts 0 [{\"body_id\":$1,\"other_id\":$2,\"pos\":{\"x\":33.0,\"y\":1.0,\"z\":$3},\"normal\":{\"x\":0.0,\"y\":0.0,\"z\":1.0},\"speed\":40.0}]" "$4"
+}
+bow_referee
+assert_ok "draw_bow true" "draw"
+check "$(logged "entity $MYENT: status [0-9]+ -> 107 \(Drawing\)")" "Drawing: a walk, no sprint or jump"
+sleep 0.9
+assert_ok "loose_arrow $SKB {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "a full draw loosed at the skeleton"
+check "$(logged "$MYENT looses at $SKB \(10\.[0-9] m, [0-9]+ % to hit\)")" "the server aimed it at the skeleton and rolled the hit"
+assert_eq "$(QTY 40022)" "2" "it took an arrow"
+A1="$(newest_arrow)"
+check "$( [ -n "$A1" ] && echo true || echo false)" "an arrow is in the world, flown by the referee ($A1)"
+SH0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
+AXP0="$(xp_of 40008)"
+hit_report "$A1" "$SKB" -1.0 "the referee: it hit the skeleton"
+SH1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
+check "$(python -c "print('true' if abs(($SH0 - $SH1) - 14.0) < 1e-3 else 'false')")" "a full draw from ten metres: the shot's 14 ($SH0 -> $SH1)"
+check "$(python -c "print('true' if $(xp_of 40008) > $AXP0 else 'false')")" "archery XP"
+assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $A1")" "0" "and the arrow is gone"
+# Point blank: a quick draw, hitting two metres from where it left the bow.
+bow_referee
+assert_ok "draw_bow true" "draw again"
+assert_ok "loose_arrow $SKB {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "loosed at once"
+A2="$(newest_arrow)"
+hit_report "$A2" "$SKB" 7.0 "it hit two metres out"
+SH2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
+check "$(python -c "d = $SH1 - $SH2; print('true' if 0 < d <= 14.0 * 0.6 + 1e-3 else 'false')")" "point blank: at most 60 % of a full 14 ($SH1 -> $SH2)"
+# The last arrow kills it: three stuck in it, 40 % of them (one) back to the bag.
+assert_ok "apply_damage $SKB $(python -c "print($SH2 - 1)") 0" "(test) worn down to 1"
+bow_referee
+assert_ok "draw_bow true" "draw the last arrow"
+sleep 0.9
+assert_ok "loose_arrow $SKB {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "loosed"
+assert_eq "$(QTY 40022)" "0" "no arrows left in the bag"
+A3="$(newest_arrow)"
+hit_report "$A3" "$SKB" -1.0 "it hit"
+assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $SKB" 1)" "true" "the skeleton falls to it"
+assert_eq "$(QTY 40022)" "1" "and one of the three arrows in it comes back (40 %)"
+# Free aim: no target, it flies the way you look.
+bow_referee
+assert_ok "draw_bow true" "draw"
+assert_ok "loose_arrow 0 {\"x\":1.0,\"y\":0.0,\"z\":0.0}" "loosed with no target, aimed east"
+A4="$(newest_arrow)"
+A4_VEL="$(sql_first "SELECT vel FROM movement_state WHERE entity_id = ${A4:-0}" 1)"
+check "$(python -c "
+import re, sys
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
+print('true' if len(v) == 3 and v[0] > 15 and abs(v[2]) < 0.5 else 'false')
+" "$A4_VEL")" "it flies east, as aimed ($A4_VEL)"
+assert_rejected "draw_bow true" "no arrows" "out of arrows, no draw"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
+spacetime call "$DB" draw_bow false >/dev/null 2>&1   # never leave the section drawn (a walk's bound)
+assert_ok "wield $AXE_ROW" "the axe again"
+
 assert_ok "unwield" "put the axe away"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"
 assert_rejected "block true" "wield a weapon" "and nothing to block with"

@@ -5,6 +5,7 @@
 		{
 			"chain_ms": 60,
 			"combo_window_ms": 900,
+			"draw_full_ms": 0,
 			"heavy": 40004,
 			"id": 40001,
 			"key": "sword",
@@ -47,6 +48,7 @@
 		{
 			"chain_ms": 60,
 			"combo_window_ms": 900,
+			"draw_full_ms": 0,
 			"heavy": 40008,
 			"id": 40002,
 			"key": "axe",
@@ -80,6 +82,26 @@
 					1
 				]
 			]
+		},
+		{
+			"chain_ms": 60,
+			"combo_window_ms": 900,
+			"draw_full_ms": 800,
+			"heavy": 0,
+			"id": 40003,
+			"key": "bow",
+			"light": [
+				40011
+			],
+			"locks": [
+				[
+					40011,
+					556
+				]
+			],
+			"name": "Bow",
+			"skill": 40008,
+			"skills": []
 		}
 	],
 	"owner": "regents",

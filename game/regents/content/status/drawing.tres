@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 107
+speed = 0.25
+can_sprint = false
+can_jump = false
+show_on_nameplate = false
+color = Color(0.7, 0.9, 0.6, 1)
+id = 40008
+display_name = "Drawing"
+designer_notes = "A BOW DRAWN (owner, 2026-10-20): you walk (a quarter of a run), no sprint or jump; the roll is whole (it lets the draw go). Set when the draw starts, ended by the shot, the right button or a roll; how long it lasted is the draw the server pays."

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/archery.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/bow_loose.tres" id="a0"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"bow"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0")])
+skills = Array[Resource]([])
+draws = true
+draw_full_ms = 800
+id = 40003
+display_name = "Bow"
+designer_notes = "THE BOW (owner, 2026-10-20): hold the left button to draw (you walk), let go to loose an arrow: at your Tab target (auto-aimed, a hit chance that falls with distance and a moving target) or, with none, where you aim. A quick release does 30 % and flies short; a full draw (draw_full_ms) all of it. Best at range: inside regents.point_blank_m it does regents.point_blank_pct. Each shot takes an arrow from the bag."

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="1_recipe"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/yew_bow.tres" id="3_out"]
+[ext_resource type="Resource" path="res://game/regents/content/item/yew_logs.tres" id="in0"]
+
+[resource]
+script = ExtResource("1_recipe")
+station = &"workbench"
+skill = ExtResource("2_skill")
+inputs = Array[Resource]([ExtResource("in0")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("3_out")
+output_qty = 1
+xp = 30
+min_rank = 1
+afk_ms = 5000
+id = 40011
+display_name = "Yew bow"

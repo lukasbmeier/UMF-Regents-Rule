@@ -75,14 +75,15 @@
 			"type": "status"
 		},
 		"shared/content/regents/ability.json": {
-			"count": 10,
-			"hash": "086f9495",
+			"count": 11,
+			"hash": "8234608a",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "4fe376bc",
 				"game/regents/content/ability/axe_chop_b.tres": "ef47c2e2",
 				"game/regents/content/ability/axe_cleave.tres": "af886adf",
 				"game/regents/content/ability/axe_heavy.tres": "d336b065",
+				"game/regents/content/ability/bow_loose.tres": "4f011e30",
 				"game/regents/content/ability/dodge.tres": "0b524f44",
 				"game/regents/content/ability/sword_heavy.tres": "422d6c72",
 				"game/regents/content/ability/sword_lunge.tres": "d82d59f5",
@@ -91,6 +92,15 @@
 				"game/regents/content/ability/sword_slash_c.tres": "3b20ef37"
 			},
 			"type": "ability"
+		},
+		"shared/content/regents/body.json": {
+			"count": 1,
+			"hash": "0162dd1c",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/body/arrow.tres": "e49d4f90"
+			},
+			"type": "body"
 		},
 		"shared/content/regents/character.json": {
 			"count": 6,
@@ -117,13 +127,15 @@
 			"type": "foe"
 		},
 		"shared/content/regents/item.json": {
-			"count": 19,
-			"hash": "a3a86f6a",
+			"count": 22,
+			"hash": "b9b31bd0",
 			"owner": "regents",
 			"sources": {
+				"game/regents/content/item/arrow_shafts.tres": "890f07f6",
 				"game/regents/content/item/birds_nest.tres": "858c0b68",
 				"game/regents/content/item/bronze_axe.tres": "ba4f5fc9",
 				"game/regents/content/item/bronze_pickaxe.tres": "f32df941",
+				"game/regents/content/item/copper_arrows.tres": "452f799a",
 				"game/regents/content/item/copper_bar.tres": "4b3867d3",
 				"game/regents/content/item/copper_ore.tres": "590860f4",
 				"game/regents/content/item/copper_rivets.tres": "f22363eb",
@@ -138,17 +150,19 @@
 				"game/regents/content/item/oak_handle.tres": "a40a1651",
 				"game/regents/content/item/oak_logs.tres": "de9da362",
 				"game/regents/content/item/uncut_gem.tres": "ee36c9cb",
+				"game/regents/content/item/yew_bow.tres": "8c210560",
 				"game/regents/content/item/yew_handle.tres": "11ab9942",
 				"game/regents/content/item/yew_logs.tres": "0025f870"
 			},
 			"type": "item"
 		},
 		"shared/content/regents/kit.json": {
-			"count": 2,
-			"hash": "8350c44a",
+			"count": 3,
+			"hash": "ef3cadf7",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/kit/axe.tres": "b72fd591",
+				"game/regents/content/kit/bow.tres": "98e7e64a",
 				"game/regents/content/kit/sword.tres": "b29cb0ef"
 			},
 			"type": "kit"
@@ -177,10 +191,12 @@
 			"type": "node"
 		},
 		"shared/content/regents/recipe.json": {
-			"count": 10,
-			"hash": "64325fde",
+			"count": 13,
+			"hash": "14e2cd64",
 			"owner": "regents",
 			"sources": {
+				"game/regents/content/recipe/arrow_shafts.tres": "f48adf34",
+				"game/regents/content/recipe/copper_arrows.tres": "7f08cadc",
 				"game/regents/content/recipe/copper_bar.tres": "f6f8988e",
 				"game/regents/content/recipe/copper_rivets.tres": "c6be86cc",
 				"game/regents/content/recipe/handle.tres": "2806f6b4",
@@ -190,24 +206,26 @@
 				"game/regents/content/recipe/iron_sword.tres": "b1db343c",
 				"game/regents/content/recipe/iron_sword_blade.tres": "5c4483b8",
 				"game/regents/content/recipe/oak_handle.tres": "f57751ee",
+				"game/regents/content/recipe/yew_bow.tres": "843e12b5",
 				"game/regents/content/recipe/yew_handle.tres": "24a912ec"
 			},
 			"type": "recipe"
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "a7eb1c00",
+			"hash": "52d27b11",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "579d4c51"
+				"game/regents/content/rules/regents.tres": "ffba5693"
 			},
 			"type": "rules"
 		},
 		"shared/content/regents/skill.json": {
-			"count": 7,
-			"hash": "4d9ae813",
+			"count": 8,
+			"hash": "a97c0e66",
 			"owner": "regents",
 			"sources": {
+				"game/regents/content/skill/archery.tres": "a75b10aa",
 				"game/regents/content/skill/axemanship.tres": "c9df3486",
 				"game/regents/content/skill/crafting.tres": "c8d9df62",
 				"game/regents/content/skill/mining.tres": "1f6082fe",
@@ -231,12 +249,13 @@
 			"type": "station"
 		},
 		"shared/content/regents/status.json": {
-			"count": 7,
-			"hash": "e93803c0",
+			"count": 8,
+			"hash": "d85d2d9f",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/status/blocking.tres": "96e8aa81",
 				"game/regents/content/status/depleted.tres": "812b8cf4",
+				"game/regents/content/status/drawing.tres": "14a8a757",
 				"game/regents/content/status/flinched.tres": "5f4168e4",
 				"game/regents/content/status/rolling.tres": "bf803c94",
 				"game/regents/content/status/slain.tres": "a107b6c3",

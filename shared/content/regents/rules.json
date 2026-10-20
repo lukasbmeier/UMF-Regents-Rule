@@ -258,6 +258,114 @@
 					"number": 4.0,
 					"text": "",
 					"unit": "%/s"
+				},
+				{
+					"key": "regents.draw_min_power_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 30.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.arrow_speed_min",
+					"kind": "number",
+					"max": 60.0,
+					"min": 5.0,
+					"number": 20.0,
+					"text": "",
+					"unit": "m/s"
+				},
+				{
+					"key": "regents.arrow_speed_max",
+					"kind": "number",
+					"max": 60.0,
+					"min": 5.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "m/s"
+				},
+				{
+					"key": "regents.bow_range_m",
+					"kind": "number",
+					"max": 120.0,
+					"min": 5.0,
+					"number": 40.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "regents.hit_near_m",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 8.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "regents.hit_far_m",
+					"kind": "number",
+					"max": 200.0,
+					"min": 1.0,
+					"number": 40.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "regents.hit_near_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 95.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.hit_far_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 55.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.hit_moving_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 15.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.point_blank_m",
+					"kind": "number",
+					"max": 20.0,
+					"min": 0.0,
+					"number": 4.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "regents.point_blank_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.arrow_recover_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 40.0,
+					"text": "",
+					"unit": "%"
 				}
 			]
 		}

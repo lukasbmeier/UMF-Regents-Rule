@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="1_recipe"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_arrows.tres" id="3_out"]
+[ext_resource type="Resource" path="res://game/regents/content/item/arrow_shafts.tres" id="in0"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="in1"]
+
+[resource]
+script = ExtResource("1_recipe")
+station = &"workbench"
+skill = ExtResource("2_skill")
+inputs = Array[Resource]([ExtResource("in0"), ExtResource("in1")])
+input_qty = PackedInt32Array(15, 1)
+output = ExtResource("3_out")
+output_qty = 15
+xp = 10
+min_rank = 1
+afk_ms = 3000
+id = 40013
+display_name = "Copper arrows"

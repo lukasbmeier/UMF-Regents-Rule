@@ -31,6 +31,8 @@ var _target_box: VBoxContainer
 var _target_label: Label
 var _target_bar: ProgressBar
 var _skillbar: Label
+## A bow's draw, under the crosshair while it is drawn.
+var _draw_bar: ProgressBar
 ## The windows (owner, 2026-10-20: dedicated UI, the foundation's kit): the bag (I), the skills (K), a
 ## station's (tap E at it).
 var bag_window: RegentsBagWindow = null
@@ -99,6 +101,16 @@ func _ready() -> void:
 	_target_bar.show_percentage = false
 	_target_box.add_child(_target_bar)
 	base.add_child(_target_box)
+	_draw_bar = ProgressBar.new()
+	_draw_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_draw_bar.offset_left = -80.0
+	_draw_bar.offset_right = 80.0
+	_draw_bar.offset_top = 40.0
+	_draw_bar.offset_bottom = 48.0
+	_draw_bar.max_value = 1.0
+	_draw_bar.show_percentage = false
+	_draw_bar.visible = false
+	base.add_child(_draw_bar)
 	_skillbar = Label.new()
 	_skillbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_skillbar.offset_top = -44.0
@@ -331,6 +343,8 @@ func _update_combat() -> void:
 		_target_bar.max_value = h.get_max()
 		_target_bar.value = h.get_current()
 	_skillbar.text = skill_bar(combat, skilling)
+	_draw_bar.visible = combat.drawing()
+	_draw_bar.value = combat.draw_progress()
 	if bag_window.is_open() and combat.weapon_row != _bag_weapon_row:
 		_bag_weapon_row = combat.weapon_row
 		bag_window.refresh()
@@ -342,6 +356,11 @@ static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
 		return "No weapon wielded:  I  opens the bag"
 	var keys: PackedStringArray = PackedStringArray(["Q", "E", "R", "F"])
 	var parts: PackedStringArray = PackedStringArray()
+	if c.kit.draws:
+		var line: String = "%s:  hold LMB draw, let go loose   RMB let go   Ctrl roll   Tab target   |   %d arrows" % [
+			c.weapon.display_name if c.weapon != null else "?", c.ammo_count()]
+		var chance: float = c.hit_chance_now()
+		return line + ("   |   to hit %d%%" % roundi(chance) if chance >= 0.0 else "   |   no target: it flies where you aim")
 	parts.append("%s:  LMB %s   hold LMB %s   RMB block   Ctrl roll   Tab target" % [c.weapon.display_name if c.weapon != null else "?",
 		c.kit.light[0].display_name, c.kit.heavy.display_name if c.kit.heavy != null else "-"])
 	var rank: int = sk.rank_in(c.kit.skill) if sk != null else 1

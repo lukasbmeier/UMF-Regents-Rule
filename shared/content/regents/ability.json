@@ -131,6 +131,19 @@
 			"range": 0.0,
 			"reach": 0.0,
 			"wind_up_ms": 100
+		},
+		{
+			"ability_id": 40011,
+			"cooldown_ms": 0,
+			"damage": 14.0,
+			"height": 0.6,
+			"judged": false,
+			"lunges": false,
+			"name": "Loose",
+			"radius": 0.35,
+			"range": 40.0,
+			"reach": 1.4,
+			"wind_up_ms": 100
 		}
 	],
 	"owner": "regents",

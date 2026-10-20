@@ -329,3 +329,49 @@ when nothing kills it in a minute or it kills a player in under 3 s. Today: the 
 in 4.6 s to the iron axe, 5.6 s to the iron sword, 6.5 s to the bronze axe, and kills you in 14 s; the
 axeman (150) in 5.7 / 7.0 / 8.1 s, you in 12 s. (The sword's light combo is slower to kill than the
 axe's: a balance question.)
+
+## Step 8: the yew bow (owner, 2026-10-20)
+
+Your answers: with a Tab target the arrow auto-aims, with a hit chance the server rolls, lower with distance
+and against a moving (or rolling) target; with no target it flies where you look (bow skills come later as
+skill shots). The draw scales the damage (you were torn: look again after the playtest). Best at range,
+worse but usable up close. You walk while drawn. A real arrow that arcs. Crafted arrows, some recovered
+from the kill. Made at the workbench; shooting trains a new mastery, Archery.
+
+- **Hold LMB: draw.** The server's Drawing status (107): you walk (a quarter of your speed), no sprint
+  or jump; the arms draw back, then hold aim (a pose on the upper body only, so the legs keep walking).
+  A bar under the crosshair fills over the bow's `draw_full_ms` (800 ms). **Let go: loose.** A release
+  under 120 ms lets the draw go instead. **RMB** lets it go; a **roll** does too. Not in the air, not
+  mid-roll or mid-swing, not with no arrows ("No arrows").
+- **The shot** (`loose_arrow`): the server takes an arrow from the bag and works out the draw it saw
+  (at least `regents.draw_min_power_pct` 30 %). With a target in `regents.bow_range_m` (40 m), it rolls the
+  hit: `hit_near_pct` 95 % at `hit_near_m` 8 m down to `hit_far_pct` 55 % at `hit_far_m` 40 m, minus
+  `hit_moving_pct` 15 if the target is moving. A hit is aimed to land on the target (a ballistic arc at a
+  speed from `arrow_speed_min` 20 to `arrow_speed_max` 50 m/s by the draw); a miss is aimed at a point
+  beside it. With no target it flies along your look. The HUD shows the chance as you aim.
+- **The arrow is a real body** (BodyDef 40001), flown by the world's referee like the fishing bobber,
+  nose into the wind (`ArrowFlight`). What it hits, the referee reports, and the server deals the damage:
+  the shot's 14 × the draw × the arrow's `ammo_damage_pct` × the mastery, at `point_blank_pct` 60 % if it
+  hits inside `point_blank_m` 4 m. Archery XP on a hit. An arrow that hits a foe stays in it; when the foe
+  falls, `arrow_recover_pct` 40 % of those come back to the bag of whoever shot them.
+- **Crafting** (workbench, Crafting): the yew bow from 2 yew logs; 15 arrow shafts from 1 log; 15 copper
+  arrows from 15 shafts and 1 copper bar.
+
+Every number above is a hot rule (`rules/regents.tres`) or on the content (`kit/bow.tres`,
+`ability/bow_loose.tres`, `item/copper_arrows.tres`). Code: server `game/regents.rs` (`draw_bow`,
+`loose_arrow`, `arrow_hit`), the pure maths in `genre/regents/mod.rs` (`draw_power`, `hit_chance_pct`,
+`aim_velocity`, `miss_point`, `arrow_damage`); client `CombatComponent` (a kit with `draws`).
+
+**Its grip is a placeholder.** It hangs well at your side, but in the aim pose the bow lies flat across
+the hands: `combat/weapons/yew_bow_grip_preview.tscn`, pick `pose.bow_aim` (and `pose.bow_draw`), stand
+it upright in the left fist.
+
+Proven: native tests (the draw's power, the hit chance, a hit's arc landing on the target, a miss
+landing beside it, point blank); the integration (a draw, a loose at a skeleton ten metres off with the
+server's roll, the arrow taken, the referee's hit for 14, Archery XP, point blank under 60 %, the killing
+arrow and one of three back, free aim flying east, no arrows no draw); the combat playtest with a real
+referee (draw, walk, the arms, an arrow that flies and hits the dummy for 14, free aim hits, RMB lets
+go). Negative: with the referee's contacts ignored, the playtest's hit checks fail.
+
+Left for later: bow skills (skill shots), more arrow kinds, an arrow model on the string while drawn, a
+quiver slot (arrows come from the bag), the draw-scales-damage question.

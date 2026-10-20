@@ -25,6 +25,12 @@ class_name ItemDef extends ContentDef
 ## Its damage, in percent of what its kit's abilities do (100: as authored; a better weapon higher).
 ## A smithed weapon's quality adds up to a fifth more.
 @export_range(10, 500, 1, "suffix:%") var weapon_damage_pct: int = 100
+@export_group("As ammo")
+## The kit it is shot from ("bow"; owner 2026-10-20: arrows are crafted ammo): each shot takes one from
+## the bag. Empty: not ammo.
+@export var ammo_for: StringName = &""
+## Its hits, in percent of the shot's (a better arrowhead higher).
+@export_range(10, 500, 1, "suffix:%") var ammo_damage_pct: int = 100
 @export_group("As a part")
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
@@ -67,6 +73,8 @@ func to_bake() -> Dictionary:
 		"tool_speed_pct": tool_speed_pct,
 		"weapon_kit": String(weapon_kit),
 		"weapon_damage_pct": weapon_damage_pct,
+		"ammo_for": String(ammo_for),
+		"ammo_damage_pct": ammo_damage_pct,
 		"part_tag": String(part_tag),
 		"handle_speed_pct": handle_speed_pct,
 		"handle_quality_pm": handle_quality_pm,

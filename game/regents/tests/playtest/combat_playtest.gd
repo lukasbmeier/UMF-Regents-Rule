@@ -6,11 +6,13 @@ extends Node
 ## numbers float up; axemanship XP), waits for the dummy to be whole, rolls (Ctrl: further than a run in
 ## the same time), blocks (no swing behind it), and lets the target go (Esc). Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 120.0
+const OVERALL_TIMEOUT_SEC: float = 220.0
 const DUMMY_1: Vector3 = Vector3(7.0, 0.0, 20.0)
 const AXE: int = 40001
 const AXEMANSHIP: int = 40007
 const DUMMY_KIND: int = 102
+const BOW: int = 40020
+const ARROWS: int = 40022
 
 var _passes: int = 0
 var _failures: int = 0
@@ -326,6 +328,64 @@ func _run() -> void:
 		var hurt_hp: float = my_hp.get_current()
 		await _until(func() -> bool: return my_hp.get_current() > hurt_hp + 3.0 or my_hp.get_current() >= my_hp.get_max(), 20.0)
 		_check(my_hp.get_current() > hurt_hp, "out of the fight, your health comes back: %.1f -> %.1f" % [hurt_hp, my_hp.get_current()])
+
+	# --- THE YEW BOW (owner, 2026-10-20): drawn on the move, loosed at the Tab target; the arrow flies in
+	# the referee's world and what it hits is the server's; free aim; RMB lets the draw go ---
+	print("GRANT_BOW %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(BOW) == 1 and inv.count(ARROWS) >= 6, 20.0)
+	_check(inv.count(BOW) == 1 and inv.count(ARROWS) >= 6, "the shell gave a yew bow and arrows")
+	var bow_row: int = -1
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == BOW:
+			bow_row = s.id
+	combat.wield(bow_row)
+	await _until(func() -> bool: return combat.kit != null and combat.kit.draws, 5.0)
+	_check(combat.kit != null and combat.kit.key == &"bow" and hud._skillbar.text.contains("hold LMB draw"), "wielded: the bar says draw and loose (\"%s\")" % hud._skillbar.text)
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 10.0), DUMMY_1)
+	combat.set_target(dummy)
+	await get_tree().create_timer(0.3).timeout
+	_check(hud._skillbar.text.contains("to hit"), "with the dummy targeted it says the chance to hit (\"%s\")" % hud._skillbar.text)
+	var arrows0: int = inv.count(ARROWS)
+	var before_shot: float = dh.get_current()
+	_mouse(MOUSE_BUTTON_LEFT, true)
+	await get_tree().create_timer(0.45).timeout
+	var pdrv: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	_check(combat.drawing() and hud._draw_bar.visible and pdrv.upper_pose_weight() > 0.5,
+		"LMB held: drawing, the bar fills, the arms draw (%.2f)" % pdrv.upper_pose_weight())
+	# Drawn, you walk.
+	Input.action_press(&"move_left")
+	await get_tree().create_timer(0.15).timeout
+	var wp0: Vector3 = me.global_position
+	await get_tree().create_timer(0.4).timeout
+	var walk_speed: float = Vector2(me.global_position.x - wp0.x, me.global_position.z - wp0.z).length() / 0.4
+	Input.action_release(&"move_left")
+	_check(walk_speed < 2.0 and pdrv.upper_pose_weight() > 0.5, "drawn, you walk (%.1f m/s), the bow still drawn" % walk_speed)
+	await get_tree().create_timer(0.4).timeout
+	_mouse(MOUSE_BUTTON_LEFT, false)
+	await _until(func() -> bool: return dh.get_current() < before_shot, 4.0)
+	_check(dh.get_current() < before_shot and inv.count(ARROWS) == arrows0 - 1,
+		"let go: an arrow flew and hit the dummy (%.1f -> %.1f), one arrow used" % [before_shot, dh.get_current()])
+	# Free aim: no target, at the dummy along the view.
+	combat.set_target(-1)
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 10.0), DUMMY_1)
+	var before_free: float = dh.get_current()
+	_mouse(MOUSE_BUTTON_LEFT, true)
+	await get_tree().create_timer(0.9).timeout
+	_mouse(MOUSE_BUTTON_LEFT, false)
+	await _until(func() -> bool: return dh.get_current() < before_free, 4.0)
+	_check(dh.get_current() < before_free, "no target: aimed along the view, it still hits what it flies into (%.1f -> %.1f)" % [before_free, dh.get_current()])
+	# RMB lets the draw go: nothing loosed.
+	var arrows1: int = inv.count(ARROWS)
+	_mouse(MOUSE_BUTTON_LEFT, true)
+	await get_tree().create_timer(0.4).timeout
+	_mouse(MOUSE_BUTTON_RIGHT, true)
+	_mouse(MOUSE_BUTTON_RIGHT, false)
+	_mouse(MOUSE_BUTTON_LEFT, false)
+	await get_tree().create_timer(0.8).timeout
+	var st_bow: StatusComponent = me.find_component(StatusComponent) as StatusComponent
+	_check(not combat.drawing() and inv.count(ARROWS) == arrows1 and st_bow.status() != 107, "RMB lets the draw go: no arrow, no Drawing")
+	combat.wield(-1)
+	await get_tree().create_timer(0.5).timeout
 
 	# --- LET THE TARGET GO ---
 	await _key(KEY_ESCAPE)

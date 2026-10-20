@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/body_def.gd" id="1_body"]
+[ext_resource type="Script" path="res://game/regents/combat/arrow_flight.gd" id="2_flight"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/arrow_look.tscn" id="3_look"]
+
+[sub_resource type="Resource" id="Flight"]
+script = ExtResource("2_flight")
+
+[resource]
+script = ExtResource("1_body")
+radius_m = 0.04
+mass_kg = 0.03
+bounce = 0.05
+friction = 0.9
+linear_damp = 0.02
+angular_damp = 0.5
+ground_drag = 6.0
+forces = SubResource("Flight")
+max_speed_mps = 60.0
+max_spin_rps = 5.0
+reach_m = 2.5
+max_per_owner = 30
+lifetime_s = 8.0
+contact_speed_mps = 2.0
+visual_scene = ExtResource("3_look")
+color = Color(0.7, 0.55, 0.35, 1)
+id = 40001
+display_name = "Arrow"
+designer_notes = "AN ARROW in flight (owner, 2026-10-20: a real arrow, it arcs): shot only by the bow's loose (never thrown by hand), flown by the referee; what it hits it hurts once (game/regents.rs, on_body_contact), then it is gone."

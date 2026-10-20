@@ -255,9 +255,117 @@ maximum = 120.0
 unit = "s"
 description = "FOES: a slain player gets up at the spawn, whole, this long after (a placeholder until a death penalty is decided)."
 
+[sub_resource type="Resource" id="Rule_draw_min_power_pct"]
+script = ExtResource("2_rule")
+name = &"draw_min_power_pct"
+number = 30.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW (owner, 2026-10-20): a quick release looses at this much of the shot (damage, speed); a full draw at all of it."
+
+[sub_resource type="Resource" id="Rule_arrow_speed_min"]
+script = ExtResource("2_rule")
+name = &"arrow_speed_min"
+number = 20.0
+minimum = 5.0
+maximum = 60.0
+unit = "m/s"
+description = "THE BOW: an arrow from the quickest release flies this fast..."
+
+[sub_resource type="Resource" id="Rule_arrow_speed_max"]
+script = ExtResource("2_rule")
+name = &"arrow_speed_max"
+number = 50.0
+minimum = 5.0
+maximum = 60.0
+unit = "m/s"
+description = "THE BOW: ...and from a full draw this fast (it flies further and flatter)."
+
+[sub_resource type="Resource" id="Rule_bow_range_m"]
+script = ExtResource("2_rule")
+name = &"bow_range_m"
+number = 40.0
+minimum = 5.0
+maximum = 120.0
+unit = "m"
+description = "THE BOW: a Tab target this near is auto-aimed at; further, the arrow flies where you look."
+
+[sub_resource type="Resource" id="Rule_hit_near_m"]
+script = ExtResource("2_rule")
+name = &"hit_near_m"
+number = 8.0
+minimum = 0.0
+maximum = 100.0
+unit = "m"
+description = "THE BOW: an auto-aimed arrow hits hit_near_pct of the time within this..."
+
+[sub_resource type="Resource" id="Rule_hit_far_m"]
+script = ExtResource("2_rule")
+name = &"hit_far_m"
+number = 40.0
+minimum = 1.0
+maximum = 200.0
+unit = "m"
+description = "THE BOW: ...falling to hit_far_pct at this distance."
+
+[sub_resource type="Resource" id="Rule_hit_near_pct"]
+script = ExtResource("2_rule")
+name = &"hit_near_pct"
+number = 95.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW: the chance to hit up close."
+
+[sub_resource type="Resource" id="Rule_hit_far_pct"]
+script = ExtResource("2_rule")
+name = &"hit_far_pct"
+number = 55.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW: the chance to hit at hit_far_m."
+
+[sub_resource type="Resource" id="Rule_hit_moving_pct"]
+script = ExtResource("2_rule")
+name = &"hit_moving_pct"
+number = 15.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW: less this when the target is on the move. (A roll dodges it outright.)"
+
+[sub_resource type="Resource" id="Rule_point_blank_m"]
+script = ExtResource("2_rule")
+name = &"point_blank_m"
+number = 4.0
+minimum = 0.0
+maximum = 20.0
+unit = "m"
+description = "THE BOW: an arrow that hits nearer than this to where it left the bow is point blank..."
+
+[sub_resource type="Resource" id="Rule_point_blank_pct"]
+script = ExtResource("2_rule")
+name = &"point_blank_pct"
+number = 60.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW: ...and does this much of its damage: a bow wants distance."
+
+[sub_resource type="Resource" id="Rule_arrow_recover_pct"]
+script = ExtResource("2_rule")
+name = &"arrow_recover_pct"
+number = 40.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW: this share of the arrows stuck in a foe come back to their owners when it falls."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

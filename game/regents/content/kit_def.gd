@@ -20,6 +20,12 @@ class_name KitDef extends ContentDef
 @export var skills: Array[AbilityDef] = []
 ## The mastery rank each skill unlocks at, one per skill.
 @export var skill_ranks: PackedInt32Array = PackedInt32Array([1, 3, 6, 9])
+## A DRAWN KIT (a bow, owner 2026-10-20): the left button held DRAWS (the walk slowed) and let go LOOSES its
+## ammo (`ItemDef.ammo_for` = this kit's key), its damage, speed and range growing with the draw to full at
+## `draw_full_ms`; the right button lets the draw go. `light` is the shot (its damage, its clip). Off: a
+## melee kit (tap, hold, combo).
+@export var draws: bool = false
+@export_range(100, 5000, 10, "suffix:ms") var draw_full_ms: int = 800
 ## A tap this soon after the last light hit is the next in the combo; later, the combo starts over.
 @export_range(200, 3000, 10, "suffix:ms") var combo_window_ms: int = 900
 ## How long the left button must be held for the heavy rather than a light.
@@ -101,6 +107,7 @@ func to_bake() -> Dictionary:
 		"skills": sk,
 		"combo_window_ms": combo_window_ms,
 		"chain_ms": chain_ms,
+		"draw_full_ms": draw_full_ms if draws else 0,
 		"locks": locks,
 	}
 

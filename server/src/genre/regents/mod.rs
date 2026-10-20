@@ -58,6 +58,9 @@ pub struct ItemSeed {
     /// As a tool's handle: its swing (percent) and the quality it adds (thousandths).
     pub handle_speed_pct: u32,
     pub handle_quality_pm: u32,
+    /// As ammo: the kit it is shot from ("bow"; empty: not ammo), and its hits in percent.
+    pub ammo_for: &'static str,
+    pub ammo_damage_pct: u32,
 }
 
 /// A skill (`SkillDef`): XP to reach each rank from 2 up.
@@ -238,6 +241,8 @@ pub struct KitSeed {
     pub chain_ms: u32,
     /// Each ability's lock: how long a swing holds its fighter (its clip's length, baked).
     pub locks: &'static [(u32, u32)],
+    /// A drawn kit (a bow): its full draw, in ms. 0: a melee kit.
+    pub draw_full_ms: u32,
 }
 
 impl KitSeed {
@@ -292,6 +297,12 @@ pub const STATUS_SWINGING: u8 = 104;
 pub const STATUS_FLINCHED: u8 = 105;
 /// Health ran out (`content/status/slain.tres`): nothing moves, acts or is hit.
 pub const STATUS_SLAIN: u8 = 106;
+/// A bow drawn (`content/status/drawing.tres`): the walk slowed; how long it lasted is the draw.
+pub const STATUS_DRAWING: u8 = 107;
+/// The arrow (`content/body/arrow.tres`): what a bow looses.
+pub const BODY_ARROW: u32 = 40001;
+/// Gravity on an arrow (Godot's, which the referee flies it by), m/s².
+pub const ARROW_GRAVITY: f32 = 9.8;
 /// The training dummy's entity kind (`content/character/dummy.tres`) and its level points.
 pub const ENTITY_DUMMY: u8 = 102;
 pub const DUMMY_POINT: &str = "dummy";
@@ -324,6 +335,57 @@ pub fn regen_step(current: f32, max: f32, pct_per_s: f32, dt_s: f32) -> f32 {
     (current + max * pct_per_s.max(0.0) / 100.0 * dt_s.max(0.0)).min(max)
 }
 
+// --- the bow (owner, 2026-10-20) ----------------------------------------------------------------------
+
+/// A draw of `draw_ms` on a kit drawn full at `full_ms`: its power, `min_pct` % at once rising to 1 at
+/// full (and held there).
+pub fn draw_power(draw_ms: i64, full_ms: u32, min_pct: f32) -> f32 {
+    let min = (min_pct / 100.0).clamp(0.0, 1.0);
+    let t = (draw_ms.max(0) as f32 / full_ms.max(1) as f32).clamp(0.0, 1.0);
+    min + (1.0 - min) * t
+}
+
+/// The chance (%) an auto-aimed arrow hits a target `dist_m` away: `near_pct` within `near_m`, falling
+/// evenly to `far_pct` at `far_m` (and past it), less `moving_pct` when the target is on the move.
+pub fn hit_chance_pct(dist_m: f32, moving: bool, near_m: f32, far_m: f32, near_pct: f32, far_pct: f32, moving_pct: f32) -> f32 {
+    let t = ((dist_m - near_m) / (far_m - near_m).max(0.01)).clamp(0.0, 1.0);
+    let base = near_pct + (far_pct - near_pct) * t;
+    (base - if moving { moving_pct } else { 0.0 }).clamp(0.0, 100.0)
+}
+
+/// The velocity that carries an arrow from `from` to `to` at `speed` under gravity `g`: the low arc. Out of
+/// its reach, the farthest it can go (45 degrees) toward it.
+pub fn aim_velocity(from: crate::sim::Vector3, to: crate::sim::Vector3, speed: f32, g: f32) -> crate::sim::Vector3 {
+    let dx = to.x - from.x;
+    let dz = to.z - from.z;
+    let x = (dx * dx + dz * dz).sqrt().max(0.001);
+    let y = to.y - from.y;
+    let v2 = speed * speed;
+    let root = v2 * v2 - g * (g * x * x + 2.0 * y * v2);
+    let angle = if root >= 0.0 { ((v2 - root.sqrt()) / (g * x)).atan() } else { std::f32::consts::FRAC_PI_4 };
+    let (h, up) = (speed * angle.cos(), speed * angle.sin());
+    crate::sim::Vector3::new(dx / x * h, up, dz / x * h)
+}
+
+/// Where a MISSED arrow is aimed: past the target by `wide_m` to one side (by `roll` 0..1000, as the server
+/// rolled it), so it flies visibly wide.
+pub fn miss_point(from: crate::sim::Vector3, target: crate::sim::Vector3, roll: u32, wide_m: f32) -> crate::sim::Vector3 {
+    let dx = target.x - from.x;
+    let dz = target.z - from.z;
+    let d = (dx * dx + dz * dz).sqrt().max(0.001);
+    // Its side, from the roll: left or right, and how far up (a little high or low).
+    let side = if roll % 2 == 0 { 1.0 } else { -1.0 };
+    let lift = (roll % 7) as f32 / 6.0 - 0.5;
+    crate::sim::Vector3::new(target.x + (-dz / d) * wide_m * side, target.y + lift * wide_m * 0.5, target.z + (dx / d) * wide_m * side)
+}
+
+/// An arrow's damage: the shot's at the draw's power, the bow's and the arrow's %, its quality and mastery;
+/// at point blank, `point_blank_pct` % of it.
+pub fn arrow_damage(shot_damage: f32, power: f32, bow_pct: u32, arrow_pct: u32, quality_pm: u32, rank: u32, point_blank: bool, point_blank_pct: f32) -> f32 {
+    let d = hit_damage(shot_damage * power, bow_pct, quality_pm, rank) * arrow_pct as f32 / 100.0;
+    if point_blank { d * point_blank_pct / 100.0 } else { d }
+}
+
 pub fn kit_keyed(key: &str) -> Option<&'static KitSeed> {
     KITS.iter().find(|k| k.key == key)
 }
@@ -334,7 +396,8 @@ pub fn kit_of_ability(ability_id: u32) -> Option<(&'static KitSeed, KitSlot)> {
         if let Some(i) = k.light.iter().position(|a| *a == ability_id) {
             return Some((k, KitSlot::Light(i as u32)));
         }
-        if k.heavy == ability_id {
+        // A kit with no heavy (a bow) bakes its heavy as 0, which is also an ability (the foundation's melee).
+        if k.heavy != 0 && k.heavy == ability_id {
             return Some((k, KitSlot::Heavy));
         }
         if let Some(i) = k.skills.iter().position(|(a, _)| *a == ability_id) {

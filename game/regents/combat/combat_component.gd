@@ -16,6 +16,11 @@ class_name CombatComponent extends SpaceTimeComponent
 ##   Esc        drops the target
 ## STANCE: a target picked, or a swing in the last `stance_s`: the body faces where the camera looks.
 ##
+## A DRAWN KIT (the bow, owner 2026-10-20): LMB held DRAWS (the server's Drawing status: a walk), the arms
+## drawing then aiming (an upper-body pose, so the legs keep walking); let go LOOSES an arrow: at the Tab
+## target (the server aims it and rolls the hit), else where the camera looks. RMB lets the draw go; a
+## roll does too. Every client draws another player's draw from their Drawing status.
+##
 ## THE SWING'S TIMELINE (owner, 2026-10-19), the same here as on the server (`game/regents.rs`): a swing
 ## lands at its wind-up and holds you for its clip's length (`KitDef.lock_ms`). A press while it holds you
 ## is QUEUED (the latest wins; it lapses after the combo's window) and fires the moment it may: the combo's
@@ -39,9 +44,15 @@ const FACING: StringName = &"regents_combat"
 const SKILL_KEYS: Array[Key] = [KEY_Q, KEY_E, KEY_R, KEY_F]
 ## The dodge roll (`content/ability/dodge.tres`): everyone's, wielding or not.
 const DODGE_ID: int = 40010
-## The Flinched and Swinging statuses (`content/status/`).
+## The Flinched, Swinging and Drawing statuses (`content/status/`).
 const STATUS_FLINCHED: int = 105
 const STATUS_SWINGING: int = 104
+const STATUS_DRAWING: int = 107
+## A drawn kit's poses and shot (`anim/adventurer.tres`).
+const POSE_DRAW: StringName = &"pose.bow_draw"
+const POSE_AIM: StringName = &"pose.bow_aim"
+## The shortest draw a release looses (shorter: the draw is let go).
+const MIN_DRAW_MS: int = 120
 ## How long after a swing lands it is still committed (the server's `regents.swing_hold_ms`).
 const COMMIT_AFTER_HIT_MS: int = 80
 
@@ -93,6 +104,10 @@ var _driver: AnimationDriverComponent = null
 var _movement: SpaceTimeMovementComponent = null
 var _status: StatusComponent = null
 var _ring: MeshInstance3D = null
+## This client's draw: when it began (msec), or -1.
+var draw_started_ms: int = -1
+## The arrows loosed by this client (tests).
+signal loosed(target_id: int, draw_ms: int)
 
 
 func required_tables() -> Array[StringName]:
@@ -110,7 +125,7 @@ func _on_bound() -> void:
 	_driver = ent.find_component(AnimationDriverComponent) as AnimationDriverComponent if ent != null else null
 	_movement = ent.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent if ent != null else null
 	_status = ent.find_component(StatusComponent) as StatusComponent if ent != null else null
-	set_process(is_local_authority)
+	set_process(true)   # everyone's draw is drawn here; the keys only for our own
 	# Everyone's swings and rolls play whole, here and on every other client (their starts arrive later).
 	if _action != null:
 		_action.action_started.connect(func(id: int, _pid: int) -> void: _began(id))
@@ -274,6 +289,7 @@ func dodge() -> int:
 		return -1
 	if _local_input != null:
 		_local_input.dash_once()
+	draw_started_ms = -1   # the server's Rolling ends the Drawing too
 	var now: int = Time.get_ticks_msec()
 	if swinging(now):
 		swing_cancelled = now < swing_hit_ms
@@ -345,6 +361,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not is_local_authority or not is_bound():
 		return
 	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb != null and _can_fight() and kit.draws:
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.pressed:
+				begin_draw()
+			else:
+				loose()
+		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+			let_draw_go()
+		return
 	if mb != null and _can_fight():
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
@@ -386,6 +411,9 @@ func _input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if not is_bound():
 		return
+	_draw_pose()
+	if not is_local_authority:
+		return
 	var now: int = Time.get_ticks_msec()
 	if _lmb_down_ms >= 0 and not _heavy_fired and kit != null and now - _lmb_down_ms >= kit.heavy_hold_ms:
 		_heavy_fired = true
@@ -406,8 +434,8 @@ func _process(_delta: float) -> void:
 			queued = {}
 	# THE COMMITTED SWING: walk from its start until just after it lands. Slow-walk until the server's
 	# Swinging status arrives, which then bounds the run to the same walk (both at once would crawl).
-	var commit: bool = swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS \
-		and (st == null or st.status() != STATUS_SWINGING)
+	var commit: bool = (swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS \
+		and (st == null or st.status() != STATUS_SWINGING)) or (drawing() and (st == null or st.status() != STATUS_DRAWING))
 	if commit != _slowing:
 		_slowing = commit
 		if commit:
@@ -419,10 +447,122 @@ func _process(_delta: float) -> void:
 	if target_id >= 0 and not _target_ok(target_id):
 		set_target(-1)
 	if _local_input != null:
-		_local_input.hold_facing(FACING, in_stance())
+		_local_input.hold_facing(FACING, in_stance() or drawing())
 		# Ctrl is the roll's, which dashes when it is taken (`dodge`): the key never dashes on its own.
 		_local_input.dash_key = false
 	_place_ring()
+
+
+# --- a drawn kit: the bow (owner, 2026-10-20) ---------------------------------------------------------
+
+## Whether this client is drawing.
+func drawing() -> bool:
+	return draw_started_ms >= 0
+
+
+## How far this client's draw is, 0..1 (full at the kit's `draw_full_ms`).
+func draw_progress() -> float:
+	if not drawing() or kit == null:
+		return 0.0
+	return clampf(float(Time.get_ticks_msec() - draw_started_ms) / float(maxi(kit.draw_full_ms, 1)), 0.0, 1.0)
+
+
+## LMB down with a bow: the draw begins (the server's Drawing: you walk). Not in the air, mid-roll or with
+## no arrows (the server says so).
+func begin_draw() -> bool:
+	if kit == null or not kit.draws or drawing() or not grounded() or Time.get_ticks_msec() < roll_until_ms:
+		return false
+	if ammo_count() <= 0:
+		refused.emit("No arrows")
+		return false
+	draw_started_ms = Time.get_ticks_msec()
+	_last_swing_ms = draw_started_ms
+	SpaceTimeSync.call_reducer(&"draw_bow", [true], ["bool"])
+	return true
+
+
+## LMB up: loose at the Tab target (the server aims and rolls the hit), else where the camera looks. Too
+## quick a release lets the draw go instead.
+func loose() -> bool:
+	if not drawing():
+		return false
+	var held: int = Time.get_ticks_msec() - draw_started_ms
+	draw_started_ms = -1
+	if held < MIN_DRAW_MS:
+		SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
+		return false
+	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
+	var pitch: float = _local_input.get_look_pitch() if _local_input != null else 0.0
+	var aim := Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	var at: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
+	SpaceTimeSync.call_reducer(&"loose_arrow", [at, aim], ["u64", "vector3[f32,f32,f32]"])
+	if _driver != null and kit != null and not kit.light.is_empty():
+		_driver.play_upper(StringName("ability.%d" % kit.light[0].id))
+	_last_swing_ms = Time.get_ticks_msec()
+	loosed.emit(at, held)
+	return true
+
+
+## RMB (or a roll): the draw is let go, nothing loosed.
+func let_draw_go() -> void:
+	if not drawing():
+		return
+	draw_started_ms = -1
+	SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
+
+
+## The chance an arrow loosed now at the Tab target hits (%), as the server rolls it (its hot rules); -1
+## with no target in the bow's range (it flies where you aim).
+func hit_chance_now() -> float:
+	if target_id < 0 or not _target_ok(target_id):
+		return -1.0
+	var me: Node3D = entity as Node3D
+	var t: Node3D = EntityRegistry.get_entity(target_id) as Node3D
+	var d: float = Vector2(t.global_position.x - me.global_position.x, t.global_position.z - me.global_position.z).length()
+	if d > HotRules.number(&"regents.bow_range_m"):
+		return -1.0
+	var near_m: float = HotRules.number(&"regents.hit_near_m")
+	var far_m: float = HotRules.number(&"regents.hit_far_m")
+	var k: float = clampf((d - near_m) / maxf(far_m - near_m, 0.01), 0.0, 1.0)
+	var near_pct: float = HotRules.number(&"regents.hit_near_pct")
+	var chance: float = near_pct + (HotRules.number(&"regents.hit_far_pct") - near_pct) * k
+	var mv: SpaceTimeMovementComponent = (t as SpaceTimeEntity).find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent if t is SpaceTimeEntity else null
+	var st: MovementState = mv.get_render_state() if mv != null else null
+	if st != null and Vector2(st.vel.x, st.vel.z).length() > 1.5:
+		chance -= HotRules.number(&"regents.hit_moving_pct")
+	return clampf(chance, 0.0, 100.0)
+
+
+## Arrows in the bag for the kit wielded.
+func ammo_count() -> int:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var inv: SpaceTimeInventoryComponent = ent.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent if ent != null else null
+	if inv == null or kit == null:
+		return 0
+	var n: int = 0
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		var it: ItemDef = ItemDef.by_id(st.item_def_id)
+		if it != null and it.ammo_for == kit.key:
+			n += st.qty
+	return n
+
+
+## THE DRAW, SHOWN on this player's arms (an upper-body pose: the legs keep walking): drawing back over the
+## draw, then held aimed. Ours from our own press; another player's from their Drawing status.
+func _draw_pose() -> void:
+	if _driver == null:
+		return
+	var t: float = -1.0
+	if is_local_authority and drawing():
+		t = draw_progress()
+	elif not is_local_authority and _status != null and _status.status() == STATUS_DRAWING and kit != null:
+		t = clampf(_status.elapsed_sec() * 1000.0 / float(maxi(kit.draw_full_ms, 1)), 0.0, 1.0)
+	if t < 0.0:
+		_driver.release_upper_pose()
+	elif t < 1.0:
+		_driver.hold_upper_pose(POSE_DRAW, 1.0, t)
+	else:
+		_driver.hold_upper_pose(POSE_AIM, 1.0)
 
 
 ## Pick `id` as the target (-1: none).

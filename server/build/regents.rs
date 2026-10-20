@@ -84,9 +84,11 @@ pub fn regents_data() {
             weapon_kits.push((name.clone(), kit.clone()));
         }
         out.push_str(&format!("    ItemSeed {{ id: {}, name: {name:?}, max_stack: {}, tool_tag: {tag:?}, tool_tier: {tier}, tool_speed_pct: {}, \
-             weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_speed_pct: {}, handle_quality_pm: {} }},\n",
+             weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_speed_pct: {}, handle_quality_pm: {}, ammo_for: {:?}, \
+             ammo_damage_pct: {} }},\n",
             int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name), int(it, "weapon_damage_pct", &name),
-            int(it, "handle_speed_pct", &name), int(it, "handle_quality_pm", &name)));
+            int(it, "handle_speed_pct", &name), int(it, "handle_quality_pm", &name), text(it, "ammo_for", &name),
+            it["ammo_damage_pct"].as_i64().unwrap_or(100)));
     }
     let item = |id: i64, what: &str| assert!(item_ids.contains(&id), "regents content: {what} names item {id}, which is not an item");
 
@@ -175,8 +177,9 @@ pub fn regents_data() {
         }
         kit_keys.push(key.clone());
         out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, heavy: {}, skills: &{skills:?}, combo_window_ms: {}, \
-             chain_ms: {}, locks: &{locks:?} }},\n",
-            int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name), int(k, "chain_ms", &name)));
+             chain_ms: {}, locks: &{locks:?}, draw_full_ms: {} }},\n",
+            int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name), int(k, "chain_ms", &name),
+            k["draw_full_ms"].as_i64().unwrap_or(0)));
     }
     for (item, kit) in &weapon_kits {
         assert!(kit_keys.contains(kit), "regents content: the weapon {item} fights with kit '{kit}', which is no kit");

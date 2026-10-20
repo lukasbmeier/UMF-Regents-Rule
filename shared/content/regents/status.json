@@ -113,6 +113,22 @@
 			"status": 106,
 			"targetable": false,
 			"then": -1
+		},
+		{
+			"burst": 1.0,
+			"burst_ms": 0,
+			"can_act": true,
+			"can_dash": true,
+			"can_jump": false,
+			"can_sprint": false,
+			"hittable": true,
+			"id": 40008,
+			"lasts_ms": 0,
+			"name": "Drawing",
+			"speed": 0.25,
+			"status": 107,
+			"targetable": true,
+			"then": -1
 		}
 	],
 	"owner": "regents",
