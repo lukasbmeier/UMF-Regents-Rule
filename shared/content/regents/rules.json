@@ -384,6 +384,24 @@
 					"number": 800.0,
 					"text": "",
 					"unit": "‰"
+				},
+				{
+					"key": "regents.mana_cost_pct",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 100.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.cast_time_pct",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 10.0,
+					"number": 100.0,
+					"text": "",
+					"unit": "%"
 				}
 			]
 		}

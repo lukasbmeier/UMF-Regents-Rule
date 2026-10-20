@@ -32,6 +32,13 @@ class_name CombatComponent extends SpaceTimeComponent
 ## wind-up cancels the swing (it never lands), in the recovery ends it. THE ROLL plays its Roll whole, facing
 ## the way it goes, and nothing swings until it is over (`regents.roll_ms`): a press waits for it, as in the air. A heavy hit in a light's wind-up
 ## FLINCHES you (the server cancels it; the Flinched status shows here and clears the queue).
+##
+## A CASTING KIT (the Staff, owner 2026-10-20): its abilities are SPELLS (`SpellDef`), cast through the same
+## press, queue and lock as a swing: LMB taps a Bolt, Q-F (in stance) its spells, each on its OWN cooldown
+## (no global one) and paid in mana (`ResourceComponent`; the server spends it, `cast_spell`). A spell with
+## a cast time shows a bar and the casting pose; a press meanwhile is held and fires when it ends. A long
+## cast (0.8 s or more) roots: moving off it, or rolling, lets it go (`cancel_cast`). An area spell lands
+## where the crosshair meets the ground, within its range.
 
 const TABLE_WIELDED: StringName = &"wielded"
 const TABLE_STATE: StringName = &"combat_state"
@@ -51,6 +58,13 @@ const STATUS_DRAWING: int = 107
 ## A drawn kit's poses and shot (`anim/adventurer.tres`).
 const POSE_DRAW: StringName = &"pose.bow_draw"
 const POSE_AIM: StringName = &"pose.bow_aim"
+## A casting kit's poses while a spell is cast (`anim/adventurer.tres`): a short cast, a long one.
+const POSE_CAST: StringName = &"pose.spell_cast"
+const POSE_CHANNEL: StringName = &"pose.spell_channel"
+## A rooted cast is let go by moving this far off where it began (the server's `ROOTED_SLACK_M`).
+const ROOTED_SLACK_M: float = 0.5
+## Who is casting what (`game/regents.rs`): everyone's, for their casting pose.
+const TABLE_CASTING: StringName = &"casting"
 ## The shortest draw a release looses (shorter: the draw is let go).
 const MIN_DRAW_MS: int = 120
 ## How long after a swing lands it is still committed (the server's `regents.swing_hold_ms`).
@@ -108,14 +122,24 @@ var _ring: MeshInstance3D = null
 var draw_started_ms: int = -1
 ## The arrows loosed by this client (tests).
 signal loosed(target_id: int, draw_ms: int)
+## A spell this client asked the server to cast (tests).
+signal cast_sent(ability_id: int, target_id: int, aim: Vector3, at: Vector3)
+## This client's cast in progress: its spell, when it lands (msec), where it began; null / -1 for none.
+var cast_spell: SpellDef = null
+var cast_until_ms: int = -1
+var cast_from: Vector3 = Vector3.ZERO
+## When each spell is ready again here (ability id -> msec): its own cooldown, as the server keeps it.
+var spell_ready_ms: Dictionary[int, int] = {}
+## Another player's cast, from their `casting` row: its ability, or -1.
+var remote_cast_ability: int = -1
 
 
 func required_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING]
 
 
 func optional_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING]
 
 
 func _on_bound() -> void:
@@ -167,6 +191,8 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 		TABLE_KILL:
 			if new != null and old == null and is_local_authority:
 				slew.emit(int(new.get(&"foe_id")), String(new.get(&"loot")))
+		TABLE_CASTING:
+			remote_cast_ability = int(new.get(&"ability")) if new != null else -1
 
 
 ## Whether Q E R F are skills now: a weapon wielded, and a target picked or a swing just now.
@@ -235,7 +261,7 @@ func swing(a: AbilityDef, step: int = -1) -> int:
 ## A press: `kind` "light", "heavy" or "skill" (`slot` 0 Q .. 3 F). It swings now when it may, else it is
 ## queued (the latest press wins) and swings the moment it may. True when it swung now.
 func press(kind: String, slot: int = 0) -> bool:
-	if kit == null:
+	if kit == null or (kind == "heavy" and kit.heavy == null):
 		return false
 	if kind == "skill":
 		if slot >= kit.skills.size():
@@ -254,6 +280,9 @@ func press(kind: String, slot: int = 0) -> bool:
 
 func _try(kind: String, slot: int) -> bool:
 	var now: int = Time.get_ticks_msec()
+	if kit.casts():
+		var a: AbilityDef = kit.light[0] if kind == "light" else (kit.skills[slot] if kind == "skill" and slot < kit.skills.size() else null)
+		return a != null and may_cast(now) and cast(a)
 	match kind:
 		"light":
 			var step: int = next_light_step(now)
@@ -290,6 +319,7 @@ func dodge() -> int:
 	if _local_input != null:
 		_local_input.dash_once()
 	draw_started_ms = -1   # the server's Rolling ends the Drawing too
+	_cast_over()   # and lets a cast go (the server ends it too)
 	var now: int = Time.get_ticks_msec()
 	if swinging(now):
 		swing_cancelled = now < swing_hit_ms
@@ -415,6 +445,7 @@ func _process(_delta: float) -> void:
 	if not is_local_authority:
 		return
 	var now: int = Time.get_ticks_msec()
+	_tick_cast(now)
 	if _lmb_down_ms >= 0 and not _heavy_fired and kit != null and now - _lmb_down_ms >= kit.heavy_hold_ms:
 		_heavy_fired = true
 		heavy()
@@ -552,6 +583,11 @@ func ammo_count() -> int:
 func _draw_pose() -> void:
 	if _driver == null:
 		return
+	# A spell being cast: the casting pose (a long cast its own), the legs free.
+	var spell: SpellDef = cast_spell if is_local_authority and casting() else (SpellDef.by_ability(remote_cast_ability) if not is_local_authority and remote_cast_ability >= 0 else null)
+	if spell != null:
+		_driver.hold_upper_pose(POSE_CHANNEL if spell.cast_ms >= 800 else POSE_CAST, 1.0)
+		return
 	var t: float = -1.0
 	if is_local_authority and drawing():
 		t = draw_progress()
@@ -563,6 +599,142 @@ func _draw_pose() -> void:
 		_driver.hold_upper_pose(POSE_DRAW, 1.0, t)
 	else:
 		_driver.hold_upper_pose(POSE_AIM, 1.0)
+
+
+# --- a casting kit: the Staff (owner, 2026-10-20) ----------------------------------------------------
+
+## Whether this client is casting a spell with a cast time.
+func casting() -> bool:
+	return cast_spell != null and cast_until_ms >= 0
+
+
+## How far this client's cast is, 0..1.
+func cast_progress() -> float:
+	if not casting():
+		return 0.0
+	var cast_ms: float = float(cast_spell.cast_ms) * HotRules.number(&"regents.cast_time_pct") / 100.0
+	return clampf(1.0 - float(cast_until_ms - Time.get_ticks_msec()) / maxf(cast_ms, 1.0), 0.0, 1.0)
+
+
+## Whether a spell may begin now: on the ground, not rolling, no cast going and the last one's clip over.
+func may_cast(now_ms: int) -> bool:
+	return kit != null and grounded() and now_ms >= roll_until_ms and not casting() and not swinging(now_ms)
+
+
+## Seconds until spell `a` is ready again here (0: ready).
+func spell_cooldown_sec(a: AbilityDef) -> float:
+	return maxf(0.0, float(int(spell_ready_ms.get(a.id, 0)) - Time.get_ticks_msec()) / 1000.0)
+
+
+## A pool to use instead of the entity's (tests, with no entity).
+var pool_for_tests: ResourceComponent = null
+
+
+## This player's pool for the kit wielded (the Staff's mana), or null.
+func pool() -> ResourceComponent:
+	if pool_for_tests != null:
+		return pool_for_tests
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	return ent.find_component(ResourceComponent) as ResourceComponent if ent != null else null
+
+
+## CAST spell `a` now: at the Tab target, where the camera looks, an area where the crosshair meets the
+## ground. Its cooldown or too little mana: refused here (consumed, not queued). True when it was cast.
+func cast(a: AbilityDef) -> bool:
+	var spell: SpellDef = SpellDef.by_ability(a.id)
+	if spell == null or kit == null or not kit.casts():
+		return false
+	var now: int = Time.get_ticks_msec()
+	if spell_cooldown_sec(a) > 0.0:
+		refused.emit("%s: ready in %.1f s" % [a.display_name, spell_cooldown_sec(a)])
+		return true
+	var p: ResourceComponent = pool()
+	var cost: float = spell.cost * HotRules.number(&"regents.mana_cost_pct") / 100.0
+	if cost > 0.0 and (p == null or not p.can_pay(kit.resource.id, cost)):
+		refused.emit("Not enough %s for %s" % [kit.resource.display_name.to_lower(), a.display_name])
+		return true
+	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
+	var pitch: float = _local_input.get_look_pitch() if _local_input != null else 0.0
+	var aim := Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	var at: Vector3 = area_point(a.range_m) if spell.kind == SpellDef.Kind.AREA else Vector3.ZERO
+	var at_target: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"cast_spell", [a.id, at_target, aim, at],
+		["u32", "u64", "vector3[f32,f32,f32]", "vector3[f32,f32,f32]"])
+	req.settled.connect(func(r: ReducerRequest) -> void:
+		if r.outcome == ReducerRequest.Outcome.REJECTED or r.outcome == ReducerRequest.Outcome.FAILED:
+			spell_ready_ms.erase(a.id)
+			if cast_spell == spell:
+				_cast_over()
+			refused.emit(r.error_message.trim_prefix("cast_spell: ")))
+	var cast_ms: int = roundi(float(spell.cast_ms) * HotRules.number(&"regents.cast_time_pct") / 100.0)
+	spell_ready_ms[a.id] = now + cast_ms + a.cooldown_ms
+	_last_swing_ms = now
+	swing_ability = a
+	swing_at_ms = now
+	swing_hit_ms = now + cast_ms
+	swing_cancelled = false
+	if cast_ms > 0:
+		cast_spell = spell
+		cast_until_ms = now + cast_ms
+		var me: Node3D = entity as Node3D
+		cast_from = me.global_position if me != null else Vector3.ZERO
+		swing_lock_ms = cast_until_ms + (kit.lock_ms(a) if kit != null else 0)
+	else:
+		swing_lock_ms = now + (kit.lock_ms(a) if kit != null else a.wind_up_ms)
+		if _driver != null:
+			_driver.play_upper(StringName("ability.%d" % a.id))
+	cast_sent.emit(a.id, at_target, aim, at)
+	swung.emit(a.id)
+	return true
+
+
+## Where an area spell would land: where the crosshair meets the ground within `range_m` of this player,
+## else that far along the look on their level.
+func area_point(range_m: float) -> Vector3:
+	var me: Node3D = entity as Node3D
+	var from_me: Vector3 = me.global_position if me != null else Vector3.ZERO
+	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
+	var flat := Vector3(-sin(yaw), 0.0, -cos(yaw))
+	var cam: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam != null and me != null:
+		var origin: Vector3 = cam.global_position
+		var dir: Vector3 = -cam.global_basis.z
+		var q := PhysicsRayQueryParameters3D.create(origin, origin + dir * (range_m + 30.0), 1)
+		var hit: Dictionary = me.get_world_3d().direct_space_state.intersect_ray(q)
+		if not hit.is_empty():
+			var p: Vector3 = hit["position"]
+			var off := Vector3(p.x - from_me.x, 0.0, p.z - from_me.z)
+			if off.length() > range_m:
+				off = off.normalized() * range_m
+				return Vector3(from_me.x + off.x, p.y, from_me.z + off.z)
+			return p
+	return from_me + flat * range_m
+
+
+## A cast in progress: it lands at its time (the clip plays), or a rooted one moved off is let go.
+func _tick_cast(now: int) -> void:
+	if not casting():
+		return
+	var me: Node3D = entity as Node3D
+	var long: bool = not cast_spell.cast_while_moving or cast_spell.cast_ms >= 800
+	if long and me != null and Vector2(me.global_position.x - cast_from.x, me.global_position.z - cast_from.z).length() > ROOTED_SLACK_M:
+		SpaceTimeSync.call_reducer(&"cancel_cast", [], [])
+		refused.emit("Moved: %s let go" % cast_spell.ability.display_name)
+		spell_ready_ms.erase(cast_spell.ability.id)
+		_cast_over()
+		swing_lock_ms = now
+		return
+	if now >= cast_until_ms:
+		if _driver != null:
+			_driver.play_upper(StringName("ability.%d" % cast_spell.ability.id))
+		cast_spell = null
+		cast_until_ms = -1
+
+
+## The cast is over (landed, let go, refused).
+func _cast_over() -> void:
+	cast_spell = null
+	cast_until_ms = -1
 
 
 ## Pick `id` as the target (-1: none).

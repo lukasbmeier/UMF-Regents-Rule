@@ -163,16 +163,14 @@ static func sheet(f: FoeDef) -> String:
 		f.display_name, f.hp, ", ".join(swings), float(r["dps"]), PLAYER_HP / maxf(float(r["dps"]), 0.001), xp]
 
 
-## What one kill drops on average: {item name: count}.
+## What one kill drops on average, to each player who earns a roll: {item name: count} (its loot table's).
 static func expected_loot(f: FoeDef) -> Dictionary:
 	var out: Dictionary = {}
-	for i: int in f.loot.size():
-		if f.loot[i] == null:
-			continue
-		var lo: int = f.loot_min[i] if i < f.loot_min.size() else 1
-		var hi: int = f.loot_max[i] if i < f.loot_max.size() else lo
-		var chance: int = f.loot_chance_pct[i] if i < f.loot_chance_pct.size() else 100
-		out[f.loot[i].display_name] = float(chance) / 100.0 * float(lo + hi) / 2.0
+	if f.loot_table == null:
+		return out
+	var e: Dictionary = f.loot_table.expected()
+	for item_id: int in e:
+		out[(e[item_id] as Dictionary)["name"]] = float((e[item_id] as Dictionary)["n"])
 	return out
 
 
@@ -205,11 +203,10 @@ func run_test(action: StringName) -> String:
 			for k: String in e:
 				parts.append("%.2f %s" % [float(e[k]), k])
 			var rare: String = ""
-			for i: int in f.loot.size():
-				var chance: int = f.loot_chance_pct[i] if i < f.loot_chance_pct.size() else 100
-				if f.loot[i] != null and chance < 10:
-					rare += "  ·  %s: one in %d kills" % [f.loot[i].display_name, roundi(100.0 / float(chance))]
-			return "a kill drops on average %s%s" % [", ".join(parts), rare]
+			for k: String in e:
+				if float(e[k]) > 0.0 and float(e[k]) < 0.1:
+					rare += "  ·  %s: about one in %d kills" % [k, roundi(1.0 / float(e[k]))]
+			return "a kill drops on average (to each player who earns a roll) %s%s" % [", ".join(parts), rare]
 	return "no such test"
 
 

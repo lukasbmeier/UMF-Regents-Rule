@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="BodyDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/body_def.gd" id="1_body"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/bolt_look.tscn" id="2_look"]
+
+[resource]
+script = ExtResource("1_body")
+radius_m = 0.08
+mass_kg = 0.05
+bounce = 0.0
+friction = 1.0
+linear_damp = 0.0
+angular_damp = 1.0
+ground_drag = 10.0
+gravity_scale = 0.0
+max_speed_mps = 60.0
+max_spin_rps = 1.0
+reach_m = 2.5
+max_per_owner = 12
+lifetime_s = 3.0
+contact_speed_mps = 1.0
+visual_scene = ExtResource("2_look")
+color = Color(0.6, 0.7, 1, 1)
+id = 40002
+display_name = "Bolt"
+designer_notes = "A SPELL'S MISSILE (owner, 2026-10-20: the Staff): no gravity, it flies straight; the referee flies it and says what it hit. Gone after lifetime_s if it hits nothing."

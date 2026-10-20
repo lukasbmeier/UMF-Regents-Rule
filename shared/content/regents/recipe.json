@@ -392,6 +392,31 @@
 			"skill": 40005,
 			"station": "workbench",
 			"xp": 10
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40014,
+			"inputs": [
+				[
+					40004,
+					1
+				],
+				[
+					40009,
+					1
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Yew staff",
+			"output": 40023,
+			"output_qty": 1,
+			"part_slot": -1,
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 30
 		}
 	],
 	"owner": "regents",

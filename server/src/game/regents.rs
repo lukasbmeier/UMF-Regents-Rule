@@ -422,6 +422,16 @@ fn add_xp(ctx: &ReducerContext, entity_id: u64, skill_id: u32, xp: u32) -> u32 {
     }
 }
 
+/// Admin: `xp` more in skill `skill_id` for `entity_id` (a playtest or a test reaching a rank: the Staff's
+/// spells unlock at Sorcery 1, 3, 6 and 9).
+#[reducer]
+pub fn grant_xp(ctx: &ReducerContext, entity_id: u64, skill_id: u32, xp: u32) -> Result<(), String> {
+    crate::module::require_admin(ctx)?;
+    rules::skill(skill_id).ok_or("grant_xp: no such skill")?;
+    add_xp(ctx, entity_id, skill_id, xp);
+    Ok(())
+}
+
 fn need_rank(ctx: &ReducerContext, entity_id: u64, skill_id: u32, min_rank: u32, verb: &str) -> Result<(), String> {
     let have = rank_in(ctx, entity_id, skill_id);
     if have < min_rank {
@@ -854,6 +864,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
     reset_dummies(ctx);
     tick_foes(ctx);
     tick_regen(ctx, WORK_TICK_MICROS as f32 / 1_000_000.0);
+    tick_spells(ctx, WORK_TICK_MICROS as f32 / 1_000_000.0);
     let mut boards: Vec<u32> = ctx.db.station().iter().filter(|s| s.key == rules::ORDER_BOARD).map(|s| s.world_id).collect();
     boards.dedup();
     for w in boards {
@@ -1231,6 +1242,432 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
     crate::module::despawn_entity_internal(ctx, body_id);
 }
 
+// --- the Staff (owner, 2026-10-20: LOOT_AND_STYLES §4-5) ----------------------------------------------
+
+/// A SPELL BEING CAST (one with a cast time: Fireball, Frost Ring): what, at whom, where it was cast from,
+/// and when it lands (`spell_timer`). Everyone is sent it: the caster's arms show the cast.
+#[table(accessor = casting, public)]
+pub struct Casting {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub ability: u32,
+    pub target_id: u64,
+    pub aim: Vector3,
+    /// Where an area spell lands.
+    pub at: Vector3,
+    /// Where the caster stood (a rooted cast is let go by moving off it).
+    pub from: Vector3,
+    pub started: Timestamp,
+    pub lands: Timestamp,
+}
+
+/// A SPELL'S OWN COOLDOWN (no global cooldown, owner 2026-10-20): when its caster may cast it again.
+#[table(accessor = spell_cooldown, public)]
+pub struct SpellCooldown {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    #[index(btree)]
+    pub entity_id: u64,
+    pub ability: u32,
+    pub ready_at: Timestamp,
+}
+
+/// A SPELL'S MISSILE IN FLIGHT (a bolt, a fireball): whose, which spell, the damage it does when it hits.
+#[table(accessor = missile)]
+pub struct Missile {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub owner: u64,
+    pub ability: u32,
+    pub damage: f32,
+    pub skill_id: u32,
+}
+
+/// A SPELL'S CIRCLE ON THE GROUND (Frost Ring): where, how wide, when it lands. Everyone in the world sees
+/// it fill; it lingers a moment after it lands, then goes.
+#[table(accessor = spell_area, public)]
+pub struct SpellArea {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub owner: u64,
+    pub ability: u32,
+    pub pos: Vector3,
+    pub radius: f32,
+    pub damage: f32,
+    pub skill_id: u32,
+    pub lands: Timestamp,
+    pub landed: bool,
+}
+
+/// SOMETHING BURNING (a fireball's): this much a second until then, whose fire.
+#[table(accessor = burning, public)]
+pub struct Burning {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub dps: f32,
+    pub until: Timestamp,
+    pub by: u64,
+    pub skill_id: u32,
+}
+
+/// When a cast (`entity_id`, the caster) or a circle (`area_id`) lands.
+#[table(accessor = spell_timer, scheduled(spell_lands))]
+pub struct SpellTimer {
+    #[primary_key]
+    #[auto_inc]
+    pub scheduled_id: u64,
+    pub scheduled_at: ScheduleAt,
+    #[index(btree)]
+    pub entity_id: u64,
+    pub area_id: u64,
+}
+
+/// How long a landed circle stays on the ground.
+const AREA_LINGER_MICROS: i64 = 800_000;
+/// A rooted cast is let go by moving this far off where it began.
+const ROOTED_SLACK_M: f32 = 0.6;
+
+/// CAST a spell (the Staff's: its left button and Q-F): ability `ability_id` at `target_id` (a Tab
+/// target, 0 none), `aim` (where you look), `at` (where an area spell lands). Refused: not a spell of the
+/// staff you wield, a rank short, mid-roll or another cast, its cooldown, short of mana, an area too far
+/// off, a blink onto nothing. One with a cast time lands at its end (`spell_lands`); the rest at once.
+#[reducer]
+pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Vector3, at: Vector3) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "spell")?;
+    let spell = rules::spell_of(ability_id).ok_or("cast_spell: that is no spell")?;
+    let (kit, slot) = rules::kit_of_ability(ability_id).ok_or("cast_spell: no kit casts that")?;
+    let (weapon, _) = wielded_weapon(ctx, me).ok_or("cast_spell: wield a staff first")?;
+    if weapon.weapon_kit != kit.key {
+        return Err(format!("cast_spell: that is a {} spell; you wield a {}", kit.key, weapon.name.to_lowercase()));
+    }
+    if let rules::KitSlot::Skill(_, rank) = slot {
+        need_rank(ctx, me, kit.skill, rank, "cast")?;
+    }
+    let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
+    if now_status == rules::STATUS_ROLLING || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
+        return Err("cast_spell: not now".into());
+    }
+    if ctx.db.casting().entity_id().find(me).is_some() {
+        return Err("cast_spell: already casting".into());
+    }
+    if let Some(cd) = ctx.db.spell_cooldown().entity_id().filter(me).find(|c| c.ability == ability_id) {
+        if cd.ready_at > ctx.timestamp {
+            return Err(format!("cast_spell: not ready ({:.1} s)", (micros(cd.ready_at) - micros(ctx.timestamp)) as f32 / 1e6));
+        }
+    }
+    let have = crate::module::resource_now(ctx, me, kit.resource).unwrap_or(0.0);
+    if have + 1e-4 < spell_cost(ctx, spell) {
+        return Err(format!("cast_spell: not enough mana ({have:.0} of {:.0})", spell_cost(ctx, spell)));
+    }
+    let m = ctx.db.movement_state().entity_id().find(me).ok_or("cast_spell: you are nowhere")?;
+    check_spell_place(ctx, me, spell, ability_id, &m, aim, at)?;
+    let cast_ms = (spell.cast_ms as f64 * hot_number(ctx, hot::CAST_TIME_PCT).max(0.0) / 100.0).round() as i64;
+    if cast_ms <= 0 {
+        return land_spell(ctx, me, ability_id, target_id, aim, at);
+    }
+    let lands = ctx.timestamp + TimeDuration::from_micros(cast_ms * 1000);
+    ctx.db.casting().insert(Casting { entity_id: me, world_id: m.world_id, ability: ability_id, target_id, aim, at, from: m.pos,
+        started: ctx.timestamp, lands });
+    ctx.db.spell_timer().insert(SpellTimer { scheduled_id: 0, scheduled_at: ScheduleAt::Time(lands), entity_id: me, area_id: 0 });
+    stop_block(ctx, me);
+    Ok(())
+}
+
+/// LET A CAST GO (the caster moved off a rooted one, or changed their mind): nothing lands, nothing is paid.
+#[reducer]
+pub fn cancel_cast(ctx: &ReducerContext) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "spell")?;
+    end_cast(ctx, me);
+    Ok(())
+}
+
+/// `entity_id`'s cast, if any, is over: its row and its timer go.
+fn end_cast(ctx: &ReducerContext, entity_id: u64) {
+    ctx.db.casting().entity_id().delete(entity_id);
+    for t in ctx.db.spell_timer().entity_id().filter(entity_id).map(|t| t.scheduled_id).collect::<Vec<_>>() {
+        ctx.db.spell_timer().scheduled_id().delete(t);
+    }
+}
+
+/// Whether the spell may land where it is aimed: an area within its range of you, a blink onto ground,
+/// a bolt only with the world's referee running (it flies the missile).
+fn check_spell_place(ctx: &ReducerContext, me: u64, spell: &rules::SpellSeed, ability_id: u32, m: &crate::module::MovementStateRow,
+    aim: Vector3, at: Vector3) -> Result<(), String> {
+    let range = ctx.db.ability_def().ability_id().find(ability_id).map_or(0.0, |d| d.range);
+    match spell.kind {
+        rules::SPELL_BOLT => {
+            if !crate::module::referee_online(ctx, m.world_id) {
+                return Err("cast_spell: no referee is running this world, so nothing would fly".into());
+            }
+        }
+        rules::SPELL_AREA => {
+            if !finite3(at) || rules::flat_dist(m.pos, at) > range + 0.5 {
+                return Err(format!("cast_spell: too far ({:.0} m; {:.0} at most)", rules::flat_dist(m.pos, at), range));
+            }
+        }
+        rules::SPELL_BLINK => {
+            let to = rules::blink_to(m.pos, aim, range).ok_or("cast_spell: aim somewhere")?;
+            let level = crate::level::by_id(crate::module::world_level_of(ctx, m.world_id));
+            if level.is_some_and(|l| !l.can_stand(to.x, to.z)) {
+                return Err("cast_spell: nowhere to stand there".into());
+            }
+        }
+        _ => {
+            if !finite3(aim) {
+                return Err("cast_spell: aim somewhere".into());
+            }
+        }
+    }
+    let _ = me;
+    Ok(())
+}
+
+/// What a spell costs now: its own cost at `regents.mana_cost_pct`.
+fn spell_cost(ctx: &ReducerContext, spell: &rules::SpellSeed) -> f32 {
+    spell.cost * (hot_number(ctx, hot::MANA_COST_PCT).max(0.0) as f32) / 100.0
+}
+
+fn finite3(v: Vector3) -> bool {
+    v.x.is_finite() && v.y.is_finite() && v.z.is_finite()
+}
+
+/// A CAST OR A CIRCLE LANDS (the scheduler, at its time).
+#[reducer]
+pub fn spell_lands(ctx: &ReducerContext, timer: SpellTimer) -> Result<(), String> {
+    if ctx.sender() != ctx.database_identity() {
+        return Err("spell_lands: scheduler only".into());
+    }
+    if timer.area_id != 0 {
+        land_area(ctx, timer.area_id);
+        return Ok(());
+    }
+    let Some(c) = ctx.db.casting().entity_id().find(timer.entity_id) else { return Ok(()) };
+    ctx.db.casting().entity_id().delete(c.entity_id);
+    // A rooted cast moved off is let go (its client says so first; this is the server's own check).
+    let moved = ctx.db.movement_state().entity_id().find(c.entity_id).map_or(f32::MAX, |m| rules::flat_dist(m.pos, c.from));
+    if rules::spell_of(c.ability).is_some_and(|s| !rules::may_walk_casting(s)) && moved > ROOTED_SLACK_M {
+        log::info!("regents: {}'s cast of {} let go: moved {moved:.1} m", c.entity_id, c.ability);
+        return Ok(());
+    }
+    if let Err(e) = land_spell(ctx, c.entity_id, c.ability, c.target_id, c.aim, c.at) {
+        log::info!("regents: {}'s cast of {} came to nothing: {e}", c.entity_id, c.ability);
+    }
+    Ok(())
+}
+
+/// THE SPELL LANDS for `me`: paid for (mana), its cooldown begun, then as its kind says.
+fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, aim: Vector3, at: Vector3) -> Result<(), String> {
+    let spell = rules::spell_of(ability_id).ok_or("no such spell")?;
+    let (kit, _) = rules::kit_of_ability(ability_id).ok_or("no kit casts that")?;
+    let (weapon, quality) = wielded_weapon(ctx, me).filter(|(w, _)| w.weapon_kit == kit.key).ok_or("the staff was put away")?;
+    if ctx.db.health_state().entity_id().find(me).is_some_and(|h| h.is_dead) {
+        return Err("dead".into());
+    }
+    let m = ctx.db.movement_state().entity_id().find(me).ok_or("nowhere")?;
+    check_spell_place(ctx, me, spell, ability_id, &m, aim, at)?;
+    crate::module::spend_resource(ctx, me, kit.resource, spell_cost(ctx, spell))?;
+    let def = ctx.db.ability_def().ability_id().find(ability_id);
+    let (base, range, cooldown_ms) = def.as_ref().map_or((0.0, 0.0, 0), |d| (d.damage, d.range, d.cooldown_ms));
+    let ready_at = ctx.timestamp + TimeDuration::from_micros(cooldown_ms as i64 * 1000);
+    match ctx.db.spell_cooldown().entity_id().filter(me).find(|c| c.ability == ability_id) {
+        Some(mut cd) => {
+            cd.ready_at = ready_at;
+            ctx.db.spell_cooldown().id().update(cd);
+        }
+        None => {
+            ctx.db.spell_cooldown().insert(SpellCooldown { id: 0, entity_id: me, ability: ability_id, ready_at });
+        }
+    }
+    let damage = rules::hit_damage(base, weapon.weapon_damage_pct, quality, rank_in(ctx, me, kit.skill));
+    match spell.kind {
+        rules::SPELL_BOLT => launch_missile(ctx, me, spell, ability_id, &m, target_id, aim, range, damage, kit.skill),
+        rules::SPELL_AREA => {
+            let lands = ctx.timestamp + TimeDuration::from_micros(spell.delay_ms * 1000);
+            let id = ctx.db.spell_area().insert(SpellArea { id: 0, world_id: m.world_id, owner: me, ability: ability_id, pos: at,
+                radius: spell.radius_m, damage, skill_id: kit.skill, lands, landed: false }).id;
+            ctx.db.spell_timer().insert(SpellTimer { scheduled_id: 0, scheduled_at: ScheduleAt::Time(lands), entity_id: 0, area_id: id });
+            Ok(())
+        }
+        rules::SPELL_BLINK => {
+            let to = rules::blink_to(m.pos, aim, range).ok_or("aim somewhere")?;
+            log::info!("regents: {me} blinks {range:.0} m");
+            crate::module::place_entity(ctx, me, to, None)
+        }
+        _ => {
+            // A CONE: everything in it (not a player: no harm between players outside a duel) hurt and thrown back.
+            let hit: Vec<(u64, Vector3)> = ctx.db.movement_state().world_id().filter(m.world_id)
+                .filter(|o| o.entity_id != me && ctx.db.player().entity_id().find(o.entity_id).is_none())
+                .filter(|o| rules::in_cone(m.pos, aim, o.pos, range, spell.angle_deg))
+                .map(|o| (o.entity_id, o.pos)).collect();
+            for (id, pos) in hit {
+                if spell_hurt(ctx, me, kit.skill, id, damage, m.world_id) && spell.push_mps > 0.0 {
+                    let (dx, dz) = (pos.x - m.pos.x, pos.z - m.pos.z);
+                    let d = (dx * dx + dz * dz).sqrt().max(0.01);
+                    let _ = crate::module::push_entity(ctx, id, Vector3::new(dx / d * spell.push_mps, 2.0, dz / d * spell.push_mps), me);
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+/// A BOLT FLIES: at the target (the server aims it and rolls the hit, as for an arrow; a miss flies wide),
+/// else where the caster looks. Straight: a missile has no gravity.
+#[allow(clippy::too_many_arguments)]
+fn launch_missile(ctx: &ReducerContext, me: u64, spell: &rules::SpellSeed, ability_id: u32, m: &crate::module::MovementStateRow,
+    target_id: u64, aim: Vector3, range: f32, damage: f32, skill_id: u32) -> Result<(), String> {
+    let from = Vector3::new(m.pos.x, m.pos.y + 1.45, m.pos.z);
+    let target = (target_id != 0).then(|| ctx.db.movement_state().entity_id().find(target_id)).flatten()
+        .filter(|t| t.world_id == m.world_id && t.entity_id != me && rules::flat_dist(t.pos, from) <= range);
+    let to = match target {
+        Some(t) => {
+            let aim_at = Vector3::new(t.pos.x, t.pos.y + 1.1, t.pos.z);
+            let dist = rules::flat_dist(aim_at, from);
+            let moving = (t.vel.x * t.vel.x + t.vel.z * t.vel.z).sqrt() > 1.5;
+            let chance = rules::hit_chance_pct(dist, moving, hot_number(ctx, hot::HIT_NEAR_M) as f32, hot_number(ctx, hot::HIT_FAR_M) as f32,
+                hot_number(ctx, hot::HIT_NEAR_PCT) as f32, hot_number(ctx, hot::HIT_FAR_PCT) as f32, hot_number(ctx, hot::HIT_MOVING_PCT) as f32);
+            let roll = rules::roll_permille((micros(ctx.timestamp) as u64) ^ me.rotate_left(31) ^ t.entity_id.rotate_left(7));
+            let hit = (roll as f32) < chance * 10.0;
+            let lead = dist / spell.speed.max(1.0);
+            log::info!("regents: {me} casts {ability_id} at {} ({:.1} m, {:.0} % to hit): {}", t.entity_id, dist, chance, if hit { "on target" } else { "wide" });
+            if hit { Vector3::new(aim_at.x + t.vel.x * lead, aim_at.y, aim_at.z + t.vel.z * lead) } else { rules::miss_point(from, aim_at, roll, 1.6) }
+        }
+        None => Vector3::new(from.x + aim.x, from.y + aim.y, from.z + aim.z),
+    };
+    let (dx, dy, dz) = (to.x - from.x, to.y - from.y, to.z - from.z);
+    let len = (dx * dx + dy * dy + dz * dz).sqrt();
+    if !len.is_finite() || len < 0.001 {
+        return Err("aim somewhere".into());
+    }
+    let vel = Vector3::new(dx / len * spell.speed, dy / len * spell.speed, dz / len * spell.speed);
+    let start = Vector3::new(from.x + dx / len * 0.6, from.y + dy / len * 0.6, from.z + dz / len * 0.6);
+    let rot = Vector3::new(dy.atan2((dx * dx + dz * dz).sqrt()), (-dx).atan2(-dz), 0.0);
+    let id = crate::module::launch_body_internal(ctx, m.world_id, spell.body as u32, me, 0, start, vel, rot, Vector3::new(0.0, 0.0, 0.0));
+    ctx.db.missile().insert(Missile { entity_id: id, world_id: m.world_id, owner: me, ability: ability_id, damage, skill_id });
+    Ok(())
+}
+
+/// A MISSILE HIT SOMETHING (the referee says): it takes the damage, those near it a splash, and it may
+/// burn. Whatever it hit, the missile is gone.
+fn missile_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
+    let Some(mi) = ctx.db.missile().entity_id().find(body_id) else { return };
+    ctx.db.missile().entity_id().delete(body_id);
+    let spell = rules::spell_of(mi.ability);
+    if other_id != 0 && other_id != mi.owner && spell_hurt(ctx, mi.owner, mi.skill_id, other_id, mi.damage, mi.world_id) {
+        if let Some(s) = spell.filter(|s| s.burn_dps > 0.0 && s.burn_ms > 0) {
+            if ctx.db.health_state().entity_id().find(other_id).is_some_and(|h| !h.is_dead) {
+                let row = Burning { entity_id: other_id, world_id: mi.world_id, dps: s.burn_dps,
+                    until: ctx.timestamp + TimeDuration::from_micros(s.burn_ms * 1000), by: mi.owner, skill_id: mi.skill_id };
+                if ctx.db.burning().entity_id().find(other_id).is_some() {
+                    ctx.db.burning().entity_id().update(row);
+                } else {
+                    ctx.db.burning().insert(row);
+                }
+            }
+        }
+    }
+    if let Some(s) = spell.filter(|s| s.splash_m > 0.0 && s.splash_pct > 0) {
+        let near: Vec<u64> = ctx.db.movement_state().world_id().filter(mi.world_id)
+            .filter(|o| o.entity_id != other_id && o.entity_id != mi.owner && ctx.db.player().entity_id().find(o.entity_id).is_none())
+            .filter(|o| rules::flat_dist(o.pos, pos) <= s.splash_m)
+            .map(|o| o.entity_id).collect();
+        for id in near {
+            spell_hurt(ctx, mi.owner, mi.skill_id, id, mi.damage * s.splash_pct as f32 / 100.0, mi.world_id);
+        }
+    }
+    crate::module::despawn_entity_internal(ctx, body_id);
+}
+
+/// A CIRCLE LANDS: every foe in it (no player) takes its damage and its status (Slowed).
+fn land_area(ctx: &ReducerContext, area_id: u64) {
+    let Some(mut a) = ctx.db.spell_area().id().find(area_id) else { return };
+    let spell = rules::spell_of(a.ability);
+    let inside: Vec<u64> = ctx.db.movement_state().world_id().filter(a.world_id)
+        .filter(|o| ctx.db.player().entity_id().find(o.entity_id).is_none())
+        .filter(|o| rules::flat_dist(o.pos, a.pos) <= a.radius)
+        .map(|o| o.entity_id).collect();
+    for id in inside {
+        if spell_hurt(ctx, a.owner, a.skill_id, id, a.damage, a.world_id) {
+            if let Some(s) = spell.filter(|s| s.status > 0) {
+                if ctx.db.health_state().entity_id().find(id).is_some_and(|h| !h.is_dead) {
+                    if let Err(e) = crate::module::set_status_internal(ctx, id, s.status as u8, s.status_ms.max(1) as u32, a.owner, String::new()) {
+                        log::warn!("regents: frost on {id}, but: {e}");
+                    }
+                }
+            }
+        }
+    }
+    a.landed = true;
+    ctx.db.spell_area().id().update(a);
+}
+
+/// A SPELL HURTS `other_id` by `dmg` (for `owner`, training `skill_id`): a foe or a dummy that can be hit
+/// (a dummy never below 1); its owner's mastery trains on it, and a foe it kills falls. Whether it was hurt.
+fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dmg: f32, world_id: u32) -> bool {
+    let hittable = ctx.db.status_state().entity_id().find(other_id).and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
+    let Some(h) = ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead) else { return false };
+    if !hittable {
+        return false;
+    }
+    let dummy = ctx.db.dummy().entity_id().find(other_id);
+    let mut dmg = dmg;
+    if let Some(mut d) = dummy.clone() {
+        dmg = dmg.min((h.current - 1.0).max(0.0));
+        d.last_hit_at = ctx.timestamp;
+        ctx.db.dummy().entity_id().update(d);
+    }
+    if dmg <= 0.0 {
+        return dummy.is_some();
+    }
+    let _ = crate::module::damage_entity(ctx, other_id, dmg, owner);
+    if dummy.is_none() {
+        hurt_now(ctx, other_id, world_id);
+    }
+    if ctx.db.player().entity_id().find(owner).is_some() {
+        let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
+        add_xp(ctx, owner, skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+    }
+    log::info!("regents: {owner}'s spell hit {other_id} for {dmg:.1}");
+    if ctx.db.health_state().entity_id().find(other_id).is_some_and(|h| h.is_dead) {
+        fell(ctx, other_id, owner);
+    }
+    true
+}
+
+/// Each work tick: what burns takes its fire's damage for the time gone by (its fire out at its time); a
+/// circle that has landed goes a moment after.
+fn tick_spells(ctx: &ReducerContext, dt_s: f32) {
+    for b in ctx.db.burning().iter().collect::<Vec<_>>() {
+        if b.until <= ctx.timestamp || ctx.db.health_state().entity_id().find(b.entity_id).is_none_or(|h| h.is_dead) {
+            ctx.db.burning().entity_id().delete(b.entity_id);
+            continue;
+        }
+        spell_hurt(ctx, b.by, b.skill_id, b.entity_id, b.dps * dt_s, b.world_id);
+    }
+    let gone: Vec<u64> = ctx.db.spell_area().iter()
+        .filter(|a| a.landed && micros(ctx.timestamp) - micros(a.lands) > AREA_LINGER_MICROS).map(|a| a.id).collect();
+    for id in gone {
+        ctx.db.spell_area().id().delete(id);
+    }
+    // A missile that hit nothing outlives its body (the module's lifetime took it): its row goes too.
+    let lost: Vec<u64> = ctx.db.missile().iter().filter(|mi| ctx.db.entity().entity_id().find(mi.entity_id).is_none()).map(|mi| mi.entity_id).collect();
+    for id in lost {
+        ctx.db.missile().entity_id().delete(id);
+    }
+}
+
 /// WIELD the weapon in bag row `item_row` (an axe, a sword): its kit is what you fight with.
 #[reducer]
 pub fn wield(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
@@ -1247,6 +1684,11 @@ pub fn wield(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
     } else {
         ctx.db.wielded().insert(w);
     }
+    // A casting kit's pool (the Staff's mana): yours from now on, kept as it is when you change weapons.
+    if let Some(res) = rules::kit_keyed(it.weapon_kit).map(|k| k.resource).filter(|r| *r != 0) {
+        crate::module::ensure_resource(ctx, me, res)?;
+    }
+    end_cast(ctx, me);
     log::info!("regents: {me} wields a {}", it.name);
     Ok(())
 }
@@ -1258,6 +1700,7 @@ pub fn unwield(ctx: &ReducerContext) -> Result<(), String> {
     crate::module::spend_rate(ctx, me, "wield")?;
     ctx.db.wielded().entity_id().delete(me);
     stop_block(ctx, me);
+    end_cast(ctx, me);
     Ok(())
 }
 
@@ -1360,6 +1803,7 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
 fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     if ability_id == rules::ABILITY_DODGE {
         stop_block(ctx, actor);
+        end_cast(ctx, actor);   // a roll lets a cast go (owner, 2026-10-20)
         // A ROLL CANCELS A SWING (owner, 2026-10-19): in its wind-up it never lands; in its recovery the
         // recovery ends. Either way the fighter is free, and the combo is over.
         if let Some(mut w) = ctx.db.swing().entity_id().find(actor) {
@@ -1543,17 +1987,13 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
             ctx.db.stuck_arrow().id().delete(s.id);
         }
         let Some(seed) = rules::FOES.iter().find(|s| s.id == f.foe_id) else { return };
-        if ctx.db.player().entity_id().find(killer).is_none() {
-            return;
+        // A personal roll of its table for each player who did enough of the damage (DECISIONS #268).
+        let got = crate::module::drop_loot(ctx, entity_id, seed.loot_table);
+        for (who, drops) in &got {
+            let loot: Vec<String> = drops.iter().map(|d| format!("{}:{}", d.item, d.qty)).collect();
+            ctx.db.foe_kill().insert(FoeKill { id: 0, entity_id: *who, world_id: f.world_id, foe_id: seed.id, loot: loot.join(","), at: ctx.timestamp });
         }
-        let salt = (micros(ctx.timestamp) as u64) ^ entity_id.rotate_left(23) ^ killer.rotate_left(47);
-        let got = rules::foe_loot(seed, |i| rules::roll_permille(salt ^ ((i as u64 + 1) << 13)));
-        for (item, qty) in &got {
-            give_items(ctx, killer, *item, *qty, None);
-        }
-        let loot: Vec<String> = got.iter().map(|(i, q)| format!("{i}:{q}")).collect();
-        ctx.db.foe_kill().insert(FoeKill { id: 0, entity_id: killer, world_id: f.world_id, foe_id: seed.id, loot: loot.join(","), at: ctx.timestamp });
-        log::info!("regents: {killer} slew {} ({entity_id}): {:?}", seed.name, got);
+        log::info!("regents: {killer} slew {} ({entity_id}); its loot: {:?}", seed.name, got);
         return;
     }
     if ctx.db.player().entity_id().find(entity_id).is_some() {
@@ -1639,6 +2079,7 @@ fn tick_regen(ctx: &ReducerContext, dt_s: f32) {
         ctx.db.health_state().entity_id().update(h);
         if whole {
             ctx.db.hurt().entity_id().delete(r.entity_id);
+            crate::module::forget_damage(ctx, r.entity_id);   // whole again: who hurt it earns nothing now
         }
     }
 }
@@ -1666,6 +2107,7 @@ fn reset_dummies(ctx: &ReducerContext) {
                 h.current = h.max;
                 h.is_dead = false;
                 ctx.db.health_state().entity_id().update(h);
+                crate::module::forget_damage(ctx, d.entity_id);
             }
         }
     }
@@ -1714,6 +2156,7 @@ impl crate::game::Genre for Regents {
     /// An arrow hit something (the referee saw it).
     fn on_body_contact(&self, ctx: &ReducerContext, body_id: u64, other_id: u64, _speed: f32, pos: Vector3) {
         arrow_hit(ctx, body_id, other_id, pos);
+        missile_hit(ctx, body_id, other_id, pos);
     }
 
     /// A slain player's time is up: up again, whole, at the spawn. (A foe's Slain lasts until it is gone.)

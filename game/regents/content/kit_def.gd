@@ -26,6 +26,10 @@ class_name KitDef extends ContentDef
 ## melee kit (tap, hold, combo).
 @export var draws: bool = false
 @export_range(100, 5000, 10, "suffix:ms") var draw_full_ms: int = 800
+## A CASTING KIT (the Staff, owner 2026-10-20): its abilities are SPELLS (`SpellDef`: the left button its
+## first light, Q-F its skills), paid from this pool (mana; DECISIONS #270), which wielding it gives you.
+## Empty: a kit paced by cooldowns alone (melee, the bow).
+@export var resource: ResourceDef
 ## A tap this soon after the last light hit is the next in the combo; later, the combo starts over.
 @export_range(200, 3000, 10, "suffix:ms") var combo_window_ms: int = 900
 ## How long the left button must be held for the heavy rather than a light.
@@ -72,6 +76,11 @@ func lock_ms(a: AbilityDef) -> int:
 	return maxi(clip_ms, a.wind_up_ms + MIN_RECOVERY_MS)
 
 
+## Whether it casts (the Staff): its abilities are spells, paid from `resource`.
+func casts() -> bool:
+	return resource != null
+
+
 ## Every ability of the kit: the combo, the heavy, the skills.
 func abilities() -> Array[AbilityDef]:
 	var out: Array[AbilityDef] = []
@@ -108,6 +117,7 @@ func to_bake() -> Dictionary:
 		"combo_window_ms": combo_window_ms,
 		"chain_ms": chain_ms,
 		"draw_full_ms": draw_full_ms if draws else 0,
+		"resource": ContentDef.ref(resource) if resource != null else 0,
 		"locks": locks,
 	}
 
@@ -127,6 +137,10 @@ func validate() -> Array[String]:
 	for a: AbilityDef in abilities():
 		if a != null and timing_set != null and not timing_set.has_exact(StringName("ability.%d" % a.id)):
 			out.append("%s has no clip in its timing set (ability.%d): it would play Interact and lock only its wind-up" % [a.display_name, a.id])
+	if resource != null:
+		for a: AbilityDef in light + skills:
+			if a != null and SpellDef.by_ability(a.id) == null:
+				out.append("%s is a casting kit's but no spell's (a SpellDef with it as its ability)" % a.display_name)
 	if skill_ranks.size() < skills.size():
 		out.append("`skill_ranks` needs a rank per skill (%d skills, %d ranks)" % [skills.size(), skill_ranks.size()])
 	return out

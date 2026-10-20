@@ -331,6 +331,21 @@
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
 			"weapon_kit": ""
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_quality_pm": 0,
+			"handle_speed_pct": 100,
+			"id": 40023,
+			"max_stack": 1,
+			"name": "Yew staff",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "staff"
 		}
 	],
 	"owner": "regents",

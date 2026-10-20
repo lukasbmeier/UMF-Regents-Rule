@@ -30,6 +30,10 @@ amendments below override the body where they differ**; the body follows, as the
    genre); pierce is a flag plus a small referee change so the body passes through someone it has hit.
    Quality has no named grades today: it is the 0-1000 number of amendment 1.
 
+**Built** (2026-10-20, PROGRESS steps 9-13): grade bands and Power, loot tables with personal rolls and
+pity, ground items, the Staff with mana, icons from the models. The server-side cast queue is not built
+(the client holds a press through a cast and sends it when it ends).
+
 **Order** (§10 with two additions): grade bands and Power; loot tables with personal rolls (and the
 damage tally per attacker they need: today the killing blow takes everything); ground items (template);
 the Staff with mana and the server-side cast queue; icons alongside.

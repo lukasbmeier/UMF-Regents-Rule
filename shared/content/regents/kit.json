@@ -37,6 +37,7 @@
 				]
 			],
 			"name": "Sword",
+			"resource": 0,
 			"skill": 40006,
 			"skills": [
 				[
@@ -75,6 +76,7 @@
 				]
 			],
 			"name": "Axe",
+			"resource": 0,
 			"skill": 40007,
 			"skills": [
 				[
@@ -100,8 +102,63 @@
 				]
 			],
 			"name": "Bow",
+			"resource": 0,
 			"skill": 40008,
 			"skills": []
+		},
+		{
+			"chain_ms": 60,
+			"combo_window_ms": 900,
+			"draw_full_ms": 0,
+			"heavy": 0,
+			"id": 40004,
+			"key": "staff",
+			"light": [
+				40012
+			],
+			"locks": [
+				[
+					40012,
+					500
+				],
+				[
+					40013,
+					500
+				],
+				[
+					40014,
+					333
+				],
+				[
+					40015,
+					500
+				],
+				[
+					40016,
+					333
+				]
+			],
+			"name": "Staff",
+			"resource": 40001,
+			"skill": 40009,
+			"skills": [
+				[
+					40013,
+					1
+				],
+				[
+					40014,
+					3
+				],
+				[
+					40015,
+					6
+				],
+				[
+					40016,
+					9
+				]
+			]
 		}
 	],
 	"owner": "regents",

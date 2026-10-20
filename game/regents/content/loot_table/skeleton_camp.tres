@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="LootTableDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/loot_table_def.gd" id="1_table"]
+[ext_resource type="Script" path="res://foundation/content/loot_line.gd" id="2_line"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_ore.tres" id="3_copper"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_ore.tres" id="4_iron"]
+[ext_resource type="Resource" path="res://game/regents/content/item/uncut_gem.tres" id="5_gem"]
+
+[sub_resource type="Resource" id="Line_copper"]
+script = ExtResource("2_line")
+item = ExtResource("3_copper")
+chance_pct = 60.0
+qty_min = 1
+qty_max = 2
+
+[sub_resource type="Resource" id="Line_iron"]
+script = ExtResource("2_line")
+item = ExtResource("4_iron")
+chance_pct = 30.0
+
+[sub_resource type="Resource" id="Line_gem"]
+script = ExtResource("2_line")
+item = ExtResource("5_gem")
+chance_pct = 4.0
+pity = true
+
+[resource]
+script = ExtResource("1_table")
+lines = Array[ExtResource("2_line")]([SubResource("Line_copper"), SubResource("Line_iron"), SubResource("Line_gem")])
+id = 40001
+display_name = "Skeleton camp"
+designer_notes = "THE SKELETONS' DROPS (owner, 2026-10-20: loot tables, LOOT_AND_STYLES.md): each line its own chance; the gem is rare, with pity (a player who keeps missing it gets likelier). Placeholder loot until the real tables."

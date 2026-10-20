@@ -292,12 +292,30 @@ assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $SKEL
 assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SKEL" 1)" "106" "Slain: nothing moves, acts or is hit"
 check "$(sql_first "SELECT fell_at FROM foe WHERE entity_id = $SKEL" 1 | grep -qv none && echo true || echo false)" "the camp knows it fell"
 LOOT="$(sql_first "SELECT loot FROM foe_kill WHERE entity_id = $MYENT" 1 | tr -d '"')"
+# It falls on the ground where it fell, yours alone for now (DECISIONS #269): sacks of what you rolled.
+GROUND="$(sql_rows "SELECT item_def_id, qty FROM ground_item WHERE owner_id = $MYENT AND anyone = false" | tr -d ' ' | tr '|' ':' | paste -sd, -)"
+check "$(python -c "
+import collections
+a = collections.Counter({int(i): int(q) for i, q in (p.split(':') for p in '$LOOT'.split(',') if p)})
+b = collections.Counter()
+for p in '$GROUND'.split(','):
+    if p:
+        i, q = p.split(':'); b[int(i)] += int(q)
+print('true' if a == b else 'false')
+")" "its loot ('$LOOT') lies on the ground, yours ('$GROUND')"
+for GID in $(sql_rows "SELECT id FROM ground_item WHERE owner_id = $MYENT" | tr -d ' '); do
+  assert_ok "pick_up $GID" "pick up a sack beside it"
+done
 check "$(python -c "
 import sys
 got = {int(a): int(b) for a, b in (p.split(':') for p in '$LOOT'.split(',') if p)}
 d = {40007: $(QTY 40007) - $C0, 40008: $(QTY 40008) - $I0, 40009: $(QTY 40009) - $G0}
 print('true' if all(d[k] == got.get(k, 0) for k in d) and all(k in d for k in got) else 'false')
-")" "its loot ('$LOOT') is in your bag, and nothing else"
+")" "picked up, its loot ('$LOOT') is in your bag, and nothing else"
+# A personal roll of the camp's table (DECISIONS #268): the chop was all the players' damage, so the roll
+# was yours; the gem's pity keeps your run of misses (0 if it dropped); the tally of who hurt it is gone.
+check "$(sql_first "SELECT rolls_since FROM drop_pity WHERE table_id = 40001 AND line = 2" 1 | grep -qE '^ *[01] *$' && echo true || echo false)" "the gem's pity: your run of misses is kept (0 or 1)"
+assert_eq "$(row_count "SELECT * FROM damage_share WHERE target_id = $SKEL")" "0" "and the tally of who hurt it is forgotten"
 check "$(python -c "print('true' if $(xp_of 40007) > $XP0 else 'false')")" "and axemanship XP for the hit (at the foe's full rate)"
 sleep 1
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" "0" "a second on, its body is gone"
@@ -405,6 +423,96 @@ for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND worl
 done
 spacetime call "$DB" draw_bow false >/dev/null 2>&1   # never leave the section drawn (a walk's bound)
 assert_ok "wield $AXE_ROW" "the axe again"
+
+# --- THE STAFF (owner, 2026-10-20, LOOT_AND_STYLES §4): mana on wielding it; a Bolt; Fireball's cast, splash
+# and burn; a cast let go costs nothing; Frost Ring's slow; Blink; too little mana; Gale's push ---
+xyz() { python -c "
+import re, sys
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
+print(' '.join('%.3f' % x for x in v))
+" "$1"; }
+vec() { printf '{"x":%s,"y":%s,"z":%s}' "$1" "$2" "$3"; }
+newest_body() { sql_rows "SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = $1" | tr -d ' ' | sort -n | tail -1; }
+HP() { sql_first "SELECT current FROM health_state WHERE entity_id = $1" 1; }
+MANA() { sql_first "SELECT stored FROM resource_state WHERE entity_id = $MYENT AND resource_id = 40001" 1; }
+assert_ok "grant_item $MYENT 40023 1" "an admin gives a yew staff"
+STAFF_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40023" 1)"
+assert_ok "wield $STAFF_ROW" "wield it"
+assert_eq "$(MANA)" "100" "wielding it gives you mana, full"
+SK2="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_2'" 1)"
+SK3="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_3'" 1)"
+read -r X2 Y2 Z2 <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $SK2" 1)")"
+read -r X3 Y3 Z3 <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $SK3" 1)")"
+NORTH="$(vec 0.0 0.0 -1.0)"
+NONE="$(vec 0.0 0.0 0.0)"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "stand eight metres south of skeleton_2"
+assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "needs Sorcery rank 3" "Frost Ring needs Sorcery rank 3"
+bow_referee
+H0="$(HP "$SK2")"
+assert_ok "cast_spell 40012 $SK2 $NORTH $NONE" "a Bolt at skeleton_2"
+B1="$(newest_body 40002)"
+check "$( [ -n "$B1" ] && echo true || echo false)" "a bolt flies, flown by the referee ($B1)"
+assert_eq "$(row_count "SELECT * FROM spell_cooldown WHERE entity_id = $MYENT AND ability = 40012")" "1" "the Bolt's own cooldown begun"
+SXP0="$(xp_of 40009)"
+assert_ok "report_body_contacts 0 [{\"body_id\":$B1,\"other_id\":$SK2,\"pos\":$(vec "$X2" 1.0 "$Z2"),\"normal\":$NORTH,\"speed\":30.0}]" "the referee: it hit"
+check "$(python -c "print('true' if abs(($H0 - $(HP "$SK2")) - 9.0) < 1e-3 else 'false')")" "the Bolt's 9 ($H0 -> $(HP "$SK2"))"
+check "$(python -c "print('true' if $(xp_of 40009) > $SXP0 else 'false')")" "Sorcery XP"
+sleep 0.7
+assert_ok 'set_rule "regents.cast_time_pct" 500.0 ""' "(test) casts five times slower, so a CLI can see one going"
+bow_referee
+assert_ok "cast_spell 40013 $SK2 $NORTH $NONE" "Fireball: a 0.6 s cast (3 s at the test's pace)"
+assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "1" "being cast"
+assert_eq "$(MANA)" "100" "not paid until it lands"
+assert_rejected "cast_spell 40012 $SK2 $NORTH $NONE" "already casting" "one cast at a time"
+bow_referee
+sleep 3.0
+assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "landed"
+assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts back to their pace"
+assert_eq "$(MANA)" "75" "and paid: 25 mana"
+F1="$(newest_body 40003)"
+check "$( [ -n "$F1" ] && echo true || echo false)" "a fireball flies ($F1)"
+bow_referee
+H2="$(HP "$SK2")"; H3="$(HP "$SK3")"
+assert_ok "report_body_contacts 0 [{\"body_id\":$F1,\"other_id\":$SK2,\"pos\":$(vec "$X3" 1.0 "$Z3"),\"normal\":$NORTH,\"speed\":20.0}]" "it hits skeleton_2 beside skeleton_3"
+check "$(logged "$MYENT's spell hit $SK2 for 20\.0")" "Fireball's 20 to skeleton_2 (the server's log of the hit)"
+assert_rejected "cast_spell 40013 $SK2 $NORTH $NONE" "not ready" "Fireball again at once: its own 7 s cooldown"
+check "$(python -c "print('true' if abs(($H3 - $(HP "$SK3")) - 8.0) < 1e-3 else 'false')")" "and 40 % (8) to skeleton_3 within 3 m ($H3 -> $(HP "$SK3"))"
+assert_eq "$(sql_first "SELECT dps FROM burning WHERE entity_id = $SK2" 1)" "3" "skeleton_2 burns, 3 a second"
+HB="$(HP "$SK2")"
+sleep 1.3
+check "$(python -c "print('true' if $HB - $(HP "$SK2") >= 2.9 else 'false')")" "and the fire hurts it ($HB -> $(HP "$SK2"))"
+assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 10"
+FROST_AT="$(vec "$X3" "$Y3" "$Z3")"
+assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X2" 0.0 "$(python -c "print($Z2 - 40)")")" "too far" "Frost Ring past its 20 m"
+M0="$(MANA)"
+assert_ok "cast_spell 40014 0 $NORTH $FROST_AT" "Frost Ring on skeleton_3: a 1 s cast"
+assert_ok "cancel_cast" "let go"
+assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "a cast let go: gone"
+assert_eq "$(MANA)" "$M0" "and costs nothing"
+assert_ok "cast_spell 40014 0 $NORTH $FROST_AT" "Frost Ring again"
+sleep 1.15
+assert_eq "$(sql_first "SELECT landed FROM spell_area WHERE owner = $MYENT" 1)" "false" "cast: its circle on the ground, landing in a second"
+assert_ok "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "Blink east"
+read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)")"
+check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight metres east, at once ($BX, $BZ)"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five metres south of skeleton_2"
+assert_ok 'set_rule "regents.mana_cost_pct" 300.0 ""' "(test) spells three times dearer: Gale 105, more than mana holds"
+assert_rejected "cast_spell 40016 0 $NORTH $NONE" "not enough mana" "too little mana: refused, nothing spent"
+assert_ok 'reset_rule "regents.mana_cost_pct"' "(test) costs back"
+sleep 1.0
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SK3" 1)" "108" "it landed: skeleton_3 is Slowed"
+sleep 1.0
+assert_eq "$(row_count "SELECT * FROM spell_area WHERE owner = $MYENT")" "0" "and the circle is gone after its moment"
+sleep 1.0
+H5="$(HP "$SK2")"
+assert_ok "cast_spell 40016 0 $NORTH $NONE" "Gale, the mana back"
+assert_eq "$(row_count "SELECT * FROM push WHERE entity_id = $SK2 AND by_id = $MYENT")" "1" "skeleton_2 is thrown back"
+check "$(logged "$MYENT's spell hit $SK2 for 7\.6")" "and hurt: Gale's 6 at Sorcery 10 (+27 %: 7.6, the server's log)"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
+assert_ok "wield $AXE_ROW" "the axe again"
+assert_eq "$(row_count "SELECT * FROM resource_state WHERE entity_id = $MYENT AND resource_id = 40001")" "1" "your mana stays yours, as it was"
 
 assert_ok "unwield" "put the axe away"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"

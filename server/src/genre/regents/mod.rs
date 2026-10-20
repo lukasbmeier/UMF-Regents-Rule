@@ -243,6 +243,82 @@ pub struct KitSeed {
     pub locks: &'static [(u32, u32)],
     /// A drawn kit (a bow): its full draw, in ms. 0: a melee kit.
     pub draw_full_ms: u32,
+    /// A casting kit (the Staff): its pool's resource id (mana); its abilities are spells. 0: none.
+    pub resource: u32,
+}
+
+/// A SPELL (`SpellDef`, owner 2026-10-20): how a casting kit's ability lands.
+#[derive(Debug)]
+pub struct SpellSeed {
+    pub ability: u32,
+    /// `SPELL_BOLT`, `SPELL_AREA`, `SPELL_BLINK`, `SPELL_CONE`.
+    pub kind: i64,
+    /// Of the kit's pool, paid when it lands.
+    pub cost: f32,
+    pub cast_ms: i64,
+    pub cast_while_moving: bool,
+    /// A bolt's missile (a body).
+    pub body: i64,
+    pub speed: f32,
+    pub splash_m: f32,
+    pub splash_pct: i64,
+    pub burn_dps: f32,
+    pub burn_ms: i64,
+    pub radius_m: f32,
+    pub delay_ms: i64,
+    pub angle_deg: f32,
+    pub push_mps: f32,
+    /// A status for what it hits (Slowed), 0 none; and how long.
+    pub status: i64,
+    pub status_ms: i64,
+}
+
+pub const SPELL_BOLT: i64 = 0;
+pub const SPELL_AREA: i64 = 1;
+pub const SPELL_BLINK: i64 = 2;
+pub const SPELL_CONE: i64 = 3;
+
+/// The spell ability `ability_id` is, if any.
+pub fn spell_of(ability_id: u32) -> Option<&'static SpellSeed> {
+    SPELLS.iter().find(|s| s.ability == ability_id)
+}
+
+/// Whether a cast with this long a cast time may be walked through: the spell says, and the owner's rule
+/// (casts of 0.8 s or more root) holds whatever it says.
+pub fn may_walk_casting(spell: &SpellSeed) -> bool {
+    spell.cast_while_moving && spell.cast_ms < 800
+}
+
+/// Whether `at` is in a cone from `from` facing `dir` (flat), `range` m long and `angle_deg` wide.
+pub fn in_cone(from: crate::sim::Vector3, dir: crate::sim::Vector3, at: crate::sim::Vector3, range: f32, angle_deg: f32) -> bool {
+    let (dx, dz) = (at.x - from.x, at.z - from.z);
+    let d = (dx * dx + dz * dz).sqrt();
+    if d > range {
+        return false;
+    }
+    if d < 0.3 {
+        return true;
+    }
+    let dl = (dir.x * dir.x + dir.z * dir.z).sqrt();
+    if dl < 1e-6 {
+        return false;
+    }
+    let cos = (dx * dir.x + dz * dir.z) / (d * dl);
+    cos >= (angle_deg.to_radians() / 2.0).cos()
+}
+
+/// Where a blink from `from` along `aim` (flat) lands: `range` m on, on the same height.
+pub fn blink_to(from: crate::sim::Vector3, aim: crate::sim::Vector3, range: f32) -> Option<crate::sim::Vector3> {
+    let l = (aim.x * aim.x + aim.z * aim.z).sqrt();
+    if !l.is_finite() || l < 1e-6 {
+        return None;
+    }
+    Some(crate::sim::Vector3::new(from.x + aim.x / l * range, from.y, from.z + aim.z / l * range))
+}
+
+/// Flat distance between two places.
+pub fn flat_dist(a: crate::sim::Vector3, b: crate::sim::Vector3) -> f32 {
+    ((a.x - b.x).powi(2) + (a.z - b.z).powi(2)).sqrt()
 }
 
 impl KitSeed {
@@ -268,8 +344,8 @@ pub struct FoeSeed {
     pub damage_pct: u32,
     /// Mastery XP for hitting it, as a share of the usual (%).
     pub xp_pct: u32,
-    /// What it may drop: (item, from, to, chance %).
-    pub loot: &'static [(u32, u32, u32, u32)],
+    /// What a kill drops: its loot table's content id (`loot::LOOT_TABLES`; 0: nothing).
+    pub loot_table: u32,
 }
 
 /// The entity kinds a foe may be (CLAIMS keeps them for this genre).
@@ -312,22 +388,6 @@ pub fn foe_of_kind(kind: u8) -> Option<&'static FoeSeed> {
     FOES.iter().find(|f| f.kind == kind)
 }
 
-/// A foe's drop, rolled: how many of each item (none when its chance missed), from one roll each,
-/// `roll(i)` giving drop i's number 0..1000 (`roll_permille`, salted by the server).
-pub fn foe_loot(foe: &FoeSeed, roll: impl Fn(usize) -> u32) -> Vec<(u32, u32)> {
-    let mut out = Vec::new();
-    for (i, &(item, from, to, chance)) in foe.loot.iter().enumerate() {
-        let r = roll(i);
-        if r >= chance * 10 {
-            continue;
-        }
-        // The same roll, under the chance, picks how many: evenly from `from` to `to`.
-        let span = to.saturating_sub(from) + 1;
-        let qty = from + (r * span) / (chance * 10).max(1);
-        out.push((item, qty.min(to)));
-    }
-    out
-}
 
 /// OUT OF THE FIGHT, HEALTH COMES BACK (2026-10-20): `pct_per_s` % of `max` a second, over `dt_s`, never
 /// past `max`.

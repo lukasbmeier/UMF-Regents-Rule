@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://foundation/held/held_item.gd" id="1_held"]
+[ext_resource type="Resource" path="res://game/regents/combat/weapons/yew_staff_grip.tres" id="2_grip"]
+[ext_resource type="PackedScene" path="res://game/regents/art/weapons/Wizard_Staff.fbx" id="3_model"]
+[ext_resource type="Texture2D" path="res://game/regents/art/weapons/Wizard_Staff_Texture.png" id="4_tex"]
+
+[sub_resource type="StandardMaterial3D" id="Wood"]
+albedo_texture = ExtResource("4_tex")
+roughness = 0.85
+
+[node name="YewStaff" type="Node3D"]
+script = ExtResource("1_held")
+grip = ExtResource("2_grip")
+
+[node name="Model" parent="." instance=ExtResource("3_model")]
+transform = Transform3D(0.65, 0, 0, 0, -0.65, 0, 0, 0, -0.65, 0, 0, 0)
+
+[node name="Wizard_Staff" parent="Model" index="0"]
+material_override = SubResource("Wood")
+
+[node name="Hold" type="Marker3D" parent="."]
+gizmo_extents = 0.05

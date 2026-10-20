@@ -42,6 +42,11 @@ var _bag_weapon_row: int = -2
 
 
 func _ready() -> void:
+	# What lies on the ground is called and graded as in the bag (DECISIONS #269).
+	GroundItems.name_of = ground_name
+	GroundItems.grade_of = ground_grade
+	# Spells in the world: a Frost Ring's circle, what burns (owner, 2026-10-20: the Staff).
+	add_child(SpellLooks.new())
 	_layer = CanvasLayer.new()
 	_layer.layer = 6
 	add_child(_layer)
@@ -177,6 +182,24 @@ func _find_player() -> void:
 
 
 ## The name of an item, or its number.
+## What lies on the ground is called (`GroundItems.name_of`): its graded name.
+static func ground_name(item_id: int, _qty: int, data: String) -> String:
+	var it: ItemDef = ItemDef.by_id(item_id)
+	return RegentsGrade.item_name(it, RegentsGrade.quality_of(data)) if it != null else item_name(item_id)
+
+
+## Its grade (`GroundItems.grade_of`).
+static func ground_grade(_item_id: int, data: String) -> int:
+	return RegentsGrade.of_quality(RegentsGrade.quality_of(data))
+
+
+## The game is going: the ground's hooks let go of this HUD's (a static Callable left behind a freed
+## script instance crashed the engine on its way out).
+func _exit_tree() -> void:
+	GroundItems.name_of = Callable()
+	GroundItems.grade_of = Callable()
+
+
 static func item_name(item_id: int) -> String:
 	var it: ItemDef = ItemDef.by_id(item_id)
 	return it.display_name if it != null else "item %d" % item_id
@@ -346,8 +369,8 @@ func _update_combat() -> void:
 		_target_bar.max_value = h.get_max()
 		_target_bar.value = h.get_current()
 	_skillbar.text = skill_bar(combat, skilling)
-	_draw_bar.visible = combat.drawing()
-	_draw_bar.value = combat.draw_progress()
+	_draw_bar.visible = combat.drawing() or combat.casting()
+	_draw_bar.value = combat.draw_progress() if combat.drawing() else combat.cast_progress()
 	if bag_window.is_open() and combat.weapon_row != _bag_weapon_row:
 		_bag_weapon_row = combat.weapon_row
 		bag_window.refresh()
@@ -359,6 +382,17 @@ static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
 		return "No weapon wielded:  I  opens the bag"
 	var keys: PackedStringArray = PackedStringArray(["Q", "E", "R", "F"])
 	var parts: PackedStringArray = PackedStringArray()
+	if c.kit.casts():
+		var p: ResourceComponent = c.pool()
+		var mana: String = "%d/%d %s" % [roundi(p.level(c.kit.resource.id)), roundi(p.max_of(c.kit.resource.id)), c.kit.resource.display_name.to_lower()] if p != null else "?"
+		parts.append("%s:  LMB %s   Ctrl roll   Tab target   |   %s" % [c.weapon.display_name if c.weapon != null else "?", c.kit.light[0].display_name, mana])
+		var r: int = sk.rank_in(c.kit.skill) if sk != null else 1
+		for i: int in mini(4, c.kit.skills.size()):
+			var a: AbilityDef = c.kit.skills[i]
+			var sp: SpellDef = SpellDef.by_ability(a.id)
+			var note: String = " (rank %d)" % c.kit.rank_for(i) if r < c.kit.rank_for(i) else (" %.0fs" % ceilf(c.spell_cooldown_sec(a)) if c.spell_cooldown_sec(a) > 0.0 else "")
+			parts.append("%s %s %d%s" % [keys[i], a.display_name, roundi(sp.cost) if sp != null else 0, note])
+		return "   |   ".join(parts) + ("" if c.in_stance() else "   (spells in stance)")
 	if c.kit.draws:
 		var line: String = "%s:  hold LMB draw, let go loose   RMB let go   Ctrl roll   Tab target   |   %d arrows" % [
 			c.weapon.display_name if c.weapon != null else "?", c.ammo_count()]

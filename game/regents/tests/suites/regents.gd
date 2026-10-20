@@ -85,7 +85,81 @@ func _run_combat() -> void:
 	_run_swing_timeline()
 	_run_foes()
 	_run_bow()
+	_run_staff()
 	await _run_grades()
+
+
+## THE STAFF (owner, 2026-10-20, LOOT_AND_STYLES §4): its content holds together, and the client's casting.
+func _run_staff() -> void:
+	print("== regents: the staff ==")
+	var staff: KitDef = KitDef.by_key(&"staff")
+	_check(staff != null and staff.casts() and staff.resource.key == &"mana" and staff.validate().is_empty(),
+		"the staff kit casts from mana, and is sound: %s" % (str(staff.validate()) if staff != null else "none"))
+	var names: PackedStringArray = PackedStringArray()
+	for a: AbilityDef in staff.light + staff.skills:
+		var sp: SpellDef = SpellDef.by_ability(a.id)
+		names.append("%s %s" % [a.display_name, ["bolt", "area", "blink", "cone"][sp.kind] if sp != null else "NONE"])
+	_check(" / ".join(names) == "Bolt bolt / Fireball bolt / Frost Ring area / Blink blink / Gale cone", "its spells: %s" % " / ".join(names))
+	var aset: AnimationSet = staff.timing_set
+	for a: AbilityDef in staff.light + staff.skills:
+		_check(aset.has_exact(StringName("ability.%d" % a.id)) and staff.lock_ms(a) > 0, "%s has its clip (%s)" % [a.display_name, aset.clip(StringName("ability.%d" % a.id)).anim_name])
+	_check(aset.has_exact(&"pose.spell_cast") and aset.has_exact(&"pose.spell_channel"), "and the casting poses")
+	var slowed: StatusDef = load("res://game/regents/content/status/slowed.tres") as StatusDef
+	_check(slowed.status == 108 and is_equal_approx(slowed.speed, 0.6) and not slowed.can_sprint, "Slowed: 40 %% slower, no sprint")
+	var yew_staff: ItemDef = ItemDef.by_id(40023)
+	var held: HeldItem = yew_staff.held_scene.instantiate() as HeldItem
+	_check(yew_staff.weapon_kit == &"staff" and held != null and held.grip.hand == &"hand_r" and RecipeDef.by_id(40014).output == yew_staff,
+		"a yew staff: the staff kit, held in the right hand, made at the workbench")
+	held.free()
+	for b: String in ["bolt", "fireball"]:
+		var body: BodyDef = load("res://game/regents/content/body/%s.tres" % b) as BodyDef
+		_check(body.gravity_scale == 0.0 and body.launched_by.is_empty() and body.lifetime_s > 0.0, "the %s flies straight, never thrown by hand, gone in time" % b)
+	# The client casting, offline.
+	var c := CombatComponent.new()
+	c.kit = staff
+	var mana := ResourceComponent.new()
+	c.pool_for_tests = mana
+	var sent: Array = []
+	c.cast_sent.connect(func(id: int, t: int, _aim: Vector3, _at: Vector3) -> void: sent.append([id, t]))
+	var said: Array[String] = []
+	c.refused.connect(func(why: String) -> void: said.append(why))
+	var bolt: AbilityDef = staff.light[0]
+	_check(c.cast(bolt) and sent == [[40012, 0]] and not c.casting() and c.spell_cooldown_sec(bolt) > 0.0,
+		"a Bolt: sent at once (no target: where you look), free, on its own cooldown")
+	_check(not c.may_cast(Time.get_ticks_msec()), "its clip holds you: a press now is queued, as a swing's")
+	var fireball: AbilityDef = staff.skills[0]
+	_check(c.cast(fireball) and sent.size() == 1 and said.size() == 1 and said[0].contains("Not enough mana"), "no mana: Fireball refused here (%s)" % str(said))
+	mana._apply(_pool_row(40001, 100.0))
+	c.swing_lock_ms = 0
+	_check(c.cast(fireball) and sent.size() == 2 and c.casting() and c.cast_progress() < 0.2, "with mana: Fireball cast, its 0.6 s bar begun")
+	_check(c.spell_cooldown_sec(fireball) > 6.0 and c.spell_cooldown_sec(bolt) > 0.0, "each on its own cooldown (Fireball %.1f s): no global one" % c.spell_cooldown_sec(fireball))
+	c._tick_cast(Time.get_ticks_msec() + 700)
+	_check(not c.casting(), "at its end it lands (the bar goes)")
+	_check(c.cast(fireball) and said.back().contains("ready in"), "again at once: its cooldown says when (%s)" % said.back())
+	c.free()
+	mana.free()
+	# What spells look like: a circle filling until it lands.
+	var looks := SpellLooks.new()
+	add_child(looks)
+	looks.show_area(5, Vector3(1, 0, 1), 4.0, ClockSync.server_usec() + 1_000_000, false)
+	_check(looks.area_fill(5) < 0.1 and looks.get_node_or_null(^"Area_5") != null, "a Frost Ring's circle, just cast: nearly empty")
+	looks.forget_area(5)
+	_check(looks.area_fill(5) == 0.0, "gone with its row")
+	looks.queue_free()
+
+
+class PoolRow extends RefCounted:
+	var resource_id: int
+	var stored: float
+	var at: int
+
+
+func _pool_row(id: int, stored: float) -> PoolRow:
+	var r := PoolRow.new()
+	r.resource_id = id
+	r.stored = stored
+	r.at = ClockSync.server_usec()
+	return r
 
 
 ## GRADES AND POWER (owner, 2026-10-20, LOOT_AND_STYLES.md): quality bands, graded names, Power from tier
@@ -119,6 +193,10 @@ func _run_grades() -> void:
 	var said: PackedStringArray = PackedStringArray(close.validate())
 	_check(said.size() > 0 and "; ".join(said).contains("reaches Iron axe at its worst (Power 100): tier must dominate"),
 		"a bronze axe at 90 %% would reach the iron axe: its check says so (%s)" % "; ".join(said))
+	# Icons drawn from the models (template #271, tools/render_icons.tscn): the bow's, the arrows' (their
+	# world model); logs have no model and keep their initials.
+	_check(ItemDef.by_id(40020).icon() != null and ItemDef.by_id(40022).icon() != null and ItemDef.by_id(40002).icon() == null,
+		"the yew bow and the arrows have drawn icons; logs (no model) none")
 	# The bag: graded edges, the graded name, Power against the weapon wielded.
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -200,8 +278,9 @@ func _run_foes() -> void:
 	_check(FoeDef.by_kind(103) != null and FoeDef.by_kind(103).kit.key == &"sword" and FoeDef.by_kind(104).kit.key == &"axe",
 		"the warrior fights with the sword kit, the axeman with the axe kit (the weapons their models carry)")
 	var bad := FoeDef.new()
-	bad.loot.append(null)
-	_check(bad.validate().size() >= 3, "a foe with no key, character, kit or whole loot is refused: %s" % str(bad.validate()))
+	_check(bad.validate().size() >= 3, "a foe with no key, character or kit is refused: %s" % str(bad.validate()))
+	_check(FoeDef.by_kind(103).loot_table != null and FoeDef.by_kind(103).loot_table.id == 40001 and FoeDef.by_kind(103).loot_table.lines[2].pity,
+		"its loot is the skeleton camp's table, the gem with pity")
 
 
 func _run_swing_timeline() -> void:
@@ -272,7 +351,7 @@ func _run_foe_bench() -> void:
 		"versus: every weapon, fastest first (%s %.1f s ... %s %.1f s)" % [rows[0]["weapon"], float(rows[0]["seconds"]), rows[rows.size() - 1]["weapon"], float(rows[rows.size() - 1]["seconds"])])
 	await bench.run_named_test(&"loot")
 	_check(is_equal_approx(float(bench.last_measure.get("Copper ore", 0.0)), 0.6 * 1.5) and is_equal_approx(float(bench.last_measure.get("Uncut gem", 0.0)), 0.04),
-		"loot: 0.9 copper ore a kill (60 %% of 1-2), 0.04 gems")
+		"loot: 0.9 copper ore a kill (60 %% of 1-2), 0.04 gems (its loot table's)")
 	_check(bench.fit_checks().is_empty(), "the warrior fits: %s" % str(bench.fit_checks()))
 	var brute := FoeDef.new()
 	brute.kit = warrior.kit
@@ -351,8 +430,8 @@ func _run_content() -> void:
 	var keys: Array[StringName] = []
 	for sk: SkillDef in SkillDef.all():
 		keys.append(sk.key)
-	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery"],
-		"five working skills and three weapon masteries: %s" % str(keys))
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery"],
+		"five working skills and four weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
 	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
 		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
@@ -387,8 +466,8 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 8 and RecipeDef.at(&"orders").is_empty(),
-		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), eight at the workbench (three handles, the axe, the sword, the yew bow, arrow shafts, copper arrows), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 9 and RecipeDef.at(&"orders").is_empty(),
+		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), nine at the workbench (three handles, the axe, the sword, the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
 	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")

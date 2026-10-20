@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/blink.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 2
+cost = 20.0
+cast_ms = 0
+id = 40004
+display_name = "Blink"
+designer_notes = "R, Sorcery rank 6: 8 m the way you look, at once, onto ground you can stand on."

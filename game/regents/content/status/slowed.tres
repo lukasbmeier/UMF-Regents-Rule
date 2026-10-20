@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 108
+speed = 0.6
+can_sprint = false
+color = Color(0.55, 0.8, 1, 1)
+id = 40009
+display_name = "Slowed"
+designer_notes = "FROST (owner, 2026-10-20: Frost Ring, LOOT_AND_STYLES §4): 40 % slower and no sprint, for as long as the spell says (3 s)."

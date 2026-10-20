@@ -3,7 +3,8 @@ class_name FoeDef extends ContentDef
 ## A FOE (owner, 2026-10-19: the first enemies are skeletons from the Bestiary pack): a monster placed on a
 ## level's points of kind `key`, that notices a player within `notice_m`, chases, fights with its `kit`
 ## (the same swings, timing, blocks and flinches as a player's), and gives up past `leash_m` from home.
-## Slain, it pays its killer mastery XP and a roll of its loot, lies there `regents.foe_corpse_s` and
+## Slain, it pays mastery XP and a roll of its `loot_table` to each player who did enough of the damage (a
+## personal roll, DECISIONS #268), lies there `regents.foe_corpse_s` and
 ## comes back `regents.foe_respawn_s` after it fell. The server keeps the numbers that decide outcomes
 ## (baked: health, damage, XP, loot); its brain (`sidecar/npc/brains/regents/foe.gd`) reads the rest here.
 
@@ -33,11 +34,8 @@ class_name FoeDef extends ContentDef
 @export_range(0, 5000, 50, "suffix:ms") var rest_ms: int = 900
 
 @export_group("Loot")
-## What it may drop, and for each: how many (from, to) and the chance in %. One number per item.
-@export var loot: Array[ItemDef] = []
-@export var loot_min: PackedInt32Array = PackedInt32Array()
-@export var loot_max: PackedInt32Array = PackedInt32Array()
-@export var loot_chance_pct: PackedInt32Array = PackedInt32Array()
+## What a kill drops (a loot table: each line its chance, shared tables, pity). Empty: nothing.
+@export var loot_table: LootTableDef
 
 static var _all: Array[FoeDef] = []
 
@@ -47,13 +45,10 @@ func content_type() -> StringName:
 
 
 func summary() -> String:
-	return "%s: %d hp, %s at %d%%, %d drops" % [key, hp, kit.key if kit != null else "?", damage_pct, loot.size()]
+	return "%s: %d hp, %s at %d%%, drops %s" % [key, hp, kit.key if kit != null else "?", damage_pct, loot_table.display_name if loot_table != null else "nothing"]
 
 
 func to_bake() -> Dictionary:
-	var drops: Array = []
-	for i: int in loot.size():
-		drops.append([ContentDef.ref(loot[i]), _at(loot_min, i, 1), _at(loot_max, i, 1), _at(loot_chance_pct, i, 100)])
 	return {
 		"id": id,
 		"name": display_name,
@@ -63,7 +58,7 @@ func to_bake() -> Dictionary:
 		"hp": hp,
 		"damage_pct": damage_pct,
 		"xp_pct": xp_pct,
-		"loot": drops,
+		"loot_table": ContentDef.ref(loot_table),
 	}
 
 
@@ -75,20 +70,7 @@ func validate() -> Array[String]:
 		out.append("its character must be a genre kind (100 or more)")
 	if kit == null:
 		out.append("it fights with no kit: set `kit`")
-	if loot.has(null):
-		out.append("its loot has an empty slot")
-	for arr: PackedInt32Array in [loot_min, loot_max, loot_chance_pct]:
-		if arr.size() != loot.size():
-			out.append("its loot needs a from, a to and a chance for every item (%d items)" % loot.size())
-			break
-	for i: int in loot.size():
-		if _at(loot_min, i, 1) > _at(loot_max, i, 1) or _at(loot_chance_pct, i, 100) <= 0:
-			out.append("drop %d: from more than to, or no chance" % i)
 	return out
-
-
-static func _at(arr: PackedInt32Array, i: int, default: int) -> int:
-	return arr[i] if i < arr.size() else default
 
 
 ## The foe that is entity kind `kind`, or null.

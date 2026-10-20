@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ResourceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/resource_def.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+key = &"mana"
+max_amount = 100.0
+regen_out_per_s = 10.0
+regen_in_per_s = 4.0
+combat_s = 5.0
+color = Color(0.35, 0.55, 1, 1)
+id = 40001
+display_name = "Mana"
+designer_notes = "THE STAFF'S POOL (owner, 2026-10-20: mana on the Staff only, LOOT_AND_STYLES amendment 3). 100, filling 10 a second out of a fight and 4 in one (the design's numbers), a fight being 5 s after the last spell."

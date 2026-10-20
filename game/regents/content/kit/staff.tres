@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="KitDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/sorcery.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/resource/mana.tres" id="3_mana"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/staff_bolt.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/fireball.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/frost_ring.tres" id="a2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/blink.tres" id="a3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/gale.tres" id="a4"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"staff"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0")])
+skills = Array[Resource]([ExtResource("a1"), ExtResource("a2"), ExtResource("a3"), ExtResource("a4")])
+resource = ExtResource("3_mana")
+id = 40004
+display_name = "Staff"
+designer_notes = "THE STAFF (owner, 2026-10-20, LOOT_AND_STYLES §4): a caster. LMB Bolt; Q Fireball, E Frost Ring, R Blink, F Gale at Sorcery 1/3/6/9. Mana is its pool (and only its). Its spells are content/spell/."

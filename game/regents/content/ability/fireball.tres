@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 7000
+range_m = 30.0
+wind_up_ms = 100
+damage = 20.0
+animation = &"ability.40013"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40013
+display_name = "Fireball"
+designer_notes = "THE STAFF (owner, 2026-10-20): a spell's damage, cooldown (its own: no global cooldown) and range. How it lands is its SpellDef (content/spell/)."

@@ -11,6 +11,26 @@
 			"max_spin_rps": 5.0,
 			"name": "Arrow",
 			"reach_m": 2.5
+		},
+		{
+			"id": 40002,
+			"launchers": [],
+			"lifetime_s": 3.0,
+			"max_per_owner": 12,
+			"max_speed_mps": 60.0,
+			"max_spin_rps": 1.0,
+			"name": "Bolt",
+			"reach_m": 2.5
+		},
+		{
+			"id": 40003,
+			"launchers": [],
+			"lifetime_s": 3.0,
+			"max_per_owner": 12,
+			"max_speed_mps": 60.0,
+			"max_spin_rps": 1.0,
+			"name": "Fireball",
+			"reach_m": 2.5
 		}
 	],
 	"owner": "regents",

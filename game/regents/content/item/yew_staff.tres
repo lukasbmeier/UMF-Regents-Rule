@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/yew_staff.tscn" id="2_held"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1
+weapon_kit = &"staff"
+weapon_damage_pct = 100
+held_scene = ExtResource("2_held")
+color = Color(0.5, 0.55, 0.95, 1)
+id = 40023
+display_name = "Yew staff"
+designer_notes = "THE STAFF (owner, 2026-10-20): the caster's weapon, made at the workbench from a yew log and an uncut gem. Placeholder grip: fix it in yew_staff_grip_preview.tscn."

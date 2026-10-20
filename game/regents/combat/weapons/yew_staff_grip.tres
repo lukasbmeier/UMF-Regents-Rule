@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemGrip" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/held/grip_entry.gd" id="1_entry"]
+[ext_resource type="Script" path="res://foundation/held/item_grip.gd" id="2_grip"]
+
+[sub_resource type="Resource" id="Grip_idle"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+position = Vector3(0, 0.08, 0.02)
+rotation_degrees = Vector3(0, 0, 0)
+
+[resource]
+script = ExtResource("2_grip")
+hand = &"hand_r"
+entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle")])
+universal = true

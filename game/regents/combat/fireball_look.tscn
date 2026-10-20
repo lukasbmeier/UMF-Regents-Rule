@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="SphereMesh" id="Mesh"]
+radius = 0.18
+height = 0.36
+radial_segments = 16
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="Glow"]
+shading_mode = 0
+albedo_color = Color(1.0, 0.5, 0.15, 1)
+emission_enabled = true
+emission = Color(1.0, 0.5, 0.15, 1)
+emission_energy_multiplier = 3.0
+
+[node name="FireballLook" type="Node3D"]
+
+[node name="Core" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh")
+surface_material_override/0 = SubResource("Glow")
+cast_shadow = 0
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(1.0, 0.5, 0.15, 1)
+light_energy = 2.0
+omni_range = 3.0

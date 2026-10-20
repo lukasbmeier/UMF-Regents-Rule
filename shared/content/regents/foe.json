@@ -9,26 +9,7 @@
 			"key": "skeleton_warrior",
 			"kind": 103,
 			"kit": "sword",
-			"loot": [
-				[
-					40007,
-					1,
-					2,
-					60
-				],
-				[
-					40008,
-					1,
-					1,
-					30
-				],
-				[
-					40009,
-					1,
-					1,
-					4
-				]
-			],
+			"loot_table": 40001,
 			"name": "Skeleton warrior",
 			"xp_pct": 100
 		},
@@ -39,26 +20,7 @@
 			"key": "skeleton_axeman",
 			"kind": 104,
 			"kit": "axe",
-			"loot": [
-				[
-					40007,
-					1,
-					2,
-					60
-				],
-				[
-					40008,
-					1,
-					1,
-					30
-				],
-				[
-					40009,
-					1,
-					1,
-					4
-				]
-			],
+			"loot_table": 40001,
 			"name": "Skeleton axeman",
 			"xp_pct": 100
 		}

@@ -191,6 +191,25 @@ script = ExtResource("1_qscmp")
 anim_name = &"extra/Bow_Aim_Neutral"
 loop = true
 
+[sub_resource type="Resource" id="Clip_spell_shoot"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Simple_Shoot"
+
+[sub_resource type="Resource" id="Clip_spell_double"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Double_Shoot"
+speed_scale = 0.8
+
+[sub_resource type="Resource" id="Clip_spell_cast"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Simple_Idle"
+loop = true
+
+[sub_resource type="Resource" id="Clip_spell_channel"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Double_Idle"
+loop = true
+
 [resource]
 script = ExtResource("4_hpq5n")
 libraries = Dictionary[StringName, AnimationLibrary]({
@@ -213,6 +232,13 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"ability.40011": SubResource("Clip_bow_loose"),
 &"pose.bow_draw": SubResource("Clip_bow_draw"),
 &"pose.bow_aim": SubResource("Clip_bow_aim"),
+&"ability.40012": SubResource("Clip_spell_shoot"),
+&"ability.40013": SubResource("Clip_spell_shoot"),
+&"ability.40014": SubResource("Clip_spell_double"),
+&"ability.40015": SubResource("Clip_spell_shoot"),
+&"ability.40016": SubResource("Clip_spell_double"),
+&"pose.spell_cast": SubResource("Clip_spell_cast"),
+&"pose.spell_channel": SubResource("Clip_spell_channel"),
 &"interact": SubResource("Resource_lhmxf"),
 &"item.draw": SubResource("Resource_k8ku3"),
 &"item.stow": SubResource("Resource_5hufo"),

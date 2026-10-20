@@ -43,6 +43,7 @@ func refresh() -> void:
 		var s := UiSlot.new()
 		s.name = "Slot_%d" % st.id
 		s.tint = it.color if it != null else Color(0, 0, 0, 0)
+		s.picture = it.icon() if it != null else null
 		s.mark = UiSlot.initials(RegentsHud.item_name(st.item_def_id))
 		s.count = st.qty
 		s.grade = RegentsGrade.of_quality(RegentsGrade.quality_of(st.instance_data))
@@ -96,12 +97,23 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 		_detail.add_child(UiKit.note("A weapon: the %s kit. %s" % [it.weapon_kit, ", ".join(moves)]))
 	if it.part_tag != &"" and not it.handle_trait().is_empty():
 		_detail.add_child(UiKit.note("A %s: %s on what it is made into." % [it.part_tag, it.handle_trait()]))
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override(&"separation", 8)
+	_detail.add_child(buttons)
+	var row: int = st.id
 	if it.weapon_kit != &"" and combat != null:
 		var held: bool = combat.weapon_row == st.id
 		var b := UiKit.button("Put away" if held else "Wield", "Wield_%d" % st.id)
-		var row: int = st.id
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(func() -> void: combat.wield(-1 if held else row))
-		_detail.add_child(b)
+		buttons.add_child(b)
+	# DROP it at your feet (DECISIONS #269): yours a minute, then anyone's. Not what you wield.
+	if combat == null or combat.weapon_row != st.id:
+		var d := UiKit.button("Drop" if st.qty <= 1 else "Drop all %d" % st.qty, "Drop_%d" % st.id)
+		d.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var qty: int = st.qty
+		d.pressed.connect(func() -> void: inventory.request_drop(row, qty))
+		buttons.add_child(d)
 
 
 ## Its name with its grade ("Fine iron axe").

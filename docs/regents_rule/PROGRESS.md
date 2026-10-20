@@ -400,3 +400,78 @@ Code: `content/item_grade.gd` (`RegentsGrade`), the bag window, the HUD's notice
 suite (bands, names, Power against the server's damage rule, tier dominance and a bronze axe at 90 %
 caught, the bag window's slots, name colour and Power lines); negative: Power ignoring quality and the
 bag ignoring grades fail six checks.
+
+## Step 10: loot tables and personal rolls (owner, 2026-10-20, `LOOT_AND_STYLES.md` order item 2)
+
+Loot is now foundation content (template DECISIONS #268), so every game gets it.
+- **A loot table** (`content/loot_table/`, a `LootTableDef`) is lines; a line is an item or another table,
+  with a chance and a from..to count. **Each** tables roll every line on its own (adding a line changes no
+  other's odds); **one-of** tables pick one line by the shares you type (10 / 20 / 30 / 40), the rest is
+  nothing, past 100 refused. A line can be marked **pity**: a player who keeps missing it gets likelier
+  each kill (doubled after its usual run of kills, certain at five times it; `foundation.loot_pity_ramp_x`
+  and `_cap_x`). The Content Dock shows what one roll gives on average.
+- **Personal rolls**: every player who did at least `foundation.loot_share_min_pct` (5 %) of the recent
+  damage (hits within `foundation.loot_share_forget_s`, 60 s) gets their own roll, with their own pity. A
+  foe that heals whole forgets who hurt it.
+- **The skeletons** drop from one shared table, **Skeleton camp** (copper ore 60 %, iron ore 30 %, an uncut
+  gem 4 % with pity). FoeDef's old loot lists are gone; the foe bench reads the table.
+
+## Step 11: items on the ground (order item 3)
+
+Template DECISIONS #269. A kill's drops fall where it died as **sacks**, a ring under each glowing in its
+grade's colour and its name above. Each is **yours alone for a minute** (nobody else is even sent it),
+then **anyone's for a minute**, then gone (`foundation.ground_owner_s`, `ground_public_s`). **Walk over a
+sack to pick it up.** The bag has a **Drop** button (not on what you wield): yours a minute, then anyone's:
+a way to hand a friend something. Lines marked `to_bag` (none yet; currency later) skip the ground.
+
+## Step 12: the Staff (order item 4)
+
+Your design (§4-5), on a generic resource (template DECISIONS #270: `ResourceDef`, `ResourceComponent`).
+- **Mana, the Staff's only**: 100, filling 10 a second out of a fight and 4 in one (a fight: 5 s after
+  the last spell). Wielding a staff gives it; changing weapons keeps it as it is.
+- **LMB: Bolt** (9, no mana): at your Tab target the server aims it and rolls the hit like the bow's (ranged
+  can miss); with none it flies where you look. A real missile the referee flies.
+- **Q: Fireball** (Sorcery 1, 25 mana, 7 s): a 0.6 s cast you can walk through; 20 to what it hits, 40 %
+  to anything within 3 m, and it burns (3 a second for 3 s).
+- **E: Frost Ring** (Sorcery 3, 30 mana, 14 s): a 1 s cast that roots you (moving or rolling lets it go,
+  nothing paid); a 4 m circle where the crosshair meets the ground (within 20 m), filling on the ground,
+  landing a second later: 6 and Slowed (40 % slower, no sprint) for 3 s.
+- **R: Blink** (Sorcery 6, 20 mana, 15 s): 8 m the way you look, at once, onto ground you can stand on.
+- **F: Gale** (Sorcery 9, 35 mana, 20 s): everything within 8 m and 45° of your look takes 6 and is thrown
+  back.
+- **No global cooldown**: each spell its own. A press during a cast or a clip is held and fires the
+  moment it ends (as a swing's). Mana is paid when a spell lands. The HUD shows mana, each spell's cost and
+  cooldown, and a cast bar.
+- Every spell is content (`content/spell/`, a `SpellDef`: one of four kinds, bolt, area, blink or cone,
+  with its cost, cast time, missile, splash, burn, radius, delay, cone and status), so a new spell of a kind
+  is a new file. `regents.mana_cost_pct` scales every cost live.
+- **Getting one**: the workbench makes a **yew staff** from a yew log and an uncut gem (a skeleton's rare
+  drop), or an admin grant (item 40023). To try the higher spells now: `grant_xp <your entity> 40009 5000`
+  (admin) puts Sorcery at 9.
+- **Its grip is a placeholder**: held fine at your side, tilted in the casting pose
+  (`combat/weapons/yew_staff_grip_preview.tscn`, `pose.spell_cast`).
+
+Proven: native tests (the staff's content, a long cast roots, the cone and the blink); the regents suite
+(the content, the client's casting: a free instant Bolt, Fireball refused without mana, cast with it, each
+spell on its own cooldown, the bar landing, a cooldown refused; the ground ring filling); the integration
+(mana on wielding; a Bolt for 9 and Sorcery XP; its cooldown; Fireball not paid until it lands, one cast at
+a time, 25 paid, 20 and 8 splash, the burn; Frost Ring too far, a cast let go costing nothing, its circle
+landing a second later and Slowed; Blink 8 m; too little mana refused; Gale's push and its damage at
+Sorcery 9). Negative: the client ignoring a cooldown fails its check.
+
+Left for later: the server-side cast queue (today the client holds a press and sends it when the cast
+ends; the server queuing it would hide the round trip), others seeing your release animation (they see
+your cast pose and the missile), reagents, the spellbook and utility spells, summons.
+
+## Step 13: icons from the models (order item 5)
+
+Template DECISIONS #271. An item's bag picture is drawn from its 3D model (its held scene, or its
+`world_model`: the arrows'), along the diagonal, lit, on a transparent square: the axes, the sword, the bow,
+the staff, the pickaxe and the arrows have theirs (`game/regents/icons/`). Materials without a model
+(logs, ore, bars, the gem) keep their initials until they have a model or a hand-drawn `icon_picture`.
+**After changing or adding an item with a model**, draw them again: `godot --path . res://tools/render_icons.tscn`
+in a window, then `godot --headless --path . --import`.
+
+**The design doc's slice order (§10) is done**: grades and Power, loot tables, ground items, the Staff,
+icons. Next in its list: trait atoms and the v1 trait pools (with handle traits' downsides), meta
+telemetry, salvage and components, reagents, the teleport spell, the Pareto check, enchanting, summons.

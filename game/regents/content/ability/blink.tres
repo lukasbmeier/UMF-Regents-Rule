@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 15000
+range_m = 8.0
+wind_up_ms = 100
+damage = 0.0
+animation = &"ability.40015"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40015
+display_name = "Blink"
+designer_notes = "THE STAFF (owner, 2026-10-20): a spell's damage, cooldown (its own: no global cooldown) and range. How it lands is its SpellDef (content/spell/)."

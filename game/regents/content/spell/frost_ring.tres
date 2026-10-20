@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/frost_ring.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="3_status"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 1
+cost = 30.0
+cast_ms = 1000
+cast_while_moving = false
+radius_m = 4.0
+delay_ms = 1000
+status = ExtResource("3_status")
+status_ms = 3000
+id = 40003
+display_name = "Frost Ring"
+designer_notes = "E, Sorcery rank 3: a 4 m ring where you aim (20 m), landing a second later: Slowed 40 % for 3 s. A 1 s cast that roots you (moving or rolling lets it go)."

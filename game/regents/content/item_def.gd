@@ -42,6 +42,10 @@ class_name ItemDef extends ContentDef
 @export_group("How it shows")
 ## What a tool looks like in the hand while it works (a `HeldItem` scene), if it is a tool.
 @export var held_scene: PackedScene
+## Its look when it is not in a hand (an arrow): its icon is drawn from it (else from `held_scene`).
+@export var world_model: PackedScene
+## A hand-drawn icon, used before the one drawn from its model (template DECISIONS #271).
+@export var icon_picture: Texture2D
 ## Its colour in the bag until it has an icon.
 @export var color: Color = Color(0.75, 0.6, 0.4)
 @export_multiline var description: String = ""
@@ -79,6 +83,16 @@ func to_bake() -> Dictionary:
 		"handle_speed_pct": handle_speed_pct,
 		"handle_quality_pm": handle_quality_pm,
 	}
+
+
+## Its icon is drawn from its model: its look apart (`world_model`), else its held scene.
+func icon_scene() -> PackedScene:
+	return world_model if world_model != null else held_scene
+
+
+## Its hand-drawn icon, else the one drawn from its model (`tools/render_icons.tscn`), else none.
+func icon() -> Texture2D:
+	return icon_picture if icon_picture != null else super()
 
 
 ## What its handle trait does, in words ("" when it has none worth saying).

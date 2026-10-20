@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/gale.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 3
+cost = 35.0
+cast_ms = 0
+angle_deg = 45.0
+push_mps = 9.0
+id = 40005
+display_name = "Gale"
+designer_notes = "F, Sorcery rank 9: everything within 8 m and 45° of where you look is hurt and thrown back."

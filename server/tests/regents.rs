@@ -63,7 +63,7 @@ fn the_chain_is_compiled_in() {
         assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)), "{}'s round is a gathering round", n.name);
     }
     let skills: Vec<&str> = rules::SKILLS.iter().map(|s| s.key).collect();
-    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery"]);
+    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
     assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD]);
     for bar in ["Copper bar", "Iron bar"] {
@@ -364,29 +364,11 @@ fn the_skeleton_camp_is_content() {
     for f in [warrior, axeman] {
         assert!(rules::FOE_KINDS.contains(&f.kind), "{} is kind {}", f.name, f.kind);
         assert_eq!(rules::foe_of_kind(f.kind).map(|s| s.id), Some(f.id));
-        assert!(rules::kit_keyed(f.kit).is_some() && f.hp > 0 && !f.loot.is_empty(), "{f:?}");
+        assert!(rules::kit_keyed(f.kit).is_some() && f.hp > 0, "{f:?}");
+        let t = umf_module::loot::find(f.loot_table).unwrap_or_else(|| panic!("{} drops from table {}, which is not baked", f.name, f.loot_table));
+        assert!(!t.one_of && t.lines.iter().any(|l| l.pity), "{}: the camp's table, its gem with pity", f.name);
     }
     assert_eq!((warrior.kit, axeman.kit), ("sword", "axe"), "each with the weapon its model carries");
-}
-
-#[test]
-fn a_foes_loot_is_rolled_per_drop() {
-    let seed = rules::FoeSeed { id: 1, name: "t", key: "t", kind: 103, kit: "sword", hp: 1, damage_pct: 100, xp_pct: 100,
-        loot: &[(7, 1, 3, 60), (8, 1, 1, 4)] };
-    assert_eq!(rules::foe_loot(&seed, |_| 0), vec![(7, 1), (8, 1)], "the luckiest roll: every drop, the least of each");
-    assert_eq!(rules::foe_loot(&seed, |_| 999), vec![], "the unluckiest: nothing");
-    assert_eq!(rules::foe_loot(&seed, |i| if i == 0 { 599 } else { 40 }), vec![(7, 3)], "just under 60 %: the most; 4 % missed at 40/1000");
-    assert_eq!(rules::foe_loot(&seed, |i| if i == 0 { 600 } else { 39 }), vec![(8, 1)], "60 % missed at 600/1000; 4 % hit at 39");
-    // Over every roll, each count from 1 to 3 comes up, about evenly, and only under the chance.
-    let mut counts = [0u32; 4];
-    for r in 0..1000 {
-        if let Some((_, q)) = rules::foe_loot(&seed, |i| if i == 0 { r } else { 999 }).first() {
-            counts[*q as usize] += 1;
-        }
-    }
-    assert_eq!(counts[0], 0);
-    assert_eq!(counts[1] + counts[2] + counts[3], 600, "{counts:?}");
-    assert!(counts[1..].iter().all(|c| *c == 200), "evenly: {counts:?}");
 }
 
 #[test]
@@ -481,4 +463,52 @@ fn a_kit_with_no_heavy_claims_no_ability_0() {
     assert!(rules::kit_keyed("bow").is_some_and(|k| k.heavy == 0));
     assert!(rules::kit_of_ability(0).is_none(), "ability 0 is no kit's");
     assert!(matches!(rules::kit_of_ability(40011), Some((k, rules::KitSlot::Light(0))) if k.key == "bow"));
+}
+
+#[test]
+fn the_staff_casts_its_spells_from_mana() {
+    // THE STAFF (owner, 2026-10-20, LOOT_AND_STYLES §4): a casting kit, mana its pool, every ability a spell.
+    let staff = rules::kit_keyed("staff").expect("a staff kit");
+    let mana = umf_module::resource::find(staff.resource).expect("the staff's pool is a resource");
+    assert_eq!((mana.key, mana.max, mana.regen_out, mana.regen_in), ("mana", 100.0, 10.0, 4.0), "the design's mana");
+    let bolt = rules::spell_of(staff.light[0]).expect("its left button is a spell");
+    assert!(bolt.kind == rules::SPELL_BOLT && bolt.cost == 0.0 && bolt.cast_ms == 0 && bolt.body > 0, "the bolt: free, instant, a missile");
+    let kinds: Vec<i64> = staff.skills.iter().map(|(a, _)| rules::spell_of(*a).expect("each skill a spell").kind).collect();
+    assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_BLINK, rules::SPELL_CONE], "Fireball, Frost Ring, Blink, Gale");
+    let ranks: Vec<u32> = staff.skills.iter().map(|(_, r)| *r).collect();
+    assert_eq!(ranks, vec![1, 3, 6, 9]);
+    let fireball = rules::spell_of(staff.skills[0].0).unwrap();
+    assert!(fireball.cost == 25.0 && fireball.splash_m == 3.0 && fireball.burn_ms == 3000 && rules::may_walk_casting(fireball),
+        "Fireball: 25 mana, a 3 m splash, a 3 s burn, a cast you may walk through");
+    let ring = rules::spell_of(staff.skills[1].0).unwrap();
+    assert!(!rules::may_walk_casting(ring) && ring.status == 108 && ring.status_ms == 3000, "Frost Ring roots its caster and slows for 3 s");
+    for k in rules::KITS.iter().filter(|k| k.key != "staff") {
+        assert!(k.resource == 0, "{}: no pool (melee and the bow are paced by cooldowns)", k.key);
+    }
+}
+
+#[test]
+fn a_long_cast_roots_whatever_its_spell_says() {
+    let mut s = rules::spell_of(rules::kit_keyed("staff").unwrap().skills[0].0).unwrap();
+    assert!(rules::may_walk_casting(s));
+    let long = rules::SpellSeed { cast_ms: 800, ability: s.ability, kind: s.kind, cost: s.cost, cast_while_moving: true, body: s.body,
+        speed: s.speed, splash_m: s.splash_m, splash_pct: s.splash_pct, burn_dps: s.burn_dps, burn_ms: s.burn_ms, radius_m: s.radius_m,
+        delay_ms: s.delay_ms, angle_deg: s.angle_deg, push_mps: s.push_mps, status: s.status, status_ms: s.status_ms };
+    s = &long;
+    assert!(!rules::may_walk_casting(s), "0.8 s or more roots (the owner's rule), whatever the spell says");
+}
+
+#[test]
+fn a_cone_and_a_blink_land_where_they_should() {
+    use umf_module::sim::Vector3;
+    let me = Vector3::new(0.0, 0.0, 0.0);
+    let north = Vector3::new(0.0, 0.0, -1.0);
+    assert!(rules::in_cone(me, north, Vector3::new(0.0, 0.0, -5.0), 8.0, 45.0), "straight ahead");
+    assert!(rules::in_cone(me, north, Vector3::new(1.5, 0.0, -5.0), 8.0, 45.0), "17° off: inside a 45° cone");
+    assert!(!rules::in_cone(me, north, Vector3::new(3.0, 0.0, -5.0), 8.0, 45.0), "31° off: outside");
+    assert!(!rules::in_cone(me, north, Vector3::new(0.0, 0.0, -9.0), 8.0, 45.0), "past its reach");
+    assert!(!rules::in_cone(me, north, Vector3::new(0.0, 0.0, 5.0), 8.0, 45.0), "behind");
+    let to = rules::blink_to(Vector3::new(1.0, 2.0, 1.0), Vector3::new(3.0, 9.0, 4.0), 8.0).unwrap();
+    assert!((to.x - 5.8).abs() < 1e-4 && to.y == 2.0 && (to.z - 7.4).abs() < 1e-4, "8 m flat along the look, at your height: {to:?}");
+    assert!(rules::blink_to(me, Vector3::new(0.0, 1.0, 0.0), 8.0).is_none(), "looking straight up: nowhere");
 }

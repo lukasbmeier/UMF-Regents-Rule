@@ -160,6 +160,8 @@ pub fn regents_data() {
     }
     out.push_str("];\n\npub static KITS: &[KitSeed] = &[\n");
     let mut kit_keys: Vec<String> = Vec::new();
+    // A casting kit's abilities must each be a spell's (checked with the spells below).
+    let mut casting_kits: Vec<(String, Vec<u32>)> = Vec::new();
     for k in &baked("kit") {
         let name = text(k, "name", "a kit");
         let key = text(k, "key", &name);
@@ -177,9 +179,12 @@ pub fn regents_data() {
         }
         kit_keys.push(key.clone());
         out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, heavy: {}, skills: &{skills:?}, combo_window_ms: {}, \
-             chain_ms: {}, locks: &{locks:?}, draw_full_ms: {} }},\n",
+             chain_ms: {}, locks: &{locks:?}, draw_full_ms: {}, resource: {} }},\n",
             int(k, "id", &name), int(k, "heavy", &name), int(k, "combo_window_ms", &name), int(k, "chain_ms", &name),
-            k["draw_full_ms"].as_i64().unwrap_or(0)));
+            k["draw_full_ms"].as_i64().unwrap_or(0), k["resource"].as_i64().unwrap_or(0).max(0)));
+        if k["resource"].as_i64().unwrap_or(0) > 0 {
+            casting_kits.push((name.clone(), light.iter().copied().chain(skills.iter().map(|(a, _)| *a)).collect()));
+        }
     }
     for (item, kit) in &weapon_kits {
         assert!(kit_keys.contains(kit), "regents content: the weapon {item} fights with kit '{kit}', which is no kit");
@@ -198,15 +203,37 @@ pub fn regents_data() {
         assert!(kit_keys.contains(&kit), "regents content: the foe {name} fights with kit '{kit}', which is no kit");
         let hp = int(f, "hp", &name);
         assert!(hp > 0, "regents content: the foe {name} has no health");
-        let loot: Vec<(u32, u32, u32, u32)> = f["loot"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no loot list"))
-            .iter().map(|d| (d[0].as_i64().unwrap() as u32, d[1].as_i64().unwrap() as u32, d[2].as_i64().unwrap() as u32, d[3].as_i64().unwrap() as u32))
-            .collect();
-        for (id, from, to, chance) in &loot {
-            item(*id as i64, &name);
-            assert!(from <= to && *chance >= 1 && *chance <= 100, "regents content: {name} drops item {id} {from}-{to} at {chance}%");
-        }
+        // Its loot table (DECISIONS #268): the foundation's build checks the table itself.
+        let loot_table = f["loot_table"].as_i64().unwrap_or(-1).max(0);
         out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
-             loot: &{loot:?} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name)));
+             loot_table: {loot_table} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name)));
+    }
+    out.push_str("];\n\npub static SPELLS: &[SpellSeed] = &[\n");
+    // THE STAFF'S SPELLS (owner, 2026-10-20): how each casting ability lands.
+    let mut spell_abilities: Vec<u32> = Vec::new();
+    for s in &baked("spell") {
+        let name = text(s, "name", "a spell");
+        let ability = int(s, "ability", &name);
+        assert!(ability > 0, "regents content: the spell {name} is no ability's");
+        assert!(!spell_abilities.contains(&(ability as u32)), "regents content: two spells are ability {ability}'s");
+        spell_abilities.push(ability as u32);
+        let kind = int(s, "kind", &name);
+        assert!((0..=3).contains(&kind), "regents content: the spell {name} is of kind {kind} (0 bolt, 1 area, 2 blink, 3 cone)");
+        let body = s["body"].as_i64().unwrap_or(-1).max(0);
+        assert!(kind != 0 || body > 0, "regents content: the bolt {name} has no missile (body)");
+        let f = |k: &str| s.get(k).and_then(|x| x.as_f64()).unwrap_or_else(|| panic!("regents content: the spell {name} has no '{k}'"));
+        out.push_str(&format!("    SpellSeed {{ ability: {ability}, kind: {kind}, cost: {:?}f32, cast_ms: {}, cast_while_moving: {}, body: {body}, \
+             speed: {:?}f32, splash_m: {:?}f32, splash_pct: {}, burn_dps: {:?}f32, burn_ms: {}, radius_m: {:?}f32, delay_ms: {}, \
+             angle_deg: {:?}f32, push_mps: {:?}f32, status: {}, status_ms: {} }},\n",
+            f("cost") as f32, int(s, "cast_ms", &name), s["cast_while_moving"].as_bool().unwrap_or(true),
+            f("speed_mps") as f32, f("splash_m") as f32, int(s, "splash_pct", &name), f("burn_dps") as f32, int(s, "burn_ms", &name),
+            f("radius_m") as f32, int(s, "delay_ms", &name), f("angle_deg") as f32, f("push_mps") as f32,
+            int(s, "status", &name), int(s, "status_ms", &name)));
+    }
+    for (kit, abilities) in &casting_kits {
+        for a in abilities {
+            assert!(spell_abilities.contains(a), "regents content: the casting kit {kit}'s ability {a} is no spell's");
+        }
     }
     out.push_str("];\n");
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("regents_data.rs"), out).unwrap();

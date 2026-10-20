@@ -19,6 +19,7 @@
     "wield": { "burst": 4, "per_sec": 2 },
     "block": { "burst": 10, "per_sec": 6 },
     "bow": { "burst": 10, "per_sec": 6 },
+    "spell": { "burst": 10, "per_sec": 6 },
     "report_perf": { "burst": 3, "per_sec": 0.5 },
     "send_feedback": { "burst": 3, "per_sec": 0.05 },
     "launch_body": { "burst": 4, "per_sec": 2 },

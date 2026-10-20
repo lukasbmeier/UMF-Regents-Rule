@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/staff_bolt.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://game/regents/content/body/bolt.tres" id="3_body"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 0
+cost = 0.0
+cast_ms = 0
+body = ExtResource("3_body")
+speed_mps = 32.0
+id = 40001
+display_name = "Bolt"
+designer_notes = "THE STAFF'S BASIC (owner, 2026-10-20, LOOT_AND_STYLES §4): a bolt at your target, the hit rolled like the bow's (ranged can miss); free aim with no target. No mana."
