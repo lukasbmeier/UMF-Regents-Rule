@@ -43,6 +43,19 @@ func duplicate() -> MovementState:
 	s.dash_left = dash_left
 	return s
 
+## Take `own`'s bookkeeping (held keys, flaps used, the dash's cooldown and length): the client's own,
+## which a server row does not carry. A correction rewinds to the row WITH what this client knew at that
+## seq; rewound without it, a dash's cooldown was gone after any correction, and the next press dashed
+## at once (DECISIONS #264). Returns self.
+func take_bookkeeping(own: MovementState) -> MovementState:
+	if own != null:
+		jump_held = own.jump_held
+		dash_held = own.dash_held
+		flaps_used = own.flaps_used
+		dash_cooldown = own.dash_cooldown
+		dash_left = own.dash_left
+	return self
+
 ## Largest absolute component difference across pos and vel. Used by tests and reconciliation.
 func max_error(other: MovementState) -> float:
 	var dp: Vector3 = (pos - other.pos).abs()
