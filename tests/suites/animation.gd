@@ -428,6 +428,25 @@ func _run_universal_grip_tests() -> void:
 	_check(not own.relative and own.position.is_equal_approx(Vector3(0.0, 0.08, 0.01)),
 		"without it, a new grip is its own, copied from the idle's (as before)")
 	idle.position -= Vector3(0.02, 0.0, 0.0)
+	# ONE BODY'S (DECISIONS #263): his one grip leaves hers alone.
+	var shared_run: GripEntry = g.find(AnimationSet.RUN)
+	var her_run := _grip_entry(AnimationSet.RUN, Vector3(0.1, 0.0, 0.0), Vector3(0, 0, 0), false)
+	her_run.body = &"female"
+	g.entries.append(her_run)
+	var count_before: int = g.entries.size()
+	var gone: int = g.use_for_all(Vector3(0.0, 0.09, 0.0), Vector3(10, 20, 30), false, &"male")
+	var his: GripEntry = g.find(AnimationSet.IDLE, &"male")
+	_check(gone == 0 and g.entries.size() == count_before + 1 and his != null,
+		"Use This Grip For All with male chosen: his one grip, nobody else's touched (%d gone)" % gone)
+	_check(g.resolve(AnimationSet.RUN, &"male") == his and g.resolve(&"interact", &"male") == his,
+		"every animation of his uses it, the shared fixes too")
+	_check(g.resolve(AnimationSet.RUN, &"female") == her_run and g.resolve(AnimationSet.WALK, &"female") == g.find(AnimationSet.WALK)
+		and g.resolve(AnimationSet.RUN) == shared_run, "hers and the shared grips are as they were")
+	var his_fix: GripEntry = g.ensure(AnimationSet.RUN, &"male")
+	_check(his_fix.relative and his_fix.base == his and his_fix.in_hand(hand, body).is_equal_approx(his.in_hand(hand, body)),
+		"a fix of his sits on his one grip")
+	g.use_for_all(Vector3.ZERO, Vector3.ZERO, false)
+	_check(g.entries.size() == 1 and g.entries[0].body.is_empty(), "with both chosen, it is everyone's again (every grip replaced)")
 
 
 const GRIP_TEST_PATH: String = "user://grip_preview_test.tres"
@@ -497,6 +516,20 @@ func _run_grip_preview_tests() -> void:
 		"Spin 90°: it turns a quarter on its own length; the fist and the length stay put")
 	prev.call("spin", -90.0)
 	await get_tree().process_frame
+	# THE LIST SAYS WHAT EACH ANIMATION IS (DECISIONS #262), and a pick from it still names the animation.
+	var label: String = prev.call("animation_label", "ability.0")
+	var melee: AbilityDef = ContentLibrary.find(&"ability", 0) as AbilityDef
+	_check(melee != null and label.begins_with("ability.0 · " + melee.display_name), "the list names an ability: \"%s\"" % label)
+	var run_label: String = prev.call("animation_label", String(AnimationSet.RUN))
+	_check(run_label.begins_with(String(AnimationSet.RUN) + " · ") and run_label.length() > String(AnimationSet.RUN).length() + 3,
+		"and the clip an animation plays: \"%s\"" % run_label)
+	var hold_before_pick: Vector3 = prev.get("hold_position") as Vector3
+	prev.set("animation", run_label)
+	await get_tree().process_frame
+	_check(prev.call("_anim") == AnimationSet.RUN, "picking \"%s\" edits %s" % [run_label, AnimationSet.RUN])
+	prev.set("animation", "interact")
+	await get_tree().process_frame
+	_check((prev.get("hold_position") as Vector3).is_equal_approx(hold_before_pick), "(back on interact, as it was)")
 	# SAVED WITH THE SCENE (DECISIONS #260): nothing is written while it is moved; the scene's save writes it.
 	_check(not FileAccess.file_exists(GRIP_TEST_PATH) and bool(prev.call("grip_unsaved")),
 		"every move above wrote nothing: the grip waits for the scene's save")

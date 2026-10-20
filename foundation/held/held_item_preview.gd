@@ -62,6 +62,8 @@ extends Node3D
 const SETTLE_MSEC: int = 250
 ## Where the second character stands: to the first one's left, clear of a right-hand item.
 const BESIDE_AT: Vector3 = Vector3(-1.8, 0.0, 0.0)
+## Between an animation's semantic name and what it is, in the Animation list.
+const LABEL_SEP: String = " · "
 ## Frames of the clip read for its worst.
 const CLIP_SAMPLES: int = 24
 ## The air off the body the label calls enough.
@@ -132,8 +134,9 @@ const STOW_AIR: float = 0.01
 			var e: GripEntry = grip.ensure(_anim(), _body_key())
 			e.set_steady(value, _hand(_holder), _skels[_holder].global_basis)
 		_posed = false
-## USE THIS GRIP FOR ALL (DECISIONS #259): the item as it sits now becomes the one grip every animation
-## and body uses, and every other grip goes. Then fix only the animations that need it. Undo: git.
+## USE THIS GRIP FOR ALL (DECISIONS #259, #263): the item as it sits now becomes the one grip every animation
+## uses FOR THE BODY CHOSEN ("male": his grips only, hers untouched; "both": everyone's), and that body's
+## other grips go. Then fix only the animations that need it. Undo: git.
 @export_tool_button("Use This Grip For All", "Reload") var one_grip: Callable = use_this_for_all
 ## Take this animation's own grip away: it goes back to the one grip (or borrows, without one).
 @export_tool_button("Clear This Grip", "Remove") var clear_grip: Callable = clear_this_grip
@@ -202,6 +205,9 @@ var _holder: int = 0
 var _grip_set: Transform3D = Transform3D()
 var _grip_known: bool = false
 var _worst_due: int = -1
+## Abilities' names by id, for the Animation list (read once).
+var _ability_names: Dictionary = {}
+var _abilities_read: bool = false
 var _refresh_due: int = -1
 ## The grip changed since the grip file was last written: it is written when the scene is saved (Ctrl+S),
 ## not on every move (DECISIONS #260).
@@ -240,10 +246,13 @@ func _validate_property(property: Dictionary) -> void:
 	if property["name"] in ["hold_position", "hold_rotation", "steady"]:
 		property["usage"] = PROPERTY_USAGE_EDITOR
 	elif property["name"] == "animation" and definition != null and definition.animation_set != null:
-		var names: Array[String] = []
+		var keys: Array[String] = []
 		for k: StringName in definition.animation_set.clips:
-			names.append(String(k))
-		names.sort()
+			keys.append(String(k))
+		keys.sort()
+		var names: Array[String] = []
+		for k: String in keys:
+			names.append(animation_label(k))
 		property["hint"] = PROPERTY_HINT_ENUM_SUGGESTION
 		property["hint_string"] = ",".join(names)
 	elif property["name"] == "body":
@@ -278,8 +287,9 @@ func use_this_for_all() -> void:
 	var e := GripEntry.new()
 	e.steady = steady_now
 	e.set_held(held, hand, _skels[_holder].global_basis)
-	var gone: int = grip.use_for_all(e.position, e.rotation_degrees, e.steady)
-	_fit_said = "One grip for all (%d grip(s) replaced). Step through the animations; a drag or a typed Hold on one is a fix on this grip." % gone
+	var key: StringName = _body_key()
+	var gone: int = grip.use_for_all(e.position, e.rotation_degrees, e.steady, key)
+	_fit_said = "One grip for all %s (%d grip(s) replaced). Step through the animations; a drag or a typed Hold on one is a fix on this grip." 		% ["bodies" if key.is_empty() else "%s grips (the others untouched)" % key, gone]
 	_posed = false
 	notify_property_list_changed()
 
@@ -936,7 +946,35 @@ func _add_body(scene: PackedScene, at: Vector3) -> void:
 # --- the grip, the pose, the air ------------------------------------------------------------
 
 func _anim() -> StringName:
-	return StringName(animation) if not animation.is_empty() else AnimationSet.IDLE
+	var key: String = animation.get_slice(LABEL_SEP, 0).strip_edges()
+	return StringName(key) if not key.is_empty() else AnimationSet.IDLE
+
+
+## AN ANIMATION AS THE LIST NAMES IT (DECISIONS #262): its semantic name, then what it is: an ability's
+## name (`ability.40002 · Slash (second)`), and the clip it plays (`· Sword_Light_B`). Only the semantic
+## name before the first ` · ` counts; the rest is for reading.
+func animation_label(semantic: String) -> String:
+	var parts: Array[String] = [semantic]
+	if semantic.begins_with("ability.") and semantic.get_slice(".", 1).is_valid_int():
+		var named: String = _ability_name(int(semantic.get_slice(".", 1)))
+		if not named.is_empty():
+			parts.append(named)
+	if definition != null and definition.animation_set != null and definition.animation_set.clips.has(StringName(semantic)):
+		var ref: Resource = definition.animation_set.clips[StringName(semantic)]
+		var clip: String = String(ref.get(&"anim_name")) if ref != null else ""
+		if not clip.is_empty():
+			parts.append(clip.get_file())
+	# A comma would split the Inspector's list.
+	return LABEL_SEP.join(parts).replace(",", "")
+
+
+## An ability's name by id, read once per preview from the game's content (the library loads every file).
+func _ability_name(id: int) -> String:
+	if not _abilities_read:
+		_abilities_read = true
+		for def: ContentDef in ContentLibrary.items(&"ability"):
+			_ability_names[def.id] = def.display_name
+	return String(_ability_names.get(id, ""))
 
 
 ## The body whose grip is edited, as the grip file keys it ("" is every body's).

@@ -550,7 +550,8 @@ says. Nothing in code tells an item how to be held.
 - **The quick way, for a weapon or tool held the same in most animations** (DECISIONS #259): in the
   preview, pick a **Body** (`both` for everyone) and an **Animation**, type the item's **Hold**
   (position and rotation in the hand) or drag the Grip node, then press **Use This Grip For All**.
-  Every animation now uses that one grip. Step through the other animations; where one looks wrong,
+  Every animation now uses that one grip, FOR THE BODY CHOSEN: with `male` picked it replaces his
+  grips only and hers stay as they are (hands differ); with `both` it replaces everyone's. Step through the other animations; where one looks wrong,
   type or drag it right there: that saves a small fix on the one grip, which keeps following it if
   you move the one grip later. **Clear This Grip** puts an animation back on the one grip. The grip
   file is at the bottom of the Inspector; you never need to open its list. Changes are written to
@@ -558,6 +559,8 @@ says. Nothing in code tells an item how to be held.
   To turn a blade's edges (or an axe's head) without moving the handle, use **Spin 15°/-15°/90°**:
   they turn the item on its own length, about the fist. The 3D view's rotate rings turn about the
   WORLD's axes unless Local space is on (press **T**).
+  The **Animation** list says what each one is: an ability's name and the clip it plays
+  (`ability.40002 · Slash (second) · Sword_Light_B`, `locomotion.run · Jog_Fwd`).
 - **Line it up in the editor**: a preview scene using `foundation/held/held_item_preview.gd`
   (the rod's is `game/fishing/rod_grip_preview.tscn`). Pick an **Animation** and a **Body**
   (`both`, `female` or `male`), then drag the **Grip** node: that sets the grip for exactly that

@@ -168,6 +168,14 @@ func find(animation: StringName, body: StringName = &"") -> GripEntry:
 	return null
 
 
+## A body's own idle grip (not a fix), or null.
+func _own_idle(body: StringName) -> GripEntry:
+	for e: GripEntry in entries:
+		if e != null and e.animation == AnimationSet.IDLE and e.body == body and not e.relative:
+			return e
+	return null
+
+
 ## The idle's own grip for a body, else the shared one: what a spot fix for that body sits on.
 func _idle_of(body: StringName) -> GripEntry:
 	var shared: GripEntry = null
@@ -180,17 +188,25 @@ func _idle_of(body: StringName) -> GripEntry:
 	return shared
 
 
-## USE THIS GRIP FOR ALL (the preview's button): every grip goes, for every animation and body, and the
-## one left is the universal grip, the item held as given (`position` in the hand; `rotation_degrees`
-## from the hand, or from the body when `steady`). Returns how many grips went.
-func use_for_all(position: Vector3, rotation_degrees: Vector3, steady: bool) -> int:
-	var gone: int = entries.size()
+## USE THIS GRIP FOR ALL (the preview's button), for one BODY (DECISIONS #263): that body's grips go and
+## the one left is its universal grip, the item held as given (`position` in the hand; `rotation_degrees`
+## from the hand, or from the body when `steady`). The other body's grips are not touched: hands differ.
+## `body` empty ("both"): every grip goes, every body's, and the one left is everyone's. Returns how many
+## grips went.
+func use_for_all(position: Vector3, rotation_degrees: Vector3, steady: bool, body: StringName = &"") -> int:
+	var kept: Array[GripEntry] = []
+	for old: GripEntry in entries:
+		if old != null and not body.is_empty() and old.body != body:
+			kept.append(old)
+	var gone: int = entries.size() - kept.size()
 	var e := GripEntry.new()
 	e.animation = AnimationSet.IDLE
+	e.body = body
 	e.position = position
 	e.rotation_degrees = rotation_degrees
 	e.steady = steady
-	entries = [e]
+	kept.append(e)
+	entries = kept
 	universal = true
 	emit_changed()
 	return gone
@@ -213,6 +229,14 @@ func make_universal() -> int:
 ## The entry an animation USES, for a body (empty: one with no grips of its own): see the header.
 ## Null only when not even the idle has a grip.
 func resolve(animation: StringName, body: StringName = &"") -> GripEntry:
+	# A BODY WITH ITS OWN ONE GRIP (`use_for_all` for that body, DECISIONS #263) uses only its own grips:
+	# its fixes, else its one grip. The shared grips are for the other body.
+	if universal and not body.is_empty() and _own_idle(body) != null:
+		for step: StringName in steps(animation):
+			var own: GripEntry = find(step, body)
+			if own != null:
+				return own
+		return null
 	for step: StringName in steps(animation):
 		if not body.is_empty():
 			var own: GripEntry = find(step, body)
