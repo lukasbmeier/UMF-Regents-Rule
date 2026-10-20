@@ -299,12 +299,6 @@ func _first_control() -> Control:
 	return _tabs.get_tab_bar()
 
 
+## The game's panel (`UiStyle`, DECISIONS #265): the Escape menu's, and every window's.
 static func _panel_style() -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color(0.1, 0.12, 0.15, 0.97)
-	s.set_border_width_all(1)
-	s.border_color = Color(0.3, 0.45, 0.6, 0.6)
-	s.set_corner_radius_all(8)
-	s.shadow_color = Color(0, 0, 0, 0.4)
-	s.shadow_size = 12
-	return s
+	return UiStyle.current().panel_style()
