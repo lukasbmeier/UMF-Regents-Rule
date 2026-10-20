@@ -4,6 +4,12 @@ extends Node3D
 ## character: give it a character `definition`, an `item` scene and its `grip` file. The game's
 ## rod uses it as `game/fishing/rod_grip_preview.tscn`.
 ##
+## THE QUICK WAY (DECISIONS #259): pick a BODY ("both" for everyone) and an ANIMATION, type the item's
+## HOLD (position and rotation in the hand) or drag the Grip node, press USE THIS GRIP FOR ALL, then step
+## through the other animations and fix only the ones that look wrong: each fix is a nudge on the one grip,
+## and follows it if it moves again. The grip FILE sits at the bottom of the Inspector; there is no need
+## to open its list.
+##
 ## A woman and a man stand in the Inspector's ANIMATION holding the item exactly as the game will
 ## (every look is one of those two bodies). Pick the ANIMATION and the BODY whose grip you are
 ## setting ("both", "female", "male"), select the GRIP node and move it (W) or turn it (E): the
@@ -77,33 +83,59 @@ const STOW_AIR: float = 0.01
 	set(value):
 		item = value
 		_built = false
-## The grip being edited — the file the game reads.
-@export var grip: ItemGrip:
-	set(value):
-		grip = value
-		_posed = false
-		notify_property_list_changed()
 ## The animation to line it up in, by semantic name. Pick one, or type one.
 @export var animation: String = "locomotion.idle":
 	set(value):
 		animation = value
 		_posed = false
+		notify_property_list_changed()   # the Hold shown is this animation's, this body's
 ## Whose grip a drag sets: "both" (the one every body shares) or one body's own ("female",
 ## "male": what the characters' looks say they are).
 @export var body: String = BOTH:
 	set(value):
 		body = value
 		_posed = false
-## Take the grip being edited away: that animation, in that body's hand, borrows again.
+		notify_property_list_changed()   # the Hold shown is this animation's, this body's
+@export_group("Hold")
+## WHERE THE ITEM SITS IN THE HAND in this animation, for this body: metres in the hand bone's frame
+## (+Y along the fingers, +Z the thumb). Typing here does what dragging the Grip node does. Not saved
+## in this scene: it is the grip file's.
+@export var hold_position: Vector3:
+	get:
+		return _hold_now().origin
+	set(value):
+		_set_hold(Transform3D(_hold_now().basis, value))
+## Its turn in the hand, in degrees (YXZ, as a node's), as it is shown now.
+@export var hold_rotation: Vector3:
+	get:
+		var e: Vector3 = _hold_now().basis.orthonormalized().get_euler(EULER_ORDER_YXZ)
+		return Vector3(rad_to_deg(e.x), rad_to_deg(e.y), rad_to_deg(e.z))
+	set(value):
+		var r: Vector3 = Vector3(deg_to_rad(value.x), deg_to_rad(value.y), deg_to_rad(value.z))
+		_set_hold(Transform3D(Basis.from_euler(r, EULER_ORDER_YXZ), _hold_now().origin))
+## STEADY: the item keeps its direction to the body, not the hand (a long item in a swinging arm). The grip
+## being edited's, read from the grip file, not stored in this scene.
+@export var steady: bool:
+	get:
+		var e: GripEntry = _shown_for_edit() if grip != null and not _skels.is_empty() else null
+		return e != null and e.is_steady()
+	set(value):
+		# Steady is part of THIS grip: made first if it is missing, where the item already sits.
+		if grip != null and not _skels.is_empty() and _holder >= 0 and _holder < _skels.size():
+			var e: GripEntry = grip.ensure(_anim(), _body_key())
+			e.set_steady(value, _hand(_holder), _skels[_holder].global_basis)
+		_posed = false
+## USE THIS GRIP FOR ALL (DECISIONS #259): the item as it sits now becomes the one grip every animation
+## and body uses, and every other grip goes. Then fix only the animations that need it. Undo: git.
+@export_tool_button("Use This Grip For All", "Reload") var one_grip: Callable = use_this_for_all
+## Take this animation's own grip away: it goes back to the one grip (or borrows, without one).
 @export_tool_button("Clear This Grip", "Remove") var clear_grip: Callable = clear_this_grip
-## Fit the grip being edited into the hand, automatically (`GripFit`).
+@export_group("Automatic fit")
+## Fit the grip being edited into the hand, automatically (`GripFit`). A fit is a grip of its own.
 @export_tool_button("Fit This Grip", "Edit") var fit_grip: Callable = fit_this_grip
-## Fit a grip for every animation in the set, for the body chosen.
+## Fit a grip for every animation in the set, for the body chosen (each its own, not one for all).
 @export_tool_button("Fit Every Animation", "Edit") var fit_all: Callable = fit_every_animation
-## ONE GRIP FOR ALL (DECISIONS #257): every animation's own grip goes, and they all use the idle's,
-## the UNIVERSAL grip. Move it with the animation on `locomotion.idle`; then spot-check the others,
-## and a drag on one makes a spot fix that keeps following the universal grip. Undo: git.
-@export_tool_button("Use One Grip For All", "Reload") var one_grip: Callable = use_one_grip
+@export_group("")
 ## Photograph every animation into res://grip_pictures/, to check the fits by eye.
 @export_tool_button("Save Pictures", "Image") var save_pictures: Callable = save_pictures_now
 ## Show the item put away, on its stow bone (move the Stow node to place it).
@@ -133,6 +165,14 @@ const STOW_AIR: float = 0.01
 	set(value):
 		beside = value
 		_built = false
+@export_group("File")
+## The grip being edited — the file the game reads. Its list is what the buttons above write; there is
+## no need to open it.
+@export var grip: ItemGrip:
+	set(value):
+		grip = value
+		_posed = false
+		notify_property_list_changed()
 
 var _built: bool = false
 var _posed: bool = false
@@ -185,32 +225,11 @@ var _stow_known: bool = false
 
 # --- the Inspector ---------------------------------------------------------------------------
 
-## STEADY is the grip being edited's, read from the grip file, not stored in this scene.
-func _get_property_list() -> Array[Dictionary]:
-	return [{"name": "steady", "type": TYPE_BOOL, "usage": PROPERTY_USAGE_EDITOR}]
-
-
-func _get(property: StringName) -> Variant:
-	if property == &"steady":
-		var e: GripEntry = _shown_for_edit()
-		return e != null and e.is_steady()
-	return null
-
-
-func _set(property: StringName, value: Variant) -> bool:
-	if property == &"steady":
-		# Steady is part of THIS grip: made first if it is missing, where the item already sits.
-		if grip != null and not _skels.is_empty() and _holder >= 0:
-			var e: GripEntry = grip.ensure(_anim(), _body_key())
-			e.set_steady(bool(value), _hand(_holder), _skels[_holder].global_basis)
-		_posed = false
-		return true
-	return false
-
-
 ## The animations and bodies offered as suggestions (any may be typed).
 func _validate_property(property: Dictionary) -> void:
-	if property["name"] == "animation" and definition != null and definition.animation_set != null:
+	if property["name"] in ["hold_position", "hold_rotation", "steady"]:
+		property["usage"] = PROPERTY_USAGE_EDITOR
+	elif property["name"] == "animation" and definition != null and definition.animation_set != null:
 		var names: Array[String] = []
 		for k: StringName in definition.animation_set.clips:
 			names.append(String(k))
@@ -238,13 +257,40 @@ func clear_this_grip() -> void:
 	_posed = false
 
 
-## USE ONE GRIP FOR ALL (`ItemGrip.make_universal`): only the idle's grips stay.
-func use_one_grip() -> void:
-	if grip == null:
+## USE THIS GRIP FOR ALL (`ItemGrip.use_for_all`): where the item sits now, in the hand shown, is the one grip.
+func use_this_for_all() -> void:
+	if grip == null or _skels.is_empty() or _holder < 0:
 		return
-	var gone: int = grip.make_universal()
-	_fit_said = "One grip for all: %d animation grip(s) cleared. Move the idle's grip; a drag on another animation is a spot fix on it." % gone
+	var shown: GripEntry = _shown_for_edit()
+	var steady_now: bool = shown != null and shown.is_steady()
+	var hand: Transform3D = _hand(_holder)
+	var held: Transform3D = hand * _hold_now()
+	var e := GripEntry.new()
+	e.steady = steady_now
+	e.set_held(held, hand, _skels[_holder].global_basis)
+	var gone: int = grip.use_for_all(e.position, e.rotation_degrees, e.steady)
+	_fit_said = "One grip for all (%d grip(s) replaced). Step through the animations; a drag or a typed Hold on one is a fix on this grip." % gone
 	_posed = false
+	notify_property_list_changed()
+
+
+## Where the item sits in the hand shown, for the grip being edited (identity before the characters stand).
+func _hold_now() -> Transform3D:
+	if grip == null or _skels.is_empty() or _holder < 0 or _holder >= _skels.size():
+		return Transform3D()
+	var e: GripEntry = _shown_for_edit()
+	if e == null:
+		return Transform3D()
+	return e.in_hand(_hand(_holder), _skels[_holder].global_basis)
+
+
+## A typed Hold: as a drag of the Grip node there (this animation's grip, made if it is missing).
+func _set_hold(in_hand: Transform3D) -> void:
+	if grip == null or _skels.is_empty() or _holder < 0 or _holder >= _skels.size():
+		return
+	var e: GripEntry = grip.ensure(_anim(), _body_key())
+	var hand: Transform3D = _hand(_holder)
+	e.set_held(hand * in_hand, hand, _skels[_holder].global_basis)
 
 
 # --- per frame -------------------------------------------------------------------------------
@@ -291,6 +337,7 @@ func _process(delta: float) -> void:
 			var e: GripEntry = grip.ensure(_anim(), _body_key())
 			e.set_held(grip_node.global_transform, _hand(_holder), _skels[_holder].global_basis)
 			_grip_set = grip_node.global_transform
+			notify_property_list_changed()
 		elif not _grip_known or not want.is_equal_approx(_grip_set):
 			grip_node.global_transform = want
 			_grip_set = grip_node.global_transform

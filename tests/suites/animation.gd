@@ -6,7 +6,7 @@ extends "res://tests/suite_base.gd"
 func run() -> void:
 	_run_animation_tests()
 	_run_universal_grip_tests()
-	await get_tree().process_frame   # the runner awaits run(): always a coroutine
+	await _run_grip_preview_tests()
 
 
 
@@ -428,3 +428,54 @@ func _run_universal_grip_tests() -> void:
 	_check(not own.relative and own.position.is_equal_approx(Vector3(0.0, 0.08, 0.01)),
 		"without it, a new grip is its own, copied from the idle's (as before)")
 	idle.position -= Vector3(0.02, 0.0, 0.0)
+
+
+## THE GRIP PREVIEW'S QUICK WAY (DECISIONS #259), driven as the Inspector drives it: type a Hold, Use This
+## Grip For All, step to another animation and fix it; move the one grip and the fix follows.
+func _run_grip_preview_tests() -> void:
+	print("== animation: the grip preview's one grip for all ==")
+	var item := HeldItem.new()
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = BoxMesh.new()
+	(mesh.mesh as BoxMesh).size = Vector3(0.03, 0.6, 0.03)
+	item.add_child(mesh)
+	mesh.owner = item
+	var packed := PackedScene.new()
+	packed.pack(item)
+	item.free()
+	var g := ItemGrip.new()
+	g.entries.append(_grip_entry(AnimationSet.IDLE, Vector3(0.0, 0.08, 0.01), Vector3(60, 40, 30), false))
+	g.entries.append(_grip_entry(AnimationSet.RUN, Vector3(0.2, 0.0, 0.0), Vector3(0, 90, 0), true))
+	var prev: Node3D = (load("res://foundation/held/held_item_preview.gd") as GDScript).new() as Node3D
+	prev.set("definition", load(CHARACTER_DEF))
+	prev.set("item", packed)
+	prev.set("grip", g)
+	prev.set("beside", -1)
+	add_child(prev)
+	for i: int in range(6):
+		await get_tree().process_frame
+	prev.set("animation", String(AnimationSet.RUN))
+	await get_tree().process_frame
+	var want := Vector3(0.01, 0.07, 0.02)
+	prev.set("hold_position", want)
+	await get_tree().process_frame
+	_check((prev.get("hold_position") as Vector3).is_equal_approx(want), "a typed Hold puts the item there in the hand (%s)" % prev.get("hold_position"))
+	prev.call("use_this_for_all")
+	await get_tree().process_frame
+	_check(g.universal and g.entries.size() == 1 and g.entries[0].animation == AnimationSet.IDLE
+		and g.entries[0].position.is_equal_approx(want), "Use This Grip For All: it is the one grip now, the others gone")
+	prev.set("animation", "interact")
+	await get_tree().process_frame
+	_check((prev.get("hold_position") as Vector3).is_equal_approx(want), "another animation uses it as it is")
+	prev.set("hold_position", want + Vector3(0.0, 0.02, 0.0))
+	await get_tree().process_frame
+	var fix: GripEntry = g.find(&"interact")
+	_check(fix != null and fix.relative and fix.position.is_equal_approx(Vector3(0.0, 0.02, 0.0)), "a Hold typed there is a fix on the one grip (a nudge %s)" % (fix.position if fix != null else Vector3.ZERO))
+	prev.set("animation", String(AnimationSet.IDLE))
+	await get_tree().process_frame
+	prev.set("hold_position", want + Vector3(0.03, 0.0, 0.0))
+	prev.set("animation", "interact")
+	await get_tree().process_frame
+	_check((prev.get("hold_position") as Vector3).is_equal_approx(want + Vector3(0.03, 0.02, 0.0)), "move the one grip and the fix follows (%s)" % prev.get("hold_position"))
+	prev.queue_free()
+	await get_tree().process_frame
