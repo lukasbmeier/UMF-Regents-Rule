@@ -505,9 +505,9 @@ echo "== Tier A trust: the envelope, correction epochs and the replay budget =="
 # Runs LAST: it moves the CLI's own player, and every section above assumes it sits at the
 # origin. The CLI disconnects after each call, so between calls this player is OFFLINE, which
 # is exactly the "entity nobody is driving" path the idle tick exists for.
-frame() {   # frame SEQ X Y Z EPOCH [MOVE_STATE] [LOOK_YAW] [FACE]  -> one InputFrame as JSON
-  printf '{"seq":%s,"client_tick":%s,"move_x":0.0,"move_y":0.0,"look_yaw":%s,"look_pitch":0.0,"jump":false,"sprint":false,"client_pos":{"x":%s,"y":%s,"z":%s},"epoch":%s,"move_state":%s,"dash":false,"slow":false,"face":%s}' \
-    "$1" "$1" "${7:-0.0}" "$2" "$3" "$4" "$5" "${6:-0}" "${8:-false}"
+frame() {   # frame SEQ X Y Z EPOCH [MOVE_STATE] [LOOK_YAW] [FACE] [DASH]  -> one InputFrame as JSON
+  printf '{"seq":%s,"client_tick":%s,"move_x":0.0,"move_y":0.0,"look_yaw":%s,"look_pitch":0.0,"jump":false,"sprint":false,"client_pos":{"x":%s,"y":%s,"z":%s},"epoch":%s,"move_state":%s,"dash":%s,"slow":false,"face":%s}' \
+    "$1" "$1" "${7:-0.0}" "$2" "$3" "$4" "$5" "${6:-0}" "${9:-false}" "${8:-false}"
 }
 send_frames() {   # send_frames JSON_ARRAY
   local out; out="$(spacetime call "$DB" submit_input "$1" 2>&1)"
@@ -610,8 +610,11 @@ print(round(best[0] * 1.5 / 60.0, 6), round((best[0] + best[1]) * 1.5 / 60.0, 6)
 PYEOF
 )"
 if python -c "import sys; sys.exit(0 if $DSTEP > $STEP else 1)"; then
-  # A DASH PRESS opens its window: that frame and the next may claim the dash's speed, unclamped.
+  # A DASH PRESS opens its window: that frame and the next may claim the dash's speed, unclamped. First a
+  # frame standing still: the first frame after a correction stands for many (a replay, #258), not one.
   read -r XA YA ZA <<< "$(pos_of)"
+  SEQ=$((SEQ + 1))
+  send_frames "[$(frame $SEQ "$XA" "$YA" "$ZA" "$EPOCH")]"
   DX=$(python -c "print(round($DSTEP * 0.9, 4))")
   SEQ=$((SEQ + 1)); S2=$((SEQ + 1))
   send_frames "[$(frame $SEQ "$(python -c "print($XA + $DX)")" "$YA" "$ZA" "$EPOCH" 0 0.0 false true),$(frame $S2 "$(python -c "print($XA + 2 * $DX)")" "$YA" "$ZA" "$EPOCH")]"
@@ -620,10 +623,10 @@ if python -c "import sys; sys.exit(0 if $DSTEP > $STEP else 1)"; then
   assert_eq "$(python -c "print('true' if abs(($XB - $XA) - 2 * $DX) < 1e-3 else 'false')")" "true"     "a dash press lets its frame and the next claim the dash's speed ($DX m a frame, past the sprint's $STEP; moved $(python -c "print(round($XB - $XA, 4))"))"
   assert_eq "$(field correction_epoch)" "$EPOCH" "unclamped: no correction"
   # Its window shuts (stand still a while); the speed hack below has no dash press, so only the sprint.
-  F=""; for i in $(seq 1 10); do SEQ=$((SEQ + 1)); F="$F${F:+,}$(frame $SEQ "$XB" "$YB" "$ZB" "$EPOCH")"; done
-  send_frames "[$F]"
-  F=""; for i in $(seq 1 10); do SEQ=$((SEQ + 1)); F="$F${F:+,}$(frame $SEQ "$XB" "$YB" "$ZB" "$EPOCH")"; done
-  send_frames "[$F]"
+  for b in 1 2 3 4; do   # 20 frames, in batches the module takes (8 at most)
+    F=""; for i in $(seq 1 5); do SEQ=$((SEQ + 1)); F="$F${F:+,}$(frame $SEQ "$XB" "$YB" "$ZB" "$EPOCH")"; done
+    send_frames "[$F]"
+  done
 fi
 read -r XA YA ZA <<< "$(pos_of)"
 SEQ=$((SEQ + 1))
