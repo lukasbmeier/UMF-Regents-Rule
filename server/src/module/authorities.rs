@@ -398,6 +398,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     prune_bodies(ctx);
     prune_pushes(ctx);
     prune_damage_shares(ctx);
+    tick_ground(ctx);
     Ok(())
 }
 
@@ -471,6 +472,7 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.equip_state().entity_id().delete(entity_id);
     ctx.db.appearance().entity_id().delete(entity_id);
     forget_damage(ctx, entity_id);
+    forget_resources(ctx, entity_id);
     ctx.db.rate_budget().entity_id().delete(entity_id);
     let open: Vec<Challenge> = ctx.db.challenge().entity_id().filter(entity_id).collect();
     for ch in open {

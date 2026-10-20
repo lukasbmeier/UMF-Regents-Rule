@@ -46,6 +46,13 @@ pub mod placed;
 /// baked from `LootTableDef` content. Pure.
 pub mod loot;
 
+/// Items on the ground (DECISIONS #269): which cell, where a kill's drops land, the reach. Pure.
+pub mod ground;
+
+/// Resources (DECISIONS #270): pools spent to act (mana), filling by themselves; what one holds now.
+/// Baked from `ResourceDef` content. Pure.
+pub mod resource;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {

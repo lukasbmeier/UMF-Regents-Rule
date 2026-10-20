@@ -213,6 +213,33 @@
 					"number": 5.0,
 					"text": "",
 					"unit": "x"
+				},
+				{
+					"key": "foundation.ground_owner_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.ground_public_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.ground_pickup_m",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.5,
+					"number": 2.5,
+					"text": "",
+					"unit": "m"
 				}
 			]
 		}

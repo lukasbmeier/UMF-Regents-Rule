@@ -156,6 +156,9 @@ func _start_game(has_display: bool) -> void:
 		var notices := Notices.new()
 		notices.name = "Notices"
 		add_child(notices)
+	# Items on the ground, shown and walked over (DECISIONS #269): every game, outside the HUD.
+	if has_display:
+		add_child(GroundItems.new())
 	# An editor run starts the world's referee if the game needs one and it is not running
 	# (DECISIONS #226): pressing Play is all a designer does.
 	if has_display:

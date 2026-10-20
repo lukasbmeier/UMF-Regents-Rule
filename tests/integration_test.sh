@@ -165,6 +165,37 @@ assert_rejected "consume_item $ITEM 99" "cannot consume" "over-consume is refuse
 assert_ok "consume_item $ITEM 1" "consume the whole stack"
 assert_eq "$(row_count "SELECT * FROM inventory_item WHERE id = $ITEM")" "0" "fully consumed stack is deleted"
 
+echo "== items on the ground: yours, then anyone's, then gone (DECISIONS #269) =="
+GI=$(sql_first "SELECT id FROM inventory_item WHERE item_def_id = 1 AND qty = 20" 1)
+assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "stand at home"
+assert_rejected "drop_item $GI 99" "cannot drop" "dropping more than the stack is refused"
+assert_ok "drop_item $GI 5" "drop five at your feet"
+assert_eq "$(sql_first "SELECT qty FROM inventory_item WHERE id = $GI" 1)" "15" "the stack is five lighter"
+GR=$(sql_first "SELECT id FROM ground_item WHERE owner_id = $MYENT" 1)
+assert_eq "$(sql_first "SELECT qty FROM ground_item WHERE id = $GR" 1)" "5" "five lie on the ground, yours"
+assert_eq "$(sql_first "SELECT anyone FROM ground_item WHERE id = $GR" 1)" "false" "yours alone for now"
+assert_eq "$(sql_rows_anon "SELECT * FROM ground_item" | wc -l | tr -d ' ')" "0" "nobody else is even sent it (row-level security)"
+out="$(spacetime call --anonymous "$DB" pick_up "$GR" 2>&1)"
+if echo "$out" | grep -qiE "not yours|no player row"; then pass; else fail "someone else cannot take it while it is yours ($(echo "$out" | head -1))"; fi
+assert_ok 'teleport {"x":10.0,"y":0.0,"z":0.0}' "walk ten metres off"
+assert_rejected "pick_up $GR" "too far" "too far to pick up"
+assert_ok 'teleport {"x":1.0,"y":0.0,"z":0.5}' "back beside it"
+assert_ok "pick_up $GR" "pick it up"
+assert_eq "$(sql_first "SELECT qty FROM inventory_item WHERE id = $GI" 1)" "20" "back in the bag"
+assert_eq "$(row_count "SELECT * FROM ground_item WHERE id = $GR")" "0" "and gone from the ground"
+assert_rejected "pick_up $GR" "it is gone" "what is gone cannot be picked up"
+assert_ok "set_rule foundation.ground_owner_s 1 \"\"" "(test) yours for a second"
+assert_ok "set_rule foundation.ground_public_s 2 \"\"" "(test) then anyone's for two"
+assert_ok "drop_item $GI 1" "drop one"
+GR2=$(sql_first "SELECT id FROM ground_item WHERE owner_id = $MYENT" 1)
+sleep 2.2
+assert_eq "$(sql_first "SELECT anyone FROM ground_item WHERE id = $GR2" 1)" "true" "a second on: anyone's"
+assert_eq "$(sql_rows_anon "SELECT * FROM ground_item" | wc -l | tr -d ' ')" "1" "and everyone is sent it"
+sleep 2.2
+assert_eq "$(row_count "SELECT * FROM ground_item WHERE id = $GR2")" "0" "its time up: gone"
+assert_ok "reset_rule foundation.ground_owner_s" "(test) rules back"
+assert_ok "reset_rule foundation.ground_public_s" "(test) rules back"
+
 echo "== equip state: in hand or put away, reported by the owner (DECISIONS #160) =="
 assert_eq "$(row_count "SELECT * FROM equip_state WHERE entity_id = $MYENT")" "0"   "nothing reported yet: no row (the client reads that as away)"
 assert_ok "set_equip_state 1" "the owner reports a draw"
