@@ -180,6 +180,22 @@ func _idle_of(body: StringName) -> GripEntry:
 	return shared
 
 
+## USE THIS GRIP FOR ALL (the preview's button): every grip goes, for every animation and body, and the
+## one left is the universal grip, the item held as given (`position` in the hand; `rotation_degrees`
+## from the hand, or from the body when `steady`). Returns how many grips went.
+func use_for_all(position: Vector3, rotation_degrees: Vector3, steady: bool) -> int:
+	var gone: int = entries.size()
+	var e := GripEntry.new()
+	e.animation = AnimationSet.IDLE
+	e.position = position
+	e.rotation_degrees = rotation_degrees
+	e.steady = steady
+	entries = [e]
+	universal = true
+	emit_changed()
+	return gone
+
+
 ## USE ONE GRIP FOR ALL: every animation's own grip goes, the idle's stay (for every body), and a
 ## grip made from now on is a spot fix on them. Returns how many grips went.
 func make_universal() -> int:

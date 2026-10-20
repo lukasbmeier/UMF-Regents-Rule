@@ -369,7 +369,8 @@ A genre's rule that moves someone (a leaf blower, a bounce pad, a hit) writes a 
 own game adds the push to their speed, at once, and carries it a while; the server, which wrote it, lets
 them move that fast meanwhile (`foundation.push_grace_s` on the Rules page is its allowance for lag). A
 pushed body (a disc) is moved by the world's referee. `dev_push <entity> <vel>` (with the dev tools on)
-tries it; `toolsun.cmd testsodies_playtest.sh` proves it at 150 ms.
+tries it; `tools
+un.cmd testsodies_playtest.sh` proves it at 150 ms.
 
 ### Aiming, charging and the flight cam
 A throw that is held to charge and let go (a disc, a ball, a cast) is `AimCharge` (`foundation/input/`):
@@ -546,6 +547,13 @@ says. Nothing in code tells an item how to be held.
   hand. A long item in a running animation needs it, or its tip sweeps through the head.
 - Put one in a hand: `HeldItem.attach(skeleton, scene)`, and give it the entity's animation driver
   (`item.driver = driver`). That's all: it reads the animations itself.
+- **The quick way, for a weapon or tool held the same in most animations** (DECISIONS #259): in the
+  preview, pick a **Body** (`both` for everyone) and an **Animation**, type the item's **Hold**
+  (position and rotation in the hand) or drag the Grip node, then press **Use This Grip For All**.
+  Every animation now uses that one grip. Step through the other animations; where one looks wrong,
+  type or drag it right there: that saves a small fix on the one grip, which keeps following it if
+  you move the one grip later. **Clear This Grip** puts an animation back on the one grip. The grip
+  file is at the bottom of the Inspector; you never need to open its list.
 - **Line it up in the editor**: a preview scene using `foundation/held/held_item_preview.gd`
   (the rod's is `game/fishing/rod_grip_preview.tscn`). Pick an **Animation** and a **Body**
   (`both`, `female` or `male`), then drag the **Grip** node: that sets the grip for exactly that
