@@ -99,6 +99,7 @@ foundation/content/loot_table_def.gd + loot_line.gd  LootTableDef (each / one-of
 server/src/loot.rs + module/loot.rs      the roll, pity, who earns one; damage_share, drop_pity, drop_loot; server/tests/loot.rs, tests/suites/loot.gd
 server/src/ground.rs + module/ground.rs  items on the ground: ground_item (its RLS), drop_to_ground, pick_up, drop_item, the tick (DECISIONS #269)
 foundation/items/ground_items.gd         GroundItems: the sacks shown, walked over and picked up (Boot adds it)
+foundation/ui/kit/icon_render.gd + tools/render_icons.tscn  icons drawn from models into <owner>/icons/ (DECISIONS #271; tests/render/icon_test)
 foundation/content/resource_def.gd + components/resource_component.gd  ResourceDef (mana) and an entity's pools on the client (DECISIONS #270)
 server/src/resource.rs + module/resources.rs  a pool's level; resource_state, ensure_resource, spend_resource
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
