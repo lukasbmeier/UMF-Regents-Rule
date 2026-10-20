@@ -93,6 +93,11 @@ func run() -> void:
 	_check(lacking.border_color.is_equal_approx(Color(0.8, 0.5, 0.3)) and lacking.border_width_left == 1, "a grade the style has no colour for: the item's own edge")
 	s.grade = -1
 	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(Color(0.8, 0.5, 0.3)), "no grade: the item's own again")
+	# Icons drawn from a model (#271): where a piece's lives, none until drawn, nothing without a renderer.
+	var melee: ContentDef = load("res://foundation/content/ability/melee.tres") as ContentDef
+	_check(melee.rendered_icon_path() == "res://foundation/icons/ability_%d.png" % melee.id and melee.icon() == null and melee.icon_scene() == null,
+		"a piece's drawn icon lives beside its content (%s); none until drawn" % melee.rendered_icon_path())
+	_check(await IconRender.render(PackedScene.new(), self) == null, "no renderer (headless) or nothing to see: no picture")
 	var gl: Label = UiKit.grade_line("Fine iron axe", 1)
 	_check(gl.get_theme_color(&"font_color").is_equal_approx(style.grade_colors[1]), "a grade line: its name in the grade's colour")
 	gl.free()

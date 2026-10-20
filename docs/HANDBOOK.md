@@ -688,7 +688,14 @@ says. Nothing in code tells an item how to be held.
   CanvasLayer. For its rows: `UiKit.heading`, `UiKit.note` (small, dim), `UiKit.line(text, role)` (a
   line in the style's good / warn / bad / accent colour), `UiKit.button`, `UiKit.slot_grid`; an item is a
   `UiSlot` (its colour or picture, its initials, a count, picked or not, a tooltip, and its `grade`: the
-  edge in the grade's colour). An item's name in its grade's colour: `UiKit.grade_line(text, grade)`; the
+  edge in the grade's colour).
+- **Item icons, drawn from their models** (DECISIONS #271): a content type that has a model says so
+  (`icon_scene()`: Regent's Rule's items return their held scene), and `tools/render_icons.tscn` draws
+  every such piece into a square picture beside its content (`game/<genre>/icons/<type>_<id>.png`: the
+  model along the diagonal, lit, transparent around it). Run it in a window, then import:
+  `godot --path . res://tools/render_icons.tscn`, then `godot --headless --path . --import`. A piece's
+  `icon()` is that picture (a type may let a designer set a hand-drawn one first). Draw them again after
+  changing a model. An item's name in its grade's colour: `UiKit.grade_line(text, grade)`; the
   grade colours (lowest first) are the style's `grade_colors`. Never type a colour into a screen: ask
   `UiKit.colour(role)`, so a reskin reaches it.
 - Connect screen and Esc menu: `foundation/ui/`. F11 or Alt+Enter: fullscreen. The menu also has

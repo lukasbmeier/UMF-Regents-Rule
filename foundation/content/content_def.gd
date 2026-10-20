@@ -71,6 +71,26 @@ func on_copied(_owner: String, _replacing: bool) -> void:
 	pass
 
 
+## THE MODEL ITS ICON IS DRAWN FROM (DECISIONS #271): an item's held scene, say; null for none (it keeps
+## its initials). `tools/render_icons.tscn` draws every piece that has one into `rendered_icon_path()`.
+func icon_scene() -> PackedScene:
+	return null
+
+
+## Where its drawn icon lives: `<its owner's content folder>/../icons/<type>_<id>.png`.
+func rendered_icon_path() -> String:
+	var owner: String = ContentLibrary.owner_of_path(resource_path)
+	var root: String = ContentLibrary.root_of(owner if not owner.is_empty() else ContentLibrary.FOUNDATION)
+	return root.get_base_dir().path_join("icons/%s_%d.png" % [content_type(), id])
+
+
+## ITS ICON: its drawn one when there is one (imported), else null. A type with a hand-drawn icon field
+## returns that first.
+func icon() -> Texture2D:
+	var path: String = rendered_icon_path()
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
 ## A link to other content, as the bake writes it: its id, or -1 for none.
 static func ref(def: ContentDef) -> int:
 	return def.id if def != null else -1
