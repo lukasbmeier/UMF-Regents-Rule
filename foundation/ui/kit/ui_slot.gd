@@ -36,6 +36,9 @@ var _count_label: Label = null
 func _init() -> void:
 	expand_icon = true
 	clip_contents = true
+	# A square: never stretched by the row it sits in.
+	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_mark_label = Label.new()
 	_mark_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_mark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
