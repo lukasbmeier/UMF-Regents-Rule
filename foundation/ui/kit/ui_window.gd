@@ -5,7 +5,8 @@ class_name UiWindow extends PanelContainer
 ##
 ## While open it frees the cursor (`MouseCapture.hold_free`, under its own reason, so two windows and the
 ## Escape menu do not fight over it), Escape closes it before the Escape menu hears the key, and `closed`
-## says so. Put it on a CanvasLayer over the game (a HUD's).
+## says so. Put it on a CanvasLayer over the game (a HUD's). A subclass that has its own `_init` calls `super()`
+## first: GDScript does not run this one for it, and `content` would not be there.
 
 signal opened()
 signal closed()
@@ -98,6 +99,13 @@ func close() -> void:
 	_dragging = false
 	MouseCapture.hold_free(_reason(), false)
 	closed.emit()
+
+
+## Shrink (or grow) to what it holds now, where it is: call it after filling `content` again.
+func fit() -> void:
+	var at: Vector2 = position
+	reset_size()
+	position = at
 
 
 func toggle() -> void:

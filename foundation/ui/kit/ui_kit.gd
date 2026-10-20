@@ -11,20 +11,27 @@ static func heading(text: String) -> Label:
 	return l
 
 
-## A small, dim note.
+## A small, dim note. It wraps, so it is given a width to wrap at (`NOTE_WIDTH`, and the row's when wider):
+## a wrapping label measured at no width wraps a letter a line and stretches its window down the screen.
 static func note(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.theme_type_variation = &"UiNote"
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(NOTE_WIDTH, 0)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
 
 
-## A line of text in a role's colour: "text", "dim", "accent", "good", "warn", "bad".
+## The narrowest a note wraps at.
+const NOTE_WIDTH: float = 240.0
+
+
+## A line of text in a role's colour: "text", "dim", "accent", "good", "warn", "bad". One line (a note wraps).
 static func line(text: String, role: StringName = &"text") -> Label:
 	var l := Label.new()
 	l.text = text
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.add_theme_color_override(&"font_color", colour(role))
 	return l
 
