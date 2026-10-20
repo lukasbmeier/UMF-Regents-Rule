@@ -483,6 +483,20 @@ func _run_grip_preview_tests() -> void:
 	prev.set("animation", "interact")
 	await get_tree().process_frame
 	_check((prev.get("hold_position") as Vector3).is_equal_approx(want + Vector3(0.03, 0.02, 0.0)), "move the one grip and the fix follows (%s)" % prev.get("hold_position"))
+	# SPIN (DECISIONS #261): turned on its own length about the fist; the handle stays where it is.
+	var before_spin: Vector3 = prev.get("hold_position") as Vector3
+	var item_now: Node3D = prev.call("item_of", prev.call("holder")) as Node3D
+	var length_before: Vector3 = item_now.global_basis.y.normalized()
+	var edge_before: Vector3 = item_now.global_basis.x.normalized()
+	prev.call("spin", 90.0)
+	for i: int in range(2):
+		await get_tree().process_frame
+	_check((prev.get("hold_position") as Vector3).is_equal_approx(before_spin)
+		and item_now.global_basis.y.normalized().dot(length_before) > 0.999
+		and absf(item_now.global_basis.x.normalized().dot(edge_before)) < 0.01,
+		"Spin 90°: it turns a quarter on its own length; the fist and the length stay put")
+	prev.call("spin", -90.0)
+	await get_tree().process_frame
 	# SAVED WITH THE SCENE (DECISIONS #260): nothing is written while it is moved; the scene's save writes it.
 	_check(not FileAccess.file_exists(GRIP_TEST_PATH) and bool(prev.call("grip_unsaved")),
 		"every move above wrote nothing: the grip waits for the scene's save")
