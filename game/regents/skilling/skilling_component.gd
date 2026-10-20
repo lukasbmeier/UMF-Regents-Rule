@@ -33,6 +33,8 @@ signal worked(result: Dictionary)
 signal xp_changed(skill_id: int, xp: int)
 ## Work was refused, and why (the server's words, or the client's own).
 signal refused(why: String)
+## E was tapped at station `target` (and nothing is being made there): its window opens (the HUD's).
+signal station_opened(target: int)
 
 ## How long E must be held to open a round rather than work AFK.
 @export_range(0.1, 1.5, 0.05, "suffix:s") var hold_s: float = 0.35
@@ -214,14 +216,9 @@ func _physics_process(_delta: float) -> void:
 		tap(target)
 
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	var k: InputEventKey = event as InputEventKey
-	if not is_local_authority or k == null or not k.pressed or k.echo or k.physical_keycode != KEY_Q or _interaction == null or _in_combat():
-		return
-	var st: StationComponent = station_of(_interaction.get_target())
-	if st != null:
-		next_recipe(st)
-		get_viewport().set_input_as_handled()
+## What E would work now (the node or station in front of us), or -1.
+func target_now() -> int:
+	return _interaction.get_target() if _interaction != null else -1
 
 
 ## Whether this player is in combat stance (Q E R F are skills then).
@@ -231,10 +228,13 @@ func _in_combat() -> bool:
 	return c != null and c.in_stance()
 
 
-## A tap on `target`: work it AFK, or stop if that is what we are doing.
+## A tap on `target`: work a node AFK; at a station, open its window (owner, 2026-10-20: a station's
+## window, not Q); stop, if that is what we are doing there.
 func tap(target: int) -> void:
 	if afk_target == target:
 		stop_afk()
+	elif station_of(target) != null:
+		station_opened.emit(target)
 	else:
 		work(target, false)
 

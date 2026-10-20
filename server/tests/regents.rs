@@ -354,3 +354,37 @@ fn a_swing_holds_its_fighter_for_its_clip_and_the_combo_chains_from_its_hit() {
     assert!(!rules::swing_allows(true, 50, 500, 60, 400, 0, false) && rules::swing_allows(true, 400, 500, 60, 400, 0, false),
         "a chain is never later than the lock");
 }
+
+#[test]
+fn the_skeleton_camp_is_content() {
+    // The first enemies (owner, 2026-10-19): two skeletons, each a kind of its own in the genre's band,
+    // fighting with a kit that exists, with health and a loot table.
+    let warrior = rules::FOES.iter().find(|f| f.key == "skeleton_warrior").expect("a skeleton warrior");
+    let axeman = rules::FOES.iter().find(|f| f.key == "skeleton_axeman").expect("a skeleton axeman");
+    for f in [warrior, axeman] {
+        assert!(rules::FOE_KINDS.contains(&f.kind), "{} is kind {}", f.name, f.kind);
+        assert_eq!(rules::foe_of_kind(f.kind).map(|s| s.id), Some(f.id));
+        assert!(rules::kit_keyed(f.kit).is_some() && f.hp > 0 && !f.loot.is_empty(), "{f:?}");
+    }
+    assert_eq!((warrior.kit, axeman.kit), ("sword", "axe"), "each with the weapon its model carries");
+}
+
+#[test]
+fn a_foes_loot_is_rolled_per_drop() {
+    let seed = rules::FoeSeed { id: 1, name: "t", key: "t", kind: 103, kit: "sword", hp: 1, damage_pct: 100, xp_pct: 100,
+        loot: &[(7, 1, 3, 60), (8, 1, 1, 4)] };
+    assert_eq!(rules::foe_loot(&seed, |_| 0), vec![(7, 1), (8, 1)], "the luckiest roll: every drop, the least of each");
+    assert_eq!(rules::foe_loot(&seed, |_| 999), vec![], "the unluckiest: nothing");
+    assert_eq!(rules::foe_loot(&seed, |i| if i == 0 { 599 } else { 40 }), vec![(7, 3)], "just under 60 %: the most; 4 % missed at 40/1000");
+    assert_eq!(rules::foe_loot(&seed, |i| if i == 0 { 600 } else { 39 }), vec![(8, 1)], "60 % missed at 600/1000; 4 % hit at 39");
+    // Over every roll, each count from 1 to 3 comes up, about evenly, and only under the chance.
+    let mut counts = [0u32; 4];
+    for r in 0..1000 {
+        if let Some((_, q)) = rules::foe_loot(&seed, |i| if i == 0 { r } else { 999 }).first() {
+            counts[*q as usize] += 1;
+        }
+    }
+    assert_eq!(counts[0], 0);
+    assert_eq!(counts[1] + counts[2] + counts[3], 600, "{counts:?}");
+    assert!(counts[1..].iter().all(|c| *c == 200), "evenly: {counts:?}");
+}

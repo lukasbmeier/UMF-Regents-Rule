@@ -20,13 +20,18 @@ class_name CombatComponent extends SpaceTimeComponent
 ## lands at its wind-up and holds you for its clip's length (`KitDef.lock_ms`). A press while it holds you
 ## is QUEUED (the latest wins; it lapses after the combo's window) and fires the moment it may: the combo's
 ## next light step from just after the hit (`chain_ms`), anything else once the lock is over. From the
-## start to just after the hit the swing is COMMITTED (you walk, facing the aim: the server's Swinging
-## status bounds the same); in the recovery you move freely and moving cuts the swing's tail. A ROLL in the
-## wind-up cancels the swing (it never lands), in the recovery ends it. A heavy hit in a light's wind-up
+## start to just after the hit the swing is COMMITTED: you walk, facing the aim (the server's Swinging
+## status bounds the same), and its animation plays on whatever the legs do (the hit lands whatever they
+## do); in the recovery you move freely and moving cuts the swing's tail. No swing starts in the air: a
+## press there waits for the ground (the queue), as the server refuses one. A ROLL in the
+## wind-up cancels the swing (it never lands), in the recovery ends it. THE ROLL plays its Roll whole, facing
+## the way it goes, and nothing swings until it is over (`regents.roll_ms`): a press waits for it, as in the air. A heavy hit in a light's wind-up
 ## FLINCHES you (the server cancels it; the Flinched status shows here and clears the queue).
 
 const TABLE_WIELDED: StringName = &"wielded"
 const TABLE_STATE: StringName = &"combat_state"
+## A foe this player slew, and what they got (`game/regents.rs`, `foe_kill`).
+const TABLE_KILL: StringName = &"foe_kill"
 ## The roll: the foundation's dash action (the client predicts its movement), on Ctrl.
 const ACTION_DODGE: StringName = &"dash"
 const ACTION_SLOW: StringName = &"move_slow"
@@ -34,8 +39,9 @@ const FACING: StringName = &"regents_combat"
 const SKILL_KEYS: Array[Key] = [KEY_Q, KEY_E, KEY_R, KEY_F]
 ## The dodge roll (`content/ability/dodge.tres`): everyone's, wielding or not.
 const DODGE_ID: int = 40010
-## The Flinched status (`content/status/flinched.tres`).
+## The Flinched and Swinging statuses (`content/status/`).
 const STATUS_FLINCHED: int = 105
+const STATUS_SWINGING: int = 104
 ## How long after a swing lands it is still committed (the server's `regents.swing_hold_ms`).
 const COMMIT_AFTER_HIT_MS: int = 80
 
@@ -43,6 +49,8 @@ const COMMIT_AFTER_HIT_MS: int = 80
 signal swung(ability_id: int)
 ## The target changed (-1: none).
 signal target_changed(target_id: int)
+## This player slew foe `foe_id` and got `loot` (`item:qty,...`; "" for nothing).
+signal slew(foe_id: int, loot: String)
 ## A key was refused here, and why (the server's refusals come back as revokes).
 signal refused(why: String)
 
@@ -74,27 +82,39 @@ var swing_cancelled: bool = false
 var queued: Dictionary = {}
 var _slowing: bool = false
 var _last_swing_ms: int = -100000
+## Until when (msec) this client's roll holds it: no swing before.
+var roll_until_ms: int = -100000
 var _lmb_down_ms: int = -1
 var _heavy_fired: bool = false
 var _rmb: bool = false
 var _local_input: LocalInputComponent = null
 var _action: SpaceTimeActionComponent = null
+var _driver: AnimationDriverComponent = null
+var _movement: SpaceTimeMovementComponent = null
+var _status: StatusComponent = null
 var _ring: MeshInstance3D = null
 
 
 func required_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL]
 
 
 func optional_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL]
 
 
 func _on_bound() -> void:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	_local_input = ent.find_component(LocalInputComponent) as LocalInputComponent if ent != null else null
 	_action = ent.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent if ent != null else null
+	_driver = ent.find_component(AnimationDriverComponent) as AnimationDriverComponent if ent != null else null
+	_movement = ent.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent if ent != null else null
+	_status = ent.find_component(StatusComponent) as StatusComponent if ent != null else null
 	set_process(is_local_authority)
+	# Everyone's swings and rolls play whole, here and on every other client (their starts arrive later).
+	if _action != null:
+		_action.action_started.connect(func(id: int, _pid: int) -> void: _began(id))
+		_action.started_elsewhere.connect(_began)
 	if is_local_authority:
 		bind_keys()
 		if _action != null:
@@ -121,7 +141,7 @@ static func bind_keys() -> void:
 			InputMap.action_add_event(ACTION_SLOW, alt)
 
 
-func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> void:
+func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> void:
 	match table:
 		TABLE_WIELDED:
 			weapon = ItemDef.by_id(int(new.get(&"item_id"))) if new != null else null
@@ -129,6 +149,9 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 			weapon_row = int(new.get(&"item_row")) if new != null else -1
 		TABLE_STATE:
 			blocking = new != null and bool(new.get(&"blocking"))
+		TABLE_KILL:
+			if new != null and old == null and is_local_authority:
+				slew.emit(int(new.get(&"foe_id")), String(new.get(&"loot")))
 
 
 ## Whether Q E R F are skills now: a weapon wielded, and a target picked or a swing just now.
@@ -152,10 +175,10 @@ func swinging(now_ms: int) -> bool:
 	return swing_ability != null and not swing_cancelled and now_ms < swing_lock_ms
 
 
-## Whether ability `a` (a light step `step`, -1 for anything else) may start at `now_ms`: the swing
-## before it lets go (the combo's next step from just after its hit), and its cooldown is over.
+## Whether ability `a` (a light step `step`, -1 for anything else) may start at `now_ms`: on the ground,
+## the swing before it lets go (the combo's next step from just after its hit), and its cooldown is over.
 func may_start(a: AbilityDef, step: int, now_ms: int) -> bool:
-	if a == null or kit == null:
+	if a == null or kit == null or not grounded() or now_ms < roll_until_ms:
 		return false
 	if swinging(now_ms):
 		var chain: bool = step > 0 and step == combo_step + 1
@@ -163,6 +186,14 @@ func may_start(a: AbilityDef, step: int, now_ms: int) -> bool:
 		if now_ms < from:
 			return false
 	return _action == null or _action.cooldown_remaining_sec(a.id) <= 0.0
+
+
+## Whether the body is on the ground (as this client moves it): no swing starts in the air.
+func grounded() -> bool:
+	if _movement == null:
+		return true
+	var s: MovementState = _movement.get_predicted_state() if is_local_authority else _movement.get_render_state()
+	return s == null or s.grounded
 
 
 ## Swing ability `a` now, aimed where the camera looks, its timeline begun: the predicted id, or -1.
@@ -233,20 +264,49 @@ func skill(slot: int) -> bool:
 
 
 ## Ctrl: the dodge roll, the way you are moving. In a swing's wind-up it cancels the swing (it never
-## lands); in its recovery it ends it; the queue and the combo are over.
+## lands); in its recovery it ends it; the queue and the combo are over. The body DASHES only when the roll
+## is taken (owner, 2026-10-19: "it dashes forward instead of rolling"): Ctrl itself presses no dash.
 func dodge() -> int:
 	if _action == null:
 		return -1
 	var pid: int = _action.request_use(DODGE_ID, 0, Vector3.ZERO)
 	if pid < 0:
 		return -1
+	if _local_input != null:
+		_local_input.dash_once()
 	var now: int = Time.get_ticks_msec()
 	if swinging(now):
 		swing_cancelled = now < swing_hit_ms
 		swing_lock_ms = now
+	roll_until_ms = now + int(HotRules.number(&"regents.roll_ms"))
 	queued = {}
 	combo_step = -1
 	return pid
+
+
+## An ability began on this entity (predicted here, or another player's arriving): a swing's animation plays
+## on to just after it lands however the body moves (the hit lands regardless); the roll plays its Roll whole,
+## the model facing the way the roll goes.
+func _began(ability_id: int) -> void:
+	if _driver == null:
+		return
+	if ability_id == DODGE_ID:
+		var roll_s: float = _driver.shot_seconds(StringName("ability.%d" % DODGE_ID))
+		_driver.commit_action(roll_s)
+		_driver.face_motion(roll_s)
+		return
+	# A foe wields nothing: its swing is whichever kit has it.
+	for k: KitDef in ([kit] if kit != null else KitDef.all()):
+		for a: AbilityDef in k.abilities():
+			if a.id == ability_id:
+				_driver.commit_action(float(a.wind_up_ms + COMMIT_AFTER_HIT_MS) / 1000.0)
+				return
+
+
+## The swing is over early (a roll, a flinch, a refusal): its animation is no longer committed.
+func _let_go() -> void:
+	if _driver != null:
+		_driver.commit_action(0.0)
 
 
 ## The server refused a use: a swing it refused never began (its timeline is undone).
@@ -255,6 +315,7 @@ func _on_revoked(ability_id: int, _predicted_id: int, why: String) -> void:
 		swing_lock_ms = Time.get_ticks_msec()
 		swing_cancelled = true
 		combo_step = -1
+		_let_go()
 	refused.emit(why)
 
 
@@ -330,20 +391,23 @@ func _process(_delta: float) -> void:
 		_heavy_fired = true
 		heavy()
 	# Flinched by the server: the swing is over, and so is what was queued.
-	var st: StatusComponent = (entity as SpaceTimeEntity).find_component(StatusComponent) as StatusComponent
+	var st: StatusComponent = _status
 	if st != null and st.status() == STATUS_FLINCHED and swinging(now):
 		swing_cancelled = true
 		swing_lock_ms = now
 		queued = {}
 		combo_step = -1
+		_let_go()
 	# The queue: fire when it may, or let it lapse.
 	if not queued.is_empty() and kit != null:
 		if now - int(queued["at"]) > kit.combo_window_ms:
 			queued = {}
 		elif _try(String(queued["kind"]), int(queued["slot"])):
 			queued = {}
-	# THE COMMITTED SWING: walk from its start until just after it lands.
-	var commit: bool = swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS
+	# THE COMMITTED SWING: walk from its start until just after it lands. Slow-walk until the server's
+	# Swinging status arrives, which then bounds the run to the same walk (both at once would crawl).
+	var commit: bool = swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS \
+		and (st == null or st.status() != STATUS_SWINGING)
 	if commit != _slowing:
 		_slowing = commit
 		if commit:
@@ -356,6 +420,8 @@ func _process(_delta: float) -> void:
 		set_target(-1)
 	if _local_input != null:
 		_local_input.hold_facing(FACING, in_stance())
+		# Ctrl is the roll's, which dashes when it is taken (`dodge`): the key never dashes on its own.
+		_local_input.dash_key = false
 	_place_ring()
 
 

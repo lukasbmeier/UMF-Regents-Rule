@@ -54,7 +54,9 @@ func _run() -> void:
 	for s: SpaceTimeInventoryComponent.Stack in inv.items():
 		if s.item_def_id == AXE:
 			row = s.id
-	var button: Button = hud.bag_panel.find_child("Wield_%d" % row, true, false) as Button if hud.bag_panel != null else null
+	hud.bag_window.picked_row = row
+	hud.bag_window.refresh()
+	var button: Button = hud.bag_window.find_child("Wield_%d" % row, true, false) as Button if hud.bag_window.is_open() else null
 	_check(button != null and button.text == "Wield", "the bag panel has a Wield button on the bronze axe")
 	if button != null:
 		button.pressed.emit()
@@ -98,6 +100,15 @@ func _run() -> void:
 	await get_tree().create_timer(1.0).timeout
 	var before_heavy: float = dh.get_current()
 	await _click(0.6)
+	# The overhead's clip steps 0.85 m forward in its source; played in place, the model never leaves the body.
+	var skel: Skeleton3D = me.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var root_bone: int = skel.find_bone("root")
+	var drift: float = 0.0
+	for i: int in range(40):
+		await get_tree().process_frame
+		drift = maxf(drift, skel.get_bone_pose_position(root_bone).length())
+	_check(driver.action_clip() == &"extra/Sword_Heavy_B" and drift < 0.05,
+		"the overhead plays in place: its root moved %.3f m (its clip steps 0.85 m), so nothing snaps back" % drift)
 	await _until(func() -> bool: return dh.get_current() < before_heavy - 1.0, 3.0)
 	_check(is_equal_approx(snappedf(before_heavy - dh.get_current(), 0.01), 22.4), "held: the overhead, 32 (%.2f)" % (before_heavy - dh.get_current()))
 	_check(feed != null and feed.shown.size() >= 3 and is_equal_approx(snappedf(feed.shown[0], 0.01), 7.7), "the numbers floated up from the dummy: %s" % str(feed.shown if feed != null else []))
@@ -151,12 +162,50 @@ func _run() -> void:
 	var p0: Vector3 = me.global_position
 	await get_tree().create_timer(0.15).timeout
 	var walked: float = Vector2(me.global_position.x - p0.x, me.global_position.z - p0.z).length() / 0.15
+	# Still running at the click; the swing plays to its hit all the same, as the server lands it.
+	await _until(func() -> bool: return Time.get_ticks_msec() >= combat.swing_hit_ms, 1.0)
+	_check(driver.action_playing() and driver.action_clip() == &"extra/Sword_Regular_A",
+		"run into a swing: its animation plays through to the hit (%s)" % driver.action_clip())
 	await get_tree().create_timer(0.8).timeout
 	var p1: Vector3 = me.global_position
 	await get_tree().create_timer(0.3).timeout
 	var ran_after: float = Vector2(me.global_position.x - p1.x, me.global_position.z - p1.z).length() / 0.3
 	Input.action_release(&"move_forward")
 	_check(walked < 2.0 and ran_after > 3.5, "running into a swing: %.1f m/s until it lands, then %.1f m/s again" % [walked, ran_after])
+
+	# --- NO SWING IN THE AIR: a click there waits for the ground ---
+	await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+	await get_tree().create_timer(1.0).timeout
+	var air: Array[bool] = []
+	var on_air: Callable = func(_a: int) -> void: air.append(combat.grounded())
+	combat.swung.connect(on_air)
+	Input.action_press(&"jump")
+	await _until(func() -> bool: return not combat.grounded(), 1.0)
+	Input.action_release(&"jump")
+	await get_tree().create_timer(0.15).timeout
+	var aloft: bool = not combat.grounded()
+	await _click(0.03)
+	var swung_aloft: int = air.size()
+	await _until(func() -> bool: return air.size() > 0, 2.0)
+	combat.swung.disconnect(on_air)
+	_check(aloft and swung_aloft == 0 and air.size() == 1 and air[0],
+		"a click in a jump swings nothing in the air; it swings on landing (%s)" % str(air))
+	await get_tree().create_timer(1.2).timeout
+	# And the server's own say: a client that asks in the air anyway (past its own check) is refused.
+	var why_refused: Array[String] = []
+	var on_no: Callable = func(why: String) -> void: why_refused.append(why)
+	combat.refused.connect(on_no)
+	Input.action_press(&"jump")
+	await _until(func() -> bool: return not combat.grounded(), 1.0)
+	Input.action_release(&"jump")
+	await get_tree().create_timer(0.2).timeout
+	var act: SpaceTimeActionComponent = me.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	act.request_use(combat.kit.light[0].id, 0, Vector3(0, 0, -1))
+	await _until(func() -> bool: return not why_refused.is_empty(), 3.0)
+	combat.refused.disconnect(on_no)
+	_check(why_refused.any(func(w: String) -> bool: return w.contains("not in the air")),
+		"a swing asked for in the air anyway: the server refuses it (%s)" % str(why_refused))
+	await get_tree().create_timer(1.2).timeout
 
 	# --- THE ROLL: further than a run in the same time ---
 	# Open ground by the spawn, running north: nothing in the way for 6 m (the camp's stall stopped it).
@@ -170,6 +219,51 @@ func _run() -> void:
 	var fixed: int = before_roll_fixes
 	_check(rolled > ran + 1.2 and int(mv.get_reconcile_stats()["reconciles"]) == fixed,
 		"Ctrl while running: the predicted dash carries %.2f m against a run's %.2f, and the server corrected none of it" % [rolled, ran])
+
+	# --- THE ROLL PLAYS WHOLE; NOTHING SWINGS IN IT; NOT AGAIN TOO SOON ---
+	await get_tree().create_timer(1.6).timeout   # the roll above is off its cooldown
+	var roll_s: float = driver.shot_seconds(&"ability.40010")
+	var rolls: Array[int] = []
+	var on_roll: Callable = func(_a: int) -> void: rolls.append(Time.get_ticks_msec())
+	combat.swung.connect(on_roll)
+	Input.action_press(&"move_forward")
+	await get_tree().create_timer(0.3).timeout
+	var rolled_at: int = Time.get_ticks_msec()
+	await _key(KEY_CTRL)
+	await _click(0.03)   # mid-roll: waits for the roll
+	# Watched until the queued swing takes over at the roll's end: the dash's speed used to cut it at once.
+	var rolling_ms: int = 0
+	while Time.get_ticks_msec() - rolled_at < int(roll_s * 1000.0) and rolls.is_empty():
+		if driver.action_playing() and driver.action_clip() == &"Roll":
+			rolling_ms = Time.get_ticks_msec() - rolled_at
+		await get_tree().process_frame
+	_check(rolling_ms >= int(HotRules.number(&"regents.roll_ms")) - 60,
+		"running, the Roll plays on (%d ms of its %.2f s, until the queued swing takes over): the dash's speed no longer cuts it" % [rolling_ms, roll_s])
+	# Ctrl again inside the roll's cooldown: no roll, and NO DASH, even with the dash's own cooldown lost (as a
+	# correction lost it before DECISIONS #264): the dash is the roll's, not the key's.
+	var mvp: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	var dodges_before: int = int(mvp.get_reconcile_stats()["reconciles"])
+	mvp._predicted.dash_cooldown = 0
+	var act2: SpaceTimeActionComponent = me.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	var second_rolls: Array[int] = []
+	var on_started: Callable = func(id: int, _pid: int) -> void: second_rolls.append(id)
+	act2.action_started.connect(on_started)
+	await _key(KEY_CTRL)
+	var dashed_again: bool = false
+	for i: int in range(12):
+		await get_tree().process_frame
+		dashed_again = dashed_again or mvp.get_predicted_state().dash_left > 0
+	act2.action_started.disconnect(on_started)
+	_check(not dashed_again and not second_rolls.has(40010),
+		"Ctrl again inside the roll's 1.5 s cooldown: no roll and no dash, even with the dash's own cooldown gone (%d corrections meanwhile)"
+		% (int(mvp.get_reconcile_stats()["reconciles"]) - dodges_before))
+	await _until(func() -> bool: return not rolls.is_empty(), 2.0)
+	Input.action_release(&"move_forward")
+	combat.swung.disconnect(on_roll)
+	var roll_ms: int = int(HotRules.number(&"regents.roll_ms"))
+	_check(rolls.size() == 1 and rolls[0] - rolled_at >= roll_ms - 20,
+		"a click mid-roll swings only once the roll is over (%d ms after Ctrl, the roll %d ms)" % [(rolls[0] - rolled_at) if not rolls.is_empty() else -1, roll_ms])
+	await get_tree().create_timer(1.2).timeout
 
 	# --- THE BLOCK ---
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
@@ -185,6 +279,44 @@ func _run() -> void:
 	combat.set_block(false)
 	await _until(func() -> bool: return not combat.blocking and st.status() == 0, 3.0)
 	_check(not combat.blocking and st.status() == 0, "let go: the block comes down")
+
+	# --- A SKELETON (owner, 2026-10-19): it notices you, comes for you and swings; you hit it back; past its
+	# leash it gives up and walks home. Its brain runs in the referee, as in play.
+	await _key(KEY_ESCAPE)
+	var my_hp: SpaceTimeHealthComponent = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	await _stand_at(Vector3(33.0, 0.05, 8.0), Vector3(33.0, 0.0, -1.0))   # 9 m from skeleton_1 (it notices at 10)
+	var foe_ent: SpaceTimeEntity = null
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and e.definition.kind == 103 \
+				and (foe_ent == null or e.global_position.distance_to(me.global_position) < foe_ent.global_position.distance_to(me.global_position)):
+			foe_ent = e
+	_check(foe_ent != null, "a skeleton warrior at the camp")
+	if foe_ent != null:
+		var home: Vector3 = foe_ent.global_position
+		var hp0: float = my_hp.get_current()
+		await _until(func() -> bool: return foe_ent.global_position.distance_to(me.global_position) < 2.6, 10.0)
+		_check(foe_ent.global_position.distance_to(me.global_position) < 2.6, "it noticed you and came (%.1f m away now)" % foe_ent.global_position.distance_to(me.global_position))
+		var sdrv: AnimationDriverComponent = foe_ent.find_component(AnimationDriverComponent) as AnimationDriverComponent
+		var swung_clip: Array[StringName] = []
+		await _until(func() -> bool:
+			if sdrv != null and sdrv.action_playing() and String(sdrv.action_clip()).contains("Sword"):
+				swung_clip.append(sdrv.action_clip())
+			return my_hp.get_current() < hp0, 8.0)
+		_check(my_hp.get_current() < hp0 and not swung_clip.is_empty(),
+			"it swung its sword (%s) and hit you: %.1f -> %.1f" % [swung_clip[0] if not swung_clip.is_empty() else &"no swing seen", hp0, my_hp.get_current()])
+		var shp: SpaceTimeHealthComponent = foe_ent.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+		var s0: float = shp.get_current()
+		var to_it: Vector3 = foe_ent.global_position - me.global_position
+		input.set_look(atan2(-to_it.x, -to_it.z), 0.0)
+		await get_tree().create_timer(0.4).timeout
+		await _click(0.06)
+		await _until(func() -> bool: return shp.get_current() < s0, 3.0)
+		_check(shp.get_current() < s0, "your chop hit it back: %.1f -> %.1f" % [s0, shp.get_current()])
+		# Run: past its leash (25 m from home) it gives up and walks home.
+		await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+		await _until(func() -> bool: return foe_ent.global_position.distance_to(home) < 2.0, 20.0)
+		_check(foe_ent.global_position.distance_to(home) < 2.0, "out of its reach, it walked home (%.1f m from its point)" % foe_ent.global_position.distance_to(home))
 
 	# --- LET THE TARGET GO ---
 	await _key(KEY_ESCAPE)
@@ -211,7 +343,7 @@ func _run_for(secs: float, roll: bool) -> float:
 
 ## The bag panel's button on row `row`: its words, or "" when there is none.
 func _bag_button(row: int) -> String:
-	var b: Button = hud.bag_panel.find_child("Wield_%d" % row, true, false) as Button if hud.bag_panel != null else null
+	var b: Button = hud.bag_window.find_child("Wield_%d" % row, true, false) as Button if hud.bag_window.is_open() else null
 	return b.text if b != null else ""
 
 

@@ -210,9 +210,36 @@ maximum = 1000.0
 unit = "ms"
 description = "COMBAT TIMING: the server takes a swing this much before its lock ends (the network: the client times the lock by its own presses)."
 
+[sub_resource type="Resource" id="Rule_foe_corpse"]
+script = ExtResource("2_rule")
+name = &"foe_corpse_s"
+number = 6.0
+minimum = 0.5
+maximum = 120.0
+unit = "s"
+description = "FOES (owner, 2026-10-19): a slain foe lies this long before it is gone."
+
+[sub_resource type="Resource" id="Rule_foe_respawn"]
+script = ExtResource("2_rule")
+name = &"foe_respawn_s"
+number = 60.0
+minimum = 1.0
+maximum = 3600.0
+unit = "s"
+description = "FOES: a slain foe comes back at its point this long after it fell."
+
+[sub_resource type="Resource" id="Rule_player_respawn"]
+script = ExtResource("2_rule")
+name = &"player_respawn_s"
+number = 5.0
+minimum = 0.5
+maximum = 120.0
+unit = "s"
+description = "FOES: a slain player gets up at the spawn, whole, this long after (a placeholder until a death penalty is decided)."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

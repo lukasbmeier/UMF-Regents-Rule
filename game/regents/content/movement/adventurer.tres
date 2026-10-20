@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_profile")
 dash_impulse = 16.0
-dash_cooldown_ticks = 54
+dash_cooldown_ticks = 84
 dash_ticks = 15
 id = 40001
 display_name = "Adventurer"
-designer_notes = "The foundation's default movement, plus the DODGE ROLL's dash (owner, 2026-10-19: Ctrl, predicted by the client the moment it is pressed; the server bounds it like any movement). Its cooldown matches the Dodge roll ability's (900 ms), which gives the roll's i-frames (the Rolling status). Parity numbers: the client predicts with them."
+designer_notes = "The foundation's default movement, plus the DODGE ROLL's dash (owner, 2026-10-19: Ctrl, predicted by the client the moment it is pressed; the server bounds it like any movement). The dash happens only when the Dodge roll ability is taken (its 1500 ms cooldown, owner 2026-10-19: longer, so it cannot be spammed; it gives the roll's i-frames, the Rolling status). The dash's own cooldown (84 ticks, 1.4 s) is a little shorter, so a roll the ability takes always dashes. Parity numbers: the client predicts with them."

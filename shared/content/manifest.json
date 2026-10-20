@@ -76,14 +76,14 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 10,
-			"hash": "5655dd86",
+			"hash": "086f9495",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "4fe376bc",
 				"game/regents/content/ability/axe_chop_b.tres": "ef47c2e2",
 				"game/regents/content/ability/axe_cleave.tres": "af886adf",
 				"game/regents/content/ability/axe_heavy.tres": "d336b065",
-				"game/regents/content/ability/dodge.tres": "3b7754ed",
+				"game/regents/content/ability/dodge.tres": "0b524f44",
 				"game/regents/content/ability/sword_heavy.tres": "422d6c72",
 				"game/regents/content/ability/sword_lunge.tres": "d82d59f5",
 				"game/regents/content/ability/sword_slash_a.tres": "061e36ab",
@@ -93,16 +93,28 @@
 			"type": "ability"
 		},
 		"shared/content/regents/character.json": {
-			"count": 4,
-			"hash": "ea35be5e",
+			"count": 6,
+			"hash": "b394af34",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/character/adventurer.tres": "82e9c25f",
 				"game/regents/content/character/dummy.tres": "f90a4f6b",
 				"game/regents/content/character/node.tres": "aa7b11b6",
+				"game/regents/content/character/skeleton_axeman.tres": "18b3f290",
+				"game/regents/content/character/skeleton_warrior.tres": "47990197",
 				"game/regents/content/character/station.tres": "61228266"
 			},
 			"type": "character"
+		},
+		"shared/content/regents/foe.json": {
+			"count": 2,
+			"hash": "b544cd4d",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/foe/skeleton_axeman.tres": "726e7074",
+				"game/regents/content/foe/skeleton_warrior.tres": "85fbdb0a"
+			},
+			"type": "foe"
 		},
 		"shared/content/regents/item.json": {
 			"count": 19,
@@ -142,11 +154,12 @@
 			"type": "kit"
 		},
 		"shared/content/regents/movement.json": {
-			"count": 1,
-			"hash": "4776fc76",
+			"count": 2,
+			"hash": "0809d688",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/movement/adventurer.tres": "3f889dc2"
+				"game/regents/content/movement/adventurer.tres": "87ab1626",
+				"game/regents/content/movement/skeleton.tres": "6c231d87"
 			},
 			"type": "movement"
 		},
@@ -183,10 +196,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "f434f77d",
+			"hash": "dc8e11ea",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "2f0017c5"
+				"game/regents/content/rules/regents.tres": "a5f85078"
 			},
 			"type": "rules"
 		},
@@ -218,16 +231,17 @@
 			"type": "station"
 		},
 		"shared/content/regents/status.json": {
-			"count": 6,
-			"hash": "ede9a4b4",
+			"count": 7,
+			"hash": "e93803c0",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/status/blocking.tres": "96e8aa81",
 				"game/regents/content/status/depleted.tres": "812b8cf4",
 				"game/regents/content/status/flinched.tres": "5f4168e4",
 				"game/regents/content/status/rolling.tres": "bf803c94",
+				"game/regents/content/status/slain.tres": "a107b6c3",
 				"game/regents/content/status/staggered.tres": "ffd05989",
-				"game/regents/content/status/swinging.tres": "9c658cee"
+				"game/regents/content/status/swinging.tres": "777c6b27"
 			},
 			"type": "status"
 		}

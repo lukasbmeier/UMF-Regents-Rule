@@ -27,7 +27,7 @@ use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTIT
 use crate::hot::regents as hot;
 use crate::module::{
     ability_def, challenge, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
-    world_level, Challenge, InventoryItem, ItemDef, DEFAULT_WORLD,
+    world_config, world_level, Challenge, InventoryItem, ItemDef, StatusStateRow, DEFAULT_WORLD,
 };
 use crate::sim::Vector3;
 
@@ -505,13 +505,15 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
         ctx.db.station().insert(Station { entity_id: id, world_id, key: st.key.to_string(), point_id: p.id.to_string() });
     }
     populate_dummies(ctx, world_id);
+    populate_foes(ctx, world_id);
 }
 
 /// Every node and station of world `world_id` taken away (its level changed).
 fn clear_world(ctx: &ReducerContext, world_id: u32) {
     let ids: Vec<u64> = ctx.db.gather_node().world_id().filter(world_id).map(|n| n.entity_id)
         .chain(ctx.db.station().world_id().filter(world_id).map(|s| s.entity_id))
-        .chain(ctx.db.dummy().world_id().filter(world_id).map(|d| d.entity_id)).collect();
+        .chain(ctx.db.dummy().world_id().filter(world_id).map(|d| d.entity_id))
+        .chain(ctx.db.foe().world_id().filter(world_id).map(|f| f.entity_id)).collect();
     let orders: Vec<u64> = ctx.db.work_order().world_id().filter(world_id).map(|o| o.id).collect();
     for id in orders {
         for f in ctx.db.order_filled().order_id().filter(id).map(|f| f.id).collect::<Vec<_>>() {
@@ -523,8 +525,9 @@ fn clear_world(ctx: &ReducerContext, world_id: u32) {
         ctx.db.dummy().entity_id().delete(id);
         ctx.db.gather_node().entity_id().delete(id);
         ctx.db.station().entity_id().delete(id);
+        ctx.db.foe().entity_id().delete(id);
         if ctx.db.entity().entity_id().find(id).is_some() {
-            crate::module::despawn_entity_internal(ctx, id);
+            forget_body(ctx, id);
         }
     }
 }
@@ -849,10 +852,15 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
         ctx.db.afk_work().entity_id().update(row);
     }
     reset_dummies(ctx);
+    tick_foes(ctx);
     let mut boards: Vec<u32> = ctx.db.station().iter().filter(|s| s.key == rules::ORDER_BOARD).map(|s| s.world_id).collect();
     boards.dedup();
     for w in boards {
         refresh_orders(ctx, w);
+    }
+    let kills: Vec<u64> = ctx.db.foe_kill().iter().filter(|k| now - micros(k.at) > RESULT_TTL_MICROS).map(|k| k.id).collect();
+    for id in kills {
+        ctx.db.foe_kill().id().delete(id);
     }
     let old: Vec<u64> = ctx.db.work_result().iter().filter(|h| now - micros(h.at) > RESULT_TTL_MICROS).map(|h| h.id).collect();
     for id in old {
@@ -966,6 +974,37 @@ pub struct Swing {
     pub lock_ms: u32,
     pub light_step: i32,
     pub cancelled: bool,
+}
+
+/// A FOE on a level point (owner, 2026-10-19: the first enemies): which foe (`FoeDef`), and when it fell.
+/// Its entity is gone `regents.foe_corpse_s` after it fell (`gone`); the row stays until it comes back,
+/// `regents.foe_respawn_s` after, as a new entity on the same point.
+#[table(accessor = foe, public)]
+#[derive(Clone)]
+pub struct Foe {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub point_id: String,
+    pub foe_id: u32,
+    pub fell_at: Option<Timestamp>,
+    pub gone: bool,
+}
+
+/// A foe slain by a player, and what they got (`item:qty,...`): the HUD's line. Kept a few seconds.
+#[table(accessor = foe_kill, public)]
+pub struct FoeKill {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    /// The killer.
+    #[index(btree)]
+    pub entity_id: u64,
+    pub world_id: u32,
+    pub foe_id: u32,
+    pub loot: String,
+    pub at: Timestamp,
 }
 
 /// A training dummy, on a level point.
@@ -1089,7 +1128,20 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
     if s.blocking {
         return Err("lower your block to swing".into());
     }
+    // No swing mid-roll (owner, 2026-10-19: "prevent melee usage like jumping"): the client holds a press
+    // until its roll is over; a slack's worth before the end is allowed (its clock ran first).
     let slack = hot_number(ctx, hot::SWING_SLACK_MS).max(0.0) as i64;
+    if let Some(st) = ctx.db.status_state().entity_id().find(actor).filter(|st| st.status == rules::STATUS_ROLLING) {
+        let left = st.lasts_ms as i64 - (micros(ctx.timestamp) - micros(st.since)) / 1000;
+        if left > slack {
+            return Err("still rolling".into());
+        }
+    }
+    // No swing in the air (owner, 2026-10-19: a jump attack played a moment and was cut off): the client
+    // holds a press made there until it lands.
+    if ctx.db.movement_state().entity_id().find(actor).is_some_and(|m| !m.grounded) {
+        return Err("not in the air".into());
+    }
     let sw = ctx.db.swing().entity_id().find(actor);
     let (lock, last_step) = sw.as_ref().map_or((0i64, -1), |w| (w.lock_ms as i64, if w.cancelled { -1 } else { w.light_step }));
     if let rules::KitSlot::Light(step) = slot {
@@ -1151,8 +1203,11 @@ fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     } else {
         ctx.db.swing().insert(w);
     }
-    // A COMMITTED SWING: slowed from its start until just after it lands.
-    let hold = wind_up + hot_number(ctx, hot::SWING_HOLD_MS).max(0.0) as u32;
+    // A COMMITTED SWING: slowed from its start until just after it lands; the server lets go a slack's worth
+    // before the client does (`regents.swing_slack_ms`), so a frame from a client already running again
+    // never meets the bound (a snap back).
+    let hold = (wind_up + hot_number(ctx, hot::SWING_HOLD_MS).max(0.0) as u32)
+        .saturating_sub(hot_number(ctx, hot::SWING_SLACK_MS).max(0.0) as u32);
     if let Err(e) = crate::module::set_status_internal(ctx, actor, rules::STATUS_SWINGING, hold, actor, String::new()) {
         log::warn!("regents: {actor} swings, but: {e}");
     }
@@ -1181,7 +1236,10 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
             }
         }
     }
-    let (pct, quality) = wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q));
+    let (pct, quality) = match foe_seed_of(ctx, actor) {
+        Some(f) => (f.damage_pct, 0),
+        None => wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q)),
+    };
     let mut dmg = rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill));
     let t = combat_state_of(ctx, target.entity_id);
     if t.blocking {
@@ -1209,11 +1267,148 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         }
     }
     if ctx.db.player().entity_id().find(actor).is_some() && dmg > 0.0 {
-        let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { 1.0 };
+        let share = if dummy.is_some() {
+            hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0
+        } else {
+            foe_seed_of(ctx, target.entity_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0)
+        };
         let xp = (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32;
         add_xp(ctx, actor, kit.skill, xp);
     }
+    if dmg > 0.0 && ctx.db.health_state().entity_id().find(target.entity_id).is_some_and(|h| h.is_dead) {
+        fell(ctx, target.entity_id, actor);
+    }
     true
+}
+
+// --- foes (owner, 2026-10-19: the first enemies, a skeleton camp) ------------------------------------
+
+/// The foe entity `entity_id` is (its kind's `FoeSeed`), if it is one.
+fn foe_seed_of(ctx: &ReducerContext, entity_id: u64) -> Option<&'static rules::FoeSeed> {
+    let kind = ctx.db.entity().entity_id().find(entity_id)?.kind;
+    if !rules::FOE_KINDS.contains(&kind) {
+        return None;
+    }
+    rules::foe_of_kind(kind)
+}
+
+/// A foe on every point of world `world_id`'s level named by a foe's key that has none yet (standing, fallen
+/// or gone: a point waits for its own to come back).
+fn populate_foes(ctx: &ReducerContext, world_id: u32) {
+    let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
+    let have: Vec<String> = ctx.db.foe().world_id().filter(world_id).map(|f| f.point_id).collect();
+    for seed in rules::FOES {
+        for p in level.points_of(seed.key) {
+            if have.iter().any(|id| id == p.id) {
+                continue;
+            }
+            spawn_foe(ctx, world_id, seed, p);
+        }
+    }
+}
+
+/// Foe `seed` standing on point `p`, whole: an entity its brain drives (`sidecar/npc/brains/regents/foe.gd`).
+fn spawn_foe(ctx: &ReducerContext, world_id: u32, seed: &rules::FoeSeed, p: &crate::level::Point) -> u64 {
+    let id = crate::module::spawn_npc_internal(ctx, world_id, seed.kind, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
+    if let Some(mut h) = ctx.db.health_state().entity_id().find(id) {
+        h.current = seed.hp as f32;
+        h.max = seed.hp as f32;
+        h.is_dead = false;
+        ctx.db.health_state().entity_id().update(h);
+    }
+    ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
+        entity_id: id, world_id, brain: FOE_BRAIN.into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
+    });
+    ctx.db.foe().insert(Foe { entity_id: id, world_id, point_id: p.id.to_string(), foe_id: seed.id, fell_at: None, gone: false });
+    id
+}
+
+/// The brain every foe has: its FoeDef says how it behaves.
+const FOE_BRAIN: &str = "regents/foe";
+
+/// HEALTH RAN OUT. A foe falls (Slain, until it is gone) and its killer, a player, gets its loot; a player
+/// is Slain `regents.player_respawn_s`, then gets up at the spawn (`on_status_expired`).
+fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
+    stop_block(ctx, entity_id);
+    if let Some(mut f) = ctx.db.foe().entity_id().find(entity_id) {
+        if f.fell_at.is_some() {
+            return;
+        }
+        f.fell_at = Some(ctx.timestamp);
+        ctx.db.foe().entity_id().update(f.clone());
+        if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_SLAIN, crate::module::LASTS_UNTIL_CHANGED, killer, String::new()) {
+            log::warn!("regents: foe {entity_id} fell, but: {e}");
+        }
+        let Some(seed) = rules::FOES.iter().find(|s| s.id == f.foe_id) else { return };
+        if ctx.db.player().entity_id().find(killer).is_none() {
+            return;
+        }
+        let salt = (micros(ctx.timestamp) as u64) ^ entity_id.rotate_left(23) ^ killer.rotate_left(47);
+        let got = rules::foe_loot(seed, |i| rules::roll_permille(salt ^ ((i as u64 + 1) << 13)));
+        for (item, qty) in &got {
+            give_items(ctx, killer, *item, *qty, None);
+        }
+        let loot: Vec<String> = got.iter().map(|(i, q)| format!("{i}:{q}")).collect();
+        ctx.db.foe_kill().insert(FoeKill { id: 0, entity_id: killer, world_id: f.world_id, foe_id: seed.id, loot: loot.join(","), at: ctx.timestamp });
+        log::info!("regents: {killer} slew {} ({entity_id}): {:?}", seed.name, got);
+        return;
+    }
+    if ctx.db.player().entity_id().find(entity_id).is_some() {
+        let ms = (hot_number(ctx, hot::PLAYER_RESPAWN_S).max(0.0) * 1000.0) as u32;
+        if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_SLAIN, ms.max(1), killer, String::new()) {
+            log::warn!("regents: player {entity_id} fell, but: {e}");
+        }
+        log::info!("regents: player {entity_id} was slain by {killer}");
+    }
+}
+
+/// A slain player's time is up: whole again, at the spawn.
+fn get_up(ctx: &ReducerContext, entity_id: u64) {
+    if let Some(mut h) = ctx.db.health_state().entity_id().find(entity_id) {
+        h.current = h.max;
+        h.is_dead = false;
+        ctx.db.health_state().entity_id().update(h);
+    }
+    let world = ctx.db.entity().entity_id().find(entity_id).map_or(DEFAULT_WORLD, |e| e.world_id);
+    let spawn = ctx.db.world_config().world_id().find(world).map_or(Vector3::new(0.0, 0.0, 0.0), |w| w.spawn);
+    if let Err(e) = crate::module::place_entity(ctx, entity_id, spawn, None) {
+        log::warn!("regents: player {entity_id} got up, but: {e}");
+    }
+}
+
+/// Fallen foes: gone after `regents.foe_corpse_s`, back on their point after `regents.foe_respawn_s`.
+fn tick_foes(ctx: &ReducerContext) {
+    let now = micros(ctx.timestamp);
+    let corpse = (hot_number(ctx, hot::FOE_CORPSE_S) * 1_000_000.0) as i64;
+    let respawn = (hot_number(ctx, hot::FOE_RESPAWN_S) * 1_000_000.0) as i64;
+    let fallen: Vec<Foe> = ctx.db.foe().iter().filter(|f| f.fell_at.is_some()).collect();
+    for mut f in fallen {
+        let since = now - micros(f.fell_at.unwrap_or(ctx.timestamp));
+        if !f.gone && since >= corpse.min(respawn) {
+            forget_body(ctx, f.entity_id);
+            f.gone = true;
+            ctx.db.foe().entity_id().update(f.clone());
+        }
+        if since < respawn {
+            continue;
+        }
+        ctx.db.foe().entity_id().delete(f.entity_id);
+        let level = crate::level::by_id(crate::module::world_level_of(ctx, f.world_id));
+        let point = level.and_then(|l| l.points.iter().find(|p| p.id == f.point_id));
+        match (rules::FOES.iter().find(|s| s.id == f.foe_id), point) {
+            (Some(seed), Some(p)) => {
+                spawn_foe(ctx, f.world_id, seed, p);
+            }
+            _ => log::warn!("regents: foe {} at {} cannot come back: its foe or its point is gone", f.foe_id, f.point_id),
+        }
+    }
+}
+
+/// A fallen foe's body goes: its entity and what this genre kept about it.
+fn forget_body(ctx: &ReducerContext, entity_id: u64) {
+    crate::module::despawn_entity_internal(ctx, entity_id);
+    ctx.db.combat_state().entity_id().delete(entity_id);
+    ctx.db.swing().entity_id().delete(entity_id);
 }
 
 /// World `world_id`'s dummies whole again `regents.dummy_reset_s` after their last hit.
@@ -1271,6 +1466,15 @@ impl crate::game::Genre for Regents {
 
     fn on_ability_hit(&self, ctx: &ReducerContext, actor_id: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
         hit(ctx, actor_id, target, ability_id)
+    }
+
+    /// A slain player's time is up: up again, whole, at the spawn. (A foe's Slain lasts until it is gone.)
+    fn on_status_expired(&self, ctx: &ReducerContext, row: &StatusStateRow) -> Option<u8> {
+        if row.status == rules::STATUS_SLAIN && ctx.db.player().entity_id().find(row.entity_id).is_some() {
+            get_up(ctx, row.entity_id);
+            return Some(crate::status::NORMAL);
+        }
+        None
     }
 
     fn on_init(&self, ctx: &ReducerContext) {

@@ -258,6 +258,82 @@ assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMM
 for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
   assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
 done
+# --- FOES (owner, 2026-10-19: the first enemies, a skeleton camp east of the spawn) ---
+assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "3" "three skeletons at the camp (the level's foe points)"
+SKEL="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $SKEL" 1)" "103" "skeleton_1 is a skeleton warrior (kind 103)"
+assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $SKEL" 1)" "120" "with its FoeDef's health"
+assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = $SKEL" 1)" "\"regents/foe\"" "and the foe brain (the referee drives it)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_2'" 1)" 1)" "104" "skeleton_2 is an axeman"
+assert_ok 'set_rule "regents.foe_corpse_s" 1.0 ""' "(test) a body lies 1 s"
+assert_ok 'set_rule "regents.foe_respawn_s" 15.0 ""' "(test) and its foe is back after 15"
+assert_ok 'set_rule "regents.player_respawn_s" 1.0 ""' "(test) a slain player is up after 1"
+assert_ok 'teleport {"x":33.0,"y":0.0,"z":0.4}' "stand by skeleton_1"
+C_CODE3='"regentscombatrefereecodethree"'
+assert_ok "offer_referee 0 $C_CODE3" "a referee for the fight"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE3" >/dev/null 2>&1
+# ITS SWING ON YOU: as its brain asks (the authority's use_ability_as), at 50 % (its FoeDef's damage).
+PHP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+assert_ok "use_ability_as $SKEL 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "the skeleton slashes (the sword kit's first light)"
+RS="$(sql_first "SELECT id FROM action_request WHERE actor_id = $SKEL" 1)"
+assert_ok "resolve_action $RS $MYENT" "the referee: it hit you"
+PHP1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+SLASH="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40001" 1)"
+check "$(python -c "print('true' if abs(($PHP0 - $PHP1) - $SLASH * 0.5) < 1e-3 else 'false')")" "its slash at its 50 %: half the sword slash's $SLASH ($PHP0 -> $PHP1)"
+# YOU SLAY IT: worn down by an authority, then a chop: Slain, its loot is yours, its body goes, it comes back.
+QTY() { local v; v="$(sql_rows "SELECT qty FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $1" | awk -F'|' '{s+=$1} END {print s+0}')"; echo "${v:-0}"; }
+C0="$(QTY 40007)"; I0="$(QTY 40008)"; G0="$(QTY 40009)"; XP0="$(xp_of 40007)"
+assert_ok "apply_damage $SKEL 118 0" "(test) worn down to 2"
+sleep 1.2
+assert_ok "use_ability_seen 40006 0 $C_AIM 921 100" "a chop at it"
+RK="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 921" 1)"
+assert_ok "resolve_action $RK $SKEL" "the referee: the chop hit"
+assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $SKEL" 1)" "true" "its health ran out"
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SKEL" 1)" "106" "Slain: nothing moves, acts or is hit"
+check "$(sql_first "SELECT fell_at FROM foe WHERE entity_id = $SKEL" 1 | grep -qv none && echo true || echo false)" "the camp knows it fell"
+LOOT="$(sql_first "SELECT loot FROM foe_kill WHERE entity_id = $MYENT" 1 | tr -d '"')"
+check "$(python -c "
+import sys
+got = {int(a): int(b) for a, b in (p.split(':') for p in '$LOOT'.split(',') if p)}
+d = {40007: $(QTY 40007) - $C0, 40008: $(QTY 40008) - $I0, 40009: $(QTY 40009) - $G0}
+print('true' if all(d[k] == got.get(k, 0) for k in d) and all(k in d for k in got) else 'false')
+")" "its loot ('$LOOT') is in your bag, and nothing else"
+check "$(python -c "print('true' if $(xp_of 40007) > $XP0 else 'false')")" "and axemanship XP for the hit (at the foe's full rate)"
+sleep 1
+assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" "0" "a second on, its body is gone"
+assert_eq "$(sql_first "SELECT gone FROM foe WHERE entity_id = $SKEL" 1)" "true" "and the camp waits for it"
+SKEL2=""
+for i in $(seq 1 30); do
+  SKEL2="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
+  [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && break
+  sleep 1
+done
+check "$( [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && echo true || echo false)" "once its time is up it is back on its point, a new entity ($SKEL2)"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
+# A PLAYER SLAIN gets up at the spawn, whole.
+PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+assert_ok "apply_damage $MYENT $(python -c "print($PHP2 - 1)") 0" "(test) you are worn down to 1"
+assert_ok "offer_referee 0 $C_CODE3" "a referee again"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE3" >/dev/null 2>&1
+assert_ok "use_ability_as $SKEL2 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "the new skeleton slashes"
+RS2="$(sql_first "SELECT id FROM action_request WHERE actor_id = $SKEL2" 1)"
+assert_ok "resolve_action $RS2 $MYENT" "and hits you"
+check "$(logged "player $MYENT was slain by $SKEL2")" "you are slain"
+sleep 2
+assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $MYENT" 1)" "false" "a second on you are up"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT max FROM health_state WHERE entity_id = $MYENT" 1)" "whole"
+check "$(python -c "
+import re
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', '''$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)''')][:3]
+print('true' if abs(v[0]) < 0.5 and abs(v[2] - 8.0) < 0.5 else 'false')
+")" "at the spawn"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
+done
+assert_ok 'reset_rule "regents.foe_corpse_s"' "(test) rules back"
+assert_ok 'reset_rule "regents.foe_respawn_s"' "(test) rules back"
+assert_ok 'reset_rule "regents.player_respawn_s"' "(test) rules back"
+
 assert_ok "unwield" "put the axe away"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"
 assert_rejected "block true" "wield a weapon" "and nothing to block with"
@@ -267,4 +343,6 @@ assert_eq "$(row_count 'SELECT * FROM gather_node')" "0" "a level change takes t
 assert_eq "$(row_count 'SELECT * FROM station')" "0" "and its stations"
 assert_eq "$(row_count 'SELECT * FROM work_order')" "0" "and its board's orders"
 assert_eq "$(row_count 'SELECT * FROM dummy')" "0" "and its dummies"
+assert_eq "$(row_count 'SELECT * FROM foe')" "0" "and its foes"
+assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 103 OR kind = 104')" "0" "and their bodies"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100 OR kind = 101')" "0" "and their entities"

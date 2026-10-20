@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"session", &"session_match", &"session_member", &"skill_xp", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -19,6 +19,8 @@ var combat_state: UmfCombatStateTable
 var dummy: UmfDummyTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
+var foe: UmfFoeTable
+var foe_kill: UmfFoeKillTable
 var gather_node: UmfGatherNodeTable
 var health_state: UmfHealthStateTable
 var hold_member: UmfHoldMemberTable
@@ -65,6 +67,8 @@ func _init(p_local_db: LocalDatabase) -> void:
 	dummy = preload('res://spacetime_bindings/schema/tables/umf_dummy_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
+	foe = preload('res://spacetime_bindings/schema/tables/umf_foe_table.gd').new(p_local_db)
+	foe_kill = preload('res://spacetime_bindings/schema/tables/umf_foe_kill_table.gd').new(p_local_db)
 	gather_node = preload('res://spacetime_bindings/schema/tables/umf_gather_node_table.gd').new(p_local_db)
 	health_state = preload('res://spacetime_bindings/schema/tables/umf_health_state_table.gd').new(p_local_db)
 	hold_member = preload('res://spacetime_bindings/schema/tables/umf_hold_member_table.gd').new(p_local_db)

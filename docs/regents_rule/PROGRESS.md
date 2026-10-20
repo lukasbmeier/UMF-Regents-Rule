@@ -245,3 +245,72 @@ jump but no longer caps speed (a roll in a wind-up must be a full roll); the com
 client's. A cheating client could run while swinging: closing that is a foundation tweak (a status's
 speed not scaling the dash). For the dash the template's own integration test learned to take the
 player's kind as the game made it (DECISIONS #255, made in the template too).
+
+**Combat polish after the second combat playtest** (owner, 2026-10-19). Swings play in place (the
+clips' root travel is taken out, template #256) and play through to their hit however you move; no
+swing starts in the air or mid-roll (a press waits for the ground or the roll's end; the server refuses
+both). The roll plays its Roll whole, facing the way it goes, 1.5 s apart; Ctrl dashes only when the roll
+is taken, and a correction no longer forgets the dash's cooldown (template #264). The server bounds a
+swing's walk (Swinging: a quarter of a run) now that a status leaves the dash whole and the dash counts
+only when one happens (template #256, #258). Grips: one grip for all per body, spot fixes, a typed Hold,
+Spin buttons, written on the scene's save (template #257, #259-#263).
+
+## Step 6: the first enemies, a skeleton camp (owner, 2026-10-19)
+
+Two skeletons from the Bestiary pack (Quaternius, `game/regents/art/monsters/`): the **Skeleton
+warrior** (Skeleton_B, a sword: the sword kit) and the **Skeleton axeman** (Skeleton_A, an axe: the axe
+kit). Their weapons are part of their models, and they play the adventurer's animations (the same
+skeleton). Three stand at a camp east of the spawn (the frontier's `Foes` points, x 33-37).
+
+- **Attack on sight.** A foe notices a player within `notice_m` (10 m) in sight, chases (it runs at
+  4.2 m/s, a little slower than you), stops at `reach_m` and fights with its kit exactly as a player
+  does: the same swings, wind-ups, Swinging status, blocks, parries, flinches, judged by the same
+  referee. Every third swing is its heavy; a combo ends with a breath (`rest_ms`): your opening. Past
+  `leash_m` (25 m) from home it gives up and walks back, deaf to everyone until it is home.
+- **Slain** (the Slain status: nothing moves, acts or is hit): your mastery XP for every hit (its
+  `xp_pct`), a roll of its loot into your bag (placeholder: copper ore 60 %, iron ore 30 %, a gem 4 %),
+  a line on the HUD. Its body lies `regents.foe_corpse_s` (6 s), and it comes back on its point
+  `regents.foe_respawn_s` (60 s) after it fell. Both hot rules.
+- **You, slain**, get up at the spawn, whole, `regents.player_respawn_s` (5 s) later. A placeholder
+  until a death penalty is decided.
+
+**Adding a foe is content, no code**: a character (`content/character/`: its model, the animation set,
+a movement profile, `brain = "regents/foe"`, a kind 103-119), listed in `genre.tres`'s entity
+definitions; a FoeDef (`content/foe/`: its key, character, kit, health, damage %, XP %, behaviour, loot);
+level points of kind = its key (a LevelPoint in the level scene, then bake the level). Bake the content
+and republish. A foe whose weapon is not part of its model needs a held item (not done yet).
+
+Server: `foe` and `foe_kill` tables, `game/regents.rs` `populate_foes` / `fell` / `tick_foes` /
+`get_up`; the brain is `sidecar/npc/brains/regents/foe.gd` (the referee drives it). Proven: native tests
+(the camp's content, loot rolls), the integration suite (spawn, its hit at its damage, a kill, the loot
+in the bag, XP, the body gone, the respawn, a slain player up at the spawn, a level change clears them),
+the combat playtest at 150 ms with a real referee (it notices, comes, swings its sword and hits, your
+chop hits back, past its leash it walks home).
+
+Not yet: a foe bench (workbench); death penalty; foes that block or roll; the axeman's own playtest; a
+loot table worth having; foes in groups pulling together.
+
+## Step 7: windows instead of text (owner, 2026-10-20)
+
+"Dedicated UI preferred", matching the Escape menu, its look changeable later for a fantasy theme. The
+foundation now has a UI kit (template DECISIONS #265): one style file (`UiStyle`: colours, sizes, fonts)
+draws every control in the game, and a window, an item slot and row pieces to build screens with. To
+reskin Regent's Rule later: a `UiStyle` `.tres` and the project setting `umf/ui/style` (handbook, "The
+game's look").
+
+- **Stations: tap E opens the station's window** (Q no longer picks). Left, what can be made there (a
+  recipe with a handle once per handle in your bag); right, the one picked: what it makes, what it takes
+  (have / need, green or red), what it pays (first make, freshness) and the buttons: MAKE (AFK; the window
+  stays open, says it is working and offers STOP) and PLAY A ROUND (when the recipe has one). At the
+  order board, each order and HAND THEM OVER. Hold E at a station still plays a round of what was picked
+  there last. Walk away and it closes.
+- **I: the bag** (right): every stack as a slot; click one for what it is (a tool's work and tier, a
+  weapon's kit, damage and moves, a handle's trait, its quality and handle) and WIELD / PUT AWAY.
+- **K: skills** (left): each skill, its rank, a bar to the next.
+- The always-on bag and skills text is gone; the screen says "I: bag  K: skills".
+
+Code: `game/regents/ui/` (`RegentsStationWindow`, `RegentsBagWindow`, `RegentsSkillsWindow`), opened by
+`RegentsHud`; `SkillingComponent.station_opened` (a tap at a station). Proven: the skilling playtest
+works the anvil and the workbench through the window (MAKE, STOP, picking the axe head for a round, the
+iron axe with the oak handle) and, with `SHOTS=<dir>`, plays in a window and saves pictures of them; the
+combat playtest wields the axe from the bag window.

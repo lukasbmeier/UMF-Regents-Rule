@@ -213,6 +213,33 @@
 					"number": 120.0,
 					"text": "",
 					"unit": "ms"
+				},
+				{
+					"key": "regents.foe_corpse_s",
+					"kind": "number",
+					"max": 120.0,
+					"min": 0.5,
+					"number": 6.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "regents.foe_respawn_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 1.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "regents.player_respawn_s",
+					"kind": "number",
+					"max": 120.0,
+					"min": 0.5,
+					"number": 5.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

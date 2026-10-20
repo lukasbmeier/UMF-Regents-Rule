@@ -181,6 +181,30 @@ pub fn regents_data() {
     for (item, kit) in &weapon_kits {
         assert!(kit_keys.contains(kit), "regents content: the weapon {item} fights with kit '{kit}', which is no kit");
     }
+    out.push_str("];\n\npub static FOES: &[FoeSeed] = &[\n");
+    let mut foe_kinds: Vec<i64> = Vec::new();
+    for f in &baked("foe") {
+        let name = text(f, "name", "a foe");
+        let key = text(f, "key", &name);
+        assert!(!key.is_empty(), "regents content: the foe {name} has no key (its level points' kind)");
+        let kind = int(f, "kind", &name);
+        assert!((103..=119).contains(&kind), "regents content: the foe {name} is kind {kind}; a foe's kind is 103-119 (genre::regents::FOE_KINDS)");
+        assert!(!foe_kinds.contains(&kind), "regents content: two foes are kind {kind}");
+        foe_kinds.push(kind);
+        let kit = text(f, "kit", &name);
+        assert!(kit_keys.contains(&kit), "regents content: the foe {name} fights with kit '{kit}', which is no kit");
+        let hp = int(f, "hp", &name);
+        assert!(hp > 0, "regents content: the foe {name} has no health");
+        let loot: Vec<(u32, u32, u32, u32)> = f["loot"].as_array().unwrap_or_else(|| panic!("regents content: {name} has no loot list"))
+            .iter().map(|d| (d[0].as_i64().unwrap() as u32, d[1].as_i64().unwrap() as u32, d[2].as_i64().unwrap() as u32, d[3].as_i64().unwrap() as u32))
+            .collect();
+        for (id, from, to, chance) in &loot {
+            item(*id as i64, &name);
+            assert!(from <= to && *chance >= 1 && *chance <= 100, "regents content: {name} drops item {id} {from}-{to} at {chance}%");
+        }
+        out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
+             loot: &{loot:?} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name)));
+    }
     out.push_str("];\n");
     fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("regents_data.rs"), out).unwrap();
 }

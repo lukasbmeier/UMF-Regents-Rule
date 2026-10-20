@@ -5,11 +5,11 @@
 [resource]
 script = ExtResource("1_status")
 status = 104
+speed = 0.25
 can_sprint = false
 can_jump = false
-can_dash = false
 show_on_nameplate = false
 color = Color(1, 0.9, 0.6, 1)
 id = 40005
 display_name = "Swinging"
-designer_notes = "A COMMITTED SWING (owner, 2026-10-19): from a swing's start until it lands (its wind-up, and regents.swing_hold_ms), the fighter cannot sprint or jump (the server bounds it) and the client walks (the combat component), so the full swing plays. Free again in the recovery. Its speed is not capped here: a status's speed also scales the dash, and a roll in a wind-up must be a full roll."
+designer_notes = "A COMMITTED SWING (owner, 2026-10-19): from a swing's start until it lands (its wind-up, and regents.swing_hold_ms), the fighter walks: a quarter of a run (1.25 m/s), no sprint, no jump, and the server bounds it, so a client cannot run while it swings. The swing's animation plays through to the hit (the combat component commits it). The dash is left whole (DECISIONS #256): a roll in a wind-up is a full roll, and cancels the swing. Free again in the recovery."

@@ -92,6 +92,8 @@
 		"dummy": "Dummy(entity_id:U64,world_id:U32,point_id:String,last_hit_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"entity": "Entity(entity_id:U64,world_id:U32,kind:U8,owner:(__identity__:U256),spawned_at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"equip_state": "EquipStateRow(entity_id:U64,world_id:U32,state:U8)",
+		"foe": "Foe(entity_id:U64,world_id:U32,point_id:String,foe_id:U32,fell_at:<some:(__timestamp_micros_since_unix_epoch__:I64)|none:()>,gone:Bool)",
+		"foe_kill": "FoeKill(id:U64,entity_id:U64,world_id:U32,foe_id:U32,loot:String,at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"gather_node": "GatherNode(entity_id:U64,world_id:U32,def_id:U32,point_id:String)",
 		"health_state": "HealthStateRow(entity_id:U64,world_id:U32,current:F32,max:F32,is_dead:Bool,last_damage_source:U64,last_change_server_tick:U64)",
 		"hold_member": "HoldMember(entity_id:U64,world_id:U32,hold_id:U64,target_id:U64,hold:U32,since:(__timestamp_micros_since_unix_epoch__:I64),from:Vector3(x:F32,y:F32,z:F32))",

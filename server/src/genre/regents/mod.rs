@@ -34,7 +34,9 @@ pub const STARTER_KIT: &[u32] = &[40001, 40006];
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     name: "regents",
     challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE],
-    entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY],
+    // The foes' kinds are content (`FoeDef`, `content/foe/`): the genre keeps 103-119 for them (FOE_KINDS).
+    entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+        117, 118, 119],
     phases: &[],
     session_kinds: &[],
 };
@@ -245,6 +247,29 @@ impl KitSeed {
     }
 }
 
+/// A FOE (`FoeDef`, owner 2026-10-19): a monster on a level's points of kind `key`, fighting with a kit.
+#[derive(Debug)]
+pub struct FoeSeed {
+    pub id: u32,
+    pub name: &'static str,
+    /// The level points it stands on.
+    pub key: &'static str,
+    /// Its entity kind (in FOE_KINDS).
+    pub kind: u8,
+    /// The kit it fights with (a `KitSeed` key).
+    pub kit: &'static str,
+    pub hp: u32,
+    /// Its hits, as a weapon of this damage %.
+    pub damage_pct: u32,
+    /// Mastery XP for hitting it, as a share of the usual (%).
+    pub xp_pct: u32,
+    /// What it may drop: (item, from, to, chance %).
+    pub loot: &'static [(u32, u32, u32, u32)],
+}
+
+/// The entity kinds a foe may be (CLAIMS keeps them for this genre).
+pub const FOE_KINDS: std::ops::RangeInclusive<u8> = 103..=119;
+
 /// Where an ability sits in its kit.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KitSlot {
@@ -265,9 +290,33 @@ pub const STATUS_BLOCKING: u8 = 102;
 pub const STATUS_STAGGERED: u8 = 103;
 pub const STATUS_SWINGING: u8 = 104;
 pub const STATUS_FLINCHED: u8 = 105;
+/// Health ran out (`content/status/slain.tres`): nothing moves, acts or is hit.
+pub const STATUS_SLAIN: u8 = 106;
 /// The training dummy's entity kind (`content/character/dummy.tres`) and its level points.
 pub const ENTITY_DUMMY: u8 = 102;
 pub const DUMMY_POINT: &str = "dummy";
+
+/// The foe that is entity kind `kind`, if any.
+pub fn foe_of_kind(kind: u8) -> Option<&'static FoeSeed> {
+    FOES.iter().find(|f| f.kind == kind)
+}
+
+/// A foe's drop, rolled: how many of each item (none when its chance missed), from one roll each,
+/// `roll(i)` giving drop i's number 0..1000 (`roll_permille`, salted by the server).
+pub fn foe_loot(foe: &FoeSeed, roll: impl Fn(usize) -> u32) -> Vec<(u32, u32)> {
+    let mut out = Vec::new();
+    for (i, &(item, from, to, chance)) in foe.loot.iter().enumerate() {
+        let r = roll(i);
+        if r >= chance * 10 {
+            continue;
+        }
+        // The same roll, under the chance, picks how many: evenly from `from` to `to`.
+        let span = to.saturating_sub(from) + 1;
+        let qty = from + (r * span) / (chance * 10).max(1);
+        out.push((item, qty.min(to)));
+    }
+    out
+}
 
 pub fn kit_keyed(key: &str) -> Option<&'static KitSeed> {
     KITS.iter().find(|k| k.key == key)

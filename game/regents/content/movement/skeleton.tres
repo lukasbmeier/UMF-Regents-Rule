@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MovementProfileDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/movement_profile_def.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+run_speed = 4.2
+sprint_speed = 4.2
+id = 40002
+display_name = "Skeleton"
+designer_notes = "A skeleton's gait (owner, 2026-10-19: the first enemies): it runs a little slower than a player (4.2 against 5 m/s), so a player can always get away by running; no sprint, no dash."

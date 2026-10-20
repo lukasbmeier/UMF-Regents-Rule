@@ -31,9 +31,11 @@ var _target_box: VBoxContainer
 var _target_label: Label
 var _target_bar: ProgressBar
 var _skillbar: Label
-## The bag panel (I): every item, a Wield button on each weapon. Null while closed.
-var bag_panel: PanelContainer = null
-const BAG_REASON: StringName = &"regents_bag"
+## The windows (owner, 2026-10-20: dedicated UI, the foundation's kit): the bag (I), the skills (K), a
+## station's (tap E at it).
+var bag_window: RegentsBagWindow = null
+var skills_window: RegentsSkillsWindow = null
+var station_window: RegentsStationWindow = null
 var _bag_weapon_row: int = -2
 
 
@@ -49,8 +51,15 @@ func _ready() -> void:
 	base.add_child(TimingBar.new())
 	base.add_child(NoiseFeedback.new())
 	_status = _label(base, Vector2(16, 12), 18)
-	_bag = _label(base, Vector2(16, 44), 17)
+	_bag = _label(base, Vector2(16, 44), 15)
+	_bag.modulate = Color(1, 1, 1, 0.6)
 	_skills = _label(base, Vector2(16, 0), 17)
+	_skills.visible = false
+	bag_window = RegentsBagWindow.new()
+	skills_window = RegentsSkillsWindow.new()
+	station_window = RegentsStationWindow.new()
+	for w: UiWindow in [bag_window, skills_window, station_window]:
+		_layer.add_child(w)
 	_prompt = Label.new()
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.offset_top = -170.0
@@ -142,8 +151,15 @@ func _find_player() -> void:
 	combat = me.find_component(CombatComponent) as CombatComponent
 	if combat != null:
 		combat.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
+		combat.slew.connect(_on_slew)
 	if _inventory != null:
 		_inventory.inventory_changed.connect(_show_bag)
+	bag_window.inventory = _inventory
+	bag_window.combat = combat
+	skills_window.skilling = s
+	station_window.skilling = s
+	station_window.inventory = _inventory
+	s.station_opened.connect(func(t: int) -> void: station_window.show_station(t))
 	_show_bag()
 	_show_skills()
 
@@ -173,7 +189,7 @@ func _update_prompt() -> void:
 		else:
 			_prompt.text = "E: %s the %s (AFK)     Hold E: play" % ["chop" if d.tool_tag == &"axe" else "mine", d.display_name.to_lower()]
 	elif station != null and station.def != null:
-		_prompt.text = station_prompt(skilling, station, _inventory)
+		_prompt.text = "" if station_window.is_open() else station_prompt(skilling, station, _inventory)
 	else:
 		_prompt.text = ""
 
@@ -189,7 +205,7 @@ static func station_prompt(sk: SkillingComponent, station: StationComponent, inv
 		var skill: SkillDef = SkillDef.by_id(int(o["skill_id"]))
 		var have: int = inv.count(int(o["item_id"])) if inv != null else 0
 		var state: String = "   (filled)" if bool(o["filled"]) else ""
-		return "%s, order %d of %d: %d %s for +%d %s XP (you have %d)%s\nE: hand them over     Q: next order" % [name, int(o["slot"]) + 1,
+		return "%s, order %d of %d: %d %s for +%d %s XP (you have %d)%s\nE: open the board" % [name, int(o["slot"]) + 1,
 			list.size(), int(o["qty"]), item_name(int(o["item_id"])), int(o["xp"]), skill.display_name if skill != null else "?", have, state]
 	if not c.has("recipe"):
 		return "%s: %s" % [name, "no orders yet" if station.key == SkillingComponent.ORDER_BOARD else "nothing is made here"]
@@ -210,8 +226,8 @@ static func station_prompt(sk: SkillingComponent, station: StationComponent, inv
 		pay += ", FIRST MAKE: x%d bonus" % int(HotRules.number(&"regents.first_make_mult"))
 	elif int(rec["fresh_pm"]) < 1000:
 		pay += ", freshness %d%%" % (int(rec["fresh_pm"]) / 10)
-	var play: String = "     Hold E: play" if r.minigame != null else ""
-	return "%s: %s  <- %s\n%s\nE: make (AFK)%s     Q: next of %d" % [name, title, ", ".join(needs), pay, play, list.size()]
+	var play: String = "     Hold E: play a round of it" if r.minigame != null else ""
+	return "%s: %s  <- %s\n%s\nE: open the %s (%d to make)%s" % [name, title, ", ".join(needs), pay, name.to_lower(), list.size(), play]
 
 
 func _target_name(target: int) -> String:
@@ -232,6 +248,7 @@ func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: in
 		return
 	game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_round_box.add_child(game)
+	station_window.close()
 	game.round_finished.connect(_on_round_finished)
 	_round_box.visible = true
 	if _input != null:
@@ -286,6 +303,20 @@ func _on_worked(r: Dictionary) -> void:
 		notice("Timber!" if node == null or not node.is_rock() else "The rock is worked out", Color(0.9, 1, 0.7))
 
 
+## A foe slain by this player: its name, and what it dropped.
+func _on_slew(foe_id: int, loot: String) -> void:
+	var foe: FoeDef = null
+	for f: FoeDef in FoeDef.all():
+		if f.id == foe_id:
+			foe = f
+	notice("Slain: %s" % (foe.display_name if foe != null else "a foe"), Color(1, 0.85, 0.6))
+	for part: String in loot.split(",", false):
+		var bits: PackedStringArray = part.split(":")
+		if bits.size() == 2:
+			var item: ItemDef = ItemDef.by_id(int(bits[0]))
+			notice("+%d %s" % [int(bits[1]), item_name(int(bits[0]))], item.color if item != null else Color.WHITE)
+
+
 ## The target frame (name, health) and the skill bar (what each key does with the wielded weapon).
 func _update_combat() -> void:
 	if combat == null or not is_instance_valid(combat):
@@ -300,9 +331,9 @@ func _update_combat() -> void:
 		_target_bar.max_value = h.get_max()
 		_target_bar.value = h.get_current()
 	_skillbar.text = skill_bar(combat, skilling)
-	if bag_panel != null and combat.weapon_row != _bag_weapon_row:
+	if bag_window.is_open() and combat.weapon_row != _bag_weapon_row:
 		_bag_weapon_row = combat.weapon_row
-		_fill_bag()
+		bag_window.refresh()
 
 
 ## What the skill bar says: the weapon, its moves, each skill key (locked ones with the rank they need).
@@ -323,61 +354,20 @@ static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k: InputEventKey = event as InputEventKey
-	if k != null and k.pressed and not k.echo and k.physical_keycode == KEY_I and skilling != null and not _round_box.visible:
+	if k == null or not k.pressed or k.echo or skilling == null or _round_box.visible:
+		return
+	if k.physical_keycode == KEY_I:
 		toggle_bag()
+		get_viewport().set_input_as_handled()
+	elif k.physical_keycode == KEY_K:
+		skills_window.toggle()
 		get_viewport().set_input_as_handled()
 
 
-## Open or close the bag panel.
+## Open or close the bag (I).
 func toggle_bag() -> void:
-	if bag_panel != null:
-		bag_panel.queue_free()
-		bag_panel = null
-		MouseCapture.hold_free(BAG_REASON, false)
-		return
-	bag_panel = PanelContainer.new()
-	bag_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
-	bag_panel.offset_left = -380.0
-	bag_panel.offset_right = -24.0
-	bag_panel.offset_top = -260.0
-	bag_panel.offset_bottom = 260.0
-	_layer.add_child(bag_panel)
-	MouseCapture.hold_free(BAG_REASON, true)
-	_fill_bag()
-
-
-## The bag panel's rows: each item, and a Wield (or Put away) button on a weapon.
-func _fill_bag() -> void:
-	if bag_panel == null or _inventory == null:
-		return
-	for c: Node in bag_panel.get_children():
-		c.queue_free()
-	var scroll: ScrollContainer = ScrollContainer.new()
-	var list: VBoxContainer = VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	bag_panel.add_child(scroll)
-	var title: Label = Label.new()
-	title.text = "Bag   (I to close)"
-	list.add_child(title)
-	for st: SpaceTimeInventoryComponent.Stack in _inventory.items():
-		var row: HBoxContainer = HBoxContainer.new()
-		var it: ItemDef = ItemDef.by_id(st.item_def_id)
-		var l: Label = Label.new()
-		l.text = "%s  x%d" % [item_name(st.item_def_id), st.qty]
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if it != null:
-			l.add_theme_color_override(&"font_color", it.color.lightened(0.3))
-		row.add_child(l)
-		if it != null and it.weapon_kit != &"" and combat != null:
-			var b: Button = Button.new()
-			var held: bool = combat.weapon_row == st.id
-			b.text = "Put away" if held else "Wield"
-			b.name = "Wield_%d" % st.id
-			var row_id: int = st.id
-			b.pressed.connect(func() -> void: combat.wield(-1 if held else row_id))
-			row.add_child(b)
-		list.add_child(row)
+	bag_window.combat = combat
+	bag_window.toggle()
 
 
 func notice(text: String, color: Color = Color.WHITE) -> void:
@@ -393,26 +383,14 @@ func notice(text: String, color: Color = Color.WHITE) -> void:
 	tw.tween_callback(l.queue_free)
 
 
+## The bag changed: its window follows; on screen, only the keys' hint.
 func _show_bag() -> void:
-	if _inventory == null:
-		_bag.text = ""
-		return
-	var lines: PackedStringArray = PackedStringArray(["Bag"])
-	for s: SpaceTimeInventoryComponent.Stack in _inventory.items():
-		var q: String = ""
-		var at: int = s.instance_data.find("\"q\":")
-		if at >= 0:
-			q = "  (%d%%)" % (s.instance_data.substr(at + 4).to_int() / 10)
-		var h: int = s.instance_data.find("\"h\":")
-		if h >= 0:
-			q += "  %s" % item_name(s.instance_data.substr(h + 4).to_int()).to_lower()
-		lines.append("%s  x%d%s" % [item_name(s.item_def_id), s.qty, q])
-	_bag.text = "\n".join(lines)
-	_skills.position.y = 44.0 + 24.0 * (lines.size() + 1)
-	_fill_bag()
+	_bag.text = "I: bag     K: skills" if _inventory != null else ""
+	bag_window.refresh()
 
 
 func _show_skills() -> void:
+	skills_window.refresh()
 	if skilling == null:
 		_skills.text = ""
 		return

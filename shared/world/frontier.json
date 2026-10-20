@@ -369,6 +369,33 @@
       "z": 21.0,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "skeleton_1",
+      "kind": "skeleton_warrior",
+      "x": 33.0,
+      "y": 0.0,
+      "z": -1.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "skeleton_2",
+      "kind": "skeleton_axeman",
+      "x": 36.0,
+      "y": 0.0,
+      "z": 2.5,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "skeleton_3",
+      "kind": "skeleton_warrior",
+      "x": 37.0,
+      "y": 0.0,
+      "z": -4.5,
+      "radius": 0.5,
+      "tags": []
     }
   ]
 }

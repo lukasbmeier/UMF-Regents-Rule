@@ -191,11 +191,19 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return interaction.get_target() == anvil, 3.0)
 	_check(hud._prompt.text.contains("Copper rivets"), "at the anvil, rivets picked: \"%s\"" % hud._prompt.text.replace("\n", " / "))
 	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
+	_check(hud.station_window.is_open() and hud.station_window.title == "Anvil" and hud.station_window.choices.size() >= 2,
+		"a tap of E opens the anvil's window: %d things to make" % hud.station_window.choices.size())
+	await _shot("station_anvil")
+	_check(await _make("Copper rivets"), "rivets picked there, and MAKE pressed")
 	await _until(func() -> bool: return inv.count(RIVETS) >= 4, 6.0)
 	_check(inv.count(RIVETS) >= 4, "a tap of E: rivets made AFK (%d)" % inv.count(RIVETS))
 	await _until(func() -> bool: return skilling.afk_target == -1, 15.0)
 	_check(skilling.afk_target == -1 and inv.count(COPPER_BAR) == 0, "out of copper bars, the work stops by itself (%d rivets)" % inv.count(RIVETS))
-	_check(await _q_until("Iron axe head"), "Q picks the axe head: \"%s\"" % hud._prompt.text.replace("\n", " / "))
+	_check(await _pick("Iron axe head"), "the window picks the axe head (hold E plays a round of it)")
+	hud.station_window.close()
+	await _until(func() -> bool: return hud._prompt.text.contains("Iron axe head"), 2.0)
+	_check(hud._prompt.text.contains("Iron axe head"), "the prompt says so: \"%s\"" % hud._prompt.text.replace("\n", " / "))
 	if await _hold_for_round():
 		var shape: ShapeMinigame = hud.game as ShapeMinigame
 		await _until(func() -> bool: return look.tool != null, 2.0)
@@ -225,23 +233,33 @@ func _chopper(tree_id: int) -> void:
 	var bench: int = await _station_at(BENCH)
 	await _stand_by(BENCH)
 	await _until(func() -> bool: return interaction.get_target() == bench, 3.0)
-	await _tap(&"interact", 0.08)
+	_check(await _make("Handle"), "the workbench's window: a handle, MAKE")
 	await _until(func() -> bool: return inv.count(HANDLE) >= 1, 6.0)
 	_check(inv.count(HANDLE) >= 1, "a handle carved from logs, AFK")
 	if skilling.afk_target == bench:
-		await _tap(&"interact", 0.08)
+		var stop_button: Button = hud.station_window.find_child("Stop", true, false) as Button
+		_check(stop_button != null, "while it works, the window offers STOP")
+		if stop_button != null:
+			stop_button.pressed.emit()
 	await _until(func() -> bool: return skilling.afk_target == -1, 4.0)
-	_check(skilling.afk_target == -1, "a second tap stops the carving")
+	_check(skilling.afk_target == -1, "STOP stops the carving")
 	_check(skilling.rank_in(SkillDef.by_key(&"crafting")) >= 2, "the first handle's first-make bonus: crafting rank %d" % skilling.rank_in(SkillDef.by_key(&"crafting")))
-	_check(await _q_until("Oak handle  <-"), "Q picks the oak handle: \"%s\"" % hud._prompt.text.replace("
-", " / "))
-	await _tap(&"interact", 0.08)
+	_check(await _make("Oak handle"), "the window: the oak handle, MAKE")
 	await _until(func() -> bool: return inv.count(OAK_HANDLE) >= 1 and skilling.afk_target == -1, 12.0)
 	_check(inv.count(OAK_HANDLE) == 1 and inv.count(OAK_LOGS) == 0, "an oak handle carved from oak logs; out of them, it stops by itself")
-	_check(await _q_until("Iron axe with oak handle"), "Q picks the iron axe with the oak handle: \"%s\"" % hud._prompt.text.replace("
-", " / "))
-	_check(hud._prompt.text.contains("+15 quality") and hud._prompt.text.contains("1 Oak handle (1)"), "the prompt says its trait and takes the oak handle")
-	await _tap(&"interact", 0.08)
+	_check(await _pick("Iron axe with oak handle"), "the window picks the iron axe with the oak handle")
+	await _shot("station_workbench")
+	hud.toggle_bag()
+	hud.skills_window.open()
+	await _shot("bag_and_skills")
+	hud.toggle_bag()
+	hud.skills_window.close()
+	var said: String = RegentsHud.station_prompt(skilling, SkillingComponent.station_of(bench), inv)
+	_check(said.contains("+15 quality") and said.contains("1 Oak handle (1)"), "it says its trait and takes the oak handle: \"%s\"" % said.replace("\n", " / "))
+	var make_button: Button = hud.station_window.find_child("Make", true, false) as Button
+	_check(make_button != null and not make_button.disabled, "MAKE is ready: the bag has what it takes")
+	if make_button != null:
+		make_button.pressed.emit()
 	await _until(func() -> bool: return inv.count(IRON_AXE) == 1 and inv.count(HEAD) == 0, 8.0)
 	_check(inv.count(IRON_AXE) == 1 and inv.count(HEAD) == 0 and inv.count(OAK_HANDLE) == 0 and inv.count(HANDLE) == 1,
 		"the head, the oak handle and two rivets become an Iron axe (the plain handle is left)")
@@ -267,16 +285,38 @@ func _chopper(tree_id: int) -> void:
 	_check(skilling.afk_target == -1, "a second tap stops the work")
 
 
-## Press Q until the prompt says `text` (at most a lap of the choices), each press waiting for the prompt
-## to show its new choice (the HUD redraws it a frame later).
-func _q_until(text: String) -> bool:
-	for i: int in 8:
-		if hud._prompt.text.contains(text):
-			return true
-		var before: String = hud._prompt.text
-		await _key(KEY_Q)
-		await _until(func() -> bool: return hud._prompt.text != before, 1.0)
-	return hud._prompt.text.contains(text)
+## SHOTS: save what the player sees now as `<name>.png` in the --shots directory (none: nothing).
+func _shot(name: String) -> void:
+	var dir: String = ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--shots="):
+			dir = a.substr(8)
+	if dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join(name + ".png"))
+
+
+## Open the station's window (a tap of E) if it is not, and pick `text` in it (what a click does).
+func _pick(text: String) -> bool:
+	if not hud.station_window.is_open():
+		await _tap(&"interact", 0.08)
+		await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
+	var ok: bool = hud.station_window.pick_named(text)
+	await get_tree().process_frame
+	return ok
+
+
+## Pick `text` in the station's window and press MAKE (AFK). False when it is not there or cannot be made.
+func _make(text: String) -> bool:
+	if not await _pick(text):
+		return false
+	var b: Button = hud.station_window.find_child("Make", true, false) as Button
+	if b == null or b.disabled:
+		return false
+	b.pressed.emit()
+	return true
 
 
 func _buddy(tree_id: int) -> void:

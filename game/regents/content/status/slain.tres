@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 106
+speed = 0.0
+can_sprint = false
+can_jump = false
+can_dash = false
+can_act = false
+targetable = false
+hittable = false
+show_on_nameplate = false
+color = Color(0.6, 0.6, 0.6, 1)
+id = 40007
+display_name = "Slain"
+designer_notes = "SLAIN (owner, 2026-10-19): health ran out. Nothing moves, acts or is hit; the body plays its death. A foe lies so regents.foe_corpse_s, then is gone until regents.foe_respawn_s; a player gets up at the spawn, whole, after regents.player_respawn_s."

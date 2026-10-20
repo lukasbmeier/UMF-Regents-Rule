@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/foe.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/art/monsters/Skeleton_A.glb" id="3_look"]
+[ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="4_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/skeleton.tres" id="5_move"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40006
+kind = 104
+scene = ExtResource("2_scene")
+brain = &"regents/foe"
+visual_scene = ExtResource("3_look")
+animation_set = ExtResource("4_anim")
+movement_profile = ExtResource("5_move")
+display_name = "Skeleton axeman"
+designer_notes = "A FOE from the Bestiary pack (Quaternius, game/regents/art/monsters/). Skeleton_A: an axe, horned helm, pauldron and greaves. Fights with the axe kit. Its weapon is part of the model. It plays the adventurer's animations (the same skeleton). What it does is its FoeDef's (content/foe/)."

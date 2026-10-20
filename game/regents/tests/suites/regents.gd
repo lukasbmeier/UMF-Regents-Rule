@@ -82,9 +82,31 @@ func _run_combat() -> void:
 		dash_q = dash_q or (e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_Q)
 	_check(ctrl_dodges and not slow_ctrl and not dash_q, "Ctrl rolls (the foundation's dash), not Q (a skill here); slow-walk is on Alt")
 	_run_swing_timeline()
+	_run_foes()
 
 
 ## The swing's timeline on the client (owner, 2026-10-19: animation-locked, a buffer, committed, cancels).
+## THE FIRST ENEMIES (owner, 2026-10-19): the skeleton camp's content holds together.
+func _run_foes() -> void:
+	print("== regents: foes ==")
+	var foes: Array[FoeDef] = FoeDef.all()
+	_check(foes.size() == 2, "two foes: %s" % ", ".join(foes.map(func(f: FoeDef) -> String: return String(f.key))))
+	var genre: Resource = load("res://game/regents/genre.tres")
+	var defs: Array = genre.get(&"entity_definitions") as Array
+	for f: FoeDef in foes:
+		_check(f.validate().is_empty(), "%s is valid content: %s" % [f.display_name, str(f.validate())])
+		_check(defs.has(f.character), "%s's character is the genre's, so a client can draw it" % f.display_name)
+		_check(f.character.brain == &"regents/foe" and f.character.animation_set != null and f.character.visual_scene != null,
+			"%s has the foe brain, the adventurer's animations and its Bestiary model" % f.display_name)
+		for a: AbilityDef in f.kit.abilities():
+			_check(f.character.animation_set.has_exact(StringName("ability.%d" % a.id)), "%s plays its %s" % [f.display_name, a.display_name])
+	_check(FoeDef.by_kind(103) != null and FoeDef.by_kind(103).kit.key == &"sword" and FoeDef.by_kind(104).kit.key == &"axe",
+		"the warrior fights with the sword kit, the axeman with the axe kit (the weapons their models carry)")
+	var bad := FoeDef.new()
+	bad.loot.append(null)
+	_check(bad.validate().size() >= 3, "a foe with no key, character, kit or whole loot is refused: %s" % str(bad.validate()))
+
+
 func _run_swing_timeline() -> void:
 	var axe: KitDef = KitDef.by_key(&"axe")
 	var aset: AnimationSet = axe.timing_set
@@ -117,8 +139,14 @@ func _run_swing_timeline() -> void:
 		"a committed swing walks (%.1f m/s) under the speed that cuts it (%.1f); running (%.1f) cuts its recovery" % [cfg.walk_speed, drv.action_cancel_speed if drv != null else 0.0, cfg.run_speed])
 	body.free()
 	var swinging_status: StatusDef = load("res://game/regents/content/status/swinging.tres") as StatusDef
-	_check(swinging_status.speed * cfg.run_speed >= cfg.walk_speed and not swinging_status.can_sprint,
-		"the server's Swinging bound (%.1f m/s) lets the client's committed walk through" % (swinging_status.speed * cfg.run_speed))
+	var adv_cfg: MovementConfig = (load("res://game/regents/content/movement/adventurer.tres") as MovementProfileDef).apply_to(cfg)
+	var in_swing: MovementConfig = swinging_status.apply_to(adv_cfg)
+	_check(in_swing.run_speed >= adv_cfg.walk_speed and in_swing.run_speed < adv_cfg.walk_speed * 1.1 and not swinging_status.can_sprint,
+		"the server's Swinging bound (%.2f m/s) lets the committed walk (%.1f) through, and no faster" % [in_swing.run_speed, adv_cfg.walk_speed])
+	_check(swinging_status.can_dash and in_swing.dash_impulse > 0.0 and is_equal_approx(in_swing.dash_impulse, adv_cfg.dash_impulse),
+		"and leaves the roll whole (a dash of %.0f in a swing, as out of one: DECISIONS #256)" % in_swing.dash_impulse)
+	var adv_set: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
+	_check(adv_set.root_motion_bone == &"root", "the swings play in place: their root travel is taken out (%s)" % adv_set.root_motion_bone)
 
 
 ## The recipe bench: a recipe's numbers worked out from the content and the hot rules' defaults.
@@ -507,9 +535,11 @@ func _run_looks() -> void:
 		var held: HeldItem = node as HeldItem
 		var fitted: bool = false
 		if held != null and held.grip != null:
+			# Its own grip for the working pose, or one grip for all it uses there (the owner's way since #259).
+			fitted = held.grip.universal and held.grip.resolve(tools[path]) != null
 			for e: GripEntry in held.grip.entries:
 				fitted = fitted or e.animation == tools[path]
-		_check(held != null and held.grip.hand == &"hand_r" and fitted, "%s is a held item, its grip fitted to %s" % [path.get_file(), tools[path]])
+		_check(held != null and held.grip.hand == &"hand_r" and fitted, "%s is a held item, held in %s (its own grip there, or its one grip for all)" % [path.get_file(), tools[path]])
 		node.free()
 	_check(ItemDef.by_id(40001).held_scene != null and ItemDef.by_id(40006).held_scene != null and SkillDef.by_key(&"smithing").tool_scene != null,
 		"the bronze axe and pickaxe show as themselves; the smith holds a hammer")

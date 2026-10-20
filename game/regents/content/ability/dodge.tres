@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_ability")
-cooldown_ms = 900
+cooldown_ms = 1500
 range_m = 0.0
 wind_up_ms = 100
 damage = 0.0

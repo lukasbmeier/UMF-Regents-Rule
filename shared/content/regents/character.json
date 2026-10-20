@@ -37,6 +37,24 @@
 			"movement": -1,
 			"name": "Training dummy",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40005,
+			"kind": 103,
+			"movement": 40002,
+			"name": "Skeleton warrior",
+			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40006,
+			"kind": 104,
+			"movement": 40002,
+			"name": "Skeleton axeman",
+			"playable": false
 		}
 	],
 	"owner": "regents",

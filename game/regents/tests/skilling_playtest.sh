@@ -35,7 +35,10 @@ trap cleanup EXIT
 echo "== two clients at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
 "$GODOT" --headless --path . "$SCENE" -- --token=buddy --role=buddy --latency="$LATENCY" --jitter="$JITTER" >"$buddy_log" 2>&1 &
 buddy_pid=$!
-"$GODOT" --headless --path . "$SCENE" -- --token=chopper --role=chopper --latency="$LATENCY" --jitter="$JITTER" >"$chop_log" 2>&1 &
+# SHOTS=<dir>: the chopper plays in a window and saves pictures of the windows it opens (the station's, the
+# bag, the skills) to <dir>.
+CHOP_HEADLESS="--headless"; [ -n "${SHOTS:-}" ] && CHOP_HEADLESS="--resolution 1280x720"
+"$GODOT" $CHOP_HEADLESS --path . "$SCENE" -- --token=chopper --role=chopper --latency="$LATENCY" --jitter="$JITTER" --autoconnect --shots="${SHOTS:-}" >"$chop_log" 2>&1 &
 chop_pid=$!
 granted=""; ore_given=""
 while kill -0 "$chop_pid" 2>/dev/null; do
