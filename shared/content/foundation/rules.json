@@ -177,6 +177,42 @@
 					"number": 0.5,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "foundation.loot_share_min_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "foundation.loot_share_forget_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.loot_pity_ramp_x",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": "x"
+				},
+				{
+					"key": "foundation.loot_pity_cap_x",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "x"
 				}
 			]
 		}

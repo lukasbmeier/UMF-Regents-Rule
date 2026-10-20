@@ -236,6 +236,8 @@ assert_eq "$(sql_first "SELECT last_damage_source FROM health_state WHERE entity
 assert_ok "apply_damage $MYENT 9999.0 999" "lethal damage"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "0" "health clamps at 0"
 assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $MYENT" 1)" "true" "is_dead flips"
+# Who hurt it, for its loot (DECISIONS #268): a private tally per attacker.
+assert_eq "$(sql_first "SELECT amount FROM damage_share WHERE target_id = $MYENT AND source_id = 999" 1)" "10029" "the tally: 999 dealt 30 + 9999"
 # A negative amount heals — `current - amount` with amount < 0. `--` is needed because the CLI
 # would otherwise read the leading minus as a flag.
 out="$(spacetime call -- "$DB" apply_damage "$MYENT" -100.0 0 2>&1)"
@@ -247,8 +249,11 @@ assert_ok 'spawn_npc 1 1 {"x":5.0,"y":0.0,"z":5.0}' "spawn an NPC into world 1"
 NPC=$(sql_first "SELECT entity_id FROM entity WHERE kind = 1" 1)
 assert_eq "$(sql_first "SELECT world_id FROM entity WHERE entity_id = $NPC" 1)" "1" "NPC is in world 1"
 assert_rejected "despawn_entity $MYENT" "refusing to despawn a player" "despawn refuses player entities"
+assert_ok "apply_damage $NPC 5.0 $MYENT" "the player hurts the NPC"
+assert_eq "$(row_count "SELECT * FROM damage_share WHERE target_id = $NPC AND source_id = $MYENT")" "1" "a tally of who hurt it"
 assert_ok "despawn_entity $NPC" "despawn the NPC"
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $NPC")" "0" "entity row gone"
+assert_eq "$(row_count "SELECT * FROM damage_share WHERE target_id = $NPC")" "0" "and the tally of who hurt it"
 assert_eq "$(row_count "SELECT * FROM movement_state WHERE entity_id = $NPC")" "0" "movement_state cascaded"
 assert_eq "$(row_count "SELECT * FROM health_state WHERE entity_id = $NPC")" "0" "health_state cascaded"
 

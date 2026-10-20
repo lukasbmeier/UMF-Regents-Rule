@@ -179,8 +179,44 @@ maximum = 3.0
 unit = "s"
 description = "PUSHES (DECISIONS #251): a player the server pushed (a blower, a bounce pad) may move as fast as the push makes them while it lasts (its sideways speed carried, slowing by 6 m/s a second; up until it tops out), and this much longer, for the rows' lag."
 
+[sub_resource type="Resource" id="Rule_loot_share_min"]
+script = ExtResource("2_rule")
+name = &"loot_share_min_pct"
+number = 5.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "LOOT (DECISIONS #268): a slain thing's loot table is rolled once for each player who dealt at least this share of its recent damage (a personal roll). 0: anyone who hit it."
+
+[sub_resource type="Resource" id="Rule_loot_share_forget"]
+script = ExtResource("2_rule")
+name = &"loot_share_forget_s"
+number = 60.0
+minimum = 0.0
+maximum = 3600.0
+unit = "s"
+description = "LOOT: a player whose last hit on it is older than this has left the fight, and earns no roll. 0: never forgotten."
+
+[sub_resource type="Resource" id="Rule_loot_pity_ramp"]
+script = ExtResource("2_rule")
+name = &"loot_pity_ramp_x"
+number = 1.0
+minimum = 0.0
+maximum = 100.0
+unit = "x"
+description = "LOOT, PITY: how fast a pity line's chance grows with a player's misses, in units of its usual run (1 / its chance): at 1, after as many misses as it usually takes, its chance has doubled. 0: it never grows."
+
+[sub_resource type="Resource" id="Rule_loot_pity_cap"]
+script = ExtResource("2_rule")
+name = &"loot_pity_cap_x"
+number = 5.0
+minimum = 0.0
+maximum = 100.0
+unit = "x"
+description = "LOOT, PITY: a pity line is certain once a player has missed it this many times its usual run (5: never more than five times the usual number of kills). 0: never certain."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap")])

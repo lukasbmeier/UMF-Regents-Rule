@@ -95,6 +95,8 @@ foundation/content/body_def.gd BodyDef; foundation/content/body/ball.tres (the g
 foundation/components/body_component.gd  a body on screen: its look, its turn, the thrower's flight kept near the referee's
 sidecar/physics/body_referee.gd          the world's bodies flown, written, their hits reported
 server/src/body.rs + module/bodies.rs    what the module checks of a throw; body_state, body_contact, launch_body, write_body_batch, report_body_contacts
+foundation/content/loot_table_def.gd + loot_line.gd  LootTableDef (each / one-of, nested, pity) (DECISIONS #268)
+server/src/loot.rs + module/loot.rs      the roll, pity, who earns one; damage_share, drop_pity, drop_loot; server/tests/loot.rs, tests/suites/loot.gd
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
                                and a restart (the NPC's brain resumes); SIDECAR_BIN= points it at a build
 tests/connect_playtest.sh      the connect screen + Esc menu, driven like a player (fresh install)

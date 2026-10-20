@@ -42,6 +42,10 @@ pub mod push;
 /// A place the server put someone is not undone by their authority's last write (DECISIONS #252). Pure.
 pub mod placed;
 
+/// Loot tables (DECISIONS #268): each / one-of, nested, pity, and who did enough damage for a roll,
+/// baked from `LootTableDef` content. Pure.
+pub mod loot;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {
