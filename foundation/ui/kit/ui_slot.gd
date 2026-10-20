@@ -1,7 +1,8 @@
 class_name UiSlot extends Button
 ## AN ITEM SLOT (DECISIONS #265): a square in a bag, a recipe's inputs, a loot window. It shows the item's
 ## mark (`mark`: its icon when it has one, else its initials on its colour), how many (`count`, a corner
-## number; 0 or 1 shows none), and whether it is picked; hovering shows `tooltip_text`. Click it (`pressed`).
+## number; 0 or 1 shows none), its grade (`grade`: the edge in the grade's colour) and whether it is picked;
+## hovering shows `tooltip_text`. Click it (`pressed`).
 ## Drawn by the game's `UiStyle` (`slot_size`, `slot_style`), so a reskin reaches every slot.
 
 ## The item's colour: the edge, and the initials' tint.
@@ -27,6 +28,12 @@ var count: int = 0:
 var selected: bool = false:
 	set(value):
 		selected = value
+		_restyle()
+## The item's grade (0 the lowest; -1 none: a material): its edge is the grade's colour
+## (`UiStyle.grade_colors`), thicker, instead of the item's own.
+var grade: int = -1:
+	set(value):
+		grade = value
 		_restyle()
 
 var _mark_label: Label = null
@@ -76,8 +83,11 @@ func _restyle() -> void:
 	if _mark_label == null:
 		return
 	var style: UiStyle = UiStyle.current()
-	var normal: StyleBoxFlat = style.slot_style(selected, tint)
-	var hover: StyleBoxFlat = style.slot_style(true, tint)
+	var graded: Color = style.grade_color(grade)
+	var edge: Color = graded if graded.a > 0.0 else tint
+	var width: int = 2 if graded.a > 0.0 else 1
+	var normal: StyleBoxFlat = style.slot_style(selected, edge, width)
+	var hover: StyleBoxFlat = style.slot_style(true, edge, width)
 	for state: StringName in [&"normal", &"disabled"]:
 		add_theme_stylebox_override(state, normal)
 	for state: StringName in [&"hover", &"pressed", &"focus"]:
