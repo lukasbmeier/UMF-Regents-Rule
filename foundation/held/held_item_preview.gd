@@ -114,6 +114,12 @@ const STOW_AIR: float = 0.01
 	set(value):
 		var r: Vector3 = Vector3(deg_to_rad(value.x), deg_to_rad(value.y), deg_to_rad(value.z))
 		_set_hold(Transform3D(Basis.from_euler(r, EULER_ORDER_YXZ), _hold_now().origin))
+## SPIN IT ON ITS OWN LENGTH, about the fist (DECISIONS #261): a blade's edges, an axe's head, turned
+## without moving the handle. The gizmo's rings turn about the WORLD's axes unless its Local space is on
+## (T in the 3D view); these always turn about the item's own +Y.
+@export_tool_button("Spin 15°", "RotateRight") var spin_cw: Callable = func() -> void: spin(15.0)
+@export_tool_button("Spin -15°", "RotateLeft") var spin_ccw: Callable = func() -> void: spin(-15.0)
+@export_tool_button("Spin 90°", "RotateRight") var spin_quarter: Callable = func() -> void: spin(90.0)
 ## STEADY: the item keeps its direction to the body, not the hand (a long item in a swinging arm). The grip
 ## being edited's, read from the grip file, not stored in this scene.
 @export var steady: bool:
@@ -276,6 +282,16 @@ func use_this_for_all() -> void:
 	_fit_said = "One grip for all (%d grip(s) replaced). Step through the animations; a drag or a typed Hold on one is a fix on this grip." % gone
 	_posed = false
 	notify_property_list_changed()
+
+
+## Turn the item `deg` about its own length (its +Y, through the fist), for the animation and body shown.
+func spin(deg: float) -> void:
+	var t: Transform3D = _hold_now()
+	# Its length in the hold's frame: the item's +Y, as the item's own Hold node is turned on it.
+	var axis: Vector3 = (_hold_inv.basis * Vector3.UP).normalized()
+	if axis.is_zero_approx():
+		axis = Vector3.UP
+	_set_hold(Transform3D(t.basis * Basis(axis, deg_to_rad(deg)), t.origin))
 
 
 ## Where the item sits in the hand shown, for the grip being edited (identity before the characters stand).

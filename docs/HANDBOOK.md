@@ -555,6 +555,9 @@ says. Nothing in code tells an item how to be held.
   you move the one grip later. **Clear This Grip** puts an animation back on the one grip. The grip
   file is at the bottom of the Inspector; you never need to open its list. Changes are written to
   the grip file when you **save the scene** (Ctrl+S; the tab shows `*` until then), not on every move.
+  To turn a blade's edges (or an axe's head) without moving the handle, use **Spin 15°/-15°/90°**:
+  they turn the item on its own length, about the fist. The 3D view's rotate rings turn about the
+  WORLD's axes unless Local space is on (press **T**).
 - **Line it up in the editor**: a preview scene using `foundation/held/held_item_preview.gd`
   (the rod's is `game/fishing/rod_grip_preview.tscn`). Pick an **Animation** and a **Body**
   (`both`, `female` or `male`), then drag the **Grip** node: that sets the grip for exactly that
