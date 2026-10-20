@@ -13,7 +13,7 @@ extends Node3D
 ## A woman and a man stand in the Inspector's ANIMATION holding the item exactly as the game will
 ## (every look is one of those two bodies). Pick the ANIMATION and the BODY whose grip you are
 ## setting ("both", "female", "male"), select the GRIP node and move it (W) or turn it (E): the
-## item follows, and the grip file is saved as you go. A drag sets the grip for exactly that
+## item follows, and the grip file is written when you SAVE THE SCENE (Ctrl+S; its tab shows * until then). A drag sets the grip for exactly that
 ## animation and that body. The first drag MAKES it, starting where the item already sits, so
 ## nothing jumps; from then on, whenever that body plays that animation in the game, the item sits
 ## there, whatever started the animation.
@@ -57,12 +57,13 @@ extends Node3D
 ## in the game. The editor reloads this script under an open scene: its variables hold only
 ## engine types (DECISIONS #152).
 
-const SAVE_DELAY_MSEC: int = 400
+## How long the grip must sit still after a change before the labels' worst air is measured again and
+## the Inspector's Hold is redrawn: neither runs on every frame of a drag (both cost a frame each).
+const SETTLE_MSEC: int = 250
 ## Where the second character stands: to the first one's left, clear of a right-hand item.
 const BESIDE_AT: Vector3 = Vector3(-1.8, 0.0, 0.0)
-## Frames of the clip read for its worst, and how often that is read again while a grip is dragged.
+## Frames of the clip read for its worst.
 const CLIP_SAMPLES: int = 24
-const WORST_EVERY_MSEC: int = 120
 ## The air off the body the label calls enough.
 const ENOUGH_AIR: float = 0.02
 ## What `body` says for the grip every body shares.
@@ -194,8 +195,11 @@ var _at: float = 0.0
 var _holder: int = 0
 var _grip_set: Transform3D = Transform3D()
 var _grip_known: bool = false
-var _save_at: int = -1
 var _worst_due: int = -1
+var _refresh_due: int = -1
+## The grip changed since the grip file was last written: it is written when the scene is saved (Ctrl+S),
+## not on every move (DECISIONS #260).
+var _dirty: bool = false
 ## The grip file's contents as last seen: a change from anywhere (gizmo, Inspector, undo) is saved.
 var _seen: String = ""
 ## What the last fit did, in words, for the label; and whether pictures are being taken (the pose
@@ -337,7 +341,6 @@ func _process(delta: float) -> void:
 			var e: GripEntry = grip.ensure(_anim(), _body_key())
 			e.set_held(grip_node.global_transform, _hand(_holder), _skels[_holder].global_basis)
 			_grip_set = grip_node.global_transform
-			notify_property_list_changed()
 		elif not _grip_known or not want.is_equal_approx(_grip_set):
 			grip_node.global_transform = want
 			_grip_set = grip_node.global_transform
@@ -345,9 +348,12 @@ func _process(delta: float) -> void:
 	var now: String = _signature()
 	if now != _seen:
 		if not _seen.is_empty():
-			_save_at = Time.get_ticks_msec() + SAVE_DELAY_MSEC
-			if _worst_due < 0:
-				_worst_due = Time.get_ticks_msec() + WORST_EVERY_MSEC
+			# Measured and redrawn once it settles, not every frame of a drag; written on the scene's save.
+			_worst_due = Time.get_ticks_msec() + SETTLE_MSEC
+			_refresh_due = Time.get_ticks_msec() + SETTLE_MSEC
+			if not _dirty:
+				_dirty = true
+				_mark_unsaved()
 		_seen = now
 	if _worst_due >= 0 and Time.get_ticks_msec() >= _worst_due:
 		_worst_due = -1
@@ -357,10 +363,35 @@ func _process(delta: float) -> void:
 		_items[i].global_transform = _place(i, _anim())
 		_hold_off_hand(i)
 		_show(i)
-	if _save_at >= 0 and Time.get_ticks_msec() >= _save_at:
-		_save_at = -1
-		if Engine.is_editor_hint() and not grip.resource_path.is_empty():
-			ResourceSaver.save(grip)
+	if _refresh_due >= 0 and Time.get_ticks_msec() >= _refresh_due:
+		_refresh_due = -1
+		notify_property_list_changed()
+
+
+## SAVED WITH THE SCENE (DECISIONS #260): the grip file is written when the preview scene is saved (Ctrl+S),
+## not on every move: a write per change had the editor rescan the file under every drag.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		save_grip()
+
+
+## Write the grip file now if it changed. True when it was written.
+func save_grip() -> bool:
+	if not _dirty or grip == null or grip.resource_path.is_empty():
+		return false
+	_dirty = false
+	return ResourceSaver.save(grip) == OK
+
+
+## Whether the grip has changes the file does not have yet.
+func grip_unsaved() -> bool:
+	return _dirty
+
+
+## The scene tab shows it unsaved (*), so Ctrl+S, or the editor asking on close, writes the grip.
+func _mark_unsaved() -> void:
+	if Engine.is_editor_hint() and Engine.has_singleton(&"EditorInterface"):
+		Engine.get_singleton(&"EditorInterface").call(&"mark_scene_as_unsaved")
 
 
 ## The other hand on the item, as the game puts it (`OffHand`), in the animations the grip holds it
