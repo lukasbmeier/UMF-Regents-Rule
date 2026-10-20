@@ -83,6 +83,11 @@ func run() -> void:
 		"graded 2: the edge is the style's third grade colour, two wide")
 	s.grade = 1
 	_check((s.get_theme_stylebox(&"normal") as StyleBoxFlat).border_color.is_equal_approx(style.grade_colors[1]), "graded 1: the second")
+	s.selected = true
+	var picked: StyleBoxFlat = s.get_theme_stylebox(&"normal") as StyleBoxFlat
+	_check(picked.border_color.is_equal_approx(style.grade_colors[1]) and not picked.bg_color.is_equal_approx(style.slot_bg),
+		"graded and picked: the grade's edge stays; the fill says it is picked")
+	s.selected = false
 	s.grade = 9
 	var lacking: StyleBoxFlat = s.get_theme_stylebox(&"normal") as StyleBoxFlat
 	_check(lacking.border_color.is_equal_approx(Color(0.8, 0.5, 0.3)) and lacking.border_width_left == 1, "a grade the style has no colour for: the item's own edge")
