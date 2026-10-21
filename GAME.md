@@ -27,7 +27,8 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **Scale**: 100–300 CCU per database, never more; a seamless open world; hybrid combat (tab-target
   basics, aimed skill shots); no global cooldown (a cast queue, cooldowns pace it).
 - **#1 Universe**: a new fantasy setting; Hollow Hill's animals are assets, not lore.
-- **#2 Resource**: one 100-point pool, the same rules for every kit, named by the kit.
+- **#2 Resource**: ~~one 100-point pool for every kit~~ REVERSED 2026-10-20: **mana on the Staff only**
+  (a generic resource); melee is paced by its combo and the roll, the bow by its arrows.
 - **#3 Mastery**: XP stored, rank from a content curve; v1 ranks 1–10 (production will go higher);
   abilities at 1/3/6/9; harder nodes need a gathering rank AND a tool tier.
 - **#13 Accounts**: SpacetimeAuth, an account that several identities link to (Steam later).
@@ -40,11 +41,26 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **The skilling loop comes first** (gather, refine, smith, then fun combat): every skill is dual-mode, AFK
   or an immersive minigame worth 1.25x yield and 1.3x rares (hot rules); woodcutting is branch dodge;
   gear is modular (Tinkers'-style core + handle, gear XP, durability and repair). Design doc §7.4.
-- Still open: #7 loot, #10 hosting (after measuring Maincloud round trips), #12 day/night, #22 handles
-  and kits; the other skills' minigames. Decided since: yield = AFK x 1.25 x score; tap E = AFK,
-  hold E = minigame; tier bands (1-3, 4-5, 6) each get a harder minigame.
+- Decided since: yield = AFK x 1.25 x score; tap E = AFK, hold E = minigame; tier bands (1-3, 4-5, 6)
+  each get a harder minigame.
+- **Combat** (2026-10-19): hybrid control (aimed light/heavy, a dodge roll, block, Q E R F skills);
+  abilities come from the weapon type (its kit), unlocked at mastery 1/3/6/9; **#22 settled**: the
+  smithed handle or hilt adds a trait. Tab picks a target (a ring) but attacks stay aimed. Swings are
+  animation-locked with a one-press buffer; a roll cancels a wind-up; heavies flinch lights.
+- **Loot, items, styles** (2026-10-20): `docs/regents_rule/LOOT_AND_STYLES.md`, whose AMENDMENTS win
+  over its body (this settles **#7 loot**): quality 0-1000 shown as Common / Fine / Masterwork bands;
+  Power from tier and quality, tier dominates; personal loot rolls on the ground; durability and repair
+  an option; **no global cooldown** (each ability its own; the cast queue is input buffering only);
+  **melee never rolls to hit**, ranged (bow, Staff) rolls; controls: Ctrl roll, Q E R F, LMB tap the
+  combo / hold the heavy, RMB block.
+- **Traits** (2026-10-21): every trait trades and never touches Power; **a handle's trait always
+  applies**, whatever the item's grade (grade sets how many a drop rolls); Brutal reads the TARGET's
+  health; the handles are toned to the early game (oak Steady, yew Springy) until **a materials and
+  Tinkers' deep-dive**, which Luke wants later.
+- Still open: #10 hosting (after measuring Maincloud round trips), #12 day/night; the other skills'
+  minigames; whether the bow's damage should scale with the draw (revisit after a playtest).
 
-## Current state (2026-10-19): the skilling chain in the frontier glade
+## Current state (2026-10-19, with steps 9-15 since: see `PROGRESS.md`): the skilling chain in the frontier glade
 A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade (level 20):
 trees (Tree, Oak, Yew), copper and iron rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**: at a node or a
