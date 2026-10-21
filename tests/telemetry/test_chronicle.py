@@ -89,8 +89,8 @@ class Kept(unittest.TestCase):
         c.apply({"authority": {"deletes": [], "inserts": [{"identity": CLI, "role": 0, "world_id": 0, "last_seen": {TS: 1}}]},
                  "player": {"deletes": [], "inserts": [{"identity": CLI, "entity_id": 1, "name": "", "online": True},
                                                         {"identity": ME, "entity_id": 7, "name": "", "online": True}]}}, 110.0, initial=True)
-        self.assertEqual(conn.execute("SELECT entity_id, tool FROM player_name ORDER BY 1").fetchall(), [(1, 1), (7, 0)],
-                         "the CLI (an admin, no name) is a tool; a nameless player who is no admin is not")
+        self.assertEqual(conn.execute("SELECT entity_id, tool, name FROM player_name ORDER BY 1").fetchall(), [(1, 1, "Player 1"), (7, 0, "Player 7")],
+                         "the CLI (an admin, no name) is a tool; a nameless player who is no admin is not, and is called as the game calls them")
         p = {"identity": CLI, "entity_id": 1, "name": "", "online": True}
         c.apply({"player": {"deletes": [p], "inserts": [dict(p, name="Luke")]}}, 111.0)
         self.assertEqual(conn.execute("SELECT name, tool FROM player_name WHERE entity_id = 1").fetchone(), ("Luke", 0),

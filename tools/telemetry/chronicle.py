@@ -18,7 +18,8 @@ heartbeat). Scheduled tables are always skipped. The file's tables:
                                                         delete; row the row (JSON), old an update's
                                                         changed columns as they were
     position(at, entity_id, world_id, level, x, y, z, yaw)   where each online player was (server time)
-    player_name(entity_id, name, identity, tool)       each player's latest name; tool 1 is the CLI's own
+    player_name(entity_id, name, identity, tool)       each player's latest name ("Player 37" while they have
+                                                        none, as the game shows them); tool 1 is the CLI's own
                                                         nameless admin (DECISIONS #272), left out of panels
     run(id, started, ended, db, tables, note)          each time it connected: a gap between runs is a gap
     content_name(type, id, name, key)                  every piece of content's name (shared/content/), so a
@@ -253,11 +254,13 @@ class Chronicle:
             self._name(row)
 
     def _name(self, row):
-        name = row.get("name") or ""
-        tool = 1 if not name.strip() and row.get("identity") in self.admins else 0
+        name = (row.get("name") or "").strip()
+        tool = 1 if not name and row.get("identity") in self.admins else 0
+        # A player who never said a name is called what the game calls them ("Player 37").
+        shown = name or "Player %s" % row.get("entity_id")
         self.conn.execute("INSERT INTO player_name(entity_id, name, identity, tool) VALUES (?, ?, ?, ?) "
                           "ON CONFLICT(entity_id) DO UPDATE SET name = excluded.name, identity = excluded.identity, tool = excluded.tool",
-                          (row.get("entity_id"), name, row.get("identity"), tool))
+                          (row.get("entity_id"), shown, row.get("identity"), tool))
 
     def prune(self, now):
         days = self.config.get("keep_days", 0)

@@ -81,7 +81,7 @@ class Site:
             return []
         with conn:
             try:
-                return [{"id": r[0], "name": r[1] or "(no name) %d" % r[0]}
+                return [{"id": r[0], "name": r[1] or "Player %d" % r[0]}
                         for r in conn.execute("SELECT entity_id, name FROM player_name WHERE tool = 0 ORDER BY name")]
             except sqlite3.Error:
                 return []
