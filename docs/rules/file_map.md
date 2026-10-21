@@ -94,6 +94,8 @@ foundation/physics/            FlyingBody (the one flight) · BodyForces (a genr
 foundation/content/body_def.gd BodyDef; foundation/content/body/ball.tres (the greybox's ball); foundation/entities/body.tscn + content/character/body.tres (kind 3)
 foundation/components/body_component.gd  a body on screen: its look, its turn, the thrower's flight kept near the referee's
 sidecar/physics/body_referee.gd          the world's bodies flown, written, their hits reported
+sidecar/project_stamp.gd                 when the project last changed: a sidecar older than it stops (DECISIONS #272)
+tools/editor_admins.py                   the identities this machine's editor plays as (publish.sh makes them admins)
 server/src/body.rs + module/bodies.rs    what the module checks of a throw; body_state, body_contact, launch_body, write_body_batch, report_body_contacts
 foundation/content/loot_table_def.gd + loot_line.gd  LootTableDef (each / one-of, nested, pity) (DECISIONS #268)
 server/src/loot.rs + module/loot.rs      the roll, pity, who earns one; damage_share, drop_pity, drop_loot; server/tests/loot.rs, tests/suites/loot.gd

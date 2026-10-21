@@ -19,6 +19,17 @@ class _PlayerRow extends RefCounted:
 		online = on
 
 
+class _NamedRow extends RefCounted:
+	var entity_id: int = 0
+	var online: bool = true
+	var name: String = ""
+	var identity: PackedByteArray
+	func _init(eid: int, n: String, id: PackedByteArray) -> void:
+		entity_id = eid
+		name = n
+		identity = id
+
+
 class _RuleRow extends RefCounted:
 	var key: String = "foundation.offline_linger_s"
 	var number: float = 0.3
@@ -75,6 +86,27 @@ func _run_presence_tests() -> void:
 	await get_tree().create_timer(0.4).timeout
 	_check(npc.visible and r.is_present(), "an NPC (no player row) is always here")
 	npc.queue_free()
+	# A tool is not a person (#272): an admin who never said a name (the CLI) is never seen; a named admin
+	# (the designer playing from the editor) and a nameless player who is no admin (a test client) are.
+	PresenceComponent.admin_check = func(identity: Variant) -> bool: return identity == PackedByteArray([1])
+	var cli: SpaceTimeEntity = _body(8804)
+	var t := PresenceComponent.new()
+	cli.add_child(t)
+	t.bind(cli, {&"player": _NamedRow.new(8804, "", PackedByteArray([1]))})
+	await get_tree().process_frame
+	_check(not cli.visible, "the database's CLI (an admin, no name): never seen")
+	t.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"player", _NamedRow.new(8804, "", PackedByteArray([1])), _NamedRow.new(8804, "Luke", PackedByteArray([1]))))
+	await get_tree().process_frame
+	_check(cli.visible, "an admin with a name (playing from the editor): seen")
+	cli.queue_free()
+	var anon: SpaceTimeEntity = _body(8805)
+	var u := PresenceComponent.new()
+	anon.add_child(u)
+	u.bind(anon, {&"player": _NamedRow.new(8805, "", PackedByteArray([2]))})
+	await get_tree().process_frame
+	_check(anon.visible, "a nameless player who is no admin (a test client): seen")
+	anon.queue_free()
+	PresenceComponent.admin_check = Callable()
 	var player_scene: Node = (load("res://foundation/entities/player.tscn") as PackedScene).instantiate()
 	_check(player_scene.get_node_or_null(^"Components/Presence") is PresenceComponent,
 		"every player scene has it (foundation/entities/player.tscn, which a genre's player instances)")

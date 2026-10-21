@@ -55,6 +55,12 @@ var referee_only: bool = false
 var _claim: String = ""
 var _parent_alive: String = ""
 var _watch: float = 0.0
+## The project as it was when this started (`ProjectStamp`), and how often it looks again.
+var started_stamp: int = 0
+var _stamp_watch: float = 0.0
+const STAMP_EVERY_S: float = 10.0
+## Off with `--keep-when-stale` (a test that changes files under a running sidecar).
+var stop_when_stale: bool = true
 
 
 func _ready() -> void:
@@ -62,6 +68,8 @@ func _ready() -> void:
 	referee_only = _flag("--referee")
 	_claim = _value("--claim=")
 	_parent_alive = _value("--parent-alive=")
+	stop_when_stale = not _flag("--keep-when-stale")
+	started_stamp = ProjectStamp.now()
 	# A referee is the authority for the bots it drives, and builds nothing else.
 	cfg.authority_process = true
 	EntitySpawner.spawning = true
@@ -143,8 +151,17 @@ func _ready() -> void:
 	SpaceTimeSync.connect_to_server(cfg)
 
 
-## The game that started it has gone (`--parent-alive`: its file stale or removed): so does it.
+## The game that started it has gone (`--parent-alive`: its file stale or removed): so does it. And the
+## project changed under it (a publish, a bake, new code: `ProjectStamp`): it stops, so whatever started
+## it starts one running the project as it is now (DECISIONS #272).
 func _process(delta: float) -> void:
+	_stamp_watch += delta
+	if stop_when_stale and _stamp_watch >= STAMP_EVERY_S:
+		_stamp_watch = 0.0
+		if is_stale():
+			print("[Sidecar] the project changed since it started (its code or content is newer): stopping, for one that runs it as it is")
+			AppExit.quit(get_tree())
+			return
 	if _parent_alive.is_empty():
 		return
 	_watch += delta
@@ -154,6 +171,11 @@ func _process(delta: float) -> void:
 	if not RefereeLauncher.is_alive(_parent_alive):
 		print("[Sidecar] the game that started it has gone (%s): stopping" % _parent_alive)
 		AppExit.quit(get_tree())
+
+
+## Whether the project is newer than this sidecar.
+func is_stale() -> bool:
+	return ProjectStamp.newer_than(started_stamp)
 
 
 func _flag(name: String) -> bool:
