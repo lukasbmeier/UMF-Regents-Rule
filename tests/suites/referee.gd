@@ -18,6 +18,38 @@ func run() -> void:
 	_run_who()
 	_run_rows()
 	await _run_client_side()
+	await _run_stale()
+
+
+## A REFEREE STOPS WHEN THE PROJECT IS NEWER THAN IT (DECISIONS #272): a folder's newest code or content
+## file is its stamp; a file written after the sidecar started makes it stale. (A referee from yesterday
+## ran yesterday's code after a publish: the skeletons never attacked.)
+func _run_stale() -> void:
+	var dir: String = "user://stamp_test"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir.path_join("deep")))
+	for f: String in ["a.gd", "deep/b.tres", "c.png"]:
+		var fa: FileAccess = FileAccess.open(dir.path_join(f), FileAccess.WRITE)
+		fa.store_string("x")
+		fa.close()
+	var before: int = ProjectStamp._newest_in(dir)
+	_check(before > 0, "a folder's stamp: its newest code or content file (%d)" % before)
+	_check(ProjectStamp.now() >= before - 86400 * 365 and ProjectStamp.now() > 0, "the project has one (its scripts, its bake, its bindings)")
+	_check(not ProjectStamp.newer_than(ProjectStamp.now()), "a sidecar just started: not stale")
+	_check(ProjectStamp.newer_than(ProjectStamp.now() - 5), "the project newer than it: stale, so it stops and a fresh one starts")
+	# A picture is not code: writing one does not make a sidecar stale; a script does.
+	await get_tree().create_timer(1.1).timeout
+	var png: FileAccess = FileAccess.open(dir.path_join("c.png"), FileAccess.WRITE)
+	png.store_string("y")
+	png.close()
+	_check(ProjectStamp._newest_in(dir) == before, "a picture written later: the stamp stays")
+	var gd: FileAccess = FileAccess.open(dir.path_join("deep/b.tres"), FileAccess.WRITE)
+	gd.store_string("y")
+	gd.close()
+	_check(ProjectStamp._newest_in(dir) > before, "a resource deep in it written later: the stamp moves on")
+	for f: String in ["a.gd", "deep/b.tres", "c.png"]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(dir.path_join(f)))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(dir.path_join("deep")))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(dir))
 
 
 class _MoveRow extends RefCounted:

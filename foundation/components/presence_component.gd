@@ -9,6 +9,11 @@ class_name PresenceComponent extends SpaceTimeComponent
 ## entity with no player row (an NPC, a prop) is always present. The local player is always
 ## present: if we can see our own entity, we are connected.
 ##
+## A TOOL IS NOT A PERSON (DECISIONS #272): an admin who has never said a name (the database's own CLI:
+## a publish, a query, the host's feedback watcher) is given a player entity like anyone who connects,
+## and nobody sees it (Luke saw a nameless "Player 30" blink in and out every few seconds while a
+## watcher polled).
+##
 ## Presentation only (hard rule 11): it hides a body; the server decides who is online.
 
 const TABLE: StringName = &"player"
@@ -17,6 +22,8 @@ const LINGER_RULE: StringName = &"foundation.offline_linger_s"
 var _online: bool = true
 var _hidden: bool = false
 var _left_at_usec: int = -1
+## Whether an identity is an admin's: the `authority` table (tests set their own).
+static var admin_check: Callable = Callable()
 
 
 func required_tables() -> Array[StringName]:
@@ -36,6 +43,9 @@ func is_present() -> bool:
 func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> void:
 	if table != TABLE:
 		return
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if ent != null:
+		ent.set_hidden_by(&"tool", is_tool(new))
 	var was: bool = _online
 	_online = new == null or bool(new.get(&"online"))
 	if _online:
@@ -62,6 +72,22 @@ func _set_hidden(hide: bool) -> void:
 	# Through the entity: an out player (StatusComponent) who leaves stays hidden either way.
 	ent.set_hidden_by(&"offline", hide)
 	print("[Presence] entity %d %s" % [entity_id, "left the world" if hide else "is back"])
+
+
+## Whether player row `row` is a tool's: no name, and its identity is an admin's.
+static func is_tool(row: RefCounted) -> bool:
+	if row == null:
+		return false
+	var name_v: Variant = row.get(&"name")
+	if name_v == null or not String(name_v).strip_edges().is_empty():
+		return false
+	var identity: Variant = row.get(&"identity")
+	if identity == null:
+		return false
+	if admin_check.is_valid():
+		return bool(admin_check.call(identity))
+	var a: RefCounted = SpaceTimeSync.get_row(&"authority", identity)
+	return a != null and int(a.get(&"role")) == Roles.ADMIN
 
 
 func _is_local() -> bool:

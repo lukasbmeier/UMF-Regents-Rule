@@ -92,4 +92,13 @@ if [ $codegen -eq 1 ]; then
 else
   echo "(bindings not regenerated: add --codegen if a table or a reducer's arguments changed)"
 fi
+# THE EDITOR IS AN ADMIN of the game's own database on this machine (DECISIONS #272): each identity an
+# editor instance plays as, so pressing Play starts the world's referee (RefereeLauncher).
+if [ "$DB" = "$GAME_DB" ]; then
+  for ident in $(python tools/editor_admins.py 2>/dev/null | tr -d ''); do
+    if spacetime call "$DB" register_authority "$ident" 0 0 >/dev/null 2>&1; then
+      echo "the editor's identity ${ident:0:12}... is an admin of $DB (Play starts its referee)"
+    fi
+  done
+fi
 echo "done: $DB is up to date. Restart the game to pick it up."

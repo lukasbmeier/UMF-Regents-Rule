@@ -311,6 +311,15 @@ ability lands (its wind-up after the press). It answers hit or miss; what a hit 
   hands it a one-time code (`offer_referee`), the sidecar presents it (`claim_referee`) and is
   registered, and it stops when your game does. A host starts it beside the server
   (`godot --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee`, registered once).
+  **Your editor is the admin**: `tools\publish.cmd` makes every identity your editor plays as on this
+  machine an admin of the game's database (DECISIONS #272), so Play starts one. If Play says "this client
+  is not the admin" in its log, publish once.
+- **A referee never runs old code.** Every sidecar stops when the project is newer than it (a publish, a
+  bake, a changed script: `ProjectStamp`, looked at every 10 s), and whatever started it (Play,
+  `tools\host.cmd`) starts a fresh one. (A referee left over from hosting ran yesterday's code: it had no
+  definition for the skeletons, and they never attacked.)
+- **A tool is not a person.** The database's own CLI (a publish, a query, the host's feedback watcher) is
+  an admin with no name; it gets a player entity like anything that connects, and nobody sees it.
 - **No referee, no guess.** While none is online a judged ability is refused ("no referee"); one
   that lands with nobody to answer is a miss.
 - **Hitboxes** are each character's body (`collision_radius`, `collision_height` on its definition).
