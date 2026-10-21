@@ -21,6 +21,8 @@ heartbeat). Scheduled tables are always skipped. The file's tables:
     player_name(entity_id, name, identity, tool)       each player's latest name; tool 1 is the CLI's own
                                                         nameless admin (DECISIONS #272), left out of panels
     run(id, started, ended, db, tables, note)          each time it connected: a gap between runs is a gap
+    content_name(type, id, name, key)                  every piece of content's name (shared/content/), so a
+                                                        panel shows "Woodcutting", not 40001: as it starts
 
 `at` is when the host heard it (Unix seconds); a position's is the server's own. One chronicle a file: a
 second start finds the first's lock fresh and leaves. It reconnects when the server goes (a republish, a
@@ -53,6 +55,7 @@ CREATE TABLE IF NOT EXISTS position(at REAL NOT NULL, entity_id INTEGER NOT NULL
 CREATE INDEX IF NOT EXISTS position_at ON position(at);
 CREATE INDEX IF NOT EXISTS position_entity_at ON position(entity_id, at);
 CREATE TABLE IF NOT EXISTS player_name(entity_id INTEGER PRIMARY KEY, name TEXT, identity TEXT, tool INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS content_name(type TEXT NOT NULL, id INTEGER NOT NULL, name TEXT, key TEXT, PRIMARY KEY(type, id));
 """
 ROLE_ADMIN = 0
 LOCK_FRESH_S = 10.0
@@ -88,6 +91,23 @@ def load_config(root=ROOT):
             out["panels"].append(dict(p, owner=owner))
         if owner == "foundation":
             out["keep_days"] = float(doc.get("keep_days", 0))
+    return out
+
+
+def content_names(root=ROOT):
+    """(type, id, name, key) of every piece of baked content (shared/content/<owner>/<type>.json)."""
+    out = []
+    for f in sorted((root / "shared" / "content").glob("*/*.json")):
+        if f.name == "manifest.json":
+            continue
+        try:
+            doc = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for it in doc.get("items", []):
+            cid = it.get("id", it.get("ability_id"))
+            if isinstance(cid, int):
+                out.append((doc.get("type", f.stem), cid, it.get("name") or it.get("display_name") or "", it.get("key") or ""))
     return out
 
 
@@ -139,6 +159,7 @@ class Chronicle:
         self.config = config
         self.db = db
         conn.executescript(SCHEMA)
+        conn.executemany("INSERT OR REPLACE INTO content_name(type, id, name, key) VALUES (?, ?, ?, ?)", content_names())
         self.tx = (conn.execute("SELECT MAX(tx) FROM change").fetchone()[0] or 0)
         self.run = None
         self.admins = set()
