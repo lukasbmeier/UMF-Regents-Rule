@@ -75,6 +75,8 @@ func run() -> void:
 	_check(chat.shown().size() == ChatBox.SHOWN and chat.shown()[-1] == "Fin: line 9", "only the last %d" % ChatBox.SHOWN)
 	SpaceTimeSync.row_event.emit(RowEvent.make(RowEvent.Kind.DELETED, &"chat_message", FakeChatRow.new(19, world, 7902, "Fin", "line 9", now + 9), null))
 	_check(chat.shown()[-1] == "Fin: line 9", "pruned on the server: still in the log")
+	say.call(30, world, 7902, "", "no name yet", now + 20)
+	_check(chat.shown()[-1] == "Player 7902: no name yet", "a player with no name: as their nameplate calls them")
 	# Writing.
 	chat.open()
 	_check(chat.is_typing() and chat.input_line().has_focus(), "Enter: a line to write in, focused")

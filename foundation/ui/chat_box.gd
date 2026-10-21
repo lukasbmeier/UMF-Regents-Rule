@@ -201,7 +201,9 @@ func _on_row(ev: RowEvent) -> void:
 func add_line(id: int, world: int, entity_id: int, who: String, text: String, at_usec: int) -> void:
 	if _lines.has(id):
 		return
-	_lines[id] = {"world": world, "entity": entity_id, "name": who, "text": text, "at": at_usec}
+	# A player who never said a name is called what their nameplate calls them.
+	var name: String = who if not who.strip_edges().is_empty() else "Player %d" % entity_id
+	_lines[id] = {"world": world, "entity": entity_id, "name": name, "text": text, "at": at_usec}
 	_redraw()
 	if world == InterestManager.world_id:
 		_quiet_s = 0.0
