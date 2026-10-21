@@ -117,7 +117,7 @@ check "$([ -n "$panels" ] && [ -z "$bad" ] && echo true || echo false)" "every p
 chat="$(curl -s -m 5 "http://127.0.0.1:8799/api/panel?id=chat&range=hour")"
 check "$(echo "$chat" | grep -q "kept for looking back" && echo "$chat" | grep -q "Tessa" && echo true || echo false)" "the chat panel shows what was said, and who by"
 who="$(curl -s -m 5 "http://127.0.0.1:8799/api/panel?id=where&range=hour")"
-check "$(echo "$who" | grep -q '\[0, 12' && echo true || echo false)" "the heatmap has where they stood ($(echo "$who" | head -c 160))"
+check "$(echo "$who" | "$PYTHON" -c "import json,sys; r=json.load(sys.stdin)['rows']; print('true' if any(x == 12 and z == -8 for _, x, z, _ in r) else 'false')")"   "the heatmap has where they stood, in its 4 m square (x 12..16, z -8..-4: -7 floors to -8, not 0's way) ($(echo "$who" | head -c 160))"
 none="$(curl -s -m 5 "http://127.0.0.1:8799/api/panel?id=no_such_panel")"
 check "$(echo "$none" | grep -q '"error"' && echo true || echo false)" "a panel that is not there is an error, not a crash"
 
