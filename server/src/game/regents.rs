@@ -1198,7 +1198,7 @@ pub fn loose_arrow(ctx: &ReducerContext, target_id: u64, aim: Vector3) -> Result
 fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
     let Some(a) = ctx.db.arrow().entity_id().find(body_id) else { return };
     ctx.db.arrow().entity_id().delete(body_id);
-    if other_id != 0 && other_id != a.owner {
+    if other_id != 0 && other_id != a.owner && hurts(ctx, a.owner, other_id) {
         let hittable = ctx.db.status_state().entity_id().find(other_id)
             .and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
         if let (true, Some(h)) = (hittable, ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead)) {
@@ -1616,6 +1616,9 @@ fn land_area(ctx: &ReducerContext, area_id: u64) {
 /// A SPELL HURTS `other_id` by `dmg` (for `owner`, training `skill_id`): a foe or a dummy that can be hit
 /// (a dummy never below 1); its owner's mastery trains on it, and a foe it kills falls. Whether it was hurt.
 fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dmg: f32, world_id: u32) -> bool {
+    if !hurts(ctx, owner, other_id) {
+        return false;
+    }
     let hittable = ctx.db.status_state().entity_id().find(other_id).and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
     let Some(h) = ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead) else { return false };
     if !hittable {
@@ -1852,6 +1855,9 @@ fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
 fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return false };
     let Some(def) = ctx.db.ability_def().ability_id().find(ability_id) else { return false };
+    if !hurts(ctx, actor, target.entity_id) {
+        return true;   // a foe's sweep catching another foe, a player's a friend: nothing
+    }
     // A swing a roll (or a flinch) cancelled in its wind-up never lands.
     if ctx.db.swing().entity_id().find(actor).is_some_and(|w| w.ability_id == ability_id && w.cancelled) {
         log::info!("regents: {actor}'s {} was cancelled before it landed", def.ability_id);
@@ -1922,6 +1928,12 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
 // --- foes (owner, 2026-10-19: the first enemies, a skeleton camp) ------------------------------------
 
 /// The foe entity `entity_id` is (its kind's `FoeSeed`), if it is one.
+/// Whether `actor` may hurt `target` (`rules::may_hurt`): a foe only players; a player not players.
+fn hurts(ctx: &ReducerContext, actor: u64, target: u64) -> bool {
+    rules::may_hurt(ctx.db.foe().entity_id().find(actor).is_some(), ctx.db.player().entity_id().find(actor).is_some(),
+        ctx.db.player().entity_id().find(target).is_some())
+}
+
 fn foe_seed_of(ctx: &ReducerContext, entity_id: u64) -> Option<&'static rules::FoeSeed> {
     let kind = ctx.db.entity().entity_id().find(entity_id)?.kind;
     if !rules::FOE_KINDS.contains(&kind) {
@@ -1997,6 +2009,9 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
         return;
     }
     if ctx.db.player().entity_id().find(entity_id).is_some() {
+        // Whatever they were working at stops (a playtest, 2026-10-20: slain mid-chop, the body kept the
+        // chop's pose through its death and after it got up).
+        stop_work(ctx, entity_id);
         let ms = (hot_number(ctx, hot::PLAYER_RESPAWN_S).max(0.0) * 1000.0) as u32;
         if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_SLAIN, ms.max(1), killer, String::new()) {
             log::warn!("regents: player {entity_id} fell, but: {e}");

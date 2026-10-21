@@ -280,11 +280,25 @@ assert_ok "resolve_action $RS $MYENT" "the referee: it hit you"
 PHP1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 SLASH="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40001" 1)"
 check "$(python -c "print('true' if abs(($PHP0 - $PHP1) - $SLASH * 0.5) < 1e-3 else 'false')")" "its slash at its 50 %: half the sword slash's $SLASH ($PHP0 -> $PHP1)"
+# WHO MAY HURT WHOM (owner's playtest, 2026-10-20): its sweep catching the skeleton beside it does nothing.
+SK_NEXT="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_2'" 1)"
+NH0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SK_NEXT" 1)"
+sleep 0.8
+assert_ok "use_ability_as $SKEL 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "it slashes again"
+RS2="$(sql_rows "SELECT id FROM action_request WHERE actor_id = $SKEL" | tr -d ' ' | sort -n | tail -1)"
+assert_ok "resolve_action $RS2 $SK_NEXT" "the referee: the sweep caught skeleton_2"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SK_NEXT" 1)" "$NH0" "skeleton_2 is not hurt by its own kind"
 # YOU SLAY IT: worn down by an authority, then a chop: Slain, its loot is yours, its body goes, it comes back.
 QTY() { local v; v="$(sql_rows "SELECT qty FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $1" | awk -F'|' '{s+=$1} END {print s+0}')"; echo "${v:-0}"; }
 C0="$(QTY 40007)"; I0="$(QTY 40008)"; G0="$(QTY 40009)"; XP0="$(xp_of 40007)"
 assert_ok "apply_damage $SKEL 118 0" "(test) worn down to 2"
 sleep 1.2
+# (A fresh stand-in referee: the last one lapses while the checks above run.)
+for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
+done
+spacetime call "$DB" offer_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
+spacetime call --anonymous "$DB" claim_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
 assert_ok "use_ability_seen 40006 0 $C_AIM 921 100" "a chop at it"
 RK="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 921" 1)"
 assert_ok "resolve_action $RK $SKEL" "the referee: the chop hit"
@@ -328,7 +342,10 @@ for i in $(seq 1 30); do
 done
 check "$( [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && echo true || echo false)" "once its time is up it is back on its point, a new entity ($SKEL2)"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
-# A PLAYER SLAIN gets up at the spawn, whole.
+# A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
+assert_ok 'teleport {"x":-9.0,"y":0.0,"z":-4.5}' "back beside tree_1"
+assert_ok "gather $TREE true" "a round of branch dodge, then..."
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "1" "(the round is open)"
 PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 assert_ok "apply_damage $MYENT $(python -c "print($PHP2 - 1)") 0" "(test) you are worn down to 1"
 assert_ok "offer_referee 0 $C_CODE3" "a referee again"
@@ -337,6 +354,7 @@ assert_ok "use_ability_as $SKEL2 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "the
 RS2="$(sql_first "SELECT id FROM action_request WHERE actor_id = $SKEL2" 1)"
 assert_ok "resolve_action $RS2 $MYENT" "and hits you"
 check "$(logged "player $MYENT was slain by $SKEL2")" "you are slain"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "0" "slain mid-round: the round is withdrawn (no chop pose over the death)"
 sleep 2
 assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $MYENT" 1)" "false" "a second on you are up"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT max FROM health_state WHERE entity_id = $MYENT" 1)" "whole"
@@ -494,6 +512,10 @@ assert_ok "cast_spell 40014 0 $NORTH $FROST_AT" "Frost Ring again"
 sleep 1.15
 assert_eq "$(sql_first "SELECT landed FROM spell_area WHERE owner = $MYENT" 1)" "false" "cast: its circle on the ground, landing in a second"
 assert_ok "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "Blink east"
+# The circle lands a second after it was cast; its Slowed lasts 3 s. Looked for at once (the CLI calls
+# below can outlast it on a busy machine).
+for _ in $(seq 1 10); do [ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SK3" 1)" = "108" ] && break; sleep 0.2; done
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SK3" 1)" "108" "it landed: skeleton_3 is Slowed"
 read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)")"
 check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight metres east, at once ($BX, $BZ)"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five metres south of skeleton_2"
@@ -501,7 +523,6 @@ assert_ok 'set_rule "regents.mana_cost_pct" 300.0 ""' "(test) spells three times
 assert_rejected "cast_spell 40016 0 $NORTH $NONE" "not enough mana" "too little mana: refused, nothing spent"
 assert_ok 'reset_rule "regents.mana_cost_pct"' "(test) costs back"
 sleep 1.0
-assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $SK3" 1)" "108" "it landed: skeleton_3 is Slowed"
 sleep 1.0
 assert_eq "$(row_count "SELECT * FROM spell_area WHERE owner = $MYENT")" "0" "and the circle is gone after its moment"
 sleep 1.0

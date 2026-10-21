@@ -18,6 +18,7 @@ var tool_scene: PackedScene = null
 var pose: StringName = &""
 var _skilling: SkillingComponent = null
 var _driver: AnimationDriverComponent = null
+var _health: SpaceTimeHealthComponent = null
 var _was_working: bool = false
 
 
@@ -35,10 +36,14 @@ func _on_bound() -> void:
 		return
 	_skilling = ent.find_component(SkillingComponent) as SkillingComponent
 	_driver = ent.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	_health = ent.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
 
 
-## Whether this character is working now: AFK (anyone's, from their row), or in a round (our own).
+## Whether this character is working now: AFK (anyone's, from their row), or in a round (our own). Never
+## while dead: the death plays alone (a playtest, 2026-10-20: slain mid-chop, the chop went on over it).
 func working() -> bool:
+	if _health != null and _health.is_dead():
+		return false
 	return _skilling != null and (_skilling.afk_target >= 0 or _skilling.round_id >= 0)
 
 

@@ -89,6 +89,7 @@ func _run() -> void:
 func _chopper(tree_id: int) -> void:
 	# --- WOODCUTTING: tap E (AFK), then hold E (a round, A and D) ---
 	await _stand_by(TREE_1)
+	await _chat_with_buddy()
 	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
 	_check(interaction.get_target() == tree_id, "facing it, the tree is the target (got %d)" % interaction.get_target())
 	_check(hud._prompt.text.contains("Hold E"), "the prompt says tap or hold: \"%s\"" % hud._prompt.text)
@@ -303,6 +304,57 @@ func _chopper(tree_id: int) -> void:
 	_check(skilling.afk_target == -1, "a second tap stops the work")
 
 
+## CHAT (DECISIONS #273), beside the buddy at tree_1: Enter, a line (typing W walks nowhere), Enter; it
+## comes back to our box; the buddy's answer shows in it and over their head.
+func _chat_with_buddy() -> void:
+	var chat: ChatBox = _chat_box()
+	_check(chat != null, "every game has the chat box")
+	if chat == null:
+		return
+	await _key(KEY_ENTER)
+	_check(chat.is_typing() and chat.input_line().has_focus(), "Enter: a line to write in")
+	var at0: Vector3 = me.global_position
+	Input.action_press(&"move_forward")
+	await get_tree().create_timer(0.5).timeout
+	Input.action_release(&"move_forward")
+	_check(me.global_position.distance_to(at0) < 0.05, "W held while typing: it walks nowhere (%.2f m)" % me.global_position.distance_to(at0))
+	chat.input_line().text = "timber!"
+	await _key(KEY_ENTER)
+	_check(not chat.is_typing(), "Enter: sent, and the line closes")
+	await _until(func() -> bool: return not _said_by("timber!", chat).is_empty(), 4.0)
+	_check(not _said_by("timber!", chat).is_empty(), "our line comes back from the server into our box (%s)" % str(chat.shown()))
+	var buddy: Array[int] = [-1]
+	await _until(func() -> bool:
+		buddy[0] = _speaker_of("nice swing", chat)
+		return buddy[0] > 0 and chat.bubble_of(buddy[0]) == "nice swing", 30.0)
+	_check(buddy[0] > 0 and chat.bubble_of(buddy[0]) == "nice swing", "the buddy's answer: in our box and over their head (%s)" % str(chat.shown()))
+	await _shot("chat")
+
+
+## The world's chat box (Boot adds one to every game).
+func _chat_box() -> ChatBox:
+	for n: Node in get_tree().root.find_children("*", "CanvasLayer", true, false):
+		if n is ChatBox:
+			return n as ChatBox
+	return null
+
+
+## The line in `chat` that says `text` ("name: text"), or "".
+func _said_by(text: String, chat: ChatBox) -> String:
+	for l: String in chat.shown():
+		if l.ends_with(": " + text):
+			return l
+	return ""
+
+
+## Who said `text` in `chat` (their entity), or -1.
+func _speaker_of(text: String, chat: ChatBox) -> int:
+	for id: int in chat._lines:
+		if String(chat._lines[id]["text"]) == text:
+			return int(chat._lines[id]["entity"])
+	return -1
+
+
 ## SHOTS: save what the player sees now as `<name>.png` in the --shots directory (none: nothing).
 func _shot(name: String) -> void:
 	var dir: String = ""
@@ -339,6 +391,15 @@ func _make(text: String) -> bool:
 
 func _buddy(tree_id: int) -> void:
 	await _stand_at(TREE_1 + Vector3(1.6, 0.05, 0.0), TREE_1)
+	# CHAT: the chopper's line reaches us (its box and over its head), and we answer.
+	var chat: ChatBox = _chat_box()
+	await _until(func() -> bool: return chat != null and chat.shown().has(_said_by("timber!", chat)), 40.0)
+	var line: String = _said_by("timber!", chat) if chat != null else ""
+	_check(not line.is_empty() and chat.shown().has(line), "the chopper's line reaches the buddy's chat box (%s)" % line)
+	if chat != null:
+		await _key(KEY_ENTER)
+		chat.input_line().text = "nice swing"
+		await _key(KEY_ENTER)
 	skilling.work(tree_id, false)
 	await _until(func() -> bool: return skilling.afk_target == tree_id, 3.0)
 	_check(skilling.afk_target == tree_id, "the buddy chops the same tree AFK")

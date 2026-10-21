@@ -773,6 +773,22 @@ func _run_looks() -> void:
 	_check(player.get_node_or_null(^"Components/SkillingLook") is SkillingLook and player.get_node_or_null(^"Components/Skilling") is SkillingComponent,
 		"the adventurer carries its skilling and the look of it")
 	player.free()
+	# Slain mid-chop: the death plays alone (a playtest, 2026-10-20: the chop went on over it, and after).
+	var look := SkillingLook.new()
+	var work := SkillingComponent.new()
+	var hp := SpaceTimeHealthComponent.new()
+	work.afk_target = 5
+	look.set(&"_skilling", work)
+	look.set(&"_health", hp)
+	_check(look.working(), "chopping AFK: working (the pose plays)")
+	hp.set(&"_is_dead", true)
+	_check(not look.working(), "slain: not working, so no chop's pose over the death")
+	hp.set(&"_is_dead", false)
+	work.afk_target = -1
+	_check(not look.working(), "up again, the work stopped by the server: still none")
+	look.free()
+	work.free()
+	hp.free()
 
 
 ## The minigames in one place: their kinds, the server's challenge kinds, a faster tool's swing.

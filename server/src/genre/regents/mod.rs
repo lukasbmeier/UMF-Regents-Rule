@@ -316,6 +316,16 @@ pub fn blink_to(from: crate::sim::Vector3, aim: crate::sim::Vector3, range: f32)
     Some(crate::sim::Vector3::new(from.x + aim.x / l * range, from.y, from.z + aim.z / l * range))
 }
 
+/// WHO MAY HURT WHOM (owner's playtest, 2026-10-20: skeletons crowding a player hit each other and played
+/// their hurt over and over; a player's chop hurt a friend). A foe hurts only players; a player hurts
+/// anything but another player (no fights between players until duels, RULE_DESIGN §4.5).
+pub fn may_hurt(actor_is_foe: bool, actor_is_player: bool, target_is_player: bool) -> bool {
+    if actor_is_foe {
+        return target_is_player;
+    }
+    !(actor_is_player && target_is_player)
+}
+
 /// Flat distance between two places.
 pub fn flat_dist(a: crate::sim::Vector3, b: crate::sim::Vector3) -> f32 {
     ((a.x - b.x).powi(2) + (a.z - b.z).powi(2)).sqrt()

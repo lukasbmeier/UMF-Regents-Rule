@@ -512,3 +512,13 @@ fn a_cone_and_a_blink_land_where_they_should() {
     assert!((to.x - 5.8).abs() < 1e-4 && to.y == 2.0 && (to.z - 7.4).abs() < 1e-4, "8 m flat along the look, at your height: {to:?}");
     assert!(rules::blink_to(me, Vector3::new(0.0, 1.0, 0.0), 8.0).is_none(), "looking straight up: nowhere");
 }
+
+#[test]
+fn a_foe_hurts_players_and_players_do_not_hurt_each_other() {
+    // (actor is a foe, actor is a player, target is a player)
+    assert!(rules::may_hurt(true, false, true), "a skeleton hurts a player");
+    assert!(!rules::may_hurt(true, false, false), "but not the skeleton beside it, nor a dummy");
+    assert!(rules::may_hurt(false, true, false), "a player hurts a foe or a dummy");
+    assert!(!rules::may_hurt(false, true, true), "but not a friend (no fights until duels)");
+    assert!(rules::may_hurt(false, false, true), "the world (a trap, a fire) may hurt a player");
+}
