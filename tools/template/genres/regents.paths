@@ -14,3 +14,4 @@ shared/golden/regents/
 shared/world/frontier.json
 shared/world/frontier_depth.bin
 sidecar/npc/brains/regents/
+.claude/rules/regents-*.md
