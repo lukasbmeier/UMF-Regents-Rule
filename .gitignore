@@ -56,3 +56,6 @@ addons/limboai/bin/*web*
 addons/limboai/bin/~*
 # The add-ons' own demos (LimboAI's agents, Sky3D's scene): local, to look at.
 /demo/
+
+# Claude Code's settings for this machine (auto memory shared across UMF ALL: CLAUDE.md)
+.claude/settings.local.json

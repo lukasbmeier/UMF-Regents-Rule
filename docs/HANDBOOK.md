@@ -1,7 +1,8 @@
 # The UMF Handbook — how it works, and how to change it
 
 This is the human guide. It explains every system in plain terms, what each one depends on, and
-what you can change without writing code. `AGENTS.md` holds the rules for AI agents and
+what you can change without writing code. `AGENTS.md` holds the rules for AI agents (`CLAUDE.md`,
+`.claude/rules/` and `docs/HANDOFF.md` are how a Claude session starts and ends: `docs/TEMPLATE_WORKFLOW.md`) and
 `docs/DECISIONS.md` the reasons behind every choice; you should not need either to find your way.
 
 Keep it true: a change to how something works updates its section here, in the same change.

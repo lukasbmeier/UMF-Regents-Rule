@@ -28,3 +28,8 @@ shared/game.json merge=ours
 addons/SpacetimeDB/plugin_config.tres merge=ours
 # The character preview names the game's own character: each game's.
 game/characters/character_preview.tscn merge=ours
+# Each repo's own instructions for Claude Code (CLAUDE.md) and where its last session stopped
+# (docs/HANDOFF.md): a pull keeps the game's copy (same driver). The template's .claude/rules/umf-*.md
+# are the foundation's and DO arrive; a game's .claude/rules/<game>-*.md never collide with them.
+CLAUDE.md merge=ours
+docs/HANDOFF.md merge=ours

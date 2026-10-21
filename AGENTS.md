@@ -1,6 +1,6 @@
 # AGENTS.md — operating rules for any AI agent working in this repo
 
-Read this first, then `GAME.md` (what this repo is), then `docs/ARCHITECTURE.md`, then the rules file for the system you are touching
+Read this first, then `docs/HANDOFF.md` (where the last session stopped), then `GAME.md` (what this repo is), then `docs/ARCHITECTURE.md`, then the rules file for the system you are touching
 (the index below). `docs/HANDBOOK.md` is the human guide; `docs/DECISIONS.md` says why things are
 the way they are (indexed by system at its top).
 
@@ -104,12 +104,11 @@ GODOT=<path> ./tests/render_test.sh        # windowed: foliage, grass, lake, gri
 Codegen by hand (publish.sh does this): `godot --headless --path . -s tools/codegen_config.gd`, `--import`, `--script res://addons/SpacetimeDB/cli.gd`, `--import` again (the second registers the generated `class_name`s). Smoke test against a live server: `godot --headless --path .` → `CONNECTED` → `local entity: N` → `world ready`.
 Golden output must read `max_err=0.000e+00` on every case on both sides. A non-zero value under tolerance is a parity bug, not a pass — do not widen the tolerance.
 
-## Using Godot MCP
-- Prefer running the headless test script over opening scenes.
-- After editing any `.gd` with `class_name`, re-import so `.godot/global_script_class_cache.cfg` updates; otherwise `class_name` lookups (and `SpaceTimeSync._find_global_class`) fail.
-- If the editor reports "SpacetimeDB.Umf not found": codegen hasn't run, or the alias differs from `NetConfig.module_alias`.
-- If the editor disagrees with a headless run, the editor is stale (DECISIONS #46); autoload edits to `project.godot` need an editor restart.
-- Rewriting a `@tool` script while its scene is open in the owner's editor can take that editor down (`docs/rules/held_items.md`, EDITOR PREVIEWS).
+## Per layer, and per session
+`.claude/rules/umf-*.md` hold the guidance for one layer each (`umf-module.md` Rust, `umf-sidecar.md`,
+`umf-gdscript.md`: SDK lookups, Godot and the editor) and the session protocol (`umf-session.md`:
+read `docs/HANDOFF.md` first, rewrite it last). Claude Code loads them itself; any other agent reads
+the one for the layer it touches.
 
 ## File map (top level; the full map is `docs/rules/file_map.md`)
 ```
@@ -140,5 +139,5 @@ addons/                     SpacetimeDB (vendored SDK, v2.8.0) · terrain_3d · 
 
 ## When you are unsure
 - SDK behaviour → **read the vendored source** under `addons/SpacetimeDB/` (`spacetime.gd`, `core/`, `core_types/`, `nodes/`); this copy has no `docs/` folder. Key facts are summarised in `docs/ARCHITECTURE.md` §SDK — treat the vendored source as the tiebreaker.
-- Rust module API → `docs.rs/spacetimedb/2.10.0`. Do not use 1.x spellings (`name =`, `ctx.sender` as a field, `ScheduleAt::Interval(...)`). `sim.rs` must never depend on the `spacetimedb` crate, and every table/reducer lives in `module/` behind `#[cfg(target_arch = "wasm32")]` (DECISIONS #27): violating either breaks `cargo test` at link.
+- Rust module API → `docs.rs/spacetimedb/2.10.1` (pinned `=2.10.1`); the details are `.claude/rules/umf-module.md`.
 - Design intent → `docs/ARCHITECTURE.md`, then `docs/DECISIONS.md`. If still unclear, leave an `# OPEN QUESTION:` comment and pick the option that keeps the genre layers thinner.
