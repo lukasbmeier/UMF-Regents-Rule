@@ -130,7 +130,7 @@ def handler_for(site):
             elif url.path == "/api/status":
                 self.json(site.status())
             elif url.path == "/api/panels":
-                self.json([{k: p.get(k, "") for k in ("id", "title", "kind", "unit", "owner")} for p in site.config["panels"]])
+                self.json([{k: p.get(k, "") for k in ("id", "title", "kind", "unit", "owner", "step")} for p in site.config["panels"]])
             elif url.path == "/api/players":
                 self.json(site.players())
             elif url.path == "/api/panel":
