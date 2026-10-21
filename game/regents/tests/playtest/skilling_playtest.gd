@@ -328,6 +328,7 @@ func _chat_with_buddy() -> void:
 		buddy[0] = _speaker_of("nice swing", chat)
 		return buddy[0] > 0 and chat.bubble_of(buddy[0]) == "nice swing", 30.0)
 	_check(buddy[0] > 0 and chat.bubble_of(buddy[0]) == "nice swing", "the buddy's answer: in our box and over their head (%s)" % str(chat.shown()))
+	await get_tree().create_timer(0.5).timeout   # the new words drawn (the font makes their glyphs first)
 	await _shot("chat")
 
 
@@ -391,8 +392,12 @@ func _make(text: String) -> bool:
 
 func _buddy(tree_id: int) -> void:
 	await _stand_at(TREE_1 + Vector3(1.6, 0.05, 0.0), TREE_1)
-	# CHAT: the chopper's line reaches us (its box and over its head), and we answer.
+	# CHAT: the chopper's line reaches us, and we answer. Headless, Boot adds no UI, so the buddy gets the
+	# box it would have had: the same code hearing the same rows.
 	var chat: ChatBox = _chat_box()
+	if chat == null:
+		chat = ChatBox.new()
+		get_tree().root.add_child(chat)
 	await _until(func() -> bool: return chat != null and chat.shown().has(_said_by("timber!", chat)), 40.0)
 	var line: String = _said_by("timber!", chat) if chat != null else ""
 	_check(not line.is_empty() and chat.shown().has(line), "the chopper's line reaches the buddy's chat box (%s)" % line)

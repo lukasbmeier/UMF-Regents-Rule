@@ -344,6 +344,7 @@ check "$( [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && echo true || echo false)
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
 # A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
 assert_ok 'teleport {"x":-9.0,"y":0.0,"z":-4.5}' "back beside tree_1"
+assert_ok "set_status $TREE 0 0 \"\"" "tree_1 grows back (an admin: it was worked out above)"
 assert_ok "gather $TREE true" "a round of branch dodge, then..."
 assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "1" "(the round is open)"
 PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"

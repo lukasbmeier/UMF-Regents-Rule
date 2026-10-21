@@ -277,6 +277,10 @@ func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 func seed_item_defs(defs: Array[UmfItemDef]) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('seed_item_defs', [defs], [&'UmfItemDef'], &'')
 
+## 0. text: String [br]
+func send_chat(text: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('send_chat', [text], [&'string'], &'')
+
 ## 0. noticed_usec: int [br]
 ## 1. category: int [br]
 ## 2. text: String [br]

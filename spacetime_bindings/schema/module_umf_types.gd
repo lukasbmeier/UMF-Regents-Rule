@@ -15,6 +15,7 @@ const BodyState = preload('res://spacetime_bindings/schema/types/umf_body_state.
 const Burning = preload('res://spacetime_bindings/schema/types/umf_burning.gd')
 const Casting = preload('res://spacetime_bindings/schema/types/umf_casting.gd')
 const Challenge = preload('res://spacetime_bindings/schema/types/umf_challenge.gd')
+const ChatMessage = preload('res://spacetime_bindings/schema/types/umf_chat_message.gd')
 const CombatState = preload('res://spacetime_bindings/schema/types/umf_combat_state.gd')
 const Dummy = preload('res://spacetime_bindings/schema/types/umf_dummy.gd')
 const Entity = preload('res://spacetime_bindings/schema/types/umf_entity.gd')

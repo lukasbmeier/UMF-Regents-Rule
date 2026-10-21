@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"chat_message", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"order_filled", &"player", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"station", &"status_state", &"swing", &"timed_press", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -17,6 +17,7 @@ var body_state: UmfBodyStateTable
 var burning: UmfBurningTable
 var casting: UmfCastingTable
 var challenge: UmfChallengeTable
+var chat_message: UmfChatMessageTable
 var combat_state: UmfCombatStateTable
 var dummy: UmfDummyTable
 var entity: UmfEntityTable
@@ -71,6 +72,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	burning = preload('res://spacetime_bindings/schema/tables/umf_burning_table.gd').new(p_local_db)
 	casting = preload('res://spacetime_bindings/schema/tables/umf_casting_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
+	chat_message = preload('res://spacetime_bindings/schema/tables/umf_chat_message_table.gd').new(p_local_db)
 	combat_state = preload('res://spacetime_bindings/schema/tables/umf_combat_state_table.gd').new(p_local_db)
 	dummy = preload('res://spacetime_bindings/schema/tables/umf_dummy_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
