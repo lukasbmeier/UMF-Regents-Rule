@@ -399,6 +399,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     prune_pushes(ctx);
     prune_damage_shares(ctx);
     tick_ground(ctx);
+    prune_chat(ctx);
     Ok(())
 }
 

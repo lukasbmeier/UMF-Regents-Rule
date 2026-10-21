@@ -24,7 +24,8 @@
     "send_feedback": { "burst": 3, "per_sec": 0.05 },
     "launch_body": { "burst": 4, "per_sec": 2 },
     "pick_up": { "burst": 8, "per_sec": 6 },
-    "drop_item": { "burst": 4, "per_sec": 2 }
+    "drop_item": { "burst": 4, "per_sec": 2 },
+    "send_chat": { "burst": 5, "per_sec": 1 }
   },
   "sessions": [
     {

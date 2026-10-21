@@ -76,7 +76,8 @@ pub fn pick_up(ctx: &ReducerContext, ground_id: u64) -> Result<(), String> {
     Ok(())
 }
 
-/// DROP `qty` of bag row `item_id` at your feet: yours for a while (pick it up again), then anyone's.
+/// DROP `qty` of bag row `item_id` a step in front of you (`ground::DROP_AHEAD_M`): yours for a while (pick it
+/// up again), then anyone's.
 #[reducer]
 pub fn drop_item(ctx: &ReducerContext, item_id: u64, qty: u32) -> Result<(), String> {
     let player = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?;
@@ -97,7 +98,7 @@ pub fn drop_item(ctx: &ReducerContext, item_id: u64, qty: u32) -> Result<(), Str
         item.qty -= qty;
         ctx.db.inventory_item().id().update(item);
     }
-    drop_to_ground(ctx, me.world_id, me.pos, def, qty, data, player.entity_id);
+    drop_to_ground(ctx, me.world_id, crate::ground::ahead_of(me.pos, me.yaw, crate::ground::DROP_AHEAD_M), def, qty, data, player.entity_id);
     Ok(())
 }
 

@@ -27,6 +27,15 @@ pub fn scatter(at: Vector3, i: usize, n: usize) -> Vector3 {
     Vector3::new(at.x + SCATTER_M * a.cos(), at.y, at.z + SCATTER_M * a.sin())
 }
 
+/// How far in front of a player a dropped stack lands, m (owner, 2026-10-20: dropped at the feet, it was
+/// picked straight back up "like a magnet").
+pub const DROP_AHEAD_M: f32 = 1.4;
+
+/// Where a stack dropped by someone at `pos` facing `yaw` (the look yaw: forward is -Z turned by it) lands.
+pub fn ahead_of(pos: Vector3, yaw: f32, dist: f32) -> Vector3 {
+    Vector3::new(pos.x - yaw.sin() * dist, pos.y, pos.z - yaw.cos() * dist)
+}
+
 /// Whether someone at `me` may pick up what lies at `at`: within `reach` m on the ground (height
 /// counts at half, a step up or a slope).
 pub fn within_reach(me: Vector3, at: Vector3, reach: f32) -> bool {

@@ -102,9 +102,13 @@ static func simulate(state: MovementState, input: InputFrame, cfg: MovementConfi
 		return s
 
 	# 1b. Jump from the ground; FLAP in the air (config-gated, §2.4, one per fresh press).
+	#    A HELD key hops again only once the body has stopped rising: brushing an object's edge on
+	#    the way up stands it "on the floor" for a tick, and a held Space jumped again from there
+	#    (a playtest's "jumping near an object makes you double jump", 2026-10-20). A fresh press
+	#    always jumps.
 	if s.grounded:
 		s.flaps_used = 0
-		if input.jump:
+		if input.jump and (not s.jump_held or s.vel.y <= 0.0):
 			s.vel = Vector3(s.vel.x, Vector3(0.0, cfg.jump_velocity, 0.0).y, s.vel.z)
 			s.grounded = false
 	elif input.jump and not s.jump_held and s.flaps_used < cfg.flap_charges:

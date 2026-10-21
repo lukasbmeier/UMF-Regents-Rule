@@ -5,6 +5,10 @@ class_name GroundItems extends Node3D
 ## `foundation.ground_pickup_m` less `INSIDE_M` of it, this client asks the server (`pick_up`), which
 ## checks the reach itself. Boot adds one to every game with a display.
 ##
+## A STACK YOU JUST DROPPED is not walked straight back into (owner, 2026-10-20: "picked up like a
+## magnet"): the server lays it a step in front of you, and here it waits until you have left its reach
+## once; walk back to it and it is yours again.
+##
 ## A game says what its items are called and which grade each is (`name_of`, `grade_of`): the
 ## foundation knows neither. Presentation only (hard rule 11): the server decides what lies where.
 
@@ -22,11 +26,17 @@ static var grade_of: Callable = Callable()
 
 ## Walking over one picks it up.
 @export var auto_pickup: bool = true
+## When this client last asked to drop a stack (msec): a row of its own that appears within
+## `OWN_DROP_MSEC` of it is held until its player steps away (the inventory component sets it).
+static var own_drop_msec: int = -1_000_000
+const OWN_DROP_MSEC: int = 3000
 
 ## ground row id -> {"node": Node3D, "pos": Vector3, "item": int, "qty": int}
 var _rows: Dictionary[int, Dictionary] = {}
 ## ground row id -> when it was last asked for (msec).
 var _asked: Dictionary[int, int] = {}
+## Rows this player dropped just now, held until they step out of reach.
+var _held: Dictionary[int, bool] = {}
 
 signal picking_up(ground_id: int)
 
@@ -58,14 +68,17 @@ func _on_row(ev: RowEvent) -> void:
 		return
 	var row: RefCounted = ev.current()
 	if row != null:
-		show_row(int(row.get(&"id")), int(row.get(&"item_def_id")), int(row.get(&"qty")), String(row.get(&"instance_data")), row.get(&"pos") as Vector3)
+		show_row(int(row.get(&"id")), int(row.get(&"item_def_id")), int(row.get(&"qty")), String(row.get(&"instance_data")), row.get(&"pos") as Vector3,
+			int(row.get(&"owner_id")))
 
 
-## One lies at `pos` (new, or as it is now).
-func show_row(id: int, item_def_id: int, qty: int, instance_data: String, pos: Vector3) -> void:
+## One lies at `pos` (new, or as it is now), `owner_id`'s.
+func show_row(id: int, item_def_id: int, qty: int, instance_data: String, pos: Vector3, owner_id: int = 0) -> void:
 	var at: Dictionary = _rows.get(id, {})
 	var node: Node3D = at.get("node", null) as Node3D
 	if node == null:
+		if owner_id != 0 and owner_id == EntityRegistry.local_entity_id and Time.get_ticks_msec() - own_drop_msec < OWN_DROP_MSEC:
+			_held[id] = true
 		node = _sack(item_def_id, qty, instance_data)
 		node.name = "Ground_%d" % id
 		add_child(node)
@@ -81,6 +94,7 @@ func forget(id: int) -> void:
 		node.queue_free()
 	_rows.erase(id)
 	_asked.erase(id)
+	_held.erase(id)
 
 
 ## ASK FOR what lies within reach of `me` and was not asked for just now. The ids asked for.
@@ -91,6 +105,10 @@ func pick_up_near(me: Vector3) -> Array[int]:
 	for id: int in _rows:
 		var pos: Vector3 = _rows[id]["pos"]
 		var flat: Vector3 = Vector3(pos.x - me.x, (pos.y - me.y) * 0.5, pos.z - me.z)
+		if _held.has(id):
+			if flat.length() > reach:
+				_held.erase(id)   # stepped away: walk back and it is picked up
+			continue
 		if flat.length() > reach or now - int(_asked.get(id, -ASK_AGAIN_MSEC)) < ASK_AGAIN_MSEC:
 			continue
 		_asked[id] = now

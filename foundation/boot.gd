@@ -159,6 +159,11 @@ func _start_game(has_display: bool) -> void:
 	# Items on the ground, shown and walked over (DECISIONS #269): every game, outside the HUD.
 	if has_display:
 		add_child(GroundItems.new())
+	# Chat (DECISIONS #273): every game, outside the HUD.
+	if has_display:
+		var chat := ChatBox.new()
+		chat.name = "Chat"
+		add_child(chat)
 	# An editor run starts the world's referee if the game needs one and it is not running
 	# (DECISIONS #226): pressing Play is all a designer does.
 	if has_display:

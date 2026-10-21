@@ -53,6 +53,22 @@ func run() -> void:
 	_check(asked == [1], "within reach: asks the server for the gem, not the ore 19 m off (%s)" % str(asked))
 	_check(view.pick_up_near(Vector3(1.5, 0, 2)).is_empty(), "and not again at once (a slow answer, a refusal)")
 	_check(view.pick_up_near(Vector3(10, 0, 0)).is_empty(), "nothing from between them")
+	# YOUR OWN FRESH DROP stays put until you step away (owner, 2026-10-20: "like a magnet").
+	var was_local: int = EntityRegistry.local_entity_id
+	EntityRegistry.local_entity_id = 77
+	GroundItems.own_drop_msec = Time.get_ticks_msec()
+	view.show_row(9, 8, 1, "", Vector3(0, 0, -1.4), 77)
+	_check(view.pick_up_near(Vector3.ZERO).is_empty(), "a stack you just dropped, a step ahead: not picked straight back up")
+	_check(view.pick_up_near(Vector3(0, 0, 5)).is_empty(), "walk away from it")
+	_check(view.pick_up_near(Vector3.ZERO) == [9], "and back to it: picked up")
+	view.show_row(10, 8, 1, "", Vector3(0, 0, -1.0), 77)
+	GroundItems.own_drop_msec = -1_000_000
+	view.show_row(11, 8, 1, "", Vector3(0, 0, -1.0), 77)
+	_check(view.pick_up_near(Vector3.ZERO) == [11], "a stack of yours from a kill (no drop just now): picked up as you walk over it")
+	EntityRegistry.local_entity_id = was_local
+	view.forget(9)
+	view.forget(10)
+	view.forget(11)
 	# Gone.
 	EntityRegistry.global_row_event.emit(RowEvent.make(RowEvent.Kind.DELETED, &"ground_item", gem, null))
 	_check(view.count() == 1 and view.sack(1) == null, "a row gone (picked up, its time up): its sack goes")

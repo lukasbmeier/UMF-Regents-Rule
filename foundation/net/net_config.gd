@@ -96,4 +96,6 @@ class_name NetConfig extends Resource
 	&"ground_item",
 	# An entity's pools: mana (ResourceComponent, DECISIONS #270)
 	&"resource_state",
+	# What players say (ChatBox, DECISIONS #273)
+	&"chat_message",
 ]
