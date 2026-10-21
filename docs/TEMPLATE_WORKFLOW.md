@@ -48,7 +48,24 @@ Then: `project.godot` `config/name`, `shared/game.json` `title` and `database`, 
 suites. A genre is added the way `docs/HANDBOOK.md` (the genre recipe) says: its folder under
 `game/<genre>/`, `server/src/game/<genre>.rs`, `server/src/genre/<genre>/`, its manifest
 `tools/template/genres/<genre>.paths`, its name in `shared/game.json` `genres`. Write
-`GAME_BRIEF.md` (below) first.
+`GAME_BRIEF.md` (below) first. Then the game's own instruction files (next section): rewrite the
+`CLAUDE.md` and `docs/HANDOFF.md` it was cloned with, and add `.claude/rules/<game>-genre.md`.
+
+## Instructions for Claude Code: who owns which file
+Work happens one session per sit-down, per repo (open the session in the repo's folder, not in
+`UMF ALL`). What carries one session to the next is in files:
+
+| File | Owner | On a pull |
+|---|---|---|
+| `AGENTS.md` | the template | arrives (the foundation's rules, numbered; `CLAUDE.md` imports it) |
+| `.claude/rules/umf-*.md` | the template | arrive (the session protocol; per-layer rules that load by path) |
+| `CLAUDE.md` | each repo | the game's copy is kept (`.gitattributes`) |
+| `docs/HANDOFF.md` | each repo | the game's copy is kept; every session overwrites it as it ends |
+| `.claude/rules/<game>-*.md` | each game | never collide (listed in the genre's manifest) |
+| `.claude/settings.local.json` | this machine | not committed; points auto memory at one directory for every repo |
+
+A game's decisions never go in its `docs/DECISIONS.md`, which is the template's: Luke's go in
+`GAME.md`, the rest in the game's progress file (`.claude/rules/umf-session.md`).
 
 ## `GAME_BRIEF.md` template
 ```
