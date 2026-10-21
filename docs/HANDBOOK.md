@@ -413,6 +413,18 @@ tells it what its items are called and their grade (`GroundItems.name_of`, `Grou
 Server code lays something down itself with `crate::module::drop_to_ground`. Tested by the
 `ground_items` suite, `server/tests/ground.rs` and the integration suite's ground section.
 
+### Traits: what makes one axe play unlike another
+A TRAIT changes how an item plays, never its Power (DECISIONS #275): "Balanced: basics recover 15%
+faster; abilities do 10% less damage". Make one as content (`TraitDef`, a genre's `content/trait/`):
+its key, the item tags it fits (`applies_to`), whether a drop may roll it, the two lines its card shows
+(`gives`, `costs`) and its ATOMS, each one number the game reads: `what` ("damage", "recovery"), `on`
+which action ("basic", "heavy"; empty: all), a multiplier or an added percent, and a `condition` (the
+target below or above some health, or of a family). Every trait must trade: mark at least one atom
+`cost`, or give one a condition; the bake refuses a pure gain. An item carries its traits in its row
+(`"t":[ids]`); game code asks `traits::mult(ids, "recovery", &["basic"], ...)` on the server and
+`Traits.mult(ids, &"recovery", [&"basic"])` on the client. `foundation.trait_strength_pct` turns every
+trait up, down or off live. Which words a game reads, and where, is in that game's own docs.
+
 ### Resources: mana, stamina, focus
 A pool an entity spends to act and that fills by itself is a RESOURCE, content (`ResourceDef`, a genre's
 `game/<genre>/content/resource/`; DECISIONS #270): its key ("mana"), how much it holds, how fast it fills

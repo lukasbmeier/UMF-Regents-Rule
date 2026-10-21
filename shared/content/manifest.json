@@ -52,10 +52,10 @@
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
-			"hash": "596d1c19",
+			"hash": "5a1e8d53",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "25b956e1"
+				"foundation/content/rules/foundation.tres": "960c426f"
 			},
 			"type": "rules"
 		},
