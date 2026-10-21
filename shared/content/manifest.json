@@ -76,7 +76,7 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 16,
-			"hash": "0aaa269d",
+			"hash": "ab589c7b",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "4fe376bc",
@@ -84,7 +84,7 @@
 				"game/regents/content/ability/axe_cleave.tres": "af886adf",
 				"game/regents/content/ability/axe_heavy.tres": "d336b065",
 				"game/regents/content/ability/blink.tres": "abf6228b",
-				"game/regents/content/ability/bow_loose.tres": "4f011e30",
+				"game/regents/content/ability/bow_loose.tres": "7d47acb5",
 				"game/regents/content/ability/dodge.tres": "0b524f44",
 				"game/regents/content/ability/fireball.tres": "db3bb64e",
 				"game/regents/content/ability/frost_ring.tres": "1beae04e",

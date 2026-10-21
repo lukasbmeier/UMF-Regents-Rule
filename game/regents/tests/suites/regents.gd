@@ -138,6 +138,17 @@ func _run_staff() -> void:
 	_check(c.cast(fireball) and said.back().contains("ready in"), "again at once: its cooldown says when (%s)" % said.back())
 	c.free()
 	mana.free()
+	# What burns shows a fire (its HitFeedbackComponent, from its `burning` row), gone with the row.
+	var burner := Node3D.new()
+	add_child(burner)
+	var hf := HitFeedbackComponent.new()
+	hf.entity = burner
+	hf._on_row_updated(&"burning", null, PoolRow.new())
+	_check(hf.fire != null and burner.get_node_or_null(^"Burning") != null, "a burning row: a fire on it")
+	hf._on_row_updated(&"burning", PoolRow.new(), null)
+	_check(hf.fire == null, "its row gone: the fire is out")
+	hf.free()
+	burner.queue_free()
 	# What spells look like: a circle filling until it lands.
 	var looks := SpellLooks.new()
 	add_child(looks)

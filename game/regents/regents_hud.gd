@@ -33,6 +33,9 @@ var _target_bar: ProgressBar
 var _skillbar: Label
 ## A bow's draw, under the crosshair while it is drawn.
 var _draw_bar: ProgressBar
+## The station prompt's next redraw (msec) and what it was for.
+var _prompt_next_ms: int = 0
+var _prompt_target: int = -1
 ## The windows (owner, 2026-10-20: dedicated UI, the foundation's kit): the bag (I), the skills (K), a
 ## station's (tap E at it).
 var bag_window: RegentsBagWindow = null
@@ -224,7 +227,12 @@ func _update_prompt() -> void:
 		else:
 			_prompt.text = "E: %s the %s (AFK)     Hold E: play" % ["chop" if d.tool_tag == &"axe" else "mine", d.display_name.to_lower()]
 	elif station != null and station.def != null:
-		_prompt.text = "" if station_window.is_open() else station_prompt(skilling, station, _inventory)
+		# At most four times a second: it lists every recipe there (owner, 2026-10-19: lag by a bench).
+		var now: int = Time.get_ticks_msec()
+		if now >= _prompt_next_ms or target != _prompt_target:
+			_prompt_next_ms = now + 250
+			_prompt_target = target
+			_prompt.text = "" if station_window.is_open() else station_prompt(skilling, station, _inventory)
 	else:
 		_prompt.text = ""
 

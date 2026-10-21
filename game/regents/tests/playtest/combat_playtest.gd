@@ -374,6 +374,10 @@ func _run() -> void:
 	_mouse(MOUSE_BUTTON_LEFT, false)
 	await _until(func() -> bool: return dh.get_current() < before_free, 4.0)
 	_check(dh.get_current() < before_free, "no target: aimed along the view, it still hits what it flies into (%.1f -> %.1f)" % [before_free, dh.get_current()])
+	# WHAT YOU HIT BECOMES YOUR TARGET (owner, 2026-10-20: "auto highlight that enemy"), on the hit, so free
+	# aim stays free.
+	await _until(func() -> bool: return combat.target_id == dummy, 1.0)
+	_check(combat.target_id == dummy and hud._target_box.visible, "and the dummy it hit is the target now (picked on the hit, not the press)")
 	# RMB lets the draw go: nothing loosed.
 	var arrows1: int = inv.count(ARROWS)
 	_mouse(MOUSE_BUTTON_LEFT, true)

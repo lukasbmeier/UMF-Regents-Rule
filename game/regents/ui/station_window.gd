@@ -17,6 +17,11 @@ var choices: Array[Dictionary] = []
 var _list: VBoxContainer = null
 var _detail: VBoxContainer = null
 var _refresh_at: int = 0
+## What it last drew (`_drawn_state`): it is drawn again only when that changes (owner, 2026-10-20: the
+## window rebuilt every button twice a second, so clicks were lost and the list's scroll jumped).
+var _drawn: String = ""
+## How many times it has been drawn (tests).
+var draws: int = 0
 
 
 func _init() -> void:
@@ -41,6 +46,7 @@ func _init() -> void:
 
 ## Open on station `station_id`: its choices, the one picked there last shown.
 func show_station(station_id: int) -> void:
+	_drawn = ""
 	station = SkillingComponent.station_of(station_id)
 	if station == null or skilling == null:
 		return
@@ -61,6 +67,7 @@ func pick_named(text: String) -> bool:
 
 ## Pick choice `i`: it is the station's pick (hold E plays it), and the right side shows it.
 func pick(i: int) -> void:
+	_drawn = ""
 	if i < 0 or i >= choices.size() or station == null:
 		return
 	skilling.recipe_pick[station.key] = SkillingComponent._choice_key(choices[i])
@@ -113,13 +120,19 @@ func _process(_delta: float) -> void:
 		refresh()
 
 
-## Draw it again from what the client knows now (the bag, the XP, the work going on).
+## Draw it again from what the client knows now (the bag, the XP, the work going on), when any of that
+## changed since it was last drawn.
 func refresh() -> void:
 	_refresh_at = Time.get_ticks_msec() + 500
 	if station == null or skilling == null:
 		return
 	choices = skilling.choices_at(station)
 	var picked_key: String = SkillingComponent._choice_key(picked()) if not picked().is_empty() else ""
+	var state: String = _drawn_state(picked_key)
+	if state == _drawn:
+		return
+	_drawn = state
+	draws += 1
 	for c: Node in _list.get_children():
 		_list.remove_child(c)
 		c.queue_free()
@@ -214,6 +227,24 @@ func _order_detail(o: Dictionary) -> void:
 	f.disabled = bool(o["filled"]) or have < int(o["qty"])
 	f.pressed.connect(func() -> void: make(false))
 	_detail.add_child(f)
+
+
+## Everything the window shows, as one string: the choices and whether each can be made, the pick, what
+## it takes and what you have, the rank and the record, the work going on.
+func _drawn_state(picked_key: String) -> String:
+	var parts: PackedStringArray = [picked_key, str(skilling.afk_target == target)]
+	for c: Dictionary in choices:
+		parts.append("%s|%s" % [label_of(c), _can_make(c)])
+		var r: RecipeDef = c.get("recipe", null) as RecipeDef
+		if r != null:
+			for it: ItemDef in r.inputs:
+				parts.append(str(inventory.count(it.id) if inventory != null else 0))
+			parts.append(str(skilling.rank_in(r.skill)))
+			parts.append(str(skilling.recipe_record(r.id)))
+		elif c.has("order"):
+			parts.append(str(c["order"]))
+	return "
+".join(parts)
 
 
 ## Whether the bag holds what `c` takes (a rank too low is the server's to say).

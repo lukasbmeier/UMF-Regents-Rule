@@ -475,3 +475,34 @@ in a window, then `godot --headless --path . --import`.
 **The design doc's slice order (§10) is done**: grades and Power, loot tables, ground items, the Staff,
 icons. Next in its list: trait atoms and the v1 trait pools (with handle traits' downsides), meta
 telemetry, salvage and components, reagents, the teleport spell, the Pareto check, enchanting, summons.
+
+## Step 14: the playtest of the loot, the Staff and the bow (owner, 2026-10-20)
+
+What you found, and what was done:
+- **The skeletons never attacked.** The world's referee (which drives every foe) had been started by
+  `tools\host.cmd` the evening before, before the skeletons existed: it had no definition for them, so no
+  brain drove them. And Play never started a fresh one: your editor was not an admin of the database (its
+  log said so), and a referee was already online. Now (template DECISIONS #272): **a referee stops once
+  the project is newer than it** (a publish, a bake, changed code) and Play or `host.cmd` starts a fresh
+  one; and **`tools\publish.cmd` makes your editor an admin** of the game's database, so Play starts the
+  referee itself.
+- **"Player 30" blinking in and out**: the database's own CLI (the host's feedback watcher polled as the
+  admin, and any query connects as it), given a player entity like anyone. **A nameless admin is a tool and
+  is never shown** now.
+- **The bow lost to melee by far**: its full draw is **30** (was 14): about 21 a second at range against
+  the iron axe's 26 up close, 18 at point blank. In `content/ability/bow_loose.tres` if it wants tuning.
+- **E at the workbench cast a skill**: E works what is in front of you unless you are fighting (a target
+  picked); a key with no skill on it is never taken.
+- **Attacking with no target**: **what your swing, arrow or spell hits becomes your target** (on the hit,
+  so the bow and the staff still aim freely with none).
+- **The UI lagged**: the station window rebuilt every button twice a second (losing clicks, jumping the
+  list's scroll); it now redraws only when something it shows changed. The station prompt by a bench was
+  worked out every frame; four times a second now.
+- **Burning showed no fire** (found on the way: it listened in the wrong place): the fire is on what
+  burns, from its row.
+
+Proven: the combat playtest (what an arrow hits becomes the target; without it, that check fails); the
+skilling playtest (in stance with a staff, no target, E at the workbench opens its window; the open window
+is not redrawn while idle); the regents suite (a burning row lights a fire, its end puts it out); the
+template's suites (a sidecar whose project is newer is stale; the CLI is never seen, a named admin and a
+nameless player are).

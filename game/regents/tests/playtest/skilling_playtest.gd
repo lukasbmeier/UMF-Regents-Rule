@@ -233,6 +233,24 @@ func _chopper(tree_id: int) -> void:
 	var bench: int = await _station_at(BENCH)
 	await _stand_by(BENCH)
 	await _until(func() -> bool: return interaction.get_target() == bench, 3.0)
+	# E AT A STATION WORKS IT, IN STANCE TOO (owner, 2026-10-20: "pressing e says I dont have an ability
+	# on that key yet"): a staff in hand (E is its Frost Ring), just swung, no target: E opens the bench.
+	var fighter: CombatComponent = hud.combat
+	var kept_kit: KitDef = fighter.kit
+	fighter.kit = KitDef.by_key(&"staff")
+	fighter._last_swing_ms = Time.get_ticks_msec()
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
+	_check(hud.station_window.is_open() and fighter.in_stance() and not fighter.fighting(),
+		"in stance with a staff (E: Frost Ring), no target: E at the workbench opens its window")
+	fighter.kit = kept_kit
+	# THE WINDOW STAYS PUT (owner, 2026-10-20: "crafting clicks dont feel immediate"): open and idle, it is
+	# not rebuilt (it rebuilt every button twice a second, losing clicks and the list's scroll).
+	var drawn0: int = hud.station_window.draws
+	await get_tree().create_timer(2.0).timeout
+	_check(hud.station_window.draws == drawn0, "open and idle for 2 s: drawn %d more times (none)" % (hud.station_window.draws - drawn0))
+	hud.station_window.close()
+	await get_tree().create_timer(0.3).timeout
 	_check(await _make("Handle"), "the workbench's window: a handle, MAKE")
 	await _until(func() -> bool: return inv.count(HANDLE) >= 1, 6.0)
 	_check(inv.count(HANDLE) >= 1, "a handle carved from logs, AFK")

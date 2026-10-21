@@ -191,8 +191,8 @@ func claim_press(target: int) -> bool:
 	var station: StationComponent = station_of(target)
 	if node == null and station == null:
 		return false
-	if _in_combat():
-		return true   # in combat stance E is a skill (CombatComponent): claimed, and nothing worked
+	if _fighting():
+		return true   # fighting (a target picked) E is a skill (CombatComponent): claimed, and nothing worked
 	if node != null and node.depleted:
 		refused.emit("Worked out: it comes back soon")
 		return true
@@ -221,11 +221,11 @@ func target_now() -> int:
 	return _interaction.get_target() if _interaction != null else -1
 
 
-## Whether this player is in combat stance (Q E R F are skills then).
-func _in_combat() -> bool:
+## Whether this player is fighting (a target picked): E is a skill then, not work (owner, 2026-10-20).
+func _fighting() -> bool:
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	var c: CombatComponent = ent.find_component(CombatComponent) as CombatComponent if ent != null else null
-	return c != null and c.in_stance()
+	return c != null and c.fighting()
 
 
 ## A tap on `target`: work a node AFK; at a station, open its window (owner, 2026-10-20: a station's

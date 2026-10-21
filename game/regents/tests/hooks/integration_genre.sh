@@ -363,7 +363,10 @@ SKB="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten metres from skeleton_1"
 C_CODE4='"regentsbowrefereecode"'
 bow_referee() {   # the stand-in referee leaves with each CLI call: claimed again before a shot
-  # (setup: refused while the last one still counts as running; the shot after says whether one is)
+  # (the last one revoked first: an offer is refused while it still counts as running, and then it lapses)
+  for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+    spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
+  done
   spacetime call "$DB" offer_referee 0 "$C_CODE4" >/dev/null 2>&1
   spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE4" >/dev/null 2>&1
 }
@@ -384,7 +387,7 @@ SH0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
 AXP0="$(xp_of 40008)"
 hit_report "$A1" "$SKB" -1.0 "the referee: it hit the skeleton"
 SH1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
-check "$(python -c "print('true' if abs(($SH0 - $SH1) - 14.0) < 1e-3 else 'false')")" "a full draw from ten metres: the shot's 14 ($SH0 -> $SH1)"
+check "$(python -c "print('true' if abs(($SH0 - $SH1) - 30.0) < 1e-3 else 'false')")" "a full draw from ten metres: the shot's 30 ($SH0 -> $SH1)"
 check "$(python -c "print('true' if $(xp_of 40008) > $AXP0 else 'false')")" "archery XP"
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $A1")" "0" "and the arrow is gone"
 # Point blank: a quick draw, hitting two metres from where it left the bow.
@@ -394,7 +397,7 @@ assert_ok "loose_arrow $SKB {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "loosed at once"
 A2="$(newest_arrow)"
 hit_report "$A2" "$SKB" 7.0 "it hit two metres out"
 SH2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
-check "$(python -c "d = $SH1 - $SH2; print('true' if 0 < d <= 14.0 * 0.6 + 1e-3 else 'false')")" "point blank: at most 60 % of a full 14 ($SH1 -> $SH2)"
+check "$(python -c "d = $SH1 - $SH2; print('true' if 0 < d <= 30.0 * 0.6 + 1e-3 else 'false')")" "point blank: at most 60 % of a full 30 ($SH1 -> $SH2)"
 # The last arrow kills it: three stuck in it, 40 % of them (one) back to the bag.
 assert_ok "apply_damage $SKB $(python -c "print($SH2 - 1)") 0" "(test) worn down to 1"
 bow_referee
@@ -465,22 +468,20 @@ assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "1" "b
 assert_eq "$(MANA)" "100" "not paid until it lands"
 assert_rejected "cast_spell 40012 $SK2 $NORTH $NONE" "already casting" "one cast at a time"
 bow_referee
-sleep 3.0
-assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "landed"
-assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts back to their pace"
-assert_eq "$(MANA)" "75" "and paid: 25 mana"
-F1="$(newest_body 40003)"
-check "$( [ -n "$F1" ] && echo true || echo false)" "a fireball flies ($F1)"
-bow_referee
 H2="$(HP "$SK2")"; H3="$(HP "$SK3")"
+# (A missile lives 3 s: its hit is reported the moment it flies, before anything else is read.)
+for _ in $(seq 1 30); do F1="$(newest_body 40003)"; [ -n "$F1" ] && break; sleep 0.1; done
 assert_ok "report_body_contacts 0 [{\"body_id\":$F1,\"other_id\":$SK2,\"pos\":$(vec "$X3" 1.0 "$Z3"),\"normal\":$NORTH,\"speed\":20.0}]" "it hits skeleton_2 beside skeleton_3"
+check "$( [ -n "$F1" ] && echo true || echo false)" "a fireball flew when the cast landed ($F1)"
+assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "landed"
+assert_eq "$(MANA)" "75" "and paid: 25 mana"
 check "$(logged "$MYENT's spell hit $SK2 for 20\.0")" "Fireball's 20 to skeleton_2 (the server's log of the hit)"
 assert_rejected "cast_spell 40013 $SK2 $NORTH $NONE" "not ready" "Fireball again at once: its own 7 s cooldown"
+assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts back to their pace"
 check "$(python -c "print('true' if abs(($H3 - $(HP "$SK3")) - 8.0) < 1e-3 else 'false')")" "and 40 % (8) to skeleton_3 within 3 m ($H3 -> $(HP "$SK3"))"
 assert_eq "$(sql_first "SELECT dps FROM burning WHERE entity_id = $SK2" 1)" "3" "skeleton_2 burns, 3 a second"
-HB="$(HP "$SK2")"
-sleep 1.3
-check "$(python -c "print('true' if $HB - $(HP "$SK2") >= 2.9 else 'false')")" "and the fire hurts it ($HB -> $(HP "$SK2"))"
+for _ in $(seq 1 25); do [ "$(row_count "SELECT * FROM burning WHERE entity_id = $SK2")" = "0" ] && break; sleep 0.2; done
+check "$(python -c "d = $H2 - $(HP "$SK2"); print('true' if 28.0 <= d <= 29.1 else 'false')")" "its fire out after 3 s: the hit's 20 and about 9 of fire, 3 a second ($H2 -> $(HP "$SK2"))"
 assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 10"
 FROST_AT="$(vec "$X3" "$Y3" "$Z3")"
 assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X2" 0.0 "$(python -c "print($Z2 - 40)")")" "too far" "Frost Ring past its 20 m"

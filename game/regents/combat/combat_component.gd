@@ -160,6 +160,7 @@ func _on_bound() -> void:
 			_action.action_revoked.connect(_on_revoked)
 
 
+
 ## The roll on Ctrl (owner, 2026-10-19: "Ctrl to roll is fine for now"): the foundation's dash action
 ## (it binds Q when a game has not: Q is a skill here), and slow-walk moved to Alt.
 static func bind_keys() -> void:
@@ -193,6 +194,36 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				slew.emit(int(new.get(&"foe_id")), String(new.get(&"loot")))
 		TABLE_CASTING:
 			remote_cast_ability = int(new.get(&"ability")) if new != null else -1
+
+
+## Whether this player is FIGHTING: a weapon wielded and a target picked. Then Q E R F are always its
+## skills; otherwise E works what is in front of you first (owner, 2026-10-20: E at the workbench cast
+## a skill).
+func fighting() -> bool:
+	return kit != null and target_id >= 0
+
+
+## WHAT YOU HIT BECOMES YOUR TARGET (owner, 2026-10-20: "if I don't have an enemy highlighted but am
+## attacking something, auto highlight that enemy"): an enemy your swing, arrow or spell just hurt, when
+## you have no target. On the hit, not the press, so a bow or a staff with no target still aims where you
+## look (free aim) and only what it lands on is picked. The target, or -1.
+func target_what_you_hit(hit_id: int, source_id: int) -> int:
+	if not is_local_authority or target_id >= 0 or source_id != entity_id or hit_id == entity_id or not _target_ok(hit_id):
+		return target_id
+	set_target(hit_id)
+	return hit_id
+
+
+## Whether key slot `slot` (0 Q .. 3 F) is a skill now: the kit has one there, you are in stance, and, for
+## the key that also works what is in front of you (E), you are fighting or nothing is in front of you.
+func skill_key_is_skill(slot: int, is_interact_key: bool) -> bool:
+	if kit == null or slot < 0 or slot >= kit.skills.size() or not in_stance():
+		return false
+	if not is_interact_key or fighting():
+		return true
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var sk: SkillingComponent = ent.find_component(SkillingComponent) as SkillingComponent if ent != null else null
+	return sk == null or sk.target_now() < 0
 
 
 ## Whether Q E R F are skills now: a weapon wielded, and a target picked or a swing just now.
@@ -421,9 +452,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif k.physical_keycode == KEY_TAB:
 		next_target()
 		get_viewport().set_input_as_handled()
-	elif in_stance() and _can_fight():
+	elif _can_fight():
 		var slot: int = SKILL_KEYS.find(k.physical_keycode)
-		if slot >= 0:
+		if slot >= 0 and skill_key_is_skill(slot, InputMap.has_action(&"interact") and k.is_action(&"interact")):
 			skill(slot)
 			get_viewport().set_input_as_handled()
 

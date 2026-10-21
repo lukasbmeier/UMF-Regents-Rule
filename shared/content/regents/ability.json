@@ -135,7 +135,7 @@
 		{
 			"ability_id": 40011,
 			"cooldown_ms": 0,
-			"damage": 14.0,
+			"damage": 30.0,
 			"height": 0.6,
 			"judged": false,
 			"lunges": false,
