@@ -12,6 +12,7 @@ const Authority = preload('res://spacetime_bindings/schema/types/umf_authority.g
 const BodyContact = preload('res://spacetime_bindings/schema/types/umf_body_contact.gd')
 const BodyState = preload('res://spacetime_bindings/schema/types/umf_body_state.gd')
 const Challenge = preload('res://spacetime_bindings/schema/types/umf_challenge.gd')
+const ChatMessage = preload('res://spacetime_bindings/schema/types/umf_chat_message.gd')
 const Entity = preload('res://spacetime_bindings/schema/types/umf_entity.gd')
 const EquipStateRow = preload('res://spacetime_bindings/schema/types/umf_equip_state_row.gd')
 const GroundItem = preload('res://spacetime_bindings/schema/types/umf_ground_item.gd')

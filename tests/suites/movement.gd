@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_movement_tests()
+	_run_held_jump()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -321,3 +322,55 @@ func _run_movement_tests() -> void:
 	_check(m7.snapshot_count() == 0, "update_view on an empty buffer is a no-op")
 	m7.entity.queue_free()
 	m7.queue_free()
+
+
+## A HELD jump hops again only once the body has stopped rising (a playtest, 2026-10-20: "jumping near
+## an object makes you double jump"): a resolver that stands the body on an edge for one tick on the
+## way up, as move_and_slide does brushing one.
+func _run_held_jump() -> void:
+	print("== movement: a held jump near an object ==")
+	var cfg := MovementConfig.new()
+	var dt: float = 1.0 / 60.0
+	var edge_at: Array = [3]   # the tick the body brushes the edge
+	var tick: Array = [0]
+	var brush := func(_prev: MovementState, next: MovementState) -> MovementState:
+		var out: MovementState = next.duplicate()
+		out.grounded = tick[0] == edge_at[0]
+		if out.pos.y <= 0.0 and out.vel.y <= 0.0:
+			out.pos.y = 0.0
+			out.vel.y = 0.0
+			out.grounded = true
+		return out
+	var s := MovementState.new()
+	s.grounded = true
+	var held := InputFrame.new()
+	held.jump = true
+	var top: float = 0.0
+	var rises: int = 0
+	var was_rising: bool = false
+	for i: int in range(40):
+		tick[0] = i
+		s = MovementModel.simulate(s, held, cfg, dt, brush)
+		top = maxf(top, s.pos.y)
+		if s.vel.y > 0.0 and not was_rising:
+			rises += 1
+		was_rising = s.vel.y > 0.0
+		if i == edge_at[0]:
+			_check(s.vel.y > 0.0 and s.vel.y < cfg.jump_velocity - 0.01, "on the edge, rising: still the first jump (vel %.2f)" % s.vel.y)
+	var one_jump: float = cfg.jump_velocity * cfg.jump_velocity / (2.0 * cfg.gravity)
+	_check(rises == 1 and top <= one_jump + 0.05, "Space held past an edge on the way up: one jump's height (%.2f m, one is %.2f)" % [top, one_jump])
+	# Held through the landing: it hops again (holding Space keeps hopping).
+	for i: int in range(60):
+		tick[0] = 100 + i
+		s = MovementModel.simulate(s, held, cfg, dt, brush)
+		if s.vel.y > 0.0 and not was_rising:
+			rises += 1
+		was_rising = s.vel.y > 0.0
+	_check(rises >= 2, "held through the landing: it hops again")
+	# A fresh press on the edge does jump: the player asked.
+	var s2 := MovementState.new()
+	s2.grounded = true
+	s2.vel = Vector3(0.0, 2.0, 0.0)
+	s2.jump_held = false
+	s2 = MovementModel.simulate(s2, held, cfg, dt)
+	_check(s2.vel.y > cfg.jump_velocity - 1.0, "a fresh press stood on an edge, even rising: it jumps")

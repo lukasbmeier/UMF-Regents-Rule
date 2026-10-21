@@ -143,7 +143,7 @@ func _run_interest_tests() -> void:
 	# the foundation's list (DECISIONS #154); a genre's suites check its own. These are the foundation's.
 	var expect_filtered: Array[StringName] = [&"entity", &"movement_state", &"health_state",
 		&"session", &"action_event", &"equip_state", &"appearance", &"lobby_member", &"world_level", &"session_match", &"status_state", &"hold_progress", &"hold_member", &"attachment", &"noise",
-		&"body_state", &"body_contact", &"push", &"ground_item", &"resource_state"]
+		&"body_state", &"body_contact", &"push", &"ground_item", &"resource_state", &"chat_message"]
 	var expect_whole: Array[StringName] = [&"world_config", &"player", &"session_member",
 		&"item_def", &"inventory_item", &"challenge", &"timed_press", &"ability_def", &"ability_state"]
 	var shipped := NetConfig.new()

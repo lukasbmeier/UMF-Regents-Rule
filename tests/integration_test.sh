@@ -173,6 +173,12 @@ assert_ok "drop_item $GI 5" "drop five at your feet"
 assert_eq "$(sql_first "SELECT qty FROM inventory_item WHERE id = $GI" 1)" "15" "the stack is five lighter"
 GR=$(sql_first "SELECT id FROM ground_item WHERE owner_id = $MYENT" 1)
 assert_eq "$(sql_first "SELECT qty FROM ground_item WHERE id = $GR" 1)" "5" "five lie on the ground, yours"
+GPOS="$(sql_first "SELECT pos FROM ground_item WHERE id = $GR" 1)"
+check "$(python -c "
+import re, sys
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
+print('true' if len(v) == 3 and abs((v[0] ** 2 + v[2] ** 2) ** 0.5 - 1.4) < 0.05 else 'false')
+" "$GPOS")" "a step (1.4 m) in front of you, not at your feet ($GPOS)"
 assert_eq "$(sql_first "SELECT anyone FROM ground_item WHERE id = $GR" 1)" "false" "yours alone for now"
 assert_eq "$(sql_rows_anon "SELECT * FROM ground_item" | wc -l | tr -d ' ')" "0" "nobody else is even sent it (row-level security)"
 out="$(spacetime call --anonymous "$DB" pick_up "$GR" 2>&1)"
@@ -195,6 +201,30 @@ for _ in $(seq 1 40); do [ "$(row_count "SELECT * FROM ground_item WHERE id = $G
 assert_eq "$(row_count "SELECT * FROM ground_item WHERE id = $GR2")" "0" "its time up: gone"
 assert_ok "reset_rule foundation.ground_owner_s" "(test) rules back"
 assert_ok "reset_rule foundation.ground_public_s" "(test) rules back"
+
+echo "== chat: a line to the world you are in (DECISIONS #273) =="
+# (Called directly: assert_ok splits its argument at spaces, and a line has them.)
+out="$(spacetime call "$DB" send_chat '"  hello     there  "' 2>&1)"
+if echo "$out" | grep -qiE "^error|error:"; then fail "say a line ($(echo "$out" | head -1))"; else pass; fi
+CM=$(sql_first "SELECT id FROM chat_message WHERE entity_id = $MYENT" 1)
+assert_eq "$(sql_first "SELECT text FROM chat_message WHERE id = $CM" 1)" '"hello there"' "kept as one line, its spaces tidied"
+assert_eq "$(sql_first "SELECT world_id FROM chat_message WHERE id = $CM" 1)" "0" "in the world you are in"
+assert_eq "$(sql_first "SELECT name FROM chat_message WHERE id = $CM" 1)" "$(sql_first "SELECT name FROM player WHERE entity_id = $MYENT" 1)" "with your name"
+assert_eq "$(sql_rows_anon "SELECT * FROM chat_message WHERE id = $CM" | wc -l | tr -d ' ')" "1" "everyone is sent it"
+out="$(spacetime call "$DB" send_chat '"   "' 2>&1)"
+if echo "$out" | grep -qi "nothing to say"; then pass; else fail "nothing to say is not a line ($(echo "$out" | head -1))"; fi
+CH_DIR="$(mktemp -d)"
+for i in $(seq 1 12); do
+  ( spacetime call "$DB" send_chat "\"flood $i\"" > "$CH_DIR/$i" 2>&1 ) &
+done
+wait
+CH_REFUSED=$(grep -li "too many calls" "$CH_DIR"/* | wc -l | tr -d ' ')
+rm -rf "$CH_DIR"
+check "$([ "$CH_REFUSED" -ge 5 ] && echo true || echo false)" "twelve lines at once: the rest refused, too often ($CH_REFUSED refused)"
+assert_ok "set_rule foundation.chat_keep_s 1 \"\"" "(test) a world keeps its lines a second"
+for _ in $(seq 1 20); do [ "$(row_count "SELECT * FROM chat_message")" = "0" ] && break; sleep 0.25; done
+assert_eq "$(row_count "SELECT * FROM chat_message")" "0" "then they are gone"
+assert_ok "reset_rule foundation.chat_keep_s" "(test) rules back"
 
 echo "== equip state: in hand or put away, reported by the owner (DECISIONS #160) =="
 assert_eq "$(row_count "SELECT * FROM equip_state WHERE entity_id = $MYENT")" "0"   "nothing reported yet: no row (the client reads that as away)"

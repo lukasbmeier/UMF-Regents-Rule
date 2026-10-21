@@ -283,6 +283,14 @@ nothing a client receives: the tables are private, read by the database's owner.
 - Adding a number: put it in the report's `detail` JSON (`Telemetry.send_window`): the table never
   needs reshaping.
 
+### Chat
+Every game has CHAT (DECISIONS #273): **Enter** opens a line bottom left, **Enter** sends it to everyone
+in your world, **Escape** cancels. You stand still while you type. The last few lines stay on screen
+(fading when nobody speaks) and a new one shows over the speaker's head for a few seconds. Someone
+arriving sees what was said in the last `foundation.chat_keep_s` (5 minutes). The server tidies and
+rate-limits each line (`rate_limits.send_chat` in `shared/rules.json`). Boot adds the box
+(`foundation/ui/chat_box.gd`); a genre with keys of its own on Enter rebinds the `chat` action.
+
 ### Who moves things (motion authority)
 Each world picks one:
 - **MODULE (Tier A, what fishing uses):** your client simulates your movement and tells the
@@ -398,8 +406,9 @@ straight into the bag; everything else falls where the thing died, a SACK with a
 grade's colour and its name above it. It is its player's ALONE for `foundation.ground_owner_s` (60 s:
 nobody else is even sent it), then ANYONE's for `foundation.ground_public_s` (60 s), then gone. Walk over
 it to pick it up (`foundation.ground_pickup_m`: the server checks the distance). A player can drop a stack
-from their bag too (`drop_item`; the inventory component's `request_drop`): theirs for a minute, then
-anyone's: a way to give a friend something. Boot shows the sacks in every game (`GroundItems`); a game
+from their bag too (`drop_item`; the inventory component's `request_drop`): it lands a step (1.4 m) in
+front of them, and their own client leaves it alone until they have walked away from it; theirs for a
+minute, then anyone's: a way to give a friend something. Boot shows the sacks in every game (`GroundItems`); a game
 tells it what its items are called and their grade (`GroundItems.name_of`, `GroundItems.grade_of`).
 Server code lays something down itself with `crate::module::drop_to_ground`. Tested by the
 `ground_items` suite, `server/tests/ground.rs` and the integration suite's ground section.
@@ -567,6 +576,8 @@ acceleration, reconciliation). Gaits: a plain key RUNS, Shift sprints, Ctrl walk
 own numbers are its movement profile (`content/movement/*.tres`); `turn_rate_full` there makes a
 heavy body swing round slowly at speed (Fowl Play's wolf: 180 degrees a second, 360 when slow), and
 0 turns at once. Changing the model means new golden vectors (`shared/golden/GENERATE.md`).
+Holding Space keeps hopping, but only once the body has stopped rising, so brushing an object's
+edge mid-jump is not a second jump (DECISIONS #274).
 A SLOW PLACE in a level (a hedge's hole, mud) is a `LevelSpeedZone`: a box with a pace (0.4: 40 % of
 anyone's speed in it), on top of their status (DECISIONS #231). An ability that `lunges` (a pounce)
 throws its user forward by their movement profile's dash as its wind-up ends (DECISIONS #232).

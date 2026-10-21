@@ -1,6 +1,6 @@
 //! ITEMS ON THE GROUND (DECISIONS #269): the cell a drop is in, where a kill's drops land, the reach.
 
-use umf_module::ground::{chunk_of, scatter, within_reach, SCATTER_M};
+use umf_module::ground::{ahead_of, chunk_of, scatter, within_reach, DROP_AHEAD_M, SCATTER_M};
 use umf_module::sim::Vector3;
 
 #[test]
@@ -38,4 +38,14 @@ fn a_pick_up_reaches_its_distance_and_no_further() {
     assert!(!within_reach(me, Vector3::new(2.6, 0.0, 0.0), 2.5));
     assert!(within_reach(me, Vector3::new(1.5, 1.5, 0.0), 2.5), "a step up counts at half its height");
     assert!(!within_reach(me, Vector3::new(0.0, 6.0, 0.0), 2.5), "but a ledge far above does not");
+}
+
+#[test]
+fn a_drop_lands_a_step_in_front_of_you() {
+    let me = Vector3::new(2.0, 1.0, 3.0);
+    let north = ahead_of(me, 0.0, DROP_AHEAD_M);
+    assert!((north.x - 2.0).abs() < 1e-5 && (north.z - (3.0 - DROP_AHEAD_M)).abs() < 1e-5 && north.y == 1.0, "facing -Z: in front, at your height ({north:?})");
+    let west = ahead_of(me, std::f32::consts::FRAC_PI_2, DROP_AHEAD_M);
+    assert!((west.x - (2.0 - DROP_AHEAD_M)).abs() < 1e-5 && (west.z - 3.0).abs() < 1e-5, "turned a quarter left: to the west ({west:?})");
+    assert!(DROP_AHEAD_M > 1.0, "far enough not to be at your feet");
 }

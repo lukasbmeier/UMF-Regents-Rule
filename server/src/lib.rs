@@ -53,6 +53,9 @@ pub mod ground;
 /// Baked from `ResourceDef` content. Pure.
 pub mod resource;
 
+/// Chat (DECISIONS #273): what a line may say, how long a world keeps them. Pure.
+pub mod chat;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {

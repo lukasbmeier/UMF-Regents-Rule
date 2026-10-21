@@ -102,6 +102,7 @@ func request_consume(item_id: int, qty: int) -> ReducerRequest:
 
 ## Drop `qty` of stack `item_id` at your feet (DECISIONS #269): yours a while, then anyone's.
 func request_drop(item_id: int, qty: int) -> ReducerRequest:
+	GroundItems.own_drop_msec = Time.get_ticks_msec()   # not walked straight back into
 	return SpaceTimeSync.call_reducer(&"drop_item", [item_id, qty], ["u64", "u32"])
 
 

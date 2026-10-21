@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"chat_message", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -14,6 +14,7 @@ var authority: UmfAuthorityTable
 var body_contact: UmfBodyContactTable
 var body_state: UmfBodyStateTable
 var challenge: UmfChallengeTable
+var chat_message: UmfChatMessageTable
 var entity: UmfEntityTable
 var equip_state: UmfEquipStateTable
 var ground_item: UmfGroundItemTable
@@ -50,6 +51,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	body_contact = preload('res://spacetime_bindings/schema/tables/umf_body_contact_table.gd').new(p_local_db)
 	body_state = preload('res://spacetime_bindings/schema/tables/umf_body_state_table.gd').new(p_local_db)
 	challenge = preload('res://spacetime_bindings/schema/tables/umf_challenge_table.gd').new(p_local_db)
+	chat_message = preload('res://spacetime_bindings/schema/tables/umf_chat_message_table.gd').new(p_local_db)
 	entity = preload('res://spacetime_bindings/schema/tables/umf_entity_table.gd').new(p_local_db)
 	equip_state = preload('res://spacetime_bindings/schema/tables/umf_equip_state_table.gd').new(p_local_db)
 	ground_item = preload('res://spacetime_bindings/schema/tables/umf_ground_item_table.gd').new(p_local_db)

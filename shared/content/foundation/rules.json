@@ -240,6 +240,15 @@
 					"number": 2.5,
 					"text": "",
 					"unit": "m"
+				},
+				{
+					"key": "foundation.chat_keep_s",
+					"kind": "number",
+					"max": 86400.0,
+					"min": 1.0,
+					"number": 300.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}
