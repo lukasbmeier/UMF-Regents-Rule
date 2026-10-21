@@ -56,6 +56,10 @@ pub mod resource;
 /// Chat (DECISIONS #273): what a line may say, how long a world keeps them. Pure.
 pub mod chat;
 
+/// Traits (DECISIONS #275): what changes how an item plays (never its Power), as atoms the game reads
+/// where they act. Baked from `TraitDef` content. Pure.
+pub mod traits;
+
 /// The content the module seeds, baked in the editor (`tools/bake_content.gd`) and compiled in by
 /// build.rs from `shared/content/` (DECISIONS #199).
 pub mod content {

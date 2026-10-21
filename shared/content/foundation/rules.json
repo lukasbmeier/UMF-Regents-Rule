@@ -249,6 +249,15 @@
 					"number": 300.0,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "foundation.trait_strength_pct",
+					"kind": "number",
+					"max": 200.0,
+					"min": 0.0,
+					"number": 100.0,
+					"text": "",
+					"unit": "%"
 				}
 			]
 		}

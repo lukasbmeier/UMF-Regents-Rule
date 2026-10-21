@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=22 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -251,8 +251,17 @@ maximum = 86400.0
 unit = "s"
 description = "CHAT (DECISIONS #273): how long a world keeps what was said, so someone arriving sees the last few minutes (at most the last 50 lines)."
 
+[sub_resource type="Resource" id="Rule_trait_strength"]
+script = ExtResource("2_rule")
+name = &"trait_strength_pct"
+number = 100.0
+minimum = 0.0
+maximum = 200.0
+unit = "%"
+description = "TRAITS (DECISIONS #275): how strongly every trait works, gains and costs alike. 100: as authored; 0: no trait does anything (a fight without them, a trait gone wrong)."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep"), SubResource("Rule_trait_strength")])
