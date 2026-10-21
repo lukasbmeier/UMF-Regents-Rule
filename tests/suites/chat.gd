@@ -1,6 +1,8 @@
 extends "res://tests/suite_base.gd"
 ## The `chat` suite (DECISIONS #273): what was said, shown.
-##   - a `chat_message` row is a line in the box, oldest first, the last few only, this world's only
+##   - a `chat_message` row is a line in the box, oldest first, the last few only, this world's only; fed
+##     as the server's rows are (`SpaceTimeSync.row_event`), through the registry's routing, which sends a
+##     row naming an entity to that entity and not to the world's bus (a playtest caught that)
 ##   - a new line shows over the speaker's head; one said before you came does not
 ##   - Enter opens a line to write in, holding the player still; sending calls send_chat; Escape closes it
 ## The server's side (who may say what, how often, how long it is kept): server/tests/chat.rs and
@@ -53,7 +55,7 @@ func run() -> void:
 	var world: int = InterestManager.world_id
 	var now: int = ClockSync.server_usec()
 	var say := func(id: int, w: int, who: int, name: String, text: String, at: int) -> void:
-		EntityRegistry.global_row_event.emit(RowEvent.make(RowEvent.Kind.INSERTED, &"chat_message", null, FakeChatRow.new(id, w, who, name, text, at)))
+		SpaceTimeSync.row_event.emit(RowEvent.make(RowEvent.Kind.INSERTED, &"chat_message", null, FakeChatRow.new(id, w, who, name, text, at)))
 	say.call(2, world, 7902, "Fin", "over here", now - 1000)
 	say.call(1, world, 7901, "Luke", "where are you?", now - 2000)
 	_check(chat.shown() == PackedStringArray(["Luke: where are you?", "Fin: over here"]), "the lines, oldest first (%s)" % str(chat.shown()))
@@ -71,7 +73,7 @@ func run() -> void:
 	for i: int in range(10):
 		say.call(10 + i, world, 7902, "Fin", "line %d" % i, now + i)
 	_check(chat.shown().size() == ChatBox.SHOWN and chat.shown()[-1] == "Fin: line 9", "only the last %d" % ChatBox.SHOWN)
-	EntityRegistry.global_row_event.emit(RowEvent.make(RowEvent.Kind.DELETED, &"chat_message", FakeChatRow.new(19, world, 7902, "Fin", "line 9", now + 9), null))
+	SpaceTimeSync.row_event.emit(RowEvent.make(RowEvent.Kind.DELETED, &"chat_message", FakeChatRow.new(19, world, 7902, "Fin", "line 9", now + 9), null))
 	_check(chat.shown()[-1] == "Fin: line 9", "pruned on the server: still in the log")
 	# Writing.
 	chat.open()

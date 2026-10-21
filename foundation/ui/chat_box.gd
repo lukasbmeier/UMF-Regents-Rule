@@ -85,15 +85,17 @@ func _ready() -> void:
 		if _input.visible:
 			close())
 	_panel.modulate.a = 0.0
-	if not EntityRegistry.global_row_event.is_connected(_on_row):
-		EntityRegistry.global_row_event.connect(_on_row)
+	# Every row as it arrives, not `EntityRegistry.global_row_event`: a line names its speaker
+	# (`entity_id`), so the registry routes it to the speaker's entity, never to the world's bus.
+	if not SpaceTimeSync.row_event.is_connected(_on_row):
+		SpaceTimeSync.row_event.connect(_on_row)
 	if not InterestManager.world_changed.is_connected(_on_world):
 		InterestManager.world_changed.connect(_on_world)
 
 
 func _exit_tree() -> void:
-	if EntityRegistry.global_row_event.is_connected(_on_row):
-		EntityRegistry.global_row_event.disconnect(_on_row)
+	if SpaceTimeSync.row_event.is_connected(_on_row):
+		SpaceTimeSync.row_event.disconnect(_on_row)
 	if InterestManager.world_changed.is_connected(_on_world):
 		InterestManager.world_changed.disconnect(_on_world)
 	_hold(false)
