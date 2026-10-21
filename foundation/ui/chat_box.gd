@@ -263,13 +263,15 @@ func _bubble(entity_id: int, text: String) -> void:
 	var l := Label3D.new()
 	l.name = "ChatBubble"
 	l.text = text
+	# Drawn as a nameplate is (`NameplateComponent`): in the world, at its scale, out to its range.
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true
-	l.fixed_size = true
-	l.pixel_size = 0.0011
-	l.font_size = 26
+	l.pixel_size = 0.0045
+	l.font_size = 40
 	l.outline_size = 8
-	l.width = 420.0
+	l.modulate = Color(1.0, 1.0, 1.0, 0.95)
+	l.outline_modulate = Color(0.0, 0.0, 0.0, 0.85)
+	l.visibility_range_end = 40.0
+	l.width = 480.0
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	l.position = Vector3(0.0, BUBBLE_HEIGHT, 0.0)
