@@ -19,8 +19,10 @@ extends SceneTree
 
 const PLUGIN_SCRIPT_PATH: String = "res://addons/SpacetimeDB/spacetime.gd"
 const CONFIG_SCRIPT_PATH: String = "res://addons/SpacetimeDB/core_types/plugin_config.gd"
-## Matches the editor plugin's own HTTPRequest timeout.
-const SCHEMA_REQUEST_TIMEOUT_SECONDS: float = 4.0
+## 30 s, not the editor plugin's 4: Godot's HTTP client took 2.3 s for
+## Regent's Rule's 137 KB schema (curl: 45 ms), and the codegen run timed out once the schema grew
+## (2026-10-21).
+const SCHEMA_REQUEST_TIMEOUT_SECONDS: float = 30.0
 
 
 func _initialize() -> void:
