@@ -301,7 +301,7 @@ private telemetry too) and where each online player was every 5 s. It lives in o
   `shared/<genre>/telemetry.json`, with a title, a kind (line, bar, table, heatmap) and the SQL that
   feeds it. The SQL reads the file's tables: `change` (one line per row changed: `tbl`, `op` (have, insert,
   update or delete), `row` as JSON, `old` holding what an update changed), `position`, `player_name`
-  (`tool = 0` for real players) and `run`. Use `json_extract(row, '$.xp')` for a column, and the
+  (`tool = 0` for real players), `content_name` (every skill's, item's or foe's name by type and id) and `run`. Use `json_extract(row, '$.xp')` for a column, and the
   `:since`, `:bucket`, `:player` and `:cell` parameters the page fills in. A panel with a mistake shows
   the error in its own card, and `tests/telemetry_test.sh` runs every panel.
 - **Too much on disk?** The "What the chronicle kept" panel shows which tables write the most. Add a

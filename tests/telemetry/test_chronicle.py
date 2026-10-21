@@ -117,6 +117,12 @@ class Kept(unittest.TestCase):
         self.assertEqual(cfg["quiet"], {"t": {"x", "y"}})
         self.assertEqual([(p["id"], p["owner"]) for p in cfg["panels"]], [("f", "foundation"), ("p", "g")])
 
+    def test_content_has_its_names(self):
+        conn, c = new()
+        rows = dict(((t, i), n) for t, i, n in conn.execute("SELECT type, id, name FROM content_name"))
+        self.assertTrue(any(t == "status" for t, _ in rows), "the foundation's statuses are named")
+        self.assertTrue(all(isinstance(i, int) for _, i in rows))
+
     def test_the_lock_keeps_a_second_chronicle_out(self):
         with tempfile.TemporaryDirectory() as d:
             lock = chronicle.Lock(pathlib.Path(d) / "x.sqlite")
