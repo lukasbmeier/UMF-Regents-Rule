@@ -96,6 +96,9 @@ foundation/components/body_component.gd  a body on screen: its look, its turn, t
 sidecar/physics/body_referee.gd          the world's bodies flown, written, their hits reported
 sidecar/project_stamp.gd                 when the project last changed: a sidecar older than it stops (DECISIONS #272)
 tools/editor_admins.py                   the identities this machine's editor plays as (publish.sh makes them admins)
+tools/telemetry/                         chronicle.py (keeps every change and place in build/telemetry/<db>.sqlite) · dashboard.py + page.html (the telemetry page) · tools/telemetry.cmd (DECISIONS #276)
+foundation/net/chronicle_launcher.gd     starts the chronicle beside an editor run (the admin's, on a local server)
+shared/telemetry.json                    the chronicle's skip and quiet tables and the foundation's panels; a genre adds shared/<genre>/telemetry.json
 server/src/body.rs + module/bodies.rs    what the module checks of a throw; body_state, body_contact, launch_body, write_body_batch, report_body_contacts
 foundation/content/loot_table_def.gd + loot_line.gd  LootTableDef (each / one-of, nested, pity) (DECISIONS #268)
 server/src/loot.rs + module/loot.rs      the roll, pity, who earns one; damage_share, drop_pity, drop_loot; server/tests/loot.rs, tests/suites/loot.gd

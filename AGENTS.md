@@ -99,6 +99,7 @@ GODOT=<path> ./tests/export_test.sh        # both presets exported, packs inspec
 GODOT=<path> ./tests/genres_test.sh        # the foundation built with no genres
 ./tests/content_test.sh                    # a stale content bake stops the build (no server, no Godot)
 GODOT=<path> ./tests/hot_rules_test.sh     # hot rules on a real server: who may set, bounds, live use, republish, reset
+./tests/telemetry_test.sh                  # the chronicle and the telemetry page on a real server (no Godot)
 GODOT=<path> ./tests/render_test.sh        # windowed: foliage, grass, lake, grip pictures, F11
 ```
 Codegen by hand (publish.sh does this): `godot --headless --path . -s tools/codegen_config.gd`, `--import`, `--script res://addons/SpacetimeDB/cli.gd`, `--import` again (the second registers the generated `class_name`s). Smoke test against a live server: `godot --headless --path .` → `CONNECTED` → `local entity: N` → `world ready`.

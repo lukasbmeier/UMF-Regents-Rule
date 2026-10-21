@@ -143,6 +143,15 @@
 					"unit": "ms"
 				},
 				{
+					"key": "foundation.telemetry_where_s",
+					"kind": "number",
+					"max": 600.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
 					"key": "foundation.body_launch_lag_s",
 					"kind": "number",
 					"max": 1.0,

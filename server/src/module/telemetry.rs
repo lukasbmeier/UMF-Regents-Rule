@@ -9,6 +9,10 @@
 //!                 server stamps it with who, where and when from its OWN rows (their entity, its world,
 //!                 level, session, round and phase, where it stood), so a report says truly whose it is.
 //!
+//!   where_sample  each online player's place, rewritten every `foundation.telemetry_where_s` (5 s) by the
+//!                 module's own tick (DECISIONS #276): the trail the host's chronicle keeps forever
+//!                 (`tools/chronicle.py`), one small row a player rather than every step they take.
+//!
 //! PRIVATE TABLES: no client receives them (nothing for every player's bandwidth); the database's owner
 //! reads them (`tools/feedback.sh`, `spacetime sql`). Nothing personal: `crate::telemetry`.
 
@@ -201,5 +205,53 @@ pub(crate) fn prune_perf(ctx: &ReducerContext) {
     let stale: Vec<u64> = ctx.db.perf_report().at().filter(..cutoff).map(|r| r.id).collect();
     for id in stale {
         ctx.db.perf_report().id().delete(id);
+    }
+}
+
+/// WHERE EVERYONE WAS (DECISIONS #276): an online player's place, noted every
+/// `foundation.telemetry_where_s` seconds. The host's chronicle (`tools/chronicle.py`) is subscribed and
+/// keeps each one on disk, so the database holds only the latest (one row a player) and the trail costs
+/// nobody's bandwidth: `movement_state` changes with every step, this every few seconds. A player who goes
+/// offline loses their row at the next note (the chronicle sees them leave).
+#[table(accessor = where_sample)]
+pub struct WhereSample {
+    #[primary_key]
+    pub entity_id: u64,
+    pub world_id: u32,
+    pub level: u8,
+    pub pos: Vector3,
+    pub yaw: f32,
+    pub at: Timestamp,
+}
+
+/// Note where every online player is, when it is time (`rules::where_due`); called by the module's
+/// once-a-second tick. The rule at 0 clears the notes and takes none.
+pub(crate) fn sample_where(ctx: &ReducerContext) {
+    let every = hot_number(ctx, crate::hot::foundation::TELEMETRY_WHERE_S);
+    let now = ctx.timestamp.to_micros_since_unix_epoch();
+    if !(every > 0.0) {
+        let all: Vec<u64> = ctx.db.where_sample().iter().map(|w| w.entity_id).collect();
+        for id in all {
+            ctx.db.where_sample().entity_id().delete(id);
+        }
+        return;
+    }
+    let last = ctx.db.where_sample().iter().map(|w| w.at.to_micros_since_unix_epoch()).max().unwrap_or(0);
+    if !rules::where_due(now, last, every) {
+        return;
+    }
+    let online: std::collections::HashSet<u64> = ctx.db.player().iter().filter(|p| p.online).map(|p| p.entity_id).collect();
+    let gone: Vec<u64> = ctx.db.where_sample().iter().filter(|w| !online.contains(&w.entity_id)).map(|w| w.entity_id).collect();
+    for id in gone {
+        ctx.db.where_sample().entity_id().delete(id);
+    }
+    for id in online {
+        let Some(m) = ctx.db.movement_state().entity_id().find(id) else { continue };
+        let row = WhereSample { entity_id: id, world_id: m.world_id, level: world_level_of(ctx, m.world_id), pos: m.pos, yaw: m.yaw, at: ctx.timestamp };
+        if ctx.db.where_sample().entity_id().find(id).is_some() {
+            ctx.db.where_sample().entity_id().update(row);
+        } else {
+            ctx.db.where_sample().insert(row);
+        }
     }
 }

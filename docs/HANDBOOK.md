@@ -284,6 +284,31 @@ nothing a client receives: the tables are private, read by the database's owner.
 - Adding a number: put it in the report's `detail` JSON (`Telemetry.send_window`): the table never
   needs reshaping.
 
+### Looking back at everything (the chronicle and the telemetry page)
+Everything that happens in the game is kept on the machine that hosts, for looking back (DECISIONS
+#276): every row of every table as it changed (skills, bags, hits, kills, crafts, chat, logins, the
+private telemetry too) and where each online player was every 5 s. It lives in one file,
+`build/telemetry/<database>.sqlite`, kept forever unless you set `keep_days`.
+- **To look: double-click `tools\telemetry.cmd`** on that machine. A page opens in your browser:
+  players online, where they were (a heatmap per level), who played and for how long, frame rate and
+  ping, chat, feedback, and each genre's own panels. Pick the last hour, day, week or all, and everyone
+  or one player. It refreshes itself every 15 s while the game runs.
+- **What records it**: `tools\host.cmd` while you host, and pressing Play in the editor (the admin's game
+  on a local server, so your own playtests are kept too). If neither is running, the telemetry page
+  records while its window is open. Only one recorder runs per database. Python must be installed
+  (standard library only).
+- **Adding a panel** is data, not code: a line in `shared/telemetry.json` (the foundation's) or a genre's
+  `shared/<genre>/telemetry.json`, with a title, a kind (line, bar, table, heatmap) and the SQL that
+  feeds it. The SQL reads the file's tables: `change` (one line per row changed: `tbl`, `op` (have, insert,
+  update or delete), `row` as JSON, `old` holding what an update changed), `position`, `player_name`
+  (`tool = 0` for real players) and `run`. Use `json_extract(row, '$.xp')` for a column, and the
+  `:since`, `:bucket`, `:player` and `:cell` parameters the page fills in. A panel with a mistake shows
+  the error in its own card, and `tests/telemetry_test.sh` runs every panel.
+- **Too much on disk?** The "What the chronicle kept" panel shows which tables write the most. Add a
+  noisy table to `skip`, or a heartbeat column to `quiet`, in the same JSON file. How often places are
+  noted is the hot rule `foundation.telemetry_where_s` (0 turns it off).
+- Any SQLite tool (DB Browser for SQLite, `python -c "import sqlite3..."`) opens the file too.
+
 ### Chat
 Every game has CHAT (DECISIONS #273): **Enter** opens a line bottom left, **Enter** sends it to everyone
 in your world, **Escape** cancels. You stand still while you type. The last few lines stay on screen

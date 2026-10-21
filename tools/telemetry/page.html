@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telemetry</title>
+<!-- THE TELEMETRY PAGE (DECISIONS #276), served by tools/telemetry/dashboard.py. Panels come from
+     shared/telemetry.json and each genre's shared/<genre>/telemetry.json; this page only draws them. -->
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --wash: rgba(11,11,11,0.05);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --critical: #d03b3b; --good: #0ca30c;
+  --q0: #f0efec; --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #256abf; --q6: #184f95; --q7: #0d366b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.06);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --q0: #383835; --q1: #0d366b; --q2: #104281; --q3: #184f95; --q4: #256abf; --q5: #3987e5; --q6: #6da7ec; --q7: #b7d3f6;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.06);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --q0: #383835; --q1: #0d366b; --q2: #104281; --q3: #184f95; --q4: #256abf; --q5: #3987e5; --q6: #6da7ec; --q7: #b7d3f6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 16px 24px 8px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+h1 { font-size: 20px; margin: 0; }
+#status { color: var(--ink-2); font-size: 13px; }
+#status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
+#status .dot.on { background: var(--good); }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 8px 24px 16px; }
+.seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--ink-2); padding: 6px 12px; font: inherit; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--ring); }
+.seg button[aria-pressed="true"] { color: var(--ink); font-weight: 600; background: var(--wash); }
+select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink); }
+label { color: var(--ink-2); font-size: 13px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 8px 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 16px; padding: 0 24px 24px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 14px 16px; min-width: 0; transition: opacity .2s; }
+.card.loading { opacity: .55; }
+.card.wide { grid-column: 1 / -1; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.card-head h3 { font-size: 15px; margin: 0; }
+.card-head button { border: 0; background: none; color: var(--ink-2); font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; }
+.empty, .err { color: var(--muted); padding: 24px 0; text-align: center; }
+.err { color: var(--critical); text-align: left; font-family: ui-monospace, Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12px; color: var(--ink-2); }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; background: var(--c); }
+.legend.boxes span::before { height: 10px; width: 10px; border-radius: 2px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.tableview { max-height: 360px; overflow: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th { text-align: left; color: var(--ink-2); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+th, td { padding: 4px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+#tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.18); display: none; z-index: 9; max-width: 280px; }
+#tip .row { display: flex; gap: 8px; align-items: center; }
+#tip .row b { font-variant-numeric: tabular-nums; }
+#tip .key { width: 12px; height: 2px; background: var(--c); }
+#tip .sub { color: var(--ink-2); }
+.levels { display: flex; flex-wrap: wrap; gap: 16px; }
+.levels > div { flex: 1 1 260px; min-width: 0; }
+.levels .lv { font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.ramp { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.ramp i { display: inline-block; width: 18px; height: 8px; }
+@media (max-width: 600px) { header, .filters { padding-left: 16px; padding-right: 16px; } .grid { padding: 0 16px 16px; } h2 { margin: 8px 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Telemetry</h1>
+  <div id="status">connecting…</div>
+</header>
+<div class="filters">
+  <div class="seg" id="range" role="group" aria-label="Time range">
+    <button data-r="hour">Last hour</button><button data-r="day" aria-pressed="true">Last day</button><button data-r="week">Last week</button><button data-r="all">All</button>
+  </div>
+  <label>Player <select id="player"><option value="0">Everyone</option></select></label>
+  <label>Heatmap square <select id="cell"><option>2</option><option selected>4</option><option>8</option><option>16</option></select> m</label>
+</div>
+<main id="groups"></main>
+<div id="tip"></div>
+<script>
+"use strict";
+const state = { range: "day", player: 0, cell: 4, panels: [], tables: {} };
+const SERIES = 8;
+const $ = (s, el) => (el || document).querySelector(s);
+function el(tag, attrs, text) {
+  const e = document.createElement(tag);
+  for (const k in attrs || {}) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function svgEl(tag, attrs) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs || {}) e.setAttribute(k, attrs[k]);
+  return e;
+}
+const fmt = (v) => typeof v !== "number" ? String(v) : Math.abs(v) >= 1000 ? v.toLocaleString(undefined, { maximumFractionDigits: 0 }) : String(Math.round(v * 100) / 100);
+function when(t, bucket) {
+  const d = new Date(t * 1000);
+  if (bucket >= 86400) return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (bucket >= 3600) return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit" });
+  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+}
+
+// THE TOOLTIP: one, shared; its text is set with textContent (names come from players).
+const tip = $("#tip");
+function showTip(ev, head, rows) {
+  tip.replaceChildren();
+  if (head) tip.appendChild(el("div", { class: "sub" }, head));
+  for (const r of rows) {
+    const row = el("div", { class: "row" });
+    if (r.c) { const k = el("span", { class: "key" }); k.style.setProperty("--c", r.c); row.appendChild(k); }
+    row.appendChild(el("b", {}, r.v));
+    if (r.l) row.appendChild(el("span", { class: "sub" }, r.l));
+    tip.appendChild(row);
+  }
+  tip.style.display = "block";
+  const x = Math.min(ev.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+  const y = Math.min(ev.clientY + 14, window.innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+
+// LINE: rows of (t, series, value). One axis; at most eight series (the rest named under it).
+function drawLine(box, data, unit) {
+  const ti = 0, si = data.columns.length > 2 ? 1 : -1, vi = data.columns.length - 1;
+  const bySeries = new Map(), ts = new Set();
+  for (const r of data.rows) {
+    const s = si >= 0 ? String(r[si]) : unit || "value";
+    if (!bySeries.has(s)) bySeries.set(s, new Map());
+    bySeries.get(s).set(r[ti], r[vi]); ts.add(r[ti]);
+  }
+  let names = [...bySeries.keys()].sort((a, b) => sum(bySeries.get(b)) - sum(bySeries.get(a)));
+  const dropped = names.slice(SERIES); names = names.slice(0, SERIES).sort();
+  const colour = (i) => `var(--s${i + 1})`;
+  const t0 = data.since > 0 ? Math.floor(data.since / data.bucket) * data.bucket : Math.min(...ts);
+  const t1 = Math.floor(data.now / data.bucket) * data.bucket;
+  const W = 600, H = 220, L = 44, R = 12, T = 10, B = 26;
+  let ymax = 0;
+  for (const n of names) for (const v of bySeries.get(n).values()) ymax = Math.max(ymax, v);
+  ymax = niceMax(ymax);
+  const x = (t) => L + (t1 > t0 ? (t - t0) / (t1 - t0) : 0.5) * (W - L - R);
+  const y = (v) => T + (1 - v / ymax) * (H - T - B);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" });
+  for (let i = 0; i <= 4; i++) {
+    const v = ymax * i / 4, yy = y(v);
+    svg.appendChild(svgEl("line", { x1: L, x2: W - R, y1: yy, y2: yy, stroke: i ? "var(--grid)" : "var(--axis)", "stroke-width": 1 }));
+    const tx = svgEl("text", { x: L - 6, y: yy + 4, "text-anchor": "end" }); tx.textContent = fmt(v); svg.appendChild(tx);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const t = t0 + (t1 - t0) * i / 4;
+    const tx = svgEl("text", { x: x(t), y: H - 6, "text-anchor": i === 0 ? "start" : i === 4 ? "end" : "middle" });
+    tx.textContent = when(t, data.bucket); svg.appendChild(tx);
+  }
+  names.forEach((n, i) => {
+    const pts = [...bySeries.get(n).entries()].sort((a, b) => a[0] - b[0]);
+    // A gap of more than one bucket breaks the line: nobody was there, not a slope.
+    let d = "", prev = null;
+    for (const [t, v] of pts) { d += (prev !== null && t - prev <= data.bucket ? "L" : "M") + x(t).toFixed(1) + " " + y(v).toFixed(1); prev = t; }
+    svg.appendChild(svgEl("path", { d, fill: "none", stroke: colour(i), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    if (pts.length === 1) svg.appendChild(svgEl("circle", { cx: x(pts[0][0]), cy: y(pts[0][1]), r: 4, fill: colour(i), stroke: "var(--surface)", "stroke-width": 2 }));
+  });
+  const hair = svgEl("line", { y1: T, y2: H - B, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" });
+  svg.appendChild(hair);
+  const hit = svgEl("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" });
+  svg.appendChild(hit);
+  const sorted = [...ts].sort((a, b) => a - b);
+  hit.addEventListener("pointermove", (ev) => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    let best = sorted[0];
+    for (const t of sorted) if (Math.abs(x(t) - px) < Math.abs(x(best) - px)) best = t;
+    hair.setAttribute("x1", x(best)); hair.setAttribute("x2", x(best)); hair.setAttribute("visibility", "visible");
+    const rows = names.map((n, i) => ({ c: colour(i), v: bySeries.get(n).has(best) ? fmt(bySeries.get(n).get(best)) : "–", l: n }));
+    showTip(ev, new Date(best * 1000).toLocaleString() + (unit ? " · " + unit : ""), rows);
+  });
+  hit.addEventListener("pointerleave", () => { hair.setAttribute("visibility", "hidden"); hideTip(); });
+  box.appendChild(svg);
+  if (names.length > 1) {
+    const lg = el("div", { class: "legend" });
+    names.forEach((n, i) => { const s = el("span", {}, n); s.style.setProperty("--c", colour(i)); lg.appendChild(s); });
+    box.appendChild(lg);
+  }
+  if (dropped.length) box.appendChild(el("div", { class: "legend" }, `+${dropped.length} more in the table: ${dropped.join(", ")}`));
+}
+function sum(m) { let s = 0; for (const v of m.values()) s += v; return s; }
+
+// BAR: rows of (label, value), horizontal, largest first; one colour (the title names it).
+function drawBar(box, data, unit) {
+  const rows = data.rows.slice(0, 25);
+  const W = 600, rowH = 22, L = 170, R = 56, H = rows.length * rowH + 4;
+  const vmax = niceMax(Math.max(...rows.map((r) => r[r.length - 1])));
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" });
+  rows.forEach((r, i) => {
+    const v = r[r.length - 1], label = String(r[0]), yy = i * rowH + 2;
+    const w = Math.max(2, (v / vmax) * (W - L - R));
+    const t = svgEl("text", { x: L - 8, y: yy + 14, "text-anchor": "end" }); t.textContent = label.length > 26 ? label.slice(0, 25) + "…" : label; svg.appendChild(t);
+    const bar = svgEl("rect", { x: L, y: yy + 3, width: w, height: rowH - 8, rx: 4, fill: "var(--s1)" });
+    svg.appendChild(bar);
+    const vt = svgEl("text", { x: L + w + 6, y: yy + 14 }); vt.textContent = fmt(v); svg.appendChild(vt);
+    const hit = svgEl("rect", { x: 0, y: yy, width: W, height: rowH, fill: "transparent" });
+    hit.addEventListener("pointermove", (ev) => { bar.setAttribute("opacity", ".8"); showTip(ev, label, [{ v: fmt(v), l: unit || "" }]); });
+    hit.addEventListener("pointerleave", () => { bar.removeAttribute("opacity"); hideTip(); });
+    svg.appendChild(hit);
+  });
+  box.appendChild(svg);
+}
+
+// HEATMAP: rows of (level, x, z, value), one map per level, x across and z down, a one-hue ramp.
+function drawHeat(box, data, unit) {
+  const levels = new Map();
+  for (const [lv, x, z, v] of data.rows) { if (!levels.has(lv)) levels.set(lv, []); levels.get(lv).push([x, z, v]); }
+  const wrap = el("div", { class: "levels" });
+  const cell = state.cell;
+  for (const [lv, cells] of [...levels.entries()].sort((a, b) => a[0] - b[0])) {
+    const xs = cells.map((c) => c[0]), zs = cells.map((c) => c[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs) + cell, z0 = Math.min(...zs), z1 = Math.max(...zs) + cell;
+    const vmax = Math.max(...cells.map((c) => c[2]));
+    const W = Math.max(cell, x1 - x0), H = Math.max(cell, z1 - z0);
+    const svg = svgEl("svg", { viewBox: `${x0} ${z0} ${W} ${H}`, role: "img", preserveAspectRatio: "xMidYMid meet" });
+    svg.style.maxHeight = "420px";
+    svg.appendChild(svgEl("rect", { x: x0, y: z0, width: W, height: H, fill: "var(--q0)" }));
+    for (const [x, z, v] of cells) {
+      // Seven steps by the cube root: a few busy squares do not wash out every quiet one.
+      const step = Math.min(7, 1 + Math.floor(6.999 * Math.cbrt(v / vmax)));
+      const r = svgEl("rect", { x, y: z, width: cell, height: cell, fill: `var(--q${step})` });
+      r.addEventListener("pointermove", (ev) => { r.setAttribute("stroke", "var(--ink)"); r.setAttribute("stroke-width", cell / 10); showTip(ev, `level ${lv} · x ${x}..${x + cell} m, z ${z}..${z + cell} m`, [{ v: fmt(v), l: unit || "" }]); });
+      r.addEventListener("pointerleave", () => { r.removeAttribute("stroke"); hideTip(); });
+      svg.appendChild(r);
+    }
+    const one = el("div");
+    one.appendChild(el("div", { class: "lv" }, `Level ${lv} · ${Math.round(W)} × ${Math.round(H)} m · x right, z down`));
+    one.appendChild(svg);
+    wrap.appendChild(one);
+  }
+  box.appendChild(wrap);
+  const ramp = el("div", { class: "ramp" });
+  ramp.appendChild(el("span", {}, "fewer"));
+  for (let i = 1; i <= 7; i++) { const b = el("i"); b.style.background = `var(--q${i})`; ramp.appendChild(b); }
+  ramp.appendChild(el("span", {}, "more " + (unit || "")));
+  box.appendChild(ramp);
+}
+
+// TABLE: any columns. Every chart has one too (its "Table" button), so nothing is colour or hover only.
+function drawTable(box, data) {
+  const wrap = el("div", { class: "tableview" });
+  const t = el("table"), head = el("tr");
+  for (const c of data.columns) head.appendChild(el("th", {}, c));
+  const thead = el("thead"); thead.appendChild(head); t.appendChild(thead);
+  const tb = el("tbody");
+  for (const r of data.rows.slice(0, 1000)) {
+    const tr = el("tr");
+    r.forEach((v) => tr.appendChild(el("td", typeof v === "number" ? { class: "num" } : {}, v === null ? "" : typeof v === "number" ? fmt(v) : String(v))));
+    tb.appendChild(tr);
+  }
+  t.appendChild(tb); wrap.appendChild(t); box.appendChild(wrap);
+}
+
+function card(p) {
+  const c = el("section", { class: "card" + (p.kind === "heatmap" || p.kind === "table" ? " wide" : ""), id: "p-" + p.id });
+  const head = el("div", { class: "card-head" });
+  head.appendChild(el("h3", {}, p.title));
+  if (p.kind !== "table") {
+    const b = el("button", { type: "button" }, "Table");
+    b.addEventListener("click", () => { state.tables[p.id] = !state.tables[p.id]; b.textContent = state.tables[p.id] ? "Chart" : "Table"; load(p); });
+    head.appendChild(b);
+  }
+  c.appendChild(head);
+  c.appendChild(el("div", { class: "body" }));
+  return c;
+}
+
+async function load(p) {
+  const c = document.getElementById("p-" + p.id), body = $(".body", c);
+  c.classList.add("loading");
+  let data;
+  try {
+    const q = new URLSearchParams({ id: p.id, range: state.range, player: state.player, cell: state.cell });
+    data = await (await fetch("/api/panel?" + q)).json();
+  } catch (e) { data = { error: String(e) }; }
+  c.classList.remove("loading");
+  body.replaceChildren();
+  if (data.error) { body.appendChild(el("div", { class: "err" }, data.error)); return; }
+  if (!data.rows || !data.rows.length) { body.appendChild(el("div", { class: "empty" }, data.note || "Nothing in this range.")); return; }
+  if (p.kind === "table" || state.tables[p.id]) drawTable(body, data);
+  else if (p.kind === "line") drawLine(body, data, p.unit);
+  else if (p.kind === "bar") drawBar(body, data, p.unit);
+  else if (p.kind === "heatmap") drawHeat(body, data, p.unit);
+  else drawTable(body, data);
+}
+
+async function status() {
+  const s = await (await fetch("/api/status")).json();
+  const st = $("#status");
+  st.replaceChildren();
+  const dot = el("span", { class: "dot" + (s.recording ? " on" : "") });
+  st.appendChild(dot);
+  const last = s.last_change ? new Date(s.last_change * 1000).toLocaleString() : "nothing yet";
+  st.appendChild(document.createTextNode((s.recording ? "Recording" + (s.recording === "this window" ? " (by this window)" : "") : "Not recording") +
+    ` · last change ${last}` + (s.size_mb !== undefined ? ` · ${s.size_mb} MB` : "")));
+}
+
+async function players() {
+  const sel = $("#player"), keep = sel.value;
+  const list = await (await fetch("/api/players")).json();
+  sel.replaceChildren(el("option", { value: "0" }, "Everyone"));
+  for (const p of list) sel.appendChild(el("option", { value: String(p.id) }, p.name));
+  sel.value = list.some((p) => String(p.id) === keep) ? keep : "0";
+}
+
+function loadAll() { for (const p of state.panels) load(p); }
+
+async function start() {
+  state.panels = await (await fetch("/api/panels")).json();
+  const groups = $("#groups"), owners = [...new Set(state.panels.map((p) => p.owner))];
+  for (const o of owners) {
+    groups.appendChild(el("h2", {}, o === "foundation" ? "Everyone, every game" : o));
+    const g = el("div", { class: "grid" });
+    for (const p of state.panels.filter((q) => q.owner === o)) g.appendChild(card(p));
+    groups.appendChild(g);
+  }
+  await Promise.all([status(), players()]);
+  loadAll();
+  setInterval(() => { status(); players(); loadAll(); }, 15000);
+}
+for (const b of document.querySelectorAll("#range button")) b.addEventListener("click", () => {
+  for (const o of document.querySelectorAll("#range button")) o.setAttribute("aria-pressed", String(o === b));
+  state.range = b.dataset.r; loadAll();
+});
+$("#player").addEventListener("change", (e) => { state.player = Number(e.target.value); loadAll(); });
+$("#cell").addEventListener("change", (e) => { state.cell = Number(e.target.value); loadAll(); });
+start();
+</script>
+</body>
+</html>

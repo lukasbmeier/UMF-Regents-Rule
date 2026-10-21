@@ -170,6 +170,10 @@ func _start_game(has_display: bool) -> void:
 		var referee := RefereeLauncher.new()
 		referee.name = "RefereeLauncher"
 		add_child(referee)
+		# ...and the host's chronicle, so the playtest is kept for looking back (DECISIONS #276).
+		var chronicle := ChronicleLauncher.new()
+		chronicle.name = "ChronicleLauncher"
+		add_child(chronicle)
 	if pause_menu != null:
 		_menu = pause_menu.instantiate() as PauseMenu
 		add_child(_menu)
