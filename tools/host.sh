@@ -28,7 +28,10 @@ up() { curl -s -m 2 -o /dev/null http://127.0.0.1:3000/v1/ping; }
 st_pid=""
 ref_pid=""
 watch_pid=""
+alive_pid=""
 cleanup() {
+  [ -n "$alive_pid" ] && kill "$alive_pid" 2>/dev/null
+  rm -f build/host/host.alive
   [ -n "$watch_pid" ] && kill "$watch_pid" 2>/dev/null
   [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null
   [ -n "$st_pid" ] && kill "$st_pid" 2>/dev/null
@@ -57,6 +60,14 @@ spacetime sql "$DB" "SELECT * FROM world_config" >/dev/null 2>&1 \
 # FEEDBACK AS IT ARRIVES (DECISIONS #244): a player's F8 shows up here, with a bell, while you host.
 "$PYTHON" tools/feedback.py --db "$DB" --watch &
 watch_pid=$!
+
+# THE CHRONICLE (DECISIONS #276): everything that happens, kept on this PC for looking back
+# (tools	elemetry.cmd shows it). It stops a few seconds after this window does (the alive file).
+( while true; do touch build/host/host.alive; sleep 1; done ) &
+alive_pid=$!
+touch build/host/host.alive
+"$PYTHON" tools/telemetry/chronicle.py --db "$DB" --parent-alive "$PWD/build/host/host.alive" > build/host/chronicle.log 2>&1 &
+echo "host: recording everything that happens for looking back (tools	elemetry.cmd; build/host/chronicle.log)"
 
 # The referee: offered a code (the CLI is the database's owner, its admin), started with it, and started
 # again whenever it stops (a crash, a sleep), until this window closes.

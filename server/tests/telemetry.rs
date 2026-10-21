@@ -32,3 +32,15 @@ fn an_unknown_category_is_other() {
     assert_eq!(category(FEEDBACK_LAG), FEEDBACK_LAG);
     assert_eq!(category(200), FEEDBACK_OTHER);
 }
+
+#[test]
+fn where_everyone_was_is_noted_every_so_often_and_never_when_off() {
+    let t = 1_800_000_000_000_000_i64;
+    assert!(where_due(t, 0, 5.0), "never noted: now");
+    assert!(!where_due(t + 3_000_000, t, 5.0), "3 s after: not yet");
+    assert!(where_due(t + 5_000_000, t, 5.0), "5 s after: again");
+    assert!(where_due(t + 4_600_000, t, 5.0), "a tick that came a moment early still counts (not stretched to 6 s)");
+    assert!(!where_due(t + 4_400_000, t, 5.0), "but not one a whole second early");
+    assert!(where_due(t + 60_000_000, t, 60.0) && !where_due(t + 30_000_000, t, 60.0), "a minute");
+    assert!(!where_due(t, 0, 0.0) && !where_due(t, 0, -1.0) && !where_due(t, 0, f64::NAN), "0 (or nonsense): never");
+}

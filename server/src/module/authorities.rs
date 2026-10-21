@@ -395,6 +395,7 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     expire_requests(ctx);
     prune_noise(ctx);
     prune_perf(ctx);
+    sample_where(ctx);
     prune_bodies(ctx);
     prune_pushes(ctx);
     prune_damage_shares(ctx);

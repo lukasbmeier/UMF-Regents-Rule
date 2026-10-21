@@ -59,3 +59,6 @@ addons/limboai/bin/~*
 
 # Claude Code's settings for this machine (auto memory shared across UMF ALL: CLAUDE.md)
 .claude/settings.local.json
+
+# Python
+__pycache__/

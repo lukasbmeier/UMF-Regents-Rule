@@ -58,3 +58,14 @@ pub fn noticed_at(noticed: i64, heard: i64) -> i64 {
 pub fn category(c: u8) -> u8 {
     if c <= FEEDBACK_OTHER { c } else { FEEDBACK_OTHER }
 }
+
+/// WHERE EVERYONE WAS (DECISIONS #276): whether the module's once-a-second tick at `now` (microseconds)
+/// notes every online player's place again, the last time having been `last` (0: never), every `every_s`
+/// seconds (`foundation.telemetry_where_s`; 0 or less: never). Half a second's slack, because the tick
+/// itself wanders by a little: a 5 s rule is not stretched to 6 by a tick that came a moment early.
+pub fn where_due(now: i64, last: i64, every_s: f64) -> bool {
+    if !(every_s > 0.0) {
+        return false;
+    }
+    now - last >= (every_s * 1_000_000.0) as i64 - 500_000
+}
