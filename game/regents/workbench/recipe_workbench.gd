@@ -104,7 +104,7 @@ static func sheet(r: RecipeDef) -> String:
 	if r.part_slot >= 0:
 		var parts: PackedStringArray = PackedStringArray()
 		for p: ItemDef in r.part_choices():
-			parts.append(p.display_name + (" (%s)" % p.handle_trait() if p.handle_trait() != "" else ""))
+			parts.append(p.display_name + (" (%s)" % p.handle_trait_text() if p.handle_trait_text() != "" else ""))
 		lines.append("handle: %s" % ", ".join(parts))
 	var own: int = r.xp
 	var xp: int = batch_xp(r)

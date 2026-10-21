@@ -312,6 +312,11 @@ func set_equip_state(state: int) -> SpacetimeDBReducerCall:
 func set_item_slot(item_id: int, slot: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_item_slot', [item_id, slot], [&'u64', &'i16'], &'')
 
+## 0. item_row: int [br]
+## 1. traits: Array of int [br]
+func set_item_traits(item_row: int, traits: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_item_traits', [item_row, traits], [&'u64', &'u32'], &'')
+
 ## 0. name: String [br]
 func set_player_name(name: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_player_name', [name], [&'string'], &'')

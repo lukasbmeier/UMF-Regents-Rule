@@ -4600,6 +4600,28 @@
 			"return_data": {}
 		},
 		{
+			"name": "set_item_traits",
+			"wire_name": "set_item_traits",
+			"namespace": [],
+			"local_name": "set_item_traits",
+			"params": [
+				{
+					"name": "item_row",
+					"type": "U64"
+				},
+				{
+					"name": "traits",
+					"nested_type": [
+						"Array"
+					],
+					"is_array": true,
+					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "set_player_name",
 			"wire_name": "set_player_name",
 			"namespace": [],

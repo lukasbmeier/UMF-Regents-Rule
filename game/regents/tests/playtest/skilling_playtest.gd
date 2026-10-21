@@ -274,7 +274,7 @@ func _chopper(tree_id: int) -> void:
 	hud.toggle_bag()
 	hud.skills_window.close()
 	var said: String = RegentsHud.station_prompt(skilling, SkillingComponent.station_of(bench), inv)
-	_check(said.contains("+15 quality") and said.contains("1 Oak handle (1)"), "it says its trait and takes the oak handle: \"%s\"" % said.replace("\n", " / "))
+	_check(said.contains("Steady") and said.contains("1 Oak handle (1)"), "it says its trait and takes the oak handle: \"%s\"" % said.replace("\n", " / "))
 	var make_button: Button = hud.station_window.find_child("Make", true, false) as Button
 	_check(make_button != null and not make_button.disabled, "MAKE is ready: the bag has what it takes")
 	if make_button != null:
@@ -287,8 +287,24 @@ func _chopper(tree_id: int) -> void:
 		if s.item_def_id == IRON_AXE:
 			quality = s.instance_data
 	var head_q: int = int(shaped_q)
-	_check(quality == "{\"q\":%d,\"h\":%d}" % [mini(1000, head_q + 150), OAK_HANDLE],
-		"the iron axe is its head's quality and the oak's +15, and remembers its handle (%s, head %d)" % [quality, head_q])
+	var steady: TraitDef = ItemDef.by_id(OAK_HANDLE).handle_trait
+	_check(quality == "{\"q\":%d,\"h\":%d,\"t\":[%d]}" % [mini(1000, head_q), OAK_HANDLE, steady.id],
+		"the iron axe is its head's quality, remembers its handle, and has the oak's trait, Steady (%s, head %d)" % [quality, head_q])
+	# Its card in the bag: the trait, what it gives and what it costs (template DECISIONS #275).
+	var axe_row: int = -1
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == IRON_AXE:
+			axe_row = s.id
+	if hud.station_window.visible:
+		hud.station_window.close()
+	hud.toggle_bag()
+	hud.bag_window.picked_row = axe_row
+	hud.bag_window.refresh()
+	await get_tree().process_frame
+	var trait_line: Label = hud.bag_window.find_child("Trait_steady", true, false) as Label
+	_check(trait_line != null and trait_line.is_visible_in_tree(), "the iron axe's card shows its trait, Steady")
+	await _shot("bag_traits")
+	hud.toggle_bag()
 	await _until(func() -> bool: return skilling.afk_target == -1, 6.0)
 
 	# --- THE IRON AXE AT WORK ---

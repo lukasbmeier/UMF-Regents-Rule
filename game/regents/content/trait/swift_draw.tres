@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"draw_time"
+mult = 0.8
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"projectile_speed"
+mult = 0.85
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"swift_draw"
+applies_to = Array[StringName]([&"bow"])
+gives = "the bow draws 20% faster"
+costs = "arrows fly 15% slower"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40007
+display_name = "Swift Draw"

@@ -60,6 +60,7 @@
 		"set_dev_tools": "(enabled:Bool)",
 		"set_equip_state": "(state:U8)",
 		"set_item_slot": "(item_id:U64,slot:I16)",
+		"set_item_traits": "(item_row:U64,traits:[U32])",
 		"set_player_name": "(name:String)",
 		"set_ready": "(ready:Bool)",
 		"set_rule": "(key:String,number:F64,text:String)",

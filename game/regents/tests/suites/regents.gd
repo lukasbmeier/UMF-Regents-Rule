@@ -489,8 +489,11 @@ func _run_content() -> void:
 	_check(RecipeDef.by_id(40001).part_choices().is_empty(), "a recipe with no part slot has no choices")
 	var oak_h: ItemDef = ItemDef.by_id(40016)
 	var yew_h: ItemDef = ItemDef.by_id(40017)
-	_check(oak_h.handle_trait() == "+15 quality" and yew_h.handle_trait() == "10% faster swing" and ItemDef.by_id(40013).handle_trait() == "",
-		"the handles' traits, in words: %s / %s" % [oak_h.handle_trait(), yew_h.handle_trait()])
+	_check(oak_h.handle_trait != null and oak_h.handle_trait.key == &"steady" and yew_h.handle_trait != null and yew_h.handle_trait.key == &"springy"
+		and ItemDef.by_id(40013).handle_trait == null, "oak gives Steady, yew Springy, a plain handle nothing (template DECISIONS #275)")
+	_check(oak_h.handle_trait_text() == "Steady: nodes are 20% less likely to run out; work 5% slower" and ItemDef.by_id(40013).handle_trait_text() == "",
+		"a handle's trait in words, gain and cost: %s" % oak_h.handle_trait_text())
+	_run_traits()
 	var bar: RecipeDef = RecipeDef.by_id(40001)
 	var ore_xp: int = (NodeDef.by_id(40004)).xp
 	_check(RecipeDef.work_xp(bar.inputs[0]) == ore_xp and bar.craft_xp(100) == bar.xp + 2 * ore_xp and bar.craft_xp(0) == bar.xp,
@@ -968,3 +971,51 @@ func _run_lab() -> void:
 		_check(lab.get("game") is ShapeMinigame, "after it, the axe head's button shows shape to the outline")
 	lab.queue_free()
 	await get_tree().process_frame
+
+
+## TRAITS IN REGENT'S RULE (template DECISIONS #275): the v1 pools, what an item is, and the client's twins
+## of the server's numbers (`server/tests/regents.rs` has the same cases).
+func _run_traits() -> void:
+	print("== regents: traits ==")
+	var keys: Array[String] = []
+	for f: Dictionary in ContentLibrary.files():
+		if String(f["path"]).begins_with(ContentLibrary.folder_for(&"trait", "regents") + "/"):
+			var d: TraitDef = load(String(f["path"])) as TraitDef
+			if d != null:
+				keys.append(String(d.key))
+				_check(d.validate().is_empty(), "%s is a trait that trades (%s)" % [d.key, str(d.validate())])
+	keys.sort()
+	_check(keys == ["balanced", "brutal", "gentle", "heavy", "hunters", "lucky", "prospectors", "springy", "steady", "swift_draw", "thirsting"],
+		"the v1 pools, less what waits for crits, armour and reach: %s" % str(keys))
+	var iron_axe: ItemDef = ItemDef.by_id(40015)
+	var bow: ItemDef = null
+	for d: ContentDef in RegentsContent.items(&"item"):
+		if (d as ItemDef).weapon_kit == &"bow":
+			bow = d as ItemDef
+	_check(iron_axe.tags() == [&"tool", &"axe", &"weapon", &"axe", &"melee"] and bow != null and bow.tags() == [&"weapon", &"bow", &"bow"],
+		"what an item is, as the server says (%s / %s)" % [str(iron_axe.tags()), str(bow.tags() if bow != null else [])])
+	var yew: TraitDef = ItemDef.by_id(40017).handle_trait
+	_check(ItemDef.trait_ids("{\"q\":612,\"h\":40017,\"t\":[%d]}" % yew.id) == ([yew.id] as Array[int]), "a made tool's traits, from its row")
+	_check(ItemDef.trait_ids("{\"q\":700,\"h\":40016}") == ([ItemDef.by_id(40016).handle_trait.id] as Array[int]),
+		"a tool made before traits (only its handle noted): its handle's")
+	_check(ItemDef.trait_ids("{\"q\":700}").is_empty(), "a plain made item: none")
+	# The twins (the server's `action_tags`, `lock_with`, `draw_full_with`).
+	var axe_kit: KitDef = KitDef.by_key(&"axe")
+	_check(CombatComponent.action_tags(axe_kit, axe_kit.light[0]) == [&"basic"] and CombatComponent.action_tags(axe_kit, axe_kit.light[-1]) == [&"basic", &"combo_last"]
+		and CombatComponent.action_tags(axe_kit, axe_kit.heavy) == [&"heavy"] and CombatComponent.action_tags(axe_kit, axe_kit.skills[0]) == [&"skill"],
+		"what an action is: basic, the combo's last, heavy, skill")
+	var balanced: Array[int] = [_trait_id(&"balanced")]
+	var heavy: Array[int] = [_trait_id(&"heavy")]
+	_check(CombatComponent.lock_with(900, 400, Traits.mult(balanced, &"recovery", [&"basic"])) == 825
+		and CombatComponent.lock_with(900, 400, Traits.mult(heavy, &"recovery", [&"basic"])) == 975 and CombatComponent.lock_with(900, 400, 1.0) == 900,
+		"Balanced recovers 15% faster, Heavy 15% slower, the wind-up as it was (the server's 825 / 975)")
+	_check(roundi(800.0 * Traits.mult([_trait_id(&"swift_draw")], &"draw_time")) == 640, "Swift Draw: 800 ms -> 640, as the server")
+
+
+func _trait_id(key: StringName) -> int:
+	for f: Dictionary in ContentLibrary.files():
+		if String(f["path"]).begins_with(ContentLibrary.folder_for(&"trait", "regents") + "/"):
+			var d: TraitDef = load(String(f["path"])) as TraitDef
+			if d != null and d.key == key:
+				return d.id
+	return -1

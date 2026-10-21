@@ -506,3 +506,60 @@ skilling playtest (in stance with a staff, no target, E at the workbench opens i
 is not redrawn while idle); the regents suite (a burning row lights a fire, its end puts it out); the
 template's suites (a sidecar whose project is newer is stale; the CLI is never seen, a named admin and a
 nameless player are).
+
+## Step 15: the friends' playtest fixes, chat, and traits (2026-10-20 to 21)
+
+**From the friends' playtest:**
+- **Dropping** puts a stack 1.4 m in front of you, and your own fresh drop is left alone until you have
+  walked away from it (it came straight back "like a magnet").
+- **Chat** (template DECISIONS #273): **Enter** to write, **Enter** to send, **Esc** to cancel. You stand
+  still while you type. Lines show bottom left and over the speaker's head.
+- **No friendly fire or PvP**: a swing, an arrow or a spell only hurts what it may (foes hurt players;
+  players hurt foes).
+- **Dying mid-chop** no longer leaves the chop's pose playing (Fin's "head nod"): dying stops the work.
+- **Jumping near an object** no longer double-jumps (template DECISIONS #274).
+- **The furnace's bellows** heat 50 a press (were 45).
+
+**TRAITS** (template DECISIONS #275; `LOOT_AND_STYLES.md` §2 and §6). A trait changes how an item plays,
+never its Power, and every one trades. They are content: `game/regents/content/trait/`. Each says in words
+what it gives and what it costs, and the bag's card shows them under the item.
+- **Handles give the tool its trait, whatever its grade** (your call): oak gives **Steady** (nodes 20% less
+  likely to run out, work 5% slower), yew gives **Springy** (work 5% faster, nodes 10% likelier to run
+  out). Toned to the early game as you asked; the materials deep-dive may rework them. **The oak no longer
+  adds +15 quality**: quality is Power, and a trait never touches Power.
+- **The v1 pools**: Balanced, Heavy, Brutal (the *target's* health, your call), Thirsting (weapons);
+  Swift Draw, Hunter's (bows); Gentle, Lucky, Prospector's (tools). Prospector's costs "work 15% slower"
+  instead of "base yield -1" (a success yields one, so -1 would be nothing).
+- **Waiting**: Keen (needs crits and Bleeding), Padded and Warded (need armour), Reaching (needs the
+  referee to judge each swing at the wielder's own reach: a new side table). **Drops roll traits by grade**
+  once drops roll a grade (the loot line's grade distribution is not built; nothing drops gear yet).
+- **Trying one**: `set_item_traits <bag row> [<trait ids>]` (dev tools on) gives an item exactly those.
+  `foundation.trait_strength_pct` on the Rules page turns every trait up, down or off live.
+
+What each trait word does in this game (an atom's `what`, and `on`):
+
+| `what` | where it acts | on |
+|---|---|---|
+| damage | a hit's damage (swing, arrow, spell), with the target's health and family for conditions | basic, combo_last, heavy, skill |
+| recovery | a swing's lock after its wind-up (the client predicts the same) | basic, heavy, skill |
+| stagger | a chance in % that a hit Staggers what it hits (and stops its cast) | heavy, combo_last |
+| heal_on_hit | % of a hit's damage back as health (not off a dummy) | basic |
+| healing_received | out-of-fight regeneration | |
+| draw_time | the bow's full draw (the client's draw bar too) | |
+| projectile_speed | an arrow's speed | |
+| work_time | a tool's speed in rounds and AFK | |
+| depletion | the chance a node runs out per item | |
+| extra_yield | a chance in % of one more per item | |
+| rare_chance | % added to a node's rare find | |
+
+A foe's family is its `FoeDef.family` (the skeletons: undead). An item's tags (what a trait may be on):
+a tool is "tool" and its tag; a weapon is "weapon", its kit, and "melee", "bow" or "staff".
+
+Proven: the template's `traits` tests (native and client: the same numbers on both sides; breaking them
+fails them); Regent's Rule's native tests (the handles' traits; a tool's speed with them; a tool made before
+traits gets its handle's; every trait trades; what an item and an action are; Balanced's lock 825 for 900,
+Heavy's 975; Swift Draw 640 for 800; Brutal, Hunter's; depletion and rare chances through the tool's traits);
+the regents suite (the pools; the client's twins give the server's numbers; scaling the whole lock fails it);
+the integration (refusals; Balanced's lock read from the server's swing; Brutal's 6.93 off a dummy above
+30 %; Heavy staggers the dummy; the dial at 0 gives the kit's own lock); the skilling playtest (an iron axe
+made with an oak handle carries Steady, and its card in the bag shows it: the `bag_traits` shot).

@@ -125,17 +125,17 @@
 		},
 		"shared/content/regents/foe.json": {
 			"count": 2,
-			"hash": "41b9f621",
+			"hash": "c3804451",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/foe/skeleton_axeman.tres": "3b940c14",
-				"game/regents/content/foe/skeleton_warrior.tres": "06f64b30"
+				"game/regents/content/foe/skeleton_axeman.tres": "828a1c8e",
+				"game/regents/content/foe/skeleton_warrior.tres": "d6619e4c"
 			},
 			"type": "foe"
 		},
 		"shared/content/regents/item.json": {
 			"count": 23,
-			"hash": "893c5c8c",
+			"hash": "0f36ca88",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/item/arrow_shafts.tres": "890f07f6",
@@ -154,11 +154,11 @@
 				"game/regents/content/item/iron_sword.tres": "76d2d228",
 				"game/regents/content/item/iron_sword_blade.tres": "91e6af93",
 				"game/regents/content/item/logs.tres": "11ca0d68",
-				"game/regents/content/item/oak_handle.tres": "a40a1651",
+				"game/regents/content/item/oak_handle.tres": "5fa76ade",
 				"game/regents/content/item/oak_logs.tres": "de9da362",
 				"game/regents/content/item/uncut_gem.tres": "ee36c9cb",
 				"game/regents/content/item/yew_bow.tres": "8c210560",
-				"game/regents/content/item/yew_handle.tres": "11ab9942",
+				"game/regents/content/item/yew_handle.tres": "90bf3f7c",
 				"game/regents/content/item/yew_logs.tres": "0025f870",
 				"game/regents/content/item/yew_staff.tres": "357f4dd8"
 			},
@@ -306,6 +306,25 @@
 				"game/regents/content/status/swinging.tres": "777c6b27"
 			},
 			"type": "status"
+		},
+		"shared/content/regents/trait.json": {
+			"count": 11,
+			"hash": "29278416",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/trait/balanced.tres": "3de375ee",
+				"game/regents/content/trait/brutal.tres": "dca59095",
+				"game/regents/content/trait/gentle.tres": "5e00b4dc",
+				"game/regents/content/trait/heavy.tres": "5e43dc39",
+				"game/regents/content/trait/hunters.tres": "9ca29b50",
+				"game/regents/content/trait/lucky.tres": "8e484a76",
+				"game/regents/content/trait/prospectors.tres": "e1d12a64",
+				"game/regents/content/trait/springy.tres": "4e00bd54",
+				"game/regents/content/trait/steady.tres": "4ef3c3f0",
+				"game/regents/content/trait/swift_draw.tres": "3f26c7bc",
+				"game/regents/content/trait/thirsting.tres": "4bc108e6"
+			},
+			"type": "trait"
 		}
 	}
 }

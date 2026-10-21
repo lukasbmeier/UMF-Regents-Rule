@@ -55,9 +55,8 @@ pub struct ItemSeed {
     pub weapon_damage_pct: u32,
     /// A part's kind ("handle"): a recipe's part slot takes any item of the same kind.
     pub part_tag: &'static str,
-    /// As a tool's handle: its swing (percent) and the quality it adds (thousandths).
-    pub handle_speed_pct: u32,
-    pub handle_quality_pm: u32,
+    /// As a tool's handle: the trait it gives what it is made into (a `traits::TRAITS` id; 0: none).
+    pub handle_trait: u32,
     /// As ammo: the kit it is shot from ("bow"; empty: not ammo), and its hits in percent.
     pub ammo_for: &'static str,
     pub ammo_damage_pct: u32,
@@ -356,6 +355,8 @@ pub struct FoeSeed {
     pub xp_pct: u32,
     /// What a kill drops: its loot table's content id (`loot::LOOT_TABLES`; 0: nothing).
     pub loot_table: u32,
+    /// Its family ("undead", "beast"): what a trait made against one reads.
+    pub family: &'static str,
 }
 
 /// The entity kinds a foe may be (CLAIMS keeps them for this genre).
@@ -564,8 +565,15 @@ pub fn whole_items(milli: u64, roll: u32) -> u32 {
 /// One gathered item's outcome: whether it brings the node's rare find (its chance, times `rare_mult`
 /// when played) and whether it is the last (the node is worked out), from two rolls.
 pub fn item_outcome(n: &NodeSeed, rare_mult: f64, rare_roll: u32, deplete_roll: u32) -> (bool, bool) {
-    let rare_pm = (n.rare_permille as f64 * rare_mult).round() as u32;
-    (n.rare_item != 0 && rare_roll < rare_pm, deplete_roll < n.deplete_permille)
+    item_outcome_with(n, rare_mult, 0, 1.0, rare_roll, deplete_roll)
+}
+
+/// `item_outcome` with a tool's traits: `rare_add_pm` more rare chance (Prospector's), the depletion
+/// chance times `deplete_mult` (Steady, Gentle less; Lucky, Springy more).
+pub fn item_outcome_with(n: &NodeSeed, rare_mult: f64, rare_add_pm: u32, deplete_mult: f32, rare_roll: u32, deplete_roll: u32) -> (bool, bool) {
+    let rare_pm = (n.rare_permille as f64 * rare_mult).round() as u32 + rare_add_pm;
+    let deplete_pm = (n.deplete_permille as f32 * deplete_mult.max(0.0)).round() as u32;
+    (n.rare_item != 0 && rare_roll < rare_pm, deplete_roll < deplete_pm)
 }
 
 /// A roll: a number 0..1000 from `salt` (splitmix64), so a result is reproducible in a test and still
@@ -599,16 +607,74 @@ pub fn quality_data(q: u32) -> String {
     format!("{{\"q\":{}}}", q.min(1000))
 }
 
-/// The `instance_data` of a tool of quality `q` assembled with handle `handle` (an item id).
+/// The `instance_data` of a tool of quality `q` assembled with handle `handle` (an item id): its handle,
+/// and the handle's trait (template DECISIONS #275), the tool's whatever its grade (owner, 2026-10-21).
 pub fn tool_data(q: u32, handle: u32) -> String {
-    format!("{{\"q\":{},\"h\":{handle}}}", q.min(1000))
+    let data = format!("{{\"q\":{},\"h\":{handle}}}", q.min(1000));
+    match item(handle).map_or(0, |h| h.handle_trait) {
+        0 => data,
+        t => crate::traits::with_ids(&data, &[t]),
+    }
 }
 
-/// A tool's speed with its handle's trait (owner, 2026-10-19: the handle's wood is the tool's trait; a
-/// tool with no handle on record, like the starter kit's, is as authored).
-pub fn tool_speed_with(tool: &ItemSeed, handle: Option<u32>) -> u32 {
-    let h = handle.and_then(item).map_or(100, |h| h.handle_speed_pct);
-    (tool.tool_speed_pct * h / 100).max(10)
+/// THE TRAITS a bag row's item has (`"t":[ids]`); a tool made before traits were (it noted only its handle)
+/// has its handle's. The client's twin: `ItemDef.trait_ids`.
+pub fn traits_of_row(instance_data: &str) -> Vec<u32> {
+    let ids = crate::traits::ids_of(instance_data);
+    if !ids.is_empty() {
+        return ids;
+    }
+    handle_of(instance_data).and_then(item).filter(|h| h.handle_trait != 0).map_or_else(Vec::new, |h| vec![h.handle_trait])
+}
+
+/// A tool's speed (percent of the base time its work takes) with its traits' `work_time`, at trait
+/// strength `strength` (Springy: quicker; Steady, Gentle: slower).
+pub fn tool_speed_with(tool: &ItemSeed, traits: &[u32], strength: f32) -> u32 {
+    let m = crate::traits::mult(traits, "work_time", &[], &crate::traits::Against::default(), strength);
+    ((tool.tool_speed_pct as f32 * m).round() as u32).max(10)
+}
+
+/// WHAT AN ITEM IS, for traits (`TraitDef.applies_to`): a tool ("tool", its tag), a weapon ("weapon", its
+/// kit, and "melee", "bow" or "staff" by how the kit fights), ammo. The client's twin: `ItemDef.tags`.
+pub fn item_tags(it: &ItemSeed) -> Vec<&'static str> {
+    let mut out = Vec::new();
+    if !it.tool_tag.is_empty() {
+        out.extend(["tool", it.tool_tag]);
+    }
+    if !it.weapon_kit.is_empty() {
+        out.extend(["weapon", it.weapon_kit]);
+        let kit = kit_keyed(it.weapon_kit);
+        out.push(if kit.is_some_and(|k| k.draw_full_ms > 0) { "bow" } else if kit.is_some_and(|k| k.resource != 0) { "staff" } else { "melee" });
+    }
+    if !it.ammo_for.is_empty() {
+        out.push("ammo");
+    }
+    out
+}
+
+/// WHAT AN ACTION IS, for traits (`TraitAtom.on`): a light step is "basic" (and "combo_last" for its
+/// kit's last), a heavy "heavy", a skill "skill".
+pub fn action_tags(kit: &KitSeed, slot: KitSlot) -> Vec<&'static str> {
+    match slot {
+        KitSlot::Light(step) if step as usize + 1 == kit.light.len() => vec!["basic", "combo_last"],
+        KitSlot::Light(_) => vec!["basic"],
+        KitSlot::Heavy => vec!["heavy"],
+        KitSlot::Skill(..) => vec!["skill"],
+    }
+}
+
+/// A bow's full draw with its traits' `draw_time` (Swift Draw: sooner). The client's twin:
+/// `CombatComponent.draw_full_ms`.
+pub fn draw_full_with(draw_full_ms: u32, draw_time: f32) -> u32 {
+    ((draw_full_ms as f32 * draw_time.max(0.05)).round() as u32).max(1)
+}
+
+/// A swing's lock (`lock_ms`) with its recovery (the part after `wind_up_ms`) scaled by `recovery`: a
+/// Balanced basic recovers faster, a Heavy one slower; the wind-up never moves (it is the animation's).
+/// The client's twin: `CombatComponent.lock_with`.
+pub fn lock_with(lock_ms: u32, wind_up_ms: u32, recovery: f32) -> u32 {
+    let rec = lock_ms.saturating_sub(wind_up_ms) as f32 * recovery.max(0.0);
+    wind_up_ms + rec.round() as u32
 }
 
 /// The XP of the work that went into one `item_id`: a gathered item, its node's XP; a made one, its

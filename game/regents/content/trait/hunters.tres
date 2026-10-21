@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"damage"
+mult = 1.15
+condition = "against"
+against = &"beast"
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"damage"
+mult = 0.85
+condition = "against"
+against = &"humanoid"
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"hunters"
+applies_to = Array[StringName]([&"bow"])
+gives = "15% more damage to beasts"
+costs = "15% less to humanoids"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40008
+display_name = "Hunter's"
+designer_notes = "A foe's family is its FoeDef's `family`."

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"recovery"
+on = &"basic"
+mult = 0.85
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"damage"
+on = &"skill"
+mult = 0.9
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"balanced"
+applies_to = Array[StringName]([&"weapon"])
+gives = "basics recover 15% faster"
+costs = "abilities do 10% less damage"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40003
+display_name = "Balanced"

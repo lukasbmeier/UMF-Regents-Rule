@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"extra_yield"
+value = 10.0
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"depletion"
+mult = 1.3
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"lucky"
+applies_to = Array[StringName]([&"tool"])
+gives = "a 10% chance of one more"
+costs = "nodes are 30% likelier to run out"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40010
+display_name = "Lucky"

@@ -4,6 +4,7 @@
 	"items": [
 		{
 			"damage_pct": 50,
+			"family": "",
 			"hp": 120,
 			"id": 40001,
 			"key": "skeleton_warrior",
@@ -15,6 +16,7 @@
 		},
 		{
 			"damage_pct": 55,
+			"family": "",
 			"hp": 150,
 			"id": 40002,
 			"key": "skeleton_axeman",

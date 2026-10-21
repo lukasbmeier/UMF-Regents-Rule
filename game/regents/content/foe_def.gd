@@ -33,6 +33,9 @@ class_name FoeDef extends ContentDef
 ## A breath after each combo: the opening a player gets.
 @export_range(0, 5000, 50, "suffix:ms") var rest_ms: int = 900
 
+## Its FAMILY ("undead", "beast", "humanoid"): what a trait made against one reads (Hunter's: more against
+## beasts, less against humanoids).
+@export var family: StringName = &""
 @export_group("Loot")
 ## What a kill drops (a loot table: each line its chance, shared tables, pity). Empty: nothing.
 @export var loot_table: LootTableDef
@@ -59,6 +62,7 @@ func to_bake() -> Dictionary:
 		"damage_pct": damage_pct,
 		"xp_pct": xp_pct,
 		"loot_table": ContentDef.ref(loot_table),
+		"family": String(family),
 	}
 
 

@@ -281,7 +281,7 @@ func swing(a: AbilityDef, step: int = -1) -> int:
 	swing_ability = a
 	swing_at_ms = now
 	swing_hit_ms = now + a.wind_up_ms
-	swing_lock_ms = now + (kit.lock_ms(a) if kit != null else a.wind_up_ms)
+	swing_lock_ms = now + lock_for(a)
 	swing_cancelled = false
 	combo_step = step
 	combo_ms = swing_lock_ms
@@ -526,7 +526,7 @@ func drawing() -> bool:
 func draw_progress() -> float:
 	if not drawing() or kit == null:
 		return 0.0
-	return clampf(float(Time.get_ticks_msec() - draw_started_ms) / float(maxi(kit.draw_full_ms, 1)), 0.0, 1.0)
+	return clampf(float(Time.get_ticks_msec() - draw_started_ms) / float(draw_full_ms()), 0.0, 1.0)
 
 
 ## LMB down with a bow: the draw begins (the server's Drawing: you walk). Not in the air, mid-roll or with
@@ -593,6 +593,54 @@ func hit_chance_now() -> float:
 	if st != null and Vector2(st.vel.x, st.vel.z).length() > 1.5:
 		chance -= HotRules.number(&"regents.hit_moving_pct")
 	return clampf(chance, 0.0, 100.0)
+
+
+## THE WIELDED WEAPON'S TRAITS (template DECISIONS #275): its bag row's, for the client's twins of the
+## server's numbers (a swing's recovery, the bow's draw). None for nothing wielded.
+func weapon_traits() -> Array[int]:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var inv: SpaceTimeInventoryComponent = ent.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent if ent != null else null
+	if inv == null or weapon_row < 0:
+		return []
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		if st.id == weapon_row:
+			return ItemDef.trait_ids(st.instance_data)
+	return []
+
+
+## WHAT AN ACTION IS, for traits: a light step "basic" (and "combo_last" for the kit's last), the heavy
+## "heavy", anything else "skill". Twin: the server's `action_tags`.
+static func action_tags(k: KitDef, a: AbilityDef) -> Array:
+	var i: int = k.light.find(a) if k != null else -1
+	if i >= 0:
+		return [&"basic", &"combo_last"] if i == k.light.size() - 1 else [&"basic"]
+	if k != null and a == k.heavy:
+		return [&"heavy"]
+	return [&"skill"]
+
+
+## A swing's lock with its recovery (the part after the wind-up) scaled by `recovery`. Twin: `lock_with`.
+static func lock_with(lock_ms: int, wind_up_ms: int, recovery: float) -> int:
+	return wind_up_ms + roundi(float(maxi(lock_ms - wind_up_ms, 0)) * maxf(recovery, 0.0))
+
+
+## How long swinging `a` holds this player: the kit's lock, its recovery through the weapon's traits
+## (Balanced faster, Heavy slower), as the server works it out.
+func lock_for(a: AbilityDef) -> int:
+	if kit == null:
+		return a.wind_up_ms
+	var traits: Array[int] = weapon_traits()
+	var recovery: float = Traits.mult(traits, &"recovery", action_tags(kit, a)) if not traits.is_empty() else 1.0
+	return lock_with(maxi(kit.lock_ms(a), a.wind_up_ms), a.wind_up_ms, recovery)
+
+
+## The bow's full draw with its traits (Swift Draw: sooner), as the server works it out (`draw_full_with`).
+func draw_full_ms() -> int:
+	if kit == null:
+		return 1
+	var traits: Array[int] = weapon_traits()
+	var m: float = Traits.mult(traits, &"draw_time") if not traits.is_empty() else 1.0
+	return maxi(roundi(float(kit.draw_full_ms) * maxf(m, 0.05)), 1)
 
 
 ## Arrows in the bag for the kit wielded.

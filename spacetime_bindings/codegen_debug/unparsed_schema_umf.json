@@ -5619,273 +5619,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Vector3"
-					},
-					"ty": 3.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FoeKill"
-					},
-					"ty": 33.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Hurt"
-					},
-					"ty": 41.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SkillXp"
-					},
-					"ty": 64.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Wielded"
-					},
-					"ty": 76.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AfkWork"
-					},
-					"ty": 7.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DropPity"
-					},
-					"ty": 26.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DamageShare"
-					},
-					"ty": 23.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMatch"
-					},
-					"ty": 62.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Challenge"
-					},
-					"ty": 17.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AuthorityCheckSchedule"
-					},
-					"ty": 12.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyContactWrite"
-					},
-					"ty": 58.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ChatMessage"
-					},
-					"ty": 19.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementWrite"
-					},
-					"ty": 83.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Station"
-					},
-					"ty": 69.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "GatherNode"
-					},
-					"ty": 34.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Arrow"
-					},
-					"ty": 9.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Swing"
-					},
-					"ty": 72.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementStateRow"
-					},
-					"ty": 48.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Missile"
-					},
-					"ty": 47.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Dummy"
-					},
-					"ty": 27.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "GroundItem"
-					},
-					"ty": 35.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "NpcBrainRow"
-					},
-					"ty": 50.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyWrite"
-					},
-					"ty": 82.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionPruneSchedule"
-					},
-					"ty": 4.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyState"
-					},
-					"ty": 14.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionEmpty"
-					},
-					"ty": 61.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "EquipStateRow"
-					},
-					"ty": 29.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "CombatState"
-					},
-					"ty": 21.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StarterKitGiven"
-					},
-					"ty": 68.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyContact"
-					},
-					"ty": 13.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Player"
-					},
-					"ty": 53.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ClientRtt"
 					},
 					"ty": 20.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HealthStateRow"
-					},
-					"ty": 36.0,
 					"custom_ordering": true
 				},
 				{
@@ -5899,121 +5635,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SpellCooldown"
+						"source_name": "SessionMatch"
 					},
-					"ty": 66.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Session"
-					},
-					"ty": 60.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AbilityState"
-					},
-					"ty": 1.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InputFrame"
-					},
-					"ty": 43.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "UnscoredPress"
-					},
-					"ty": 75.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RecipeLog"
-					},
-					"ty": 56.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Casting"
-					},
-					"ty": 16.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StatusStateRow"
-					},
-					"ty": 70.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StuckArrow"
-					},
-					"ty": 71.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TickSchedule"
-					},
-					"ty": 73.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionRequest"
-					},
-					"ty": 5.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkOrder"
-					},
-					"ty": 77.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "PerfReport"
-					},
-					"ty": 52.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HoldMember"
-					},
-					"ty": 37.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RefereeOffer"
-					},
-					"ty": 57.0,
+					"ty": 62.0,
 					"custom_ordering": true
 				},
 				{
@@ -6027,9 +5651,105 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "DevTools"
+						"source_name": "Swing"
 					},
-					"ty": 25.0,
+					"ty": 72.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityState"
+					},
+					"ty": 1.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Missile"
+					},
+					"ty": 47.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "GatherNode"
+					},
+					"ty": 34.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HealthStateRow"
+					},
+					"ty": 36.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Casting"
+					},
+					"ty": 16.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorkSchedule"
+					},
+					"ty": 79.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FoeKill"
+					},
+					"ty": 33.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AbilityDef"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PhaseSchedule"
+					},
+					"ty": 6.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementWrite"
+					},
+					"ty": 83.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionRequest"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldLevel"
+					},
+					"ty": 81.0,
 					"custom_ordering": true
 				},
 				{
@@ -6038,6 +5758,262 @@
 						"source_name": "SpellArea"
 					},
 					"ty": 65.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PerfReport"
+					},
+					"ty": 52.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "GroundItem"
+					},
+					"ty": 35.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RefereeOffer"
+					},
+					"ty": 57.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Wielded"
+					},
+					"ty": 76.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Entity"
+					},
+					"ty": 28.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DevTools"
+					},
+					"ty": 25.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellCooldown"
+					},
+					"ty": 66.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "CombatState"
+					},
+					"ty": 21.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Noise"
+					},
+					"ty": 49.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellTimer"
+					},
+					"ty": 67.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "EquipStateRow"
+					},
+					"ty": 29.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ChallengePruneSchedule"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Session"
+					},
+					"ty": 60.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "NpcBrainRow"
+					},
+					"ty": 50.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TickSchedule"
+					},
+					"ty": 73.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SkillXp"
+					},
+					"ty": 64.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "UnscoredPress"
+					},
+					"ty": 75.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Dummy"
+					},
+					"ty": 27.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldTick"
+					},
+					"ty": 39.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionEmpty"
+					},
+					"ty": 61.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 43.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Feedback"
+					},
+					"ty": 31.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Push"
+					},
+					"ty": 54.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DashWindowRow"
+					},
+					"ty": 24.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DropPity"
+					},
+					"ty": 26.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldMember"
+					},
+					"ty": 37.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldConfig"
+					},
+					"ty": 80.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StuckArrow"
+					},
+					"ty": 71.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StatusStateRow"
+					},
+					"ty": 70.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "OrderFilled"
+					},
+					"ty": 51.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StarterKitGiven"
+					},
+					"ty": 68.0,
 					"custom_ordering": true
 				},
 				{
@@ -6059,41 +6035,81 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "OrderFilled"
+						"source_name": "Attachment"
 					},
-					"ty": 51.0,
+					"ty": 10.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WorldConfig"
+						"source_name": "RecipeLog"
 					},
-					"ty": 80.0,
+					"ty": 56.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WorldLevel"
+						"source_name": "DamageShare"
 					},
-					"ty": 81.0,
+					"ty": 23.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "AbilityDef"
+						"source_name": "Vector3"
 					},
-					"ty": 0.0,
+					"ty": 3.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "DashWindowRow"
+						"source_name": "BodyContactWrite"
 					},
-					"ty": 24.0,
+					"ty": 58.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMember"
+					},
+					"ty": 63.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StatusExpiry"
+					},
+					"ty": 30.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Arrow"
+					},
+					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Challenge"
+					},
+					"ty": 17.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "BodyContact"
+					},
+					"ty": 13.0,
 					"custom_ordering": true
 				},
 				{
@@ -6107,17 +6123,41 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "InventoryItem"
+						"source_name": "Station"
 					},
-					"ty": 44.0,
+					"ty": 69.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "StatusExpiry"
+						"source_name": "ItemDef"
 					},
-					"ty": 30.0,
+					"ty": 45.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputQueueRow"
+					},
+					"ty": 42.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionPruneSchedule"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Hurt"
+					},
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -6139,25 +6179,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SessionMember"
+						"source_name": "Player"
 					},
-					"ty": 63.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SpellTimer"
-					},
-					"ty": 67.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "PhaseSchedule"
-					},
-					"ty": 6.0,
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -6171,25 +6195,33 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ChallengePruneSchedule"
+						"source_name": "HoldProgress"
 					},
-					"ty": 18.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Feedback"
+						"source_name": "BodyWrite"
 					},
-					"ty": 31.0,
+					"ty": 82.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "InputQueueRow"
+						"source_name": "AfkWork"
 					},
-					"ty": 42.0,
+					"ty": 7.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InventoryItem"
+					},
+					"ty": 44.0,
 					"custom_ordering": true
 				},
 				{
@@ -6203,54 +6235,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Authority"
-					},
-					"ty": 11.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkSchedule"
-					},
-					"ty": 79.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Entity"
-					},
-					"ty": 28.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Push"
-					},
-					"ty": 54.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "HoldProgress"
-					},
-					"ty": 38.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionEvent"
-					},
-					"ty": 2.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "AppearanceRow"
 					},
 					"ty": 8.0,
@@ -6259,33 +6243,49 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Attachment"
+						"source_name": "Authority"
 					},
-					"ty": 10.0,
+					"ty": 11.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ItemDef"
+						"source_name": "AuthorityCheckSchedule"
 					},
-					"ty": 45.0,
+					"ty": 12.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Noise"
+						"source_name": "BodyState"
 					},
-					"ty": 49.0,
+					"ty": 14.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "HoldTick"
+						"source_name": "ChatMessage"
 					},
-					"ty": 39.0,
+					"ty": 19.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementStateRow"
+					},
+					"ty": 48.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorkOrder"
+					},
+					"ty": 77.0,
 					"custom_ordering": true
 				}
 			]
@@ -6293,77 +6293,15 @@
 		{
 			"Tables": [
 				{
-					"source_name": "action_prune_schedule",
-					"product_type_ref": 4.0,
+					"source_name": "afk_work",
+					"product_type_ref": 7.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "action_prune_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "arrow",
-					"product_type_ref": 9.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "arrow_world_id_idx_btree"
+								"some": "afk_work_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -6376,7 +6314,7 @@
 						},
 						{
 							"source_name": {
-								"some": "arrow_entity_id_idx_btree"
+								"some": "afk_work_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -6391,7 +6329,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "arrow_entity_id_key"
+								"some": "afk_work_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -6403,2026 +6341,6 @@
 						}
 					],
 					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "dash_window",
-					"product_type_ref": 24.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "dash_window_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "dash_window_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "dev_tools",
-					"product_type_ref": 25.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "dev_tools_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "dev_tools_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "missile",
-					"product_type_ref": 47.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "missile_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "missile_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "missile_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "push",
-					"product_type_ref": 54.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "push_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "push_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "push_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "push_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "push_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "tick_schedule",
-					"product_type_ref": 73.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "tick_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "tick_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "tick_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "hold_member",
-					"product_type_ref": 37.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "hold_member_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "hold_member_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "hold_member_hold_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "hold_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "hold_member_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "station",
-					"product_type_ref": 69.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "station_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "station_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "station_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "ability_state",
-					"product_type_ref": 1.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "ability_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "ability_state_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "ability_state_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "ability_state_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "authority",
-					"product_type_ref": 11.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "authority_identity_idx_btree"
-							},
-							"accessor_name": {
-								"some": "identity"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "authority_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "authority_identity_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "stuck_arrow",
-					"product_type_ref": 71.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "stuck_arrow_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "stuck_arrow_foe_idx_btree"
-							},
-							"accessor_name": {
-								"some": "foe"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "stuck_arrow_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "stuck_arrow_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "hold_progress",
-					"product_type_ref": 38.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "hold_progress_hold_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "hold_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "hold_progress_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "hold_progress_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "hold_progress_hold_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "hold_progress_hold_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "referee_offer",
-					"product_type_ref": 57.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "referee_offer_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "referee_offer_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "gather_node",
-					"product_type_ref": 34.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "gather_node_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "gather_node_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "gather_node_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "timed_press",
-					"product_type_ref": 74.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "timed_press_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "timed_press_challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "challenge_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "timed_press_challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "player",
-					"product_type_ref": 53.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "player_identity_idx_btree"
-							},
-							"accessor_name": {
-								"some": "identity"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "player_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "player_identity_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						},
-						{
-							"source_name": {
-								"some": "player_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										1.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "swing",
-					"product_type_ref": 72.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "swing_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "swing_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "unscored_press",
-					"product_type_ref": 75.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "unscored_press_challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "challenge_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "unscored_press_challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "session_match",
-					"product_type_ref": 62.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "session_match_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "session_match_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "session_match_session_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "item_def",
-					"product_type_ref": 45.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "item_def_item_def_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "item_def_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "item_def_item_def_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "burning",
-					"product_type_ref": 15.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "burning_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "burning_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "burning_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "drop_pity",
-					"product_type_ref": 26.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "drop_pity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "drop_pity_identity_idx_btree"
-							},
-							"accessor_name": {
-								"some": "identity"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "drop_pity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "drop_pity_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "chat_message",
-					"product_type_ref": 19.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "chat_message_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "chat_message_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "chat_message_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "chat_message_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "foe",
-					"product_type_ref": 32.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "foe_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "foe_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "foe_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "lobby_member",
-					"product_type_ref": 46.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "lobby_member_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "lobby_member_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "lobby_member_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "lobby_member_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "work_schedule",
-					"product_type_ref": 79.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "attachment",
-					"product_type_ref": 10.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "attachment_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "attachment_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "attachment_carrier_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "carrier_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "attachment_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "entity",
-					"product_type_ref": 28.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "entity_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "entity_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "entity_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "entity_entity_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "action_request",
-					"product_type_ref": 5.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "action_request_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "action_request_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "action_request_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "action_request_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "world_level",
-					"product_type_ref": 81.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "world_level_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "world_level_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "rate_budget",
-					"product_type_ref": 55.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_idx_btree"
-							},
-							"accessor_name": {
-								"some": "key"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "rate_budget_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "spell_cooldown",
-					"product_type_ref": 66.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "spell_cooldown_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "spell_cooldown_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "spell_cooldown_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "spell_cooldown_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "action_event",
-					"product_type_ref": 2.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "action_event_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "action_event_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "action_event_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "action_event_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
 					"table_type": {
 						"User": []
 					},
@@ -8508,15 +6426,300 @@
 					"is_event": false
 				},
 				{
-					"source_name": "skill_xp",
-					"product_type_ref": 64.0,
+					"source_name": "item_def",
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "skill_xp_entity_id_idx_btree"
+								"some": "item_def_item_def_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "item_def_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "item_def_item_def_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "hot_rule",
+					"product_type_ref": 40.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hot_rule_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hot_rule_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "dash_window",
+					"product_type_ref": 24.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "dash_window_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "dash_window_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "spell_area",
+					"product_type_ref": 65.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "spell_area_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "spell_area_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "spell_area_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "spell_area_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "phase_schedule",
+					"product_type_ref": 6.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "phase_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "resource_state",
+					"product_type_ref": 59.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "resource_state_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "resource_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -8529,6 +6732,739 @@
 						},
 						{
 							"source_name": {
+								"some": "resource_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "resource_state_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "resource_state_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "foe_kill",
+					"product_type_ref": 33.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "foe_kill_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "foe_kill_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "foe_kill_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "foe_kill_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "hold_tick",
+					"product_type_ref": 39.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hold_tick_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hold_tick_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "hold_tick_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "spell_cooldown",
+					"product_type_ref": 66.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "spell_cooldown_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "spell_cooldown_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "spell_cooldown_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "spell_cooldown_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "unscored_press",
+					"product_type_ref": 75.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "unscored_press_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "unscored_press_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "referee_offer",
+					"product_type_ref": 57.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "referee_offer_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "referee_offer_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "work_order",
+					"product_type_ref": 77.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "work_order_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "work_order_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "work_order_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "work_order_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority",
+					"product_type_ref": 11.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "authority_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "action_event",
+					"product_type_ref": 2.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "action_event_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "action_event_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "action_event_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_event_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "missile",
+					"product_type_ref": 47.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "missile_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "missile_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "missile_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_match",
+					"product_type_ref": 62.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_match_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_match_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_match_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "world_level",
+					"product_type_ref": 81.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_level_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "skill_xp",
+					"product_type_ref": 64.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
 								"some": "skill_xp_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8537,6 +7473,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "skill_xp_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
 								]
 							}
 						}
@@ -8583,18 +7532,31 @@
 					"is_event": false
 				},
 				{
-					"source_name": "authority_check_schedule",
-					"product_type_ref": 12.0,
+					"source_name": "dummy",
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_idx_btree"
+								"some": "dummy_world_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "scheduled_id"
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "dummy_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -8606,7 +7568,181 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_key"
+								"some": "dummy_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "client_rtt",
+					"product_type_ref": 20.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "client_rtt_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "client_rtt_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "hold_member",
+					"product_type_ref": 37.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hold_member_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hold_member_hold_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "hold_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hold_member_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hold_member_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "perf_report",
+					"product_type_ref": 52.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "perf_report_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "perf_report_at_idx_btree"
+							},
+							"accessor_name": {
+								"some": "at"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "perf_report_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -8620,7 +7756,7 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "authority_check_schedule_scheduled_id_seq"
+								"some": "perf_report_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -8720,18 +7856,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "npc_brain",
-					"product_type_ref": 50.0,
+					"source_name": "action_request",
+					"product_type_ref": 5.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "npc_brain_entity_id_idx_btree"
+								"some": "action_request_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "entity_id"
+								"some": "id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -8741,7 +7877,7 @@
 						},
 						{
 							"source_name": {
-								"some": "npc_brain_world_id_idx_btree"
+								"some": "action_request_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -8756,7 +7892,219 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "npc_brain_entity_id_key"
+								"some": "action_request_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_request_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "body_contact",
+					"product_type_ref": 13.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "body_contact_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "body_contact_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "body_contact_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "body_contact_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "noise",
+					"product_type_ref": 49.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "noise_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "noise_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "noise_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "noise_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "ability_def",
+					"product_type_ref": 0.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "ability_def_ability_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "ability_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ability_def_ability_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -8778,18 +8126,89 @@
 					"is_event": false
 				},
 				{
-					"source_name": "hot_rule",
-					"product_type_ref": 40.0,
+					"source_name": "health_state",
+					"product_type_ref": 36.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "hot_rule_key_idx_btree"
+								"some": "health_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "key"
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "health_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "health_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "movement_state",
+					"product_type_ref": 48.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "movement_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "movement_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -8801,7 +8220,331 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "hot_rule_key_key"
+								"some": "movement_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "swing",
+					"product_type_ref": 72.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "swing_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "swing_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "work_result",
+					"product_type_ref": 78.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "work_result_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "work_result_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "work_result_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "work_result_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "attachment",
+					"product_type_ref": 10.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "attachment_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "attachment_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "attachment_carrier_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "carrier_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "attachment_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "status_expiry",
+					"product_type_ref": 30.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_expiry_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "status_expiry_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "burning",
+					"product_type_ref": 15.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "burning_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "burning_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "burning_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -8831,19 +8574,6 @@
 					"indexes": [
 						{
 							"source_name": {
-								"some": "session_member_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
 								"some": "session_member_session_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8865,6 +8595,19 @@
 							"algorithm": {
 								"BTree": [
 									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_member_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
 								]
 							}
 						}
@@ -8901,6 +8644,462 @@
 							"increment": 1.0
 						}
 					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "tick_schedule",
+					"product_type_ref": 73.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "tick_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rate_budget",
+					"product_type_ref": 55.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rate_budget_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "rate_budget_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "npc_brain",
+					"product_type_ref": 50.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "npc_brain_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "npc_brain_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "hurt",
+					"product_type_ref": 41.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hurt_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hurt_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hurt_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "damage_share",
+					"product_type_ref": 23.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "damage_share_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "damage_share_target_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "target_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "damage_share_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "damage_share_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session",
+					"product_type_ref": 60.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "session_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "session_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "status_state",
+					"product_type_ref": 70.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "status_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "status_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
 					"table_type": {
 						"User": []
 					},
@@ -8956,15 +9155,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "hold_tick",
-					"product_type_ref": 39.0,
+					"source_name": "work_schedule",
+					"product_type_ref": 79.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "hold_tick_scheduled_id_idx_btree"
+								"some": "work_schedule_scheduled_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "scheduled_id"
@@ -8979,7 +9178,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "hold_tick_scheduled_id_key"
+								"some": "work_schedule_scheduled_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -8993,7 +9192,7 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "hold_tick_scheduled_id_seq"
+								"some": "work_schedule_scheduled_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -9018,15 +9217,392 @@
 					"is_event": false
 				},
 				{
-					"source_name": "spell_area",
-					"product_type_ref": 65.0,
+					"source_name": "ability_state",
+					"product_type_ref": 1.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "spell_area_world_id_idx_btree"
+								"some": "ability_state_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ability_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "ability_state_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "ability_state_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "session_empty",
+					"product_type_ref": 61.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "session_empty_session_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "entity",
+					"product_type_ref": 28.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "entity_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "entity_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "entity_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "entity_entity_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "authority_check_schedule",
+					"product_type_ref": 12.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "authority_check_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "action_prune_schedule",
+					"product_type_ref": 4.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "action_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "foe",
+					"product_type_ref": 32.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "foe_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "foe_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "foe_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "lobby_member",
+					"product_type_ref": 46.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "lobby_member_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -9039,7 +9615,361 @@
 						},
 						{
 							"source_name": {
-								"some": "spell_area_id_idx_btree"
+								"some": "lobby_member_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "lobby_member_session_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "session_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "lobby_member_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "recipe_log",
+					"product_type_ref": 56.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "recipe_log_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "recipe_log_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "recipe_log_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "recipe_log_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge_prune_schedule",
+					"product_type_ref": 18.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "push",
+					"product_type_ref": 54.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "push_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "push_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "push_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "push_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "push_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "appearance",
+					"product_type_ref": 8.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "appearance_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "appearance_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "appearance_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "drop_pity",
+					"product_type_ref": 26.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "drop_pity_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "drop_pity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "id"
@@ -9054,7 +9984,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "spell_area_id_key"
+								"some": "drop_pity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -9068,7 +9998,492 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "spell_area_id_seq"
+								"some": "drop_pity_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge",
+					"product_type_ref": 17.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "challenge_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "station",
+					"product_type_ref": 69.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "station_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "station_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "station_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "arrow",
+					"product_type_ref": 9.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "arrow_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "arrow_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "arrow_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "timed_press",
+					"product_type_ref": 74.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "timed_press_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "challenge_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "timed_press_challenge_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "correction",
+					"product_type_ref": 22.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "correction_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "casting",
+					"product_type_ref": 16.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "casting_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "casting_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "casting_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "dev_tools",
+					"product_type_ref": 25.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "dev_tools_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "dev_tools_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "hold_progress",
+					"product_type_ref": 38.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "hold_progress_hold_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "hold_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hold_progress_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hold_progress_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "hold_progress_hold_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "hold_progress_hold_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -9101,19 +10516,6 @@
 					"indexes": [
 						{
 							"source_name": {
-								"some": "equip_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
 								"some": "equip_state_world_id_idx_btree"
 							},
 							"accessor_name": {
@@ -9122,6 +10524,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "equip_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
 								]
 							}
 						}
@@ -9151,25 +10566,162 @@
 					"is_event": false
 				},
 				{
-					"source_name": "feedback",
-					"product_type_ref": 31.0,
+					"source_name": "chat_message",
+					"product_type_ref": 19.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "feedback_at_idx_btree"
+								"some": "chat_message_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "at"
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "chat_message_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
 							},
 							"algorithm": {
 								"BTree": [
 									1.0
 								]
 							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "chat_message_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "chat_message_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "inventory_item",
+					"product_type_ref": 44.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
 						},
+						{
+							"source_name": {
+								"some": "inventory_item_owner_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "inventory_item_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "feedback",
+					"product_type_ref": 31.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
 						{
 							"source_name": {
 								"some": "feedback_id_idx_btree"
@@ -9180,6 +10732,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "feedback_at_idx_btree"
+							},
+							"accessor_name": {
+								"some": "at"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
 								]
 							}
 						}
@@ -9226,18 +10791,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "ability_def",
-					"product_type_ref": 0.0,
+					"source_name": "combat_state",
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "ability_def_ability_id_idx_btree"
+								"some": "combat_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "ability_id"
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -9249,7 +10814,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "ability_def_ability_id_key"
+								"some": "combat_state_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -9391,80 +10956,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 18.0,
+					"source_name": "stuck_arrow",
+					"product_type_ref": 71.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
+								"some": "stuck_arrow_foe_idx_btree"
 							},
 							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "damage_share",
-					"product_type_ref": 23.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "damage_share_target_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "target_id"
+								"some": "foe"
 							},
 							"algorithm": {
 								"BTree": [
@@ -9474,7 +10977,7 @@
 						},
 						{
 							"source_name": {
-								"some": "damage_share_id_idx_btree"
+								"some": "stuck_arrow_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "id"
@@ -9489,7 +10992,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "damage_share_id_key"
+								"some": "stuck_arrow_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -9503,7 +11006,7 @@
 					"sequences": [
 						{
 							"source_name": {
-								"some": "damage_share_id_seq"
+								"some": "stuck_arrow_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -9528,73 +11031,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "appearance",
-					"product_type_ref": 8.0,
+					"source_name": "gather_node",
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "appearance_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "appearance_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "appearance_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "health_state",
-					"product_type_ref": 36.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "health_state_entity_id_idx_btree"
+								"some": "gather_node_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -9607,7 +11052,7 @@
 						},
 						{
 							"source_name": {
-								"some": "health_state_world_id_idx_btree"
+								"some": "gather_node_world_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "world_id"
@@ -9622,7 +11067,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "health_state_entity_id_key"
+								"some": "gather_node_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -9644,15 +11089,85 @@
 					"is_event": false
 				},
 				{
-					"source_name": "combat_state",
-					"product_type_ref": 21.0,
+					"source_name": "player",
+					"product_type_ref": 53.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "combat_state_entity_id_idx_btree"
+								"some": "player_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "player_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "player_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "player_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "body_state",
+					"product_type_ref": 14.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "body_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
 								"some": "entity_id"
@@ -9662,12 +11177,38 @@
 									0.0
 								]
 							}
+						},
+						{
+							"source_name": {
+								"some": "body_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "body_state_owner_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_id"
+							},
+							"algorithm": {
+								"BTree": [
+									3.0
+								]
+							}
 						}
 					],
 					"constraints": [
 						{
 							"source_name": {
-								"some": "combat_state_entity_id_key"
+								"some": "body_state_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -9684,51 +11225,6 @@
 					},
 					"table_access": {
 						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "session_empty",
-					"product_type_ref": 61.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "session_empty_session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "session_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "session_empty_session_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -9779,394 +11275,12 @@
 					"is_event": false
 				},
 				{
-					"source_name": "dummy",
-					"product_type_ref": 27.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "dummy_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "dummy_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "dummy_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "client_rtt",
-					"product_type_ref": 20.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "client_rtt_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "client_rtt_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "hurt",
-					"product_type_ref": 41.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "hurt_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "hurt_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "hurt_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "recipe_log",
-					"product_type_ref": 56.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "recipe_log_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "recipe_log_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "recipe_log_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "recipe_log_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "afk_work",
-					"product_type_ref": 7.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "afk_work_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "afk_work_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "afk_work_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "noise",
-					"product_type_ref": 49.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "noise_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "noise_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "noise_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "noise_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "input_queue",
 					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
-						{
-							"source_name": {
-								"some": "input_queue_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
 						{
 							"source_name": {
 								"some": "input_queue_entity_id_idx_btree"
@@ -10192,6 +11306,19 @@
 									2.0
 								]
 							}
+						},
+						{
+							"source_name": {
+								"some": "input_queue_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
 						}
 					],
 					"constraints": [
@@ -10212,1133 +11339,6 @@
 						{
 							"source_name": {
 								"some": "input_queue_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "work_result",
-					"product_type_ref": 78.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "work_result_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "work_result_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "work_result_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "work_result_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "challenge",
-					"product_type_ref": 17.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "challenge_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "challenge_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "challenge_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "challenge_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "casting",
-					"product_type_ref": 16.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "casting_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "casting_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "casting_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "perf_report",
-					"product_type_ref": 52.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "perf_report_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "perf_report_at_idx_btree"
-							},
-							"accessor_name": {
-								"some": "at"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "perf_report_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "perf_report_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "session",
-					"product_type_ref": 60.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "session_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "session_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "session_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						},
-						{
-							"source_name": {
-								"some": "session_world_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										1.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "session_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "inventory_item",
-					"product_type_ref": 44.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "inventory_item_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "inventory_item_owner_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "owner_entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "inventory_item_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "inventory_item_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "correction",
-					"product_type_ref": 22.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "correction_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "correction_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "status_state",
-					"product_type_ref": 70.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "status_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "status_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "status_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "body_state",
-					"product_type_ref": 14.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "body_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "body_state_owner_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "owner_id"
-							},
-							"algorithm": {
-								"BTree": [
-									3.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "body_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "body_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "phase_schedule",
-					"product_type_ref": 6.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "phase_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "work_order",
-					"product_type_ref": 77.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "work_order_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "work_order_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "work_order_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "work_order_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "resource_state",
-					"product_type_ref": 59.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "resource_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "resource_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "resource_state_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "resource_state_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "resource_state_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "foe_kill",
-					"product_type_ref": 33.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "foe_kill_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "foe_kill_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "foe_kill_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "foe_kill_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "status_expiry",
-					"product_type_ref": 30.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "status_expiry_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "status_expiry_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "movement_state",
-					"product_type_ref": 48.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "movement_state_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "movement_state_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "movement_state_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "body_contact",
-					"product_type_ref": 13.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "body_contact_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "body_contact_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "body_contact_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "body_contact_id_seq"
 							},
 							"column": 0.0,
 							"start": {
@@ -13638,6 +13638,42 @@
 					}
 				},
 				{
+					"source_name": "set_item_traits",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_row"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "traits"
+								},
+								"algebraic_type": {
+									"Array": {
+										"U32": []
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "set_player_name",
 					"params": {
 						"elements": [
@@ -14575,11 +14611,35 @@
 			"Schedules": [
 				{
 					"source_name": {
-						"some": "action_prune_schedule_sched"
+						"some": "spell_timer_sched"
 					},
-					"table_name": "action_prune_schedule",
+					"table_name": "spell_timer",
 					"schedule_at_col": 1.0,
-					"function_name": "prune_action_events"
+					"function_name": "spell_lands"
+				},
+				{
+					"source_name": {
+						"some": "phase_schedule_sched"
+					},
+					"table_name": "phase_schedule",
+					"schedule_at_col": 1.0,
+					"function_name": "advance_phases"
+				},
+				{
+					"source_name": {
+						"some": "hold_tick_sched"
+					},
+					"table_name": "hold_tick",
+					"schedule_at_col": 1.0,
+					"function_name": "tick_holds"
+				},
+				{
+					"source_name": {
+						"some": "status_expiry_sched"
+					},
+					"table_name": "status_expiry",
+					"schedule_at_col": 1.0,
+					"function_name": "expire_status"
 				},
 				{
 					"source_name": {
@@ -14599,14 +14659,6 @@
 				},
 				{
 					"source_name": {
-						"some": "spell_timer_sched"
-					},
-					"table_name": "spell_timer",
-					"schedule_at_col": 1.0,
-					"function_name": "spell_lands"
-				},
-				{
-					"source_name": {
 						"some": "authority_check_schedule_sched"
 					},
 					"table_name": "authority_check_schedule",
@@ -14615,11 +14667,11 @@
 				},
 				{
 					"source_name": {
-						"some": "hold_tick_sched"
+						"some": "action_prune_schedule_sched"
 					},
-					"table_name": "hold_tick",
+					"table_name": "action_prune_schedule",
 					"schedule_at_col": 1.0,
-					"function_name": "tick_holds"
+					"function_name": "prune_action_events"
 				},
 				{
 					"source_name": {
@@ -14628,22 +14680,6 @@
 					"table_name": "challenge_prune_schedule",
 					"schedule_at_col": 1.0,
 					"function_name": "prune_challenges"
-				},
-				{
-					"source_name": {
-						"some": "phase_schedule_sched"
-					},
-					"table_name": "phase_schedule",
-					"schedule_at_col": 1.0,
-					"function_name": "advance_phases"
-				},
-				{
-					"source_name": {
-						"some": "status_expiry_sched"
-					},
-					"table_name": "status_expiry",
-					"schedule_at_col": 1.0,
-					"function_name": "expire_status"
 				}
 			]
 		},
@@ -14672,25 +14708,25 @@
 		{
 			"RowLevelSecurity": [
 				{
-					"sql": "SELECT c.* FROM challenge c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
-				},
-				{
-					"sql": "SELECT * FROM ground_item WHERE anyone = true"
+					"sql": "SELECT q.* FROM input_queue q JOIN authority a ON a.world_id = q.world_id WHERE a.identity = :sender"
 				},
 				{
 					"sql": "SELECT r.* FROM action_request r JOIN authority a ON a.world_id = r.world_id WHERE a.identity = :sender"
 				},
 				{
-					"sql": "SELECT g.* FROM ground_item g JOIN player p ON g.owner_id = p.entity_id WHERE p.identity = :sender"
-				},
-				{
 					"sql": "SELECT b.* FROM npc_brain b JOIN authority a ON a.world_id = b.world_id WHERE a.identity = :sender"
 				},
 				{
-					"sql": "SELECT q.* FROM input_queue q JOIN authority a ON a.world_id = q.world_id WHERE a.identity = :sender"
+					"sql": "SELECT * FROM ground_item WHERE anyone = true"
 				},
 				{
 					"sql": "SELECT c.* FROM timed_press c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT g.* FROM ground_item g JOIN player p ON g.owner_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT c.* FROM challenge c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
 				}
 			]
 		},
@@ -14699,206 +14735,8 @@
 				"entries": [
 					{
 						"Table": {
-							"source_name": "action_prune_schedule",
-							"canonical_name": "action_prune_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "arrow",
-							"canonical_name": "arrow"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "dash_window",
-							"canonical_name": "dash_window"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "dev_tools",
-							"canonical_name": "dev_tools"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "missile",
-							"canonical_name": "missile"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "push",
-							"canonical_name": "push"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "tick_schedule",
-							"canonical_name": "tick_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "hold_member",
-							"canonical_name": "hold_member"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "station",
-							"canonical_name": "station"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "ability_state",
-							"canonical_name": "ability_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "authority",
-							"canonical_name": "authority"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "stuck_arrow",
-							"canonical_name": "stuck_arrow"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "hold_progress",
-							"canonical_name": "hold_progress"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "referee_offer",
-							"canonical_name": "referee_offer"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "gather_node",
-							"canonical_name": "gather_node"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "timed_press",
-							"canonical_name": "timed_press"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "player",
-							"canonical_name": "player"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "swing",
-							"canonical_name": "swing"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "unscored_press",
-							"canonical_name": "unscored_press"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session_match",
-							"canonical_name": "session_match"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "item_def",
-							"canonical_name": "item_def"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "burning",
-							"canonical_name": "burning"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "drop_pity",
-							"canonical_name": "drop_pity"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "chat_message",
-							"canonical_name": "chat_message"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "foe",
-							"canonical_name": "foe"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "lobby_member",
-							"canonical_name": "lobby_member"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "work_schedule",
-							"canonical_name": "work_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "attachment",
-							"canonical_name": "attachment"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "entity",
-							"canonical_name": "entity"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "action_request",
-							"canonical_name": "action_request"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "world_level",
-							"canonical_name": "world_level"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "rate_budget",
-							"canonical_name": "rate_budget"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "spell_cooldown",
-							"canonical_name": "spell_cooldown"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "action_event",
-							"canonical_name": "action_event"
+							"source_name": "afk_work",
+							"canonical_name": "afk_work"
 						}
 					},
 					{
@@ -14909,26 +14747,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "skill_xp",
-							"canonical_name": "skill_xp"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "authority_check_schedule",
-							"canonical_name": "authority_check_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "ground_item",
-							"canonical_name": "ground_item"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "npc_brain",
-							"canonical_name": "npc_brain"
+							"source_name": "item_def",
+							"canonical_name": "item_def"
 						}
 					},
 					{
@@ -14939,20 +14759,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "session_member",
-							"canonical_name": "session_member"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "wielded",
-							"canonical_name": "wielded"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "hold_tick",
-							"canonical_name": "hold_tick"
+							"source_name": "dash_window",
+							"canonical_name": "dash_window"
 						}
 					},
 					{
@@ -14963,182 +14771,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "equip_state",
-							"canonical_name": "equip_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "feedback",
-							"canonical_name": "feedback"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "ability_def",
-							"canonical_name": "ability_def"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "order_filled",
-							"canonical_name": "order_filled"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "world_config",
-							"canonical_name": "world_config"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "challenge_prune_schedule",
-							"canonical_name": "challenge_prune_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "damage_share",
-							"canonical_name": "damage_share"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "appearance",
-							"canonical_name": "appearance"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "health_state",
-							"canonical_name": "health_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "combat_state",
-							"canonical_name": "combat_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session_empty",
-							"canonical_name": "session_empty"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "starter_kit_given",
-							"canonical_name": "starter_kit_given"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "dummy",
-							"canonical_name": "dummy"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "client_rtt",
-							"canonical_name": "client_rtt"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "hurt",
-							"canonical_name": "hurt"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "recipe_log",
-							"canonical_name": "recipe_log"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "afk_work",
-							"canonical_name": "afk_work"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "noise",
-							"canonical_name": "noise"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "input_queue",
-							"canonical_name": "input_queue"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "work_result",
-							"canonical_name": "work_result"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "challenge",
-							"canonical_name": "challenge"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "casting",
-							"canonical_name": "casting"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "perf_report",
-							"canonical_name": "perf_report"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "session",
-							"canonical_name": "session"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "inventory_item",
-							"canonical_name": "inventory_item"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "correction",
-							"canonical_name": "correction"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "status_state",
-							"canonical_name": "status_state"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "body_state",
-							"canonical_name": "body_state"
-						}
-					},
-					{
-						"Table": {
 							"source_name": "phase_schedule",
 							"canonical_name": "phase_schedule"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "work_order",
-							"canonical_name": "work_order"
 						}
 					},
 					{
@@ -15155,8 +14789,128 @@
 					},
 					{
 						"Table": {
-							"source_name": "status_expiry",
-							"canonical_name": "status_expiry"
+							"source_name": "hold_tick",
+							"canonical_name": "hold_tick"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "spell_cooldown",
+							"canonical_name": "spell_cooldown"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "unscored_press",
+							"canonical_name": "unscored_press"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "referee_offer",
+							"canonical_name": "referee_offer"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "work_order",
+							"canonical_name": "work_order"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority",
+							"canonical_name": "authority"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "action_event",
+							"canonical_name": "action_event"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "missile",
+							"canonical_name": "missile"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_match",
+							"canonical_name": "session_match"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_level",
+							"canonical_name": "world_level"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "skill_xp",
+							"canonical_name": "skill_xp"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "dummy",
+							"canonical_name": "dummy"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "client_rtt",
+							"canonical_name": "client_rtt"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "hold_member",
+							"canonical_name": "hold_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "perf_report",
+							"canonical_name": "perf_report"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ground_item",
+							"canonical_name": "ground_item"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "action_request",
+							"canonical_name": "action_request"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "body_contact",
+							"canonical_name": "body_contact"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "noise",
+							"canonical_name": "noise"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ability_def",
+							"canonical_name": "ability_def"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "health_state",
+							"canonical_name": "health_state"
 						}
 					},
 					{
@@ -15167,8 +14921,290 @@
 					},
 					{
 						"Table": {
-							"source_name": "body_contact",
-							"canonical_name": "body_contact"
+							"source_name": "swing",
+							"canonical_name": "swing"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "work_result",
+							"canonical_name": "work_result"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "attachment",
+							"canonical_name": "attachment"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "status_expiry",
+							"canonical_name": "status_expiry"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "burning",
+							"canonical_name": "burning"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_member",
+							"canonical_name": "session_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "tick_schedule",
+							"canonical_name": "tick_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "rate_budget",
+							"canonical_name": "rate_budget"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "npc_brain",
+							"canonical_name": "npc_brain"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "hurt",
+							"canonical_name": "hurt"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "damage_share",
+							"canonical_name": "damage_share"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session",
+							"canonical_name": "session"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "status_state",
+							"canonical_name": "status_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "wielded",
+							"canonical_name": "wielded"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "work_schedule",
+							"canonical_name": "work_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "ability_state",
+							"canonical_name": "ability_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "session_empty",
+							"canonical_name": "session_empty"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "entity",
+							"canonical_name": "entity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "authority_check_schedule",
+							"canonical_name": "authority_check_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "action_prune_schedule",
+							"canonical_name": "action_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "foe",
+							"canonical_name": "foe"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "lobby_member",
+							"canonical_name": "lobby_member"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "recipe_log",
+							"canonical_name": "recipe_log"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "challenge_prune_schedule",
+							"canonical_name": "challenge_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "push",
+							"canonical_name": "push"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "appearance",
+							"canonical_name": "appearance"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "drop_pity",
+							"canonical_name": "drop_pity"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "challenge",
+							"canonical_name": "challenge"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "station",
+							"canonical_name": "station"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "arrow",
+							"canonical_name": "arrow"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "timed_press",
+							"canonical_name": "timed_press"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "correction",
+							"canonical_name": "correction"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "casting",
+							"canonical_name": "casting"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "dev_tools",
+							"canonical_name": "dev_tools"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "hold_progress",
+							"canonical_name": "hold_progress"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "equip_state",
+							"canonical_name": "equip_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "chat_message",
+							"canonical_name": "chat_message"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "inventory_item",
+							"canonical_name": "inventory_item"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "feedback",
+							"canonical_name": "feedback"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "combat_state",
+							"canonical_name": "combat_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "order_filled",
+							"canonical_name": "order_filled"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_config",
+							"canonical_name": "world_config"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "stuck_arrow",
+							"canonical_name": "stuck_arrow"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "gather_node",
+							"canonical_name": "gather_node"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "player",
+							"canonical_name": "player"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "body_state",
+							"canonical_name": "body_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "starter_kit_given",
+							"canonical_name": "starter_kit_given"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "input_queue",
+							"canonical_name": "input_queue"
 						}
 					},
 					{
@@ -15565,6 +15601,12 @@
 						"Function": {
 							"source_name": "set_item_slot",
 							"canonical_name": "set_item_slot"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_item_traits",
+							"canonical_name": "set_item_traits"
 						}
 					},
 					{

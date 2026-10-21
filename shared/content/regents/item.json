@@ -5,8 +5,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40001,
 			"max_stack": 1,
 			"name": "Bronze axe",
@@ -20,8 +19,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40002,
 			"max_stack": 1000,
 			"name": "Logs",
@@ -35,8 +33,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40003,
 			"max_stack": 1000,
 			"name": "Oak logs",
@@ -50,8 +47,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40004,
 			"max_stack": 1000,
 			"name": "Yew logs",
@@ -65,8 +61,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40005,
 			"max_stack": 100,
 			"name": "Bird's nest",
@@ -80,8 +75,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40006,
 			"max_stack": 1,
 			"name": "Bronze pickaxe",
@@ -95,8 +89,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40007,
 			"max_stack": 1000,
 			"name": "Copper ore",
@@ -110,8 +103,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40008,
 			"max_stack": 1000,
 			"name": "Iron ore",
@@ -125,8 +117,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40009,
 			"max_stack": 100,
 			"name": "Uncut gem",
@@ -140,8 +131,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40010,
 			"max_stack": 1000,
 			"name": "Copper bar",
@@ -155,8 +145,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40011,
 			"max_stack": 1000,
 			"name": "Iron bar",
@@ -170,8 +159,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40012,
 			"max_stack": 1000,
 			"name": "Copper rivets",
@@ -185,8 +173,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40013,
 			"max_stack": 100,
 			"name": "Handle",
@@ -200,8 +187,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40014,
 			"max_stack": 1,
 			"name": "Iron axe head",
@@ -215,8 +201,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40015,
 			"max_stack": 1,
 			"name": "Iron axe",
@@ -230,8 +215,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 150,
-			"handle_speed_pct": 100,
+			"handle_trait": 40001,
 			"id": 40016,
 			"max_stack": 100,
 			"name": "Oak handle",
@@ -245,8 +229,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 90,
+			"handle_trait": 40002,
 			"id": 40017,
 			"max_stack": 100,
 			"name": "Yew handle",
@@ -260,8 +243,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40018,
 			"max_stack": 1,
 			"name": "Iron sword blade",
@@ -275,8 +257,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40019,
 			"max_stack": 1,
 			"name": "Iron sword",
@@ -290,8 +271,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40020,
 			"max_stack": 1,
 			"name": "Yew bow",
@@ -305,8 +285,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40021,
 			"max_stack": 1000,
 			"name": "Arrow shafts",
@@ -320,8 +299,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "bow",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40022,
 			"max_stack": 1000,
 			"name": "Copper arrows",
@@ -335,8 +313,7 @@
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_quality_pm": 0,
-			"handle_speed_pct": 100,
+			"handle_trait": -1,
 			"id": 40023,
 			"max_stack": 1,
 			"name": "Yew staff",

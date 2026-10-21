@@ -35,10 +35,9 @@ class_name ItemDef extends ContentDef
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
 @export var part_tag: StringName = &""
-## As a tool's HANDLE, its trait (Tinkers'-style: the handle's wood): the tool's swing, in percent (yew:
-## lighter, faster), and quality it adds to the tool (oak: sturdier), in thousandths.
-@export_range(50, 150, 1, "suffix:%") var handle_speed_pct: int = 100
-@export_range(0, 1000, 10, "suffix:‰") var handle_quality_pm: int = 0
+## As a tool's HANDLE, the TRAIT it gives what it is made into (Tinkers'-style: the handle's wood; oak:
+## Steady, yew: Springy; template DECISIONS #275). Always the tool's, whatever its grade (owner, 2026-10-21).
+@export var handle_trait: TraitDef
 @export_group("How it shows")
 ## What a tool looks like in the hand while it works (a `HeldItem` scene), if it is a tool.
 @export var held_scene: PackedScene
@@ -80,8 +79,7 @@ func to_bake() -> Dictionary:
 		"ammo_for": String(ammo_for),
 		"ammo_damage_pct": ammo_damage_pct,
 		"part_tag": String(part_tag),
-		"handle_speed_pct": handle_speed_pct,
-		"handle_quality_pm": handle_quality_pm,
+		"handle_trait": ContentDef.ref(handle_trait),
 	}
 
 
@@ -95,14 +93,39 @@ func icon() -> Texture2D:
 	return icon_picture if icon_picture != null else super()
 
 
-## What its handle trait does, in words ("" when it has none worth saying).
-func handle_trait() -> String:
-	var parts: PackedStringArray = PackedStringArray()
-	if handle_speed_pct != 100:
-		parts.append("%d%% %s swing" % [absi(100 - handle_speed_pct), "faster" if handle_speed_pct < 100 else "slower"])
-	if handle_quality_pm > 0:
-		parts.append("+%d quality" % (handle_quality_pm / 10))
-	return ", ".join(parts)
+## What its handle's trait does, in words ("Steady: nodes are 20% less likely to run out; work 5% slower"),
+## or "" when it gives none.
+func handle_trait_text() -> String:
+	if handle_trait == null:
+		return ""
+	return "%s: %s%s" % [handle_trait.display_name, handle_trait.gives, ("; " + handle_trait.costs) if not handle_trait.costs.is_empty() else ""]
+
+
+## THE TRAITS a bag row's item has (`"t":[ids]` in its `instance_data`). A tool made before traits were
+## (it noted only its handle, `"h"`) has its handle's. The server's twin: `traits_of_row`.
+static func trait_ids(instance_data: String) -> Array[int]:
+	var ids: Array[int] = Traits.ids_of(instance_data)
+	if ids.is_empty():
+		var h: ItemDef = ItemDef.by_id(int(RegentsGrade.data_of(instance_data).get("h", -1)))
+		if h != null and h.handle_trait != null:
+			ids.append(h.handle_trait.id)
+	return ids
+
+
+## WHAT IT IS, for traits (`TraitDef.applies_to`): a tool ("tool" and its tag, "axe"), a weapon ("weapon",
+## its kit's key, and "melee", "bow" or "staff" by how its kit fights), ammo ("ammo"). The server's twin:
+## `item_tags` (genre/regents/mod.rs).
+func tags() -> Array[StringName]:
+	var out: Array[StringName] = []
+	if tool_tag != &"":
+		out.append_array([&"tool", tool_tag])
+	if weapon_kit != &"":
+		out.append_array([&"weapon", weapon_kit])
+		var kit: KitDef = KitDef.by_key(weapon_kit)
+		out.append(&"bow" if kit != null and kit.draws else (&"staff" if kit != null and kit.casts() else &"melee"))
+	if ammo_for != &"":
+		out.append(&"ammo")
+	return out
 
 
 func validate() -> Array[String]:
@@ -113,8 +136,10 @@ func validate() -> Array[String]:
 		out.append("a tool does not stack: `max_stack` 1")
 	if weapon_kit != &"" and max_stack != 1:
 		out.append("a weapon does not stack: `max_stack` 1")
-	if part_tag == &"" and (handle_speed_pct != 100 or handle_quality_pm != 0):
+	if part_tag == &"" and handle_trait != null:
 		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
+	if handle_trait != null and not handle_trait.applies_to.has(&"tool"):
+		out.append("its handle trait (%s) is not one a tool may have: its `applies_to` lacks \"tool\"" % handle_trait.display_name)
 	if weapon_kit != &"":
 		# Tier dominates (owner, 2026-10-20): against every other weapon of its kit.
 		var kin: Array[ItemDef] = [self]

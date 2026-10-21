@@ -169,7 +169,7 @@ func _fill_detail(c: Dictionary) -> void:
 	var names := VBoxContainer.new()
 	names.add_child(UiKit.line(label_of(c), &"accent"))
 	if part != null and r.part_slot >= 0 and part != r.inputs[r.part_slot]:
-		names.add_child(UiKit.note("Its handle's trait: %s" % part.handle_trait()))
+		names.add_child(UiKit.note("Its handle's trait: %s" % part.handle_trait_text()))
 	top.add_child(names)
 	_detail.add_child(UiKit.note("Takes"))
 	for i: int in r.inputs.size():

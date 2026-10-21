@@ -258,6 +258,63 @@ assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMM
 for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
   assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
 done
+# --- TRAITS (template DECISIONS #275): what changes how a weapon plays, never its Power. A dev reducer
+# gives them here (a designer trying one); the playtest makes a tool with a handle's. Ids: the content's
+# (game/regents/content/trait/). ---
+T_BALANCED=40003; T_HEAVY=40004; T_BRUTAL=40005; T_SWIFT=40007
+assert_rejected "set_item_traits $AXE_ROW [99999]" "no trait 99999" "a trait that is not one: refused"
+assert_rejected "set_item_traits $AXE_ROW [$T_SWIFT]" "is not on a bronze axe" "Swift Draw is a bow's: refused on an axe"
+C_CODE_T='"regentstraitsrefereecode"'
+assert_ok "offer_referee 0 $C_CODE_T" "a referee for the traits"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T" >/dev/null 2>&1
+sleep 1.0
+HPT0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_ok "use_ability_seen 40006 0 $C_AIM 931 100" "a plain chop"
+W0="$(sql_first "SELECT wind_up_ms FROM swing WHERE entity_id = $MYENT" 1)"; L0="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
+assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 931" 1) $DUMMY" "it hits the dummy"
+HPT1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_eq "$(python -c "print(round($HPT0 - $HPT1, 2))")" "7.7" "11 at the bronze axe's 70 %: 7.7 (no traits)"
+assert_ok "set_item_traits $AXE_ROW [$T_BALANCED,$T_BRUTAL]" "(dev) the axe made Balanced and Brutal"
+check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q "\"t\":\[$T_BALANCED,$T_BRUTAL\]" && echo true || echo false)" "its row carries them"
+sleep 1.2
+assert_ok "use_ability_seen 40006 0 $C_AIM 932 100" "a chop with the Balanced, Brutal axe"
+L1="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
+assert_eq "$L1" "$(python -c "import math; print($W0 + int(math.floor(($L0 - $W0) * 0.85 + 0.5)))")" "Balanced: its recovery 15% shorter ($L0 -> $L1 ms, the wind-up $W0 as it was)"
+assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 932" 1) $DUMMY" "it hits the dummy"
+HPT2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_eq "$(python -c "print(round($HPT1 - $HPT2, 2))")" "6.93" "Brutal, the dummy above 30 %: a tenth less (7.7 -> 6.93)"
+assert_ok "set_item_traits $AXE_ROW [$T_HEAVY]" "(dev) now Heavy"
+sleep 1.2
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "(the last referee unregistered first)"
+done
+C_CODE_T2='"regentstraitsrefereecode2"'
+assert_ok "offer_referee 0 $C_CODE_T2" "a fresh referee (a claim lapses in seconds)"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T2" >/dev/null 2>&1
+assert_ok "use_ability_seen 40008 0 $C_AIM 933 100" "the overhead (the heavy) with the Heavy axe"
+assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 933" 1) $DUMMY" "it hits the dummy"
+check "$(logged "$MYENT's hit staggered $DUMMY")" "Heavy: its heavy Staggers what it hits"
+assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $DUMMY" 1)" "103" "the dummy is Staggered"
+assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again (what follows counts on it)"
+check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q '"t"' && echo false || echo true)" "no traits left on it"
+assert_ok 'set_rule "foundation.trait_strength_pct" 0.0 ""' "(test) traits off"
+assert_ok "set_item_traits $AXE_ROW [$T_BALANCED]" "(dev) Balanced again"
+sleep 1.2
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "(the last referee unregistered first)"
+done
+C_CODE_T3='"regentstraitsrefereecode3"'
+assert_ok "offer_referee 0 $C_CODE_T3" "a fresh referee"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T3" >/dev/null 2>&1
+assert_ok "use_ability_seen 40006 0 $C_AIM 934 100" "a chop, traits off"
+assert_eq "$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)" "$L0" "the dial at 0: the kit's own lock"
+assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 934" 1) $DUMMY" "(its hit, so nothing is left waiting)"
+assert_ok 'reset_rule "foundation.trait_strength_pct"' "(test) traits back on"
+assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the traits' referee unregistered"
+done
+sleep 5
 # --- FOES (owner, 2026-10-19: the first enemies, a skeleton camp east of the spawn) ---
 assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "3" "three skeletons at the camp (the level's foe points)"
 SKEL="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"

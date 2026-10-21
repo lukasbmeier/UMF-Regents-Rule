@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"damage"
+mult = 1.25
+condition = "target_below"
+threshold_pct = 30.0
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"damage"
+mult = 0.9
+condition = "target_above"
+threshold_pct = 30.0
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"brutal"
+applies_to = Array[StringName]([&"weapon"])
+gives = "25% more damage to a target below 30% health"
+costs = "10% less above it"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40005
+display_name = "Brutal"
+designer_notes = "The TARGET's health (owner, 2026-10-21): an executioner's trait."

@@ -261,7 +261,7 @@ static func station_prompt(sk: SkillingComponent, station: StationComponent, inv
 		needs.append("%d %s (%d)" % [r.input_qty[i], it.display_name, have])
 	var title: String = r.display_name
 	if part != null and part != r.inputs[r.part_slot]:
-		title = "%s with %s (%s)" % [r.display_name, part.display_name.to_lower(), part.handle_trait()]
+		title = "%s with %s (%s)" % [r.display_name, part.display_name.to_lower(), part.handle_trait_text()]
 	var rec: Dictionary = sk.recipe_record(r.id)
 	var share: int = int(HotRules.number(&"regents.craft_work_share_pct"))
 	var pay: String = "about %d XP a batch" % r.craft_xp(share)

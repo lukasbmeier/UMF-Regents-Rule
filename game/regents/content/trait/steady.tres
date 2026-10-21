@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
+[ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
+
+[sub_resource type="Resource" id="Atom_0"]
+script = ExtResource("2_atom")
+what = &"depletion"
+mult = 0.8
+
+[sub_resource type="Resource" id="Atom_1"]
+script = ExtResource("2_atom")
+what = &"work_time"
+mult = 1.05
+cost = true
+
+[resource]
+script = ExtResource("1_trait")
+key = &"steady"
+applies_to = Array[StringName]([&"tool"])
+rollable = false
+gives = "nodes are 20% less likely to run out"
+costs = "work 5% slower"
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1")])
+id = 40001
+display_name = "Steady"
+designer_notes = "OAK HANDLE (owner, 2026-10-21: toned to the early game; the materials deep-dive may rework it)."

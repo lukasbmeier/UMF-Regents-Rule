@@ -228,15 +228,49 @@ pub fn count_item(ctx: &ReducerContext, entity_id: u64, item: u32) -> u32 {
     ctx.db.inventory_item().owner_entity_id().filter(entity_id).filter(|s| s.item_def_id == item).map(|s| s.qty).sum()
 }
 
-/// The best tool of `tag` in the bag: highest tier, then the quickest (its quality and its handle's trait).
-/// (item, quality, its speed with its handle in percent)
-pub fn best_tool(ctx: &ReducerContext, entity_id: u64, tag: &str) -> Option<(&'static rules::ItemSeed, u32, u32)> {
+/// The best tool of `tag` in the bag: highest tier, then the quickest (its quality and its traits).
+/// (item, quality, its speed with its traits in percent, its traits)
+pub fn best_tool(ctx: &ReducerContext, entity_id: u64, tag: &str) -> Option<(&'static rules::ItemSeed, u32, u32, Vec<u32>)> {
+    let k = trait_strength(ctx);
     ctx.db.inventory_item().owner_entity_id().filter(entity_id)
         .filter(|s| s.qty > 0)
         .filter_map(|s| rules::item(s.item_def_id).filter(|i| i.tool_tag == tag).map(|i| {
-            (i, rules::quality_of(&s.instance_data).unwrap_or(0), rules::tool_speed_with(i, rules::handle_of(&s.instance_data)))
+            let traits = rules::traits_of_row(&s.instance_data);
+            (i, rules::quality_of(&s.instance_data).unwrap_or(0), rules::tool_speed_with(i, &traits, k), traits)
         }))
-        .max_by_key(|(i, q, sp)| (i.tool_tier, std::cmp::Reverse(rules::speed_pct(*sp, *q, 1)), *q))
+        .max_by_key(|(i, q, sp, _)| (i.tool_tier, std::cmp::Reverse(rules::speed_pct(*sp, *q, 1)), *q))
+}
+
+/// How strongly traits work now (`foundation.trait_strength_pct`, template DECISIONS #275): 1.0 as authored.
+fn trait_strength(ctx: &ReducerContext) -> f32 {
+    hot_number(ctx, crate::hot::foundation::TRAIT_STRENGTH_PCT).max(0.0) as f32 / 100.0
+}
+
+/// The traits of what `entity_id` wields (none for nothing, or for a foe).
+fn weapon_traits(ctx: &ReducerContext, entity_id: u64) -> Vec<u32> {
+    ctx.db.wielded().entity_id().find(entity_id)
+        .and_then(|w| ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == entity_id))
+        .map_or_else(Vec::new, |r| rules::traits_of_row(&r.instance_data))
+}
+
+/// What a trait condition knows of `target`: its health in percent of its most, and its family (a foe's).
+fn against_of(ctx: &ReducerContext, target: u64) -> (Option<f32>, &'static str) {
+    let pct = ctx.db.health_state().entity_id().find(target).filter(|h| h.max > 0.0).map(|h| h.current / h.max * 100.0);
+    (pct, foe_seed_of(ctx, target).map_or("", |f| f.family))
+}
+
+/// `dmg` from `actor` at an action tagged `ons` against `target`, through the actor's weapon traits
+/// (`damage`: Balanced's abilities, Brutal below 30 %, Hunter's against beasts). A foe's: as it was.
+fn traited_damage(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], dmg: f32) -> f32 {
+    if ctx.db.player().entity_id().find(actor).is_none() {
+        return dmg;
+    }
+    let traits = weapon_traits(ctx, actor);
+    if traits.is_empty() {
+        return dmg;
+    }
+    let (target_pct, family) = against_of(ctx, target);
+    dmg * crate::traits::mult(&traits, "damage", ons, &crate::traits::Against { target_pct, family }, trait_strength(ctx))
 }
 
 /// Takes `qty` of `item` from the bag (the best quality first), noting the qualities taken (one per item
@@ -336,11 +370,11 @@ fn make_batch(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, round_qualit
     for (item, qty) in inputs_with(r, part) {
         take_items(ctx, entity_id, item, qty, &mut taken);
     }
+    // The handle gives the tool its TRAIT (template DECISIONS #275), never quality: quality is Power.
     let handle = if r.part_slot >= 0 && part != 0 { Some(part) } else { None };
-    let bonus = handle.and_then(rules::item).map_or(0, |h| h.handle_quality_pm);
     let quality = match r.quality {
-        rules::QUALITY_FROM_ROUND => Some((round_quality + bonus).min(1000)),
-        rules::QUALITY_FROM_INPUTS => Some((taken.iter().copied().max().unwrap_or(0) + bonus).min(1000)),
+        rules::QUALITY_FROM_ROUND => Some(round_quality.min(1000)),
+        rules::QUALITY_FROM_INPUTS => Some(taken.iter().copied().max().unwrap_or(0).min(1000)),
         _ => None,
     };
     give_made(ctx, entity_id, r.output, r.output_qty, quality, if quality.is_some() { handle } else { None });
@@ -591,10 +625,20 @@ fn report(ctx: &ReducerContext, entity_id: u64, world_id: u32, target_id: u64, s
 fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u64, def: &NodeSeed, n: u32, active: bool, score_pm: i32, salt: u64) -> u32 {
     let rare_mult = if active { hot_number(ctx, hot::ACTIVE_RARE_MULT) } else { 1.0 };
     let already = is_depleted(ctx, node_id);
+    // The tool's TRAITS: depletion (Steady, Gentle; Lucky, Springy), a rare find (Prospector's), one more (Lucky).
+    let traits = best_tool(ctx, entity_id, def.tool_tag).map_or_else(Vec::new, |t| t.3);
+    let (k, none) = (trait_strength(ctx), crate::traits::Against::default());
+    let deplete_mult = crate::traits::mult(&traits, "depletion", &[], &none, k);
+    let rare_add_pm = (crate::traits::value(&traits, "rare_chance", &[], &none, k) * 10.0).round().max(0.0) as u32;
+    let extra_pm = (crate::traits::value(&traits, "extra_yield", &[], &none, k) * 10.0).round().max(0.0) as u32;
     let (mut got, mut rare, mut out) = (0u32, 0u32, false);
     for i in 0..n as u64 {
         got += 1;
-        let (r, d) = rules::item_outcome(def, rare_mult, rules::roll_permille(salt ^ (i * 2 + 3)), rules::roll_permille(salt ^ (i * 2 + 4)));
+        if extra_pm > 0 && rules::roll_permille(salt ^ (i * 2 + 5).rotate_left(7)) < extra_pm {
+            got += 1;
+        }
+        let (r, d) = rules::item_outcome_with(def, rare_mult, rare_add_pm, deplete_mult,
+            rules::roll_permille(salt ^ (i * 2 + 3)), rules::roll_permille(salt ^ (i * 2 + 4)));
         rare += u32::from(r);
         if d && !already {
             out = true;
@@ -640,7 +684,7 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
     }
     need_rank(ctx, me, def.skill, def.min_rank, "gather")?;
     let article = if def.tool_tag.starts_with(['a', 'e', 'i', 'o', 'u']) { "an" } else { "a" };
-    let (tool, quality, tool_speed) = best_tool(ctx, me, def.tool_tag).ok_or_else(|| format!("gather: you need {article} {} in your bag", def.tool_tag))?;
+    let (tool, quality, tool_speed, _) = best_tool(ctx, me, def.tool_tag).ok_or_else(|| format!("gather: you need {article} {} in your bag", def.tool_tag))?;
     if tool.tool_tier < def.min_tool_tier {
         return Err(format!("gather: a {} needs a {} of tier {} (yours: {})", def.name, def.tool_tag, def.min_tool_tier, tool.tool_tier));
     }
@@ -846,7 +890,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
                 ctx.db.afk_work().entity_id().delete(row.entity_id);
                 continue;
             };
-            let tool_ok = best_tool(ctx, row.entity_id, def.tool_tag).is_some_and(|(t, _, _)| t.tool_tier >= def.min_tool_tier);
+            let tool_ok = best_tool(ctx, row.entity_id, def.tool_tag).is_some_and(|(t, _, _, _)| t.tool_tier >= def.min_tool_tier);
             if is_depleted(ctx, row.target_id) || !tool_ok {
                 ctx.db.afk_work().entity_id().delete(row.entity_id);
                 continue;
@@ -1148,8 +1192,12 @@ pub fn loose_arrow(ctx: &ReducerContext, target_id: u64, aim: Vector3) -> Result
     let (ammo_id, ammo) = ammo_in_bag(ctx, me, kit.key).ok_or("loose_arrow: no arrows")?;
     let at = ctx.db.movement_state().entity_id().find(me).ok_or("loose_arrow: you are nowhere")?;
     let draw_ms = (micros(ctx.timestamp) - micros(st.since)) / 1000;
-    let power = rules::draw_power(draw_ms, kit.draw_full_ms, hot_number(ctx, hot::DRAW_MIN_POWER_PCT) as f32);
-    let speed = hot_number(ctx, hot::ARROW_SPEED_MIN) as f32 + (hot_number(ctx, hot::ARROW_SPEED_MAX) - hot_number(ctx, hot::ARROW_SPEED_MIN)) as f32 * power;
+    // The bow's traits: Swift Draw draws to full sooner, and its arrows fly slower.
+    let (traits, k, none) = (weapon_traits(ctx, me), trait_strength(ctx), crate::traits::Against::default());
+    let full_ms = rules::draw_full_with(kit.draw_full_ms, crate::traits::mult(&traits, "draw_time", &[], &none, k));
+    let power = rules::draw_power(draw_ms, full_ms, hot_number(ctx, hot::DRAW_MIN_POWER_PCT) as f32);
+    let speed = (hot_number(ctx, hot::ARROW_SPEED_MIN) as f32 + (hot_number(ctx, hot::ARROW_SPEED_MAX) - hot_number(ctx, hot::ARROW_SPEED_MIN)) as f32 * power)
+        * crate::traits::mult(&traits, "projectile_speed", &[], &none, k);
     let from = Vector3::new(at.pos.x, at.pos.y + 1.45, at.pos.z);
     // Where it flies: the target (auto-aimed, the hit rolled), else where the player looks.
     let target = (target_id != 0).then(|| ctx.db.movement_state().entity_id().find(target_id)).flatten()
@@ -1204,7 +1252,8 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
         if let (true, Some(h)) = (hittable, ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead)) {
             let (dx, dz) = (pos.x - a.from.x, pos.z - a.from.z);
             let point_blank = (dx * dx + dz * dz).sqrt() < hot_number(ctx, hot::POINT_BLANK_M) as f32;
-            let mut dmg = if point_blank { a.damage * hot_number(ctx, hot::POINT_BLANK_PCT) as f32 / 100.0 } else { a.damage };
+            let base = traited_damage(ctx, a.owner, other_id, &["basic"], a.damage);
+            let mut dmg = if point_blank { base * hot_number(ctx, hot::POINT_BLANK_PCT) as f32 / 100.0 } else { base };
             let dummy = ctx.db.dummy().entity_id().find(other_id);
             if let Some(mut d) = dummy.clone() {
                 dmg = dmg.min((h.current - 1.0).max(0.0));
@@ -1619,6 +1668,7 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
     if !hurts(ctx, owner, other_id) {
         return false;
     }
+    let dmg = traited_damage(ctx, owner, other_id, &["skill"], dmg);
     let hittable = ctx.db.status_state().entity_id().find(other_id).and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
     let Some(h) = ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead) else { return false };
     if !hittable {
@@ -1669,6 +1719,26 @@ fn tick_spells(ctx: &ReducerContext, dt_s: f32) {
     for id in lost {
         ctx.db.missile().entity_id().delete(id);
     }
+}
+
+/// (DEV) GIVE bag row `item_row` exactly the traits `traits` (none: take them off): a designer trying one,
+/// a test. Each must be a trait and fit the item (template DECISIONS #275). Behind `set_dev_tools`.
+#[reducer]
+pub fn set_item_traits(ctx: &ReducerContext, item_row: u64, traits: Vec<u32>) -> Result<(), String> {
+    crate::module::require_dev_tools(ctx, "set_item_traits")?;
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    let mut row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me).ok_or("set_item_traits: not in your bag")?;
+    let it = rules::item(row.item_def_id).ok_or("set_item_traits: not an item this game knows")?;
+    let tags = rules::item_tags(it);
+    for t in &traits {
+        let s = crate::traits::find(*t).ok_or_else(|| format!("set_item_traits: there is no trait {t}"))?;
+        if !crate::traits::fits(s, &tags) {
+            return Err(format!("set_item_traits: {} is not on a {}", s.name, it.name.to_lowercase()));
+        }
+    }
+    row.instance_data = crate::traits::with_ids(&row.instance_data, &traits);
+    ctx.db.inventory_item().id().update(row);
+    Ok(())
 }
 
 /// WIELD the weapon in bag row `item_row` (an axe, a sword): its kit is what you fight with.
@@ -1832,8 +1902,11 @@ fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     s.combo_at = ctx.timestamp;
     save_combat_state(ctx, s);
     let wind_up = ctx.db.ability_def().ability_id().find(ability_id).map_or(0, |d| d.wind_up_ms);
+    // Its recovery through the weapon's traits (Balanced faster, Heavy slower): the client predicts the same.
+    let recovery = crate::traits::mult(&weapon_traits(ctx, actor), "recovery", &rules::action_tags(kit, slot),
+        &crate::traits::Against::default(), trait_strength(ctx));
     let w = Swing {
-        entity_id: actor, ability_id, at: ctx.timestamp, wind_up_ms: wind_up, lock_ms: kit.lock_ms(ability_id).max(wind_up),
+        entity_id: actor, ability_id, at: ctx.timestamp, wind_up_ms: wind_up, lock_ms: rules::lock_with(kit.lock_ms(ability_id).max(wind_up), wind_up, recovery),
         light_step: if let rules::KitSlot::Light(step) = slot { step as i32 } else { -1 }, cancelled: false,
     };
     if ctx.db.swing().entity_id().find(actor).is_some() {
@@ -1881,7 +1954,8 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         Some(f) => (f.damage_pct, 0),
         None => wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q)),
     };
-    let mut dmg = rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill));
+    let ons = rules::action_tags(kit, slot);
+    let mut dmg = traited_damage(ctx, actor, target.entity_id, &ons, rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill)));
     let t = combat_state_of(ctx, target.entity_id);
     if t.blocking {
         let since_ms = (micros(ctx.timestamp) - micros(t.block_since)) / 1000;
@@ -1909,6 +1983,7 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         if dummy.is_none() {
             hurt_now(ctx, target.entity_id, target.world_id);
         }
+        on_hit_traits(ctx, actor, target.entity_id, &ons, dmg, dummy.is_some());
     }
     if ctx.db.player().entity_id().find(actor).is_some() && dmg > 0.0 {
         let share = if dummy.is_some() {
@@ -1923,6 +1998,36 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         fell(ctx, target.entity_id, actor);
     }
     true
+}
+
+/// WHAT A WEAPON'S TRAITS DO AS ITS HIT LANDS (template DECISIONS #275): `stagger` (Heavy: its heavies and
+/// the combo's last hit Stagger what they hit, a chance in percent) and `heal_on_hit` (Thirsting: a share
+/// of the damage back as health; not off a training dummy).
+fn on_hit_traits(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], dmg: f32, dummy: bool) {
+    if ctx.db.player().entity_id().find(actor).is_none() {
+        return;
+    }
+    let traits = weapon_traits(ctx, actor);
+    if traits.is_empty() {
+        return;
+    }
+    let (k, none) = (trait_strength(ctx), crate::traits::Against::default());
+    let stagger_pm = (crate::traits::value(&traits, "stagger", ons, &none, k) * 10.0).round() as i64;
+    let alive = ctx.db.health_state().entity_id().find(target).is_some_and(|h| !h.is_dead);
+    if stagger_pm > 0 && alive && (rules::roll_permille((micros(ctx.timestamp) as u64) ^ actor.rotate_left(13) ^ target) as i64) < stagger_pm {
+        let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
+        if crate::module::set_status_internal(ctx, target, rules::STATUS_STAGGERED, ms, actor, String::new()).is_ok() {
+            end_cast(ctx, target);
+            log::info!("regents: {actor}'s hit staggered {target}");
+        }
+    }
+    let heal_pct = crate::traits::value(&traits, "heal_on_hit", ons, &none, k);
+    if heal_pct > 0.0 && !dummy {
+        if let Some(mut h) = ctx.db.health_state().entity_id().find(actor).filter(|h| !h.is_dead) {
+            h.current = (h.current + dmg * heal_pct / 100.0).min(h.max);
+            ctx.db.health_state().entity_id().update(h);
+        }
+    }
 }
 
 // --- foes (owner, 2026-10-19: the first enemies, a skeleton camp) ------------------------------------
@@ -2089,7 +2194,11 @@ fn tick_regen(ctx: &ReducerContext, dt_s: f32) {
         if h.is_dead {
             continue;
         }
-        h.current = rules::regen_step(h.current, h.max, pct, dt_s);
+        // Healing received through the wielded weapon's traits (Thirsting: less).
+        let k = if ctx.db.player().entity_id().find(r.entity_id).is_some() {
+            crate::traits::mult(&weapon_traits(ctx, r.entity_id), "healing_received", &[], &crate::traits::Against::default(), trait_strength(ctx))
+        } else { 1.0 };
+        h.current = rules::regen_step(h.current, h.max, pct * k, dt_s);
         let whole = h.current >= h.max;
         ctx.db.health_state().entity_id().update(h);
         if whole {

@@ -86,6 +86,17 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 		var power_line: Label = _power_line(st, it, pw, stacks)
 		power_line.name = "Power"
 		_detail.add_child(power_line)
+	# Its TRAITS (template DECISIONS #275): each its name, what it gives and what it costs.
+	for id: int in ItemDef.trait_ids(st.instance_data):
+		var t: TraitDef = Traits.def(id)
+		if t == null:
+			continue
+		var name_line: Label = UiKit.line(t.display_name, &"accent")
+		name_line.name = "Trait_%s" % t.key
+		_detail.add_child(name_line)
+		_detail.add_child(UiKit.line("  + " + t.gives, &"good"))
+		if not t.costs.is_empty():
+			_detail.add_child(UiKit.line("  - " + t.costs, &"bad"))
 	if it.tool_tag != &"":
 		_detail.add_child(UiKit.note("A tool: works %s nodes up to tier %d, from the bag." % [it.tool_tag, it.tool_tier]))
 	if it.weapon_kit != &"":
@@ -95,8 +106,8 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 			for a: AbilityDef in kit.abilities():
 				moves.append(a.display_name)
 		_detail.add_child(UiKit.note("A weapon: the %s kit. %s" % [it.weapon_kit, ", ".join(moves)]))
-	if it.part_tag != &"" and not it.handle_trait().is_empty():
-		_detail.add_child(UiKit.note("A %s: %s on what it is made into." % [it.part_tag, it.handle_trait()]))
+	if it.part_tag != &"" and not it.handle_trait_text().is_empty():
+		_detail.add_child(UiKit.note("A %s: %s on what it is made into." % [it.part_tag, it.handle_trait_text()]))
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override(&"separation", 8)
 	_detail.add_child(buttons)

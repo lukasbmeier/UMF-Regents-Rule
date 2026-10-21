@@ -4,6 +4,7 @@
 //! same file by the `regents` suite.
 
 use umf_module::genre::regents::chop::{self, ChopParams, ChopResult};
+use umf_module::traits;
 
 fn golden() -> serde_json::Value {
     let text = std::fs::read_to_string("../shared/golden/regents/chop.json").expect("shared/golden/regents/chop.json");
@@ -98,19 +99,25 @@ fn handles_are_parts_and_their_wood_is_the_tools_trait() {
     assert_eq!(handles, vec!["Handle", "Oak handle", "Yew handle"], "three handles fill it");
     let oak = rules::ITEMS.iter().find(|i| i.name == "Oak handle").unwrap();
     let yew = rules::ITEMS.iter().find(|i| i.name == "Yew handle").unwrap();
-    assert!(oak.handle_quality_pm > 0 && oak.handle_speed_pct == 100, "oak: sturdier (quality)");
-    assert!(yew.handle_speed_pct < 100 && yew.handle_quality_pm == 0, "yew: lighter (a quicker swing)");
+    let trait_of = |h: &rules::ItemSeed| traits::find(h.handle_trait).map(|t| t.key);
+    assert_eq!((trait_of(oak), trait_of(yew), trait_of(plain)), (Some("steady"), Some("springy"), None),
+        "oak gives Steady, yew Springy, a plain handle nothing (template DECISIONS #275)");
     for (h, logs) in [("Oak handle", "Oak logs"), ("Yew handle", "Yew logs")] {
         let r = rules::RECIPES.iter().find(|r| r.name == h).expect(h);
         assert_eq!(rules::item(r.inputs[0].0).map(|i| i.name), Some(logs), "{h} is carved from {logs}");
     }
     let iron = rules::item(axe.output).unwrap();
-    assert_eq!(rules::tool_speed_with(iron, None), 85, "no handle on record: as authored");
-    assert_eq!(rules::tool_speed_with(iron, Some(plain.id)), 85, "a plain handle: no trait");
-    assert_eq!(rules::tool_speed_with(iron, Some(yew.id)), 85 * yew.handle_speed_pct / 100, "a yew handle swings quicker");
-    assert_eq!(rules::tool_speed_with(iron, Some(999_999)), 85, "a handle that is not an item: no trait");
+    assert_eq!(rules::tool_speed_with(iron, &[], 1.0), 85, "no traits: as authored");
+    assert_eq!(rules::tool_speed_with(iron, &[yew.handle_trait], 1.0), 81, "Springy: 5 % quicker (85 -> 81)");
+    assert_eq!(rules::tool_speed_with(iron, &[oak.handle_trait], 1.0), 89, "Steady: 5 % slower (85 -> 89)");
+    assert_eq!(rules::tool_speed_with(iron, &[yew.handle_trait], 0.0), 85, "traits off: as authored");
+    assert_eq!(rules::tool_speed_with(iron, &[999_999], 1.0), 85, "a trait that is not one: nothing");
     let data = rules::tool_data(612, yew.id);
     assert_eq!((rules::quality_of(&data), rules::handle_of(&data)), (Some(612), Some(yew.id)), "a tool keeps its quality and its handle");
+    assert_eq!(rules::traits_of_row(&data), vec![yew.handle_trait], "and its handle's trait ({data})");
+    assert_eq!(rules::traits_of_row(&rules::tool_data(612, plain.id)), Vec::<u32>::new(), "a plain handle's tool: none");
+    assert_eq!(rules::traits_of_row(&format!("{{\"q\":700,\"h\":{}}}", oak.id)), vec![oak.handle_trait],
+        "a tool made before traits (only its handle noted): its handle's");
     assert_eq!(rules::handle_of(&rules::quality_data(5)), None, "a plain made item has no handle");
     assert_eq!(rules::parse_part(&rules::payload_with_part(9, 40006, 100, yew.id)), yew.id);
     assert_eq!(rules::parse_payload(&rules::payload_with_part(9, 40006, 100, yew.id)), Some((9, 40006, 100)), "the first three fields are as before");
@@ -521,4 +528,67 @@ fn a_foe_hurts_players_and_players_do_not_hurt_each_other() {
     assert!(rules::may_hurt(false, true, false), "a player hurts a foe or a dummy");
     assert!(!rules::may_hurt(false, true, true), "but not a friend (no fights until duels)");
     assert!(rules::may_hurt(false, false, true), "the world (a trap, a fire) may hurt a player");
+}
+
+#[test]
+fn every_trait_trades_and_fits_what_it_is_on() {
+    assert!(traits::TRAITS.len() >= 11, "the v1 pools: {}", traits::TRAITS.len());
+    for t in traits::TRAITS {
+        let cost = t.atoms.iter().any(|a| a.cost);
+        let sometimes = t.atoms.iter().any(|a| !a.condition.is_empty() && a.condition != "always");
+        assert!(cost || sometimes, "{} is a pure gain", t.key);
+    }
+    for h in rules::ITEMS.iter().filter(|i| i.handle_trait != 0) {
+        let t = traits::find(h.handle_trait).expect("a handle's trait is a trait");
+        assert!(traits::fits(t, &["tool", "axe"]) && !t.rollable, "{}'s {} is a tool's, and only a handle's", h.name, t.key);
+    }
+    let iron_axe = rules::ITEMS.iter().find(|i| i.name == "Iron axe").unwrap();
+    let bow = rules::ITEMS.iter().find(|i| i.weapon_kit == "bow").unwrap();
+    let staff = rules::ITEMS.iter().find(|i| i.weapon_kit == "staff").unwrap();
+    assert_eq!(rules::item_tags(iron_axe), vec!["tool", "axe", "weapon", "axe", "melee"], "an axe is a tool and a melee weapon");
+    assert_eq!(rules::item_tags(bow), vec!["weapon", "bow", "bow"]);
+    assert_eq!(rules::item_tags(staff), vec!["weapon", "staff", "staff"]);
+    let melee = traits::roll(&rules::item_tags(iron_axe), 2, 11);
+    assert!(melee.iter().all(|id| traits::find(*id).is_some_and(|t| t.rollable && traits::fits(t, &rules::item_tags(iron_axe)))),
+        "a drop rolls what fits it ({melee:?})");
+}
+
+#[test]
+fn a_weapons_traits_reach_its_actions() {
+    let axe = rules::kit_keyed("axe").unwrap();
+    let last = axe.light.len() as u32 - 1;
+    assert_eq!(rules::action_tags(axe, rules::KitSlot::Light(0)), vec!["basic"]);
+    assert_eq!(rules::action_tags(axe, rules::KitSlot::Light(last)), vec!["basic", "combo_last"], "the combo's last hit");
+    assert_eq!(rules::action_tags(axe, rules::KitSlot::Heavy), vec!["heavy"]);
+    assert_eq!(rules::action_tags(axe, rules::KitSlot::Skill(0, 1)), vec!["skill"]);
+    let none = traits::Against::default();
+    let id = |k: &str| traits::by_key(k).unwrap().id;
+    let balanced = traits::mult(&[id("balanced")], "recovery", &rules::action_tags(axe, rules::KitSlot::Light(0)), &none, 1.0);
+    assert_eq!(rules::lock_with(900, 400, balanced), 400 + 425, "Balanced: a basic's recovery 15 % shorter, the wind-up as it was");
+    assert_eq!(rules::lock_with(900, 400, 1.0), 900, "no traits: the kit's lock");
+    let heavy_basic = traits::mult(&[id("heavy")], "recovery", &["basic"], &none, 1.0);
+    assert_eq!(rules::lock_with(900, 400, heavy_basic), 400 + 575, "Heavy: a basic recovers 15 % slower");
+    assert!((traits::value(&[id("heavy")], "stagger", &["basic", "combo_last"], &none, 1.0) - 100.0).abs() < 1e-4
+        && traits::value(&[id("heavy")], "stagger", &["basic"], &none, 1.0) == 0.0, "Heavy staggers on the combo's last hit, not its first");
+    let low = traits::Against { target_pct: Some(20.0), family: "undead" };
+    let high = traits::Against { target_pct: Some(90.0), family: "beast" };
+    assert!((traits::mult(&[id("brutal")], "damage", &["basic"], &low, 1.0) - 1.25).abs() < 1e-5, "Brutal: the target below 30 %");
+    assert!((traits::mult(&[id("hunters")], "damage", &["basic"], &high, 1.0) - 1.15).abs() < 1e-5, "Hunter's: a beast");
+    assert!((traits::mult(&[id("hunters")], "damage", &["basic"], &low, 1.0) - 1.0).abs() < 1e-5, "Hunter's: an undead skeleton is neither");
+    assert_eq!(rules::draw_full_with(800, traits::mult(&[id("swift_draw")], "draw_time", &[], &none, 1.0)), 640, "Swift Draw: 800 ms -> 640");
+    assert_eq!(rules::draw_full_with(800, 1.0), 800);
+}
+
+#[test]
+fn a_tools_traits_change_what_a_node_gives() {
+    let tree = rules::NODES.iter().find(|n| n.deplete_permille > 0 && n.rare_item != 0).expect("a node with a rare find and depletion");
+    let (rare_pm, dep_pm) = (tree.rare_permille, tree.deplete_permille);
+    // Just past the depletion chance: out with Lucky (x1.3), not without; just under it: kept with Gentle (x0.5).
+    let past = dep_pm;
+    assert!(!rules::item_outcome_with(tree, 1.0, 0, 1.0, 999, past).1, "a roll at the chance: not out");
+    assert!(rules::item_outcome_with(tree, 1.0, 0, 1.3, 999, past).1, "Lucky: likelier out");
+    assert!(!rules::item_outcome_with(tree, 1.0, 0, 0.5, 999, dep_pm / 2 + 1).1, "Gentle: half as likely");
+    assert!(!rules::item_outcome_with(tree, 1.0, 0, 1.0, rare_pm, 999).0 && rules::item_outcome_with(tree, 1.0, 50, 1.0, rare_pm, 999).0,
+        "Prospector's: 5 % more rare chance");
+    assert_eq!(rules::item_outcome(tree, 1.0, 7, 8), rules::item_outcome_with(tree, 1.0, 0, 1.0, 7, 8), "no traits: as before");
 }

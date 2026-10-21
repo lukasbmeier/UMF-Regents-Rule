@@ -31,7 +31,9 @@ amendments below override the body where they differ**; the body follows, as the
    Quality has no named grades today: it is the 0-1000 number of amendment 1.
 
 **Built** (2026-10-20, PROGRESS steps 9-13): grade bands and Power, loot tables with personal rolls and
-pity, ground items, the Staff with mana, icons from the models. The server-side cast queue is not built
+pity, ground items, the Staff with mana, icons from the models. **Then** (2026-10-21, PROGRESS step 15): trait atoms, `TraitDef`
+and the v1 pools, handles as traits (oak Steady, yew Springy, toned to the early game; the materials
+deep-dive later); Keen, Padded, Warded and Reaching wait for crits, armour and per-swing reach. The server-side cast queue is not built
 (the client holds a press through a cast and sends it when it ends).
 
 **Order** (§10 with two additions): grade bands and Power; loot tables with personal rolls (and the
