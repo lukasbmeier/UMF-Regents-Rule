@@ -185,13 +185,13 @@ assert_eq "$(sql_first "SELECT qty FROM inventory_item WHERE id = $GI" 1)" "20" 
 assert_eq "$(row_count "SELECT * FROM ground_item WHERE id = $GR")" "0" "and gone from the ground"
 assert_rejected "pick_up $GR" "it is gone" "what is gone cannot be picked up"
 assert_ok "set_rule foundation.ground_owner_s 1 \"\"" "(test) yours for a second"
-assert_ok "set_rule foundation.ground_public_s 2 \"\"" "(test) then anyone's for two"
+assert_ok "set_rule foundation.ground_public_s 6 \"\"" "(test) then anyone's for six (long enough for the queries below)"
 assert_ok "drop_item $GI 1" "drop one"
 GR2=$(sql_first "SELECT id FROM ground_item WHERE owner_id = $MYENT" 1)
 sleep 2.2
 assert_eq "$(sql_first "SELECT anyone FROM ground_item WHERE id = $GR2" 1)" "true" "a second on: anyone's"
 assert_eq "$(sql_rows_anon "SELECT * FROM ground_item" | wc -l | tr -d ' ')" "1" "and everyone is sent it"
-sleep 2.2
+for _ in $(seq 1 40); do [ "$(row_count "SELECT * FROM ground_item WHERE id = $GR2")" = "0" ] && break; sleep 0.25; done
 assert_eq "$(row_count "SELECT * FROM ground_item WHERE id = $GR2")" "0" "its time up: gone"
 assert_ok "reset_rule foundation.ground_owner_s" "(test) rules back"
 assert_ok "reset_rule foundation.ground_public_s" "(test) rules back"
