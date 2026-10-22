@@ -86,6 +86,21 @@ func _run_animation_tests() -> void:
 	_check(not swap.use_custom_timeline,
 		"and swapping an UNSCALED clip in clears it rather than inheriting %.2f s" % swapped_len)
 
+	# A LOOPING POSE OF A ONE-SHOT'S CLIP (DECISIONS #277): a status that holds `react.hit` loops it on its own
+	# node; the shared clip stays a one-shot, so every hit reaction after it still ends.
+	var hit_anim: Animation = AnimationTreeBuilder.clip_animation(set, AnimationSet.HIT)
+	_check(hit_anim != null and hit_anim.loop_mode == Animation.LOOP_NONE, "the hit reaction's clip plays once by itself")
+	var pose_node := AnimationNodeAnimation.new()
+	AnimationTreeBuilder.apply_clip(pose_node, set, AnimationSet.HIT, true)
+	_check(pose_node.use_custom_timeline and pose_node.loop_mode == Animation.LOOP_LINEAR
+		and is_equal_approx(pose_node.timeline_length, hit_anim.length if hit_anim != null else -1.0),
+		"held as a looping pose, the NODE loops it, over the clip's own length")
+	_check(hit_anim != null and hit_anim.loop_mode == Animation.LOOP_NONE,
+		"and the shared clip is left as it was: still once (it looped every hit reaction after a Flinch)")
+	var shot_node := AnimationNodeAnimation.new()
+	AnimationTreeBuilder.apply_clip(shot_node, set, AnimationSet.HIT)
+	_check(not shot_node.use_custom_timeline, "a hit one-shot after it plays the clip once")
+
 	# (b) The interact verb resolves to a clip (a genre's set may override it with its own, from a
 	# second library: fishing's cast, checked in its own suite).
 	_check(set.clip(AnimationSet.INTERACT) != null and set.anim_name(AnimationSet.INTERACT) != &"",
@@ -263,8 +278,9 @@ func _run_animation_tests() -> void:
 			% [start_len / start_ref.speed_scale, takeoff.timeline_length])
 
 	# A library exported without `_Loop` suffixes has no loop flags, and a locomotion blend of
-	# one-shots freezes a second after the player starts walking. The builder fixes that; here
-	# it is given a clip that really does not loop, on a private copy of the library.
+	# one-shots freezes a second after the player starts walking. The builder loops them on their own
+	# nodes, leaving the clip as it is (DECISIONS #277: a clip is shared, so changing it looped the hit
+	# reaction); here it is given a clip that really does not loop, on a private copy of the library.
 	var copy: AnimationLibrary = set.libraries[&""].duplicate(true) as AnimationLibrary
 	_check(copy.get_animation(&"Interact").loop_mode == Animation.LOOP_NONE,
 		"`Interact` is a one-shot clip in the library (otherwise this test proves nothing)")
@@ -276,8 +292,18 @@ func _run_animation_tests() -> void:
 		loopy_clips[semantic] = AnimationClipRef.make(&"Interact", true)
 	loopy.clips = loopy_clips
 	var loopy_tree: AnimationTree = AnimationTreeBuilder.build(loopy)
-	_check(loopy_tree != null and copy.get_animation(&"Interact").loop_mode != Animation.LOOP_NONE,
-		"building a tree makes the clips its locomotion needs loop")
+	var loopy_root: AnimationNodeBlendTree = loopy_tree.tree_root as AnimationNodeBlendTree if loopy_tree != null else null
+	var loopy_sm: AnimationNodeStateMachine = loopy_root.get_node(AnimationTreeBuilder.NODE_BODY) as AnimationNodeStateMachine if loopy_root != null else null
+	var ground: AnimationRootNode = loopy_sm.get_node(AnimationTreeBuilder.STATE_GROUNDED) if loopy_sm != null else null
+	var idle_node: AnimationNodeAnimation = null
+	if ground is AnimationNodeBlendSpace1D:
+		idle_node = (ground as AnimationNodeBlendSpace1D).get_blend_point_node(0) as AnimationNodeAnimation
+	elif ground is AnimationNodeBlendSpace2D:
+		idle_node = (ground as AnimationNodeBlendSpace2D).get_blend_point_node(0) as AnimationNodeAnimation
+	_check(idle_node != null and idle_node.use_custom_timeline and idle_node.loop_mode == Animation.LOOP_LINEAR,
+		"building a tree loops the clips its locomotion needs, on their nodes")
+	_check(copy.get_animation(&"Interact").loop_mode == Animation.LOOP_NONE,
+		"and leaves the clip itself as it was (every other node playing it still plays it once)")
 	if loopy_tree != null:
 		loopy_tree.free()
 
