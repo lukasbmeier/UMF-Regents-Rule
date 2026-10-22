@@ -23,6 +23,9 @@ Not re-run this session: the integration suite (the module change is the 1 Hz ti
   the schema (`addons/SpacetimeDB/cli.gd`: Godot took 2.3 s for Regent's 137 KB schema and the 4 s limit
   failed; the editor plugin's own 4 s in `spacetime.gd` is unchanged, since rewriting a @tool script
   under an open editor has crashed it).
+- DECISIONS #277 (from Regent's playtest): `AnimationTreeBuilder.apply_clip` loops a clip on its NODE, never
+  by changing the shared clip; a status holding `react.hit` as a looping pose had made every later hit
+  reaction loop for ever. `animation` 2075/0, with checks that fail the old way.
 - Tests: `tests/telemetry/test_chronicle.py`, `tests/telemetry_test.sh`, the `referee` suite (the lock),
   native `telemetry`. Docs: HANDBOOK "Looking back at everything", file map, AGENTS verify loop.
 
