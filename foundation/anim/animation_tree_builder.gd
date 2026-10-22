@@ -287,17 +287,21 @@ static func apply_clip(node: AnimationNodeAnimation, set: AnimationSet, semantic
 		return false
 	node.animation = ref.anim_name
 	var loops: bool = looping or ref.loop
-	if loops:
-		_ensure_loop(set, ref.anim_name)
+	# A LOOP THE CLIP DOES NOT HAVE ITSELF IS THE NODE'S, NEVER THE CLIP'S (DECISIONS #277). The clip is
+	# one resource shared by every node, entity and set that plays it: setting its loop for a looping
+	# pose (a status's `pose = react.hit`, held while Flinched) made every later hit reaction, a
+	# one-shot of the same clip, loop forever, on everyone, dead or not (Luke's playtest, 2026-10-21).
+	var needs_loop: bool = loops and not _loops_itself(set, ref.anim_name)
 	# A clip authored for a different character rarely fits this game's timings — Quaternius'
 	# take-off runs 1.33 s against a 0.8 s jump, so the character would still be crouching as it
 	# landed. `speed_scale` is played through a custom timeline, which is how a state-machine
 	# state can be sped up at all (nothing in a state machine takes a TimeScale node).
 	var length: float = _length_of(set, ref.anim_name)
-	if not is_equal_approx(ref.speed_scale, 1.0) and ref.speed_scale > 0.0 and length > 0.0:
+	var scaled: bool = not is_equal_approx(ref.speed_scale, 1.0) and ref.speed_scale > 0.0
+	if (scaled or needs_loop) and length > 0.0:
 		node.use_custom_timeline = true
 		node.stretch_time_scale = true
-		node.timeline_length = length / ref.speed_scale
+		node.timeline_length = length / ref.speed_scale if scaled else length
 		# The override above, restated. A one-shot (a landing, a death) must still NOT loop, or
 		# the `at end` transition it hands over on never fires.
 		node.loop_mode = Animation.LOOP_LINEAR if loops else Animation.LOOP_NONE
@@ -346,21 +350,13 @@ static func _animation_of(set: AnimationSet, full_name: StringName) -> Animation
 	return lib.get_animation(clip_name)
 
 
-## Locomotion clips have to loop. Godot's importers set that from a `_Loop` suffix, which every
-## Quaternius clip carries — but a library exported by hand may not, and a locomotion blend of
-## non-looping clips freezes on the last frame a second after the character starts walking.
-## Fixed here rather than trusted, because the failure is silent and looks like a hang.
-static func _ensure_loop(set: AnimationSet, full_name: StringName) -> void:
-	var s: String = String(full_name)
-	var slash: int = s.find("/")
-	var lib_name: StringName = StringName(s.substr(0, slash)) if slash >= 0 else &""
-	var clip_name: StringName = StringName(s.substr(slash + 1)) if slash >= 0 else full_name
-	var lib: AnimationLibrary = set.libraries.get(lib_name, null)
-	if lib == null or not lib.has_animation(clip_name):
-		return
-	var anim: Animation = lib.get_animation(clip_name)
-	if anim.loop_mode == Animation.LOOP_NONE:
-		anim.loop_mode = Animation.LOOP_LINEAR
+## Whether a clip loops by itself. Locomotion clips have to loop: Godot's importers set that from a
+## `_Loop` suffix, which every Quaternius clip carries, but a library exported by hand may not, and a
+## locomotion blend of non-looping clips freezes on the last frame a second after the character starts
+## walking. `apply_clip` loops such a clip on its NODE (never by changing the shared clip).
+static func _loops_itself(set: AnimationSet, full_name: StringName) -> bool:
+	var anim: Animation = _animation_of(set, full_name)
+	return anim != null and anim.loop_mode != Animation.LOOP_NONE
 
 
 ## The bones an upper-body one-shot moves: the set's `upper_body_filter`, else the humanoid's chest,

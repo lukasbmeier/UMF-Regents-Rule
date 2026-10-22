@@ -297,6 +297,16 @@ func _run_animation_scene_tests() -> void:
 		health.damaged.emit(7.0, 0)
 		await _anim_frames(movement, seq, 3, Vector2.ZERO)
 		_check(driver.hit_playing(), "taking damage fires the hit reaction over whatever is playing")
+		# Held as a status's looping pose (Flinched, Staggered: `pose = react.hit`), then let go: a hit after it
+		# still ends (DECISIONS #277: it looped for ever, even after death).
+		driver.hold_pose(AnimationSet.HIT, 1.0, -1.0, true)
+		await _anim_frames(movement, seq, 10, Vector2.ZERO)
+		driver.release_pose()
+		health.damaged.emit(7.0, 0)
+		await _anim_frames(movement, seq, 3, Vector2.ZERO)
+		var shot_on: bool = driver.hit_playing()
+		await _anim_frames(movement, seq, 90, Vector2.ZERO)
+		_check(shot_on and not driver.hit_playing(), "after the hit clip was held as a looping pose, a hit reaction still plays once and ends")
 	if interaction != null:
 		interaction.interact_requested.emit(99)
 		await _anim_frames(movement, seq, 2, Vector2.ZERO)
