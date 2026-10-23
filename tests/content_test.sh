@@ -175,7 +175,9 @@ restatus 'items = [i for i in items if i["status"] != 0]'
 out="$(build)"
 check "$(echo "$out" | grep -q "there is no status 0" && echo true || echo false)" "a game without status 0 (normal) does not build"
 fresh_copy
-restatus 'items[2]["then"] = 999'
+# A foundation status no genre redefines (a genre's own status of the same number replaces the
+# foundation's: Fowl Play's Downed did, and breaking the foundation's then proved nothing).
+restatus 'import glob; taken = {i["status"] for q in glob.glob(str(root / "shared/content/*/status.json")) if pathlib.Path(q).parent.name != "foundation" for i in json.loads(pathlib.Path(q).read_text(encoding="utf-8"))["items"]}; k = next(n for n, i in enumerate(items) if i["status"] != 0 and i["status"] not in taken); items[k]["then"] = 999'
 out="$(build)"
 check "$(echo "$out" | grep -q "becomes content 999 when it ends, which is not a status" && echo true || echo false)" \
   "a status that becomes something that is not a status stops the build"

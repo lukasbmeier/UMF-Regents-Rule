@@ -1,12 +1,11 @@
-# Handoff — UMF Template, 2026-10-21
+# Handoff — UMF Template, 2026-10-23
 
 ## Where it stands
-The chronicle and the telemetry page (DECISIONS #276) are committed and pushed (`24af605` and four fixes after it). They were
-merged into Regent's Rule by hand, because that repo holds Luke's uncommitted grip edits and
-`ship_template.sh` refuses a dirty game. Fishing, Fowl Play and DiscGolf have NOT been merged yet: the
-next ship merges them. Suites green: unit 2069/0, cargo test all, `tests/telemetry_test.sh` 21/0 (new).
-Not re-run this session: the integration suite (the module change is the 1 Hz tick calling
-`sample_where`; the telemetry suite covers it on a real server).
+The chronicle and the telemetry page (DECISIONS #276) and #277 are SHIPPED to every game
+(`ship_template.sh`, 2026-10-23); Fishing, Fowl Play and DiscGolf republished with `--codegen` (data kept)
+and checked (cargo test, content, the unit suite, each game's playtest: all green); Regent's Rule already
+was. Then `tests/content_test.sh` was fixed (below) and shipped again. Suites green here: unit 2075/0,
+cargo test all, telemetry 21/0, content 18/0.
 
 ## This session
 - `where_sample` (private table, `server/src/module/telemetry.rs`): each online player's place every
@@ -26,13 +25,15 @@ Not re-run this session: the integration suite (the module change is the 1 Hz ti
 - DECISIONS #277 (from Regent's playtest): `AnimationTreeBuilder.apply_clip` loops a clip on its NODE, never
   by changing the shared clip; a status holding `react.hit` as a looping pose had made every later hit
   reaction loop for ever. `animation` 2075/0, with checks that fail the old way.
+- `tests/content_test.sh`: "a status that becomes something that is not a status" broke the foundation's
+  status at index 2 (Downed), which Fowl Play's chicken genre replaces with its own, so it had failed
+  there since 2026-10-12; it now breaks a foundation status no genre redefines.
 - Tests: `tests/telemetry/test_chronicle.py`, `tests/telemetry_test.sh`, the `referee` suite (the lock),
   native `telemetry`. Docs: HANDBOOK "Looking back at everything", file map, AGENTS verify loop.
 
 ## Next, in order
-1. Ship to the other games at the next release (`ship_template.sh`); each republishes with `--codegen`.
-2. Give the releases since 0.51.2 a CHANGELOG section (chat, held jump, traits, the chronicle).
-3. Regent's Rule's foundation asks (its `GAME.md`): M8, M16, M18-M26, the template 1.0 `chunk` reshape.
+1. Give the releases since 0.51.2 a CHANGELOG section (chat, held jump, traits, the chronicle).
+2. Regent's Rule's foundation asks (its `GAME.md`): M8, M16, M18-M26, the template 1.0 `chunk` reshape.
 
 ## Waiting on Luke
 - Nothing new.
