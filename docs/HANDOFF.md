@@ -1,14 +1,12 @@
 # Handoff — Regent's Rule, 2026-10-21 (end of the second session)
 
 ## Where it stands
-Step 16 (telemetry, the polish round, and the fixes after Luke's first play of it) is built. The SERVER
-part is published to the play database `regents-rule` (`--codegen`, data kept: a friend needs a NEW
-EXPORT). The fixes since (hit loop, collisions, ore layouts, skeleton facing) are client only: Play picks
-them up, no republish. NOTHING of step 16 is committed yet. Luke's call (2026-10-21): once he has confirmed
-the fixes in play, commit and push ALL of it, his own grip edits, adventurer AnimationSet and texture
-imports included, and ship the template to the other games. The template merges are committed (`9e6a166`).
-Suites green: unit 2391/0, native all, integration 931/0, telemetry 21/0, skilling playtest 62/0 + 7/0,
-combat playtest 50/0, content 18/0.
+Step 16 (telemetry, the polish round, and the fixes after Luke's first play of it) is COMMITTED and
+pushed (`38efd3e`; Luke confirmed the fixes in play, 2026-10-23), with Luke's own grip edits, the
+adventurer AnimationSet and texture imports at his word: the tree is clean. Published to the play database
+`regents-rule` (`--codegen`, data kept: a friend needs a NEW EXPORT). The template (#276, #277) is shipped
+to every game (`ship_template.sh`; here `932a6a0`). Suites green: unit 2391/0, native all, integration
+931/0, telemetry 21/0, skilling playtest 62/0 + 7/0, combat playtest 50/0, content 18/0.
 
 ## This session
 - Telemetry: the chronicle (template #276) keeps every change and a place every 5 s in
@@ -21,9 +19,7 @@ combat playtest 50/0, content 18/0.
   (`skilling/mining/ore/`); skeletons turned to face forward. PROGRESS step 16 has all of it.
 
 ## Next, in order
-1. Luke confirms the fixes in play, then: commit everything (his files too), push; `ship_template.sh`
-   for Fishing, Fowl Play and DiscGolf (it needs every game clean: this one will be, after the commit).
-2. **THE MATERIALS AND TINKERS' DEEP-DIVE** (Luke's next session). Read first: `RULE_DESIGN.md` §7.4
+1. **THE MATERIALS AND TINKERS' DEEP-DIVE** (Luke's next session). Read first: `RULE_DESIGN.md` §7.4
    (gear is modular: a core sets base stats and tier, a handle or hilt its trait; gear XP; durability and
    repair as the material sink), `LOOT_AND_STYLES.md` §0 (Tier = the material level, sets the power band;
    Grade; Power; Trait), its §2 and §6 (traits; handles give theirs always), §9 (all standard gear is
@@ -37,10 +33,10 @@ combat playtest 50/0, content 18/0.
    Questions for Luke, not to default: which materials per tier and how many tiers in v1; what a material
    changes (only Power through tier, or traits too, as handles); whether cores take a material trait;
    gear XP and durability now or later; where rarer materials come from (nodes, drops, salvage).
-3. Then `LOOT_AND_STYLES.md` §10's list: salvage and components, the reagent cost hook, the teleport spell.
+2. Then `LOOT_AND_STYLES.md` §10's list: salvage and components, the reagent cost hook, the teleport spell.
 
 ## Waiting on Luke
-- His play of the fixes (hit loop, collisions, the ore, skeletons); placing the nuggets in the layouts.
+- Placing the nuggets in the ore layouts, when he wants them elsewhere.
 - The materials deep-dive's questions (above). Open items: #10 hosting, #12 day/night, the other skills'
   minigames, the bow's draw scaling, how the minimap grows.
 
