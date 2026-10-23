@@ -1,8 +1,9 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://foundation/level/level_info.gd" id="s_info"]
 [ext_resource type="Script" path="res://foundation/level/level_spawn.gd" id="s_spawn"]
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="s_point"]
+[ext_resource type="Script" path="res://game/regents/levels/solid_props.gd" id="s_solid"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="m_Rock_Medium_1"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="m_Rock_Medium_2"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="m_Rock_Big_1"]
@@ -826,3 +827,6 @@ environment = SubResource("Env")
 
 [node name="OverviewCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.906, 0.423, 0, -0.423, 0.906, 0, 16, 34)
+
+[node name="SolidProps" type="Node" parent="."]
+script = ExtResource("s_solid")

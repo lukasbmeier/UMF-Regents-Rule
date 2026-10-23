@@ -42,6 +42,14 @@ signal station_opened(target: int)
 ## The node or station worked AFK (an entity id), or -1; and its row's values.
 var afk_target: int = -1
 var afk: Dictionary = {}
+## THE WORK'S PROGRESS (owner, 2026-10-21: "progress bar on crafting/refining"): when the piece now being
+## worked began and when it comes (server microseconds), from the row's `started_at` and `next_at`.
+var afk_from_us: int = 0
+var afk_next_us: int = 0
+## MAKE 1 / X / ALL (owner, 2026-10-21): how many batches this AFK run makes before it stops itself (0: until
+## the bag runs out, as before), and how many it has made. The stop is the player's own input (`work_stop`).
+var make_limit: int = 0
+var made: int = 0
 ## The round being played (a challenge id), or -1; and what it is of (a NodeDef or a RecipeDef).
 var round_id: int = -1
 var round_def: ContentDef = null
@@ -265,6 +273,20 @@ func work(target: int, active: bool) -> ReducerRequest:
 	return req2
 
 
+## MAKE `count` batches of what is picked at station `target` AFK (0: all the bag allows), then stop.
+func make(target: int, count: int) -> ReducerRequest:
+	make_limit = maxi(0, count)
+	made = 0
+	return work(target, false)
+
+
+## How far the piece being worked is (0..1, at server time `now_us`); 0 when nothing is.
+func afk_progress(now_us: int) -> float:
+	if afk_target < 0 or afk_next_us <= afk_from_us:
+		return 0.0
+	return clampf(float(now_us - afk_from_us) / float(afk_next_us - afk_from_us), 0.0, 1.0)
+
+
 func stop_afk() -> ReducerRequest:
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"work_stop", [], [])
 	_watch(req)
@@ -339,10 +361,25 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 			_on_challenge(old, new)
 		TABLE_AFK:
 			var t: int = int(new.get(&"target_id")) if new != null else -1
+			if new == null:
+				afk_from_us = 0
+				afk_next_us = 0
+			else:
+				var next_us: int = int(new.get(&"next_at"))
+				# A new run begins at its start; each new piece when the last one came.
+				if old == null or t != afk_target or afk_next_us == 0:
+					afk_from_us = int(new.get(&"started_at"))
+					afk_next_us = next_us
+				elif next_us != afk_next_us:
+					afk_from_us = afk_next_us
+					afk_next_us = next_us
 			afk = {} if new == null else {"target_id": t, "def_id": int(new.get(&"def_id")), "craft": bool(new.get(&"craft")),
 				"skill_id": int(new.get(&"skill_id")), "tool_item": int(new.get(&"tool_item"))}
 			if t != afk_target:
 				afk_target = t
+				if t < 0:
+					make_limit = 0
+					made = 0
 				afk_changed.emit(t >= 0, t)
 		TABLE_RESULT:
 			if new != null and old == null and is_bound():
@@ -352,6 +389,7 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				for key: String in ["depleted", "ran_out", "active"]:
 					r[key] = bool(new.get(StringName(key)))
 				worked.emit(r)
+				_count_made(r)
 		TABLE_XP:
 			if new != null:
 				var sid: int = int(new.get(&"skill_id"))
@@ -365,6 +403,18 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				orders_filled[int(new.get(&"order_id"))] = true
 			elif old != null:
 				orders_filled.erase(int(old.get(&"order_id")))
+
+
+## A batch made AFK at a station counts toward Make X; the last one asked for stops the run.
+func _count_made(r: Dictionary) -> void:
+	if make_limit <= 0 or bool(r["active"]) or int(r["qty"]) <= 0 or int(r["target_id"]) != afk_target:
+		return
+	if not bool(afk.get("craft", false)):
+		return   # gathering is not made in batches
+	made += 1
+	if made >= make_limit:
+		make_limit = 0
+		stop_afk()
 
 
 func _on_challenge(old: RefCounted, new: RefCounted) -> void:

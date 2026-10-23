@@ -116,6 +116,7 @@
 		"inventory_item": "InventoryItem(id:U64,owner_entity_id:U64,item_def_id:U32,qty:U32,slot:I16,instance_data:String)",
 		"item_def": "ItemDef(item_def_id:U32,kind:U8,max_stack:U32,data:String)",
 		"lobby_member": "LobbyMember(entity_id:U64,world_id:U32,session_id:U64,ready:Bool,team:U8)",
+		"meta_share": "MetaShare(id:U64,from_s:U64,period_s:U32,activity:String,weapon:String,hits:U32,damage:F32,share_pct:F32,alarm:Bool)",
 		"movement_state": "MovementStateRow(entity_id:U64,world_id:U32,pos:Vector3(x:F32,y:F32,z:F32),vel:Vector3(x:F32,y:F32,z:F32),yaw:F32,grounded:Bool,move_state:U8,last_processed_seq:U32,server_tick:U64,server_ts:(__timestamp_micros_since_unix_epoch__:I64),teleport_flag:Bool,correction_epoch:U32)",
 		"noise": "Noise(id:U64,world_id:U32,kind:U16,pos:Vector3(x:F32,y:F32,z:F32),source_id:U64,target_id:U64,at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"npc_brain": "NpcBrainRow(entity_id:U64,world_id:U32,brain:String,state:String,target_id:U64,data:String,updated_at:(__timestamp_micros_since_unix_epoch__:I64))",

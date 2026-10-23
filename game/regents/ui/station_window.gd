@@ -2,8 +2,9 @@ class_name RegentsStationWindow extends UiWindow
 ## A STATION'S WINDOW (owner, 2026-10-20: "dedicated UI preferred", no Q-cycling): tap E at a furnace, an
 ## anvil, the workbench or the order board and this opens. Left, what can be done there (each recipe; a
 ## recipe with a handle once per handle in the bag); right, the one picked: what it makes, what it takes
-## (have / need, in the style's good and bad), what it pays, and the buttons: MAKE works it AFK (it stays
-## open, says so, and offers STOP), PLAY A ROUND starts the round (and closes). At the order board, each
+## (have / need, in the style's good and bad), what it pays, and the buttons: MAKE 1, MAKE X (the number
+## beside it) or MAKE ALL work it AFK that many times (owner, 2026-10-21; it stays open, a bar fills to each
+## batch, says how many are done, and offers STOP), PLAY A ROUND starts the round (and closes). At the order board, each
 ## order and FILL. The pick is the station's (`SkillingComponent.recipe_pick`), so holding E there plays
 ## a round of what was picked last. It closes when you walk away. Presentation only: the server decides.
 
@@ -22,6 +23,10 @@ var _refresh_at: int = 0
 var _drawn: String = ""
 ## How many times it has been drawn (tests).
 var draws: int = 0
+## Make X's number (kept while the window is open), and the bar while working.
+var make_x: int = 5
+var _progress: ProgressBar = null
+var _progress_text: Label = null
 
 
 func _init() -> void:
@@ -89,6 +94,13 @@ func make(active: bool) -> void:
 		close()
 
 
+## MAKE `count` of what is picked AFK (0: all the bag allows).
+func make_count(count: int) -> void:
+	if skilling == null or target < 0:
+		return
+	skilling.make(target, count)
+
+
 func stop() -> void:
 	if skilling != null:
 		skilling.stop_afk()
@@ -118,6 +130,16 @@ func _process(_delta: float) -> void:
 		return
 	if Time.get_ticks_msec() >= _refresh_at:
 		refresh()
+	if _progress != null and is_instance_valid(_progress) and skilling.afk_target == target:
+		_progress.value = skilling.afk_progress(ClockSync.server_usec())
+		_progress_text.text = made_text(skilling)
+
+
+## What the working line says: how many of a Make X are done, or that it goes on until the bag runs out.
+static func made_text(sk: SkillingComponent) -> String:
+	if sk.make_limit > 0:
+		return "Making %d of %d...  (moving stops it too)" % [mini(sk.made + 1, sk.make_limit), sk.make_limit]
+	return "Making until the bag runs out...  (moving stops it too)"
 
 
 ## Draw it again from what the client knows now (the bag, the XP, the work going on), when any of that
@@ -193,16 +215,45 @@ func _fill_detail(c: Dictionary) -> void:
 	var buttons := HBoxContainer.new()
 	_detail.add_child(buttons)
 	var working: bool = skilling.afk_target == target
+	_progress = null
 	if working:
-		_detail.add_child(UiKit.line("Making it AFK...  (moving stops it too)", &"accent"))
+		_progress_text = UiKit.line(made_text(skilling), &"accent")
+		_detail.add_child(_progress_text)
+		_progress = ProgressBar.new()
+		_progress.name = "Progress"
+		_progress.max_value = 1.0
+		_progress.show_percentage = false
+		_progress.custom_minimum_size = Vector2(0, 10)
+		_progress.value = skilling.afk_progress(ClockSync.server_usec())
+		_detail.add_child(_progress)
 		var s := UiKit.button("Stop", "Stop")
 		s.pressed.connect(stop)
 		buttons.add_child(s)
 	else:
-		var m := UiKit.button("Make (AFK)", "Make")
-		m.disabled = not _can_make(c)
-		m.pressed.connect(func() -> void: make(false))
-		buttons.add_child(m)
+		var can: bool = _can_make(c)
+		var one := UiKit.button("Make 1", "Make")
+		one.disabled = not can
+		one.tooltip_text = "Make one batch AFK."
+		one.pressed.connect(func() -> void: make_count(1))
+		buttons.add_child(one)
+		var x := SpinBox.new()
+		x.name = "MakeX"
+		x.min_value = 1
+		x.max_value = 999
+		x.value = make_x
+		x.custom_minimum_size = Vector2(76, 0)
+		x.value_changed.connect(func(v: float) -> void: make_x = int(v))
+		buttons.add_child(x)
+		var mx := UiKit.button("Make X", "MakeXGo")
+		mx.disabled = not can
+		mx.tooltip_text = "Make this many batches AFK, then stop."
+		mx.pressed.connect(func() -> void: make_count(make_x))
+		buttons.add_child(mx)
+		var all := UiKit.button("Make all", "MakeAll")
+		all.disabled = not can
+		all.tooltip_text = "Make AFK until the bag runs out."
+		all.pressed.connect(func() -> void: make_count(0))
+		buttons.add_child(all)
 	if r.minigame != null:
 		var p := UiKit.button("Play a round", "Round")
 		p.disabled = working or not _can_make(c)

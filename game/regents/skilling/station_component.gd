@@ -1,12 +1,14 @@
 class_name StationComponent extends SpaceTimeComponent
 ## A STATION, DRAWN (presentation only): which one it is comes from its `station` row (a `StationDef`'s
 ## key); its look is that def's pieces, a greybox body, and a glow (a furnace's fire). Its bulk blocks the
-## way. What is made at it is its recipes' (`RecipeDef.at(key)`).
+## way: every piece of it, as drawn (`RegentsSolid`; owner, 2026-10-21: an anvil you walked through). What is made at it is its recipes' (`RecipeDef.at(key)`).
 
 const TABLE_STATION: StringName = &"station"
 
 var def: StationDef = null
 var key: StringName = &""
+## What blocks the way (tests read it).
+var solid: StaticBody3D = null
 
 
 func required_tables() -> Array[StringName]:
@@ -72,8 +74,14 @@ func _build() -> void:
 		glow.emission = def.glow_color
 		glow.emission_energy_multiplier = 3.0
 		mouth.material_override = glow
+		mouth.add_to_group(&"not_solid")
 		v.add_child(mouth)
+	solid = RegentsSolid.wrap(v, v)
+	if solid != null:
+		return
+	# Nothing drawn to wrap: a box where it stands.
 	var blocker: StaticBody3D = StaticBody3D.new()
+	blocker.name = "Solid"
 	blocker.collision_mask = 0
 	var shape: CollisionShape3D = CollisionShape3D.new()
 	var b: BoxShape3D = BoxShape3D.new()
@@ -82,3 +90,4 @@ func _build() -> void:
 	shape.position = Vector3(0, 0.6, 0)
 	blocker.add_child(shape)
 	v.add_child(blocker)
+	solid = blocker

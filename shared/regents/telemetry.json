@@ -1,0 +1,71 @@
+{
+  "_comment": "REGENT'S RULE ON THE TELEMETRY PAGE (template DECISIONS #276; PROGRESS step 16). What the chronicle leaves out of this genre's tables, and this genre's panels (SQL over the chronicle's file: change, position, player_name, content_name, run; see shared/telemetry.json). meta_tally changes with every hit: its closed hours are meta_share.",
+  "skip": ["meta_tally", "hurt", "spell_cooldown", "combat_state"],
+  "quiet": {
+    "dummy": ["last_hit_at"]
+  },
+  "panels": [
+    {
+      "id": "meta_share",
+      "title": "The meta: each weapon's share of an hour's damage to foes",
+      "kind": "line",
+      "unit": "% of damage",
+      "step": 3600,
+      "sql": "SELECT json_extract(row, '$.from_s') AS t, json_extract(row, '$.weapon') AS series, ROUND(MAX(json_extract(row, '$.share_pct')), 1) AS value FROM change WHERE tbl = 'meta_share' AND op IN ('insert', 'have') AND json_extract(row, '$.from_s') >= :since GROUP BY 1, 2 ORDER BY 1"
+    },
+    {
+      "id": "meta_alarms",
+      "title": "Meta alarms (a weapon past regents.meta_alarm_pct of a busy hour)",
+      "kind": "table",
+      "sql": "SELECT datetime(json_extract(row, '$.from_s'), 'unixepoch', 'localtime') AS hour, json_extract(row, '$.activity') AS activity, json_extract(row, '$.weapon') AS weapon, ROUND(MAX(json_extract(row, '$.share_pct')), 1) AS share_pct, MAX(json_extract(row, '$.hits')) AS hits FROM change WHERE tbl = 'meta_share' AND op IN ('insert', 'have') AND json_extract(row, '$.alarm') = 1 AND json_extract(row, '$.from_s') >= :since GROUP BY json_extract(row, '$.from_s'), json_extract(row, '$.activity'), json_extract(row, '$.weapon') ORDER BY 1 DESC"
+    },
+    {
+      "id": "xp_by_skill",
+      "title": "Mastery XP gained, by skill",
+      "kind": "bar",
+      "unit": "XP",
+      "sql": "SELECT COALESCE(s.name, 'skill ' || json_extract(c.row, '$.skill_id')) AS label, SUM(CASE c.op WHEN 'update' THEN json_extract(c.row, '$.xp') - COALESCE(json_extract(c.old, '$.xp'), json_extract(c.row, '$.xp')) WHEN 'insert' THEN json_extract(c.row, '$.xp') ELSE 0 END) AS value FROM change c LEFT JOIN content_name s ON s.type = 'skill' AND s.id = json_extract(c.row, '$.skill_id') WHERE c.tbl = 'skill_xp' AND c.at >= :since AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1 HAVING value > 0 ORDER BY value DESC"
+    },
+    {
+      "id": "xp_over_time",
+      "title": "Mastery XP gained over time",
+      "kind": "line",
+      "unit": "XP",
+      "sql": "SELECT CAST(c.at / :bucket AS INTEGER) * :bucket AS t, COALESCE(s.name, 'skill ' || json_extract(c.row, '$.skill_id')) AS series, SUM(CASE c.op WHEN 'update' THEN json_extract(c.row, '$.xp') - COALESCE(json_extract(c.old, '$.xp'), json_extract(c.row, '$.xp')) WHEN 'insert' THEN json_extract(c.row, '$.xp') ELSE 0 END) AS value FROM change c LEFT JOIN content_name s ON s.type = 'skill' AND s.id = json_extract(c.row, '$.skill_id') WHERE c.tbl = 'skill_xp' AND c.op IN ('update', 'insert') AND c.at >= :since AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1, 2 ORDER BY 1"
+    },
+    {
+      "id": "mastery",
+      "title": "Mastery by player (XP now)",
+      "kind": "table",
+      "sql": "SELECT n.name AS player, COALESCE(s.name, 'skill ' || json_extract(c.row, '$.skill_id')) AS skill, MAX(json_extract(c.row, '$.xp')) AS xp, datetime(MAX(c.at), 'unixepoch', 'localtime') AS last_gained FROM change c JOIN player_name n ON n.entity_id = json_extract(c.row, '$.entity_id') AND n.tool = 0 LEFT JOIN content_name s ON s.type = 'skill' AND s.id = json_extract(c.row, '$.skill_id') WHERE c.tbl = 'skill_xp' AND c.op != 'delete' AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1, 2 ORDER BY 1, xp DESC"
+    },
+    {
+      "id": "foes_slain",
+      "title": "Foes slain",
+      "kind": "bar",
+      "unit": "kills",
+      "sql": "SELECT COALESCE(f.name, 'foe ' || json_extract(c.row, '$.foe_id')) AS label, COUNT(*) AS value FROM change c LEFT JOIN content_name f ON f.type = 'foe' AND f.id = json_extract(c.row, '$.foe_id') WHERE c.tbl = 'foe_kill' AND c.op = 'insert' AND c.at >= :since AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1 ORDER BY value DESC"
+    },
+    {
+      "id": "swings",
+      "title": "Abilities used by players (kit share)",
+      "kind": "bar",
+      "unit": "uses",
+      "sql": "SELECT COALESCE(a.name, 'ability ' || json_extract(c.row, '$.ability_id')) AS label, COUNT(*) AS value FROM change c JOIN player_name n ON n.entity_id = json_extract(c.row, '$.entity_id') AND n.tool = 0 LEFT JOIN content_name a ON a.type = 'ability' AND a.id = json_extract(c.row, '$.ability_id') WHERE c.tbl = 'swing' AND c.op IN ('insert', 'update') AND c.at >= :since AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1 ORDER BY value DESC"
+    },
+    {
+      "id": "gathered_made",
+      "title": "Gathered and made",
+      "kind": "bar",
+      "unit": "items",
+      "sql": "SELECT COALESCE(i.name, 'item ' || json_extract(c.row, '$.item_id')) AS label, SUM(json_extract(c.row, '$.qty')) AS value FROM change c LEFT JOIN content_name i ON i.type = 'item' AND i.id = json_extract(c.row, '$.item_id') WHERE c.tbl = 'work_result' AND c.op = 'insert' AND c.at >= :since AND (:player = 0 OR json_extract(c.row, '$.entity_id') = :player) GROUP BY 1 HAVING value > 0 ORDER BY value DESC"
+    },
+    {
+      "id": "loot",
+      "title": "Dropped on the ground (loot and players' drops)",
+      "kind": "bar",
+      "unit": "items",
+      "sql": "SELECT COALESCE(i.name, 'item ' || json_extract(c.row, '$.item_def_id')) AS label, SUM(json_extract(c.row, '$.qty')) AS value FROM change c LEFT JOIN content_name i ON i.type = 'item' AND i.id = json_extract(c.row, '$.item_def_id') WHERE c.tbl = 'ground_item' AND c.op = 'insert' AND c.at >= :since GROUP BY 1 ORDER BY value DESC"
+    }
+  ]
+}

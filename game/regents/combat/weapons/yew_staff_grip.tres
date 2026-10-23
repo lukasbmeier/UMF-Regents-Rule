@@ -1,16 +1,35 @@
-[gd_resource type="Resource" script_class="ItemGrip" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemGrip" format=3 uid="uid://472ir70ecnld"]
 
-[ext_resource type="Script" path="res://foundation/held/grip_entry.gd" id="1_entry"]
-[ext_resource type="Script" path="res://foundation/held/item_grip.gd" id="2_grip"]
+[ext_resource type="Script" uid="uid://h2oobh1iuatv" path="res://foundation/held/grip_entry.gd" id="1_entry"]
+[ext_resource type="Script" uid="uid://ct18lkq3ruqa" path="res://foundation/held/item_grip.gd" id="2_grip"]
 
 [sub_resource type="Resource" id="Grip_idle"]
 script = ExtResource("1_entry")
 animation = &"locomotion.idle"
-position = Vector3(0, 0.08, 0.02)
-rotation_degrees = Vector3(0, 0, 0)
+position = Vector3(-0.004999995, 0.07999998, 0.120000005)
+rotation_degrees = Vector3(-66.74, 179.99998, -179.99998)
+
+[sub_resource type="Resource" id="Resource_7j2wk"]
+script = ExtResource("1_entry")
+animation = &"ability.40012"
+position = Vector3(-0.014999986, 0.014999986, -0.03999999)
+relative = true
+
+[sub_resource type="Resource" id="Resource_emnt5"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"female"
+position = Vector3(-0.01999998, 0.09499985, 0.08000004)
+rotation_degrees = Vector3(-66.73998, 179.99998, -179.99998)
+
+[sub_resource type="Resource" id="Resource_afu6u"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"male"
+position = Vector3(-0.019999951, 0.12000036, 0.08000007)
+rotation_degrees = Vector3(-66.74, 179.99998, -179.99998)
 
 [resource]
 script = ExtResource("2_grip")
-hand = &"hand_r"
-entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle")])
+entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle"), SubResource("Resource_7j2wk"), SubResource("Resource_emnt5"), SubResource("Resource_afu6u")])
 universal = true

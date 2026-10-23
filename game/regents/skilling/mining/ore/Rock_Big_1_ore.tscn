@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_22qms"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Pebble_Round_1.gltf" id="2_irqgc"]
+
+[node name="Rock_Big_1_ore" type="Node3D" unique_id=619477800]
+
+[node name="Rock" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_22qms")]
+
+[node name="Ore1" type="Node3D" parent="." unique_id=1149220721 instance=ExtResource("2_irqgc")]
+transform = Transform3D(0.4305991, 0.7618485, -0.21016963, -0.7903065, 0.41509372, -0.11451108, 0, 0.23934089, 0.86759204, 1.7751689, 2.4775233, 0.21567172)
+
+[node name="Ore2" type="Node3D" parent="." unique_id=2037902187 instance=ExtResource("2_irqgc")]
+transform = Transform3D(0.8367456, 0.18958007, -0.27187514, -0.27171648, -0.030412668, -0.8574644, -0.18980736, 0.8792806, 0.0289604, 0.48388642, 2.7985487, 1.0424136)
+
+[node name="Ore3" type="Node3D" parent="." unique_id=402678889 instance=ExtResource("2_irqgc")]
+transform = Transform3D(-0.70479065, -0.2987493, 0.4733065, -0.19097288, 0.8437567, 0.24820223, -0.5261174, 0.09393545, -0.7241386, -0.8817939, 3.4851086, 1.0243676)
+
+[node name="Ore4" type="Node3D" parent="." unique_id=1637324619 instance=ExtResource("2_irqgc")]
+transform = Transform3D(-0.2348017, -0.39242733, 0.7751574, -0.8346161, -0.12124168, -0.3141915, 0.24142085, -0.80081284, -0.33228713, -1.0630633, 2.4987597, -0.68747336)
+
+[node name="Ore5" type="Node3D" parent="." unique_id=1137794353 instance=ExtResource("2_irqgc")]
+transform = Transform3D(0.740505, 0.48316294, -0.16794668, 0.04609907, 0.23125745, 0.8685592, 0.5094382, -0.7232384, 0.16552663, 0.7468884, 3.0987926, -1.4398704)

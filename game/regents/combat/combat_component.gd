@@ -361,6 +361,19 @@ func dodge() -> int:
 	return pid
 
 
+## THE ROLL'S COOLDOWN (owner, 2026-10-21: "roll cooldown UI"): how long until Ctrl rolls again, and its
+## whole cooldown, in seconds (the server's word as the action component holds it). (0, total) when ready.
+func roll_cooldown() -> Vector2:
+	if _roll_total_s < 0.0:
+		var def: AbilityDef = ContentLibrary.find(&"ability", DODGE_ID) as AbilityDef
+		_roll_total_s = float(def.cooldown_ms) / 1000.0 if def != null else 0.0
+	return Vector2(_action.cooldown_remaining_sec(DODGE_ID) if _action != null else 0.0, _roll_total_s)
+
+
+## The roll's whole cooldown (s), looked up once (-1: not yet).
+var _roll_total_s: float = -1.0
+
+
 ## An ability began on this entity (predicted here, or another player's arriving): a swing's animation plays
 ## on to just after it lands however the body moves (the hit lands regardless); the roll plays its Roll whole,
 ## the model facing the way the roll goes.

@@ -734,3 +734,29 @@ pub fn parse_payload(payload: &str) -> Option<(u64, u32, u32)> {
     let mut p = payload.split(' ');
     Some((p.next()?.parse().ok()?, p.next()?.parse().ok()?, p.next()?.parse().ok()?))
 }
+
+// THE META (LOOT_AND_STYLES.md §7.5, owner priority; PROGRESS step 16): each weapon type's share of an
+// hour's damage to foes, rolled up as the hour ends, with an alarm when one type dominates.
+
+/// When the period of `period_s` seconds (`regents.meta_period_s`, an hour) that `micros` falls in began,
+/// in Unix seconds.
+pub fn meta_period(micros: i64, period_s: u32) -> u64 {
+    let p = period_s.max(1) as i64;
+    (micros.div_euclid(1_000_000).div_euclid(p) * p).max(0) as u64
+}
+
+/// Each weapon type's share of the damage in `damage`, in percent, in the same order (all 0 when none).
+pub fn meta_shares(damage: &[f32]) -> Vec<f32> {
+    let total: f32 = damage.iter().map(|d| d.max(0.0)).sum();
+    damage.iter().map(|d| if total > 0.0 { d.max(0.0) / total * 100.0 } else { 0.0 }).collect()
+}
+
+/// Whether a share is an alarm: past `alarm_pct` (0: never) in an hour of at least `min_hits` hits.
+pub fn meta_alarm(share_pct: f32, hour_hits: u32, alarm_pct: f64, min_hits: f64) -> bool {
+    alarm_pct > 0.0 && hour_hits as f64 >= min_hits && share_pct as f64 > alarm_pct
+}
+
+/// The weapon type (its kit's key) that trains `skill_id`; "" for none.
+pub fn kit_of_skill(skill_id: u32) -> &'static str {
+    KITS.iter().find(|k| k.skill == skill_id).map_or("", |k| k.key)
+}

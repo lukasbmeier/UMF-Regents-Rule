@@ -356,6 +356,8 @@ for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND wor
 done
 spacetime call "$DB" offer_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
 spacetime call --anonymous "$DB" claim_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
+# THE META (PROGRESS step 16): an alarm for a single hit, so this kill's period closes into one.
+assert_ok 'set_rule "regents.meta_alarm_min_hits" 1.0 ""' "(test) a single hit can be a meta alarm"
 assert_ok "use_ability_seen 40006 0 $C_AIM 921 100" "a chop at it"
 RK="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 921" 1)"
 assert_ok "resolve_action $RK $SKEL" "the referee: the chop hit"
@@ -388,6 +390,10 @@ print('true' if all(d[k] == got.get(k, 0) for k in d) and all(k in d for k in go
 check "$(sql_first "SELECT rolls_since FROM drop_pity WHERE table_id = 40001 AND line = 2" 1 | grep -qE '^ *[01] *$' && echo true || echo false)" "the gem's pity: your run of misses is kept (0 or 1)"
 assert_eq "$(row_count "SELECT * FROM damage_share WHERE target_id = $SKEL")" "0" "and the tally of who hurt it is forgotten"
 check "$(python -c "print('true' if $(xp_of 40007) > $XP0 else 'false')")" "and axemanship XP for the hit (at the foe's full rate)"
+CHOP_DMG="$(sql_first "SELECT damage FROM meta_tally WHERE weapon = 'axe'" 1)"
+assert_eq "$(sql_first "SELECT hits FROM meta_tally WHERE weapon = 'axe'" 1)" "1" "the meta: one axe hit on a foe this period (the dummy's never count)"
+check "$(python -c "print('true' if 2.0 < float('${CHOP_DMG:-0}') < 50.0 else 'false')")" "its damage, the chop's whole hit as XP counts it, past the 2 health it had left (${CHOP_DMG})"
+assert_ok 'set_rule "regents.meta_period_s" 10.0 ""' "(test) the meta's period made 10 s: this hour's tally ends now"
 sleep 1
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" "0" "a second on, its body is gone"
 assert_eq "$(sql_first "SELECT gone FROM foe WHERE entity_id = $SKEL" 1)" "true" "and the camp waits for it"
@@ -398,6 +404,13 @@ for i in $(seq 1 30); do
   sleep 1
 done
 check "$( [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && echo true || echo false)" "once its time is up it is back on its point, a new entity ($SKEL2)"
+# The meta's period ended while the camp waited: closed into meta_share, the tally gone.
+for i in $(seq 1 15); do [ "$(row_count "SELECT * FROM meta_tally")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM meta_tally")" "0" "the meta: the period over, its tally is closed"
+MS="$(sql_rows "SELECT weapon, hits, share_pct, alarm, period_s FROM meta_share" | tr -d ' ' | paste -sd, -)"
+assert_eq "$MS" "\"axe\"|1|100|true|3600" "into one share: the axe, 1 hit, 100 % of the damage, an alarm past 45 %, its hour"
+assert_ok 'reset_rule "regents.meta_period_s"' "(test) the meta by the hour again"
+assert_ok 'reset_rule "regents.meta_alarm_min_hits"' "(test) and an alarm needs a busy hour"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
 # A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
 assert_ok 'teleport {"x":-9.0,"y":0.0,"z":-4.5}' "back beside tree_1"

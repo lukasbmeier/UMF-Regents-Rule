@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ItemGrip" format=3]
+[gd_resource type="Resource" script_class="ItemGrip" format=3 uid="uid://07hfv7lsfybg"]
 
-[ext_resource type="Script" path="res://foundation/held/grip_entry.gd" id="1_entry"]
-[ext_resource type="Script" path="res://foundation/held/item_grip.gd" id="2_grip"]
+[ext_resource type="Script" uid="uid://h2oobh1iuatv" path="res://foundation/held/grip_entry.gd" id="1_entry"]
+[ext_resource type="Script" uid="uid://ct18lkq3ruqa" path="res://foundation/held/item_grip.gd" id="2_grip"]
 
 [sub_resource type="Resource" id="Grip_idle"]
 script = ExtResource("1_entry")
@@ -137,8 +137,8 @@ rotation_degrees = Vector3(68.31555, 48.291584, 46.513847)
 [sub_resource type="Resource" id="Resource_gsftc"]
 script = ExtResource("1_entry")
 animation = &"pose.smith"
-position = Vector3(-0.021637391, 0.080899574, 0.013624012)
-rotation_degrees = Vector3(68.316696, 48.288597, 46.511055)
+position = Vector3(-0.021999996, 0.045999974, -0.04099995)
+rotation_degrees = Vector3(-15.548685, 93.87921, 74.69612)
 
 [sub_resource type="Resource" id="Resource_jem0a"]
 script = ExtResource("1_entry")
@@ -158,9 +158,24 @@ animation = &"react.revive"
 position = Vector3(-0.023052523, 0.08064174, 0.013684053)
 rotation_degrees = Vector3(40.84798, -62.625805, -30.409767)
 
+[sub_resource type="Resource" id="Resource_6csmi"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"female"
+position = Vector3(-0.021999981, 0.045999974, -0.04099989)
+rotation_degrees = Vector3(-1.0553588, 89.96154, 75.26659)
+
+[sub_resource type="Resource" id="Resource_2uk6i"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"male"
+position = Vector3(-0.032000065, 0.0710001, -0.055999994)
+rotation_degrees = Vector3(-1.0553228, 89.96152, 75.266594)
+
 [resource]
 script = ExtResource("2_grip")
-entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle"), SubResource("Resource_607eu"), SubResource("Resource_f02em"), SubResource("Resource_f58jn"), SubResource("Resource_f3oc4"), SubResource("Resource_ubxr4"), SubResource("Resource_3ptrj"), SubResource("Resource_6sfpr"), SubResource("Resource_lxrtd"), SubResource("Resource_tjtj3"), SubResource("Resource_4ea3m"), SubResource("Resource_qdsqk"), SubResource("Resource_775wt"), SubResource("Resource_1m3gp"), SubResource("Resource_mtu13"), SubResource("Resource_t4dr3"), SubResource("Resource_vbb8p"), SubResource("Resource_khsqn"), SubResource("Resource_yuvbu"), SubResource("Resource_xf4ci"), SubResource("Resource_gsftc"), SubResource("Resource_jem0a"), SubResource("Resource_uufdr"), SubResource("Resource_m4g0e")])
+entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle"), SubResource("Resource_607eu"), SubResource("Resource_f02em"), SubResource("Resource_f58jn"), SubResource("Resource_f3oc4"), SubResource("Resource_ubxr4"), SubResource("Resource_3ptrj"), SubResource("Resource_6sfpr"), SubResource("Resource_lxrtd"), SubResource("Resource_tjtj3"), SubResource("Resource_4ea3m"), SubResource("Resource_qdsqk"), SubResource("Resource_775wt"), SubResource("Resource_1m3gp"), SubResource("Resource_mtu13"), SubResource("Resource_t4dr3"), SubResource("Resource_vbb8p"), SubResource("Resource_khsqn"), SubResource("Resource_yuvbu"), SubResource("Resource_xf4ci"), SubResource("Resource_gsftc"), SubResource("Resource_jem0a"), SubResource("Resource_uufdr"), SubResource("Resource_m4g0e"), SubResource("Resource_6csmi"), SubResource("Resource_2uk6i")])
+universal = true
 fist_animation = &"pose.smith"
 stow_position = Vector3(-0.17758648, 0.40684462, -0.14494401)
 stow_rotation_degrees = Vector3(19.124966, 18.295143, -122.28985)

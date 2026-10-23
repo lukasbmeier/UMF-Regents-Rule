@@ -402,6 +402,42 @@
 					"number": 100.0,
 					"text": "",
 					"unit": "%"
+				},
+				{
+					"key": "regents.meta_period_s",
+					"kind": "integer",
+					"max": 86400.0,
+					"min": 10.0,
+					"number": 3600.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "regents.meta_alarm_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 45.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.meta_alarm_min_hits",
+					"kind": "integer",
+					"max": 100000.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "hits"
+				},
+				{
+					"key": "regents.meta_keep_days",
+					"kind": "number",
+					"max": 365.0,
+					"min": 1.0,
+					"number": 14.0,
+					"text": "",
+					"unit": "days"
 				}
 			]
 		}

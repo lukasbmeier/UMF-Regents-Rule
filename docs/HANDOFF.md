@@ -1,40 +1,53 @@
-# Handoff — Regent's Rule, 2026-10-21
+# Handoff — Regent's Rule, 2026-10-21 (end of the second session)
 
 ## Where it stands
-Step 15 (the friends' playtest fixes, chat, traits) is committed and pushed (`dc8f01a`; the session
-workflow `0313513`, the template's `c6740ad` merged in `0ec76a4`). **Published** to the play database
-`regents-rule` with `--codegen` (2026-10-21): Luke's friend needs a NEW EXPORT (older builds are
-refused). Suites green at `dc8f01a`: unit 2327/0, integration 922/0, native all, the skilling
-playtest (two clients) 60/0 and 7/0. The template is at `4883be6` (#273-#275), pushed.
+Step 16 (telemetry, the polish round, and the fixes after Luke's first play of it) is built. The SERVER
+part is published to the play database `regents-rule` (`--codegen`, data kept: a friend needs a NEW
+EXPORT). The fixes since (hit loop, collisions, ore layouts, skeleton facing) are client only: Play picks
+them up, no republish. NOTHING of step 16 is committed yet. Luke's call (2026-10-21): once he has confirmed
+the fixes in play, commit and push ALL of it, his own grip edits, adventurer AnimationSet and texture
+imports included, and ship the template to the other games. The template merges are committed (`9e6a166`).
+Suites green: unit 2391/0, native all, integration 931/0, telemetry 21/0, skilling playtest 62/0 + 7/0,
+combat playtest 50/0, content 18/0.
 
 ## This session
-- The friends' playtest: drops land 1.4 m ahead and your own stays put; no friendly fire or PvP;
-  dying stops work (the "head nod"); a held jump hops again only once falling (template #274);
-  bellows heat 50 a press. Chat (template #273). PROGRESS step 15.
-- Traits (template #275; here: `game/regents/content/trait/`, wired in `server/src/game/regents.rs`,
-  twins in `game/regents/combat/combat_component.gd`); `set_item_traits` (dev tools) to try one.
-- Brought `GAME.md` and `.claude/rules/regents-genre.md` up to Luke's 2026-10-19..21 calls (mana on
-  the Staff only, #7 and #22 settled, no global cooldown, the trait calls).
+- Telemetry: the chronicle (template #276) keeps every change and a place every 5 s in
+  `build/telemetry/regents-rule.sqlite`; `tools\telemetry.cmd` shows it; Regent's panels in
+  `shared/regents/telemetry.json`; the meta in the database (`meta_tally`, `meta_share`, the 45 % alarm).
+- Polish: vitals, work bar, Make 1 / X / all, the minimap, hit flashes (`regents_hud.gd`, `ui/`,
+  `combat/hit_feedback_component.gd`).
+- After Luke's play: the hit reaction looping (template #277); every rock, station and level prop solid
+  (`solid.gd`, `levels/solid_props.gd`); ore layouts per rock model to place by hand
+  (`skilling/mining/ore/`); skeletons turned to face forward. PROGRESS step 16 has all of it.
 
 ## Next, in order
-1. Luke playtests step 15 (traits on a made tool, chat, the fixes).
-2. `LOOT_AND_STYLES.md` §10 "Next" after traits: the meta telemetry rollup, then salvage and
-   components, the reagent cost hook, the teleport spell. Or the materials deep-dive if Luke picks it.
-3. Waiting traits: Keen (crits, Bleeding), Padded and Warded (armour), Reaching (a per-swing reach side
-   table for the referee). Drops roll traits by grade once loot lines roll a grade (not built).
+1. Luke confirms the fixes in play, then: commit everything (his files too), push; `ship_template.sh`
+   for Fishing, Fowl Play and DiscGolf (it needs every game clean: this one will be, after the commit).
+2. **THE MATERIALS AND TINKERS' DEEP-DIVE** (Luke's next session). Read first: `RULE_DESIGN.md` §7.4
+   (gear is modular: a core sets base stats and tier, a handle or hilt its trait; gear XP; durability and
+   repair as the material sink), `LOOT_AND_STYLES.md` §0 (Tier = the material level, sets the power band;
+   Grade; Power; Trait), its §2 and §6 (traits; handles give theirs always), §9 (all standard gear is
+   crafted; drops give materials and components; salvage), and `GAME.md`'s Traits call (oak Steady, yew
+   Springy are toned to the early game UNTIL this deep-dive).
+   What exists now: woods (logs, oak, yew), ores (copper, iron) and bars, one handle per wood (plain,
+   oak 40016 Steady, yew 40017 Springy), cores (iron axe head, iron sword blade), assembled tools and
+   weapons (bronze axe and pickaxe from the starter kit; iron axe, iron sword; yew bow, yew staff); an
+   item's instance data holds its quality, handle and traits (`{"q","h","t"}`). Recipes:
+   `game/regents/content/recipe/`; items: `content/item/`; tiers and Power: `server/src/genre/regents/`.
+   Questions for Luke, not to default: which materials per tier and how many tiers in v1; what a material
+   changes (only Power through tier, or traits too, as handles); whether cores take a material trait;
+   gear XP and durability now or later; where rarer materials come from (nodes, drops, salvage).
+3. Then `LOOT_AND_STYLES.md` §10's list: salvage and components, the reagent cost hook, the teleport spell.
 
 ## Waiting on Luke
-- His playtest of step 15; which comes next (telemetry or the materials deep-dive).
-- Open items: #10 hosting, #12 day/night, the other skills' minigames, the bow's draw scaling.
-- `LOOT_AND_STYLES.md` §11's four questions: §1-4 of its amendments answer them; confirm before asking.
+- His play of the fixes (hit loop, collisions, the ore, skeletons); placing the nuggets in the layouts.
+- The materials deep-dive's questions (above). Open items: #10 hosting, #12 day/night, the other skills'
+  minigames, the bow's draw scaling, how the minimap grows.
 
 ## Watch out
-- Uncommitted on purpose: Luke's own GRIP edits (`game/regents/**/*_grip.tres` and their previews,
-  2026-10-20) and the adventurer AnimationSet and four texture `.import` files. Never restore, rewrite
-  or commit them without Luke; `ship_template.sh` refuses while this repo is dirty, so ask him first.
-- Tool traits (Steady, Springy, Gentle, Lucky, Prospector's) are proven by native tests only: their
-  effect on a node's speed and depletion has not been seen in play.
-- A referee claim in `integration_genre.sh` lapses in seconds: revoke, then offer and claim afresh
-  before each step that needs one (the traits section does).
-- The local SpacetimeDB was started from a session shell (`spacetime start`): if a suite says "No local
-  SpacetimeDB", start it again.
+- `frontier.tscn` gained a `SolidProps` node: if the editor has the level open from before, reload it
+  before saving there, or the editor's copy drops the node.
+- `NodeDef` and `RuleOverride` are `@tool` scripts: never rewrite one while Luke's editor is open.
+- A windowed Godot run strips one blank line from `project.godot` `[rendering]`: put it back.
+- The editor's Play starts `chronicle.py` (Python on PATH); it stops a few seconds after the game.
+- The minimap zooms with the wheel only while the cursor is free (a window open, Alt).

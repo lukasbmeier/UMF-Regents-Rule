@@ -3191,6 +3191,146 @@
 							"elements": [
 								{
 									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "from_s"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "period_s"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "activity"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "weapon"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "hits"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "damage"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "share_pct"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "alarm"
+									},
+									"algebraic_type": {
+										"Bool": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "from_s"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "period_s"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "activity"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "weapon"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "hits"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "damage"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -5078,6 +5218,71 @@
 								},
 								{
 									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "level"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 3.0
+									}
+								},
+								{
+									"name": {
+										"some": "yaw"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
 										"some": "item_row"
 									},
 									"algebraic_type": {
@@ -5629,7 +5834,7 @@
 						"scope": [],
 						"source_name": "WorkResult"
 					},
-					"ty": 78.0,
+					"ty": 81.0,
 					"custom_ordering": true
 				},
 				{
@@ -5637,7 +5842,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 62.0,
+					"ty": 64.0,
 					"custom_ordering": true
 				},
 				{
@@ -5653,7 +5858,7 @@
 						"scope": [],
 						"source_name": "Swing"
 					},
-					"ty": 72.0,
+					"ty": 74.0,
 					"custom_ordering": true
 				},
 				{
@@ -5667,9 +5872,17 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "WhereSample"
+					},
+					"ty": 78.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "Missile"
 					},
-					"ty": 47.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -5701,7 +5914,7 @@
 						"scope": [],
 						"source_name": "WorkSchedule"
 					},
-					"ty": 79.0,
+					"ty": 82.0,
 					"custom_ordering": true
 				},
 				{
@@ -5733,7 +5946,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 83.0,
+					"ty": 86.0,
 					"custom_ordering": true
 				},
 				{
@@ -5749,7 +5962,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 81.0,
+					"ty": 84.0,
 					"custom_ordering": true
 				},
 				{
@@ -5757,7 +5970,7 @@
 						"scope": [],
 						"source_name": "SpellArea"
 					},
-					"ty": 65.0,
+					"ty": 67.0,
 					"custom_ordering": true
 				},
 				{
@@ -5765,7 +5978,7 @@
 						"scope": [],
 						"source_name": "PerfReport"
 					},
-					"ty": 52.0,
+					"ty": 54.0,
 					"custom_ordering": true
 				},
 				{
@@ -5781,7 +5994,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 57.0,
+					"ty": 59.0,
 					"custom_ordering": true
 				},
 				{
@@ -5789,7 +6002,7 @@
 						"scope": [],
 						"source_name": "Wielded"
 					},
-					"ty": 76.0,
+					"ty": 79.0,
 					"custom_ordering": true
 				},
 				{
@@ -5813,7 +6026,7 @@
 						"scope": [],
 						"source_name": "SpellCooldown"
 					},
-					"ty": 66.0,
+					"ty": 68.0,
 					"custom_ordering": true
 				},
 				{
@@ -5829,7 +6042,7 @@
 						"scope": [],
 						"source_name": "Noise"
 					},
-					"ty": 49.0,
+					"ty": 51.0,
 					"custom_ordering": true
 				},
 				{
@@ -5837,7 +6050,7 @@
 						"scope": [],
 						"source_name": "SpellTimer"
 					},
-					"ty": 67.0,
+					"ty": 69.0,
 					"custom_ordering": true
 				},
 				{
@@ -5861,7 +6074,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 60.0,
+					"ty": 62.0,
 					"custom_ordering": true
 				},
 				{
@@ -5869,7 +6082,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 50.0,
+					"ty": 52.0,
 					"custom_ordering": true
 				},
 				{
@@ -5877,7 +6090,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 73.0,
+					"ty": 75.0,
 					"custom_ordering": true
 				},
 				{
@@ -5885,7 +6098,7 @@
 						"scope": [],
 						"source_name": "SkillXp"
 					},
-					"ty": 64.0,
+					"ty": 66.0,
 					"custom_ordering": true
 				},
 				{
@@ -5893,7 +6106,7 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 75.0,
+					"ty": 77.0,
 					"custom_ordering": true
 				},
 				{
@@ -5917,7 +6130,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 61.0,
+					"ty": 63.0,
 					"custom_ordering": true
 				},
 				{
@@ -5947,14 +6160,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Push"
-					},
-					"ty": 54.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "DashWindowRow"
 					},
 					"ty": 24.0,
@@ -5971,6 +6176,14 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Push"
+					},
+					"ty": 56.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "HoldMember"
 					},
 					"ty": 37.0,
@@ -5981,7 +6194,7 @@
 						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 80.0,
+					"ty": 83.0,
 					"custom_ordering": true
 				},
 				{
@@ -5989,7 +6202,7 @@
 						"scope": [],
 						"source_name": "StuckArrow"
 					},
-					"ty": 71.0,
+					"ty": 73.0,
 					"custom_ordering": true
 				},
 				{
@@ -5997,7 +6210,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 70.0,
+					"ty": 72.0,
 					"custom_ordering": true
 				},
 				{
@@ -6005,7 +6218,7 @@
 						"scope": [],
 						"source_name": "OrderFilled"
 					},
-					"ty": 51.0,
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -6013,7 +6226,7 @@
 						"scope": [],
 						"source_name": "StarterKitGiven"
 					},
-					"ty": 68.0,
+					"ty": 70.0,
 					"custom_ordering": true
 				},
 				{
@@ -6021,7 +6234,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 55.0,
+					"ty": 57.0,
 					"custom_ordering": true
 				},
 				{
@@ -6029,7 +6242,7 @@
 						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 74.0,
+					"ty": 76.0,
 					"custom_ordering": true
 				},
 				{
@@ -6045,7 +6258,7 @@
 						"scope": [],
 						"source_name": "RecipeLog"
 					},
-					"ty": 56.0,
+					"ty": 58.0,
 					"custom_ordering": true
 				},
 				{
@@ -6069,7 +6282,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 58.0,
+					"ty": 60.0,
 					"custom_ordering": true
 				},
 				{
@@ -6077,7 +6290,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 63.0,
+					"ty": 65.0,
 					"custom_ordering": true
 				},
 				{
@@ -6094,6 +6307,14 @@
 						"source_name": "Arrow"
 					},
 					"ty": 9.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MetaTally"
+					},
+					"ty": 48.0,
 					"custom_ordering": true
 				},
 				{
@@ -6123,14 +6344,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Station"
-					},
-					"ty": 69.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ItemDef"
 					},
 					"ty": 45.0,
@@ -6139,9 +6352,25 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Station"
+					},
+					"ty": 71.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "InputQueueRow"
 					},
 					"ty": 42.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MetaShare"
+					},
+					"ty": 47.0,
 					"custom_ordering": true
 				},
 				{
@@ -6181,7 +6410,7 @@
 						"scope": [],
 						"source_name": "Player"
 					},
-					"ty": 53.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
@@ -6205,7 +6434,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 82.0,
+					"ty": 85.0,
 					"custom_ordering": true
 				},
 				{
@@ -6229,7 +6458,7 @@
 						"scope": [],
 						"source_name": "ResourceState"
 					},
-					"ty": 59.0,
+					"ty": 61.0,
 					"custom_ordering": true
 				},
 				{
@@ -6277,7 +6506,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 48.0,
+					"ty": 50.0,
 					"custom_ordering": true
 				},
 				{
@@ -6285,7 +6514,7 @@
 						"scope": [],
 						"source_name": "WorkOrder"
 					},
-					"ty": 77.0,
+					"ty": 80.0,
 					"custom_ordering": true
 				}
 			]
@@ -6352,7 +6581,7 @@
 				},
 				{
 					"source_name": "spell_timer",
-					"product_type_ref": 67.0,
+					"product_type_ref": 69.0,
 					"primary_key": [
 						0.0
 					],
@@ -6562,7 +6791,7 @@
 				},
 				{
 					"source_name": "spell_area",
-					"product_type_ref": 65.0,
+					"product_type_ref": 67.0,
 					"primary_key": [
 						0.0
 					],
@@ -6699,7 +6928,7 @@
 				},
 				{
 					"source_name": "resource_state",
-					"product_type_ref": 59.0,
+					"product_type_ref": 61.0,
 					"primary_key": [
 						0.0
 					],
@@ -6924,7 +7153,7 @@
 				},
 				{
 					"source_name": "spell_cooldown",
-					"product_type_ref": 66.0,
+					"product_type_ref": 68.0,
 					"primary_key": [
 						0.0
 					],
@@ -6999,7 +7228,7 @@
 				},
 				{
 					"source_name": "unscored_press",
-					"product_type_ref": 75.0,
+					"product_type_ref": 77.0,
 					"primary_key": [
 						0.0
 					],
@@ -7044,7 +7273,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 57.0,
+					"product_type_ref": 59.0,
 					"primary_key": [
 						0.0
 					],
@@ -7089,7 +7318,7 @@
 				},
 				{
 					"source_name": "work_order",
-					"product_type_ref": 77.0,
+					"product_type_ref": 80.0,
 					"primary_key": [
 						0.0
 					],
@@ -7297,7 +7526,7 @@
 				},
 				{
 					"source_name": "missile",
-					"product_type_ref": 47.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -7355,7 +7584,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 62.0,
+					"product_type_ref": 64.0,
 					"primary_key": [
 						0.0
 					],
@@ -7413,7 +7642,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 81.0,
+					"product_type_ref": 84.0,
 					"primary_key": [
 						0.0
 					],
@@ -7458,7 +7687,7 @@
 				},
 				{
 					"source_name": "skill_xp",
-					"product_type_ref": 64.0,
+					"product_type_ref": 66.0,
 					"primary_key": [
 						0.0
 					],
@@ -7707,7 +7936,7 @@
 				},
 				{
 					"source_name": "perf_report",
-					"product_type_ref": 52.0,
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
@@ -8007,7 +8236,7 @@
 				},
 				{
 					"source_name": "noise",
-					"product_type_ref": 49.0,
+					"product_type_ref": 51.0,
 					"primary_key": [
 						0.0
 					],
@@ -8185,7 +8414,7 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 48.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -8243,7 +8472,7 @@
 				},
 				{
 					"source_name": "swing",
-					"product_type_ref": 72.0,
+					"product_type_ref": 74.0,
 					"primary_key": [
 						0.0
 					],
@@ -8288,7 +8517,7 @@
 				},
 				{
 					"source_name": "work_result",
-					"product_type_ref": 78.0,
+					"product_type_ref": 81.0,
 					"primary_key": [
 						0.0
 					],
@@ -8567,7 +8796,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 63.0,
+					"product_type_ref": 65.0,
 					"primary_key": [
 						0.0
 					],
@@ -8655,7 +8884,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 73.0,
+					"product_type_ref": 75.0,
 					"primary_key": [
 						0.0
 					],
@@ -8716,66 +8945,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "rate_budget",
-					"product_type_ref": 55.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "rate_budget_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									1.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "rate_budget_key_idx_btree"
-							},
-							"accessor_name": {
-								"some": "key"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "rate_budget_key_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "npc_brain",
-					"product_type_ref": 50.0,
+					"product_type_ref": 52.0,
 					"primary_key": [
 						0.0
 					],
@@ -8827,6 +8998,64 @@
 					},
 					"table_access": {
 						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "rate_budget",
+					"product_type_ref": 57.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "rate_budget_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "rate_budget_key_idx_btree"
+							},
+							"accessor_name": {
+								"some": "key"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "rate_budget_key_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -8965,8 +9194,83 @@
 					"is_event": false
 				},
 				{
+					"source_name": "meta_share",
+					"product_type_ref": 47.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "meta_share_from_s_idx_btree"
+							},
+							"accessor_name": {
+								"some": "from_s"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "meta_share_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "meta_share_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "meta_share_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "session",
-					"product_type_ref": 60.0,
+					"product_type_ref": 62.0,
 					"primary_key": [
 						0.0
 					],
@@ -9053,7 +9357,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 70.0,
+					"product_type_ref": 72.0,
 					"primary_key": [
 						0.0
 					],
@@ -9111,7 +9415,7 @@
 				},
 				{
 					"source_name": "wielded",
-					"product_type_ref": 76.0,
+					"product_type_ref": 79.0,
 					"primary_key": [
 						0.0
 					],
@@ -9150,68 +9454,6 @@
 					},
 					"table_access": {
 						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "work_schedule",
-					"product_type_ref": 79.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "work_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -9292,8 +9534,70 @@
 					"is_event": false
 				},
 				{
+					"source_name": "work_schedule",
+					"product_type_ref": 82.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "work_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "work_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "work_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "session_empty",
-					"product_type_ref": 61.0,
+					"product_type_ref": 63.0,
 					"primary_key": [
 						0.0
 					],
@@ -9665,8 +9969,132 @@
 					"is_event": false
 				},
 				{
+					"source_name": "meta_tally",
+					"product_type_ref": 48.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "meta_tally_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "meta_tally_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "meta_tally_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "challenge_prune_schedule",
+					"product_type_ref": 18.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "scheduled_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "challenge_prune_schedule_scheduled_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "recipe_log",
-					"product_type_ref": 56.0,
+					"product_type_ref": 58.0,
 					"primary_key": [
 						0.0
 					],
@@ -9740,70 +10168,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 18.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "scheduled_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [
-						{
-							"source_name": {
-								"some": "challenge_prune_schedule_scheduled_id_seq"
-							},
-							"column": 0.0,
-							"start": {
-								"none": []
-							},
-							"min_value": {
-								"none": []
-							},
-							"max_value": {
-								"none": []
-							},
-							"increment": 1.0
-						}
-					],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "push",
-					"product_type_ref": 54.0,
+					"product_type_ref": 56.0,
 					"primary_key": [
 						0.0
 					],
@@ -10099,7 +10465,7 @@
 				},
 				{
 					"source_name": "station",
-					"product_type_ref": 69.0,
+					"product_type_ref": 71.0,
 					"primary_key": [
 						0.0
 					],
@@ -10151,6 +10517,51 @@
 					},
 					"table_access": {
 						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "where_sample",
+					"product_type_ref": 78.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "where_sample_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "where_sample_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -10215,7 +10626,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 74.0,
+					"product_type_ref": 76.0,
 					"primary_key": [
 						0.0
 					],
@@ -10837,7 +11248,7 @@
 				},
 				{
 					"source_name": "order_filled",
-					"product_type_ref": 51.0,
+					"product_type_ref": 53.0,
 					"primary_key": [
 						0.0
 					],
@@ -10912,7 +11323,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 80.0,
+					"product_type_ref": 83.0,
 					"primary_key": [
 						0.0
 					],
@@ -10957,7 +11368,7 @@
 				},
 				{
 					"source_name": "stuck_arrow",
-					"product_type_ref": 71.0,
+					"product_type_ref": 73.0,
 					"primary_key": [
 						0.0
 					],
@@ -11090,7 +11501,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 53.0,
+					"product_type_ref": 55.0,
 					"primary_key": [
 						0.0
 					],
@@ -11231,7 +11642,7 @@
 				},
 				{
 					"source_name": "starter_kit_given",
-					"product_type_ref": 68.0,
+					"product_type_ref": 70.0,
 					"primary_key": [
 						0.0
 					],
@@ -13118,7 +13529,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 58.0
+										"Ref": 60.0
 									}
 								}
 							}
@@ -14064,7 +14475,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 67.0
+									"Ref": 69.0
 								}
 							}
 						]
@@ -14206,7 +14617,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 73.0
+									"Ref": 75.0
 								}
 							}
 						]
@@ -14458,7 +14869,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 79.0
+									"Ref": 82.0
 								}
 							}
 						]
@@ -14493,7 +14904,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 82.0
+										"Ref": 85.0
 									}
 								}
 							}
@@ -14529,7 +14940,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 83.0
+										"Ref": 86.0
 									}
 								}
 							}
@@ -14963,14 +15374,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "rate_budget",
-							"canonical_name": "rate_budget"
+							"source_name": "npc_brain",
+							"canonical_name": "npc_brain"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "npc_brain",
-							"canonical_name": "npc_brain"
+							"source_name": "rate_budget",
+							"canonical_name": "rate_budget"
 						}
 					},
 					{
@@ -14983,6 +15394,12 @@
 						"Table": {
 							"source_name": "damage_share",
 							"canonical_name": "damage_share"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "meta_share",
+							"canonical_name": "meta_share"
 						}
 					},
 					{
@@ -15005,14 +15422,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "work_schedule",
-							"canonical_name": "work_schedule"
+							"source_name": "ability_state",
+							"canonical_name": "ability_state"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "ability_state",
-							"canonical_name": "ability_state"
+							"source_name": "work_schedule",
+							"canonical_name": "work_schedule"
 						}
 					},
 					{
@@ -15053,14 +15470,20 @@
 					},
 					{
 						"Table": {
-							"source_name": "recipe_log",
-							"canonical_name": "recipe_log"
+							"source_name": "meta_tally",
+							"canonical_name": "meta_tally"
 						}
 					},
 					{
 						"Table": {
 							"source_name": "challenge_prune_schedule",
 							"canonical_name": "challenge_prune_schedule"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "recipe_log",
+							"canonical_name": "recipe_log"
 						}
 					},
 					{
@@ -15091,6 +15514,12 @@
 						"Table": {
 							"source_name": "station",
 							"canonical_name": "station"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "where_sample",
+							"canonical_name": "where_sample"
 						}
 					},
 					{

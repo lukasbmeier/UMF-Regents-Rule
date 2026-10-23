@@ -7,6 +7,11 @@ class_name RegentsHud extends Node
 ## player held still and the cursor free) and its inputs handed to `SkillingComponent.submit_round`; what
 ## each piece of work gave ("+3 Copper ore", "+30 Mining XP", a rank, a rare find, the node worked out);
 ## the bag; the skills and their ranks. Presentation only.
+##
+## READING THE GAME AT A GLANCE (owner, 2026-10-21): your health (and the Staff's mana) and the roll's
+## cooldown bottom left (`vitals`); a bar filling to the next piece while you work AFK, with how many of a
+## Make X are done; the edge of the screen pulses red when you are hit; the minimap top right
+## (`RegentsMinimap`).
 
 const NOTICE_S: float = 3.0
 ## How long a round's end screen stays before the game comes back.
@@ -39,6 +44,16 @@ var _prompt_target: int = -1
 ## The windows (owner, 2026-10-20: dedicated UI, the foundation's kit): the bag (I), the skills (K), a
 ## station's (tap E at it).
 var bag_window: RegentsBagWindow = null
+## Bottom left: health, mana (the Staff's), the roll's cooldown. Each a bar with its words on it.
+var health_bar: ProgressBar = null
+var mana_bar: ProgressBar = null
+var roll_bar: ProgressBar = null
+## Under the prompt while working AFK: the piece being made.
+var work_bar: ProgressBar = null
+var minimap: RegentsMinimap = null
+## The red edge when you are hit (its alpha is the pulse).
+var hurt_edge: ColorRect = null
+var _health: SpaceTimeHealthComponent = null
 var skills_window: RegentsSkillsWindow = null
 var station_window: RegentsStationWindow = null
 var _bag_weapon_row: int = -2
@@ -119,6 +134,38 @@ func _ready() -> void:
 	_draw_bar.show_percentage = false
 	_draw_bar.visible = false
 	base.add_child(_draw_bar)
+	hurt_edge = ColorRect.new()
+	hurt_edge.name = "HurtEdge"
+	hurt_edge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hurt_edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var edge := ShaderMaterial.new()
+	edge.shader = Shader.new()
+	edge.shader.code = "shader_type canvas_item;\nuniform float strength = 0.0;\nvoid fragment() {\n\tvec2 p = UV * 2.0 - 1.0;\n\tfloat d = max(abs(p.x), abs(p.y));\n\tCOLOR = vec4(0.75, 0.04, 0.02, smoothstep(0.55, 1.0, d) * strength);\n}\n"
+	hurt_edge.material = edge
+	base.add_child(hurt_edge)
+	var vitals := VBoxContainer.new()
+	vitals.name = "Vitals"
+	vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	vitals.offset_left = 16.0
+	vitals.offset_right = 276.0
+	vitals.offset_top = -132.0
+	vitals.offset_bottom = -64.0
+	vitals.alignment = BoxContainer.ALIGNMENT_END
+	vitals.add_theme_constant_override(&"separation", 4)
+	vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	base.add_child(vitals)
+	health_bar = _bar(vitals, Color(0.78, 0.16, 0.14), 22.0, "Health")
+	mana_bar = _bar(vitals, Color(0.22, 0.42, 0.92), 16.0, "Mana")
+	roll_bar = _bar(vitals, Color(0.92, 0.7, 0.22), 10.0, "Roll")
+	work_bar = _bar(base, Color(0.4, 0.78, 0.4), 12.0, "Work")
+	work_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	work_bar.offset_left = -180.0
+	work_bar.offset_right = 180.0
+	work_bar.offset_top = -132.0
+	work_bar.offset_bottom = -120.0
+	work_bar.visible = false
+	minimap = RegentsMinimap.new()
+	base.add_child(minimap)
 	_skillbar = Label.new()
 	_skillbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_skillbar.offset_top = -44.0
@@ -127,6 +174,44 @@ func _ready() -> void:
 	_skillbar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_outline(_skillbar, 17)
 	base.add_child(_skillbar)
+
+
+## A bar of `colour`, `height` tall, its words (`name`'s label, a child named Text) on it.
+func _bar(parent: Control, colour: Color, height: float, bar_name: String) -> ProgressBar:
+	var b := ProgressBar.new()
+	b.name = bar_name
+	b.custom_minimum_size = Vector2(0, height)
+	b.show_percentage = false
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = colour
+	fill.set_corner_radius_all(3)
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.05, 0.05, 0.06, 0.72)
+	back.border_color = Color(0, 0, 0, 0.9)
+	back.set_border_width_all(1)
+	back.set_corner_radius_all(3)
+	b.add_theme_stylebox_override(&"fill", fill)
+	b.add_theme_stylebox_override(&"background", back)
+	if height >= 14.0:
+		var t := Label.new()
+		t.name = "Text"
+		t.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_outline(t, 13 if height < 20.0 else 15)
+		b.add_child(t)
+	parent.add_child(b)
+	return b
+
+
+## Bar `b` at `value` of `most`, saying `text` (when it has words).
+static func set_bar(b: ProgressBar, value: float, most: float, text: String) -> void:
+	b.max_value = maxf(most, 0.001)
+	b.value = clampf(value, 0.0, b.max_value)
+	var t: Label = b.get_node_or_null(^"Text") as Label
+	if t != null:
+		t.text = text
 
 
 func _label(parent: Control, at: Vector2, font_size: int) -> Label:
@@ -149,6 +234,8 @@ func _process(_delta: float) -> void:
 	_status.text = FoundationHud.connection_line() if skilling == null else ""
 	_update_prompt()
 	_update_combat()
+	_update_vitals()
+	_update_work()
 
 
 func _find_player() -> void:
@@ -169,6 +256,9 @@ func _find_player() -> void:
 	s.xp_changed.connect(func(_id: int, _xp: int) -> void: _show_skills())
 	s.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
 	combat = me.find_component(CombatComponent) as CombatComponent
+	_health = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	if _health != null:
+		_health.health_changed.connect(_on_my_health)
 	if combat != null:
 		combat.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
 		combat.slew.connect(_on_slew)
@@ -213,7 +303,8 @@ func _update_prompt() -> void:
 		_prompt.text = ""
 		return
 	if skilling.afk_target >= 0:
-		_prompt.text = "%s (AFK)...   E: stop   (moving stops it too)" % _target_name(skilling.afk_target)
+		var of: String = "  %d of %d" % [skilling.made, skilling.make_limit] if skilling.make_limit > 0 else ""
+		_prompt.text = "%s (AFK)%s...   E: stop   (moving stops it too)" % [_target_name(skilling.afk_target), of]
 		return
 	var target: int = _interaction.get_target() if _interaction != null else -1
 	var node: NodeComponent = SkillingComponent.node_of(target) if target >= 0 else null
@@ -361,6 +452,51 @@ func _on_slew(foe_id: int, loot: String) -> void:
 		if bits.size() == 2:
 			var item: ItemDef = ItemDef.by_id(int(bits[0]))
 			notice("+%d %s" % [int(bits[1]), item_name(int(bits[0]))], item.color if item != null else Color.WHITE)
+
+
+## YOU WERE HIT: the screen's edge pulses red, more for a bigger share of your health.
+func _on_my_health(_current: float, most: float, delta: float) -> void:
+	if delta >= 0.0 or hurt_edge == null:
+		return
+	pulse_hurt(clampf(-delta / maxf(most, 1.0) * 4.0, 0.35, 1.0))
+
+
+## The red edge at `strength` (0..1), fading over half a second.
+func pulse_hurt(strength: float) -> void:
+	var m: ShaderMaterial = hurt_edge.material as ShaderMaterial
+	m.set_shader_parameter(&"strength", strength)
+	var tw: Tween = hurt_edge.create_tween()
+	tw.tween_method(func(v: float) -> void: m.set_shader_parameter(&"strength", v), strength, 0.0, 0.55).set_ease(Tween.EASE_IN)
+
+
+## Your health, the Staff's mana while it is wielded, and the roll: ready, or how long until it is.
+func _update_vitals() -> void:
+	var have: bool = _health != null and is_instance_valid(_health)
+	health_bar.get_parent().visible = have
+	if not have:
+		return
+	set_bar(health_bar, _health.get_current(), _health.get_max(), "%d / %d" % [roundi(_health.get_current()), roundi(_health.get_max())])
+	var p: ResourceComponent = combat.pool() if combat != null and combat.kit != null and combat.kit.casts() else null
+	mana_bar.visible = p != null
+	if p != null:
+		var rid: int = combat.kit.resource.id
+		set_bar(mana_bar, p.level(rid), p.max_of(rid), "%d / %d %s" % [roundi(p.level(rid)), roundi(p.max_of(rid)), combat.kit.resource.display_name.to_lower()])
+	var roll: Vector2 = combat.roll_cooldown() if combat != null else Vector2.ZERO
+	roll_bar.visible = combat != null
+	set_bar(roll_bar, roll.y - roll.x if roll.y > 0.0 else 1.0, roll.y if roll.y > 0.0 else 1.0, "")
+	roll_bar.modulate = Color(1, 1, 1, 1.0) if roll.x <= 0.0 else Color(0.75, 0.75, 0.75, 0.85)
+	roll_bar.tooltip_text = "Roll (Ctrl): ready" if roll.x <= 0.0 else "Roll (Ctrl): %.1f s" % roll.x
+
+
+## While working AFK: a bar filling to the next piece; a Make X says how many are done.
+func _update_work() -> void:
+	var on: bool = skilling != null and skilling.afk_target >= 0 and not _round_box.visible
+	work_bar.visible = on
+	if not on:
+		return
+	var of: String = " (%d of %d)" % [skilling.made, skilling.make_limit] if skilling.make_limit > 0 else ""
+	set_bar(work_bar, skilling.afk_progress(ClockSync.server_usec()), 1.0, of)
+	work_bar.tooltip_text = "The next piece%s" % of
 
 
 ## The target frame (name, health) and the skill bar (what each key does with the wielded weapon).

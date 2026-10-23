@@ -117,8 +117,8 @@
 				"game/regents/content/character/adventurer.tres": "82e9c25f",
 				"game/regents/content/character/dummy.tres": "f90a4f6b",
 				"game/regents/content/character/node.tres": "aa7b11b6",
-				"game/regents/content/character/skeleton_axeman.tres": "18b3f290",
-				"game/regents/content/character/skeleton_warrior.tres": "47990197",
+				"game/regents/content/character/skeleton_axeman.tres": "a500cadd",
+				"game/regents/content/character/skeleton_warrior.tres": "dc8f8ce6",
 				"game/regents/content/character/station.tres": "61228266"
 			},
 			"type": "character"
@@ -241,10 +241,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "b77c5033",
+			"hash": "5382603e",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "016141b0"
+				"game/regents/content/rules/regents.tres": "4708170b"
 			},
 			"type": "rules"
 		},

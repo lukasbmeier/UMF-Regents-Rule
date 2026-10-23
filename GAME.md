@@ -57,10 +57,15 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   applies**, whatever the item's grade (grade sets how many a drop rolls); Brutal reads the TARGET's
   health; the handles are toned to the early game (oak Steady, yew Springy) until **a materials and
   Tinkers' deep-dive**, which Luke wants later.
+- **Telemetry** (2026-10-21): live, for looking back, with full history: BOTH a chronicle on the host's
+  disk (every change of every table, a place every 5 s; template #276) and the meta rolled up in the
+  database (`meta_share`, the 45 % alarm); a local dashboard (`tools	elemetry.cmd`). Then a polish round
+  before the materials deep-dive: health bar, work progress, roll cooldown, minimap (OSRS style, to
+  iterate), hit flashes, Make 1 / X / all.
 - Still open: #10 hosting (after measuring Maincloud round trips), #12 day/night; the other skills'
   minigames; whether the bow's damage should scale with the draw (revisit after a playtest).
 
-## Current state (2026-10-19, with steps 9-15 since: see `PROGRESS.md`): the skilling chain in the frontier glade
+## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
 A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade (level 20):
 trees (Tree, Oak, Yew), copper and iron rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**: at a node or a

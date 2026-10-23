@@ -563,3 +563,92 @@ the regents suite (the pools; the client's twins give the server's numbers; scal
 the integration (refusals; Balanced's lock read from the server's swing; Brutal's 6.93 off a dummy above
 30 %; Heavy staggers the dummy; the dial at 0 gives the kit's own lock); the skilling playtest (an iron axe
 made with an oak handle carries Steady, and its card in the bag shows it: the `bag_traits` shot).
+
+## Step 16: telemetry for looking back, and a polish round (2026-10-21)
+
+**TELEMETRY** (Luke: "ideally live telemetry exists for looking back ... full historical data in
+positions, skills, and all other data points"; he chose **both** a chronicle on disk and in-database
+rollups, **a place every 5 s**, and **a local dashboard**). The foundation's part is template DECISIONS
+#276, shipped here by hand (`git merge template/main`: Luke's grip edits keep `ship_template.sh` out).
+- **To look back: double-click `tools\telemetry.cmd`** on the machine that hosts. A page opens in your
+  browser with the foundation's panels (players online, where they were as a heatmap, who played, frame
+  rate, ping, chat, feedback, what was kept) and **Regent's Rule's own**: the meta (each weapon's share of
+  an hour's damage to foes), meta alarms, mastery XP gained by skill and over time, mastery by player,
+  foes slain, abilities used by players (kit share), what was gathered and made, and what was dropped.
+  Pick the last hour, day, week or all, and everyone or one player.
+- **What records it**: `tools\host.cmd` while hosting, pressing Play in the editor (your own playtests),
+  or the page itself when nothing else does. Everything lands in `build/telemetry/regents-rule.sqlite`,
+  kept forever.
+- **The meta in the database** (`LOOT_AND_STYLES.md` §7.5): every player hit on a foe (never a training
+  dummy) adds to a private `meta_tally` (period, activity "overworld", weapon type, hits, damage: a hit's whole damage, as XP counts it). When
+  its period ends (`regents.meta_period_s`, an hour; shortening the rule closes open tallies sooner), it
+  becomes `meta_share` rows: each weapon's share of the damage, and an **alarm** when one passes
+  `regents.meta_alarm_pct` (45 %) in a period of at least `regents.meta_alarm_min_hits` (50) hits. An
+  alarm is a `META ALARM` warning in the server's log and a row on the page. `regents.meta_keep_days` (14)
+  is how long the database keeps them; the chronicle keeps every one.
+- The panels are data: `shared/regents/telemetry.json` (SQL over the chronicle's file; the HANDBOOK's
+  "Looking back at everything" explains adding one). `meta_tally`, `hurt`, `spell_cooldown` and
+  `combat_state` are not recorded (they change on every hit or swing); the dummy's `last_hit_at` alone
+  is no line.
+
+**THE POLISH ROUND** (Luke: "more visually telling and easy to read"):
+- **Health bar** bottom left (under the chat), with the Staff's **mana** under it while it is wielded and
+  a thin **roll** bar that refills over the roll's 1.5 s cooldown (grey while it does; its tooltip says
+  how long).
+- **A work bar** under the prompt while you work AFK: it fills to the next piece (bar, batch, ore, log),
+  piece after piece, from the server's own `next_at`. The station's window shows the same bar.
+- **Make 1, Make X, Make all** in the station's window (X is the number box beside it; 5 to start).
+  Make X stops itself after that many batches (the client asks `work_stop` after the last), Make all
+  works until the bag runs out (what Make did before). The prompt and the window say "Making 2 of 5".
+- **The minimap**, top right, OSRS style: round, turning with the camera so ahead is up, N on the rim, the
+  level drawn once from straight above when it loads, dots for players (white), foes (yellow), trees
+  (green), rocks (grey), stations (blue) and the dummy (orange), your arrow in the middle. The mouse
+  wheel over it zooms (15 to 90 m) while the cursor is free (a window open, or Alt). Open for iterations: click-to-walk, a world map, quest markers.
+- **Hits flash**: whatever is hit lights up white for a moment, you light up red, and the screen's edge
+  pulses red (more for a bigger hit); a hit taken while blocking flashes steel blue and says "Blocked";
+  a stagger (your parry, a Heavy trait) flashes gold and says "Staggered". On top of the numbers and the
+  shake that were there.
+
+**Tested**: native `regents` (the meta's period, shares and alarm; each weapon type's skill); the
+integration hook (a chop on a foe tallies one axe hit of 2 damage; the dummy never counts; the period
+closes into one share: axe, 1 hit, 100 %, an alarm); the template's `telemetry_test.sh` (21 checks on a
+real server); the regents suite's polish checks (the minimap's sums and colours, the work's progress and
+Make X counting, the flashes, the bars; flipping the map's turn fails two, losing the block flash one); the
+skilling playtest (Make X of 1 makes exactly one batch of rivets and stops by itself, the work bar fills,
+then Make all uses the rest).
+
+**Left for later**: trait share and time-to-kill by foe as panels (the design's §7.5 "same rollup"); the
+minimap's click-to-walk and a recapture when trees fall; an activity other than "overworld" (lairs,
+dungeons, duels once they exist); the meta alarm on screen in game for an admin.
+
+**After Luke's first play of step 16 (same day)**:
+- **The hit reaction no longer loops** (template DECISIONS #277). Flinched and Staggered hold `react.hit`
+  as a looping pose, and the builder made a clip loop by changing the clip itself, which every node shares:
+  after the first flinch anywhere, every hit reaction played for ever, through death. A loop is now the
+  node's own. Proven by the template's `animation` and `animation_scene` suites (putting the old way back
+  fails four checks, one a body stuck in its hit reaction while dead).
+- **Everything you see stops you** (`game/regents/solid.gd`, `RegentsSolid`): a convex hull per mesh of
+  the model as drawn. Rocks (copper and iron) block across their whole shape (Rock_Medium_1 is 3.2 m wide:
+  the old 0.75 m cylinder let you into it), stations across every piece (the anvil, the workbench and the
+  order board are pieces with no box), trees at their trunk. The level's props: `SolidProps` in
+  `frontier.tscn` (`RegentsSolidProps`) makes every model under `Decor` whose file starts with `Rock_` or
+  `Bush_` solid; grass, flowers, ferns, pebbles and mushrooms are walked through. Add a prefix there for
+  more.
+- **The ore on the rocks, by hand**: `game/regents/skilling/mining/ore/<rock model>_ore.tscn`, one per rock
+  model (Rock_Medium_1, Rock_Medium_2, Rock_Big_1: copper and iron use them). **Open one, move, turn or
+  size the nuggets (`Ore1`..`Ore5`; add or delete some), save**: every rock of that model, copper or iron,
+  shows its ore so (grey in the scene, the ore's colour in the game). They start snapped onto the surface,
+  so none floats. A new rock model: run `make_ore_layouts.tscn` (headless) for its starting layout; with
+  none, nuggets are snapped onto the surface at runtime (`RegentsOreSpots`).
+- **The skeletons face the way they fight**: the same Quaternius rig as the adventurer, now turned the
+  same (`visual_yaw_deg = 180` on both definitions); they were drawn backwards while their swings went
+  forwards.
+- The skilling playtest's chat check failed headless since step 15 (no chat box without a display): the
+  chopper now gets its box as the buddy does.
+
+Tested: regents suite 2391/0 (hulls where the mesh is drawn; every copper and iron rock model solid across
+its shape, its nuggets where its layout puts them, rubble not solid; with no layout each nugget lies on
+the surface; a tree's trunk; each station wherever it is drawn; a level's rock solid and its grass not;
+the skeletons turned as the adventurer; breaking the hulls, the layouts or the props list fails its
+checks); skilling playtest 62/0 + 7/0; combat playtest 50/0; content bake 18/0. Not seen yet by Luke:
+the collisions, the ore and the skeletons in play.

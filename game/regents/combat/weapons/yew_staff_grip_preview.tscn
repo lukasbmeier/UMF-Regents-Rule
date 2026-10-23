@@ -1,9 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://be604mkg5br0h"]
 
-[ext_resource type="Script" path="res://foundation/held/held_item_preview.gd" id="1_prev"]
+[ext_resource type="Script" uid="uid://dugm3qc8jl46q" path="res://foundation/held/held_item_preview.gd" id="1_prev"]
 [ext_resource type="Resource" path="res://game/regents/content/character/adventurer.tres" id="2_def"]
 [ext_resource type="PackedScene" path="res://game/regents/combat/weapons/yew_staff.tscn" id="3_item"]
-[ext_resource type="Resource" path="res://game/regents/combat/weapons/yew_staff_grip.tres" id="4_grip"]
+[ext_resource type="Resource" uid="uid://472ir70ecnld" path="res://game/regents/combat/weapons/yew_staff_grip.tres" id="4_grip"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -11,20 +11,21 @@ background_color = Color(0.55, 0.62, 0.7, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.6, 0.62, 0.66, 1)
 
-[node name="GripPreview" type="Node3D"]
+[node name="GripPreview" type="Node3D" unique_id=437726802]
 script = ExtResource("1_prev")
 definition = ExtResource("2_def")
 item = ExtResource("3_item")
+animation = "ability.40016 · Gale · Spell_Double_Shoot"
+body = "male"
 grip = ExtResource("4_grip")
-animation = "locomotion.idle"
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=986453145]
 transform = Transform3D(0.8660254, -0.38302222, 0.32139382, 0, 0.64278764, 0.76604444, -0.5, -0.66341394, 0.5566704, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Environment" type="WorldEnvironment" parent="."]
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=436072340]
 environment = SubResource("Env")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=868856904]
 transform = Transform3D(-0.91913533, -0.030085739, 0.39279145, 0, 0.9970795, 0.07637099, -0.39394197, 0.07019528, -0.916451, 0.9, 1.55, -4.2)
 fov = 40.0

@@ -196,9 +196,20 @@ func _chopper(tree_id: int) -> void:
 	_check(hud.station_window.is_open() and hud.station_window.title == "Anvil" and hud.station_window.choices.size() >= 2,
 		"a tap of E opens the anvil's window: %d things to make" % hud.station_window.choices.size())
 	await _shot("station_anvil")
-	_check(await _make("Copper rivets"), "rivets picked there, and MAKE pressed")
-	await _until(func() -> bool: return inv.count(RIVETS) >= 4, 6.0)
-	_check(inv.count(RIVETS) >= 4, "a tap of E: rivets made AFK (%d)" % inv.count(RIVETS))
+	# MAKE X (owner, 2026-10-21): one batch asked for, one made, and the work stops by itself.
+	hud.station_window.make_x = 1
+	_check(await _make("Copper rivets", "MakeXGo"), "rivets picked there, Make X at 1 pressed")
+	var bar_seen: Array[float] = [-1.0]
+	await _until(func() -> bool:
+		if skilling.afk_target >= 0 and hud.work_bar.visible:
+			bar_seen[0] = maxf(bar_seen[0], hud.work_bar.value)
+		return inv.count(RIVETS) >= 4 and skilling.afk_target == -1, 10.0)
+	_check(inv.count(RIVETS) >= 4, "rivets made AFK (%d)" % inv.count(RIVETS))
+	_check(bar_seen[0] > 0.2, "while it worked, the work bar filled toward the batch (to %.2f)" % bar_seen[0])
+	_check(skilling.afk_target == -1 and inv.count(RIVETS) == 4, "Make X of 1: one batch (4 rivets) and it stopped by itself (%d, bars left %d)" % [inv.count(RIVETS), inv.count(COPPER_BAR)])
+	if inv.count(COPPER_BAR) > 0:
+		_check(await _make("Copper rivets"), "then MAKE ALL for the rest")
+		await _until(func() -> bool: return inv.count(RIVETS) > 4, 6.0)
 	await _until(func() -> bool: return skilling.afk_target == -1, 15.0)
 	_check(skilling.afk_target == -1 and inv.count(COPPER_BAR) == 0, "out of copper bars, the work stops by itself (%d rivets)" % inv.count(RIVETS))
 	_check(await _pick("Iron axe head"), "the window picks the axe head (hold E plays a round of it)")
@@ -324,7 +335,13 @@ func _chopper(tree_id: int) -> void:
 ## comes back to our box; the buddy's answer shows in it and over their head.
 func _chat_with_buddy() -> void:
 	var chat: ChatBox = _chat_box()
-	_check(chat != null, "every game has the chat box")
+	if DisplayServer.get_name() == "headless":
+		# Headless, Boot adds no UI: the chopper gets the box it would have had, as the buddy does.
+		if chat == null:
+			chat = ChatBox.new()
+			get_tree().root.add_child(chat)
+	else:
+		_check(chat != null, "every game with a window has the chat box")
 	if chat == null:
 		return
 	await _key(KEY_ENTER)
@@ -395,11 +412,12 @@ func _pick(text: String) -> bool:
 	return ok
 
 
-## Pick `text` in the station's window and press MAKE (AFK). False when it is not there or cannot be made.
-func _make(text: String) -> bool:
+## Pick `text` in the station's window and press `button` (MAKE ALL, AFK until the bag runs out; "Make" is
+## Make 1, "MakeXGo" Make X). False when it is not there or cannot be made.
+func _make(text: String, button: String = "MakeAll") -> bool:
 	if not await _pick(text):
 		return false
-	var b: Button = hud.station_window.find_child("Make", true, false) as Button
+	var b: Button = hud.station_window.find_child(button, true, false) as Button
 	if b == null or b.disabled:
 		return false
 	b.pressed.emit()

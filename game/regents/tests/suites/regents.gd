@@ -28,6 +28,8 @@ func run() -> void:
 	await _run_recipe_bench()
 	await _run_foe_bench()
 	await _run_combat()
+	_run_polish()
+	await _run_solid()
 
 
 ## Combat's client side, with no server: kits, the combo's steps, the stance, the keys, the skill bar.
@@ -157,6 +159,272 @@ func _run_staff() -> void:
 	looks.forget_area(5)
 	_check(looks.area_fill(5) == 0.0, "gone with its row")
 	looks.queue_free()
+
+
+## THE POLISH ROUND (owner, 2026-10-21: "more visually telling and easy to read"): the minimap's sums, the
+## work's progress and Make X, the hit flashes, the HUD's bars.
+func _run_polish() -> void:
+	print("== regents: reading the game at a glance ==")
+	# The minimap: ahead is up, whichever way the camera looks; north on the rim.
+	_check(RegentsMinimap.facing_of(Vector3(0, 0, -1)) == 0.0 and is_equal_approx(RegentsMinimap.facing_of(Vector3(1, 0, 0)), PI / 2.0),
+		"a camera looking north faces 0, looking east PI/2")
+	_check(RegentsMinimap.to_map(Vector2(0, -10), 0.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing north, a thing 10 m north is 20 px up")
+	_check(RegentsMinimap.to_map(Vector2(10, 0), PI / 2.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing east, a thing 10 m east is up")
+	_check(RegentsMinimap.to_map(Vector2(0, -10), PI / 2.0, 2.0).is_equal_approx(Vector2(-20, 0)), "and north is to the left")
+	var bake: LevelBake = LevelBake.by_id(20)
+	var area: Rect2 = RegentsMinimap.area_of(bake)
+	var all_in: bool = bake != null and not bake.points.is_empty()
+	for pt: Dictionary in (bake.points if bake != null else []):
+		all_in = all_in and area.has_point(Vector2(float(pt["x"]), float(pt["z"])))
+	_check(all_in and area.size.x >= RegentsMinimap.CAPTURE_MIN_M and area.size.x <= RegentsMinimap.CAPTURE_MAX_M and is_equal_approx(area.size.x, area.size.y),
+		"the frontier's picture: a square holding every point of its bake (%.0f m)" % area.size.x)
+	_check(RegentsMinimap.colour_of(0) == RegentsMinimap.PLAYER and RegentsMinimap.colour_of(103) == RegentsMinimap.FOE
+		and RegentsMinimap.colour_of(101) == RegentsMinimap.STATION and RegentsMinimap.colour_of(100) == RegentsMinimap.TREE,
+		"dots: players white, foes yellow, stations blue, trees green")
+	# The work's progress: from the run's start to the next piece, then piece to piece.
+	var sk := SkillingComponent.new()
+	var row := AfkRow.new()
+	row.target_id = 77
+	row.craft = true
+	row.started_at = 1_000_000
+	row.next_at = 3_000_000
+	sk._on_row_updated(SkillingComponent.TABLE_AFK, null, row)
+	_check(sk.afk_target == 77 and is_equal_approx(sk.afk_progress(2_000_000), 0.5), "half way from the start to the first piece: 0.5")
+	var row2 := AfkRow.new()
+	row2.target_id = 77
+	row2.craft = true
+	row2.started_at = 1_000_000
+	row2.next_at = 5_000_000
+	sk._on_row_updated(SkillingComponent.TABLE_AFK, row, row2)
+	_check(is_equal_approx(sk.afk_progress(4_000_000), 0.5) and sk.afk_progress(9_000_000) == 1.0, "the next piece counts from when the last came")
+	sk._on_row_updated(SkillingComponent.TABLE_AFK, row2, row2)
+	_check(is_equal_approx(sk.afk_progress(4_000_000), 0.5), "the same row again moves nothing")
+	# Make X: each batch made counts, the last asked for stops the run; gathering never counts.
+	sk.make_limit = 2
+	sk.made = 0
+	var made_one: Dictionary = {"active": false, "qty": 4, "target_id": 77}
+	sk._count_made(made_one)
+	_check(sk.made == 1 and sk.make_limit == 2, "one of two made: it goes on")
+	sk._count_made({"active": true, "qty": 4, "target_id": 77})
+	_check(sk.made == 1, "a played round is not a Make X batch")
+	sk._count_made(made_one)
+	_check(sk.made == 2 and sk.make_limit == 0, "two of two: the limit is spent and the run is stopped")
+	sk.afk["craft"] = false
+	sk.make_limit = 1
+	sk.made = 0
+	sk._count_made(made_one)
+	_check(sk.made == 0 and sk.make_limit == 1, "work at a node (gathering) is not counted")
+	sk._on_row_updated(SkillingComponent.TABLE_AFK, row2, null)
+	_check(sk.afk_target == -1 and sk.make_limit == 0 and sk.afk_progress(4_000_000) == 0.0, "the run over: no bar, no limit left")
+	sk.free()
+	# The hit flashes: a hit lights the body, a blocked one is steel, a stagger gold.
+	var body := Node3D.new()
+	add_child(body)
+	var look := Node3D.new()
+	look.name = "Visual"
+	body.add_child(look)
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = BoxMesh.new()
+	look.add_child(mesh)
+	var hf := HitFeedbackComponent.new()
+	hf.entity = body
+	hf._on_health_changed(90.0, 100.0, -10.0)
+	_check(hf.flashes.back() == &"hit" and mesh.material_overlay != null, "a hit: the body flashes")
+	var st := StatusComponent.new()
+	st._status = HitFeedbackComponent.STATUS_BLOCKING
+	hf._status = st
+	hf._on_health_changed(85.0, 100.0, -5.0)
+	_check(hf.flashes.back() == &"block", "a hit taken while blocking: the block's flash")
+	hf._on_status_changed(0, HitFeedbackComponent.STATUS_STAGGERED)
+	_check(hf.flashes.back() == &"stagger", "staggered (a parried swing): the stagger's flash")
+	hf._on_health_changed(95.0, 100.0, 10.0)
+	_check(hf.flashes.size() == 3, "a heal flashes nothing")
+	hf._unflash()
+	_check(mesh.material_overlay == null, "the flash over, the body is its own again")
+	st.free()
+	hf.free()
+	body.queue_free()
+	# The skeletons face the way they fight (owner, 2026-10-21: "facing backwards"): the same Quaternius rig as
+	# the adventurer, so the same turn of the model (its `visual_yaw_deg`, 180: the rig is made facing +Z).
+	var hero: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
+	for f: String in ["skeleton_warrior", "skeleton_axeman"]:
+		var foe_def: EntityDefinition = load("res://game/regents/content/character/%s.tres" % f) as EntityDefinition
+		_check(foe_def.animation_set == hero.animation_set and is_equal_approx(foe_def.visual_yaw_deg, hero.visual_yaw_deg),
+			"the %s's model is turned as the adventurer's (%.0f deg): it faces the way it swings" % [f, foe_def.visual_yaw_deg])
+	# The HUD's bars.
+	var bar := ProgressBar.new()
+	var words := Label.new()
+	words.name = "Text"
+	bar.add_child(words)
+	RegentsHud.set_bar(bar, 150.0, 100.0, "150 / 100")
+	_check(bar.value == 100.0 and bar.max_value == 100.0 and words.text == "150 / 100", "a bar never runs past its most, and says its words")
+	bar.free()
+
+
+## EVERYTHING YOU SEE STOPS YOU, AND ORE SITS ON ITS ROCK (owner, 2026-10-21): hulls from the models, the
+## rocks', the stations' and the level's props; the nuggets on the rock's surface or where a layout puts them.
+func _run_solid() -> void:
+	print("== regents: what stops you, and the ore on the rocks ==")
+	# A hull is the mesh as drawn: moved, turned and scaled with it; a not-solid mesh is left out.
+	var holder := Node3D.new()
+	var box := MeshInstance3D.new()
+	box.mesh = BoxMesh.new()
+	box.transform = Transform3D(Basis().scaled(Vector3(2, 2, 2)), Vector3(3, 0, 0))
+	holder.add_child(box)
+	var ghost := MeshInstance3D.new()
+	ghost.mesh = SphereMesh.new()
+	ghost.add_to_group(&"not_solid")
+	holder.add_child(ghost)
+	var body: StaticBody3D = RegentsSolid.wrap(holder, holder)
+	var shapes: Array[Node] = body.get_children() if body != null else []
+	var pts: AABB = _points_box(shapes)
+	_check(body != null and shapes.size() == 1 and body.collision_layer == 1 and body.collision_mask == 0,
+		"a model's body: one hull per solid mesh (the not-solid one left out), on the world's layer")
+	_check(pts.position.distance_to(Vector3(2, -1, -1)) < 0.05 and pts.size.distance_to(Vector3(2, 2, 2)) < 0.05,
+		"the hull is where the mesh is drawn, at its size (%s)" % pts)
+	_check(RegentsSolid.hull_of(box.mesh) == RegentsSolid.hull_of(box.mesh), "a mesh's hull is worked out once")
+	holder.free()
+	# A rock blocks the way across its whole width (it stopped you at a 0.75 m cylinder on a 3 m rock). Copper
+	# and iron, each of their models (an id that does not make the fallback's ring the layout's own).
+	for which: Array in [[40004, 3], [40004, 4], [40005, 3], [40005, 4]]:
+		await _check_rock(NodeDef.by_id(int(which[0])), int(which[1]))
+	# With no layout: every nugget on the rock's own surface (none floats).
+	var bare: Node3D = (load("res://game/regents/art/nature/Rock_Medium_1.gltf") as PackedScene).instantiate() as Node3D
+	var surface: TriangleMesh = RegentsOreSpots.surface_of(bare)
+	var spots: Array[Transform3D] = RegentsOreSpots.on_surface(bare, 5, 3)
+	var on_it: int = 0
+	for t: Transform3D in spots:
+		var up: Vector3 = t.basis.y.normalized()
+		var hit: Dictionary = surface.intersect_ray(t.origin + up * 0.5, -up)
+		if not hit.is_empty() and absf((hit["position"] as Vector3).distance_to(t.origin) - RegentsOreSpots.SINK_M) < 0.02:
+			on_it += 1
+	_check(spots.size() == 5 and on_it == 5, "with no layout, each nugget lies on the rock's own surface, %.2f m in (%d of %d)" % [RegentsOreSpots.SINK_M, on_it, spots.size()])
+	bare.free()
+	# A tree: its trunk only (the canopy is walked under).
+	var tree: Array = _node_entity(NodeDef.by_id(40001), 1)
+	var tshapes: Array[Node] = (tree[1] as NodeComponent).solid.get_children()
+	_check(tshapes.size() == 1 and (tshapes[0] as CollisionShape3D).shape is CylinderShape3D, "a tree blocks at its trunk")
+	(tree[0] as Node).free()
+	# A station: every piece of it, as drawn (the workbench is all pieces, no body).
+	for key: StringName in [&"anvil", &"workbench", &"orders", &"furnace"]:
+		var ent := Node3D.new()
+		var comps := Node.new()
+		comps.name = "Components"
+		ent.add_child(comps)
+		var look := Node3D.new()
+		look.name = "Visual"
+		ent.add_child(look)
+		add_child(ent)
+		var sc := StationComponent.new()
+		comps.add_child(sc)
+		sc.def = StationDef.by_key(key)
+		sc.key = key
+		sc._build()
+		var drawn := AABB()
+		var first: bool = true
+		for mi: Node in look.find_children("*", "MeshInstance3D", true, false):
+			if mi.is_in_group(&"not_solid"):
+				continue
+			var b: AABB = RegentsSolid.relative(look, mi as MeshInstance3D) * (mi as MeshInstance3D).get_aabb()
+			drawn = b if first else drawn.merge(b)
+			first = false
+		var held: AABB = _points_box(sc.solid.get_children() if sc.solid != null else [])
+		_check(sc.solid != null and held.grow(0.05).encloses(drawn), "the %s blocks wherever it is drawn (%s in %s)" % [key, drawn, held])
+		ent.free()
+	# A level's props: rocks and bushes solid, grass walked through.
+	var level := Node3D.new()
+	var decor := Node3D.new()
+	decor.name = "Decor"
+	level.add_child(decor)
+	var big: Node3D = (load("res://game/regents/art/nature/Rock_Big_1.gltf") as PackedScene).instantiate() as Node3D
+	big.position = Vector3(10, 0, 0)
+	decor.add_child(big)
+	var grass: Node3D = (load("res://game/regents/art/nature/Grass_Common_Short.gltf") as PackedScene).instantiate() as Node3D
+	decor.add_child(grass)
+	var sp := RegentsSolidProps.new()
+	level.add_child(sp)
+	add_child(level)
+	var walls: Array[Node] = decor.find_children("Solid*", "StaticBody3D", false, false)
+	var wall_box: AABB = _points_box(walls[0].get_children() if not walls.is_empty() else [])
+	_check(sp.made_solid == [big] and walls.size() == 1, "a level's rock is made solid, its grass is not (%d bodies)" % walls.size())
+	_check(wall_box.has_point(Vector3(10, 0.5, 0)), "where the rock stands (%s)" % wall_box)
+	level.free()
+
+
+## One rock of `def` (entity `id`): solid across its shape, its ore where its model's layout puts it, not
+## solid itself; worked out it blocks nothing, back it blocks again.
+func _check_rock(def: NodeDef, id: int) -> void:
+	var rock: Array = _node_entity(def, id)
+	var nc: NodeComponent = rock[1]
+	var model_box: AABB = NodeComponent._aabb_of(nc._model)
+	var solid_box: AABB = _points_box(nc.solid.get_children() if nc.solid != null else [])
+	_check(nc.solid != null and solid_box.size.x >= model_box.size.x * nc.def.model_scale * 0.9 and solid_box.size.z >= model_box.size.z * nc.def.model_scale * 0.9,
+		"%s (entity %d) is solid across its whole shape (%.2f x %.2f m, the model %.2f x %.2f)" % [def.display_name, id, solid_box.size.x, solid_box.size.z,
+		model_box.size.x * nc.def.model_scale, model_box.size.z * nc.def.model_scale])
+	# Its ore: as its model's layout puts it (`ore/<model>_ore.tscn`).
+	var scene: PackedScene = nc.def.models[id % nc.def.models.size()]
+	var laid: Array[Transform3D] = RegentsOreSpots.from_layout(load(RegentsOreSpots.layout_path(scene)) as PackedScene)
+	var same: bool = nc.nuggets.size() == laid.size() and laid.size() > 0
+	for i: int in mini(nc.nuggets.size(), laid.size()):
+		same = same and nc.nuggets[i].transform.is_equal_approx(laid[i])
+	_check(same, "%s: its nuggets are where %s's layout puts them (%d)" % [def.display_name, scene.resource_path.get_file(), laid.size()])
+	_check(nc.nuggets.all(func(n: Node3D) -> bool: return n.is_in_group(&"not_solid")), "and they are no part of what blocks")
+	nc._set_depleted(true)
+	await get_tree().physics_frame
+	_check(nc.solid.collision_layer == 0, "worked out, the rubble blocks nothing")
+	nc._set_depleted(false)
+	await get_tree().physics_frame
+	_check(nc.solid.collision_layer == 1, "back, it blocks again")
+	(rock[0] as Node).free()
+
+
+## A node entity as the game builds one (an entity, its Components, its Visual) showing `def`.
+func _node_entity(def: NodeDef, id: int) -> Array:
+	var ent := Node3D.new()
+	var comps := Node.new()
+	comps.name = "Components"
+	ent.add_child(comps)
+	var look := Node3D.new()
+	look.name = "Visual"
+	ent.add_child(look)
+	add_child(ent)
+	var nc := NodeComponent.new()
+	nc.entity_id = id
+	comps.add_child(nc)
+	nc._set_def(def)
+	return [ent, nc]
+
+
+## The box round every point of these collision shapes' hulls (in their body's space).
+static func _points_box(shapes: Array) -> AABB:
+	var out := AABB()
+	var first: bool = true
+	for n: Variant in shapes:
+		var cs: CollisionShape3D = n as CollisionShape3D
+		if cs == null:
+			continue
+		var hull: ConvexPolygonShape3D = cs.shape as ConvexPolygonShape3D
+		var cyl: CylinderShape3D = cs.shape as CylinderShape3D
+		var pts: PackedVector3Array = hull.points if hull != null else PackedVector3Array()
+		if cyl != null:
+			pts = PackedVector3Array([cs.position + Vector3(-cyl.radius, -cyl.height * 0.5, -cyl.radius), cs.position + Vector3(cyl.radius, cyl.height * 0.5, cyl.radius)])
+		for p: Vector3 in pts:
+			if first:
+				out = AABB(p, Vector3.ZERO)
+				first = false
+			else:
+				out = out.expand(p)
+	return out
+
+
+class AfkRow extends RefCounted:
+	var target_id: int
+	var def_id: int = 40005
+	var craft: bool
+	var skill_id: int = 0
+	var tool_item: int = 0
+	var started_at: int
+	var next_at: int
 
 
 class PoolRow extends RefCounted:

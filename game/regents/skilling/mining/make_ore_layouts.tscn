@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/mining/make_ore_layouts.gd" id="1_make"]
+
+[node name="MakeOreLayouts" type="Node"]
+script = ExtResource("1_make")

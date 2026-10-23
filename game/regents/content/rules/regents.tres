@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -399,9 +399,47 @@ maximum = 1000.0
 unit = "%"
 description = "THE STAFF (owner, 2026-10-20): every spell's cast time, in percent of what its SpellDef says (a balance dial: 80 makes casting snappier). Whether a cast roots you is its own, not this."
 
+[sub_resource type="Resource" id="Rule_meta_alarm_pct"]
+script = ExtResource("2_rule")
+name = &"meta_alarm_pct"
+number = 45.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE META ALARM (LOOT_AND_STYLES.md section 7.5, owner priority): a weapon type dealing more than this share of an hour's damage to foes is an alarm (meta_share.alarm, a warning in the server's log, red on the telemetry page). 0: never."
+
+[sub_resource type="Resource" id="Rule_meta_alarm_min_hits"]
+script = ExtResource("2_rule")
+name = &"meta_alarm_min_hits"
+kind = 1
+number = 50.0
+minimum = 0.0
+maximum = 100000.0
+unit = "hits"
+description = "THE META ALARM: an hour needs at least this many hits on foes before a share can be an alarm (two friends with one sword each are no meta)."
+
+[sub_resource type="Resource" id="Rule_meta_keep_days"]
+script = ExtResource("2_rule")
+name = &"meta_keep_days"
+number = 14.0
+minimum = 1.0
+maximum = 365.0
+unit = "days"
+description = "THE META: how long the database keeps each closed hour's shares (meta_share). The host's chronicle keeps them forever either way."
+
+[sub_resource type="Resource" id="Rule_meta_period_s"]
+script = ExtResource("2_rule")
+name = &"meta_period_s"
+kind = 1
+number = 3600.0
+minimum = 10.0
+maximum = 86400.0
+unit = "s"
+description = "THE META: how long a period the weapon shares are rolled up over (an hour). A tally in progress closes when its own period ends."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

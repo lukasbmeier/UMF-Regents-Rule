@@ -13,6 +13,7 @@ kind = 104
 scene = ExtResource("2_scene")
 brain = &"regents/foe"
 visual_scene = ExtResource("3_look")
+visual_yaw_deg = 180.0
 animation_set = ExtResource("4_anim")
 movement_profile = ExtResource("5_move")
 display_name = "Skeleton axeman"

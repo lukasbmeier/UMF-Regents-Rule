@@ -4,6 +4,7 @@
 # Directories end in /. Globs are git pathspecs. The bindings (spacetime_bindings/) regenerate at codegen.
 game/regents/
 shared/content/regents/
+shared/regents/
 server/src/game/regents.rs
 server/src/genre/regents/
 docs/regents_rule/

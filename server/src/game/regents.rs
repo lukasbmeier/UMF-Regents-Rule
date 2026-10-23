@@ -851,6 +851,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
     if ctx.sender() != ctx.database_identity() {
         return Err("work_tick: scheduler only".into());
     }
+    close_meta_hours(ctx);
     let stop_m = hot_number(ctx, hot::AFK_STOP_MOVING_M) as f32;
     let now = micros(ctx.timestamp);
     let rows: Vec<AfkWork> = ctx.db.afk_work().iter().collect();
@@ -1104,6 +1105,47 @@ pub struct FoeKill {
 }
 
 /// A training dummy, on a level point.
+/// THE META, THIS HOUR (LOOT_AND_STYLES.md §7.5; PROGRESS step 16): each weapon type's hits and damage on
+/// foes (not training dummies) in the period going (`regents.meta_period_s`, an hour), one row per
+/// (period, activity, weapon). PRIVATE, and kept out of the chronicle (`shared/regents/telemetry.json`): it
+/// changes with every hit. Closed into `meta_share` as the period ends.
+#[table(accessor = meta_tally)]
+pub struct MetaTally {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    /// When its period began (Unix seconds), and how long it is.
+    pub from_s: u64,
+    pub period_s: u32,
+    /// Where it was fought: "overworld" (lairs, dungeons and duels to come).
+    pub activity: String,
+    /// The weapon type: its kit's key (sword, axe, bow, staff).
+    pub weapon: String,
+    pub hits: u32,
+    pub damage: f32,
+}
+
+/// THE META, A CLOSED HOUR (or period): each weapon type's share of its damage to foes in an activity,
+/// and whether it was an ALARM (`regents.meta_alarm_pct` past, in a period of at least
+/// `regents.meta_alarm_min_hits` hits). Public: a game's own page may show it. Kept
+/// `regents.meta_keep_days`; the host's chronicle keeps every one.
+#[table(accessor = meta_share, public)]
+pub struct MetaShare {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    /// When its period began (Unix seconds), and how long it was.
+    #[index(btree)]
+    pub from_s: u64,
+    pub period_s: u32,
+    pub activity: String,
+    pub weapon: String,
+    pub hits: u32,
+    pub damage: f32,
+    pub share_pct: f32,
+    pub alarm: bool,
+}
+
 #[table(accessor = dummy, public)]
 #[derive(Clone)]
 pub struct Dummy {
@@ -1269,6 +1311,9 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
                     let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 }
                         else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
                     add_xp(ctx, a.owner, a.skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+                    if dummy.is_none() {
+                        tally_hit(ctx, a.skill_id, dmg);
+                    }
                 }
                 if ctx.db.foe().entity_id().find(other_id).is_some() {
                     match ctx.db.stuck_arrow().foe().filter(other_id).find(|s| s.owner == a.owner && s.item_id == a.item_id) {
@@ -1691,6 +1736,9 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
     if ctx.db.player().entity_id().find(owner).is_some() {
         let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
         add_xp(ctx, owner, skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+        if dummy.is_none() {
+            tally_hit(ctx, skill_id, dmg);
+        }
     }
     log::info!("regents: {owner}'s spell hit {other_id} for {dmg:.1}");
     if ctx.db.health_state().entity_id().find(other_id).is_some_and(|h| h.is_dead) {
@@ -1924,6 +1972,64 @@ fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     }
 }
 
+/// THE META: a player's hit of `dmg` on a foe (not a dummy) with the weapon that trains `skill_id`, added to
+/// this hour's tally.
+fn tally_hit(ctx: &ReducerContext, skill_id: u32, dmg: f32) {
+    let weapon = rules::kit_of_skill(skill_id);
+    if weapon.is_empty() || dmg <= 0.0 {
+        return;
+    }
+    let period_s = hot_number(ctx, hot::META_PERIOD_S).max(1.0) as u32;
+    let from_s = rules::meta_period(micros(ctx.timestamp), period_s);
+    let activity = "overworld";
+    match ctx.db.meta_tally().iter().find(|t| t.from_s == from_s && t.period_s == period_s && t.activity == activity && t.weapon == weapon) {
+        Some(mut t) => {
+            t.hits += 1;
+            t.damage += dmg;
+            ctx.db.meta_tally().id().update(t);
+        }
+        None => {
+            ctx.db.meta_tally().insert(MetaTally { id: 0, from_s, period_s, activity: activity.into(), weapon: weapon.into(), hits: 1, damage: dmg });
+        }
+    }
+}
+
+/// THE META: every period that has ended closed into `meta_share` (each weapon's share of its activity's
+/// damage, an alarm logged as a warning), and closed ones older than `regents.meta_keep_days` dropped. A
+/// period ends at its own length, or sooner when `regents.meta_period_s` has been made shorter since.
+fn close_meta_hours(ctx: &ReducerContext) {
+    let now_s = (micros(ctx.timestamp) / 1_000_000).max(0) as u64;
+    let live_s = hot_number(ctx, hot::META_PERIOD_S).max(1.0) as u64;
+    let done: Vec<MetaTally> = ctx.db.meta_tally().iter().filter(|t| t.from_s + (t.period_s as u64).min(live_s) <= now_s).collect();
+    if !done.is_empty() {
+        let alarm_pct = hot_number(ctx, hot::META_ALARM_PCT);
+        let min_hits = hot_number(ctx, hot::META_ALARM_MIN_HITS);
+        let mut groups: Vec<(u64, u32, String)> = done.iter().map(|t| (t.from_s, t.period_s, t.activity.clone())).collect();
+        groups.sort();
+        groups.dedup();
+        for (from_s, period_s, activity) in groups {
+            let rows: Vec<&MetaTally> = done.iter().filter(|t| t.from_s == from_s && t.period_s == period_s && t.activity == activity).collect();
+            let shares = rules::meta_shares(&rows.iter().map(|t| t.damage).collect::<Vec<f32>>());
+            let hits: u32 = rows.iter().map(|t| t.hits).sum();
+            for (t, share) in rows.iter().zip(shares) {
+                let alarm = rules::meta_alarm(share, hits, alarm_pct, min_hits);
+                if alarm {
+                    log::warn!("META ALARM {activity}, the {period_s} s from {from_s}: {} dealt {share:.0}% of the damage ({} of {hits} hits)", t.weapon, t.hits);
+                }
+                ctx.db.meta_share().insert(MetaShare { id: 0, from_s, period_s, activity: activity.clone(), weapon: t.weapon.clone(), hits: t.hits, damage: t.damage, share_pct: share, alarm });
+            }
+        }
+        for t in done {
+            ctx.db.meta_tally().id().delete(t.id);
+        }
+    }
+    let keep_s = (hot_number(ctx, hot::META_KEEP_DAYS).max(1.0) * 86_400.0) as u64;
+    let old: Vec<u64> = ctx.db.meta_share().from_s().filter(..now_s.saturating_sub(keep_s)).map(|m| m.id).collect();
+    for id in old {
+        ctx.db.meta_share().id().delete(id);
+    }
+}
+
 /// What a hit by `actor` with `ability_id` on `target` does (true: done here). Ours when it is a kit's.
 fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return false };
@@ -1993,6 +2099,9 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         };
         let xp = (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32;
         add_xp(ctx, actor, kit.skill, xp);
+        if dummy.is_none() {
+            tally_hit(ctx, kit.skill, dmg);
+        }
     }
     if dmg > 0.0 && ctx.db.health_state().entity_id().find(target.entity_id).is_some_and(|h| h.is_dead) {
         fell(ctx, target.entity_id, actor);

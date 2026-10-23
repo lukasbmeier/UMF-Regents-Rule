@@ -54,6 +54,39 @@ script = ExtResource("1_qscmp")
 anim_name = &"Roll"
 speed_scale = 2.0
 
+[sub_resource type="Resource" id="Clip_bow_loose"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Shoot"
+speed_scale = 1.2
+
+[sub_resource type="Resource" id="Clip_bow_draw"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Notch"
+
+[sub_resource type="Resource" id="Clip_bow_aim"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Aim_Neutral"
+loop = true
+
+[sub_resource type="Resource" id="Clip_spell_shoot"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Simple_Shoot"
+
+[sub_resource type="Resource" id="Clip_spell_double"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Double_Shoot"
+speed_scale = 0.8
+
+[sub_resource type="Resource" id="Clip_spell_cast"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Simple_Idle"
+loop = true
+
+[sub_resource type="Resource" id="Clip_spell_channel"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Double_Idle"
+loop = true
+
 [sub_resource type="Resource" id="Resource_lhmxf"]
 script = ExtResource("1_qscmp")
 anim_name = &"Interact"
@@ -177,39 +210,6 @@ anim_name = &"Hit_Chest"
 script = ExtResource("1_qscmp")
 anim_name = &"extra/KipUp"
 
-[sub_resource type="Resource" id="Clip_bow_loose"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Shoot"
-speed_scale = 1.2
-
-[sub_resource type="Resource" id="Clip_bow_draw"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Notch"
-
-[sub_resource type="Resource" id="Clip_bow_aim"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Aim_Neutral"
-loop = true
-
-[sub_resource type="Resource" id="Clip_spell_shoot"]
-script = ExtResource("1_qscmp")
-anim_name = &"Spell_Simple_Shoot"
-
-[sub_resource type="Resource" id="Clip_spell_double"]
-script = ExtResource("1_qscmp")
-anim_name = &"Spell_Double_Shoot"
-speed_scale = 0.8
-
-[sub_resource type="Resource" id="Clip_spell_cast"]
-script = ExtResource("1_qscmp")
-anim_name = &"Spell_Simple_Idle"
-loop = true
-
-[sub_resource type="Resource" id="Clip_spell_channel"]
-script = ExtResource("1_qscmp")
-anim_name = &"Spell_Double_Idle"
-loop = true
-
 [resource]
 script = ExtResource("4_hpq5n")
 libraries = Dictionary[StringName, AnimationLibrary]({
@@ -230,15 +230,11 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"ability.40009": SubResource("Clip_attack_axe_cleave"),
 &"ability.40010": SubResource("Clip_dodge_roll"),
 &"ability.40011": SubResource("Clip_bow_loose"),
-&"pose.bow_draw": SubResource("Clip_bow_draw"),
-&"pose.bow_aim": SubResource("Clip_bow_aim"),
 &"ability.40012": SubResource("Clip_spell_shoot"),
 &"ability.40013": SubResource("Clip_spell_shoot"),
 &"ability.40014": SubResource("Clip_spell_double"),
 &"ability.40015": SubResource("Clip_spell_shoot"),
 &"ability.40016": SubResource("Clip_spell_double"),
-&"pose.spell_cast": SubResource("Clip_spell_cast"),
-&"pose.spell_channel": SubResource("Clip_spell_channel"),
 &"interact": SubResource("Resource_lhmxf"),
 &"item.draw": SubResource("Resource_k8ku3"),
 &"item.stow": SubResource("Resource_5hufo"),
@@ -256,11 +252,15 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"locomotion.walk_left": SubResource("Resource_ccsxd"),
 &"locomotion.walk_right": SubResource("Resource_m8n37"),
 &"pose.block": SubResource("Clip_pose_block"),
+&"pose.bow_aim": SubResource("Clip_bow_aim"),
+&"pose.bow_draw": SubResource("Clip_bow_draw"),
 &"pose.chop": SubResource("Clip_chop"),
 &"pose.craft": SubResource("Clip_craft"),
 &"pose.mine": SubResource("Clip_mine"),
 &"pose.smelt": SubResource("Clip_smelt"),
 &"pose.smith": SubResource("Clip_mine"),
+&"pose.spell_cast": SubResource("Clip_spell_cast"),
+&"pose.spell_channel": SubResource("Clip_spell_channel"),
 &"react.death": SubResource("Resource_p0gq0"),
 &"react.hit": SubResource("Resource_c3sdk"),
 &"react.revive": SubResource("Resource_82rw1")

@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ItemGrip" format=3]
+[gd_resource type="Resource" script_class="ItemGrip" format=3 uid="uid://dmbiwkar5res2"]
 
-[ext_resource type="Script" path="res://foundation/held/grip_entry.gd" id="1_entry"]
-[ext_resource type="Script" path="res://foundation/held/item_grip.gd" id="2_grip"]
+[ext_resource type="Script" uid="uid://h2oobh1iuatv" path="res://foundation/held/grip_entry.gd" id="1_entry"]
+[ext_resource type="Script" uid="uid://ct18lkq3ruqa" path="res://foundation/held/item_grip.gd" id="2_grip"]
 
 [sub_resource type="Resource" id="Grip_idle"]
 script = ExtResource("1_entry")
@@ -113,8 +113,8 @@ steady = true
 [sub_resource type="Resource" id="Resource_gho3n"]
 script = ExtResource("1_entry")
 animation = &"pose.chop"
-position = Vector3(-0.021636514, 0.08090101, 0.013623634)
-rotation_degrees = Vector3(68.31735, 48.286873, 46.509438)
+position = Vector3(-0.022000015, 0.10599995, -0.07100004)
+rotation_degrees = Vector3(1.0543753, -90.038605, -75.266556)
 
 [sub_resource type="Resource" id="Resource_mo1r8"]
 script = ExtResource("1_entry")
@@ -134,9 +134,24 @@ animation = &"react.revive"
 position = Vector3(-0.02305272, 0.080640934, 0.013684266)
 rotation_degrees = Vector3(14.619067, 75.94474, 82.89546)
 
+[sub_resource type="Resource" id="Resource_vc1b4"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"male"
+position = Vector3(-0.02700007, 0.08100003, -0.07099995)
+rotation_degrees = Vector3(1.0543536, -90.0386, -75.266556)
+
+[sub_resource type="Resource" id="Resource_qq1ev"]
+script = ExtResource("1_entry")
+animation = &"locomotion.idle"
+body = &"female"
+position = Vector3(-0.022000015, 0.04099986, -0.14100003)
+rotation_degrees = Vector3(1.0543655, -90.03858, -75.266556)
+
 [resource]
 script = ExtResource("2_grip")
-entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle"), SubResource("Resource_lb4m1"), SubResource("Resource_k4jnl"), SubResource("Resource_d75df"), SubResource("Resource_xyiu6"), SubResource("Resource_ncxrd"), SubResource("Resource_whv7e"), SubResource("Resource_e0u1x"), SubResource("Resource_tdjaq"), SubResource("Resource_b6hin"), SubResource("Resource_d2yqu"), SubResource("Resource_u60aa"), SubResource("Resource_nx2i7"), SubResource("Resource_tre25"), SubResource("Resource_h2hmd"), SubResource("Resource_pcvhc"), SubResource("Resource_gho3n"), SubResource("Resource_mo1r8"), SubResource("Resource_j0ion"), SubResource("Resource_dejfo")])
+entries = Array[ExtResource("1_entry")]([SubResource("Grip_idle"), SubResource("Resource_lb4m1"), SubResource("Resource_k4jnl"), SubResource("Resource_d75df"), SubResource("Resource_xyiu6"), SubResource("Resource_ncxrd"), SubResource("Resource_whv7e"), SubResource("Resource_e0u1x"), SubResource("Resource_tdjaq"), SubResource("Resource_b6hin"), SubResource("Resource_d2yqu"), SubResource("Resource_u60aa"), SubResource("Resource_nx2i7"), SubResource("Resource_tre25"), SubResource("Resource_h2hmd"), SubResource("Resource_pcvhc"), SubResource("Resource_gho3n"), SubResource("Resource_mo1r8"), SubResource("Resource_j0ion"), SubResource("Resource_dejfo"), SubResource("Resource_vc1b4"), SubResource("Resource_qq1ev")])
+universal = true
 fist_animation = &"pose.chop"
 stow_position = Vector3(-0.17758694, 0.40684354, -0.14494282)
 stow_rotation_degrees = Vector3(59.88341, -96.160805, 169.69165)

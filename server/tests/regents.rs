@@ -592,3 +592,25 @@ fn a_tools_traits_change_what_a_node_gives() {
         "Prospector's: 5 % more rare chance");
     assert_eq!(rules::item_outcome(tree, 1.0, 7, 8), rules::item_outcome_with(tree, 1.0, 0, 1.0, 7, 8), "no traits: as before");
 }
+
+#[test]
+fn the_meta_is_each_weapons_share_of_a_periods_damage_and_an_alarm_past_the_line() {
+    assert_eq!(rules::meta_period(0, 3600), 0);
+    assert_eq!(rules::meta_period(3_599_999_999, 3600), 0, "the last microsecond of the first hour");
+    assert_eq!(rules::meta_period(3_600_000_000, 3600), 3600);
+    assert_eq!(rules::meta_period(1_792_614_123_000_000, 3600), 1_792_612_800, "an hour in 2026 began on the hour");
+    assert_eq!(rules::meta_period(1_792_614_123_000_000, 10), 1_792_614_120, "a 10 s period (a test's)");
+    assert_eq!(rules::meta_period(5_000_000, 0), 5, "a period of 0 is taken as 1 s, never a division by 0");
+    let s = rules::meta_shares(&[60.0, 30.0, 10.0]);
+    assert!((s[0] - 60.0).abs() < 1e-4 && (s[1] - 30.0).abs() < 1e-4 && (s[2] - 10.0).abs() < 1e-4, "{s:?}");
+    assert_eq!(rules::meta_shares(&[0.0, 0.0]), vec![0.0, 0.0], "no damage: no shares");
+    assert!(rules::meta_alarm(60.0, 100, 45.0, 50.0), "60 % of a busy hour past 45: an alarm");
+    assert!(!rules::meta_alarm(44.0, 100, 45.0, 50.0), "under the line: none");
+    assert!(!rules::meta_alarm(100.0, 12, 45.0, 50.0), "a quiet hour (two friends, one sword): none");
+    assert!(!rules::meta_alarm(100.0, 1000, 0.0, 50.0), "the alarm at 0: never");
+    for k in ["sword", "bow", "staff"] {
+        let kit = rules::kit_keyed(k).unwrap_or_else(|| panic!("a {k} kit"));
+        assert_eq!(rules::kit_of_skill(kit.skill), k, "the {k}'s skill names its weapon type");
+    }
+    assert_eq!(rules::kit_of_skill(0), "", "no skill, no weapon type");
+}

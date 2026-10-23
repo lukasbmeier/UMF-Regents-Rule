@@ -33,6 +33,7 @@ const InputFrame = preload('res://spacetime_bindings/schema/types/umf_input_fram
 const InventoryItem = preload('res://spacetime_bindings/schema/types/umf_inventory_item.gd')
 const ItemDef = preload('res://spacetime_bindings/schema/types/umf_item_def.gd')
 const LobbyMember = preload('res://spacetime_bindings/schema/types/umf_lobby_member.gd')
+const MetaShare = preload('res://spacetime_bindings/schema/types/umf_meta_share.gd')
 const MovementStateRow = preload('res://spacetime_bindings/schema/types/umf_movement_state_row.gd')
 const Noise = preload('res://spacetime_bindings/schema/types/umf_noise.gd')
 const NpcBrainRow = preload('res://spacetime_bindings/schema/types/umf_npc_brain_row.gd')
