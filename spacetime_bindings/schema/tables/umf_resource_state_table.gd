@@ -7,6 +7,7 @@ signal updated(old_row: UmfResourceState, new_row: UmfResourceState)
 signal deleted(row: UmfResourceState)
 
 var id: UmfResourceStateIdUniqueIndex
+var chunk: UmfResourceStateChunkBTreeIndex
 var entity_id: UmfResourceStateEntityIdBTreeIndex
 var world_id: UmfResourceStateWorldIdBTreeIndex
 
@@ -14,6 +15,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"resource_state"
 	id = UmfResourceStateIdUniqueIndex.new(p_local_db)
+	chunk = UmfResourceStateChunkBTreeIndex.new(p_local_db)
 	entity_id = UmfResourceStateEntityIdBTreeIndex.new(p_local_db)
 	world_id = UmfResourceStateWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
@@ -65,6 +67,12 @@ func find_by_world_id(value: int) -> Array[UmfResourceState]:
 
 func first_by_world_id(value: int) -> UmfResourceState:
 	return world_id._first_row(value) as UmfResourceState
+
+func find_by_chunk(value: int) -> Array[UmfResourceState]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfResourceState:
+	return chunk._first_row(value) as UmfResourceState
 
 func find_by_resource_id(value: int) -> Array[UmfResourceState]:
 	return find_by(&"resource_id", value)

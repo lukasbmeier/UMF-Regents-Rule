@@ -267,6 +267,42 @@
 					"number": 100.0,
 					"text": "",
 					"unit": "%"
+				},
+				{
+					"key": "foundation.guests_allowed",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "foundation.characters_per_account",
+					"kind": "integer",
+					"max": 12.0,
+					"min": 1.0,
+					"number": 1.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "foundation.park_offline_s",
+					"kind": "number",
+					"max": 86400.0,
+					"min": 0.0,
+					"number": 0.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "foundation.link_code_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 30.0,
+					"number": 600.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

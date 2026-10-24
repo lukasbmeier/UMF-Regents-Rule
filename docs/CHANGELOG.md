@@ -748,3 +748,37 @@ From Luke's first try of Fowl Play (DECISIONS #221):
 
 ## 0.51.2 — a body forgets a stand-in that went
 - `FlyingBody` skips a collision exception freed since (a referee's stand-in for someone who left, or who became untouchable: DiscGolf's finished golfer); before, its contact cast called `get_rid` on null every frame. Found by DiscGolf's bots playtest.
+
+## Between 0.51.2 and 1.0.0 — what Regent's Rule and the friends' playtests asked for
+Shipped to the games as they were made (DECISIONS #258-#277): a replay frame may hold one dash, a
+correction keeps the client's bookkeeping; the grip preview's quick way, its file written on save, spin,
+named animations and per-body grips; one look for every screen (`UiStyle`, `UiWindow`, `UiSlot`), item
+grades as colours, icons drawn from the models; held upper-body poses; loot tables rolled per
+contributing player with pity, items on the ground (yours, then anyone's, then gone), resources that
+fill by themselves, traits that trade; no referee runs old code, the editor is an admin, a tool is not a
+person; chat; a held jump hops again only once it has stopped rising; the chronicle and the telemetry
+page; a loop a clip does not have is its node's.
+
+## 1.0.0 — the world in cells, a streamed level, accounts (a reshape: every game's database wiped once)
+The plan, agreed with Luke on 2026-10-23: `docs/TEMPLATE_1_0.md` (DECISIONS #278-#281). The first major
+version: tables changed shape, so builds from before it are refused before connecting (`compat` 2) and
+each game publishes `--fresh` once.
+- **Cells**: every row of a placed thing carries its 64 m cell (`chunk`), kept right by
+  `server/src/module/place.rs` (every movement write goes through it; a lint stops any other).
+  `shared/rules.json` `cells` holds the numbers.
+- **Ring interest** (`NetConfig.interest = RING`, Regent's Rule's): a client is sent the 3 x 3 cells round
+  its player and its own rows, swapped as it walks. Every other game keeps `WORLD` and plays as before.
+- **Streaming**: `LevelInfo.streamed` with a `Cells` node; the bake cuts it into a scene per cell and
+  `LevelStreamer` loads the 5 x 5 round the player.
+- **Accounts**: sign in through SpacetimeAuth (set up per game in `shared/game.json` `sign_in`; until
+  then everyone is a guest, as before), an account per person on any machine, characters
+  (`foundation.characters_per_account`), link codes, take-over, guests by `foundation.guests_allowed`,
+  the connect screen's Sign in and the Escape menu's Account page.
+- **Parking**: `foundation.park_offline_s` puts an offline character away and brings it back where it
+  stood (0, the default: as before).
+- `player` gains `left_at`, `connection_id`, `account_id`; `ground_item.owner_id` is indexed (#281).
+- New suites: `tests/accounts_test.sh` (with the suites' own OIDC issuer, `tests/lib/oidc_issuer.py`),
+  `tests/ring_test.sh`; unit `cells`, `streaming`, `accounts`; native `cell`.
+- Taking it in a game: commit, pull, add `"compat": 2` to its own `shared/game.json` (that file is the
+  game's and does not arrive with the pull), `tools\publish.cmd --fresh --codegen`, run its suites; its
+  friends download the new build.

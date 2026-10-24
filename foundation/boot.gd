@@ -62,6 +62,15 @@ var _flag_autoconnect: bool = false
 var _flag_connect_timeout: float = -1.0
 var _flag_no_splash: bool = false
 var _flag_lobby_screen: bool = false
+## SIGNING IN (template 1.0): sign in before connecting this run; the service, client and port instead
+## of shared/game.json's; and, for a test, the browser's part played by this process as that user.
+var _flag_sign_in: bool = false
+var _flag_sign_in_issuer: String = ""
+var _flag_sign_in_client: String = ""
+var _flag_sign_in_port: int = 0
+var _flag_sign_in_as: String = ""
+## The sign-in (`SignIn`), made on first use.
+var _sign_in: SignIn = null
 
 
 func _ready() -> void:
@@ -156,6 +165,11 @@ func _start_game(has_display: bool) -> void:
 		var notices := Notices.new()
 		notices.name = "Notices"
 		add_child(notices)
+	# A streamed level's scenery round the player (template 1.0, DECISIONS #278): every game, display or
+	# not (a headless player predicts on its collision too). It does nothing for a level loaded whole.
+	var streamer := LevelStreamer.new()
+	streamer.name = "LevelStreamer"
+	add_child(streamer)
 	# Items on the ground, shown and walked over (DECISIONS #269): every game, outside the HUD.
 	if has_display:
 		add_child(GroundItems.new())
@@ -177,12 +191,16 @@ func _start_game(has_display: bool) -> void:
 	if pause_menu != null:
 		_menu = pause_menu.instantiate() as PauseMenu
 		add_child(_menu)
+		_add_account_page()
 	if connect_screen != null and (has_display or _flag_connect_screen):
 		_screen = connect_screen.instantiate() as ConnectScreen
 		if _flag_connect_timeout > 0.0:
 			_screen.first_connect_timeout_sec = _flag_connect_timeout
 		add_child(_screen)
 		_screen.connect_requested.connect(_on_connect_requested)
+		_screen.show_sign_in(sign_in().configured(), sign_in().remembered())
+		_screen.sign_in_requested.connect(func() -> void: _flag_sign_in = true)
+		_screen.sign_out_requested.connect(sign_out)
 		_screen.open(net_config.host, _player_name, ConnectSettings.auto_connect())
 	if _menu != null:
 		_menu.can_disconnect = _screen != null
@@ -216,7 +234,123 @@ func _on_connect_requested(host: String, player_name: String, auto_connect: bool
 
 
 func _connect() -> void:
+	if _flag_sign_in or sign_in().remembered():
+		var token: String = await _signed_in_token()
+		if token.is_empty():
+			return   # said on screen; the connect screen stays to try again (or play as a guest)
+		SpaceTimeSync.sign_in_token = token
 	SpaceTimeSync.connect_to_server(net_config)
+
+
+## YOUR ACCOUNT in the Escape menu (template 1.0): characters, link codes, signing in and out.
+func _add_account_page() -> void:
+	var page := AccountPage.new()
+	page.can_sign_in = sign_in().configured()
+	_menu.add_child(page)   # the menu's from now on, hidden until opened
+	var button: Button = _menu.add_button("Account")
+	button.pressed.connect(func() -> void: _menu.open_page(page))
+	page.sign_in_requested.connect(func() -> void:
+		page.close()
+		SpaceTimeSync.disconnect_from_server("signing in")
+		sign_in_and_connect())
+	page.sign_out_requested.connect(func() -> void:
+		page.close()
+		sign_out()
+		SpaceTimeSync.disconnect_from_server("signed out")
+		if _screen != null:
+			_screen.show_sign_in(sign_in().configured(), false)
+			_screen.open(net_config.host, _player_name, false, "Signed out.")
+		else:
+			_connect())
+
+
+## The sign-in for this identity slot (its refresh token sits beside the identity's token file).
+func sign_in() -> SignIn:
+	if _sign_in == null:
+		_sign_in = SignIn.new()
+		_sign_in.name = "SignIn"
+		_sign_in.store_path = net_config.token_path.get_basename() + ".sign_in.cfg" \
+			if not net_config.token_path.is_empty() else _sign_in.store_path
+		if not _flag_sign_in_issuer.is_empty():
+			_sign_in.issuer = _flag_sign_in_issuer.trim_suffix("/")
+		if not _flag_sign_in_client.is_empty():
+			_sign_in.client_id = _flag_sign_in_client
+		if _flag_sign_in_port > 0:
+			_sign_in.redirect_port = _flag_sign_in_port
+		if not _flag_sign_in_as.is_empty():
+			_sign_in.open_url = _browserless
+		add_child(_sign_in)
+	return _sign_in
+
+
+## Sign in from the connect screen's button (or the Escape menu's), then connect as the account.
+func sign_in_and_connect() -> void:
+	_flag_sign_in = true
+	if _screen != null:
+		_screen.submit()
+	else:
+		_connect()
+
+
+## Sign out: the kept sign-in goes, and the next connect is as this machine (a guest).
+func sign_out() -> void:
+	sign_in().forget()
+	_flag_sign_in = false
+	SpaceTimeSync.sign_in_token = ""
+
+
+## A sign-in's ID token: silently from the kept refresh token, else through the browser. Empty when
+## it did not work (said on screen).
+func _signed_in_token() -> String:
+	var si: SignIn = sign_in()
+	if not si.configured():
+		SignalBus.notification_requested.emit("This game has no sign-in set up (shared/game.json sign_in)", 2)
+		_flag_sign_in = false
+		return ""
+	var result: Array[String] = ["", ""]
+	var ok_cb: Callable = func(t: String) -> void: result[0] = t
+	var bad_cb: Callable = func(why: String) -> void: result[1] = why
+	si.signed_in.connect(ok_cb)
+	si.failed.connect(bad_cb)
+	if si.remembered():
+		print("[Boot] signing in again (kept from last time)")
+		await si.resume()
+	if result[0].is_empty():
+		result[1] = ""
+		print("[Boot] signing in through the browser")
+		SignalBus.notification_requested.emit("Sign in in your browser…", 1)
+		if _screen != null:
+			_screen.waiting_for_sign_in = true
+		si.start(_flag_sign_in_as)
+		while result[0].is_empty() and result[1].is_empty():
+			await get_tree().process_frame
+	si.signed_in.disconnect(ok_cb)
+	si.failed.disconnect(bad_cb)
+	if _screen != null:
+		_screen.waiting_for_sign_in = false
+	if result[0].is_empty():
+		push_warning("[Boot] sign-in failed: " + result[1])
+		SignalBus.notification_requested.emit("Sign-in failed: " + result[1], 2)
+		_flag_sign_in = false
+		if _screen != null:
+			_screen.sign_in_failed(result[1])
+	else:
+		print("[Boot] signed in")
+		if _screen != null:
+			_screen.show_sign_in(si.configured(), si.remembered())
+	return result[0]
+
+
+## TESTING (`--sign-in-as=`): the browser's part, played here: the service's page is asked for, and its
+## answer (a redirect to our own 127.0.0.1 listener) followed, as a browser would. Only the suites'
+## issuer says yes without a person (tests/lib/oidc_issuer.py).
+func _browserless(url: String) -> void:
+	var req := HTTPRequest.new()
+	req.max_redirects = 4
+	add_child(req)
+	req.request(url)
+	await req.request_completed
+	req.queue_free()
 
 
 ## The identity tag the token path was chosen by: "" for the default identity, "dev2" for editor
@@ -370,6 +504,11 @@ const DEV_IDENTITY_SLOTS: int = 8
 ##   --connect-timeout=<s>  how long the connect screen waits before giving up (tests).
 ##   --no-splash       skip the splash screen (it is skipped anyway with --autoconnect or --host).
 ##   --lobby-screen    show the lobby screen even headless (tests).
+##   --sign-in         sign in before connecting (template 1.0): silently with a sign-in kept from last
+##                     time, else through the browser. A kept sign-in is used without the flag.
+##   --sign-in-issuer=<url> --sign-in-client=<id> --sign-in-port=<n>  the sign-in service, this game's
+##                     client id there and the port its answer comes back to, instead of shared/game.json's.
+##   --sign-in-as=<who>  TESTING: sign in with no browser, as <who> (the suites' own issuer only).
 ##   --token=<name>    use a separate identity file. TWO CLIENTS ON ONE MACHINE MUST NOT SHARE
 ##                     ONE: the server keys entities by identity, so they would be handed the
 ##                     same entity and look like a single player. Absent, and running from the
@@ -405,6 +544,17 @@ func _apply_cli_overrides() -> void:
 			_flag_no_splash = true
 		elif arg == "--lobby-screen":
 			_flag_lobby_screen = true
+		elif arg == "--sign-in":
+			_flag_sign_in = true
+		elif arg.begins_with("--sign-in-issuer="):
+			_flag_sign_in_issuer = arg.substr("--sign-in-issuer=".length())
+		elif arg.begins_with("--sign-in-client="):
+			_flag_sign_in_client = arg.substr("--sign-in-client=".length())
+		elif arg.begins_with("--sign-in-port="):
+			_flag_sign_in_port = int(arg.substr("--sign-in-port=".length()))
+		elif arg.begins_with("--sign-in-as="):
+			_flag_sign_in_as = arg.substr("--sign-in-as=".length())
+			_flag_sign_in = true
 		elif arg.begins_with("--token="):
 			var tag: String = arg.substr("--token=".length())
 			net_config.token_path = "user://spacetime_token_%s.txt" % tag

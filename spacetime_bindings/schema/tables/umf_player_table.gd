@@ -8,12 +8,14 @@ signal deleted(row: UmfPlayer)
 
 var entity_id: UmfPlayerEntityIdUniqueIndex
 var identity: UmfPlayerIdentityUniqueIndex
+var account_id: UmfPlayerAccountIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"player"
 	entity_id = UmfPlayerEntityIdUniqueIndex.new(p_local_db)
 	identity = UmfPlayerIdentityUniqueIndex.new(p_local_db)
+	account_id = UmfPlayerAccountIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
 	on_delete(_emit_deleted)
@@ -73,6 +75,18 @@ func find_by_online(value: bool) -> Array[UmfPlayer]:
 
 func first_by_online(value: bool) -> UmfPlayer:
 	return first_by(&"online", value)
+
+func find_by_left_at(value: int) -> Array[UmfPlayer]:
+	return find_by(&"left_at", value)
+
+func first_by_left_at(value: int) -> UmfPlayer:
+	return first_by(&"left_at", value)
+
+func find_by_account_id(value: int) -> Array[UmfPlayer]:
+	return account_id.filter(value)
+
+func first_by_account_id(value: int) -> UmfPlayer:
+	return account_id._first_row(value) as UmfPlayer
 
 func _emit_inserted(row: _ModuleTableType) -> void:
 	inserted.emit(row as UmfPlayer)

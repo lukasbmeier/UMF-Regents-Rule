@@ -7,12 +7,14 @@ signal updated(old_row: UmfBodyContact, new_row: UmfBodyContact)
 signal deleted(row: UmfBodyContact)
 
 var id: UmfBodyContactIdUniqueIndex
+var chunk: UmfBodyContactChunkBTreeIndex
 var world_id: UmfBodyContactWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"body_contact"
 	id = UmfBodyContactIdUniqueIndex.new(p_local_db)
+	chunk = UmfBodyContactChunkBTreeIndex.new(p_local_db)
 	world_id = UmfBodyContactWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfBodyContact]:
 
 func first_by_world_id(value: int) -> UmfBodyContact:
 	return world_id._first_row(value) as UmfBodyContact
+
+func find_by_chunk(value: int) -> Array[UmfBodyContact]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfBodyContact:
+	return chunk._first_row(value) as UmfBodyContact
 
 func find_by_body_id(value: int) -> Array[UmfBodyContact]:
 	return find_by(&"body_id", value)

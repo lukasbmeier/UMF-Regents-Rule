@@ -7,12 +7,14 @@ signal updated(old_row: UmfAppearanceRow, new_row: UmfAppearanceRow)
 signal deleted(row: UmfAppearanceRow)
 
 var entity_id: UmfAppearanceEntityIdUniqueIndex
+var chunk: UmfAppearanceChunkBTreeIndex
 var world_id: UmfAppearanceWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"appearance"
 	entity_id = UmfAppearanceEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfAppearanceChunkBTreeIndex.new(p_local_db)
 	world_id = UmfAppearanceWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfAppearanceRow]:
 
 func first_by_world_id(value: int) -> UmfAppearanceRow:
 	return world_id._first_row(value) as UmfAppearanceRow
+
+func find_by_chunk(value: int) -> Array[UmfAppearanceRow]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfAppearanceRow:
+	return chunk._first_row(value) as UmfAppearanceRow
 
 func find_by_look(value: String) -> Array[UmfAppearanceRow]:
 	return find_by(&"look", value)

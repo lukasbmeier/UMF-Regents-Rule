@@ -7,12 +7,14 @@ signal updated(old_row: UmfEquipStateRow, new_row: UmfEquipStateRow)
 signal deleted(row: UmfEquipStateRow)
 
 var entity_id: UmfEquipStateEntityIdUniqueIndex
+var chunk: UmfEquipStateChunkBTreeIndex
 var world_id: UmfEquipStateWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"equip_state"
 	entity_id = UmfEquipStateEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfEquipStateChunkBTreeIndex.new(p_local_db)
 	world_id = UmfEquipStateWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfEquipStateRow]:
 
 func first_by_world_id(value: int) -> UmfEquipStateRow:
 	return world_id._first_row(value) as UmfEquipStateRow
+
+func find_by_chunk(value: int) -> Array[UmfEquipStateRow]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfEquipStateRow:
+	return chunk._first_row(value) as UmfEquipStateRow
 
 func find_by_state(value: int) -> Array[UmfEquipStateRow]:
 	return find_by(&"state", value)

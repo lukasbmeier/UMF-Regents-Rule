@@ -478,20 +478,15 @@ pub fn leave_session(ctx: &ReducerContext) -> Result<(), String> {
 }
 
 /// Keep every row that describes an entity on the same world. Anything that scopes by world
-/// (subscriptions, `tick_movement`, authority checks) reads these.
+/// (subscriptions, `tick_movement`, authority checks) reads these. The rows that also carry its cell
+/// follow it through `follow` (template 1.0); the rest are here.
 pub(crate) fn move_entity_to_world(ctx: &ReducerContext, entity_id: u64, world_id: u32) {
-    if let Some(mut e) = ctx.db.entity().entity_id().find(entity_id) {
-        e.world_id = world_id;
-        ctx.db.entity().entity_id().update(e);
-    }
     if let Some(mut m) = ctx.db.movement_state().entity_id().find(entity_id) {
         m.world_id = world_id;
         m.teleport_flag = true;   // the client must snap, not interpolate across worlds
-        ctx.db.movement_state().entity_id().update(m);
-    }
-    if let Some(mut h) = ctx.db.health_state().entity_id().find(entity_id) {
-        h.world_id = world_id;
-        ctx.db.health_state().entity_id().update(h);
+        write_movement(ctx, m);   // and everything that follows it goes too
+    } else {
+        follow(ctx, entity_id, world_id, chunk_of_entity(ctx, entity_id));
     }
     let queued: Vec<u64> = ctx.db.input_queue().entity_id().filter(entity_id).map(|q| q.id).collect();
     for id in queued {
@@ -502,25 +497,9 @@ pub(crate) fn move_entity_to_world(ctx: &ReducerContext, entity_id: u64, world_i
         b.world_id = world_id;
         ctx.db.npc_brain().entity_id().update(b);
     }
-    if let Some(mut q) = ctx.db.equip_state().entity_id().find(entity_id) {
-        q.world_id = world_id;
-        ctx.db.equip_state().entity_id().update(q);
-    }
-    if let Some(mut a) = ctx.db.appearance().entity_id().find(entity_id) {
-        a.world_id = world_id;
-        ctx.db.appearance().entity_id().update(a);
-    }
     if let Some(mut l) = ctx.db.lobby_member().entity_id().find(entity_id) {
         l.world_id = world_id;
         ctx.db.lobby_member().entity_id().update(l);
-    }
-    if let Some(mut s) = ctx.db.status_state().entity_id().find(entity_id) {
-        s.world_id = world_id;
-        ctx.db.status_state().entity_id().update(s);
-    }
-    for mut r in ctx.db.resource_state().entity_id().filter(entity_id).collect::<Vec<_>>() {
-        r.world_id = world_id;
-        ctx.db.resource_state().id().update(r);
     }
 }
 

@@ -24,6 +24,9 @@ pub struct BodyState {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// Which body it is (`BodyDef.id`).
     pub def_id: u32,
     /// Who threw it (an entity; 0: the world, a genre's rule).
@@ -52,6 +55,9 @@ pub struct BodyContact {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub body_id: u64,
     /// What it hit: an entity (a person, another body), or 0 for the level.
     pub other_id: u64,
@@ -138,13 +144,15 @@ pub fn launch_body_internal(ctx: &ReducerContext, world_id: u32, def_id: u32, ow
     let ent = ctx.db.entity().insert(Entity {
         entity_id: 0,
         world_id,
+        chunk: 0,
         kind: entity_kind::BODY,
         owner: ctx.sender(),
         spawned_at: ctx.timestamp,
     });
-    ctx.db.movement_state().insert(MovementStateRow {
+    insert_movement(ctx, MovementStateRow {
         entity_id: ent.entity_id,
         world_id,
+        chunk: 0,
         pos: origin,
         vel,
         yaw: 0.0,
@@ -159,6 +167,7 @@ pub fn launch_body_internal(ctx: &ReducerContext, world_id: u32, def_id: u32, ow
     ctx.db.body_state().insert(BodyState {
         entity_id: ent.entity_id,
         world_id,
+        chunk: chunk_of_entity(ctx, ent.entity_id),
         def_id,
         owner_id,
         launch_id,
@@ -191,7 +200,9 @@ pub fn write_body_batch(ctx: &ReducerContext, world_id: u32, writes: Vec<BodyWri
             continue;
         }
         let came_to_rest = w.at_rest && !b.at_rest;
-        ctx.db.movement_state().entity_id().update(MovementStateRow {
+        // The body's own row first: written after the move, its old copy would put back its old cell.
+        ctx.db.body_state().entity_id().update(BodyState { rot: w.rot, spin: w.spin, at_rest: w.at_rest, frames: w.frames, ..b });
+        write_movement(ctx, MovementStateRow {
             pos: w.pos,
             vel: w.vel,
             grounded: w.at_rest,
@@ -201,7 +212,6 @@ pub fn write_body_batch(ctx: &ReducerContext, world_id: u32, writes: Vec<BodyWri
             teleport_flag: false,
             ..m
         });
-        ctx.db.body_state().entity_id().update(BodyState { rot: w.rot, spin: w.spin, at_rest: w.at_rest, frames: w.frames, ..b });
         if came_to_rest {
             crate::game::on_body_rest(ctx, w.entity_id);
         }
@@ -226,6 +236,7 @@ pub fn report_body_contacts(ctx: &ReducerContext, world_id: u32, contacts: Vec<B
         ctx.db.body_contact().insert(BodyContact {
             id: 0,
             world_id,
+            chunk: crate::cell::chunk_of(c.pos),
             body_id: c.body_id,
             other_id: c.other_id,
             pos: c.pos,

@@ -40,6 +40,11 @@ pub trait Genre: Sync {
     /// A player who has been here before connected again.
     fn on_player_returned(&self, _ctx: &ReducerContext, _entity_id: u64) {}
 
+    /// An entity is now in another cell or world (template 1.0, DECISIONS #278): the foundation's rows
+    /// that describe it have followed it (`module::follow`). A genre whose own rows describe a placed
+    /// entity (a node's state, a cast in progress) and carry `chunk` and `world_id` moves them here.
+    fn on_place_changed(&self, _ctx: &ReducerContext, _entity_id: u64, _world_id: u32, _chunk: u32) {}
+
     /// A player disconnected. The foundation KEEPS their entity; a party game despawns it here.
     /// Every `spacetime call` from the CLI connects and disconnects too.
     fn on_player_left(&self, _ctx: &ReducerContext, _entity_id: u64) {}
@@ -235,6 +240,12 @@ pub fn on_player_returned(ctx: &ReducerContext, entity_id: u64) {
 pub fn on_player_left(ctx: &ReducerContext, entity_id: u64) {
     for g in GENRES {
         g.on_player_left(ctx, entity_id);
+    }
+}
+
+pub fn on_place_changed(ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32) {
+    for g in GENRES {
+        g.on_place_changed(ctx, entity_id, world_id, chunk);
     }
 }
 

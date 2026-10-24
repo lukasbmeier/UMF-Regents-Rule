@@ -6,18 +6,21 @@ class_name UmfEquipStateRow extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'equip_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"state": &"u8" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"state": &"u8" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var state: int
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. state: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_state: int) -> UmfEquipStateRow:
+## 2. chunk: int[br]
+## 3. state: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_state: int) -> UmfEquipStateRow:
 	var result: UmfEquipStateRow = UmfEquipStateRow.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.state = p_state
 	return result

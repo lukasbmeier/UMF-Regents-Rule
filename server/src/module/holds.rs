@@ -25,6 +25,9 @@ pub struct HoldProgress {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// The hold's content id (`HoldDef.id`).
     pub hold: u32,
     /// How far along it was at `at` (0..1).
@@ -162,6 +165,7 @@ pub fn begin_hold(ctx: &ReducerContext, actor_id: u64, target_id: u64, verb: u8)
             hold_id: 0,
             entity_id: target_id,
             world_id: target.world_id,
+            chunk: chunk_of_entity(ctx, target_id),
             hold: seed.id,
             progress: 0.0,
             rate: 0.0,

@@ -7,6 +7,7 @@ signal updated(old_row: UmfBodyState, new_row: UmfBodyState)
 signal deleted(row: UmfBodyState)
 
 var entity_id: UmfBodyStateEntityIdUniqueIndex
+var chunk: UmfBodyStateChunkBTreeIndex
 var owner_id: UmfBodyStateOwnerIdBTreeIndex
 var world_id: UmfBodyStateWorldIdBTreeIndex
 
@@ -14,6 +15,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"body_state"
 	entity_id = UmfBodyStateEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfBodyStateChunkBTreeIndex.new(p_local_db)
 	owner_id = UmfBodyStateOwnerIdBTreeIndex.new(p_local_db)
 	world_id = UmfBodyStateWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
@@ -59,6 +61,12 @@ func find_by_world_id(value: int) -> Array[UmfBodyState]:
 
 func first_by_world_id(value: int) -> UmfBodyState:
 	return world_id._first_row(value) as UmfBodyState
+
+func find_by_chunk(value: int) -> Array[UmfBodyState]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfBodyState:
+	return chunk._first_row(value) as UmfBodyState
 
 func find_by_def_id(value: int) -> Array[UmfBodyState]:
 	return find_by(&"def_id", value)

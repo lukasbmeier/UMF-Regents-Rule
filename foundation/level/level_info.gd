@@ -11,6 +11,7 @@ class_name LevelInfo extends Node3D
 ##   the spawn        the first `LevelSpawn` in the scene
 ##   the spots        every `LevelSpot` (a named piece of water: a fishing spot)
 ##   the points       every `LevelPoint` (anything else: a basket, a tee, a coop, a goal), by kind
+##   the cells        with `streamed` on: everything under `Cells`, cut into a scene per cell
 ##
 ## into `shared/world/<level_name>.json` and its depth grid, the files `server/build.rs` compiles in
 ## and the client's `LevelBake` reads. Then republish (`tools/publish.sh`) so the server has it.
@@ -34,10 +35,24 @@ class_name LevelInfo extends Node3D
 ## The region sampled, in the level's space (only its X and Z matter): where the water might be.
 @export var bake_bounds: AABB = AABB(Vector3(-40, -20, -40), Vector3(80, 40, 80))
 
+## A BIG WORLD, STREAMED (template 1.0, DECISIONS #278): put what fills the world (props, trees,
+## buildings, markers) under a child node named `Cells`, and the bake also cuts it into one scene per
+## 64 m cell (`LevelCells`); a player's game then loads only the cells round them (`LevelStreamer`, 5 x 5)
+## while the server keeps the whole level. Off: the level is loaded whole, as every level before 1.0.
+@export var streamed: bool = false
+
 @export_tool_button("Bake For The Server", "Save") var bake_button: Callable = bake_in_editor
 
 ## What the last bake said.
 var last_bake: String = ""
+
+
+## Every LevelInfo in a running game, for the streamer to find (template 1.0).
+const GROUP: StringName = &"umf_level_info"
+
+
+func _ready() -> void:
+	add_to_group(GROUP)
 
 
 ## Bake from the editor: the saved scene, through the headless baker (it needs physics running).

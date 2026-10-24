@@ -28,6 +28,22 @@ How entities are shaped and bound, what the client subscribes to, and how it con
   spawner cannot tell a torn-down cache from a reconnect.
 - Never connect a lambda that closes over an SDK handle to that handle's own signal (#105).
 
+## CELLS AND THE RING (template 1.0, DECISIONS #278, #279)
+- Every row of a placed thing carries `chunk` (`server/src/cell.rs`, the client's `Cells`). Write a
+  `movement_state` row ONLY through `module/place.rs` (`write_movement`, `insert_movement`; `park`,
+  `unpark`): they recut the cell and move every row that follows the entity. `run_tests.sh` lints it.
+- A new foundation table that describes a placed entity: give it `world_id` and `chunk` (indexed),
+  set the chunk from `chunk_of_entity` (an event: `cell::chunk_of(pos)`), add it to `follow` if it
+  follows the entity, and to `InterestManager.CELL_TABLES` (and `FOLLOW_TABLES`). A genre's: its
+  `NetConfig.cell_tables` / `follow_tables`, and its rows through the `on_place_changed` hook.
+- RING interest is three sets: the world's, our own rows (`own#`), the cells (`cells#`). Never put a
+  row in two queries of one set (our own rows were deleted once that way, #279), and swap a set only
+  with the overlap (the new one applied before the old is dropped).
+- A parked entity's rows are in the NOWHERE cell (`u32::MAX`): every query of a cell table skips it.
+- A ROW FILTER may join only a table with no filter of its own, on indexed columns (#281); check a new
+  one with `spacetime subscribe --anonymous <db> "SELECT * FROM <table>" --num-updates 0` (the owner
+  sees through filters, so the CLI's own calls never find it).
+
 ## WHO IS HERE, AND WHO THEY ARE (DECISIONS #202)
 - A player who disconnects LEAVES THE WORLD: `PresenceComponent` (in `foundation/entities/player.tscn`,
   so every genre's player has it) hides the body and drops its collision after the grace the hot rule
@@ -39,8 +55,13 @@ How entities are shaped and bound, what the client subscribes to, and how it con
   holds; a player who shared a name with an OLDER player before this rule becomes "<name> 2" on
   their next connect (the first holder keeps it). A refused name is said on screen (`Notices`).
 - An identity is a TOKEN FILE on the machine, not a name: each editor slot, each exported copy and
-  each `--token=` has its own, by design. Accounts (the same person, the same identity, on any
-  machine) are a roadmap item: SpacetimeDB's OpenID Connect login.
+  each `--token=` has its own, by design: a GUEST. A SIGN-IN (template 1.0, #280) is an identity made
+  from the sign-in service's token, the same on every machine; `module/accounts.rs` makes it an
+  account the first time. Only the game's issuer (`shared/game.json` `sign_in`) with its client id as
+  the audience, or one `trust_issuer` added, counts: SpacetimeDB accepts any issuer's token.
+- A character is a `player` entity listed in `account_character`; `take_character` is the only way one
+  changes hands (it parks what the identity played). The newest connection plays: check
+  `player.connection_id` in a reducer that drives the character (as `submit_input` does).
 - `Notices` (Boot adds one to every game scene, outside the HUD) shows every
   `SignalBus.notification_requested` briefly at the top of the screen.
 

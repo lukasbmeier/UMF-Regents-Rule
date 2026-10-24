@@ -13,7 +13,14 @@ NPC). Every game is a fork of this repo and takes its updates with `git pull tem
 | Genre rules files | none |
 | Games made from it | Fishing (UMF-Fishing, the reference game, parked) · Fowl Play (game 2) |
 
-## Current state (0.38.0)
+## Current state (1.0.0, 2026-10-23: built, not yet shipped to the games)
+The template 1.0 (`docs/TEMPLATE_1_0.md`, DECISIONS #278-#281): every placed row in 64 m cells, ring
+interest (Regent's Rule's; this greybox keeps WORLD), streamed levels, SpacetimeAuth accounts with
+characters, link codes and parking. `shared/game.json` `compat` 2. The greybox plays as before (guests).
+Luke's 1.0 calls: all four games take their one wipe together at the ship; sign-in set up per game when
+he makes the Maincloud login (`sign_in.client_id` in each game's `shared/game.json`).
+
+## Earlier (0.38.0)
 Made from Fishing 0.24.1 by `python tools/template/strip_genre.py fishing` (DECISIONS #196). It
 builds, publishes and passes every suite with no genre in it. FOUNDATION WORK IS DONE HERE, with
 its tests, then each game pulls it (`tools\update_from_template.cmd`). 0.26.0: old builds keep

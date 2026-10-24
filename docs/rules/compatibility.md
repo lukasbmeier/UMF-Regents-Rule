@@ -10,6 +10,11 @@ authority, and SpacetimeDB already pushes schema changes to be additive: a table
 added to a live database, but reshaping a table needs `--fresh`. New client → old server is not
 attempted: a new client would ask for tables and reducers the old server never had.
 
+## Major versions
+- **1.0.0** (2026-10-23, DECISIONS #278): `chunk` on every placed row, `player` reshaped for accounts;
+  `compat` 2. Every game's database wiped once, every older build refused. From 1.0 on, the rules
+  below hold again until 2.0. A game's `shared/game.json` is its own: it sets `"compat": 2` itself.
+
 ## The rules, within a major version
 1. **Add, never change.** New tables and new reducers are fine. Never add, remove or retype a column
    of an existing table, and never change an existing reducer's arguments.

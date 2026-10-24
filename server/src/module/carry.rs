@@ -24,6 +24,9 @@ pub struct Attachment {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     #[index(btree)]
     pub carrier_id: u64,
     /// Where on its carrier (a genre's name for it; "" the carrier's carry point).
@@ -69,6 +72,7 @@ pub fn attach(ctx: &ReducerContext, entity_id: u64, carrier_id: u64, socket: &st
     ctx.db.attachment().insert(Attachment {
         entity_id,
         world_id: it.world_id,
+        chunk: chunk_of_entity(ctx, entity_id),
         carrier_id,
         socket: socket.to_string(),
         since: ctx.timestamp,
@@ -92,7 +96,7 @@ pub fn detach(ctx: &ReducerContext, entity_id: u64, at: Option<Vector3>, status:
         row.vel = Vector3::new(0.0, 0.0, 0.0);
         row.teleport_flag = true;
         row.server_ts = ctx.timestamp;
-        ctx.db.movement_state().entity_id().update(row);
+        write_movement(ctx, row);
     }
     let then = status.unwrap_or(a.prev_status);
     set_status_internal(ctx, entity_id, then, LASTS_OWN, a.carrier_id, String::new())?;

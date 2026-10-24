@@ -35,6 +35,7 @@ Read it second. Foundation work is done in the template, never in a game
 | `docs/CONTENT_TOOLING_SPEC.md` | content as Resources + bake, the Content Dock, WORKBENCHES ("no content type without a workbench") and the Catalog, hot vs baked tunables, balance sims, recording, FeedbackSet, the admin panel; its §9 is the order of work |
 | `docs/reviews/REVIEW_0.23.1.md` | the architecture author's review: B and C are done (0.24.0, DECISIONS #187–#193); D and E are open, and F lists suspected bugs to check |
 | `docs/rules/compatibility.md` | old clients on new servers |
+| `docs/TEMPLATE_1_0.md` | the 1.0, agreed 2026-10-23: `chunk` on every placed thing's row, ring interest, a streamed level, SpacetimeAuth accounts and characters, parking; its §8 is the order of work (#278) |
 A game's own design docs live in that game's repo (Fowl Play: `docs/fowl_play/`).
 
 ## Hard rules (violations fail review)
@@ -100,6 +101,8 @@ GODOT=<path> ./tests/genres_test.sh        # the foundation built with no genres
 ./tests/content_test.sh                    # a stale content bake stops the build (no server, no Godot)
 GODOT=<path> ./tests/hot_rules_test.sh     # hot rules on a real server: who may set, bounds, live use, republish, reset
 ./tests/telemetry_test.sh                  # the chronicle and the telemetry page on a real server (no Godot)
+GODOT=<path> ./tests/accounts_test.sh      # sign-in, accounts, link codes, characters, parking, against the suites' own OIDC issuer
+GODOT=<path> ./tests/ring_test.sh          # ring interest: a real client sent only the cells round it
 GODOT=<path> ./tests/render_test.sh        # windowed: foliage, grass, lake, grip pictures, F11
 ```
 Codegen by hand (publish.sh does this): `godot --headless --path . -s tools/codegen_config.gd`, `--import`, `--script res://addons/SpacetimeDB/cli.gd`, `--import` again (the second registers the generated `class_name`s). Smoke test against a live server: `godot --headless --path .` → `CONNECTED` → `local entity: N` → `world ready`.

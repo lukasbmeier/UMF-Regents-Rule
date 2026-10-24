@@ -2,10 +2,12 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"chat_message", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"chat_message", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
+var account_character: UmfAccountCharacterTable
+var account_login: UmfAccountLoginTable
 var action_event: UmfActionEventTable
 var action_request: UmfActionRequestTable
 var appearance: UmfAppearanceTable
@@ -25,6 +27,7 @@ var hot_rule: UmfHotRuleTable
 var input_queue: UmfInputQueueTable
 var inventory_item: UmfInventoryItemTable
 var item_def: UmfItemDefTable
+var link_code: UmfLinkCodeTable
 var lobby_member: UmfLobbyMemberTable
 var movement_state: UmfMovementStateTable
 var noise: UmfNoiseTable
@@ -43,6 +46,8 @@ var world_level: UmfWorldLevelTable
 func _init(p_local_db: LocalDatabase) -> void:
 	ability_def = preload('res://spacetime_bindings/schema/tables/umf_ability_def_table.gd').new(p_local_db)
 	ability_state = preload('res://spacetime_bindings/schema/tables/umf_ability_state_table.gd').new(p_local_db)
+	account_character = preload('res://spacetime_bindings/schema/tables/umf_account_character_table.gd').new(p_local_db)
+	account_login = preload('res://spacetime_bindings/schema/tables/umf_account_login_table.gd').new(p_local_db)
 	action_event = preload('res://spacetime_bindings/schema/tables/umf_action_event_table.gd').new(p_local_db)
 	action_request = preload('res://spacetime_bindings/schema/tables/umf_action_request_table.gd').new(p_local_db)
 	appearance = preload('res://spacetime_bindings/schema/tables/umf_appearance_table.gd').new(p_local_db)
@@ -62,6 +67,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	input_queue = preload('res://spacetime_bindings/schema/tables/umf_input_queue_table.gd').new(p_local_db)
 	inventory_item = preload('res://spacetime_bindings/schema/tables/umf_inventory_item_table.gd').new(p_local_db)
 	item_def = preload('res://spacetime_bindings/schema/tables/umf_item_def_table.gd').new(p_local_db)
+	link_code = preload('res://spacetime_bindings/schema/tables/umf_link_code_table.gd').new(p_local_db)
 	lobby_member = preload('res://spacetime_bindings/schema/tables/umf_lobby_member_table.gd').new(p_local_db)
 	movement_state = preload('res://spacetime_bindings/schema/tables/umf_movement_state_table.gd').new(p_local_db)
 	noise = preload('res://spacetime_bindings/schema/tables/umf_noise_table.gd').new(p_local_db)

@@ -6,10 +6,11 @@ class_name UmfBodyContact extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'body_contact']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"body_id": &"u64", &"other_id": &"u64", &"pos": &"vector3[f32,f32,f32]", &"normal": &"vector3[f32,f32,f32]", &"speed": &"f32", &"at": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"body_id": &"u64", &"other_id": &"u64", &"pos": &"vector3[f32,f32,f32]", &"normal": &"vector3[f32,f32,f32]", &"speed": &"f32", &"at": &"i64" }
 
 @export var id: int
 @export var world_id: int
+@export var chunk: int
 @export var body_id: int
 @export var other_id: int
 @export var pos: Vector3
@@ -19,16 +20,18 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world
 
 ## 0. id: int[br]
 ## 1. world_id: int[br]
-## 2. body_id: int[br]
-## 3. other_id: int[br]
-## 4. pos: Vector3[br]
-## 5. normal: Vector3[br]
-## 6. speed: float[br]
-## 7. at: int[br]
-static func create(p_id: int, p_world_id: int, p_body_id: int, p_other_id: int, p_pos: Vector3, p_normal: Vector3, p_speed: float, p_at: int) -> UmfBodyContact:
+## 2. chunk: int[br]
+## 3. body_id: int[br]
+## 4. other_id: int[br]
+## 5. pos: Vector3[br]
+## 6. normal: Vector3[br]
+## 7. speed: float[br]
+## 8. at: int[br]
+static func create(p_id: int, p_world_id: int, p_chunk: int, p_body_id: int, p_other_id: int, p_pos: Vector3, p_normal: Vector3, p_speed: float, p_at: int) -> UmfBodyContact:
 	var result: UmfBodyContact = UmfBodyContact.new()
 	result.id = p_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.body_id = p_body_id
 	result.other_id = p_other_id
 	result.pos = p_pos

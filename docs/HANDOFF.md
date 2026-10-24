@@ -1,50 +1,52 @@
 # Handoff — UMF Template, 2026-10-23
 
 ## Where it stands
-The chronicle and the telemetry page (DECISIONS #276) and #277 are SHIPPED to every game
-(`ship_template.sh`, 2026-10-23); Fishing, Fowl Play and DiscGolf republished with `--codegen` (data kept)
-and checked (cargo test, content, the unit suite, each game's playtest: all green); Regent's Rule already
-was. Then `tests/content_test.sh` was fixed (below) and shipped again. Suites green here: unit 2075/0,
-cargo test all, telemetry 21/0, content 18/0.
+THE TEMPLATE 1.0 is BUILT here and NOT shipped (`docs/TEMPLATE_1_0.md`, DECISIONS #278-#281; CHANGELOG
+1.0.0). Nothing committed (Luke commits). `umf-template` was published `--fresh --codegen` with Luke's
+say-so (its greybox data wiped); no game's database touched. The full sweep, all green: cargo test,
+unit 2139/0, content 18, integration 642, e2e 11, multiclient 25, accounts 65, ring 15, sidecar 13, connect
+95, remote 7, press 7, playtest 41, bodies 10, hot rules 12, telemetry 21, genres 5, export 32.
 
 ## This session
-- `where_sample` (private table, `server/src/module/telemetry.rs`): each online player's place every
-  `foundation.telemetry_where_s` (a new hot rule, 5 s; 0 off), at the server's time.
-- `tools/telemetry/chronicle.py`: the owner's `spacetime subscribe` to every table except those
-  `shared/telemetry.json` skips. Writes every change to `build/telemetry/<db>.sqlite` (`change`,
-  `position`, `player_name`, `run`) and reconnects as a new run.
-- `tools/telemetry/dashboard.py` + `page.html` (`tools\telemetry.cmd`): panels are SQL in the JSON (line,
-  bar, table, heatmap), with range and player filters and a 15 s refresh. 127.0.0.1 only.
-- Who runs the chronicle: `tools/host.sh`, `ChronicleLauncher` (editor runs, beside `RefereeLauncher` in
-  Boot), and the page when nothing else records. One per file, through a lock.
-- Later the same session: `content_name` (every piece of content's name, for panels); a panel's `step`;
-  heatmap squares floor (z -7 is the -8 square); a nameless player is "Player 37"; codegen waits 30 s for
-  the schema (`addons/SpacetimeDB/cli.gd`: Godot took 2.3 s for Regent's 137 KB schema and the 4 s limit
-  failed; the editor plugin's own 4 s in `spacetime.gd` is unchanged, since rewriting a @tool script
-  under an open editor has crashed it).
-- DECISIONS #277 (from Regent's playtest): `AnimationTreeBuilder.apply_clip` loops a clip on its NODE, never
-  by changing the shared clip; a status holding `react.hit` as a looping pose had made every later hit
-  reaction loop for ever. `animation` 2075/0, with checks that fail the old way.
-- `tests/content_test.sh`: "a status that becomes something that is not a status" broke the foundation's
-  status at index 2 (Downed), which Fowl Play's chicken genre replaces with its own, so it had failed
-  there since 2026-10-12; it now breaks a foundation status no genre redefines.
-- Tests: `tests/telemetry/test_chronicle.py`, `tests/telemetry_test.sh`, the `referee` suite (the lock),
-  native `telemetry`. Docs: HANDBOOK "Looking back at everything", file map, AGENTS verify loop.
+- The design pass with Luke: `docs/TEMPLATE_1_0.md` (§2 what was checked: SpacetimeAuth's methods and
+  endpoints, a self-hosted server validating its tokens, the subscription grammar; §10 his calls). #278.
+- Cells (#279): `server/src/cell.rs`, `module/place.rs` (the only movement writes; a lint), `chunk` on
+  fifteen tables, `shared/rules.json` `cells`, the genre hook `on_place_changed`, the client's `Cells`.
+- Ring interest (#279): `InterestManager` RING mode, three sets (world, own rows, cells), hysteresis;
+  `tests/ring_test.sh`. Streaming: `LevelInfo.streamed`, `LevelCells` (the bake's cut), `LevelStreamer`.
+- Accounts (#280): `module/accounts.rs`, `player` reshaped (`left_at`, `connection_id`, `account_id`),
+  parking (`place::park`), four hot rules, `SignIn`, Boot's sign-in flags, the connect screen's Sign in,
+  the Escape menu's `AccountPage`; `tests/accounts_test.sh` with `tests/lib/oidc_issuer.py`.
+- #281: a row filter may join only an unfiltered table on indexed columns; `ground_item.owner_id`
+  indexed (its whole-table query was refused for non-owners; the games' filtered one was fine).
+- `compat` 2 in the template's `shared/game.json`. HANDBOOK (Accounts, A big world, the suites),
+  netcode/compatibility rules, file map, AGENTS verify loop, ROADMAP, FOUNDATION_SYSTEMS.
 
 ## Next, in order
-1. Give the releases since 0.51.2 a CHANGELOG section (chat, held jump, traits, the chronicle).
-2. Regent's Rule's foundation asks (its `GAME.md`): M8, M16, M18-M26, the template 1.0 `chunk` reshape.
+1. Luke reviews and commits; then THE SHIP (his say): `bash "../ship_template.sh" "1.0.0: cells,
+   streaming, accounts"`. All four games take their one wipe together (his call). Each game first
+   commits (Regent's Rule has steps 17-21 uncommitted), then after the pull: add `"compat": 2` to its own
+   `shared/game.json` (merge=ours: it does not arrive), `tools\publish.cmd --fresh --codegen` (wipes that
+   game's database: Luke's say-so at the ship), run its suites. Fishing: its
+   `game/fishing/tests/suites/fishing_interest.gd` asserts the old query strings (lines 111, 121, 154:
+   cell tables now end `AND chunk != 4294967295`).
+2. Regent's Rule, in its own session after the pull: `NetConfig.interest = RING` in its net config, the
+   hot-rule overrides `characters_per_account` 3 and `park_offline_s` 30, its own placed tables
+   (`cell_tables`/`follow_tables`, `on_place_changed`), its glade as a streamed level when it grows.
+3. When Luke makes the Maincloud login: HANDBOOK, Accounts, "Setting up SpacetimeAuth"; then a real
+   sign-in by hand, measuring the token's lifetime and checking the 127.0.0.1 redirect (§2 of the plan).
 
 ## Waiting on Luke
-- Nothing new.
+- The commit, and the go for the ship (and with it each game's wipe).
+- The Maincloud login and SpacetimeAuth project (later, by his choice); which providers' apps to make.
+- Passwords stay off (his call); revisit after the playtests or if SpacetimeAuth adds them.
 
 ## Watch out
-- The CLI's own player flips online/offline as other CLI calls connect and leave (one identity). The
-  chronicle marks it a tool while it has no name. Suites that name the CLI's player make it a "player".
-- The editor plugin's schema fetch still times out at 4 s (`spacetime.gd`): codegen from the editor's dock
-  may fail on a big schema; `tools/publish.sh --codegen` uses `cli.gd` (30 s). Change it with the editor
-  closed.
-- A chronicle killed hard (Task Manager, a console closed under the page) can leave its `spacetime
-  subscribe` child connected until its next write fails. host.sh and editor runs stop it cleanly.
-- `spacetime.exe` is a launcher: killing it leaves the `spacetimedb-cli subscribe` child running. The
-  chronicle kills the tree (`taskkill /T`), and the suite cleans up leftovers by command line.
+- The server caches a sign-in service's keys for minutes: a test issuer with a NEW key at the same
+  address is refused (InvalidSignature) until it looks again. The suite keeps its keys in
+  `build/test_issuer/`; do not delete them between runs.
+- `spacetime subscribe --anonymous` is the way to see what a real client is refused: the owner (the CLI)
+  sees through every row filter.
+- Not built: refreshing a sign-in's token before a reconnect (an expired token fails the reconnect: sign
+  in again); a parked spot no longer standable; the 9-cells-vs-OR measurement (300-bot harness).
+- A sign-in through the browser waits up to 5 minutes; the connect screen's clock waits with it.

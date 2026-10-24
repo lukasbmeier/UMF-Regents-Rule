@@ -17,6 +17,9 @@ pub struct Push {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// Who or what is pushed (a player, a body).
     #[index(btree)]
     pub entity_id: u64,
@@ -33,7 +36,7 @@ pub struct Push {
 pub fn push_entity(ctx: &ReducerContext, entity_id: u64, vel: Vector3, by_id: u64) -> Result<u64, String> {
     let ent = ctx.db.entity().entity_id().find(entity_id).ok_or("push: no such entity")?;
     let vel = crate::push::bounded(vel).ok_or("push: a push must be finite")?;
-    Ok(ctx.db.push().insert(Push { id: 0, world_id: ent.world_id, entity_id, vel, by_id, at: ctx.timestamp }).id)
+    Ok(ctx.db.push().insert(Push { id: 0, world_id: ent.world_id, chunk: chunk_of_entity(ctx, entity_id), entity_id, vel, by_id, at: ctx.timestamp }).id)
 }
 
 /// `limits` widened by the pushes `entity_id` is under (`crate::push::widened`).

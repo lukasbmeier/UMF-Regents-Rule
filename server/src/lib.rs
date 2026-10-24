@@ -46,6 +46,10 @@ pub mod placed;
 /// baked from `LootTableDef` content. Pure.
 pub mod loot;
 
+/// The world in squares (template 1.0, DECISIONS #278): which cell a place is in, and the cells round it.
+/// Pure.
+pub mod cell;
+
 /// Items on the ground (DECISIONS #269): which cell, where a kill's drops land, the reach. Pure.
 pub mod ground;
 

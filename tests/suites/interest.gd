@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_interest_tests()
+	_run_ring_tests()
 	await get_tree().process_frame   # the runner awaits run(): always a coroutine
 
 
@@ -112,8 +113,8 @@ func _run_interest_tests() -> void:
 	var sidecar_table: Array[StringName] = [&"input_queue"]
 	im.extra_tables = sidecar_table
 	var qs: Array[String] = im.build_queries(3)
-	_check(qs.has("SELECT * FROM entity WHERE world_id = 3"),
-		"a per-world table is filtered to the world we are in")
+	_check(qs.has("SELECT * FROM entity WHERE world_id = 3 AND chunk != 4294967295"),
+		"a per-world table is filtered to the world we are in (and a placed thing's, never a parked one)")
 	_check(qs.has("SELECT * FROM item_def"),
 		"a static catalogue is not: every world shares one")
 	_check(qs.has("SELECT * FROM input_queue WHERE world_id = 3"),
@@ -121,7 +122,7 @@ func _run_interest_tests() -> void:
 	var always: int = InterestManager.ALWAYS_TABLES.filter(func(t: StringName) -> bool: return not cfg.core_tables.has(t)).size()
 	_check(qs.size() == cfg.core_tables.size() + 1 + always,
 		"one query per table, %d for %d" % [qs.size(), cfg.core_tables.size() + 1 + always])
-	_check(im.build_queries(0).has("SELECT * FROM entity WHERE world_id = 0"),
+	_check(im.build_queries(0).has("SELECT * FROM entity WHERE world_id = 0 AND chunk != 4294967295"),
 		"and world 0 is spelled out rather than left unfiltered")
 	var dupe: Array[StringName] = [&"entity"]
 	im.extra_tables = dupe
@@ -157,8 +158,10 @@ func _run_interest_tests() -> void:
 		"no table is subscribed without deciding whether it is per-world (%s)" % str(undecided))
 	var wrong: Array[String] = []
 	for t: StringName in expect_filtered:
-		if not im.query_for(t, 5, shipped).ends_with("WHERE world_id = 5"):
-			wrong.append("%s should be filtered" % t)
+		var q: String = im.query_for(t, 5, shipped)
+		var cell: bool = InterestManager.CELL_TABLES.has(t)
+		if not q.ends_with("WHERE world_id = 5" + (" AND chunk != 4294967295" if cell else "")):
+			wrong.append("%s should be filtered (%s)" % [t, q])
 	for t: StringName in expect_whole:
 		if im.query_for(t, 5, shipped).contains("world_id"):
 			wrong.append("%s should not be" % t)
@@ -257,4 +260,139 @@ func _run_interest_tests() -> void:
 	im.extra_tables = prev_extra
 	im._active = null
 	im._incoming = null
+	fake.free()
+
+
+## RING INTEREST (template 1.0, DECISIONS #278): a client in a big world is sent only the cells round its
+## player. Two sets: the world's (catalogues, rules, sessions: swapped only with the world) and the
+## ring's (every row of a placed thing, by cell, and our own rows by id), swapped as the player walks,
+## with the same overlap as a world so a neighbour in a cell both rings share never respawns.
+func _run_ring_tests() -> void:
+	print("== InterestManager: the cells round you (RING) ==")
+	var im: Node = _autoload("InterestManager")
+	var sync: Node = _autoload("SpaceTimeSync")
+	if im == null or sync == null:
+		return
+	var prev_config: NetConfig = sync.config
+	var prev_sdk: Variant = sync._sdk
+	var prev_state: int = sync.state
+	var prev_world: int = im.world_id
+	var cfg := NetConfig.new()
+	cfg.interest = NetConfig.Interest.RING
+	sync.config = cfg
+
+	# Every cell table is also filtered by world for a WORLD client, and the ones that follow an entity are cell tables.
+	var not_world: Array[StringName] = []
+	for t: StringName in InterestManager.CELL_TABLES:
+		if not InterestManager.WORLD_TABLES.has(t):
+			not_world.append(t)
+	var not_cell: Array[StringName] = []
+	for t: StringName in InterestManager.FOLLOW_TABLES:
+		if not InterestManager.CELL_TABLES.has(t):
+			not_cell.append(t)
+	_check(not_world.is_empty() and not_cell.is_empty(),
+		"every cell table is a world table %s, every follow table a cell table %s" % [not_world, not_cell])
+	_check(sync.row_event.is_connected(im._on_row_event) and SignalBus.local_entity_assigned.is_connected(im._on_local_entity),
+		"the ring hears our player's rows and who our player is")
+
+	var fake := FakeSubSdk.new()
+	add_child(fake)
+	sync._sdk = fake
+	sync._sets.clear()
+	im._active = null
+	im._incoming = null
+	im._ring_active = null
+	im._ring_incoming = null
+	im._own_active = null
+	im._own_incoming = null
+	im.centre = -1
+	im.own_entity = -1
+	im.world_id = 0
+	var moves: Array[int] = []
+	var moved_cb: Callable = func(c: int) -> void: moves.append(c)
+	im.cells_changed.connect(moved_cb)
+
+	sync.state = SpaceTimeSync.ConnectionState.CONNECTED
+	_check(fake.handles.size() == 1, "connecting asks for the world's set only: no player, no place yet (%d sets)" % fake.handles.size())
+	var base: PackedStringArray = fake.queries[0]
+	_check(base.has("SELECT * FROM player") and base.has("SELECT * FROM session WHERE world_id = 0")
+		and not ",".join(base).contains("FROM entity ") and not ",".join(base).contains("chunk"),
+		"the world's set has what is not placed (players, sessions) and no placed thing")
+	fake.handles[0].applied.emit()
+
+	im._on_local_entity(77)
+	_check(fake.handles.size() == 2, "our player known: a set of our own rows is asked for")
+	var own: PackedStringArray = fake.queries[1]
+	_check(own.has("SELECT * FROM movement_state WHERE entity_id = 77") and own.has("SELECT * FROM entity WHERE entity_id = 77")
+		and not own.has("SELECT * FROM noise WHERE entity_id = 77") and not ",".join(own).contains("chunk"),
+		"our own rows by id, before we know where we are (an event is not ours to follow)")
+	fake.handles[1].applied.emit()
+	_check(im.own_set() != null and moves.is_empty(), "and it applies (no cells yet)")
+
+	var here := Vector3(32, 0, 32)
+	im._on_row_event(_move_ev(FakeMoveRow.new(77, here, 0)))
+	var c0: int = Cells.chunk_of(here)
+	_check(im.centre == c0 and fake.handles.size() == 3, "our movement row places the ring (centre %d)" % im.centre)
+	var r0: PackedStringArray = fake.queries[2]
+	var cells0: PackedInt64Array = Cells.ring(c0, 1)
+	var missing: Array[String] = []
+	for c: int in cells0:
+		for t: StringName in [&"entity", &"movement_state", &"noise", &"ground_item"]:
+			var q: String = "SELECT * FROM %s WHERE world_id = 0 AND chunk = %d" % [t, c]
+			if not r0.has(q):
+				missing.append(q)
+	_check(missing.is_empty(), "every cell table, for each of the nine cells: %s" % ", ".join(missing.slice(0, 3)))
+	_check(not ",".join(r0).contains("entity_id = 77"), "the cells' set asks by cell only: no row is two of its queries'")
+	_check(not ",".join(r0).contains("item_def") and not ",".join(r0).contains("hot_rule"), "nothing of the world's set is asked again")
+	fake.handles[2].applied.emit()
+	_check(not fake.handles[1].unsubscribed and not fake.handles[0].unsubscribed and moves == [c0],
+		"the ring arrives; our own set and the world's are never touched (%s)" % str(moves))
+
+	im._on_row_event(_move_ev(FakeMoveRow.new(77, Vector3(65, 0, 32), 0)))
+	_check(fake.handles.size() == 3 and im.centre == c0, "a step over the edge moves nothing")
+	im._on_row_event(_move_ev(FakeMoveRow.new(77, Vector3(68.5, 0, 32), 0)))
+	var c1: int = Cells.chunk_of(Vector3(68.5, 0, 32))
+	_check(fake.handles.size() == 4 and im.centre == c1, "well inside the next cell, the ring follows")
+	var far_east: int = Cells.at(Cells.squares(c0).x + 2, Cells.squares(c0).y)
+	_check(fake.queries[3].has("SELECT * FROM entity WHERE world_id = 0 AND chunk = %d" % far_east)
+		and not fake.queries[3].has("SELECT * FROM entity WHERE world_id = 0 AND chunk = %d"
+			% Cells.at(Cells.squares(c0).x - 1, Cells.squares(c0).y)),
+		"gaining the column ahead, losing the one behind")
+	im._on_row_event(_move_ev(FakeMoveRow.new(77, Vector3(300, 0, 32), 0)))
+	_check(fake.handles[3].unsubscribed and fake.handles.size() == 5, "moved on before it applied: the pending one is cancelled")
+	fake.handles[4].applied.emit()
+	_check(fake.handles[2].unsubscribed and moves.back() == Cells.chunk_of(Vector3(300, 0, 32)), "and the last asked is the one kept")
+	_check(not fake.handles[1].unsubscribed, "our own set stays through every move")
+
+	im.set_world(1)
+	_check(fake.handles.size() == 7 and fake.queries[6].has("SELECT * FROM entity WHERE world_id = 1 AND chunk = %d" % im.centre),
+		"another world: a new world set and a new ring, in that world")
+	fake.handles[5].applied.emit()
+	fake.handles[6].applied.emit()
+
+	var ref := NetConfig.new()
+	ref.interest = NetConfig.Interest.RING
+	ref.authority_process = true
+	_check(not im.is_ring(ref), "a sidecar or referee is never a ring: it runs the whole world")
+	var world_cfg := NetConfig.new()
+	_check(not im.is_ring(world_cfg), "and WORLD is the default")
+
+	for set: SubscriptionSet in [im._active, im._ring_active, im._own_active]:
+		if set != null:
+			sync.unsubscribe(set)
+	_check(sync._sets.is_empty(), "the suite leaves no subscription behind (%d)" % sync._sets.size())
+	im.cells_changed.disconnect(moved_cb)
+	sync.state = prev_state
+	sync._sets.clear()
+	sync._sdk = prev_sdk
+	sync.config = prev_config
+	im.world_id = prev_world
+	im._active = null
+	im._incoming = null
+	im._ring_active = null
+	im._ring_incoming = null
+	im._own_active = null
+	im._own_incoming = null
+	im.centre = -1
+	im.own_entity = -1
 	fake.free()

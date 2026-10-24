@@ -154,7 +154,7 @@ pub fn set_appearance(ctx: &ReducerContext, look: String) -> Result<(), String> 
         ctx.db.appearance().entity_id().delete(ent.entity_id);
         return Ok(());
     }
-    let row = AppearanceRow { entity_id: ent.entity_id, world_id: ent.world_id, look };
+    let row = AppearanceRow { entity_id: ent.entity_id, world_id: ent.world_id, chunk: chunk_of_entity(ctx, ent.entity_id), look };
     match ctx.db.appearance().entity_id().find(ent.entity_id) {
         Some(old) if old.look == row.look => {}   // idempotent: clients send it on every connect
         Some(_) => { ctx.db.appearance().entity_id().update(row); }
@@ -171,7 +171,7 @@ pub fn set_equip_state(ctx: &ReducerContext, state: u8) -> Result<(), String> {
     let player = ctx.db.player().identity().find(ctx.sender()).ok_or("set_equip_state: no player row")?;
     let ent = ctx.db.entity().entity_id().find(player.entity_id).ok_or("set_equip_state: no entity")?;
     spend_rate(ctx, ent.entity_id, "set_equip_state")?;
-    let row = EquipStateRow { entity_id: ent.entity_id, world_id: ent.world_id, state };
+    let row = EquipStateRow { entity_id: ent.entity_id, world_id: ent.world_id, chunk: chunk_of_entity(ctx, ent.entity_id), state };
     if ctx.db.equip_state().entity_id().find(ent.entity_id).is_some() {
         ctx.db.equip_state().entity_id().update(row);
     } else {

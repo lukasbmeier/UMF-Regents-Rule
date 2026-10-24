@@ -95,13 +95,15 @@ pub fn spawn_resource_node(
     let ent = ctx.db.entity().insert(Entity {
         entity_id: 0,
         world_id,
+        chunk: 0,
         kind: entity_kind::RESOURCE_NODE,
         owner: ctx.sender(),
         spawned_at: ctx.timestamp,
     });
-    ctx.db.movement_state().insert(MovementStateRow {
+    insert_movement(ctx, MovementStateRow {
         entity_id: ent.entity_id,
         world_id,
+        chunk: 0,
         pos,
         vel: Vector3::ZERO,
         yaw: 0.0,

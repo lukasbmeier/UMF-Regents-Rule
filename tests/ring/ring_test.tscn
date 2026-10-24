@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://tests/levels/greybox.tscn" id="1_level"]
+[ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
+[ext_resource type="Resource" path="res://foundation/content/character/player.tres" id="3_player"]
+[ext_resource type="Script" path="res://tests/ring/ring_runner.gd" id="4_runner"]
+[ext_resource type="Resource" path="res://tests/ring/ring_net_config.tres" id="5_net"]
+
+[node name="Ring" type="Node3D"]
+
+[node name="Greybox" parent="." instance=ExtResource("1_level")]
+
+[node name="Boot" type="Node" parent="."]
+script = ExtResource("2_boot")
+net_config = ExtResource("5_net")
+entity_definitions = Array[Resource]([ExtResource("3_player")])
+world_root = NodePath("../Greybox/WorldRoot")
+
+[node name="Runner" type="Node" parent="."]
+script = ExtResource("4_runner")

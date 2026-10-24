@@ -107,6 +107,14 @@ foundation/items/ground_items.gd         GroundItems: the sacks shown, walked ov
 foundation/ui/kit/icon_render.gd + tools/render_icons.tscn  icons drawn from models into <owner>/icons/ (DECISIONS #271; tests/render/icon_test)
 foundation/content/resource_def.gd + components/resource_component.gd  ResourceDef (mana) and an entity's pools on the client (DECISIONS #270)
 server/src/resource.rs + module/resources.rs  a pool's level; resource_state, ensure_resource, spend_resource
+server/src/cell.rs + module/place.rs     THE CELLS (template 1.0, #279): chunk_of, ring, NOWHERE; write_movement/insert_movement/follow (the ONLY movement writes), park/unpark; server/tests/cell.rs
+module/accounts.rs                       ACCOUNTS (#280): login_issuer, account, account_login, account_character, link_code, take_character, the reducers; tests/accounts_test.sh
+foundation/net/cells.gd                  Cells: the client's twin of cell.rs (shared/golden/cells.json), Cells.recentre (the ring's hysteresis)
+foundation/net/sign_in.gd                SignIn: the desktop sign-in (browser, PKCE, 127.0.0.1, the kept refresh token); Boot drives it
+foundation/ui/account_page.gd            AccountPage: the Escape menu's Account (characters, link codes, sign in/out)
+foundation/level/level_cells.gd + level_streamer.gd  a streamed level cut into cells by the bake, and loaded round the player (#279)
+tests/lib/oidc_issuer.py                 the suites' own OIDC sign-in service (keys in build/test_issuer/, trusted by test databases only)
+tests/ring_test.sh + tests/ring/         a real RING client against the real module
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
                                and a restart (the NPC's brain resumes); SIDECAR_BIN= points it at a build
 tests/connect_playtest.sh      the connect screen + Esc menu, driven like a player (fresh install)
