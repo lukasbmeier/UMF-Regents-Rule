@@ -1,6 +1,8 @@
 # Handoff — Regent's Rule, 2026-10-23 (materials steps 1-3, the Tester page, Luke's crafting feedback)
 
 ## Where it stands
+**The template 1.0 is taken (2026-10-24)**: cells, ring interest, streamed levels, SpacetimeAuth accounts (`../UMF Template/docs/TEMPLATE_1_0.md`, DECISIONS #278-#281). This game's database was WIPED once and republished `--fresh --codegen`, `compat` 2: builds from before are refused, so friends need a new export (`tools\release.cmd`). Guests play as before; signing in waits on the SpacetimeAuth client id in `shared/game.json` `sign_in`. Regent's suites after the pull: unit 2533/0, e2e 11, accounts 65, skilling 63+7 and combat 50 playtests green; integration 0 failed on its third run (the first two failed one check each, different ones, in its random-order hook: timing, not 1.0). Its hook's pickaxe check now survives an order that took the pickaxe. Still to do here (its own session): `NetConfig.interest = RING`, the overrides `characters_per_account` 3 and `park_offline_s` 30, its placed tables as cell tables.
+
 Steps 17-21 built, NOT committed (last commit: the template merge `ded24b3`); Luke commits. Published to the
 play database `regents-rule` with `--codegen`, data kept: a friend's build needs a NEW EXPORT (new reducers:
 the four `admin_*`, `craft_choosing`, `set_craft_grade`, `refit`; new tables `craft_choice`, `craft_grade`).
