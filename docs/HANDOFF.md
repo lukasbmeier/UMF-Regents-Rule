@@ -23,7 +23,11 @@ this repo's bake; not committed).
    machine (M23, #13). One wipe of every game's database; then pulled here (and into the other games).
 3. THE COMBAT DEEP-DIVE with Luke: equipment and armour (five slots, stats), the server-side cast queue,
    crits (then Keen on steel rivets), NPC tiers; movement feel (orbit a still character; diagonal strafes).
-4. Herbalism (fibre bindings, tier 4-6 / fibre / hide names) and the economy (marks, vendors).
+4. THE IN-GAME LOOKUP (Luke, 2026-10-24; `GAME.md`, "The in-game lookup"): look into it with Luke first,
+   then build the glance line, the detail card (`???` until found: a new add-only "found" table) and the
+   skill guides. No in-game handbook (the wiki covers it). Open: chances as numbers or words; what `???`
+   hides; the key (Q is taken).
+5. Herbalism (fibre bindings, tier 4-6 / fibre / hide names) and the economy (marks, vendors).
 - Small, any time: the minimap's north-up / turning choice.
 
 ## Waiting on Luke

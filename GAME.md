@@ -79,11 +79,21 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **The order of work** (2026-10-23): (1) Luke's playtest of steps 17-20, then fixes; (2) **the template 1.0
   with accounts** (chunks, streaming, interest management; SpacetimeAuth accounts and characters that outlive
   a machine), template work pulled here, one wipe; (3) **the combat deep-dive**, folding in equipment and
-  armour (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **herbalism and the
+  armour (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **the in-game lookup**
+  (added 2026-10-24, below); (5) **herbalism and the
   economy** (marks, vendors). After those: writs, potions, death and shrines; party, duels, the lair and the
   Undercroft (M8, M25); the 300-bot load test. Movement feel from the template and Fishing that Regent's
   lost (the camera orbiting a still character without turning it; diagonal strafing that blends well) is
   noted for when it suits, likely with combat.
+- **The in-game lookup** (2026-10-24, scheduled before herbalism and the economy, "to look into" with Luke
+  first): WAILA/Jade-style help that is player friendly without being hand-holdy or cluttered. Wanted early:
+  a **glance** line for the current target (name, needs: rank and tool tier, green/red for you), a **detail**
+  card on a key (a node's drops, a foe's loot, a station's recipes; drops shown as `???` until you have
+  found them, with their chances), and OSRS-style **skill guides** (what each rank opens) in the skills
+  window. **No full in-game handbook for now**: the wiki (`UMF ALL\Regents Wiki`) is to be shared later.
+  Known before the look: the client already has every number; a per-player "found" record is the one new
+  server table (add-only); Q is taken (station recipe pick, kit skill 1), so the key is to choose. Open,
+  Luke's: exact chances or words ("rare"); what `???` hides (the item, or its chance too); the key.
 - **Answers** (2026-10-23): **hosting** on Luke's machine for now, then a VPS, before any Maincloud
   measurement; **the bow's damage scales with the draw** (built: a quick release 30 %, a full draw 100 %,
   `regents.draw_min_power_pct`); herbalism's and the higher bands' minigames when they are made; **the minimap
