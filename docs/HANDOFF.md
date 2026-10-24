@@ -44,7 +44,7 @@ unit 2139/0, content 18, integration 642, e2e 11, multiclient 25, accounts 65, r
 ## Watch out
 - The server caches a sign-in service's keys for minutes: a test issuer with a NEW key at the same
   address is refused (InvalidSignature) until it looks again. The suite keeps its keys in
-  `build/test_issuer/`; do not delete them between runs.
+  `~/.umf_test_issuer/` (one per machine, every game's copy of the suite shares it); do not delete it.
 - `spacetime subscribe --anonymous` is the way to see what a real client is refused: the owner (the CLI)
   sees through every row filter.
 - Not built: refreshing a sign-in's token before a reconnect (an expired token fails the reconnect: sign

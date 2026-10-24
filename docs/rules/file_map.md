@@ -113,7 +113,7 @@ foundation/net/cells.gd                  Cells: the client's twin of cell.rs (sh
 foundation/net/sign_in.gd                SignIn: the desktop sign-in (browser, PKCE, 127.0.0.1, the kept refresh token); Boot drives it
 foundation/ui/account_page.gd            AccountPage: the Escape menu's Account (characters, link codes, sign in/out)
 foundation/level/level_cells.gd + level_streamer.gd  a streamed level cut into cells by the bake, and loaded round the player (#279)
-tests/lib/oidc_issuer.py                 the suites' own OIDC sign-in service (keys in build/test_issuer/, trusted by test databases only)
+tests/lib/oidc_issuer.py                 the suites' own OIDC sign-in service (keys in ~/.umf_test_issuer/, one per machine; trusted by test databases only)
 tests/ring_test.sh + tests/ring/         a real RING client against the real module
 tests/sidecar_test.sh          a real sidecar against the real module, with an unregistered control
                                and a restart (the NPC's brain resumes); SIDECAR_BIN= points it at a build
