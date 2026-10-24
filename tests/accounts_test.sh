@@ -29,9 +29,10 @@ if ! curl -s -m 3 -o /dev/null "$HOST/v1/ping"; then
   exit 1
 fi
 work="$(mktemp -d)"
-# The issuers' keys are kept between runs: the server keeps an issuer's keys for minutes, so a new key
-# under the same address would be refused (InvalidSignature) until it looks again.
-KEYS=build/test_issuer
+# The issuers' keys are kept between runs, ONE PER MACHINE (every game's copy of this suite uses the same
+# address): the server keeps an issuer's keys for minutes, so a new key under the same address would be
+# refused (InvalidSignature) until it looks again.
+KEYS="${UMF_TEST_ISSUER_DIR:-$HOME/.umf_test_issuer}"
 pids=()
 cleanup() { for p in "${pids[@]}"; do kill "$p" 2>/dev/null; done; rm -rf "$work"; }
 trap cleanup EXIT

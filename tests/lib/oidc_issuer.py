@@ -4,11 +4,11 @@ this: an issuer on 127.0.0.1 that the TEST database is told to trust (`trust_iss
 anyone plays in. Python's standard library only (the RSA is done by hand, as the chronicle needs nothing
 installed either).
 
-    python tests/lib/oidc_issuer.py serve --port 8765 --dir build/test_issuer
+    python tests/lib/oidc_issuer.py serve --port 8765 --dir ~/.umf_test_issuer/main
         the issuer: its discovery document and keys (what SpacetimeDB fetches to check a token), an
         /authorize that says yes at once (to the user named by login_hint) and a /token that swaps the
         code (PKCE checked) or a refresh token for an ID token: the desktop sign-in, end to end.
-    python tests/lib/oidc_issuer.py mint --dir build/test_issuer --sub alice [--aud umf-test] [--exp 3600]
+    python tests/lib/oidc_issuer.py mint --dir ~/.umf_test_issuer/main --sub alice [--aud umf-test] [--exp 3600]
         prints an ID token signed with the same key, for a shell suite's curl calls. --exp -120: one
         that ran out two minutes ago.
 
@@ -198,7 +198,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["serve", "mint"])
     ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--dir", default="build/test_issuer")
+    ap.add_argument("--dir", default=os.path.join(os.path.expanduser("~"), ".umf_test_issuer", "main"))
     ap.add_argument("--sub", default="tester")
     ap.add_argument("--aud", default="")
     ap.add_argument("--exp", type=int, default=3600)
