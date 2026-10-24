@@ -7,6 +7,7 @@ signal updated(old_row: UmfPush, new_row: UmfPush)
 signal deleted(row: UmfPush)
 
 var id: UmfPushIdUniqueIndex
+var chunk: UmfPushChunkBTreeIndex
 var entity_id: UmfPushEntityIdBTreeIndex
 var world_id: UmfPushWorldIdBTreeIndex
 
@@ -14,6 +15,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"push"
 	id = UmfPushIdUniqueIndex.new(p_local_db)
+	chunk = UmfPushChunkBTreeIndex.new(p_local_db)
 	entity_id = UmfPushEntityIdBTreeIndex.new(p_local_db)
 	world_id = UmfPushWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
@@ -59,6 +61,12 @@ func find_by_world_id(value: int) -> Array[UmfPush]:
 
 func first_by_world_id(value: int) -> UmfPush:
 	return world_id._first_row(value) as UmfPush
+
+func find_by_chunk(value: int) -> Array[UmfPush]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfPush:
+	return chunk._first_row(value) as UmfPush
 
 func find_by_entity_id(value: int) -> Array[UmfPush]:
 	return entity_id.filter(value)

@@ -6,10 +6,11 @@ class_name UmfBodyState extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'body_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"def_id": &"u32", &"owner_id": &"u64", &"launch_id": &"u32", &"launched_at": &"i64", &"rot": &"vector3[f32,f32,f32]", &"spin": &"vector3[f32,f32,f32]", &"at_rest": &"bool", &"frames": &"u32" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"def_id": &"u32", &"owner_id": &"u64", &"launch_id": &"u32", &"launched_at": &"i64", &"rot": &"vector3[f32,f32,f32]", &"spin": &"vector3[f32,f32,f32]", &"at_rest": &"bool", &"frames": &"u32" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var def_id: int
 @export var owner_id: int
 @export var launch_id: int
@@ -21,18 +22,20 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. def_id: int[br]
-## 3. owner_id: int[br]
-## 4. launch_id: int[br]
-## 5. launched_at: int[br]
-## 6. rot: Vector3[br]
-## 7. spin: Vector3[br]
-## 8. at_rest: bool[br]
-## 9. frames: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_def_id: int, p_owner_id: int, p_launch_id: int, p_launched_at: int, p_rot: Vector3, p_spin: Vector3, p_at_rest: bool, p_frames: int) -> UmfBodyState:
+## 2. chunk: int[br]
+## 3. def_id: int[br]
+## 4. owner_id: int[br]
+## 5. launch_id: int[br]
+## 6. launched_at: int[br]
+## 7. rot: Vector3[br]
+## 8. spin: Vector3[br]
+## 9. at_rest: bool[br]
+## 10. frames: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_def_id: int, p_owner_id: int, p_launch_id: int, p_launched_at: int, p_rot: Vector3, p_spin: Vector3, p_at_rest: bool, p_frames: int) -> UmfBodyState:
 	var result: UmfBodyState = UmfBodyState.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.def_id = p_def_id
 	result.owner_id = p_owner_id
 	result.launch_id = p_launch_id

@@ -14,14 +14,18 @@ pub struct GroundItem {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
-    /// The 64 m cell it lies in (`ground::chunk_of`), for the interest by cell to come.
+    /// The cell it lies in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
     pub chunk: u32,
     pub item_def_id: u32,
     pub qty: u32,
     /// What the stack carries (a made item's quality and handle), as in `inventory_item`.
     pub instance_data: String,
     pub pos: Vector3,
-    /// The player entity it is first for; 0: anyone's from the start.
+    /// The player entity it is first for; 0: anyone's from the start. Indexed: the owner's filter joins
+    /// on it, and a subscription to a join on a column with no index is refused (found by the 1.0's ring
+    /// test: every client but the database's owner was refused `ground_item`).
+    #[index(btree)]
     pub owner_id: u64,
     /// Anyone may see it and take it.
     pub anyone: bool,

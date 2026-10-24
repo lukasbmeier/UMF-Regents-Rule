@@ -18,6 +18,9 @@ pub fn submit_input(ctx: &ReducerContext, frames: Vec<InputFrame>) -> Result<(),
         .identity()
         .find(ctx.sender())
         .ok_or("submit_input: sender has no player row")?;
+    if player.connection_id.is_some() && player.connection_id != ctx.connection_id() {
+        return Err("submit_input: signed in elsewhere (another connection plays this character)".into());
+    }
 
     if frames.is_empty() || frames.len() > MAX_BATCH {
         return Err(format!("submit_input: batch size {} out of range 1..={}", frames.len(), MAX_BATCH));
@@ -216,9 +219,10 @@ pub(crate) fn tick_world_module(
         let changed = s.pos != row.pos || s.vel != row.vel || s.grounded != row.grounded
             || last_seq != row.last_processed_seq || epoch != row.correction_epoch || row.teleport_flag;
         if changed {
-            ctx.db.movement_state().entity_id().update(MovementStateRow {
+            write_movement(ctx, MovementStateRow {
                 entity_id: row.entity_id,
                 world_id: row.world_id,
+                chunk: 0,
                 pos: s.pos,
                 vel: s.vel,
                 yaw: s.yaw,
@@ -251,7 +255,7 @@ fn place_carried(ctx: &ReducerContext, carried: &[(u64, u64)], tick: u64) {
         if row.pos == carrier.pos && row.yaw == carrier.yaw && last_seq == row.last_processed_seq && !row.teleport_flag {
             continue;
         }
-        ctx.db.movement_state().entity_id().update(MovementStateRow {
+        write_movement(ctx, MovementStateRow {
             pos: carrier.pos,
             vel: carrier.vel,
             yaw: carrier.yaw,
@@ -495,7 +499,7 @@ pub fn place_entity(ctx: &ReducerContext, entity_id: u64, pos: Vector3, yaw: Opt
     m.correction_epoch = m.correction_epoch.wrapping_add(1);
     m.server_ts = ctx.timestamp;
     record_correction(ctx, m.entity_id, m.correction_epoch, m.last_processed_seq);
-    ctx.db.movement_state().entity_id().update(m);
+    write_movement(ctx, m);
     Ok(())
 }
 
@@ -511,6 +515,6 @@ pub fn dev_nudge(ctx: &ReducerContext, offset: Vector3) -> Result<(), String> {
     m.correction_epoch = m.correction_epoch.wrapping_add(1);
     m.server_ts = ctx.timestamp;
     record_correction(ctx, m.entity_id, m.correction_epoch, m.last_processed_seq);
-    ctx.db.movement_state().entity_id().update(m);
+    write_movement(ctx, m);
     Ok(())
 }

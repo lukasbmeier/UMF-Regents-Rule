@@ -6,10 +6,11 @@ class_name UmfHealthStateRow extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'health_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"current": &"f32", &"max": &"f32", &"is_dead": &"bool", &"last_damage_source": &"u64", &"last_change_server_tick": &"u64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"current": &"f32", &"max": &"f32", &"is_dead": &"bool", &"last_damage_source": &"u64", &"last_change_server_tick": &"u64" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var current: float
 @export var max: float
 @export var is_dead: bool
@@ -18,15 +19,17 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. current: float[br]
-## 3. max: float[br]
-## 4. is_dead: bool[br]
-## 5. last_damage_source: int[br]
-## 6. last_change_server_tick: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_current: float, p_max: float, p_is_dead: bool, p_last_damage_source: int, p_last_change_server_tick: int) -> UmfHealthStateRow:
+## 2. chunk: int[br]
+## 3. current: float[br]
+## 4. max: float[br]
+## 5. is_dead: bool[br]
+## 6. last_damage_source: int[br]
+## 7. last_change_server_tick: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_current: float, p_max: float, p_is_dead: bool, p_last_damage_source: int, p_last_change_server_tick: int) -> UmfHealthStateRow:
 	var result: UmfHealthStateRow = UmfHealthStateRow.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.current = p_current
 	result.max = p_max
 	result.is_dead = p_is_dead

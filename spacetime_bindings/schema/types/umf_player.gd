@@ -6,21 +6,30 @@ class_name UmfPlayer extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'player']
 const PRIMARY_KEY: StringName = &"identity"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"identity": &"identity", &"entity_id": &"u64", &"name": &"string", &"online": &"bool" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"identity": &"identity", &"entity_id": &"u64", &"name": &"string", &"online": &"bool", &"left_at": &"i64", &"connection_id": &"connection_id", &"account_id": &"u64" }
 
 @export var identity: PackedByteArray
 @export var entity_id: int
 @export var name: String
 @export var online: bool
+@export var left_at: int
+@export var connection_id: Option ## Option of PackedByteArray
+@export var account_id: int
 
 ## 0. identity: PackedByteArray[br]
 ## 1. entity_id: int[br]
 ## 2. name: String[br]
 ## 3. online: bool[br]
-static func create(p_identity: PackedByteArray, p_entity_id: int, p_name: String, p_online: bool) -> UmfPlayer:
+## 4. left_at: int[br]
+## 5. connection_id: Option of PackedByteArray[br]
+## 6. account_id: int[br]
+static func create(p_identity: PackedByteArray, p_entity_id: int, p_name: String, p_online: bool, p_left_at: int, p_connection_id: Option, p_account_id: int) -> UmfPlayer:
 	var result: UmfPlayer = UmfPlayer.new()
 	result.identity = p_identity
 	result.entity_id = p_entity_id
 	result.name = p_name
 	result.online = p_online
+	result.left_at = p_left_at
+	result.connection_id = p_connection_id
+	result.account_id = p_account_id
 	return result

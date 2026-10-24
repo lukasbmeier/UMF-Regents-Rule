@@ -6,10 +6,11 @@ class_name UmfPush extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'push']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"entity_id": &"u64", &"vel": &"vector3[f32,f32,f32]", &"by_id": &"u64", &"at": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"entity_id": &"u64", &"vel": &"vector3[f32,f32,f32]", &"by_id": &"u64", &"at": &"i64" }
 
 @export var id: int
 @export var world_id: int
+@export var chunk: int
 @export var entity_id: int
 @export var vel: Vector3
 @export var by_id: int
@@ -17,14 +18,16 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world
 
 ## 0. id: int[br]
 ## 1. world_id: int[br]
-## 2. entity_id: int[br]
-## 3. vel: Vector3[br]
-## 4. by_id: int[br]
-## 5. at: int[br]
-static func create(p_id: int, p_world_id: int, p_entity_id: int, p_vel: Vector3, p_by_id: int, p_at: int) -> UmfPush:
+## 2. chunk: int[br]
+## 3. entity_id: int[br]
+## 4. vel: Vector3[br]
+## 5. by_id: int[br]
+## 6. at: int[br]
+static func create(p_id: int, p_world_id: int, p_chunk: int, p_entity_id: int, p_vel: Vector3, p_by_id: int, p_at: int) -> UmfPush:
 	var result: UmfPush = UmfPush.new()
 	result.id = p_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.entity_id = p_entity_id
 	result.vel = p_vel
 	result.by_id = p_by_id

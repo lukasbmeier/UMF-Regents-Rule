@@ -24,6 +24,9 @@ pub struct Noise {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub kind: u16,
     pub pos: Vector3,
     /// Who made it (0: the world itself, a genre's rule).
@@ -35,7 +38,7 @@ pub struct Noise {
 
 /// MAKE A NOISE in `world_id`, for code that has already decided it happened (a genre's rule). Its id.
 pub fn make_noise(ctx: &ReducerContext, world_id: u32, kind: u16, pos: Vector3, source_id: u64, target_id: u64) -> u64 {
-    ctx.db.noise().insert(Noise { id: 0, world_id, kind, pos, source_id, target_id, at: ctx.timestamp }).id
+    ctx.db.noise().insert(Noise { id: 0, world_id, chunk: crate::cell::chunk_of(pos), kind, pos, source_id, target_id, at: ctx.timestamp }).id
 }
 
 /// A PLAYER'S PING (a hen's Bawk): a noise of kind 1 where they point, about what they point at, if

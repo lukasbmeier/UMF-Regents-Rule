@@ -6,11 +6,12 @@ class_name UmfResourceState extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'resource_state']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entity_id": &"u64", &"world_id": &"u32", &"resource_id": &"u32", &"stored": &"f32", &"at": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"resource_id": &"u32", &"stored": &"f32", &"at": &"i64" }
 
 @export var id: int
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var resource_id: int
 @export var stored: float
 @export var at: int
@@ -18,14 +19,16 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entit
 ## 0. id: int[br]
 ## 1. entity_id: int[br]
 ## 2. world_id: int[br]
-## 3. resource_id: int[br]
-## 4. stored: float[br]
-## 5. at: int[br]
-static func create(p_id: int, p_entity_id: int, p_world_id: int, p_resource_id: int, p_stored: float, p_at: int) -> UmfResourceState:
+## 3. chunk: int[br]
+## 4. resource_id: int[br]
+## 5. stored: float[br]
+## 6. at: int[br]
+static func create(p_id: int, p_entity_id: int, p_world_id: int, p_chunk: int, p_resource_id: int, p_stored: float, p_at: int) -> UmfResourceState:
 	var result: UmfResourceState = UmfResourceState.new()
 	result.id = p_id
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.resource_id = p_resource_id
 	result.stored = p_stored
 	result.at = p_at

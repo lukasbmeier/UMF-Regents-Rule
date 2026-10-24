@@ -7,12 +7,14 @@ signal updated(old_row: UmfNoise, new_row: UmfNoise)
 signal deleted(row: UmfNoise)
 
 var id: UmfNoiseIdUniqueIndex
+var chunk: UmfNoiseChunkBTreeIndex
 var world_id: UmfNoiseWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"noise"
 	id = UmfNoiseIdUniqueIndex.new(p_local_db)
+	chunk = UmfNoiseChunkBTreeIndex.new(p_local_db)
 	world_id = UmfNoiseWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfNoise]:
 
 func first_by_world_id(value: int) -> UmfNoise:
 	return world_id._first_row(value) as UmfNoise
+
+func find_by_chunk(value: int) -> Array[UmfNoise]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfNoise:
+	return chunk._first_row(value) as UmfNoise
 
 func find_by_kind(value: int) -> Array[UmfNoise]:
 	return find_by(&"kind", value)

@@ -48,10 +48,22 @@ class_name NetConfig extends Resource
 @export_range(1, 8) var input_batch_size: int = 3
 
 @export_group("Subscriptions")
+## WHAT OF THE WORLD THIS CLIENT IS SENT (template 1.0, DECISIONS #278). WORLD: everything in its world
+## (every game before 1.0; right for a match of a few players). RING: only the rows of the cells round
+## its player (`shared/rules.json` `cells.ring`: 3 x 3), swapped as it walks: an MMO's world.
+enum Interest { WORLD, RING }
+@export var interest: Interest = Interest.WORLD
 ## The GAME's tables whose rows each belong to one world (they have a `world_id` column): asked
 ## for `WHERE world_id = <yours>`, like the foundation's own (`InterestManager.WORLD_TABLES`).
 ## Anything in `core_tables` not here or there is subscribed whole (DECISIONS #154).
 @export var world_tables: Array[StringName] = []
+## The GAME's tables whose rows each carry the cell of a placed thing (`world_id` and `chunk`), like the
+## foundation's own (`InterestManager.CELL_TABLES`): with RING interest, asked for by cell. List them in
+## `world_tables` too (what a WORLD client asks). Those with an `entity_id` are also in `follow_tables`.
+@export var cell_tables: Array[StringName] = []
+## Of `cell_tables`, those whose rows describe an entity by `entity_id` and follow it (a node's state):
+## a RING client is always sent its own player's, wherever the cells are.
+@export var follow_tables: Array[StringName] = []
 ## Tables always subscribed at boot. Genre layers add spatial/filtered sets later.
 ## MUST cover every table a foundation component declares in `required_tables()`, or that
 ## component's entity stalls on its bind timeout and comes up with default state. A missing

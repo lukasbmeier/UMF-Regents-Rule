@@ -6,18 +6,21 @@ class_name UmfAppearanceRow extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'appearance']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"look": &"string" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"look": &"string" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var look: String
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. look: String[br]
-static func create(p_entity_id: int, p_world_id: int, p_look: String) -> UmfAppearanceRow:
+## 2. chunk: int[br]
+## 3. look: String[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_look: String) -> UmfAppearanceRow:
 	var result: UmfAppearanceRow = UmfAppearanceRow.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.look = p_look
 	return result

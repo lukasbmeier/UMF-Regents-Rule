@@ -41,6 +41,9 @@ pub struct Entity {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub kind: u8,
     pub owner: Identity,
     pub spawned_at: Timestamp,
@@ -54,6 +57,15 @@ pub struct Player {
     pub entity_id: u64,
     pub name: String,
     pub online: bool,
+    /// When they last connected or left (template 1.0): how long they have been gone, for parking.
+    pub left_at: Timestamp,
+    /// The connection that plays this character (template 1.0): a second connection of the same sign-in
+    /// takes over, and inputs from the one before are refused.
+    pub connection_id: Option<ConnectionId>,
+    /// The account playing it (template 1.0); 0: a guest. What a player is shown their characters by
+    /// (`account_character`'s filter joins this row, which has no filter of its own).
+    #[index(btree)]
+    pub account_id: u64,
 }
 
 #[table(accessor = movement_state, public)]
@@ -62,6 +74,9 @@ pub struct MovementStateRow {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub pos: Vector3,
     pub vel: Vector3,
     pub yaw: f32,
@@ -86,6 +101,9 @@ pub struct HealthStateRow {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub current: f32,
     pub max: f32,
     pub is_dead: bool,
@@ -103,6 +121,9 @@ pub struct EquipStateRow {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// `EQUIP_AWAY`, `EQUIP_DRAWING`, `EQUIP_READY` or `EQUIP_STOWING`.
     pub state: u8,
 }
@@ -128,6 +149,9 @@ pub struct AppearanceRow {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub look: String,
 }
 

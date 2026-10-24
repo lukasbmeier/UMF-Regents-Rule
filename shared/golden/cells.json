@@ -1,0 +1,66 @@
+{
+  "_comment": "THE CELL CASES (template 1.0, DECISIONS #278): where a place is, and the cell both sides must say it is in at cell_m 64 (shared/rules.json). server/tests/cell.rs and the client's cells suite read this file; the formula is crate::cell::chunk_of / Cells.chunk_of. Hand-made from the formula: (floor(x/64) + 512) * 1024 + (floor(z/64) + 512), each square clamped to the grid.",
+  "cell_m": 64,
+  "cases": [
+    {
+      "x": 0,
+      "z": 0,
+      "chunk": 524800
+    },
+    {
+      "x": 63.9,
+      "z": 63.9,
+      "chunk": 524800
+    },
+    {
+      "x": 64,
+      "z": 0,
+      "chunk": 525824
+    },
+    {
+      "x": -0.1,
+      "z": 0,
+      "chunk": 523776
+    },
+    {
+      "x": 0,
+      "z": 64,
+      "chunk": 524801
+    },
+    {
+      "x": -64,
+      "z": -64,
+      "chunk": 523775
+    },
+    {
+      "x": -64.0001,
+      "z": 10,
+      "chunk": 522752
+    },
+    {
+      "x": 1000.5,
+      "z": -3000.25,
+      "chunk": 540113
+    },
+    {
+      "x": 31999.9,
+      "z": -32000,
+      "chunk": 1035276
+    },
+    {
+      "x": 1000000000.0,
+      "z": -1000000000.0,
+      "chunk": 1047552
+    },
+    {
+      "x": -1000000000.0,
+      "z": 1000000000.0,
+      "chunk": 1023
+    },
+    {
+      "x": 127.99,
+      "z": -0.0001,
+      "chunk": 525823
+    }
+  ]
+}

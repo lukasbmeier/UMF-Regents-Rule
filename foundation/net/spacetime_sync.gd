@@ -51,6 +51,9 @@ var state: ConnectionState = ConnectionState.DISCONNECTED:
 		connection_state_changed.emit(v)
 
 var local_identity: PackedByteArray = PackedByteArray()
+## A SIGN-IN's ID token to connect with (template 1.0, `SignIn`): the identity is the sign-in's, the
+## same on every machine. Empty: the identity's own token file (a guest, the editor, the suites).
+var sign_in_token: String = ""
 var is_world_ready: bool = false
 ## Why the last session ended. Empty while a session is live or being attempted.
 var last_disconnect_reason: String = ""
@@ -630,8 +633,13 @@ func _sdk_connect(cfg: NetConfig) -> void:
 		opts.set(&"one_time_token", cfg.token_path.is_empty())
 		opts.set(&"save_token", not cfg.token_path.is_empty())
 		opts.set(&"process_while_paused", true)
+		if not sign_in_token.is_empty():
+			# A sign-in's token: used as it is, never written over the identity's token file.
+			opts.set(&"token", sign_in_token)
+			opts.set(&"one_time_token", false)
+			opts.set(&"save_token", false)
 	# SDK: token file path lives on the client, not the options
-	if not cfg.token_path.is_empty():
+	if not cfg.token_path.is_empty() and sign_in_token.is_empty():
 		_sdk.set(&"token_save_path", cfg.token_path)
 	# SDK: connect_db(host_url, database_name, options). Failures arrive via connection_error.
 	_sdk.call(&"connect_db", cfg.host, database_name(cfg), opts)

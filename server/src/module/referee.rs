@@ -205,6 +205,7 @@ fn insert_action_event(ctx: &ReducerContext, req: &ActionRequest, target_id: u64
     ctx.db.action_event().insert(ActionEvent {
         id: 0,
         world_id: req.world_id,
+        chunk: chunk_of_entity(ctx, req.actor_id),
         actor_id: req.actor_id,
         ability_id: req.ability_id,
         target_id,

@@ -8,6 +8,7 @@ signal deleted(row: UmfAttachment)
 
 var entity_id: UmfAttachmentEntityIdUniqueIndex
 var carrier_id: UmfAttachmentCarrierIdBTreeIndex
+var chunk: UmfAttachmentChunkBTreeIndex
 var world_id: UmfAttachmentWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
@@ -15,6 +16,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	_table_name = &"attachment"
 	entity_id = UmfAttachmentEntityIdUniqueIndex.new(p_local_db)
 	carrier_id = UmfAttachmentCarrierIdBTreeIndex.new(p_local_db)
+	chunk = UmfAttachmentChunkBTreeIndex.new(p_local_db)
 	world_id = UmfAttachmentWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -59,6 +61,12 @@ func find_by_world_id(value: int) -> Array[UmfAttachment]:
 
 func first_by_world_id(value: int) -> UmfAttachment:
 	return world_id._first_row(value) as UmfAttachment
+
+func find_by_chunk(value: int) -> Array[UmfAttachment]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfAttachment:
+	return chunk._first_row(value) as UmfAttachment
 
 func find_by_carrier_id(value: int) -> Array[UmfAttachment]:
 	return carrier_id.filter(value)

@@ -27,6 +27,10 @@ extends Node
 ## "we are in world N now" should not have to special-case the one at boot.
 signal world_changed(world_id: int)
 
+## RING interest (template 1.0, DECISIONS #278): the cells round this client's player moved and the
+## new ones have arrived. `centre` is the cell the ring is round.
+signal cells_changed(centre: int)
+
 ## Tables whose rows belong to ONE world, and are therefore filtered to it. Everything else in
 ## `NetConfig.core_tables` is subscribed whole: static catalogues (`item_def`, `ability_def`),
 ## identity-keyed rows (`player`), rows keyed by entity rather than world
@@ -37,7 +41,10 @@ signal world_changed(world_id: int)
 ## Tables EVERY client and sidecar subscribes, whatever its config lists: what the foundation itself
 ## needs everywhere: the hot rules (DECISIONS #201: every client follows the live values) and who
 ## is trusted (`authority`: the client shows the admin's pages only to the admin, `Roles`).
-const ALWAYS_TABLES: Array[StringName] = [&"hot_rule", &"authority"]
+const ALWAYS_TABLES: Array[StringName] = [&"hot_rule", &"authority",
+	# Your own account, its characters and your link code (template 1.0): the server sends each player
+	# only their own rows (row-level security), so they are asked for whole.
+	&"account_login", &"account_character", &"link_code"]
 
 const WORLD_TABLES: Array[StringName] = [
 	&"entity", &"movement_state", &"health_state", &"session", &"action_event", &"equip_state",
@@ -49,6 +56,26 @@ const WORLD_TABLES: Array[StringName] = [
 	# Also sidecar-only: a world's NPC brains, for its authority to resume after a restart.
 	&"npc_brain",
 ]
+
+## Tables whose rows carry the cell of a placed thing (`chunk`, template 1.0, DECISIONS #278): a RING
+## client asks for them cell by cell, in a set of their own (`_ring_active`), swapped as its player
+## walks; everything else stays in the world's set, which only a change of world swaps. Every one is
+## also a WORLD table (what a WORLD client asks).
+const CELL_TABLES: Array[StringName] = [
+	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state",
+	&"attachment", &"resource_state", &"hold_progress", &"body_state",
+	&"noise", &"body_contact", &"push", &"action_event", &"ground_item",
+]
+
+## Of `CELL_TABLES`, those whose rows describe an entity by `entity_id` and follow it: a RING client is
+## always sent its own player's, by id, wherever the cells are (and before it knows where it is).
+const FOLLOW_TABLES: Array[StringName] = [
+	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state",
+	&"attachment", &"resource_state", &"hold_progress", &"body_state",
+]
+
+## The cell of a PARKED character (the module's `cell::NOWHERE`): its rows are kept there, sent to nobody.
+const NOWHERE: int = 4294967295
 
 ## `module.rs` DEFAULT_WORLD: where `client_connected` puts a player that has not joined anything.
 const DEFAULT_WORLD: int = 0
@@ -68,9 +95,25 @@ var _incoming: SubscriptionSet = null
 ## Subscription set names must be unique while active, and an overlap means two are.
 var _serial: int = 0
 
+## RING interest: the cell the ring is round, -1 until this client's own movement row says.
+var centre: int = -1
+## RING interest: the entity whose rows are asked for by id (this client's player), -1 until known.
+var own_entity: int = -1
+## RING interest: the set of cell rows in the cache, and the one replacing it. Swapped with the same
+## overlap as a world (the new one applied before the old is dropped), so a neighbour in a cell both
+## rings share is never deleted and re-inserted; one walking between two cells of one ring is an update
+## inside the set (the SDK pairs its delete and insert).
+var _ring_active: SubscriptionSet = null
+var _ring_incoming: SubscriptionSet = null
+## RING interest: the set of our own rows (by id), and the one replacing it (another character).
+var _own_active: SubscriptionSet = null
+var _own_incoming: SubscriptionSet = null
+
 
 func _ready() -> void:
 	SpaceTimeSync.connection_state_changed.connect(_on_connection_state_changed)
+	SpaceTimeSync.row_event.connect(_on_row_event)
+	SignalBus.local_entity_assigned.connect(_on_local_entity)
 
 
 # =============================================================================
@@ -85,6 +128,8 @@ func set_world(new_world: int) -> void:
 	world_id = new_world
 	if SpaceTimeSync.state == SpaceTimeSync.ConnectionState.CONNECTED:
 		_apply()
+		if is_ring():
+			_apply_ring()   # the same cells in another world are other rows
 
 
 ## True once the core set for the current world has applied.
@@ -111,8 +156,63 @@ func build_queries(for_world: int) -> Array[String]:
 		if not tables.has(t):
 			tables.append(t)
 	for t: StringName in tables:
+		if is_ring() and is_cell_table(t):
+			continue   # asked for by cell, in the ring's own set (`build_ring_queries`)
 		out.append(query_for(t, for_world))
 	return out
+
+
+## RING interest: the queries of the cell set for `for_world`: every cell table subscribed, by each cell
+## of the ring round `centre` (none until it is known). One query per cell rather than one OR'd ring: two
+## clients in the same cells ask the same queries, which the server works out once for both.
+func build_ring_queries(for_world: int) -> Array[String]:
+	var out: Array[String] = []
+	if centre < 0:
+		return out
+	var cells: PackedInt64Array = Cells.ring(centre, Cells.ring_radius())
+	for t: StringName in subscribed_tables():
+		if not is_cell_table(t):
+			continue
+		for c: int in cells:
+			out.append("SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [t, for_world, c])
+	return out
+
+
+## RING interest: this client's own rows of the tables that follow an entity, by id, in a set of their
+## own that only a new player (another character) swaps: our own body is never one cell's to drop.
+## Kept apart from the cells, so no row is matched by two queries of one set.
+func build_own_queries() -> Array[String]:
+	var out: Array[String] = []
+	if own_entity < 0:
+		return out
+	for t: StringName in subscribed_tables():
+		if is_cell_table(t) and is_follow_table(t):
+			out.append("SELECT * FROM %s WHERE entity_id = %d" % [t, own_entity])
+	return out
+
+
+## Whether this client is sent only the cells round it: its config says RING, and it is not an
+## authority (a sidecar or referee takes the whole world it runs).
+func is_ring(cfg: NetConfig = null) -> bool:
+	var c: NetConfig = cfg if cfg != null else SpaceTimeSync.config
+	return c != null and c.interest == NetConfig.Interest.RING and not c.authority_process
+
+
+## Whether `table`'s rows carry a placed thing's cell: the foundation's (`CELL_TABLES`) or the game's.
+func is_cell_table(table: StringName, cfg: NetConfig = null) -> bool:
+	var c: NetConfig = cfg if cfg != null else SpaceTimeSync.config
+	return CELL_TABLES.has(table) or (c != null and c.cell_tables.has(table))
+
+
+## Whether `table`'s rows describe an entity by `entity_id` and follow it.
+func is_follow_table(table: StringName, cfg: NetConfig = null) -> bool:
+	var c: NetConfig = cfg if cfg != null else SpaceTimeSync.config
+	return FOLLOW_TABLES.has(table) or (c != null and c.follow_tables.has(table))
+
+
+## The ring's set in the cache, or null. For tests and the debug overlay.
+func ring_set() -> SubscriptionSet:
+	return _ring_active
 
 
 ## Every table the current set asks for: the config's core tables and the extras. What an entity
@@ -133,6 +233,9 @@ func subscribed_tables() -> Array[StringName]:
 ## The query for one table. Split out so an override can reuse the world-filtering rule for the
 ## tables it agrees about and replace only the ones it does not.
 func query_for(table: StringName, for_world: int, cfg: NetConfig = null) -> String:
+	if is_cell_table(table, cfg):
+		# A parked character's rows sit in the NOWHERE cell (template 1.0): nobody is sent them.
+		return "SELECT * FROM %s WHERE world_id = %d AND chunk != %d" % [table, for_world, NOWHERE]
 	if is_world_table(table, cfg):
 		return "SELECT * FROM %s WHERE world_id = %d" % [table, for_world]
 	return "SELECT * FROM %s" % table
@@ -155,11 +258,117 @@ func _on_connection_state_changed(state: SpaceTimeSync.ConnectionState) -> void:
 			# A reconnect arrives here too, with the handles intact — see the header.
 			if _active == null and _incoming == null:
 				_apply()
+			if is_ring() and _ring_active == null and _ring_incoming == null:
+				_apply_ring()
+			if is_ring() and _own_active == null and _own_incoming == null:
+				_apply_own()
 		SpaceTimeSync.ConnectionState.DISCONNECTED, SpaceTimeSync.ConnectionState.FAILED:
 			# `disconnected` is terminal in this SDK: every handle is gone and SpaceTimeSync has
 			# already dropped its own references.
 			_active = null
 			_incoming = null
+			_ring_active = null
+			_ring_incoming = null
+			_own_active = null
+			_own_incoming = null
+			centre = -1
+			own_entity = -1
+
+
+## RING interest: subscribe the cells round `centre` (and our own rows), keeping the ring in the cache
+## until the new one has applied. Nothing to ask yet (no player, no place): nothing subscribed.
+func _apply_ring() -> void:
+	if _ring_incoming != null:
+		SpaceTimeSync.unsubscribe(_ring_incoming)   # superseded: the player moved on again
+		_ring_incoming = null
+	if SpaceTimeSync.state != SpaceTimeSync.ConnectionState.CONNECTED:
+		return
+	var queries: Array[String] = build_ring_queries(world_id)
+	if queries.is_empty():
+		return
+	_serial += 1
+	var set := SubscriptionSet.new()
+	set.name = StringName("cells#%d" % _serial)
+	for q: String in queries:
+		set.add_query(q)
+	set.applied.connect(_on_ring_applied)
+	set.ended.connect(_on_ended)
+	_ring_incoming = set
+	SpaceTimeSync.subscribe(set)
+
+
+func _on_ring_applied(set: SubscriptionSet) -> void:
+	if set == _ring_active or set != _ring_incoming:
+		return   # a reconnect re-applying the one we hold, or one already superseded
+	var old: SubscriptionSet = _ring_active
+	_ring_active = set
+	_ring_incoming = null
+	if old != null:
+		SpaceTimeSync.unsubscribe(old)   # only now: the shared cells' rows are held by the new one too
+	cells_changed.emit(centre)
+
+
+## RING interest: subscribe our own rows, keeping the old player's until the new one's have applied.
+func _apply_own() -> void:
+	if _own_incoming != null:
+		SpaceTimeSync.unsubscribe(_own_incoming)
+		_own_incoming = null
+	if SpaceTimeSync.state != SpaceTimeSync.ConnectionState.CONNECTED:
+		return
+	var queries: Array[String] = build_own_queries()
+	if queries.is_empty():
+		return
+	_serial += 1
+	var set := SubscriptionSet.new()
+	set.name = StringName("own#%d" % _serial)
+	for q: String in queries:
+		set.add_query(q)
+	set.applied.connect(_on_own_applied)
+	set.ended.connect(_on_ended)
+	_own_incoming = set
+	SpaceTimeSync.subscribe(set)
+
+
+func _on_own_applied(set: SubscriptionSet) -> void:
+	if set == _own_active or set != _own_incoming:
+		return
+	var old: SubscriptionSet = _own_active
+	_own_active = set
+	_own_incoming = null
+	if old != null:
+		SpaceTimeSync.unsubscribe(old)
+
+
+## The set of our own rows in the cache, or null. For tests and the debug overlay.
+func own_set() -> SubscriptionSet:
+	return _own_active
+
+
+## Our player is known: its rows are asked for by id from now on, wherever it stands.
+func _on_local_entity(eid: int) -> void:
+	if eid == own_entity:
+		return
+	own_entity = eid
+	if is_ring():
+		_apply_own()
+
+
+## Our player's movement row: the ring follows it, once it is well inside another cell (`Cells.recentre`).
+func _on_row_event(ev: RowEvent) -> void:
+	if own_entity < 0 or ev.entity_id != own_entity or ev.table != &"movement_state" or not is_ring():
+		return
+	if ev.kind == RowEvent.Kind.DELETED:
+		return   # gone from the cache (a world being left): the next row says where it is
+	var row: RefCounted = ev.current()
+	if row == null:
+		return
+	var pos: Variant = row.get(&"pos")
+	if not pos is Vector3:
+		return
+	var next: int = Cells.recentre(centre, pos as Vector3)
+	if next != centre:
+		centre = next
+		_apply_ring()
 
 
 func _apply() -> void:
@@ -208,5 +417,13 @@ func _on_ended(set: SubscriptionSet, error: String) -> void:
 		_incoming = null
 	if set == _active:
 		_active = null
+	if set == _ring_incoming:
+		_ring_incoming = null
+	if set == _ring_active:
+		_ring_active = null
+	if set == _own_incoming:
+		_own_incoming = null
+	if set == _own_active:
+		_own_active = null
 	# It never worked; do not leave it counted among the live sets.
 	SpaceTimeSync.unsubscribe(set)

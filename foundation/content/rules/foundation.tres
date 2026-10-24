@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=24 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -269,8 +269,46 @@ maximum = 200.0
 unit = "%"
 description = "TRAITS (DECISIONS #275): how strongly every trait works, gains and costs alike. 100: as authored; 0: no trait does anything (a fight without them, a trait gone wrong)."
 
+[sub_resource type="Resource" id="Rule_guests"]
+script = ExtResource("2_rule")
+name = &"guests_allowed"
+kind = 2
+number = 1.0
+minimum = 0.0
+maximum = 1.0
+unit = ""
+description = "GUESTS (template 1.0, DECISIONS #278): whether someone who has not signed in may play, as their machine (a token file) with a name of their own. On for the playtests in every game. Off: only a sign-in (SpacetimeAuth) gets a character; the editor, the suites and bots are unaffected only while it is on."
+
+[sub_resource type="Resource" id="Rule_characters"]
+script = ExtResource("2_rule")
+name = &"characters_per_account"
+kind = 1
+number = 1.0
+minimum = 1.0
+maximum = 12.0
+unit = ""
+description = "CHARACTERS (template 1.0, DECISIONS #278): how many characters one account may have. A match game's player is one character (1); an MMO's may keep several (Regent's Rule: 3)."
+
+[sub_resource type="Resource" id="Rule_park"]
+script = ExtResource("2_rule")
+name = &"park_offline_s"
+number = 0.0
+minimum = 0.0
+maximum = 86400.0
+unit = "s"
+description = "PARKING (template 1.0, DECISIONS #278): how long after a player leaves their character is put away (no client is sent it), to come back where it stood when they sign in again. 0: never; they stay in the world, hidden, as before 1.0 (a match game). An MMO with thousands of characters parks them (Regent's Rule: 30)."
+
+[sub_resource type="Resource" id="Rule_link_code"]
+script = ExtResource("2_rule")
+name = &"link_code_s"
+number = 600.0
+minimum = 30.0
+maximum = 3600.0
+unit = "s"
+description = "LINK CODES (template 1.0, DECISIONS #278): how long a code shown on a signed-in machine may be typed on another to join it to the account (another way in, a guest's machine)."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_telemetry_where"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep"), SubResource("Rule_trait_strength")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_telemetry_where"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep"), SubResource("Rule_trait_strength"), SubResource("Rule_guests"), SubResource("Rule_characters"), SubResource("Rule_park"), SubResource("Rule_link_code")])

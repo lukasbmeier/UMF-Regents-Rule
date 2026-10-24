@@ -6,10 +6,11 @@ class_name UmfStatusStateRow extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'status_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"status": &"u8", &"prev_status": &"u8", &"since": &"i64", &"lasts_ms": &"u32", &"by_entity": &"u64", &"data": &"string", &"serial": &"u32" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"status": &"u8", &"prev_status": &"u8", &"since": &"i64", &"lasts_ms": &"u32", &"by_entity": &"u64", &"data": &"string", &"serial": &"u32" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var status: int
 @export var prev_status: int
 @export var since: int
@@ -20,17 +21,19 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. status: int[br]
-## 3. prev_status: int[br]
-## 4. since: int[br]
-## 5. lasts_ms: int[br]
-## 6. by_entity: int[br]
-## 7. data: String[br]
-## 8. serial: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_status: int, p_prev_status: int, p_since: int, p_lasts_ms: int, p_by_entity: int, p_data: String, p_serial: int) -> UmfStatusStateRow:
+## 2. chunk: int[br]
+## 3. status: int[br]
+## 4. prev_status: int[br]
+## 5. since: int[br]
+## 6. lasts_ms: int[br]
+## 7. by_entity: int[br]
+## 8. data: String[br]
+## 9. serial: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_status: int, p_prev_status: int, p_since: int, p_lasts_ms: int, p_by_entity: int, p_data: String, p_serial: int) -> UmfStatusStateRow:
 	var result: UmfStatusStateRow = UmfStatusStateRow.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.status = p_status
 	result.prev_status = p_prev_status
 	result.since = p_since

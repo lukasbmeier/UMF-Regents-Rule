@@ -6,10 +6,11 @@ class_name UmfActionEvent extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'action_event']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"actor_id": &"u64", &"ability_id": &"u32", &"target_id": &"u64", &"aim": &"vector3[f32,f32,f32]", &"outcome": &"u8", &"predicted_id": &"u32", &"server_ts": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"actor_id": &"u64", &"ability_id": &"u32", &"target_id": &"u64", &"aim": &"vector3[f32,f32,f32]", &"outcome": &"u8", &"predicted_id": &"u32", &"server_ts": &"i64" }
 
 @export var id: int
 @export var world_id: int
+@export var chunk: int
 @export var actor_id: int
 @export var ability_id: int
 @export var target_id: int
@@ -20,17 +21,19 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world
 
 ## 0. id: int[br]
 ## 1. world_id: int[br]
-## 2. actor_id: int[br]
-## 3. ability_id: int[br]
-## 4. target_id: int[br]
-## 5. aim: Vector3[br]
-## 6. outcome: int[br]
-## 7. predicted_id: int[br]
-## 8. server_ts: int[br]
-static func create(p_id: int, p_world_id: int, p_actor_id: int, p_ability_id: int, p_target_id: int, p_aim: Vector3, p_outcome: int, p_predicted_id: int, p_server_ts: int) -> UmfActionEvent:
+## 2. chunk: int[br]
+## 3. actor_id: int[br]
+## 4. ability_id: int[br]
+## 5. target_id: int[br]
+## 6. aim: Vector3[br]
+## 7. outcome: int[br]
+## 8. predicted_id: int[br]
+## 9. server_ts: int[br]
+static func create(p_id: int, p_world_id: int, p_chunk: int, p_actor_id: int, p_ability_id: int, p_target_id: int, p_aim: Vector3, p_outcome: int, p_predicted_id: int, p_server_ts: int) -> UmfActionEvent:
 	var result: UmfActionEvent = UmfActionEvent.new()
 	result.id = p_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.actor_id = p_actor_id
 	result.ability_id = p_ability_id
 	result.target_id = p_target_id

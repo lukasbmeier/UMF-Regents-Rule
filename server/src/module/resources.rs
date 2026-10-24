@@ -15,6 +15,9 @@ pub struct ResourceState {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// Its `ResourceDef`'s content id.
     pub resource_id: u32,
     /// What it held at `at` (after its last spend).
@@ -34,7 +37,7 @@ pub fn ensure_resource(ctx: &ReducerContext, entity_id: u64, resource_id: u32) -
     if ctx.db.resource_state().entity_id().filter(entity_id).any(|r| r.resource_id == resource_id) {
         return Ok(());
     }
-    ctx.db.resource_state().insert(ResourceState { id: 0, entity_id, world_id: ent.world_id, resource_id, stored: seed.max, at: ctx.timestamp });
+    ctx.db.resource_state().insert(ResourceState { id: 0, entity_id, world_id: ent.world_id, chunk: chunk_of_entity(ctx, entity_id), resource_id, stored: seed.max, at: ctx.timestamp });
     Ok(())
 }
 

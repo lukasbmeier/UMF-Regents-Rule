@@ -6,10 +6,11 @@ class_name UmfMovementStateRow extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'movement_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"pos": &"vector3[f32,f32,f32]", &"vel": &"vector3[f32,f32,f32]", &"yaw": &"f32", &"grounded": &"bool", &"move_state": &"u8", &"last_processed_seq": &"u32", &"server_tick": &"u64", &"server_ts": &"i64", &"teleport_flag": &"bool", &"correction_epoch": &"u32" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"pos": &"vector3[f32,f32,f32]", &"vel": &"vector3[f32,f32,f32]", &"yaw": &"f32", &"grounded": &"bool", &"move_state": &"u8", &"last_processed_seq": &"u32", &"server_tick": &"u64", &"server_ts": &"i64", &"teleport_flag": &"bool", &"correction_epoch": &"u32" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var pos: Vector3
 @export var vel: Vector3
 @export var yaw: float
@@ -23,20 +24,22 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. pos: Vector3[br]
-## 3. vel: Vector3[br]
-## 4. yaw: float[br]
-## 5. grounded: bool[br]
-## 6. move_state: int[br]
-## 7. last_processed_seq: int[br]
-## 8. server_tick: int[br]
-## 9. server_ts: int[br]
-## 10. teleport_flag: bool[br]
-## 11. correction_epoch: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_pos: Vector3, p_vel: Vector3, p_yaw: float, p_grounded: bool, p_move_state: int, p_last_processed_seq: int, p_server_tick: int, p_server_ts: int, p_teleport_flag: bool, p_correction_epoch: int) -> UmfMovementStateRow:
+## 2. chunk: int[br]
+## 3. pos: Vector3[br]
+## 4. vel: Vector3[br]
+## 5. yaw: float[br]
+## 6. grounded: bool[br]
+## 7. move_state: int[br]
+## 8. last_processed_seq: int[br]
+## 9. server_tick: int[br]
+## 10. server_ts: int[br]
+## 11. teleport_flag: bool[br]
+## 12. correction_epoch: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_pos: Vector3, p_vel: Vector3, p_yaw: float, p_grounded: bool, p_move_state: int, p_last_processed_seq: int, p_server_tick: int, p_server_ts: int, p_teleport_flag: bool, p_correction_epoch: int) -> UmfMovementStateRow:
 	var result: UmfMovementStateRow = UmfMovementStateRow.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.pos = p_pos
 	result.vel = p_vel
 	result.yaw = p_yaw

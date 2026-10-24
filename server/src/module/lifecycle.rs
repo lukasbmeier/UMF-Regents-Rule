@@ -112,10 +112,11 @@ pub fn set_player_name(ctx: &ReducerContext, name: String) -> Result<(), String>
     }
     // NAMES ARE UNIQUE (DECISIONS #202): two identities called "Luke" are two people nobody can
     // tell apart (or one pretending to be the other). Case and spacing do not make a new name.
-    if let Some(other) = name_holder(ctx, &trimmed, ctx.sender()) {
+    if let Some(other) = name_holder(ctx, &trimmed, ctx.sender()).or_else(|| character_name_taken(ctx, &trimmed, p.entity_id)) {
         return Err(format!("the name '{}' is taken (player {other}): choose another", trimmed));
     }
     log::info!("player {} is now '{}'", p.entity_id, trimmed);
+    rename_character(ctx, p.entity_id, &trimmed);
     p.name = trimmed;
     ctx.db.player().identity().update(p);
     Ok(())
@@ -133,22 +134,28 @@ fn free_name(ctx: &ReducerContext, name: &str, me: Identity) -> String {
     crate::names::free(name, MAX_NAME_LEN, |n| name_holder(ctx, n, me).is_some())
 }
 
-/// A client connected. Creates its player row, entity and state on first sight; flips
-/// `online` back on for a returning identity.
+/// A client connected. A SIGNED-IN connection (template 1.0) plays its account's last character, from
+/// wherever it was last played; one whose account has none yet is made one. A connection that is not
+/// signed in is a GUEST, as every connection was before 1.0: its player row, entity and state are made
+/// on first sight and kept for its identity (when the game allows guests: `foundation.guests_allowed`).
 #[reducer(client_connected)]
 pub fn client_connected(ctx: &ReducerContext) {
     // A republish does not run init: the first connect after one brings the hot rules up to date,
     // and the abilities (DECISIONS #226: a new one, the Pounce, reached a world made before it).
     sync_hot_rules(ctx);
     sync_abilities(ctx);
+    sync_issuers(ctx);
     // A SIDECAR IS NOT A PLAYER (0.41.1): a referee or a world's authority gets no entity (Luke saw a
     // stranger standing at the spawn: his referee, made a player on its first connection).
     if ctx.db.authority().identity().find(ctx.sender()).is_some_and(|a| a.role == ROLE_SIDECAR) {
         drop_sidecar_player(ctx, ctx.sender());
         return;
     }
+    let account = account_of_sender(ctx);
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
         p.online = true;
+        p.left_at = ctx.timestamp;
+        p.connection_id = ctx.connection_id();
         // A name shared with an OLDER player (from before names were unique, #202) becomes free:
         // the first to hold it keeps it.
         if !p.name.is_empty() {
@@ -162,22 +169,53 @@ pub fn client_connected(ctx: &ReducerContext) {
         }
         let entity_id = p.entity_id;
         ctx.db.player().identity().update(p);
+        unpark(ctx, entity_id);
         player_arrived(ctx, entity_id);
         crate::game::on_player_returned(ctx, entity_id);
         return;
     }
+    match connect_account(ctx) {
+        Some(true) => {
+            // Its account's character, taken from another sign-in or brought back where it stood.
+            let entity_id = ctx.db.player().identity().find(ctx.sender()).map(|p| p.entity_id).unwrap_or(0);
+            player_arrived(ctx, entity_id);
+            crate::game::on_player_returned(ctx, entity_id);
+            return;
+        }
+        Some(false) => {}
+        None if !guests_allowed(ctx) => {
+            log::info!("a connection that is not signed in, and this game does not take guests: no character");
+            return;
+        }
+        None => {}
+    }
+    let entity_id = new_player_entity(ctx);
+    ctx.db.player().insert(Player {
+        identity: ctx.sender(),
+        entity_id,
+        name: String::new(),
+        online: true,
+        left_at: ctx.timestamp,
+        connection_id: ctx.connection_id(),
+        account_id: account.unwrap_or(0),
+    });
+    if let Some(acc) = account {
+        list_character(ctx, acc, entity_id, "");
+    }
+    player_arrived(ctx, entity_id);
+    crate::game::on_player_created(ctx, entity_id);
+}
+
+/// A NEW PLAYER'S ENTITY: its entity, movement at the default world's spawn, health and session
+/// membership (no player row: the caller makes the one that plays it). Returns its id.
+pub(crate) fn new_player_entity(ctx: &ReducerContext) -> u64 {
     let ent = ctx.db.entity().insert(Entity {
         entity_id: 0,
         world_id: DEFAULT_WORLD,
+        chunk: 0,
         kind: entity_kind::PLAYER,
         owner: ctx.sender(),
         spawned_at: ctx.timestamp,
-    });
-    ctx.db.player().insert(Player {
-        identity: ctx.sender(),
-        entity_id: ent.entity_id,
-        name: String::new(),
-        online: true,
     });
     let spawn = ctx
         .db
@@ -186,9 +224,10 @@ pub fn client_connected(ctx: &ReducerContext) {
         .find(DEFAULT_WORLD)
         .map(|w| w.spawn)
         .unwrap_or_else(default_spawn);
-    ctx.db.movement_state().insert(MovementStateRow {
+    insert_movement(ctx, MovementStateRow {
         entity_id: ent.entity_id,
         world_id: DEFAULT_WORLD,
+        chunk: 0,
         pos: spawn,
         vel: Vector3::ZERO,
         yaw: 0.0,
@@ -203,6 +242,7 @@ pub fn client_connected(ctx: &ReducerContext) {
     ctx.db.health_state().insert(HealthStateRow {
         entity_id: ent.entity_id,
         world_id: DEFAULT_WORLD,
+        chunk: chunk_of_entity(ctx, ent.entity_id),
         current: hot_number(ctx, crate::hot::foundation::NEW_PLAYER_HEALTH) as f32,
         max: hot_number(ctx, crate::hot::foundation::NEW_PLAYER_HEALTH) as f32,
         is_dead: false,
@@ -213,18 +253,21 @@ pub fn client_connected(ctx: &ReducerContext) {
     if let Some(sess) = ctx.db.session().world_id().find(DEFAULT_WORLD) {
         let _ = add_member(ctx, &sess, ent.entity_id);
     }
-    player_arrived(ctx, ent.entity_id);
-    crate::game::on_player_created(ctx, ent.entity_id);
+    ent.entity_id
 }
 
 #[reducer(client_disconnected)]
 pub fn client_disconnected(ctx: &ReducerContext) {
     if let Some(mut p) = ctx.db.player().identity().find(ctx.sender()) {
+        if p.connection_id.is_some() && p.connection_id != ctx.connection_id() {
+            return;   // an older connection of this sign-in, already taken over: the character plays on
+        }
         p.online = false;
+        p.left_at = ctx.timestamp;
         let entity_id = p.entity_id;
         ctx.db.player().identity().update(p);
-        // Persistence policy is the genre's: the foundation keeps the entity, and the hook may
-        // despawn it (a party game) or keep it (an MMO).
+        // Persistence policy is the genre's: the foundation keeps the entity (and parks it after
+        // `foundation.park_offline_s`), and the hook may despawn it (a party game).
         crate::game::on_player_left(ctx, entity_id);
     }
 }

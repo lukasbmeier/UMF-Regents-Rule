@@ -11,7 +11,7 @@
 //! and this file re-exports them all, so `crate::module::<item>` reaches anything, as before.
 
 pub(crate) use crate::sim::{InputFrame, MovementState, Vector3};
-pub(crate) use spacetimedb::{client_visibility_filter, reducer, table, Filter, Identity, ReducerContext,
+pub(crate) use spacetimedb::{client_visibility_filter, reducer, table, ConnectionId, Filter, Identity, ReducerContext,
     ScheduleAt, SpacetimeType, Table, TimeDuration, Timestamp};
 
 // `spacetimedb` is pinned in Cargo.toml to the server's exact version (DECISIONS #190).
@@ -70,3 +70,7 @@ mod resources;
 pub use resources::*;
 mod chat;
 pub use chat::*;
+mod place;
+pub use place::*;
+mod accounts;
+pub use accounts::*;

@@ -7,12 +7,14 @@ signal updated(old_row: UmfActionEvent, new_row: UmfActionEvent)
 signal deleted(row: UmfActionEvent)
 
 var id: UmfActionEventIdUniqueIndex
+var chunk: UmfActionEventChunkBTreeIndex
 var world_id: UmfActionEventWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"action_event"
 	id = UmfActionEventIdUniqueIndex.new(p_local_db)
+	chunk = UmfActionEventChunkBTreeIndex.new(p_local_db)
 	world_id = UmfActionEventWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfActionEvent]:
 
 func first_by_world_id(value: int) -> UmfActionEvent:
 	return world_id._first_row(value) as UmfActionEvent
+
+func find_by_chunk(value: int) -> Array[UmfActionEvent]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfActionEvent:
+	return chunk._first_row(value) as UmfActionEvent
 
 func find_by_actor_id(value: int) -> Array[UmfActionEvent]:
 	return find_by(&"actor_id", value)

@@ -116,8 +116,17 @@ static func bake(root: Node3D, out_dir: String = "res://shared/world/", settings
 	var jf: FileAccess = FileAccess.open(json_path, FileAccess.WRITE)
 	jf.store_string(JSON.stringify(doc, "  ", false) + "\n")
 	jf.close()
+	var cells: Dictionary = {}
+	if info != null and info.streamed:
+		# A streamed level's scenery, cut into a scene per cell for the client (template 1.0). Only the
+		# client reads these: the server's bake above is the whole level, as always.
+		var scene_path: String = root.scene_file_path if not root.scene_file_path.is_empty() \
+			else out_dir.path_join(level_name + ".tscn")
+		cells = LevelCells.cut(root, LevelCells.folder_for(scene_path, level_name))
+		if not bool(cells.get("ok", false)):
+			return {"ok": false, "error": "the cells: %s" % cells.get("error", "")}
 	return {"ok": true, "error": "", "doc": doc, "json": json_path, "bin": bin_path, "wet": wet,
-		"width": w, "height": h}
+		"width": w, "height": h, "cells": cells.get("cells", {})}
 
 
 ## The first LevelSpawn's position, else a "SpawnPoint" marker's (the generated lakeside's), else

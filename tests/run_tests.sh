@@ -75,6 +75,16 @@ if lint_code 'res://sidecar' foundation game tests --include='*.gd' --include='*
 fi
 echo "ok"
 
+echo "== architecture lint: every movement write goes through place.rs (template 1.0) =="
+# write_movement / insert_movement recut the row's cell and move every row that follows it (DECISIONS
+# #278); a write past them leaves an entity's rows in the wrong cell, invisible to a ring client.
+if grep -rnE 'movement_state\(\)\.(insert|entity_id\(\)\.update)\(' server/src --include='*.rs' \
+     | grep -v '^server/src/module/place.rs:'; then
+  echo "VIOLATION: movement_state written outside server/src/module/place.rs; use write_movement / insert_movement." >&2
+  exit 1
+fi
+echo "ok"
+
 # The foundation reads generated rows through MovementState.from_row(), which assumes the
 # module's wire struct maps onto Godot's built-in Vector3. It only does so because the Rust
 # struct is literally named `Vector3` (DECISIONS #40) — rename it and codegen silently emits a

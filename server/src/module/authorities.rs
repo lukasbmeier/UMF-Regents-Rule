@@ -146,9 +146,10 @@ pub fn write_movement_batch(
         if crate::placed::stale(row.teleport_flag, row.pos, age_us, w.teleport_flag, w.pos) {
             continue;   // from before it saw the server move this entity: that move stands (#252)
         }
-        ctx.db.movement_state().entity_id().update(MovementStateRow {
+        write_movement(ctx, MovementStateRow {
             entity_id: w.entity_id,
             world_id,
+            chunk: 0,
             pos: w.pos,
             vel: w.vel,
             yaw: w.yaw,
@@ -354,6 +355,7 @@ pub fn use_ability_from(
     ctx.db.action_event().insert(ActionEvent {
         id: 0,
         world_id: me.world_id,
+        chunk: chunk_of_entity(ctx, actor),
         actor_id: actor,
         ability_id,
         target_id,
@@ -401,6 +403,8 @@ pub fn prune_action_events(ctx: &ReducerContext, _sched: ActionPruneSchedule) ->
     prune_damage_shares(ctx);
     tick_ground(ctx);
     prune_chat(ctx);
+    prune_link_codes(ctx);
+    park_offline(ctx);
     Ok(())
 }
 
@@ -416,13 +420,15 @@ pub fn spawn_npc_internal(ctx: &ReducerContext, world_id: u32, kind: u8, pos: Ve
     let ent = ctx.db.entity().insert(Entity {
         entity_id: 0,
         world_id,
+        chunk: 0,
         kind,
         owner: ctx.sender(),
         spawned_at: ctx.timestamp,
     });
-    ctx.db.movement_state().insert(MovementStateRow {
+    insert_movement(ctx, MovementStateRow {
         entity_id: ent.entity_id,
         world_id,
+        chunk: 0,
         pos,
         vel: Vector3::ZERO,
         yaw,
@@ -437,6 +443,7 @@ pub fn spawn_npc_internal(ctx: &ReducerContext, world_id: u32, kind: u8, pos: Ve
     ctx.db.health_state().insert(HealthStateRow {
         entity_id: ent.entity_id,
         world_id,
+        chunk: chunk_of_entity(ctx, ent.entity_id),
         current: 100.0,
         max: 100.0,
         is_dead: false,

@@ -6,10 +6,11 @@ class_name UmfAttachment extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'attachment']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"carrier_id": &"u64", &"socket": &"string", &"since": &"i64", &"prev_status": &"u8" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"carrier_id": &"u64", &"socket": &"string", &"since": &"i64", &"prev_status": &"u8" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var carrier_id: int
 @export var socket: String
 @export var since: int
@@ -17,14 +18,16 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. carrier_id: int[br]
-## 3. socket: String[br]
-## 4. since: int[br]
-## 5. prev_status: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_carrier_id: int, p_socket: String, p_since: int, p_prev_status: int) -> UmfAttachment:
+## 2. chunk: int[br]
+## 3. carrier_id: int[br]
+## 4. socket: String[br]
+## 5. since: int[br]
+## 6. prev_status: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_carrier_id: int, p_socket: String, p_since: int, p_prev_status: int) -> UmfAttachment:
 	var result: UmfAttachment = UmfAttachment.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.carrier_id = p_carrier_id
 	result.socket = p_socket
 	result.since = p_since

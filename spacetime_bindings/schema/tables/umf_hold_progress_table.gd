@@ -7,6 +7,7 @@ signal updated(old_row: UmfHoldProgress, new_row: UmfHoldProgress)
 signal deleted(row: UmfHoldProgress)
 
 var hold_id: UmfHoldProgressHoldIdUniqueIndex
+var chunk: UmfHoldProgressChunkBTreeIndex
 var entity_id: UmfHoldProgressEntityIdBTreeIndex
 var world_id: UmfHoldProgressWorldIdBTreeIndex
 
@@ -14,6 +15,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"hold_progress"
 	hold_id = UmfHoldProgressHoldIdUniqueIndex.new(p_local_db)
+	chunk = UmfHoldProgressChunkBTreeIndex.new(p_local_db)
 	entity_id = UmfHoldProgressEntityIdBTreeIndex.new(p_local_db)
 	world_id = UmfHoldProgressWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
@@ -65,6 +67,12 @@ func find_by_world_id(value: int) -> Array[UmfHoldProgress]:
 
 func first_by_world_id(value: int) -> UmfHoldProgress:
 	return world_id._first_row(value) as UmfHoldProgress
+
+func find_by_chunk(value: int) -> Array[UmfHoldProgress]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfHoldProgress:
+	return chunk._first_row(value) as UmfHoldProgress
 
 func find_by_hold(value: int) -> Array[UmfHoldProgress]:
 	return find_by(&"hold", value)

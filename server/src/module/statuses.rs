@@ -15,6 +15,9 @@ pub struct StatusStateRow {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// Its number (`StatusDef.status`): the foundation's 0-99, a genre's 100-255.
     pub status: u8,
     /// The one before: for the grace after a change (`status::bound`), and for whoever shows it.
@@ -111,6 +114,7 @@ pub fn set_status_internal(ctx: &ReducerContext, entity_id: u64, status: u8, las
     let row = StatusStateRow {
         entity_id,
         world_id: ent.world_id,
+        chunk: chunk_of_entity(ctx, entity_id),
         status,
         prev_status: from,
         since: ctx.timestamp,

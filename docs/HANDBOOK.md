@@ -209,10 +209,68 @@ A deliberate break (you retuned movement, or reshaped a table) is made by adding
   is hidden and nothing can bump into it or use it; their progress, catches and records stay. They
   reappear where they left when they come back.
 - **Names are unique.** Two players cannot both be "Luke" (nor "luke"). Each copy of the game on a
-  computer is its own player (each editor window, each exported build): a second copy you start
-  needs another name. If two players already shared a name, the one who had it first keeps it and
-  the other becomes "Luke 2" the next time they join. Proper accounts (log in, and be the same
-  player on any computer) are on the roadmap.
+  computer is its own player (each editor window, each exported build) unless it SIGNS IN (below): a
+  second copy you start needs another name. If two players already shared a name, the one who had it
+  first keeps it and the other becomes "Luke 2" the next time they join. A character nobody is playing
+  keeps its name too.
+
+### Accounts, characters and signing in (template 1.0)
+The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
+- **A guest** is what every player was before 1.0: this machine's token file, a character of its own,
+  a unique name. Every game allows guests for the playtests (the hot rule `foundation.guests_allowed`,
+  1). At 0 only a sign-in gets a character (the editor, the suites and bots then need one too).
+- **Signing in** (the connect screen's **Sign in**, or **Account, Sign in** in the Escape menu) opens
+  the player's browser on the game's sign-in service, SpacetimeAuth (Discord, Google, an email link;
+  Steam later), and the game hears the answer itself on 127.0.0.1. The first sign-in makes an
+  ACCOUNT. The same sign-in on another machine is the same account and character, with nothing to do;
+  the next launch signs in silently (the sign-in is kept in the user folder beside the identity's token
+  file; **Sign out** forgets it). There are no passwords of our own: SpacetimeAuth has none, and Luke
+  chose to try it as it is (its email link is the email sign-in).
+- **Another way in** (Steam on the Mac, Discord on the PC, or a guest's machine joining an account):
+  **Account, Play on another machine** shows an 8-letter LINK CODE for 10 minutes
+  (`foundation.link_code_s`); on the other machine **Account, Join** with it. That machine then plays
+  the account's character; the guest character it had joins the account if there is room.
+- **Characters**: an account has up to `foundation.characters_per_account` (1; Regent's Rule 3), each
+  a player entity kept on the server. **Account** lists them: **Play** one, **New character**.
+- **Whoever connects last plays it.** Signing in on a second machine while the first is still on takes
+  the character over; the first stops controlling it.
+- **Logging back in where you left**: a player who leaves stays in the world, hidden, as before; with
+  `foundation.park_offline_s` above 0 (an MMO: Regent's 30) their character is PUT AWAY after that
+  long (no client is sent it) and comes back where it stood when they sign in. Everything of theirs is
+  kept either way. What a game keeps beyond the place is its own rows: nothing is deleted.
+- **Which sign-ins count** is the server's: only the game's service (`shared/game.json` `sign_in`:
+  `issuer`, `client_id`, `redirect_port`), and any an admin trusts (`trust_issuer`), make accounts. Any
+  other token plays as a guest. SpacetimeDB itself checks the token's signature with the service's keys
+  (a self-hosted server fetches them over HTTPS: your machine needs to reach `auth.spacetimedb.com`).
+- **Setting up SpacetimeAuth (Luke, when you are ready; nothing else needs it until then)**:
+  1. Sign in at spacetimedb.com and publish any module to Maincloud (a stub is fine): a SpacetimeAuth
+     project is made from a Maincloud module's dashboard, then serves your own databases too.
+  2. In that module's dashboard: **SpacetimeAuth, Use SpacetimeAuth**. Under **Clients**, add the
+     redirect URI `http://127.0.0.1:53682/callback` to the default client and copy its client ID.
+  3. Under **Identity Providers**, switch on Discord and Google (each needs an app in that provider's
+     developer console; the dashboard lists the redirect each needs) and the magic link.
+  4. Put the client ID in each game's `shared/game.json`: `"sign_in": { "client_id": "<it>" }`, then
+     `tools\publish.cmd` and restart the game: the connect screen shows **Sign in**.
+  Still to check on the first real sign-in (`docs/TEMPLATE_1_0.md` §2): how long its tokens last, and
+  that its client takes the 127.0.0.1 redirect.
+
+### A big world: cells, the ring and streaming (template 1.0)
+- **Every row of a placed thing knows its 64 m CELL** (`chunk`: entity, movement, health, looks,
+  statuses, carry, resources, holds, bodies, noises, pushes, actions, ground items). The server keeps it
+  right in one place (`server/src/module/place.rs`): every movement write goes through it (a lint stops
+  any other), and when something crosses into another cell everything of it moves with it, in one step.
+  A genre's own rows that follow an entity join in with the `on_place_changed` hook.
+- **Ring interest** (`NetConfig.interest = RING`; Regent's Rule's): a client is sent only the 3 x 3 cells
+  round its player, swapped as it walks (once it is 4 m into a new cell), plus its own rows wherever
+  they are. Everything else (players' names, sessions, rules, chat) comes as before. Every other game
+  keeps `WORLD`: its whole world, as before 1.0.
+- **A streamed level**: tick `LevelInfo.streamed`, put what fills the world (props, trees, buildings,
+  markers) under a child node named `Cells`, and bake. The bake also cuts it into a scene per cell
+  (`<level folder>/<level>_cells/`); a player's game frees the level's own copy and loads the 5 x 5
+  cells round them on a thread (`LevelStreamer`, which Boot adds to every game). The server, referees
+  and sidecars keep the whole level. Bake again after moving anything under `Cells`.
+- **The numbers** are the game's, in `shared/rules.json` `cells`: `cell_m` (64; changing it needs a
+  `--fresh` publish, since rows store their cell), `ring` (1), `stream_ring` (2), `hysteresis_m` (4).
 
 ### Playing with a friend on another computer
 1. **Make the build:** double-click `tools\release.cmd`. It exports and tests both builds, records
@@ -520,8 +578,8 @@ Step by step, from pressing Play:
    (`game/splash_screen.tscn`: the game's name and its tips and lore for 5 s; any key skips it;
    Settings, Game: "Splash screen at start" turns it off) and shows the connect screen.
 2. **Connect.** `SpaceTimeSync` (the only script that talks to the SDK) connects with this
-   machine's identity token. Editor instances get their own token each (slot 1, 2...), so two
-   instances are two players.
+   machine's identity token, or, signed in, with the sign-in's token (section 3, Accounts). Editor
+   instances get their own token each (slot 1, 2...), so two instances are two players.
 3. **The server runs `client_connected`.** First time for this identity: it creates an `entity`
    row (kind 0 = player), a `player` row (name, online), a `movement_state` at the world's spawn,
    a `health_state` (`shared/rules.json`'s health) and a session membership, then calls the game's
@@ -1129,6 +1187,8 @@ and the example level (`foundation/level/example/`, level 200).
 | Multiclient | `./tests/multiclient_test.sh` | yes (`umf-test`) | two players see each other |
 | Playtests | `fishing_playtest.sh`, `playtest_test.sh`, `remote_playtest.sh`, `press_playtest.sh`, `connect_playtest.sh` | yes (`umf-test`) | the game played through real keys. `SHOTS=grip_pictures/play` before `fishing_playtest.sh` plays it in a window and saves a picture of every moment there: look at them after a change to how anything looks |
 | Sidecar, export | `sidecar_test.sh`, `export_test.sh` | yes (`umf-test`) | the authority process, the builds |
+| Accounts | `./tests/accounts_test.sh` | yes (the test database) | signing in makes an account, another machine finds it, link codes, characters, parking, guests off; a real client signs in and comes back silently. Its sign-in service is the suites' own (`tests/lib/oidc_issuer.py`), trusted by the test database only |
+| The ring | `./tests/ring_test.sh` | yes (the test database) | a ring client sees its cells' neighbours and nobody beyond, keeps one walking between its cells, gains and loses them as it moves |
 | The look | `./tests/render_test.sh` | no, opens a window | foliage, grass, water, fullscreen |
 
 On Windows run each through `tools\run.cmd` (section 3), e.g. `tools\run.cmd tests\run_tests.sh`;

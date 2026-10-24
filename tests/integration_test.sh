@@ -1556,6 +1556,40 @@ assert_ok "new_match 1" "another match"
 assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $MYENT" 1)" "1" "keeps them injured"
 assert_ok "reset_rule foundation.statuses_reset_each_match" "the rule back"
 
+# EVERY ROW OF A PLACED THING KNOWS ITS CELL (template 1.0, DECISIONS #278): a ring client is sent only
+# the cells round it, so when someone crosses a cell's edge every row it is drawn from must follow
+# (module/place.rs `follow`), in the same step. An EVENT (a push) is cut where it happened.
+echo "== cells: every row of a placed thing follows it =="
+cell_of() { python -c "import math; s = lambda v: max(-512, min(511, math.floor(v / 64.0))); print((s($1) + 512) * 1024 + s($2) + 512)"; }
+assert_ok "set_status $MYENT 1 4294967295 \"\"" "the player in a status (a row of its own)"
+assert_ok 'set_appearance "cells_test"' "with a look"
+assert_ok "set_equip_state 2" "something in hand"
+HOME=$(cell_of 0.0 0.0)
+assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "at the origin"
+for t in entity movement_state health_state status_state appearance equip_state; do
+  assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$HOME" "$t is in the origin's cell"
+done
+assert_ok 'teleport {"x":200.5,"y":0.0,"z":-130.0}' "three cells east, three north"
+FAR=$(cell_of 200.5 -130.0)
+check "$([ "$FAR" != "$HOME" ] && echo true || echo false)" "(another cell: $FAR)"
+for t in entity movement_state health_state status_state appearance equip_state; do
+  assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$FAR" "$t follows the player into its new cell"
+done
+assert_eq "$(sql_rows "SELECT entity_id FROM movement_state WHERE world_id = 0 AND (chunk = $FAR OR chunk = $HOME)" | grep -cw "$MYENT")" "1" \
+  "a query by cells finds them in theirs"
+assert_eq "$(row_count "SELECT * FROM health_state WHERE world_id = 0 AND chunk = $HOME AND entity_id = $MYENT")" "0" \
+  "and no longer in the cell they left"
+assert_ok "set_dev_tools true" "(dev tools on, for a push)"
+assert_ok "dev_push $MYENT {\"x\":0.0,\"y\":3.0,\"z\":0.0}" "a push where they stand"
+assert_eq "$(sql_first "SELECT chunk FROM push WHERE entity_id = $MYENT" 1)" "$FAR" "an event is cut in the cell it happened in"
+assert_ok "set_dev_tools false" "(dev tools off)"
+assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "home again"
+for t in entity movement_state health_state status_state appearance equip_state; do
+  assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$HOME" "$t comes home with them"
+done
+assert_eq "$(sql_first "SELECT chunk FROM push WHERE entity_id = $MYENT" 1)" "$FAR" "the push stays where it happened"
+assert_ok "set_status $MYENT 0 4294967295 \"\"" "(normal again)"
+
 run_genre_hooks integration_end   # a genre's checks that end a match or change what follows (Fowl Play: a new match is a new night)
 
 echo

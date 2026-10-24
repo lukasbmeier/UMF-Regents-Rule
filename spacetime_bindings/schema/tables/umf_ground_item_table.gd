@@ -7,12 +7,16 @@ signal updated(old_row: UmfGroundItem, new_row: UmfGroundItem)
 signal deleted(row: UmfGroundItem)
 
 var id: UmfGroundItemIdUniqueIndex
+var chunk: UmfGroundItemChunkBTreeIndex
+var owner_id: UmfGroundItemOwnerIdBTreeIndex
 var world_id: UmfGroundItemWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"ground_item"
 	id = UmfGroundItemIdUniqueIndex.new(p_local_db)
+	chunk = UmfGroundItemChunkBTreeIndex.new(p_local_db)
+	owner_id = UmfGroundItemOwnerIdBTreeIndex.new(p_local_db)
 	world_id = UmfGroundItemWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -59,10 +63,10 @@ func first_by_world_id(value: int) -> UmfGroundItem:
 	return world_id._first_row(value) as UmfGroundItem
 
 func find_by_chunk(value: int) -> Array[UmfGroundItem]:
-	return find_by(&"chunk", value)
+	return chunk.filter(value)
 
 func first_by_chunk(value: int) -> UmfGroundItem:
-	return first_by(&"chunk", value)
+	return chunk._first_row(value) as UmfGroundItem
 
 func find_by_item_def_id(value: int) -> Array[UmfGroundItem]:
 	return find_by(&"item_def_id", value)
@@ -83,10 +87,10 @@ func first_by_instance_data(value: String) -> UmfGroundItem:
 	return first_by(&"instance_data", value)
 
 func find_by_owner_id(value: int) -> Array[UmfGroundItem]:
-	return find_by(&"owner_id", value)
+	return owner_id.filter(value)
 
 func first_by_owner_id(value: int) -> UmfGroundItem:
-	return first_by(&"owner_id", value)
+	return owner_id._first_row(value) as UmfGroundItem
 
 func find_by_anyone(value: bool) -> Array[UmfGroundItem]:
 	return find_by(&"anyone", value)

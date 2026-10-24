@@ -56,6 +56,9 @@ pub struct ActionEvent {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub actor_id: u64,
     pub ability_id: u32,
     pub target_id: u64,

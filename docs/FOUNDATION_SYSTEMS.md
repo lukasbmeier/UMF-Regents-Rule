@@ -168,6 +168,25 @@ every entity's, fixed in the registry), and a body's rows placed on its watchers
 referee's round trip early (they are placed by when the server wrote them). Proved by the `bodies` suite, the
 integration suite and `tests/bodies_playtest.sh` (a real referee, a thrower and a watcher at 150 ms).
 
+## Template 1.0: chunks, a streamed world, accounts (Regent's Rule's M18, M19, M23)
+THE PLAN: `docs/TEMPLATE_1_0.md`, agreed with Luke 2026-10-23 (DECISIONS #278); built the same day
+(#279-#281). How to play it: the greybox game is unchanged (WORLD interest, guests); a ring client is
+`tests/ring/ring_test.tscn`; signing in needs a game's SpacetimeAuth client id (HANDBOOK, Accounts).
+Tested: `tests/accounts_test.sh`, `tests/ring_test.sh`, the integration suite's cells, unit `cells`,
+`interest`, `streaming`, `accounts`, native `cell`. The only major
+version so far: `chunk` reshapes the tables, so every game's database is wiped once (all four at the
+ship) and older builds are refused (`compat` 2).
+
+| | Milestone | State |
+|---|---|---|
+| A | Checks: a real SpacetimeAuth sign-in against Luke's machine (when he makes the Maincloud login and project: later), token lifetime, the loopback redirect; nine one-cell queries vs one OR'd ring, measured | the local issuer's half ✔; a real SpacetimeAuth sign-in waits on Luke's Maincloud login; the measurement with the 300-bot harness |
+| B | `chunk` on every placed thing's row (option A), kept right by one helper; a genre's hook | ✔ #279 |
+| C | `RING` interest (Regent's only; the rest keep `WORLD`): 3 x 3 cell sets, the overlap, 4 m hysteresis, your own rows always | ✔ #279 (three sets) |
+| D | Streaming: the bake cuts a `streamed` level into 64 m cells; `LevelStreamer`, 5 x 5 | ✔ #279 |
+| E | Accounts: `account`, `account_login`, `character`, sign-in through SpacetimeAuth (Discord, email link, Google; Steam later), link codes, take-over, guests by a per-game rule (allowed in every game for the playtests), tested with a local OIDC issuer | ✔ #280, #281 |
+| F | Parking an offline character (a hot rule; the match games 0) and logging back in where it stood | ✔ #280 |
+| G | 1.0.0: compat 2, HANDBOOK, DECISIONS, CHANGELOG, the full sweep; ship when Luke says | built; the ship waits on Luke |
+
 ## Owner decisions in force (2026-10-07)
 Lag compensation capped at 150 ms, favouring the attacker; hosting a friend-hosted bundle first; the
 hatch also starts Dawn; the first-person predator shows no body. Each is a hot rule where it is a number.

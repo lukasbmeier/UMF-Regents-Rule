@@ -7,12 +7,14 @@ signal updated(old_row: UmfMovementStateRow, new_row: UmfMovementStateRow)
 signal deleted(row: UmfMovementStateRow)
 
 var entity_id: UmfMovementStateEntityIdUniqueIndex
+var chunk: UmfMovementStateChunkBTreeIndex
 var world_id: UmfMovementStateWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"movement_state"
 	entity_id = UmfMovementStateEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfMovementStateChunkBTreeIndex.new(p_local_db)
 	world_id = UmfMovementStateWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfMovementStateRow]:
 
 func first_by_world_id(value: int) -> UmfMovementStateRow:
 	return world_id._first_row(value) as UmfMovementStateRow
+
+func find_by_chunk(value: int) -> Array[UmfMovementStateRow]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfMovementStateRow:
+	return chunk._first_row(value) as UmfMovementStateRow
 
 func find_by_yaw(value: float) -> Array[UmfMovementStateRow]:
 	return find_by(&"yaw", value)

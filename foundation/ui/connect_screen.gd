@@ -14,6 +14,9 @@ class_name ConnectScreen extends CanvasLayer
 ## The player pressed Connect with an address that parsed. `host` is already normalised
 ## (`ConnectSettings.normalize_host`).
 signal connect_requested(host: String, player_name: String, auto_connect: bool)
+## Sign in pressed (template 1.0): the connect that follows is as the sign-in (Boot), not this machine.
+signal sign_in_requested
+signal sign_out_requested
 
 ## An attempt that has not reached the world after this long is given up on and explained. The
 ## SDK retries for ever (`NetConfig.max_reconnect_attempts = 0`), which is right for a game that
@@ -49,6 +52,11 @@ var character_page: Control = null:
 			_character.visible = v != null
 var _panel: SettingsPanel = null
 var _page: Control = null
+## SIGNING IN (template 1.0): the button beside Connect, shown when the game has a sign-in to offer;
+## while the player is in their browser the attempt's clock waits (Boot sets `waiting_for_sign_in`).
+var _sign_in: Button = null
+var _signed_in: bool = false
+var waiting_for_sign_in: bool = false
 
 var _mode: Mode = Mode.HIDDEN
 ## The address being tried, normalised.
@@ -88,6 +96,37 @@ func _ready() -> void:
 	SpaceTimeSync.connection_state_changed.connect(_on_state)
 	SpaceTimeSync.connection_error.connect(_on_connection_error)
 	SignalBus.world_ready.connect(_on_world_ready)
+	_sign_in = Button.new()
+	_sign_in.name = "SignIn"
+	_sign_in.visible = false
+	_connect.get_parent().add_child(_sign_in)
+	_connect.get_parent().move_child(_sign_in, _connect.get_index())
+	_sign_in.pressed.connect(func() -> void:
+		if _signed_in:
+			sign_out_requested.emit()
+			show_sign_in(true, false)
+		elif _mode == Mode.FORM:
+			sign_in_requested.emit()
+			_on_connect_pressed())
+
+
+## Offer signing in (`available`: the game has a sign-in) and say whether one is kept on this machine
+## (then Connect connects as it, and the button signs out).
+func show_sign_in(available: bool, remembered: bool) -> void:
+	_signed_in = remembered
+	if _sign_in == null:
+		return
+	_sign_in.visible = available
+	_sign_in.text = "Sign out" if remembered else "Sign in"
+	_sign_in.tooltip_text = "Signed in on this machine: Connect plays your account's character." if remembered \
+		else "Sign in in your browser (Discord, Google, an email link) to keep your character on any machine."
+
+
+## The sign-in did not work: the attempt ends, saying why, and the form comes back.
+func sign_in_failed(reason: String) -> void:
+	waiting_for_sign_in = false
+	if _mode == Mode.CONNECTING:
+		_end_attempt("Sign-in failed: %s" % reason, true)
 
 
 # --- API -------------------------------------------------------------------------------
@@ -210,6 +249,9 @@ func _on_connect_pressed() -> void:
 
 func _process(delta: float) -> void:
 	if _mode != Mode.CONNECTING:
+		return
+	if waiting_for_sign_in:
+		_set_status("Sign in in your browser, then come back here…", false)
 		return
 	_elapsed += delta
 	var joined: bool = SpaceTimeSync.state == SpaceTimeSync.ConnectionState.CONNECTED
