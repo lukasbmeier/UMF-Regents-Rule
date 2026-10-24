@@ -4,5 +4,6 @@
   "database": "regents-rule",
   "genres": [
     "regents"
-  ]
+  ],
+  "compat": 2
 }

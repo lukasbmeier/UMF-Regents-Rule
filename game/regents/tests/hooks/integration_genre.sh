@@ -265,6 +265,10 @@ assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $DUMMY" 1
 assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = $DUMMY" 1)" "\"stand\"" "and a stand-still brain (so the referee counts it as someone to hit)"
 assert_ok 'teleport {"x":7.0,"y":0.0,"z":21.5}' "stand by the dummy"
 AXE_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40001" 1)"
+# The order board's orders are random: one that wanted a copper pickaxe took ours above (2026-10-24).
+if [ -z "$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)" ]; then
+  assert_ok "grant_item $MYENT 40006 1" "(a copper pickaxe again: an order took ours)"
+fi
 PICK_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)"
 assert_rejected "use_ability_seen 40006 0 $C_AIM 901 100" "wield an axe first" "nothing wielded: an axe's chop is refused"
 assert_rejected "wield $PICK_ROW" "is no weapon" "a pickaxe is no weapon"

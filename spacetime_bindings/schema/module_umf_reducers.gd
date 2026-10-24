@@ -96,8 +96,8 @@ func claim_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('claim_referee', [world_id, code], [&'u32', &'string'], &'')
 
 
-func compat_generation_1() -> SpacetimeDBReducerCall:
-	return _client.call_reducer('compat_generation_1', [], [], &'')
+func compat_generation_2() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('compat_generation_2', [], [], &'')
 
 ## 0. item_id: int [br]
 ## 1. qty: int [br]
@@ -161,6 +161,10 @@ func dev_nudge(offset: Vector3) -> SpacetimeDBReducerCall:
 ## 1. vel: Vector3 [br]
 func dev_push(entity_id: int, vel: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('dev_push', [entity_id, vel], [&'u64', &'vector3[f32,f32,f32]'], &'')
+
+## 0. issuer: String [br]
+func distrust_issuer(issuer: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('distrust_issuer', [issuer], [&'string'], &'')
 
 ## 0. on: bool [br]
 func draw_bow(on: bool) -> SpacetimeDBReducerCall:
@@ -238,6 +242,14 @@ func leave_session() -> SpacetimeDBReducerCall:
 func loose_arrow(target_id: int, aim: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('loose_arrow', [target_id, aim], [&'u64', &'vector3[f32,f32,f32]'], &'')
 
+## 0. code: String [br]
+func make_link_code(code: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('make_link_code', [code], [&'string'], &'')
+
+
+func new_character() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('new_character', [], [], &'')
+
 ## 0. session_id: int [br]
 func new_match(session_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('new_match', [session_id], [&'u64'], &'')
@@ -255,6 +267,10 @@ func pick_up(ground_id: int) -> SpacetimeDBReducerCall:
 ## 1. target_id: int [br]
 func ping(pos: Vector3, target_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('ping', [pos, target_id], [&'vector3[f32,f32,f32]', &'u64'], &'')
+
+## 0. entity_id: int [br]
+func play_character(entity_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('play_character', [entity_id], [&'u64'], &'')
 
 ## 0. station_id: int [br]
 ## 1. item_row: int [br]
@@ -426,6 +442,12 @@ func submit_input(frames: Array[UmfInputFrame]) -> SpacetimeDBReducerCall:
 func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('teleport', [pos], [&'vector3[f32,f32,f32]'], &'')
 
+## 0. issuer: String [br]
+## 1. audience: String [br]
+## 2. name: String [br]
+func trust_issuer(issuer: String, audience: String, name: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('trust_issuer', [issuer, audience, name], [&'string', &'string', &'string'], &'')
+
 
 func unwield() -> SpacetimeDBReducerCall:
 	return _client.call_reducer('unwield', [], [], &'')
@@ -452,6 +474,10 @@ func use_ability_as(actor_id: int, ability_id: int, target_id: int, aim: Vector3
 ## 4. view_delay_ms: int [br]
 func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_id: int, view_delay_ms: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_ability_seen', [ability_id, target_id, aim, predicted_id, view_delay_ms], [&'u32', &'u64', &'vector3[f32,f32,f32]', &'u32', &'u32'], &'')
+
+## 0. code: String [br]
+func use_link_code(code: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('use_link_code', [code], [&'string'], &'')
 
 ## 0. item_row: int [br]
 func wield(item_row: int) -> SpacetimeDBReducerCall:

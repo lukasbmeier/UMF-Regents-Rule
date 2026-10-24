@@ -119,6 +119,156 @@
 							"elements": [
 								{
 									"name": {
+										"some": "account_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "created"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "account_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "name"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "created"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "account_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "method"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "issuer"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "linked_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "id"
 									},
 									"algebraic_type": {
@@ -128,6 +278,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -162,7 +320,7 @@
 										"some": "aim"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -344,7 +502,7 @@
 										"some": "aim"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -577,7 +735,7 @@
 										"some": "from"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -605,6 +763,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -661,7 +827,7 @@
 										"some": "from"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -697,6 +863,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -892,6 +1066,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "body_id"
 									},
 									"algebraic_type": {
@@ -911,7 +1093,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -919,7 +1101,7 @@
 										"some": "normal"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -973,6 +1155,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "def_id"
 									},
 									"algebraic_type": {
@@ -1019,7 +1209,7 @@
 										"some": "rot"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -1027,7 +1217,7 @@
 										"some": "spin"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -1154,7 +1344,7 @@
 										"some": "aim"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -1162,7 +1352,7 @@
 										"some": "at"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -1170,7 +1360,7 @@
 										"some": "from"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -1900,6 +2090,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "kind"
 									},
 									"algebraic_type": {
@@ -1961,6 +2159,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -2161,7 +2367,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -2492,7 +2698,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -2566,6 +2772,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -2681,7 +2895,7 @@
 										"some": "from"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								}
 							]
@@ -2709,6 +2923,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -2969,7 +3191,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 45.0
+										"Ref": 48.0
 									}
 								},
 								{
@@ -3066,7 +3288,7 @@
 										"some": "client_pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -3209,6 +3431,66 @@
 							"elements": [
 								{
 									"name": {
+										"some": "code"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "maker"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "account_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "until"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -3245,6 +3527,36 @@
 									},
 									"algebraic_type": {
 										"U8": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "issuer"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "audience"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "name"
+									},
+									"algebraic_type": {
+										"String": []
 									}
 								}
 							]
@@ -3465,10 +3777,18 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -3476,7 +3796,7 @@
 										"some": "vel"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -3578,6 +3898,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "kind"
 									},
 									"algebraic_type": {
@@ -3589,7 +3917,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -3990,6 +4318,73 @@
 									"algebraic_type": {
 										"Bool": []
 									}
+								},
+								{
+									"name": {
+										"some": "left_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "connection_id"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "some"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__connection_id__"
+																	},
+																	"algebraic_type": {
+																		"U128": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "none"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": []
+														}
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "account_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
 								}
 							]
 						}
@@ -4015,6 +4410,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "entity_id"
 									},
 									"algebraic_type": {
@@ -4026,7 +4429,7 @@
 										"some": "vel"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -4238,7 +4641,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -4246,7 +4649,7 @@
 										"some": "normal"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -4282,6 +4685,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -4609,7 +5020,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -4879,6 +5290,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -5301,7 +5720,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5720,7 +6139,7 @@
 										"some": "spawn"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								}
 							]
@@ -5764,7 +6183,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5772,7 +6191,7 @@
 										"some": "vel"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5780,7 +6199,7 @@
 										"some": "rot"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5788,7 +6207,7 @@
 										"some": "spin"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5826,7 +6245,7 @@
 										"some": "pos"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5834,7 +6253,7 @@
 										"some": "vel"
 									},
 									"algebraic_type": {
-										"Ref": 3.0
+										"Ref": 6.0
 									}
 								},
 								{
@@ -5898,7 +6317,7 @@
 						"scope": [],
 						"source_name": "MetaShare"
 					},
-					"ty": 49.0,
+					"ty": 54.0,
 					"custom_ordering": true
 				},
 				{
@@ -5906,7 +6325,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 61.0,
+					"ty": 66.0,
 					"custom_ordering": true
 				},
 				{
@@ -5914,7 +6333,7 @@
 						"scope": [],
 						"source_name": "Dummy"
 					},
-					"ty": 29.0,
+					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -5922,7 +6341,7 @@
 						"scope": [],
 						"source_name": "DropPity"
 					},
-					"ty": 28.0,
+					"ty": 31.0,
 					"custom_ordering": true
 				},
 				{
@@ -5930,7 +6349,7 @@
 						"scope": [],
 						"source_name": "PerfReport"
 					},
-					"ty": 56.0,
+					"ty": 61.0,
 					"custom_ordering": true
 				},
 				{
@@ -5938,7 +6357,7 @@
 						"scope": [],
 						"source_name": "SessionMember"
 					},
-					"ty": 67.0,
+					"ty": 72.0,
 					"custom_ordering": true
 				},
 				{
@@ -5946,7 +6365,7 @@
 						"scope": [],
 						"source_name": "Arrow"
 					},
-					"ty": 9.0,
+					"ty": 12.0,
 					"custom_ordering": true
 				},
 				{
@@ -5954,7 +6373,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 54.0,
+					"ty": 59.0,
 					"custom_ordering": true
 				},
 				{
@@ -5962,7 +6381,7 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 44.0,
+					"ty": 47.0,
 					"custom_ordering": true
 				},
 				{
@@ -5970,7 +6389,7 @@
 						"scope": [],
 						"source_name": "ChallengePruneSchedule"
 					},
-					"ty": 18.0,
+					"ty": 21.0,
 					"custom_ordering": true
 				},
 				{
@@ -5978,7 +6397,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 59.0,
+					"ty": 64.0,
 					"custom_ordering": true
 				},
 				{
@@ -5986,7 +6405,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 62.0,
+					"ty": 67.0,
 					"custom_ordering": true
 				},
 				{
@@ -5994,7 +6413,7 @@
 						"scope": [],
 						"source_name": "InputFrame"
 					},
-					"ty": 45.0,
+					"ty": 48.0,
 					"custom_ordering": true
 				},
 				{
@@ -6002,7 +6421,7 @@
 						"scope": [],
 						"source_name": "AuthorityCheckSchedule"
 					},
-					"ty": 12.0,
+					"ty": 15.0,
 					"custom_ordering": true
 				},
 				{
@@ -6010,7 +6429,7 @@
 						"scope": [],
 						"source_name": "SessionMatch"
 					},
-					"ty": 66.0,
+					"ty": 71.0,
 					"custom_ordering": true
 				},
 				{
@@ -6018,7 +6437,15 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 87.0,
+					"ty": 92.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AccountLogin"
+					},
+					"ty": 4.0,
 					"custom_ordering": true
 				},
 				{
@@ -6026,15 +6453,7 @@
 						"scope": [],
 						"source_name": "BodyState"
 					},
-					"ty": 14.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DamageShare"
-					},
-					"ty": 25.0,
+					"ty": 17.0,
 					"custom_ordering": true
 				},
 				{
@@ -6042,7 +6461,15 @@
 						"scope": [],
 						"source_name": "AfkWork"
 					},
-					"ty": 7.0,
+					"ty": 10.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DamageShare"
+					},
+					"ty": 28.0,
 					"custom_ordering": true
 				},
 				{
@@ -6050,13 +6477,21 @@
 						"scope": [],
 						"source_name": "StatusExpiry"
 					},
-					"ty": 32.0,
+					"ty": 35.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
 						"source_name": "Missile"
+					},
+					"ty": 56.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LinkCode"
 					},
 					"ty": 51.0,
 					"custom_ordering": true
@@ -6066,7 +6501,7 @@
 						"scope": [],
 						"source_name": "SkillXp"
 					},
-					"ty": 68.0,
+					"ty": 73.0,
 					"custom_ordering": true
 				},
 				{
@@ -6074,7 +6509,7 @@
 						"scope": [],
 						"source_name": "Player"
 					},
-					"ty": 57.0,
+					"ty": 62.0,
 					"custom_ordering": true
 				},
 				{
@@ -6082,7 +6517,7 @@
 						"scope": [],
 						"source_name": "FoeKill"
 					},
-					"ty": 35.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
@@ -6090,7 +6525,7 @@
 						"scope": [],
 						"source_name": "Authority"
 					},
-					"ty": 11.0,
+					"ty": 14.0,
 					"custom_ordering": true
 				},
 				{
@@ -6098,7 +6533,7 @@
 						"scope": [],
 						"source_name": "Swing"
 					},
-					"ty": 76.0,
+					"ty": 81.0,
 					"custom_ordering": true
 				},
 				{
@@ -6106,7 +6541,7 @@
 						"scope": [],
 						"source_name": "OrderFilled"
 					},
-					"ty": 55.0,
+					"ty": 60.0,
 					"custom_ordering": true
 				},
 				{
@@ -6114,7 +6549,15 @@
 						"scope": [],
 						"source_name": "Foe"
 					},
-					"ty": 34.0,
+					"ty": 37.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AccountCharacter"
+					},
+					"ty": 3.0,
 					"custom_ordering": true
 				},
 				{
@@ -6122,7 +6565,7 @@
 						"scope": [],
 						"source_name": "CombatState"
 					},
-					"ty": 21.0,
+					"ty": 24.0,
 					"custom_ordering": true
 				},
 				{
@@ -6130,7 +6573,7 @@
 						"scope": [],
 						"source_name": "HealthStateRow"
 					},
-					"ty": 38.0,
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -6138,7 +6581,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 52.0,
+					"ty": 57.0,
 					"custom_ordering": true
 				},
 				{
@@ -6146,7 +6589,7 @@
 						"scope": [],
 						"source_name": "CraftChoice"
 					},
-					"ty": 23.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
@@ -6154,7 +6597,7 @@
 						"scope": [],
 						"source_name": "Noise"
 					},
-					"ty": 53.0,
+					"ty": 58.0,
 					"custom_ordering": true
 				},
 				{
@@ -6162,7 +6605,7 @@
 						"scope": [],
 						"source_name": "ResourceState"
 					},
-					"ty": 63.0,
+					"ty": 68.0,
 					"custom_ordering": true
 				},
 				{
@@ -6170,7 +6613,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 64.0,
+					"ty": 69.0,
 					"custom_ordering": true
 				},
 				{
@@ -6178,7 +6621,7 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 79.0,
+					"ty": 84.0,
 					"custom_ordering": true
 				},
 				{
@@ -6186,7 +6629,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 86.0,
+					"ty": 91.0,
 					"custom_ordering": true
 				},
 				{
@@ -6194,7 +6637,7 @@
 						"scope": [],
 						"source_name": "GatherNode"
 					},
-					"ty": 36.0,
+					"ty": 39.0,
 					"custom_ordering": true
 				},
 				{
@@ -6202,7 +6645,7 @@
 						"scope": [],
 						"source_name": "HoldMember"
 					},
-					"ty": 39.0,
+					"ty": 42.0,
 					"custom_ordering": true
 				},
 				{
@@ -6210,7 +6653,7 @@
 						"scope": [],
 						"source_name": "SpellTimer"
 					},
-					"ty": 71.0,
+					"ty": 76.0,
 					"custom_ordering": true
 				},
 				{
@@ -6218,7 +6661,7 @@
 						"scope": [],
 						"source_name": "Attachment"
 					},
-					"ty": 10.0,
+					"ty": 13.0,
 					"custom_ordering": true
 				},
 				{
@@ -6226,7 +6669,7 @@
 						"scope": [],
 						"source_name": "StuckArrow"
 					},
-					"ty": 75.0,
+					"ty": 80.0,
 					"custom_ordering": true
 				},
 				{
@@ -6234,7 +6677,7 @@
 						"scope": [],
 						"source_name": "Wielded"
 					},
-					"ty": 81.0,
+					"ty": 86.0,
 					"custom_ordering": true
 				},
 				{
@@ -6242,7 +6685,7 @@
 						"scope": [],
 						"source_name": "Station"
 					},
-					"ty": 73.0,
+					"ty": 78.0,
 					"custom_ordering": true
 				},
 				{
@@ -6250,7 +6693,7 @@
 						"scope": [],
 						"source_name": "ActionRequest"
 					},
-					"ty": 5.0,
+					"ty": 8.0,
 					"custom_ordering": true
 				},
 				{
@@ -6258,7 +6701,7 @@
 						"scope": [],
 						"source_name": "Hurt"
 					},
-					"ty": 43.0,
+					"ty": 46.0,
 					"custom_ordering": true
 				},
 				{
@@ -6266,7 +6709,7 @@
 						"scope": [],
 						"source_name": "PhaseSchedule"
 					},
-					"ty": 6.0,
+					"ty": 9.0,
 					"custom_ordering": true
 				},
 				{
@@ -6274,7 +6717,7 @@
 						"scope": [],
 						"source_name": "AppearanceRow"
 					},
-					"ty": 8.0,
+					"ty": 11.0,
 					"custom_ordering": true
 				},
 				{
@@ -6282,7 +6725,7 @@
 						"scope": [],
 						"source_name": "DevTools"
 					},
-					"ty": 27.0,
+					"ty": 30.0,
 					"custom_ordering": true
 				},
 				{
@@ -6290,7 +6733,7 @@
 						"scope": [],
 						"source_name": "LobbyMember"
 					},
-					"ty": 48.0,
+					"ty": 52.0,
 					"custom_ordering": true
 				},
 				{
@@ -6298,7 +6741,7 @@
 						"scope": [],
 						"source_name": "ActionPruneSchedule"
 					},
-					"ty": 4.0,
+					"ty": 7.0,
 					"custom_ordering": true
 				},
 				{
@@ -6306,7 +6749,7 @@
 						"scope": [],
 						"source_name": "DashWindowRow"
 					},
-					"ty": 26.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -6314,7 +6757,7 @@
 						"scope": [],
 						"source_name": "Push"
 					},
-					"ty": 58.0,
+					"ty": 63.0,
 					"custom_ordering": true
 				},
 				{
@@ -6322,7 +6765,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 74.0,
+					"ty": 79.0,
 					"custom_ordering": true
 				},
 				{
@@ -6330,7 +6773,7 @@
 						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 78.0,
+					"ty": 83.0,
 					"custom_ordering": true
 				},
 				{
@@ -6338,69 +6781,13 @@
 						"scope": [],
 						"source_name": "ClientRtt"
 					},
-					"ty": 20.0,
+					"ty": 23.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Entity"
-					},
-					"ty": 30.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SpellCooldown"
-					},
-					"ty": 70.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ItemDef"
-					},
-					"ty": 47.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkSchedule"
-					},
-					"ty": 84.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RecipeLog"
-					},
-					"ty": 60.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SpellArea"
-					},
-					"ty": 69.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyContact"
-					},
-					"ty": 13.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ActionEvent"
+						"source_name": "Account"
 					},
 					"ty": 2.0,
 					"custom_ordering": true
@@ -6408,9 +6795,73 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Entity"
+					},
+					"ty": 33.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellCooldown"
+					},
+					"ty": 75.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ItemDef"
+					},
+					"ty": 50.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorkSchedule"
+					},
+					"ty": 89.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RecipeLog"
+					},
+					"ty": 65.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellArea"
+					},
+					"ty": 74.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ActionEvent"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "BodyContact"
+					},
+					"ty": 16.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "StarterKitGiven"
 					},
-					"ty": 72.0,
+					"ty": 77.0,
 					"custom_ordering": true
 				},
 				{
@@ -6426,7 +6877,7 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 46.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -6434,7 +6885,15 @@
 						"scope": [],
 						"source_name": "HotRuleRow"
 					},
-					"ty": 42.0,
+					"ty": 45.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LoginIssuer"
+					},
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -6442,7 +6901,7 @@
 						"scope": [],
 						"source_name": "HoldProgress"
 					},
-					"ty": 40.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -6450,7 +6909,7 @@
 						"scope": [],
 						"source_name": "Correction"
 					},
-					"ty": 22.0,
+					"ty": 25.0,
 					"custom_ordering": true
 				},
 				{
@@ -6458,7 +6917,7 @@
 						"scope": [],
 						"source_name": "Casting"
 					},
-					"ty": 16.0,
+					"ty": 19.0,
 					"custom_ordering": true
 				},
 				{
@@ -6466,7 +6925,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 65.0,
+					"ty": 70.0,
 					"custom_ordering": true
 				},
 				{
@@ -6474,7 +6933,7 @@
 						"scope": [],
 						"source_name": "GroundItem"
 					},
-					"ty": 37.0,
+					"ty": 40.0,
 					"custom_ordering": true
 				},
 				{
@@ -6482,7 +6941,7 @@
 						"scope": [],
 						"source_name": "WhereSample"
 					},
-					"ty": 80.0,
+					"ty": 85.0,
 					"custom_ordering": true
 				},
 				{
@@ -6490,7 +6949,7 @@
 						"scope": [],
 						"source_name": "WorkOrder"
 					},
-					"ty": 82.0,
+					"ty": 87.0,
 					"custom_ordering": true
 				},
 				{
@@ -6498,7 +6957,7 @@
 						"scope": [],
 						"source_name": "WorkResult"
 					},
-					"ty": 83.0,
+					"ty": 88.0,
 					"custom_ordering": true
 				},
 				{
@@ -6506,7 +6965,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 77.0,
+					"ty": 82.0,
 					"custom_ordering": true
 				},
 				{
@@ -6514,7 +6973,7 @@
 						"scope": [],
 						"source_name": "ChatMessage"
 					},
-					"ty": 19.0,
+					"ty": 22.0,
 					"custom_ordering": true
 				},
 				{
@@ -6522,7 +6981,7 @@
 						"scope": [],
 						"source_name": "MetaTally"
 					},
-					"ty": 50.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
@@ -6530,7 +6989,7 @@
 						"scope": [],
 						"source_name": "WorldConfig"
 					},
-					"ty": 85.0,
+					"ty": 90.0,
 					"custom_ordering": true
 				},
 				{
@@ -6538,7 +6997,7 @@
 						"scope": [],
 						"source_name": "Feedback"
 					},
-					"ty": 33.0,
+					"ty": 36.0,
 					"custom_ordering": true
 				},
 				{
@@ -6546,7 +7005,7 @@
 						"scope": [],
 						"source_name": "Burning"
 					},
-					"ty": 15.0,
+					"ty": 18.0,
 					"custom_ordering": true
 				},
 				{
@@ -6554,7 +7013,7 @@
 						"scope": [],
 						"source_name": "CraftGrade"
 					},
-					"ty": 24.0,
+					"ty": 27.0,
 					"custom_ordering": true
 				},
 				{
@@ -6562,7 +7021,7 @@
 						"scope": [],
 						"source_name": "EquipStateRow"
 					},
-					"ty": 31.0,
+					"ty": 34.0,
 					"custom_ordering": true
 				},
 				{
@@ -6570,7 +7029,7 @@
 						"scope": [],
 						"source_name": "Challenge"
 					},
-					"ty": 17.0,
+					"ty": 20.0,
 					"custom_ordering": true
 				},
 				{
@@ -6578,7 +7037,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 88.0,
+					"ty": 93.0,
 					"custom_ordering": true
 				},
 				{
@@ -6586,7 +7045,7 @@
 						"scope": [],
 						"source_name": "Vector3"
 					},
-					"ty": 3.0,
+					"ty": 6.0,
 					"custom_ordering": true
 				},
 				{
@@ -6594,7 +7053,7 @@
 						"scope": [],
 						"source_name": "HoldTick"
 					},
-					"ty": 41.0,
+					"ty": 44.0,
 					"custom_ordering": true
 				}
 			]
@@ -6603,7 +7062,7 @@
 			"Tables": [
 				{
 					"source_name": "entity",
-					"product_type_ref": 30.0,
+					"product_type_ref": 33.0,
 					"primary_key": [
 						0.0
 					],
@@ -6631,6 +7090,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "entity_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -6678,7 +7150,7 @@
 				},
 				{
 					"source_name": "arrow",
-					"product_type_ref": 9.0,
+					"product_type_ref": 12.0,
 					"primary_key": [
 						0.0
 					],
@@ -6736,24 +7208,11 @@
 				},
 				{
 					"source_name": "push",
-					"product_type_ref": 58.0,
+					"product_type_ref": 63.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
-						{
-							"source_name": {
-								"some": "push_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						},
 						{
 							"source_name": {
 								"some": "push_id_idx_btree"
@@ -6769,6 +7228,19 @@
 						},
 						{
 							"source_name": {
+								"some": "push_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "push_world_id_idx_btree"
 							},
 							"accessor_name": {
@@ -6777,6 +7249,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "push_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									3.0
 								]
 							}
 						}
@@ -6824,7 +7309,7 @@
 				},
 				{
 					"source_name": "where_sample",
-					"product_type_ref": 80.0,
+					"product_type_ref": 85.0,
 					"primary_key": [
 						0.0
 					],
@@ -6869,7 +7354,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 67.0,
+					"product_type_ref": 72.0,
 					"primary_key": [
 						0.0
 					],
@@ -6957,7 +7442,7 @@
 				},
 				{
 					"source_name": "player",
-					"product_type_ref": 57.0,
+					"product_type_ref": 62.0,
 					"primary_key": [
 						0.0
 					],
@@ -6972,6 +7457,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "player_account_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "account_id"
+							},
+							"algorithm": {
+								"BTree": [
+									6.0
 								]
 							}
 						},
@@ -7026,8 +7524,111 @@
 					"is_event": false
 				},
 				{
+					"source_name": "account_character",
+					"product_type_ref": 3.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "account_character_account_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "account_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "account_character_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "account_character_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "dash_window",
+					"product_type_ref": 29.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "dash_window_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "dash_window_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "spell_area",
-					"product_type_ref": 69.0,
+					"product_type_ref": 74.0,
 					"primary_key": [
 						0.0
 					],
@@ -7101,53 +7702,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "dash_window",
-					"product_type_ref": 26.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "dash_window_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "dash_window_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "spell_cooldown",
-					"product_type_ref": 70.0,
+					"product_type_ref": 75.0,
 					"primary_key": [
 						0.0
 					],
@@ -7222,7 +7778,7 @@
 				},
 				{
 					"source_name": "status_expiry",
-					"product_type_ref": 32.0,
+					"product_type_ref": 35.0,
 					"primary_key": [
 						0.0
 					],
@@ -7297,7 +7853,7 @@
 				},
 				{
 					"source_name": "craft_choice",
-					"product_type_ref": 23.0,
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -7342,7 +7898,7 @@
 				},
 				{
 					"source_name": "hurt",
-					"product_type_ref": 43.0,
+					"product_type_ref": 46.0,
 					"primary_key": [
 						0.0
 					],
@@ -7400,7 +7956,7 @@
 				},
 				{
 					"source_name": "action_request",
-					"product_type_ref": 5.0,
+					"product_type_ref": 8.0,
 					"primary_key": [
 						0.0
 					],
@@ -7475,7 +8031,7 @@
 				},
 				{
 					"source_name": "perf_report",
-					"product_type_ref": 56.0,
+					"product_type_ref": 61.0,
 					"primary_key": [
 						0.0
 					],
@@ -7550,7 +8106,7 @@
 				},
 				{
 					"source_name": "starter_kit_given",
-					"product_type_ref": 72.0,
+					"product_type_ref": 77.0,
 					"primary_key": [
 						0.0
 					],
@@ -7595,7 +8151,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 59.0,
+					"product_type_ref": 64.0,
 					"primary_key": [
 						0.0
 					],
@@ -7653,7 +8209,7 @@
 				},
 				{
 					"source_name": "gather_node",
-					"product_type_ref": 36.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -7711,11 +8267,24 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 52.0,
+					"product_type_ref": 57.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
+						{
+							"source_name": {
+								"some": "movement_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
 						{
 							"source_name": {
 								"some": "movement_state_entity_id_idx_btree"
@@ -7769,7 +8338,7 @@
 				},
 				{
 					"source_name": "combat_state",
-					"product_type_ref": 21.0,
+					"product_type_ref": 24.0,
 					"primary_key": [
 						0.0
 					],
@@ -7814,7 +8383,7 @@
 				},
 				{
 					"source_name": "work_order",
-					"product_type_ref": 82.0,
+					"product_type_ref": 87.0,
 					"primary_key": [
 						0.0
 					],
@@ -7889,7 +8458,7 @@
 				},
 				{
 					"source_name": "feedback",
-					"product_type_ref": 33.0,
+					"product_type_ref": 36.0,
 					"primary_key": [
 						0.0
 					],
@@ -7964,7 +8533,7 @@
 				},
 				{
 					"source_name": "chat_message",
-					"product_type_ref": 19.0,
+					"product_type_ref": 22.0,
 					"primary_key": [
 						0.0
 					],
@@ -8039,7 +8608,7 @@
 				},
 				{
 					"source_name": "body_state",
-					"product_type_ref": 14.0,
+					"product_type_ref": 17.0,
 					"primary_key": [
 						0.0
 					],
@@ -8059,6 +8628,19 @@
 						},
 						{
 							"source_name": {
+								"some": "body_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "body_state_owner_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8066,7 +8648,7 @@
 							},
 							"algorithm": {
 								"BTree": [
-									3.0
+									4.0
 								]
 							}
 						},
@@ -8110,7 +8692,7 @@
 				},
 				{
 					"source_name": "dummy",
-					"product_type_ref": 29.0,
+					"product_type_ref": 32.0,
 					"primary_key": [
 						0.0
 					],
@@ -8168,7 +8750,7 @@
 				},
 				{
 					"source_name": "authority_check_schedule",
-					"product_type_ref": 12.0,
+					"product_type_ref": 15.0,
 					"primary_key": [
 						0.0
 					],
@@ -8230,7 +8812,7 @@
 				},
 				{
 					"source_name": "phase_schedule",
-					"product_type_ref": 6.0,
+					"product_type_ref": 9.0,
 					"primary_key": [
 						0.0
 					],
@@ -8292,7 +8874,7 @@
 				},
 				{
 					"source_name": "body_contact",
-					"product_type_ref": 13.0,
+					"product_type_ref": 16.0,
 					"primary_key": [
 						0.0
 					],
@@ -8307,6 +8889,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "body_contact_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -8367,7 +8962,7 @@
 				},
 				{
 					"source_name": "casting",
-					"product_type_ref": 16.0,
+					"product_type_ref": 19.0,
 					"primary_key": [
 						0.0
 					],
@@ -8425,7 +9020,7 @@
 				},
 				{
 					"source_name": "unscored_press",
-					"product_type_ref": 79.0,
+					"product_type_ref": 84.0,
 					"primary_key": [
 						0.0
 					],
@@ -8470,7 +9065,7 @@
 				},
 				{
 					"source_name": "appearance",
-					"product_type_ref": 8.0,
+					"product_type_ref": 11.0,
 					"primary_key": [
 						0.0
 					],
@@ -8498,6 +9093,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "appearance_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -8528,7 +9136,7 @@
 				},
 				{
 					"source_name": "client_rtt",
-					"product_type_ref": 20.0,
+					"product_type_ref": 23.0,
 					"primary_key": [
 						0.0
 					],
@@ -8573,7 +9181,7 @@
 				},
 				{
 					"source_name": "hold_tick",
-					"product_type_ref": 41.0,
+					"product_type_ref": 44.0,
 					"primary_key": [
 						0.0
 					],
@@ -8635,7 +9243,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 47.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -8680,7 +9288,7 @@
 				},
 				{
 					"source_name": "foe",
-					"product_type_ref": 34.0,
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
@@ -8738,11 +9346,24 @@
 				},
 				{
 					"source_name": "noise",
-					"product_type_ref": 53.0,
+					"product_type_ref": 58.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
+						{
+							"source_name": {
+								"some": "noise_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
 						{
 							"source_name": {
 								"some": "noise_id_idx_btree"
@@ -8813,7 +9434,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 74.0,
+					"product_type_ref": 79.0,
 					"primary_key": [
 						0.0
 					],
@@ -8828,6 +9449,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "status_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -8871,7 +9505,7 @@
 				},
 				{
 					"source_name": "order_filled",
-					"product_type_ref": 55.0,
+					"product_type_ref": 60.0,
 					"primary_key": [
 						0.0
 					],
@@ -8946,7 +9580,7 @@
 				},
 				{
 					"source_name": "hot_rule",
-					"product_type_ref": 42.0,
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
@@ -8991,7 +9625,7 @@
 				},
 				{
 					"source_name": "skill_xp",
-					"product_type_ref": 68.0,
+					"product_type_ref": 73.0,
 					"primary_key": [
 						0.0
 					],
@@ -9066,7 +9700,7 @@
 				},
 				{
 					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 18.0,
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
@@ -9128,7 +9762,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 44.0,
+					"product_type_ref": 47.0,
 					"primary_key": [
 						0.0
 					],
@@ -9216,7 +9850,7 @@
 				},
 				{
 					"source_name": "spell_timer",
-					"product_type_ref": 71.0,
+					"product_type_ref": 76.0,
 					"primary_key": [
 						0.0
 					],
@@ -9291,7 +9925,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 66.0,
+					"product_type_ref": 71.0,
 					"primary_key": [
 						0.0
 					],
@@ -9349,7 +9983,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 54.0,
+					"product_type_ref": 59.0,
 					"primary_key": [
 						0.0
 					],
@@ -9407,7 +10041,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 78.0,
+					"product_type_ref": 83.0,
 					"primary_key": [
 						0.0
 					],
@@ -9465,7 +10099,7 @@
 				},
 				{
 					"source_name": "stuck_arrow",
-					"product_type_ref": 75.0,
+					"product_type_ref": 80.0,
 					"primary_key": [
 						0.0
 					],
@@ -9615,11 +10249,24 @@
 				},
 				{
 					"source_name": "health_state",
-					"product_type_ref": 38.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
+						{
+							"source_name": {
+								"some": "health_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
 						{
 							"source_name": {
 								"some": "health_state_entity_id_idx_btree"
@@ -9673,7 +10320,7 @@
 				},
 				{
 					"source_name": "action_event",
-					"product_type_ref": 2.0,
+					"product_type_ref": 5.0,
 					"primary_key": [
 						0.0
 					],
@@ -9701,6 +10348,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "action_event_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -9748,7 +10408,7 @@
 				},
 				{
 					"source_name": "ground_item",
-					"product_type_ref": 37.0,
+					"product_type_ref": 40.0,
 					"primary_key": [
 						0.0
 					],
@@ -9763,6 +10423,32 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ground_item_owner_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "owner_id"
+							},
+							"algorithm": {
+								"BTree": [
+									7.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "ground_item_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -9823,7 +10509,7 @@
 				},
 				{
 					"source_name": "hold_member",
-					"product_type_ref": 39.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -9938,8 +10624,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "account_login",
+					"product_type_ref": 4.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "account_login_account_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "account_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "account_login_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "account_login_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "foe_kill",
-					"product_type_ref": 35.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -10013,53 +10757,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "swing",
-					"product_type_ref": 76.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "swing_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "swing_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "craft_grade",
-					"product_type_ref": 24.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -10104,7 +10803,7 @@
 				},
 				{
 					"source_name": "meta_tally",
-					"product_type_ref": 50.0,
+					"product_type_ref": 55.0,
 					"primary_key": [
 						0.0
 					],
@@ -10165,18 +10864,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "world_config",
-					"product_type_ref": 85.0,
+					"source_name": "swing",
+					"product_type_ref": 81.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "world_config_world_id_idx_btree"
+								"some": "swing_entity_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "world_id"
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -10188,7 +10887,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "world_config_world_id_key"
+								"some": "swing_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -10211,7 +10910,7 @@
 				},
 				{
 					"source_name": "burning",
-					"product_type_ref": 15.0,
+					"product_type_ref": 18.0,
 					"primary_key": [
 						0.0
 					],
@@ -10268,8 +10967,140 @@
 					"is_event": false
 				},
 				{
+					"source_name": "account",
+					"product_type_ref": 2.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "account_account_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "account_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "account_account_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [
+						{
+							"source_name": {
+								"some": "account_account_id_seq"
+							},
+							"column": 0.0,
+							"start": {
+								"none": []
+							},
+							"min_value": {
+								"none": []
+							},
+							"max_value": {
+								"none": []
+							},
+							"increment": 1.0
+						}
+					],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "link_code",
+					"product_type_ref": 51.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "link_code_maker_idx_btree"
+							},
+							"accessor_name": {
+								"some": "maker"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "link_code_code_idx_btree"
+							},
+							"accessor_name": {
+								"some": "code"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "link_code_maker_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										1.0
+									]
+								}
+							}
+						},
+						{
+							"source_name": {
+								"some": "link_code_code_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "hold_progress",
-					"product_type_ref": 40.0,
+					"product_type_ref": 43.0,
 					"primary_key": [
 						0.0
 					],
@@ -10289,14 +11120,14 @@
 						},
 						{
 							"source_name": {
-								"some": "hold_progress_world_id_idx_btree"
+								"some": "hold_progress_chunk_idx_btree"
 							},
 							"accessor_name": {
-								"some": "world_id"
+								"some": "chunk"
 							},
 							"algorithm": {
 								"BTree": [
-									2.0
+									3.0
 								]
 							}
 						},
@@ -10310,6 +11141,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "hold_progress_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -10357,7 +11201,7 @@
 				},
 				{
 					"source_name": "challenge",
-					"product_type_ref": 17.0,
+					"product_type_ref": 20.0,
 					"primary_key": [
 						0.0
 					],
@@ -10431,8 +11275,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "world_config",
+					"product_type_ref": 90.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "world_config_world_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "authority",
-					"product_type_ref": 11.0,
+					"product_type_ref": 14.0,
 					"primary_key": [
 						0.0
 					],
@@ -10490,7 +11379,7 @@
 				},
 				{
 					"source_name": "attachment",
-					"product_type_ref": 10.0,
+					"product_type_ref": 13.0,
 					"primary_key": [
 						0.0
 					],
@@ -10505,6 +11394,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "attachment_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -10530,7 +11432,7 @@
 							},
 							"algorithm": {
 								"BTree": [
-									2.0
+									3.0
 								]
 							}
 						}
@@ -10561,7 +11463,7 @@
 				},
 				{
 					"source_name": "recipe_log",
-					"product_type_ref": 60.0,
+					"product_type_ref": 65.0,
 					"primary_key": [
 						0.0
 					],
@@ -10636,7 +11538,7 @@
 				},
 				{
 					"source_name": "correction",
-					"product_type_ref": 22.0,
+					"product_type_ref": 25.0,
 					"primary_key": [
 						0.0
 					],
@@ -10681,7 +11583,7 @@
 				},
 				{
 					"source_name": "damage_share",
-					"product_type_ref": 25.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -10756,7 +11658,7 @@
 				},
 				{
 					"source_name": "missile",
-					"product_type_ref": 51.0,
+					"product_type_ref": 56.0,
 					"primary_key": [
 						0.0
 					],
@@ -10814,7 +11716,7 @@
 				},
 				{
 					"source_name": "lobby_member",
-					"product_type_ref": 48.0,
+					"product_type_ref": 52.0,
 					"primary_key": [
 						0.0
 					],
@@ -10885,7 +11787,7 @@
 				},
 				{
 					"source_name": "dev_tools",
-					"product_type_ref": 27.0,
+					"product_type_ref": 30.0,
 					"primary_key": [
 						0.0
 					],
@@ -10930,7 +11832,7 @@
 				},
 				{
 					"source_name": "wielded",
-					"product_type_ref": 81.0,
+					"product_type_ref": 86.0,
 					"primary_key": [
 						0.0
 					],
@@ -10975,7 +11877,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 77.0,
+					"product_type_ref": 82.0,
 					"primary_key": [
 						0.0
 					],
@@ -11037,7 +11939,7 @@
 				},
 				{
 					"source_name": "work_result",
-					"product_type_ref": 83.0,
+					"product_type_ref": 88.0,
 					"primary_key": [
 						0.0
 					],
@@ -11112,7 +12014,7 @@
 				},
 				{
 					"source_name": "drop_pity",
-					"product_type_ref": 28.0,
+					"product_type_ref": 31.0,
 					"primary_key": [
 						0.0
 					],
@@ -11187,7 +12089,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 65.0,
+					"product_type_ref": 70.0,
 					"primary_key": [
 						0.0
 					],
@@ -11232,7 +12134,7 @@
 				},
 				{
 					"source_name": "action_prune_schedule",
-					"product_type_ref": 4.0,
+					"product_type_ref": 7.0,
 					"primary_key": [
 						0.0
 					],
@@ -11294,7 +12196,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 64.0,
+					"product_type_ref": 69.0,
 					"primary_key": [
 						0.0
 					],
@@ -11381,7 +12283,7 @@
 				},
 				{
 					"source_name": "station",
-					"product_type_ref": 73.0,
+					"product_type_ref": 78.0,
 					"primary_key": [
 						0.0
 					],
@@ -11439,7 +12341,7 @@
 				},
 				{
 					"source_name": "resource_state",
-					"product_type_ref": 63.0,
+					"product_type_ref": 68.0,
 					"primary_key": [
 						0.0
 					],
@@ -11454,6 +12356,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "resource_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									3.0
 								]
 							}
 						},
@@ -11527,7 +12442,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 46.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -11602,7 +12517,7 @@
 				},
 				{
 					"source_name": "work_schedule",
-					"product_type_ref": 84.0,
+					"product_type_ref": 89.0,
 					"primary_key": [
 						0.0
 					],
@@ -11664,7 +12579,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 61.0,
+					"product_type_ref": 66.0,
 					"primary_key": [
 						0.0
 					],
@@ -11708,8 +12623,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "login_issuer",
+					"product_type_ref": 53.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "login_issuer_issuer_idx_btree"
+							},
+							"accessor_name": {
+								"some": "issuer"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "login_issuer_issuer_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "world_level",
-					"product_type_ref": 86.0,
+					"product_type_ref": 91.0,
 					"primary_key": [
 						0.0
 					],
@@ -11754,11 +12714,24 @@
 				},
 				{
 					"source_name": "equip_state",
-					"product_type_ref": 31.0,
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
+						{
+							"source_name": {
+								"some": "equip_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
 						{
 							"source_name": {
 								"some": "equip_state_entity_id_idx_btree"
@@ -11812,7 +12785,7 @@
 				},
 				{
 					"source_name": "meta_share",
-					"product_type_ref": 49.0,
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
@@ -11887,7 +12860,7 @@
 				},
 				{
 					"source_name": "afk_work",
-					"product_type_ref": 7.0,
+					"product_type_ref": 10.0,
 					"primary_key": [
 						0.0
 					],
@@ -11980,7 +12953,7 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -12192,7 +13165,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 6.0
+									"Ref": 9.0
 								}
 							}
 						]
@@ -12437,7 +13410,7 @@
 									"some": "aim"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -12445,7 +13418,7 @@
 									"some": "at"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -12523,7 +13496,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 12.0
+									"Ref": 15.0
 								}
 							}
 						]
@@ -12635,7 +13608,7 @@
 					}
 				},
 				{
-					"source_name": "compat_generation_1",
+					"source_name": "compat_generation_2",
 					"params": {
 						"elements": []
 					},
@@ -13042,7 +14015,7 @@
 									"some": "offset"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -13076,7 +14049,33 @@
 									"some": "vel"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "distrust_issuer",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "issuer"
+								},
+								"algebraic_type": {
+									"String": []
 								}
 							}
 						]
@@ -13205,7 +14204,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 32.0
+									"Ref": 35.0
 								}
 							}
 						]
@@ -13544,7 +14543,7 @@
 									"some": "origin"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -13552,7 +14551,7 @@
 									"some": "vel"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -13560,7 +14559,7 @@
 									"some": "rot"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -13568,7 +14567,7 @@
 									"some": "spin"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -13619,10 +14618,53 @@
 									"some": "aim"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "make_link_code",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "code"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "new_character",
+					"params": {
+						"elements": []
 					},
 					"visibility": {
 						"ClientCallable": []
@@ -13731,12 +14773,38 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
 								"name": {
 									"some": "target_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "play_character",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
 								},
 								"algebraic_type": {
 									"U64": []
@@ -13765,7 +14833,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 4.0
+									"Ref": 7.0
 								}
 							}
 						]
@@ -13791,7 +14859,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 18.0
+									"Ref": 21.0
 								}
 							}
 						]
@@ -13959,7 +15027,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 62.0
+										"Ref": 67.0
 									}
 								}
 							}
@@ -14222,7 +15290,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 47.0
+										"Ref": 50.0
 									}
 								}
 							}
@@ -14829,7 +15897,7 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -14871,7 +15939,7 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -14905,7 +15973,7 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -14931,7 +15999,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 71.0
+									"Ref": 76.0
 								}
 							}
 						]
@@ -14994,7 +16062,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 45.0
+										"Ref": 48.0
 									}
 								}
 							}
@@ -15021,7 +16089,7 @@
 									"some": "pos"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							}
 						]
@@ -15047,7 +16115,7 @@
 									"some": "_tick"
 								},
 								"algebraic_type": {
-									"Ref": 41.0
+									"Ref": 44.0
 								}
 							}
 						]
@@ -15073,13 +16141,55 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 77.0
+									"Ref": 82.0
 								}
 							}
 						]
 					},
 					"visibility": {
 						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "trust_issuer",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "issuer"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "audience"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							},
+							{
+								"name": {
+									"some": "name"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
 					},
 					"ok_return_type": {
 						"Product": {
@@ -15132,7 +16242,7 @@
 									"some": "aim"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -15190,7 +16300,7 @@
 									"some": "aim"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -15240,7 +16350,7 @@
 									"some": "aim"
 								},
 								"algebraic_type": {
-									"Ref": 3.0
+									"Ref": 6.0
 								}
 							},
 							{
@@ -15257,6 +16367,32 @@
 								},
 								"algebraic_type": {
 									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "use_link_code",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "code"
+								},
+								"algebraic_type": {
+									"String": []
 								}
 							}
 						]
@@ -15325,7 +16461,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 84.0
+									"Ref": 89.0
 								}
 							}
 						]
@@ -15360,7 +16496,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 87.0
+										"Ref": 92.0
 									}
 								}
 							}
@@ -15396,7 +16532,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 88.0
+										"Ref": 93.0
 									}
 								}
 							}
@@ -15575,12 +16711,6 @@
 		{
 			"RowLevelSecurity": [
 				{
-					"sql": "SELECT * FROM ground_item WHERE anyone = true"
-				},
-				{
-					"sql": "SELECT c.* FROM timed_press c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
-				},
-				{
 					"sql": "SELECT r.* FROM action_request r JOIN authority a ON a.world_id = r.world_id WHERE a.identity = :sender"
 				},
 				{
@@ -15591,6 +16721,21 @@
 				},
 				{
 					"sql": "SELECT g.* FROM ground_item g JOIN player p ON g.owner_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT * FROM account_login WHERE identity = :sender"
+				},
+				{
+					"sql": "SELECT * FROM ground_item WHERE anyone = true"
+				},
+				{
+					"sql": "SELECT * FROM link_code WHERE maker = :sender"
+				},
+				{
+					"sql": "SELECT c.* FROM timed_press c JOIN player p ON c.entity_id = p.entity_id WHERE p.identity = :sender"
+				},
+				{
+					"sql": "SELECT c.* FROM account_character c JOIN player p ON c.account_id = p.account_id WHERE p.identity = :sender"
 				},
 				{
 					"sql": "SELECT q.* FROM input_queue q JOIN authority a ON a.world_id = q.world_id WHERE a.identity = :sender"
@@ -15638,14 +16783,20 @@
 					},
 					{
 						"Table": {
-							"source_name": "spell_area",
-							"canonical_name": "spell_area"
+							"source_name": "account_character",
+							"canonical_name": "account_character"
 						}
 					},
 					{
 						"Table": {
 							"source_name": "dash_window",
 							"canonical_name": "dash_window"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "spell_area",
+							"canonical_name": "spell_area"
 						}
 					},
 					{
@@ -15914,14 +17065,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "foe_kill",
-							"canonical_name": "foe_kill"
+							"source_name": "account_login",
+							"canonical_name": "account_login"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "swing",
-							"canonical_name": "swing"
+							"source_name": "foe_kill",
+							"canonical_name": "foe_kill"
 						}
 					},
 					{
@@ -15938,14 +17089,26 @@
 					},
 					{
 						"Table": {
-							"source_name": "world_config",
-							"canonical_name": "world_config"
+							"source_name": "swing",
+							"canonical_name": "swing"
 						}
 					},
 					{
 						"Table": {
 							"source_name": "burning",
 							"canonical_name": "burning"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "account",
+							"canonical_name": "account"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "link_code",
+							"canonical_name": "link_code"
 						}
 					},
 					{
@@ -15958,6 +17121,12 @@
 						"Table": {
 							"source_name": "challenge",
 							"canonical_name": "challenge"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "world_config",
+							"canonical_name": "world_config"
 						}
 					},
 					{
@@ -16078,6 +17247,12 @@
 						"Table": {
 							"source_name": "referee_offer",
 							"canonical_name": "referee_offer"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "login_issuer",
+							"canonical_name": "login_issuer"
 						}
 					},
 					{
@@ -16232,8 +17407,8 @@
 					},
 					{
 						"Function": {
-							"source_name": "compat_generation_1",
-							"canonical_name": "compat_generation_1"
+							"source_name": "compat_generation_2",
+							"canonical_name": "compat_generation_2"
 						}
 					},
 					{
@@ -16300,6 +17475,12 @@
 						"Function": {
 							"source_name": "dev_push",
 							"canonical_name": "dev_push"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "distrust_issuer",
+							"canonical_name": "distrust_issuer"
 						}
 					},
 					{
@@ -16406,6 +17587,18 @@
 					},
 					{
 						"Function": {
+							"source_name": "make_link_code",
+							"canonical_name": "make_link_code"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "new_character",
+							"canonical_name": "new_character"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "new_match",
 							"canonical_name": "new_match"
 						}
@@ -16426,6 +17619,12 @@
 						"Function": {
 							"source_name": "ping",
 							"canonical_name": "ping"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "play_character",
+							"canonical_name": "play_character"
 						}
 					},
 					{
@@ -16652,6 +17851,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "trust_issuer",
+							"canonical_name": "trust_issuer"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "unwield",
 							"canonical_name": "unwield"
 						}
@@ -16672,6 +17877,12 @@
 						"Function": {
 							"source_name": "use_ability_seen",
 							"canonical_name": "use_ability_seen"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "use_link_code",
+							"canonical_name": "use_link_code"
 						}
 					},
 					{
