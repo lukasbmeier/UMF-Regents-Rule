@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/iron_sword.tscn" id="1_bn2cp"]
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="2_tqxcf"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword.tres" id="3_40ked"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_lykio"]
+
+[resource]
+script = ExtResource("4_lykio")
+max_stack = 1
+weapon_kit = &"sword"
+weapon_damage_pct = 140
+held_scene = ExtResource("1_bn2cp")
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A sword: quick light cuts, a heavy, a lunge."
+material = ExtResource("2_tqxcf")
+pattern = ExtResource("3_40ked")
+id = 40035
+display_name = "Steel sword"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Sword): made by Make the table."

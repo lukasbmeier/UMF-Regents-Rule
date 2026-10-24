@@ -36,3 +36,4 @@ quality = 1
 afk_quality = 350
 id = 40009
 display_name = "Iron sword blade"
+from_table = true

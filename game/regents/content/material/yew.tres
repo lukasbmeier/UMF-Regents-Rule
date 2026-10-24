@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/springy.tres" id="1_yopfr"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/balanced.tres" id="2_vbmac"]
+[ext_resource type="Resource" path="res://game/regents/content/item/yew_logs.tres" id="2_vbnw4"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="3_vbmac"]
+
+[resource]
+script = ExtResource("3_vbmac")
+key = &"yew"
+prefix = "Yew"
+family = 1
+tier = 3
+raw = ExtResource("2_vbnw4")
+weapon_damage_pct = 100
+tool_speed_pct = 100
+part_trait = ExtResource("1_yopfr")
+part_weapon_trait = ExtResource("2_vbmac")
+work_scale_pct = 300
+rank = 4
+color = Color(0.78, 0.62, 0.36, 1)
+id = 40005
+display_name = "Yew"
+designer_notes = ""

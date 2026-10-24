@@ -438,6 +438,42 @@
 					"number": 14.0,
 					"text": "",
 					"unit": "days"
+				},
+				{
+					"key": "regents.crafted_traits_common",
+					"kind": "integer",
+					"max": 6.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": "traits"
+				},
+				{
+					"key": "regents.crafted_traits_fine",
+					"kind": "integer",
+					"max": 6.0,
+					"min": 0.0,
+					"number": 2.0,
+					"text": "",
+					"unit": "traits"
+				},
+				{
+					"key": "regents.crafted_traits_masterwork",
+					"kind": "integer",
+					"max": 6.0,
+					"min": 0.0,
+					"number": 3.0,
+					"text": "",
+					"unit": "traits"
+				},
+				{
+					"key": "regents.refit_bars",
+					"kind": "integer",
+					"max": 50.0,
+					"min": 0.0,
+					"number": 2.0,
+					"text": "",
+					"unit": "bars"
 				}
 			]
 		}

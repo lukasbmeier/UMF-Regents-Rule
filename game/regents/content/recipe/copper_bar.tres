@@ -44,3 +44,4 @@ quality = 0
 afk_quality = 350
 id = 40001
 display_name = "Copper bar"
+from_table = true

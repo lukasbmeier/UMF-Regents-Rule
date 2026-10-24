@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # COMBAT, PLAYED (owner, 2026-10-19: the first slice): the world's real referee and a real client at a
-# simulated round trip, in the frontier glade's camp. The fighter wields the bronze axe from the bag panel,
+# simulated round trip, in the frontier glade's camp. The fighter wields the copper axe from the bag panel,
 # Tabs onto a training dummy (the ring, its health at the top), swings the light combo and a held heavy (the
 # referee judges each along the way the body faces; the numbers float up; axemanship XP), rolls (Ctrl: the
 # Rolling burst carries it further than a run), blocks (the right button: no swing behind it), and lets go

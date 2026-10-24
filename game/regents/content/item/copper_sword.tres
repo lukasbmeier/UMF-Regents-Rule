@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/iron_sword.tscn" id="1_tatpj"]
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="2_c30j5"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword.tres" id="3_ut7xj"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_e0fpk"]
+
+[resource]
+script = ExtResource("4_e0fpk")
+max_stack = 1
+weapon_kit = &"sword"
+weapon_damage_pct = 70
+held_scene = ExtResource("1_tatpj")
+color = Color(0.9, 0.55, 0.3, 1)
+description = "A sword: quick light cuts, a heavy, a lunge."
+material = ExtResource("2_c30j5")
+pattern = ExtResource("3_ut7xj")
+id = 40028
+display_name = "Copper sword"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Copper in Sword): made by Make the table."

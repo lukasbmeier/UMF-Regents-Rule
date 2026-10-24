@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_q1bx4"]
+
+[resource]
+script = ExtResource("1_q1bx4")
+color = Color(0.16, 0.16, 0.18, 1)
+description = "Burns hot: smelted with iron ore into steel."
+id = 40024
+display_name = "Coal"

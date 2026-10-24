@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="1_krmqu"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_aune5"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="4_nq8tx"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="5_4sopr"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="6_d3ao6"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="7_o73bw"]
+
+[sub_resource type="Resource" id="Resource_spjns"]
+script = ExtResource("1_krmqu")
+display_name = "Iron axe head"
+outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
+
+[sub_resource type="Resource" id="Resource_v63yl"]
+script = ExtResource("4_nq8tx")
+name = "bar"
+takes = 1
+pattern = ExtResource("5_4sopr")
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("6_d3ao6")
+key = &"axe_head"
+name_format = "{m} axe head"
+family = 0
+not_made_of = Array[ExtResource("2_aune5")]([])
+max_stack = 1
+tool_tag = &""
+weapon_kit = &""
+part_tag = &""
+carries_trait = false
+station = &"anvil"
+skill = ExtResource("7_o73bw")
+parts = Array[ExtResource("4_nq8tx")]([SubResource("Resource_v63yl")])
+output_qty = 1
+quality = 1
+xp = 30
+afk_ms = 8000
+minigame = SubResource("Resource_spjns")
+description = "Forged at the anvil: its quality is the smith's."
+id = 40002
+display_name = "Axe head"
+designer_notes = ""

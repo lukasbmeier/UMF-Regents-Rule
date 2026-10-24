@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_y7r52"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_bar.tres" id="2_678h3"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_kcvl5"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_axe_head.tres" id="4_qv76m"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_gk0ov"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_2bdfa"]
+
+[sub_resource type="Resource" id="Resource_nd745"]
+script = ExtResource("3_kcvl5")
+display_name = "Iron axe head"
+outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
+
+[resource]
+script = ExtResource("5_gk0ov")
+station = &"anvil"
+skill = ExtResource("6_2bdfa")
+inputs = Array[ExtResource("1_y7r52")]([ExtResource("2_678h3")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("4_qv76m")
+xp = 45
+min_rank = 3
+afk_ms = 12000
+minigame = SubResource("Resource_nd745")
+quality = 1
+from_table = true
+id = 40024
+display_name = "Steel axe head"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Axe head): its numbers are yours to tune."

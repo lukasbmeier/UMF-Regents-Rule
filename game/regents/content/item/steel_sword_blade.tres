@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_yiha3"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword_blade.tres" id="2_he7u7"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_0apbd"]
+
+[resource]
+script = ExtResource("3_0apbd")
+max_stack = 1
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A sword's blade, shaped at the anvil: as good as its smith."
+material = ExtResource("1_yiha3")
+pattern = ExtResource("2_he7u7")
+id = 40033
+display_name = "Steel sword blade"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Sword blade): made by Make the table."

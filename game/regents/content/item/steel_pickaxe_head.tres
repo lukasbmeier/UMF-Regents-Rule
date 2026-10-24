@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_bbdtw"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/pickaxe_head.tres" id="2_2hsd5"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_wsg6e"]
+
+[resource]
+script = ExtResource("3_wsg6e")
+max_stack = 1
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A pick's head, shaped at the anvil: as good as its smith."
+material = ExtResource("1_bbdtw")
+pattern = ExtResource("2_2hsd5")
+id = 40036
+display_name = "Steel pickaxe head"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Pickaxe head): made by Make the table."

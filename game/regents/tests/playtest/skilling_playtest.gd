@@ -73,7 +73,7 @@ func _run() -> void:
 		_finish()
 		return
 	await _until(func() -> bool: return inv.count(AXE) == 1 and inv.count(PICK) == 1, 5.0)
-	_check(inv.count(AXE) == 1 and inv.count(PICK) == 1, "a Bronze axe and a Bronze pickaxe in the bag")
+	_check(inv.count(AXE) == 1 and inv.count(PICK) == 1, "a Copper axe and a Copper pickaxe in the bag")
 	var tree_id: int = await _node_at(TREE_1)
 	_check(tree_id > 0, "tree_1 is a node, drawn as a Tree")
 	if tree_id <= 0:
@@ -97,7 +97,7 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return skilling.afk_target == tree_id, 3.0)
 	_check(skilling.afk_target == tree_id and hud._prompt.text.contains("(AFK)"), "a tap of E: working the tree AFK (\"%s\")" % hud._prompt.text)
 	await _until(func() -> bool: return look.tool != null and driver.pose_weight() > 0.6, 2.0)
-	_check(look.tool != null and driver.pose_clip() == &"extra/TreeChopping", "chopping AFK, the character swings the bronze axe (%s)" % driver.pose_clip())
+	_check(look.tool != null and driver.pose_clip() == &"extra/TreeChopping", "chopping AFK, the character swings the copper axe (%s)" % driver.pose_clip())
 	var logs0: int = inv.count(LOGS)
 	var node: NodeComponent = SkillingComponent.node_of(tree_id)
 	for attempt: int in 3:
@@ -190,7 +190,9 @@ func _chopper(tree_id: int) -> void:
 	var anvil: int = await _station_at(ANVIL)
 	await _stand_by(ANVIL)
 	await _until(func() -> bool: return interaction.get_target() == anvil, 3.0)
-	_check(hud._prompt.text.contains("Copper rivets"), "at the anvil, rivets picked: \"%s\"" % hud._prompt.text.replace("\n", " / "))
+	# Nothing picked here yet: the prompt names the first line of the anvil's list (by what it makes: an axe head).
+	var first_here: String = RegentsStationWindow.label_of(skilling.choices_at(SkillingComponent.station_of(anvil))[0])
+	_check(hud._prompt.text.contains(first_here), "at the anvil, its first recipe (%s) offered: \"%s\"" % [first_here, hud._prompt.text.replace("\n", " / ")])
 	await _tap(&"interact", 0.08)
 	await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
 	_check(hud.station_window.is_open() and hud.station_window.title == "Anvil" and hud.station_window.choices.size() >= 2,
@@ -277,7 +279,16 @@ func _chopper(tree_id: int) -> void:
 	_check(await _make("Oak handle"), "the window: the oak handle, MAKE")
 	await _until(func() -> bool: return inv.count(OAK_HANDLE) >= 1 and skilling.afk_target == -1, 12.0)
 	_check(inv.count(OAK_HANDLE) == 1 and inv.count(OAK_LOGS) == 0, "an oak handle carved from oak logs; out of them, it stops by itself")
-	_check(await _pick("Iron axe with oak handle"), "the window picks the iron axe with the oak handle")
+	# One line a recipe; the handle is picked in its slot's list, and the traits under it (MATERIALS.md step 3).
+	_check(await _pick("Iron axe"), "the window picks the iron axe")
+	hud.station_window.pick_part(0, OAK_HANDLE)
+	await get_tree().process_frame
+	var slot_list: OptionButton = hud.station_window.find_child("Part_0", true, false) as OptionButton
+	var steady_box: CheckBox = hud.station_window.find_child("Trait_steady", true, false) as CheckBox
+	var steady_state: Label = hud.station_window.find_child("TraitState_steady", true, false) as Label
+	_check(slot_list != null and slot_list.get_selected_id() == OAK_HANDLE and steady_box != null and steady_box.button_pressed
+		and steady_state != null and steady_state.text.ends_with("(in use)") and hud.station_window.traits_line().begins_with("A "),
+		"the oak handle in its slot; Steady ticked and in use; %s" % hud.station_window.traits_line())
 	await _shot("station_workbench")
 	hud.toggle_bag()
 	hud.skills_window.open()
@@ -299,8 +310,11 @@ func _chopper(tree_id: int) -> void:
 			quality = s.instance_data
 	var head_q: int = int(shaped_q)
 	var steady: TraitDef = ItemDef.by_id(OAK_HANDLE).handle_trait
-	_check(quality == "{\"q\":%d,\"h\":%d,\"t\":[%d]}" % [mini(1000, head_q), OAK_HANDLE, steady.id],
-		"the iron axe is its head's quality, remembers its handle, and has the oak's trait, Steady (%s, head %d)" % [quality, head_q])
+	# Its traits (owner, 2026-10-23): Steady (the oak's) and Gentle (the copper rivets'), as many as its grade holds.
+	var gentle: TraitDef = ItemDef.by_id(RIVETS).handle_trait
+	var kept: String = "%d" % steady.id if SkillingComponent.trait_room(head_q) < 2 else "%d,%d" % [steady.id, gentle.id]
+	_check(quality == "{\"q\":%d,\"h\":%d,\"p\":[%d,%d],\"t\":[%s]}" % [mini(1000, head_q), OAK_HANDLE, OAK_HANDLE, RIVETS, kept],
+		"the iron axe is its head's quality, remembers its parts, and has Steady (the oak's) and Gentle (the rivets') as its grade holds (%s, head %d)" % [quality, head_q])
 	# Its card in the bag: the trait, what it gives and what it costs (template DECISIONS #275).
 	var axe_row: int = -1
 	for s: SpaceTimeInventoryComponent.Stack in inv.items():

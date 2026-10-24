@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="1_1vb5q"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_tv5fa"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="3_sf0t6"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="4_v01y4"]
+
+[sub_resource type="Resource" id="Resource_w0bv1"]
+script = ExtResource("2_tv5fa")
+name = "logs"
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("3_sf0t6")
+key = &"handle"
+name_format = "{m} handle"
+family = 1
+max_stack = 100
+part_tag = &"handle"
+carries_trait = true
+skill = ExtResource("4_v01y4")
+parts = Array[ExtResource("2_tv5fa")]([SubResource("Resource_w0bv1")])
+xp = 8
+description = "Carved from logs at the workbench: its wood is its trait."
+id = 40004
+display_name = "Handle"

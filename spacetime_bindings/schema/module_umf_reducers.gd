@@ -19,6 +19,27 @@ func add_bot(session_id: int, kind: int, brain: String, pos: Vector3) -> Spaceti
 func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('add_score', [entity_id, score, coins], [&'u64', &'i64', &'i64'], &'')
 
+## 0. entity_id: int [br]
+## 1. item_id: int [br]
+## 2. qty: int [br]
+## 3. quality: int [br]
+func admin_give_item(entity_id: int, item_id: int, qty: int, quality: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_give_item', [entity_id, item_id, qty, quality], [&'u64', &'u32', &'u32', &'u32'], &'')
+
+## 0. entity_id: int [br]
+func admin_reset_bag(entity_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_reset_bag', [entity_id], [&'u64'], &'')
+
+## 0. entity_id: int [br]
+func admin_reset_skills(entity_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_reset_skills', [entity_id], [&'u64'], &'')
+
+## 0. entity_id: int [br]
+## 1. skill_id: int [br]
+## 2. rank: int [br]
+func admin_set_rank(entity_id: int, skill_id: int, rank: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_set_rank', [entity_id, skill_id, rank], [&'u64', &'u32', &'u32'], &'')
+
 ## 0. target_id: int [br]
 ## 1. amount: float [br]
 ## 2. source_id: int [br]
@@ -88,6 +109,14 @@ func consume_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
 ## 2. active: bool [br]
 func craft(station_id: int, recipe_id: int, active: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('craft', [station_id, recipe_id, active], [&'u64', &'u32', &'bool'], &'')
+
+## 0. station_id: int [br]
+## 1. recipe_id: int [br]
+## 2. active: bool [br]
+## 3. parts: Array of int [br]
+## 4. traits: Array of int [br]
+func craft_choosing(station_id: int, recipe_id: int, active: bool, parts: Array[int], traits: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('craft_choosing', [station_id, recipe_id, active, parts, traits], [&'u64', &'u32', &'bool', &'u32', &'u32'], &'')
 
 ## 0. station_id: int [br]
 ## 1. recipe_id: int [br]
@@ -227,6 +256,13 @@ func pick_up(ground_id: int) -> SpacetimeDBReducerCall:
 func ping(pos: Vector3, target_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('ping', [pos, target_id], [&'vector3[f32,f32,f32]', &'u64'], &'')
 
+## 0. station_id: int [br]
+## 1. item_row: int [br]
+## 2. parts: Array of int [br]
+## 3. traits: Array of int [br]
+func refit(station_id: int, item_row: int, parts: Array[int], traits: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('refit', [station_id, item_row, parts, traits], [&'u64', &'u64', &'u32', &'u32'], &'')
+
 ## 0. identity: PackedByteArray [br]
 ## 1. role: int [br]
 ## 2. world_id: int [br]
@@ -298,6 +334,10 @@ func set_appearance(look: String) -> SpacetimeDBReducerCall:
 ## 1. kind: int [br]
 func set_character_of(entity_id: int, kind: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_character_of', [entity_id, kind], [&'u64', &'u8'], &'')
+
+## 0. grade: int [br]
+func set_craft_grade(grade: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_craft_grade', [grade], [&'u32'], &'')
 
 ## 0. enabled: bool [br]
 func set_dev_tools(enabled: bool) -> SpacetimeDBReducerCall:

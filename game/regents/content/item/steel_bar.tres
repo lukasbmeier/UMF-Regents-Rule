@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_mbb6q"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="2_w4osv"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_d8lr3"]
+
+[resource]
+script = ExtResource("3_d8lr3")
+color = Color(0.58, 0.62, 0.7, 1)
+description = "Iron and coal, smelted hot: steel parts at the anvil."
+material = ExtResource("1_mbb6q")
+pattern = ExtResource("2_w4osv")
+by_hand = true
+id = 40025
+display_name = "Steel bar"
+designer_notes = "A CELL BY HAND (steel in Bar): the table's bar takes one raw form, and steel is made of two."

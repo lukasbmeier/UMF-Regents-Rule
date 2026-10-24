@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_3rfxf"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="2_8dx61"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_56gx1"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_pickaxe_head.tres" id="4_thxq6"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_b6t7j"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_8klnd"]
+
+[sub_resource type="Resource" id="Resource_vmbex"]
+script = ExtResource("3_56gx1")
+display_name = "Pickaxe head"
+outline = PackedInt32Array(10, 12, 14, 16, 18, 20, 22, 24, 24, 22, 20, 18, 16, 14, 12, 10)
+
+[resource]
+script = ExtResource("5_b6t7j")
+station = &"anvil"
+skill = ExtResource("6_8klnd")
+inputs = Array[ExtResource("1_3rfxf")]([ExtResource("2_8dx61")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("4_thxq6")
+xp = 15
+afk_ms = 4000
+minigame = SubResource("Resource_vmbex")
+quality = 1
+from_table = true
+id = 40020
+display_name = "Copper pickaxe head"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Copper in Pickaxe head): its numbers are yours to tune."

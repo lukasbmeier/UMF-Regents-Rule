@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/skilling/woodcutting/axe.tscn" id="1_gesjr"]
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="2_q6gfk"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/axe.tres" id="3_fqlwi"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_yl4lm"]
+
+[resource]
+script = ExtResource("4_yl4lm")
+max_stack = 1
+tool_tag = &"axe"
+tool_tier = 3
+tool_speed_pct = 75
+weapon_kit = &"axe"
+weapon_damage_pct = 140
+held_scene = ExtResource("1_gesjr")
+color = Color(0.55, 0.6, 0.68, 1)
+description = "An axe: fells trees, and fights."
+material = ExtResource("2_q6gfk")
+pattern = ExtResource("3_fqlwi")
+id = 40034
+display_name = "Steel axe"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Axe): made by Make the table."

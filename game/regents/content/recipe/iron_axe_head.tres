@@ -36,3 +36,4 @@ quality = 1
 afk_quality = 350
 id = 40004
 display_name = "Iron axe head"
+from_table = true

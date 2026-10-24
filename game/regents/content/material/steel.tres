@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/prospectors.tres" id="1_7dd40"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="1_gkgb6"]
+
+[resource]
+script = ExtResource("1_gkgb6")
+key = &"steel"
+prefix = "Steel"
+family = 0
+tier = 3
+weapon_damage_pct = 140
+tool_speed_pct = 75
+part_trait = ExtResource("1_7dd40")
+work_scale_pct = 150
+rank = 3
+color = Color(0.55, 0.6, 0.68, 1)
+id = 40006
+display_name = "Steel"
+designer_notes = "Tier 3 (MATERIALS.md §8): iron and coal at the furnace. No raw form: its bar is a cell by hand."

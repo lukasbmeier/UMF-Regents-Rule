@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/skilling/mining/pickaxe.tscn" id="1_w3nd2"]
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="2_ccne3"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/pickaxe.tres" id="3_lql3h"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_il4dr"]
+
+[resource]
+script = ExtResource("4_il4dr")
+max_stack = 1
+tool_tag = &"pick"
+tool_tier = 3
+tool_speed_pct = 75
+held_scene = ExtResource("1_w3nd2")
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A pick: works rocks up to its tier."
+material = ExtResource("2_ccne3")
+pattern = ExtResource("3_lql3h")
+id = 40037
+display_name = "Steel pickaxe"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Pickaxe): made by Make the table."

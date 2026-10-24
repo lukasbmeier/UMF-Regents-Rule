@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smelting/smelt_params.gd" id="1_y3gsg"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_rihpe"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="3_merh6"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_ep3rj"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smelting.tres" id="5_0y1no"]
+
+[sub_resource type="Resource" id="Resource_noewd"]
+script = ExtResource("1_y3gsg")
+display_name = "Iron bar"
+pump_heat = 50
+cool_per_tick = 12
+band_center = 680
+band_amp = 160
+band_period_ticks = 60
+band_half_start = 100
+band_half_end = 45
+burn_line = 930
+pour_rate = 32
+target_lo = 600
+target_hi = 840
+pour_tolerance = 200
+
+[sub_resource type="Resource" id="Resource_rk1e7"]
+script = ExtResource("3_merh6")
+name = "ore"
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("4_ep3rj")
+key = &"bar"
+name_format = "{m} bar"
+station = &"furnace"
+skill = ExtResource("5_0y1no")
+parts = Array[ExtResource("3_merh6")]([SubResource("Resource_rk1e7")])
+xp = 12
+afk_ms = 4000
+minigame = SubResource("Resource_noewd")
+description = "Smelted from its ore at the furnace."
+id = 40001
+display_name = "Bar"

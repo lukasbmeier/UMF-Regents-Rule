@@ -3,7 +3,7 @@ class_name SkillingLook extends SpaceTimeComponent
 ## while they work (their `afk_work` row, which every client has, or a round the local player is playing)
 ## the body plays the skill's pose (`SkillDef.pose`: the chop, the pick's swing, the bellows, the hammer)
 ## held through the driver, and the tool is in the hand: the one they work with (`ItemDef.held_scene`, from
-## the AFK row: a bronze axe or an iron one) or the skill's own (`SkillDef.tool_scene`: the smith's hammer).
+## the AFK row: a copper axe or an iron one) or the skill's own (`SkillDef.tool_scene`: the smith's hammer).
 ## Both go when they stop, the tool once the pose has blended out. Tools live in the bag (design #15), so
 ## a tool is shown only while it is used.
 

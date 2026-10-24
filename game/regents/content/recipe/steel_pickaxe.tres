@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_ilvvg"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_pickaxe_head.tres" id="2_8uotb"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_rfiay"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="4_r27ot"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_pickaxe.tres" id="5_oxjbo"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="6_lopkg"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="7_lmcsh"]
+
+[resource]
+script = ExtResource("6_lopkg")
+station = &"workbench"
+skill = ExtResource("7_lmcsh")
+inputs = Array[ExtResource("1_ilvvg")]([ExtResource("2_8uotb"), ExtResource("3_rfiay"), ExtResource("4_r27ot")])
+input_qty = PackedInt32Array(1, 1, 2)
+output = ExtResource("5_oxjbo")
+xp = 37
+min_rank = 3
+afk_ms = 6000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1, 2)
+from_table = true
+id = 40029
+display_name = "Steel pickaxe"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Pickaxe): its numbers are yours to tune."

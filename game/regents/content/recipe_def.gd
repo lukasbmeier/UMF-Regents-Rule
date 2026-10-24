@@ -33,8 +33,17 @@ enum Quality { NONE, FROM_ROUND, FROM_INPUTS }
 ## The quality AFK makes, when the round decides it (thousandths).
 @export_range(0, 1000, 10, "suffix:‰") var afk_quality: int = 350
 ## The input that is the made tool's HANDLE (an index into `inputs`; -1: none). Any item of that input's
-## `part_tag` may take its place, picked at the station (Q), and its trait goes on the tool.
+## `part_tag` may take its place, picked at the station, and its trait goes on the tool. Kept for builds
+## before `part_slots` (they pick this one only): the first of `part_slots`.
 @export_range(-1, 8) var part_slot: int = -1
+## EVERY INPUT THE PLAYER PICKS (`docs/regents_rule/MATERIALS.md` §3-§4, step 3): indexes into `inputs`, each
+## a part (a handle, a binding) any item of whose kind may take its place at the station, its trait
+## offered for the made item. Empty: `part_slot` alone (when it is one).
+@export var part_slots: PackedInt32Array = PackedInt32Array()
+## MADE BY THE MATERIAL TABLE for its output's cell (`MaterialTable`, `docs/regents_rule/MATERIALS.md`):
+## its station, skill, inputs, output and part slot follow the cell's pattern and material; its numbers
+## (XP, rank, AFK time, how many of each input, its round) are yours to tune, here or on the recipe bench.
+@export var from_table: bool = false
 
 static var _all: Array[RecipeDef] = []
 ## `work_xp` worked out once per item in a running game (content does not change there).
@@ -72,6 +81,7 @@ func to_bake() -> Dictionary:
 		"quality": int(quality),
 		"afk_quality": afk_quality,
 		"part_slot": part_slot,
+		"part_slots": Array(pick_slots()),
 	}
 
 
@@ -113,13 +123,23 @@ func craft_xp(share_pct: int) -> int:
 	return xp + ins * share_pct / 100
 
 
-## The items that may fill the part slot (any item of its kind), plain first; empty when it has none.
-func part_choices() -> Array[ItemDef]:
+## Every input the player picks (`part_slots`, else `part_slot` when it is one), in order.
+func pick_slots() -> PackedInt32Array:
+	if not part_slots.is_empty():
+		return part_slots
+	return PackedInt32Array([part_slot]) if part_slot >= 0 else PackedInt32Array()
+
+
+## The items that may fill input `slot` (any item of its kind), its own first; empty when it is no part
+## (-1: the first picked slot).
+func part_choices(slot: int = -1) -> Array[ItemDef]:
 	var out: Array[ItemDef] = []
-	if part_slot < 0 or part_slot >= inputs.size() or inputs[part_slot] == null:
+	if slot < 0:
+		slot = pick_slots()[0] if not pick_slots().is_empty() else -1
+	if slot < 0 or slot >= inputs.size() or inputs[slot] == null:
 		return out
-	var kind: StringName = inputs[part_slot].part_tag
-	out.append(inputs[part_slot])
+	var kind: StringName = inputs[slot].part_tag
+	out.append(inputs[slot])
 	for d: ContentDef in RegentsContent.items(&"item"):
 		var it: ItemDef = d as ItemDef
 		if it != null and it != inputs[part_slot] and it.part_tag == kind:
@@ -148,6 +168,15 @@ func validate() -> Array[String]:
 		out.append("its `part_slot` (%d) is past its inputs" % part_slot)
 	elif part_slot >= 0 and inputs[part_slot] != null and inputs[part_slot].part_tag == &"":
 		out.append("its part slot is %s, which is no part: set that item's `part_tag`" % inputs[part_slot].display_name)
+	for i: int in part_slots:
+		if i < 0 or i >= inputs.size():
+			out.append("its `part_slots` name input %d, which it does not have" % i)
+		elif inputs[i] != null and inputs[i].part_tag == &"":
+			out.append("its part slot %d is %s, which is no part: set that item's `part_tag`" % [i, inputs[i].display_name])
+	if not part_slots.is_empty() and part_slot != part_slots[0]:
+		out.append("its `part_slot` must be the first of its `part_slots` (%d), for older builds" % part_slots[0])
+	if from_table and output != null and (output.material == null or output.by_hand):
+		out.append("it is the material table's, but %s is no cell the table makes: untick `from_table` to make it yours" % output.display_name)
 	return out
 
 

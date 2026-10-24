@@ -20,6 +20,7 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 | `docs/regents_rule/PROGRESS.md` | THE PROGRESS FILE: each step built, how to play it, how it was tested, what was left | every session: the current step |
 | `docs/regents_rule/RULE_DESIGN.md` | THE DESIGN: combat, world and chunks, NPC tiers, nodes and minigames, items, accounts, scale; build plan §12, open items §13 | before a new system |
 | `docs/regents_rule/LOOT_AND_STYLES.md` | loot, grades, traits, spells; its §10 is the order of work | loot and items work |
+| `docs/regents_rule/MATERIALS.md` | materials and modular gear (2026-10-23): the generated table, slots, trait picks and ranks, gear XP, catalysts; its §10 is the order of work | materials, parts, crafting work |
 | `docs/DECISIONS.md` | the FOUNDATION's decision log (arrives with pulls) | the last ~20, plus your system's rows |
 | `docs/FOUNDATION_SYSTEMS.md` | the foundation milestones; this game asks for M8, M16, M18-M26, the template 1.0 | when a step needs the foundation |
 | `docs/HANDBOOK.md` | the human guide | when a change alters how something works |

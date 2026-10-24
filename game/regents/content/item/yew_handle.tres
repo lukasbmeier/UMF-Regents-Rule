@@ -1,14 +1,20 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
 [ext_resource type="Resource" path="res://game/regents/content/trait/springy.tres" id="2_trait"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/balanced.tres" id="3_rm83r"]
+[ext_resource type="Resource" path="res://game/regents/content/material/yew.tres" id="t_material"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/handle.tres" id="t_pattern"]
 
 [resource]
 script = ExtResource("1_item")
 max_stack = 100
 part_tag = &"handle"
 handle_trait = ExtResource("2_trait")
+part_weapon_trait = ExtResource("3_rm83r")
 color = Color(0.78, 0.62, 0.36, 1)
 description = "A light, springy yew handle: a quicker tool (Springy)."
+material = ExtResource("t_material")
+pattern = ExtResource("t_pattern")
 id = 40017
 display_name = "Yew handle"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="1_j84m6"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword_blade.tres" id="2_7dv5f"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_ltkur"]
+
+[resource]
+script = ExtResource("3_ltkur")
+max_stack = 1
+color = Color(0.9, 0.55, 0.3, 1)
+description = "A sword's blade, shaped at the anvil: as good as its smith."
+material = ExtResource("1_j84m6")
+pattern = ExtResource("2_7dv5f")
+id = 40027
+display_name = "Copper sword blade"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Copper in Sword blade): made by Make the table."

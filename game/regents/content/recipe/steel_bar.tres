@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_88ngw"]
+[ext_resource type="Script" path="res://game/regents/skilling/smelting/smelt_params.gd" id="2_o70rx"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_ore.tres" id="2_yycww"]
+[ext_resource type="Resource" path="res://game/regents/content/item/coal.tres" id="3_svub3"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_bar.tres" id="3_yycww"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_svub3"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smelting.tres" id="5_rp2hb"]
+
+[sub_resource type="Resource" id="Resource_av6k3"]
+script = ExtResource("2_o70rx")
+display_name = "Steel bar"
+heat_ms = 8000
+pump_heat = 50
+cool_per_tick = 12
+band_center = 740
+band_amp = 160
+band_period_ticks = 60
+band_half_start = 100
+band_half_end = 38
+burn_line = 960
+pour_rate = 32
+target_lo = 600
+target_hi = 840
+pour_tolerance = 200
+
+[resource]
+script = ExtResource("4_svub3")
+skill = ExtResource("5_rp2hb")
+inputs = Array[ExtResource("1_88ngw")]([ExtResource("2_yycww"), ExtResource("3_svub3")])
+input_qty = PackedInt32Array(2, 2)
+output = ExtResource("3_yycww")
+xp = 22
+min_rank = 3
+afk_ms = 5500
+minigame = SubResource("Resource_av6k3")
+id = 40015
+display_name = "Steel bar"
+designer_notes = "Steel (MATERIALS.md step 2): two iron ore and two coal to a bar, hotter and narrower than iron."

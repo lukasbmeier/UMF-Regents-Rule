@@ -142,7 +142,7 @@ static func per_hour(r: RecipeDef, played: bool) -> Dictionary:
 
 
 ## The raw (gathered) materials behind one batch, {name: qty}, and the AFK minutes gathering them takes
-## (a bronze tool, rank 1).
+## (a copper tool, rank 1).
 static func chain(r: RecipeDef) -> Dictionary:
 	var raw: Dictionary = {}
 	var ms: Array[float] = [0.0]
@@ -170,7 +170,7 @@ static func _raw_of(item: ItemDef, qty: float, raw: Dictionary, ms: Array[float]
 	raw[item.display_name] = float(raw.get(item.display_name, 0.0)) + qty   # nothing makes it: given
 
 
-## XP an hour of gathering AFK at the node giving `item` (bronze tool, rank 1), or -1 when none does.
+## XP an hour of gathering AFK at the node giving `item` (copper tool, rank 1), or -1 when none does.
 static func gathering_xp_hour(item: ItemDef) -> int:
 	for d: ContentDef in ContentLibrary.items(&"node"):
 		var n: NodeDef = d as NodeDef

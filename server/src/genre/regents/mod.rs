@@ -28,7 +28,7 @@ pub const STATION_POINT: &str = "station";
 /// The order board's station key (`content/station/`), and how many orders it shows.
 pub const ORDER_BOARD: &str = "orders";
 pub const ORDER_SLOTS: u32 = 3;
-/// What a new character is given, once (`content/item/`): a Bronze axe and a Bronze pickaxe.
+/// What a new character is given, once (`content/item/`): a Copper axe and a Copper pickaxe.
 pub const STARTER_KIT: &[u32] = &[40001, 40006];
 
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
@@ -55,8 +55,10 @@ pub struct ItemSeed {
     pub weapon_damage_pct: u32,
     /// A part's kind ("handle"): a recipe's part slot takes any item of the same kind.
     pub part_tag: &'static str,
-    /// As a tool's handle: the trait it gives what it is made into (a `traits::TRAITS` id; 0: none).
+    /// As a part: the trait it offers a TOOL it is made into (a `traits::TRAITS` id; 0: none).
     pub handle_trait: u32,
+    /// As a part: the trait it offers a WEAPON (owner, 2026-10-23: oak Heavy, iron rivets Brutal; 0: none).
+    pub weapon_trait: u32,
     /// As ammo: the kit it is shot from ("bow"; empty: not ammo), and its hits in percent.
     pub ammo_for: &'static str,
     pub ammo_damage_pct: u32,
@@ -219,8 +221,10 @@ pub struct RecipeSeed {
     pub quality: u8,
     pub afk_quality: u32,
     /// The input that is the tool's HANDLE (-1: none): any item of that input's `part_tag` may take its
-    /// place, at the player's choice, and its trait goes on the tool.
+    /// place, at the player's choice, and its trait goes on the tool. The first of `part_slots`.
     pub part_slot: i32,
+    /// EVERY INPUT THE PLAYER PICKS (MATERIALS.md step 3): a handle, a binding; each offers its trait.
+    pub part_slots: &'static [i32],
 }
 
 /// A weapon kit (`KitDef`): what a weapon of its key fights with.
@@ -535,6 +539,21 @@ pub fn rank_of(s: &SkillSeed, xp: u32) -> u32 {
     1 + s.xp_to_rank.iter().filter(|need| xp >= **need).count() as u32
 }
 
+/// The highest rank skill `s` has.
+pub fn max_rank(s: &SkillSeed) -> u32 {
+    1 + s.xp_to_rank.len() as u32
+}
+
+/// The XP at which skill `s` reaches `rank` (0 for rank 1), or None past its highest: what the admin's
+/// Tester page sets a skill to (owner, 2026-10-23).
+pub fn xp_for_rank(s: &SkillSeed, rank: u32) -> Option<u32> {
+    match rank {
+        0 => None,
+        1 => Some(0),
+        r => s.xp_to_rank.get(r as usize - 2).copied(),
+    }
+}
+
 /// How long work takes, in percent of the base: the tool's speed, up to a tenth off for its quality
 /// (thousandths), and 3 % off per rank above the first (at most 27 %). Never under 10 %.
 pub fn speed_pct(tool_speed_pct: u32, quality_pm: u32, rank: u32) -> u32 {
@@ -607,6 +626,81 @@ pub fn quality_data(q: u32) -> String {
     format!("{{\"q\":{}}}", q.min(1000))
 }
 
+/// HOW MANY TRAITS A CRAFTED ITEM OF QUALITY `q` HOLDS (owner, 2026-10-23, MATERIALS.md §4): its grade's
+/// (`fine_q` and `masterwork_q` cut the grades; `common`, `fine`, `masterwork` are the counts).
+pub fn crafted_trait_room(q: u32, fine_q: u32, masterwork_q: u32, common: u32, fine: u32, masterwork: u32) -> u32 {
+    if q >= masterwork_q.max(fine_q) {
+        masterwork
+    } else if q >= fine_q {
+        fine
+    } else {
+        common
+    }
+}
+
+/// THE TRAITS A CRAFTED ITEM GETS: the player's `wanted`, in their order, those its parts `offer` (the
+/// rest dropped, and none twice), as many as `room` holds (a lower grade keeps the first).
+pub fn crafted_traits(wanted: &[u32], offered: &[u32], room: u32) -> Vec<u32> {
+    let mut out: Vec<u32> = Vec::new();
+    for t in wanted {
+        if out.len() as u32 >= room {
+            break;
+        }
+        if offered.contains(t) && !out.contains(t) {
+            out.push(*t);
+        }
+    }
+    out
+}
+
+/// The `instance_data` of an assembled item of quality `q`: its first part (`"h"`, the handle, read by older
+/// builds), every part in slot order (`"p"`: what a refit changes), and its traits, `"t":[]` when it has none
+/// ON PURPOSE (then no falling back to the handle's trait).
+pub fn made_data(q: u32, parts: &[u32], traits: &[u32]) -> String {
+    let join = |v: &[u32]| v.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",");
+    match parts.first() {
+        Some(h) => format!("{{\"q\":{},\"h\":{h},\"p\":[{}],\"t\":[{}]}}", q.min(1000), join(parts), join(traits)),
+        None => format!("{{\"q\":{},\"t\":[{}]}}", q.min(1000), join(traits)),
+    }
+}
+
+/// The parts an assembled item was made with (`"p"`), or, for one made before they were noted, its handle
+/// (`"h"`) alone. Empty for none.
+pub fn parts_of_row(instance_data: &str) -> Vec<u32> {
+    if let Some(at) = instance_data.find("\"p\":[") {
+        let rest = &instance_data[at + 5..];
+        if let Some(end) = rest.find(']') {
+            return rest[..end].split(',').filter_map(|s| s.trim().parse().ok()).collect();
+        }
+    }
+    handle_of(instance_data).into_iter().collect()
+}
+
+/// THE TRAIT part `part` offers item `made` (owner, 2026-10-23): its tool trait for a tool (an axe too), else
+/// its weapon trait for a weapon; only one that fits `made`'s tags. 0 for none. The client's twin:
+/// `ItemDef.trait_for`.
+pub fn offered_for(part: &ItemSeed, made: &ItemSeed) -> u32 {
+    let t = if !made.tool_tag.is_empty() { part.handle_trait } else if !made.weapon_kit.is_empty() { part.weapon_trait } else { 0 };
+    match crate::traits::find(t) {
+        Some(seed) if crate::traits::fits(seed, &item_tags(made)) => t,
+        _ => 0,
+    }
+}
+
+/// THE GRADE of quality `q` (0 Common, 1 Fine, 2 Masterwork) by the cut points `fine_q`, `masterwork_q`.
+pub fn grade_of(q: u32, fine_q: u32, masterwork_q: u32) -> u32 {
+    if q >= masterwork_q.max(fine_q) {
+        2
+    } else if q >= fine_q {
+        1
+    } else {
+        0
+    }
+}
+
+/// `set_craft_grade`'s "no grade picked": the best first, as before (owner, 2026-10-23).
+pub const ANY_GRADE: u32 = 3;
+
 /// The `instance_data` of a tool of quality `q` assembled with handle `handle` (an item id): its handle,
 /// and the handle's trait (template DECISIONS #275), the tool's whatever its grade (owner, 2026-10-21).
 pub fn tool_data(q: u32, handle: u32) -> String {
@@ -621,8 +715,8 @@ pub fn tool_data(q: u32, handle: u32) -> String {
 /// has its handle's. The client's twin: `ItemDef.trait_ids`.
 pub fn traits_of_row(instance_data: &str) -> Vec<u32> {
     let ids = crate::traits::ids_of(instance_data);
-    if !ids.is_empty() {
-        return ids;
+    if !ids.is_empty() || instance_data.contains("\"t\":[") {
+        return ids;   // its own (none on purpose: `"t":[]`)
     }
     handle_of(instance_data).and_then(item).filter(|h| h.handle_trait != 0).map_or_else(Vec::new, |h| vec![h.handle_trait])
 }

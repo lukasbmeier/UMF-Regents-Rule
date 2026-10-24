@@ -20,3 +20,4 @@ quality = 0
 afk_quality = 350
 id = 40007
 display_name = "Oak handle"
+from_table = true

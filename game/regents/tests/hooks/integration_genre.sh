@@ -43,8 +43,8 @@ assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id >= 40001 AND it
   "the chain's fifteen items are item_def rows, from the genre's content"
 assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id = 40016 OR item_def_id = 40017')" "2" "and the oak and yew handles"
 assert_ok "set_world_level 0 20" "world 0 to the frontier glade (level 20)"
-assert_eq "$(row_count 'SELECT * FROM gather_node WHERE world_id = 0')" "26" "its 26 nodes are placed (17 trees, 5 copper and 4 iron rocks)"
-assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100')" "26" "each an entity of the node kind (100)"
+assert_eq "$(row_count 'SELECT * FROM gather_node WHERE world_id = 0')" "29" "its 29 nodes are placed (17 trees, 5 copper, 4 iron and 3 coal rocks)"
+assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100')" "29" "each an entity of the node kind (100)"
 assert_eq "$(row_count 'SELECT * FROM station WHERE world_id = 0')" "4" "and its four stations: a furnace, an anvil, a workbench, the order board"
 assert_eq "$(row_count 'SELECT * FROM gather_node WHERE def_id = 40005')" "4" "four of the nodes iron rocks, by the points' tags"
 TREE="$(node_at tree_1)"; TREE2="$(node_at tree_2)"; TREE3="$(node_at tree_3)"    # at (-9,0,-6), (-3,0,-11), (5,0,-8)
@@ -54,7 +54,7 @@ BOARD="$(station_at orders)"                                                    
 # the newest work_result's XP at a target (the SQL has no ORDER BY: the highest id)
 wr_xp() { sql_rows "SELECT id, xp FROM work_result WHERE entity_id = $MYENT AND target_id = $1" | tr -d ' ' | sort -t'|' -k1,1n | tail -1 | cut -d'|' -f2; }
 log_of() { sql_first "SELECT $2 FROM recipe_log WHERE entity_id = $MYENT AND recipe_id = $1" 1; }
-assert_eq "$(qty_of 40001) $(qty_of 40006)" "1 1" "the player was given a Bronze axe and a Bronze pickaxe"
+assert_eq "$(qty_of 40001) $(qty_of 40006)" "1 1" "the player was given a Copper axe and a Copper pickaxe"
 
 # --- woodcutting ---
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":8.0}' "stand at the spawn, 16 m from tree_1"
@@ -67,7 +67,7 @@ assert_eq "$(row_count "SELECT * FROM afk_work WHERE entity_id = $MYENT")" "0" "
 LOGS0="$(qty_of 40002)"
 assert_ok "gather $TREE true" "hold E: a round is dealt"
 CID="$(round_cid)"
-assert_eq "$(round_field "$CID" payload)" "\"$TREE 40001 100\"" "its payload: the tree, its NodeDef, the bronze axe's speed (100 %)"
+assert_eq "$(round_field "$CID" payload)" "\"$TREE 40001 100\"" "its payload: the tree, its NodeDef, the copper axe's speed (100 %)"
 assert_eq "$(round_field "$CID" kind)" "100" "a round of branch dodge (challenge kind 100)"
 assert_ok "submit_challenge_result $CID [10000.0,1.0]" "a press at the round's last millisecond, sent the moment it was dealt..."
 assert_eq "$(qty_of 40002)" "$LOGS0" "...pays nothing: by the server's clock that press had not happened yet"
@@ -151,6 +151,61 @@ assert_rejected "craft_with $BENCH 40006 false 40010" "takes a handle there" "a 
 assert_rejected "craft_with $BENCH 40006 false 40016" "needs 1 Oak handle" "an oak handle chosen: the bag must have one"
 assert_rejected "craft_with $BENCH 40005 false 40016" "takes no part" "a plain handle's recipe has no part slot"
 assert_rejected "craft $BENCH 40007 false" "needs Crafting rank 2" "an oak handle needs crafting rank 2"
+# CHOOSING PARTS AND TRAITS (owner, 2026-10-23, MATERIALS.md step 3): craft_choosing takes the item in each part slot and
+# the traits wanted, in order; each must be offered by a part picked, none twice. Steady is 40001 (oak), Springy 40002 (yew).
+assert_rejected "craft_choosing $BENCH 40006 false [40010] []" "takes a handle there" "craft_choosing: a copper bar is no handle"
+assert_rejected "craft_choosing $BENCH 40006 false [40013] [40001]" "offers no trait 40001" "a plain handle offers no Steady"
+assert_rejected "craft_choosing $BENCH 40006 false [40016] [40002]" "offers no trait 40002" "an oak handle offers no Springy (the yew's)"
+assert_rejected "craft_choosing $BENCH 40006 false [40016] [40001,40001]" "wanted twice" "Steady twice: refused"
+assert_rejected "craft_choosing $BENCH 40006 false [40016,40012,40013] [40001]" "takes 2 part(s), not 3" "three parts for two slots (a handle, a binding): refused"
+assert_rejected "craft_choosing $BENCH 40006 false [40016,40013] [40001]" "takes a binding there" "a handle in the binding's slot: refused"
+assert_rejected "craft_choosing $BENCH 40005 false [40016] []" "takes no part" "a plain handle's recipe has no part slot"
+assert_rejected "craft_choosing $BENCH 40006 false [40016] [40001]" "needs 1 Oak handle" "an oak handle chosen: the bag must have one"
+assert_ok "grant_item $MYENT 40016 1" "(an oak handle for it)"
+assert_ok "grant_item $MYENT 40012 2" "(and two rivets)"
+assert_ok "craft_choosing $BENCH 40006 false [40016] [40001]" "craft_choosing: an iron axe with the oak handle, Steady wanted"
+# (The SQL prints an array bare, its numbers run together: [40016,40012] is "4001640012"; none: blank. The AFK work ends at once: the
+# CLI's player is offline.)
+assert_eq "$(sql_first "SELECT recipe_id FROM craft_choice WHERE entity_id = $MYENT" 1)" "40006" "the choice is kept for its batches: the iron axe's"
+assert_eq "$(sql_rows "SELECT parts, traits FROM craft_choice WHERE entity_id = $MYENT" | sed -e 's/ *| */|/' -e 's/^ *//' -e 's/ *$//' )" "4001640012|40001" "kept as chosen: the oak handle and copper rivets (the binding's own), Steady"
+assert_ok "craft_choosing $BENCH 40006 false [40016] []" "craft_choosing again, no trait wanted (none is a choice too)"
+assert_eq "$(sql_rows "SELECT parts, traits FROM craft_choice WHERE entity_id = $MYENT" | sed -e 's/ *| */|/' -e 's/^ *//' -e 's/ *$//' )" "4001640012|" "kept: the parts, no trait"
+assert_ok "work_stop" "stop (the playtest makes the axe for real)"
+# AFTER LUKE'S PLAYTEST (2026-10-23): rivets offer traits (copper: Gentle 40009 on a tool, Thirsting 40006 on a weapon);
+# a part's trait counts only where it fits; the head picked BY GRADE; a made item REFITTED at a cost.
+assert_ok "craft_choosing $BENCH 40006 false [40016,40012] [40001,40009]" "an iron axe with oak and copper rivets: Steady and Gentle"
+assert_rejected "craft_choosing $BENCH 40006 false [40016,40012] [40006]" "offers no trait 40006" "Thirsting is the rivets' for a WEAPON: an axe (a tool) is offered Gentle"
+assert_rejected "craft_choosing $BENCH 40010 false [40016,40012] [40001]" "offers no trait 40001" "and a sword is offered no Steady (a tool's): the oak gives it Heavy"
+assert_rejected "set_craft_grade 4" "grades are 0 to 2" "grade 4: refused"
+# The heads in the bag first go (the one shaped in a round above may be any grade, even Masterwork), then exactly one Fine.
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40014" | tr -d ' '); do
+  assert_ok "consume_item $row 1" "(an iron axe head put away)"
+done
+assert_ok "admin_give_item $MYENT 40014 1 600" "(one Fine iron axe head, and no other)"
+assert_ok "set_craft_grade 2" "make with Masterwork heads"
+assert_rejected "craft_choosing $BENCH 40006 false [40016,40012] [40001]" "of grade 2" "no Masterwork head in the bag: refused, by grade"
+assert_ok "set_craft_grade 1" "make with Fine heads"
+assert_ok "craft_choosing $BENCH 40006 false [40016,40012] [40001]" "a Fine head in the bag: begun"
+assert_eq "$(sql_first "SELECT grade FROM craft_grade WHERE entity_id = $MYENT" 1)" "1" "the grade is kept for its batches"
+assert_ok "craft_with $BENCH 40006 false 40016" "an older build's craft (any grade)"
+assert_eq "$(row_count "SELECT * FROM craft_grade WHERE entity_id = $MYENT")" "0" "takes the best of any grade: the grade picked is forgotten"
+assert_ok "work_stop" "stop"
+# REFIT: a Fine iron axe made before parts were noted (plain handle, copper rivets), an oak handle swapped in.
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40011" | tr -d ' '); do
+  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(no iron bars yet)"
+done
+assert_ok "admin_give_item $MYENT 40015 1 650" "(a Fine iron axe, quality 650)"
+AXE_R="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40015 AND instance_data = '{\"q\":650}'" 1)"
+OAK0="$(qty_of 40016)"
+assert_rejected "refit $BENCH $AXE_R [40016,40012] [40001]" "it takes 2 Iron bar" "no iron bars: refused (a refit costs bars of the head's metal)"
+assert_ok "grant_item $MYENT 40011 2" "(two iron bars)"
+assert_rejected "refit $BENCH $AXE_R [40016,40012] [40006]" "offers no trait 40006" "a refit's traits: only what the parts offer an axe"
+assert_rejected "refit $BENCH $(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40012" 1) [] []" "is not made of parts" "rivets are not made of parts: no refit"
+assert_rejected "refit $BENCH 999999 [] []" "not in your bag" "a row that is not yours: refused"
+assert_ok "refit $BENCH $AXE_R [40016,40012] [40001,40009]" "refit: the oak handle swapped in, Steady and Gentle"
+assert_eq "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_R" 1)" "\"{\"q\":650,\"h\":40016,\"p\":[40016,40012],\"t\":[40001,40009]}\""   "the same row: its quality kept, its parts and its two traits (Fine holds two)"
+assert_eq "$(qty_of 40016) $(qty_of 40011)" "$((OAK0 - 1)) 0" "the oak handle used up, the two iron bars paid"
+assert_rejected "refit $BENCH $AXE_R [40016,40012] [40001,40009]" "how it is already" "the same again: nothing to change"
 
 # --- the order board ---
 assert_eq "$(row_count 'SELECT * FROM work_order WHERE world_id = 0')" "3" "the board has three work orders"
@@ -174,6 +229,11 @@ assert_eq "$(row_count "SELECT * FROM order_filled WHERE order_id = $ORDER AND e
 assert_ok "grant_item $MYENT $O_ITEM $O_QTY" "the same again"
 assert_rejected "fill_order $BOARD $ORDER" "you have filled that order" "an order is filled once per player"
 assert_rejected "fill_order $BOARD 999999" "that order is gone" "an order that is not there"
+# What "the same again" gave goes: an order may want a tool (a steel axe since the material table), which would
+# be the best axe below (found 2026-10-23: the round at the steel axe's 75 %, and "no axe" with one in the bag).
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $O_ITEM" | tr -d ' '); do
+  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the order's item again, put away)"
+done
 assert_ok "grant_item $MYENT 40015 1" "an admin gives an iron axe (no quality)"
 assert_ok 'teleport {"x":-25.0,"y":0.0,"z":-28.5}' "stand by yew_1"
 assert_rejected "gather $(node_at yew_1) true" "needs Woodcutting rank 4" "a yew needs woodcutting rank 4"
@@ -209,7 +269,7 @@ PICK_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MY
 assert_rejected "use_ability_seen 40006 0 $C_AIM 901 100" "wield an axe first" "nothing wielded: an axe's chop is refused"
 assert_rejected "wield $PICK_ROW" "is no weapon" "a pickaxe is no weapon"
 assert_rejected "wield 999999" "not in your bag" "nor is what is not in the bag"
-assert_ok "wield $AXE_ROW" "wield the bronze axe"
+assert_ok "wield $AXE_ROW" "wield the copper axe"
 assert_eq "$(sql_first "SELECT kit FROM wielded WHERE entity_id = $MYENT" 1)" "\"axe\"" "it fights with the axe kit"
 assert_rejected "use_ability_seen 40001 0 $C_AIM 902 100" "that is a sword move" "a sword's slash, with an axe: refused"
 assert_rejected "use_ability_seen 40007 0 $C_AIM 903 100" "out of the combo's order" "the combo's second swing first: refused"
@@ -226,7 +286,7 @@ R906="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 906" 1)"
 assert_ok "resolve_action $R905 $DUMMY" "the referee: the chop hit the dummy"
 assert_ok "resolve_action $R906 $DUMMY" "and the second"
 HP1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
-assert_eq "$(python -c "print(round($HP0 - $HP1, 2))")" "18.2" "11 + 15 damage at the bronze axe's 70 %: 18.2 off the dummy"
+assert_eq "$(python -c "print(round($HP0 - $HP1, 2))")" "18.2" "11 + 15 damage at the copper axe's 70 %: 18.2 off the dummy"
 assert_eq "$(xp_of 40007)" "5" "axemanship XP: half a point a damage, half again on a dummy (2 + 3)"
 assert_ok "use_ability_seen 40010 0 $C_AIM 907 100" "Ctrl: the dodge roll"
 logged() { spacetime logs "$DB" 2>/dev/null | tail -60 | grep -qE "$1" && echo true || echo false; }
@@ -263,7 +323,7 @@ done
 # (game/regents/content/trait/). ---
 T_BALANCED=40003; T_HEAVY=40004; T_BRUTAL=40005; T_SWIFT=40007
 assert_rejected "set_item_traits $AXE_ROW [99999]" "no trait 99999" "a trait that is not one: refused"
-assert_rejected "set_item_traits $AXE_ROW [$T_SWIFT]" "is not on a bronze axe" "Swift Draw is a bow's: refused on an axe"
+assert_rejected "set_item_traits $AXE_ROW [$T_SWIFT]" "is not on a copper axe" "Swift Draw is a bow's: refused on an axe"
 C_CODE_T='"regentstraitsrefereecode"'
 assert_ok "offer_referee 0 $C_CODE_T" "a referee for the traits"
 spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T" >/dev/null 2>&1
@@ -273,7 +333,7 @@ assert_ok "use_ability_seen 40006 0 $C_AIM 931 100" "a plain chop"
 W0="$(sql_first "SELECT wind_up_ms FROM swing WHERE entity_id = $MYENT" 1)"; L0="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
 assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 931" 1) $DUMMY" "it hits the dummy"
 HPT1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
-assert_eq "$(python -c "print(round($HPT0 - $HPT1, 2))")" "7.7" "11 at the bronze axe's 70 %: 7.7 (no traits)"
+assert_eq "$(python -c "print(round($HPT0 - $HPT1, 2))")" "7.7" "11 at the copper axe's 70 %: 7.7 (no traits)"
 assert_ok "set_item_traits $AXE_ROW [$T_BALANCED,$T_BRUTAL]" "(dev) the axe made Balanced and Brutal"
 check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q "\"t\":\[$T_BALANCED,$T_BRUTAL\]" && echo true || echo false)" "its row carries them"
 sleep 1.2
@@ -610,6 +670,48 @@ assert_eq "$(row_count "SELECT * FROM resource_state WHERE entity_id = $MYENT AN
 assert_ok "unwield" "put the axe away"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "nothing wielded"
 assert_rejected "block true" "wield a weapon" "and nothing to block with"
+
+# THE TESTER PAGE (owner, 2026-10-23): the admin sets any player's ranks, resets their skills, gives them items
+# and resets their bag; nobody else may. (The page itself: game/regents/ui/tester_page.gd, the unit suite.)
+MINING=40002
+# A stranger's calls change NOTHING (checked by what is in the database, not by the words printed: a probe of
+# the page's reducers with the admin check taken out printed nothing either way, 2026-10-23).
+before() { echo "$(xp_of $MINING) $(row_count "SELECT * FROM recipe_log WHERE entity_id = $MYENT") $(qty_of 40024) $(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")"; }
+WAS="$(before)"
+for verb in "admin_set_rank $MYENT $MINING 3" "admin_reset_skills $MYENT" "admin_give_item $MYENT 40024 5 0" "admin_reset_bag $MYENT"; do
+  # shellcheck disable=SC2086
+  out="$(spacetime call --anonymous "$DB" $verb 2>&1)"
+  check "$(echo "$out" | grep -qi "admin only" && echo true || echo false)" "a stranger's ${verb%% *}: refused, admin only"
+  assert_eq "$(before)" "$WAS" "and after a stranger's ${verb%% *}, the player's mining XP, recipe records, coal and bag are as they were"
+done
+assert_ok "admin_set_rank $MYENT $MINING 3" "the admin sets mining to rank 3"
+assert_eq "$(xp_of $MINING)" "150" "mining's XP is rank 3's start (150)"
+assert_ok "admin_set_rank $MYENT $MINING 1" "and back down to rank 1"
+assert_eq "$(xp_of $MINING)" "0" "rank 1 is no XP"
+assert_rejected "admin_set_rank $MYENT $MINING 11" "ranks 1 to 10" "rank 11: refused (mining has ten)"
+assert_rejected "admin_set_rank $MYENT $MINING 0" "ranks 1 to 10" "rank 0: refused"
+assert_rejected "admin_set_rank $MYENT 1 3" "no such skill" "a skill that is not: refused"
+assert_rejected "admin_set_rank $(node_at copper_1) $MINING 3" "is no player" "a rock is no player: refused"
+COAL0="$(qty_of 40024)"
+assert_ok "admin_give_item $MYENT 40024 25 0" "the admin gives 25 coal"
+assert_eq "$(qty_of 40024)" "$((COAL0 + 25))" "25 more coal in the bag"
+assert_ok "admin_give_item $MYENT 40034 2 850" "the admin gives two steel axes at quality 850"
+assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40034 AND instance_data = '{\"q\":850}'")" "2" "two rows, each a Masterwork steel axe (q 850)"
+assert_rejected "admin_give_item $MYENT 40034 21 500" "1 to 20" "21 axes at once: refused (one row each)"
+assert_rejected "admin_give_item $MYENT 40024 0 0" "1 to 10000" "none: refused"
+assert_rejected "admin_give_item $MYENT 49999 1 0" "no such item" "an item that is not: refused"
+assert_ok "grant_xp $MYENT $MINING 500" "(some mining XP to reset)"
+check "$([ "$(row_count "SELECT * FROM recipe_log WHERE entity_id = $MYENT")" -gt 0 ] && echo true || echo false)" "(recipes made above, on record)"
+assert_ok "admin_reset_skills $MYENT" "the admin resets every skill"
+assert_eq "$(row_count "SELECT * FROM skill_xp WHERE entity_id = $MYENT")" "0" "no XP left in any skill"
+assert_eq "$(row_count "SELECT * FROM recipe_log WHERE entity_id = $MYENT")" "0" "no recipe on record (the first-make bonus back)"
+assert_eq "$(row_count "SELECT * FROM order_filled WHERE entity_id = $MYENT")" "0" "no order filled"
+AXE_NOW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40034" 1)"
+assert_ok "wield $AXE_NOW" "wield a steel axe"
+assert_ok "admin_reset_bag $MYENT" "the admin resets the bag"
+assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")" "2" "two rows left: the starter kit"
+assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40024) $(qty_of 40034)" "1 1 0 0" "a Copper axe and a Copper pickaxe; no coal, no steel axe"
+assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "the steel axe it held is put away"
 
 assert_ok "set_world_level 0 0" "back to the greybox"
 assert_eq "$(row_count 'SELECT * FROM gather_node')" "0" "a level change takes the glade's nodes away"

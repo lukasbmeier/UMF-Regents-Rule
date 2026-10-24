@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/iron_sword.tscn" id="1_vdtdo"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_6wlxu"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="4_7dr8o"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword_blade.tres" id="5_jf3ot"]
+[ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="6_6mnnj"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/handle.tres" id="7_tnqpf"]
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="7_vdtdo"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="8_6wlxu"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="9_jck4g"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="10_qx8go"]
+
+[sub_resource type="Resource" id="Resource_770fj"]
+script = ExtResource("4_7dr8o")
+name = "blade"
+takes = 1
+pattern = ExtResource("5_jf3ot")
+core = true
+
+[sub_resource type="Resource" id="Resource_f7jwo"]
+script = ExtResource("4_7dr8o")
+name = "handle"
+takes = 2
+pattern = ExtResource("7_tnqpf")
+default_material = ExtResource("6_6mnnj")
+
+[sub_resource type="Resource" id="Resource_e2jcw"]
+script = ExtResource("4_7dr8o")
+name = "binding"
+takes = 2
+pattern = ExtResource("8_6wlxu")
+default_material = ExtResource("7_vdtdo")
+qty = 2
+
+[resource]
+script = ExtResource("9_jck4g")
+key = &"sword"
+name_format = "{m} sword"
+max_stack = 1
+weapon_kit = &"sword"
+skill = ExtResource("10_qx8go")
+parts = Array[ExtResource("4_7dr8o")]([SubResource("Resource_770fj"), SubResource("Resource_f7jwo"), SubResource("Resource_e2jcw")])
+quality = 2
+xp = 25
+afk_ms = 4000
+held_scene = ExtResource("1_vdtdo")
+description = "A sword: quick light cuts, a heavy, a lunge."
+id = 40006
+display_name = "Sword"

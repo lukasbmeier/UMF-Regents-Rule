@@ -652,3 +652,225 @@ the surface; a tree's trunk; each station wherever it is drawn; a level's rock s
 the skeletons turned as the adventurer; breaking the hulls, the layouts or the props list fails its
 checks); skilling playtest 62/0 + 7/0; combat playtest 50/0; content bake 18/0. Not seen yet by Luke:
 the collisions, the ore and the skeletons in play.
+
+## Step 17: the material table (MATERIALS.md step 1, 2026-10-23)
+
+Luke's materials deep-dive (`MATERIALS.md`, his calls in `GAME.md`) starts here: **materials are a
+generated table**. Nothing a player sees changes in this step: today's chain is re-expressed as the
+table's cells, with every id kept, and the baked `item.json` and `recipe.json` are byte for byte as before.
+
+- **Two new content types**: `MaterialDef` (`content/material/`: copper, iron, plain wood, oak, yew; each
+  its tier, the Power and tool speed it gives as a core, the trait it gives as a handle, what it is
+  gathered as) and `PatternDef` (`content/pattern/`: bar, axe head, sword blade, handle, axe, sword; each
+  what is made, its station and skill, and its PARTS, `PartSlot`: the material's raw form, this
+  material's cell of another pattern, any material's (the player's pick at the station), or a fixed item).
+  A pattern lists as many slots as it needs; one is its CORE.
+- **The cells are ordinary items and recipes** (`content/item/`, `content/recipe/`), marked: an item's
+  `material` and `pattern` (the group "In the material table"), a recipe's `from_table`. The nine cells
+  today: copper and iron bars, the iron axe head and sword blade, the iron axe and sword, the plain, oak
+  and yew handles. Copper is a hole in the head, blade, axe and sword columns (`not_made_of`) until step 2.
+  The bronze starters, rivets, arrows, the bow and the staff stay written by hand.
+- **Make the table** (`MaterialTable`): a button on every material and pattern in the Inspector, or
+  `godot --headless --path . -s res://game/regents/tools/make_material_table.gd` (`-- --check` only says).
+  It writes the cells that are missing and sets, on the ones there, ONLY what the table decides: an item's
+  name, stack, tool and tier, weapon and Power, part and trait; a recipe's name, station, skill, inputs,
+  output and part slot. **Everything else is yours and stays**: an item's colour, look and words; a
+  recipe's XP, rank, AFK time, how many of each input and its round (so the recipe bench keeps working).
+  A new cell starts those from its pattern and material ("New cells start with": the pattern's XP and
+  time scaled by the material's `work_scale_pct`, at the material's `rank`).
+- **A cell by hand**: tick its `by_hand` and the table leaves it and its recipe alone (steel's bar, made
+  from iron and coal, will be one). The table never deletes a file: a cell it no longer makes (a new hole)
+  is reported, to settle by hand, since its id may be in players' bags.
+- **The bake refuses a table out of date** (each material's `validate_with`): the Content panel and the
+  bake name the file, the field ("weapon_damage_pct: has 90, makes 100") and the fix (Make the table).
+- **Try it**: open `content/material/iron.tres`, set Weapon Damage Pct to 110, press **Make the table**:
+  the iron axe and sword go to 110 (the item check still holds tier dominance: no iron below the best
+  bronze). Put it back and press it again. A new metal is one new material: press the button and its bar, head, blade,
+  axe and sword appear with their recipes.
+- Not in this step (MATERIALS.md §10): copper as tier 1, coal and steel (step 2); the station's slots and
+  the player's trait pick (step 3; the recipe still has one pickable part, so a pattern may have one);
+  optional slots (an oil); bindings and wood-core bows (step 4); the Materials bench (step 7). The server
+  does not read materials or patterns yet (their JSON is baked for when it does).
+
+Tested: regents suite 2421/0 (30 new: five materials and six patterns, valid; the nine cells each the
+item it was, ids pinned; the table current and making it again a no-op; an iron axe at 90 % named by
+iron's own check with the file, the field and the fix, copper's silent; iron to tier 3 stales the axe
+alone; a recipe's inputs drifting caught; tuned XP never stale; a cell with no pattern, a pattern with no
+core or no {m}, a table recipe for a non-cell, refused; in a scratch project a new metal and wood made for
+real (four cells, four recipes, tier, speed, Power and trait from the material, new ids and files, seeded
+XP and time), made again a no-op, a renamed cell restored with its colour and XP kept, a tier change
+touching the axe alone, a hole that keeps its file, `by_hand` left alone). Each negative proven by
+breaking the table: drift never reported (6 checks fail), links equal whatever their id (1), `by_hand`
+made over (1), a tool's tier not its material's (3). The bake: `item.json` and `recipe.json` unchanged;
+content bake 18/0; `cargo check` (wasm) clean; skilling playtest 61/0 + 7/0 (61 or 62 by the dice: two
+of its checks run only when the AFK tree stands and the smelt leaves bars over). Published to
+`regents-rule` (data kept). Not seen by Luke yet: the Make the table button in his editor.
+
+## Step 18: copper, iron, steel (MATERIALS.md step 2, 2026-10-23)
+
+The slice's ladder (Luke, `MATERIALS.md` §8): **copper tier 1, iron tier 2, steel tier 3**, and coal.
+- **Copper is tier 1**: out of the table's holes, so it has an axe head, a sword blade, a pickaxe head, an
+  axe, a sword and a pickaxe like iron. **The starters are copper's cells**: the Bronze axe and Bronze
+  pickaxe are now the **Copper axe** and **Copper pickaxe**, the same items (ids 40001 and 40006, so every
+  bag that has one keeps it; their files are `copper_axe.tres`, `copper_pickaxe.tres`). Copper's Power is
+  the starter's 70, its tool speed 100.
+- **Two new patterns**, the pickaxe head (anvil, its own outline: thin points, a thick eye) and the pickaxe
+  (head, handle, rivets), so every metal has a pick. The **iron pickaxe** (tier 2) is the way to coal.
+- **Coal** (an item) from the **coal rock** (`content/node/coal_rock.tres`): mining tier 3, needs mining
+  rank 3 and a pick of tier 2, a harder seam than iron's (nine notches, a steeper bend, quicker strikes).
+  Three stand southwest of the iron rocks (`coal_1`..`coal_3` in `frontier.tscn`; the level re-baked).
+- **Steel** (`content/material/steel.tres`): tier 3, Power 140 (its swords and axes 140 to 168: tier
+  still dominates), tools at 75 % of the time, no ore of its own. **The steel bar is a cell by hand**:
+  two iron ore and two coal at the furnace (`recipe/steel_bar.tres`, smelting rank 3, a
+  hotter, narrower round than iron's). Everything else steel (heads, blades, axe, sword, pickaxe) is the
+  table's, from that bar.
+- **New cells' numbers** came from the patterns scaled by each material (copper half of iron's XP and
+  time, steel half again more, at rank 1, 1 and 3) and are yours to tune on the recipe bench; the iron
+  pickaxe's two recipes were set to rank 1, as the iron axe's are. Icons: the new items show their
+  initials until `tools/render_icons.tscn` is run (windowed).
+- **The table found its own bug** while making these: a new item and the recipe that takes it, made in
+  one run, wrote the item INSIDE the recipe (the item did not yet know its file), and the bake refused it.
+  Fixed (`MaterialTable._save` gives a new piece its path), and the suite now reads made recipes back from
+  disk. And "no recipe from the table" no longer hides why the table cannot make one (steel's bar,
+  unticked from `by_hand`, says "Steel has no raw form").
+- **Play it**: Play; mine copper (the starter pick), smelt, smith and assemble a copper pickaxe if you like;
+  mine iron, smelt iron bars, smith an **iron pickaxe head** and assemble the **iron pickaxe**; mine the
+  **coal rocks** (southwest, past the iron) at mining rank 3; smelt **steel bars** (2 iron ore + 2 coal, at
+  smelting rank 3); smith steel parts and assemble a steel axe, sword or pickaxe.
+
+Tested: regents suite 2426/0 (the ladder; the starters as copper's cells under 40001 and 40006; swords by
+tier 70-84, 100-120, 140-168, no overlap; the steel bar by hand, two iron ore and two coal, and the table's
+steel head taking it; the coal rock's tier, pick and rank; the iron pick works coal and the copper one not;
+iron to tier 3 stales both its axe and pickaxe; made recipes read back from disk link their cells; the
+lab's eighteen rounds). Negatives by breaking the table: a new piece not taking its path (the read-back
+check fails, naming every recipe that carried an item inside), "no recipe" hiding why (the steel check
+fails). Native `cargo test` all green (the regents test: six nodes, steel's coal); integration 1021/0 (29
+nodes placed); skilling playtest 62/0 + 7/0; combat playtest 50/0 (the Copper axe on the skill bar);
+content bake 18/0; `cargo check` (wasm) clean. Published to `regents-rule` (data kept: a returning player's
+arrival places the coal rocks and renames the starters in every bag). Not seen by Luke yet: any of it in
+play; the new items' icons (run `tools/render_icons.tscn`, windowed).
+
+## Step 19: the Tester page (owner, 2026-10-23)
+
+Luke, before playing the ladder: "I think Tester should have an admin button to reset the stats or maybe
+manually adjust them". He chose all four tools, on **any player**.
+- **Escape, Tester (admin)**: shown only to the admin (the identity your editor plays as, `Roles`), like
+  Rules (admin). Pick the player (you first, then everyone in the world by name; Refresh list), then:
+  - **Skills**: each skill's rank and XP for that player, a rank box and **Set** (down as well as up: the
+    XP becomes that rank's start).
+  - **Reset all skills**: every skill to rank 1 with no XP, no recipe on record (the first-make bonus back,
+    nothing stale), no work order filled; any work stops.
+  - **Give**: any item, how many, and a quality (0 to 1000, its grade shown) for one that does not stack;
+    a stacking item ignores it. Up to 10 000 of a stack at once, 20 of a tool or weapon.
+  - **Reset the bag**: emptied, the weapon put away, the starter kit (Copper axe and pickaxe) again.
+- The server does each (`admin_set_rank`, `admin_reset_skills`, `admin_give_item`, `admin_reset_bag` in
+  `server/src/game/regents.rs`) and refuses anyone who is not the admin, a target who is no player, a
+  rank past the skill's, a count past the caps. New reducers (rule 17: nothing an older build calls
+  changed), so a publish with `--codegen`; no wipe. The page: `game/regents/ui/tester_page.gd`, added to the
+  menu by the HUD (`regents_hud.gd`).
+- To try the ladder quickly: set mining and smithing and smelting to 3, give 20 iron ore and 20 coal, and
+  go to the furnace.
+
+Tested (step 19): regents suite (offline: each control sends its reducer with the right arguments; the grade
+shown for a quality; stacking items show no quality; the menu's button for the admin only, added once);
+integration (a stranger's four calls refused AND the player's XP, records, coal and bag unchanged; ranks set
+up and down, past the skill's refused, a rock no player; coal and two Masterwork steel axes given; caps;
+skills reset with records and orders; the bag reset to the starter kit, the held weapon put away). Negatives:
+the button shown to everyone (1 check fails), added every frame (1), the admin check taken out (8). Published
+with `--codegen` (data kept): a friend's build needs a NEW EXPORT.
+
+## Step 20: the crafting rework, choosing parts and traits (MATERIALS.md step 3, 2026-10-23)
+
+Luke's calls (`GAME.md`, `MATERIALS.md` §3-§4): a crafted item holds traits by grade, **Common 1, Fine 2,
+Masterwork 3**, and **the player picks which**; the station must say plainly how many this grade holds and
+which are in use. Built while Luke was away ("start the crafting rework ... I'll playtest it at the end").
+- **The station window lists each recipe once**, under what it makes (Handles, Axes, Swords, Pickaxes, Bars,
+  Axe heads...; what is no cell of the material table under Other): no more a line per handle.
+- **Each part slot is a list** of every part of its kind (the handle: plain, oak, yew, with how many you
+  have); pick one there.
+- **Traits**: "Made Fine (quality 650): holds 2 traits" (the grade from the best input in the bag, as the
+  server takes it: best first), then each trait the picked parts offer, a box to want it, numbered in the
+  order wanted, marked **in use**, **left out**, or **no room at this grade**. Before you have a head: what
+  each grade holds.
+- **The server** (`craft_choosing`: the part in each slot and the traits wanted, in order) keeps the choice
+  (`craft_choice`) for every batch, AFK or a round; each batch's made item keeps as many of the wanted traits
+  as ITS grade holds, the first first. **None wanted is a choice**: the item says `"t":[]` and has none (not
+  its handle's). `craft` and `craft_with` (older builds) are unchanged: every trait the parts offer.
+- **Hot rules** `regents.crafted_traits_common / _fine / _masterwork` (1, 2, 3; the Rules page).
+- **Recipes may now have several part slots** (`RecipeDef.part_slots`, from the pattern's player-picked
+  slots; `part_slot` stays the first, for older builds), so a binding or an oil that offers a trait is
+  content, not code. Today only the handle offers one (bindings with traits are step 4, Luke's §11).
+- **Defaults I chose while Luke was away (his to change)**: changing a part starts its recipe's trait picks
+  over (every trait the parts now offer, ticked); a lower-grade batch keeps the FIRST traits in the order
+  wanted; the pick is made at assembly and fixed (re-picking later stays §11's open question); the server's
+  reducer is `craft_choosing` (SpacetimeDB names `craft_v2` `craft_v_2`, so a digit was avoided).
+- **What a player sees today**: the same items as before (a Common axe holds one trait, and a handle is the
+  only part with one), now with the choice shown and the option to leave a handle's trait out.
+- **Play it**: at the workbench pick Iron axe; in Takes, set the handle's list to Oak; under Traits see the
+  grade your best head makes and Steady in use; untick it to make an axe with no trait; MAKE.
+- Luke confirmed these defaults the same day (`GAME.md`).
+- **Found by the playtest, fixed**: a list argument's type hint to the SDK is its ELEMENT's (`u32`, not
+  `vec_u32`: the SDK writes the length, then each element), and SpacetimeDB names a reducer `craft_v2`
+  `craft_v_2` (so it is `craft_choosing`). The unit suite cannot see either (offline, a call fails before it
+  is written); the skilling playtest does. And the integration suite's order board could leave a steel axe in
+  the bag (an order may now want a tool), which then was "the best axe": it now puts away what it gave.
+
+Tested: regents suite 2454/0 (new: traits by grade from the hot rules; the iron axe's slot, the plain
+handle to start; the oak picked offers Steady, sent to `craft_choosing` with it; unticked, none is sent; the
+yew re-ticks its Springy; logs are no handle; headings; the window: sixteen lines under five headings, the
+slot's list of three handles, "Made Fine (quality 650): holds 2 traits", Steady first and in use, unticked
+left out, a Common head's room for one, MAKE greyed with the oak handle gone); native `cargo test` all (the
+room by grade; the player's order; a lower grade keeps the first; offered only, none twice; none on purpose
+stays none, an old tool still has its handle's); integration 1024/0 (`craft_choosing` refuses a copper bar
+as a handle, a trait no part offers, one twice, two parts for one slot, a part for a recipe with none, an
+oak handle not in the bag; keeps the choice as sent, and none as none); skilling playtest 63/0 + 7/0 (the
+Iron axe made through the window: the oak handle in its slot, Steady in use, `{"q":..,"h":40016,"t":[40001]}`);
+combat playtest 50/0; content 18/0. Negatives by breaking the code: the grade's room ignored (native fails),
+none falling back to the handle (native), the picks ignored on the client (2 unit checks), the server taking
+any trait (2 integration checks). Published with `--codegen` (data kept). Not seen by Luke yet: all of it.
+
+## Step 21: after Luke's first look at the crafting rework (2026-10-23)
+
+Luke, with the station window open: the wording should lose the quality number; pick WHICH head (a Common
+or a Masterwork), greyed when you have none; there is no benefit to more than one trait yet (only handles
+offer one); and earlier materials should say what to expect at the workbench. His calls (`GAME.md`):
+- **The head by grade**: in Takes, the head is a list, "1 / 1  Masterwork iron axe head", "Fine ...",
+  "Common ..." (a grade you lack greyed; none at all, the list greyed). The window sends it
+  (`set_craft_grade`, then `craft_choosing`); every batch of that run takes only that grade's heads and the
+  run stops when they run out (`craft_grade`). When the grade picked is gone from the bag, the list shows the
+  best you have. An older build's `craft` takes the best of any grade, as before.
+- **Plainer traits**: "A Fine iron axe holds 2 traits"; before you have a head, what each grade holds. The
+  boxes are drawn as checkboxes (the style's button look had reached them).
+- **Rivets are a pattern now** (copper, iron, steel; copper rivets keep their id 40012), and the axe, sword and
+  pickaxe take ANY rivets in their binding slot, so Fine and Masterwork have something to hold.
+- **Every part offers a tool trait and a weapon trait**, and only the one that fits counts (an axe is a tool
+  first): oak Steady / Heavy, yew Springy / Balanced, copper rivets Gentle / Thirsting, iron Lucky / Brutal,
+  steel Prospector's / nothing until Keen (crits). This also fixed a step-20 mistake: an oak handle's Steady
+  was offered to a sword, where it does nothing. Each part's list says what it gives the item being made
+  ("Oak handle: Steady").
+- **Refit** (swap a made item's parts): at the workbench, under "Refit (swap its parts)", each made item in
+  your bag; pick new parts and traits as when making it; it costs each new part (the old one is lost) and
+  `regents.refit_bars` (2) bars of its head's metal; its head, quality and anything else it carries stay;
+  its traits are picked again within its grade's room. A made item now records its parts (`"p"`).
+- **Tooltips**: a material or a part says what it makes ("Makes: Iron axe head, Iron rivets...") and, for a
+  part, the trait it gives tools and weapons; in a part's list, the one it gives the item being made. In the
+  bag's card, the same lines.
+- **Trait ranks** were discussed, not built: both a better-made part and upgrades through use are liked, but
+  the minigames must be harder first and AFK crafting must still pay (`GAME.md`, `MATERIALS.md` §11).
+- **Play it**: Tester page: give two iron axe heads (quality 300 and 900), an oak handle, iron rivets, iron bars;
+  at the workbench pick Iron axe; the head's list by grade; the rivets' list (Iron rivets: Lucky); Masterwork
+  holds 3; make it; then under Refit pick it, swap the handle, see the cost, Refit.
+
+Tested (step 21): regents suite 2469/0 (each part's trait by what it is made into; two part slots, copper
+rivets' Gentle by default; the oak's Steady and Heavy; a sword's Heavy and Thirsting; the head's list by grade
+with the missing grade greyed and the best as fallback; "A Fine iron axe holds 2 traits"; a checkbox drawn
+as one; Gentle with no room at Common, moving up when Steady is left out; the refit line, its cost, REFIT
+greyed when nothing changes or bars are short; tooltips: what a material makes, a part's traits); native
+`cargo test` all (regents 35/0: the trait that fits, grades, the parts noted); integration 1051/0 (rivets'
+traits by kind; the grade refused when absent, kept, forgotten by an older build's craft; refit's refusals,
+its cost paid, the row rewritten with its parts and traits, nothing-to-change refused); skilling playtest
+63/0 + 7/0 (the axe made with Steady and Gentle as its grade holds, its parts noted); combat 50/0; content
+18/0. Negatives: a part giving its tool trait to a sword (native fails), a missing grade selectable (unit),
+a refit charging no bars (2 integration checks), the grade ignored (integration). Found while testing: the
+CLI's SQL runs an array's numbers together, and the integration's own crafted head can be any grade (it now
+clears heads first). Published with `--codegen` (data kept). Not seen by Luke yet: step 21 in play.

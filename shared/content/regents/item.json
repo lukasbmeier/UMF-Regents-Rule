@@ -8,13 +8,14 @@
 			"handle_trait": -1,
 			"id": 40001,
 			"max_stack": 1,
-			"name": "Bronze axe",
+			"name": "Copper axe",
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "axe",
 			"tool_tier": 1,
 			"weapon_damage_pct": 70,
-			"weapon_kit": "axe"
+			"weapon_kit": "axe",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -28,7 +29,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -42,7 +44,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -56,7 +59,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -70,7 +74,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -78,13 +83,14 @@
 			"handle_trait": -1,
 			"id": 40006,
 			"max_stack": 1,
-			"name": "Bronze pickaxe",
+			"name": "Copper pickaxe",
 			"part_tag": "",
 			"tool_speed_pct": 100,
 			"tool_tag": "pick",
 			"tool_tier": 1,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -98,7 +104,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -112,7 +119,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -126,7 +134,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -140,7 +149,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -154,21 +164,23 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
 			"ammo_for": "",
-			"handle_trait": -1,
+			"handle_trait": 40009,
 			"id": 40012,
 			"max_stack": 1000,
 			"name": "Copper rivets",
-			"part_tag": "",
+			"part_tag": "binding",
 			"tool_speed_pct": 100,
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": 40006
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -182,7 +194,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -196,7 +209,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -210,7 +224,8 @@
 			"tool_tag": "axe",
 			"tool_tier": 2,
 			"weapon_damage_pct": 100,
-			"weapon_kit": "axe"
+			"weapon_kit": "axe",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -224,7 +239,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": 40004
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -238,7 +254,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": 40003
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -252,7 +269,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -266,7 +284,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": "sword"
+			"weapon_kit": "sword",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -280,7 +299,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": "bow"
+			"weapon_kit": "bow",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -294,7 +314,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -308,7 +329,8 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": ""
+			"weapon_kit": "",
+			"weapon_trait": -1
 		},
 		{
 			"ammo_damage_pct": 100,
@@ -322,7 +344,248 @@
 			"tool_tag": "",
 			"tool_tier": 0,
 			"weapon_damage_pct": 100,
-			"weapon_kit": "staff"
+			"weapon_kit": "staff",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40024,
+			"max_stack": 1000,
+			"name": "Coal",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40025,
+			"max_stack": 1000,
+			"name": "Steel bar",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40026,
+			"max_stack": 1,
+			"name": "Copper axe head",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40027,
+			"max_stack": 1,
+			"name": "Copper sword blade",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40028,
+			"max_stack": 1,
+			"name": "Copper sword",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 70,
+			"weapon_kit": "sword",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40029,
+			"max_stack": 1,
+			"name": "Copper pickaxe head",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40030,
+			"max_stack": 1,
+			"name": "Iron pickaxe head",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40031,
+			"max_stack": 1,
+			"name": "Iron pickaxe",
+			"part_tag": "",
+			"tool_speed_pct": 85,
+			"tool_tag": "pick",
+			"tool_tier": 2,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40032,
+			"max_stack": 1,
+			"name": "Steel axe head",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40033,
+			"max_stack": 1,
+			"name": "Steel sword blade",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40034,
+			"max_stack": 1,
+			"name": "Steel axe",
+			"part_tag": "",
+			"tool_speed_pct": 75,
+			"tool_tag": "axe",
+			"tool_tier": 3,
+			"weapon_damage_pct": 140,
+			"weapon_kit": "axe",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40035,
+			"max_stack": 1,
+			"name": "Steel sword",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 140,
+			"weapon_kit": "sword",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40036,
+			"max_stack": 1,
+			"name": "Steel pickaxe head",
+			"part_tag": "",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": -1,
+			"id": 40037,
+			"max_stack": 1,
+			"name": "Steel pickaxe",
+			"part_tag": "",
+			"tool_speed_pct": 75,
+			"tool_tag": "pick",
+			"tool_tier": 3,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": 40010,
+			"id": 40038,
+			"max_stack": 1000,
+			"name": "Iron rivets",
+			"part_tag": "binding",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": 40005
+		},
+		{
+			"ammo_damage_pct": 100,
+			"ammo_for": "",
+			"handle_trait": 40011,
+			"id": 40039,
+			"max_stack": 1000,
+			"name": "Steel rivets",
+			"part_tag": "binding",
+			"tool_speed_pct": 100,
+			"tool_tag": "",
+			"tool_tier": 0,
+			"weapon_damage_pct": 100,
+			"weapon_kit": "",
+			"weapon_trait": -1
 		}
 	],
 	"owner": "regents",

@@ -18,8 +18,8 @@
 //!   mastery    every item gives XP in its skill (`skill_xp`); ranks gate nodes and recipes; a rank and a
 //!              better tool make work faster (`genre::regents::speed_pct`).
 //!
-//! A tool is the best of its tag in the bag (design #15); a new character is given a Bronze axe and a
-//! Bronze pickaxe, once. What came out is a `work_result` row everyone in the world sees for a moment.
+//! A tool is the best of its tag in the bag (design #15); a new character is given a Copper axe and a
+//! Copper pickaxe, once. What came out is a `work_result` row everyone in the world sees for a moment.
 
 use spacetimedb::{reducer, table, ReducerContext, ScheduleAt, Table, TimeDuration, Timestamp};
 
@@ -190,6 +190,28 @@ pub struct StarterKitGiven {
     pub at: Timestamp,
 }
 
+/// WHAT A PLAYER CHOSE FOR THE CRAFT THEY ARE ON (owner, 2026-10-23, MATERIALS.md step 3): the part in each of
+/// its recipe's part slots and the traits they want the made item to have, in their order. Kept while they
+/// work it AFK or play its round, so every batch is made as chosen. One a player; only the server reads it.
+#[table(accessor = craft_choice)]
+pub struct CraftChoice {
+    #[primary_key]
+    pub entity_id: u64,
+    pub recipe_id: u32,
+    pub parts: Vec<u32>,
+    pub traits: Vec<u32>,
+}
+
+/// THE GRADE OF CORE A PLAYER MAKES WITH (owner, 2026-10-23, after his playtest): the head picked BY GRADE at the
+/// station; a run takes only that grade's (best first) and stops when they run out. None: the best first.
+/// Set by `set_craft_grade` just before `craft_choosing`; one a player; only the server reads it.
+#[table(accessor = craft_grade)]
+pub struct CraftGrade {
+    #[primary_key]
+    pub entity_id: u64,
+    pub grade: u32,
+}
+
 #[table(accessor = work_schedule, scheduled(work_tick))]
 pub struct WorkSchedule {
     #[primary_key]
@@ -273,13 +295,40 @@ fn traited_damage(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], d
     dmg * crate::traits::mult(&traits, "damage", ons, &crate::traits::Against { target_pct, family }, trait_strength(ctx))
 }
 
+/// How many of `item` the bag holds that may be used at grade `grade` (`ANY_GRADE`: all; an item with no
+/// quality is any grade).
+fn count_graded(ctx: &ReducerContext, entity_id: u64, item: u32, grade: u32) -> u32 {
+    let (fine, mw) = grade_cuts(ctx);
+    ctx.db.inventory_item().owner_entity_id().filter(entity_id).filter(|s| s.item_def_id == item)
+        .filter(|s| grade == rules::ANY_GRADE || rules::quality_of(&s.instance_data).is_none_or(|q| rules::grade_of(q, fine, mw) == grade))
+        .map(|s| s.qty).sum()
+}
+
+/// The grade cut points now (`regents.grade_fine_q`, `regents.grade_masterwork_q`).
+fn grade_cuts(ctx: &ReducerContext) -> (u32, u32) {
+    (hot_number(ctx, hot::GRADE_FINE_Q).max(0.0) as u32, hot_number(ctx, hot::GRADE_MASTERWORK_Q).max(0.0) as u32)
+}
+
+/// The grade `entity_id` makes with (their `craft_grade`; none: `ANY_GRADE`).
+fn grade_for(ctx: &ReducerContext, entity_id: u64) -> u32 {
+    ctx.db.craft_grade().entity_id().find(entity_id).map_or(rules::ANY_GRADE, |g| g.grade)
+}
+
 /// Takes `qty` of `item` from the bag (the best quality first), noting the qualities taken (one per item
 /// that had one). False, taking nothing, when there are not enough.
 fn take_items(ctx: &ReducerContext, entity_id: u64, item: u32, qty: u32, taken: &mut Vec<u32>) -> bool {
-    if count_item(ctx, entity_id, item) < qty {
+    take_graded(ctx, entity_id, item, qty, rules::ANY_GRADE, taken)
+}
+
+/// `take_items` of grade `grade` only (`ANY_GRADE`: any).
+fn take_graded(ctx: &ReducerContext, entity_id: u64, item: u32, qty: u32, grade: u32, taken: &mut Vec<u32>) -> bool {
+    if count_graded(ctx, entity_id, item, grade) < qty {
         return false;
     }
-    let mut rows: Vec<InventoryItem> = ctx.db.inventory_item().owner_entity_id().filter(entity_id).filter(|s| s.item_def_id == item).collect();
+    let (fine, mw) = grade_cuts(ctx);
+    let mut rows: Vec<InventoryItem> = ctx.db.inventory_item().owner_entity_id().filter(entity_id).filter(|s| s.item_def_id == item)
+        .filter(|s| grade == rules::ANY_GRADE || rules::quality_of(&s.instance_data).is_none_or(|q| rules::grade_of(q, fine, mw) == grade))
+        .collect();
     rows.sort_by_key(|r| std::cmp::Reverse(rules::quality_of(&r.instance_data).unwrap_or(0)));
     let mut left = qty;
     for mut r in rows {
@@ -332,52 +381,104 @@ fn give_made(ctx: &ReducerContext, entity_id: u64, item: u32, qty: u32, quality:
     }
 }
 
-/// The part `r`'s part slot is filled with: `part` when it is of the slot's kind, the slot's own item for
-/// 0 (or a recipe without one: 0). Err when `part` is not of the slot's kind.
-fn part_for(r: &RecipeSeed, part: u32) -> Result<u32, String> {
-    if r.part_slot < 0 {
-        return if part == 0 { Ok(0) } else { Err(format!("a {} takes no part", r.name)) };
+/// The item in each of `r`'s part slots (MATERIALS.md step 3): `parts[n]` when it is of slot n's kind, the
+/// slot's own item for 0 or none given. Err when one is not of its slot's kind, or for more parts than slots
+/// ("takes no part" for a recipe with none).
+fn parts_for(r: &RecipeSeed, parts: &[u32]) -> Result<Vec<u32>, String> {
+    if r.part_slots.is_empty() && parts.iter().any(|p| *p != 0) {
+        return Err(format!("a {} takes no part", r.name));
     }
-    let own = r.inputs[r.part_slot as usize].0;
-    if part == 0 || part == own {
-        return Ok(own);
+    if parts.len() > r.part_slots.len() && !r.part_slots.is_empty() {
+        return Err(format!("a {} takes {} part(s), not {}", r.name, r.part_slots.len(), parts.len()));
     }
-    let kind = rules::item(own).map_or("", |i| i.part_tag);
-    match rules::item(part) {
-        Some(p) if !kind.is_empty() && p.part_tag == kind => Ok(part),
-        _ => Err(format!("a {} takes a {kind} there, not item {part}", r.name)),
-    }
+    r.part_slots.iter().enumerate().map(|(n, slot)| {
+        let own = r.inputs[*slot as usize].0;
+        let want = parts.get(n).copied().unwrap_or(0);
+        if want == 0 || want == own {
+            return Ok(own);
+        }
+        let kind = rules::item(own).map_or("", |i| i.part_tag);
+        match rules::item(want) {
+            Some(p) if !kind.is_empty() && p.part_tag == kind => Ok(want),
+            _ => Err(format!("a {} takes a {kind} there, not item {want}", r.name)),
+        }
+    }).collect()
 }
 
-/// `r`'s inputs for one batch with its part slot filled by `part` (see `part_for`).
-fn inputs_with(r: &RecipeSeed, part: u32) -> Vec<(u32, u32)> {
-    r.inputs.iter().enumerate().map(|(i, (item, qty))| if i as i32 == r.part_slot && part != 0 { (part, *qty) } else { (*item, *qty) }).collect()
+/// The traits `parts` offer item `made`: each part's that fits it (a tool's for a tool, a weapon's for a
+/// weapon: `rules::offered_for`), in slot order, none twice.
+fn offered_traits(parts: &[u32], made: u32) -> Vec<u32> {
+    let Some(made) = rules::item(made) else { return Vec::new() };
+    let mut out: Vec<u32> = Vec::new();
+    for t in parts.iter().filter_map(|p| rules::item(*p)).map(|p| rules::offered_for(p, made)) {
+        if t != 0 && !out.contains(&t) {
+            out.push(t);
+        }
+    }
+    out
 }
 
-/// The first input of `r` (its part slot filled by `part`) the bag lacks for one batch, or None.
-fn missing_input(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, part: u32) -> Option<(u32, u32)> {
-    inputs_with(r, part).into_iter().find(|(item, qty)| count_item(ctx, entity_id, *item) < *qty)
+/// `r`'s inputs for one batch with its part slots filled by `parts` (as `parts_for` gave them).
+fn inputs_with(r: &RecipeSeed, parts: &[u32]) -> Vec<(u32, u32)> {
+    r.inputs.iter().enumerate().map(|(i, (item, qty))| match r.part_slots.iter().position(|s| *s as usize == i) {
+        Some(n) => (parts.get(n).copied().unwrap_or(*item), *qty),
+        None => (*item, *qty),
+    }).collect()
 }
 
-/// One batch of `r` made with `part` in its part slot: its inputs taken, its output given (as good as
-/// `round_quality`, or its inputs; a handle adds its quality and goes on the tool). None, making nothing,
-/// when the bag lacks an input. Else the quality made (-1 for none).
-fn make_batch(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, round_quality: u32, part: u32) -> Option<i32> {
-    if missing_input(ctx, entity_id, r, part).is_some() {
+/// The first input of `r` (its part slots filled by `parts`) the bag lacks for one batch at grade `grade`, or None.
+fn missing_input(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, parts: &[u32], grade: u32) -> Option<(u32, u32)> {
+    inputs_with(r, parts).into_iter().find(|(item, qty)| count_graded(ctx, entity_id, *item, grade) < *qty)
+}
+
+/// What `entity_id` chose for `r` (its craft choice, when it is for `r`); else, for work begun by a build from
+/// before the choice: `legacy_part` in its one part slot and every trait the parts offer.
+fn choice_for(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, legacy_part: u32) -> (Vec<u32>, Vec<u32>) {
+    if let Some(c) = ctx.db.craft_choice().entity_id().find(entity_id).filter(|c| c.recipe_id == r.id) {
+        return (c.parts, c.traits);
+    }
+    let given: Vec<u32> = if legacy_part == 0 { Vec::new() } else { vec![legacy_part] };
+    let parts = parts_for(r, &given).or_else(|_| parts_for(r, &[])).unwrap_or_default();
+    let traits = offered_traits(&parts, r.output);
+    (parts, traits)
+}
+
+/// How many traits a crafted item of quality `q` holds now (the hot rules: its grade's count).
+fn trait_room(ctx: &ReducerContext, q: u32) -> u32 {
+    let n = |v: f64| v.max(0.0) as u32;
+    rules::crafted_trait_room(q, n(hot_number(ctx, hot::GRADE_FINE_Q)), n(hot_number(ctx, hot::GRADE_MASTERWORK_Q)),
+        n(hot_number(ctx, hot::CRAFTED_TRAITS_COMMON)), n(hot_number(ctx, hot::CRAFTED_TRAITS_FINE)), n(hot_number(ctx, hot::CRAFTED_TRAITS_MASTERWORK)))
+}
+
+/// One batch of `r` made with `parts` in its part slots: its inputs taken, its output given (as good as
+/// `round_quality`, or its inputs). An assembled item gets the TRAITS chosen (`traits`, in the player's order,
+/// those its parts offer), as many as its grade holds (owner, 2026-10-23: Common 1, Fine 2, Masterwork 3;
+/// `regents.crafted_traits_*`); a trait never touches quality, which is Power. None, making nothing, when the
+/// bag lacks an input. Else the quality made (-1 for none).
+fn make_batch(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, round_quality: u32, parts: &[u32], traits: &[u32]) -> Option<i32> {
+    let grade = grade_for(ctx, entity_id);
+    if missing_input(ctx, entity_id, r, parts, grade).is_some() {
         return None;
     }
     let mut taken: Vec<u32> = Vec::new();
-    for (item, qty) in inputs_with(r, part) {
-        take_items(ctx, entity_id, item, qty, &mut taken);
+    for (item, qty) in inputs_with(r, parts) {
+        take_graded(ctx, entity_id, item, qty, grade, &mut taken);
     }
-    // The handle gives the tool its TRAIT (template DECISIONS #275), never quality: quality is Power.
-    let handle = if r.part_slot >= 0 && part != 0 { Some(part) } else { None };
     let quality = match r.quality {
         rules::QUALITY_FROM_ROUND => Some(round_quality.min(1000)),
         rules::QUALITY_FROM_INPUTS => Some(taken.iter().copied().max().unwrap_or(0).min(1000)),
         _ => None,
     };
-    give_made(ctx, entity_id, r.output, r.output_qty, quality, if quality.is_some() { handle } else { None });
+    match quality {
+        Some(q) if !r.part_slots.is_empty() => {
+            let kept = rules::crafted_traits(traits, &offered_traits(parts, r.output), trait_room(ctx, q));
+            let data = rules::made_data(q, parts, &kept);
+            for _ in 0..r.output_qty {
+                ctx.db.inventory_item().insert(InventoryItem { id: 0, owner_entity_id: entity_id, item_def_id: r.output, qty: 1, slot: -1, instance_data: data.clone() });
+            }
+        }
+        _ => give_made(ctx, entity_id, r.output, r.output_qty, quality, None),
+    }
     Some(quality.map_or(-1, |q| q as i32))
 }
 
@@ -463,6 +564,101 @@ pub fn grant_xp(ctx: &ReducerContext, entity_id: u64, skill_id: u32, xp: u32) ->
     crate::module::require_admin(ctx)?;
     rules::skill(skill_id).ok_or("grant_xp: no such skill")?;
     add_xp(ctx, entity_id, skill_id, xp);
+    Ok(())
+}
+
+// --- THE TESTER PAGE (owner, 2026-10-23): the admin sets any player's ranks, resets their skills, gives them
+// items and resets their bag, to try a stretch of the game without playing up to it. Admin only; new
+// reducers, so nothing an older build calls changes (rule 17). The client's page: `ui/tester_page.gd`.
+
+/// The player `entity_id`, or an error naming `verb`.
+fn tester_target(ctx: &ReducerContext, entity_id: u64, verb: &str) -> Result<(), String> {
+    crate::module::require_admin(ctx)?;
+    if ctx.db.player().entity_id().find(entity_id).is_none() {
+        return Err(format!("{verb}: {entity_id} is no player"));
+    }
+    Ok(())
+}
+
+/// Admin: `entity_id`'s rank in `skill_id` becomes `rank` (its XP the rank's start: down as well as up).
+#[reducer]
+pub fn admin_set_rank(ctx: &ReducerContext, entity_id: u64, skill_id: u32, rank: u32) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_set_rank")?;
+    let s = rules::skill(skill_id).ok_or("admin_set_rank: no such skill")?;
+    let xp = rules::xp_for_rank(s, rank).ok_or_else(|| format!("admin_set_rank: {} has ranks 1 to {}", s.name, rules::max_rank(s)))?;
+    match ctx.db.skill_xp().entity_id().filter(entity_id).find(|r| r.skill_id == skill_id) {
+        Some(mut r) => {
+            r.xp = xp;
+            ctx.db.skill_xp().id().update(r);
+        }
+        None => {
+            ctx.db.skill_xp().insert(SkillXp { id: 0, entity_id, skill_id, xp });
+        }
+    }
+    log::info!("regents: the admin set {entity_id}'s {} to rank {rank} ({xp} XP)", s.name);
+    Ok(())
+}
+
+/// Admin: `entity_id` starts over in every skill: no XP, no recipe made before (the first-make bonus
+/// back, nothing stale), no work order filled. Whatever they were working at stops.
+#[reducer]
+pub fn admin_reset_skills(ctx: &ReducerContext, entity_id: u64) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_reset_skills")?;
+    stop_work(ctx, entity_id);
+    let xp: Vec<u64> = ctx.db.skill_xp().entity_id().filter(entity_id).map(|r| r.id).collect();
+    for id in xp {
+        ctx.db.skill_xp().id().delete(id);
+    }
+    let logs: Vec<u64> = ctx.db.recipe_log().entity_id().filter(entity_id).map(|r| r.id).collect();
+    for id in logs {
+        ctx.db.recipe_log().id().delete(id);
+    }
+    let filled: Vec<u64> = ctx.db.order_filled().iter().filter(|f| f.entity_id == entity_id).map(|f| f.id).collect();
+    for id in filled {
+        ctx.db.order_filled().id().delete(id);
+    }
+    log::info!("regents: the admin reset {entity_id}'s skills");
+    Ok(())
+}
+
+/// Admin: `qty` of item `item_id` into `entity_id`'s bag. One that does not stack (a tool, a weapon, a
+/// part) comes at quality `quality` (thousandths, at most 1000: its grade); a stacking item has none, and
+/// `quality` is ignored. At most `ADMIN_GIVE_ONE_BY_ONE` of one that does not stack, `ADMIN_GIVE_MAX` of any.
+#[reducer]
+pub fn admin_give_item(ctx: &ReducerContext, entity_id: u64, item_id: u32, qty: u32, quality: u32) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_give_item")?;
+    let it = rules::item(item_id).ok_or("admin_give_item: no such item")?;
+    let one_by_one = it.max_stack == 1;
+    let cap = if one_by_one { ADMIN_GIVE_ONE_BY_ONE } else { ADMIN_GIVE_MAX };
+    if qty == 0 || qty > cap {
+        return Err(format!("admin_give_item: 1 to {cap} of {} at once", it.name));
+    }
+    let q = if one_by_one { Some(quality.min(1000)) } else { None };
+    give_items(ctx, entity_id, item_id, qty, q);
+    log::info!("regents: the admin gave {entity_id} {qty} {}", it.name);
+    Ok(())
+}
+
+/// The most of a stacking item `admin_give_item` gives at once, and of one that does not stack (a row each).
+const ADMIN_GIVE_MAX: u32 = 10_000;
+const ADMIN_GIVE_ONE_BY_ONE: u32 = 20;
+
+/// Admin: `entity_id`'s bag is emptied and the starter kit given again (the Copper axe and pickaxe); the
+/// weapon put away and any work stopped. What lies on the ground stays.
+#[reducer]
+pub fn admin_reset_bag(ctx: &ReducerContext, entity_id: u64) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_reset_bag")?;
+    stop_work(ctx, entity_id);
+    ctx.db.wielded().entity_id().delete(entity_id);
+    stop_block(ctx, entity_id);
+    end_cast(ctx, entity_id);
+    let rows: Vec<u64> = ctx.db.inventory_item().owner_entity_id().filter(entity_id).map(|r| r.id).collect();
+    for id in rows {
+        ctx.db.inventory_item().id().delete(id);
+    }
+    ctx.db.starter_kit_given().entity_id().delete(entity_id);
+    starter_kit(ctx, entity_id);
+    log::info!("regents: the admin reset {entity_id}'s bag");
     Ok(())
 }
 
@@ -711,17 +907,112 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
 /// A recipe with a part slot uses the slot's own item (`craft_with` picks another).
 #[reducer]
 pub fn craft(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: bool) -> Result<(), String> {
-    craft_impl(ctx, station_id, recipe_id, active, 0)
+    craft_impl(ctx, station_id, recipe_id, active, &[], None)
 }
 
 /// `craft`, with `part` (an item id) in the recipe's part slot: an Iron axe with an oak or a yew handle
 /// (owner, 2026-10-19). 0: the slot's own item. A new reducer, so `craft`'s arguments never change (rule 17).
 #[reducer]
 pub fn craft_with(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: bool, part: u32) -> Result<(), String> {
-    craft_impl(ctx, station_id, recipe_id, active, part)
+    let given: Vec<u32> = if part == 0 { Vec::new() } else { vec![part] };
+    craft_impl(ctx, station_id, recipe_id, active, &given, None)
 }
 
-fn craft_impl(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: bool, part: u32) -> Result<(), String> {
+/// CRAFT, CHOOSING (owner, 2026-10-23, MATERIALS.md step 3): the part in each of the recipe's part slots
+/// (`parts`, one per slot in order; 0 or none given: the slot's own item) and the TRAITS the made item should
+/// have (`traits`, in the order wanted: each one a chosen part offers, none twice; none at all is a choice
+/// too). Each batch keeps as many as its grade holds (`regents.crafted_traits_*`), the first first. A new
+/// reducer, so `craft` and `craft_with` stay as they were for older builds (they take every trait offered).
+#[reducer]
+pub fn craft_choosing(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: bool, parts: Vec<u32>, traits: Vec<u32>) -> Result<(), String> {
+    craft_impl(ctx, station_id, recipe_id, active, &parts, Some(traits))
+}
+
+/// THE GRADE TO MAKE WITH (owner, 2026-10-23, after his playtest): the head (any input with a quality) is picked
+/// by grade at the station, 0 Common, 1 Fine, 2 Masterwork; `ANY_GRADE` (3): the best first, as before. Sent
+/// before `craft_choosing`; every batch of the next craft takes only that grade's.
+#[reducer]
+pub fn set_craft_grade(ctx: &ReducerContext, grade: u32) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "craft")?;
+    if grade > rules::ANY_GRADE {
+        return Err(format!("set_craft_grade: grades are 0 to 2 ({} for any)", rules::ANY_GRADE));
+    }
+    ctx.db.craft_grade().entity_id().delete(me);
+    if grade != rules::ANY_GRADE {
+        ctx.db.craft_grade().insert(CraftGrade { entity_id: me, grade });
+    }
+    Ok(())
+}
+
+/// REFIT (owner, 2026-10-23, after his playtest): swap the parts of an item already made (`item_row`, yours) at the
+/// station it is made at: `parts` as `craft_choosing` takes them, `traits` the ones wanted, in order. Each part
+/// changed is used up (the old one is lost), and `regents.refit_bars` of the bar its head was made from are paid;
+/// the head, the quality and anything else the item carries stay; its traits are picked again within its grade's
+/// room.
+#[reducer]
+pub fn refit(ctx: &ReducerContext, station_id: u64, item_row: u64, parts: Vec<u32>, traits: Vec<u32>) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "craft")?;
+    crate::module::require_can_act(ctx, me, "refit")?;
+    let (st, _) = near_station(ctx, me, station_id, "refit")?;
+    let row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me).ok_or("refit: that is not in your bag")?;
+    let r = rules::RECIPES.iter().find(|r| r.output == row.item_def_id && !r.part_slots.is_empty())
+        .ok_or_else(|| format!("refit: a {} is not made of parts", rules::item(row.item_def_id).map_or("?", |i| i.name)))?;
+    if r.station != st.key {
+        return Err(format!("refit: a {} is refitted at the {}", r.name, r.station));
+    }
+    let new_parts = parts_for(r, &parts).map_err(|e| format!("refit: {e}"))?;
+    let old_parts = {
+        let had = rules::parts_of_row(&row.instance_data);
+        parts_for(r, &had).unwrap_or_else(|_| parts_for(r, &[]).unwrap_or_default())
+    };
+    let offered = offered_traits(&new_parts, r.output);
+    for (i, id) in traits.iter().enumerate() {
+        if !offered.contains(id) {
+            return Err(format!("refit: a {} with those parts offers no trait {id}", r.name));
+        }
+        if traits[..i].contains(id) {
+            return Err(format!("refit: trait {id} is wanted twice"));
+        }
+    }
+    // What it costs: each part changed (as many as the recipe takes), and the bars of its head's metal.
+    let mut cost: Vec<(u32, u32)> = Vec::new();
+    for (n, slot) in r.part_slots.iter().enumerate() {
+        if new_parts.get(n) != old_parts.get(n) {
+            cost.push((new_parts[n], r.inputs[*slot as usize].1));
+        }
+    }
+    if cost.is_empty() && rules::traits_of_row(&row.instance_data) == traits {
+        return Err("refit: that is how it is already".into());
+    }
+    let bars = hot_number(ctx, hot::REFIT_BARS).max(0.0) as u32;
+    let core = r.inputs.iter().enumerate().find(|(i, _)| !r.part_slots.contains(&(*i as i32))).map(|(_, (item, _))| *item);
+    let fee = core.and_then(|c| rules::RECIPES.iter().find(|x| x.output == c)).and_then(|x| x.inputs.first()).map(|(item, _)| *item);
+    if let Some(f) = fee {
+        if bars > 0 {
+            cost.push((f, bars));
+        }
+    }
+    for (item, qty) in &cost {
+        if count_item(ctx, me, *item) < *qty {
+            return Err(format!("refit: it takes {qty} {} (you have {})", rules::item(*item).map_or("?", |i| i.name), count_item(ctx, me, *item)));
+        }
+    }
+    let mut taken: Vec<u32> = Vec::new();
+    for (item, qty) in &cost {
+        take_items(ctx, me, *item, *qty, &mut taken);
+    }
+    let q = rules::quality_of(&row.instance_data).unwrap_or(0);
+    let kept = rules::crafted_traits(&traits, &offered, trait_room(ctx, q));
+    let mut fresh = row;
+    fresh.instance_data = rules::made_data(q, &new_parts, &kept);
+    ctx.db.inventory_item().id().update(fresh);
+    log::info!("regents: {me} refits a {} with {:?}, traits {:?}", r.name, new_parts, kept);
+    Ok(())
+}
+
+fn craft_impl(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: bool, parts: &[u32], traits: Option<Vec<u32>>) -> Result<(), String> {
     let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
     crate::module::spend_rate(ctx, me, "craft")?;
     crate::module::require_can_act(ctx, me, "craft")?;
@@ -730,12 +1021,36 @@ fn craft_impl(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: boo
     if r.station != st.key {
         return Err(format!("craft: a {} is not made at the {}", r.name, st.key));
     }
-    let part = part_for(r, part).map_err(|e| format!("craft: {e}"))?;
+    let parts = parts_for(r, parts).map_err(|e| format!("craft: {e}"))?;
+    let offered = offered_traits(&parts, r.output);
+    // An older build's craft takes any grade (the best first); `craft_choosing` the grade set just before.
+    if traits.is_none() {
+        ctx.db.craft_grade().entity_id().delete(me);
+    }
+    let grade = grade_for(ctx, me);
+    let traits = match traits {
+        None => offered.clone(),
+        Some(t) => {
+            for (i, id) in t.iter().enumerate() {
+                if !offered.contains(id) {
+                    return Err(format!("craft: a {} made with those parts offers no trait {id}", r.name));
+                }
+                if t[..i].contains(id) {
+                    return Err(format!("craft: trait {id} is wanted twice"));
+                }
+            }
+            t
+        }
+    };
     need_rank(ctx, me, r.skill, r.min_rank, "craft")?;
-    if let Some((item, need)) = missing_input(ctx, me, r, part) {
-        return Err(format!("craft: a {} needs {need} {} (you have {})", r.name, rules::item(item).map_or("?", |i| i.name), count_item(ctx, me, item)));
+    if let Some((item, need)) = missing_input(ctx, me, r, &parts, grade) {
+        let what = if grade == rules::ANY_GRADE { String::new() } else { format!(" of grade {grade}") };
+        return Err(format!("craft: a {} needs {need} {}{what} (you have {})", r.name, rules::item(item).map_or("?", |i| i.name), count_graded(ctx, me, item, grade)));
     }
     stop_work(ctx, me);
+    ctx.db.craft_choice().entity_id().delete(me);
+    ctx.db.craft_choice().insert(CraftChoice { entity_id: me, recipe_id: r.id, parts: parts.clone(), traits });
+    let part = parts.first().copied().unwrap_or(0);
     if active && !matches!(r.minigame, Minigame::None) {
         let ttl = r.minigame.duration_ms() * 1000 + ROUND_GRACE_MICROS;
         crate::module::issue_genre_challenge(ctx, me, r.minigame.challenge_kind(), rules::payload_with_part(station_id, r.id, 100, part), ttl)?;
@@ -872,14 +1187,15 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
                 ctx.db.afk_work().entity_id().delete(row.entity_id);
                 continue;
             };
-            match make_batch(ctx, row.entity_id, r, r.afk_quality, row.tool_item) {
+            let (parts, traits) = choice_for(ctx, row.entity_id, r, row.tool_item);
+            match make_batch(ctx, row.entity_id, r, r.afk_quality, &parts, &traits) {
                 Some(q) => {
                     let xp = craft_paid_xp(ctx, row.entity_id, r, 1);
                     let rank = add_xp(ctx, row.entity_id, r.skill, xp);
                     report(ctx, row.entity_id, row.world_id, row.target_id, r.skill, r.output, r.output_qty, 0, false, false, false, -1, q, xp, rank);
                 }
                 None => {
-                    let missing = missing_input(ctx, row.entity_id, r, row.tool_item).map_or(0, |(i, _)| i);
+                    let missing = missing_input(ctx, row.entity_id, r, &choice_for(ctx, row.entity_id, r, row.tool_item).0, grade_for(ctx, row.entity_id)).map_or(0, |(i, _)| i);
                     report(ctx, row.entity_id, row.world_id, row.target_id, r.skill, missing, 0, 0, false, true, false, -1, -1, 0, 0);
                     ctx.db.afk_work().entity_id().delete(row.entity_id);
                     continue;
@@ -962,10 +1278,10 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
         } else {
             rules::whole_items(rules::active_yield_milli(r.afk_ms, r.minigame.duration_ms(), mult, score), rules::roll_permille(salt))
         };
-        let part = part_for(r, rules::parse_part(&ch.payload)).unwrap_or(0);
+        let (parts, traits) = choice_for(ctx, ch.entity_id, r, rules::parse_part(&ch.payload));
         let (mut made, mut quality) = (0u32, -1i32);
         for _ in 0..batches {
-            match make_batch(ctx, ch.entity_id, r, score as u32, part) {
+            match make_batch(ctx, ch.entity_id, r, score as u32, &parts, &traits) {
                 Some(q) => {
                     made += 1;
                     quality = q;

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="NodeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/mining/crack_params.gd" id="1_qp13c"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_wr0x1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="3_w372v"]
+[ext_resource type="Resource" path="res://game/regents/content/item/uncut_gem.tres" id="4_l67kj"]
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="5_8orc2"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/mining.tres" id="6_0eo1h"]
+[ext_resource type="Resource" path="res://game/regents/content/item/coal.tres" id="7_cbsd3"]
+
+[sub_resource type="Resource" id="Resource_qpf05"]
+script = ExtResource("1_qp13c")
+display_name = "Coal rock"
+swing_ms = 250
+stagger_ms = 800
+notches = 9
+bend_pm = 220
+radius_pm = 60
+reveal_ahead = 2
+target_hits = 19
+
+[resource]
+script = ExtResource("5_8orc2")
+skill = ExtResource("6_0eo1h")
+tier = 3
+minigame = SubResource("Resource_qpf05")
+yield_item = ExtResource("7_cbsd3")
+tool_tag = &"pick"
+min_tool_tier = 2
+min_rank = 3
+xp = 26
+afk_ms_per_item = 7000
+deplete_permille = 200
+regrow_s = 50.0
+rare_item = ExtResource("4_l67kj")
+rare_permille = 9
+models = Array[PackedScene]([ExtResource("2_wr0x1"), ExtResource("3_w372v")])
+model_scale = 0.9
+depleted = 1
+depleted_color = Color(0.3, 0.29, 0.29, 1)
+ore_color = Color(0.1, 0.1, 0.12, 1)
+id = 40006
+display_name = "Coal rock"
+designer_notes = "Mining tier 3 (MATERIALS.md step 2): needs mining rank 3 and a pick of tier 2 (iron). Its round is played in the skilling lab."

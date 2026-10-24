@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDef" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="t_material"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/axe_head.tres" id="t_pattern"]
 
 [resource]
 script = ExtResource("1_item")
@@ -9,3 +11,5 @@ color = Color(0.62, 0.64, 0.68, 1)
 description = "Forged at the anvil: its quality is the smith's."
 id = 40014
 display_name = "Iron axe head"
+material = ExtResource("t_material")
+pattern = ExtResource("t_pattern")

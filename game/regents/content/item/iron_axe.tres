@@ -1,7 +1,9 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemDef" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
 [ext_resource type="PackedScene" path="res://game/regents/skilling/woodcutting/iron_axe.tscn" id="2_held"]
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="t_material"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/axe.tres" id="t_pattern"]
 
 [resource]
 script = ExtResource("1_item")
@@ -16,3 +18,5 @@ color = Color(0.70, 0.72, 0.76, 1)
 description = "Fells yews, and faster."
 id = 40015
 display_name = "Iron axe"
+material = ExtResource("t_material")
+pattern = ExtResource("t_pattern")

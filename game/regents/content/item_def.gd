@@ -35,9 +35,13 @@ class_name ItemDef extends ContentDef
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
 @export var part_tag: StringName = &""
-## As a tool's HANDLE, the TRAIT it gives what it is made into (Tinkers'-style: the handle's wood; oak:
-## Steady, yew: Springy; template DECISIONS #275). Always the tool's, whatever its grade (owner, 2026-10-21).
+## As a part (a handle, a binding), the TRAIT it offers a TOOL it is made into (Tinkers'-style: the handle's
+## wood; oak: Steady, yew: Springy; template DECISIONS #275). The player picks which offered traits the item
+## keeps, as many as its grade holds (owner, 2026-10-23). The name is from when only handles had one.
 @export var handle_trait: TraitDef
+## The trait it offers a WEAPON (oak: Heavy, iron rivets: Brutal). An item that is both (an axe) takes the
+## tool's. None: nothing for weapons.
+@export var part_weapon_trait: TraitDef
 @export_group("How it shows")
 ## What a tool looks like in the hand while it works (a `HeldItem` scene), if it is a tool.
 @export var held_scene: PackedScene
@@ -48,6 +52,14 @@ class_name ItemDef extends ContentDef
 ## Its colour in the bag until it has an icon.
 @export var color: Color = Color(0.75, 0.6, 0.4)
 @export_multiline var description: String = ""
+@export_group("In the material table")
+## A CELL of the material table (`docs/regents_rule/MATERIALS.md`): made of this material in this
+## pattern. `MaterialTable` keeps its name, stack, tool, weapon, part and trait as the two say (Make the
+## table); its colour, looks and words are yours. Both empty: an item written by hand (ore, rivets).
+@export var material: MaterialDef
+@export var pattern: PatternDef
+## The cell is yours: the table leaves it and its recipe alone (an alloy made from two ores, say).
+@export var by_hand: bool = false
 
 static var _by_id: Dictionary[int, ItemDef] = {}
 
@@ -80,6 +92,7 @@ func to_bake() -> Dictionary:
 		"ammo_damage_pct": ammo_damage_pct,
 		"part_tag": String(part_tag),
 		"handle_trait": ContentDef.ref(handle_trait),
+		"weapon_trait": ContentDef.ref(part_weapon_trait),
 	}
 
 
@@ -101,11 +114,12 @@ func handle_trait_text() -> String:
 	return "%s: %s%s" % [handle_trait.display_name, handle_trait.gives, ("; " + handle_trait.costs) if not handle_trait.costs.is_empty() else ""]
 
 
-## THE TRAITS a bag row's item has (`"t":[ids]` in its `instance_data`). A tool made before traits were
-## (it noted only its handle, `"h"`) has its handle's. The server's twin: `traits_of_row`.
+## THE TRAITS a bag row's item has (`"t":[ids]` in its `instance_data`; `"t":[]` none ON PURPOSE, chosen at
+## the station). A tool made before traits were (it noted only its handle, `"h"`) has its handle's. The
+## server's twin: `traits_of_row`.
 static func trait_ids(instance_data: String) -> Array[int]:
 	var ids: Array[int] = Traits.ids_of(instance_data)
-	if ids.is_empty():
+	if ids.is_empty() and not instance_data.contains("\"t\":["):
 		var h: ItemDef = ItemDef.by_id(int(RegentsGrade.data_of(instance_data).get("h", -1)))
 		if h != null and h.handle_trait != null:
 			ids.append(h.handle_trait.id)
@@ -140,6 +154,14 @@ func validate() -> Array[String]:
 		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
 	if handle_trait != null and not handle_trait.applies_to.has(&"tool"):
 		out.append("its handle trait (%s) is not one a tool may have: its `applies_to` lacks \"tool\"" % handle_trait.display_name)
+	if part_weapon_trait != null and not _for_weapons(part_weapon_trait):
+		out.append("its weapon trait (%s) is not one a weapon may have: its `applies_to` names no weapon" % part_weapon_trait.display_name)
+	if part_tag == &"" and part_weapon_trait != null:
+		out.append("it has a weapon trait but is no part: set `part_tag`")
+	if (material == null) != (pattern == null):
+		out.append("a cell of the material table names both its material and its pattern (or neither: an item by hand)")
+	if by_hand and material == null:
+		out.append("`by_hand` is for a cell of the material table; an item with no material is by hand already")
 	if weapon_kit != &"":
 		# Tier dominates (owner, 2026-10-20): against every other weapon of its kit.
 		var kin: Array[ItemDef] = [self]
@@ -149,6 +171,72 @@ func validate() -> Array[String]:
 				kin.append(other)
 		out.append_array(RegentsGrade.tier_overlaps(kin).duplicate())
 	return out
+
+
+## Whether trait `t` is one a weapon may have (any of "weapon", "melee", "bow", "staff").
+static func _for_weapons(t: TraitDef) -> bool:
+	for tag: StringName in [&"weapon", &"melee", &"bow", &"staff"]:
+		if t.applies_to.has(tag):
+			return true
+	return false
+
+
+## THE TRAIT this part offers `made` (what it is assembled into): the tool trait for a tool (an axe too), else
+## the weapon trait for a weapon; only one that fits `made` (`TraitDef.applies_to` against its tags). Null for
+## none. The server's twin: `offered_for` (genre/regents/mod.rs).
+func trait_for(made: ItemDef) -> TraitDef:
+	if made == null:
+		return null
+	var t: TraitDef = handle_trait if made.tool_tag != &"" else (part_weapon_trait if made.weapon_kit != &"" else null)
+	if t == null:
+		return null
+	for tag: StringName in made.tags():
+		if t.applies_to.has(tag):
+			return t
+	return null
+
+
+## WHAT IT IS MADE INTO (owner, 2026-10-23: "more intuitive ... as to what you can expect when you get to the
+## workbench"): every recipe's output that takes it, or takes any part of its kind; names, sorted.
+func uses() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for r: RecipeDef in RecipeDef.all():
+		if r.output == null:
+			continue
+		var takes_it: bool = r.inputs.has(self)
+		for slot: int in r.pick_slots():
+			takes_it = takes_it or (part_tag != &"" and r.inputs[slot] != null and r.inputs[slot].part_tag == part_tag)
+		if takes_it and not out.has(r.output.display_name):
+			out.append(r.output.display_name)
+	out.sort()
+	return out
+
+
+## The part's traits in words: "On tools: Steady (gives; costs)", "On weapons: Heavy (...)"; empty for none.
+func part_lines() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for pair: Array in [["tools", handle_trait], ["weapons", part_weapon_trait]]:
+		var t: TraitDef = pair[1]
+		if t != null:
+			out.append("On %s: %s (%s%s)" % [pair[0], t.display_name, t.gives, "; " + t.costs if not t.costs.is_empty() else ""])
+	return out
+
+
+## ITS TOOLTIP: its name, its words, the traits it gives as a part (only the one for `made`, when given), and
+## what it is made into.
+func tooltip_for(made: ItemDef = null) -> String:
+	var lines: PackedStringArray = PackedStringArray([display_name])
+	if not description.is_empty():
+		lines.append(description)
+	if made != null:
+		var t: TraitDef = trait_for(made)
+		lines.append("On the %s: %s" % [made.display_name.to_lower(), "%s (%s%s)" % [t.display_name, t.gives, "; " + t.costs if not t.costs.is_empty() else ""] if t != null else "no trait"])
+	else:
+		lines.append_array(part_lines())
+	var u: PackedStringArray = uses()
+	if not u.is_empty():
+		lines.append("Makes: " + ", ".join(u))
+	return "\n".join(lines)
 
 
 ## The item with content id `item_id`, or null.

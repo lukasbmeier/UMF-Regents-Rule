@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="1_g4jef"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_vfbqm"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="4_ok5qn"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="5_8bnda"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="6_xly42"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="7_q3brr"]
+
+[sub_resource type="Resource" id="Resource_v17o1"]
+script = ExtResource("1_g4jef")
+display_name = "Iron sword blade"
+outline = PackedInt32Array(6, 10, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 10, 4)
+
+[sub_resource type="Resource" id="Resource_0unr2"]
+script = ExtResource("4_ok5qn")
+name = "bar"
+takes = 1
+pattern = ExtResource("5_8bnda")
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("6_xly42")
+key = &"sword_blade"
+name_format = "{m} sword blade"
+family = 0
+not_made_of = Array[ExtResource("2_vfbqm")]([])
+max_stack = 1
+tool_tag = &""
+weapon_kit = &""
+part_tag = &""
+carries_trait = false
+station = &"anvil"
+skill = ExtResource("7_q3brr")
+parts = Array[ExtResource("4_ok5qn")]([SubResource("Resource_0unr2")])
+output_qty = 1
+quality = 1
+xp = 32
+afk_ms = 8000
+minigame = SubResource("Resource_v17o1")
+description = "A sword's blade, shaped at the anvil: as good as its smith."
+id = 40003
+display_name = "Sword blade"
+designer_notes = ""

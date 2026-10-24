@@ -57,6 +57,21 @@ var round_def: ContentDef = null
 var xp: Dictionary[int, int] = {}
 ## The choice picked at each kind of station (its key: `_choice_key`).
 var recipe_pick: Dictionary[StringName, String] = {}
+## THE PARTS AND TRAITS CHOSEN (owner, 2026-10-23, MATERIALS.md step 3), per recipe id: the item in each of its
+## part slots (`parts_of`), and the traits wanted on what it makes, in order (`traits_of`; none picked yet:
+## every trait its parts offer). What the station's window sets; `work` sends both (`craft_choosing`).
+var part_pick: Dictionary[int, PackedInt32Array] = {}
+var trait_pick: Dictionary[int, PackedInt32Array] = {}
+## THE GRADE OF HEAD picked per recipe id (owner, 2026-10-23, after his playtest): 0 Common, 1 Fine, 2 Masterwork;
+## absent: the best the bag has. Sent as `set_craft_grade` before `craft_choosing`.
+var grade_pick: Dictionary[int, int] = {}
+## REFIT choices per bag row (owner, 2026-10-23): the part in each slot, the traits wanted in order.
+var refit_part_pick: Dictionary[int, PackedInt32Array] = {}
+var refit_trait_pick: Dictionary[int, PackedInt32Array] = {}
+## The bag read in place of our entity's (a test's; null: our own).
+var bag: SpaceTimeInventoryComponent = null
+## `set_craft_grade`'s "any grade" (the server's `ANY_GRADE`).
+const ANY_GRADE: int = 3
 ## Our record of each recipe (by id): {"made", "fresh_pm", "at_us"}, from our `recipe_log` rows.
 var recipe_log: Dictionary[int, Dictionary] = {}
 ## The work orders we have filled (order ids).
@@ -105,14 +120,283 @@ func choices_at(station: StationComponent) -> Array[Dictionary]:
 		for o: Dictionary in orders():
 			out.append({"order": o})
 		return out
-	for r: RecipeDef in station.recipes():
-		var parts: Array[ItemDef] = r.part_choices()
-		if parts.is_empty():
-			out.append({"recipe": r, "part": null})
-			continue
-		for i: int in parts.size():
-			if i == 0 or count_of(parts[i].id) > 0:
-				out.append({"recipe": r, "part": parts[i]})
+	# One a recipe (its parts are picked in the window, MATERIALS.md step 3), grouped by what it makes: a
+	# cell of the material table by its pattern, then its material's tier; the rest after, as listed.
+	var recipes: Array[RecipeDef] = station.recipes()
+	recipes.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return _order_key(a) < _order_key(b))
+	for r: RecipeDef in recipes:
+		out.append({"recipe": r})
+	# REFIT (owner, 2026-10-23): each item in the bag made here of parts, last, under its own heading.
+	var inv: SpaceTimeInventoryComponent = _bag()
+	if inv != null:
+		for st: SpaceTimeInventoryComponent.Stack in inv.items():
+			for r: RecipeDef in recipes:
+				if r.output != null and r.output.id == st.item_def_id and not r.pick_slots().is_empty():
+					out.append({"refit": st.id, "made_by": r, "data": st.instance_data})
+					break
+	return out
+
+
+## Where a recipe sorts in a station's list: by its output's pattern and material tier; not a cell, last.
+static func _order_key(r: RecipeDef) -> String:
+	var it: ItemDef = r.output
+	if it != null and it.pattern != null and it.material != null:
+		return "0 %06d %02d %06d" % [it.pattern.id, it.material.tier, r.id]
+	return "1 000000 00 %06d" % r.id
+
+
+## The heading a recipe sits under in a station's list ("Axes", "Bars"; "Other" for what is no cell).
+static func group_of(r: RecipeDef) -> String:
+	var it: ItemDef = r.output if r != null else null
+	return it.pattern.display_name + "s" if it != null and it.pattern != null else "Other"
+
+
+## The item in each of `r`'s part slots: the one picked there, while it is still of the slot's kind; else
+## the slot's own (the plain handle).
+func parts_of(r: RecipeDef) -> Array[ItemDef]:
+	var out: Array[ItemDef] = []
+	var picked: PackedInt32Array = part_pick.get(r.id, PackedInt32Array())
+	var slots: PackedInt32Array = r.pick_slots()
+	for n: int in slots.size():
+		var choices: Array[ItemDef] = r.part_choices(slots[n])
+		var it: ItemDef = choices[0] if not choices.is_empty() else null
+		for c: ItemDef in choices:
+			if n < picked.size() and c.id == picked[n]:
+				it = c
+		out.append(it)
+	return out
+
+
+## Put item `item_id` in `r`'s part slot `n` (the n-th of its part slots). The traits wanted start over as
+## every one the parts now offer (a yew handle picked: its Springy ticked).
+func set_part(r: RecipeDef, n: int, item_id: int) -> void:
+	trait_pick.erase(r.id)
+	var picked: PackedInt32Array = PackedInt32Array()
+	for it: ItemDef in parts_of(r):
+		picked.append(it.id if it != null else 0)
+	if n >= 0 and n < picked.size():
+		picked[n] = item_id
+	part_pick[r.id] = picked
+
+
+## The traits `parts` offer `made`: each part's that fits it (a tool's trait for a tool, an axe too; a weapon's
+## for a weapon: `ItemDef.trait_for`), in slot order, none twice.
+static func offered_traits(parts: Array[ItemDef], made: ItemDef) -> Array[TraitDef]:
+	var out: Array[TraitDef] = []
+	for it: ItemDef in parts:
+		var t: TraitDef = it.trait_for(made) if it != null else null
+		if t != null and not out.has(t):
+			out.append(t)
+	return out
+
+
+## The traits wanted on what `r` makes, in order: those picked that its parts still offer; none picked yet,
+## every one they offer.
+func traits_of(r: RecipeDef) -> Array[TraitDef]:
+	return _wanted(offered_traits(parts_of(r), r.output), trait_pick.get(r.id, null))
+
+
+## Want trait `trait_id` on what `r` makes (last in the order), or not.
+func want_trait(r: RecipeDef, trait_id: int, on: bool) -> void:
+	trait_pick[r.id] = _toggled(traits_of(r), trait_id, on)
+
+
+static func _wanted(offered: Array[TraitDef], picked: Variant) -> Array[TraitDef]:
+	if picked == null:
+		return offered
+	var out: Array[TraitDef] = []
+	for id: int in picked as PackedInt32Array:
+		for t: TraitDef in offered:
+			if t.id == id and not out.has(t):
+				out.append(t)
+	return out
+
+
+static func _toggled(now: Array[TraitDef], trait_id: int, on: bool) -> PackedInt32Array:
+	var ids: PackedInt32Array = PackedInt32Array()
+	for t: TraitDef in now:
+		if t.id != trait_id:
+			ids.append(t.id)
+	if on:
+		ids.append(trait_id)
+	return ids
+
+
+## THE CORE INPUT of `r` (the head: an input that does not stack and is no part slot), or null.
+static func core_of(r: RecipeDef) -> ItemDef:
+	var slots: PackedInt32Array = r.pick_slots()
+	for i: int in r.inputs.size():
+		if not slots.has(i) and r.inputs[i] != null and r.inputs[i].max_stack == 1:
+			return r.inputs[i]
+	return null
+
+
+## How many of `r`'s core the bag holds of each grade: {2: Masterwork, 1: Fine, 0: Common}.
+func core_grades(r: RecipeDef, inv: SpaceTimeInventoryComponent = null) -> Dictionary[int, int]:
+	var out: Dictionary[int, int] = {2: 0, 1: 0, 0: 0}
+	var core: ItemDef = core_of(r)
+	inv = inv if inv != null else _bag()
+	if core == null or inv == null:
+		return out
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		var q: int = RegentsGrade.quality_of(st.instance_data)
+		if st.item_def_id == core.id and q >= 0:
+			out[RegentsGrade.of_quality(q)] += st.qty
+	return out
+
+
+## The grade of core `r` is made with: the one picked while the bag has some, else the best it has; -1 none.
+func grade_of(r: RecipeDef, inv: SpaceTimeInventoryComponent = null) -> int:
+	var have: Dictionary[int, int] = core_grades(r, inv)
+	if grade_pick.has(r.id) and have.get(grade_pick[r.id], 0) > 0:
+		return grade_pick[r.id]
+	for g: int in [2, 1, 0]:
+		if have[g] > 0:
+			return g
+	return -1
+
+
+func _bag() -> SpaceTimeInventoryComponent:
+	if bag != null:
+		return bag
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	return ent.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent if ent != null else null
+
+
+## THE PARTS an item already made carries (`"p"`; one made before: its handle, then each slot's own).
+func parts_on(r: RecipeDef, instance_data: String) -> Array[ItemDef]:
+	var had: Array = RegentsGrade.data_of(instance_data).get("p", [])
+	if had.is_empty():
+		var h: int = int(RegentsGrade.data_of(instance_data).get("h", 0))
+		had = [h] if h > 0 else []
+	var out: Array[ItemDef] = []
+	var slots: PackedInt32Array = r.pick_slots()
+	for n: int in slots.size():
+		var it: ItemDef = r.inputs[slots[n]]
+		if n < had.size() and ItemDef.by_id(int(had[n])) != null:
+			it = ItemDef.by_id(int(had[n]))
+		out.append(it)
+	return out
+
+
+## REFIT bag row `row` (made by `r`, carrying `instance_data`): the parts picked for it (as it is, to start).
+func refit_parts(row: int, r: RecipeDef, instance_data: String) -> Array[ItemDef]:
+	var out: Array[ItemDef] = parts_on(r, instance_data)
+	var picked: PackedInt32Array = refit_part_pick.get(row, PackedInt32Array())
+	var slots: PackedInt32Array = r.pick_slots()
+	for n: int in mini(picked.size(), out.size()):
+		for c: ItemDef in r.part_choices(slots[n]):
+			if c.id == picked[n]:
+				out[n] = c
+	return out
+
+
+func set_refit_part(row: int, r: RecipeDef, instance_data: String, n: int, item_id: int) -> void:
+	refit_trait_pick.erase(row)
+	var picked: PackedInt32Array = PackedInt32Array()
+	for it: ItemDef in refit_parts(row, r, instance_data):
+		picked.append(it.id if it != null else 0)
+	if n >= 0 and n < picked.size():
+		picked[n] = item_id
+	refit_part_pick[row] = picked
+
+
+## The traits wanted on refitted row `row`: picked, else those it has that its parts still offer, else all.
+func refit_traits(row: int, r: RecipeDef, instance_data: String) -> Array[TraitDef]:
+	var offered: Array[TraitDef] = offered_traits(refit_parts(row, r, instance_data), r.output)
+	if refit_trait_pick.has(row):
+		return _wanted(offered, refit_trait_pick[row])
+	if not refit_part_pick.has(row):
+		return _wanted(offered, PackedInt32Array(ItemDef.trait_ids(instance_data)))
+	return offered
+
+
+func want_refit_trait(row: int, r: RecipeDef, instance_data: String, trait_id: int, on: bool) -> void:
+	refit_trait_pick[row] = _toggled(refit_traits(row, r, instance_data), trait_id, on)
+
+
+## What a refit of row `row` costs: [[item, qty], ...]: each part changed, and the bars of its head's metal.
+func refit_cost(row: int, r: RecipeDef, instance_data: String) -> Array:
+	var out: Array = []
+	var now: Array[ItemDef] = parts_on(r, instance_data)
+	var want: Array[ItemDef] = refit_parts(row, r, instance_data)
+	var slots: PackedInt32Array = r.pick_slots()
+	for n: int in want.size():
+		if want[n] != now[n]:
+			out.append([want[n], r.input_qty[slots[n]]])
+	var core: ItemDef = core_of(r)
+	var bars: int = int(HotRules.number(&"regents.refit_bars"))
+	for x: RecipeDef in RecipeDef.all():
+		if core != null and x.output == core and not x.inputs.is_empty() and bars > 0:
+			out.append([x.inputs[0], bars])
+			break
+	return out
+
+
+## What `refit` is sent for row `row` at station `target`.
+func refit_args(target: int, row: int, r: RecipeDef, instance_data: String) -> Array:
+	var parts: Array = []
+	for it: ItemDef in refit_parts(row, r, instance_data):
+		parts.append(it.id if it != null else 0)
+	var traits: Array = []
+	for t: TraitDef in refit_traits(row, r, instance_data):
+		traits.append(t.id)
+	return [target, row, parts, traits]
+
+
+## REFIT row `row` at station `target` as picked.
+func refit(target: int, row: int, r: RecipeDef, instance_data: String) -> ReducerRequest:
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"refit", refit_args(target, row, r, instance_data), ["u64", "u64", "u32", "u32"])
+	_watch(req)
+	return req
+
+
+## The quality `r` would make now (the best of its inputs in the bag, as the server takes them: best
+## first), or -1 when nothing it takes has one (or its output has none). `inv`: the bag to read (none: ours).
+func made_quality(r: RecipeDef, inv: SpaceTimeInventoryComponent = null) -> int:
+	if r == null or r.quality != RecipeDef.Quality.FROM_INPUTS:
+		return -1
+	inv = inv if inv != null else _bag()
+	if inv == null:
+		return -1
+	var grade: int = grade_of(r, inv)
+	var best: int = -1
+	for it: ItemDef in _inputs_now(r):
+		for s: SpaceTimeInventoryComponent.Stack in inv.items():
+			var q: int = RegentsGrade.quality_of(s.instance_data)
+			if s.item_def_id == it.id and (grade < 0 or q < 0 or RegentsGrade.of_quality(q) == grade):
+				best = maxi(best, q)
+	return mini(best, 1000)
+
+
+## How many traits a crafted item of quality `q` holds (its grade's: `regents.crafted_traits_*`).
+static func trait_room(q: int) -> int:
+	match RegentsGrade.of_quality(maxi(q, 0)):
+		2:
+			return int(HotRules.number(&"regents.crafted_traits_masterwork"))
+		1:
+			return int(HotRules.number(&"regents.crafted_traits_fine"))
+	return int(HotRules.number(&"regents.crafted_traits_common"))
+
+
+## `r`'s inputs for one batch with its part slots filled as picked.
+func _inputs_now(r: RecipeDef) -> Array[ItemDef]:
+	var out: Array[ItemDef] = []
+	out.assign(r.inputs)
+	var parts: Array[ItemDef] = parts_of(r)
+	var slots: PackedInt32Array = r.pick_slots()
+	for n: int in slots.size():
+		if parts[n] != null:
+			out[slots[n]] = parts[n]
+	return out
+
+
+## What it takes for one batch, picked parts and all: [[item, qty], ...].
+func takes(r: RecipeDef) -> Array:
+	var out: Array = []
+	var now: Array[ItemDef] = _inputs_now(r)
+	for i: int in now.size():
+		out.append([now[i], r.input_qty[i] if i < r.input_qty.size() else 1])
 	return out
 
 
@@ -150,9 +434,10 @@ func _picked_index(station: StationComponent, list: Array[Dictionary]) -> int:
 static func _choice_key(c: Dictionary) -> String:
 	if c.has("order"):
 		return "order:%d" % int((c["order"] as Dictionary)["slot"])
+	if c.has("refit"):
+		return "refit:%d" % int(c["refit"])
 	var r: RecipeDef = c.get("recipe", null) as RecipeDef
-	var part: ItemDef = c.get("part", null) as ItemDef
-	return "%d:%d" % [r.id if r != null else 0, part.id if part != null else 0]
+	return "%d" % (r.id if r != null else 0)
 
 
 ## How many of item `item_id` are in our bag.
@@ -256,13 +541,18 @@ func work(target: int, active: bool) -> ReducerRequest:
 		if c.has("order"):
 			var o: Dictionary = c["order"]
 			req = SpaceTimeSync.call_reducer(&"fill_order", [target, int(o["id"])], ["u64", "u64"])
+		elif c.has("refit"):
+			return refit(target, int(c["refit"]), c["made_by"] as RecipeDef, String(c["data"]))
 		elif c.has("recipe"):
 			var r: RecipeDef = c["recipe"]
-			var part: ItemDef = c.get("part", null) as ItemDef
-			if part != null and r.part_slot >= 0 and part != r.inputs[r.part_slot]:
-				req = SpaceTimeSync.call_reducer(&"craft_with", [target, r.id, active, part.id], ["u64", "u32", "bool", "u32"])
-			else:
+			if r.pick_slots().is_empty():
 				req = SpaceTimeSync.call_reducer(&"craft", [target, r.id, active], ["u64", "u32", "bool"])
+			else:
+				# The grade of head first (none picked: the best the bag has), then the craft, on one connection, in order.
+				var g: int = grade_of(r)
+				SpaceTimeSync.call_reducer(&"set_craft_grade", [g if g >= 0 else ANY_GRADE], ["u32"])
+				# A list argument's hint is its ELEMENT's type: the SDK writes the length, then each element so.
+				req = SpaceTimeSync.call_reducer(&"craft_choosing", craft_args(target, r, active), ["u64", "u32", "bool", "u32", "u32"])
 		else:
 			refused.emit("Nothing to do here" if station.key != ORDER_BOARD else "The board has no orders yet")
 			return null
@@ -271,6 +561,18 @@ func work(target: int, active: bool) -> ReducerRequest:
 	var req2: ReducerRequest = SpaceTimeSync.call_reducer(&"gather", [target, active], ["u64", "bool"])
 	_watch(req2)
 	return req2
+
+
+## What `craft_choosing` is sent for `r` at station `target`: the station, the recipe, `active`, the item in each
+## part slot, and the traits wanted in order.
+func craft_args(target: int, r: RecipeDef, active: bool) -> Array:
+	var parts: Array = []
+	for it: ItemDef in parts_of(r):
+		parts.append(it.id if it != null else 0)
+	var traits: Array = []
+	for t: TraitDef in traits_of(r):
+		traits.append(t.id)
+	return [target, r.id, active, parts, traits]
 
 
 ## MAKE `count` batches of what is picked at station `target` AFK (0: all the bag allows), then stop.

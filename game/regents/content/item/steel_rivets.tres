@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/prospectors.tres" id="1_v6ffw"]
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="2_5m13w"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="3_ky8oo"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_fx5jx"]
+
+[resource]
+script = ExtResource("4_fx5jx")
+part_tag = &"binding"
+handle_trait = ExtResource("1_v6ffw")
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A binding: fixes a head to its handle. Its metal is its trait."
+material = ExtResource("2_5m13w")
+pattern = ExtResource("3_ky8oo")
+id = 40039
+display_name = "Steel rivets"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Rivets): made by Make the table."

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="1_ndx7a"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_s6gbt"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="3_fghyl"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_0dq7w"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="4_s6gbt"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="5_ic3s7"]
+
+[sub_resource type="Resource" id="Resource_wspu7"]
+script = ExtResource("1_ndx7a")
+display_name = "Pickaxe head"
+outline = PackedInt32Array(10, 12, 14, 16, 18, 20, 22, 24, 24, 22, 20, 18, 16, 14, 12, 10)
+
+[sub_resource type="Resource" id="Resource_fghyl"]
+script = ExtResource("3_fghyl")
+name = "bar"
+takes = 1
+pattern = ExtResource("4_s6gbt")
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("4_0dq7w")
+key = &"pickaxe_head"
+name_format = "{m} pickaxe head"
+family = 0
+not_made_of = Array[ExtResource("2_s6gbt")]([])
+max_stack = 1
+tool_tag = &""
+weapon_kit = &""
+part_tag = &""
+carries_trait = false
+station = &"anvil"
+skill = ExtResource("5_ic3s7")
+parts = Array[ExtResource("3_fghyl")]([SubResource("Resource_fghyl")])
+output_qty = 1
+quality = 1
+xp = 30
+afk_ms = 8000
+minigame = SubResource("Resource_wspu7")
+description = "A pick's head, shaped at the anvil: as good as its smith."
+id = 40007
+display_name = "Pickaxe head"
+designer_notes = ""

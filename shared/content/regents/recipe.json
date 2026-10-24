@@ -38,6 +38,7 @@
 			"output": 40010,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40003,
 			"station": "furnace",
@@ -79,6 +80,7 @@
 			"output": 40011,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40003,
 			"station": "furnace",
@@ -100,6 +102,7 @@
 			"output": 40012,
 			"output_qty": 4,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40004,
 			"station": "anvil",
@@ -150,6 +153,7 @@
 			"output": 40014,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 1,
 			"skill": 40004,
 			"station": "anvil",
@@ -171,6 +175,7 @@
 			"output": 40013,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -200,6 +205,10 @@
 			"output": 40015,
 			"output_qty": 1,
 			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
 			"quality": 2,
 			"skill": 40005,
 			"station": "workbench",
@@ -221,6 +230,7 @@
 			"output": 40016,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -242,6 +252,7 @@
 			"output": 40017,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -292,6 +303,7 @@
 			"output": 40018,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 1,
 			"skill": 40004,
 			"station": "anvil",
@@ -321,6 +333,10 @@
 			"output": 40019,
 			"output_qty": 1,
 			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
 			"quality": 2,
 			"skill": 40005,
 			"station": "workbench",
@@ -342,6 +358,7 @@
 			"output": 40020,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -363,6 +380,7 @@
 			"output": 40021,
 			"output_qty": 15,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -388,6 +406,7 @@
 			"output": 40022,
 			"output_qty": 15,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
@@ -413,10 +432,689 @@
 			"output": 40023,
 			"output_qty": 1,
 			"part_slot": -1,
+			"part_slots": [],
 			"quality": 0,
 			"skill": 40005,
 			"station": "workbench",
 			"xp": 30
+		},
+		{
+			"afk_ms": 5500,
+			"afk_quality": 350,
+			"id": 40015,
+			"inputs": [
+				[
+					40008,
+					2
+				],
+				[
+					40024,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {
+				"band_amp": 160,
+				"band_center": 740,
+				"band_half_end": 38,
+				"band_half_start": 100,
+				"band_period_ticks": 60,
+				"burn_line": 960,
+				"cool_per_tick": 12,
+				"heat_ms": 8000,
+				"heat_weight_pct": 60,
+				"kind": "smelt",
+				"pour_ms": 4000,
+				"pour_rate": 32,
+				"pour_ready_ms": 600,
+				"pour_tolerance": 200,
+				"pump_heat": 50,
+				"pump_ms": 40,
+				"start_heat": 350,
+				"target_hi": 840,
+				"target_lo": 600
+			},
+			"name": "Steel bar",
+			"output": 40025,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40003,
+			"station": "furnace",
+			"xp": 22
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40016,
+			"inputs": [
+				[
+					40010,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					22,
+					20,
+					16,
+					12,
+					10,
+					10,
+					10,
+					10,
+					10,
+					10,
+					12,
+					14,
+					18,
+					22,
+					24,
+					24
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Copper axe head",
+			"output": 40026,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 15
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40017,
+			"inputs": [
+				[
+					40010,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					6,
+					10,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					10,
+					4
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Copper sword blade",
+			"output": 40027,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 16
+		},
+		{
+			"afk_ms": 2000,
+			"afk_quality": 350,
+			"id": 40018,
+			"inputs": [
+				[
+					40026,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper axe",
+			"output": 40001,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 2000,
+			"afk_quality": 350,
+			"id": 40019,
+			"inputs": [
+				[
+					40027,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper sword",
+			"output": 40028,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40020,
+			"inputs": [
+				[
+					40010,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					10,
+					12,
+					14,
+					16,
+					18,
+					20,
+					22,
+					24,
+					24,
+					22,
+					20,
+					18,
+					16,
+					14,
+					12,
+					10
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Copper pickaxe head",
+			"output": 40029,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 15
+		},
+		{
+			"afk_ms": 2000,
+			"afk_quality": 350,
+			"id": 40021,
+			"inputs": [
+				[
+					40029,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper pickaxe",
+			"output": 40006,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 8000,
+			"afk_quality": 350,
+			"id": 40022,
+			"inputs": [
+				[
+					40011,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					10,
+					12,
+					14,
+					16,
+					18,
+					20,
+					22,
+					24,
+					24,
+					22,
+					20,
+					18,
+					16,
+					14,
+					12,
+					10
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Iron pickaxe head",
+			"output": 40030,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 30
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40023,
+			"inputs": [
+				[
+					40030,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Iron pickaxe",
+			"output": 40031,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 12000,
+			"afk_quality": 350,
+			"id": 40024,
+			"inputs": [
+				[
+					40025,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					22,
+					20,
+					16,
+					12,
+					10,
+					10,
+					10,
+					10,
+					10,
+					10,
+					12,
+					14,
+					18,
+					22,
+					24,
+					24
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Steel axe head",
+			"output": 40032,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 45
+		},
+		{
+			"afk_ms": 12000,
+			"afk_quality": 350,
+			"id": 40025,
+			"inputs": [
+				[
+					40025,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					6,
+					10,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					12,
+					10,
+					4
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Steel sword blade",
+			"output": 40033,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 48
+		},
+		{
+			"afk_ms": 6000,
+			"afk_quality": 350,
+			"id": 40026,
+			"inputs": [
+				[
+					40032,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {},
+			"name": "Steel axe",
+			"output": 40034,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 6000,
+			"afk_quality": 350,
+			"id": 40027,
+			"inputs": [
+				[
+					40033,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {},
+			"name": "Steel sword",
+			"output": 40035,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 12000,
+			"afk_quality": 350,
+			"id": 40028,
+			"inputs": [
+				[
+					40025,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {
+				"duration_ms": 15000,
+				"error_scale": 100,
+				"hammer_drop": 4,
+				"heat_ms": 5000,
+				"kind": "shape",
+				"outline": [
+					10,
+					12,
+					14,
+					16,
+					18,
+					20,
+					22,
+					24,
+					24,
+					22,
+					20,
+					18,
+					16,
+					14,
+					12,
+					10
+				],
+				"reheat_ms": 1500,
+				"spread_pct": 20,
+				"start_height": 20,
+				"start_jitter": 2,
+				"swing_ms": 280
+			},
+			"name": "Steel pickaxe head",
+			"output": 40036,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 45
+		},
+		{
+			"afk_ms": 6000,
+			"afk_quality": 350,
+			"id": 40029,
+			"inputs": [
+				[
+					40036,
+					1
+				],
+				[
+					40013,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 3,
+			"minigame": {},
+			"name": "Steel pickaxe",
+			"output": 40037,
+			"output_qty": 1,
+			"part_slot": 1,
+			"part_slots": [
+				1,
+				2
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40030,
+			"inputs": [
+				[
+					40011,
+					1
+				]
+			],
+			"min_rank": 2,
+			"minigame": {},
+			"name": "Iron rivets",
+			"output": 40038,
+			"output_qty": 4,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 10
+		},
+		{
+			"afk_ms": 7500,
+			"afk_quality": 350,
+			"id": 40031,
+			"inputs": [
+				[
+					40025,
+					1
+				]
+			],
+			"min_rank": 3,
+			"minigame": {},
+			"name": "Steel rivets",
+			"output": 40039,
+			"output_qty": 4,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 15
 		}
 	],
 	"owner": "regents",

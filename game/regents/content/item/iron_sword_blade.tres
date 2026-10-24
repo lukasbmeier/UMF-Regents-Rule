@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDef" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="t_material"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/sword_blade.tres" id="t_pattern"]
 
 [resource]
 script = ExtResource("1_item")
@@ -9,3 +11,5 @@ color = Color(0.72, 0.74, 0.78, 1)
 description = "A sword's blade, shaped at the anvil: as good as its smith."
 id = 40018
 display_name = "Iron sword blade"
+material = ExtResource("t_material")
+pattern = ExtResource("t_pattern")

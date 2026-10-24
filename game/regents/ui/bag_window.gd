@@ -48,7 +48,8 @@ func refresh() -> void:
 		s.count = st.qty
 		s.grade = RegentsGrade.of_quality(RegentsGrade.quality_of(st.instance_data))
 		s.selected = st.id == picked_row
-		s.tooltip_text = "%s  x%d" % [_name(st), st.qty] if st.qty > 1 else _name(st)
+		var def: ItemDef = ItemDef.by_id(st.item_def_id)
+		s.tooltip_text = ("%s  x%d" % [_name(st), st.qty] if st.qty > 1 else _name(st)) + ("\n" + def.tooltip_for().get_slice("\n", 1) if def != null and def.tooltip_for().contains("\n") else "")
 		var row: int = st.id
 		s.pressed.connect(func() -> void:
 			picked_row = row
@@ -106,8 +107,14 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 			for a: AbilityDef in kit.abilities():
 				moves.append(a.display_name)
 		_detail.add_child(UiKit.note("A weapon: the %s kit. %s" % [it.weapon_kit, ", ".join(moves)]))
-	if it.part_tag != &"" and not it.handle_trait_text().is_empty():
-		_detail.add_child(UiKit.note("A %s: %s on what it is made into." % [it.part_tag, it.handle_trait_text()]))
+	# What it leads to (owner, 2026-10-23): as a part, the trait it gives tools and weapons; what it makes.
+	for line: String in it.part_lines():
+		_detail.add_child(UiKit.note("As a %s, %s" % [it.part_tag, line[0].to_lower() + line.substr(1)]))
+	if not it.uses().is_empty():
+		var makes := UiKit.note("Makes: " + ", ".join(it.uses()))
+		makes.name = "Makes"
+		makes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_detail.add_child(makes)
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override(&"separation", 8)
 	_detail.add_child(buttons)

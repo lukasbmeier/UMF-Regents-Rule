@@ -24,12 +24,13 @@ paths:
 - Mastery: XP stored, rank from a content curve (v1 ranks 1-10, abilities at 1/3/6/9); harder nodes
   need a gathering rank AND a tool tier.
 - Items: three grades; Power is the number; a trait changes how an item plays and never its Power,
-  and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6).
+  and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6). Materials and modular gear:
+  `docs/regents_rule/MATERIALS.md` (2026-10-23; crafted items hold Common 1 / Fine 2 / MW 3 traits, picked).
 - The server judges every swing, round and roll from inputs; the referee (sidecar) runs the foes.
 - `chunk` comes to the template's positional tables in the template 1.0 reshape, not a side table:
   never add a chunk side table here.
-- Still open, Luke's to decide (never default): #10 hosting, #12 day/night, the other skills'
-  minigames, the materials deep-dive, the bow's draw scaling. (#7 loot and #22 handles are settled:
+- Still open, Luke's to decide (never default): #12 day/night, the other skills' minigames, how the
+  minimap grows, what is still open in `MATERIALS.md` §11. The order of work: `GAME.md`. (#7 loot and #22 handles are settled:
   `GAME.md`.)
 - The weapon and tool GRIPS (`*_grip.tres`, `*_grip_preview.tscn`) are Luke's to fix himself: never
   restore, rewrite or commit his edits to them; ask.

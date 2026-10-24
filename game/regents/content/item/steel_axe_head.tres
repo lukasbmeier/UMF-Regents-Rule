@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_ljguy"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/axe_head.tres" id="2_m437y"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_jtidd"]
+
+[resource]
+script = ExtResource("3_jtidd")
+max_stack = 1
+color = Color(0.55, 0.6, 0.68, 1)
+description = "Forged at the anvil: its quality is the smith's."
+material = ExtResource("1_ljguy")
+pattern = ExtResource("2_m437y")
+id = 40032
+display_name = "Steel axe head"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Axe head): made by Make the table."

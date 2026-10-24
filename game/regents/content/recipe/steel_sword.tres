@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_oq0ql"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_sword_blade.tres" id="2_wg5uh"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_ah11u"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="4_ccqmj"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_sword.tres" id="5_8dbpd"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="6_fvi0r"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="7_8cnqn"]
+
+[resource]
+script = ExtResource("6_fvi0r")
+station = &"workbench"
+skill = ExtResource("7_8cnqn")
+inputs = Array[ExtResource("1_oq0ql")]([ExtResource("2_wg5uh"), ExtResource("3_ah11u"), ExtResource("4_ccqmj")])
+input_qty = PackedInt32Array(1, 1, 2)
+output = ExtResource("5_8dbpd")
+xp = 37
+min_rank = 3
+afk_ms = 6000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1, 2)
+from_table = true
+id = 40027
+display_name = "Steel sword"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Sword): its numbers are yours to tune."

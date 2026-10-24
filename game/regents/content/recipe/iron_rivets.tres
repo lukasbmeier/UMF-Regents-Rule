@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_d4be1"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_bar.tres" id="2_nfgg8"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_rivets.tres" id="3_6aagn"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_m4oqf"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="5_gnjbd"]
+
+[resource]
+script = ExtResource("4_m4oqf")
+station = &"anvil"
+skill = ExtResource("5_gnjbd")
+inputs = Array[ExtResource("1_d4be1")]([ExtResource("2_nfgg8")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("3_6aagn")
+output_qty = 4
+min_rank = 2
+afk_ms = 5000
+part_slots = PackedInt32Array()
+from_table = true
+id = 40030
+display_name = "Iron rivets"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Iron in Rivets): its numbers are yours to tune."

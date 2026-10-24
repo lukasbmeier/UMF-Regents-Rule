@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_ore.tres" id="1_q3o8u"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/gentle.tres" id="1_ve3im"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/thirsting.tres" id="2_oyary"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_qbrah"]
+
+[resource]
+script = ExtResource("2_qbrah")
+key = &"copper"
+prefix = "Copper"
+family = 0
+tier = 1
+raw = ExtResource("1_q3o8u")
+weapon_damage_pct = 70
+tool_speed_pct = 100
+part_trait = ExtResource("1_ve3im")
+part_weapon_trait = ExtResource("2_oyary")
+work_scale_pct = 50
+rank = 1
+color = Color(0.9, 0.55, 0.3, 1)
+id = 40001
+display_name = "Copper"
+designer_notes = ""

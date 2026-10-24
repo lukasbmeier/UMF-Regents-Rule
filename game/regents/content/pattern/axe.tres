@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/skilling/woodcutting/axe.tscn" id="1_l00hr"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_0drib"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="4_4wvna"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/axe_head.tres" id="5_rgkyy"]
+[ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="6_qs5uv"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/handle.tres" id="7_f7syv"]
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="7_l00hr"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="8_0drib"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="9_ydxhq"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="10_w75gy"]
+
+[sub_resource type="Resource" id="Resource_yxywa"]
+script = ExtResource("4_4wvna")
+name = "head"
+takes = 1
+pattern = ExtResource("5_rgkyy")
+core = true
+
+[sub_resource type="Resource" id="Resource_w154q"]
+script = ExtResource("4_4wvna")
+name = "handle"
+takes = 2
+pattern = ExtResource("7_f7syv")
+default_material = ExtResource("6_qs5uv")
+
+[sub_resource type="Resource" id="Resource_o758o"]
+script = ExtResource("4_4wvna")
+name = "binding"
+takes = 2
+pattern = ExtResource("8_0drib")
+default_material = ExtResource("7_l00hr")
+qty = 2
+
+[resource]
+script = ExtResource("9_ydxhq")
+key = &"axe"
+name_format = "{m} axe"
+max_stack = 1
+tool_tag = &"axe"
+weapon_kit = &"axe"
+skill = ExtResource("10_w75gy")
+parts = Array[ExtResource("4_4wvna")]([SubResource("Resource_yxywa"), SubResource("Resource_w154q"), SubResource("Resource_o758o")])
+quality = 2
+xp = 25
+afk_ms = 4000
+held_scene = ExtResource("1_l00hr")
+description = "An axe: fells trees, and fights."
+id = 40005
+display_name = "Axe"

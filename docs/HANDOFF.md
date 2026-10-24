@@ -1,49 +1,43 @@
-# Handoff — Regent's Rule, 2026-10-21 (end of the second session)
+# Handoff — Regent's Rule, 2026-10-23 (materials steps 1-3, the Tester page, Luke's crafting feedback)
 
 ## Where it stands
-Step 16 (telemetry, the polish round, and the fixes after Luke's first play of it) is COMMITTED and
-pushed (`38efd3e`; Luke confirmed the fixes in play, 2026-10-23), with Luke's own grip edits, the
-adventurer AnimationSet and texture imports at his word: the tree is clean. Published to the play database
-`regents-rule` (`--codegen`, data kept: a friend needs a NEW EXPORT). The template (#276, #277) is shipped
-to every game (`ship_template.sh`; here `932a6a0`). Suites green: unit 2391/0, native all, integration
-931/0, telemetry 21/0, skilling playtest 62/0 + 7/0, combat playtest 50/0, content 18/0.
+Steps 17-21 built, NOT committed (last commit: the template merge `ded24b3`); Luke commits. Published to the
+play database `regents-rule` with `--codegen`, data kept: a friend's build needs a NEW EXPORT (new reducers:
+the four `admin_*`, `craft_choosing`, `set_craft_grade`, `refit`; new tables `craft_choice`, `craft_grade`).
+Suites green: regents unit 2469/0, native `cargo test` all (regents 35/0), integration 1051/0,
+skilling playtest 63/0 + 7/0, combat playtest 50/0, content 18/0, `cargo check` (wasm) clean.
+The internal wiki is its own project, `UMF ALL\Regents Wiki` (another session; `wiki.cmd` rebuilds it from
+this repo's bake; not committed).
 
 ## This session
-- Telemetry: the chronicle (template #276) keeps every change and a place every 5 s in
-  `build/telemetry/regents-rule.sqlite`; `tools\telemetry.cmd` shows it; Regent's panels in
-  `shared/regents/telemetry.json`; the meta in the database (`meta_tally`, `meta_share`, the 45 % alarm).
-- Polish: vitals, work bar, Make 1 / X / all, the minimap, hit flashes (`regents_hud.gd`, `ui/`,
-  `combat/hit_feedback_component.gd`).
-- After Luke's play: the hit reaction looping (template #277); every rock, station and level prop solid
-  (`solid.gd`, `levels/solid_props.gd`); ore layouts per rock model to place by hand
-  (`skilling/mining/ore/`); skeletons turned to face forward. PROGRESS step 16 has all of it.
+- The materials deep-dive (`docs/regents_rule/MATERIALS.md`) and steps 17-20 (the material table; copper,
+  iron, steel; the Tester page; the crafting rework): PROGRESS has each.
+- Step 21, after Luke's first look: the head picked by grade, plainer traits, rivets as a pattern with
+  traits, every part a tool trait and a weapon trait, Refit (swap a made item's parts at a cost), tooltips.
+- The order of work, Luke's answers and his confirmed defaults: `GAME.md`.
 
-## Next, in order
-1. **THE MATERIALS AND TINKERS' DEEP-DIVE** (Luke's next session). Read first: `RULE_DESIGN.md` §7.4
-   (gear is modular: a core sets base stats and tier, a handle or hilt its trait; gear XP; durability and
-   repair as the material sink), `LOOT_AND_STYLES.md` §0 (Tier = the material level, sets the power band;
-   Grade; Power; Trait), its §2 and §6 (traits; handles give theirs always), §9 (all standard gear is
-   crafted; drops give materials and components; salvage), and `GAME.md`'s Traits call (oak Steady, yew
-   Springy are toned to the early game UNTIL this deep-dive).
-   What exists now: woods (logs, oak, yew), ores (copper, iron) and bars, one handle per wood (plain,
-   oak 40016 Steady, yew 40017 Springy), cores (iron axe head, iron sword blade), assembled tools and
-   weapons (bronze axe and pickaxe from the starter kit; iron axe, iron sword; yew bow, yew staff); an
-   item's instance data holds its quality, handle and traits (`{"q","h","t"}`). Recipes:
-   `game/regents/content/recipe/`; items: `content/item/`; tiers and Power: `server/src/genre/regents/`.
-   Questions for Luke, not to default: which materials per tier and how many tiers in v1; what a material
-   changes (only Power through tier, or traits too, as handles); whether cores take a material trait;
-   gear XP and durability now or later; where rarer materials come from (nodes, drops, salvage).
-2. Then `LOOT_AND_STYLES.md` §10's list: salvage and components, the reagent cost hook, the teleport spell.
+## Next, in order (Luke, 2026-10-23)
+1. Done: Luke signed crafting off (2026-10-23). Later: the minigames harder, so the grades take skill.
+2. NOW (a session started 2026-10-23 in `../UMF Template`): THE TEMPLATE 1.0 WITH ACCOUNTS, in `../UMF Template` (its own session): `chunk` on the positional tables,
+   chunked subscriptions and streaming (M18, M19), SpacetimeAuth accounts and characters that outlive a
+   machine (M23, #13). One wipe of every game's database; then pulled here (and into the other games).
+3. THE COMBAT DEEP-DIVE with Luke: equipment and armour (five slots, stats), the server-side cast queue,
+   crits (then Keen on steel rivets), NPC tiers; movement feel (orbit a still character; diagonal strafes).
+4. Herbalism (fibre bindings, tier 4-6 / fibre / hide names) and the economy (marks, vendors).
+- Small, any time: the minimap's north-up / turning choice.
 
 ## Waiting on Luke
-- Placing the nuggets in the ore layouts, when he wants them elsewhere.
-- The materials deep-dive's questions (above). Open items: #10 hosting, #12 day/night, the other skills'
-  minigames, the bow's draw scaling, how the minimap grows.
+- His look at step 21. Open: trait ranks (both paths liked; harder minigames first, AFK must still pay);
+  #12 day/night; how the minimap grows; the ore nuggets' placement; gear XP numbers (MATERIALS step 5).
 
 ## Watch out
-- `frontier.tscn` gained a `SolidProps` node: if the editor has the level open from before, reload it
-  before saving there, or the editor's copy drops the node.
-- `NodeDef` and `RuleOverride` are `@tool` scripts: never rewrite one while Luke's editor is open.
-- A windowed Godot run strips one blank line from `project.godot` `[rendering]`: put it back.
-- The editor's Play starts `chronicle.py` (Python on PATH); it stops a few seconds after the game.
-- The minimap zooms with the wheel only while the cursor is free (a window open, Alt).
+- SpacetimeDB renames a reducer with a digit after `_` (`craft_v2` -> `craft_v_2`): avoid it.
+- A list argument's type hint to the SDK is its element's (`"u32"`), never `"vec_u32"`.
+- The CLI's SQL prints an array's numbers run together (`[40016,40012]` is `4001640012`).
+- The unit suite cannot see what a call sends on the wire (offline it fails first): the playtests do.
+- A crafted head's grade in the integration suite is whatever its round scored: tests clear heads first.
+- Python on this machine reads files as Windows-1252 unless told UTF-8 (the wiki's ‰ "bake bug" was this).
+- The ability bench's cooldown check (template suite) is timing-sensitive: it failed once in five runs.
+- Setting an untyped Array on a typed exported array through `Object.set` silently does nothing.
+- A headless `-s` script that NAMES a content class compiles before the autoloads: load it by path.
+- `frontier.tscn` gained coal markers: reload the level in an open editor before saving there.

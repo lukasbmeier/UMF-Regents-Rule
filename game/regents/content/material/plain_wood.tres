@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/item/logs.tres" id="1_urpk8"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_ny063"]
+
+[resource]
+script = ExtResource("2_ny063")
+key = &"plain_wood"
+prefix = ""
+family = 1
+tier = 1
+raw = ExtResource("1_urpk8")
+weapon_damage_pct = 100
+tool_speed_pct = 100
+work_scale_pct = 100
+rank = 1
+color = Color(0.7, 0.52, 0.32, 1)
+id = 40003
+display_name = "Plain wood"
+designer_notes = ""

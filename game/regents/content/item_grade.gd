@@ -7,10 +7,10 @@ class_name RegentsGrade
 ##   GRADE     a BAND of quality, for the colour, the name and (later) the trait count: Common, Fine
 ##             from `regents.grade_fine_q` (400), Masterwork from `regents.grade_masterwork_q` (800).
 ##             A material (no quality) has none. The colours are the style's (`UiStyle.grade_colors`).
-##   TIER      the item itself (bronze, iron): its `weapon_damage_pct`. Tier DOMINATES: the best of a
+##   TIER      the item itself (copper, iron): its `weapon_damage_pct`. Tier DOMINATES: the best of a
 ##             tier never reaches the worst of the next (`tier_overlaps`; an item's `validate` says so).
 ##   POWER     the one number to compare: the weapon's damage in percent of its kit's, its quality
-##             included (an iron weapon 100 to 120, a bronze one 70 to 84); ammo its own percent.
+##             included (an iron weapon 100 to 120, a copper one 70 to 84); ammo its own percent.
 ##             Tools show their tier and speed instead (a tier is what a node asks for).
 
 const NAMES: PackedStringArray = ["Common", "Fine", "Masterwork"]

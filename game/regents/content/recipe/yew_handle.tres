@@ -20,3 +20,4 @@ quality = 0
 afk_quality = 350
 id = 40008
 display_name = "Yew handle"
+from_table = true

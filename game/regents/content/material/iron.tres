@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_ore.tres" id="1_gac7p"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/lucky.tres" id="1_m0mxu"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/brutal.tres" id="2_k68pi"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_v5d77"]
+
+[resource]
+script = ExtResource("2_v5d77")
+key = &"iron"
+prefix = "Iron"
+family = 0
+tier = 2
+raw = ExtResource("1_gac7p")
+weapon_damage_pct = 100
+tool_speed_pct = 85
+part_trait = ExtResource("1_m0mxu")
+part_weapon_trait = ExtResource("2_k68pi")
+work_scale_pct = 100
+rank = 2
+color = Color(0.65, 0.66, 0.7, 1)
+id = 40002
+display_name = "Iron"
+designer_notes = ""

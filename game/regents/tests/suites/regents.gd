@@ -15,6 +15,8 @@ const R: int = ChopModel.SIDE_RIGHT
 
 func run() -> void:
 	_run_content()
+	_run_material_table()
+	_run_material_table_writes()
 	_run_trunk()
 	_run_golden()
 	_run_skill_goldens()
@@ -29,6 +31,8 @@ func run() -> void:
 	await _run_foe_bench()
 	await _run_combat()
 	_run_polish()
+	await _run_tester_page()
+	await _run_crafting_choice()
 	await _run_solid()
 
 
@@ -45,7 +49,7 @@ func _run_combat() -> void:
 			"%s: judged by the referee along the body's facing, reaching %.1f m, on the combat component's keys" % [a.display_name, a.reach_m])
 	var iron_sword: ItemDef = ItemDef.by_id(40019)
 	_check(iron_sword.weapon_kit == &"sword" and iron_sword.held_scene != null and ItemDef.by_id(40001).weapon_kit == &"axe",
-		"the iron sword fights as a sword; the bronze axe is a weapon too")
+		"the iron sword fights as a sword; the copper axe is a weapon too")
 	var bad: ItemDef = iron_sword.duplicate() as ItemDef
 	bad.max_stack = 5
 	_check(bad.validate().any(func(e: String) -> bool: return e.contains("weapon does not stack")), "a stacking weapon is refused")
@@ -449,15 +453,15 @@ func _run_grades() -> void:
 		and RegentsGrade.of_quality(400) == 1 and RegentsGrade.of_quality(799) == 1 and RegentsGrade.of_quality(800) == 2
 		and RegentsGrade.of_quality(1000) == 2, "bands: Common under 400, Fine from 400, Masterwork from 800 (hot rules); none without a quality")
 	var iron_axe: ItemDef = ItemDef.by_id(40015)
-	var bronze_axe: ItemDef = ItemDef.by_id(40001)
+	var copper_axe: ItemDef = ItemDef.by_id(40001)
 	_check(RegentsGrade.quality_of("{\"q\":850,\"h\":40016}") == 850 and RegentsGrade.quality_of("{\"q\":300}") == 300
 		and RegentsGrade.quality_of("") == -1, "a row's quality: 850 beside its handle, 300 alone, none for a plain item")
 	_check(RegentsGrade.item_name(iron_axe, 734) == "Fine iron axe" and RegentsGrade.item_name(iron_axe, 900) == "Masterwork iron axe"
 		and RegentsGrade.item_name(iron_axe, 100) == "Iron axe" and RegentsGrade.item_name(iron_axe, -1) == "Iron axe",
 		"names: Fine iron axe, Masterwork iron axe; a Common or ungraded one as it is")
 	_check(RegentsGrade.power(iron_axe, 0) == 100 and RegentsGrade.power(iron_axe, 1000) == 120 and RegentsGrade.power(iron_axe, 734) == 115
-		and RegentsGrade.power(bronze_axe, 0) == 70 and RegentsGrade.power(bronze_axe, 1000) == 84,
-		"Power: iron 100 to 120, bronze 70 to 84, by quality")
+		and RegentsGrade.power(copper_axe, 0) == 70 and RegentsGrade.power(copper_axe, 1000) == 84,
+		"Power: iron 100 to 120, copper 70 to 84, by quality")
 	_check(RegentsGrade.power(iron_axe, 734) == roundi(FoeWorkbench.hit_damage(100.0, iron_axe.weapon_damage_pct, 734, 1)),
 		"Power is the hit the server deals: the kit's 100 through the weapon and its quality (hit_damage)")
 	_check(RegentsGrade.power(ItemDef.by_id(40022), -1) == 100 and RegentsGrade.power(ItemDef.by_id(40002), -1) == -1,
@@ -467,11 +471,11 @@ func _run_grades() -> void:
 		if d is ItemDef:
 			all.append(d as ItemDef)
 	_check(RegentsGrade.tier_overlaps(all).is_empty(), "every tier dominates the one below it (%s)" % "; ".join(RegentsGrade.tier_overlaps(all)))
-	var close: ItemDef = bronze_axe.duplicate() as ItemDef
+	var close: ItemDef = copper_axe.duplicate() as ItemDef
 	close.weapon_damage_pct = 90
 	var said: PackedStringArray = PackedStringArray(close.validate())
 	_check(said.size() > 0 and "; ".join(said).contains("reaches Iron axe at its worst (Power 100): tier must dominate"),
-		"a bronze axe at 90 %% would reach the iron axe: its check says so (%s)" % "; ".join(said))
+		"a copper axe at 90 %% would reach the iron axe: its check says so (%s)" % "; ".join(said))
 	# Icons drawn from the models (template #271, tools/render_icons.tscn): the bow's, the arrows' (their
 	# world model); logs have no model and keep their initials.
 	_check(ItemDef.by_id(40020).icon() != null and ItemDef.by_id(40022).icon() != null and ItemDef.by_id(40002).icon() == null,
@@ -496,13 +500,13 @@ func _run_grades() -> void:
 	var s2: UiSlot = bag.find_child("Slot_2", true, false) as UiSlot
 	var s3: UiSlot = bag.find_child("Slot_3", true, false) as UiSlot
 	_check(s1 != null and s2 != null and s3 != null and s1.grade == 2 and s2.grade == 0 and s3.grade == -1,
-		"slots: the iron axe Masterwork, the bronze Common, the logs ungraded")
+		"slots: the iron axe Masterwork, the copper Common, the logs ungraded")
 	var title: Label = bag.find_child("ItemName", true, false) as Label
 	_check(title != null and title.text == "Masterwork iron axe" and title.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().grade_colors[2]),
 		"its name: Masterwork iron axe, in the Masterwork colour")
 	var pw: Label = bag.find_child("Power", true, false) as Label
-	_check(pw != null and pw.text == "Power 117  (+43 on your Bronze axe)" and pw.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().good),
-		"Power 117, 43 over the bronze axe you wield, in the good colour (%s)" % (pw.text if pw != null else "none"))
+	_check(pw != null and pw.text == "Power 117  (+43 on your Copper axe)" and pw.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().good),
+		"Power 117, 43 over the copper axe you wield, in the good colour (%s)" % (pw.text if pw != null else "none"))
 	bag.picked_row = 2
 	bag.refresh()
 	await get_tree().process_frame
@@ -676,6 +680,231 @@ func _run_recipe_bench() -> void:
 	await get_tree().process_frame
 
 
+## CHOOSING PARTS AND TRAITS AT THE STATION (owner, 2026-10-23, MATERIALS.md step 3), offline: one line a
+## recipe under its heading; a part slot's list of every part of its kind; the traits by the grade it will be
+## made at, in use or left out; what `craft_choosing` is sent. (The server's half: the native tests and the
+## integration suite; made for real: the skilling playtest.)
+func _run_crafting_choice() -> void:
+	print("== regents: crafting, choosing parts and traits ==")
+	var room: Array[int] = []
+	for q: int in [0, 399, 400, 799, 800, 1000]:
+		room.append(SkillingComponent.trait_room(q))
+	_check(room == [1, 1, 2, 2, 3, 3], "a crafted item holds Common 1, Fine 2, Masterwork 3 traits (hot rules) %s" % str(room))
+	var steady: int = _trait_id(&"steady")
+	var springy: int = _trait_id(&"springy")
+	var gentle: int = _trait_id(&"gentle")
+	var heavy: int = _trait_id(&"heavy")
+	var thirsting: int = _trait_id(&"thirsting")
+	# Each part offers a tool trait and a weapon trait; only the one that fits what is made counts (Luke, 2026-10-23).
+	var oak: ItemDef = ItemDef.by_id(40016)
+	var copper_r: ItemDef = ItemDef.by_id(40012)
+	var steel_r: ItemDef = MaterialTable.cell(MaterialDef.by_key(&"steel"), _pattern(&"rivets"))
+	var axe_i: ItemDef = ItemDef.by_id(40015)
+	var sword_i: ItemDef = ItemDef.by_id(40019)
+	_check(oak.trait_for(axe_i).id == steady and oak.trait_for(sword_i).id == heavy and copper_r.trait_for(axe_i).id == gentle
+		and copper_r.trait_for(sword_i).id == thirsting and steel_r.trait_for(sword_i) == null and ItemDef.by_id(40013).trait_for(axe_i) == null,
+		"an oak handle gives an axe Steady and a sword Heavy; copper rivets Gentle and Thirsting; steel rivets give a sword nothing yet; a plain handle nothing")
+	var sk := SkillingComponent.new()
+	var axe: RecipeDef = RecipeDef.by_id(40006)
+	var sword: RecipeDef = RecipeDef.by_id(40010)
+	var parts: Array[ItemDef] = sk.parts_of(axe)
+	_check(parts.size() == 2 and parts[0].id == 40013 and parts[1].id == 40012 and sk.traits_of(axe).size() == 1 and sk.traits_of(axe)[0].id == gentle,
+		"the iron axe: two part slots, the plain handle and copper rivets to start; the rivets offer Gentle, wanted")
+	sk.set_part(axe, 0, 40016)
+	var ids: Array[int] = []
+	for t: TraitDef in sk.traits_of(axe):
+		ids.append(t.id)
+	_check(ids == [steady, gentle], "the oak handle picked: Steady and Gentle offered, both wanted, handle first")
+	_check(sk.craft_args(9, axe, false) == [9, 40006, false, [40016, 40012], [steady, gentle]], "craft_choosing is sent the oak handle, the copper rivets, Steady then Gentle %s" % str(sk.craft_args(9, axe, false)))
+	sk.want_trait(axe, steady, false)
+	_check(sk.craft_args(9, axe, false)[4] == [gentle], "Steady unticked: Gentle alone is sent")
+	sk.want_trait(axe, gentle, false)
+	_check(sk.traits_of(axe).is_empty() and sk.craft_args(9, axe, false)[4] == [], "both unticked: none (a choice: the axe keeps none)")
+	sk.set_part(axe, 0, 40017)
+	_check(sk.traits_of(axe).size() == 2 and sk.traits_of(axe)[0].id == springy, "the yew handle picked instead: its Springy offered and ticked again, first")
+	sk.set_part(axe, 0, 40004)
+	_check(sk.parts_of(axe)[0].id == 40013, "yew LOGS are no handle: the slot keeps a handle (the plain one)")
+	sk.set_part(sword, 0, 40016)
+	var sword_ids: Array[int] = []
+	for t: TraitDef in sk.traits_of(sword):
+		sword_ids.append(t.id)
+	_check(sword_ids == [heavy, thirsting], "a sword with an oak handle and copper rivets: Heavy and Thirsting, its weapon traits %s" % str(sword_ids))
+	_check(SkillingComponent.group_of(axe) == "Axes" and SkillingComponent.group_of(RecipeDef.by_id(40012)) == "Other" and SkillingComponent.core_of(axe) == ItemDef.by_id(40014),
+		"headings: the iron axe under Axes, arrow shafts under Other; the axe's core is its head")
+	# Tooltips: what a material or a part is for (Luke, 2026-10-23).
+	_check(ItemDef.by_id(40011).uses().has("Iron axe head") and ItemDef.by_id(40011).uses().has("Iron rivets") and oak.uses().has("Steel sword"),
+		"an iron bar makes the iron axe head and iron rivets; an oak handle goes into any axe, sword or pickaxe")
+	var tip: String = oak.tooltip_for()
+	_check(tip.contains("On tools: Steady") and tip.contains("On weapons: Heavy") and tip.contains("Makes: "), "the oak handle's tooltip: Steady on tools, Heavy on weapons, what it makes")
+	_check(oak.tooltip_for(sword_i).contains("On the iron sword: Heavy"),
+		"in a sword's handle list, its tooltip names the one it gives there: Heavy")
+	# The window, on the workbench: a Fine and a Masterwork iron axe head, an oak handle, a plain one and rivets.
+	sk.part_pick.clear()
+	sk.trait_pick.clear()
+	var inv := SpaceTimeInventoryComponent.new()
+	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40014, 1, 0, "{\"q\":650}")
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, 40016, 1, 1)
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40012, 4, 2)
+	inv._stacks[4] = SpaceTimeInventoryComponent.Stack.new(4, 40013, 1, 3)
+	inv._stacks[5] = SpaceTimeInventoryComponent.Stack.new(5, 40014, 1, 4, "{\"q\":900}")
+	_check(sk.core_grades(axe, inv) == {2: 1, 1: 1, 0: 0} and sk.grade_of(axe, inv) == 2 and sk.made_quality(axe, inv) == 900,
+		"the heads by grade: one Masterwork, one Fine, no Common; the best (Masterwork, 900) to start")
+	sk.grade_pick[axe.id] = 1
+	_check(sk.grade_of(axe, inv) == 1 and sk.made_quality(axe, inv) == 650, "Fine picked: made with the Fine head (650)")
+	sk.grade_pick[axe.id] = 0
+	_check(sk.grade_of(axe, inv) == 2, "Common picked but none in the bag: the best there is")
+	sk.grade_pick.clear()
+	var st := StationComponent.new()
+	st.key = &"workbench"
+	st.def = StationDef.by_key(&"workbench")
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var w := RegentsStationWindow.new()
+	w.skilling = sk
+	w.inventory = inv
+	w.station = st
+	w.target = 1
+	layer.add_child(w)
+	w.refresh()
+	w.open()
+	await get_tree().process_frame
+	var heads: Array[String] = []
+	for n: Node in w.find_children("Group_*", "Label", true, false):
+		heads.append((n as Label).text)
+	_check(heads == ["Handles", "Axes", "Swords", "Pickaxes", "Other"], "the workbench's list: one line a recipe, under Handles, Axes, Swords, Pickaxes, Other %s" % str(heads))
+	_check(w.pick_named("Iron axe"), "the iron axe picked")
+	var core: OptionButton = w.find_child("Core", true, false) as OptionButton
+	_check(core != null and core.item_count == 3 and core.get_selected_id() == 2 and core.get_item_text(0).contains("Masterwork iron axe head")
+		and not core.is_item_disabled(0) and not core.is_item_disabled(1) and core.is_item_disabled(2),
+		"its head is a list by grade: Masterwork picked, Fine there, Common greyed (none)")
+	var part_list: OptionButton = w.find_child("Part_0", true, false) as OptionButton
+	_check(part_list != null and part_list.item_count == 3 and part_list.get_selected_id() == 40013 and part_list.get_item_text(1).ends_with("Oak handle: Steady"),
+		"its handle slot lists the three handles, the plain one picked, each with the trait it gives (\"%s\")" % (part_list.get_item_text(1) if part_list != null else ""))
+	_check(w.traits_line() == "A Masterwork iron axe holds 3 traits", "the traits, said plainly, no quality number (%s)" % w.traits_line())
+	w.pick_grade(1)
+	await get_tree().process_frame
+	_check(w.traits_line() == "A Fine iron axe holds 2 traits", "Fine picked in the head's list: room for two (%s)" % w.traits_line())
+	w.pick_part(0, 40016)
+	await get_tree().process_frame
+	var box: CheckBox = w.find_child("Trait_steady", true, false) as CheckBox
+	var state: Label = w.find_child("TraitState_steady", true, false) as Label
+	_check(box != null and box.button_pressed and box.text == "1. Steady" and state != null and state.text.ends_with("(in use)")
+		and box.get_theme_stylebox(&"hover") is StyleBoxEmpty,
+		"the oak handle picked: Steady ticked, first, in use; drawn as a checkbox, not a button")
+	_check((w.find_child("TraitState_gentle", true, false) as Label).text.ends_with("(in use)"), "Gentle second, in use (Fine holds two)")
+	w.pick_grade(0)
+	inv._stacks[6] = SpaceTimeInventoryComponent.Stack.new(6, 40014, 1, 5, "{\"q\":200}")
+	w.refresh()
+	await get_tree().process_frame
+	_check(w.traits_line() == "A Common iron axe holds 1 trait" and (w.find_child("TraitState_gentle", true, false) as Label).text.ends_with("(no room at this grade)"),
+		"a Common head picked: room for one; Gentle, second, has no room (%s)" % w.traits_line())
+	w.want_trait(steady, false)
+	await get_tree().process_frame
+	_check((w.find_child("TraitState_steady", true, false) as Label).text.ends_with("(left out)") and (w.find_child("TraitState_gentle", true, false) as Label).text.ends_with("(in use)"),
+		"Steady unticked: left out, and Gentle moves up into the room")
+	var make: Button = w.find_child("Make", true, false) as Button
+	_check(make != null and not make.disabled, "the bag holds a Common head and the rest: MAKE is ready")
+	inv._stacks.erase(6)
+	w.refresh()
+	await get_tree().process_frame
+	make = w.find_child("Make", true, false) as Button
+	_check(make != null and not make.disabled and w.traits_line() == "A Masterwork iron axe holds 3 traits" and (w.find_child("Core", true, false) as OptionButton).get_selected_id() == 2,
+		"the Common head gone: the list falls back to the best there is (Masterwork), shown picked, MAKE ready (%s)" % w.traits_line())
+	# REFIT (Luke, 2026-10-23): a made axe in the bag, its parts swapped at a cost.
+	inv._stacks[7] = SpaceTimeInventoryComponent.Stack.new(7, 40015, 1, 6, "{\"q\":650,\"h\":40013,\"p\":[40013,40012],\"t\":[%d]}" % gentle)
+	inv._stacks[8] = SpaceTimeInventoryComponent.Stack.new(8, 40011, 3, 7)
+	sk.bag = inv
+	w.refresh()
+	await get_tree().process_frame
+	var groups: Array[String] = []
+	for n: Node in w.find_children("Group_*", "Label", true, false):
+		groups.append((n as Label).text)
+	_check(groups.back() == "Refit (swap its parts)" and w.pick_named("Fine iron axe (Gentle)"),
+		"the iron axe made earlier is listed to refit, last, by its grade and traits %s" % str(groups))
+	var data: String = inv._stacks[7].instance_data
+	var cost_line: Label = w.find_child("RefitCost", true, false) as Label
+	var refit_b: Button = w.find_child("Refit", true, false) as Button
+	_check(cost_line != null and cost_line.text == "Costs: 2 Iron bar (you have 3)" and refit_b != null and refit_b.disabled,
+		"as it is, nothing to change: only the bars would be paid, so REFIT is greyed (%s)" % (cost_line.text if cost_line != null else "none"))
+	w.pick_part(0, 40016)
+	await get_tree().process_frame
+	cost_line = w.find_child("RefitCost", true, false) as Label
+	refit_b = w.find_child("Refit", true, false) as Button
+	_check(cost_line.text == "Costs: 1 Oak handle (you have 1), 2 Iron bar (you have 3)" and not refit_b.disabled
+		and sk.refit_args(1, 7, axe, data) == [1, 7, [40016, 40012], [steady, gentle]],
+		"the oak handle swapped in: it costs the handle and 2 iron bars (the head's metal), REFIT ready, Steady joins Gentle (%s)" % cost_line.text)
+	inv._stacks.erase(8)
+	w.refresh()
+	await get_tree().process_frame
+	_check((w.find_child("Refit", true, false) as Button).disabled, "no iron bars: REFIT greyed")
+	sk.bag = null
+	layer.queue_free()
+	st.free()
+	sk.free()
+	inv.free()
+	await get_tree().process_frame
+
+
+## The pattern with key `key`.
+func _pattern(key: StringName) -> PatternDef:
+	for p: PatternDef in MaterialTable.patterns():
+		if p.key == key:
+			return p
+	return null
+
+
+## THE TESTER PAGE (owner, 2026-10-23), offline: what each control sends (the server's half, and its
+## refusals, is the integration suite's), the grade it shows, and its button in the Escape menu, hidden
+## from anyone who is not the admin.
+func _run_tester_page() -> void:
+	print("== regents: the tester page ==")
+	var page := RegentsTesterPage.new()
+	add_child(page)
+	page.open()
+	await get_tree().process_frame
+	var lines: Dictionary[int, String] = page.skill_lines()
+	_check(lines.size() == SkillDef.all().size() and lines.get(40002, "") == "Mining: ?",
+		"a line per skill (%d); with no player picked, mining reads \"?\" (%s)" % [lines.size(), lines.get(40002, "")])
+	var r: ReducerRequest = page.set_rank(77, 40002, 3)
+	_check(r.reducer_name == &"admin_set_rank" and r.args == [77, 40002, 3], "Set: admin_set_rank(player, skill, rank) %s" % str(r.args))
+	var status: Label = page.find_children("*", "Label", true, false).back() as Label
+	_check(status.text == "admin_set_rank: not connected", "and what came of it is said (offline: %s)" % status.text)
+	r = page.reset_skills(77)
+	_check(r.reducer_name == &"admin_reset_skills" and r.args == [77], "Reset all skills: admin_reset_skills(player)")
+	r = page.reset_bag(77)
+	_check(r.reducer_name == &"admin_reset_bag" and r.args == [77], "Reset the bag: admin_reset_bag(player)")
+	page.pick_item(40024, 25, 700)
+	r = page.give_selected()
+	_check(page.grade_text() == "stacks: no quality" and r.reducer_name == &"admin_give_item" and r.args == [-1, 40024, 25, 700],
+		"Give 25 coal: it stacks, so the page says no quality (the server ignores the number) (%s)" % str(r.args))
+	page.pick_item(40034, 1, 850)
+	r = page.give_selected()
+	_check(page.grade_text() == "Masterwork" and r.args == [-1, 40034, 1, 850], "Give a steel axe at 850: a Masterwork, its quality sent (%s)" % str(r.args))
+	page.pick_item(40034, 1, 500)
+	_check(page.grade_text() == "Fine", "at 500: Fine")
+	page.queue_free()
+	# The Escape menu gains the page's button, for the admin only (offline, nobody is).
+	var menu: PauseMenu = (load("res://foundation/ui/pause_menu.tscn") as PackedScene).instantiate() as PauseMenu
+	add_child(menu)
+	var hud: RegentsHud = (load("res://game/regents/regents_hud.tscn") as PackedScene).instantiate() as RegentsHud
+	add_child(hud)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var button: Button = menu.find_child("Tester", true, false) as Button
+	_check(button != null and button.text == "Tester (admin)" and not button.visible and hud.tester_page != null and hud.tester_page.get_parent() == menu,
+		"the Escape menu has a Tester (admin) button, hidden from a player who is not the admin, its page in the menu")
+	# By its words, not its name: Godot renames a second node called "Tester", so a name finds one only.
+	var count: Callable = func() -> int:
+		return menu.find_children("*", "Button", true, false).filter(func(b: Node) -> bool: return (b as Button).text == "Tester (admin)").size()
+	var buttons: int = count.call()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(buttons == 1 and count.call() == 1, "added once, not every frame (%d, then %d)" % [buttons, count.call()])
+	hud.queue_free()
+	menu.queue_free()
+	await get_tree().process_frame
+
+
 func _params(permille: int = 450) -> ChopParams:
 	var p: ChopParams = ChopParams.new()
 	p.duration_ms = 10000
@@ -717,7 +946,7 @@ func _run_content() -> void:
 	var names: Array[String] = []
 	for n: NodeDef in NodeDef.all_by_tier():
 		names.append(n.display_name)
-	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock"], "five nodes, by skill then tier: %s" % str(names))
+	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock"], "six nodes, by skill then tier: %s" % str(names))
 	var prev: ChopParams = null
 	for n: NodeDef in NodeDef.all_by_tier():
 		if not (n.minigame is ChopParams):
@@ -745,8 +974,8 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 2 and RecipeDef.at(&"anvil").size() == 3 and RecipeDef.at(&"workbench").size() == 9 and RecipeDef.at(&"orders").is_empty(),
-		"two recipes at the furnace, three at the anvil (rivets, the axe head, the sword blade), nine at the workbench (three handles, the axe, the sword, the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 12 and RecipeDef.at(&"workbench").size() == 16 and RecipeDef.at(&"orders").is_empty(),
+		"three recipes at the furnace (copper, iron, steel bars), twelve at the anvil (rivets, an axe head, a sword blade and a pickaxe head of each metal), sixteen at the workbench (three handles; an axe, a sword and a pickaxe of each metal; the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
 	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -773,6 +1002,329 @@ func _run_content() -> void:
 		_check(StationDef.by_key(key) != null, "the %s is a station" % key)
 	var iron: ItemDef = ItemDef.by_id(40015)
 	_check(iron.tool_tag == &"axe" and iron.tool_tier == 2 and iron.tool_speed_pct == 85 and iron.held_scene != null, "the iron axe: tier 2, 85 % of the time, held as its own")
+
+
+## THE MATERIAL TABLE as shipped (`MATERIALS.md` step 1): today's hand-written chain re-expressed as cells,
+## their ids pinned, nothing out of date; and a cell gone wrong is caught where the bake will see it.
+func _run_material_table() -> void:
+	print("== regents: the material table ==")
+	var keys: Array[StringName] = []
+	for m: MaterialDef in MaterialTable.materials():
+		keys.append(m.key)
+	var pkeys: Array[StringName] = []
+	for p: PatternDef in MaterialTable.patterns():
+		pkeys.append(p.key)
+	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel"]
+		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets"],
+		"six materials and nine patterns: %s x %s" % [str(keys), str(pkeys)])
+	var bad: Array[String] = []
+	for type: StringName in [&"material", &"pattern"]:
+		for d: ContentDef in ContentLibrary.items(type):
+			if not d.validate().is_empty():
+				bad.append("%s: %s" % [d.display_name, str(d.validate())])
+	_check(bad.is_empty(), "every material and pattern is valid%s" % ("" if bad.is_empty() else ": " + "; ".join(bad)))
+	# The ids players hold, pinned: each cell IS the file it was (MATERIALS.md §2).
+	var pinned: Dictionary[String, int] = {"copper:bar": 40010, "iron:bar": 40011, "iron:axe_head": 40014, "iron:sword_blade": 40018,
+		"iron:axe": 40015, "iron:sword": 40019, "plain_wood:handle": 40013, "oak:handle": 40016, "yew:handle": 40017,
+		"copper:axe": 40001, "copper:pickaxe": 40006, "steel:bar": 40025, "copper:rivets": 40012}
+	var got: Dictionary[String, int] = {}
+	for c: Dictionary in MaterialTable.plan():
+		var m: MaterialDef = c["material"]
+		var p: PatternDef = c["pattern"]
+		var it: ItemDef = MaterialTable.cell(m, p)
+		got["%s:%s" % [m.key, p.key]] = it.id if it != null else -1
+	var kept: bool = true
+	for k: String in pinned:
+		kept = kept and got.get(k, -1) == pinned[k]
+	_check(got.size() == 27 and kept and not got.values().has(-1),
+		"27 cells (three metals in eight patterns, three woods in one), every one made; the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
+	var problems: Array[String] = MaterialTable.problems()
+	_check(problems.is_empty(), "the table is current: every cell and recipe as the table makes it%s" % ("" if problems.is_empty() else ": " + "; ".join(problems)))
+	var dry: Dictionary = MaterialTable.generate(false)
+	_check((dry["made"] as Array).is_empty() and (dry["updated"] as Array).is_empty() and (dry["errors"] as Array).is_empty(),
+		"making it again would change nothing: %s" % str(dry["lines"]))
+	var iron: MaterialDef = MaterialDef.by_key(&"iron")
+	var plain: MaterialDef = MaterialDef.by_key(&"plain_wood")
+	var axe_p: PatternDef = MaterialTable.cell(iron, MaterialTable.patterns()[4]).pattern
+	_check(axe_p.item_name(iron) == "Iron axe" and MaterialTable.patterns()[3].item_name(plain) == "Handle",
+		"names: \"{m} axe\" of iron is \"Iron axe\"; \"{m} handle\" of plain wood is \"Handle\"")
+	var wants: Dictionary = MaterialTable.item_wants(iron, axe_p)
+	_check(wants["tool_tier"] == 2 and wants["tool_speed_pct"] == 85 and wants["weapon_damage_pct"] == 100 and wants["tool_tag"] == &"axe",
+		"an iron axe's tier, tool speed and Power are iron's: %s" % str(wants))
+	var errs: Array[String] = []
+	var rw: Dictionary = MaterialTable.recipe_wants(iron, axe_p, ItemDef.by_id(40015), MaterialTable._index(MaterialTable._items()), errs)
+	var ins: Array[String] = []
+	for it: ItemDef in rw["inputs"] as Array:
+		ins.append(it.display_name)
+	_check(errs.is_empty() and ins == ["Iron axe head", "Handle", "Copper rivets"] and rw["part_slot"] == 1 and rw["input_qty"] == PackedInt32Array([1, 1, 2]),
+		"its recipe from the slots: the iron head (the core), any handle (plain listed, the player's pick), two rivets: %s" % str(ins))
+	# A cell gone wrong, in memory only: the bake refuses it through the material's own check.
+	var axe: ItemDef = ItemDef.by_id(40015)
+	axe.weapon_damage_pct = 90
+	var iron_says: Array[String] = iron.validate_with(ContentLibrary.items(&"material"))
+	var copper_says: Array[String] = MaterialDef.by_key(&"copper").validate_with(ContentLibrary.items(&"material"))
+	_check(iron_says.size() == 1 and iron_says[0].contains("iron_axe.tres") and iron_says[0].contains("weapon_damage_pct: has 90, makes 100")
+		and iron_says[0].contains("Make the table"), "an iron axe at 90 %%: iron's check names the file, the field and the fix: %s" % str(iron_says))
+	_check(copper_says.is_empty(), "and copper's says nothing (each material reports its own cells)")
+	axe.weapon_damage_pct = 100
+	iron.tier = 3
+	var tier_says: Array[String] = MaterialTable.problems()
+	_check(tier_says.size() == 2 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
+		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_axe.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_pickaxe.tres")),
+		"iron moved to tier 3: its axe's and pickaxe's tool tiers are out of date (a sword's and a head's have none): %s" % str(tier_says))
+	iron.tier = 2
+	var recipe: RecipeDef = RecipeDef.by_id(40006)
+	var was: Array[ItemDef] = recipe.inputs.duplicate()
+	recipe.inputs = [was[0], ItemDef.by_id(40016), was[2]]
+	_check(MaterialTable.problems().any(func(p: String) -> bool: return p.contains("iron_axe.tres") and p.contains("inputs")),
+		"a table recipe listing an oak handle where the pattern lists the plain one is out of date")
+	recipe.inputs = was
+	var tuned: int = recipe.xp
+	recipe.xp = tuned + 7
+	_check(MaterialTable.problems().is_empty(), "a recipe's XP is the designer's: tuning it is never out of date")
+	recipe.xp = tuned
+	_check(MaterialTable.problems().is_empty(), "everything put back: current again")
+	# STEP 2: copper, iron, steel (MATERIALS.md §8).
+	var copper: MaterialDef = MaterialDef.by_key(&"copper")
+	var steel: MaterialDef = MaterialDef.by_key(&"steel")
+	_check(copper.tier == 1 and iron.tier == 2 and steel.tier == 3 and copper.weapon_damage_pct < iron.weapon_damage_pct
+		and iron.weapon_damage_pct < steel.weapon_damage_pct and steel.tool_speed_pct < iron.tool_speed_pct and steel.raw == null,
+		"the ladder: copper 1, iron 2, steel 3, each a stronger core and a quicker tool; steel has no ore")
+	var starter_axe: ItemDef = ItemDef.by_id(40001)
+	var starter_pick: ItemDef = ItemDef.by_id(40006)
+	_check(starter_axe.display_name == "Copper axe" and starter_axe.material == copper and starter_axe.tool_tier == 1 and starter_axe.weapon_damage_pct == 70
+		and starter_pick.display_name == "Copper pickaxe" and starter_pick.tool_tag == &"pick" and starter_pick.tool_tier == 1,
+		"the starters are copper's cells, under their old ids: the Copper axe (tier 1, Power 70) and the Copper pickaxe")
+	var swords: Array[int] = []
+	for m: MaterialDef in [copper, iron, steel]:
+		var sw: ItemDef = MaterialTable.cell(m, MaterialTable.patterns()[5])
+		swords.append_array([RegentsGrade.power(sw, 0), RegentsGrade.power(sw, 1000)])
+	_check(swords == [70, 84, 100, 120, 140, 168], "swords by tier, worst to best: copper 70-84, iron 100-120, steel 140-168: no overlap %s" % str(swords))
+	var steel_bar: ItemDef = MaterialTable.cell(steel, MaterialTable.patterns()[0])
+	var smelt_steel: RecipeDef = null
+	for rr: RecipeDef in RecipeDef.all():
+		if rr.output == steel_bar:
+			smelt_steel = rr
+	var steel_ins: Array[String] = []
+	for it: ItemDef in smelt_steel.inputs:
+		steel_ins.append(it.display_name)
+	_check(steel_bar.by_hand and not smelt_steel.from_table and smelt_steel.station == &"furnace" and steel_ins == ["Iron ore", "Coal"]
+		and smelt_steel.input_qty == PackedInt32Array([2, 2]), "the steel bar is a cell by hand: two iron ore and two coal at the furnace")
+	var steel_head: RecipeDef = null
+	for rr: RecipeDef in RecipeDef.all():
+		if rr.output == MaterialTable.cell(steel, MaterialTable.patterns()[1]):
+			steel_head = rr
+	_check(steel_head.from_table and steel_head.inputs[0] == steel_bar and steel_head.min_rank == 3, "the table's steel axe head takes that bar (at smithing rank 3)")
+	steel_bar.by_hand = false
+	_check(MaterialTable.problems(steel).any(func(p: String) -> bool: return p.contains("Steel has no raw form")),
+		"unticked, the steel bar would be the table's, which cannot make it from no ore: said")
+	steel_bar.by_hand = true
+	var coal_rock: NodeDef = NodeDef.by_id(40006)
+	_check(coal_rock.display_name == "Coal rock" and coal_rock.tier == 3 and coal_rock.min_tool_tier == 2 and coal_rock.min_rank == 3
+		and coal_rock.yield_item == ItemDef.by_id(40024) and ItemDef.by_id(40024).display_name == "Coal",
+		"the coal rock: mining tier 3, an iron pick (tier 2) and mining rank 3, yielding coal")
+	var iron_pick: ItemDef = MaterialTable.cell(iron, MaterialTable.patterns()[7])
+	_check(iron_pick.display_name == "Iron pickaxe" and iron_pick.tool_tier >= coal_rock.min_tool_tier and starter_pick.tool_tier < coal_rock.min_tool_tier,
+		"the iron pickaxe works coal; the starter's copper one does not")
+	# What the types refuse.
+	var stray: ItemDef = ItemDef.new()
+	stray.id = 1
+	stray.display_name = "Stray"
+	stray.material = iron
+	_check(stray.validate().any(func(e: String) -> bool: return e.contains("both its material and its pattern")), "a cell with a material and no pattern is refused")
+	var no_core: PatternDef = axe_p.duplicate() as PatternDef
+	var slots: Array[PartSlot] = []
+	for s: PartSlot in axe_p.parts:
+		var c2: PartSlot = s.duplicate() as PartSlot
+		c2.core = false
+		slots.append(c2)
+	no_core.parts = slots
+	_check(no_core.validate().any(func(e: String) -> bool: return e.contains("one slot is its core")), "a pattern with no core slot is refused")
+	var nameless: PatternDef = axe_p.duplicate() as PatternDef
+	nameless.name_format = "Axe"
+	_check(nameless.validate().any(func(e: String) -> bool: return e.contains("{m}")), "a pattern whose names lack {m} is refused")
+	var mine: RecipeDef = RecipeDef.by_id(40012).duplicate() as RecipeDef
+	mine.from_table = true
+	_check(mine.validate().any(func(e: String) -> bool: return e.contains("no cell the table makes")), "a table recipe for an item that is no cell (arrow shafts) is refused")
+
+
+## MAKING THE TABLE, for real, in a scratch project: a new metal and a new wood become their cells and
+## recipes; making it again changes nothing; the designer's numbers survive, the table's fields come back;
+## a hole leaves its file (never deleted) and says so; a cell by hand is left alone.
+func _run_material_table_writes() -> void:
+	print("== regents: making the material table ==")
+	var root: String = "user://material_table_test"
+	_wipe_dir(root)
+	ContentLibrary.root_override = root
+	ContentLibrary.genres_override = PackedStringArray(["regents"])
+	var c: String = root.path_join("game/regents/content")
+	for d: String in ["item", "recipe", "material", "pattern"]:
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(c.path_join(d)))
+	var mod := GenreModule.new()
+	mod.id = &"regents"
+	mod.content_id_base = 40000
+	ResourceSaver.save(mod, root.path_join("game/regents/genre.tres"))
+	var ore: ItemDef = _scratch_item(c, 40001, "Tin ore")
+	var ash_logs: ItemDef = _scratch_item(c, 40002, "Ash logs")
+	var pins: ItemDef = _scratch_item(c, 40003, "Pins")
+	var tin := MaterialDef.new()
+	tin.id = 40001
+	tin.display_name = "Tin"
+	tin.key = &"tin"
+	tin.prefix = "Tin"
+	tin.tier = 3
+	tin.raw = ore
+	tin.weapon_damage_pct = 130
+	tin.tool_speed_pct = 70
+	tin.work_scale_pct = 200
+	tin.rank = 5
+	tin.color = Color(0.3, 0.4, 0.5)
+	ResourceSaver.save(tin, c.path_join("material/tin.tres"))
+	var ash := MaterialDef.new()
+	ash.id = 40002
+	ash.display_name = "Ash"
+	ash.key = &"ash"
+	ash.prefix = "Ash"
+	ash.family = MaterialDef.Family.WOOD
+	ash.raw = ash_logs
+	ash.part_trait = load("res://game/regents/content/trait/steady.tres") as TraitDef
+	ResourceSaver.save(ash, c.path_join("material/ash.tres"))
+	tin = load(c.path_join("material/tin.tres")) as MaterialDef
+	ash = load(c.path_join("material/ash.tres")) as MaterialDef
+	var crafting: SkillDef = load("res://game/regents/content/skill/crafting.tres") as SkillDef
+	var bar: PatternDef = _scratch_pattern(c, 40001, &"bar", "{m} bar", MaterialDef.Family.METAL, [_scratch_slot("ore", PartSlot.Takes.RAW, null, null, null, 2, true)], crafting)
+	var head: PatternDef = _scratch_pattern(c, 40002, &"head", "{m} head", MaterialDef.Family.METAL, [_scratch_slot("bar", PartSlot.Takes.SAME_MATERIAL, bar, null, null, 3, true)], crafting)
+	var handle: PatternDef = _scratch_pattern(c, 40003, &"handle", "{m} handle", MaterialDef.Family.WOOD, [_scratch_slot("logs", PartSlot.Takes.RAW, null, null, null, 2, true)], crafting, &"handle")
+	var axe: PatternDef = _scratch_pattern(c, 40004, &"axe", "{m} axe", MaterialDef.Family.METAL, [
+		_scratch_slot("head", PartSlot.Takes.SAME_MATERIAL, head, null, null, 1, true),
+		_scratch_slot("handle", PartSlot.Takes.ANY_MATERIAL, handle, ash, null, 1, false),
+		_scratch_slot("binding", PartSlot.Takes.ITEM, null, null, pins, 4, false)], crafting, &"", &"axe")
+	var first: Dictionary = MaterialTable.generate()
+	_check((first["errors"] as Array).is_empty() and (first["made"] as Array).size() == 8 and (first["updated"] as Array).is_empty(),
+		"a new metal and a new wood: four cells and four recipes made %s %s" % [str(first["lines"]), str(first["errors"])])
+	# As the bake reads them: from disk, every recipe LINKING its cells by file (a copy inside it has no id).
+	var inside: Array[String] = []
+	for path: String in first["made"] as Array:
+		var fresh: RecipeDef = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as RecipeDef
+		if fresh == null:
+			continue
+		for linked: ItemDef in fresh.inputs + [fresh.output]:
+			if linked == null or linked.resource_path.is_empty() or linked.resource_path.contains("::"):
+				inside.append("%s: %s" % [path.get_file(), linked.display_name if linked != null else "none"])
+	_check(inside.is_empty(), "read back from disk, each recipe links its cells by their files, made in the same run (none carried inside) %s" % str(inside))
+	var t_axe: ItemDef = MaterialTable.cell(tin, axe)
+	var a_handle: ItemDef = MaterialTable.cell(ash, handle)
+	_check(t_axe != null and t_axe.display_name == "Tin axe" and t_axe.tool_tier == 3 and t_axe.tool_speed_pct == 70 and t_axe.weapon_damage_pct == 130
+		and t_axe.tool_tag == &"axe" and t_axe.max_stack == 1 and t_axe.color == tin.color and t_axe.id >= 40004 and t_axe.resource_path.ends_with("item/tin_axe.tres"),
+		"the Tin axe: tin's tier 3, tool speed 70 and Power 130, a new id (%d) and its own file" % (t_axe.id if t_axe != null else -1))
+	_check(a_handle != null and a_handle.display_name == "Ash handle" and a_handle.part_tag == &"handle" and a_handle.handle_trait != null
+		and a_handle.handle_trait.key == &"steady", "the Ash handle: a handle, giving ash's trait (Steady)")
+	var r: RecipeDef = null
+	for d: ContentDef in ContentLibrary.items(&"recipe"):
+		if (d as RecipeDef).output != null and (d as RecipeDef).output.id == t_axe.id:
+			r = d as RecipeDef
+	var names: Array[String] = []
+	for it: ItemDef in r.inputs:
+		names.append(it.display_name)
+	_check(r != null and r.from_table and names == ["Tin head", "Ash handle", "Pins"] and r.input_qty == PackedInt32Array([1, 1, 4]) and r.part_slot == 1,
+		"its recipe: the tin head, an ash handle (the pick), four pins: %s" % str(names))
+	_check(r.xp == 50 and r.afk_ms == 8000 and r.min_rank == 5, "new numbers start from the pattern, scaled by tin (200 %: 50 XP, 8 s) at tin's rank 5")
+	var again: Dictionary = MaterialTable.generate()
+	_check((again["made"] as Array).is_empty() and (again["updated"] as Array).is_empty() and MaterialTable.problems().is_empty(),
+		"making it again changes nothing, and the table is current")
+	# The designer tunes; someone edits a field that is the table's.
+	r.xp = 999
+	ResourceSaver.save(r, r.resource_path)
+	t_axe.display_name = "Wrong"
+	t_axe.color = Color(1, 0, 0)
+	ResourceSaver.save(t_axe, t_axe.resource_path)
+	var says: Array[String] = MaterialTable.problems()
+	_check(says.size() == 1 and says[0].contains("tin_axe.tres") and says[0].contains("display_name"), "a renamed cell is out of date, its tuned XP and colour are not: %s" % str(says))
+	var fix: Dictionary = MaterialTable.generate()
+	var reread: ItemDef = load(t_axe.resource_path) as ItemDef
+	_check((fix["updated"] as Array).size() == 1 and reread.display_name == "Tin axe" and reread.color == Color(1, 0, 0) and r.xp == 999,
+		"making it puts the name back and keeps the colour and the XP")
+	# The material moves.
+	tin.tier = 4
+	ResourceSaver.save(tin, tin.resource_path)
+	var moved: Dictionary = MaterialTable.generate()
+	_check((moved["updated"] as Array).size() == 1 and String((moved["updated"] as Array)[0]).ends_with("tin_axe.tres") and t_axe.tool_tier == 4,
+		"tin to tier 4: only the axe changes (a bar and a head have no tier)")
+	# A hole where a cell was: its file stays.
+	axe.not_made_of = [tin]
+	ResourceSaver.save(axe, axe.resource_path)
+	var hole: Array[String] = MaterialTable.problems()
+	MaterialTable.generate()
+	_check(hole.any(func(p: String) -> bool: return p.contains("tin_axe.tres") and p.contains("does not make")) and FileAccess.file_exists(t_axe.resource_path),
+		"a hole where the Tin axe was: said, and its file never deleted (its id may be in bags)")
+	t_axe.by_hand = true
+	ResourceSaver.save(t_axe, t_axe.resource_path)
+	_check(MaterialTable.problems().is_empty(), "ticked by hand: the table leaves it alone")
+	axe.not_made_of = []
+	ResourceSaver.save(axe, axe.resource_path)
+	t_axe.display_name = "My own axe"
+	ResourceSaver.save(t_axe, t_axe.resource_path)
+	var own: Dictionary = MaterialTable.generate()
+	_check((own["made"] as Array).is_empty() and (own["updated"] as Array).is_empty() and t_axe.display_name == "My own axe",
+		"a cell by hand counts as made, and stays as written")
+	ContentLibrary.root_override = ""
+	ContentLibrary.genres_override = null
+	RegentsContent.clear()
+	_wipe_dir(root)
+
+
+func _scratch_item(c: String, id: int, n: String) -> ItemDef:
+	var it := ItemDef.new()
+	it.id = id
+	it.display_name = n
+	var path: String = c.path_join("item/%s.tres" % ContentLibrary.file_stem(n))
+	ResourceSaver.save(it, path)
+	return load(path) as ItemDef
+
+
+func _scratch_pattern(c: String, id: int, key: StringName, fmt: String, fam: MaterialDef.Family, parts: Array[PartSlot], skill: SkillDef,
+		part_tag: StringName = &"", kit: StringName = &"") -> PatternDef:
+	var p := PatternDef.new()
+	p.id = id
+	p.display_name = String(key).capitalize()
+	p.key = key
+	p.name_format = fmt
+	p.family = fam
+	p.parts = parts
+	p.skill = skill
+	p.part_tag = part_tag
+	p.carries_trait = part_tag != &""
+	p.max_stack = 100 if part_tag != &"" else (1 if kit != &"" else 1000)
+	p.tool_tag = kit
+	p.weapon_kit = kit
+	p.xp = 25
+	p.afk_ms = 4000
+	var path: String = c.path_join("pattern/%s.tres" % key)
+	ResourceSaver.save(p, path)
+	return load(path) as PatternDef
+
+
+func _scratch_slot(n: String, t: PartSlot.Takes, pat: PatternDef, dm: MaterialDef, it: ItemDef, q: int, core: bool) -> PartSlot:
+	var s := PartSlot.new()
+	s.name = n
+	s.takes = t
+	s.pattern = pat
+	s.default_material = dm
+	s.item = it
+	s.qty = q
+	s.core = core
+	return s
+
+
+func _wipe_dir(dir: String) -> void:
+	var abs: String = ProjectSettings.globalize_path(dir)
+	if not DirAccess.dir_exists_absolute(abs):
+		return
+	for f: String in DirAccess.get_files_at(abs):
+		DirAccess.remove_absolute(abs.path_join(f))
+	for d: String in DirAccess.get_directories_at(abs):
+		_wipe_dir(dir.path_join(d))
+	DirAccess.remove_absolute(abs)
 
 
 func _run_trunk() -> void:
@@ -1039,7 +1591,7 @@ func _run_looks() -> void:
 		_check(held != null and held.grip.hand == &"hand_r" and fitted, "%s is a held item, held in %s (its own grip there, or its one grip for all)" % [path.get_file(), tools[path]])
 		node.free()
 	_check(ItemDef.by_id(40001).held_scene != null and ItemDef.by_id(40006).held_scene != null and SkillDef.by_key(&"smithing").tool_scene != null,
-		"the bronze axe and pickaxe show as themselves; the smith holds a hammer")
+		"the copper axe and pickaxe show as themselves; the smith holds a hammer")
 	var player: Node = (load("res://game/regents/adventurer.tscn") as PackedScene).instantiate()
 	_check(player.get_node_or_null(^"Components/SkillingLook") is SkillingLook and player.get_node_or_null(^"Components/Skilling") is SkillingComponent,
 		"the adventurer carries its skilling and the look of it")
@@ -1222,8 +1774,8 @@ func _run_lab() -> void:
 	var buttons: Array[Button] = []
 	buttons.assign(lab.get("buttons"))
 	var game: SkillMinigame = lab.get("game") as SkillMinigame
-	_check(buttons.size() == 9 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
-		"nine rounds to play (five nodes, four recipes), the first, a tree's, on show (%d)" % buttons.size())
+	_check(buttons.size() == 18 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"eighteen rounds to play (six nodes; three bars and nine smithed parts), the first, a tree's, on show (%d)" % buttons.size())
 	if buttons.size() == 9:
 		buttons[3].pressed.emit()
 		game = lab.get("game") as SkillMinigame

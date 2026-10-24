@@ -58,7 +58,7 @@ use umf_module::genre::regents as rules;
 #[test]
 fn the_chain_is_compiled_in() {
     let nodes: Vec<&str> = rules::NODES.iter().map(|n| n.name).collect();
-    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock"], "the five nodes, from game/regents/content/node/");
+    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock"], "the six nodes, from game/regents/content/node/");
     for n in rules::NODES {
         assert!(rules::item(n.yield_item).is_some() && rules::skill(n.skill).is_some(), "{} gives an item and trains a skill", n.name);
         assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)), "{}'s round is a gathering round", n.name);
@@ -67,10 +67,13 @@ fn the_chain_is_compiled_in() {
     assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
     assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD]);
-    for bar in ["Copper bar", "Iron bar"] {
+    for bar in ["Copper bar", "Iron bar", "Steel bar"] {
         let r = rules::RECIPES.iter().find(|r| r.name == bar).unwrap();
         assert_eq!(r.inputs[0].1, 2, "{bar}: two ores to a bar (owner, 2026-10-19: never one to one)");
     }
+    let steel = rules::RECIPES.iter().find(|r| r.name == "Steel bar").unwrap();
+    assert_eq!(steel.inputs.len(), 2, "steel: iron ore and coal (MATERIALS.md step 2)");
+    assert_eq!(rules::item(steel.inputs[1].0).map(|i| i.name), Some("Coal"), "steel's second input is coal");
     for r in rules::RECIPES {
         assert!(rules::STATIONS.iter().any(|s| s.key == r.station), "{} is made at a station", r.name);
         assert!(r.inputs.iter().all(|(i, q)| rules::item(*i).is_some() && *q >= 1), "{}'s inputs are items", r.name);
@@ -148,7 +151,7 @@ fn ranks_come_from_the_curve_and_speed_from_tool_quality_and_rank() {
     let wc = rules::SKILLS.iter().find(|s| s.key == "woodcutting").unwrap();
     assert_eq!((rules::rank_of(wc, 0), rules::rank_of(wc, 59), rules::rank_of(wc, 60), rules::rank_of(wc, 280)), (1, 1, 2, 4));
     assert_eq!(rules::rank_of(wc, 1_000_000), wc.xp_to_rank.len() as u32 + 1, "the cap is the curve's length");
-    assert_eq!(rules::speed_pct(100, 0, 1), 100, "a bronze tool, no quality, rank 1: as authored");
+    assert_eq!(rules::speed_pct(100, 0, 1), 100, "a copper tool, no quality, rank 1: as authored");
     assert_eq!(rules::speed_pct(85, 0, 1), 85, "the iron axe");
     assert_eq!(rules::speed_pct(85, 1000, 1), 76, "a perfect iron axe: a tenth more off (85 x 0.9)");
     assert_eq!(rules::speed_pct(100, 0, 4), 91, "rank 4: 9 % off");
@@ -324,11 +327,11 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     assert!(rules::kit_of_ability(rules::ABILITY_DODGE).is_none(), "the roll is everyone's: no kit");
     let iron_sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").unwrap();
     assert_eq!((iron_sword.weapon_kit, iron_sword.weapon_damage_pct), ("sword", 100));
-    let bronze_axe = rules::item(40001).unwrap();
-    assert_eq!((bronze_axe.weapon_kit, bronze_axe.tool_tag), ("axe", "axe"), "the axe is a tool and a weapon");
+    let copper_axe = rules::item(40001).unwrap();
+    assert_eq!((copper_axe.weapon_kit, copper_axe.tool_tag), ("axe", "axe"), "the axe is a tool and a weapon");
     assert!(rules::item(40002).unwrap().weapon_kit.is_empty(), "logs are no weapon");
     assert_eq!(rules::hit_damage(10.0, 100, 0, 1), 10.0, "as authored: no quality, rank 1");
-    assert_eq!(rules::hit_damage(10.0, 70, 0, 1), 7.0, "a bronze axe at 70 %");
+    assert_eq!(rules::hit_damage(10.0, 70, 0, 1), 7.0, "a copper axe at 70 %");
     assert!((rules::hit_damage(10.0, 100, 1000, 1) - 12.0).abs() < 1e-4, "a perfect weapon: a fifth more");
     assert!((rules::hit_damage(10.0, 100, 0, 4) - 10.9).abs() < 1e-4, "rank 4: 9 % more");
     assert!((rules::hit_damage(10.0, 100, 0, 99) - 12.7).abs() < 1e-4, "mastery's share stops at 27 %");
@@ -538,9 +541,16 @@ fn every_trait_trades_and_fits_what_it_is_on() {
         let sometimes = t.atoms.iter().any(|a| !a.condition.is_empty() && a.condition != "always");
         assert!(cost || sometimes, "{} is a pure gain", t.key);
     }
+    // A part's tool trait fits a tool and its weapon trait a weapon (owner, 2026-10-23); a rivet's may be one a
+    // drop rolls too (Gentle, Lucky, Prospector's), a handle's is its own (Steady, Springy).
     for h in rules::ITEMS.iter().filter(|i| i.handle_trait != 0) {
-        let t = traits::find(h.handle_trait).expect("a handle's trait is a trait");
-        assert!(traits::fits(t, &["tool", "axe"]) && !t.rollable, "{}'s {} is a tool's, and only a handle's", h.name, t.key);
+        let t = traits::find(h.handle_trait).expect("a part's tool trait is a trait");
+        assert!(traits::fits(t, &["tool", "axe"]), "{}'s {} is a tool's", h.name, t.key);
+        assert!(h.part_tag != "handle" || !t.rollable, "{}'s {} is a handle's own", h.name, t.key);
+    }
+    for h in rules::ITEMS.iter().filter(|i| i.weapon_trait != 0) {
+        let t = traits::find(h.weapon_trait).expect("a part's weapon trait is a trait");
+        assert!(traits::fits(t, &["weapon", "sword", "melee"]), "{}'s {} is a weapon's", h.name, t.key);
     }
     let iron_axe = rules::ITEMS.iter().find(|i| i.name == "Iron axe").unwrap();
     let bow = rules::ITEMS.iter().find(|i| i.weapon_kit == "bow").unwrap();
@@ -613,4 +623,62 @@ fn the_meta_is_each_weapons_share_of_a_periods_damage_and_an_alarm_past_the_line
         assert_eq!(rules::kit_of_skill(kit.skill), k, "the {k}'s skill names its weapon type");
     }
     assert_eq!(rules::kit_of_skill(0), "", "no skill, no weapon type");
+}
+
+#[test]
+fn the_tester_page_sets_a_rank_at_its_start() {
+    let wc = rules::SKILLS.iter().find(|s| s.key == "woodcutting").unwrap();
+    assert_eq!(rules::xp_for_rank(wc, 1), Some(0), "rank 1 is no XP");
+    for r in 2..=rules::max_rank(wc) {
+        let xp = rules::xp_for_rank(wc, r).unwrap();
+        assert_eq!(rules::rank_of(wc, xp), r, "rank {r}'s start is rank {r}");
+        assert_eq!(rules::rank_of(wc, xp - 1), r - 1, "one XP short of rank {r} is rank {}", r - 1);
+    }
+    assert_eq!(rules::xp_for_rank(wc, 0), None, "no rank 0");
+    assert_eq!(rules::xp_for_rank(wc, rules::max_rank(wc) + 1), None, "nothing past the highest rank");
+}
+
+#[test]
+fn a_crafted_item_holds_traits_by_its_grade() {
+    // Fine from 400, Masterwork from 800 (the hot rules' defaults); Common 1, Fine 2, Masterwork 3.
+    let room = |q| rules::crafted_trait_room(q, 400, 800, 1, 2, 3);
+    assert_eq!((room(0), room(399), room(400), room(799), room(800), room(1000)), (1, 1, 2, 2, 3, 3), "the grade's count");
+    let (steady, springy, other) = (40001, 40002, 40099);
+    assert_eq!(rules::crafted_traits(&[springy, steady], &[steady, springy], 3), vec![springy, steady], "the player's order");
+    assert_eq!(rules::crafted_traits(&[springy, steady], &[steady, springy], 1), vec![springy], "a lower grade keeps the first");
+    assert_eq!(rules::crafted_traits(&[other, steady], &[steady], 2), vec![steady], "a trait no part offers is dropped");
+    assert_eq!(rules::crafted_traits(&[steady, steady], &[steady], 2), vec![steady], "none twice");
+    assert_eq!(rules::crafted_traits(&[], &[steady], 2), Vec::<u32>::new(), "none chosen: none");
+}
+
+#[test]
+fn no_traits_on_purpose_stays_none() {
+    let oak = rules::item(40016).unwrap();
+    assert!(oak.handle_trait != 0, "the oak handle gives a trait");
+    let none = rules::made_data(500, &[40016, 40012], &[]);
+    assert_eq!(none, "{\"q\":500,\"h\":40016,\"p\":[40016,40012],\"t\":[]}");
+    assert!(rules::traits_of_row(&none).is_empty(), "an oak-handled tool made with no traits ON PURPOSE has none");
+    assert_eq!(rules::traits_of_row("{\"q\":500,\"h\":40016}"), vec![oak.handle_trait], "one made before traits (no \"t\") still has its handle's");
+    let some = rules::made_data(900, &[40016, 40012], &[oak.handle_trait]);
+    assert_eq!(rules::traits_of_row(&some), vec![oak.handle_trait], "one made with its handle's trait has it");
+    assert_eq!(rules::quality_of(&some), Some(900), "and its quality");
+    assert_eq!(rules::parts_of_row(&some), vec![40016, 40012], "and its parts, in slot order (what a refit changes)");
+    assert_eq!(rules::parts_of_row("{\"q\":500,\"h\":40016}"), vec![40016], "one made before parts were noted: its handle");
+}
+
+#[test]
+fn a_part_offers_the_trait_that_fits() {
+    // Owner, 2026-10-23: a tool's trait for a tool (an axe too), a weapon's for a weapon; only one that fits.
+    let (oak, rivets, steel_r, plain) = (rules::item(40016).unwrap(), rules::item(40012).unwrap(), rules::item(40039).unwrap(), rules::item(40013).unwrap());
+    let (axe, sword) = (rules::item(40015).unwrap(), rules::item(40019).unwrap());
+    let name = |id: u32| crate_trait_key(id);
+    assert_eq!((name(rules::offered_for(oak, axe)), name(rules::offered_for(oak, sword))), ("steady", "heavy"), "oak: Steady on an axe, Heavy on a sword");
+    assert_eq!((name(rules::offered_for(rivets, axe)), name(rules::offered_for(rivets, sword))), ("gentle", "thirsting"), "copper rivets: Gentle, Thirsting");
+    assert_eq!(rules::offered_for(steel_r, sword), 0, "steel rivets give a sword nothing yet (Keen waits for crits)");
+    assert_eq!(rules::offered_for(plain, axe), 0, "a plain handle gives nothing");
+    assert_eq!((rules::grade_of(399, 400, 800), rules::grade_of(400, 400, 800), rules::grade_of(800, 400, 800)), (0, 1, 2), "grades by the cut points");
+}
+
+fn crate_trait_key(id: u32) -> &'static str {
+    umf_module::traits::find(id).map_or("", |t| t.key)
 }

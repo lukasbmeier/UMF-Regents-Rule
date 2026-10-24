@@ -20,3 +20,4 @@ quality = 0
 afk_quality = 350
 id = 40005
 display_name = "Handle"
+from_table = true

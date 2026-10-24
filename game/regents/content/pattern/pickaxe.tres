@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/skilling/mining/pickaxe.tscn" id="1_k3wvu"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_j8ecu"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="3_rqwry"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_7gtet"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/pickaxe_head.tres" id="4_owno3"]
+[ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="5_bylb8"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_owno3"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/handle.tres" id="6_06710"]
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="7_bylb8"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="8_06710"]
+
+[sub_resource type="Resource" id="Resource_edufd"]
+script = ExtResource("3_rqwry")
+name = "head"
+takes = 1
+pattern = ExtResource("4_owno3")
+core = true
+
+[sub_resource type="Resource" id="Resource_0uc7k"]
+script = ExtResource("3_rqwry")
+name = "handle"
+takes = 2
+pattern = ExtResource("6_06710")
+default_material = ExtResource("5_bylb8")
+
+[sub_resource type="Resource" id="Resource_24fk0"]
+script = ExtResource("3_rqwry")
+name = "binding"
+takes = 2
+pattern = ExtResource("8_06710")
+default_material = ExtResource("7_bylb8")
+qty = 2
+
+[resource]
+script = ExtResource("4_7gtet")
+key = &"pickaxe"
+name_format = "{m} pickaxe"
+max_stack = 1
+tool_tag = &"pick"
+skill = ExtResource("5_owno3")
+parts = Array[ExtResource("3_rqwry")]([SubResource("Resource_edufd"), SubResource("Resource_0uc7k"), SubResource("Resource_24fk0")])
+quality = 2
+xp = 25
+afk_ms = 4000
+held_scene = ExtResource("1_k3wvu")
+description = "A pick: works rocks up to its tier."
+id = 40008
+display_name = "Pickaxe"

@@ -57,6 +57,10 @@ var _health: SpaceTimeHealthComponent = null
 var skills_window: RegentsSkillsWindow = null
 var station_window: RegentsStationWindow = null
 var _bag_weapon_row: int = -2
+## THE TESTER PAGE (owner, 2026-10-23): the Escape menu's "Tester (admin)", for the admin only
+## (`RegentsTesterPage`). Added once the menu exists; its button follows the local player's role.
+var tester_page: RegentsTesterPage = null
+var _tester_button: Button = null
 
 
 func _ready() -> void:
@@ -228,6 +232,19 @@ func _outline(l: Label, font_size: int) -> void:
 	l.add_theme_constant_override(&"outline_size", 6)
 
 
+## The Tester page's button in the Escape menu, added when the menu is there, shown to the admin only.
+func _update_tester() -> void:
+	if _tester_button == null or not is_instance_valid(_tester_button):
+		var menu: PauseMenu = PauseMenu.find(get_tree())
+		if menu == null:
+			return
+		tester_page = RegentsTesterPage.new()
+		menu.add_child(tester_page)
+		_tester_button = menu.add_button("Tester (admin)", "Tester")
+		_tester_button.pressed.connect(func() -> void: menu.open_page(tester_page))
+	_tester_button.visible = Roles.is_local_admin()
+
+
 func _process(_delta: float) -> void:
 	if skilling == null or not is_instance_valid(skilling):
 		_find_player()
@@ -236,6 +253,7 @@ func _process(_delta: float) -> void:
 	_update_combat()
 	_update_vitals()
 	_update_work()
+	_update_tester()
 
 
 func _find_player() -> void:
@@ -344,15 +362,17 @@ static func station_prompt(sk: SkillingComponent, station: StationComponent, inv
 	if not c.has("recipe"):
 		return "%s: %s" % [name, "no orders yet" if station.key == SkillingComponent.ORDER_BOARD else "nothing is made here"]
 	var r: RecipeDef = c["recipe"]
-	var part: ItemDef = c.get("part", null) as ItemDef
 	var needs: PackedStringArray = PackedStringArray()
-	for i: int in r.inputs.size():
-		var it: ItemDef = part if i == r.part_slot and part != null else r.inputs[i]
+	for pair: Array in sk.takes(r):
+		var it: ItemDef = pair[0]
 		var have: int = inv.count(it.id) if inv != null else 0
-		needs.append("%d %s (%d)" % [r.input_qty[i], it.display_name, have])
+		needs.append("%d %s (%d)" % [int(pair[1]), it.display_name, have])
 	var title: String = r.display_name
-	if part != null and part != r.inputs[r.part_slot]:
-		title = "%s with %s (%s)" % [r.display_name, part.display_name.to_lower(), part.handle_trait_text()]
+	var traits: PackedStringArray = PackedStringArray()
+	for t: TraitDef in sk.traits_of(r):
+		traits.append(t.display_name)
+	if not traits.is_empty():
+		title = "%s (%s)" % [r.display_name, ", ".join(traits)]
 	var rec: Dictionary = sk.recipe_record(r.id)
 	var share: int = int(HotRules.number(&"regents.craft_work_share_pct"))
 	var pay: String = "about %d XP a batch" % r.craft_xp(share)

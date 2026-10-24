@@ -1,11 +1,19 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDef" format=3]
 
+[ext_resource type="Resource" path="res://game/regents/content/material/copper.tres" id="1_hvvh3"]
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/gentle.tres" id="1_wnsst"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="2_vdoe2"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/thirsting.tres" id="3_6cvl3"]
 
 [resource]
 script = ExtResource("1_item")
-max_stack = 1000
-color = Color(0.90, 0.60, 0.35, 1)
+part_tag = &"binding"
+handle_trait = ExtResource("1_wnsst")
+part_weapon_trait = ExtResource("3_6cvl3")
+color = Color(0.9, 0.6, 0.35, 1)
 description = "Fix a head to a handle."
+material = ExtResource("1_hvvh3")
+pattern = ExtResource("2_vdoe2")
 id = 40012
 display_name = "Copper rivets"

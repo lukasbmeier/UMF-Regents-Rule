@@ -309,6 +309,39 @@
       ]
     },
     {
+      "id": "coal_1",
+      "kind": "node",
+      "x": -31.0,
+      "y": 0.0,
+      "z": 25.0,
+      "radius": 0.6,
+      "tags": [
+        "Coal rock"
+      ]
+    },
+    {
+      "id": "coal_2",
+      "kind": "node",
+      "x": -29.0,
+      "y": 0.0,
+      "z": 32.0,
+      "radius": 0.6,
+      "tags": [
+        "Coal rock"
+      ]
+    },
+    {
+      "id": "coal_3",
+      "kind": "node",
+      "x": -21.0,
+      "y": 0.0,
+      "z": 31.0,
+      "radius": 0.6,
+      "tags": [
+        "Coal rock"
+      ]
+    },
+    {
       "id": "furnace",
       "kind": "station",
       "x": -6.0,

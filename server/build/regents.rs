@@ -84,10 +84,10 @@ pub fn regents_data() {
             weapon_kits.push((name.clone(), kit.clone()));
         }
         out.push_str(&format!("    ItemSeed {{ id: {}, name: {name:?}, max_stack: {}, tool_tag: {tag:?}, tool_tier: {tier}, tool_speed_pct: {}, \
-             weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_trait: {}, ammo_for: {:?}, \
+             weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_trait: {}, weapon_trait: {}, ammo_for: {:?}, \
              ammo_damage_pct: {} }},\n",
             int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name), int(it, "weapon_damage_pct", &name),
-            it["handle_trait"].as_i64().unwrap_or(-1).max(0), text(it, "ammo_for", &name),
+            it["handle_trait"].as_i64().unwrap_or(-1).max(0), it["weapon_trait"].as_i64().unwrap_or(-1).max(0), text(it, "ammo_for", &name),
             it["ammo_damage_pct"].as_i64().unwrap_or(100)));
     }
     let item = |id: i64, what: &str| assert!(item_ids.contains(&id), "regents content: {what} names item {id}, which is not an item");
@@ -152,9 +152,21 @@ pub fn regents_data() {
         assert!(slot < ins.len() as i64, "regents content: {name}'s part slot {slot} is past its inputs");
         assert!(slot < 0 || part_items.iter().any(|(id, _)| *id == ins[slot as usize].0),
             "regents content: {name}'s part slot is item {}, which is no part (set its `part_tag`)", if slot >= 0 { ins[slot as usize].0 } else { 0 });
+        // Every input the player picks (MATERIALS.md step 3); a bake from before them: the one part slot.
+        let slots: Vec<i64> = match r["part_slots"].as_array() {
+            Some(a) => a.iter().map(|v| v.as_i64().unwrap_or(-1)).collect(),
+            None if slot >= 0 => vec![slot],
+            None => vec![],
+        };
+        for s in &slots {
+            assert!(*s >= 0 && *s < ins.len() as i64, "regents content: {name}'s part slot {s} is past its inputs");
+            assert!(part_items.iter().any(|(id, _)| *id == ins[*s as usize].0), "regents content: {name}'s part slot {s} is item {}, which is no part", ins[*s as usize].0);
+        }
+        assert!(slots.first().copied().unwrap_or(-1) == slot, "regents content: {name}'s part_slot must be the first of its part_slots");
+        let slots: Vec<i32> = slots.iter().map(|s| *s as i32).collect();
         out.push_str(&format!(
             "    RecipeSeed {{ id: {}, name: {name:?}, station: {st:?}, skill: {sk}, inputs: &{:?}, output: {output}, output_qty: {}, xp: {}, min_rank: {}, \
-             afk_ms: {}, minigame: {mg}, quality: {quality}, afk_quality: {}, part_slot: {slot} }},\n",
+             afk_ms: {}, minigame: {mg}, quality: {quality}, afk_quality: {}, part_slot: {slot}, part_slots: &{slots:?} }},\n",
             int(r, "id", &name), ins.iter().map(|(a, b)| (*a as u32, *b as u32)).collect::<Vec<_>>(), int(r, "output_qty", &name), int(r, "xp", &name),
             int(r, "min_rank", &name), int(r, "afk_ms", &name), int(r, "afk_quality", &name)));
     }

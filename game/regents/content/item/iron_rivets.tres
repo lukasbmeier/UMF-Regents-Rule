@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/lucky.tres" id="1_qdkl7"]
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="2_4qi86"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/brutal.tres" id="3_bro1v"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/rivets.tres" id="4_rr75b"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="5_s4ssi"]
+
+[resource]
+script = ExtResource("5_s4ssi")
+part_tag = &"binding"
+handle_trait = ExtResource("1_qdkl7")
+part_weapon_trait = ExtResource("3_bro1v")
+color = Color(0.65, 0.66, 0.7, 1)
+description = "A binding: fixes a head to its handle. Its metal is its trait."
+material = ExtResource("2_4qi86")
+pattern = ExtResource("4_rr75b")
+id = 40038
+display_name = "Iron rivets"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Rivets): made by Make the table."

@@ -1,7 +1,7 @@
 extends Node
 ## COMBAT, PLAYED (game/regents/tests/combat_playtest.sh starts this beside the world's real referee): a
 ## real client through the latency simulator, at the frontier camp's training dummy, through the real
-## keys, clicks and the bag panel. Wields the bronze axe (the bag's button), Tabs onto the dummy (the
+## keys, clicks and the bag panel. Wields the copper axe (the bag's button), Tabs onto the dummy (the
 ## ring, the target frame), taps the light combo and holds a heavy (each judged by the referee; the
 ## numbers float up; axemanship XP), waits for the dummy to be whole, rolls (Ctrl: further than a run in
 ## the same time), blocks (no swing behind it), and lets the target go (Esc). Exits 0/1.
@@ -59,7 +59,7 @@ func _run() -> void:
 	hud.bag_window.picked_row = row
 	hud.bag_window.refresh()
 	var button: Button = hud.bag_window.find_child("Wield_%d" % row, true, false) as Button if hud.bag_window.is_open() else null
-	_check(button != null and button.text == "Wield", "the bag panel has a Wield button on the bronze axe")
+	_check(button != null and button.text == "Wield", "the bag panel has a Wield button on the copper axe")
 	if button != null:
 		button.pressed.emit()
 	await _until(func() -> bool: return combat.kit != null, 5.0)
@@ -68,7 +68,7 @@ func _run() -> void:
 	_check(_bag_button(row) == "Put away", "its button now puts it away")
 	hud.toggle_bag()
 	await _until(func() -> bool: return combat.weapon != null and hud._skillbar.text.contains("LMB Chop"), 2.0)
-	_check(hud._skillbar.text.contains("Bronze axe") and hud._skillbar.text.contains("LMB Chop") and hud._skillbar.text.contains("Q Cleave"),
+	_check(hud._skillbar.text.contains("Copper axe") and hud._skillbar.text.contains("LMB Chop") and hud._skillbar.text.contains("Q Cleave"),
 		"the bar: \"%s\"" % hud._skillbar.text)
 
 	# --- TARGET: Tab onto the dummy ---
@@ -94,7 +94,7 @@ func _run() -> void:
 	_check(driver.action_clip() == &"extra/Sword_Regular_A", "a chop plays its own swing, not Interact (%s)" % driver.action_clip())
 	await _until(func() -> bool: return dh.get_current() < 500.0, 3.0)
 	var hit1: float = 500.0 - dh.get_current()
-	_check(is_equal_approx(snappedf(hit1, 0.01), 7.7), "a tap of the left button: a chop the referee judged a hit, 11 at the bronze axe's 70 %% (%.2f)" % hit1)
+	_check(is_equal_approx(snappedf(hit1, 0.01), 7.7), "a tap of the left button: a chop the referee judged a hit, 11 at the copper axe's 70 %% (%.2f)" % hit1)
 	await _click(0.06)
 	await _until(func() -> bool: return dh.get_current() < 500.0 - hit1 - 1.0, 3.0)
 	var hit2: float = 500.0 - hit1 - dh.get_current()

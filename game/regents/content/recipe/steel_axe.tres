@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_i0qp7"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_axe_head.tres" id="2_e1wbr"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_bulas"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="4_ktb71"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_axe.tres" id="5_d8lin"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="6_rqd3l"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="7_y8sep"]
+
+[resource]
+script = ExtResource("6_rqd3l")
+station = &"workbench"
+skill = ExtResource("7_y8sep")
+inputs = Array[ExtResource("1_i0qp7")]([ExtResource("2_e1wbr"), ExtResource("3_bulas"), ExtResource("4_ktb71")])
+input_qty = PackedInt32Array(1, 1, 2)
+output = ExtResource("5_d8lin")
+xp = 37
+min_rank = 3
+afk_ms = 6000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1, 2)
+from_table = true
+id = 40026
+display_name = "Steel axe"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Axe): its numbers are yours to tune."

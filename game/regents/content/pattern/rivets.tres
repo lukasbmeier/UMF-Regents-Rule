@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="1_1pycf"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_hjaac"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="3_4o68h"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_7rt35"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="5_fd0wb"]
+
+[sub_resource type="Resource" id="Resource_vg5gk"]
+script = ExtResource("2_hjaac")
+name = "bar"
+takes = 1
+pattern = ExtResource("3_4o68h")
+core = true
+
+[resource]
+script = ExtResource("4_7rt35")
+key = &"rivets"
+name_format = "{m} rivets"
+part_tag = &"binding"
+carries_trait = true
+station = &"anvil"
+skill = ExtResource("5_fd0wb")
+parts = Array[ExtResource("2_hjaac")]([SubResource("Resource_vg5gk")])
+output_qty = 4
+afk_ms = 5000
+description = "A binding: fixes a head to its handle. Its metal is its trait."
+id = 40009
+display_name = "Rivets"
