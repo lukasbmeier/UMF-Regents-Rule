@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_vfqqc"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_7jx5f"]
+
+[node name="Cell_10_-11" type="Node3D" unique_id=1760042680]
+
+[node name="w_coal_rock_20" type="Marker3D" parent="." unique_id=1582907707]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 691.3372, 5.230073, -687.81647)
+gizmo_extents = 0.6
+script = ExtResource("1_vfqqc")
+point_id = "w_coal_rock_20"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="w_coal_rock_21" type="Marker3D" parent="." unique_id=1845184951]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 682.93335, 4.9341974, -644.78375)
+gizmo_extents = 0.6
+script = ExtResource("1_vfqqc")
+point_id = "w_coal_rock_21"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="rock_big_1_805" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_7jx5f")]
+transform = Transform3D(1.3437175, 0, -0.070500925, 0, 1.3455657, 0, 0.070500925, 0, 1.3437175, 686.5207, 4.9939947, -661.98)

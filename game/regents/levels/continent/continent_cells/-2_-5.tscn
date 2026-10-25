@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_cwf7e"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_4c84i"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_digxy"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="4_wsn56"]
+
+[node name="Cell_-2_-5" type="Node3D" unique_id=1953570693]
+
+[node name="w_copper_rock_16" type="Marker3D" parent="." unique_id=760617001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -91.04387, 6.992869, -303.98032)
+gizmo_extents = 0.6
+script = ExtResource("1_cwf7e")
+point_id = "w_copper_rock_16"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="grass_common_tall_373" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_4c84i")]
+transform = Transform3D(-0.7381536, 0, 0.71459603, 0, 1.0273842, 0, -0.71459603, 0, -0.7381536, -79.02745, 7.7721477, -286.17847)
+
+[node name="bush_large_374" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_digxy")]
+transform = Transform3D(-0.38208804, 0, 0.6839556, 0, 0.7834453, 0, -0.6839556, 0, -0.38208804, -99.71639, 8.33548, -259.83807)
+
+[node name="bush_long_1_375" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("4_wsn56")]
+transform = Transform3D(0.15929201, 0, 0.8203094, 0, 0.8356323, 0, -0.8203094, 0, 0.15929201, -117.57534, 7.8177495, -270.5377)

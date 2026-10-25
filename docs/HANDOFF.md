@@ -1,51 +1,50 @@
-# Handoff — Regent's Rule, 2026-10-24 (this game's half of the 1.0 done; next, the combat deep-dive)
+# Handoff — Regent's Rule, 2026-10-24 (the continent built; next, the load test harness)
 
 ## Where it stands
-- **PROGRESS step 22 built, green, committed and pushed** (`c6ce3e9`). Ring interest on, the two
-  overrides in, `chunk` on Regent's own placed tables. A reshape, so (Luke's call) the play database
-  `regents-rule` was WIPED a second time today (`--fresh --codegen`, then republished keeping data), and
-  `shared/game.json` `compat` is 3. No compat-2 build had gone to friends; they need a new export
-  (`tools\release.cmd`) before they play.
-- **Template 1.1.0 taken** (shipped to all four games the same evening, Luke's say: runs well on weak
-  computers, template #282, and the accounts suite's pinned defaults). No schema change, nothing republished.
-  Restart the editor once (project.godot gained a line).
-- **Suites**: step 22: `cargo test` green, integration 1096/0, skilling playtest 63+7, combat 50. After the
-  1.1.0 pull: unit 2628/0, accounts 65/0, render_test.sh all passes (and in Fishing, Fowl Play, DiscGolf:
-  unit and render green there too).
+- **PROGRESS step 23, the continent: built and green, NOT committed** (last commit `531ac53`, pushed).
+  A generated greybox of Luke's map's main continent (2.25 x 3 km, level 21, streamed in 484 cells) with the
+  glade's camp copied in at its origin and a test placement (516 nodes, 16 skeleton camps).
+- **The play database `regents-rule` runs the continent**: published (data kept), then
+  `spacetime call regents-rule set_world_level 0 21` (back to the glade: `... 0 20`). A fresh database, and
+  so every suite, still starts in the glade (level 20).
+- Step 22 (ring interest, overrides, cell tables; compat 3) and template 1.1.0 are committed and pushed.
+- **Suites, step 23**: unit 2643/0, `cargo test` green (the continent's 82 parity probes on both sides),
+  the new continent playtest 17/0, skilling 62+7, combat 50. Not rerun: integration and accounts (no server
+  or schema code changed; the level is data).
 
 ## This session
-- `game/regents/regents_net_config.tres` (new, on the game's Boot): `interest` RING, Regent's `cell_tables`
-  and `follow_tables`. No foundation change was needed (NetConfig already takes a game's cell tables).
-- `game/regents/content/rules/regents.tres`: overrides `characters_per_account` 3, `park_offline_s` 30.
-- `server/src/game/regents.rs`: `chunk` on gather_node, station, dummy, foe, afk_work, work_result, casting,
-  spell_area, burning, wielded, combat_state (the last two gained `world_id`); `place_of`; `follow_place`
-  (the `on_place_changed` hook). `genre.tres` world_tables gained foe, wielded, combat_state.
-- Tests: the regents suite checks the ring config against the bindings' contract; the integration hook walks
-  a player three cells over (weapon and block follow); two timing traps in its traits block fixed (a fresh
-  referee, a whole dummy). Negatives: each new check fails when its thing is broken.
-- `.claude/rules/regents-genre.md`: how a new table of ours joins the ring. `GAME.md` order of work updated.
+- Step 22: this game's half of the 1.0 (see PROGRESS); template 1.1.0 shipped to all four games, with the
+  accounts suite's pinned defaults (`511eee3`).
+- `game/regents/levels/continent/`: `continent_map.webp` (Luke's map), `continent_shape.gd` (land, ridge,
+  heights read off it), `build_continent.tscn/.gd` (the generator: terrain, sea, wading wall, camp, test
+  placement, then the bake and the cell cut). Outputs: `continent.tscn`, `continent_cells/`, `terrain/`,
+  `shared/world/continent.json` + `_depth.bin`, `shared/golden/level/continent_probes.json`.
+- `game/regents/levels/solid_props.gd`: a streamed cell's rocks and bushes are wrapped as it arrives.
+- `game/regents/tests/continent_playtest.sh` (+ `playtest/continent_playtest.*`): a real client on the ring.
+- `GAME.md`: Luke's calls (load test first, on the continent, 3 km, camp centre-west). Genre rules: the
+  continent is generated, never hand-edited.
 
 ## Next, in order
-1. **THE COMBAT DEEP-DIVE** with Luke (`GAME.md` order of work (3)): equipment and armour (five slots, stats),
-   the server-side cast queue, crits (then Keen on steel rivets), NPC tiers; movement feel (orbit a still
-   character, blended diagonal strafes).
-2. The in-game lookup (`GAME.md` "The in-game lookup"): look into it with Luke first.
-3. Herbalism and the economy.
-- Later, from step 22: a player's own records (`skill_xp`, `recipe_log`, `spell_cooldown`, `order_filled`,
-  `foe_kill`) still go to everyone; "your own only" needs a template query (the 1.0 doc's `inventory_item`
-  item). The 300-bot test decides whether it matters.
+1. Luke: walk the continent (Play), say what to change in the shape; commit step 23.
+2. **THE LOAD TEST HARNESS**, in the TEMPLATE (a milestone of its own): a light bot client (likely Rust on the
+   SpacetimeDB client SDK, many connections in one process; check the SDK first), each bot asking the
+   ring's queries and sending real inputs (walk, gather, swing at dummies); run from the M1 so it does not
+   take the server's CPU; 50 -> 100 -> 300, measuring rows and bytes a second per client and in total (the
+   upload), reducer p95, the referee's lag, cell swaps a minute, nine cell sets against one OR'd query.
+3. The combat design talk alongside it (`GAME.md` order (3)), then the in-game lookup, herbalism, economy.
 
 ## Waiting on Luke
-- The SpacetimeAuth client id (`shared/game.json` `sign_in`): the 3 characters per account need a sign-in.
-- Open: trait ranks; #12 day/night; how the minimap grows; the ore nuggets' placement; gear XP numbers.
+- His look at the continent: the mountains' height and steepness, the camp's spot, the test placement.
+- The SpacetimeAuth client id (`shared/game.json` `sign_in`); open: trait ranks, #12 day/night, the minimap.
 
 ## Watch out
-- The integration hook's CLI referee is online only 5 s after its claim: a block of checks that takes longer
-  needs a fresh referee (revoke, offer, claim), as the later trait blocks do.
-- `TaskStop` on a background suite stops the shell, not its children: the suite kept running and shared the
-  test database with the next one. Let a suite finish, or kill its processes too.
-- The skilling playtest's count moves (61 or 63) with how its rounds went (Make all, Stop): not a failure.
-- `session_member` bind warnings for entities 36-39 in the playtests are the CLI's own players, in both modes.
-- Older traps still hold: a digit after `_` in a reducer name; list hints are the element's type; the CLI
-  runs array numbers together; Python reads files as Windows-1252 unless told UTF-8; `NodeDef` and
-  `RuleOverride` are `@tool` scripts (never rewrite one under Luke's open editor).
+- Terrain3D puts an import's corner on its region grid (512 m at 2 m spacing): `build_continent.gd` starts
+  the terrain on one; a terrain that does not lands up to a region off its shape.
+- Rebuilding the continent rewrites `terrain/`, `continent_cells/` and the bake: publish after, and expect a
+  ~16 MB diff. Never hand-edit those files.
+- After a teleport the new cells load on a thread (only the very first load is immediate): props appear a
+  moment later; the ground is the terrain, always there.
+- `TaskStop` on a background suite stops the shell, not its children (two suites then shared the database).
+- The integration hook's CLI referee is online only 5 s after its claim: a long block needs a fresh one.
+- Older traps: a digit after `_` in a reducer name; list hints are the element's type; the CLI runs array
+  numbers together; Python reads Windows-1252 unless told UTF-8; `NodeDef`/`RuleOverride` are `@tool`.

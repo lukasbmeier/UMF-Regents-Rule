@@ -35,6 +35,98 @@ func run() -> void:
 	await _run_crafting_choice()
 	await _run_solid()
 	_run_cells()
+	_run_continent()
+	await _run_streamed_solids()
+
+
+## THE CONTINENT (PROGRESS step 23): the generated level is baked as level 21, streamed, with the glade's
+## camp at its origin exactly as the glade has it, and every scattered point one the server can spawn.
+func _run_continent() -> void:
+	print("== regents: the continent ==")
+	var bake: LevelBake = LevelBake.by_id(21)
+	_check(bake != null, "level 21 is baked (shared/world/continent.json)")
+	if bake == null:
+		return
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://shared/world/continent.json")) as Dictionary
+	_check(str(doc.get("level", "")) == "continent" and ResourceLoader.exists(str(doc.get("scene", ""))),
+		"its scene is there: %s" % doc.get("scene", ""))
+	var scene: PackedScene = load(str(doc["scene"])) as PackedScene
+	var root: Node3D = scene.instantiate() as Node3D
+	var info: LevelInfo = LevelBaker.find_info(root)
+	_check(info != null and info.streamed and info.level_id == 21 and LevelCells.cells_node(root) != null,
+		"a streamed level with its Cells")
+	var cells: Dictionary[int, String] = LevelCells.read(LevelCells.folder_for(str(doc["scene"]), "continent"))
+	_check(cells.size() > 300, "cut into cells for players' games: %d" % cells.size())
+	root.free()
+	# The camp: the glade's every point, at the same place, so whatever works in the glade works here.
+	var glade: LevelBake = LevelBake.by_id(20)
+	var theirs: Dictionary = {}
+	for p: Dictionary in (doc["points"] as Array):
+		theirs[str(p["id"])] = p
+	var moved: Array[String] = []
+	var glade_points: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://shared/world/frontier.json")) as Dictionary)["points"]
+	for p: Dictionary in glade_points:
+		var q: Dictionary = theirs.get(str(p["id"]), {})
+		if q.is_empty() or Vector3(float(p["x"]), float(p["y"]), float(p["z"])).distance_to(Vector3(float(q["x"]), float(q["y"]), float(q["z"]))) > 0.01:
+			moved.append(str(p["id"]))
+	_check(glade != null and moved.is_empty(), "the glade's %d points are all in its camp, where the glade has them (moved or missing: %s)" % [glade_points.size(), str(moved)])
+	# The rest: nodes of a known kind, foes of a known kind, on dry land.
+	var bad: Array[String] = []
+	var nodes: int = 0
+	var foes: int = 0
+	for p: Dictionary in (doc["points"] as Array):
+		var kind: String = str(p["kind"])
+		var at := Vector3(float(p["x"]), float(p["y"]), float(p["z"]))
+		if not bake.can_stand(at.x, at.z) or bake.is_water(at.x, at.z):
+			bad.append("%s in the sea" % p["id"])
+		if kind == "node":
+			nodes += 1
+			var tags: Array = p["tags"]
+			if tags.is_empty() or NodeDef.all_by_tier().filter(func(d: NodeDef) -> bool: return d.display_name == str(tags[0])).is_empty():
+				bad.append("%s is no node (%s)" % [p["id"], str(tags)])
+		elif kind.begins_with("skeleton"):
+			foes += 1
+			if FoeDef.all().filter(func(f: FoeDef) -> bool: return String(f.key) == kind).is_empty():
+				bad.append("%s is no foe (%s)" % [p["id"], kind])
+	_check(bad.is_empty(), "every point is a node or foe the game has, on dry land: %s" % str(bad.slice(0, 5)))
+	_check(nodes > 300 and foes > 30, "a world to visit: %d nodes, %d foes" % [nodes, foes])
+	# The sea: wet off the coast, dry at the camp; the server's grid is the coarse one.
+	_check(not bake.is_water(0.0, 0.0) and bake.can_stand(0.0, 8.0), "the camp is dry ground")
+	# A corner of the server's grid (off the grid counts as standable): open sea, past any coast.
+	var grid: Dictionary = doc["depth_grid"]
+	var sea := Vector2(float(grid["origin_x"]) + 20.0, float(grid["origin_z"]) + 20.0)
+	_check(float(grid["spacing"]) == 4.0 and bake.is_water(sea.x, sea.y) and not bake.can_stand(sea.x, sea.y),
+		"the sea at the grid's corner %s is deep water, not standable" % str(sea))
+
+
+## A STREAMED LEVEL'S PROPS ARE SOLID AS THEIR CELL ARRIVES (PROGRESS step 23): a cell's scene added under
+## the props after the level loaded gets its rocks wrapped under it, and they go with it.
+func _run_streamed_solids() -> void:
+	print("== regents: props solid as their cell streams in ==")
+	var level := Node3D.new()
+	var props := Node3D.new()
+	props.name = "Cells"
+	level.add_child(props)
+	var solid: RegentsSolidProps = (load("res://game/regents/levels/solid_props.gd") as GDScript).new() as RegentsSolidProps
+	solid.props = NodePath("../Cells")
+	level.add_child(solid)
+	add_child(level)
+	await get_tree().process_frame
+	var cell := Node3D.new()
+	cell.name = "Cell_0_0"
+	var rock: Node3D = (load("res://game/regents/art/nature/Rock_Medium_1.gltf") as PackedScene).instantiate() as Node3D
+	cell.add_child(rock)
+	var grass: Node3D = (load("res://game/regents/art/nature/Grass_Common_Short.gltf") as PackedScene).instantiate() as Node3D
+	cell.add_child(grass)
+	props.add_child(cell)
+	await get_tree().process_frame
+	var bodies: Array[Node] = cell.find_children("Solid", "StaticBody3D", false, false)
+	_check(bodies.size() == 1 and solid.made_solid.has(rock) and not solid.made_solid.has(grass),
+		"the rock in the arriving cell is solid, the grass is not (%d bodies)" % bodies.size())
+	var body: Node = bodies[0] if not bodies.is_empty() else null
+	cell.free()
+	_check(body == null or not is_instance_valid(body), "and its shape goes with the cell")
+	level.free()
 
 
 ## THE RING (template 1.0, this game's half): Regent's Rule is sent only the cells round its player, so

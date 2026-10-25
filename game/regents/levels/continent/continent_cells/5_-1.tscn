@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_vgdsv"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_286mp"]
+
+[node name="Cell_5_-1" type="Node3D" unique_id=582552936]
+
+[node name="w_copper_rock_45" type="Marker3D" parent="." unique_id=3453254]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 353.87656, 9.551666, -13.642555)
+gizmo_extents = 0.6
+script = ExtResource("1_vgdsv")
+point_id = "w_copper_rock_45"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="fern_1_643" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_286mp")]
+transform = Transform3D(0.5574117, 0, -0.780715, 0, 0.9592829, 0, 0.780715, 0, 0.5574117, 371.30463, 3.527688, -44.145866)
+
+[node name="fern_1_644" type="Node3D" parent="." unique_id=476286425 instance=ExtResource("2_286mp")]
+transform = Transform3D(-0.78499985, 0, -0.013478868, 0, 0.7851156, 0, 0.013478868, 0, -0.78499985, 367.63126, 9.249572, -13.363644)

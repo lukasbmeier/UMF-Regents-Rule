@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_nmv4o"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_ffoof"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_rpvnb"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="4_0ncvj"]
+
+[node name="Cell_-8_0" type="Node3D" unique_id=791696407]
+
+[node name="w_tree_36" type="Marker3D" parent="." unique_id=98955084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -479.9147, 3.1675096, 17.603533)
+gizmo_extents = 0.6
+script = ExtResource("1_nmv4o")
+point_id = "w_tree_36"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_oak_19" type="Marker3D" parent="." unique_id=272646403]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -505.963, 4.74143, 45.86937)
+gizmo_extents = 0.6
+script = ExtResource("1_nmv4o")
+point_id = "w_oak_19"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_oak_20" type="Marker3D" parent="." unique_id=1752142396]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -496.33032, 3.740015, 23.246685)
+gizmo_extents = 0.6
+script = ExtResource("1_nmv4o")
+point_id = "w_oak_20"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="bush_long_1_112" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_ffoof")]
+transform = Transform3D(1.1366428, 0, 0.76167727, 0, 1.3682504, 0, -0.76167727, 0, 1.1366428, -484.0511, 3.8946078, 32.60034)
+
+[node name="fern_1_113" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_rpvnb")]
+transform = Transform3D(1.3268836, 0, 0.597822, 0, 1.4553388, 0, -0.597822, 0, 1.3268836, -489.61118, 3.6542118, 23.080288)
+
+[node name="rock_big_1_114" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("4_0ncvj")]
+transform = Transform3D(0.078505665, 0, 0.7148917, 0, 0.7191893, 0, -0.7148917, 0, 0.078505665, -498.37296, 4.396924, 37.960022)

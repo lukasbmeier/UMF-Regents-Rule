@@ -80,7 +80,9 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   with accounts** (TAKEN 2026-10-24; this game's half DONE the same day, PROGRESS step 22: ring interest,
   3 characters an account, parked 30 s after leaving, `chunk` on Regent's own placed tables; Luke chose a
   second wipe for it, `compat` 3, since no compat-2 build had gone out) (chunks, streaming, interest management; SpacetimeAuth accounts and characters that outlive
-  a machine), template work pulled here, one wipe; (3) **the combat deep-dive**, folding in equipment and
+  a machine), template work pulled here, one wipe; (2b, Luke 2026-10-24) **the load test** on the continent
+  (PROGRESS step 23 the continent; the harness next, in the template), the combat talk alongside;
+  (3) **the combat deep-dive**, folding in equipment and
   armour (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **the in-game lookup**
   (added 2026-10-24, below); (5) **herbalism and the
   economy** (marks, vendors). After those: writs, potions, death and shrines; party, duels, the lair and the
@@ -118,6 +120,12 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   must still pay (an AFK part is Common): to think through before `MATERIALS.md` step 5.
 - **Crafting signed off** (2026-10-23, after step 21): "pretty good as it stands". Later: revisit the refining
   and other minigames so Common, Fine and Masterwork take real skill (also what trait ranks wait on).
+- **Load test before combat** (2026-10-24): the 300-bot load test moves ahead of the combat deep-dive, the
+  combat design talk alongside it. It runs on **the continent** (PROGRESS step 23), Luke's map's main
+  landmass (no islands; the name on the map, Aethel, not taken): **about 3 km across**, the camp in the
+  **centre-west lowlands**. A greybox for testing: its node and skeleton placement is a test one, and the
+  world's regions, roads, towns, the lair and the Undercroft are Luke's to design later. A fresh database
+  still starts in the glade (level 20); the continent is level 21 (`set_world_level 0 21`).
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade

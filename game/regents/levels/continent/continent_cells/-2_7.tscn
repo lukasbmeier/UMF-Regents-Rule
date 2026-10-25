@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_nq2lv"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_nb7up"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_y0miy"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="4_tl1hm"]
+
+[node name="Cell_-2_7" type="Node3D" unique_id=1249347508]
+
+[node name="rock_big_1_383" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_nq2lv")]
+transform = Transform3D(-1.2306666, 0, 0.4938065, 0, 1.3260412, 0, -0.4938065, 0, -1.2306666, -105.15336, 6.97398, 491.7592)
+
+[node name="rock_medium_1_384" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_nb7up")]
+transform = Transform3D(0.8163638, 0, -0.47548693, 0, 0.94474214, 0, 0.47548693, 0, 0.8163638, -81.72808, 6.152178, 476.37622)
+
+[node name="grass_common_tall_385" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_y0miy")]
+transform = Transform3D(0.7425464, 0, -0.09399563, 0, 0.748472, 0, 0.09399563, 0, 0.7425464, -91.8599, 6.32498, 454.6127)
+
+[node name="w_skeleton_2_1" type="Marker3D" parent="." unique_id=1222841640]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -117.400635, 7.36105, 463.03296)
+gizmo_extents = 0.5
+script = ExtResource("4_tl1hm")
+point_id = "w_skeleton_2_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_2_2" type="Marker3D" parent="." unique_id=1203549337]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -114.400635, 7.1866693, 466.53296)
+gizmo_extents = 0.5
+script = ExtResource("4_tl1hm")
+point_id = "w_skeleton_2_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_2_3" type="Marker3D" parent="." unique_id=117439266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -113.400635, 7.108241, 459.53296)
+gizmo_extents = 0.5
+script = ExtResource("4_tl1hm")
+point_id = "w_skeleton_2_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()

@@ -34,6 +34,10 @@ paths:
   `chunk_of_entity`; an event `cell::chunk_of(pos)`), moved in `follow_place` if it follows an entity, listed
   in the net config's `cell_tables` (and `follow_tables` when a player's) and in `genre.tres` `world_tables`.
   The regents suite fails a table with a chunk that is not a cell table.
+- The continent (level 21, PROGRESS step 23) is GENERATED: never hand-edit `continent.tscn`, its
+  `continent_cells/` or `terrain/`; change `continent_shape.gd`, `build_continent.gd` or the map and run
+  `build_continent.tscn` (it bakes too), then publish. Its node and skeleton placement is a TEST one: Luke's
+  own replaces it. The glade (level 20) stays the suites' level and a fresh database's.
 - Still open, Luke's to decide (never default): #12 day/night, the other skills' minigames, how the
   minimap grows, what is still open in `MATERIALS.md` §11. The order of work: `GAME.md`. (#7 loot and #22 handles are settled:
   `GAME.md`.)

@@ -4,6 +4,11 @@ class_name RegentsSolidProps extends Node
 ## as the level loads (`RegentsSolid`: a convex hull per mesh), in players' games and the referee's alike,
 ## so a rock or a bush blocks you, and a foe, where it is drawn. What lies low and soft (grass, flowers,
 ## ferns, pebbles, mushrooms) is walked through: leave it off the list.
+##
+## A STREAMED level (the continent, PROGRESS step 23): its props arrive a cell at a time, after the level
+## loaded (`LevelStreamer` adds each cell's scene under the props node). Each cell's are wrapped as it
+## arrives, under that cell, so its shapes go when it is freed. A referee never streams: it keeps the
+## whole level, wrapped as it loads.
 
 ## The props: every model under this node is looked at (not only its children).
 @export var props: NodePath = ^"../Decor"
@@ -19,12 +24,36 @@ func _ready() -> void:
 	if root == null:
 		push_warning("RegentsSolidProps: no props at %s" % props)
 		return
-	for n: Node in root.find_children("*", "Node3D", true, false):
+	_wrap_all(root, root)
+	# Connected after: the bodies just made are children of `root` too.
+	root.child_entered_tree.connect(_on_arrived)
+
+
+## A streamed cell (or anything added later) arrived under the props: its own props, wrapped under it.
+func _on_arrived(n: Node) -> void:
+	var node: Node3D = n as Node3D
+	if node == null or node is StaticBody3D:
+		return   # one of the bodies made here
+	if is_solid(node.scene_file_path):
+		_wrap_one.call_deferred(node)   # a single prop, added on its own
+	else:
+		_wrap_all.call_deferred(node, node)   # a streamed cell: its props, under it
+
+
+func _wrap_all(holder: Node3D, under: Node3D) -> void:
+	if not is_instance_valid(holder) or not holder.is_inside_tree():
+		return
+	for n: Node in under.find_children("*", "Node3D", true, false):
 		var prop: Node3D = n as Node3D
 		if prop.scene_file_path.is_empty() or not is_solid(prop.scene_file_path):
 			continue
-		if RegentsSolid.wrap(root, prop) != null:
+		if RegentsSolid.wrap(holder, prop) != null:
 			made_solid.append(prop)
+
+
+func _wrap_one(prop: Node3D) -> void:
+	if is_instance_valid(prop) and prop.is_inside_tree() and RegentsSolid.wrap(prop, prop) != null:
+		made_solid.append(prop)
 
 
 ## Whether a prop of model `path` is solid here.

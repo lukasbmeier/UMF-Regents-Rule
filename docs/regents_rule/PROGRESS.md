@@ -919,3 +919,40 @@ accounts 65/0 with the template's fix (6 failed without it). Negatives: `burning
 (2 unit checks fail), the `on_place_changed` hook switched off (3 integration checks fail). Published:
 `regents-rule` `--fresh --codegen` (wiped, Luke's say-so), then again keeping data. Not run: e2e and the
 template's ring suite (foundation only, unchanged here). Not seen by Luke yet.
+
+## Step 23: the continent, a greybox for the ring and the load test (2026-10-24)
+
+Luke, with his map (`game/regents/levels/continent/continent_map.webp`): load test first, but on a world bigger
+than the glade (which fits inside one ring, so nothing in it ever crosses cells). His calls: the main
+continent only (no islands, no name), **about 3 km across its widest**, the camp in the **centre-west
+lowlands**.
+- **The shape is read off the map** (`continent_shape.gd`): its green is land, its grey-brown ridge the
+  mountain spine, the rest sea; only the largest landmass is kept. 2.25 x 3 km, peaks to ~160 m, the sea at
+  y = -6, and the camp's point flattened to y = 0 at the world's origin.
+- **The level is generated** (`build_continent.tscn`, seeded, re-run to change anything; ~20 s): Terrain3D
+  at 2 m (42 regions, 7.5 MB) with generated ground textures (grass, rock, sand, tinted), the sea plane, an
+  invisible wall at wading depth (the server's bake says the same water is not standable), and under
+  `LevelInfo/Cells` everything placed: **the glade's camp copied in unchanged** (its 38 points at the same
+  places, so whatever works in the glade works here) and a **TEST placement**: 516 nodes (trees, oaks, yews
+  in forest patches; copper, iron, coal by the hills and mountains, the better the farther out), 16 skeleton
+  camps (48 skeletons), 917 decor pieces. Luke's own placement replaces the test one.
+- **Level 21 "continent", streamed**: the bake writes `shared/world/continent.json` (602 points, a 4 m depth
+  grid, 0.4 MB, compiled into the server) and cuts 484 cell scenes (`continent_cells/`); a player's game
+  loads the 5 x 5 round them. Probes for the Rust/GDScript parity: `shared/golden/level/continent_probes.json`.
+- **Rocks and bushes stay solid when streamed** (`solid_props.gd`): each cell's are wrapped as it arrives.
+- Found on the way: Terrain3D puts an import's corner on its region grid, so a terrain not started on one
+  was 248 m and 346 m off its shape (the unit checks caught it: points "in the sea"). It now starts on one.
+- **Play it**: a fresh database still starts in the glade (level 20; the suites run there). The play
+  database's world 0 is put on the continent with `spacetime call regents-rule set_world_level 0 21`
+  (back: `... 0 20`; bags and skills are kept either way). Press Play: the camp as before, the continent round
+  it; walk out (sprint is ~6 min from end to end).
+
+Tested (step 23): unit 2643/0 (11 new: level 21 baked, streamed, cut; the glade's points all in its camp;
+every point a node or foe the game has, on dry land; the camp dry, the open sea not standable; a streamed
+cell's rock wrapped as it arrives, the grass not, its shape gone with the cell; the continent's 82 probes on
+both sides); `cargo test` green; the new **continent playtest** 17/0 (`game/regents/tests/continent_playtest.sh`:
+a real client at 150 ms on the continent: 19 of 484 cells loaded round it, the nodes it is sent all in its
+3 x 3 cells; 700 m out the ring and the cells follow, the camp's tree is let go, it stands on the ground;
+a cell east, the nodes both rings share kept, none spawned again). Negatives: WORLD interest instead of the
+ring (6 playtest checks fail; it is then sent all 545 nodes and 603 entities, against 7 on the ring), the
+streamed wrapping switched off and a camp point moved (a unit check each).

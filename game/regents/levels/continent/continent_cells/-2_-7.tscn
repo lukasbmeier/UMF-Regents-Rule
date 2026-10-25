@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_22byt"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_ysp58"]
+
+[node name="Cell_-2_-7" type="Node3D" unique_id=952901138]
+
+[node name="bush_large_370" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_22byt")]
+transform = Transform3D(0.866932, 0, 0.7976239, 0, 1.1780386, 0, -0.7976239, 0, 0.866932, -89.59996, 5.0493145, -408.32224)
+
+[node name="fern_1_371" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_ysp58")]
+transform = Transform3D(-1.0661974, 0, 0.11905587, 0, 1.0728239, 0, -0.11905587, 0, -1.0661974, -120.2098, 3.9214685, -413.79596)
