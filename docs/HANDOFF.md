@@ -1,15 +1,17 @@
 # Handoff — Regent's Rule, 2026-10-24 (this game's half of the 1.0 done; next, the combat deep-dive)
 
 ## Where it stands
-- **PROGRESS step 22 built, green and committed** (`c6ce3e9`, not pushed). Ring interest on, the two
+- **PROGRESS step 22 built, green, committed and pushed** (`c6ce3e9`). Ring interest on, the two
   overrides in, `chunk` on Regent's own placed tables. A reshape, so (Luke's call) the play database
   `regents-rule` was WIPED a second time today (`--fresh --codegen`, then republished keeping data), and
   `shared/game.json` `compat` is 3. No compat-2 build had gone to friends; they need a new export
   (`tools\release.cmd`) before they play.
-- **Suites**: unit 2572/0, `cargo test` green, integration 1096/0, skilling playtest 63+7, combat 50,
-  accounts 65/0 (only with the template's fix below; this game's copy of the suite fails 6 until the pull).
-- **In the template, uncommitted** (beside its low-end hardware session's work, which waits on Luke):
-  `tests/accounts_test.sh` pins the foundation defaults it is written for. The template's HANDOFF says so.
+- **Template 1.1.0 taken** (shipped to all four games the same evening, Luke's say: runs well on weak
+  computers, template #282, and the accounts suite's pinned defaults). No schema change, nothing republished.
+  Restart the editor once (project.godot gained a line).
+- **Suites**: step 22: `cargo test` green, integration 1096/0, skilling playtest 63+7, combat 50. After the
+  1.1.0 pull: unit 2628/0, accounts 65/0, render_test.sh all passes (and in Fishing, Fowl Play, DiscGolf:
+  unit and render green there too).
 
 ## This session
 - `game/regents/regents_net_config.tres` (new, on the game's Boot): `interest` RING, Regent's `cell_tables`
@@ -24,23 +26,20 @@
 - `.claude/rules/regents-genre.md`: how a new table of ours joins the ring. `GAME.md` order of work updated.
 
 ## Next, in order
-1. Luke: commit the template's uncommitted work and ship it, so this game pulls the accounts fix.
-2. **THE COMBAT DEEP-DIVE** with Luke (`GAME.md` order of work (3)): equipment and armour (five slots, stats),
+1. **THE COMBAT DEEP-DIVE** with Luke (`GAME.md` order of work (3)): equipment and armour (five slots, stats),
    the server-side cast queue, crits (then Keen on steel rivets), NPC tiers; movement feel (orbit a still
    character, blended diagonal strafes).
-3. The in-game lookup (`GAME.md` "The in-game lookup"): look into it with Luke first.
-4. Herbalism and the economy.
+2. The in-game lookup (`GAME.md` "The in-game lookup"): look into it with Luke first.
+3. Herbalism and the economy.
 - Later, from step 22: a player's own records (`skill_xp`, `recipe_log`, `spell_cooldown`, `order_filled`,
   `foe_kill`) still go to everyone; "your own only" needs a template query (the 1.0 doc's `inventory_item`
   item). The 300-bot test decides whether it matters.
 
 ## Waiting on Luke
-- Say when the template ships (the accounts fix rides with the low-end hardware work).
 - The SpacetimeAuth client id (`shared/game.json` `sign_in`): the 3 characters per account need a sign-in.
 - Open: trait ranks; #12 day/night; how the minimap grows; the ore nuggets' placement; gear XP numbers.
 
 ## Watch out
-- This game's `tests/accounts_test.sh` fails 6 checks until the template's fix is pulled: expected, not new.
 - The integration hook's CLI referee is online only 5 s after its claim: a block of checks that takes longer
   needs a fresh referee (revoke, offer, claim), as the later trait blocks do.
 - `TaskStop` on a background suite stops the shell, not its children: the suite kept running and shared the
