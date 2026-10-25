@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://game/regents/levels/frontier.tscn" id="1_level"]
 [ext_resource type="Script" path="res://foundation/boot.gd" id="2_boot"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://foundation/level/level_loader.gd" id="16_loader"]
 [ext_resource type="PackedScene" path="res://game/splash_screen.tscn" id="18_splash"]
 [ext_resource type="PackedScene" path="res://foundation/ui/hud.tscn" id="19_hud"]
+[ext_resource type="Resource" path="res://game/regents/regents_net_config.tres" id="20_net"]
 
 [node name="RegentsGame" type="Node3D"]
 
@@ -16,6 +17,7 @@
 
 [node name="Boot" type="Node" parent="."]
 script = ExtResource("2_boot")
+net_config = ExtResource("20_net")
 entity_definitions = Array[Resource]([ExtResource("4_character")])
 world_root = NodePath("../Frontier/WorldRoot")
 connect_screen = ExtResource("9_connect")

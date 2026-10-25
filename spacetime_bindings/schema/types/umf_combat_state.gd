@@ -6,22 +6,28 @@ class_name UmfCombatState extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'combat_state']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"combo": &"i32", &"combo_at": &"i64", &"blocking": &"bool", &"block_since": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"combo": &"i32", &"combo_at": &"i64", &"blocking": &"bool", &"block_since": &"i64" }
 
 @export var entity_id: int
+@export var world_id: int
+@export var chunk: int
 @export var combo: int
 @export var combo_at: int
 @export var blocking: bool
 @export var block_since: int
 
 ## 0. entity_id: int[br]
-## 1. combo: int[br]
-## 2. combo_at: int[br]
-## 3. blocking: bool[br]
-## 4. block_since: int[br]
-static func create(p_entity_id: int, p_combo: int, p_combo_at: int, p_blocking: bool, p_block_since: int) -> UmfCombatState:
+## 1. world_id: int[br]
+## 2. chunk: int[br]
+## 3. combo: int[br]
+## 4. combo_at: int[br]
+## 5. blocking: bool[br]
+## 6. block_since: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_combo: int, p_combo_at: int, p_blocking: bool, p_block_since: int) -> UmfCombatState:
 	var result: UmfCombatState = UmfCombatState.new()
 	result.entity_id = p_entity_id
+	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.combo = p_combo
 	result.combo_at = p_combo_at
 	result.blocking = p_blocking

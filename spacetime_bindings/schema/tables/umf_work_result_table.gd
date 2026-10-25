@@ -7,12 +7,14 @@ signal updated(old_row: UmfWorkResult, new_row: UmfWorkResult)
 signal deleted(row: UmfWorkResult)
 
 var id: UmfWorkResultIdUniqueIndex
+var chunk: UmfWorkResultChunkBTreeIndex
 var entity_id: UmfWorkResultEntityIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"work_result"
 	id = UmfWorkResultIdUniqueIndex.new(p_local_db)
+	chunk = UmfWorkResultChunkBTreeIndex.new(p_local_db)
 	entity_id = UmfWorkResultEntityIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -63,6 +65,12 @@ func find_by_world_id(value: int) -> Array[UmfWorkResult]:
 
 func first_by_world_id(value: int) -> UmfWorkResult:
 	return first_by(&"world_id", value)
+
+func find_by_chunk(value: int) -> Array[UmfWorkResult]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfWorkResult:
+	return chunk._first_row(value) as UmfWorkResult
 
 func find_by_target_id(value: int) -> Array[UmfWorkResult]:
 	return find_by(&"target_id", value)

@@ -874,3 +874,48 @@ its cost paid, the row rewritten with its parts and traits, nothing-to-change re
 a refit charging no bars (2 integration checks), the grade ignored (integration). Found while testing: the
 CLI's SQL runs an array's numbers together, and the integration's own crafted head can be any grade (it now
 clears heads first). Published with `--codegen` (data kept). Not seen by Luke yet: step 21 in play.
+
+## Step 22: this game's half of the template 1.0 (2026-10-24)
+
+The template 1.0 (cells, the ring, streaming, accounts) was taken in the morning; this is Regent's own part
+of it (`../UMF Template/docs/TEMPLATE_1_0.md`, template DECISIONS #278-#281).
+- **Ring interest**: the game's Boot now has a net config of its own (`game/regents/regents_net_config.tres`,
+  `interest` RING): a player is sent only the 3 x 3 cells (64 m each) round them, plus their own rows
+  wherever they are. The frontier glade fits inside one ring from the spawn, so nothing looks different
+  today; it matters once the world is bigger than ~190 m across.
+- **The overrides** (`game/regents/content/rules/regents.tres`, Luke's 1.0 answers 4 and 10):
+  `foundation.characters_per_account` 3, `foundation.park_offline_s` 30 (a character whose player left
+  stays where it stood for 30 s, then is put away until they sign in again; nothing of theirs is deleted).
+- **Regent's own tables carry the cell** (Luke, 2026-10-24: "reshape now"; a second wipe, `compat` 3,
+  because no compat-2 build had gone to friends): `gather_node`, `station`, `dummy`, `foe` (placed things),
+  `afk_work`, `casting`, `burning`, `wielded`, `combat_state` (they follow a player or a foe: `follow_place`,
+  the genre's `on_place_changed` hook; `wielded` and `combat_state` gained `world_id` too), `work_result` and
+  `spell_area` (events, cut where they happened). Each is asked for by cell (`cell_tables`), the five that
+  can be a player's also by id (`follow_tables`), and every one is a world table for a WORLD client (the
+  referee).
+- **Left world-wide on purpose**: `skill_xp`, `recipe_log`, `spell_cooldown`, `order_filled`, `foe_kill` are
+  a player's own records, sent to everyone today (the template has no "your own only" query yet; the 1.0
+  doc named it for `inventory_item`). `work_order` is the world's board. The 300-bot test decides whether
+  any of it matters. Server-only tables (`arrow`, `missile`, `hurt`, `stuck_arrow`) are never sent.
+- **Play it**: Play as before; nothing in the glade looks different (it fits one ring). Two characters per
+  account beyond the first come with a sign-in (the SpacetimeAuth client id is still Luke's to set up); a
+  guest's character is put away 30 s after they quit and is back where they stood when they connect again.
+- **Two test fixes found on the way**: the integration hook's traits block let its CLI referee lapse (a
+  referee is online 5 s after it was last seen; the calls took longer, so it failed twice): a fresh referee
+  now judges the traited chop, and the chop is measured from a whole dummy (it heals 5 s after its last hit,
+  which a slower run crossed). And the foundation's ACCOUNTS suite assumed the foundation's defaults; under
+  Regent's 3 characters a guest's character joined the account at the link, so its "second character" was a
+  third. Fixed in the TEMPLATE (`tests/accounts_test.sh` sets 1 character and no parking after it publishes),
+  uncommitted there beside the low-end hardware work; this game's copy is the old one until the next pull.
+
+Tested (step 22): `cargo check` (wasm) clean, `cargo test` all green; unit 2572/0 (39 new: the game's Boot
+has ring interest; each cell table is subscribed, a world table, and its rows carry `world_id` and `chunk`;
+each follow table is keyed by `entity_id`; every table of ours with a `chunk` is a cell table); integration
+1096/0 (new: `wielded` and `combat_state` in the camp's cell, the dummy's row in the cell it stands in; three
+cells away both follow, the weapon no longer in the camp's cell; back, it comes back); skilling playtest 63/0
++ 7/0 and combat playtest 50/0, both on the ring (a WORLD run of the skilling playtest for comparison: the same
+63 + 7 and the same `session_member` bind warnings, which are the CLI's own players and older than this);
+accounts 65/0 with the template's fix (6 failed without it). Negatives: `burning` left out of the cell tables
+(2 unit checks fail), the `on_place_changed` hook switched off (3 integration checks fail). Published:
+`regents-rule` `--fresh --codegen` (wiped, Luke's say-so), then again keeping data. Not run: e2e and the
+template's ring suite (foundation only, unchanged here). Not seen by Luke yet.

@@ -7,11 +7,15 @@ signal updated(old_row: UmfCombatState, new_row: UmfCombatState)
 signal deleted(row: UmfCombatState)
 
 var entity_id: UmfCombatStateEntityIdUniqueIndex
+var chunk: UmfCombatStateChunkBTreeIndex
+var world_id: UmfCombatStateWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"combat_state"
 	entity_id = UmfCombatStateEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfCombatStateChunkBTreeIndex.new(p_local_db)
+	world_id = UmfCombatStateWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
 	on_delete(_emit_deleted)
@@ -49,6 +53,18 @@ func find_by_entity_id(value: int) -> Array[UmfCombatState]:
 
 func first_by_entity_id(value: int) -> UmfCombatState:
 	return entity_id.find(value)
+
+func find_by_world_id(value: int) -> Array[UmfCombatState]:
+	return world_id.filter(value)
+
+func first_by_world_id(value: int) -> UmfCombatState:
+	return world_id._first_row(value) as UmfCombatState
+
+func find_by_chunk(value: int) -> Array[UmfCombatState]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfCombatState:
+	return chunk._first_row(value) as UmfCombatState
 
 func find_by_combo(value: int) -> Array[UmfCombatState]:
 	return find_by(&"combo", value)

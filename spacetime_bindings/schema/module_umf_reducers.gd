@@ -96,8 +96,8 @@ func claim_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('claim_referee', [world_id, code], [&'u32', &'string'], &'')
 
 
-func compat_generation_2() -> SpacetimeDBReducerCall:
-	return _client.call_reducer('compat_generation_2', [], [], &'')
+func compat_generation_3() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('compat_generation_3', [], [], &'')
 
 ## 0. item_id: int [br]
 ## 1. qty: int [br]

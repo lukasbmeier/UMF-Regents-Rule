@@ -7,12 +7,14 @@ signal updated(old_row: UmfBurning, new_row: UmfBurning)
 signal deleted(row: UmfBurning)
 
 var entity_id: UmfBurningEntityIdUniqueIndex
+var chunk: UmfBurningChunkBTreeIndex
 var world_id: UmfBurningWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"burning"
 	entity_id = UmfBurningEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfBurningChunkBTreeIndex.new(p_local_db)
 	world_id = UmfBurningWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfBurning]:
 
 func first_by_world_id(value: int) -> UmfBurning:
 	return world_id._first_row(value) as UmfBurning
+
+func find_by_chunk(value: int) -> Array[UmfBurning]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfBurning:
+	return chunk._first_row(value) as UmfBurning
 
 func find_by_dps(value: float) -> Array[UmfBurning]:
 	return find_by(&"dps", value)

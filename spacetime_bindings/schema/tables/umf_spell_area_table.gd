@@ -7,12 +7,14 @@ signal updated(old_row: UmfSpellArea, new_row: UmfSpellArea)
 signal deleted(row: UmfSpellArea)
 
 var id: UmfSpellAreaIdUniqueIndex
+var chunk: UmfSpellAreaChunkBTreeIndex
 var world_id: UmfSpellAreaWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"spell_area"
 	id = UmfSpellAreaIdUniqueIndex.new(p_local_db)
+	chunk = UmfSpellAreaChunkBTreeIndex.new(p_local_db)
 	world_id = UmfSpellAreaWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfSpellArea]:
 
 func first_by_world_id(value: int) -> UmfSpellArea:
 	return world_id._first_row(value) as UmfSpellArea
+
+func find_by_chunk(value: int) -> Array[UmfSpellArea]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfSpellArea:
+	return chunk._first_row(value) as UmfSpellArea
 
 func find_by_owner(value: int) -> Array[UmfSpellArea]:
 	return find_by(&"owner", value)

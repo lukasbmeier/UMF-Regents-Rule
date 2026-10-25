@@ -7,12 +7,14 @@ signal updated(old_row: UmfCasting, new_row: UmfCasting)
 signal deleted(row: UmfCasting)
 
 var entity_id: UmfCastingEntityIdUniqueIndex
+var chunk: UmfCastingChunkBTreeIndex
 var world_id: UmfCastingWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"casting"
 	entity_id = UmfCastingEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfCastingChunkBTreeIndex.new(p_local_db)
 	world_id = UmfCastingWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfCasting]:
 
 func first_by_world_id(value: int) -> UmfCasting:
 	return world_id._first_row(value) as UmfCasting
+
+func find_by_chunk(value: int) -> Array[UmfCasting]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfCasting:
+	return chunk._first_row(value) as UmfCasting
 
 func find_by_ability(value: int) -> Array[UmfCasting]:
 	return find_by(&"ability", value)

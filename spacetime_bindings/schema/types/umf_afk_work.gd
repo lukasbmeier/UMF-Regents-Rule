@@ -6,10 +6,11 @@ class_name UmfAfkWork extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'afk_work']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"target_id": &"u64", &"def_id": &"u32", &"craft": &"bool", &"skill_id": &"u32", &"tool_item": &"u32", &"speed_pct": &"u32", &"started_at": &"i64", &"next_at": &"i64", &"from": &"vector3[f32,f32,f32]", &"count_": &"u32" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"target_id": &"u64", &"def_id": &"u32", &"craft": &"bool", &"skill_id": &"u32", &"tool_item": &"u32", &"speed_pct": &"u32", &"started_at": &"i64", &"next_at": &"i64", &"from": &"vector3[f32,f32,f32]", &"count_": &"u32" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var target_id: int
 @export var def_id: int
 @export var craft: bool
@@ -23,20 +24,22 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. target_id: int[br]
-## 3. def_id: int[br]
-## 4. craft: bool[br]
-## 5. skill_id: int[br]
-## 6. tool_item: int[br]
-## 7. speed_pct: int[br]
-## 8. started_at: int[br]
-## 9. next_at: int[br]
-## 10. from: Vector3[br]
-## 11. count_: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_target_id: int, p_def_id: int, p_craft: bool, p_skill_id: int, p_tool_item: int, p_speed_pct: int, p_started_at: int, p_next_at: int, p_from: Vector3, p_count_: int) -> UmfAfkWork:
+## 2. chunk: int[br]
+## 3. target_id: int[br]
+## 4. def_id: int[br]
+## 5. craft: bool[br]
+## 6. skill_id: int[br]
+## 7. tool_item: int[br]
+## 8. speed_pct: int[br]
+## 9. started_at: int[br]
+## 10. next_at: int[br]
+## 11. from: Vector3[br]
+## 12. count_: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_target_id: int, p_def_id: int, p_craft: bool, p_skill_id: int, p_tool_item: int, p_speed_pct: int, p_started_at: int, p_next_at: int, p_from: Vector3, p_count_: int) -> UmfAfkWork:
 	var result: UmfAfkWork = UmfAfkWork.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.target_id = p_target_id
 	result.def_id = p_def_id
 	result.craft = p_craft

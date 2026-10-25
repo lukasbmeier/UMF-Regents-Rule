@@ -77,7 +77,9 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   player** in the world: set a skill's rank, reset all skills (with recipe records and orders), give any
   item (a quality for one that does not stack), reset the bag to the starter kit.
 - **The order of work** (2026-10-23): (1) Luke's playtest of steps 17-20, then fixes; (2) **the template 1.0
-  with accounts** (TAKEN 2026-10-24; this game's half next: ring interest, its overrides, its cell tables) (chunks, streaming, interest management; SpacetimeAuth accounts and characters that outlive
+  with accounts** (TAKEN 2026-10-24; this game's half DONE the same day, PROGRESS step 22: ring interest,
+  3 characters an account, parked 30 s after leaving, `chunk` on Regent's own placed tables; Luke chose a
+  second wipe for it, `compat` 3, since no compat-2 build had gone out) (chunks, streaming, interest management; SpacetimeAuth accounts and characters that outlive
   a machine), template work pulled here, one wipe; (3) **the combat deep-dive**, folding in equipment and
   armour (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **the in-game lookup**
   (added 2026-10-24, below); (5) **herbalism and the

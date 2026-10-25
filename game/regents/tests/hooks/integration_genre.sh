@@ -305,6 +305,24 @@ assert_ok "block true" "hold the right button: block"
 check "$(logged "block .*entity $MYENT: status 0 -> 102 \(Blocking\)")" "the block went up (Blocking: half speed, no sprint)"
 check "$(logged "client_disconnected .*entity $MYENT: status 102 -> 0")" "and came down as the player left"
 assert_eq "$(sql_first "SELECT blocking FROM combat_state WHERE entity_id = $MYENT" 1)" "false" "the server's record agrees"
+# THE RING (template 1.0, this game's half): a ring client is sent only the cells round it, so every row of
+# ours that draws a player (the weapon, the block) follows them over a cell's edge, in the same step
+# (`follow_place`), and a placed thing's (the dummy's) is cut in the cell it stands in.
+rcell() { python -c "import math; s = lambda v: max(-512, min(511, math.floor(v / 64.0))); print((s($1) + 512) * 1024 + s($2) + 512)"; }
+R_HOME=$(rcell 7.0 21.5)
+for t in wielded combat_state; do
+  assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$R_HOME" "$t is in the camp's cell"
+done
+assert_eq "$(sql_first "SELECT chunk FROM dummy WHERE entity_id = $DUMMY" 1)" "$(sql_first "SELECT chunk FROM movement_state WHERE entity_id = $DUMMY" 1)" \
+  "the dummy's row is in the cell it stands in"
+assert_ok 'teleport {"x":200.5,"y":0.0,"z":-130.0}' "three cells east, three north"
+R_FAR=$(rcell 200.5 -130.0)
+for t in wielded combat_state; do
+  assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$R_FAR" "$t follows the player into their new cell"
+done
+assert_eq "$(row_count "SELECT * FROM wielded WHERE world_id = 0 AND chunk = $R_HOME AND entity_id = $MYENT")" "0" "and is no longer in the camp's"
+assert_ok 'teleport {"x":7.0,"y":0.0,"z":21.5}' "back by the dummy"
+assert_eq "$(sql_first "SELECT chunk FROM wielded WHERE entity_id = $MYENT" 1)" "$R_HOME" "the weapon comes back with them"
 sleep 5
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" "500" "the dummy is whole again a few seconds after its last hit"
 # A ROLL CANCELS A SWING: in the overhead's wind-up (600 ms) the roll; the referee finds the dummy, and
@@ -341,6 +359,21 @@ assert_eq "$(python -c "print(round($HPT0 - $HPT1, 2))")" "7.7" "11 at the coppe
 assert_ok "set_item_traits $AXE_ROW [$T_BALANCED,$T_BRUTAL]" "(dev) the axe made Balanced and Brutal"
 check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q "\"t\":\[$T_BALANCED,$T_BRUTAL\]" && echo true || echo false)" "its row carries them"
 sleep 1.2
+# A referee is online 5 s after it was last seen, and the CLI's never calls again: the calls above can take
+# that long (failed twice on 2026-10-24), so a fresh one judges this chop.
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "(the first traits referee unregistered)"
+done
+# The dummy is whole again `regents.dummy_reset_s` after its last hit: wait for it, so the traited hit is
+# measured from full health whatever the calls above took (a reset between the two hits read -0.77).
+for _ in $(seq 1 20); do
+  [ "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" = "500" ] && break
+  sleep 0.5
+done
+HPT1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+assert_eq "$HPT1" "500" "(the dummy whole again before the traited chop)"
+assert_ok "offer_referee 0 $C_CODE_T" "(a fresh referee for the traited chop)"
+spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T" >/dev/null 2>&1
 assert_ok "use_ability_seen 40006 0 $C_AIM 932 100" "a chop with the Balanced, Brutal axe"
 L1="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
 assert_eq "$L1" "$(python -c "import math; print($W0 + int(math.floor(($L0 - $W0) * 0.85 + 0.5)))")" "Balanced: its recovery 15% shorter ($L0 -> $L1 ms, the wind-up $W0 as it was)"

@@ -6,21 +6,24 @@ class_name UmfGatherNode extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'gather_node']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"def_id": &"u32", &"point_id": &"string" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"def_id": &"u32", &"point_id": &"string" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var def_id: int
 @export var point_id: String
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. def_id: int[br]
-## 3. point_id: String[br]
-static func create(p_entity_id: int, p_world_id: int, p_def_id: int, p_point_id: String) -> UmfGatherNode:
+## 2. chunk: int[br]
+## 3. def_id: int[br]
+## 4. point_id: String[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_def_id: int, p_point_id: String) -> UmfGatherNode:
 	var result: UmfGatherNode = UmfGatherNode.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.def_id = p_def_id
 	result.point_id = p_point_id
 	return result

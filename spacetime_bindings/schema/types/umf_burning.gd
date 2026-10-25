@@ -6,10 +6,11 @@ class_name UmfBurning extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'burning']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"dps": &"f32", &"until": &"i64", &"by": &"u64", &"skill_id": &"u32" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"dps": &"f32", &"until": &"i64", &"by": &"u64", &"skill_id": &"u32" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var dps: float
 @export var until: int
 @export var by: int
@@ -17,14 +18,16 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. dps: float[br]
-## 3. until: int[br]
-## 4. by: int[br]
-## 5. skill_id: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_dps: float, p_until: int, p_by: int, p_skill_id: int) -> UmfBurning:
+## 2. chunk: int[br]
+## 3. dps: float[br]
+## 4. until: int[br]
+## 5. by: int[br]
+## 6. skill_id: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_dps: float, p_until: int, p_by: int, p_skill_id: int) -> UmfBurning:
 	var result: UmfBurning = UmfBurning.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.dps = p_dps
 	result.until = p_until
 	result.by = p_by

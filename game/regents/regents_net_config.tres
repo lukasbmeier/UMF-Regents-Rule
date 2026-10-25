@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="NetConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/net/net_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+interest = 1
+cell_tables = Array[StringName]([&"gather_node", &"station", &"dummy", &"foe", &"afk_work", &"work_result", &"wielded", &"combat_state", &"casting", &"spell_area", &"burning"])
+follow_tables = Array[StringName]([&"afk_work", &"wielded", &"combat_state", &"casting", &"burning"])

@@ -6,21 +6,24 @@ class_name UmfDummy extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'dummy']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"point_id": &"string", &"last_hit_at": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"point_id": &"string", &"last_hit_at": &"i64" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var point_id: String
 @export var last_hit_at: int
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. point_id: String[br]
-## 3. last_hit_at: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_point_id: String, p_last_hit_at: int) -> UmfDummy:
+## 2. chunk: int[br]
+## 3. point_id: String[br]
+## 4. last_hit_at: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_point_id: String, p_last_hit_at: int) -> UmfDummy:
 	var result: UmfDummy = UmfDummy.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.point_id = p_point_id
 	result.last_hit_at = p_last_hit_at
 	return result

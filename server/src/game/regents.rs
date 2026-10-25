@@ -50,6 +50,9 @@ pub struct GatherNode {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub def_id: u32,
     /// The level point it stands on.
     pub point_id: String,
@@ -62,6 +65,9 @@ pub struct Station {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub key: String,
     pub point_id: String,
 }
@@ -73,6 +79,9 @@ pub struct AfkWork {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// The node or station.
     pub target_id: u64,
     /// The NodeDef (gathering) or RecipeDef (crafting).
@@ -101,6 +110,9 @@ pub struct WorkResult {
     #[index(btree)]
     pub entity_id: u64,
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub target_id: u64,
     pub skill_id: u32,
     pub item_id: u32,
@@ -233,6 +245,50 @@ fn flat_dist(a: Vector3, b: Vector3) -> f32 {
 
 fn pos_of(ctx: &ReducerContext, entity_id: u64) -> Option<Vector3> {
     ctx.db.movement_state().entity_id().find(entity_id).map(|m| m.pos)
+}
+
+/// The world and cell an entity is in (template 1.0): what a row of ours that describes it carries, so a
+/// ring client near it is sent the row. `on_place_changed` keeps it right as the entity moves.
+fn place_of(ctx: &ReducerContext, entity_id: u64) -> (u32, u32) {
+    let world_id = ctx.db.movement_state().entity_id().find(entity_id).map(|m| m.world_id)
+        .or_else(|| ctx.db.entity().entity_id().find(entity_id).map(|e| e.world_id))
+        .unwrap_or(crate::module::DEFAULT_WORLD);
+    (world_id, crate::module::chunk_of_entity(ctx, entity_id))
+}
+
+/// AN ENTITY MOVED CELL OR WORLD (the `on_place_changed` hook): every row of ours that describes it goes
+/// with it, written only where it is not there already. A node, a station and a dummy never move (their
+/// rows are cut where they were placed) but a foe walks, and a player takes their work, cast, burning,
+/// weapon and block along. Events (`work_result`, `spell_area`) stay where they happened.
+fn follow_place(ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32) {
+    let off = |w: u32, c: u32| w != world_id || c != chunk;
+    if let Some(r) = ctx.db.gather_node().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.gather_node().entity_id().update(GatherNode { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.station().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.station().entity_id().update(Station { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.dummy().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.dummy().entity_id().update(Dummy { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.foe().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.foe().entity_id().update(Foe { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.afk_work().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.afk_work().entity_id().update(AfkWork { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.casting().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.casting().entity_id().update(Casting { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.burning().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.burning().entity_id().update(Burning { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.wielded().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.wielded().entity_id().update(Wielded { world_id, chunk, ..r });
+    }
+    if let Some(r) = ctx.db.combat_state().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.combat_state().entity_id().update(CombatState { world_id, chunk, ..r });
+    }
 }
 
 fn is_depleted(ctx: &ReducerContext, node_id: u64) -> bool {
@@ -730,7 +786,7 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
             continue;
         };
         let id = crate::module::spawn_npc_internal(ctx, world_id, ENTITY_NODE, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
-        ctx.db.gather_node().insert(GatherNode { entity_id: id, world_id, def_id: def.id, point_id: p.id.to_string() });
+        ctx.db.gather_node().insert(GatherNode { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), def_id: def.id, point_id: p.id.to_string() });
     }
     let stations: Vec<String> = ctx.db.station().world_id().filter(world_id).map(|s| s.point_id).collect();
     for p in level.points_of(rules::STATION_POINT) {
@@ -742,7 +798,7 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
             continue;
         };
         let id = crate::module::spawn_npc_internal(ctx, world_id, ENTITY_STATION, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
-        ctx.db.station().insert(Station { entity_id: id, world_id, key: st.key.to_string(), point_id: p.id.to_string() });
+        ctx.db.station().insert(Station { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), key: st.key.to_string(), point_id: p.id.to_string() });
     }
     populate_dummies(ctx, world_id);
     populate_foes(ctx, world_id);
@@ -809,8 +865,9 @@ fn deplete(ctx: &ReducerContext, node_id: u64, n: &NodeSeed, by: u64) {
 #[allow(clippy::too_many_arguments)]
 fn report(ctx: &ReducerContext, entity_id: u64, world_id: u32, target_id: u64, skill_id: u32, item_id: u32, qty: u32, rare_item: u32,
     depleted: bool, ran_out: bool, active: bool, score_pm: i32, quality: i32, xp: u32, rank: u32) {
+    // An event: cut once, where the worker stood, and never follows them.
     ctx.db.work_result().insert(WorkResult {
-        id: 0, entity_id, world_id, target_id, skill_id, item_id, qty, rare_item, depleted, ran_out, active, score_pm, quality, xp, rank,
+        id: 0, entity_id, world_id, chunk: crate::module::chunk_of_entity(ctx, entity_id), target_id, skill_id, item_id, qty, rare_item, depleted, ran_out, active, score_pm, quality, xp, rank,
         at: ctx.timestamp,
     });
 }
@@ -892,7 +949,7 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
         log::info!("regents: {me} plays a round at {} {node_id} (speed {speed} %)", def.name);
     } else {
         ctx.db.afk_work().insert(AfkWork {
-            entity_id: me, world_id: node.world_id, target_id: node_id, def_id: def.id, craft: false, skill_id: def.skill,
+            entity_id: me, world_id: node.world_id, chunk: mine.chunk, target_id: node_id, def_id: def.id, craft: false, skill_id: def.skill,
             tool_item: tool.id, speed_pct: speed, started_at: ctx.timestamp,
             next_at: ctx.timestamp + TimeDuration::from_micros(rules::afk_interval_ms(def.afk_ms, speed) as i64 * 1000),
             from: mine.pos, count: 0,
@@ -1058,7 +1115,7 @@ fn craft_impl(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: boo
     } else {
         // A craft's `tool_item` is the part it is made with (0: none).
         ctx.db.afk_work().insert(AfkWork {
-            entity_id: me, world_id: st.world_id, target_id: station_id, def_id: r.id, craft: true, skill_id: r.skill, tool_item: part,
+            entity_id: me, world_id: st.world_id, chunk: mine.chunk, target_id: station_id, def_id: r.id, craft: true, skill_id: r.skill, tool_item: part,
             speed_pct: 100, started_at: ctx.timestamp, next_at: ctx.timestamp + TimeDuration::from_micros(r.afk_ms as i64 * 1000),
             from: mine.pos, count: 0,
         });
@@ -1317,6 +1374,11 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
 pub struct Wielded {
     #[primary_key]
     pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub item_row: u64,
     pub item_id: u32,
     pub kit: String,
@@ -1327,6 +1389,11 @@ pub struct Wielded {
 pub struct CombatState {
     #[primary_key]
     pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     /// The light step last swung (-1: no combo going).
     pub combo: i32,
     pub combo_at: Timestamp,
@@ -1359,6 +1426,9 @@ pub struct Foe {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub point_id: String,
     pub foe_id: u32,
     pub fell_at: Option<Timestamp>,
@@ -1469,13 +1539,17 @@ pub struct Dummy {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub point_id: String,
     pub last_hit_at: Timestamp,
 }
 
 fn combat_state_of(ctx: &ReducerContext, entity_id: u64) -> CombatState {
-    ctx.db.combat_state().entity_id().find(entity_id).unwrap_or(CombatState {
-        entity_id, combo: -1, combo_at: ctx.timestamp, blocking: false, block_since: ctx.timestamp,
+    ctx.db.combat_state().entity_id().find(entity_id).unwrap_or_else(|| {
+        let (world_id, chunk) = place_of(ctx, entity_id);
+        CombatState { entity_id, world_id, chunk, combo: -1, combo_at: ctx.timestamp, blocking: false, block_since: ctx.timestamp }
     })
 }
 
@@ -1662,6 +1736,9 @@ pub struct Casting {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub ability: u32,
     pub target_id: u64,
     pub aim: Vector3,
@@ -1707,6 +1784,9 @@ pub struct SpellArea {
     pub id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub owner: u64,
     pub ability: u32,
     pub pos: Vector3,
@@ -1724,6 +1804,9 @@ pub struct Burning {
     pub entity_id: u64,
     #[index(btree)]
     pub world_id: u32,
+    /// The cell it is in (`crate::cell`, template 1.0): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
     pub dps: f32,
     pub until: Timestamp,
     pub by: u64,
@@ -1787,7 +1870,7 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
         return land_spell(ctx, me, ability_id, target_id, aim, at);
     }
     let lands = ctx.timestamp + TimeDuration::from_micros(cast_ms * 1000);
-    ctx.db.casting().insert(Casting { entity_id: me, world_id: m.world_id, ability: ability_id, target_id, aim, at, from: m.pos,
+    ctx.db.casting().insert(Casting { entity_id: me, world_id: m.world_id, chunk: m.chunk, ability: ability_id, target_id, aim, at, from: m.pos,
         started: ctx.timestamp, lands });
     ctx.db.spell_timer().insert(SpellTimer { scheduled_id: 0, scheduled_at: ScheduleAt::Time(lands), entity_id: me, area_id: 0 });
     stop_block(ctx, me);
@@ -1905,7 +1988,7 @@ fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, ai
         rules::SPELL_BOLT => launch_missile(ctx, me, spell, ability_id, &m, target_id, aim, range, damage, kit.skill),
         rules::SPELL_AREA => {
             let lands = ctx.timestamp + TimeDuration::from_micros(spell.delay_ms * 1000);
-            let id = ctx.db.spell_area().insert(SpellArea { id: 0, world_id: m.world_id, owner: me, ability: ability_id, pos: at,
+            let id = ctx.db.spell_area().insert(SpellArea { id: 0, world_id: m.world_id, chunk: crate::cell::chunk_of(at), owner: me, ability: ability_id, pos: at,
                 radius: spell.radius_m, damage, skill_id: kit.skill, lands, landed: false }).id;
             ctx.db.spell_timer().insert(SpellTimer { scheduled_id: 0, scheduled_at: ScheduleAt::Time(lands), entity_id: 0, area_id: id });
             Ok(())
@@ -1978,7 +2061,7 @@ fn missile_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) 
     if other_id != 0 && other_id != mi.owner && spell_hurt(ctx, mi.owner, mi.skill_id, other_id, mi.damage, mi.world_id) {
         if let Some(s) = spell.filter(|s| s.burn_dps > 0.0 && s.burn_ms > 0) {
             if ctx.db.health_state().entity_id().find(other_id).is_some_and(|h| !h.is_dead) {
-                let row = Burning { entity_id: other_id, world_id: mi.world_id, dps: s.burn_dps,
+                let row = Burning { entity_id: other_id, world_id: mi.world_id, chunk: crate::module::chunk_of_entity(ctx, other_id), dps: s.burn_dps,
                     until: ctx.timestamp + TimeDuration::from_micros(s.burn_ms * 1000), by: mi.owner, skill_id: mi.skill_id };
                 if ctx.db.burning().entity_id().find(other_id).is_some() {
                     ctx.db.burning().entity_id().update(row);
@@ -2115,7 +2198,8 @@ pub fn wield(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
     if it.weapon_kit.is_empty() {
         return Err(format!("wield: a {} is no weapon", it.name.to_lowercase()));
     }
-    let w = Wielded { entity_id: me, item_row, item_id: it.id, kit: it.weapon_kit.to_string() };
+    let (world_id, chunk) = place_of(ctx, me);
+    let w = Wielded { entity_id: me, world_id, chunk, item_row, item_id: it.id, kit: it.weapon_kit.to_string() };
     if ctx.db.wielded().entity_id().find(me).is_some() {
         ctx.db.wielded().entity_id().update(w);
     } else {
@@ -2499,7 +2583,7 @@ fn spawn_foe(ctx: &ReducerContext, world_id: u32, seed: &rules::FoeSeed, p: &cra
     ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
         entity_id: id, world_id, brain: FOE_BRAIN.into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
     });
-    ctx.db.foe().insert(Foe { entity_id: id, world_id, point_id: p.id.to_string(), foe_id: seed.id, fell_at: None, gone: false });
+    ctx.db.foe().insert(Foe { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), point_id: p.id.to_string(), foe_id: seed.id, fell_at: None, gone: false });
     id
 }
 
@@ -2681,7 +2765,7 @@ fn populate_dummies(ctx: &ReducerContext, world_id: u32) {
         ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
             entity_id: id, world_id, brain: "stand".into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
         });
-        ctx.db.dummy().insert(Dummy { entity_id: id, world_id, point_id: p.id.to_string(), last_hit_at: ctx.timestamp });
+        ctx.db.dummy().insert(Dummy { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), point_id: p.id.to_string(), last_hit_at: ctx.timestamp });
     }
 }
 
@@ -2742,6 +2826,10 @@ impl crate::game::Genre for Regents {
     fn on_player_left(&self, ctx: &ReducerContext, entity_id: u64) {
         ctx.db.afk_work().entity_id().delete(entity_id);
         stop_block(ctx, entity_id);
+    }
+
+    fn on_place_changed(&self, ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32) {
+        follow_place(ctx, entity_id, world_id, chunk);
     }
 
     fn on_level_changed(&self, ctx: &ReducerContext, world_id: u32, _level_id: u8) {

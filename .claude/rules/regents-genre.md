@@ -29,6 +29,11 @@ paths:
 - The server judges every swing, round and roll from inputs; the referee (sidecar) runs the foes.
 - `chunk` comes to the template's positional tables in the template 1.0 reshape, not a side table:
   never add a chunk side table here.
+- The client has RING interest (`game/regents/regents_net_config.tres`, PROGRESS step 22). A new table of
+  ours that describes a placed thing: `world_id` and an indexed `chunk` (set at insert: `place_of`,
+  `chunk_of_entity`; an event `cell::chunk_of(pos)`), moved in `follow_place` if it follows an entity, listed
+  in the net config's `cell_tables` (and `follow_tables` when a player's) and in `genre.tres` `world_tables`.
+  The regents suite fails a table with a chunk that is not a cell table.
 - Still open, Luke's to decide (never default): #12 day/night, the other skills' minigames, how the
   minimap grows, what is still open in `MATERIALS.md` §11. The order of work: `GAME.md`. (#7 loot and #22 handles are settled:
   `GAME.md`.)

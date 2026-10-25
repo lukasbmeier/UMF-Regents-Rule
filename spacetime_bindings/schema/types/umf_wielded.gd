@@ -6,20 +6,26 @@ class_name UmfWielded extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'wielded']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"item_row": &"u64", &"item_id": &"u32", &"kit": &"string" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"item_row": &"u64", &"item_id": &"u32", &"kit": &"string" }
 
 @export var entity_id: int
+@export var world_id: int
+@export var chunk: int
 @export var item_row: int
 @export var item_id: int
 @export var kit: String
 
 ## 0. entity_id: int[br]
-## 1. item_row: int[br]
-## 2. item_id: int[br]
-## 3. kit: String[br]
-static func create(p_entity_id: int, p_item_row: int, p_item_id: int, p_kit: String) -> UmfWielded:
+## 1. world_id: int[br]
+## 2. chunk: int[br]
+## 3. item_row: int[br]
+## 4. item_id: int[br]
+## 5. kit: String[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_item_row: int, p_item_id: int, p_kit: String) -> UmfWielded:
 	var result: UmfWielded = UmfWielded.new()
 	result.entity_id = p_entity_id
+	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.item_row = p_item_row
 	result.item_id = p_item_id
 	result.kit = p_kit

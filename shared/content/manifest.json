@@ -306,10 +306,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "78b8ddc3",
+			"hash": "b5581e18",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "3dcbe076"
+				"game/regents/content/rules/regents.tres": "87fc40f0"
 			},
 			"type": "rules"
 		},

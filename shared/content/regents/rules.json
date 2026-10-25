@@ -5,7 +5,18 @@
 		{
 			"id": 40000,
 			"name": "Regent's Rule rules",
-			"overrides": [],
+			"overrides": [
+				{
+					"key": "foundation.characters_per_account",
+					"number": 3.0,
+					"text": ""
+				},
+				{
+					"key": "foundation.park_offline_s",
+					"number": 30.0,
+					"text": ""
+				}
+			],
 			"rules": [
 				{
 					"key": "regents.active_yield_mult",

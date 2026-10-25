@@ -6,10 +6,11 @@ class_name UmfCasting extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'casting']
 const PRIMARY_KEY: StringName = &"entity_id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"ability": &"u32", &"target_id": &"u64", &"aim": &"vector3[f32,f32,f32]", &"at": &"vector3[f32,f32,f32]", &"from": &"vector3[f32,f32,f32]", &"started": &"i64", &"lands": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"ability": &"u32", &"target_id": &"u64", &"aim": &"vector3[f32,f32,f32]", &"at": &"vector3[f32,f32,f32]", &"from": &"vector3[f32,f32,f32]", &"started": &"i64", &"lands": &"i64" }
 
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var ability: int
 @export var target_id: int
 @export var aim: Vector3
@@ -20,17 +21,19 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"entity_id": &"u64", 
 
 ## 0. entity_id: int[br]
 ## 1. world_id: int[br]
-## 2. ability: int[br]
-## 3. target_id: int[br]
-## 4. aim: Vector3[br]
-## 5. at: Vector3[br]
-## 6. from: Vector3[br]
-## 7. started: int[br]
-## 8. lands: int[br]
-static func create(p_entity_id: int, p_world_id: int, p_ability: int, p_target_id: int, p_aim: Vector3, p_at: Vector3, p_from: Vector3, p_started: int, p_lands: int) -> UmfCasting:
+## 2. chunk: int[br]
+## 3. ability: int[br]
+## 4. target_id: int[br]
+## 5. aim: Vector3[br]
+## 6. at: Vector3[br]
+## 7. from: Vector3[br]
+## 8. started: int[br]
+## 9. lands: int[br]
+static func create(p_entity_id: int, p_world_id: int, p_chunk: int, p_ability: int, p_target_id: int, p_aim: Vector3, p_at: Vector3, p_from: Vector3, p_started: int, p_lands: int) -> UmfCasting:
 	var result: UmfCasting = UmfCasting.new()
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.ability = p_ability
 	result.target_id = p_target_id
 	result.aim = p_aim

@@ -374,6 +374,10 @@
 					"type": "U32"
 				},
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "target_id",
 					"type": "U64"
 				},
@@ -736,6 +740,10 @@
 					"type": "U32"
 				},
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "dps",
 					"type": "F32"
 				},
@@ -773,6 +781,10 @@
 				},
 				{
 					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
 					"type": "U32"
 				},
 				{
@@ -973,6 +985,14 @@
 				{
 					"name": "entity_id",
 					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
+					"type": "U32"
 				},
 				{
 					"name": "combo",
@@ -1235,6 +1255,10 @@
 					"type": "U32"
 				},
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "point_id",
 					"type": "String"
 				},
@@ -1468,6 +1492,10 @@
 					"type": "U32"
 				},
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "point_id",
 					"type": "String"
 				},
@@ -1549,6 +1577,10 @@
 				},
 				{
 					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
 					"type": "U32"
 				},
 				{
@@ -3032,6 +3064,10 @@
 					"type": "U32"
 				},
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "owner",
 					"type": "U64"
 				},
@@ -3178,6 +3214,10 @@
 				},
 				{
 					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
 					"type": "U32"
 				},
 				{
@@ -3510,6 +3550,14 @@
 					"type": "U64"
 				},
 				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "item_row",
 					"type": "U64"
 				},
@@ -3595,6 +3643,10 @@
 				},
 				{
 					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
 					"type": "U32"
 				},
 				{
@@ -4188,10 +4240,10 @@
 			"return_data": {}
 		},
 		{
-			"name": "compat_generation_2",
-			"wire_name": "compat_generation_2",
+			"name": "compat_generation_3",
+			"wire_name": "compat_generation_3",
 			"namespace": [],
-			"local_name": "compat_generation_2",
+			"local_name": "compat_generation_3",
 			"params": [],
 			"return_type": "",
 			"return_data": {}
@@ -6023,6 +6075,10 @@
 			],
 			"btree_indexes": [
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "world_id",
 					"type": "U32"
 				}
@@ -6238,6 +6294,10 @@
 			],
 			"btree_indexes": [
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "world_id",
 					"type": "U32"
 				}
@@ -6261,6 +6321,10 @@
 				}
 			],
 			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
 				{
 					"name": "world_id",
 					"type": "U32"
@@ -6374,7 +6438,16 @@
 					"constraint_name": "combat_state_entity_id_key"
 				}
 			],
-			"btree_indexes": [],
+			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
 			"is_public": true
 		},
 		{
@@ -6538,6 +6611,10 @@
 			],
 			"btree_indexes": [
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "world_id",
 					"type": "U32"
 				}
@@ -6642,6 +6719,10 @@
 			],
 			"btree_indexes": [
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "world_id",
 					"type": "U32"
 				}
@@ -6689,6 +6770,10 @@
 				}
 			],
 			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
 				{
 					"name": "world_id",
 					"type": "U32"
@@ -7539,6 +7624,10 @@
 			],
 			"btree_indexes": [
 				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
 					"name": "world_id",
 					"type": "U32"
 				}
@@ -7633,6 +7722,10 @@
 				}
 			],
 			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
 				{
 					"name": "world_id",
 					"type": "U32"
@@ -7840,7 +7933,16 @@
 					"constraint_name": "wielded_entity_id_key"
 				}
 			],
-			"btree_indexes": [],
+			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
 			"is_public": true
 		},
 		{
@@ -7884,6 +7986,10 @@
 				}
 			],
 			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
 				{
 					"name": "entity_id",
 					"type": "U64"
@@ -8850,6 +8956,14 @@
 					},
 					{
 						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "target_id"
 						},
 						"algebraic_type": {
@@ -9464,6 +9578,14 @@
 					},
 					{
 						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "dps"
 						},
 						"algebraic_type": {
@@ -9522,6 +9644,14 @@
 					{
 						"name": {
 							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -9890,6 +10020,22 @@
 					},
 					{
 						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "combo"
 						},
 						"algebraic_type": {
@@ -10238,6 +10384,14 @@
 					{
 						"name": {
 							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -10678,6 +10832,14 @@
 					},
 					{
 						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "point_id"
 						},
 						"algebraic_type": {
@@ -10822,6 +10984,14 @@
 					{
 						"name": {
 							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -13205,6 +13375,14 @@
 					},
 					{
 						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "owner"
 						},
 						"algebraic_type": {
@@ -13456,6 +13634,14 @@
 					{
 						"name": {
 							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
 						},
 						"algebraic_type": {
 							"U32": []
@@ -13970,6 +14156,22 @@
 					},
 					{
 						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
 							"some": "item_row"
 						},
 						"algebraic_type": {
@@ -14098,6 +14300,14 @@
 					{
 						"name": {
 							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
 						},
 						"algebraic_type": {
 							"U32": []

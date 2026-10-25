@@ -7,12 +7,14 @@ signal updated(old_row: UmfGatherNode, new_row: UmfGatherNode)
 signal deleted(row: UmfGatherNode)
 
 var entity_id: UmfGatherNodeEntityIdUniqueIndex
+var chunk: UmfGatherNodeChunkBTreeIndex
 var world_id: UmfGatherNodeWorldIdBTreeIndex
 
 func _init(p_local_db: LocalDatabase) -> void:
 	super(p_local_db)
 	_table_name = &"gather_node"
 	entity_id = UmfGatherNodeEntityIdUniqueIndex.new(p_local_db)
+	chunk = UmfGatherNodeChunkBTreeIndex.new(p_local_db)
 	world_id = UmfGatherNodeWorldIdBTreeIndex.new(p_local_db)
 	on_insert(_emit_inserted)
 	on_update(_emit_updated)
@@ -57,6 +59,12 @@ func find_by_world_id(value: int) -> Array[UmfGatherNode]:
 
 func first_by_world_id(value: int) -> UmfGatherNode:
 	return world_id._first_row(value) as UmfGatherNode
+
+func find_by_chunk(value: int) -> Array[UmfGatherNode]:
+	return chunk.filter(value)
+
+func first_by_chunk(value: int) -> UmfGatherNode:
+	return chunk._first_row(value) as UmfGatherNode
 
 func find_by_def_id(value: int) -> Array[UmfGatherNode]:
 	return find_by(&"def_id", value)

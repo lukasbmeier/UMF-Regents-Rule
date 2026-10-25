@@ -646,6 +646,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "target_id"
 									},
 									"algebraic_type": {
@@ -1260,6 +1268,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "dps"
 									},
 									"algebraic_type": {
@@ -1318,6 +1334,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -1686,6 +1710,22 @@
 								},
 								{
 									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "combo"
 									},
 									"algebraic_type": {
@@ -2034,6 +2074,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -2474,6 +2522,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "point_id"
 									},
 									"algebraic_type": {
@@ -2618,6 +2674,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -5001,6 +5065,14 @@
 								},
 								{
 									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "owner"
 									},
 									"algebraic_type": {
@@ -5252,6 +5324,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -5766,6 +5846,22 @@
 								},
 								{
 									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "item_row"
 									},
 									"algebraic_type": {
@@ -5894,6 +5990,14 @@
 								{
 									"name": {
 										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
 									},
 									"algebraic_type": {
 										"U32": []
@@ -7648,6 +7752,19 @@
 						},
 						{
 							"source_name": {
+								"some": "spell_area_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "spell_area_world_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8216,6 +8333,19 @@
 					"indexes": [
 						{
 							"source_name": {
+								"some": "gather_node_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "gather_node_entity_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8345,6 +8475,19 @@
 					"indexes": [
 						{
 							"source_name": {
+								"some": "combat_state_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "combat_state_entity_id_idx_btree"
 							},
 							"accessor_name": {
@@ -8353,6 +8496,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "combat_state_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -8722,6 +8878,19 @@
 									0.0
 								]
 							}
+						},
+						{
+							"source_name": {
+								"some": "dummy_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
 						}
 					],
 					"constraints": [
@@ -8990,6 +9159,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "casting_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -9303,6 +9485,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "foe_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -10917,6 +11112,19 @@
 					"indexes": [
 						{
 							"source_name": {
+								"some": "burning_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "burning_entity_id_idx_btree"
 							},
 							"accessor_name": {
@@ -11839,6 +12047,19 @@
 					"indexes": [
 						{
 							"source_name": {
+								"some": "wielded_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
 								"some": "wielded_entity_id_idx_btree"
 							},
 							"accessor_name": {
@@ -11847,6 +12068,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "wielded_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
 								]
 							}
 						}
@@ -11954,6 +12188,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "work_result_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									3.0
 								]
 							}
 						},
@@ -12311,6 +12558,19 @@
 							"algorithm": {
 								"BTree": [
 									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "station_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						}
@@ -12875,6 +13135,19 @@
 							"algorithm": {
 								"BTree": [
 									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "afk_work_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
 								]
 							}
 						},
@@ -13608,7 +13881,7 @@
 					}
 				},
 				{
-					"source_name": "compat_generation_2",
+					"source_name": "compat_generation_3",
 					"params": {
 						"elements": []
 					},
@@ -17407,8 +17680,8 @@
 					},
 					{
 						"Function": {
-							"source_name": "compat_generation_2",
-							"canonical_name": "compat_generation_2"
+							"source_name": "compat_generation_3",
+							"canonical_name": "compat_generation_3"
 						}
 					},
 					{

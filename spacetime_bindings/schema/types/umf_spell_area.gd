@@ -6,10 +6,11 @@ class_name UmfSpellArea extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'spell_area']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"owner": &"u64", &"ability": &"u32", &"pos": &"vector3[f32,f32,f32]", &"radius": &"f32", &"damage": &"f32", &"skill_id": &"u32", &"lands": &"i64", &"landed": &"bool" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"owner": &"u64", &"ability": &"u32", &"pos": &"vector3[f32,f32,f32]", &"radius": &"f32", &"damage": &"f32", &"skill_id": &"u32", &"lands": &"i64", &"landed": &"bool" }
 
 @export var id: int
 @export var world_id: int
+@export var chunk: int
 @export var owner: int
 @export var ability: int
 @export var pos: Vector3
@@ -21,18 +22,20 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"world
 
 ## 0. id: int[br]
 ## 1. world_id: int[br]
-## 2. owner: int[br]
-## 3. ability: int[br]
-## 4. pos: Vector3[br]
-## 5. radius: float[br]
-## 6. damage: float[br]
-## 7. skill_id: int[br]
-## 8. lands: int[br]
-## 9. landed: bool[br]
-static func create(p_id: int, p_world_id: int, p_owner: int, p_ability: int, p_pos: Vector3, p_radius: float, p_damage: float, p_skill_id: int, p_lands: int, p_landed: bool) -> UmfSpellArea:
+## 2. chunk: int[br]
+## 3. owner: int[br]
+## 4. ability: int[br]
+## 5. pos: Vector3[br]
+## 6. radius: float[br]
+## 7. damage: float[br]
+## 8. skill_id: int[br]
+## 9. lands: int[br]
+## 10. landed: bool[br]
+static func create(p_id: int, p_world_id: int, p_chunk: int, p_owner: int, p_ability: int, p_pos: Vector3, p_radius: float, p_damage: float, p_skill_id: int, p_lands: int, p_landed: bool) -> UmfSpellArea:
 	var result: UmfSpellArea = UmfSpellArea.new()
 	result.id = p_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.owner = p_owner
 	result.ability = p_ability
 	result.pos = p_pos

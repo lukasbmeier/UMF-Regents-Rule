@@ -6,11 +6,12 @@ class_name UmfWorkResult extends _ModuleTableType
 const module_name : String = "Umf"
 const table_names: Array[StringName] = [&'work_result']
 const PRIMARY_KEY: StringName = &"id"
-const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entity_id": &"u64", &"world_id": &"u32", &"target_id": &"u64", &"skill_id": &"u32", &"item_id": &"u32", &"qty": &"u32", &"rare_item": &"u32", &"depleted": &"bool", &"ran_out": &"bool", &"active": &"bool", &"score_pm": &"i32", &"quality": &"i32", &"xp": &"u32", &"rank": &"u32", &"at": &"i64" }
+const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entity_id": &"u64", &"world_id": &"u32", &"chunk": &"u32", &"target_id": &"u64", &"skill_id": &"u32", &"item_id": &"u32", &"qty": &"u32", &"rare_item": &"u32", &"depleted": &"bool", &"ran_out": &"bool", &"active": &"bool", &"score_pm": &"i32", &"quality": &"i32", &"xp": &"u32", &"rank": &"u32", &"at": &"i64" }
 
 @export var id: int
 @export var entity_id: int
 @export var world_id: int
+@export var chunk: int
 @export var target_id: int
 @export var skill_id: int
 @export var item_id: int
@@ -28,24 +29,26 @@ const BSATN_TYPES: Dictionary[StringName, StringName] = { &"id": &"u64", &"entit
 ## 0. id: int[br]
 ## 1. entity_id: int[br]
 ## 2. world_id: int[br]
-## 3. target_id: int[br]
-## 4. skill_id: int[br]
-## 5. item_id: int[br]
-## 6. qty: int[br]
-## 7. rare_item: int[br]
-## 8. depleted: bool[br]
-## 9. ran_out: bool[br]
-## 10. active: bool[br]
-## 11. score_pm: int[br]
-## 12. quality: int[br]
-## 13. xp: int[br]
-## 14. rank: int[br]
-## 15. at: int[br]
-static func create(p_id: int, p_entity_id: int, p_world_id: int, p_target_id: int, p_skill_id: int, p_item_id: int, p_qty: int, p_rare_item: int, p_depleted: bool, p_ran_out: bool, p_active: bool, p_score_pm: int, p_quality: int, p_xp: int, p_rank: int, p_at: int) -> UmfWorkResult:
+## 3. chunk: int[br]
+## 4. target_id: int[br]
+## 5. skill_id: int[br]
+## 6. item_id: int[br]
+## 7. qty: int[br]
+## 8. rare_item: int[br]
+## 9. depleted: bool[br]
+## 10. ran_out: bool[br]
+## 11. active: bool[br]
+## 12. score_pm: int[br]
+## 13. quality: int[br]
+## 14. xp: int[br]
+## 15. rank: int[br]
+## 16. at: int[br]
+static func create(p_id: int, p_entity_id: int, p_world_id: int, p_chunk: int, p_target_id: int, p_skill_id: int, p_item_id: int, p_qty: int, p_rare_item: int, p_depleted: bool, p_ran_out: bool, p_active: bool, p_score_pm: int, p_quality: int, p_xp: int, p_rank: int, p_at: int) -> UmfWorkResult:
 	var result: UmfWorkResult = UmfWorkResult.new()
 	result.id = p_id
 	result.entity_id = p_entity_id
 	result.world_id = p_world_id
+	result.chunk = p_chunk
 	result.target_id = p_target_id
 	result.skill_id = p_skill_id
 	result.item_id = p_item_id

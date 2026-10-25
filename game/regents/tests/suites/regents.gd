@@ -34,6 +34,36 @@ func run() -> void:
 	await _run_tester_page()
 	await _run_crafting_choice()
 	await _run_solid()
+	_run_cells()
+
+
+## THE RING (template 1.0, this game's half): Regent's Rule is sent only the cells round its player, so
+## each of its tables that describes a placed thing is a cell table, asked for `WHERE world_id AND chunk`.
+## A cell table the bindings give no `chunk` would be a query the server refuses; one that is not also a
+## world table would be sent whole to a WORLD client (the referee).
+func _run_cells() -> void:
+	print("== regents: the ring and its cell tables ==")
+	var game: PackedScene = load("res://game/regents/regents_game.tscn") as PackedScene
+	var root: Node = game.instantiate()
+	var cfg: NetConfig = root.get_node("Boot").get(&"net_config") as NetConfig
+	root.free()
+	_check(cfg != null and cfg.interest == NetConfig.Interest.RING, "the game's Boot has ring interest")
+	if cfg == null:
+		return
+	var genre: GenreModule = load("res://game/regents/genre.tres") as GenreModule
+	var contract: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SpaceTimeSync.BINDINGS_CONTRACT_PATH)) as Dictionary
+	var tables: Dictionary = contract.get("tables", {}) as Dictionary
+	for t: StringName in cfg.cell_tables:
+		var row: String = str(tables.get(String(t), ""))
+		_check(genre.tables.has(t) and genre.world_tables.has(t), "%s is subscribed, and by world for a WORLD client" % t)
+		_check(row.contains("world_id:U32") and row.contains("chunk:U32"), "%s's rows carry world_id and chunk: %s" % [t, row])
+	for t: StringName in cfg.follow_tables:
+		_check(cfg.cell_tables.has(t) and str(tables.get(String(t), "")).contains("entity_id:U64"),
+			"%s follows an entity: a cell table keyed by entity_id" % t)
+	# Every table of ours with a chunk is asked for by cell; a new one left out would be sent world-wide.
+	for t: StringName in genre.tables:
+		if str(tables.get(String(t), "")).contains("chunk:U32"):
+			_check(cfg.cell_tables.has(t), "%s has a chunk, so it is a cell table" % t)
 
 
 ## Combat's client side, with no server: kits, the combo's steps, the stance, the keys, the skill bar.
