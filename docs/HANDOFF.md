@@ -1,4 +1,4 @@
-# Handoff — Regent's Rule, 2026-10-24 (the continent built; next, the load test harness)
+# Handoff — Regent's Rule, 2026-10-24 (the continent built; NEXT SESSION: Luke's playtest fixes, then the load test)
 
 ## Where it stands
 - **PROGRESS step 23, the continent: built, green, committed and pushed** (`36e5861`).
@@ -25,10 +25,18 @@
   continent is generated, never hand-edited.
 
 ## Next, in order
-1. **Luke's solo playtest notes** (PROGRESS step 23, "Luke's solo playtest": 9 notes, sorted, none fixed):
-   the small ones first (the T-posing spawn, the nameless "Player 39", the minimap on the continent, bushes
-   not solid); the combat ones go to the deep-dive; the referee's stalls (3-4.5 s) go to the load test.
-2. **THE LOAD TEST HARNESS** (Luke: Tuesday, when his usage resets), in the TEMPLATE (a milestone of its own): a light bot client (likely Rust on the
+1. **FIRST, THE NEXT SESSION (Sunday, before Tuesday 5 pm): fix Luke's playtest notes** (PROGRESS step 23,
+   "Luke's solo playtest": 9 notes, sorted, none fixed) with the usage left before his reset. Luke's
+   words: "fix what we can". Usage is short: one note at a time, its suite and its negative, COMMIT AND
+   PUSH after each, so stopping anywhere loses nothing. Suggested order (real bugs first):
+   a. #2/#3 skeletons stop doing damage, and hit each other (the referee's sweep, likely the first body);
+   b. #9 the skeleton T-posing near the origin as it spawns;
+   c. #7 the nameless "Player 39" (the CLI's player, drawn);
+   d. #4 bushes not solid: ASK Luke first (all bushes? rocks stay solid); then the shadows near them;
+   e. #5 the minimap out on the continent (M for a world map: ask, it is an idea);
+   f. #6 no roll in the air, #8 the sword's cut-off swings: only if small, else to the deep-dive.
+   Leave the referee's stalls (#1, 3-4.5 s) for the load test.
+2. **THE LOAD TEST HARNESS** (Luke: Tuesday, after 5 pm, when his usage resets), in the TEMPLATE (a milestone of its own): a light bot client (likely Rust on the
    SpacetimeDB client SDK, many connections in one process; check the SDK first), each bot asking the
    ring's queries and sending real inputs (walk, gather, swing at dummies); run from the M1 so it does not
    take the server's CPU; 50 -> 100 -> 300, measuring rows and bytes a second per client and in total (the
