@@ -956,3 +956,30 @@ a real client at 150 ms on the continent: 19 of 484 cells loaded round it, the n
 a cell east, the nodes both rings share kept, none spawned again). Negatives: WORLD interest instead of the
 ring (6 playtest checks fail; it is then sent all 545 nodes and 603 entities, against 7 on the ring), the
 streamed wrapping switched off and a camp point moved (a unit check each).
+
+### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted, NOT fixed yet
+Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. Sorted for the next work:
+- **Small, with or before the load test** (each to look into first):
+  - #9 a skeleton T-poses near the origin for a moment as it spawns (Luke's guess: spawned at 0, then moved
+    to its point). Likely its entity drawn before its place and pose arrived; check on the ring, where a
+    foe's rows come in cell sets.
+  - #7 a nameless "Player 39" is shown (once "Player 30", DECISIONS #272: a tool is not a person). Likely
+    the CLI's own player again (this session's `spacetime call`/`sql` made one); why it is drawn is the bug.
+  - #5 the minimap stops updating out on the continent (it was built for the glade's size); **idea: M opens
+    a full world map**.
+  - #4 **bushes should not be solid** (Luke: "the bushes have 3d collisions when I don't think they should":
+    a change to his 2026-10-21 "every 3d object should have collisions"; rocks stay solid). Shadows "seem a
+    little messed up" near them (to look at).
+- **The combat deep-dive** (Luke: "we can fix in combat rework/deep dive"):
+  - #8 the sword: spamming LMB cuts off the second swing's animation; Q (Lunge) is cut off halfway.
+  - #6 a roll in the air should not happen: queue it for the landing (the cast queue).
+  - #2 + #3 skeletons hit once, then keep swinging for no damage; two side by side were hitting EACH OTHER
+    (friendly fire off, so nothing), and once one died he took damage again. Likely the referee's sweep
+    stopping at the first body it meets (the other skeleton), not the player behind it.
+  - #4 foes do not path round obstacles: a bush blocks a skeleton's sight and it turns back (NPC tiers and
+    brains).
+- **Performance, for the load test**: #1 a lag spike sprinting at the start (Luke's guess: the referee
+  starting). The reports agree: network spikes of 600-950 ms at 22:03:23-25 for him; the REFEREE had 111
+  spikes in 16 min, stalls of 3.0 s (22:03:41) and 4.5 s (22:06:49), its worst frame 144 ms. It now loads
+  the whole continent (Terrain3D's full collision, ~600 entities, ~900 props wrapped solid): the first
+  suspect, and exactly what the harness should measure.

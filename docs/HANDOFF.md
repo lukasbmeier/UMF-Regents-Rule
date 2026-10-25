@@ -1,7 +1,7 @@
 # Handoff — Regent's Rule, 2026-10-24 (the continent built; next, the load test harness)
 
 ## Where it stands
-- **PROGRESS step 23, the continent: built and green, NOT committed** (last commit `531ac53`, pushed).
+- **PROGRESS step 23, the continent: built, green, committed and pushed** (`36e5861`).
   A generated greybox of Luke's map's main continent (2.25 x 3 km, level 21, streamed in 484 cells) with the
   glade's camp copied in at its origin and a test placement (516 nodes, 16 skeleton camps).
 - **The play database `regents-rule` runs the continent**: published (data kept), then
@@ -25,8 +25,10 @@
   continent is generated, never hand-edited.
 
 ## Next, in order
-1. Luke: walk the continent (Play), say what to change in the shape; commit step 23.
-2. **THE LOAD TEST HARNESS**, in the TEMPLATE (a milestone of its own): a light bot client (likely Rust on the
+1. **Luke's solo playtest notes** (PROGRESS step 23, "Luke's solo playtest": 9 notes, sorted, none fixed):
+   the small ones first (the T-posing spawn, the nameless "Player 39", the minimap on the continent, bushes
+   not solid); the combat ones go to the deep-dive; the referee's stalls (3-4.5 s) go to the load test.
+2. **THE LOAD TEST HARNESS** (Luke: Tuesday, when his usage resets), in the TEMPLATE (a milestone of its own): a light bot client (likely Rust on the
    SpacetimeDB client SDK, many connections in one process; check the SDK first), each bot asking the
    ring's queries and sending real inputs (walk, gather, swing at dummies); run from the M1 so it does not
    take the server's CPU; 50 -> 100 -> 300, measuring rows and bytes a second per client and in total (the
@@ -35,6 +37,7 @@
 
 ## Waiting on Luke
 - His look at the continent: the mountains' height and steepness, the camp's spot, the test placement.
+- Bushes not solid (his note #4): confirm it is all bushes, rocks staying solid; and whether M opens a world map.
 - The SpacetimeAuth client id (`shared/game.json` `sign_in`); open: trait ranks, #12 day/night, the minimap.
 
 ## Watch out
