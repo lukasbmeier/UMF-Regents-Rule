@@ -60,6 +60,11 @@ echo "== a sign-in service of our own, and the test database =="
 wait_up "$ISS" && wait_up "http://127.0.0.1:$OTHER_PORT" || { echo "the test issuers did not start" >&2; cat "$work/issuer.log" >&2; exit 1; }
 (cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1 || { echo "publish failed" >&2; exit 1; }
 sleep 2
+# The foundation's defaults, which what follows is written for: a game may override them (Regent's Rule:
+# 3 characters an account, parked 30 s after leaving), and with room on the account a guest's own
+# character joins it at the link, so "a second character" would be a third (found there, 2026-10-24).
+spacetime call "$DB" set_rule foundation.characters_per_account 1 '""' >/dev/null 2>&1
+spacetime call "$DB" set_rule foundation.park_offline_s 0 '""' >/dev/null 2>&1
 spacetime call "$DB" trust_issuer "\"$ISS\"" "\"$AUD\"" '"the suites issuer"' >/dev/null 2>&1
 check "$([ "$(row_count "SELECT * FROM login_issuer WHERE issuer = '$ISS'")" = "1" ] && echo true || echo false)" "the admin trusts the suites' issuer"
 out="$(spacetime call --anonymous "$DB" trust_issuer '"http://evil.example"' '""' '"no"' 2>&1)"
