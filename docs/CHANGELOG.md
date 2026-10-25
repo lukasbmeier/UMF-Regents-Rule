@@ -782,3 +782,25 @@ each game publishes `--fresh` once.
 - Taking it in a game: commit, pull, add `"compat": 2` to its own `shared/game.json` (that file is the
   game's and does not arrive with the pull), `tools\publish.cmd --fresh --codegen`, run its suites; its
   friends download the new build.
+
+## 1.1.0 — runs well on weak computers (DECISIONS #282)
+No schema change: a game takes it with a pull and a restart of the editor (`project.godot` gains a line).
+- **The renderer, chosen with no command line.** `project.godot` `application/config/project_settings_override`
+  names `user://renderer.cfg`, which the engine reads as it starts. Settings ▸ Video ▸ Renderer: Automatic
+  (the default), Full (the game's own) or Compatibility, used from the next start (Restart now). Automatic
+  picks Compatibility by itself on Intel's pre-Xe graphics (HD, UHD 6xx, Iris Plus) and, in a build, after a
+  start that crashed; it restarts once and says why. A friend no longer needs `--rendering-method`.
+- **Graphics quality** Low / Medium / High / Custom sets render scale, anti-aliasing, Shadows (now with
+  Off), Lighting effects (Off, Reduced, Full), Detail and the frame cap together. High is the look the
+  game always had; a fresh install on Compatibility or an old Intel GPU starts on Low.
+- A level's effects and lights are turned DOWN from what it was made with, never past it
+  (`GraphicsQuality`); designers mark extra detail with the groups `detail_high`, `detail_medium` and
+  `detail_density` (a MultiMesh drawn at a quarter, half or all of its instances).
+- Other characters are posed less often far away and off screen on Low and Medium (`AnimationRate`), and
+  drawn to 80 / 150 m: skinning a crowd was most of a weak GPU's frame.
+- Measured with `tools/perf/perf_bench.tscn` (60 characters, 1080p): Forward+ 5.8 ms a frame on High, 1.5
+  on Low; Compatibility 5.4 on High, 1.2 on Low.
+- New: unit suite `quality`; `tests/render_test.sh` checks the renderer switch, the self-restart and Low
+  against High on both renderers; `tests/export_test.sh` checks the exported client reads the file.
+- The accounts suite pins the foundation defaults it is written for (1 character, no parking): a game
+  that overrides them (Regent's Rule: 3, 30 s) failed 6 of its checks (`511eee3`).

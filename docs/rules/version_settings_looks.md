@@ -26,3 +26,27 @@ The schema fingerprint, settings as data, appearance rows, modular pieces, LODs,
 - THE REGISTRY'S BUFFER (#176) holds one event per row, keyed by the cache's row instance: an
   update replaces the event it follows, and nothing is evicted. Never put a cap back that drops
   rows: an entity with many owned rows (the rival's catches) lost its own state that way.
+
+## GRAPHICS QUALITY AND THE RENDERER (DECISIONS #282)
+- `quality` (Low / Medium / High / Custom) sets `Settings.PRESET_KEYS` together from
+  `QUALITY_PRESETS`; a member changed by hand makes it Custom, and members matching a preset make it
+  that preset again. HIGH IS THE LOOK BEFORE PRESETS: never change High's values (or the defaults on
+  a good machine) without Luke's say. A fresh install starts on `machine_quality()`: Low on
+  Compatibility or a `RendererChoice.LEGACY_GPUS` adapter, else High.
+- A preset never runs while a file is read (`use_file`, `use_defaults`, a start): every member takes
+  its own saved value. Choices are stored by INDEX: append to a CHOICE, never reorder (`shadows` became
+  `shadow_quality` with Off first, and a saved `shadows` is read across).
+- What a choice does to a level is `GraphicsQuality`: it turns a level's effects and shadows DOWN
+  from what the level was authored with (kept as meta the first time it sees each Environment and
+  light) and back to exactly that, never past it. It applies to every node as it enters the tree
+  (`node_added`). Only Forward+ gets SSAO, SSIL, SSR, SDFGI, volumetric fog (the others warn).
+  Designers mark extra detail with groups (`detail_high`, `detail_medium`, `detail_density` on a
+  MultiMeshInstance3D), never code.
+- THE RENDERER is picked by the engine as it starts: `project.godot`'s
+  `application/config/project_settings_override` names `user://renderer.cfg` (`RendererChoice`); the
+  editor ignores it. Keep that line in every game's `project.godot`. Nothing may switch renderers
+  but `RendererChoice` (Settings' `renderer`, Automatic's switch and restart). A renderer on the
+  command line is the player's: nothing is written then.
+- Tests never touch the player's renderer files: `Settings` only uses them with the player's own
+  `settings.cfg`; a suite passes its own paths (`use_file(file, [override, guard])`).
+  `tests/render_test.sh` sets the player's aside and puts them back.

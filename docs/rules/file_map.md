@@ -32,6 +32,10 @@ game/world/levels/meadow.tscn  the example level built in the editor (level 2)
 game/fishing/genre.tres        fishing's client half: definitions, tables, HUD + fishing_world.tscn
 tests/genres_test.sh           the server built from a game of no genres
 foundation/core/settings.gd    Settings autoload: this machine's video/audio/controls, as data
+foundation/core/graphics_quality.gd  what the video settings do to a level: effects, lights, LOD, detail groups (#282)
+foundation/core/renderer_choice.gd  the renderer the next start uses (user://renderer.cfg), Automatic's switch, the start guard (#282)
+foundation/anim/animation_rate.gd  how often another character is posed, by Detail; its Pacer; its draw distance (#282)
+tools/perf/perf_bench.tscn     the bench: every graphics lever and the quality presets, timed (#282)
 foundation/core/appearance.gd  a chosen look as text ("ranger_f;hair=2")
 foundation/ui/settings_panel.gd  the settings screen, drawn from the definitions
 foundation/ui/character_picker.gd  choose a look and its options, in a turning preview

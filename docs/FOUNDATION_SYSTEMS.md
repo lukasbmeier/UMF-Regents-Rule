@@ -187,6 +187,28 @@ ship) and older builds are refused (`compat` 2).
 | F | Parking an offline character (a hot rule; the match games 0) and logging back in where it stood | ✔ #280 |
 | G | 1.0.0: compat 2, HANDBOOK, DECISIONS, CHANGELOG, the full sweep; ship when Luke says | built; the ship waits on Luke |
 
+## Low-end hardware (2026-10-24, DECISIONS #282; not yet shipped to the games)
+Asked for by Luke after a friend's Intel Iris Plus crashed on Forward+ and ran badly on Compatibility.
+BUILT: a renderer chosen with no command line (`RendererChoice`; Settings ▸ Video ▸ Renderer, Automatic
+by default: Compatibility on old Intel graphics or after a start that never got going, restarting itself
+once); Graphics quality Low / Medium / High / Custom (`Settings.QUALITY_PRESETS`) with Shadows Off,
+Lighting effects and Detail; `GraphicsQuality` (a level's effects and lights turned down from what it
+was made with; designer groups `detail_high`, `detail_medium`, `detail_density`); `AnimationRate` (other
+characters posed less often far away and off screen on Low and Medium; drawn to 80 / 150 m).
+HOW TO TRY IT: Escape, Settings, Video: Graphics quality Low, or Renderer Compatibility and Restart now.
+The bench: `godot --path . res://tools/perf/perf_bench.tscn` (add `-- --level=res://<a level>.tscn` for a
+game's own; `--only=presets`; `--chars=N`).
+MEASURED (60 characters, 1080p, RX 9060 XT): Forward+ High 5.8 ms a frame, Medium 3.0, Low 1.5;
+Compatibility High 5.4, Medium 2.8, Low 1.2. The crowd's skinning was the biggest cost on weak GPUs.
+TESTED: unit `quality` (new) and `remote_animation`, `tests/render_test.sh` (the renderer steps, the
+restart, Low vs High on both renderers), `tests/export_test.sh` (the export reads the file), the full
+unit sweep, e2e.
+LUKE'S CALL (2026-10-24): Apple M1, Iris Xe and AMD integrated graphics start on High; only old Intel
+(`RendererChoice.LEGACY_GPUS`) starts on Low.
+LEFT FOR LATER: a measurement on a real iGPU (this machine's is disabled: the friend's next build);
+each game's own
+levels through the bench, and its grass and clutter put in the detail groups (Fishing's meadow).
+
 ## Owner decisions in force (2026-10-07)
 Lag compensation capped at 150 ms, favouring the attacker; hosting a friend-hosted bundle first; the
 hatch also starts Dawn; the first-person predator shows no body. Each is a hot rule where it is a number.

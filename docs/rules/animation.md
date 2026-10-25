@@ -55,3 +55,9 @@ AnimationSet, the generated tree, the driver, held poses, the upper body, IK, ar
 - THE OFF HAND (#172) is grip data run by `OffHand` (a tool script): `HeldItem` and the preview
   call the same code. Its point is a node in the item's scene BY NAME (it may move: the rod's
   `OffHand` is moved onto the turning handle at runtime), present in the scene so the editor has it.
+- THE ANIMATION RATE (#282): another character's tree is posed less often by the Detail setting
+  (`AnimationRate`: by distance, on screen or not; High and your own character every frame), through
+  `AnimationRate.Pacer` (manual mode, advanced by the time owed, staggered per entity). Skinning is
+  most of a crowd's cost on weak GPUs and runs only when a pose changes. Code that reads a bone must
+  not assume it moved this frame; anything timed reads the clock, not the pose. Never set a driven
+  tree's `callback_mode_process` elsewhere.

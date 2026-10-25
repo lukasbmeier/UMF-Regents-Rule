@@ -14,6 +14,12 @@ extends Node
 ## rendering, the audio buses (`res://default_bus_layout.tres`), mouse look (read by
 ## LocalInputComponent) and key bindings (InputMap).
 ##
+## GRAPHICS QUALITY (DECISIONS #282): `quality` (Low / Medium / High) sets the video settings in
+## `QUALITY_PRESETS` together; changing one of them by hand makes it Custom. What the levels' own
+## effects, lights and designer groups do is `GraphicsQuality`; which renderer the game starts on is
+## `RendererChoice` (`renderer`, used at the next start). A fresh install starts on High, or on Low
+## when the game runs on Compatibility or on a weak GPU (`RendererChoice.LEGACY_GPUS`).
+##
 ## TESTS AND HARNESSES keep off the player's file: a process started by a test suite (UMF_DB set,
 ## DECISIONS #154) or with UMF_SETTINGS=none runs on the defaults and saves nothing, so a player who
 ## chose fullscreen does not get a fullscreen test window. UMF_SETTINGS=<path> uses another file.
@@ -36,6 +42,19 @@ const BUS_EFFECTS: StringName = &"Effects"
 const BUS_AMBIENCE: StringName = &"Ambience"
 const BUS_VOICE: StringName = &"Voice"
 
+## THE QUALITY PRESETS, Low, Medium, High (the index is `quality`'s value; Custom is the next one).
+## Each names a value for every setting in `PRESET_KEYS`. High is the game's full look, and was every
+## machine's look before presets existed. The costs behind Low and Medium: DECISIONS #282.
+const QUALITY_PRESETS: Array[Dictionary] = [
+	{&"render_scale": 70.0, &"anti_aliasing": 1, &"shadow_quality": 0, &"effects": 0, &"detail": 0, &"max_fps": 2},
+	{&"render_scale": 85.0, &"anti_aliasing": 1, &"shadow_quality": 2, &"effects": 1, &"detail": 1, &"max_fps": 0},
+	{&"render_scale": 100.0, &"anti_aliasing": 2, &"shadow_quality": 3, &"effects": 2, &"detail": 2, &"max_fps": 0},
+]
+const PRESET_KEYS: Array[StringName] = [&"render_scale", &"anti_aliasing", &"shadow_quality", &"effects", &"detail", &"max_fps"]
+const QUALITY_LOW: int = 0
+const QUALITY_HIGH: int = 2
+const QUALITY_CUSTOM: int = 3
+
 ## The actions the foundation lets a player rebind. A game adds its own with `define_key`.
 const FOUNDATION_KEYS: Array[Array] = [
 	[&"move_forward", "Move forward"], [&"move_back", "Move back"],
@@ -56,6 +75,12 @@ var _values: Dictionary[StringName, Variant] = {}
 var _display: bool = true
 ## Per action, the binding `_bind` last put on it, so the next one takes it off again.
 var _applied_keys: Dictionary[StringName, String] = {}
+## The renderer's files (`RendererChoice`): "" unless this is the player's own settings file.
+var _renderer_path: String = ""
+var _guard_path: String = ""
+## While a preset sets its members (they do not make it Custom).
+var _applying_preset: bool = false
+var _defined: bool = false
 
 
 func _ready() -> void:
@@ -68,7 +93,14 @@ func _ready() -> void:
 		_path = env
 	if not _path.is_empty():
 		_cfg.load(_path)   # a fresh install has no file: every value is its default
+	if _path == DEFAULT_PATH:
+		_renderer_path = RendererChoice.OVERRIDE_PATH
+		_guard_path = RendererChoice.GUARD_PATH
 	_define_foundation()
+	_defined = true
+	_quality_from_members()
+	get_tree().node_added.connect(GraphicsQuality.apply_node)
+	_start_renderer()
 
 
 # --- reading -------------------------------------------------------------------------------
@@ -126,6 +158,7 @@ func path() -> String:
 ##   opts.format             SLIDER label, e.g. "%d%%" (given the value)
 ##   opts.tooltip            shown on hover
 ##   opts.apply              Callable(value) run whenever the value changes, and now
+##   opts.restart_needed     Callable() -> bool: the change waits for a restart (the panel offers one)
 func define(key: StringName, tab: String, label: String, kind: Kind, default: Variant,
 		opts: Dictionary = {}) -> void:
 	var e: Dictionary = {
@@ -135,6 +168,7 @@ func define(key: StringName, tab: String, label: String, kind: Kind, default: Va
 		"choices": PackedStringArray(opts.get("choices", PackedStringArray())),
 		"format": String(opts.get("format", "")), "tooltip": String(opts.get("tooltip", "")),
 		"apply": opts.get("apply", Callable()),
+		"restart_needed": opts.get("restart_needed", Callable()),
 	}
 	var at: int = _index_of(key)
 	if at >= 0:
@@ -172,6 +206,8 @@ func set_value(key: StringName, value: Variant) -> void:
 	_apply(e)
 	changed.emit(key, v)
 	_save(e)
+	if PRESET_KEYS.has(key) and not _applying_preset:
+		_match_quality()
 
 
 ## Every setting on `tab` back to its default.
@@ -183,21 +219,117 @@ func reset(tab: String) -> void:
 ## Run on the defaults from now on, reading and writing no file (tests).
 func use_defaults() -> void:
 	_path = ""
+	_renderer_path = ""
+	_guard_path = ""
 	_cfg = ConfigFile.new()
+	_defined = false   # every member takes its own value: no preset runs over them
 	for e: Dictionary in _entries:
 		_values[e["key"]] = _valid(e, e["default"])
 		_apply(e)
+	_defined = true
 
 
-## Read and write `path` from now on (tests: a file of their own).
-func use_file(file: String) -> void:
+## Read and write `path` from now on (tests: a file of their own). The renderer's files are left
+## alone unless `renderer_files` names some (`[override, guard]`, tests' own).
+func use_file(file: String, renderer_files: PackedStringArray = PackedStringArray()) -> void:
 	_path = file
+	_renderer_path = renderer_files[0] if renderer_files.size() == 2 else ""
+	_guard_path = renderer_files[1] if renderer_files.size() == 2 else ""
 	_cfg = ConfigFile.new()
 	_cfg.load(_path)
+	_defined = false
 	for e: Dictionary in _entries:
 		var saved: Variant = _saved(e)
 		_values[e["key"]] = _valid(e, saved) if saved != null else _valid(e, e["default"])
 		_apply(e)
+	_defined = true
+	_quality_from_members()
+
+
+## A file with no quality in it (saved before presets existed, with a render scale changed) says
+## what its settings are: the preset they match, or Custom. Nothing is saved.
+func _quality_from_members() -> void:
+	var e: Dictionary = entry(&"quality")
+	if not e.is_empty() and _saved(e) == null:
+		_values[&"quality"] = matching_quality()
+
+
+# --- graphics quality ----------------------------------------------------------------------
+
+## The quality a fresh install starts on: Low on Compatibility or a weak GPU, else High.
+static func machine_quality() -> int:
+	if RendererChoice.running() == RendererChoice.COMPATIBILITY \
+			or RendererChoice.is_legacy_gpu(RenderingServer.get_video_adapter_name()):
+		return QUALITY_LOW
+	return QUALITY_HIGH
+
+
+## The preset the members now match, or Custom.
+func matching_quality() -> int:
+	for i: int in range(QUALITY_PRESETS.size()):
+		var all: bool = true
+		for k: StringName in PRESET_KEYS:
+			if _values.get(k) != _valid(entry(k), QUALITY_PRESETS[i][k]):
+				all = false
+				break
+		if all:
+			return i
+	return QUALITY_CUSTOM
+
+
+func _apply_preset(v: int) -> void:
+	if not _defined or v < 0 or v >= QUALITY_PRESETS.size():
+		return   # Custom keeps what is set; at start every member has its own saved value
+	_applying_preset = true
+	for k: StringName in PRESET_KEYS:
+		set_value(k, QUALITY_PRESETS[v][k])
+	_applying_preset = false
+
+
+func _match_quality() -> void:
+	var q: int = matching_quality()
+	if _values.get(&"quality") != q:
+		_values[&"quality"] = q
+		changed.emit(&"quality", q)
+		_save(entry(&"quality"))
+
+
+## The renderer's files (`RendererChoice`), "" when this process keeps off them (tests).
+func renderer_paths() -> PackedStringArray:
+	return PackedStringArray([_renderer_path, _guard_path])
+
+
+## Whether the renderer chosen is not the one running (the panel offers a restart).
+func renderer_needs_restart() -> bool:
+	return RendererChoice.method_for(int(_values.get(&"renderer", 0)), _renderer_path) != RendererChoice.running()
+
+
+## This start got going (a world was shown a while, or the game quit on purpose).
+func mark_start_good() -> void:
+	RendererChoice.mark_good(_guard_path)
+
+
+## Automatic's look at the machine as the game starts (RendererChoice): switch and restart, or
+## carry on and mark the start good once a world has been on screen.
+func _start_renderer() -> void:
+	if _guard_path.is_empty() or not _display or RendererChoice.from_command_line():
+		return
+	var reason: String = RendererChoice.on_start(int(_values.get(&"renderer", 0)),
+		RenderingServer.get_video_adapter_name(), RendererChoice.running(), OS.has_feature("template"), _guard_path)
+	if not reason.is_empty():
+		print("Settings: starting again on the Compatibility renderer (%s, %s)" % [reason, RenderingServer.get_video_adapter_name()])
+		RendererChoice.switch(reason, _renderer_path, _guard_path)
+		RendererChoice.restart.call_deferred(get_tree())
+		return
+	SignalBus.world_ready.connect(_on_world_shown, CONNECT_ONE_SHOT)
+
+
+func _on_world_shown() -> void:
+	var said: String = RendererChoice.take_announcement(_guard_path)
+	if not said.is_empty():
+		SignalBus.notification_requested.emit(said, 1)
+	await get_tree().create_timer(RendererChoice.GOOD_START_S, true, false, true).timeout
+	mark_start_good()
 
 
 # --- key bindings --------------------------------------------------------------------------
@@ -292,6 +424,19 @@ func _bind(action: StringName, text: String) -> void:
 # --- the foundation's own ------------------------------------------------------------------
 
 func _define_foundation() -> void:
+	var start: Dictionary = QUALITY_PRESETS[machine_quality()]
+	define(&"quality", VIDEO, "Graphics quality", Kind.CHOICE, machine_quality(), {
+		"choices": PackedStringArray(["Low", "Medium", "High", "Custom"]),
+		"tooltip": "Sets the settings below together. Low is for integrated graphics and older laptops; change any one and it is Custom.",
+		"apply": func(v: Variant) -> void: _apply_preset(int(v)),
+	})
+	define(&"renderer", VIDEO, "Renderer", Kind.CHOICE, RendererChoice.Choice.AUTOMATIC, {
+		"choices": PackedStringArray(["Automatic", "Full (%s)" % _method_label(RendererChoice.project_method()),
+			"Compatibility (older or integrated graphics)"]),
+		"tooltip": "Used from the next start. Automatic picks Compatibility on older Intel graphics, or after the full renderer stopped the game.",
+		"apply": func(v: Variant) -> void: RendererChoice.write(int(v), _renderer_path),
+		"restart_needed": renderer_needs_restart,
+	})
 	define(&"fullscreen", VIDEO, "Fullscreen", Kind.TOGGLE, false, {
 		"tooltip": "F11 or Alt+Enter at any time.",
 		"apply": func(v: Variant) -> void:
@@ -305,40 +450,65 @@ func _define_foundation() -> void:
 				DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(v)
 					else DisplayServer.VSYNC_DISABLED),
 	})
-	define(&"max_fps", VIDEO, "Frame rate limit", Kind.CHOICE, 0, {
+	define(&"max_fps", VIDEO, "Frame rate limit", Kind.CHOICE, start[&"max_fps"], {
 		"choices": PackedStringArray(["Unlimited", "30", "60", "120", "144", "165", "240"]),
 		"apply": func(v: Variant) -> void:
 			if _display:
 				var label: String = entry(&"max_fps")["choices"][int(v)]
 				Engine.max_fps = 0 if not label.is_valid_int() else int(label),
 	})
-	define(&"render_scale", VIDEO, "Render scale", Kind.SLIDER, 100.0, {
+	define(&"render_scale", VIDEO, "Render scale", Kind.SLIDER, start[&"render_scale"], {
 		"min": 50.0, "max": 100.0, "step": 5.0, "format": "%d%%",
 		"tooltip": "Below 100% draws the 3D world at a lower resolution (upscaled with FSR): faster, softer.",
 		"apply": func(v: Variant) -> void:
 			var root: Window = get_tree().root
 			root.scaling_3d_scale = float(v) / 100.0
-			root.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR if float(v) < 100.0 \
+			# FSR needs the full renderer; Compatibility stretches.
+			root.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR if float(v) < 100.0 and not _compatibility() \
 				else Viewport.SCALING_3D_MODE_BILINEAR,
 	})
-	define(&"anti_aliasing", VIDEO, "Anti-aliasing", Kind.CHOICE, 2, {
+	define(&"anti_aliasing", VIDEO, "Anti-aliasing", Kind.CHOICE, start[&"anti_aliasing"], {
 		"choices": PackedStringArray(["Off", "FXAA", "TAA"]),
-		"tooltip": "TAA is the smoothest; FXAA is cheaper and softer.",
+		"tooltip": "TAA is the smoothest; FXAA is cheaper and softer. Compatibility has neither: TAA is 2x MSAA there, FXAA none.",
 		"apply": func(v: Variant) -> void:
 			var root: Window = get_tree().root
-			root.use_taa = int(v) == 2
-			root.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if int(v) == 1 \
-				else Viewport.SCREEN_SPACE_AA_DISABLED,
+			var compat: bool = _compatibility()
+			root.use_taa = int(v) == 2 and not compat
+			root.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if int(v) == 1 and not compat \
+				else Viewport.SCREEN_SPACE_AA_DISABLED
+			root.msaa_3d = Viewport.MSAA_2X if int(v) == 2 and compat else Viewport.MSAA_DISABLED,
 	})
-	define(&"shadows", VIDEO, "Shadows", Kind.CHOICE, 2, {
-		"choices": PackedStringArray(["Low", "Medium", "High"]),
+	# Was `shadows` (Low, Medium, High) before Off existed: a saved one is read as the same choice.
+	if _cfg.has_section_key("video", "shadows") and not _cfg.has_section_key("video", "shadow_quality"):
+		var old_shadows: Variant = _cfg.get_value("video", "shadows")
+		if old_shadows is int:
+			_cfg.set_value("video", "shadow_quality", clampi(int(old_shadows) + 1, 1, 3))
+	define(&"shadow_quality", VIDEO, "Shadows", Kind.CHOICE, start[&"shadow_quality"], {
+		"choices": PackedStringArray(["Off", "Low", "Medium", "High"]),
+		"tooltip": "Off is the biggest saving on integrated graphics.",
 		"apply": func(v: Variant) -> void:
-			var size: int = 2048 if int(v) == 0 else 4096
-			RenderingServer.directional_shadow_atlas_set_size(size, true)
-			# High is what the project ships (soft_shadow_filter_quality = 3).
+			RenderingServer.directional_shadow_atlas_set_size(2048 if int(v) <= 1 else 4096, true)
+			# High is what the project ships (soft_shadow_filter_quality = 3, soft medium).
 			var quality: RenderingServer.ShadowQuality = [RenderingServer.SHADOW_QUALITY_HARD,
-				RenderingServer.SHADOW_QUALITY_SOFT_LOW, RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][int(v)]
-			RenderingServer.directional_soft_shadow_filter_set_quality(quality),
+				RenderingServer.SHADOW_QUALITY_HARD, RenderingServer.SHADOW_QUALITY_SOFT_LOW,
+				RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][int(v)]
+			RenderingServer.directional_soft_shadow_filter_set_quality(quality)
+			GraphicsQuality.shadows_on = int(v) > 0
+			GraphicsQuality.apply_tree(get_tree().root),
+	})
+	define(&"effects", VIDEO, "Lighting effects", Kind.CHOICE, start[&"effects"], {
+		"choices": PackedStringArray(["Off", "Reduced", "Full"]),
+		"tooltip": "The level's ambient occlusion, glow, light bounce, reflections and volumetric fog. Reduced keeps ambient occlusion and glow.",
+		"apply": func(v: Variant) -> void:
+			GraphicsQuality.effects = int(v)
+			GraphicsQuality.apply_tree(get_tree().root),
+	})
+	define(&"detail", VIDEO, "Detail", Kind.CHOICE, start[&"detail"], {
+		"choices": PackedStringArray(["Low", "Medium", "High"]),
+		"tooltip": "How far models keep their detail and the sun's shadows reach, and how much of a level's extra detail (grass, clutter) is drawn.",
+		"apply": func(v: Variant) -> void:
+			GraphicsQuality.detail = int(v)
+			GraphicsQuality.apply_tree(get_tree().root),
 	})
 	define(&"ui_scale", VIDEO, "Interface scale", Kind.SLIDER, 100.0, {
 		"min": 75.0, "max": 150.0, "step": 5.0, "format": "%d%%",
@@ -375,6 +545,18 @@ func _define_foundation() -> void:
 	define(&"splash_at_start", GAME, "Splash screen at start", Kind.TOGGLE, true, {
 		"tooltip": "The game's name and its tips for a few seconds before connecting. Off: straight to the connect screen (handy while testing).",
 	})
+
+
+func _compatibility() -> bool:
+	return RendererChoice.running() == RendererChoice.COMPATIBILITY
+
+
+static func _method_label(method: String) -> String:
+	match method:
+		"forward_plus": return "Forward+"
+		"mobile": return "Mobile"
+		RendererChoice.COMPATIBILITY: return "Compatibility"
+	return method
 
 
 func _volume_opts(bus: StringName) -> Dictionary:
