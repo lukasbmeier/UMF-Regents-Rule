@@ -28,6 +28,10 @@ static func quit(tree: SceneTree, code: int = 0) -> void:
 	if tree == null or _quitting:
 		return
 	_quitting = true
+	# A start that ends on purpose got going (RendererChoice's start guard, DECISIONS #282).
+	var settings: Node = tree.root.get_node_or_null(^"Settings")
+	if settings != null and settings.has_method(&"mark_start_good"):
+		settings.call(&"mark_start_good")
 	stop_sounds(tree.root)
 	# The content the game kept loaded (DECISIONS #224), let go so nothing is still held at exit.
 	HoldDef.clear_cache()

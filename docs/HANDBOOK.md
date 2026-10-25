@@ -309,7 +309,8 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
    else wants an Apple Developer ID ($99 a year) to sign and notarize it: the preset's codesign and
    notarization settings, which Godot can do from Windows. They type your address on the connect screen, pick a name and a
    character, and connect.
-4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`.
+4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`. A crash at start or a
+   slow game on a laptop: "Running well on a weak computer", below.
 5. **After you change the server**, publish with `--codegen`. Their build keeps working unless you
    changed something it uses; the unit tests tell you before you publish (the release snapshot),
    and if you did it on purpose, bump `compat` and send a new build.
@@ -319,6 +320,65 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
    `EDITOR_ONLY_AUTOLOADS`; the export test fails if any of it is in a build.
 
 Voice: use Discord alongside for now (the roadmap has voice chat later).
+
+### Running well on a weak computer (graphics quality and the renderer)
+DECISIONS #282. A friend with Intel Iris Plus graphics (built into the laptop's processor) crashed on
+the game's renderer and had to start it with `--rendering-method gl_compatibility`, and it still ran
+badly. Now nobody needs a command line, and Low is really low.
+- **The renderer.** Godot draws with Forward+ (the full look) or Compatibility (OpenGL, for older and
+  built-in graphics). It picks one as the game starts, and cannot switch while it runs. The choice is a
+  small file the engine reads at start, `renderer.cfg` in the game's user folder (Escape, Open log folder,
+  one level up), named in `project.godot` (`application/config/project_settings_override`). Your editor
+  never reads it, so a choice made while playing never changes the project.
+  - **Settings ▸ Video ▸ Renderer**: Automatic (the default), Full (Forward+) or Compatibility. A change
+    says "Used from the next start" and offers **Restart now**.
+  - **Automatic** switches to Compatibility on its own and restarts the game once: on Intel's older
+    built-in graphics (HD, UHD 6xx, Iris Plus, Iris Pro; never Iris Xe, Arc or newer), before anything is
+    drawn; and in a friend's build, after a start that crashed before a world had been on screen for 5
+    seconds. The next start shows a notice saying why. The editor's Stop button is not counted as a crash.
+  - Why Iris Plus crashed: Intel stopped fixing the drivers for those chips in 2024, and Godot's own
+    fallback only catches a renderer that fails to START, not one that crashes once it is drawing.
+  - Starting the game with `--rendering-method` still works and wins: nothing is written then.
+- **Graphics quality** (top of Video): Low, Medium, High or Custom. It sets these together:
+
+  | | Low | Medium | High (the game's look, unchanged) |
+  |---|---|---|---|
+  | Render scale | 70 % | 85 % | 100 % |
+  | Anti-aliasing | FXAA | FXAA | TAA |
+  | Shadows | Off | Medium | High |
+  | Lighting effects (SSAO, glow, light bounce, reflections, volumetric fog) | Off | Reduced (SSAO and glow) | Full (as the level has them) |
+  | Detail (model LOD, shadow reach, the level's extra detail, other characters) | Low | Medium | High |
+  | Frame rate limit | 60 | none | none |
+
+  Change any one of them and it says Custom. A new install starts on **High**, or on **Low** when it is
+  on Compatibility or older Intel graphics. On Compatibility there is no TAA or FXAA (TAA is 2x MSAA
+  there) and no SSAO, light bounce, reflections or volumetric fog at all.
+- **Other characters, posed less often** (Detail Low and Medium): a crowd's animation was the biggest
+  cost on weak graphics. Far away or off screen, another character's limbs move a few times a second
+  instead of every frame (its position still moves smoothly), and beyond 80 m (Low) or 150 m (Medium) it
+  is not drawn. Yours, and everyone on High, every frame. The bands: `foundation/anim/animation_rate.gd`.
+- **What it gained**, measured with 60 walking characters at 1080p (this PC's RX 9060 XT; its Intel
+  graphics are switched off, so no real laptop yet): Forward+ 5.8 ms a frame on High (172 fps), 3.0 on
+  Medium, 1.5 on Low (677 fps); Compatibility 5.4 ms on High, 2.8 on Medium, 1.2 on Low (864 fps). On
+  Microsoft's software renderer (a stand-in for weak graphics) Low halves the frame.
+- **Measure it yourself: `tools/perf/perf_bench.tscn`** (F6 it in the editor, or
+  `godot --path . res://tools/perf/perf_bench.tscn`): a made-up level with a crowd, every setting turned
+  down one at a time, then the three presets, printed as a table. `-- --level=res://<your level>.tscn`
+  benches a game's own level, `--chars=100` a bigger crowd, `--only=presets` just the presets,
+  `--rendering-method gl_compatibility` (before the `--`) the other renderer.
+- **Designers: mark extra detail, no code.** In the Inspector's Node ▸ Groups, put a node in
+  `detail_high` (shown only on High detail: close-up clutter, a second layer of props) or
+  `detail_medium` (hidden on Low). A MultiMesh of grass or pebbles in `detail_density` is drawn at a
+  quarter of its instances on Low and half on Medium: the first ones are kept, so scatter in a random
+  order. A level's effects and lights are only ever turned DOWN from what you made, and back to exactly
+  that on High.
+- **If a friend's game crashes as it starts or runs slowly:** ask for `godot.log` (Escape, Open log
+  folder) and the GPU it names on its second line. Settings ▸ Video ▸ Renderer ▸ Compatibility and
+  Graphics quality ▸ Low is the fix to try; their telemetry (`tools\feedback.cmd`) shows their frame times.
+- **What a change here takes:** the presets are `Settings.QUALITY_PRESETS` in
+  `foundation/core/settings.gd` (High must stay the look it is), the GPU list `RendererChoice.LEGACY_GPUS`
+  in `foundation/core/renderer_choice.gd`. A restart; nothing to publish. After a pull, restart the
+  editor once (`project.godot` gained the override line).
 
 ### How it ran for them, and what they said (telemetry and feedback)
 Every player's game and every referee reports to the HOST how it ran (DECISIONS #244), always, in
@@ -821,7 +881,8 @@ says. Nothing in code tells an item how to be held.
   every setting is a `Settings.define(...)` and the screen (`foundation/ui/settings_panel.gd`)
   draws whatever is defined, so a game adds its own on its own tab without editing the screen.
   Sounds pick a bus (`Settings.BUS_MUSIC`, `BUS_EFFECTS`, `BUS_AMBIENCE`, `BUS_VOICE`) and get its
-  volume. Tests never read your settings, nor the name and look you saved on the connect
+  volume. Video has Graphics quality (Low, Medium, High, Custom), the Renderer (used from the next
+  start) and the settings the quality sets: section 3, "Running well on a weak computer". Tests never read your settings, nor the name and look you saved on the connect
   screen (a suite's processes keep their own profile, named after the test database).
 - **Character picker** (`foundation/ui/character_picker.gd`): start from one of the player
   definition's `visual_variants`, then change whatever the look's model offers
@@ -918,6 +979,7 @@ Around it:
 | change how the rod sits in the hand, for one animation or all | `game/fishing/rod_grip_preview.tscn`: pick an Animation and a Body (both, female, male), drag the Grip node until the labels are green | restart |
 | swap a character model or the camera | the definition `.tres` (`game/fishing/fisher_definition.tres`) | restart |
 | change key bindings | Project → Project Settings → Input Map | restart (and restart the editor if `project.godot` was edited outside it) |
+| make a level's grass, clutter or second layer of props cheaper on weak computers | the node's Node ▸ Groups: `detail_high` (High only), `detail_medium` (not on Low), `detail_density` on a MultiMeshInstance3D (a quarter on Low, half on Medium) | nothing: the player's Detail setting does the rest (section 3, "Running well on a weak computer") |
 | move or restyle the HUD | `game/fishing/fishing_hud.tscn` | restart |
 | change the water's colours and depths | the defaults at the top of `game/world/lake_water.gdshader` | live in the editor. The lake's material sits inside the generated `lakeside.tscn`, so a change made there is lost when the level is regenerated |
 | replace a sound | drop a file over one in `game/fishing/sfx/` | restart |
@@ -1189,7 +1251,7 @@ and the example level (`foundation/level/example/`, level 200).
 | Sidecar, export | `sidecar_test.sh`, `export_test.sh` | yes (`umf-test`) | the authority process, the builds |
 | Accounts | `./tests/accounts_test.sh` | yes (the test database) | signing in makes an account, another machine finds it, link codes, characters, parking, guests off; a real client signs in and comes back silently. Its sign-in service is the suites' own (`tests/lib/oidc_issuer.py`), trusted by the test database only |
 | The ring | `./tests/ring_test.sh` | yes (the test database) | a ring client sees its cells' neighbours and nobody beyond, keeps one walking between its cells, gains and loses them as it moves |
-| The look | `./tests/render_test.sh` | no, opens a window | foliage, grass, water, fullscreen |
+| The look | `./tests/render_test.sh` | no, opens a window | foliage, grass, water, fullscreen; the renderer chosen with no command line (the engine reads `renderer.cfg`, the game restarts itself onto Compatibility and says why) and Low under 60 % of High's GPU time on both renderers (it sets your own renderer files aside and puts them back) |
 
 On Windows run each through `tools\run.cmd` (section 3), e.g. `tools\run.cmd tests\run_tests.sh`;
 they find Godot through `tools\local.env` (the integration suite needs it too: it plays fights

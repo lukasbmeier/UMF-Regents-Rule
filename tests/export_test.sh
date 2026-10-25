@@ -141,6 +141,25 @@ else
   fail "the 'macOS Client' preset exports (tools/mac_export.sh; the macOS export template installed?)"
 fi
 
+echo "== the exported client's renderer, chosen with no command line (DECISIONS #282) =="
+# In a window (a headless one has no renderer): with `user://renderer.cfg` naming Compatibility, the
+# build starts on it, as an Iris Plus does after Automatic's switch. The player's own file is set
+# aside and put back; the build's log (user://logs/godot.log) says what it drew with.
+udir="$APPDATA/Godot/app_userdata/$(sed -n 's/^config\/name="\(.*\)"/\1/p' project.godot | head -1)"
+mkdir -p "$udir"
+aside_r="$(mktemp -d)"
+[ -f "$udir/renderer.cfg" ] && mv "$udir/renderer.cfg" "$aside_r/renderer.cfg"
+printf '[rendering]\n\nrenderer/rendering_method="gl_compatibility"\n' > "$udir/renderer.cfg"
+UMF_SETTINGS=none build/client/umf.exe --resolution 320x240 --quit-after 90 >/dev/null 2>&1
+check "$(grep -q ' - Compatibility - Using Device' "$udir/logs/godot.log" && echo true || echo false)" \
+  "the exported client starts on Compatibility when renderer.cfg says so: nothing on the command line"
+rm -f "$udir/renderer.cfg"
+UMF_SETTINGS=none build/client/umf.exe --resolution 320x240 --quit-after 90 >/dev/null 2>&1
+check "$(grep -q ' - Forward+ - Using Device' "$udir/logs/godot.log" && echo true || echo false)" \
+  "and on the game's own renderer (Forward+) without it"
+[ -f "$aside_r/renderer.cfg" ] && mv "$aside_r/renderer.cfg" "$udir/renderer.cfg"
+rmdir "$aside_r" 2>/dev/null
+
 echo "== run the exported CLIENT =="
 # Headless: no connect screen (nobody to ask), so it connects to the shipped default server —
 # the local one. A token of its own keeps it from sharing an identity with anyone.

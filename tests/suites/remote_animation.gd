@@ -93,4 +93,29 @@ func _run_remote_animation_tests() -> void:
 	_check(driver.current_state() == AnimationTreeBuilder.STATE_JUMP_START,
 		"a remote take-off survives a view that still shows its feet on the ground (%s)"
 			% driver.current_state())
+
+	# THE ANIMATION RATE (DECISIONS #282): on Low detail another character is posed less often the
+	# further it is, less still off screen, and not drawn past its range; High is every frame.
+	var cam := Camera3D.new()
+	level.add_child(cam)
+	cam.make_current()
+	var body: Vector3 = (other as Node3D).global_position
+	var rates: Array[float] = []
+	Settings.set_value(&"detail", GraphicsQuality.Detail.LOW)
+	for place: Array in [[Vector3(0.0, 1.5, 4.0), true], [Vector3(0.0, 1.5, 100.0), true], [Vector3(0.0, 1.5, 4.0), false]]:
+		cam.global_position = body + (place[0] as Vector3)
+		cam.look_at(body + Vector3(0.0, 1.0, 0.0) if bool(place[1]) else body + (place[0] as Vector3) * 2.0)
+		for i: int in range(3):
+			await get_tree().process_frame
+		rates.append(driver.animation_rate())
+	var mesh: GeometryInstance3D = other.find_children("*", "MeshInstance3D", true, false)[0] as GeometryInstance3D
+	_check(rates == [30.0, 8.0, 5.0] and mesh.visibility_range_end == AnimationRate.CHARACTER_RANGE[0],
+		"Low detail: a remote character 4 m away posed 30 times a second, 100 m away 8, behind the camera 5, drawn to 80 m (%s, %.0f m)"
+			% [str(rates), mesh.visibility_range_end])
+	Settings.set_value(&"detail", GraphicsQuality.Detail.HIGH)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(driver.animation_rate() == 0.0 and mesh.visibility_range_end == 0.0,
+		"High detail: every frame, drawn as far as the camera sees (the look before rates existed)")
+	cam.queue_free()
 	await _teardown_anim(reg, spawner, eid, prev_local, prev_ready, level)

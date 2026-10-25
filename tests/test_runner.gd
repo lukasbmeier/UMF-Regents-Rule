@@ -54,6 +54,7 @@ const SUITES: PackedStringArray = [
 	"play_as",
 	"workbench",
 	"settings",
+	"quality",
 	"music",
 	"looks",
 	"genres",

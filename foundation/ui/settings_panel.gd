@@ -15,6 +15,8 @@ var _tabs: TabContainer = null
 ## Per setting key, the control that shows it, refreshed when the value changes elsewhere (F11).
 var _controls: Dictionary[StringName, Control] = {}
 var _notes: Dictionary[StringName, Label] = {}
+## Per setting that waits for a restart (the renderer), the row offering one.
+var _restarts: Dictionary[StringName, Control] = {}
 ## The action waiting for a key, or &"".
 var _listening: StringName = &""
 var _built: bool = false
@@ -65,6 +67,11 @@ func control_for(key: StringName) -> Control:
 	return _controls.get(key)
 
 
+## The row offering a restart under a setting that waits for one, or null (tests).
+func restart_row(key: StringName) -> Control:
+	return _restarts.get(key)
+
+
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
@@ -94,6 +101,7 @@ func _build() -> void:
 		c.queue_free()
 	_controls.clear()
 	_notes.clear()
+	_restarts.clear()
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = PANEL_SIZE
 	panel.add_theme_stylebox_override(&"panel", _panel_style())
@@ -222,8 +230,34 @@ func _build_control(e: Dictionary) -> Control:
 	c.name = String(key)
 	c.tooltip_text = String(e["tooltip"])
 	_controls[key] = c
+	var needs: Callable = e.get("restart_needed", Callable())
+	if needs.is_valid():
+		c = _with_restart(key, c)
 	_refresh(key)
 	return c
+
+
+## A setting used from the next start (the renderer): under it, when what is chosen is not what
+## runs, "Used from the next start" and a Restart now button (DECISIONS #282).
+func _with_restart(key: StringName, c: Control) -> Control:
+	var holder := VBoxContainer.new()
+	holder.name = String(key) + "_holder"
+	holder.add_child(c)
+	var row := HBoxContainer.new()
+	row.name = "Restart"
+	var note := Label.new()
+	note.text = "Used from the next start."
+	note.modulate = Color(1.0, 0.75, 0.45)
+	note.add_theme_font_size_override(&"font_size", 11)
+	var now := Button.new()
+	now.name = "RestartNow"
+	now.text = "Restart now"
+	now.pressed.connect(func() -> void: RendererChoice.restart(get_tree()))
+	row.add_child(note)
+	row.add_child(now)
+	holder.add_child(row)
+	_restarts[key] = row
+	return holder
 
 
 # --- showing values --------------------------------------------------------------------------
@@ -239,6 +273,9 @@ func _refresh(key: StringName) -> void:
 	if c == null or e.is_empty():
 		return
 	var v: Variant = Settings.get_value(key)
+	if _restarts.has(key):
+		var needs: Callable = e["restart_needed"]
+		_restarts[key].visible = bool(needs.call())
 	match int(e["kind"]):
 		Settings.Kind.TOGGLE:
 			(c as CheckButton).set_pressed_no_signal(bool(v))

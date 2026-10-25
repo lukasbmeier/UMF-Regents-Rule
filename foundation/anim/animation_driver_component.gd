@@ -101,6 +101,8 @@ var _hit_weight: float = 0.0
 ## The upper-body one-shot (`play_upper`): what it was last asked to play, and its weight.
 var _upper_semantic: StringName = &""
 var _upper_weight: float = 0.0
+## THE ANIMATION RATE (`AnimationRate`, DECISIONS #282): how often the tree poses the character.
+var _pacer: AnimationRate.Pacer = AnimationRate.Pacer.new()
 
 
 func required_tables() -> Array[StringName]:
@@ -122,6 +124,10 @@ func _on_bound() -> void:
 	if not _install():
 		return
 	_connect_siblings()
+	if not is_local_authority:
+		AnimationRate.apply_range(_model, GraphicsQuality.detail)
+		if not Settings.changed.is_connected(_on_setting):
+			Settings.changed.connect(_on_setting)
 	set_process(true)
 
 
@@ -331,11 +337,17 @@ func action_clip() -> StringName:
 ## Presentation runs on the render clock, not the physics clock: the body is interpolated
 ## between physics ticks (DECISIONS #74) and the pose has to follow what is drawn.
 func _process(delta: float) -> void:
-	if _movement == null or _tree == null:
+	if _tree == null:
 		return
-	var s: MovementState = _movement.get_render_state()
-	if s == null:
-		return
+	var s: MovementState = _movement.get_render_state() if _movement != null else null
+	if s != null:
+		_drive(s, delta)
+	# Advanced here, never by the tree itself (AnimationRate): even with nothing to drive it, as the
+	# tree's own process did.
+	_advance(delta)
+
+
+func _drive(s: MovementState, delta: float) -> void:
 	var speed: float = Vector2(s.vel.x, s.vel.z).length()
 	var target: float = clampf(speed / _sprint_speed, 0.0, 1.0)
 	# IDLE is authoritative about standing still: interpolation noise on a remote entity can
@@ -369,6 +381,28 @@ func _process(delta: float) -> void:
 	_upper_weight = _ease_shot(_upper_weight, AnimationTreeBuilder.NODE_UPPER,
 		AnimationTreeBuilder.P_UPPER_ACTIVE, delta)
 	_end_covered_upper()
+
+
+## Pose the character now, or owe the tree the time (AnimationRate: by the Detail setting, how far
+## the character is from the camera and whether it is on screen; yours always every frame).
+func _advance(delta: float) -> void:
+	var hz: float = AnimationRate.EVERY_FRAME
+	var cam: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam != null and _model != null and not is_local_authority:
+		var at: Vector3 = _model.global_position + Vector3(0.0, 1.0, 0.0)
+		hz = AnimationRate.hz(GraphicsQuality.detail, cam.global_position.distance_to(at),
+			AnimationRate.on_screen(cam, at), false)
+	_pacer.step(_tree, hz, delta, AnimationRate.phase(entity_id))
+
+
+## How often this character is posed now, Hz (0: every frame).
+func animation_rate() -> float:
+	return _pacer.hz
+
+
+func _on_setting(key: StringName, _value: Variant) -> void:
+	if key == &"detail" and _model != null and is_instance_valid(_model):
+		AnimationRate.apply_range(_model, GraphicsQuality.detail)
 
 
 ## A one-shot over the WHOLE body (an action, a hit) stops Godot processing the upper-body one under
@@ -703,6 +737,7 @@ func _install() -> bool:
 	_tree = AnimationTreeBuilder.build(animation_set)
 	if _tree == null:
 		return false
+	AnimationRate.Pacer.take(_tree)   # before it plays: the driver advances it from now on
 	_model = model
 	_strafing = AnimationTreeBuilder.is_strafing(animation_set)
 	_blend_tree = _tree.tree_root as AnimationNodeBlendTree
