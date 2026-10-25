@@ -1,7 +1,7 @@
 # Handoff — Regent's Rule, 2026-10-24 (this game's half of the 1.0 done; next, the combat deep-dive)
 
 ## Where it stands
-- **PROGRESS step 22 built and green, NOT committed** (last commit `48efe0c`). Ring interest on, the two
+- **PROGRESS step 22 built, green and committed** (`c6ce3e9`, not pushed). Ring interest on, the two
   overrides in, `chunk` on Regent's own placed tables. A reshape, so (Luke's call) the play database
   `regents-rule` was WIPED a second time today (`--fresh --codegen`, then republished keeping data), and
   `shared/game.json` `compat` is 3. No compat-2 build had gone to friends; they need a new export
@@ -24,7 +24,7 @@
 - `.claude/rules/regents-genre.md`: how a new table of ours joins the ring. `GAME.md` order of work updated.
 
 ## Next, in order
-1. Luke: commit this (and the template's uncommitted work, then ship it so this game pulls the accounts fix).
+1. Luke: commit the template's uncommitted work and ship it, so this game pulls the accounts fix.
 2. **THE COMBAT DEEP-DIVE** with Luke (`GAME.md` order of work (3)): equipment and armour (five slots, stats),
    the server-side cast queue, crits (then Keen on steel rivets), NPC tiers; movement feel (orbit a still
    character, blended diagonal strafes).
@@ -35,7 +35,7 @@
   item). The 300-bot test decides whether it matters.
 
 ## Waiting on Luke
-- Commit step 22; say when the template ships (the accounts fix rides with the low-end hardware work).
+- Say when the template ships (the accounts fix rides with the low-end hardware work).
 - The SpacetimeAuth client id (`shared/game.json` `sign_in`): the 3 characters per account need a sign-in.
 - Open: trait ranks; #12 day/night; how the minimap grows; the ore nuggets' placement; gear XP numbers.
 
