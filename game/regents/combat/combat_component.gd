@@ -30,7 +30,8 @@ class_name CombatComponent extends SpaceTimeComponent
 ## do); in the recovery you move freely and moving cuts the swing's tail. No swing starts in the air: a
 ## press there waits for the ground (the queue), as the server refuses one. A ROLL in the
 ## wind-up cancels the swing (it never lands), in the recovery ends it. THE ROLL plays its Roll whole, facing
-## the way it goes, and nothing swings until it is over (`regents.roll_ms`): a press waits for it, as in the air. A heavy hit in a light's wind-up
+## the way it goes, and nothing swings until it is over (`regents.roll_ms`): a press waits for it, as in the air.
+## No roll starts in the air either: Ctrl there is held and rolls on landing (within `ROLL_HOLD_MS`). A heavy hit in a light's wind-up
 ## FLINCHES you (the server cancels it; the Flinched status shows here and clears the queue).
 ##
 ## A CASTING KIT (the Staff, owner 2026-10-20): its abilities are SPELLS (`SpellDef`), cast through the same
@@ -109,6 +110,11 @@ var _slowing: bool = false
 var _last_swing_ms: int = -100000
 ## Until when (msec) this client's roll holds it: no swing before.
 var roll_until_ms: int = -100000
+## A roll asked for in the air (Luke's playtest, 2026-10-24: "I can roll in the air, shouldn't be doable,
+## queue it for when I land"): when it was asked (msec), taken on landing; -1 for none.
+var roll_on_landing_ms: int = -1
+## How long a roll asked for in the air waits for the ground before it lapses.
+const ROLL_HOLD_MS: int = 1500
 var _lmb_down_ms: int = -1
 var _heavy_fired: bool = false
 var _rmb: bool = false
@@ -344,6 +350,10 @@ func skill(slot: int) -> bool:
 func dodge() -> int:
 	if _action == null:
 		return -1
+	if not grounded():
+		roll_on_landing_ms = Time.get_ticks_msec()   # no roll in the air: taken as it lands
+		return -1
+	roll_on_landing_ms = -1
 	var pid: int = _action.request_use(DODGE_ID, 0, Vector3.ZERO)
 	if pid < 0:
 		return -1
@@ -501,6 +511,12 @@ func _process(_delta: float) -> void:
 		queued = {}
 		combo_step = -1
 		_let_go()
+	# A roll asked for in the air: on landing, or let it lapse.
+	if roll_on_landing_ms >= 0 and grounded():
+		var asked: int = roll_on_landing_ms
+		roll_on_landing_ms = -1
+		if now - asked <= ROLL_HOLD_MS:
+			dodge()
 	# The queue: fire when it may, or let it lapse.
 	if not queued.is_empty() and kit != null:
 		if now - int(queued["at"]) > kit.combo_window_ms:

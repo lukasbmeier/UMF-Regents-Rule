@@ -994,6 +994,9 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
     little messed up" near them (to look at).
 - **The combat deep-dive** (Luke: "we can fix in combat rework/deep dive"):
   - #8 the sword: spamming LMB cuts off the second swing's animation; Q (Lunge) is cut off halfway.
+  - **#6 FIXED 2026-10-26** (`combat_component.gd`): Ctrl in the air is held and rolls as you land (within
+    1.5 s), as a swing already did. Client-side only: the server does not refuse a roll in the air yet (for the
+    deep-dive's cast queue). Tested: the combat playtest live (51/0; 50/1 without the hold).
   - #6 a roll in the air should not happen: queue it for the landing (the cast queue).
   - **FIXED 2026-10-26** (template 1.1.1, DECISIONS #283): the referee's sweep hit the FIRST person in its
     path, the skeleton beside, which the genre then spared. A hot flag `foundation.referee_two_sides`, ON here

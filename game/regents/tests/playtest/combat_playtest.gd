@@ -208,6 +208,21 @@ func _run() -> void:
 	_check(why_refused.any(func(w: String) -> bool: return w.contains("not in the air")),
 		"a swing asked for in the air anyway: the server refuses it (%s)" % str(why_refused))
 	await get_tree().create_timer(1.2).timeout
+	# NO ROLL IN THE AIR (Luke's playtest, 2026-10-24): Ctrl in a jump is held, and rolls as it lands.
+	await get_tree().create_timer(1.0).timeout
+	var rolled_before: int = combat.roll_until_ms
+	Input.action_press(&"jump")
+	await _until(func() -> bool: return not combat.grounded(), 1.0)
+	Input.action_release(&"jump")
+	await get_tree().create_timer(0.15).timeout
+	var up_there: bool = not combat.grounded()
+	await _key(KEY_CTRL)
+	var held_aloft: bool = combat.roll_until_ms == rolled_before and combat.roll_on_landing_ms >= 0
+	await _until(func() -> bool: return combat.roll_until_ms != rolled_before, 2.0)
+	var landed_first: bool = combat.grounded()
+	_check(up_there and held_aloft and combat.roll_until_ms != rolled_before and landed_first,
+		"Ctrl in a jump rolls nothing in the air (held: %s); it rolls as it lands (%s)" % [str(held_aloft), str(landed_first)])
+	await get_tree().create_timer(2.0).timeout
 
 	# --- THE ROLL: further than a run in the same time ---
 	# Open ground by the spawn, running north: nothing in the way for 6 m (the camp's stall stopped it).
