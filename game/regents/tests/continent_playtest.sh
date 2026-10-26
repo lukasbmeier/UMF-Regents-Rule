@@ -2,7 +2,8 @@
 # THE CONTINENT, WALKED (PROGRESS step 23): a real client on ring interest in the continent (level 21), a
 # world bigger than one ring. Only the cells round it are loaded and sent; far away (a teleport) both follow
 # and the camp's are let go; a cell over, what both rings share is kept, never spawned again; it stands on
-# the ground. The checks are the client's (game/regents/tests/playtest/continent_playtest.gd).
+# the ground; back at the camp the ring follows at once, and the CLI's player (online, a tool) is never seen.
+# The checks are the client's (game/regents/tests/playtest/continent_playtest.gd).
 #
 #   GODOT=/path/to/godot ./game/regents/tests/continent_playtest.sh     # 150 ms round trip, 20 ms jitter
 #
@@ -29,9 +30,15 @@ LEVEL=$(spacetime sql "$DB" "SELECT level_id FROM world_level WHERE world_id = 0
 NODES=$(spacetime sql "$DB" "SELECT entity_id FROM gather_node WHERE world_id = 0" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l)
 echo "   world 0 runs level ${LEVEL:-none} (the continent is 21), with $NODES nodes"
 
-log="$(mktemp)"; pid=""
-cleanup() { [ -n "$pid" ] && kill "$pid" 2>/dev/null; wait 2>/dev/null; rm -f "$log"; }
+log="$(mktemp)"; pid=""; cli_pid=""
+cleanup() { [ -n "$pid" ] && kill "$pid" 2>/dev/null; [ -n "$cli_pid" ] && kill "$cli_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$log"; }
 trap cleanup EXIT
+# The database's CLI comes back every few seconds throughout, as the host's feedback watcher does (Luke's
+# playtest, 2026-10-24: its nameless "Player 39" was drawn at the spawn): its player stays at the camp (never
+# parked), a tool, never seen.
+( while true; do spacetime sql "$DB" "SELECT * FROM world_level" >/dev/null 2>&1; sleep 3; done ) &
+cli_pid=$!
+sleep 2
 echo "== a client at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
 "$GODOT" --headless --path . "$SCENE" -- --token=walker --latency="$LATENCY" --jitter="$JITTER" --autoconnect >"$log" 2>&1 &
 pid=$!

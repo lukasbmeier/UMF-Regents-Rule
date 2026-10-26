@@ -53,6 +53,13 @@ func _run() -> void:
 	_check_ring("at the camp", total_nodes)
 	_check(await _node_at(TREE_1) > 0, "the camp's tree_1 is there, as in the glade")
 	_check(_solid_bodies() > 0, "the cells loaded round the camp have solid rocks and bushes (%d bodies)" % _solid_bodies())
+	var camp_spot: Vector3 = me.global_position + Vector3(0.0, 0.5, 0.0)
+	# A TOOL IS NOT A PERSON (DECISIONS #272; Luke's playtest 2026-10-24, "Player 39 is showing"): the
+	# database's CLI has a player at the spawn, an admin with no name, never drawn, though on the ring the
+	# admins' rows come in their own subscription, after the players'.
+	await _until(func() -> bool: return not _tools().is_empty() and _tools_drawn() == 0, 3.0)
+	_check(not _tools().is_empty() and _tools_drawn() == 0, "the database's CLI player (%s) is here and hidden as a tool (%d not)"
+		% [str(_tools()), _tools_drawn()])
 
 	# --- FAR AWAY ---
 	var far: Vector3 = _far_tree()
@@ -98,6 +105,21 @@ func _run() -> void:
 			respawned.append(id)
 	_check(InterestManager.centre == Cells.chunk_of(east), "a cell east, the ring re-centred")
 	_check(shared > 0 and respawned.is_empty(), "the %d nodes both rings share were kept, none spawned again (%s)" % [shared, str(respawned)])
+
+	# --- BACK TO THE CAMP: what left the ring and came back is whole (Luke's "Player 39": the CLI's player,
+	# spawned again from its cells' rows, never had its `player` row again, and was drawn) ---
+	var tools_before: Array[int] = _tools()
+	var home: Vector3 = camp_spot
+	for attempt: int in 4:   # the ring must follow at once, though the spawn is ON a cell's edge (#7)
+		SpaceTimeSync.call_reducer(&"teleport", [home], ["vector3[f32,f32,f32]"])
+		await _until(func() -> bool: return InterestManager.centre == Cells.chunk_of(home), 3.0)
+		if InterestManager.centre == Cells.chunk_of(home):
+			break
+	await _until(func() -> bool: return _node_near(TREE_1) > 0, 8.0)
+	await _until(func() -> bool: return not _tools().is_empty() and _tools_drawn() == 0, 3.0)
+	_check(tools_before.is_empty() and not _tools().is_empty() and _tools_drawn() == 0,
+		"back at the camp (centre %d, home %d) the CLI's player is spawned again and still hidden as a tool (%s, %d not; at %s)"
+			% [InterestManager.centre, Cells.chunk_of(home), str(_tools()), _tools_drawn(), str(me.global_position)])
 	print("   cells loaded %d of %d; nodes drawn %d of %d; entities in the registry %d" % [streamer.loaded_cells().size(),
 		total_cells, _node_ids().size(), total_nodes, EntityRegistry.all_entity_ids().size()])
 	_finish()
@@ -193,6 +215,33 @@ func _solid_bodies() -> int:
 	if cells_node == null:
 		return 0
 	return cells_node.find_children("Solid", "StaticBody3D", true, false).size()
+
+
+## The entities of the players who are tools (nameless admins: the CLI) that are spawned here.
+func _tools() -> Array[int]:
+	var out: Array[int] = []
+	for row: Variant in SpaceTimeSync.find_rows(&"player", func(_r: RefCounted) -> bool: return true):
+		var eid: int = int((row as RefCounted).get(&"entity_id"))
+		if _is_tool(row as RefCounted) and EntitySpawner.get_entity_node(eid) != null:
+			out.append(eid)
+	return out
+
+
+## A tool's player row: no name, and an admin's identity (the server's own word, read here directly).
+func _is_tool(r: RefCounted) -> bool:
+	var a: RefCounted = SpaceTimeSync.get_row(&"authority", r.get(&"identity"))
+	return String(r.get(&"name")).is_empty() and a != null and int(a.get(&"role")) == Roles.ADMIN
+
+
+## How many of them are not hidden as tools (one hidden only because it went offline counts: the CLI
+## comes and goes, and while it is connected it would be drawn).
+func _tools_drawn() -> int:
+	var n: int = 0
+	for eid: int in _tools():
+		var e: SpaceTimeEntity = EntitySpawner.get_entity_node(eid) as SpaceTimeEntity
+		if e != null and not e.hidden_reasons().has(&"tool"):
+			n += 1
+	return n
 
 
 func _until(cond: Callable, timeout_s: float) -> void:

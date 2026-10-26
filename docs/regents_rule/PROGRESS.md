@@ -967,6 +967,15 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
   - #9 a skeleton T-poses near the origin for a moment as it spawns (Luke's guess: spawned at 0, then moved
     to its point). Likely its entity drawn before its place and pose arrived; check on the ring, where a
     foe's rows come in cell sets.
+  - **#7 WORKED ON 2026-10-26** (template 1.1.1): "Player 39" is the database CLI's own player (an admin with no
+    name, at the spawn), drawn though `PresenceComponent` hides a tool. Its exact cause on Luke's night is not
+    proven; two real foundation bugs found on the way are fixed: (a) `Cells.recentre` held the old ring centre
+    after a long jump onto a cell's EDGE, and the spawn (0, 0, 8) is on one: back at the camp from far away a
+    player kept a ring 600 m off and was sent nothing round them (now a jump past the neighbouring cells
+    re-centres at once); (b) a nameless player whose admin row comes after theirs is asked after again
+    (`is_tool_row`). The continent playtest now keeps the CLI coming back every 3 s (as the host's watcher
+    did), checks it is hidden as a tool at the camp, and again after a trip out and back (19/0). If Luke still
+    sees it, the next look is the nameplate/presence of an entity that re-enters the ring.
   - #7 a nameless "Player 39" is shown (once "Player 30", DECISIONS #272: a tool is not a person). Likely
     the CLI's own player again (this session's `spacetime call`/`sql` made one); why it is drawn is the bug.
   - #5 the minimap stops updating out on the continent (it was built for the glade's size); **idea: M opens
