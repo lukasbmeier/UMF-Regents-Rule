@@ -993,6 +993,11 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
     a change to his 2026-10-21 "every 3d object should have collisions"; rocks stay solid). Shadows "seem a
     little messed up" near them (to look at).
 - **The combat deep-dive** (Luke: "we can fix in combat rework/deep dive"):
+  - **#8, the Lunge part DONE 2026-10-26** (`CombatComponent.commit_seconds`): a swing's animation was held only
+    to just after its hit; the Lunge moves the body itself, so its own dash let go of the clip halfway. A
+    lunging ability is held its whole clip now. Tested: the genre suite's sum only; NOT seen in a game (the
+    combat playtest wields the axe): Luke's look. The LMB spam (the next light may start just after the last
+    one's hit, cutting its tail) is combo design: left for the deep-dive.
   - #8 the sword: spamming LMB cuts off the second swing's animation; Q (Lunge) is cut off halfway.
   - **#6 FIXED 2026-10-26** (`combat_component.gd`): Ctrl in the air is held and rolls as you land (within
     1.5 s), as a swing already did. Client-side only: the server does not refuse a roll in the air yet (for the

@@ -384,6 +384,14 @@ func roll_cooldown() -> Vector2:
 var _roll_total_s: float = -1.0
 
 
+## How long a swing's animation is held whatever the body does: to just after its hit; a LUNGE (it moves the
+## body itself) its whole clip, or its own dash let go of it halfway (Luke's playtest, 2026-10-24: "q lunge is
+## also cut off half way through"). `clip_s`: its clip's length.
+static func commit_seconds(a: AbilityDef, clip_s: float) -> float:
+	var to_hit: float = float(a.wind_up_ms + COMMIT_AFTER_HIT_MS) / 1000.0
+	return maxf(clip_s, to_hit) if a.lunges else to_hit
+
+
 ## An ability began on this entity (predicted here, or another player's arriving): a swing's animation plays
 ## on to just after it lands however the body moves (the hit lands regardless); the roll plays its Roll whole,
 ## the model facing the way the roll goes.
@@ -399,7 +407,7 @@ func _began(ability_id: int) -> void:
 	for k: KitDef in ([kit] if kit != null else KitDef.all()):
 		for a: AbilityDef in k.abilities():
 			if a.id == ability_id:
-				_driver.commit_action(float(a.wind_up_ms + COMMIT_AFTER_HIT_MS) / 1000.0)
+				_driver.commit_action(commit_seconds(a, _driver.shot_seconds(StringName("ability.%d" % a.id))))
 				return
 
 

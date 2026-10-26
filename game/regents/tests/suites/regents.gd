@@ -296,6 +296,12 @@ func _run_polish() -> void:
 		"a camera looking north faces 0, looking east PI/2")
 	_check(RegentsMinimap.to_map(Vector2(0, -10), 0.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing north, a thing 10 m north is 20 px up")
 	_check(RegentsMinimap.to_map(Vector2(10, 0), PI / 2.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing east, a thing 10 m east is up")
+	# The Lunge plays whole (Luke's playtest, 2026-10-24: "cut off half way"); a light swing to just after its hit.
+	var lunge: AbilityDef = load("res://game/regents/content/ability/sword_lunge.tres") as AbilityDef
+	var chop: AbilityDef = KitDef.by_key(&"axe").light[0]
+	_check(is_equal_approx(CombatComponent.commit_seconds(lunge, 1.2), 1.2)
+		and is_equal_approx(CombatComponent.commit_seconds(chop, 1.2), float(chop.wind_up_ms + CombatComponent.COMMIT_AFTER_HIT_MS) / 1000.0),
+		"a lunge's animation is held its whole clip, a chop's to just after its hit")
 	# A level too big for one picture (Luke's playtest, 2026-10-24: "minimap doesn't update out here").
 	_check(not RegentsMinimap.is_big(LevelBake.by_id(20)) and RegentsMinimap.is_big(LevelBake.by_id(21)),
 		"the glade is pictured whole; the continent round you")
