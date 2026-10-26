@@ -207,7 +207,9 @@ func _run_walls_and_rewind() -> void:
 	_check(float(back_to_bale["reach"]) > 8.9, "its back to the bale, a throw goes its whole way ahead (%.2f m of 9)" % float(back_to_bale["reach"]))
 
 	# THE PROOF. A hen runs -Z through the gap at 4 m/s, and is out of reach (through it) at T. The
-	# wolf stands facing her; its view of others is 150 ms behind the server.
+	# wolf stands facing her; its view of others is 150 ms behind the server. (Two sides off, as in Fowl
+	# Play: a game that turns them on, a bot wolf and a bot hen are one side.)
+	var sides_off: RefCounted = _two_sides(0.0)
 	var t_safe: int = BASE + 2_000_000
 	ref.set_entity(1, 0)
 	ref.set_entity(2, 0)
@@ -236,6 +238,7 @@ func _run_walls_and_rewind() -> void:
 	_check(early.is_empty() and ref.pending_count() == 1, "one that lands a second later waits (%d judged)" % early.size())
 	_check(ref.settle(due + 1_000_000 + ActionReferee.SETTLE_USEC - 1).is_empty(), "until it has landed and settled")
 	_check(ref.settle(due + 1_000_000 + ActionReferee.SETTLE_USEC).size() == 1, "then it is judged")
+	_two_sides_back(sides_off)
 	root.queue_free()
 	await get_tree().process_frame
 
@@ -384,17 +387,17 @@ func _run_two_sides() -> void:
 	_check(ref.is_player(32) and not ref.is_player(30), "(a player is on the players' side; a brain with no player is not)")
 	ref.add_request(1, 30, 501, 0, BASE)
 	ref.add_request(2, 33, 501, 0, BASE)
+	var off_row: RefCounted = _two_sides(0.0)    # set either way: a game's own override is the default
 	var off: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
+	_two_sides_back(off_row)
 	_check(int(off.get(1, -1)) == 31, "the rule off: the skeleton's swing hits the skeleton beside it (%d)" % int(off.get(1, -1)))
 	_check(int(off.get(2, -1)) == 32, "and the player's hits the player in front (%d)" % int(off.get(2, -1)))
-	var hot: Node = HotRules
-	var on := _HotOn.new()
-	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, on))
+	var on: RefCounted = _two_sides(1.0)
 	ref.add_request(3, 30, 501, 0, BASE)
 	ref.add_request(4, 33, 501, 0, BASE)
 	ref.add_request(5, 35, 501, 0, BASE)
 	var two: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
-	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.DELETED, &"hot_rule", on, null))
+	_two_sides_back(on)
 	_check(int(two.get(3, -1)) == 32, "on: the skeleton's swing passes its friend and hits the player (%d)" % int(two.get(3, -1)))
 	_check(int(two.get(4, -1)) == 31, "and the player's passes the other player and hits the skeleton (%d)" % int(two.get(4, -1)))
 	_check(int(two.get(5, -1)) == 34, "and a player still hits an NPC with no brain (a training dummy) (%d)" % int(two.get(5, -1)))
@@ -408,7 +411,19 @@ func _by_request(verdicts: Array[Dictionary]) -> Dictionary:
 	return out
 
 
-class _HotOn extends RefCounted:
+## The two-sides rule as the server's row says (`_two_sides_back` takes the row away again).
+func _two_sides(value: float) -> RefCounted:
+	var row := _HotRow.new()
+	row.number = value
+	(HotRules as Node).call(&"_on_row", RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, row))
+	return row
+
+
+func _two_sides_back(row: RefCounted) -> void:
+	(HotRules as Node).call(&"_on_row", RowEvent.make(RowEvent.Kind.DELETED, &"hot_rule", row, null))
+
+
+class _HotRow extends RefCounted:
 	var key: String = String(ActionReferee.TWO_SIDES)
 	var number: float = 1.0
 	var text: String = ""
