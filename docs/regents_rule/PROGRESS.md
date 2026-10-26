@@ -973,6 +973,11 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
 - **The combat deep-dive** (Luke: "we can fix in combat rework/deep dive"):
   - #8 the sword: spamming LMB cuts off the second swing's animation; Q (Lunge) is cut off halfway.
   - #6 a roll in the air should not happen: queue it for the landing (the cast queue).
+  - **FIXED 2026-10-26** (template 1.1.1, DECISIONS #283): the referee's sweep hit the FIRST person in its
+    path, the skeleton beside, which the genre then spared. A hot flag `foundation.referee_two_sides`, ON here
+    (an override in `game/regents/content/rules/regents.tres`): a sweep passes through its user's own side
+    (the players, or everyone else) to the first of the other; a player still hits a training dummy. Tested:
+    the referee suite's two sides (off and on), unit 2649/0, the combat playtest 50/0 live.
   - #2 + #3 skeletons hit once, then keep swinging for no damage; two side by side were hitting EACH OTHER
     (friendly fire off, so nothing), and once one died he took damage again. Likely the referee's sweep
     stopping at the first body it meets (the other skeleton), not the player behind it.

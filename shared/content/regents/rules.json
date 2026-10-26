@@ -15,6 +15,11 @@
 					"key": "foundation.park_offline_s",
 					"number": 30.0,
 					"text": ""
+				},
+				{
+					"key": "foundation.referee_two_sides",
+					"number": 1.0,
+					"text": ""
 				}
 			],
 			"rules": [
