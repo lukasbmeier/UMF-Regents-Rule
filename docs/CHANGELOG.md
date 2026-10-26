@@ -804,3 +804,9 @@ No schema change: a game takes it with a pull and a restart of the editor (`proj
   against High on both renderers; `tests/export_test.sh` checks the exported client reads the file.
 - The accounts suite pins the foundation defaults it is written for (1 character, no parking): a game
   that overrides them (Regent's Rule: 3, 30 s) failed 6 of its checks (`511eee3`).
+
+## 1.1.1 — the referee's two sides (DECISIONS #283)
+No schema change: a game takes it with a pull (the content bake is in it).
+- A hot flag `foundation.referee_two_sides` (off): on, a judged ability passes through its user's own side
+  (players, or bots) to the first person of the other. Regent's Rule turns it on (two skeletons were hitting
+  each other); Fowl Play keeps it off.

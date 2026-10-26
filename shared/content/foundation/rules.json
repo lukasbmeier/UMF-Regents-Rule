@@ -303,6 +303,15 @@
 					"number": 600.0,
 					"text": "",
 					"unit": "s"
+				},
+				{
+					"key": "foundation.referee_two_sides",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.0,
+					"text": "",
+					"unit": ""
 				}
 			]
 		}

@@ -16,6 +16,7 @@ func run() -> void:
 	await _run_walls_and_rewind()
 	await _run_walls_put_up()
 	_run_who()
+	_run_two_sides()
 	_run_rows()
 	await _run_client_side()
 	await _run_stale()
@@ -359,6 +360,53 @@ func _run_who() -> void:
 	_check(is_equal_approx(float(b2["radius"]), 0.28) and is_equal_approx(float(b2["height"]), 0.7) and is_equal_approx(float(b2["center_y"]), 0.35),
 		"a character's own size (a hen: 0.28 m by 0.7) is its hitbox (%s)" % str(b2))
 	ref.free()
+
+
+## TWO SIDES (DECISIONS #283, Regent's Rule: two skeletons side by side hit each other, never the player
+## behind). Off, a sweep's first person is hit, whoever it is; on, a bot's passes through bots and a
+## player's through players.
+func _run_two_sides() -> void:
+	print("== referee: two sides ==")
+	var ref := ActionReferee.new()
+	ref.set_sweep(501, 1.6, 0.35, 0.6)
+	ref.set_entity(30, 1, 0, false, true, true)    # a skeleton swinging -Z
+	ref.set_entity(31, 1, 0, false, true, true)    # the skeleton just ahead of it
+	ref.set_entity(32, 0, 0, true)                 # the player behind that one
+	ref.set_entity(33, 0, 0, true)                 # a player swinging +Z at the skeleton, through 32
+	ref.record(30, BASE, Vector3.ZERO, 0.0)
+	ref.record(31, BASE, Vector3(0, 0, -0.6), 0.0)
+	ref.record(32, BASE, Vector3(0, 0, -1.3), 0.0)
+	ref.record(33, BASE, Vector3(0, 0, -2.0), PI)
+	_check(ref.is_bot(30) and not ref.is_bot(32), "(a brain with no player is a bot; a player is not)")
+	ref.add_request(1, 30, 501, 0, BASE)
+	ref.add_request(2, 33, 501, 0, BASE)
+	var off: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
+	_check(int(off.get(1, -1)) == 31, "the rule off: the skeleton's swing hits the skeleton beside it (%d)" % int(off.get(1, -1)))
+	_check(int(off.get(2, -1)) == 32, "and the player's hits the player in front (%d)" % int(off.get(2, -1)))
+	var hot: Node = HotRules
+	var on := _HotOn.new()
+	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, on))
+	ref.add_request(3, 30, 501, 0, BASE)
+	ref.add_request(4, 33, 501, 0, BASE)
+	var two: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
+	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.DELETED, &"hot_rule", on, null))
+	_check(int(two.get(3, -1)) == 32, "on: the skeleton's swing passes its friend and hits the player (%d)" % int(two.get(3, -1)))
+	_check(int(two.get(4, -1)) == 31, "and the player's passes the other player and hits the skeleton (%d)" % int(two.get(4, -1)))
+	ref.free()
+
+
+func _by_request(verdicts: Array[Dictionary]) -> Dictionary:
+	var out: Dictionary = {}
+	for v: Dictionary in verdicts:
+		out[int(v["request_id"])] = int(v["hit_id"])
+	return out
+
+
+class _HotOn extends RefCounted:
+	var key: String = String(ActionReferee.TWO_SIDES)
+	var number: float = 1.0
+	var text: String = ""
+	var overridden: bool = true
 
 
 func _run_rows() -> void:
