@@ -47,3 +47,5 @@ func _run_cells_tests() -> void:
 	_check(Cells.recentre(home, Vector3(68.5, 0, 64.5)) == home,
 		"crossing at a corner, deep in one axis but not the other: wait (it may be going north)")
 	_check(Cells.recentre(home, Vector3(300, 0, 32)) == Cells.chunk_of(Vector3(300, 0, 32)), "a teleport far away: at once")
+	_check(Cells.recentre(Cells.chunk_of(Vector3(600, 0, 32)), Vector3(0.0, 0, 8)) == Cells.chunk_of(Vector3(0.0, 0, 8)),
+		"a teleport from far away to a spot ON an edge (Regent's Rule's spawn): at once, not held where they were")

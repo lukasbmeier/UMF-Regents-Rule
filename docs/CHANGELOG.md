@@ -812,3 +812,8 @@ No schema change: a game takes it with a pull (the content bake is in it).
   each other); Fowl Play keeps it off.
 - A character is posed the moment it is built (`AnimationDriverComponent`): since #282 its tree is advanced
   only by the driver, and a new one stood in its rest pose (a T-pose) until its first advance.
+- Ring interest re-centres at once after a jump past the cells next to its centre (`Cells.recentre`): a player
+  teleported or respawned onto a cell's edge (Regent's Rule's spawn) kept a ring hundreds of metres away.
+- `PresenceComponent` asks again after a nameless player who is not yet known as an admin (the `authority`
+  rows may come after the player's): a tool is hidden whichever comes first. Its `is_tool` is now
+  `is_tool_row` (`PresenceComponent.is_tool` from outside called Godot's own `Script.is_tool()`).
