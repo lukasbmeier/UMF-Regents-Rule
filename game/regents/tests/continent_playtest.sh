@@ -6,6 +6,7 @@
 # The checks are the client's (game/regents/tests/playtest/continent_playtest.gd).
 #
 #   GODOT=/path/to/godot ./game/regents/tests/continent_playtest.sh     # 150 ms round trip, 20 ms jitter
+#   WINDOWED=1 GODOT=... ./game/regents/tests/continent_playtest.sh     # in a window: the minimap pictured round you too
 #
 # Requires a local server (`spacetime start`). Republishes the TEST database with --delete-data.
 set -uo pipefail
@@ -39,8 +40,9 @@ trap cleanup EXIT
 ( while true; do spacetime sql "$DB" "SELECT * FROM world_level" >/dev/null 2>&1; sleep 3; done ) &
 cli_pid=$!
 sleep 2
+HL="--headless"; [ -n "${WINDOWED:-}" ] && HL=""   # WINDOWED=1: in a window, so the minimap's pictures are taken too
 echo "== a client at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
-"$GODOT" --headless --path . "$SCENE" -- --token=walker --latency="$LATENCY" --jitter="$JITTER" --autoconnect >"$log" 2>&1 &
+"$GODOT" $HL --path . "$SCENE" -- --token=walker --latency="$LATENCY" --jitter="$JITTER" --autoconnect >"$log" 2>&1 &
 pid=$!
 wait "$pid"; status=$?; pid=""
 grep -E "^   |FAIL|passed,|LevelStreamer" "$log"

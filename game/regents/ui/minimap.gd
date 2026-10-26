@@ -7,6 +7,10 @@ class_name RegentsMinimap extends Control
 ## trees (green), rocks (grey), stations (blue), the training dummy (orange). The mouse wheel over it zooms.
 ## Presentation only.
 ##
+## A level bigger than one picture (the continent, streamed: only the cells round you are there to picture)
+## is pictured round YOU, and pictured again round you as your view nears the picture's edge (Luke's
+## playtest, 2026-10-24: "minimap doesn't update out here").
+##
 ## Open for iterations: click-to-walk, a world map (M), markers for orders and quests, the ground's own
 ## icons, recapturing when trees fall.
 
@@ -22,6 +26,10 @@ const CAPTURE_MIN_M: float = 80.0
 const CAPTURE_MAX_M: float = 400.0
 ## How long after the level appears its picture is taken (the ground and the trees settle first).
 const CAPTURE_AFTER_S: float = 1.5
+## Pictured round you (a level bigger than `CAPTURE_MAX_M`): the side, inside the 5 x 5 cells streamed round
+## you (320 m), and how long after you near its edge it is taken again (the cells there load first).
+const AROUND_M: float = 288.0
+const RECAPTURE_AFTER_S: float = 0.75
 
 const PLAYER: Color = Color(1, 1, 1)
 const FOE: Color = Color(1.0, 0.86, 0.2)
@@ -55,6 +63,9 @@ var _capture: SubViewport = null
 var _loader: LevelLoader = null
 var _capture_in: float = -1.0
 var _captured_level: int = -1
+## Whether the level is pictured round you (too big for one picture), and a new picture's countdown.
+var _around: bool = false
+var _recapture_in: float = -1.0
 var _look_in: float = 0.0
 ## The netcode readout (F3, on in editor runs): while it shows, the map sits under it, not behind it.
 var _overlay_panel: Control = null
@@ -272,7 +283,10 @@ func _watch_level(delta: float) -> void:
 				break
 		if _loader == null:
 			return
-	if _loader.level() == null or _loader.level_id() == _captured_level:
+	if _loader.level() == null:
+		return
+	if _loader.level_id() == _captured_level:
+		_follow(delta)
 		return
 	if _capture_in < 0.0:
 		_capture_in = CAPTURE_AFTER_S
@@ -282,10 +296,48 @@ func _watch_level(delta: float) -> void:
 		capture(_loader.level_id())
 
 
-## Picture level `level_id` from straight above, north up, into the map.
-func capture(level_id: int) -> void:
+## A level pictured round you: again, round you, once your view nears the picture's edge.
+func _follow(delta: float) -> void:
+	if not _around:
+		return
+	var me: Node3D = EntityRegistry.get_entity(EntityRegistry.local_entity_id) as Node3D if EntityRegistry.local_entity_id > 0 else null
+	if me == null:
+		return
+	var here := Vector2(me.global_position.x, me.global_position.z)
+	if _recapture_in < 0.0:
+		if leaves_picture(here, RADIUS_MAX_M, area_origin, area_m):
+			_recapture_in = RECAPTURE_AFTER_S
+		return
+	_recapture_in -= delta
+	if _recapture_in <= 0.0:
+		_recapture_in = -1.0
+		capture(_captured_level, here)
+
+
+## Whether the view round `here` (`view_m` across its radius, with room to walk) reaches past the
+## picture's edge (`origin`, `side`): time to picture it again.
+static func leaves_picture(here: Vector2, view_m: float, origin: Vector2, side: float) -> bool:
+	var room: float = view_m + 20.0
+	return here.x - room < origin.x or here.y - room < origin.y or here.x + room > origin.x + side or here.y + room > origin.y + side
+
+
+## Whether a level's points need more than one picture: then it is pictured round you.
+static func is_big(bake: LevelBake) -> bool:
+	var whole: Rect2 = area_of(bake)
+	return whole.size.x >= CAPTURE_MAX_M
+
+
+## Picture level `level_id` from straight above, north up, into the map: the whole level, or (one too big
+## for a picture) the square `AROUND_M` round `around`.
+func capture(level_id: int, around: Variant = null) -> void:
 	_captured_level = level_id
-	var area: Rect2 = area_of(LevelBake.by_id(level_id))
+	var bake: LevelBake = LevelBake.by_id(level_id)
+	_around = is_big(bake)
+	var area: Rect2 = area_of(bake)
+	if _around:
+		var me: Node3D = EntityRegistry.get_entity(EntityRegistry.local_entity_id) as Node3D if EntityRegistry.local_entity_id > 0 else null
+		var at: Vector2 = around if around is Vector2 else (Vector2(me.global_position.x, me.global_position.z) if me != null else Vector2.ZERO)
+		area = Rect2(at - Vector2(AROUND_M, AROUND_M) * 0.5, Vector2(AROUND_M, AROUND_M))
 	area_origin = area.position
 	area_m = area.size.x
 	if _capture != null:
@@ -298,8 +350,8 @@ func capture(level_id: int) -> void:
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 	cam.size = area_m
 	cam.near = 1.0
-	cam.far = 160.0
-	cam.position = Vector3(area.get_center().x, 80.0, area.get_center().y)
+	cam.far = 800.0   # from 400 m up: the continent's mountains stand well above the camp
+	cam.position = Vector3(area.get_center().x, 400.0, area.get_center().y)
 	# The level's own light and sky, without its fog: from 80 m up, distance fog washes the ground out.
 	var env: Environment = _capture.world_3d.environment if _capture.world_3d != null else null
 	if env == null:

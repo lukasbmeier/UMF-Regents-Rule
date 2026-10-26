@@ -296,6 +296,15 @@ func _run_polish() -> void:
 		"a camera looking north faces 0, looking east PI/2")
 	_check(RegentsMinimap.to_map(Vector2(0, -10), 0.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing north, a thing 10 m north is 20 px up")
 	_check(RegentsMinimap.to_map(Vector2(10, 0), PI / 2.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing east, a thing 10 m east is up")
+	# A level too big for one picture (Luke's playtest, 2026-10-24: "minimap doesn't update out here").
+	_check(not RegentsMinimap.is_big(LevelBake.by_id(20)) and RegentsMinimap.is_big(LevelBake.by_id(21)),
+		"the glade is pictured whole; the continent round you")
+	var pic := Vector2(-144, -144)
+	_check(not RegentsMinimap.leaves_picture(Vector2(0, 0), RegentsMinimap.RADIUS_MAX_M, pic, RegentsMinimap.AROUND_M),
+		"at the middle of its picture the widest view is inside it")
+	_check(RegentsMinimap.leaves_picture(Vector2(40, 0), RegentsMinimap.RADIUS_MAX_M, pic, RegentsMinimap.AROUND_M)
+		and RegentsMinimap.leaves_picture(Vector2(-130, 600), RegentsMinimap.RADIUS_MAX_M, pic, RegentsMinimap.AROUND_M),
+		"40 m east, the widest view nears its edge, and far out it is off it: pictured again round you")
 	_check(RegentsMinimap.to_map(Vector2(0, -10), PI / 2.0, 2.0).is_equal_approx(Vector2(-20, 0)), "and north is to the left")
 	var bake: LevelBake = LevelBake.by_id(20)
 	var area: Rect2 = RegentsMinimap.area_of(bake)

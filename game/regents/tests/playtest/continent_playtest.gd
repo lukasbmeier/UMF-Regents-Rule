@@ -82,6 +82,14 @@ func _run() -> void:
 	_check_streamed("far out", total_cells)
 	_check(not streamer.loaded_cells().has(camp_cell), "the camp's cell is freed behind them")
 	_check_ring("far out", total_nodes)
+	# THE MINIMAP out here (Luke's playtest, 2026-10-24: "minimap doesn't update out here"): pictured round
+	# them. Only in a window (WINDOWED=1): headless, nothing is drawn and no picture is taken.
+	if DisplayServer.get_name() != "headless":
+		var mini: RegentsMinimap = get_tree().root.find_children("*", "RegentsMinimap", true, false).front() as RegentsMinimap 			if not get_tree().root.find_children("*", "RegentsMinimap", true, false).is_empty() else null
+		var at2 := Vector2(me.global_position.x, me.global_position.z)
+		await _until(func() -> bool: return mini != null and not RegentsMinimap.leaves_picture(at2, RegentsMinimap.RADIUS_MAX_M, mini.area_origin, mini.area_m), 6.0)
+		_check(mini != null and not RegentsMinimap.leaves_picture(at2, RegentsMinimap.RADIUS_MAX_M, mini.area_origin, mini.area_m),
+			"the minimap is pictured round them out here (%s, %.0f m from %s)" % [str(at2), mini.area_m if mini != null else 0.0, str(mini.area_origin) if mini != null else "-"])
 	await get_tree().create_timer(2.0).timeout
 	var ground: float = _ground_below(me.global_position)
 	_check(not is_nan(ground) and absf(me.global_position.y - ground) < 0.6,

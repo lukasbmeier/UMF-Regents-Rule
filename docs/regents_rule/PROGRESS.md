@@ -978,6 +978,11 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
     sees it, the next look is the nameplate/presence of an entity that re-enters the ring.
   - #7 a nameless "Player 39" is shown (once "Player 30", DECISIONS #272: a tool is not a person). Likely
     the CLI's own player again (this session's `spacetime call`/`sql` made one); why it is drawn is the bug.
+  - **#5 FIXED 2026-10-26** (the minimap; the M world map is an idea, Luke's call): it pictured a level once,
+    at most 400 m square round its points. A level too big for that (the continent) is now pictured round
+    the player (288 m, inside the 5 x 5 streamed cells) and again as their widest view nears the picture's
+    edge; the camera is 400 m up (the mountains). Tested: the genre suite's sums, and the continent playtest
+    in a window (`WINDOWED=1`): 850 m out the picture is round them (20/0; the old minimap fails it).
   - #5 the minimap stops updating out on the continent (it was built for the glade's size); **idea: M opens
     a full world map**.
   - #4 **bushes should not be solid** (Luke: "the bushes have 3d collisions when I don't think they should":
