@@ -455,7 +455,7 @@ ability lands (its wind-up after the press). It answers hit or miss; what a hit 
 (Fowl Play: a hen injured, then downed), or the ability's damage. DECISIONS #226.
 A sweep hits the first person in its path. With the hot rule **Referee two sides** on
 (`foundation.referee_two_sides`, an override in a game's rule set) it passes through its user's own
-side, players or bots, to the first of the other: an MMO's monsters do not block each other's swings,
+side (the players, or everyone else) to the first of the other: an MMO's monsters do not block each other's swings,
 nor its players each other's. DECISIONS #283.
 
 - **A sidecar's jobs, per world.** In a MODULE world it only judges (players still move themselves);

@@ -363,8 +363,8 @@ func _run_who() -> void:
 
 
 ## TWO SIDES (DECISIONS #283, Regent's Rule: two skeletons side by side hit each other, never the player
-## behind). Off, a sweep's first person is hit, whoever it is; on, a bot's passes through bots and a
-## player's through players.
+## behind). Off, a sweep's first person is hit, whoever it is; on, a player's passes through players and
+## anyone else's through everyone but players.
 func _run_two_sides() -> void:
 	print("== referee: two sides ==")
 	var ref := ActionReferee.new()
@@ -373,11 +373,15 @@ func _run_two_sides() -> void:
 	ref.set_entity(31, 1, 0, false, true, true)    # the skeleton just ahead of it
 	ref.set_entity(32, 0, 0, true)                 # the player behind that one
 	ref.set_entity(33, 0, 0, true)                 # a player swinging +Z at the skeleton, through 32
+	ref.set_entity(34, 1)                          # an NPC with no brain (a training dummy), off to the side
+	ref.set_entity(35, 0, 0, true)                 # a player swinging -Z at it
 	ref.record(30, BASE, Vector3.ZERO, 0.0)
 	ref.record(31, BASE, Vector3(0, 0, -0.6), 0.0)
 	ref.record(32, BASE, Vector3(0, 0, -1.3), 0.0)
 	ref.record(33, BASE, Vector3(0, 0, -2.0), PI)
-	_check(ref.is_bot(30) and not ref.is_bot(32), "(a brain with no player is a bot; a player is not)")
+	ref.record(34, BASE, Vector3(5, 0, -0.8), 0.0)
+	ref.record(35, BASE, Vector3(5, 0, 0.8), 0.0)
+	_check(ref.is_player(32) and not ref.is_player(30), "(a player is on the players' side; a brain with no player is not)")
 	ref.add_request(1, 30, 501, 0, BASE)
 	ref.add_request(2, 33, 501, 0, BASE)
 	var off: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
@@ -388,10 +392,12 @@ func _run_two_sides() -> void:
 	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.INSERTED, &"hot_rule", null, on))
 	ref.add_request(3, 30, 501, 0, BASE)
 	ref.add_request(4, 33, 501, 0, BASE)
+	ref.add_request(5, 35, 501, 0, BASE)
 	var two: Dictionary = _by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC))
 	hot.call(&"_on_row", RowEvent.make(RowEvent.Kind.DELETED, &"hot_rule", on, null))
 	_check(int(two.get(3, -1)) == 32, "on: the skeleton's swing passes its friend and hits the player (%d)" % int(two.get(3, -1)))
 	_check(int(two.get(4, -1)) == 31, "and the player's passes the other player and hits the skeleton (%d)" % int(two.get(4, -1)))
+	_check(int(two.get(5, -1)) == 34, "and a player still hits an NPC with no brain (a training dummy) (%d)" % int(two.get(5, -1)))
 	ref.free()
 
 
