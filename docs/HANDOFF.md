@@ -1,53 +1,38 @@
-# Handoff — UMF Template, 2026-10-24
+# Handoff — UMF Template, 2026-10-26
 
 ## Where it stands
-**1.1.0 SHIPPED to all four games (2026-10-24, Luke's say)**: the low-end hardware work (DECISIONS #282,
-CHANGELOG 1.1.0) and the accounts suite's pinned defaults (`511eee3`, from a Regent's Rule session: a game
-overriding `characters_per_account` / `park_offline_s` failed 6 of its checks). No schema change: nothing
-to publish. Each game's suites after the pull: its own HANDOFF.
-Suites this session, all green: unit sweep (run_tests.sh, every lint) 2193/0, then `settings`,
-`quality`, `remote_animation` 100/0 and, after the last change, `settings` + `quality` 94/0; e2e 11/0; export 34/0 (two new checks);
-render_test.sh ok (the renderer steps, the self-restart, Low vs High on both renderers). Five
-mutations of the new code each caught by `quality`. Not run: the other server suites (no server code
-changed), any game's suites (not shipped).
+**1.1.1 COMMITTED AND PUSHED, NOT SHIPPED**: four foundation fixes made from a Regent's Rule session (Luke's
+playtest of the continent, 2026-10-24). Regent's Rule has pulled it; **Fishing, Fowl Play and DiscGolf have
+not** (`ship_template.sh` not run: the usage ran short). No schema change; the content bake is in it (a new
+hot rule), so a game takes it with a pull, a publish (data kept) and its suites.
+Suites here: the unit sweep 2205/0 after the last change (referee, remote_animation, presence, cells each
+with its new checks; each new check failed with its fix taken out). Not run here: e2e, export, the server
+suites (no server code changed; `cargo check` wasm green).
 
-## This session
-- Why Intel Iris Plus crashed: the template runs Vulkan on Windows; Iris Plus (Gen 9.5/11) has
-  Intel's frozen legacy drivers; Godot's `fallback_to_opengl3` only catches a renderer that fails to
-  start. Notes in the shared folder of the session that asked (`low-end-hardware.md`).
-- `foundation/core/renderer_choice.gd` + `project.godot` `config/project_settings_override=
-  "user://renderer.cfg"`: Settings > Video > Renderer (Automatic, Full, Compatibility, Restart now);
-  Automatic switches and restarts itself on `LEGACY_GPUS` or after a crashed start (exports only).
-- `Settings`: Graphics quality Low/Medium/High/Custom (`QUALITY_PRESETS`), `shadow_quality` (with Off;
-  the old `shadows` read across), `effects`, `detail`. High is the old look exactly.
-- `foundation/core/graphics_quality.gd`: a level's effects and lights turned down from what it was
-  made with (a copy's meta is not trusted); designer groups `detail_high`, `detail_medium`,
-  `detail_density`.
-- `foundation/anim/animation_rate.gd` + the driver: other characters posed less often far away / off
-  screen on Low and Medium, drawn to 80/150 m. The driver always advances its tree itself now.
-- `tools/perf/perf_bench.tscn` (the bench); tests: unit `quality`, `remote_animation` rates,
-  `tests/render/renderer_steps.*` in `render_test.sh`, a renderer check in `export_test.sh`.
-- HANDBOOK §3 "Running well on a weak computer", §6 Settings, §8 table, §10; rules
-  `version_settings_looks.md`, `animation.md`; FOUNDATION_SYSTEMS "Low-end hardware".
+## This session (CHANGELOG 1.1.1)
+- **DECISIONS #283, two sides**: hot flag `foundation.referee_two_sides` (off). On, a judged sweep passes
+  through its user's own side, the players or everyone else (`ActionReferee.is_player`), to the first of
+  the other. Regent's Rule turns it on (two skeletons blocked each other's swings). Fowl Play keeps it off.
+  The referee suite sets it either way, since a game's override is its default.
+- `AnimationDriverComponent`: a character is posed the moment it is built (`_tree.advance(0.0)`); since
+  #282 a new one stood in its rest pose (a T-pose) until the driver's first advance.
+- `Cells.recentre`: a jump past the cells next to the centre re-centres at once. Regent's Rule's spawn is
+  ON a cell edge; back from far away a player kept a ring 600 m off and was sent nothing round them.
+- `PresenceComponent`: a nameless player not yet known as an admin is asked after again every 0.5 s;
+  `is_tool` is renamed `is_tool_row` (called from outside the class, `PresenceComponent.is_tool` was
+  Godot's own `Script.is_tool()`).
 
 ## Next, in order
-1. Luke: try it (Escape, Settings, Video: Graphics quality, Renderer). Shipped; restart each game's
-   editor once (project.godot gained a line).
-2. A friend's build on the Iris Plus laptop (`tools\release.cmd` per game): its first start should
-   restart itself onto Compatibility and Low. Ask for its `godot.log` and its telemetry.
-3. Each game's own levels through the bench (`-- --level=res://...`); Fishing's meadow grass into
-   `detail_density`, clutter into `detail_high`.
+1. **Ship 1.1.1** to Fishing, Fowl Play and DiscGolf: `ship_template.sh "1.1.1: ..."` (each game's work
+   committed first), then in each a publish and its suites. Fowl Play's referee suites matter most (the
+   two-sides rule must stay off there).
+2. The load test harness (Regent's Rule's HANDOFF: Tuesday after 5 pm), a milestone of its own here.
 
 ## Waiting on Luke
-- Decided 2026-10-24: Apple M1, Iris Xe and AMD integrated graphics start on High; only old Intel
-  (`RendererChoice.LEGACY_GPUS`) starts on Low. Do not widen the list without asking.
+- Nothing new for the template.
 
 ## Watch out
-- Changing an AnimationTree's `callback_mode_process` restarts what it plays: the driver sets manual
-  once, before it plays. Do not set it anywhere else.
-- `render_test.sh` and `export_test.sh` set the player's `renderer.cfg` aside and put it back; a run
-  killed halfway can leave one behind in `%APPDATA%\Godot\app_userdata\<game>\`.
-- This PC's Intel iGPU is disabled in Windows: no real iGPU numbers yet (WARP stood in).
-- The Edit tool rewrote `tests/export_test.sh` with CRLF once: check line endings of a `.sh` after editing.
-- Every Compatibility start prints "TAA is only available..." once (project.godot's TAA, read before
-  Settings turns it off); harmless.
+- A game's hot-rule override is its build's default: a foundation test that assumes a rule's foundation
+  default must set the rule itself (the referee suite does now).
+- `SomeClass.is_tool(...)` from outside a script calls `Script.is_tool()`: avoid static names that
+  shadow `Script`/`Resource` methods.
