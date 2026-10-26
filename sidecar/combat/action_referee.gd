@@ -18,12 +18,16 @@ class_name ActionReferee extends Node3D
 ## Who can be hit: people (a player, an NPC person, any playable character, anything a brain drives:
 ## Fowl Play's decoy hens), not a nest or a prop;
 ## and only in a status that is targetable and hittable (a downed hen is not hit again). The module
-## checks the same again: this only proposes.
+## checks the same again: this only proposes. With the hot rule `foundation.referee_two_sides` on
+## (DECISIONS #283: an MMO's players against its monsters), a sweep passes through its user's own side
+## (players, or bots) to the first of the other: a skeleton's swing is not stopped by the skeleton beside it.
 ##
 ## SERVER-ONLY (hard rule 7b).
 
 ## How long after a use lands it is judged: the user's own row from that moment has to have come.
 const SETTLE_USEC: int = 80_000
+## The rule that splits people into two sides, players and bots (DECISIONS #283).
+const TWO_SIDES: StringName = &"foundation.referee_two_sides"
 ## The tables it reads.
 const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"player", &"ability_def", &"npc_brain"]
 
@@ -234,8 +238,9 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 	var me: Dictionary = mine.at(due)
 	var seen_at: int = due - int(req["rewind_ms"]) * 1000
 	var targets: Array = []
+	var sides: bool = HotRules.flag(TWO_SIDES)
 	for eid: int in _histories.keys():
-		if eid == actor or not may_be_hit(eid):
+		if eid == actor or not may_be_hit(eid) or (sides and is_bot(eid) == is_bot(actor)):
 			continue
 		var was: Dictionary = (_histories[eid] as TransformHistory).at(seen_at)
 		if was.is_empty():
@@ -262,6 +267,11 @@ func may_be_hit(eid: int) -> bool:
 		return false
 	var st: StatusDef = StatusDef.find(int(_statuses.get(eid, StatusDef.NORMAL)))
 	return st == null or (st.targetable and st.hittable)
+
+
+## A bot: anything a brain drives that no player plays (the other side from the players, #283).
+func is_bot(eid: int) -> bool:
+	return _brained.has(eid) and not _players.has(eid)
 
 
 ## A kind's hitbox: its body (`EntityDefinition.body_capsule`, the scene's capsule resized by the
