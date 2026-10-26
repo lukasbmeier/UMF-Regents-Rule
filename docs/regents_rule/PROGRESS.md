@@ -957,7 +957,7 @@ a cell east, the nodes both rings share kept, none spawned again). Negatives: WO
 ring (6 playtest checks fail; it is then sent all 545 nodes and 603 entities, against 7 on the ring), the
 streamed wrapping switched off and a camp point moved (a unit check each).
 
-### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted, NOT fixed yet
+### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted; worked through 2026-10-26 (each marked)
 Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. Sorted for the next work:
 - **Small, with or before the load test** (each to look into first):
   - **#9 FIXED 2026-10-26** (template 1.1.1, `AnimationDriverComponent`): the server spawns a skeleton at its
