@@ -466,7 +466,7 @@ func _run_solid() -> void:
 		var held: AABB = _points_box(sc.solid.get_children() if sc.solid != null else [])
 		_check(sc.solid != null and held.grow(0.05).encloses(drawn), "the %s blocks wherever it is drawn (%s in %s)" % [key, drawn, held])
 		ent.free()
-	# A level's props: rocks and bushes solid, grass walked through.
+	# A level's props: rocks solid; bushes and grass walked through (Luke's playtest, 2026-10-24).
 	var level := Node3D.new()
 	var decor := Node3D.new()
 	decor.name = "Decor"
@@ -476,12 +476,15 @@ func _run_solid() -> void:
 	decor.add_child(big)
 	var grass: Node3D = (load("res://game/regents/art/nature/Grass_Common_Short.gltf") as PackedScene).instantiate() as Node3D
 	decor.add_child(grass)
+	var bush: Node3D = (load("res://game/regents/art/nature/Bush_Large.gltf") as PackedScene).instantiate() as Node3D
+	bush.position = Vector3(-10, 0, 0)
+	decor.add_child(bush)
 	var sp := RegentsSolidProps.new()
 	level.add_child(sp)
 	add_child(level)
 	var walls: Array[Node] = decor.find_children("Solid*", "StaticBody3D", false, false)
 	var wall_box: AABB = _points_box(walls[0].get_children() if not walls.is_empty() else [])
-	_check(sp.made_solid == [big] and walls.size() == 1, "a level's rock is made solid, its grass is not (%d bodies)" % walls.size())
+	_check(sp.made_solid == [big] and walls.size() == 1, "a level's rock is made solid, its grass and its bush are not (%d bodies)" % walls.size())
 	_check(wall_box.has_point(Vector3(10, 0.5, 0)), "where the rock stands (%s)" % wall_box)
 	level.free()
 

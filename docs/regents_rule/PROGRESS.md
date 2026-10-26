@@ -985,6 +985,10 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
     in a window (`WINDOWED=1`): 850 m out the picture is round them (20/0; the old minimap fails it).
   - #5 the minimap stops updating out on the continent (it was built for the glade's size); **idea: M opens
     a full world map**.
+  - **#4 bushes DONE 2026-10-26** (Luke's words, to confirm; GAME.md): `solid_models` is rocks only, in the
+    script and in the continent's scene (its one line edited to what the generator now writes, not rebuilt:
+    the bake is water depth only). A foe now sees and walks through a bush too. Tested: the genre suite (a
+    level's bush is not made solid), the continent playtest 19/0. Not looked at: the shadows near them.
   - #4 **bushes should not be solid** (Luke: "the bushes have 3d collisions when I don't think they should":
     a change to his 2026-10-21 "every 3d object should have collisions"; rocks stay solid). Shadows "seem a
     little messed up" near them (to look at).

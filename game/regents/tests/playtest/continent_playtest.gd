@@ -52,7 +52,7 @@ func _run() -> void:
 	await _until(func() -> bool: return _node_ids().size() > 10, 8.0)
 	_check_ring("at the camp", total_nodes)
 	_check(await _node_at(TREE_1) > 0, "the camp's tree_1 is there, as in the glade")
-	_check(_solid_bodies() > 0, "the cells loaded round the camp have solid rocks and bushes (%d bodies)" % _solid_bodies())
+	_check(_solid_bodies() > 0, "the cells loaded round the camp have solid rocks (%d bodies)" % _solid_bodies())
 	var camp_spot: Vector3 = me.global_position + Vector3(0.0, 0.5, 0.0)
 	# A TOOL IS NOT A PERSON (DECISIONS #272; Luke's playtest 2026-10-24, "Player 39 is showing"): the
 	# database's CLI has a player at the spawn, an admin with no name, never drawn, though on the ring the

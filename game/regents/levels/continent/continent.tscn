@@ -8766,4 +8766,4 @@ current = true
 [node name="SolidProps" type="Node" parent="." unique_id=1121625217]
 script = ExtResource("16_7hmwg")
 props = NodePath("../LevelInfo/Cells")
-solid_models = PackedStringArray("Rock_", "Bush_")
+solid_models = PackedStringArray("Rock_")

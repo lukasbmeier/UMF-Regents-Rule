@@ -89,6 +89,10 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   Undercroft (M8, M25); the 300-bot load test. Movement feel from the template and Fishing that Regent's
   lost (the camera orbiting a still character without turning it; diagonal strafing that blends well) is
   noted for when it suits, likely with combat.
+- **Bushes are not solid** (Luke's playtest note, 2026-10-24: "the bushes have 3d collisions when I don't think
+  they should"; done 2026-10-26, to confirm): of a level's props only ROCKS stop you and a foe's sight
+  (`RegentsSolidProps.solid_models`); bushes, grass and flowers are walked and seen through. Narrows his
+  2026-10-21 "every 3d object should have collisions".
 - **The in-game lookup** (2026-10-24, scheduled before herbalism and the economy, "to look into" with Luke
   first): WAILA/Jade-style help that is player friendly without being hand-holdy or cluttered. Wanted early:
   a **glance** line for the current target (name, needs: rank and tool tier, green/red for you), a **detail**
