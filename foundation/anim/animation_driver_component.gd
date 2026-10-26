@@ -746,6 +746,10 @@ func _install() -> bool:
 	if not animation_set.root_motion_bone.is_empty():
 		_tree.root_motion_track = NodePath("%s:%s" % [skel.name, animation_set.root_motion_bone])
 	_tree.active = true
+	# Posed now, before it is first drawn (Regent's Rule's playtest, 2026-10-24: a skeleton T-posed as it
+	# spawned). A paced tree is advanced only by the driver's own process, which a node added mid-frame
+	# misses, and at a low rate not for up to one interval: until then the model stood in its rest pose.
+	_tree.advance(0.0)
 	_playback = _tree.get(AnimationTreeBuilder.P_PLAYBACK) as AnimationNodeStateMachinePlayback
 	return _playback != null
 

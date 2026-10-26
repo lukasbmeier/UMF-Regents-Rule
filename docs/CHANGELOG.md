@@ -810,3 +810,5 @@ No schema change: a game takes it with a pull (the content bake is in it).
 - A hot flag `foundation.referee_two_sides` (off): on, a judged ability passes through its user's own side
   (the players, or everyone else) to the first person of the other. Regent's Rule turns it on (two skeletons were hitting
   each other); Fowl Play keeps it off.
+- A character is posed the moment it is built (`AnimationDriverComponent`): since #282 its tree is advanced
+  only by the driver, and a new one stood in its rest pose (a T-pose) until its first advance.

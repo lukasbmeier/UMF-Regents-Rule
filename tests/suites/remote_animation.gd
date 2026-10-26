@@ -43,6 +43,15 @@ func _run_remote_animation_tests() -> void:
 		SpaceTimeMovementComponent) as SpaceTimeMovementComponent
 	_check(driver != null and driver.is_animating(),
 		"and it animates: the driver does not care whose entity it is")
+	# POSED BEFORE IT IS FIRST DRAWN (Regent's Rule's playtest, 2026-10-24: a skeleton T-posed as it
+	# spawned): no frame has run since it was built, and it already stands in its first pose, not its rest.
+	var skel: Skeleton3D = other.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var posed: int = 0
+	for b: int in skel.get_bone_count():
+		if not skel.get_bone_pose_rotation(b).is_equal_approx(skel.get_bone_rest(b).basis.get_rotation_quaternion()):
+			posed += 1
+	_check(posed > skel.get_bone_count() / 4, "posed the moment it is spawned, before any frame: %d of %d bones off their rest (no T-pose)"
+		% [posed, skel.get_bone_count()])
 
 	if driver == null or movement == null:
 		await _teardown_anim(reg, spawner, eid, prev_local, prev_ready, level)
