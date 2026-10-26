@@ -12,7 +12,9 @@ class_name PresenceComponent extends SpaceTimeComponent
 ## A TOOL IS NOT A PERSON (DECISIONS #272): an admin who has never said a name (the database's own CLI:
 ## a publish, a query, the host's feedback watcher) is given a player entity like anyone who connects,
 ## and nobody sees it (Luke saw a nameless "Player 30" blink in and out every few seconds while a
-## watcher polled).
+## watcher polled). A nameless player's identity is asked after again until it is known to be an admin's:
+## with ring interest the `authority` rows come in their own subscription, often after the player's
+## (Regent's Rule's playtest, 2026-10-24: the CLI's "Player 39" stood at the spawn).
 ##
 ## Presentation only (hard rule 11): it hides a body; the server decides who is online.
 
@@ -24,6 +26,11 @@ var _hidden: bool = false
 var _left_at_usec: int = -1
 ## Whether an identity is an admin's: the `authority` table (tests set their own).
 static var admin_check: Callable = Callable()
+## How often a nameless player who is no admin (yet) is asked after again, seconds.
+const TOOL_RECHECK_SEC: float = 0.5
+## A nameless player's identity while it is not known to be a tool's; null otherwise.
+var _nameless: Variant = null
+var _recheck_in: float = 0.0
 
 
 func required_tables() -> Array[StringName]:
@@ -45,7 +52,9 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 		return
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	if ent != null:
-		ent.set_hidden_by(&"tool", is_tool(new))
+		var tool: bool = is_tool_row(new)
+		ent.set_hidden_by(&"tool", tool)
+		_nameless = new.get(&"identity") if new != null and not tool and _has_no_name(new) else null
 	var was: bool = _online
 	_online = new == null or bool(new.get(&"online"))
 	if _online:
@@ -56,7 +65,16 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 		_left_at_usec = Time.get_ticks_usec() if is_bound() else 0
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _nameless != null:
+		_recheck_in -= delta
+		if _recheck_in <= 0.0:
+			_recheck_in = TOOL_RECHECK_SEC
+			if _is_admin(_nameless):
+				_nameless = null
+				var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+				if ent != null:
+					ent.set_hidden_by(&"tool", true)
 	if _online or _left_at_usec < 0 or _hidden or _is_local():
 		return
 	var linger_usec: int = int(HotRules.number(LINGER_RULE) * 1_000_000.0)
@@ -75,13 +93,18 @@ func _set_hidden(hide: bool) -> void:
 
 
 ## Whether player row `row` is a tool's: no name, and its identity is an admin's.
-static func is_tool(row: RefCounted) -> bool:
-	if row == null:
+static func is_tool_row(row: RefCounted) -> bool:
+	if row == null or not _has_no_name(row):
 		return false
+	return _is_admin(row.get(&"identity"))
+
+
+static func _has_no_name(row: RefCounted) -> bool:
 	var name_v: Variant = row.get(&"name")
-	if name_v == null or not String(name_v).strip_edges().is_empty():
-		return false
-	var identity: Variant = row.get(&"identity")
+	return name_v != null and String(name_v).strip_edges().is_empty()
+
+
+static func _is_admin(identity: Variant) -> bool:
 	if identity == null:
 		return false
 	if admin_check.is_valid():

@@ -71,7 +71,9 @@ static func ring(chunk: int, r: int) -> PackedInt64Array:
 
 
 ## Where a ring's centre should be for someone at `pos` whose centre is `centre` (-1: none yet): it
-## moves only once they are `margin` m inside another cell, so walking along an edge never churns.
+## moves only once they are `margin` m inside another cell, so walking along an edge never churns. A jump past
+## the cells next to the centre (a teleport, a respawn) moves it at once, wherever in its cell they land
+## (Regent's Rule's spawn is ON an edge: back from far away, a player kept a ring 600 m off, sent nothing).
 static func recentre(centre: int, pos: Vector3, margin: float = -1.0, side: float = -1.0) -> int:
 	var here: int = chunk_of(pos, side)
 	if centre < 0 or here == centre:
@@ -83,6 +85,8 @@ static func recentre(centre: int, pos: Vector3, margin: float = -1.0, side: floa
 	var in_x: float = minf(pos.x - sq.x * m, (sq.x + 1) * m - pos.x)
 	var in_z: float = minf(pos.z - sq.y * m, (sq.y + 1) * m - pos.z)
 	var old: Vector2i = squares(centre)
+	if absi(sq.x - old.x) > 1 or absi(sq.y - old.y) > 1:
+		return here
 	# Only the axes it crossed need the margin: a step along an edge it did not cross is not a move.
 	var deep: bool = (sq.x == old.x or in_x >= h) and (sq.y == old.y or in_z >= h)
 	return here if deep else centre

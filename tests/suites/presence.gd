@@ -106,6 +106,20 @@ func _run_presence_tests() -> void:
 	await get_tree().process_frame
 	_check(anon.visible, "a nameless player who is no admin (a test client): seen")
 	anon.queue_free()
+	# THE ADMINS ARRIVE AFTER THE PLAYER (Regent's Rule's playtest, 2026-10-24: with ring interest the
+	# `authority` rows come in their own subscription, and the CLI's "Player 39" stood at the spawn).
+	var admins: Array[PackedByteArray] = []
+	PresenceComponent.admin_check = func(identity: Variant) -> bool: return admins.has(identity)
+	var late: SpaceTimeEntity = _body(8806)
+	var w := PresenceComponent.new()
+	late.add_child(w)
+	w.bind(late, {&"player": _NamedRow.new(8806, "", PackedByteArray([3]))})
+	await get_tree().process_frame
+	_check(late.visible, "(the CLI's player, before the admins' rows have come: not yet known as a tool)")
+	admins.append(PackedByteArray([3]))
+	await get_tree().create_timer(PresenceComponent.TOOL_RECHECK_SEC + 0.2).timeout
+	_check(not late.visible, "once they have, it is asked after again and hidden")
+	late.queue_free()
 	PresenceComponent.admin_check = Callable()
 	var player_scene: Node = (load("res://foundation/entities/player.tscn") as PackedScene).instantiate()
 	_check(player_scene.get_node_or_null(^"Components/Presence") is PresenceComponent,
