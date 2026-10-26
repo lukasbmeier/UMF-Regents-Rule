@@ -20,13 +20,14 @@ class_name ActionReferee extends Node3D
 ## and only in a status that is targetable and hittable (a downed hen is not hit again). The module
 ## checks the same again: this only proposes. With the hot rule `foundation.referee_two_sides` on
 ## (DECISIONS #283: an MMO's players against its monsters), a sweep passes through its user's own side
-## (players, or bots) to the first of the other: a skeleton's swing is not stopped by the skeleton beside it.
+## (the players, or everyone else) to the first of the other: a skeleton's swing is not stopped by the
+## skeleton beside it, nor a player's by a player.
 ##
 ## SERVER-ONLY (hard rule 7b).
 
 ## How long after a use lands it is judged: the user's own row from that moment has to have come.
 const SETTLE_USEC: int = 80_000
-## The rule that splits people into two sides, players and bots (DECISIONS #283).
+## The rule that splits people into two sides, the players and everyone else (DECISIONS #283).
 const TWO_SIDES: StringName = &"foundation.referee_two_sides"
 ## The tables it reads.
 const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"player", &"ability_def", &"npc_brain"]
@@ -240,7 +241,7 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 	var targets: Array = []
 	var sides: bool = HotRules.flag(TWO_SIDES)
 	for eid: int in _histories.keys():
-		if eid == actor or not may_be_hit(eid) or (sides and is_bot(eid) == is_bot(actor)):
+		if eid == actor or not may_be_hit(eid) or (sides and is_player(eid) == is_player(actor)):
 			continue
 		var was: Dictionary = (_histories[eid] as TransformHistory).at(seen_at)
 		if was.is_empty():
@@ -269,9 +270,10 @@ func may_be_hit(eid: int) -> bool:
 	return st == null or (st.targetable and st.hittable)
 
 
-## A bot: anything a brain drives that no player plays (the other side from the players, #283).
-func is_bot(eid: int) -> bool:
-	return _brained.has(eid) and not _players.has(eid)
+## Someone a player plays (their `player` row): one side; everyone else (bots, NPCs, a training dummy) is
+## the other (#283).
+func is_player(eid: int) -> bool:
+	return _players.has(eid)
 
 
 ## A kind's hitbox: its body (`EntityDefinition.body_capsule`, the scene's capsule resized by the
