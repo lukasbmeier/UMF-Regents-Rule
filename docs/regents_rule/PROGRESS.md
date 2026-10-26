@@ -960,6 +960,10 @@ streamed wrapping switched off and a camp point moved (a unit check each).
 ### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted, NOT fixed yet
 Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. Sorted for the next work:
 - **Small, with or before the load test** (each to look into first):
+  - **#9 FIXED 2026-10-26** (template 1.1.1, `AnimationDriverComponent`): the server spawns a skeleton at its
+    point in one step (the chronicle agrees: the camp is at the continent's origin). Since #282 a character's
+    tree is advanced only by its driver, and a new one was drawn in its rest pose until then; it is posed the
+    moment it is built now. Tested: the remote_animation suite (0 of 65 bones posed without the fix).
   - #9 a skeleton T-poses near the origin for a moment as it spawns (Luke's guess: spawned at 0, then moved
     to its point). Likely its entity drawn before its place and pose arrived; check on the ring, where a
     foe's rows come in cell sets.
