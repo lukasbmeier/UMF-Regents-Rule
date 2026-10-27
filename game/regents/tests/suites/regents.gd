@@ -314,6 +314,16 @@ func _run_polish() -> void:
 	for p: Dictionary in LevelBake.by_id(21).points:
 		every_in = every_in and whole.has_point(Vector2(float(p["x"]), float(p["z"])))
 	_check(every_in and whole.size.x > 2000.0, "the continent's map holds every point (%.0f m across)" % whole.size.x)
+	# The continent's icons in a moment, every node named (2026-10-27: looked up per point, its 545 nodes froze the
+	# game ~90 s each time M opened, and the server dropped it for idle).
+	var t0: int = Time.get_ticks_msec()
+	var big: Array[Dictionary] = RegentsWorldMap.icons_of(LevelBake.by_id(21))
+	var took: int = Time.get_ticks_msec() - t0
+	var unnamed: int = 0
+	for ic: Dictionary in big:
+		unnamed += 1 if String(ic["kind"]) == "node" and String(ic.get("skill", "?")) == "?" else 0
+	_check(took < 2000 and big.size() >= LevelBake.by_id(21).points_of("node").size() and unnamed == 0,
+		"the continent's %d icons in %d ms, every node known (%d not)" % [big.size(), took, unnamed])
 	# The Lunge plays whole (Luke's playtest, 2026-10-24: "cut off half way"); a light swing to just after its hit.
 	var lunge: AbilityDef = load("res://game/regents/content/ability/sword_lunge.tres") as AbilityDef
 	var chop: AbilityDef = KitDef.by_key(&"axe").light[0]

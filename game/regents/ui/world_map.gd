@@ -88,8 +88,15 @@ static func area_of(bake: LevelBake) -> Rect2:
 
 
 ## The icons of `bake`'s points: [{at (x, z), kind: "node" | "station" | "poi", name, point, skill, rock}].
+## The nodes' content is looked up once per call, never per point: the library lists its folders and loads
+## every piece each time it is asked, and per point the continent's 545 nodes froze the game for 3 minutes
+## (headless and windowed alike; the server dropped it for idle, 2026-10-27).
 static func icons_of(bake: LevelBake) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
+	var defs: Dictionary[String, NodeDef] = {}
+	for d: ContentDef in RegentsContent.items(&"node"):
+		if d is NodeDef and not defs.has(d.display_name):
+			defs[d.display_name] = d as NodeDef
 	for p: Dictionary in bake.points:
 		var kind: String = String(p.get("kind", ""))
 		var tags: Array = p.get("tags", []) as Array
@@ -97,7 +104,7 @@ static func icons_of(bake: LevelBake) -> Array[Dictionary]:
 		var at := Vector2(float(p.get("x", 0.0)), float(p.get("z", 0.0)))
 		match kind:
 			"node":
-				var def: NodeDef = node_named(tag)
+				var def: NodeDef = defs.get(tag) as NodeDef
 				out.append({"at": at, "kind": kind, "name": def.display_name if def != null else tag, "point": String(p.get("id", "")),
 					"skill": def.skill.display_name if def != null and def.skill != null else "?",
 					"rock": def != null and def.depleted == NodeDef.Depleted.RUBBLE})
@@ -110,7 +117,7 @@ static func icons_of(bake: LevelBake) -> Array[Dictionary]:
 
 ## The node content named `name` (a node point's tag), or null.
 static func node_named(name: String) -> NodeDef:
-	for d: ContentDef in ContentLibrary.items(&"node"):
+	for d: ContentDef in RegentsContent.items(&"node"):
 		if d is NodeDef and d.display_name == name:
 			return d as NodeDef
 	return null
@@ -241,7 +248,7 @@ func _take_picture() -> void:
 	_capture.add_child(cam)
 	add_child(_capture)
 	# Kept as a plain picture and the camera taken away at once: a camera left over the whole level is one
-	# more view for the terrain to follow (a windowed run stalled 30 s and lost its connection with it).
+	# more view for the terrain to follow. (The stall first blamed on it was `icons_of`'s per-point lookup.)
 	var shot: SubViewport = _capture
 	await RenderingServer.frame_post_draw
 	if not is_instance_valid(shot):

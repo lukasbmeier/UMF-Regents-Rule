@@ -974,11 +974,16 @@ streamed wrapping switched off and a camp point moved (a unit check each).
 - Tested: the regents suite (icons for every node, "Mining ???" unseen / "Coal rock" seen, the continent's
   map holds every point), the integration suite 1085/0 (saw_nodes: far not seen, near seen once, nonsense
   skipped, 33 refused, another player sent none). Seen in a window: the continent's terrain, zones and
-  camps drawn (a screenshot). **NOT green: the continent playtest** now loses its connection ~30 s in
-  (`RECONNECTING`, the server's idle timeout; the client's own frames were fine, its round trip peaked at
-  35 s), with the discovery tracker off and with the new row filter off alike, so the cause is not found;
-  it passed 20/0 earlier the same day. Its new checks (discovery near the spawn, M opens and closes) never
-  ran to the end because of it.
+  camps drawn (a screenshot). **The continent playtest's dropped connection (found 2026-10-27)**: not the network. Opening M froze the
+  game's main thread ~90 s (twice: the HUD's open and the test's own count), so it answered no keep-alive and
+  the server closed it for idle. `RegentsWorldMap.icons_of` looked each node point's content up with
+  `ContentLibrary.items`, which lists the content folders and loads every piece each call: 545 times on the
+  continent (38 in the glade, so the unit suite never felt it). Now the node defs are listed once per call,
+  through `RegentsContent` (the genre's cache). Found by timing the playtest's steps (the gap sat between
+  "M opens" and the next step); restarting `spacetime start` changed nothing. Tested: the regents suite
+  2661/0 (new: the continent's icons in under 2 s, every node known; with the per-point lookup back it FAILS
+  at 19.6 s); the continent playtest 22/0 headless (27 s, was 6.5 min) and 23/0 windowed, its discovery and M
+  checks green. Client only: no publish needed.
 
 ### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted; worked through 2026-10-26 (each marked)
 Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. Sorted for the next work:

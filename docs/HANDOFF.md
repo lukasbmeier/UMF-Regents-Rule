@@ -1,42 +1,31 @@
-# Handoff — Regent's Rule, 2026-10-27 (playtest notes fixed; the world map built; NEXT: the continent playtest's stall, then the load test)
+# Handoff — Regent's Rule, 2026-10-27 (the continent playtest's dropped connection found and fixed; NEXT: the load test)
 
 ## Where it stands
-- **NEW 2026-10-27: the world map (M), discovery (`node_seen`, `saw_nodes`; a table ADDED: codegen done) and
-  POIs** (PROGRESS, "The world map"). Published to `regents-rule` with codegen: restart the editor and the game.
-  **The continent playtest is RED**: ~30 s in the server drops the client (idle timeout; client frames fine,
-  round trip to 35 s), even with discovery and the new row filter off. FIRST next session: find why (try a
-  restart of the local `spacetime start`, then bisect from `6384ce8`, when it passed 20/0).
-- **Luke's 9 playtest notes (PROGRESS step 23, "Luke's solo playtest") worked through, one commit each,
-  all pushed** (last `f4a1a2d`). Template **1.1.1** pulled (four foundation fixes; NOT yet shipped to the
-  other games: the template's HANDOFF).
-- **The play database `regents-rule` is published** (data kept) and still runs the continent (level 21).
-- Suites: unit 2657/0; combat playtest 51/0; continent playtest 20/0 in a window (`WINDOWED=1`), 19/0
-  headless. Each fix's new check failed with the fix taken out. Not run: integration, accounts, skilling
-  (no server code changed; the module was rebuilt by the publish).
+- **The continent playtest is GREEN again**: 22/0 headless (27 s), 23/0 windowed (`WINDOWED=1`), its new
+  discovery and M checks included. Regents unit suite 2661/0. Committed (this session's commit, after
+  `b06fdd0`); not pushed unless the closing note says so.
+- The fix is client-only (`game/regents/ui/world_map.gd`): the play database `regents-rule` needs no
+  republish (still on the continent, level 21, published with codegen 2026-10-26). Restart the game to get it.
+- Template 1.1.1 is pulled here; NOT yet shipped to the other games (the template's HANDOFF).
+- Not run this session: integration, accounts, skilling, combat (nothing they cover changed).
 
-## This session (details per note in PROGRESS step 23)
-- #2/#3 skeletons hitting each other: template #283, hot rule `foundation.referee_two_sides`, ON here
-  (`game/regents/content/rules/regents.tres`): a sweep passes through its user's own side.
-- #9 T-pose on spawn: template, a character is posed the moment it is built.
-- #7 "Player 39" (the CLI's own player): cause on Luke's night NOT proven. Found and fixed on the way: the
-  ring held its old centre after a long jump back onto the spawn (it is ON a cell edge); a late admin row.
-  `continent_playtest` now keeps the CLI coming back and checks it hidden, at the camp and after a trip.
-- #5 minimap: a big level is pictured round the player and follows them (`game/regents/ui/minimap.gd`).
-- #4 bushes: walked and seen through, rocks solid (`solid_props.gd`; one line of `continent.tscn`). Luke's
-  call from his note, recorded in GAME.md, to confirm.
-- #6 roll in the air: held and taken on landing (client only). #8: the Lunge plays whole (not seen in a
-  game); the LMB-spam cut is combo design, for the deep-dive.
+## This session
+- **The cause of the "dropped connection"**: not the network. Opening M froze the main thread ~90 s per
+  call, so the client answered no keep-alive and the server closed it for idle (30 s).
+  `RegentsWorldMap.icons_of` looked up each node point's content with `ContentLibrary.items`, which lists the
+  content folders and loads every piece on each call. That ran 545 times on the continent but only 38 in the
+  glade. Now the node defs are listed once per call, through `RegentsContent` (the genre's cache);
+  `node_named` uses it too.
+- Found by timing the playtest's steps: the 181 s gap sat between "M opens" and the next step. Restarting the
+  local `spacetime start` changed nothing; no bisect was needed.
+- New unit check (`game/regents/tests/suites/regents.gd`, `_run_polish`): the continent's icons in under 2 s,
+  every node known. With the per-point lookup put back it FAILS (19.6 s).
+- PROGRESS step 23, "The world map", records it.
 
 ## Next, in order
-0. **FIRST (Luke, 2026-10-27): why the continent playtest loses its connection ~30 s in**, before the load
-   test. What is known: the server closes the socket (idle timeout); the client's frames were fine (max
-   143 ms) while its round trip peaked at 35 s; it happens headless and windowed, with the discovery tracker
-   off and with `node_seen`'s row filter off; it passed 20/0 at `6384ce8`. Try: restart the local
-   `spacetime start`; then bisect the commits since `6384ce8`. Its new checks (discovery, M) then need a
-   green run, and the play database a republish if anything server-side changes.
-1. **The load test harness** (Tuesday after 5 pm), in the TEMPLATE: as the previous HANDOFF had it (a light
-   bot client, many connections in one process; 50 -> 100 -> 300; rows and bytes a second, reducer p95,
-   the referee's lag, cell swaps). Note #1 (the referee's stalls) is for it.
+1. **The load test harness** (Tuesday after 5 pm), in the TEMPLATE: a light bot client, many connections in
+   one process; 50 -> 100 -> 300; rows and bytes a second, reducer p95, the referee's lag, cell swaps.
+   Note #1 (the referee's stalls) is for it.
 2. Before or with it: ship template 1.1.1 to the other games (the template's HANDOFF).
 3. The combat deep-dive: the LMB spam cut, foes pathing round obstacles (#4), a server refusal of a roll
    in the air, the cast queue.
@@ -44,15 +33,19 @@
 ## Waiting on Luke
 - His look: the Lunge whole; bushes passable (and are the shadows near them still odd?); does "Player 39"
   still show (if so: where he walked from, and whether it was the body or only its name).
-- M for a full world map (his idea, note #5): wanted now or later?
+- M, the world map: built (2026-10-26); his look at it on the continent.
 - Still open: the SpacetimeAuth client id (`shared/game.json` `sign_in`); trait ranks; #12 day/night.
 
 ## Watch out
-- `continent_playtest.sh` polls the CLI every 3 s for the whole run (as the host's watcher does); set
-  `WINDOWED=1` to also check the minimap (headless takes no pictures).
-- `continent.tscn` is generated: its `solid_models` line was edited to what the generator now writes;
-  a rebuild writes the same.
-- A game's hot-rule override is the build default on every client and referee too, so tests that assume a
-  foundation default must set the rule themselves.
+- **`ContentLibrary.items` / `find` rescan and reload every content file on each call** (right for the
+  editor and the bake). In game code use `RegentsContent.items`; never call either per point, per row or
+  per frame. Other direct callers remain (workbenches, `material_table.gd`, `make_ore_layouts.gd`: tools
+  and once-at-load, fine as they are). A foundation-level cache would be a template change.
+- The local `spacetime start` was restarted by this session (log `%TEMP%\spacetime_server.log`, the old one
+  `spacetime_server.old.log`, 27 MB). If it is down next time, start it again.
+- The playtest log prints `[Nameplate] nameplate: 39 = Player 39` for the CLI's player; the test still
+  finds it hidden as a tool. A lead for #7 if Luke still sees the name.
+- `continent_playtest.sh` polls the CLI every 3 s for the whole run; `continent.tscn` and its cells are
+  generated (never hand-edit); a game's hot-rule override is every client's and referee's default too.
 - Older traps: Terrain3D's region grid; rebuilding the continent is a ~16 MB diff; `TaskStop` leaves a
   suite's children running; the CLI referee is online only 5 s after its claim.
