@@ -296,6 +296,24 @@ func _run_polish() -> void:
 		"a camera looking north faces 0, looking east PI/2")
 	_check(RegentsMinimap.to_map(Vector2(0, -10), 0.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing north, a thing 10 m north is 20 px up")
 	_check(RegentsMinimap.to_map(Vector2(10, 0), PI / 2.0, 2.0).is_equal_approx(Vector2(0, -20)), "facing east, a thing 10 m east is up")
+	# THE WORLD MAP (Luke, 2026-10-26): every node of the level, named once seen, its skill and ??? before.
+	var glade: LevelBake = LevelBake.by_id(20)
+	var icons: Array[Dictionary] = RegentsWorldMap.icons_of(glade)
+	var coal: Dictionary = {}
+	var nodes_n: int = 0
+	for ic: Dictionary in icons:
+		if String(ic["kind"]) == "node":
+			nodes_n += 1
+			if String(ic["name"]) == "Coal rock":
+				coal = ic
+	_check(nodes_n == glade.points_of("node").size() and not coal.is_empty(), "an icon for each of the glade's %d nodes, a coal rock among them" % nodes_n)
+	_check(RegentsWorldMap.label_of(coal, {}) == "Mining ???" and RegentsWorldMap.label_of(coal, {String(coal["point"]): true}) == "Coal rock",
+		"unseen it says \"%s\"; seen, \"%s\"" % [RegentsWorldMap.label_of(coal, {}), RegentsWorldMap.label_of(coal, {String(coal["point"]): true})])
+	var whole: Rect2 = RegentsWorldMap.area_of(LevelBake.by_id(21))
+	var every_in: bool = true
+	for p: Dictionary in LevelBake.by_id(21).points:
+		every_in = every_in and whole.has_point(Vector2(float(p["x"]), float(p["z"])))
+	_check(every_in and whole.size.x > 2000.0, "the continent's map holds every point (%.0f m across)" % whole.size.x)
 	# The Lunge plays whole (Luke's playtest, 2026-10-24: "cut off half way"); a light swing to just after its hit.
 	var lunge: AbilityDef = load("res://game/regents/content/ability/sword_lunge.tres") as AbilityDef
 	var chop: AbilityDef = KitDef.by_key(&"axe").light[0]

@@ -21,7 +21,7 @@
 //! A tool is the best of its tag in the bag (design #15); a new character is given a Copper axe and a
 //! Copper pickaxe, once. What came out is a `work_result` row everyone in the world sees for a moment.
 
-use spacetimedb::{reducer, table, ReducerContext, ScheduleAt, Table, TimeDuration, Timestamp};
+use spacetimedb::{client_visibility_filter, reducer, table, Filter, ReducerContext, ScheduleAt, Table, TimeDuration, Timestamp};
 
 use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTITY_NODE, ENTITY_STATION, LEVEL_FRONTIER, STATUS_DEPLETED};
 use crate::hot::regents as hot;
@@ -134,6 +134,24 @@ pub struct WorkResult {
     pub rank: u32,
     pub at: Timestamp,
 }
+
+/// A NODE A CHARACTER HAS BEEN NEAR (Luke, 2026-10-26: the world map names a node you have discovered, by
+/// having been within `regents.seen_reach_m` of it; any other is its skill and ???). One row per character
+/// and node point (the level's, so it outlives the node's entity); each player is sent only their own.
+#[table(accessor = node_seen, public)]
+pub struct NodeSeen {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    #[index(btree)]
+    pub entity_id: u64,
+    pub point_id: String,
+}
+
+#[client_visibility_filter]
+const NODE_SEEN_MINE: Filter = Filter::Sql(
+    "SELECT s.* FROM node_seen s JOIN player p ON s.entity_id = p.entity_id WHERE p.identity = :sender",
+);
 
 /// A character's XP in one skill.
 #[table(accessor = skill_xp, public)]
@@ -912,6 +930,32 @@ fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u6
 }
 
 // --- the reducers -------------------------------------------------------------------------------------
+
+/// THE NODES `node_ids` ARE NEAR ME (the world map's discovery, Luke 2026-10-26): each one that is a node of
+/// this player's world within `regents.seen_reach_m` (and a little slack) of where the server has them, and
+/// not seen before, is recorded as seen. Anything else in the list is skipped, not refused: the client asks
+/// by what it draws, which may be a moment behind.
+#[reducer]
+pub fn saw_nodes(ctx: &ReducerContext, node_ids: Vec<u64>) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "saw")?;
+    if node_ids.len() > 32 {
+        return Err("saw_nodes: at most 32 at a time".into());
+    }
+    let mine = ctx.db.movement_state().entity_id().find(me).ok_or("saw_nodes: you are nowhere")?;
+    let reach = hot_number(ctx, hot::SEEN_REACH_M).max(0.0) as f32 + 5.0;
+    let mut have: Vec<String> = ctx.db.node_seen().entity_id().filter(me).map(|r| r.point_id).collect();
+    for id in node_ids {
+        let Some(n) = ctx.db.gather_node().entity_id().find(id) else { continue };
+        let Some(at) = ctx.db.movement_state().entity_id().find(id) else { continue };
+        if n.world_id != mine.world_id || rules::flat_dist(at.pos, mine.pos) > reach || have.contains(&n.point_id) {
+            continue;
+        }
+        ctx.db.node_seen().insert(NodeSeen { id: 0, entity_id: me, point_id: n.point_id.clone() });
+        have.push(n.point_id);
+    }
+    Ok(())
+}
 
 /// GATHER AT NODE `node_id`: a round of its minigame (`active`: held E), or AFK (tapped E). Checks it is not
 /// worked out, the player is within `regents.work_reach_m` of it, has its skill's rank and a tool of its

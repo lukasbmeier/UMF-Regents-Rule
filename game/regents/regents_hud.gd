@@ -11,7 +11,7 @@ class_name RegentsHud extends Node
 ## READING THE GAME AT A GLANCE (owner, 2026-10-21): your health (and the Staff's mana) and the roll's
 ## cooldown bottom left (`vitals`); a bar filling to the next piece while you work AFK, with how many of a
 ## Make X are done; the edge of the screen pulses red when you are hit; the minimap top right
-## (`RegentsMinimap`).
+## (`RegentsMinimap`); M the world map (`RegentsWorldMap`).
 
 const NOTICE_S: float = 3.0
 ## How long a round's end screen stays before the game comes back.
@@ -55,6 +55,9 @@ var minimap: RegentsMinimap = null
 var hurt_edge: ColorRect = null
 var _health: SpaceTimeHealthComponent = null
 var skills_window: RegentsSkillsWindow = null
+## The world map (M) and what you have discovered for it (Luke, 2026-10-26).
+var world_map: RegentsWorldMap = null
+var discovery: RegentsDiscovery = null
 var station_window: RegentsStationWindow = null
 var _bag_weapon_row: int = -2
 ## THE TESTER PAGE (owner, 2026-10-23): the Escape menu's "Tester (admin)", for the admin only
@@ -87,8 +90,11 @@ func _ready() -> void:
 	bag_window = RegentsBagWindow.new()
 	skills_window = RegentsSkillsWindow.new()
 	station_window = RegentsStationWindow.new()
-	for w: UiWindow in [bag_window, skills_window, station_window]:
+	world_map = RegentsWorldMap.new()
+	for w: UiWindow in [bag_window, skills_window, station_window, world_map]:
 		_layer.add_child(w)
+	discovery = RegentsDiscovery.new()
+	add_child(discovery)
 	_prompt = Label.new()
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.offset_top = -170.0
@@ -582,6 +588,20 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif k.physical_keycode == KEY_K:
 		skills_window.toggle()
 		get_viewport().set_input_as_handled()
+	elif k.physical_keycode == KEY_M:
+		toggle_world_map()
+		get_viewport().set_input_as_handled()
+
+
+## Open or close the world map (M) on the level shown.
+func toggle_world_map() -> void:
+	if world_map.is_open():
+		world_map.close()
+		return
+	for n: Node in get_tree().root.find_children("*", "", true, false):
+		if n is LevelLoader and (n as LevelLoader).level() != null:
+			world_map.show_level((n as LevelLoader).level_id())
+			return
 
 
 ## Open or close the bag (I).

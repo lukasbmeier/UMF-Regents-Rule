@@ -38,6 +38,7 @@ const LinkCode = preload('res://spacetime_bindings/schema/types/umf_link_code.gd
 const LobbyMember = preload('res://spacetime_bindings/schema/types/umf_lobby_member.gd')
 const MetaShare = preload('res://spacetime_bindings/schema/types/umf_meta_share.gd')
 const MovementStateRow = preload('res://spacetime_bindings/schema/types/umf_movement_state_row.gd')
+const NodeSeen = preload('res://spacetime_bindings/schema/types/umf_node_seen.gd')
 const Noise = preload('res://spacetime_bindings/schema/types/umf_noise.gd')
 const NpcBrainRow = preload('res://spacetime_bindings/schema/types/umf_npc_brain_row.gd')
 const OrderFilled = preload('res://spacetime_bindings/schema/types/umf_order_filled.gd')

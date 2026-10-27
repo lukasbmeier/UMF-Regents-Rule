@@ -25,6 +25,7 @@
     "leave_session": { "burst": 4, "per_sec": 0.25 },
     "ping": { "burst": 2, "per_sec": 0.34 },
     "gather": { "burst": 6, "per_sec": 2 },
+    "saw": { "burst": 4, "per_sec": 1 },
     "craft": { "burst": 6, "per_sec": 2 },
     "work_stop": { "burst": 6, "per_sec": 2 },
     "wield": { "burst": 4, "per_sec": 2 },

@@ -750,6 +750,23 @@ assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MY
 assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40024) $(qty_of 40034)" "1 1 0 0" "a Copper axe and a Copper pickaxe; no coal, no steel axe"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "the steel axe it held is put away"
 
+# --- THE WORLD MAP'S DISCOVERY (Luke, 2026-10-26): a node is named once you have been near it ---
+SEEN_TREE="$(node_at tree_1)"
+seen_n() { row_count "SELECT * FROM node_seen WHERE entity_id = $MYENT"; }
+assert_eq "$(seen_n)" "0" "nothing seen yet"
+assert_ok 'teleport {"x":200.0,"y":0.0,"z":200.0}' "stand 280 m from tree_1"
+assert_ok "saw_nodes [$SEEN_TREE]" "say tree_1 is near, from far away"
+assert_eq "$(seen_n)" "0" "too far: not seen (the server measures, not the client)"
+sleep 1
+assert_ok 'teleport {"x":-9.0,"y":0.0,"z":-4.5}' "stand 1.5 m from tree_1"
+assert_ok "saw_nodes [$SEEN_TREE,999999]" "tree_1 is near (and a nonsense id)"
+assert_eq "$(sql_first "SELECT point_id FROM node_seen WHERE entity_id = $MYENT" 1 | tr -d ' "')" "tree_1" "tree_1 seen, by its point; the nonsense skipped"
+sleep 1
+assert_ok "saw_nodes [$SEEN_TREE]" "tree_1 again"
+assert_eq "$(seen_n)" "1" "seen once only"
+assert_rejected "saw_nodes [$(seq -s, 1 33)]" "at most 32" "33 at once: refused"
+assert_eq "$(spacetime sql --anonymous "$DB" "SELECT * FROM node_seen" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" "0" "another player is sent none of them"
+
 assert_ok "set_world_level 0 0" "back to the greybox"
 assert_eq "$(row_count 'SELECT * FROM gather_node')" "0" "a level change takes the glade's nodes away"
 assert_eq "$(row_count 'SELECT * FROM station')" "0" "and its stations"

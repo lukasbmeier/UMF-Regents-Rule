@@ -325,6 +325,10 @@ func resolve_action(request_id: int, hit_id: int) -> SpacetimeDBReducerCall:
 func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('revoke_authority', [identity], [&'identity'], &'')
 
+## 0. node_ids: Array of int [br]
+func saw_nodes(node_ids: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('saw_nodes', [node_ids], [&'u64'], &'')
+
 ## 0. defs: Array of UmfItemDef [br]
 func seed_item_defs(defs: Array[UmfItemDef]) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('seed_item_defs', [defs], [&'UmfItemDef'], &'')

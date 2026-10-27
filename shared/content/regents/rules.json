@@ -490,6 +490,15 @@
 					"number": 2.0,
 					"text": "",
 					"unit": "bars"
+				},
+				{
+					"key": "regents.seen_reach_m",
+					"kind": "number",
+					"max": 100.0,
+					"min": 5.0,
+					"number": 25.0,
+					"text": "",
+					"unit": "m"
 				}
 			]
 		}
