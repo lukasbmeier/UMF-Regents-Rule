@@ -28,6 +28,12 @@
   game); the LMB-spam cut is combo design, for the deep-dive.
 
 ## Next, in order
+0. **FIRST (Luke, 2026-10-27): why the continent playtest loses its connection ~30 s in**, before the load
+   test. What is known: the server closes the socket (idle timeout); the client's frames were fine (max
+   143 ms) while its round trip peaked at 35 s; it happens headless and windowed, with the discovery tracker
+   off and with `node_seen`'s row filter off; it passed 20/0 at `6384ce8`. Try: restart the local
+   `spacetime start`; then bisect the commits since `6384ce8`. Its new checks (discovery, M) then need a
+   green run, and the play database a republish if anything server-side changes.
 1. **The load test harness** (Tuesday after 5 pm), in the TEMPLATE: as the previous HANDOFF had it (a light
    bot client, many connections in one process; 50 -> 100 -> 300; rows and bytes a second, reducer p95,
    the referee's lag, cell swaps). Note #1 (the referee's stalls) is for it.
