@@ -431,6 +431,53 @@
       "tags": []
     },
     {
+      "id": "poi_camp",
+      "kind": "poi",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 8.0,
+      "radius": 6.0,
+      "tags": [
+        "The frontier camp"
+      ]
+    },
+    {
+      "id": "poi_workshop",
+      "kind": "poi",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 16.0,
+      "radius": 6.0,
+      "tags": [
+        "Workshop",
+        "minor"
+      ]
+    },
+    {
+      "id": "poi_training",
+      "kind": "poi",
+      "x": 8.5,
+      "y": 0.0,
+      "z": 20.5,
+      "radius": 6.0,
+      "tags": [
+        "Training yard",
+        "minor"
+      ]
+    },
+    {
+      "id": "poi_skeletons",
+      "kind": "poi",
+      "x": 35.0,
+      "y": 0.0,
+      "z": -1.0,
+      "radius": 6.0,
+      "tags": [
+        "Skeleton camp",
+        "minor"
+      ]
+    },
+    {
       "id": "w_copper_rock_1",
       "kind": "node",
       "x": -916.934387207031,
@@ -6134,6 +6181,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_1",
+      "kind": "poi",
+      "x": 233.940063476563,
+      "y": 4.72603368759155,
+      "z": -620.36181640625,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_2_1",
       "kind": "skeleton_warrior",
       "x": -117.400634765625,
@@ -6159,6 +6217,17 @@
       "z": 459.532958984375,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_2",
+      "kind": "poi",
+      "x": -117.400634765625,
+      "y": 7.36105012893677,
+      "z": 463.032958984375,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_3_1",
@@ -6188,6 +6257,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_3",
+      "kind": "poi",
+      "x": -128.282165527344,
+      "y": 1.14206659793854,
+      "z": 1175.11108398438,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_4_1",
       "kind": "skeleton_warrior",
       "x": 222.58447265625,
@@ -6213,6 +6293,17 @@
       "z": 382.8564453125,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_4",
+      "kind": "poi",
+      "x": 222.58447265625,
+      "y": -0.364002913236618,
+      "z": 386.3564453125,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_5_1",
@@ -6242,6 +6333,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_5",
+      "kind": "poi",
+      "x": 773.94873046875,
+      "y": 3.26628637313843,
+      "z": -499.086853027344,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_6_1",
       "kind": "skeleton_warrior",
       "x": 643.140258789063,
@@ -6267,6 +6369,17 @@
       "z": -1203.00537109375,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_6",
+      "kind": "poi",
+      "x": 643.140258789063,
+      "y": 4.62699460983276,
+      "z": -1199.50537109375,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_7_1",
@@ -6296,6 +6409,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_7",
+      "kind": "poi",
+      "x": -265.110046386719,
+      "y": 0.473559945821762,
+      "z": -339.933471679688,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_8_1",
       "kind": "skeleton_warrior",
       "x": -415.354858398438,
@@ -6321,6 +6445,17 @@
       "z": -17.13330078125,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_8",
+      "kind": "poi",
+      "x": -415.354858398438,
+      "y": 0.220450207591057,
+      "z": -13.63330078125,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_9_1",
@@ -6350,6 +6485,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_9",
+      "kind": "poi",
+      "x": -391.072204589844,
+      "y": 1.96277058124542,
+      "z": 771.18359375,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_10_1",
       "kind": "skeleton_warrior",
       "x": -902.63720703125,
@@ -6375,6 +6521,17 @@
       "z": 141.39013671875,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_10",
+      "kind": "poi",
+      "x": -902.63720703125,
+      "y": 0.872843444347382,
+      "z": 144.89013671875,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_11_1",
@@ -6404,6 +6561,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_11",
+      "kind": "poi",
+      "x": 562.633056640625,
+      "y": 2.24902081489563,
+      "z": -229.535400390625,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_12_1",
       "kind": "skeleton_warrior",
       "x": 564.754272460938,
@@ -6429,6 +6597,17 @@
       "z": 205.78662109375,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_12",
+      "kind": "poi",
+      "x": 564.754272460938,
+      "y": -1.00201749801636,
+      "z": 209.28662109375,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_13_1",
@@ -6458,6 +6637,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_13",
+      "kind": "poi",
+      "x": -571.781127929688,
+      "y": 1.5601954460144,
+      "z": 305.000244140625,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_14_1",
       "kind": "skeleton_warrior",
       "x": 569.486938476563,
@@ -6483,6 +6673,17 @@
       "z": -864.015502929688,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_14",
+      "kind": "poi",
+      "x": 569.486938476563,
+      "y": -0.344673573970795,
+      "z": -860.515502929688,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
     },
     {
       "id": "w_skeleton_15_1",
@@ -6512,6 +6713,17 @@
       "tags": []
     },
     {
+      "id": "w_poi_skeletons_15",
+      "kind": "poi",
+      "x": 210.536499023438,
+      "y": 10.4615421295166,
+      "z": -287.594116210938,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
       "id": "w_skeleton_16_1",
       "kind": "skeleton_warrior",
       "x": -112.319885253906,
@@ -6537,6 +6749,292 @@
       "z": -648.507507324219,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "w_poi_skeletons_16",
+      "kind": "poi",
+      "x": -112.319885253906,
+      "y": 1.01272141933441,
+      "z": -645.007507324219,
+      "radius": 10.0,
+      "tags": [
+        "Skeleton camp"
+      ]
+    },
+    {
+      "id": "w_poi_zone_1",
+      "kind": "poi",
+      "x": 325.821502685547,
+      "y": 5.86773204803467,
+      "z": 112.482727050781,
+      "radius": 10.0,
+      "tags": [
+        "Coal mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_2",
+      "kind": "poi",
+      "x": 527.13037109375,
+      "y": 6.04862546920776,
+      "z": -612.755126953125,
+      "radius": 10.0,
+      "tags": [
+        "Coal mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_3",
+      "kind": "poi",
+      "x": 624.872863769531,
+      "y": 128.765090942383,
+      "z": -907.526794433594,
+      "radius": 10.0,
+      "tags": [
+        "Coal mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_4",
+      "kind": "poi",
+      "x": 270.033477783203,
+      "y": 88.4419403076172,
+      "z": -209.918090820313,
+      "radius": 10.0,
+      "tags": [
+        "Copper mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_5",
+      "kind": "poi",
+      "x": 129.599716186523,
+      "y": 6.53191089630127,
+      "z": -516.395080566406,
+      "radius": 10.0,
+      "tags": [
+        "Copper mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_6",
+      "kind": "poi",
+      "x": 114.706504821777,
+      "y": 7.91889953613281,
+      "z": 103.314682006836,
+      "radius": 10.0,
+      "tags": [
+        "Copper mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_7",
+      "kind": "poi",
+      "x": 507.062377929688,
+      "y": 57.0298652648926,
+      "z": -585.686462402344,
+      "radius": 10.0,
+      "tags": [
+        "Copper mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_8",
+      "kind": "poi",
+      "x": 612.502380371094,
+      "y": -0.662225723266602,
+      "z": -984.379150390625,
+      "radius": 10.0,
+      "tags": [
+        "Copper mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_9",
+      "kind": "poi",
+      "x": -20.25,
+      "y": 0.0,
+      "z": 19.75,
+      "radius": 10.0,
+      "tags": [
+        "Iron mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_10",
+      "kind": "poi",
+      "x": 669.277526855469,
+      "y": 4.65509939193726,
+      "z": -521.586669921875,
+      "radius": 10.0,
+      "tags": [
+        "Iron mining zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_11",
+      "kind": "poi",
+      "x": -286.084289550781,
+      "y": 0.297677904367447,
+      "z": -240.497619628906,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_12",
+      "kind": "poi",
+      "x": -186.484924316406,
+      "y": 1.36423397064209,
+      "z": -588.3984375,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_13",
+      "kind": "poi",
+      "x": -232.060150146484,
+      "y": 2.9152991771698,
+      "z": 673.57275390625,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_14",
+      "kind": "poi",
+      "x": -173.15168762207,
+      "y": 2.88958859443665,
+      "z": 882.064819335938,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_15",
+      "kind": "poi",
+      "x": -523.927551269531,
+      "y": 7.24764108657837,
+      "z": 186.705062866211,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_16",
+      "kind": "poi",
+      "x": -806.308471679688,
+      "y": 2.93090391159058,
+      "z": 269.83544921875,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_17",
+      "kind": "poi",
+      "x": 205.918029785156,
+      "y": 10.3187980651855,
+      "z": -94.4021987915039,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_18",
+      "kind": "poi",
+      "x": 254.520843505859,
+      "y": 6.74631881713867,
+      "z": -573.749938964844,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_19",
+      "kind": "poi",
+      "x": 207.124862670898,
+      "y": 1.77580642700195,
+      "z": 343.985961914063,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_20",
+      "kind": "poi",
+      "x": 523.961791992188,
+      "y": 2.09654402732849,
+      "z": -186.562316894531,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_21",
+      "kind": "poi",
+      "x": 584.212341308594,
+      "y": 6.67546415328979,
+      "z": -526.946594238281,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_22",
+      "kind": "poi",
+      "x": 697.521057128906,
+      "y": 7.13779163360596,
+      "z": -1007.01007080078,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_23",
+      "kind": "poi",
+      "x": 547.885375976563,
+      "y": -4.27253103256226,
+      "z": -1303.76574707031,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_24",
+      "kind": "poi",
+      "x": 784.934204101563,
+      "y": 2.95124220848084,
+      "z": -880.825012207031,
+      "radius": 10.0,
+      "tags": [
+        "Oak woodcutting zone"
+      ]
+    },
+    {
+      "id": "w_poi_zone_25",
+      "kind": "poi",
+      "x": -28.5,
+      "y": 0.0,
+      "z": -33.25,
+      "radius": 10.0,
+      "tags": [
+        "Yew woodcutting zone"
+      ]
     }
   ]
 }

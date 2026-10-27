@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_5v5a3"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_sgoif"]
 
-[node name="Cell_-13_5" type="Node3D" unique_id=793949135]
+[node name="Cell_-13_5" type="Node3D" unique_id=226563911]
 
-[node name="w_yew_2" type="Marker3D" parent="." unique_id=122529580]
+[node name="w_yew_2" type="Marker3D" parent="." unique_id=1130932249]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -782.9547, 2.518973, 340.35486)
 gizmo_extents = 0.6
 script = ExtResource("1_5v5a3")
@@ -14,7 +14,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Yew")
 
-[node name="w_tree_10" type="Marker3D" parent="." unique_id=1939478916]
+[node name="w_tree_10" type="Marker3D" parent="." unique_id=1477112279]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -778.33514, 2.918257, 327.80643)
 gizmo_extents = 0.6
 script = ExtResource("1_5v5a3")
@@ -23,7 +23,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_yew_3" type="Marker3D" parent="." unique_id=195199922]
+[node name="w_yew_3" type="Marker3D" parent="." unique_id=1034000631]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -820.3056, -0.033068035, 370.8352)
 gizmo_extents = 0.6
 script = ExtResource("1_5v5a3")

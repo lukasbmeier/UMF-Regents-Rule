@@ -9,7 +9,7 @@ extends Node
 ##   - a cell over (a step east), a node both rings share is the same one, never despawned and spawned
 ## Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 120.0
+const OVERALL_TIMEOUT_SEC: float = 180.0
 const LEVEL: int = 21
 const TREE_1: Vector3 = Vector3(-9.0, 0.0, -6.0)
 
@@ -54,6 +54,41 @@ func _run() -> void:
 	_check(await _node_at(TREE_1) > 0, "the camp's tree_1 is there, as in the glade")
 	_check(_solid_bodies() > 0, "the cells loaded round the camp have solid rocks (%d bodies)" % _solid_bodies())
 	var camp_spot: Vector3 = me.global_position + Vector3(0.0, 0.5, 0.0)
+	# THE WORLD MAP'S DISCOVERY (Luke, 2026-10-26): the nodes near the spawn are seen, by the server's word
+	# (`node_seen`, sent to us only); the camp's farther ones are not. Then M: every point of interest on it.
+	var reach: float = HotRules.number(&"regents.seen_reach_m")
+	await _until(func() -> bool: return not RegentsDiscovery.seen_points().is_empty(), 6.0)
+	await get_tree().create_timer(2.5).timeout
+	var seen: Dictionary = RegentsDiscovery.seen_points()
+	var near_ok: bool = true
+	var far_one: String = ""
+	for pt: Dictionary in bake.points_of("node"):
+		var d: float = Vector2(float(pt["x"]) - me.global_position.x, float(pt["z"]) - me.global_position.z).length()
+		if d < reach - 3.0 and not seen.has(String(pt["id"])):
+			near_ok = false
+		if d > reach + 8.0 and seen.has(String(pt["id"])):
+			far_one = String(pt["id"])
+	_check(not seen.is_empty() and near_ok and far_one.is_empty(),
+		"the nodes within %.0f m of the spawn are discovered, none beyond (%d seen%s)" % [reach, seen.size(), ", but " + far_one if not far_one.is_empty() else ""])
+	var hud: RegentsHud = null
+	for n: Node in get_tree().root.find_children("*", "", true, false):
+		if n is RegentsHud:
+			hud = n as RegentsHud
+			break
+	if hud != null:
+		hud.toggle_world_map()
+		var wm: RegentsWorldMap = hud.world_map
+		var pois: int = 0
+		for ic: Dictionary in RegentsWorldMap.icons_of(bake):
+			pois += 1 if String(ic["kind"]) == "poi" else 0
+		_check(wm != null and wm.is_open() and wm.level_id == LEVEL and pois >= 40, "M opens the world map on the continent, %d places of interest on it" % pois)
+		if DisplayServer.get_name() != "headless":
+			await get_tree().create_timer(1.5).timeout
+			get_viewport().get_texture().get_image().save_png(OS.get_environment("MAP_SHOT") if not OS.get_environment("MAP_SHOT").is_empty() else "user://world_map.png")
+		hud.toggle_world_map()
+		_check(wm != null and not wm.is_open(), "and M again closes it")
+	else:
+		_check(false, "the game's HUD is here")
 	# A TOOL IS NOT A PERSON (DECISIONS #272; Luke's playtest 2026-10-24, "Player 39 is showing"): the
 	# database's CLI has a player at the spawn, an admin with no name, never drawn, though on the ring the
 	# admins' rows come in their own subscription, after the players'.

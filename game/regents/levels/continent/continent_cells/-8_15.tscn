@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_en7f0"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_dir64"]
 
-[node name="Cell_-8_15" type="Node3D" unique_id=1919053211]
+[node name="Cell_-8_15" type="Node3D" unique_id=997203756]
 
-[node name="w_tree_45" type="Marker3D" parent="." unique_id=1927718269]
+[node name="w_tree_45" type="Marker3D" parent="." unique_id=1672385425]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -464.4563, -0.46448925, 999.07056)
 gizmo_extents = 0.6
 script = ExtResource("1_nmbeg")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_46" type="Marker3D" parent="." unique_id=1275226709]
+[node name="w_tree_46" type="Marker3D" parent="." unique_id=1906199060]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -481.8456, 0.013972984, 980.4457)
 gizmo_extents = 0.6
 script = ExtResource("1_nmbeg")
@@ -24,7 +24,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_47" type="Marker3D" parent="." unique_id=1725633737]
+[node name="w_tree_47" type="Marker3D" parent="." unique_id=1625162822]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -463.4142, -0.3297142, 998.64954)
 gizmo_extents = 0.6
 script = ExtResource("1_nmbeg")
@@ -39,5 +39,5 @@ transform = Transform3D(-0.64253587, 0, 0.3871854, 0, 0.75017655, 0, -0.3871854,
 [node name="bush_large_131" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_dir64")]
 transform = Transform3D(0.3560174, 0, -1.1095665, 0, 1.1652837, 0, 1.1095665, 0, 0.3560174, -475.31662, -2.1658149, 1017.55804)
 
-[node name="grass_common_tall_132" type="Node3D" parent="." unique_id=157438098 instance=ExtResource("2_en7f0")]
+[node name="grass_common_tall_132" type="Node3D" parent="." unique_id=191392893 instance=ExtResource("2_en7f0")]
 transform = Transform3D(-1.0365611, 0, 0.59539706, 0, 1.1953897, 0, -0.59539706, 0, -1.0365611, -478.01947, -1.4495406, 1006.2544)

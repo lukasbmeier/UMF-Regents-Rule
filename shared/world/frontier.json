@@ -429,6 +429,53 @@
       "z": -4.5,
       "radius": 0.5,
       "tags": []
+    },
+    {
+      "id": "poi_camp",
+      "kind": "poi",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 8.0,
+      "radius": 6.0,
+      "tags": [
+        "The frontier camp"
+      ]
+    },
+    {
+      "id": "poi_workshop",
+      "kind": "poi",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 16.0,
+      "radius": 6.0,
+      "tags": [
+        "Workshop",
+        "minor"
+      ]
+    },
+    {
+      "id": "poi_training",
+      "kind": "poi",
+      "x": 8.5,
+      "y": 0.0,
+      "z": 20.5,
+      "radius": 6.0,
+      "tags": [
+        "Training yard",
+        "minor"
+      ]
+    },
+    {
+      "id": "poi_skeletons",
+      "kind": "poi",
+      "x": 35.0,
+      "y": 0.0,
+      "z": -1.0,
+      "radius": 6.0,
+      "tags": [
+        "Skeleton camp",
+        "minor"
+      ]
     }
   ]
 }

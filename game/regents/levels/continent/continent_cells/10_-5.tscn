@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_qman3"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="4_b3671"]
 
-[node name="Cell_10_-5" type="Node3D" unique_id=876171937]
+[node name="Cell_10_-5" type="Node3D" unique_id=1368337392]
 
-[node name="w_copper_rock_62" type="Marker3D" parent="." unique_id=1161603844]
+[node name="w_copper_rock_62" type="Marker3D" parent="." unique_id=925104650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 668.3097, -1.1791718, -279.84644)
 gizmo_extents = 0.6
 script = ExtResource("1_bgjk1")

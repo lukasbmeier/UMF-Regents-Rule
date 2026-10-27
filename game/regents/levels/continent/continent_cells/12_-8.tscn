@@ -3,12 +3,12 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_fw7ws"]
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_mxbiu"]
 
-[node name="Cell_12_-8" type="Node3D" unique_id=1840422873]
+[node name="Cell_12_-8" type="Node3D" unique_id=890447302]
 
 [node name="rock_medium_1_875" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_fw7ws")]
 transform = Transform3D(-0.21094488, 0, 1.0511373, 0, 1.0720949, 0, -1.0511373, 0, -0.21094488, 820.4529, 1.8761362, -451.85757)
 
-[node name="w_skeleton_5_1" type="Marker3D" parent="." unique_id=2141412062]
+[node name="w_skeleton_5_1" type="Marker3D" parent="." unique_id=648810730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 773.9487, 3.2662864, -499.08685)
 gizmo_extents = 0.5
 script = ExtResource("2_mxbiu")
@@ -17,7 +17,7 @@ kind = "skeleton_warrior"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_skeleton_5_2" type="Marker3D" parent="." unique_id=591978000]
+[node name="w_skeleton_5_2" type="Marker3D" parent="." unique_id=918181366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 776.9487, 3.1768308, -495.58685)
 gizmo_extents = 0.5
 script = ExtResource("2_mxbiu")
@@ -26,7 +26,7 @@ kind = "skeleton_axeman"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_skeleton_5_3" type="Marker3D" parent="." unique_id=581542659]
+[node name="w_skeleton_5_3" type="Marker3D" parent="." unique_id=1192528932]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 777.9487, 3.1673243, -502.58685)
 gizmo_extents = 0.5
 script = ExtResource("2_mxbiu")
@@ -34,3 +34,12 @@ point_id = "w_skeleton_5_3"
 kind = "skeleton_warrior"
 radius = 0.5
 tags = PackedStringArray()
+
+[node name="w_poi_skeletons_5" type="Marker3D" parent="." unique_id=929595408]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 773.9487, 3.2662864, -499.08685)
+gizmo_extents = 10.0
+script = ExtResource("2_mxbiu")
+point_id = "w_poi_skeletons_5"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_2vlmp"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_nwfj2"]
 
-[node name="Cell_4_1" type="Node3D" unique_id=1843481395]
+[node name="Cell_4_1" type="Node3D" unique_id=1789585377]
 
-[node name="w_tree_194" type="Marker3D" parent="." unique_id=1325478388]
+[node name="w_tree_194" type="Marker3D" parent="." unique_id=2015362302]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 268.89908, 8.77125, 110.93587)
 gizmo_extents = 0.6
 script = ExtResource("1_2vlmp")
@@ -14,7 +14,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_195" type="Marker3D" parent="." unique_id=1634240143]
+[node name="w_tree_195" type="Marker3D" parent="." unique_id=1145878268]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 262.01303, 8.969206, 107.85989)
 gizmo_extents = 0.6
 script = ExtResource("1_2vlmp")
@@ -23,7 +23,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_196" type="Marker3D" parent="." unique_id=89168554]
+[node name="w_tree_196" type="Marker3D" parent="." unique_id=303745814]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 289.3562, 7.463768, 77.61301)
 gizmo_extents = 0.6
 script = ExtResource("1_2vlmp")

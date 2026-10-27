@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_t1cxs"]
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="3_cmk0h"]
 
-[node name="Cell_-3_18" type="Node3D" unique_id=1773352960]
+[node name="Cell_-3_18" type="Node3D" unique_id=1233227679]
 
 [node name="rock_big_1_356" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_y6enk")]
 transform = Transform3D(0.27878284, 0, -1.3819461, 0, 1.4097854, 0, 1.3819461, 0, 0.27878284, -144.68396, 0.1595243, 1196.6619)
@@ -12,7 +12,7 @@ transform = Transform3D(0.27878284, 0, -1.3819461, 0, 1.4097854, 0, 1.3819461, 0
 [node name="grass_common_tall_357" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_t1cxs")]
 transform = Transform3D(-1.0277947, 0, -0.7170139, 0, 1.2531843, 0, 0.7170139, 0, -1.0277947, -170.75656, 0.60636014, 1207.2813)
 
-[node name="w_skeleton_3_1" type="Marker3D" parent="." unique_id=239387326]
+[node name="w_skeleton_3_1" type="Marker3D" parent="." unique_id=2129053143]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -128.28217, 1.1420666, 1175.1111)
 gizmo_extents = 0.5
 script = ExtResource("3_cmk0h")
@@ -20,3 +20,12 @@ point_id = "w_skeleton_3_1"
 kind = "skeleton_warrior"
 radius = 0.5
 tags = PackedStringArray()
+
+[node name="w_poi_skeletons_3" type="Marker3D" parent="." unique_id=1690666275]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -128.28217, 1.1420666, 1175.1111)
+gizmo_extents = 10.0
+script = ExtResource("3_cmk0h")
+point_id = "w_poi_skeletons_3"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

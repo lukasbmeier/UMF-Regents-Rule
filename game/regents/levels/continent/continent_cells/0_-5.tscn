@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_eoe80"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_4h866"]
 
-[node name="Cell_0_-5" type="Node3D" unique_id=1168618322]
+[node name="Cell_0_-5" type="Node3D" unique_id=315308667]
 
 [node name="fern_1_464" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_eoe80")]
 transform = Transform3D(-0.59799814, 0, 0.5110351, 0, 0.78661215, 0, -0.5110351, 0, -0.59799814, 11.428438, 6.629184, -317.62476)

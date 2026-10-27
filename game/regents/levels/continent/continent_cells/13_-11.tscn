@@ -2,10 +2,10 @@
 
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_4o63r"]
 
-[node name="Cell_13_-11" type="Node3D" unique_id=277549991]
+[node name="Cell_13_-11" type="Node3D" unique_id=1036289853]
 
 [node name="fern_1_893" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_4o63r")]
 transform = Transform3D(1.2783313, 0, -0.6703231, 0, 1.4434209, 0, 0.6703231, 0, 1.2783313, 870.3297, -2.6547492, -672.8217)
 
-[node name="fern_1_894" type="Node3D" parent="." unique_id=1930517845 instance=ExtResource("1_4o63r")]
+[node name="fern_1_894" type="Node3D" parent="." unique_id=1225405302 instance=ExtResource("1_4o63r")]
 transform = Transform3D(1.2554662, 0, -0.27531442, 0, 1.285299, 0, 0.27531442, 0, 1.2554662, 835.72003, 0.0468325, -667.09216)

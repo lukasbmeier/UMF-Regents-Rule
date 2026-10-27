@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ul7ln"]
 
-[node name="Cell_5_-6" type="Node3D" unique_id=1976560384]
+[node name="Cell_5_-6" type="Node3D" unique_id=771743979]
 
-[node name="w_copper_rock_43" type="Marker3D" parent="." unique_id=1794765158]
+[node name="w_copper_rock_43" type="Marker3D" parent="." unique_id=861220043]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 365.37363, 14.223271, -336.81012)
 gizmo_extents = 0.6
 script = ExtResource("1_ul7ln")

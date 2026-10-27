@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_o6kmh"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_32g0q"]
 
-[node name="Cell_9_-20" type="Node3D" unique_id=51773321]
+[node name="Cell_9_-20" type="Node3D" unique_id=1484609530]
 
 [node name="rock_big_1_760" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_o6kmh")]
 transform = Transform3D(0.9869314, 0, -0.60797596, 0, 1.159167, 0, 0.60797596, 0, 0.9869314, 586.65173, -0.4972356, -1257.568)
@@ -11,5 +11,5 @@ transform = Transform3D(0.9869314, 0, -0.60797596, 0, 1.159167, 0, 0.60797596, 0
 [node name="rock_medium_1_761" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_32g0q")]
 transform = Transform3D(-0.005726753, 0, 1.1246055, 0, 1.1246202, 0, -1.1246055, 0, -0.005726753, 637.65967, 3.4303668, -1238.7721)
 
-[node name="rock_medium_1_762" type="Node3D" parent="." unique_id=1105660303 instance=ExtResource("2_32g0q")]
+[node name="rock_medium_1_762" type="Node3D" parent="." unique_id=432814558 instance=ExtResource("2_32g0q")]
 transform = Transform3D(-1.0918394, 0, -0.32210997, 0, 1.138362, 0, 0.32210997, 0, -1.0918394, 618.9662, 2.1855876, -1251.4512)

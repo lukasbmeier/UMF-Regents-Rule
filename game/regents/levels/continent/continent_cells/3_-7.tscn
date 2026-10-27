@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_qba8f"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_sjdvs"]
 
-[node name="Cell_3_-7" type="Node3D" unique_id=1433872859]
+[node name="Cell_3_-7" type="Node3D" unique_id=1392288102]
 
-[node name="w_copper_rock_29" type="Marker3D" parent="." unique_id=1558635395]
+[node name="w_copper_rock_29" type="Marker3D" parent="." unique_id=205238796]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 204.20313, 9.4482355, -392.65054)
 gizmo_extents = 0.6
 script = ExtResource("1_qba8f")

@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ixk8g"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_excun"]
 
-[node name="Cell_-2_4" type="Node3D" unique_id=752416276]
+[node name="Cell_-2_4" type="Node3D" unique_id=438104520]
 
-[node name="w_tree_117" type="Marker3D" parent="." unique_id=1701476429]
+[node name="w_tree_117" type="Marker3D" parent="." unique_id=694608283]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -76.81897, 6.8422656, 275.8435)
 gizmo_extents = 0.6
 script = ExtResource("1_ixk8g")

@@ -852,6 +852,44 @@ directional_shadow_max_distance = 80.0
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env")
 
+[node name="Places" type="Node3D" parent="."]
+
+[node name="poi_camp" type="Marker3D" parent="Places"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 8.0)
+gizmo_extents = 1.5
+script = ExtResource("s_point")
+point_id = "poi_camp"
+kind = "poi"
+radius = 6.0
+tags = PackedStringArray("The frontier camp")
+
+[node name="poi_workshop" type="Marker3D" parent="Places"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 16.0)
+gizmo_extents = 1.5
+script = ExtResource("s_point")
+point_id = "poi_workshop"
+kind = "poi"
+radius = 6.0
+tags = PackedStringArray("Workshop", "minor")
+
+[node name="poi_training" type="Marker3D" parent="Places"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 20.5)
+gizmo_extents = 1.5
+script = ExtResource("s_point")
+point_id = "poi_training"
+kind = "poi"
+radius = 6.0
+tags = PackedStringArray("Training yard", "minor")
+
+[node name="poi_skeletons" type="Marker3D" parent="Places"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0, -1.0)
+gizmo_extents = 1.5
+script = ExtResource("s_point")
+point_id = "poi_skeletons"
+kind = "poi"
+radius = 6.0
+tags = PackedStringArray("Skeleton camp", "minor")
+
 [node name="OverviewCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.906, 0.423, 0, -0.423, 0.906, 0, 16, 34)
 

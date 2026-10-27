@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_f1ivp"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="4_a4710"]
 
-[node name="Cell_10_-7" type="Node3D" unique_id=1835279194]
+[node name="Cell_10_-7" type="Node3D" unique_id=1663174749]
 
-[node name="w_iron_rock_9" type="Marker3D" parent="." unique_id=1715448229]
+[node name="w_iron_rock_9" type="Marker3D" parent="." unique_id=172206385]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 665.9753, 5.5774574, -420.09286)
 gizmo_extents = 0.6
 script = ExtResource("1_u1lqv")
@@ -16,7 +16,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Iron rock")
 
-[node name="w_iron_rock_10" type="Marker3D" parent="." unique_id=737349219]
+[node name="w_iron_rock_10" type="Marker3D" parent="." unique_id=1199607862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 688.8954, 3.541699, -402.69662)
 gizmo_extents = 0.6
 script = ExtResource("1_u1lqv")

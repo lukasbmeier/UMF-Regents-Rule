@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_406ek"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_lptid"]
 
-[node name="Cell_11_-12" type="Node3D" unique_id=1516303568]
+[node name="Cell_11_-12" type="Node3D" unique_id=1127740924]
 
-[node name="w_tree_249" type="Marker3D" parent="." unique_id=197156448]
+[node name="w_tree_249" type="Marker3D" parent="." unique_id=191583501]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 723.5132, 6.632435, -739.0827)
 gizmo_extents = 0.6
 script = ExtResource("1_rncml")
@@ -21,5 +21,5 @@ transform = Transform3D(-0.7811621, 0, 0.35616714, 0, 0.85852736, 0, -0.35616714
 [node name="grass_common_tall_836" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_lptid")]
 transform = Transform3D(0.16049442, 0, 0.7784829, 0, 0.79485476, 0, -0.7784829, 0, 0.16049442, 722.0971, 5.50089, -713.7362)
 
-[node name="fern_1_837" type="Node3D" parent="." unique_id=117172462 instance=ExtResource("2_406ek")]
+[node name="fern_1_837" type="Node3D" parent="." unique_id=1699733293 instance=ExtResource("2_406ek")]
 transform = Transform3D(-0.74393284, 0, -0.47204408, 0, 0.88105714, 0, 0.47204408, 0, -0.74393284, 708.85144, 7.028644, -749.3274)

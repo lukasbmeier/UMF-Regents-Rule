@@ -48,6 +48,9 @@ const CAMP_CLEAR_M: float = 220.0
 const SKELETON_CAMPS: int = 16
 const SKELETON_SPACING_M: float = 320.0
 const SKELETON_FROM_START_M: float = 350.0
+## Harvest zones on the world map: at least this many nodes of a kind in a square this wide.
+const ZONE_M: float = 384.0
+const ZONE_MIN: int = 4
 
 enum Tex { GRASS, ROCK, SAND }
 const TEXTURE_NAMES: Array[String] = ["grass", "rock", "sand"]
@@ -334,7 +337,7 @@ func _make_barrier() -> void:
 ## The frontier glade's camp, at the origin: its nodes, stations, dummies, foes and decor, as they are there.
 func _make_camp() -> void:
 	var glade: Node3D = (load(FRONTIER) as PackedScene).instantiate() as Node3D
-	for group: String in ["Nodes", "Stations", "Dummies", "Foes", "Decor"]:
+	for group: String in ["Nodes", "Stations", "Dummies", "Foes", "Decor", "Places"]:
 		var holder: Node = glade.get_node_or_null(group)
 		if holder == null:
 			push_error("build_continent: the frontier has no %s" % group)
@@ -373,6 +376,7 @@ func _scatter() -> void:
 			z += cell
 		x += cell
 	_skeleton_camps()
+	_harvest_zones()
 
 
 func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
@@ -477,7 +481,47 @@ func _skeleton_camps() -> void:
 			_cells.add_child(lp)
 			_own(lp)
 			_count("skeleton")
+		_poi("w_poi_skeletons_%d" % n, p, "Skeleton camp")
 	print("build_continent: %d skeleton camps" % placed.size())
+
+
+## POINTS OF INTEREST for the world map (Luke, 2026-10-26): a zone of each kind of rock or wood where at
+## least `ZONE_MIN` of its nodes stand in one `ZONE_M` square, named at their middle. No random draws: the
+## placement before it is unchanged.
+func _harvest_zones() -> void:
+	var names: Dictionary[String, String] = {"Copper rock": "Copper mining zone", "Iron rock": "Iron mining zone",
+		"Coal rock": "Coal mining zone", "Oak": "Oak woodcutting zone", "Yew": "Yew woodcutting zone"}
+	var sums: Dictionary = {}   # "tag|bx|bz" -> [sum, count]
+	for child: Node in _cells.get_children():
+		var lp: LevelPoint = child as LevelPoint
+		if lp == null or lp.kind != "node" or lp.tags.is_empty() or not names.has(lp.tags[0]) or lp.point_id.begins_with("tree_"):
+			continue
+		var key: String = "%s|%d|%d" % [lp.tags[0], floori(lp.position.x / ZONE_M), floori(lp.position.z / ZONE_M)]
+		var acc: Array = sums.get(key, [Vector2.ZERO, 0])
+		sums[key] = [(acc[0] as Vector2) + Vector2(lp.position.x, lp.position.z), int(acc[1]) + 1]
+	var keys: Array = sums.keys()
+	keys.sort()
+	var made: int = 0
+	for key: String in keys:
+		var acc: Array = sums[key]
+		if int(acc[1]) < ZONE_MIN:
+			continue
+		var tag: String = key.split("|")[0]
+		made += 1
+		_poi("w_poi_zone_%d" % made, (acc[0] as Vector2) / float(acc[1]), names[tag])
+	print("build_continent: %d harvest zones" % made)
+
+
+func _poi(id: String, at: Vector2, label: String) -> void:
+	var lp := LevelPoint.new()
+	lp.point_id = id
+	lp.name = id
+	lp.kind = "poi"
+	lp.radius = 10.0
+	lp.tags = PackedStringArray([label])
+	lp.position = Vector3(at.x, _ground(at.x, at.y), at.y)
+	_cells.add_child(lp)
+	_own(lp)
 
 
 func _make_environment() -> void:

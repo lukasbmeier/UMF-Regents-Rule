@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_y3lmc"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_u181g"]
 
-[node name="Cell_-8_18" type="Node3D" unique_id=1528495728]
+[node name="Cell_-8_18" type="Node3D" unique_id=138354051]
 
-[node name="w_yew_5" type="Marker3D" parent="." unique_id=956045585]
+[node name="w_yew_5" type="Marker3D" parent="." unique_id=418765718]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -489.618, -4.2159977, 1196.0717)
 gizmo_extents = 0.6
 script = ExtResource("1_y3lmc")
@@ -14,7 +14,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Yew")
 
-[node name="w_oak_25" type="Marker3D" parent="." unique_id=1803499360]
+[node name="w_oak_25" type="Marker3D" parent="." unique_id=1749837902]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -456.8293, -4.524469, 1170.0197)
 gizmo_extents = 0.6
 script = ExtResource("1_y3lmc")

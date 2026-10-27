@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_38k57"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_pfeo2"]
 
-[node name="Cell_-1_16" type="Node3D" unique_id=921501003]
+[node name="Cell_-1_16" type="Node3D" unique_id=568189102]
 
-[node name="w_tree_138" type="Marker3D" parent="." unique_id=463115864]
+[node name="w_tree_138" type="Marker3D" parent="." unique_id=926484966]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.75151, 0.9810658, 1066.753)
 gizmo_extents = 0.6
 script = ExtResource("1_38k57")

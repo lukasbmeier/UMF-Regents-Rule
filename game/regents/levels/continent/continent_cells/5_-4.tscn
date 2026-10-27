@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_ms68a"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_0kd0e"]
 
-[node name="Cell_5_-4" type="Node3D" unique_id=1035825700]
+[node name="Cell_5_-4" type="Node3D" unique_id=1739989841]
 
-[node name="w_tree_202" type="Marker3D" parent="." unique_id=1523568912]
+[node name="w_tree_202" type="Marker3D" parent="." unique_id=1855728080]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 340.45758, 4.718359, -238.36394)
 gizmo_extents = 0.6
 script = ExtResource("1_mu17a")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_oak_83" type="Marker3D" parent="." unique_id=187634633]
+[node name="w_oak_83" type="Marker3D" parent="." unique_id=568557777]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 371.7247, 4.3153653, -239.1361)
 gizmo_extents = 0.6
 script = ExtResource("1_mu17a")
@@ -24,7 +24,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Oak")
 
-[node name="w_oak_84" type="Marker3D" parent="." unique_id=1835031851]
+[node name="w_oak_84" type="Marker3D" parent="." unique_id=418377627]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 354.4606, 4.6437936, -232.27373)
 gizmo_extents = 0.6
 script = ExtResource("1_mu17a")
@@ -36,7 +36,7 @@ tags = PackedStringArray("Oak")
 [node name="rock_big_1_634" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_ms68a")]
 transform = Transform3D(-1.0387285, 0, -0.5871869, 0, 1.193208, 0, 0.5871869, 0, -1.0387285, 341.74692, 4.284017, -224.01186)
 
-[node name="rock_big_1_635" type="Node3D" parent="." unique_id=1797821080 instance=ExtResource("2_ms68a")]
+[node name="rock_big_1_635" type="Node3D" parent="." unique_id=1669768712 instance=ExtResource("2_ms68a")]
 transform = Transform3D(-0.043061573, 0, 1.0077062, 0, 1.0086257, 0, -1.0077062, 0, -0.043061573, 350.20215, 5.0536714, -245.1676)
 
 [node name="rock_medium_1_636" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_0kd0e")]

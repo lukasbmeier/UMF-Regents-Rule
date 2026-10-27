@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_dgi2o"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_2desb"]
 
-[node name="Cell_-5_-5" type="Node3D" unique_id=1711585911]
+[node name="Cell_-5_-5" type="Node3D" unique_id=987805177]
 
-[node name="w_oak_35" type="Marker3D" parent="." unique_id=962217833]
+[node name="w_oak_35" type="Marker3D" parent="." unique_id=524773873]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -303.63663, -2.6516721, -293.90134)
 gizmo_extents = 0.6
 script = ExtResource("1_clc72")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Oak")
 
-[node name="w_oak_36" type="Marker3D" parent="." unique_id=1829338978]
+[node name="w_oak_36" type="Marker3D" parent="." unique_id=599545752]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -278.18228, -0.36702597, -289.10587)
 gizmo_extents = 0.6
 script = ExtResource("1_clc72")
@@ -24,7 +24,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Oak")
 
-[node name="w_oak_37" type="Marker3D" parent="." unique_id=76556814]
+[node name="w_oak_37" type="Marker3D" parent="." unique_id=526133083]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -269.68594, 0.43448746, -297.1726)
 gizmo_extents = 0.6
 script = ExtResource("1_clc72")
@@ -39,5 +39,5 @@ transform = Transform3D(0.95779276, 0, -0.8047468, 0, 1.2509934, 0, 0.8047468, 0
 [node name="bush_large_191" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_2desb")]
 transform = Transform3D(-0.886317, 0, 0.11658966, 0, 0.8939525, 0, -0.11658966, 0, -0.886317, -290.6836, -0.9138139, -312.55878)
 
-[node name="grass_common_tall_192" type="Node3D" parent="." unique_id=1174910384 instance=ExtResource("2_dgi2o")]
+[node name="grass_common_tall_192" type="Node3D" parent="." unique_id=261174492 instance=ExtResource("2_dgi2o")]
 transform = Transform3D(-0.31436715, 0, -1.3028845, 0, 1.3402741, 0, 1.3028845, 0, -0.31436715, -291.92007, -0.7984295, -258.97507)

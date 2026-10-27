@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_bcfda"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_fi0ic"]
 
-[node name="Cell_-3_12" type="Node3D" unique_id=1451581556]
+[node name="Cell_-3_12" type="Node3D" unique_id=1760870038]
 
-[node name="w_oak_60" type="Marker3D" parent="." unique_id=559600598]
+[node name="w_oak_60" type="Marker3D" parent="." unique_id=1505701886]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -183.5578, 2.0928576, 788.6153)
 gizmo_extents = 0.6
 script = ExtResource("1_xslpq")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Oak")
 
-[node name="w_tree_113" type="Marker3D" parent="." unique_id=2080084891]
+[node name="w_tree_113" type="Marker3D" parent="." unique_id=1673808035]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -170.33987, 1.2116549, 784.14996)
 gizmo_extents = 0.6
 script = ExtResource("1_xslpq")
@@ -24,7 +24,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_oak_61" type="Marker3D" parent="." unique_id=1121935595]
+[node name="w_oak_61" type="Marker3D" parent="." unique_id=762074089]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -164.3883, 2.5162227, 823.56415)
 gizmo_extents = 0.6
 script = ExtResource("1_xslpq")
@@ -39,5 +39,5 @@ transform = Transform3D(-1.1660429, 0, -0.03118594, 0, 1.1664599, 0, 0.03118594,
 [node name="fern_1_342" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_fi0ic")]
 transform = Transform3D(0.59574103, 0, 0.42020604, 0, 0.7290271, 0, -0.42020604, 0, 0.59574103, -138.19249, 1.3881747, 815.0686)
 
-[node name="fern_1_343" type="Node3D" parent="." unique_id=1170623701 instance=ExtResource("3_fi0ic")]
+[node name="fern_1_343" type="Node3D" parent="." unique_id=1477917532 instance=ExtResource("3_fi0ic")]
 transform = Transform3D(0.005223359, 0, -1.1488279, 0, 1.1488397, 0, 1.1488279, 0, 0.005223359, -132.26187, 0.19202293, 804.82544)

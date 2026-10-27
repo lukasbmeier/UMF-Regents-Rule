@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_do4mc"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_huvf8"]
 
-[node name="Cell_2_-9" type="Node3D" unique_id=1494289380]
+[node name="Cell_2_-9" type="Node3D" unique_id=1960513898]
 
-[node name="w_tree_164" type="Marker3D" parent="." unique_id=591971293]
+[node name="w_tree_164" type="Marker3D" parent="." unique_id=386792174]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170.23232, 5.867142, -549.56494)
 gizmo_extents = 0.6
 script = ExtResource("1_k0mhs")
@@ -20,3 +20,12 @@ transform = Transform3D(-0.29731154, 0, 0.85627574, 0, 0.9064228, 0, -0.85627574
 
 [node name="bush_long_1_517" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_huvf8")]
 transform = Transform3D(-0.81051344, 0, 0.8022154, 0, 1.1403866, 0, -0.8022154, 0, -0.81051344, 166.48769, 5.4190745, -561.83203)
+
+[node name="w_poi_zone_5" type="Marker3D" parent="." unique_id=833020685]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 129.59972, 6.531911, -516.3951)
+gizmo_extents = 10.0
+script = ExtResource("1_k0mhs")
+point_id = "w_poi_zone_5"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

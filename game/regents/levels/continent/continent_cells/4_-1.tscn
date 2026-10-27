@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_suffh"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="4_587a1"]
 
-[node name="Cell_4_-1" type="Node3D" unique_id=894771658]
+[node name="Cell_4_-1" type="Node3D" unique_id=1500124967]
 
-[node name="w_copper_rock_38" type="Marker3D" parent="." unique_id=272909879]
+[node name="w_copper_rock_38" type="Marker3D" parent="." unique_id=1744704354]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 289.12137, 8.497893, -36.64302)
 gizmo_extents = 0.6
 script = ExtResource("1_dvsqh")
@@ -16,7 +16,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Copper rock")
 
-[node name="w_copper_rock_39" type="Marker3D" parent="." unique_id=897705390]
+[node name="w_copper_rock_39" type="Marker3D" parent="." unique_id=1596745454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 286.59457, 8.886451, -45.203194)
 gizmo_extents = 0.6
 script = ExtResource("1_dvsqh")

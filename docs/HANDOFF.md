@@ -1,6 +1,11 @@
-# Handoff — Regent's Rule, 2026-10-26 (Luke's playtest notes fixed; NEXT: the load test, Tuesday after 5 pm)
+# Handoff — Regent's Rule, 2026-10-27 (playtest notes fixed; the world map built; NEXT: the continent playtest's stall, then the load test)
 
 ## Where it stands
+- **NEW 2026-10-27: the world map (M), discovery (`node_seen`, `saw_nodes`; a table ADDED: codegen done) and
+  POIs** (PROGRESS, "The world map"). Published to `regents-rule` with codegen: restart the editor and the game.
+  **The continent playtest is RED**: ~30 s in the server drops the client (idle timeout; client frames fine,
+  round trip to 35 s), even with discovery and the new row filter off. FIRST next session: find why (try a
+  restart of the local `spacetime start`, then bisect from `6384ce8`, when it passed 20/0).
 - **Luke's 9 playtest notes (PROGRESS step 23, "Luke's solo playtest") worked through, one commit each,
   all pushed** (last `f4a1a2d`). Template **1.1.1** pulled (four foundation fixes; NOT yet shipped to the
   other games: the template's HANDOFF).

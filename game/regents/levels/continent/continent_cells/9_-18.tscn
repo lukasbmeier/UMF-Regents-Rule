@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_boclu"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_4pkry"]
 
-[node name="Cell_9_-18" type="Node3D" unique_id=343500898]
+[node name="Cell_9_-18" type="Node3D" unique_id=1868615402]
 
 [node name="rock_big_1_765" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_boclu")]
 transform = Transform3D(-1.4655862, 0, 0.11983597, 0, 1.4704773, 0, -0.11983597, 0, -1.4655862, 601.4748, 3.119015, -1144.817)
@@ -11,5 +11,5 @@ transform = Transform3D(-1.4655862, 0, 0.11983597, 0, 1.4704773, 0, -0.11983597,
 [node name="grass_common_tall_766" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_4pkry")]
 transform = Transform3D(-0.2901827, 0, -1.3213508, 0, 1.3528392, 0, 1.3213508, 0, -0.2901827, 629.6597, 3.1548097, -1103.5972)
 
-[node name="rock_big_1_767" type="Node3D" parent="." unique_id=317082714 instance=ExtResource("1_boclu")]
+[node name="rock_big_1_767" type="Node3D" parent="." unique_id=2116274768 instance=ExtResource("1_boclu")]
 transform = Transform3D(1.3341515, 0, -0.16107984, 0, 1.3438404, 0, 0.16107984, 0, 1.3341515, 633.10864, 4.4000015, -1149.7112)

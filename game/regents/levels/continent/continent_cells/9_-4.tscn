@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_7c8ox"]
 
-[node name="Cell_9_-4" type="Node3D" unique_id=442926485]
+[node name="Cell_9_-4" type="Node3D" unique_id=44130943]
 
 [node name="bush_large_782" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_7c8ox")]
 transform = Transform3D(-0.24007928, 0, -1.2197456, 0, 1.2431482, 0, 1.2197456, 0, -0.24007928, 622.067, -0.89485085, -223.03865)

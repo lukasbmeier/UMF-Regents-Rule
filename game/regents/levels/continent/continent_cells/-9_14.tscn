@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_aft4s"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_hqiq6"]
 
-[node name="Cell_-9_14" type="Node3D" unique_id=35155171]
+[node name="Cell_-9_14" type="Node3D" unique_id=1547077404]
 
-[node name="w_copper_rock_6" type="Marker3D" parent="." unique_id=1908670094]
+[node name="w_copper_rock_6" type="Marker3D" parent="." unique_id=60340122]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -571.1982, -4.5031724, 951.34644)
 gizmo_extents = 0.6
 script = ExtResource("1_lk658")

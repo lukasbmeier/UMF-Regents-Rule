@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_u5a8y"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_h0p6g"]
 
-[node name="Cell_12_-22" type="Node3D" unique_id=1753088111]
+[node name="Cell_12_-22" type="Node3D" unique_id=1028329347]
 
 [node name="fern_1_853" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_b8e12")]
 transform = Transform3D(-0.500471, 0, 1.2105294, 0, 1.3099056, 0, -1.2105294, 0, -0.500471, 815.9477, -3.7858486, -1369.423)

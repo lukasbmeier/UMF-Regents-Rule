@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_gyrq5"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_2i838"]
 
-[node name="Cell_3_-2" type="Node3D" unique_id=1325966188]
+[node name="Cell_3_-2" type="Node3D" unique_id=1975542374]
 
-[node name="w_copper_rock_33" type="Marker3D" parent="." unique_id=1974825128]
+[node name="w_copper_rock_33" type="Marker3D" parent="." unique_id=1528378103]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 245.71274, 10.497247, -80.19149)
 gizmo_extents = 0.6
 script = ExtResource("1_gyrq5")
@@ -16,3 +16,12 @@ tags = PackedStringArray("Copper rock")
 
 [node name="fern_1_572" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_2i838")]
 transform = Transform3D(-1.1492939, 0, -0.49025828, 0, 1.2494918, 0, 0.49025828, 0, -1.1492939, 227.0738, 10.707703, -74.46178)
+
+[node name="w_poi_zone_17" type="Marker3D" parent="." unique_id=1663504429]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205.91803, 10.318798, -94.4022)
+gizmo_extents = 10.0
+script = ExtResource("1_gyrq5")
+point_id = "w_poi_zone_17"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

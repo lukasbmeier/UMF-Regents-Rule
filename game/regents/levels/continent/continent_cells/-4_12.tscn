@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_lowh8"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_6sdyj"]
 
-[node name="Cell_-4_12" type="Node3D" unique_id=1283640573]
+[node name="Cell_-4_12" type="Node3D" unique_id=144893145]
 
-[node name="w_tree_98" type="Marker3D" parent="." unique_id=439256367]
+[node name="w_tree_98" type="Marker3D" parent="." unique_id=780131325]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -218.40619, 2.660332, 786.4336)
 gizmo_extents = 0.6
 script = ExtResource("1_5prrh")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_99" type="Marker3D" parent="." unique_id=1642993687]
+[node name="w_tree_99" type="Marker3D" parent="." unique_id=2146254957]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -221.65857, 2.5363607, 772.36096)
 gizmo_extents = 0.6
 script = ExtResource("1_5prrh")

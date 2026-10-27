@@ -10,13 +10,16 @@ const MAP_PX: Vector2 = Vector2(760, 560)
 ## Room round the level's points (metres).
 const MARGIN_M: float = 80.0
 ## The picture's side in pixels.
-const CAPTURE_PX: int = 2048
+const CAPTURE_PX: int = 1024
 ## How near the mouse (px) an icon must be to be hovered.
 const HOVER_PX: float = 8.0
 const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 12.0
 
+## A point of interest: a level's `poi` point, its first tag its name; tagged "minor" (a camp's workshop), its
+## name shows only once zoomed in to this many metres a pixel or nearer.
 const POI_KIND: String = "poi"
+const MINOR_LABEL_M_PER_PX: float = 1.0
 const POI: Color = Color(1.0, 0.85, 0.35)
 const BACKDROP: Color = Color(0.12, 0.2, 0.28)
 
@@ -101,7 +104,7 @@ static func icons_of(bake: LevelBake) -> Array[Dictionary]:
 			"station":
 				out.append({"at": at, "kind": kind, "name": tag.capitalize(), "point": String(p.get("id", ""))})
 			POI_KIND:
-				out.append({"at": at, "kind": kind, "name": tag, "point": String(p.get("id", ""))})
+				out.append({"at": at, "kind": kind, "name": tag, "point": String(p.get("id", "")), "minor": tags.has("minor")})
 	return out
 
 
@@ -141,6 +144,7 @@ func _draw_map() -> void:
 		_canvas.draw_texture_rect(_picture, Rect2(to_canvas(area.position), area.size / _m_per_px()), false)
 	var font: Font = ThemeDB.fallback_font
 	var mouse: Vector2 = _canvas.get_local_mouse_position()
+	var labels: Array[Rect2] = []
 	hovered = ""
 	var best: float = HOVER_PX
 	for icon: Dictionary in _icons:
@@ -159,8 +163,15 @@ func _draw_map() -> void:
 			POI_KIND:
 				var d := PackedVector2Array([at + Vector2(0, -6), at + Vector2(6, 0), at + Vector2(0, 6), at + Vector2(-6, 0)])
 				_canvas.draw_colored_polygon(d, POI)
-				_canvas.draw_string_outline(font, at + Vector2(9, 5), String(icon["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.9))
-				_canvas.draw_string(font, at + Vector2(9, 5), String(icon["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, POI)
+				# A minor place's name only once zoomed in near it (hovering says it before).
+				# Nor over a name already drawn (zoom in, or hover, for the ones underneath).
+				var w: float = font.get_string_size(String(icon["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+				var box := Rect2(at + Vector2(8, -8), Vector2(w + 4, 16))
+				var clear: bool = not labels.any(func(r: Rect2) -> bool: return r.intersects(box))
+				if clear and (not bool(icon.get("minor", false)) or _m_per_px() <= MINOR_LABEL_M_PER_PX):
+					labels.append(box)
+					_canvas.draw_string_outline(font, at + Vector2(9, 5), String(icon["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.9))
+					_canvas.draw_string(font, at + Vector2(9, 5), String(icon["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, POI)
 		var dist: float = at.distance_to(mouse)
 		if dist < best:
 			best = dist
@@ -229,4 +240,13 @@ func _take_picture() -> void:
 	cam.current = true
 	_capture.add_child(cam)
 	add_child(_capture)
-	_picture = _capture.get_texture()
+	# Kept as a plain picture and the camera taken away at once: a camera left over the whole level is one
+	# more view for the terrain to follow (a windowed run stalled 30 s and lost its connection with it).
+	var shot: SubViewport = _capture
+	await RenderingServer.frame_post_draw
+	if not is_instance_valid(shot):
+		return
+	_picture = ImageTexture.create_from_image(shot.get_texture().get_image())
+	shot.queue_free()
+	if _capture == shot:
+		_capture = null

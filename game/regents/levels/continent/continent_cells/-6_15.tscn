@@ -3,12 +3,12 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_f5784"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_4lvtp"]
 
-[node name="Cell_-6_15" type="Node3D" unique_id=710006965]
+[node name="Cell_-6_15" type="Node3D" unique_id=1375866458]
 
 [node name="bush_large_181" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_f5784")]
 transform = Transform3D(0.30658683, 0, 1.0200843, 0, 1.0651608, 0, -1.0200843, 0, 0.30658683, -371.59607, 2.381943, 999.0728)
 
-[node name="bush_large_182" type="Node3D" parent="." unique_id=1785591527 instance=ExtResource("1_f5784")]
+[node name="bush_large_182" type="Node3D" parent="." unique_id=1587300741 instance=ExtResource("1_f5784")]
 transform = Transform3D(-0.10164251, 0, 1.0176772, 0, 1.0227405, 0, -1.0176772, 0, -0.10164251, -349.87088, 2.5658727, 1002.18646)
 
 [node name="rock_big_1_183" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_4lvtp")]

@@ -957,6 +957,29 @@ a cell east, the nodes both rings share kept, none spawned again). Negatives: WO
 ring (6 playtest checks fail; it is then sent all 545 nodes and 603 entities, against 7 on the ring), the
 streamed wrapping switched off and a camp point moved (a unit check each).
 
+### The world map (Luke, 2026-10-26: "M should open full world map with hoverable icons")
+- **M** opens `RegentsWorldMap` (`game/regents/ui/world_map.gd`): the level from straight above (one 1024 px
+  picture, the capture camera freed after one frame), every node, station and point of interest of its bake,
+  you as the arrow; wheel zooms at the mouse, drag pans; hover says what an icon is. A node you have
+  DISCOVERED is named ("Coal rock"), any other is "<skill> ???" ("Mining ???"). POI names are drawn unless
+  they would overlap one already drawn; a "minor" POI (the camp's workshop) only once zoomed in.
+- **Discovered = been within `regents.seen_reach_m` (25 m, hot) of THAT node** (Luke chose per node, by
+  being near). `RegentsDiscovery` (`game/regents/discovery.gd`) asks `saw_nodes` once a second with the
+  nodes drawn near you; the server measures from where it has you (+5 m slack) and keeps a `node_seen` row
+  per character and point, sent to its player only (a row filter). Rate limit `saw` (4, 1/s).
+- **POIs** are level points of kind `poi`, first tag the name: the glade has The frontier camp, Workshop,
+  Training yard, Skeleton camp (`frontier.tscn` "Places", rebaked); the continent copies them and its
+  generator adds one per skeleton camp and a harvest zone wherever 4+ nodes of a kind stand in a 384 m
+  square (25 zones; no random draws, so the 602 placed points are exactly where they were).
+- Tested: the regents suite (icons for every node, "Mining ???" unseen / "Coal rock" seen, the continent's
+  map holds every point), the integration suite 1085/0 (saw_nodes: far not seen, near seen once, nonsense
+  skipped, 33 refused, another player sent none). Seen in a window: the continent's terrain, zones and
+  camps drawn (a screenshot). **NOT green: the continent playtest** now loses its connection ~30 s in
+  (`RECONNECTING`, the server's idle timeout; the client's own frames were fine, its round trip peaked at
+  35 s), with the discovery tracker off and with the new row filter off alike, so the cause is not found;
+  it passed 20/0 earlier the same day. Its new checks (discovery near the spawn, M opens and closes) never
+  ran to the end because of it.
+
 ### Luke's solo playtest of the continent (2026-10-24 night): his notes, sorted; worked through 2026-10-26 (each marked)
 Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. Sorted for the next work:
 - **Small, with or before the load test** (each to look into first):
