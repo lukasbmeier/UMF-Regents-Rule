@@ -833,3 +833,8 @@ No schema change: a game takes it with a pull; nothing to republish.
   300, 57 KB/s on the wire (gzip), 2000 rows a second, 55 others in view. **The referee breaks between 150 and
   200 bots** (frame p95 6.9 ms at 100, 76 at 200; stalls up to 2 s at 300): it is sent every bot's movement.
 - New: `tests/load/test_load.py` (19 checks, no server); the suite's two negative runs.
+
+## 1.2.1 — the load test plays on the game's own level
+No schema change: a game takes it with a pull; nothing to republish.
+- `shared/load.json` `"level"` (0, the greybox): the level world 0 is put on for the load test; a game sets its
+  own in `shared/<genre>/load.json` (Regent's Rule's continent is 21). `tests/load_test.sh` always used 0.
