@@ -465,6 +465,9 @@ Hundreds of bot players, each a real connection to the server, and what each one
   (`bot.call("cast", 3, {"x": 1.0, "y": 0.0, "z": 2.0})`), steers (`bot.walk_to(x, z)`, `bot.wander()`,
   `bot.stop()`) and reads `bot.pos`, `bot.entity_id`, `bot.world_id` and `bot.rng`. A genre's own limits
   go in `shared/<genre>/load.json` (they override the foundation's, key by key).
+- **The level it plays on** is `shared/load.json` `"level"` (0, the greybox); a game whose world is
+  another level sets its id in `shared/<genre>/load.json` (Regent's Rule: 21, the continent). The bots walk
+  the square round the level's origin, so a level whose origin is not where players are needs it moved.
 
 ### Chat
 Every game has CHAT (DECISIONS #273): **Enter** opens a line bottom left, **Enter** sends it to everyone

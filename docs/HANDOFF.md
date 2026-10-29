@@ -9,6 +9,9 @@ times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative
 ("breaks"): the referee breaks between 150 and 200 bots (below).
 
 ## This session
+- **1.2.1** (from Regent's Rule's session, 2026-10-29): `shared/load.json` `"level"` (0) is the level the load
+  test puts world 0 on; a game overrides it in `shared/<genre>/load.json`. `tests/load_test.sh` read 0 always.
+  Checked: a 10-bot run here holds. Pushed; shipped to Regent's Rule only (by merge), not yet to the others.
 - Shipped 1.1.1: games' suites after the pull: Fishing unit 2985/0, content 18/0, fishing playtest 106/0 +
   observer 18/0; Fowl Play unit 2489/0 (referee two sides off), content 18/0, hunt 13/0, launch 8/0, powers
   2/1 (stale test, below); DiscGolf unit 2279/0, content 18/0, bots 15/0. Each game has one uncommitted
@@ -25,7 +28,7 @@ times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative
   FOUNDATION_SYSTEMS "The load test".
 
 ## Next, in order
-1. Ship 1.2.0: `bash "../ship_template.sh" "1.2.0: the load test"` (games committed first; Luke has the
+1. Ship 1.2.0 and 1.2.1: `bash "../ship_template.sh" "1.2.0: the load test"` (games committed first; Luke has the
    debug-dump files to commit), then each game's unit suite (no republish needed).
 2. Regent's Rule pulls it and writes its `load_300.sh` on the continent with `game/regents/load_bot.py`
    (cast basics, harvest) and its own `shared/regents/load.json`.

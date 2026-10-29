@@ -34,17 +34,20 @@ if ! curl -s -m 3 -o /dev/null http://127.0.0.1:3000/v1/ping; then
   exit 1
 fi
 
+# The level world 0 plays on: shared/load.json "level", a game's own shared/<genre>/load.json over it.
+LEVEL="$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import load_test; print(int(load_test.load_config().get('level', 0)))")"   || { echo "could not read the level from shared/load.json" >&2; exit 1; }
+
 fresh() {
   (cd server && spacetime publish "$DB" --server local --delete-data --yes) >"$OUT/publish.log" 2>&1 \
     || { echo "publish failed ($OUT/publish.log)" >&2; tail -20 "$OUT/publish.log" >&2; exit 1; }
-  spacetime call "$DB" set_world_level 0 0 >/dev/null 2>&1
+  spacetime call "$DB" set_world_level 0 "$LEVEL" >/dev/null 2>&1 || { echo "set_world_level 0 $LEVEL failed" >&2; exit 1; }
   # The bots spread across the area with the dev tools' teleport (as players who logged out there would be).
   spacetime call "$DB" set_dev_tools true >/dev/null 2>&1
   # The referee reports how it ran every 10 s instead of 30, so a step's window holds several reports.
   spacetime call "$DB" set_rule '"foundation.telemetry_window_s"' 10 '""' >/dev/null 2>&1
 }
 
-echo "== $DB, fresh =="
+echo "== $DB, fresh, world 0 on level $LEVEL =="
 fresh
 echo "== what a real client of this game asks for =="
 for mode in ring world; do
