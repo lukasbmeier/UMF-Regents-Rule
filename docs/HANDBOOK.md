@@ -448,6 +448,8 @@ Hundreds of bot players, each a real connection to the server, and what each one
   - cell swaps (how often a bot's ring of cells moved, and how long the new ring took to arrive);
   - THE REFEREE'S LAG: its own reports (frame times, slow frames, stalls when the server's rows stopped
     coming), every 10 s during the test;
+  - the referee DROPPING OUT: a judged ability refused because nobody is judging the world (its
+    heartbeat lapsed in a stall) breaks the step (`referee_gone_refusals`), not the harness;
   - the bots' own lateness: if the bots' computer fell behind, the step says so and its numbers are not
     the server's.
 - **Reading the verdict**: a step HOLDS when every limit in `shared/load.json` holds; the first that does

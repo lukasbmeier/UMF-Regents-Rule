@@ -233,7 +233,7 @@ class TheArithmetic(unittest.TestCase):
         self.assertEqual(load_test.hist_quantile(b, 0.95), 0.1, "past the last bound: the last bound")
         self.assertIsNone(load_test.hist_quantile([], 0.5))
 
-    def lines(self, missing=None, refused=False, quiet=None, played=False):
+    def lines(self, missing=None, refused=False, quiet=None, played=False, gone=False):
         out = []
         for s in range(1, 11):
             per = []
@@ -243,7 +243,8 @@ class TheArithmetic(unittest.TestCase):
                 rows = 0 if i == quiet else 100
                 per.append([i, 2048, 4096, rows, 20, 3, 5.0, 1])
             out.append({"t": 1000.0 + s, "states": {"walking": 4}, "per_bot": per, "rtt": {"submit_input": [5.0] * 20},
-                        "ack": [40.0] * 20, "swaps": 1, "swap_ms": [30.0], "errors": {"x: no": 1} if refused and s == 3 else {},
+                        "ack": [40.0] * 20, "swaps": 1, "swap_ms": [30.0], "errors": ({"x: no": 1} if refused and s == 3 else {}) | (
+                            {"use_ability: use_ability: nobody is judging world 0 (no referee)": 3} if gone and s == 5 else {}),
                         "expected": {"gather: worked out": 2} if played and s in (3, 4) else {},
                         "sub_errors": [], "tables": {"movement_state": 400}, "lag": [1.0] * 50, "tick_behind": 0, "deaths": []})
         return out
@@ -277,6 +278,15 @@ class TheArithmetic(unittest.TestCase):
         w["_min_neighbours_seen"] = 3
         self.assertTrue(any("nothing was refused" in t for t, ok in load_test.harness_checks(w, True) if not ok),
                         "an unexpected refusal still fails beside an expected one")
+
+    def test_a_referee_gone_breaks_the_step_not_the_harness(self):
+        w = load_test.window(self.lines(gone=True), 1000.0, 1010.0, 4)
+        w["_min_neighbours_seen"] = 3
+        self.assertEqual(w["refused"], {})
+        self.assertEqual(w["refused_referee_gone"], 3)
+        self.assertTrue(all(ok for _, ok in load_test.harness_checks(w, True)))
+        lim, _ = load_test.limits_checks(w, {"reducers": {}}, None, {"referee_gone_refusals": 0}, 20)
+        self.assertEqual(lim, [("referee_gone_refusals", 3, 0, False)])
 
     def test_limits(self):
         w = load_test.window(self.lines(), 1000.0, 1010.0, 4)
