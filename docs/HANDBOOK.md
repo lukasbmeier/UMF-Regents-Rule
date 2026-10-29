@@ -542,7 +542,9 @@ A bot is an NPC that plays: a member of a session (it scores, it is in the stand
 fills each night to one wolf and four hens) and they go with `remove_bots_internal` or a despawn; an
 admin can add one by hand (`add_bot`). The world's referee builds and drives every bot (players still
 move themselves): its brain thinks a few times a second and walks a path its body fits (a walk map
-baked from the level's collision), and holds, lets go or uses an ability the way a player would, so
+baked from the level's collision; a level wider than 256 m a tile at a time, 128 m with half a tile round it,
+each baked on first asking off the main thread: DECISIONS #285), and holds, lets go or uses an ability the way a
+player would, so
 the server judges a bot as it judges a player. A genre's brains are scripts in
 `sidecar/npc/brains/<genre>/` (Fowl Play's `chicken/hen`, `chicken/wolf`). DECISIONS #230.
 

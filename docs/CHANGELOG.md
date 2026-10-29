@@ -843,3 +843,7 @@ No schema change: a game takes it with a pull; nothing to republish.
   The owner's SQL is `wire.owner_sql`, shared with `load_test.py`. `tests/load/test_load.py` 20 checks.
 - A judged ability refused because the referee dropped out ("nobody is judging world") is the game
   breaking, a limit (`referee_gone_refusals`, 0), no longer a harness failure that stopped the run.
+- **A big level's walk map, a tile at a time** (DECISIONS #285): `NpcNav` bakes a level wider than 256 m in
+  128 m tiles (half a tile round each) on first asking, and every walk map off the main thread. On Regent's
+  Rule's continent the whole-level bake was refused by the engine (no foe could path) and stalled the referee.
+  The bots suite's new 3 km level: tiled maps bake and route round a wall; baked whole, it fails.

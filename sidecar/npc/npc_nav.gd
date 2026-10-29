@@ -4,6 +4,13 @@ class_name NpcNav extends RefCounted
 ## (a hen) is routed under a hole a big one (the wolf) is not. Baked once per level and body size,
 ## on first asking (a second or two for a farm), and kept.
 ##
+## A BIG LEVEL IS WALKED A TILE AT A TIME (Regent's Rule's continent, 2026-10-29): a level wider than two
+## tiles (`TILE_M`) is never baked whole (the navigation server refuses a mesh that size, and trying
+## stalled the referee); each tile is baked on first asking round a point in it, with half a tile all
+## round, so a way from that point stays on one map. A way that leaves it ends at its edge (a brain
+## walks the last stretch straight). Every bake runs on the navigation server's thread; until it is
+## taken in, `path` is empty and a brain goes straight.
+##
 ## What a body does NOT see here: walls entities put up (a shut gate, DECISIONS #229) and other
 ## bodies. A brain meets those as it walks, and decides (open the gate, go round).
 ##
@@ -13,10 +20,15 @@ class_name NpcNav extends RefCounted
 const MAX_CLIMB: float = 0.3
 ## Cell size: a 0.9 m gap must stay a gap at a 0.28 m radius.
 const CELL: float = 0.15
+## A big level's tiles, a side (each baked with half a tile round it: 256 m square). A level whose bounds
+## are wider than two tiles is tiled; a smaller one is baked whole.
+const TILE_M: float = 128.0
 
-## [level instance id, radius, height] -> the map RID its mesh is on, and its region.
+## [level instance id, radius, height(, tile)] -> the map RID its mesh is on, its region, and the point a
+## taken-in map is checked at (the tile's centre, or the level's origin).
 static var _maps: Dictionary = {}
 static var _regions: Dictionary = {}
+static var _centres: Dictionary = {}
 
 
 ## A path from `from` to `to` for a body of `radius` by `height` in `level` (the level node the
@@ -25,29 +37,32 @@ static var _regions: Dictionary = {}
 static func path(level: Node3D, from: Vector3, to: Vector3, radius: float, height: float) -> PackedVector3Array:
 	if level == null or not level.is_inside_tree():
 		return PackedVector3Array()
-	if not ready(level, radius, height):
+	if not ready(level, radius, height, from):
 		return PackedVector3Array()
-	return NavigationServer3D.map_get_path(map_for(level, radius, height), from, to, true)
+	return NavigationServer3D.map_get_path(map_for(level, radius, height, from), from, to, true)
 
 
 ## Whether the walk map for `level` and that body is baked and taken in by the navigation server (it
-## takes a new mesh in over a few frames, on its own thread). Bakes it if it is not yet.
-static func ready(level: Node3D, radius: float, height: float) -> bool:
+## bakes it on its own thread and takes it in over a few frames). Bakes it if it is not yet. `at`: where,
+## on a tiled level (its tile's map).
+static func ready(level: Node3D, radius: float, height: float, at: Vector3 = Vector3.ZERO) -> bool:
 	if level == null or not level.is_inside_tree():
 		return false
-	var map: RID = map_for(level, radius, height)
+	var map: RID = map_for(level, radius, height, at)
 	if not map.is_valid() or NavigationServer3D.map_get_iteration_id(map) == 0:
 		return false
-	var region: RID = _regions.get(_key(level, radius, height), RID())
+	var key: String = _key(level, radius, height, at)
+	var region: RID = _regions.get(key, RID())
 	if not region.is_valid() or NavigationServer3D.region_get_iteration_id(region) == 0:
 		return false
 	# The map holds the region's polygons once a point on it belongs to the region.
-	return NavigationServer3D.map_get_closest_point_owner(map, level.global_position) == region
+	return NavigationServer3D.map_get_closest_point_owner(map, _centres.get(key, level.global_position)) == region
 
 
-## The map for `level` and a body of `radius` by `height`, baked if it is not yet.
-static func map_for(level: Node3D, radius: float, height: float) -> RID:
-	var key: String = _key(level, radius, height)
+## The map for `level` and a body of `radius` by `height` (on a tiled level, the tile `at` is in), its bake
+## begun if it is not yet.
+static func map_for(level: Node3D, radius: float, height: float, at: Vector3 = Vector3.ZERO) -> RID:
+	var key: String = _key(level, radius, height, at)
 	if _maps.has(key):
 		return _maps[key]
 	var mesh := NavigationMesh.new()
@@ -61,24 +76,50 @@ static func map_for(level: Node3D, radius: float, height: float) -> RID:
 	# The level's collision, not its meshes: tall grass is drawn, never walked into.
 	mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	mesh.geometry_collision_mask = SpaceTimeEntity.WORLD_MASK | SpaceTimeEntity.BARRIER_MASK
-	var bounds: AABB = _bounds(level)
+	var level_bounds: AABB = _bounds(level)
+	var tiled: bool = is_tiled(level_bounds)
+	var bounds: AABB = area_of(level_bounds, at)
 	if bounds.size != Vector3.ZERO:
 		mesh.filter_baking_aabb = bounds
+	# Reading the level's collision is the main thread's (the parser's rule); the bake is not.
+	var parse_from: int = Time.get_ticks_msec()
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, level)
 	add_ground(level, bounds, source)
-	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
+	var parse_ms: int = Time.get_ticks_msec() - parse_from
 	var map: RID = NavigationServer3D.map_create()
 	NavigationServer3D.map_set_cell_size(map, mesh.cell_size)
 	NavigationServer3D.map_set_cell_height(map, mesh.cell_height)
 	var region: RID = NavigationServer3D.region_create()
 	NavigationServer3D.region_set_map(region, map)
-	NavigationServer3D.region_set_navigation_mesh(region, mesh)
 	NavigationServer3D.map_set_active(map, true)
 	_maps[key] = map
 	_regions[key] = region
-	print("[Sidecar] a walk map for bodies %.2f m by %.2f m: %d polygons" % [radius, height, mesh.get_polygon_count()])
+	_centres[key] = bounds.get_center() if tiled else level.global_position
+	var where: String = (" round (%.0f, %.0f)" % [bounds.get_center().x, bounds.get_center().z]) if tiled else ""
+	var started: int = Time.get_ticks_msec()
+	# On the navigation server's thread: a big tile takes a second or more, and the referee must not wait.
+	NavigationServer3D.bake_from_source_geometry_data_async(mesh, source, func() -> void:
+		NavigationServer3D.region_set_navigation_mesh(region, mesh)
+		print("[Sidecar] a walk map for bodies %.2f m by %.2f m%s: %d polygons, read in %d ms, baked in %d ms" % [radius,
+			height, where, mesh.get_polygon_count(), parse_ms, Time.get_ticks_msec() - started]))
 	return map
+
+
+## Whether a level with these bounds is walked a tile at a time (wider than two tiles either way).
+static func is_tiled(bounds: AABB) -> bool:
+	return bounds.size.x > 2.0 * TILE_M or bounds.size.z > 2.0 * TILE_M
+
+
+## What is baked for a map: the level's bounds, or on a tiled level the tile `at` is in with half a tile
+## all round (within the level's height).
+static func area_of(bounds: AABB, at: Vector3) -> AABB:
+	if not is_tiled(bounds):
+		return bounds
+	var tx: float = floorf(at.x / TILE_M) * TILE_M
+	var tz: float = floorf(at.z / TILE_M) * TILE_M
+	return AABB(Vector3(tx - TILE_M * 0.5, bounds.position.y, tz - TILE_M * 0.5),
+		Vector3(TILE_M * 2.0, bounds.size.y, TILE_M * 2.0))
 
 
 ## GROUND THAT MAKES ITS OWN COLLISION (DECISIONS #240: a Terrain3D, whose collision is a heightmap
@@ -96,8 +137,11 @@ static func add_ground(level: Node3D, bounds: AABB, source: NavigationMeshSource
 	return added
 
 
-static func _key(level: Node3D, radius: float, height: float) -> String:
-	return "%d|%.2f|%.2f" % [level.get_instance_id(), radius, height]
+static func _key(level: Node3D, radius: float, height: float, at: Vector3 = Vector3.ZERO) -> String:
+	var key: String = "%d|%.2f|%.2f" % [level.get_instance_id(), radius, height]
+	if is_tiled(_bounds(level)):
+		key += "|%d,%d" % [int(floorf(at.x / TILE_M)), int(floorf(at.z / TILE_M))]
+	return key
 
 
 ## The part of the level worth baking: its LevelInfo's bake bounds, when it has one.
@@ -116,3 +160,4 @@ static func clear() -> void:
 		NavigationServer3D.free_rid(map)
 	_regions.clear()
 	_maps.clear()
+	_centres.clear()
