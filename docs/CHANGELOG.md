@@ -841,3 +841,5 @@ No schema change: a game takes it with a pull; nothing to republish.
 - A game's bot hook may name the refusals that are play (`EXPECTED_REFUSALS`: counted apart, never judged),
   hear each call's answer (`on_result`) and read rows as the owner sees them (`bot.sql`, off the bots' loop).
   The owner's SQL is `wire.owner_sql`, shared with `load_test.py`. `tests/load/test_load.py` 20 checks.
+- A judged ability refused because the referee dropped out ("nobody is judging world") is the game
+  breaking, a limit (`referee_gone_refusals`, 0), no longer a harness failure that stopped the run.

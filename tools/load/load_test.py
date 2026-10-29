@@ -269,6 +269,11 @@ class Workers:
             log.close()
 
 
+# A judged ability refused because the world's referee is gone (module/referee.rs): the GAME breaking under
+# the load, a limit (`referee_gone_refusals`), never the harness's fault.
+REFEREE_GONE = "nobody is judging world"
+
+
 def window(lines, t0, t1, n_bots):
     """Everything the bots saw in [t0, t1], summed up."""
     secs = max(1e-6, t1 - t0)
@@ -334,7 +339,8 @@ def window(lines, t0, t1, n_bots):
         "ring_swaps_per_bot_min": swaps / max(1, len(walking_all)) / minutes,
         "ring_swap_ms": summary(swap_ms),
         "rows_per_s_by_table": {k: v / secs for k, v in sorted(tables.items(), key=lambda kv: -kv[1])},
-        "refused": errors,
+        "refused": {k: v for k, v in errors.items() if REFEREE_GONE not in k},
+        "refused_referee_gone": sum(v for k, v in errors.items() if REFEREE_GONE in k),
         "refused_in_play": expected,
         "subscription_errors": sub_errors[:10],
         "disconnected": deaths[:10],
@@ -417,6 +423,7 @@ def limits_checks(w, srv, ref, limits, lag_limit):
         "ring_swap_p95_ms": w["ring_swap_ms"]["p95"],
         "referee_frame_p95_ms": ref["frame_p95_ms"] if ref else None,
         "referee_net_stalls": ref["net_stalls"] if ref else None,
+        "referee_gone_refusals": w.get("refused_referee_gone", 0),
         "client_kb_per_s_p95": w["client_kb_per_s"]["p95"],
         "client_rows_per_s_p95": w["client_rows_per_s"]["p95"],
     }

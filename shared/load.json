@@ -1,5 +1,5 @@
 {
-  "_comment": "THE LOAD TEST'S LIMITS (DECISIONS #284; tests/load_test.sh, tools/load/load_test.py). A step of the test HOLDS when every limit here holds; the first step that does not is where the game breaks on this machine. A limit of null is measured and reported but not judged. A genre may override any of them in shared/<genre>/load.json (later genres win). The 'keeps up' limits are engineering facts: the movement tick runs 20 times a second, so a tick that takes longer than its 50 ms falls behind. The per-client bandwidth limits are a design budget (Luke's to set: null until he does). 'level' is the level world 0 plays the test on (a LevelDef id; 0 the greybox): a game whose world is elsewhere sets it in its own load.json.",
+  "_comment": "THE LOAD TEST'S LIMITS (DECISIONS #284; tests/load_test.sh, tools/load/load_test.py). A step of the test HOLDS when every limit here holds; the first step that does not is where the game breaks on this machine. A limit of null is measured and reported but not judged. A genre may override any of them in shared/<genre>/load.json (later genres win). The 'keeps up' limits are engineering facts: the movement tick runs 20 times a second, so a tick that takes longer than its 50 ms falls behind. The per-client bandwidth limits are a design budget (Luke's to set: null until he does). 'referee_gone_refusals' counts judged abilities refused because the referee had dropped out. 'level' is the level world 0 plays the test on (a LevelDef id; 0 the greybox): a game whose world is elsewhere sets it in its own load.json.",
   "level": 0,
   "steps": [50, 100, 300],
   "area_cells": 8,
@@ -13,6 +13,7 @@
     "ring_swap_p95_ms": 1000,
     "referee_frame_p95_ms": 50,
     "referee_net_stalls": 0,
+    "referee_gone_refusals": 0,
     "client_kb_per_s_p95": null,
     "client_rows_per_s_p95": null
   },
