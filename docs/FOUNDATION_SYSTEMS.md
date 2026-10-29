@@ -179,7 +179,7 @@ ship) and older builds are refused (`compat` 2).
 
 | | Milestone | State |
 |---|---|---|
-| A | Checks: a real SpacetimeAuth sign-in against Luke's machine (when he makes the Maincloud login and project: later), token lifetime, the loopback redirect; nine one-cell queries vs one OR'd ring, measured | the local issuer's half ✔; a real SpacetimeAuth sign-in waits on Luke's Maincloud login; the measurement with the 300-bot harness |
+| A | Checks: a real SpacetimeAuth sign-in against Luke's machine (when he makes the Maincloud login and project: later), token lifetime, the loopback redirect; nine one-cell queries vs one OR'd ring, measured | the local issuer's half ✔; a real SpacetimeAuth sign-in waits on Luke's Maincloud login; the harness exists (#284), the OR'd ring not yet measured with it |
 | B | `chunk` on every placed thing's row (option A), kept right by one helper; a genre's hook | ✔ #279 |
 | C | `RING` interest (Regent's only; the rest keep `WORLD`): 3 x 3 cell sets, the overlap, 4 m hysteresis, your own rows always | ✔ #279 (three sets) |
 | D | Streaming: the bake cuts a `streamed` level into 64 m cells; `LevelStreamer`, 5 x 5 | ✔ #279 |
@@ -208,6 +208,22 @@ LUKE'S CALL (2026-10-24): Apple M1, Iris Xe and AMD integrated graphics start on
 LEFT FOR LATER: a measurement on a real iGPU (this machine's is disabled: the friend's next build);
 each game's own
 levels through the bench, and its grass and clutter put in the detail groups (Fishing's meadow).
+
+## The load test (2026-10-29, DECISIONS #284; 1.2.0, asked for by Regent's Rule: its M18 and note #1)
+BUILT: `tests/load_test.sh` and `tools/load/` (bots in Python, standard library only, many to a process,
+asking what the game's client asks; the server's own metrics; the referee's own reports); limits in
+`shared/load.json`; a genre's bots do more through `game/<genre>/load_bot.py`.
+HOW TO RUN IT: `toolsun.cmd tests\load_test.sh` (SpacetimeDB running; ~20 minutes; `STEPS=50,100`,
+`MEASURE=30`, `NEGATIVE=0` to change it). It plays on `umf-template-test` only.
+MEASURED (`docs/load/2026-10-29_greybox.md`, steps of 50 to 300 on this PC): the server keeps up at 300;
+the REFEREE BREAKS between 150 and 200 bots (it is sent every bot's movement); 57 KB/s a player on the
+wire at 300.
+TESTED: `tests/load/test_load.py` (19), the suite itself at 10 bots and twice at 50-300, its two negative
+runs, the unit sweep (2205/0) for the `InterestManager` split.
+LEFT FOR LATER: Regent's Rule's own `load_300.sh` on its continent with a hook that casts and harvests
+(after a pull); what to do about the referee's feed (a ring of its own, or fewer rows); one OR'd ring
+query against nine (1.0 milestone A); the per-player bandwidth budget (Luke's); a run with the bots on
+another machine.
 
 ## Owner decisions in force (2026-10-07)
 Lag compensation capped at 150 ms, favouring the attacker; hosting a friend-hosted bundle first; the

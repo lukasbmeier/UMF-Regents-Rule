@@ -1,0 +1,19 @@
+{
+  "_comment": "THE LOAD TEST'S LIMITS (DECISIONS #284; tests/load_test.sh, tools/load/load_test.py). A step of the test HOLDS when every limit here holds; the first step that does not is where the game breaks on this machine. A limit of null is measured and reported but not judged. A genre may override any of them in shared/<genre>/load.json (later genres win). The 'keeps up' limits are engineering facts: the movement tick runs 20 times a second, so a tick that takes longer than its 50 ms falls behind. The per-client bandwidth limits are a design budget (Luke's to set: null until he does).",
+  "steps": [50, 100, 300],
+  "area_cells": 8,
+  "settle_s": 15,
+  "measure_s": 60,
+  "limits": {
+    "tick_movement_p95_ms": 50,
+    "reducer_wait_p95_ms": 50,
+    "submit_input_rtt_p95_ms": 100,
+    "input_ack_p95_ms": 250,
+    "ring_swap_p95_ms": 1000,
+    "referee_frame_p95_ms": 50,
+    "referee_net_stalls": 0,
+    "client_kb_per_s_p95": null,
+    "client_rows_per_s_p95": null
+  },
+  "bots_kept_up_lag_p95_ms": 20
+}

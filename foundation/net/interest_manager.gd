@@ -174,8 +174,19 @@ func build_ring_queries(for_world: int) -> Array[String]:
 		if not is_cell_table(t):
 			continue
 		for c: int in cells:
-			out.append("SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [t, for_world, c])
+			out.append(cell_query(t, for_world, c))
 	return out
+
+
+## RING interest: the query for one cell table's rows in one cell. Also what the load test's bots ask
+## (`tools/load/interest_dump.gd`), so they are sent what a real client is.
+func cell_query(table: StringName, for_world: int, cell: int) -> String:
+	return "SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [table, for_world, cell]
+
+
+## RING interest: the query for one follow table's row of our own entity.
+func own_query(table: StringName, entity: int) -> String:
+	return "SELECT * FROM %s WHERE entity_id = %d" % [table, entity]
 
 
 ## RING interest: this client's own rows of the tables that follow an entity, by id, in a set of their
@@ -187,7 +198,7 @@ func build_own_queries() -> Array[String]:
 		return out
 	for t: StringName in subscribed_tables():
 		if is_cell_table(t) and is_follow_table(t):
-			out.append("SELECT * FROM %s WHERE entity_id = %d" % [t, own_entity])
+			out.append(own_query(t, own_entity))
 	return out
 
 
