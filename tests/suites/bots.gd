@@ -15,6 +15,7 @@ func run() -> void:
 	_run_acts()
 	_run_route()
 	await _run_nav()
+	await _run_nav_tiled()
 	_run_ground()
 	_run_tree()
 
@@ -149,6 +150,46 @@ func _run_nav() -> void:
 	_check(small.size() >= 2 and float(length.call(small)) < 7.0, "a hen's way goes under the hole (%.1f m)" % float(length.call(small)))
 	_check(big.size() >= 2 and float(length.call(big)) > 12.0, "the wolf's goes round the hedge's end (%.1f m)" % float(length.call(big)))
 	_check(NpcNav.path(null, Vector3.ZERO, Vector3.ONE, 0.3, 1.0).is_empty(), "no level: no way (a brain goes straight)")
+	NpcNav.clear()
+	level.queue_free()
+	await get_tree().process_frame
+
+
+## A level 3 km across (Regent's Rule's continent is 2.5 by 3.3): baked whole, the navigation server refuses
+## it (an engine error, which fails this suite) and the referee stalled trying. Tiled, each tile is baked on
+## its own, on the server's thread.
+func _run_nav_tiled() -> void:
+	print("== bots: a big level's walk map, a tile at a time ==")
+	var level := Node3D.new()
+	add_child(level)
+	var info := LevelInfo.new()
+	info.bake_bounds = AABB(Vector3(-1500, -20, -1500), Vector3(3000, 40, 3000))
+	level.add_child(info)
+	_wall(level, Vector3(0, -0.5, 0), Vector3(60, 1, 60))           # ground round the origin
+	_wall(level, Vector3(-7, 1.2, 0), Vector3(26, 2.4, 0.9))        # a wall along z = 0, x -20 to 6: round its east end
+	_wall(level, Vector3(1000, -0.5, 1000), Vector3(20, 1, 20))     # ground far off, another tile
+	for i: int in 3:
+		await get_tree().physics_frame
+	_check(NpcNav.is_tiled(info.bake_bounds) and not NpcNav.is_tiled(AABB(Vector3(-100, 0, -100), Vector3(200, 10, 200))),
+		"3 km is walked in tiles; 200 m is baked whole")
+	_check(NpcNav.area_of(info.bake_bounds, Vector3(5, 0, 5)) == AABB(Vector3(-64, -20, -64), Vector3(256, 40, 256)),
+		"a tile's bake: its 128 m and half a tile round it (%s)" % str(NpcNav.area_of(info.bake_bounds, Vector3(5, 0, 5))))
+	var near: RID = NpcNav.map_for(level, 0.4, 1.8, Vector3(0, 0, 5))
+	var far: RID = NpcNav.map_for(level, 0.4, 1.8, Vector3(1000, 0, 1000))
+	_check(near != far and NpcNav.map_for(level, 0.4, 1.8, Vector3(60, 0, 60)) == near,
+		"one map a tile: another tile's is another, a point in the same tile shares it")
+	var until: int = Time.get_ticks_msec() + 20000
+	while Time.get_ticks_msec() < until and not (NpcNav.ready(level, 0.4, 1.8, Vector3(0, 0, 5)) and NpcNav.ready(level, 0.4, 1.8, Vector3(1000, 0, 1000))):
+		await get_tree().physics_frame
+	_check(NpcNav.ready(level, 0.4, 1.8, Vector3(0, 0, 5)) and NpcNav.ready(level, 0.4, 1.8, Vector3(1000, 0, 1000)),
+		"both tiles' maps are baked off the main thread and taken in")
+	var way: PackedVector3Array = NpcNav.path(level, Vector3(0, 0, 5), Vector3(0, 0, -5), 0.4, 1.8)
+	var length: float = 0.0
+	for i: int in range(1, way.size()):
+		length += way[i - 1].distance_to(way[i])
+	_check(way.size() >= 3 and length > 15.0, "a way round the wall's end (%.1f m, %d points; straight is 10)" % [length, way.size()])
+	var there: PackedVector3Array = NpcNav.path(level, Vector3(995, 0, 995), Vector3(1005, 0, 1005), 0.4, 1.8)
+	_check(there.size() >= 2, "a way on the far tile, on its own map")
 	NpcNav.clear()
 	level.queue_free()
 	await get_tree().process_frame

@@ -9,6 +9,9 @@ times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative
 ("breaks"): the referee breaks between 150 and 200 bots (below).
 
 ## This session
+- **1.2.1, the walk map a tile at a time** (DECISIONS #285, from Regent's Rule's session): a level wider than
+  256 m is baked in 128 m tiles on first asking, every walk map off the main thread. Unit sweep 2211/0; the
+  new 3 km check fails baked whole. Fowl Play's farm keeps one map (its bots suites, at the ship).
 - **1.2.1** (from Regent's Rule's session, 2026-10-29): `shared/load.json` `"level"` (0) is the level the load
   test puts world 0 on; a game overrides it in `shared/<genre>/load.json`. `tests/load_test.sh` read 0 always.
   A hook may name refusals that are play (`EXPECTED_REFUSALS`), hear answers (`on_result`), read rows as the
