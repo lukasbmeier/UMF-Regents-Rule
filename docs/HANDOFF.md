@@ -36,7 +36,8 @@ times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative
    debug-dump files to commit), then each game's unit suite (no republish needed).
 2. Regent's Rule pulls it and writes its `load_300.sh` on the continent with `game/regents/load_bot.py`
    (cast basics, harvest) and its own `shared/regents/load.json`.
-3. The referee's feed (Luke's call on the approach): a ring/cell interest of its own for what it judges,
+3. The referee's feed: MEASURED in Regent's Rule (`../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`): first a referee
+   subscribes only what it reads (no `input_queue`), then NPC tiers, then region referees. Was (Luke's call on the approach): a ring/cell interest of its own for what it judges,
    or thinner movement rows to it; then this suite says how far it goes.
 4. Template 1.0 milestone A's last measurement: one OR'd ring query per table against nine one-cell ones
    (an interest file with OR'd cell queries; `bots.py` builds per cell today).
