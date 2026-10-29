@@ -233,7 +233,7 @@ class TheArithmetic(unittest.TestCase):
         self.assertEqual(load_test.hist_quantile(b, 0.95), 0.1, "past the last bound: the last bound")
         self.assertIsNone(load_test.hist_quantile([], 0.5))
 
-    def lines(self, missing=None, refused=False, quiet=None):
+    def lines(self, missing=None, refused=False, quiet=None, played=False):
         out = []
         for s in range(1, 11):
             per = []
@@ -244,6 +244,7 @@ class TheArithmetic(unittest.TestCase):
                 per.append([i, 2048, 4096, rows, 20, 3, 5.0, 1])
             out.append({"t": 1000.0 + s, "states": {"walking": 4}, "per_bot": per, "rtt": {"submit_input": [5.0] * 20},
                         "ack": [40.0] * 20, "swaps": 1, "swap_ms": [30.0], "errors": {"x: no": 1} if refused and s == 3 else {},
+                        "expected": {"gather: worked out": 2} if played and s in (3, 4) else {},
                         "sub_errors": [], "tables": {"movement_state": 400}, "lag": [1.0] * 50, "tick_behind": 0, "deaths": []})
         return out
 
@@ -263,6 +264,19 @@ class TheArithmetic(unittest.TestCase):
             w["_min_neighbours_seen"] = 3
             failed = [t for t, ok in load_test.harness_checks(w, True) if not ok]
             self.assertTrue(any(word in t for t in failed), (kw, failed))
+
+    def test_a_refusal_the_game_expects_is_counted_never_judged(self):
+        w = load_test.window(self.lines(played=True), 1000.0, 1010.0, 4)
+        w["_min_neighbours_seen"] = 3
+        self.assertEqual(w["refused_in_play"], {"gather: worked out": 4})
+        self.assertEqual(w["refused"], {})
+        checks = load_test.harness_checks(w, True)
+        self.assertTrue(all(ok for _, ok in checks), checks)
+        self.assertTrue(any("refused in play" in t and "x4" in t for t, _ in checks))
+        w = load_test.window(self.lines(played=True, refused=True), 1000.0, 1010.0, 4)
+        w["_min_neighbours_seen"] = 3
+        self.assertTrue(any("nothing was refused" in t for t, ok in load_test.harness_checks(w, True) if not ok),
+                        "an unexpected refusal still fails beside an expected one")
 
     def test_limits(self):
         w = load_test.window(self.lines(), 1000.0, 1010.0, 4)

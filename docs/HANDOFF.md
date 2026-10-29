@@ -11,7 +11,8 @@ times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative
 ## This session
 - **1.2.1** (from Regent's Rule's session, 2026-10-29): `shared/load.json` `"level"` (0) is the level the load
   test puts world 0 on; a game overrides it in `shared/<genre>/load.json`. `tests/load_test.sh` read 0 always.
-  Checked: a 10-bot run here holds. Pushed; shipped to Regent's Rule only (by merge), not yet to the others.
+  A hook may name refusals that are play (`EXPECTED_REFUSALS`), hear answers (`on_result`), read rows as the
+  owner (`bot.sql`). Checked: unit 20/0 (the new check fails with the change taken out); a 10-bot run holds. Pushed; shipped to Regent's Rule only (by merge), not yet to the others.
 - Shipped 1.1.1: games' suites after the pull: Fishing unit 2985/0, content 18/0, fishing playtest 106/0 +
   observer 18/0; Fowl Play unit 2489/0 (referee two sides off), content 18/0, hunt 13/0, launch 8/0, powers
   2/1 (stale test, below); DiscGolf unit 2279/0, content 18/0, bots 15/0. Each game has one uncommitted

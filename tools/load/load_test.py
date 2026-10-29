@@ -134,21 +134,10 @@ def database_identity(host, db):
 
 
 def sql(db, query):
-    """The owner's CLI (it sees private tables), as tools/feedback.py reads them."""
-    out = subprocess.run(["spacetime", "sql", db, "--format", "json", query], capture_output=True, text=True,
-                         encoding="utf-8")
-    text = out.stdout[out.stdout.find("["):] if "[" in out.stdout else ""
-    if not text:
-        raise RuntimeError("could not read %s: %s" % (db, (out.stderr or out.stdout).strip()[-300:]))
-    result = json.loads(text)[0]
-    names = [e["name"].get("some", "") for e in result["schema"]["elements"]]
-    rows = []
-    for r in result["rows"]:
-        row = {}
-        for n, v in zip(names, r):
-            row[n] = v[0] if isinstance(v, list) and len(v) == 1 and isinstance(v[0], int) else v
-        rows.append(row)
-    return rows
+    """The owner's CLI (it sees private tables): `wire.owner_sql`."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import wire  # noqa: E402
+    return wire.owner_sql(db, query)
 
 
 def referee_windows(db, t0, t1):
@@ -287,7 +276,7 @@ def window(lines, t0, t1, n_bots):
     rtt = {}
     ack, swap_ms, lag = [], [], []
     swaps = 0
-    errors, tables = {}, {}
+    errors, expected, tables = {}, {}, {}
     sub_errors, deaths = [], []
     tick_behind = 0
     for d in lines:
@@ -312,6 +301,8 @@ def window(lines, t0, t1, n_bots):
         tick_behind += d.get("tick_behind", 0)
         for k, v in d["errors"].items():
             errors[k] = errors.get(k, 0) + v
+        for k, v in d.get("expected", {}).items():
+            expected[k] = expected.get(k, 0) + v
         for k, v in d["tables"].items():
             tables[k] = tables.get(k, 0) + v
         sub_errors.extend(d["sub_errors"])
@@ -344,6 +335,7 @@ def window(lines, t0, t1, n_bots):
         "ring_swap_ms": summary(swap_ms),
         "rows_per_s_by_table": {k: v / secs for k, v in sorted(tables.items(), key=lambda kv: -kv[1])},
         "refused": errors,
+        "refused_in_play": expected,
         "subscription_errors": sub_errors[:10],
         "disconnected": deaths[:10],
         "disconnected_count": len(deaths),
@@ -404,6 +396,11 @@ def harness_checks(w, ring):
     c.append(("every bot saw others (the fewest any bot saw: %s)" % fewest, (fewest or 0) > 0))
     c.append(("nothing was refused (%s)" % (", ".join("%s x%d" % kv for kv in list(w["refused"].items())[:3]) or "none"),
               not w["refused"]))
+    played = w.get("refused_in_play", {})
+    if played:
+        # A refusal the game's hook names as play (a node worked out as a bot reached it): shown, never judged.
+        c.append(("refused in play, as the game's hook expects (%s)" % ", ".join(
+            "%s x%d" % kv for kv in sorted(played.items(), key=lambda kv: -kv[1])[:3]), True))
     c.append(("no subscription was refused", not w["subscription_errors"]))
     if ring:
         c.append(("the bots crossed cells and their rings followed (%d swaps)" % w["ring_swaps"], w["ring_swaps"] > 0))

@@ -838,3 +838,6 @@ No schema change: a game takes it with a pull; nothing to republish.
 No schema change: a game takes it with a pull; nothing to republish.
 - `shared/load.json` `"level"` (0, the greybox): the level world 0 is put on for the load test; a game sets its
   own in `shared/<genre>/load.json` (Regent's Rule's continent is 21). `tests/load_test.sh` always used 0.
+- A game's bot hook may name the refusals that are play (`EXPECTED_REFUSALS`: counted apart, never judged),
+  hear each call's answer (`on_result`) and read rows as the owner sees them (`bot.sql`, off the bots' loop).
+  The owner's SQL is `wire.owner_sql`, shared with `load_test.py`. `tests/load/test_load.py` 20 checks.
