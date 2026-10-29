@@ -16,6 +16,7 @@ import gzip
 import json
 import os
 import struct
+import subprocess
 import urllib.request
 
 PROTOCOL = "v3.bsatn.spacetimedb"
@@ -490,6 +491,25 @@ class WebSocket:
             self.writer.close()
         except (OSError, RuntimeError):
             pass
+
+
+def owner_sql(db, query):
+    """Rows of `query` as the database's OWNER sees them (every row, private tables too), through the
+    `spacetime` CLI, as tools/feedback.py reads them. Blocking: a bot's hook calls it through `bot.sql`."""
+    out = subprocess.run(["spacetime", "sql", db, "--format", "json", query], capture_output=True, text=True,
+                         encoding="utf-8")
+    text = out.stdout[out.stdout.find("["):] if "[" in out.stdout else ""
+    if not text:
+        raise RuntimeError("could not read %s: %s" % (db, (out.stderr or out.stdout).strip()[-300:]))
+    result = json.loads(text)[0]
+    names = [e["name"].get("some", "") for e in result["schema"]["elements"]]
+    rows = []
+    for r in result["rows"]:
+        row = {}
+        for n, v in zip(names, r):
+            row[n] = v[0] if isinstance(v, list) and len(v) == 1 and isinstance(v[0], int) else v
+        rows.append(row)
+    return rows
 
 
 def new_identity(host):

@@ -463,7 +463,11 @@ Hundreds of bot players, each a real connection to the server, and what each one
   manifest): `setup(bot)` once a bot is walking, `tick(bot, now)` ten times a second. A hook calls any
   reducer by name with plain Python values, encoded from the module's own schema
   (`bot.call("cast", 3, {"x": 1.0, "y": 0.0, "z": 2.0})`), steers (`bot.walk_to(x, z)`, `bot.wander()`,
-  `bot.stop()`) and reads `bot.pos`, `bot.entity_id`, `bot.world_id` and `bot.rng`. A genre's own limits
+  `bot.stop()`) and reads `bot.pos`, `bot.entity_id`, `bot.world_id` and `bot.rng`. Optional: `on_result(bot, request_id,
+  reducer, ok, text)` hears every call's answer; `EXPECTED_REFUSALS` (regexes on "reducer: text") names the
+  refusals that are play, not faults (a node worked out as a bot reached it), shown apart and never judged; and
+  `bot.sql(query, done)` reads rows as the owner sees them, off the bots' loop (a bot's bag: a bot decodes only
+  its own movement). A genre's own limits
   go in `shared/<genre>/load.json` (they override the foundation's, key by key).
 - **The level it plays on** is `shared/load.json` `"level"` (0, the greybox); a game whose world is
   another level sets its id in `shared/<genre>/load.json` (Regent's Rule: 21, the continent). The bots walk

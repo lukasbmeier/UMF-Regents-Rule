@@ -14,7 +14,11 @@ WHAT A BOT DOES BESIDES WALKING is its game's: `game/<genre>/load_bot.py` for ea
 `shared/game.json`, with `setup(bot)` (once, when it is walking) and `tick(bot, now)` (10 times a second).
 A hook calls reducers by name with Python values (`bot.call("cast", 3, {"x": 1.0, ...})`, encoded from
 the module's own schema), steers (`bot.walk_to(x, z)`, `bot.wander()`), and reads `bot.pos`,
-`bot.entity_id`, `bot.world_id`, `bot.rng`. `docs/HANDBOOK.md`, "The load test".
+`bot.entity_id`, `bot.world_id`, `bot.rng`. Optional: `on_result(bot, request_id, reducer, ok, text)` hears
+each call's answer; `EXPECTED_REFUSALS`, a list of regexes on "reducer: text", names the refusals that are play
+(a node worked out as the bot reached it), counted apart and never judged; `bot.sql(query, done)` reads rows as
+the database's owner sees them (what a real client knows from rows a bot does not decode: its bag), off the
+event loop, then `done(rows, error)` on it. `docs/HANDBOOK.md`, "The load test".
 """
 import argparse
 import asyncio
@@ -23,6 +27,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import time
 import urllib.parse
@@ -45,13 +50,15 @@ class Totals:
         self.swap_ms = []      # ms from a new ring subscribed to it applied
         self.swaps = 0
         self.errors = {}       # "reducer: text" -> count
+        self.expected = {}     # the same, for refusals a genre's hook names as play (EXPECTED_REFUSALS)
         self.sub_errors = []
         self.tables = {}       # table -> rows
         self.lag = []          # ms the event loop woke up late
         self.tick_behind = 0   # 60 Hz ticks skipped because the process was behind
 
-    def err(self, key):
-        self.errors[key] = self.errors.get(key, 0) + 1
+    def err(self, key, expected=False):
+        into = self.expected if expected else self.errors
+        into[key] = into.get(key, 0) + 1
 
 
 class Bot:
@@ -116,6 +123,22 @@ class Bot:
 
     def log(self, text):
         print("[%s] %s" % (self.name, text), flush=True)
+
+    def sql(self, query, done):
+        """`query` as the database's owner sees it, run off the event loop; then `done(rows, error)` on it
+        (rows None and the error's text when it failed)."""
+        fut = asyncio.get_running_loop().run_in_executor(None, wire.owner_sql, self.swarm.db, query)
+
+        def finished(f):
+            try:
+                rows, why = f.result(), ""
+            except Exception as e:  # noqa: BLE001 - the hook is told, never left waiting
+                rows, why = None, "%s: %s" % (type(e).__name__, e)
+            try:
+                done(rows, why)
+            except Exception as e:  # noqa: BLE001 - a hook's fault is this bot's, counted
+                self.die("sql callback: %s: %s" % (type(e).__name__, e))
+        fut.add_done_callback(finished)
 
     # ---- connecting -----------------------------------------------------------------------------
     async def run(self):
@@ -185,9 +208,14 @@ class Bot:
                 sent = self.pending.pop(m[1], None)
                 if sent is not None:
                     sw.totals.rtt.setdefault(sent[0], []).append((time.perf_counter() - sent[1]) * 1000.0)
+                    text = ""
                     if m[2] != "ok":
                         text = wire.reducer_error_text(m[3]) if m[2] == "err" else m[3]
-                        sw.totals.err("%s: %s" % (sent[0], text[:120]))
+                        key = "%s: %s" % (sent[0], text[:120])
+                        sw.totals.err(key, any(p.search(key) for p in sw.expected))
+                    for h in sw.hooks:
+                        if hasattr(h, "on_result"):
+                            h.on_result(self, m[1], sent[0], m[2] == "ok", text)
                 if m[2] == "ok":
                     self.on_rows(m[3])
 
@@ -344,6 +372,7 @@ class Swarm:
         self.player_row = self.schema.row_decoder("player")
         self.movement_row = self.schema.row_decoder("movement_state")
         self.hooks = load_hooks(root) if not a.no_hooks else []
+        self.expected = [re.compile(p) for h in self.hooks for p in getattr(h, "EXPECTED_REFUSALS", [])]
         self.bots = [Bot(self, i) for i in range(a.first, a.first + a.count)]
         self.connect_rate = a.connect_rate
         self.totals = Totals()
@@ -440,7 +469,7 @@ class Swarm:
         line = {"t": time.time(), "states": states, "per_bot": per_bot,
                 "rtt": {k: [round(x, 2) for x in v] for k, v in t.rtt.items()},
                 "ack": [round(x, 2) for x in t.ack], "swaps": t.swaps, "swap_ms": [round(x, 2) for x in t.swap_ms],
-                "errors": t.errors, "sub_errors": t.sub_errors, "tables": t.tables,
+                "errors": t.errors, "expected": t.expected, "sub_errors": t.sub_errors, "tables": t.tables,
                 "lag": [round(x, 2) for x in t.lag], "tick_behind": t.tick_behind,
                 "deaths": self.deaths}
         out.write(json.dumps(line) + "\n")
