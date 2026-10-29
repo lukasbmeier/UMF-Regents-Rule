@@ -427,6 +427,45 @@ private telemetry too) and where each online player was every 5 s. It lives in o
   noted is the hot rule `foundation.telemetry_where_s` (0 turns it off).
 - Any SQLite tool (DB Browser for SQLite, `python -c "import sqlite3..."`) opens the file too.
 
+### The load test: how many players the game takes on this machine
+Hundreds of bot players, each a real connection to the server, and what each one costs (DECISIONS #284).
+- **To run it: `tools\run.cmd tests\load_test.sh`** (about 20 minutes; SpacetimeDB running, Python
+  installed, standard library only). The first measurement, and how to read one:
+  `docs/load/2026-10-29_greybox.md` (the server kept up at 300 bots; the referee broke between 150 and 200). It plays on the TEST database (`<database>-test`, wiped first),
+  never the one people play on: the bots refuse any other.
+- **What happens**: it starts the world's referee, then adds bots in STEPS (50, then 100, then 300:
+  `shared/load.json`). Each bot is a guest, placed somewhere in an 8 x 8-cell square (512 m a side), and
+  runs from place to place at the run speed, sending its inputs exactly as a player's game does (60 a
+  second, three to a call). It asks the server for exactly what a player's game asks for, cell by cell
+  (`tools/load/interest_dump.gd` writes the game's own queries out for it), so it is sent what a player
+  would be. After each step settles it measures for a minute.
+- **What it measures, per step** (printed, and kept in `build/load/ring/report.md`):
+  - per player: KB a second on the wire and decoded, rows and messages a second, how many others it saw;
+  - each reducer's round trip as a bot timed it, and the SERVER's own timing of every reducer (its wall
+    time and how long it queued), from SpacetimeDB's metrics for this database only;
+  - "input sent to processed": from a bot's inputs leaving to the server's movement row saying it
+    took them (the movement tick runs 20 times a second, so ~25-50 ms is normal);
+  - cell swaps (how often a bot's ring of cells moved, and how long the new ring took to arrive);
+  - THE REFEREE'S LAG: its own reports (frame times, slow frames, stalls when the server's rows stopped
+    coming), every 10 s during the test;
+  - the bots' own lateness: if the bots' computer fell behind, the step says so and its numbers are not
+    the server's.
+- **Reading the verdict**: a step HOLDS when every limit in `shared/load.json` holds; the first that does
+  not is where the game BREAKS on this machine. The "keeps up" limits are facts (the movement tick must
+  finish inside its 50 ms); the per-player bandwidth limits are a budget you set (null: shown, not judged).
+  A step whose bots did not all connect, move, see each other and cross cells is a harness failure, not a
+  verdict. The server, the referee and the bots share one computer, so a real host (bots elsewhere) does
+  better: these are this machine's numbers.
+- **Other steps or a shorter window**: `STEPS=50,100 MEASURE=30 tools\run.cmd tests\load_test.sh`.
+  `NEGATIVE=0` skips the two runs at the end that check the test itself (a limit nothing can meet is
+  reported broken; bots asking for the whole world are sent far more than a ring).
+- **A game's bots do more than walk** through its hook, `game/<genre>/load_bot.py` (in the genre's
+  manifest): `setup(bot)` once a bot is walking, `tick(bot, now)` ten times a second. A hook calls any
+  reducer by name with plain Python values, encoded from the module's own schema
+  (`bot.call("cast", 3, {"x": 1.0, "y": 0.0, "z": 2.0})`), steers (`bot.walk_to(x, z)`, `bot.wander()`,
+  `bot.stop()`) and reads `bot.pos`, `bot.entity_id`, `bot.world_id` and `bot.rng`. A genre's own limits
+  go in `shared/<genre>/load.json` (they override the foundation's, key by key).
+
 ### Chat
 Every game has CHAT (DECISIONS #273): **Enter** opens a line bottom left, **Enter** sends it to everyone
 in your world, **Escape** cancels. You stand still while you type. The last few lines stay on screen
@@ -1255,6 +1294,7 @@ and the example level (`foundation/level/example/`, level 200).
 | Sidecar, export | `sidecar_test.sh`, `export_test.sh` | yes (`umf-test`) | the authority process, the builds |
 | Accounts | `./tests/accounts_test.sh` | yes (the test database) | signing in makes an account, another machine finds it, link codes, characters, parking, guests off; a real client signs in and comes back silently. Its sign-in service is the suites' own (`tests/lib/oidc_issuer.py`), trusted by the test database only |
 | The ring | `./tests/ring_test.sh` | yes (the test database) | a ring client sees its cells' neighbours and nobody beyond, keeps one walking between its cells, gains and loses them as it moves |
+| The load test | `./tests/load_test.sh` | yes (the test database) | 50, 100 and 300 bot players walking cell to cell with the referee running: bandwidth and rows per player, reducer and tick times, cell swaps, the referee's frame times and stalls; where the game breaks on this machine ("The load test", section 3) |
 | The look | `./tests/render_test.sh` | no, opens a window | foliage, grass, water, fullscreen; the renderer chosen with no command line (the engine reads `renderer.cfg`, the game restarts itself onto Compatibility and says why) and Low under 60 % of High's GPU time on both renderers (it sets your own renderer files aside and puts them back) |
 
 On Windows run each through `tools\run.cmd` (section 3), e.g. `tools\run.cmd tests\run_tests.sh`;

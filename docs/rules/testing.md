@@ -69,6 +69,15 @@ GODOT=<path> ./tests/connect_playtest.sh
 # module and the server through the whole sidecar suite (#134). Needs the export templates.
 GODOT=<path> ./tests/export_test.sh
 
+# THE LOAD: 50, 100 and 300 bot players (tools/load/bots.py: stdlib Python, many guests in one
+# process) on the TEST database, asking exactly what the game's client asks (its InterestManager's
+# queries, dumped), walking cell to cell with the referee running; measured per step: bytes and rows
+# a player, reducer round trips and the server's own reducer times (/v1/metrics), input to processed,
+# ring swaps, the referee's frame times and stalls (its perf_report rows). Harness checks (every bot
+# connected, moved, saw others, crossed cells, nothing refused) must hold or the numbers mean nothing;
+# limits (shared/load.json) say where it breaks. Ends with two negative runs (#284). ~20 minutes.
+GODOT=<path> ./tests/load_test.sh
+
 # THE LOOK: checks that need pixels, so it opens a small window (every other layer is headless,
 # and the headless renderer draws nothing). Foliage lit the same from both sides (#141), the
 # grass's colour (#146), the lake's depth (#150), the grip preview's pictures (#157), F11 (#148).

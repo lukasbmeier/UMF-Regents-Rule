@@ -1,38 +1,50 @@
-# Handoff — UMF Template, 2026-10-26
+# Handoff — UMF Template, 2026-10-29
 
 ## Where it stands
-**1.1.1 COMMITTED AND PUSHED, NOT SHIPPED**: four foundation fixes made from a Regent's Rule session (Luke's
-playtest of the continent, 2026-10-24). Regent's Rule has pulled it; **Fishing, Fowl Play and DiscGolf have
-not** (`ship_template.sh` not run: the usage ran short). No schema change; the content bake is in it (a new
-hot rule), so a game takes it with a pull, a publish (data kept) and its suites.
-Suites here: the unit sweep 2205/0 after the last change (referee, remote_animation, presence, cells each
-with its new checks; each new check failed with its fix taken out). Not run here: e2e, export, the server
-suites (no server code changed; `cargo check` wasm green).
+**1.2.0, the load test (DECISIONS #284)**: committed and pushed with this HANDOFF; NOT yet shipped to the
+games (`ship_template.sh` not run for 1.2.0; no schema change, nothing to republish). **1.1.1 is shipped**
+to Fishing, Fowl Play, DiscGolf (and Regent's Rule) this session, each republished `--codegen` (data kept).
+Suites here: unit sweep 2205/0 (lints clean), `tests/load/test_load.py` 19/0, `tests/load_test.sh` run three
+times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative runs passing. Its exit is 2
+("breaks"): the referee breaks between 150 and 200 bots (below).
 
-## This session (CHANGELOG 1.1.1)
-- **DECISIONS #283, two sides**: hot flag `foundation.referee_two_sides` (off). On, a judged sweep passes
-  through its user's own side, the players or everyone else (`ActionReferee.is_player`), to the first of
-  the other. Regent's Rule turns it on (two skeletons blocked each other's swings). Fowl Play keeps it off.
-  The referee suite sets it either way, since a game's override is its default.
-- `AnimationDriverComponent`: a character is posed the moment it is built (`_tree.advance(0.0)`); since
-  #282 a new one stood in its rest pose (a T-pose) until the driver's first advance.
-- `Cells.recentre`: a jump past the cells next to the centre re-centres at once. Regent's Rule's spawn is
-  ON a cell edge; back from far away a player kept a ring 600 m off and was sent nothing round them.
-- `PresenceComponent`: a nameless player not yet known as an admin is asked after again every 0.5 s;
-  `is_tool` is renamed `is_tool_row` (called from outside the class, `PresenceComponent.is_tool` was
-  Godot's own `Script.is_tool()`).
+## This session
+- Shipped 1.1.1: games' suites after the pull: Fishing unit 2985/0, content 18/0, fishing playtest 106/0 +
+  observer 18/0; Fowl Play unit 2489/0 (referee two sides off), content 18/0, hunt 13/0, launch 8/0, powers
+  2/1 (stale test, below); DiscGolf unit 2279/0, content 18/0, bots 15/0. Each game has one uncommitted
+  file, `spacetime_bindings/codegen_debug/unparsed_schema_umf.json` (the codegen's debug dump): Luke's to commit.
+- The load test (#284): `tools/load/` (`wire.py` WebSocket + BSATN from the module's schema + v3 messages;
+  `bots.py` many guests a process; `cells.py` the Cells twin; `load_test.py` steps, server metrics, the
+  referee's `perf_report`, the report; `interest_dump.gd/.tscn` the game's own queries), `tests/load_test.sh`,
+  `tests/load/test_load.py`, `shared/load.json`. `InterestManager.cell_query` / `own_query` split out.
+- MEASURED (`docs/load/2026-10-29_greybox.md`): the server keeps up at 300 (tick p95 9.5 ms of 50;
+  `submit_input` queue wait p95 41 ms at 300, 6000 calls/s); per player at 300: 57 KB/s wire, 2000 rows/s,
+  55 others in view. THE REFEREE: frame p95 6.9 ms at 100, 13.8 at 150, 76 at 200, 100 at 300; stalls to 2 s
+  (6.6 s in an earlier run); its ping in seconds. It is sent every bot's movement (whole-world subscription).
+- HANDBOOK "The load test" (section 3) and §10; AGENTS verify loop; testing.md; file_map; CHANGELOG 1.2.0;
+  FOUNDATION_SYSTEMS "The load test".
 
 ## Next, in order
-1. **Ship 1.1.1** to Fishing, Fowl Play and DiscGolf: `ship_template.sh "1.1.1: ..."` (each game's work
-   committed first), then in each a publish and its suites. Fowl Play's referee suites matter most (the
-   two-sides rule must stay off there).
-2. The load test harness (Regent's Rule's HANDOFF: Tuesday after 5 pm), a milestone of its own here.
+1. Ship 1.2.0: `bash "../ship_template.sh" "1.2.0: the load test"` (games committed first; Luke has the
+   debug-dump files to commit), then each game's unit suite (no republish needed).
+2. Regent's Rule pulls it and writes its `load_300.sh` on the continent with `game/regents/load_bot.py`
+   (cast basics, harvest) and its own `shared/regents/load.json`.
+3. The referee's feed (Luke's call on the approach): a ring/cell interest of its own for what it judges,
+   or thinner movement rows to it; then this suite says how far it goes.
+4. Template 1.0 milestone A's last measurement: one OR'd ring query per table against nine one-cell ones
+   (an interest file with OR'd cell queries; `bots.py` builds per cell today).
 
 ## Waiting on Luke
-- Nothing new for the template.
+- The per-player bandwidth budget (`shared/load.json` `client_kb_per_s_p95`, `client_rows_per_s_p95`: null,
+  reported only). 57 KB/s on the wire at 300 bots on the greybox is the number to set it against.
+- Which way to fix the referee's feed (Next 3).
+- Fowl Play's `powers_playtest.sh` fails "Play as: built again as the eagle": the eagle rests since
+  2026-10-15 (`chicken.eagle_playable` off, "a hen instead"), so the test is stale, not the template.
+  A Fowl Play fix (skip the eagle when it is resting), not done here.
 
 ## Watch out
-- A game's hot-rule override is its build's default: a foundation test that assumes a rule's foundation
-  default must set the rule itself (the referee suite does now).
-- `SomeClass.is_tool(...)` from outside a script calls `Script.is_tool()`: avoid static names that
-  shadow `Script`/`Resource` methods.
+- SpacetimeDB on Windows answers reducers on the 15.6 ms timer: round trips p95 ~15 ms whatever the load
+  (server time 0.05 ms). Do not read it as server load; read the server's own histograms in the report.
+- asyncio's clock on Windows ticks every 15.6 ms: the bots measure with `perf_counter`; keep it that way.
+- The load suite wipes `umf-template-test` several times and runs six Python processes and a referee:
+  run nothing else on the server meanwhile, or the numbers are not the game's.

@@ -101,6 +101,7 @@ sidecar/physics/body_referee.gd          the world's bodies flown, written, thei
 sidecar/project_stamp.gd                 when the project last changed: a sidecar older than it stops (DECISIONS #272)
 tools/editor_admins.py                   the identities this machine's editor plays as (publish.sh makes them admins)
 tools/telemetry/                         chronicle.py (keeps every change and place in build/telemetry/<db>.sqlite) · dashboard.py + page.html (the telemetry page) · tools/telemetry.cmd (DECISIONS #276)
+tools/load/                              the load test (DECISIONS #284): bots.py (many guest bots in one process) · wire.py (WebSocket, BSATN from the module's schema, the v3 messages) · cells.py (the Cells twin) · load_test.py (steps, server metrics, the referee's reports, the report) · interest_dump.gd/.tscn (the game's own queries for the bots) · tests/load_test.sh, tests/load/test_load.py, shared/load.json
 foundation/net/chronicle_launcher.gd     starts the chronicle beside an editor run (the admin's, on a local server)
 shared/telemetry.json                    the chronicle's skip and quiet tables and the foundation's panels; a genre adds shared/<genre>/telemetry.json
 server/src/body.rs + module/bodies.rs    what the module checks of a throw; body_state, body_contact, launch_body, write_body_batch, report_body_contacts

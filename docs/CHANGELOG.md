@@ -817,3 +817,19 @@ No schema change: a game takes it with a pull (the content bake is in it).
 - `PresenceComponent` asks again after a nameless player who is not yet known as an admin (the `authority`
   rows may come after the player's): a tool is hidden whichever comes first. Its `is_tool` is now
   `is_tool_row` (`PresenceComponent.is_tool` from outside called Godot's own `Script.is_tool()`).
+
+## 1.2.0 — the load test (DECISIONS #284)
+No schema change: a game takes it with a pull; nothing to republish.
+- **`tests/load_test.sh`** (`tools\run.cmd tests\load_test.sh`, ~20 minutes): bot players in steps (50, 100,
+  300: `shared/load.json`) on the TEST database, each a real guest connection walking cell to cell with the
+  world's referee running, measured step by step until a limit breaks. Report in `build/load/ring/report.md`.
+- **The bots** (`tools/load/`, Python standard library only): many in one process, asking exactly what the
+  game's client asks for (`interest_dump.gd` writes out the game's own `InterestManager` queries), calling
+  reducers by name from the module's own schema. What a game's bots do besides walking is its hook,
+  `game/<genre>/load_bot.py`; its limits go in `shared/<genre>/load.json`.
+- `InterestManager.cell_query` / `own_query`: the ring's two queries by name (the client and the bots share them).
+- **Measured on this machine, the greybox** (`docs/load/2026-10-29_greybox.md`): the server keeps up at 300
+  (movement tick p95 9.5 ms of its 50; 6000 `submit_input` calls a second queue 41 ms at p95); per player at
+  300, 57 KB/s on the wire (gzip), 2000 rows a second, 55 others in view. **The referee breaks between 150 and
+  200 bots** (frame p95 6.9 ms at 100, 76 at 200; stalls up to 2 s at 300): it is sent every bot's movement.
+- New: `tests/load/test_load.py` (19 checks, no server); the suite's two negative runs.
