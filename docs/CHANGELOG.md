@@ -910,3 +910,15 @@ Code and tools only: a game republishes (no `--codegen`; data kept).
   fewest referees that held with room (`build/load/sweep.md`).
 - `GenreModule.cell_tables`: a genre's tables of placed things; a region referee asks for them by its cells
   (its config never had the game's `cell_tables`, so it was sent every one of those rows in the world).
+
+## 1.5.1 — a ring's cells are asked for by their number alone (DECISIONS #291)
+Code only: a game republishes (no `--codegen`; data kept).
+- `InterestManager.cell_query` is `SELECT * FROM <table> WHERE chunk = N`: the server narrows a subscription
+  by one `column = value` and not by `world_id = W AND chunk = N`. Measured on Regent's Rule's Skyrim-size
+  world (300 bots spread out, each with cells of its own): the movement tick's subscription update 111 ms
+  a tick with the world in the query, 19 ms without; a referee's write 55 ms, 7.
+- Rows of another world in the same cell number are kept from the game where they arrive
+  (`SpaceTimeSync.ring_world`, `ring_tables`); a row moving out of the world shown is a delete, into it an
+  insert; our own entity's rows always pass. Moving to another world shows its rows from the cache at once
+  (`show_ring_world`).
+- The referee sweep's test no longer prints its tables into the unit run.

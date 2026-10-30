@@ -29,6 +29,10 @@ class FakeSubSdk extends Node:
 	var handles: Array[FakeSubHandle] = []
 	var queries: Array[PackedStringArray] = []
 	var next_error: int = OK
+	var ldb: FakeCache = FakeCache.new()
+
+	func get_local_database() -> Object:
+		return ldb
 
 	func subscribe(q: PackedStringArray) -> RefCounted:
 		var h := FakeSubHandle.new()
@@ -37,6 +41,28 @@ class FakeSubSdk extends Node:
 		handles.append(h)
 		queries.append(q)
 		return h
+
+## The SDK's row cache, as far as `SpaceTimeSync.find_rows` reads it: rows by table.
+class FakeCache extends RefCounted:
+	var rows: Dictionary = {}   # table -> Array of rows
+
+	func find_where(table: StringName, pred: Callable) -> Array:
+		var out: Array = []
+		for r: Variant in rows.get(table, []):
+			if pred.call(r):
+				out.append(r)
+		return out
+
+
+## A placed thing's row: whose, in which world.
+class FakeCellRow extends RefCounted:
+	var entity_id: int = 0
+	var world_id: int = 0
+
+	func _init(eid: int, world: int) -> void:
+		entity_id = eid
+		world_id = world
+
 
 ## THE ONE PLACE SUBSCRIPTION SQL IS BUILT (PHASE3_SPEC Task 11). Two things go wrong here and
 ## neither of them errors: asking for the wrong rows, which brings the game up empty with every
@@ -338,10 +364,11 @@ func _run_ring_tests() -> void:
 	var missing: Array[String] = []
 	for c: int in cells0:
 		for t: StringName in [&"entity", &"movement_state", &"noise", &"ground_item"]:
-			var q: String = "SELECT * FROM %s WHERE world_id = 0 AND chunk = %d" % [t, c]
+			var q: String = "SELECT * FROM %s WHERE chunk = %d" % [t, c]
 			if not r0.has(q):
 				missing.append(q)
-	_check(missing.is_empty(), "every cell table, for each of the nine cells: %s" % ", ".join(missing.slice(0, 3)))
+	_check(missing.is_empty(), "every cell table, for each of the nine cells, by its cell alone (the server narrows one `column = value`): %s" % ", ".join(missing.slice(0, 3)))
+	_check(not ",".join(r0).contains("world_id"), "no world in a cell's query: another world's rows are kept back where they arrive")
 	_check(not ",".join(r0).contains("entity_id = 77"), "the cells' set asks by cell only: no row is two of its queries'")
 	_check(not ",".join(r0).contains("item_def") and not ",".join(r0).contains("hot_rule"), "nothing of the world's set is asked again")
 	fake.handles[2].applied.emit()
@@ -354,8 +381,8 @@ func _run_ring_tests() -> void:
 	var c1: int = Cells.chunk_of(Vector3(68.5, 0, 32))
 	_check(fake.handles.size() == 4 and im.centre == c1, "well inside the next cell, the ring follows")
 	var far_east: int = Cells.at(Cells.squares(c0).x + 2, Cells.squares(c0).y)
-	_check(fake.queries[3].has("SELECT * FROM entity WHERE world_id = 0 AND chunk = %d" % far_east)
-		and not fake.queries[3].has("SELECT * FROM entity WHERE world_id = 0 AND chunk = %d"
+	_check(fake.queries[3].has("SELECT * FROM entity WHERE chunk = %d" % far_east)
+		and not fake.queries[3].has("SELECT * FROM entity WHERE chunk = %d"
 			% Cells.at(Cells.squares(c0).x - 1, Cells.squares(c0).y)),
 		"gaining the column ahead, losing the one behind")
 	im._on_row_event(_move_ev(FakeMoveRow.new(77, Vector3(300, 0, 32), 0)))
@@ -364,11 +391,43 @@ func _run_ring_tests() -> void:
 	_check(fake.handles[2].unsubscribed and moves.back() == Cells.chunk_of(Vector3(300, 0, 32)), "and the last asked is the one kept")
 	_check(not fake.handles[1].unsubscribed, "our own set stays through every move")
 
+	# ANOTHER WORLD'S ROWS IN OUR CELLS (template 1.5.1): kept from the game where they arrive.
+	var seen: Array[String] = []
+	var seen_cb: Callable = func(ev: RowEvent) -> void:
+		if ev.table == &"noise":
+			seen.append("%s %d" % [RowEvent.Kind.keys()[ev.kind], ev.entity_id])
+	sync.row_event.connect(seen_cb)
+	var prev_local: int = EntityRegistry.local_entity_id
+	EntityRegistry.local_entity_id = 77
+	_check(sync.ring_world == 0 and sync.ring_tables.has(&"noise") and not sync.ring_tables.has(&"player"),
+		"the ring shows world 0's rows of its cell tables")
+	var here0 := FakeCellRow.new(5, 0)
+	var there1 := FakeCellRow.new(6, 1)
+	sync._emit_row(RowEvent.Kind.INSERTED, &"noise", null, here0)
+	sync._emit_row(RowEvent.Kind.INSERTED, &"noise", null, there1)
+	sync._emit_row(RowEvent.Kind.UPDATED, &"noise", there1, FakeCellRow.new(6, 1))
+	sync._emit_row(RowEvent.Kind.DELETED, &"noise", there1, null)
+	_check(seen == ["INSERTED 5"], "a row of our world comes in, one of another world in the same cell never does (%s)" % str(seen))
+	seen.clear()
+	sync._emit_row(RowEvent.Kind.UPDATED, &"noise", here0, FakeCellRow.new(5, 1))
+	sync._emit_row(RowEvent.Kind.UPDATED, &"noise", there1, FakeCellRow.new(6, 0))
+	sync._emit_row(RowEvent.Kind.INSERTED, &"noise", null, FakeCellRow.new(77, 1))
+	_check(seen == ["DELETED 5", "INSERTED 6", "INSERTED 77"],
+		"one leaving our world is gone, one arriving is new, our own always passes (%s)" % str(seen))
+	seen.clear()
+	fake.ldb.rows[&"noise"] = [FakeCellRow.new(5, 1), FakeCellRow.new(6, 0), FakeCellRow.new(8, 1), FakeCellRow.new(77, 1)]
 	im.set_world(1)
-	_check(fake.handles.size() == 7 and fake.queries[6].has("SELECT * FROM entity WHERE world_id = 1 AND chunk = %d" % im.centre),
-		"another world: a new world set and a new ring, in that world")
+	_check(seen.has("DELETED 6") and seen.has("INSERTED 5") and seen.has("INSERTED 8") and not seen.has("INSERTED 77")
+		and seen.size() == 3 and sync.ring_world == 1,
+		"moving to world 1: what we showed of world 0 goes, world 1's rows held back come in, our own untouched (%s)" % str(seen))
+	_check(fake.handles.size() == 7 and fake.queries[6].has("SELECT * FROM entity WHERE chunk = %d" % im.centre),
+		"and a new world set and ring are asked for")
 	fake.handles[5].applied.emit()
 	fake.handles[6].applied.emit()
+	sync.row_event.disconnect(seen_cb)
+	EntityRegistry.local_entity_id = prev_local
+	sync.ring_world = -1
+	sync.ring_tables.clear()
 
 	var ref := NetConfig.new()
 	ref.interest = NetConfig.Interest.RING

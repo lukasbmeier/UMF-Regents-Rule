@@ -264,6 +264,12 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
   round its player, swapped as it walks (once it is 4 m into a new cell), plus its own rows wherever
   they are. Everything else (players' names, sessions, rules, chat) comes as before. Every other game
   keeps `WORLD`: its whole world, as before 1.0.
+- **A cell is asked for by its number alone** (`SELECT * FROM movement_state WHERE chunk = N`, template
+  1.5.1): the server can narrow a subscription by one `column = value`, not by `world_id = W AND chunk = N`,
+  and with the world in it every moved row was checked against every player's every cell (on a world
+  Skyrim's size, the whole of the server's tick). Another world's rows in the same cell number are kept from
+  the game where they arrive (`SpaceTimeSync.ring_world`), and moving to another world shows that world's
+  at once. Two worlds a ring plays at once cost each other only those rows on the wire.
 - **A streamed level**: tick `LevelInfo.streamed`, put what fills the world (props, trees, buildings,
   markers) under a child node named `Cells`, and bake. The bake also cuts it into a scene per cell
   (`<level folder>/<level>_cells/`); a player's game frees the level's own copy and loads the 5 x 5

@@ -47,13 +47,14 @@ def fmt(v, d=1):
     return "-" if v is None else ("%." + str(d) + "f") % v if isinstance(v, float) else str(v)
 
 
-def main(labels):
+def main(labels, quiet=False):
     rows = []
     for label in labels:
         try:
             rows.append(row_of(label))
         except (OSError, ValueError, KeyError, IndexError) as e:
-            print("sweep_report: %s has no usable report (%s)" % (label, e))
+            if not quiet:
+                print("sweep_report: %s has no usable report (%s)" % (label, e))
     if not rows:
         sys.exit("sweep_report: no reports")
     m = rows[0]["machine"]
@@ -87,7 +88,8 @@ def main(labels):
     text = "\n".join(md) + "\n"
     with open(os.path.join(OUT, "sweep.md"), "w", encoding="utf-8") as f:
         f.write(text)
-    print(text)
+    if not quiet:
+        print(text)
 
 
 if __name__ == "__main__":
