@@ -1,58 +1,45 @@
-# Handoff — UMF Template, 2026-10-29
+# Handoff — UMF Template, 2026-10-29 (night: the referee at 300 players; 1.2.2, 1.3.0, 1.4.0)
 
 ## Where it stands
-**1.2.0, the load test (DECISIONS #284)**: committed and pushed with this HANDOFF; NOT yet shipped to the
-games (`ship_template.sh` not run for 1.2.0; no schema change, nothing to republish). **1.1.1 is shipped**
-to Fishing, Fowl Play, DiscGolf (and Regent's Rule) this session, each republished `--codegen` (data kept).
-Suites here: unit sweep 2205/0 (lints clean), `tests/load/test_load.py` 19/0, `tests/load_test.sh` run three
-times (10 bots; 50/100/300; 50-300 by 50s, the run of record) with both negative runs passing. Its exit is 2
-("breaks"): the referee breaks between 150 and 200 bots (below).
+**1.4.0, region referees** (DECISIONS #288) on top of **1.3.0** (#287) and **1.2.2** (#286): committed and
+pushed. Pulled into Regent's Rule (local merge commits there); NOT shipped to Fishing, Fowl Play, DiscGolf
+(`ship_template.sh` not run since 1.1.1: each has its codegen debug dump uncommitted, Luke's). 1.4.0 adds a
+table: each game republishes `--codegen` (data kept).
+Suites here: unit 2260/0; integration 644/0; sidecar 13/0; bodies 20/0 + 10/0; regions 25/0 (a keeper that
+never lets go fails 4); native 92/0; `tests/load/test_load.py` all green.
 
-## This session
-- **1.2.1, the walk map a tile at a time** (DECISIONS #285, from Regent's Rule's session): a level wider than
-  256 m is baked in 128 m tiles on first asking, every walk map off the main thread. Unit sweep 2211/0; the
-  new 3 km check fails baked whole. Fowl Play's farm keeps one map (its bots suites, at the ship).
-- **1.2.1** (from Regent's Rule's session, 2026-10-29): `shared/load.json` `"level"` (0) is the level the load
-  test puts world 0 on; a game overrides it in `shared/<genre>/load.json`. `tests/load_test.sh` read 0 always.
-  A hook may name refusals that are play (`EXPECTED_REFUSALS`), hear answers (`on_result`), read rows as the
-  owner (`bot.sql`). Checked: unit 20/0 (the new check fails with the change taken out); a 10-bot run holds. Pushed; shipped to Regent's Rule only (by merge), not yet to the others.
-- Shipped 1.1.1: games' suites after the pull: Fishing unit 2985/0, content 18/0, fishing playtest 106/0 +
-  observer 18/0; Fowl Play unit 2489/0 (referee two sides off), content 18/0, hunt 13/0, launch 8/0, powers
-  2/1 (stale test, below); DiscGolf unit 2279/0, content 18/0, bots 15/0. Each game has one uncommitted
-  file, `spacetime_bindings/codegen_debug/unparsed_schema_umf.json` (the codegen's debug dump): Luke's to commit.
-- The load test (#284): `tools/load/` (`wire.py` WebSocket + BSATN from the module's schema + v3 messages;
-  `bots.py` many guests a process; `cells.py` the Cells twin; `load_test.py` steps, server metrics, the
-  referee's `perf_report`, the report; `interest_dump.gd/.tscn` the game's own queries), `tests/load_test.sh`,
-  `tests/load/test_load.py`, `shared/load.json`. `InterestManager.cell_query` / `own_query` split out.
-- MEASURED (`docs/load/2026-10-29_greybox.md`): the server keeps up at 300 (tick p95 9.5 ms of 50;
-  `submit_input` queue wait p95 41 ms at 300, 6000 calls/s); per player at 300: 57 KB/s wire, 2000 rows/s,
-  55 others in view. THE REFEREE: frame p95 6.9 ms at 100, 13.8 at 150, 76 at 200, 100 at 300; stalls to 2 s
-  (6.6 s in an earlier run); its ping in seconds. It is sent every bot's movement (whole-world subscription).
-- HANDBOOK "The load test" (section 3) and §10; AGENTS verify loop; testing.md; file_map; CHANGELOG 1.2.0;
-  FOUNDATION_SYSTEMS "The load test".
+## This session (all from Regent's Rule's load test, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
+- **1.2.2 (#286)**: a referee subscribes only what it reads (`SidecarMain.referee_feed`; `GenreModule.
+  referee_tables`, `*` by default; `SpaceTimeComponent.also_reads`), never `input_queue`; reading an unasked
+  table is an error in its log. The integration suite reads the feed from the bots' referee's log.
+- **1.3.0 (#287)**: the brains' world view once a think period (not every tick); NPC tiers behind
+  `foundation.npc_tiers` (off; 200 / 400 m / 30 s); FIXED: the view never knew who the players were.
+- **1.4.0 (#288)**: region referees (`--region`, `--border`, `--hand-on`, `--name`), `npc_driver` +
+  `drive_npcs` + `offer_region_referee`, `RegionKeeper`, `RefereeRegion` (clipped to the level's bake bounds;
+  no cell asked for until the world's level is known), `InterestManager.set_region`; the load test's
+  `referees` split; `tests/regions_test.sh`. HANDBOOK "Several referees for one big world", AGENTS verify loop.
+- Measured on Regent's continent: one referee 19.5 ms p95 at 100 bots, breaks at 200; four region referees
+  hold at 300 (21 ms p95 the worst of them; the server's tick 46 of 50, its reducers' wait 47.6 of 50).
 
 ## Next, in order
-1. Ship 1.2.0 and 1.2.1: `bash "../ship_template.sh" "1.2.0: the load test"` (games committed first; Luke has the
-   debug-dump files to commit), then each game's unit suite (no republish needed).
-2. Regent's Rule pulls it and writes its `load_300.sh` on the continent with `game/regents/load_bot.py`
-   (cast basics, harvest) and its own `shared/regents/load.json`.
-3. The referee's feed: MEASURED in Regent's Rule (`../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`): first a referee
-   subscribes only what it reads (no `input_queue`), then NPC tiers, then region referees. Was (Luke's call on the approach): a ring/cell interest of its own for what it judges,
-   or thinner movement rows to it; then this suite says how far it goes.
-4. Template 1.0 milestone A's last measurement: one OR'd ring query per table against nine one-cell ones
-   (an interest file with OR'd cell queries; `bots.py` builds per cell today).
+1. Ship 1.2.0-1.4.0: `bash "../ship_template.sh" "1.4.0: region referees"` once Luke commits the games'
+   debug dumps; each game republishes `--codegen` and runs its unit suite and its referee suites. Fowl Play
+   and DiscGolf keep `referee_tables = *` (their brains read genre tables) until they list theirs.
+2. The SERVER is now the ceiling at 300 (tick 46 ms, reducer wait 47.6 ms of 50): `prune_action_events`
+   scans the whole `action_event` table every time (4 ms at 300); `work_tick` 2.4 ms (Regent's); then the
+   reducers' queue.
+3. Genre cell tables are asked for whole by a region referee (its config has the foundation's cell tables
+   only): give the sidecar the game's net config's `cell_tables`.
+4. Template 1.0 milestone A's last measurement (OR'd ring query against nine one-cell ones).
 
 ## Waiting on Luke
-- The per-player bandwidth budget (`shared/load.json` `client_kb_per_s_p95`, `client_rows_per_s_p95`: null,
-  reported only). 57 KB/s on the wire at 300 bots on the greybox is the number to set it against.
-- Which way to fix the referee's feed (Next 3).
-- Fowl Play's `powers_playtest.sh` fails "Play as: built again as the eagle": the eagle rests since
-  2026-10-15 (`chicken.eagle_playable` off, "a hen instead"), so the test is stale, not the template.
-  A Fowl Play fix (skip the eagle when it is resting), not done here.
+- The per-player bandwidth budget (`client_kb_per_s_p95`): ~120 KB/s at 300 dense; his home upload is
+  39 Mbit/s (fits ~30-40 dense players), so 300 means a rented host.
+- Fowl Play's `powers_playtest.sh` eagle check is stale (the eagle rests), not the template.
 
 ## Watch out
-- SpacetimeDB on Windows answers reducers on the 15.6 ms timer: round trips p95 ~15 ms whatever the load
-  (server time 0.05 ms). Do not read it as server load; read the server's own histograms in the report.
-- asyncio's clock on Windows ticks every 15.6 ms: the bots measure with `perf_counter`; keep it that way.
-- The load suite wipes `umf-template-test` several times and runs six Python processes and a referee:
-  run nothing else on the server meanwhile, or the numbers are not the game's.
+- A referee errors on any read of a table it does not subscribe: a component's `also_reads`, a genre's
+  `referee_tables`.
+- Region referees are static rectangles the operator gives; they must cover the world between them.
+- SpacetimeDB on Windows answers on the 15.6 ms timer: round trips p95 ~15 ms whatever the load.
+- The load suite wipes the test database several times: run nothing else on the server meanwhile.
