@@ -922,3 +922,13 @@ Code only: a game republishes (no `--codegen`; data kept).
   insert; our own entity's rows always pass. Moving to another world shows its rows from the cache at once
   (`show_ring_world`).
 - The referee sweep's test no longer prints its tables into the unit run.
+
+## 1.5.2 — a big world's idle rows cost the tick nothing; referees cut by their work (DECISIONS #292)
+Code only: a game republishes (no `--codegen`; data kept).
+- `tick_movement` passes a row standing on the ground with no frames and no teleport before any lookup, and
+  looks an entity's kind up only for a row that moves (it read every entity of the world a tick; for every row
+  without frames it asked whether a player drives it). Regent's Rule's Skyrim-size world has 12,000 such rows.
+- The load test cuts region referees by players AND the NPCs the level places (`npc_kinds`, `npc_weight` in
+  a game's load config): by players alone, one referee of four got half of a world's 660 skeletons.
+- `EntityRegistry` says what it dropped (events for entities never built here) once a minute, not once an
+  entity with a backtrace (a region referee printed thousands).

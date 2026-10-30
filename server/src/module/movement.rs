@@ -131,7 +131,6 @@ pub(crate) fn tick_world_module(
     for q in ctx.db.input_queue().world_id().filter(world_id) {
         inputs_of.entry(q.entity_id).or_default().push(q);
     }
-    let kinds: HashMap<u64, u8> = ctx.db.entity().world_id().filter(world_id).map(|e| (e.entity_id, e.kind)).collect();
     let statuses: HashMap<u64, StatusStateRow> = ctx.db.status_state().world_id().filter(world_id).map(|r| (r.entity_id, r)).collect();
     let bodies: HashSet<u64> = ctx.db.body_state().world_id().filter(world_id).map(|b| b.entity_id).collect();
     let mut pushes_of: HashMap<u64, Vec<Push>> = HashMap::new();
@@ -149,6 +148,13 @@ pub(crate) fn tick_world_module(
             continue;
         }
         let mut inputs: Vec<InputQueueRow> = inputs_of.remove(&row.entity_id).unwrap_or_default();
+        // NOTHING TO DO FOR MOST ROWS OF A BIG WORLD (template 1.5.2: Regent's Rule's Skyrim-size world has
+        // 12,000, its nodes and stones): standing on the ground with no frames and no teleport to clear,
+        // nothing below would move or write it, so it is passed before any lookup (each was a player and
+        // a kind lookup a row a tick: the tick's own code 16.9 ms there, the continent's 3.2).
+        if inputs.is_empty() && row.grounded && !row.teleport_flag {
+            continue;
+        }
         inputs.sort_by_key(|q| q.frame.seq);
 
         let mut s = MovementState {
@@ -160,7 +166,8 @@ pub(crate) fn tick_world_module(
         };
         let mut last_seq = row.last_processed_seq;
         // Its kind's bound (its characters' movement profiles, #205), as its status allows (#206).
-        let kind_limits = crate::content::movement_limits(kinds.get(&row.entity_id).copied().unwrap_or(0));
+        let kind = ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0);
+        let kind_limits = crate::content::movement_limits(kind);
         let limits = status_limits(statuses.get(&row.entity_id), now, kind_limits, grace_ms);
         // And as fast as the pushes it is under make it go (DECISIONS #251: a blower, a pad).
         let limits = push_limits(pushes_of.get(&row.entity_id).map_or(&[][..], |v| v.as_slice()), now, push_grace_s, limits);
@@ -176,8 +183,7 @@ pub(crate) fn tick_world_module(
             // client's own gravity when they arrive. Simulating it here as well puts the module
             // one step ahead of the client for a tick, which the client sees as a correction
             // mid-jump. Only an entity nobody is driving (an NPC, a player who has left) falls.
-            let driven = ctx.db.player().entity_id().find(row.entity_id).map(|p| p.online).unwrap_or(false);
-            if !driven && !s.grounded {
+            if !s.grounded && !ctx.db.player().entity_id().find(row.entity_id).is_some_and(|p| p.online) {
                 s = crate::sim::simulate(&s, &InputFrame::default(), cfg, SERVER_DT);
             }
         } else {

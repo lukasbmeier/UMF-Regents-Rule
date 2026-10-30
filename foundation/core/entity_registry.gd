@@ -27,6 +27,7 @@ signal global_row_event(ev: RowEvent)
 const ENTITY_TABLE: StringName = &"entity"
 const PLAYER_TABLE: StringName = &"player"
 const BUFFER_TTL_USEC: int = 30_000_000     # drop orphaned buffers after 30 s
+const DROPPED_WARN_EVERY_USEC: int = 60_000_000   # and say so at most once a minute
 const SWEEP_INTERVAL_SEC: float = 5.0
 
 var local_entity_id: int = -1
@@ -40,6 +41,11 @@ var _binding: Dictionary[int, Node] = {}
 ## entity_id -> {row: RowEvent}, in arrival order, keyed by the row the event leaves current.
 var _buffers: Dictionary[int, Dictionary] = {}
 var _buffer_touched_usec: Dictionary[int, int] = {}
+## Orphaned events dropped since the last warning, and when that was (template 1.5.2: one warning, with a
+## backtrace, an entity, was thousands in a region referee, which spawns only what it runs).
+var _dropped_events: int = 0
+var _dropped_entities: int = 0
+var _dropped_warned_usec: int = 0
 var _sweep_accum: float = 0.0
 
 
@@ -190,9 +196,18 @@ func _sweep_buffers() -> void:
 	var now: int = Time.get_ticks_usec()
 	for eid: int in _buffer_touched_usec.keys():
 		if now - _buffer_touched_usec[eid] > BUFFER_TTL_USEC:
-			push_warning("EntityRegistry: dropping %d orphaned events for entity %d" % [_buffers[eid].size(), eid])
+			_dropped_events += _buffers[eid].size()
+			_dropped_entities += 1
 			_buffers.erase(eid)
 			_buffer_touched_usec.erase(eid)
+	# One line a minute at most: rows of entities never built here (a referee spawns only what it runs; a
+	# subscription that delivered rows for an entity whose own row never came).
+	if _dropped_entities > 0 and now - _dropped_warned_usec > DROPPED_WARN_EVERY_USEC:
+		push_warning("EntityRegistry: dropped %d orphaned events for %d entities never built here (no entity row came for them in 30 s)"
+			% [_dropped_events, _dropped_entities])
+		_dropped_events = 0
+		_dropped_entities = 0
+		_dropped_warned_usec = now
 
 
 func _maybe_assign_local(ev: RowEvent) -> void:

@@ -707,6 +707,10 @@ def region_args(cfg, split, n_bots, seed=1):
         level = levels.Level.by_id(ROOT, int(cfg.get("level", 0)))
         if level is not None:
             pts = levels.homes(n_bots, seed, spread, level, int(cfg["area_cells"]), cell_m())
+            # A referee's work is its players AND the NPCs it runs (template 1.5.2): a cut by players alone
+            # gave one referee of four half of a world's 660 skeletons. `npc_kinds`: the level points it runs.
+            pts = pts + [p for p in levels.npc_points(level, cfg.get("npc_kinds", []))
+                         for _ in range(max(0, int(round(float(cfg.get("npc_weight", 1.0))))))]
             return regions_by_homes(split, pts, cell_m())
     return regions(split, int(cfg["area_cells"]))
 
