@@ -2,8 +2,10 @@
 
 ## Where it stands
 **1.5.5** (DECISIONS #290-#294) on 1.4.1: committed and pushed. Pulled into Regent's Rule; shipped to Fishing,
-Fowl Play, DiscGolf with `ship_template.sh` (each republished `--codegen`: 1.4.0 added a table): see their
-HANDOFFs for their suites. Suites here: unit 2272/0 (the ground bake, the ring's world filter and the
+Fowl Play, DiscGolf with `ship_template.sh` (each republished `--codegen`: 1.4.0 added a table). Their suites:
+Fishing unit 3053, integration 850; Fowl Play unit 2557, integration 1136, chase 28, nest 17, hunt 13; DiscGolf
+unit 2347, bots 15, all green; this suite's integration in DiscGolf fails 22, against 32 before the ship (its
+round plan, interact and bodies sections: DiscGolf's to look at, its HANDOFF). Suites here: unit 2272/0 (the ground bake, the ring's world filter and the
 still-frame drop each failed by a negative), integration 644/0, e2e 11/0, ring 15+47/0, sidecar 13/0,
 regions 25/0, native 92/0, `tests/load/test_load.py` 33/0.
 
