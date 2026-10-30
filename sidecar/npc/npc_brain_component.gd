@@ -189,6 +189,7 @@ func _set_dormant(on: bool) -> void:
 	if on == dormant:
 		return
 	dormant = on
+	print("[Sidecar] entity %d %s" % [entity_id, "goes dormant (no player near)" if on else "wakes (a player came near)"])
 	tier_changed.emit(on)
 
 
