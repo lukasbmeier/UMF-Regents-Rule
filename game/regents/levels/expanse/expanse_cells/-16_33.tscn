@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_1co8k"]
+
+[node name="Cell_-16_33" type="Node3D" unique_id=540629382]
+
+[node name="w_skeleton_146_1" type="Marker3D" parent="." unique_id=442740778]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -969.6245, 10.937884, 2151.9072)
+gizmo_extents = 0.5
+script = ExtResource("1_1co8k")
+point_id = "w_skeleton_146_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_146_2" type="Marker3D" parent="." unique_id=44350140]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -966.6245, 10.981824, 2155.4072)
+gizmo_extents = 0.5
+script = ExtResource("1_1co8k")
+point_id = "w_skeleton_146_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_146_3" type="Marker3D" parent="." unique_id=694721513]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -965.6245, 10.681115, 2148.4072)
+gizmo_extents = 0.5
+script = ExtResource("1_1co8k")
+point_id = "w_skeleton_146_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_146" type="Marker3D" parent="." unique_id=1554029932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -969.6245, 10.937884, 2151.9072)
+gizmo_extents = 10.0
+script = ExtResource("1_1co8k")
+point_id = "w_poi_skeletons_146"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")
+
+[node name="w_poi_zone_75" type="Marker3D" parent="." unique_id=21471286]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -997.48364, 11.093684, 2126.5442)
+gizmo_extents = 10.0
+script = ExtResource("1_1co8k")
+point_id = "w_poi_zone_75"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

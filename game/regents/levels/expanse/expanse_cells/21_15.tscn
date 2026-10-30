@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_yingm"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_bkm2b"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_0ghse"]
+
+[node name="Cell_21_15" type="Node3D" unique_id=1599936601]
+
+[node name="w_oak_1397" type="Marker3D" parent="." unique_id=1275325188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1366.0015, 5.4965367, 986.8065)
+gizmo_extents = 0.6
+script = ExtResource("1_yingm")
+point_id = "w_oak_1397"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_3787" type="Marker3D" parent="." unique_id=1257736410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1401.3801, 5.984365, 1001.0595)
+gizmo_extents = 0.6
+script = ExtResource("1_yingm")
+point_id = "w_tree_3787"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_yew_508" type="Marker3D" parent="." unique_id=1046651849]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1359.2457, 5.926739, 991.48016)
+gizmo_extents = 0.6
+script = ExtResource("1_yingm")
+point_id = "w_yew_508"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="fern_1_4430" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_bkm2b")]
+transform = Transform3D(-0.2792403, 0, -0.97219807, 0, 1.011506, 0, 0.97219807, 0, -0.2792403, 1356.207, 6.459294, 1010.3394)
+
+[node name="bush_long_1_4431" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_0ghse")]
+transform = Transform3D(-0.7704305, 0, -0.25551927, 0, 0.8116978, 0, 0.25551927, 0, -0.7704305, 1360.9902, 5.728452, 989.59534)
+
+[node name="w_poi_zone_525" type="Marker3D" parent="." unique_id=1886422114]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1402.2723, 6.010897, 960.6212)
+gizmo_extents = 10.0
+script = ExtResource("1_yingm")
+point_id = "w_poi_zone_525"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

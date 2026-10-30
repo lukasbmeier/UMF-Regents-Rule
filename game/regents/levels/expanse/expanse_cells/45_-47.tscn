@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_keyjc"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_taikl"]
+
+[node name="Cell_45_-47" type="Node3D" unique_id=907395553]
+
+[node name="w_tree_4810" type="Marker3D" parent="." unique_id=511406983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2924.85, 11.076544, -2992.4734)
+gizmo_extents = 0.6
+script = ExtResource("1_keyjc")
+point_id = "w_tree_4810"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="rock_medium_1_5744" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_taikl")]
+transform = Transform3D(-0.46473572, 0, 0.6323575, 0, 0.78476447, 0, -0.6323575, 0, -0.46473572, 2925.4275, 10.266785, -2962.7537)

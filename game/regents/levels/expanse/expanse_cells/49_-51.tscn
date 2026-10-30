@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_d1t4b"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_aqcew"]
+
+[node name="Cell_49_-51" type="Node3D" unique_id=1475388549]
+
+[node name="w_oak_1857" type="Marker3D" parent="." unique_id=43964492]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3184.973, 12.899223, -3255.1409)
+gizmo_extents = 0.6
+script = ExtResource("1_d1t4b")
+point_id = "w_oak_1857"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_4984" type="Marker3D" parent="." unique_id=2143099335]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3150.236, 14.37919, -3213.2527)
+gizmo_extents = 0.6
+script = ExtResource("1_d1t4b")
+point_id = "w_tree_4984"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_yew_674" type="Marker3D" parent="." unique_id=1508500366]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3142.5913, 12.243961, -3243.8318)
+gizmo_extents = 0.6
+script = ExtResource("1_d1t4b")
+point_id = "w_yew_674"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="fern_1_5918" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_aqcew")]
+transform = Transform3D(-0.88711035, 0, 0.11837291, 0, 0.8949731, 0, -0.11837291, 0, -0.88711035, 3154.5898, 14.453738, -3208.9854)
+
+[node name="w_poi_zone_462" type="Marker3D" parent="." unique_id=737343809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3199.887, 13.549493, -3231.1238)
+gizmo_extents = 10.0
+script = ExtResource("1_d1t4b")
+point_id = "w_poi_zone_462"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")
+
+[node name="w_poi_zone_542" type="Marker3D" parent="." unique_id=1472267610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3188.1204, 13.410349, -3214.7856)
+gizmo_extents = 10.0
+script = ExtResource("1_d1t4b")
+point_id = "w_poi_zone_542"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

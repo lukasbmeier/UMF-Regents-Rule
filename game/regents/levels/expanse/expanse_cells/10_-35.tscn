@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_ytojp"]
+
+[node name="Cell_10_-35" type="Node3D" unique_id=1037972578]
+
+[node name="grass_common_tall_3715" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_ytojp")]
+transform = Transform3D(0.8264475, 0, 0.4322807, 0, 0.9326747, 0, -0.4322807, 0, 0.8264475, 644.8107, 7.7177043, -2181.2385)

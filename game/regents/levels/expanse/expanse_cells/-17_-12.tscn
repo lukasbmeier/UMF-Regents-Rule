@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_t4pqo"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_ose3h"]
+
+[node name="Cell_-17_-12" type="Node3D" unique_id=978866019]
+
+[node name="w_oak_453" type="Marker3D" parent="." unique_id=1623881143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1043.9509, 15.12229, -725.9854)
+gizmo_extents = 0.6
+script = ExtResource("1_t4pqo")
+point_id = "w_oak_453"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_yew_179" type="Marker3D" parent="." unique_id=1132981951]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1033.9817, 15.366881, -748.99664)
+gizmo_extents = 0.6
+script = ExtResource("1_t4pqo")
+point_id = "w_yew_179"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="fern_1_1472" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_ose3h")]
+transform = Transform3D(-0.67753637, 0, -0.9069334, 0, 1.1320705, 0, 0.9069334, 0, -0.67753637, -1033.9843, 15.316624, -745.7632)

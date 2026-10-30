@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_qm6ch"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_im7a5"]
+
+[node name="Cell_-8_-21" type="Node3D" unique_id=1261199411]
+
+[node name="bush_large_2341" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_qm6ch")]
+transform = Transform3D(0.90074015, 0, 0.07744084, 0, 0.904063, 0, -0.07744084, 0, 0.90074015, -459.15857, 9.748614, -1290.6785)
+
+[node name="w_skeleton_152_3" type="Marker3D" parent="." unique_id=870686559]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -506.67505, 8.505713, -1281.5435)
+gizmo_extents = 0.5
+script = ExtResource("2_im7a5")
+point_id = "w_skeleton_152_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()

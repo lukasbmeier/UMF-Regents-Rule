@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_3lfjq"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_mty5m"]
+
+[node name="Cell_-38_22" type="Node3D" unique_id=2086912200]
+
+[node name="w_tree_436" type="Marker3D" parent="." unique_id=1968809304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2398.2354, 7.756247, 1465.2831)
+gizmo_extents = 0.6
+script = ExtResource("1_3lfjq")
+point_id = "w_tree_436"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_437" type="Marker3D" parent="." unique_id=2072926860]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2377.3083, 10.324447, 1433.1643)
+gizmo_extents = 0.6
+script = ExtResource("1_3lfjq")
+point_id = "w_tree_437"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="grass_common_tall_489" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_mty5m")]
+transform = Transform3D(0.51050067, 0, -0.48204583, 0, 0.7021247, 0, 0.48204583, 0, 0.51050067, -2379.748, 7.9995813, 1457.3264)

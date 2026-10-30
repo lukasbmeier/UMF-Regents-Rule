@@ -660,13 +660,14 @@ H2="$(HP "$SK2")"; H3="$(HP "$SK3")"
 for _ in $(seq 1 30); do F1="$(newest_body 40003)"; [ -n "$F1" ] && break; sleep 0.1; done
 assert_ok "report_body_contacts 0 [{\"body_id\":$F1,\"other_id\":$SK2,\"pos\":$(vec "$X3" 1.0 "$Z3"),\"normal\":$NORTH,\"speed\":20.0}]" "it hits skeleton_2 beside skeleton_3"
 check "$( [ -n "$F1" ] && echo true || echo false)" "a fireball flew when the cast landed ($F1)"
+# Read at once: the burn lasts 3 s, and the five calls below took longer than that on a busy machine.
+assert_eq "$(sql_first "SELECT dps FROM burning WHERE entity_id = $SK2" 1)" "3" "skeleton_2 burns, 3 a second"
 assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "landed"
 assert_eq "$(MANA)" "75" "and paid: 25 mana"
 check "$(logged "$MYENT's spell hit $SK2 for 20\.0")" "Fireball's 20 to skeleton_2 (the server's log of the hit)"
 assert_rejected "cast_spell 40013 $SK2 $NORTH $NONE" "not ready" "Fireball again at once: its own 7 s cooldown"
 assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts back to their pace"
 check "$(python -c "print('true' if abs(($H3 - $(HP "$SK3")) - 8.0) < 1e-3 else 'false')")" "and 40 % (8) to skeleton_3 within 3 m ($H3 -> $(HP "$SK3"))"
-assert_eq "$(sql_first "SELECT dps FROM burning WHERE entity_id = $SK2" 1)" "3" "skeleton_2 burns, 3 a second"
 for _ in $(seq 1 25); do [ "$(row_count "SELECT * FROM burning WHERE entity_id = $SK2")" = "0" ] && break; sleep 0.2; done
 check "$(python -c "d = $H2 - $(HP "$SK2"); print('true' if 28.0 <= d <= 29.1 else 'false')")" "its fire out after 3 s: the hit's 20 and about 9 of fire, 3 a second ($H2 -> $(HP "$SK2"))"
 assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 10"

@@ -16,6 +16,9 @@ shared/world/frontier.json
 shared/world/frontier_depth.bin
 shared/world/continent.json
 shared/world/continent_depth.bin
+shared/world/expanse.json
+shared/world/expanse_depth.bin
+shared/world/expanse_ground.bin
 shared/golden/level/continent_probes.json
 sidecar/npc/brains/regents/
 .claude/rules/regents-*.md

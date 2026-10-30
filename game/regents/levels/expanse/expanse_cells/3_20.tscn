@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_6viom"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_sf6rm"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_qh473"]
+
+[node name="Cell_3_20" type="Node3D" unique_id=1565160833]
+
+[node name="w_tree_2875" type="Marker3D" parent="." unique_id=1620048461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 218.06856, 17.51082, 1312.5764)
+gizmo_extents = 0.6
+script = ExtResource("1_6viom")
+point_id = "w_tree_2875"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_2876" type="Marker3D" parent="." unique_id=1642453567]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 238.11134, 16.825102, 1290.7893)
+gizmo_extents = 0.6
+script = ExtResource("1_6viom")
+point_id = "w_tree_2876"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_2877" type="Marker3D" parent="." unique_id=1689715258]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 235.55817, 16.93634, 1327.001)
+gizmo_extents = 0.6
+script = ExtResource("1_6viom")
+point_id = "w_tree_2877"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="fern_1_3304" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_sf6rm")]
+transform = Transform3D(0.6040546, 0, 1.0733323, 0, 1.2316347, 0, -1.0733323, 0, 0.6040546, 250.80948, 16.755016, 1317.0768)
+
+[node name="rock_medium_1_3305" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_qh473")]
+transform = Transform3D(1.0451257, 0, 0.81526387, 0, 1.3254973, 0, -0.81526387, 0, 1.0451257, 203.49962, 16.71043, 1314.64)
+
+[node name="w_poi_zone_110" type="Marker3D" parent="." unique_id=1959646022]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 211.56055, 17.262453, 1329.3447)
+gizmo_extents = 10.0
+script = ExtResource("1_6viom")
+point_id = "w_poi_zone_110"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

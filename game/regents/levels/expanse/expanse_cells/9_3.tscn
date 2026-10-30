@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_qexby"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_sp7fn"]
+
+[node name="Cell_9_3" type="Node3D" unique_id=1438268326]
+
+[node name="grass_common_tall_3684" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_qexby")]
+transform = Transform3D(-1.1360335, 0, -0.034359418, 0, 1.136553, 0, 0.034359418, 0, -1.1360335, 602.99, 9.171412, 234.60027)
+
+[node name="w_poi_zone_115" type="Marker3D" parent="." unique_id=539371652]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 602.61926, 8.010695, 198.03136)
+gizmo_extents = 10.0
+script = ExtResource("2_sp7fn")
+point_id = "w_poi_zone_115"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

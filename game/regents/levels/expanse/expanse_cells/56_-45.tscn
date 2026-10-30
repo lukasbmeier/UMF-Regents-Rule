@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ncaah"]
+
+[node name="Cell_56_-45" type="Node3D" unique_id=1453193179]
+
+[node name="w_tree_5194" type="Marker3D" parent="." unique_id=1007908925]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3615.914, 9.184032, -2846.1575)
+gizmo_extents = 0.6
+script = ExtResource("1_ncaah")
+point_id = "w_tree_5194"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_oak_1948" type="Marker3D" parent="." unique_id=1946010725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3619.2874, 7.861943, -2864.1362)
+gizmo_extents = 0.6
+script = ExtResource("1_ncaah")
+point_id = "w_oak_1948"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_oak_1949" type="Marker3D" parent="." unique_id=929278702]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3599.7139, 9.084136, -2861.4963)
+gizmo_extents = 0.6
+script = ExtResource("1_ncaah")
+point_id = "w_oak_1949"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")

@@ -1,0 +1,56 @@
+[gd_resource type="Terrain3DAssets" format=3]
+
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/grass_albedo.res" id="1_plosa"]
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/grass_normal.res" id="2_pbqgs"]
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/rock_albedo.res" id="3_k5rr2"]
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/rock_normal.res" id="4_n2fpp"]
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/sand_albedo.res" id="5_ps85v"]
+[ext_resource type="Texture2D" path="res://game/regents/levels/expanse/terrain/textures/sand_normal.res" id="6_sraag"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jg4o7"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+distance_fade_mode = 1
+distance_fade_min_distance = 128.0
+distance_fade_max_distance = 96.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_1fwhf"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_jg4o7")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_gkpbw"]
+name = "grass"
+albedo_color = Color(0.42, 0.6, 0.27, 1)
+albedo_texture = ExtResource("1_plosa")
+normal_texture = ExtResource("2_pbqgs")
+uv_scale = 0.12
+detiling_rotation = 0.15
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_o7msl"]
+name = "rock"
+id = 1
+albedo_color = Color(0.55, 0.53, 0.5, 1)
+albedo_texture = ExtResource("3_k5rr2")
+normal_texture = ExtResource("4_n2fpp")
+uv_scale = 0.12
+detiling_rotation = 0.15
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_cm2tf"]
+name = "sand"
+id = 2
+albedo_color = Color(0.82, 0.76, 0.56, 1)
+albedo_texture = ExtResource("5_ps85v")
+normal_texture = ExtResource("6_sraag")
+uv_scale = 0.12
+detiling_rotation = 0.15
+
+[resource]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_1fwhf")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_gkpbw"), SubResource("Terrain3DTextureAsset_o7msl"), SubResource("Terrain3DTextureAsset_cm2tf")])

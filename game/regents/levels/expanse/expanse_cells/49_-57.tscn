@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_hxruc"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_li53m"]
+
+[node name="Cell_49_-57" type="Node3D" unique_id=1784045139]
+
+[node name="w_tree_4983" type="Marker3D" parent="." unique_id=22836926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3150.8804, 8.84635, -3614.5508)
+gizmo_extents = 0.6
+script = ExtResource("1_hxruc")
+point_id = "w_tree_4983"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="fern_1_5914" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_li53m")]
+transform = Transform3D(-0.74444985, 0, 0.58447784, 0, 0.94647765, 0, -0.58447784, 0, -0.74444985, 3143.7134, 9.553421, -3623.6829)

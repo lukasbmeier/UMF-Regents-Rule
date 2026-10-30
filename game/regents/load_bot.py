@@ -112,6 +112,17 @@ def tick(bot, now):
     s = getattr(bot, "rr", None)
     if s is None or bot.pos is None:
         return
+    # A bot the server has not seen move for 20 s says once what it is doing (a stuck bot fails the harness).
+    sp = bot.server_pos
+    if sp is not None:
+        last = s.get("last_pos")
+        if last is None or math.hypot(sp["x"] - last[0], sp["z"] - last[1]) > 1.0:
+            s["last_pos"], s["last_moved"], s["told"] = (sp["x"], sp["z"]), now, False
+        elif now - s["last_moved"] > 20.0 and not s.get("told"):
+            s["told"] = True
+            bot.log("load_bot: %s %d has not moved for 20 s: node %s, stand %s, working %s, paused %s, target %s, pos (%.1f, %.1f), server (%.1f, %.1f), bag %s" % (
+                s["role"], bot.index, s["node"] and s["node"][0], s.get("stand"), s["working"], bot.paused, bot.target,
+                bot.pos["x"], bot.pos["z"], sp["x"], sp["z"], bot.entity_id in _bags))
     bag = _bags.get(bot.entity_id)
     if bag is None or AXE not in bag:
         _read_bags(bot, now)
@@ -163,14 +174,19 @@ def _gather(bot, s, now):
             return
         s["next_find"] = now + 5.0
         best, best_d = None, FIND_RADIUS_M
+        level = getattr(bot.swarm, "level", None)
+        here = (bot.pos["x"], bot.pos["z"])
         for n in _nodes:
             if n[0] in s["avoid"]:
                 continue
             d = math.hypot(n[2] - bot.pos["x"], n[3] - bot.pos["z"])
-            if d < best_d:
+            # Not across a bay: the server refuses a step into deep water, and a bot walking straight at a node
+            # over the sea stood at the shore for good (the expanse, PROGRESS step 25).
+            if d < best_d and (level is None or level.segment_dry(here, (n[2], n[3]))):
                 best, best_d = n, d
         if best is None:
             s["avoid"].clear()      # walked round them all: any may have grown back
+            bot.wander()            # none near (a bot living in the mountains): walk on and look again
             return
         s["node"] = best
         # Stand REACH_M short of its centre, on the side the bot comes from.
@@ -181,13 +197,23 @@ def _gather(bot, s, now):
         return
     if math.hypot(bot.pos["x"] - s["stand"][0], bot.pos["z"] - s["stand"][1]) < 0.3:
         bot.stop()
+        # As a player stops and then taps E: only once the server has us standing there too (on a busy
+        # world it lags the bot's own place by a step or two, and from 3 m out the node is "too far").
+        sp = bot.server_pos
+        s.setdefault("arrived", now)
+        if (sp is None or math.hypot(sp["x"] - s["stand"][0], sp["z"] - s["stand"][1]) > 0.5) and now - s["arrived"] < 2.0:
+            return
+        s.pop("arrived", None)
         bot.call("saw_nodes", [s["node"][0]])
         bot.call("gather", s["node"][0], False)
         s["working"] = True
         # 6 to 12 s, then on: the shortest window a run measures (15 s) always sees a gatherer walk.
         s["work_until"] = now + bot.rng.uniform(6.0, 12.0)
-    elif bot.target is None:
-        bot.walk_to(*s["stand"])     # the walk was interrupted (a correction): on to the node again
+    elif bot.target is None or bot.paused:
+        # The walk was interrupted (a correction), or it had stopped there and the server's correction then
+        # put it a step away (paused for good, the expanse found): on to the node again.
+        s.pop("arrived", None)
+        bot.walk_to(*s["stand"])
 
 
 def on_result(bot, request_id, reducer, ok, text):

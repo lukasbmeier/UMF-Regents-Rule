@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_183in"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_7gqf4"]
+
+[node name="Cell_-11_-30" type="Node3D" unique_id=1724962678]
+
+[node name="fern_1_2050" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_183in")]
+transform = Transform3D(-1.0269073, 0, 0.7432048, 0, 1.2676325, 0, -0.7432048, 0, -1.0269073, -671.66833, 11.224692, -1862.0874)
+
+[node name="rock_medium_1_2051" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_7gqf4")]
+transform = Transform3D(0.37538832, 0, -0.6135204, 0, 0.71925217, 0, 0.6135204, 0, 0.37538832, -688.27264, 9.888374, -1872.76)

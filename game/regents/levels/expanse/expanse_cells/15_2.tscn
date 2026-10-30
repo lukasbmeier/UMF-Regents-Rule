@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_e20j2"]
+
+[node name="Cell_15_2" type="Node3D" unique_id=925840789]
+
+[node name="w_tree_3519" type="Marker3D" parent="." unique_id=1357242725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 968.9556, 14.962424, 140.55489)
+gizmo_extents = 0.6
+script = ExtResource("1_e20j2")
+point_id = "w_tree_3519"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3520" type="Marker3D" parent="." unique_id=1848635445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 999.91254, 15.499762, 147.97311)
+gizmo_extents = 0.6
+script = ExtResource("1_e20j2")
+point_id = "w_tree_3520"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_231" type="Marker3D" parent="." unique_id=1217538539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 983.09875, 16.14115, 174.95483)
+gizmo_extents = 10.0
+script = ExtResource("1_e20j2")
+point_id = "w_poi_zone_231"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_n5tyj"]
+
+[node name="Cell_-14_26" type="Node3D" unique_id=1161774222]
+
+[node name="w_copper_rock_274" type="Marker3D" parent="." unique_id=2053401393]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -838.55115, 13.373484, 1720.2126)
+gizmo_extents = 0.6
+script = ExtResource("1_n5tyj")
+point_id = "w_copper_rock_274"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_iron_rock_101" type="Marker3D" parent="." unique_id=75057476]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -860.27606, 16.22362, 1675.2721)
+gizmo_extents = 0.6
+script = ExtResource("1_n5tyj")
+point_id = "w_iron_rock_101"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="w_poi_zone_307" type="Marker3D" parent="." unique_id=1081177934]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -881.4586, 15.739166, 1693.7335)
+gizmo_extents = 10.0
+script = ExtResource("1_n5tyj")
+point_id = "w_poi_zone_307"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

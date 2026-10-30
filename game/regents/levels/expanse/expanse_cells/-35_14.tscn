@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_um1rk"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_vt07g"]
+
+[node name="Cell_-35_14" type="Node3D" unique_id=1296010611]
+
+[node name="w_copper_rock_66" type="Marker3D" parent="." unique_id=348908930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2235.8723, 12.946954, 931.66315)
+gizmo_extents = 0.6
+script = ExtResource("1_um1rk")
+point_id = "w_copper_rock_66"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="grass_common_tall_583" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_vt07g")]
+transform = Transform3D(-1.1925033, 0, 0.6926, 0, 1.3790427, 0, -0.6926, 0, -1.1925033, -2218.1682, 12.437191, 955.68427)
+
+[node name="w_poi_zone_503" type="Marker3D" parent="." unique_id=1148089103]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2200.3147, 12.005638, 957.2533)
+gizmo_extents = 10.0
+script = ExtResource("1_um1rk")
+point_id = "w_poi_zone_503"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

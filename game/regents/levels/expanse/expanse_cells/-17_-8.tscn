@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_5t1ku"]
+
+[node name="Cell_-17_-8" type="Node3D" unique_id=562938997]
+
+[node name="w_tree_1273" type="Marker3D" parent="." unique_id=1368191960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1067.457, 9.438469, -479.5673)
+gizmo_extents = 0.6
+script = ExtResource("1_5t1ku")
+point_id = "w_tree_1273"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_5" type="Marker3D" parent="." unique_id=1321307021]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1025.0632, 11.762761, -494.3523)
+gizmo_extents = 10.0
+script = ExtResource("1_5t1ku")
+point_id = "w_poi_zone_5"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Coal mining zone")

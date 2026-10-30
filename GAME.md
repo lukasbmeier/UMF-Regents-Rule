@@ -134,6 +134,10 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   **centre-west lowlands**. A greybox for testing: its node and skeleton placement is a test one, and the
   world's regions, roads, towns, the lair and the Undercroft are Luke's to design later. A fresh database
   still starts in the glade (level 20); the continent is level 21 (`set_world_level 0 21`).
+- **A Skyrim-size test world** (2026-10-30): "try it on a world close to the same size as skyrim with 300
+  players to see ... how many refs I need ... with me playing a local user as well". The **expanse** (level 22,
+  PROGRESS step 25) is that: the continent's map 3.7 times as wide, ~37 km2 of land, its test placement at the
+  continent's density. A TEST world for the load test (the test database only); the continent stays the world.
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
@@ -155,3 +159,7 @@ tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alo
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms
 ```
+
+**300 bots on a Skyrim-size world, and you among them** (PROGRESS step 25, the test database only):
+`tools\run.cmd game\regents\tests\expanse_watch.sh` (a game window opens: press Play as a guest at the camp;
+Ctrl+C in the terminal ends it); how many referees it needs: `tools\run.cmd game\regents\tests\expanse_referees.sh`.

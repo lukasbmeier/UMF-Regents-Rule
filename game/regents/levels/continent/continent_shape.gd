@@ -44,9 +44,15 @@ var extent: Rect2 = Rect2()
 
 var _hills := FastNoiseLite.new()
 var _peaks := FastNoiseLite.new()
+## The same map at another size (the expanse, PROGRESS step 25: Skyrim's size for the load test): the landmass's
+## widest side, and how much taller its hills and mountains stand. The continent's are the defaults.
+var width_m: float = WIDTH_M
+var relief: float = 1.0
 
 
-func _init() -> void:
+func _init(p_width_m: float = WIDTH_M, p_relief: float = 1.0) -> void:
+	width_m = p_width_m
+	relief = p_relief
 	_hills.seed = 4021
 	_hills.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	_hills.frequency = 1.0 / 420.0
@@ -73,11 +79,11 @@ func height(x: float, z: float) -> float:
 	else:
 		var inland: float = smoothstep(40.0, 320.0, d_m)
 		h = SEA_Y + 1.2 + SHORE_RISE_M * smoothstep(0.0, SHORE_WIDTH_M, d_m)
-		h += HILL_M * (_hills.get_noise_2d(x, z) * 0.5 + 0.5) * inland
+		h += HILL_M * (1.0 + (relief - 1.0) * 0.5) * (_hills.get_noise_2d(x, z) * 0.5 + 0.5) * inland
 		var r: float = _sample(ridge, p)
 		if r > 0.0:
 			var peak: float = _peaks.get_noise_2d(x, z) * 0.5 + 0.5
-			h += r * r * (MOUNTAIN_M + MOUNTAIN_PEAK_M * peak) * smoothstep(0.0, 60.0, d_m)
+			h += r * r * (MOUNTAIN_M + MOUNTAIN_PEAK_M * peak) * relief * smoothstep(0.0, 60.0, d_m)
 		h = maxf(h, SEA_Y + 0.9)
 	# The camp: flat at 0, blended in.
 	var c: float = Vector2(x, z).length()
@@ -180,7 +186,7 @@ func _read_map() -> void:
 	land.resize(n)
 	for i: int in range(n):
 		land[i] = float(main[i])
-	m_per_px = WIDTH_M / float(maxi(x1 - x0, y1 - y0))
+	m_per_px = width_m / float(maxi(x1 - x0, y1 - y0))
 	var a: Vector2 = to_world(Vector2(x0, y0))
 	var z: Vector2 = to_world(Vector2(x1, y1))
 	extent = Rect2(a, z - a)

@@ -21,20 +21,34 @@ extends Node3D
 ## rest is a TEST placement (nodes, skeleton camps, decor), seeded, for bots and the ring to have
 ## something to visit. Luke's own placement replaces it.
 
-const DIR: String = "res://game/regents/levels/continent/"
-const SCENE_PATH: String = DIR + "continent.tscn"
-const DATA_DIR: String = DIR + "terrain/data"
-const ASSETS_PATH: String = DIR + "terrain/continent_assets.tres"
-const TEXTURES_DIR: String = DIR + "terrain/textures/"
 const FRONTIER: String = "res://game/regents/levels/frontier.tscn"
 const NATURE: String = "res://game/regents/art/nature/"
 const SOLID_PROPS: String = "res://game/regents/levels/solid_props.gd"
 
-## The level's number and name (the server's `crate::genre::regents::LEVEL_CONTINENT`).
-const LEVEL_ID: int = 21
-const LEVEL_NAME: String = "continent"
+## WHICH WORLD (PROGRESS step 25): "continent" (level 21, the map at Luke's ~3 km) or "expanse" (level 22, the
+## same map at Skyrim's size, ~37 km2 of land, for the load test's 300 players spread over a world:
+## `build_expanse.tscn`). Everything else below is the same code; the continent's settings are the defaults,
+## so the continent comes out as it always has.
+@export var world: String = "continent"
+
+## Where it is written: the folder, its scene, the terrain's data, assets and textures.
+var _dir: String = "res://game/regents/levels/continent/"
+var _scene_path: String = _dir + "continent.tscn"
+var _data_dir: String = _dir + "terrain/data"
+var _assets_path: String = _dir + "terrain/continent_assets.tres"
+var _textures_dir: String = _dir + "terrain/textures/"
+## The level's number and name.
+var _level_id: int = 21
+var _level_name: String = "continent"
 ## Metres between the terrain's vertices (the server needs none of it: it is the client's and referee's).
-const SPACING: float = 2.0
+var _spacing: float = 2.0
+## The landmass's widest side, and how much taller its hills and mountains are (ContinentShape).
+var _width_m: float = ContinentShape.WIDTH_M
+var _relief: float = 1.0
+## The share of the decor kept (the expanse thins it: its cells are many).
+var _decor_share: float = 1.0
+## The bake also writes the ground's height (LevelInfo.bake_ground: the load test's bots walk on it).
+var _bake_ground: bool = false
 ## Terrain3D's region, vertices a side (its default).
 const REGION_VERTS: float = 256.0
 ## Metres between the server's depth samples (the bake's grid; 4 is its coarsest).
@@ -45,7 +59,7 @@ const WADE_DEPTH: float = 0.7
 ## The camp's own ground: nothing scattered this close to the origin.
 const CAMP_CLEAR_M: float = 220.0
 ## The test placement: skeleton camps, how far apart, and how far from the start.
-const SKELETON_CAMPS: int = 16
+var _camp_count: int = 16
 const SKELETON_SPACING_M: float = 320.0
 const SKELETON_FROM_START_M: float = 350.0
 ## Harvest zones on the world map: at least this many nodes of a kind in a square this wide.
@@ -77,7 +91,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var t0: int = Time.get_ticks_msec()
 	_rng.seed = 0xC0417E17
-	_shape = ContinentShape.new()
+	if not _configure():
+		AppExit.quit(get_tree(), 1)
+		return
+	_shape = ContinentShape.new(_width_m, _relief)
 	_root = Node3D.new()
 	_root.name = "Continent"
 	add_child(_root)
@@ -101,6 +118,32 @@ func _ready() -> void:
 	AppExit.quit(get_tree(), 0 if ok else 1)
 
 
+## The settings of `world`: the continent's are the defaults above.
+func _configure() -> bool:
+	match world:
+		"continent":
+			return true
+		"expanse":
+			# Skyrim's land is about 37 km2; the continent's is 2.7 at 3 km across: 3.7 times as wide.
+			_dir = "res://game/regents/levels/expanse/"
+			_scene_path = _dir + "expanse.tscn"
+			_data_dir = _dir + "terrain/data"
+			_assets_path = _dir + "terrain/expanse_assets.tres"
+			_textures_dir = _dir + "terrain/textures/"
+			_level_id = 22
+			_level_name = "expanse"
+			_spacing = 4.0
+			_width_m = ContinentShape.WIDTH_M * 3.7
+			_relief = 2.0
+			_decor_share = 0.4
+			_bake_ground = true
+			# The continent's camps to its land, 16 to 2.7 km2: about 220 on 37.
+			_camp_count = 220
+			return true
+	push_error("build_continent: no world '%s' (continent, expanse)" % world)
+	return false
+
+
 # =============================================================================================
 # THE LEVEL
 # =============================================================================================
@@ -108,11 +151,12 @@ func _ready() -> void:
 func _make_info() -> void:
 	_info = LevelInfo.new()
 	_info.name = "LevelInfo"
-	_info.level_name = LEVEL_NAME
-	_info.level_id = LEVEL_ID
+	_info.level_name = _level_name
+	_info.level_id = _level_id
 	_info.water_y = ContinentShape.SEA_Y
 	_info.wade_depth = WADE_DEPTH
 	_info.grid_spacing = BAKE_SPACING
+	_info.bake_ground = _bake_ground
 	var ext: Rect2 = _shape.extent.grow(MARGIN_M * 0.75)
 	_info.bake_bounds = AABB(Vector3(ext.position.x, -40.0, ext.position.y), Vector3(ext.size.x, 260.0, ext.size.y))
 	_info.streamed = true
@@ -137,10 +181,10 @@ func _sample_heights() -> void:
 	var ext: Rect2 = _shape.extent.grow(MARGIN_M)
 	# Terrain3D puts an import's corner on its region grid (`REGION_VERTS` vertices a side): one that is not
 	# on it lands the whole terrain up to a region away (found 2026-10-24: 248 m and 346 m off).
-	var region_m: float = REGION_VERTS * SPACING
+	var region_m: float = REGION_VERTS * _spacing
 	_origin = (ext.position / region_m).floor() * region_m
-	_w = int(ceil((ext.end.x - _origin.x) / SPACING)) + 1
-	_h = int(ceil((ext.end.y - _origin.y) / SPACING)) + 1
+	_w = int(ceil((ext.end.x - _origin.x) / _spacing)) + 1
+	_h = int(ceil((ext.end.y - _origin.y) / _spacing)) + 1
 	_heights.resize(_w * _h)
 	for j: int in range(_h):
 		for i: int in range(_w):
@@ -150,19 +194,19 @@ func _sample_heights() -> void:
 
 ## World XZ of terrain vertex (i, j).
 func _xz(i: int, j: int) -> Vector2:
-	return _origin + Vector2(float(i), float(j)) * SPACING
+	return _origin + Vector2(float(i), float(j)) * _spacing
 
 
 ## The terrain's height at (x, z) (nearest vertex), and its slope (rise over run).
 func _ground(x: float, z: float) -> float:
-	var i: int = clampi(roundi((x - _origin.x) / SPACING), 0, _w - 1)
-	var j: int = clampi(roundi((z - _origin.y) / SPACING), 0, _h - 1)
+	var i: int = clampi(roundi((x - _origin.x) / _spacing), 0, _w - 1)
+	var j: int = clampi(roundi((z - _origin.y) / _spacing), 0, _h - 1)
 	return _heights[j * _w + i]
 
 
 func _slope(x: float, z: float) -> float:
-	var dx: float = (_ground(x + SPACING, z) - _ground(x - SPACING, z)) / (2.0 * SPACING)
-	var dz: float = (_ground(x, z + SPACING) - _ground(x, z - SPACING)) / (2.0 * SPACING)
+	var dx: float = (_ground(x + _spacing, z) - _ground(x - _spacing, z)) / (2.0 * _spacing)
+	var dz: float = (_ground(x, z + _spacing) - _ground(x, z - _spacing)) / (2.0 * _spacing)
 	return Vector2(dx, dz).length()
 
 
@@ -173,13 +217,13 @@ func _make_terrain() -> void:
 	_own(t)
 	_terrain = t
 	# Old regions would load underneath the new ones: start from an empty directory.
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DATA_DIR))
-	var d: DirAccess = DirAccess.open(DATA_DIR)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_data_dir))
+	var d: DirAccess = DirAccess.open(_data_dir)
 	for f: String in d.get_files():
 		if f.begins_with("terrain3d") and f.ends_with(".res"):
 			d.remove(f)
-	t.data_directory = DATA_DIR
-	t.vertex_spacing = SPACING
+	t.data_directory = _data_dir
+	t.vertex_spacing = _spacing
 	t.mesh_lods = 7
 	t.mesh_size = 48
 	# The referee walks foes everywhere: the whole terrain is solid, not only round a camera.
@@ -256,9 +300,9 @@ static func _noise_texture(seed_value: int, normal: bool) -> ImageTexture:
 
 ## `tex` saved as a file of its own (Terrain3D wants its textures in files, and the asset list stays small),
 ## and loaded back from it.
-static func _saved(tex: ImageTexture, file: String) -> Texture2D:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TEXTURES_DIR))
-	var path: String = TEXTURES_DIR + file + ".res"
+func _saved(tex: ImageTexture, file: String) -> Texture2D:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_textures_dir))
+	var path: String = _textures_dir + file + ".res"
 	var err: int = ResourceSaver.save(tex, path)
 	if err != OK:
 		push_error("build_continent: could not save %s (%s)" % [path, error_string(err)])
@@ -416,6 +460,8 @@ func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
 	if mtn < 0.3:
 		var models: Array[String] = ["Bush_Large", "Bush_Long_1", "Rock_Medium_1", "Rock_Big_1", "Grass_Common_Tall", "Fern_1"]
 		for _k: int in range(_rng.randi_range(1, 3)):
+			if _decor_share < 1.0 and _rng.randf() > _decor_share:
+				continue
 			var p: Vector2 = _free_spot(r, 2.0)
 			if p.x == INF:
 				continue
@@ -459,7 +505,7 @@ func _skeleton_camps() -> void:
 	var placed: Array[Vector2] = []
 	var ext: Rect2 = _shape.extent
 	var tries: int = 0
-	while placed.size() < SKELETON_CAMPS and tries < 4000:
+	while placed.size() < _camp_count and tries < maxi(4000, _camp_count * 250):
 		tries += 1
 		var p := Vector2(_rng.randf_range(ext.position.x, ext.end.x), _rng.randf_range(ext.position.y, ext.end.y))
 		if p.length() < SKELETON_FROM_START_M or _shape.coast_distance(p.x, p.y) < 60.0 or _shape.mountain(p.x, p.y) > 0.05:
@@ -560,20 +606,20 @@ func _make_environment() -> void:
 # =============================================================================================
 
 func _save_terrain() -> void:
-	var err: int = ResourceSaver.save(_terrain.assets, ASSETS_PATH)
+	var err: int = ResourceSaver.save(_terrain.assets, _assets_path)
 	if err != OK:
-		push_error("build_continent: could not save %s (%s)" % [ASSETS_PATH, error_string(err)])
-	_terrain.assets = load(ASSETS_PATH) as Terrain3DAssets
-	_terrain.data.save_directory(DATA_DIR)
+		push_error("build_continent: could not save %s (%s)" % [_assets_path, error_string(err)])
+	_terrain.assets = load(_assets_path) as Terrain3DAssets
+	_terrain.data.save_directory(_data_dir)
 
 
 func _save_scene() -> bool:
 	var packed := PackedScene.new()
 	var err: int = packed.pack(_root)
 	if err == OK:
-		err = ResourceSaver.save(packed, SCENE_PATH)
+		err = ResourceSaver.save(packed, _scene_path)
 	if err != OK:
-		push_error("build_continent: could not save %s (%s)" % [SCENE_PATH, error_string(err)])
+		push_error("build_continent: could not save %s (%s)" % [_scene_path, error_string(err)])
 		return false
 	return true
 
@@ -583,8 +629,8 @@ func _save_scene() -> bool:
 func _bake() -> bool:
 	_root.queue_free()
 	await get_tree().process_frame
-	var level: Node3D = (ResourceLoader.load(SCENE_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene).instantiate() as Node3D
-	level.scene_file_path = SCENE_PATH
+	var level: Node3D = (ResourceLoader.load(_scene_path, "", ResourceLoader.CACHE_MODE_IGNORE) as PackedScene).instantiate() as Node3D
+	level.scene_file_path = _scene_path
 	add_child(level)
 	for _k: int in range(10):
 		await get_tree().physics_frame

@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_luy7v"]
+
+[node name="Cell_-10_-10" type="Node3D" unique_id=1509259544]
+
+[node name="w_skeleton_56_3" type="Marker3D" parent="." unique_id=717624170]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -610.1814, 9.45208, -579.2178)
+gizmo_extents = 0.5
+script = ExtResource("1_luy7v")
+point_id = "w_skeleton_56_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()

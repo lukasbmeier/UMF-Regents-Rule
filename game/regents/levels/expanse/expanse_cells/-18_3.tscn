@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_se3de"]
+
+[node name="Cell_-18_3" type="Node3D" unique_id=527647156]
+
+[node name="w_coal_rock_36" type="Marker3D" parent="." unique_id=1579201227]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1124.5693, 16.427532, 196.88554)
+gizmo_extents = 0.6
+script = ExtResource("1_se3de")
+point_id = "w_coal_rock_36"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")

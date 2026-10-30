@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_tq65y"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_7klt8"]
+
+[node name="Cell_39_-35" type="Node3D" unique_id=1456419569]
+
+[node name="w_iron_rock_466" type="Marker3D" parent="." unique_id=1624659756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2503.091, 9.619728, -2180.7625)
+gizmo_extents = 0.6
+script = ExtResource("1_tq65y")
+point_id = "w_iron_rock_466"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="rock_medium_1_5445" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_7klt8")]
+transform = Transform3D(0.6725948, 0, -1.3055841, 0, 1.4686502, 0, 1.3055841, 0, 0.6725948, 2528.4504, 13.109827, -2182.5413)
+
+[node name="w_poi_zone_253" type="Marker3D" parent="." unique_id=509378748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2557.7524, 28.184813, -2220.5537)
+gizmo_extents = 10.0
+script = ExtResource("1_tq65y")
+point_id = "w_poi_zone_253"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

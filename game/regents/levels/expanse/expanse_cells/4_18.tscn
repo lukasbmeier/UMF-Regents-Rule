@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_f4f4k"]
+
+[node name="Cell_4_18" type="Node3D" unique_id=1171460175]
+
+[node name="w_tree_2940" type="Marker3D" parent="." unique_id=1270305560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 280.67337, 14.12968, 1163.1855)
+gizmo_extents = 0.6
+script = ExtResource("1_f4f4k")
+point_id = "w_tree_2940"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_2941" type="Marker3D" parent="." unique_id=1356076327]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 311.00433, 16.339119, 1197.9362)
+gizmo_extents = 0.6
+script = ExtResource("1_f4f4k")
+point_id = "w_tree_2941"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_skeleton_94_1" type="Marker3D" parent="." unique_id=1062544199]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 298.95044, 13.454916, 1156.6641)
+gizmo_extents = 0.5
+script = ExtResource("1_f4f4k")
+point_id = "w_skeleton_94_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_94_2" type="Marker3D" parent="." unique_id=582354558]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 301.95044, 14.028496, 1160.1641)
+gizmo_extents = 0.5
+script = ExtResource("1_f4f4k")
+point_id = "w_skeleton_94_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_94_3" type="Marker3D" parent="." unique_id=1643379622]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 302.95044, 12.668592, 1153.1641)
+gizmo_extents = 0.5
+script = ExtResource("1_f4f4k")
+point_id = "w_skeleton_94_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_94" type="Marker3D" parent="." unique_id=1218440759]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 298.95044, 13.454916, 1156.6641)
+gizmo_extents = 10.0
+script = ExtResource("1_f4f4k")
+point_id = "w_poi_skeletons_94"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

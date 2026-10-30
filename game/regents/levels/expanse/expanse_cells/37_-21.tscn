@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_gbigv"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_2jc8p"]
+
+[node name="Cell_37_-21" type="Node3D" unique_id=1722472649]
+
+[node name="w_oak_1664" type="Marker3D" parent="." unique_id=146896238]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2409.1523, 14.344413, -1294.2189)
+gizmo_extents = 0.6
+script = ExtResource("1_gbigv")
+point_id = "w_oak_1664"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_4505" type="Marker3D" parent="." unique_id=673951129]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2406.182, 13.35627, -1313.6028)
+gizmo_extents = 0.6
+script = ExtResource("1_gbigv")
+point_id = "w_tree_4505"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="bush_long_1_5356" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_2jc8p")]
+transform = Transform3D(1.1005452, 0, -0.776868, 0, 1.3471167, 0, 0.776868, 0, 1.1005452, 2392.186, 14.21363, -1332.58)

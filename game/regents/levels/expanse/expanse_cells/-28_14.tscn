@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_rigap"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_8xgh2"]
+
+[node name="Cell_-28_14" type="Node3D" unique_id=1107761599]
+
+[node name="bush_long_1_831" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("1_rigap")]
+transform = Transform3D(0.47224966, 0, 0.77129805, 0, 0.9043895, 0, -0.77129805, 0, 0.47224966, -1788.7471, 7.2773, 932.9655)
+
+[node name="w_poi_zone_331" type="Marker3D" parent="." unique_id=274798193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1785.8281, 7.460144, 908.3962)
+gizmo_extents = 10.0
+script = ExtResource("2_8xgh2")
+point_id = "w_poi_zone_331"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_cjvs3"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_nctr8"]
+
+[node name="Cell_-44_66" type="Node3D" unique_id=61172371]
+
+[node name="w_iron_rock_18" type="Marker3D" parent="." unique_id=667154414]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2770.0413, 0.118210614, 4239.223)
+gizmo_extents = 0.6
+script = ExtResource("1_cjvs3")
+point_id = "w_iron_rock_18"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="rock_medium_1_272" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_nctr8")]
+transform = Transform3D(0.5533709, 0, -0.92259973, 0, 1.0758297, 0, 0.92259973, 0, 0.5533709, -2810.9153, 0.5188333, 4242.645)
+
+[node name="w_skeleton_54_1" type="Marker3D" parent="." unique_id=1772536169]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2760.2104, 1.3037137, 4252.1064)
+gizmo_extents = 0.5
+script = ExtResource("1_cjvs3")
+point_id = "w_skeleton_54_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_54_2" type="Marker3D" parent="." unique_id=343470351]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2757.2104, 1.656876, 4255.6064)
+gizmo_extents = 0.5
+script = ExtResource("1_cjvs3")
+point_id = "w_skeleton_54_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_54_3" type="Marker3D" parent="." unique_id=1872090858]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2756.2104, 0.9215861, 4248.6064)
+gizmo_extents = 0.5
+script = ExtResource("1_cjvs3")
+point_id = "w_skeleton_54_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_54" type="Marker3D" parent="." unique_id=1791985987]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2760.2104, 1.3037137, 4252.1064)
+gizmo_extents = 10.0
+script = ExtResource("1_cjvs3")
+point_id = "w_poi_skeletons_54"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

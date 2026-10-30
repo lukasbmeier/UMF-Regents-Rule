@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_iwkrt"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_hctbi"]
+
+[node name="Cell_-15_63" type="Node3D" unique_id=1414470844]
+
+[node name="w_tree_1466" type="Marker3D" parent="." unique_id=536834595]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -916.2829, 9.515972, 4056.2463)
+gizmo_extents = 0.6
+script = ExtResource("1_iwkrt")
+point_id = "w_tree_1466"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_1467" type="Marker3D" parent="." unique_id=716978512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -940.75, 7.9824314, 4040.75)
+gizmo_extents = 0.6
+script = ExtResource("1_iwkrt")
+point_id = "w_tree_1467"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_1468" type="Marker3D" parent="." unique_id=541835994]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -939.357, 7.9129076, 4047.7786)
+gizmo_extents = 0.6
+script = ExtResource("1_iwkrt")
+point_id = "w_tree_1468"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="grass_common_tall_1713" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_hctbi")]
+transform = Transform3D(0.24996106, 0, 0.9669578, 0, 0.9987432, 0, -0.9669578, 0, 0.24996106, -943.05493, 8.084788, 4054.7761)
+
+[node name="w_poi_zone_70" type="Marker3D" parent="." unique_id=1177658440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -906.55505, 10.142155, 4059.8105)
+gizmo_extents = 10.0
+script = ExtResource("1_iwkrt")
+point_id = "w_poi_zone_70"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")
+
+[node name="w_poi_zone_210" type="Marker3D" parent="." unique_id=327149845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -904.85034, 10.435152, 4063.3398)
+gizmo_extents = 10.0
+script = ExtResource("1_iwkrt")
+point_id = "w_poi_zone_210"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

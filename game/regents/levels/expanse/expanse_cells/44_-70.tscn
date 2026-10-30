@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_i11fc"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_vf4t7"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_6aak4"]
+
+[node name="Cell_44_-70" type="Node3D" unique_id=421213703]
+
+[node name="w_oak_1771" type="Marker3D" parent="." unique_id=1283446405]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2866.7551, 4.054421, -4448.574)
+gizmo_extents = 0.6
+script = ExtResource("1_i11fc")
+point_id = "w_oak_1771"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_oak_1772" type="Marker3D" parent="." unique_id=713505580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2820.33, 7.661336, -4420.0845)
+gizmo_extents = 0.6
+script = ExtResource("1_i11fc")
+point_id = "w_oak_1772"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_4758" type="Marker3D" parent="." unique_id=192524256]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2871.6655, 4.2321343, -4470.4185)
+gizmo_extents = 0.6
+script = ExtResource("1_i11fc")
+point_id = "w_tree_4758"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="bush_large_5675" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_vf4t7")]
+transform = Transform3D(1.1407648, 0, -0.021608982, 0, 1.1409695, 0, 0.021608982, 0, 1.1407648, 2874.4792, 4.0677876, -4477.7705)
+
+[node name="fern_1_5676" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_6aak4")]
+transform = Transform3D(-1.029593, 0, -0.29771167, 0, 1.0717714, 0, 0.29771167, 0, -1.029593, 2824.6406, 7.860498, -4463.22)
+
+[node name="w_poi_zone_181" type="Marker3D" parent="." unique_id=490630046]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2875.1055, 3.5339868, -4445.774)
+gizmo_extents = 10.0
+script = ExtResource("1_i11fc")
+point_id = "w_poi_zone_181"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

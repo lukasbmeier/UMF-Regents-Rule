@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_u3w1q"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_fdiwd"]
+
+[node name="Cell_15_-82" type="Node3D" unique_id=1139944719]
+
+[node name="w_coal_rock_148" type="Marker3D" parent="." unique_id=1437828297]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 966.0851, 18.293186, -5204.1353)
+gizmo_extents = 0.6
+script = ExtResource("1_u3w1q")
+point_id = "w_coal_rock_148"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="rock_big_1_4054" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_fdiwd")]
+transform = Transform3D(-1.3007475, 0, 0.39412, 0, 1.3591449, 0, -0.39412, 0, -1.3007475, 1012.7091, 9.341938, -5190.326)
+
+[node name="w_poi_zone_13" type="Marker3D" parent="." unique_id=332567809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 966.9342, 18.293186, -5203.1016)
+gizmo_extents = 10.0
+script = ExtResource("1_u3w1q")
+point_id = "w_poi_zone_13"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Coal mining zone")

@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_wbsnh"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_seste"]
+
+[node name="Cell_22_27" type="Node3D" unique_id=347017375]
+
+[node name="w_oak_1414" type="Marker3D" parent="." unique_id=94049064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1432.4575, 2.3185818, 1759.3169)
+gizmo_extents = 0.6
+script = ExtResource("1_wbsnh")
+point_id = "w_oak_1414"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_3837" type="Marker3D" parent="." unique_id=1682104360]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1436.0945, 3.4049199, 1736.7749)
+gizmo_extents = 0.6
+script = ExtResource("1_wbsnh")
+point_id = "w_tree_3837"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3838" type="Marker3D" parent="." unique_id=1661413290]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1440.6355, 1.9499227, 1782.0692)
+gizmo_extents = 0.6
+script = ExtResource("1_wbsnh")
+point_id = "w_tree_3838"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="fern_1_4486" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_seste")]
+transform = Transform3D(0.6427122, 0, -0.82693636, 0, 1.0473312, 0, 0.82693636, 0, 0.6427122, 1444.9303, 3.7778628, 1740.3649)
+
+[node name="w_poi_zone_408" type="Marker3D" parent="." unique_id=428550668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1425.2283, 2.2445695, 1746.9813)
+gizmo_extents = 10.0
+script = ExtResource("1_wbsnh")
+point_id = "w_poi_zone_408"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

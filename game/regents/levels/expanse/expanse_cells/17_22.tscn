@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_q776c"]
+
+[node name="Cell_17_22" type="Node3D" unique_id=1576114991]
+
+[node name="w_tree_3622" type="Marker3D" parent="." unique_id=676631909]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1107.437, 9.336824, 1457.6769)
+gizmo_extents = 0.6
+script = ExtResource("1_q776c")
+point_id = "w_tree_3622"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3623" type="Marker3D" parent="." unique_id=1203770490]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1096.8285, 9.890914, 1416.4044)
+gizmo_extents = 0.6
+script = ExtResource("1_q776c")
+point_id = "w_tree_3623"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_skeleton_76_1" type="Marker3D" parent="." unique_id=993144100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1088.4431, 9.590858, 1432.6958)
+gizmo_extents = 0.5
+script = ExtResource("1_q776c")
+point_id = "w_skeleton_76_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_76_2" type="Marker3D" parent="." unique_id=629786772]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1091.4431, 9.450132, 1436.1958)
+gizmo_extents = 0.5
+script = ExtResource("1_q776c")
+point_id = "w_skeleton_76_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_76_3" type="Marker3D" parent="." unique_id=2102027854]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1092.4431, 9.809914, 1429.1958)
+gizmo_extents = 0.5
+script = ExtResource("1_q776c")
+point_id = "w_skeleton_76_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_76" type="Marker3D" parent="." unique_id=2110642038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1088.4431, 9.590858, 1432.6958)
+gizmo_extents = 10.0
+script = ExtResource("1_q776c")
+point_id = "w_poi_skeletons_76"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

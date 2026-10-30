@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_2gcug"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_msqec"]
+
+[node name="Cell_19_-44" type="Node3D" unique_id=1971477379]
+
+[node name="grass_common_tall_4284" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_2gcug")]
+transform = Transform3D(0.7492618, 0, -0.4605161, 0, 0.87947047, 0, 0.4605161, 0, 0.7492618, 1257.5796, 9.673703, -2796.7725)
+
+[node name="w_poi_zone_22" type="Marker3D" parent="." unique_id=771817259]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1278.7899, 12.494875, -2758.44)
+gizmo_extents = 10.0
+script = ExtResource("2_msqec")
+point_id = "w_poi_zone_22"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Coal mining zone")

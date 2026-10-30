@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_2lshi"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_jya2n"]
+
+[node name="Cell_35_-76" type="Node3D" unique_id=1417031697]
+
+[node name="rock_medium_1_5213" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_2lshi")]
+transform = Transform3D(-1.0426507, 0, -0.088243596, 0, 1.0463783, 0, 0.088243596, 0, -1.0426507, 2252.221, 9.403171, -4815.5396)
+
+[node name="grass_common_tall_5214" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_jya2n")]
+transform = Transform3D(-0.58069134, 0, -0.9455662, 0, 1.1096386, 0, 0.9455662, 0, -0.58069134, 2293.8462, 9.149485, -4820.0605)

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_m4hin"]
+
+[node name="Cell_35_13" type="Node3D" unique_id=290970518]
+
+[node name="bush_long_1_5266" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("1_m4hin")]
+transform = Transform3D(0.5113633, 0, 0.98436517, 0, 1.1092643, 0, -0.98436517, 0, 0.5113633, 2249.8486, 4.963625, 878.4158)

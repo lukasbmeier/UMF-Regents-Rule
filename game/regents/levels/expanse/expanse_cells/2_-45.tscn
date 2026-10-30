@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_gu5n1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_upbiv"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_vjejn"]
+
+[node name="Cell_2_-45" type="Node3D" unique_id=2124565161]
+
+[node name="w_tree_2757" type="Marker3D" parent="." unique_id=1445692168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 134.84671, 4.40288, -2866.672)
+gizmo_extents = 0.6
+script = ExtResource("1_gu5n1")
+point_id = "w_tree_2757"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_yew_370" type="Marker3D" parent="." unique_id=1802160017]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158.5377, 5.45592, -2847.3748)
+gizmo_extents = 0.6
+script = ExtResource("1_gu5n1")
+point_id = "w_yew_370"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_2758" type="Marker3D" parent="." unique_id=1765143684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144.67729, 4.7195597, -2860.4497)
+gizmo_extents = 0.6
+script = ExtResource("1_gu5n1")
+point_id = "w_tree_2758"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="grass_common_tall_3177" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_upbiv")]
+transform = Transform3D(1.3380973, 0, 0.32720944, 0, 1.3775233, 0, -0.32720944, 0, 1.3380973, 142.54181, 4.894329, -2856.398)
+
+[node name="bush_long_1_3178" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_vjejn")]
+transform = Transform3D(1.4065449, 0, -0.3401098, 0, 1.447081, 0, 0.3401098, 0, 1.4065449, 165.9006, 6.5302, -2833.1187)
+
+[node name="w_poi_zone_107" type="Marker3D" parent="." unique_id=1942461789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164.22964, 6.745082, -2827.412)
+gizmo_extents = 10.0
+script = ExtResource("1_gu5n1")
+point_id = "w_poi_zone_107"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

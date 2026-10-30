@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_5q2yx"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_e64vd"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_ut850"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="4_6l8f5"]
+
+[node name="Cell_52_-23" type="Node3D" unique_id=1498213552]
+
+[node name="w_tree_5107" type="Marker3D" parent="." unique_id=1804428052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3366.913, 6.498101, -1457.6462)
+gizmo_extents = 0.6
+script = ExtResource("1_5q2yx")
+point_id = "w_tree_5107"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_yew_699" type="Marker3D" parent="." unique_id=627724226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3339.164, 7.4939504, -1443.0004)
+gizmo_extents = 0.6
+script = ExtResource("1_5q2yx")
+point_id = "w_yew_699"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_oak_1905" type="Marker3D" parent="." unique_id=1064272930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3386.2976, 7.4758706, -1434.9224)
+gizmo_extents = 0.6
+script = ExtResource("1_5q2yx")
+point_id = "w_oak_1905"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="rock_medium_1_6070" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_e64vd")]
+transform = Transform3D(1.0699273, 0, 0.5800121, 0, 1.2170286, 0, -0.5800121, 0, 1.0699273, 3330.5632, 8.94948, -1427.275)
+
+[node name="grass_common_tall_6071" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_ut850")]
+transform = Transform3D(-1.2184118, 0, 0.46340567, 0, 1.3035613, 0, -0.46340567, 0, -1.2184118, 3370.5508, 6.315428, -1469.8932)
+
+[node name="bush_long_1_6072" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("4_6l8f5")]
+transform = Transform3D(-0.63587195, 0, -1.0431201, 0, 1.2216517, 0, 1.0431201, 0, -0.63587195, 3379.3855, 6.430778, -1461.8154)

@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_aefcb"]
+
+[node name="Cell_15_-39" type="Node3D" unique_id=1863624888]
+
+[node name="w_copper_rock_723" type="Marker3D" parent="." unique_id=822702142]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 994.5785, 13.620202, -2462.4285)
+gizmo_extents = 0.6
+script = ExtResource("1_aefcb")
+point_id = "w_copper_rock_723"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_poi_zone_127" type="Marker3D" parent="." unique_id=909851705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1018.0005, 13.840218, -2481.9846)
+gizmo_extents = 10.0
+script = ExtResource("1_aefcb")
+point_id = "w_poi_zone_127"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")
+
+[node name="w_poi_zone_391" type="Marker3D" parent="." unique_id=894195148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 974.4123, 15.822667, -2491.4534)
+gizmo_extents = 10.0
+script = ExtResource("1_aefcb")
+point_id = "w_poi_zone_391"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

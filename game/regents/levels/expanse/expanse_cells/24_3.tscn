@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_ht4j4"]
+
+[node name="Cell_24_3" type="Node3D" unique_id=2102623028]
+
+[node name="fern_1_4577" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_ht4j4")]
+transform = Transform3D(0.73104334, 0, -1.0887592, 0, 1.3114195, 0, 1.0887592, 0, 0.73104334, 1553.6536, 6.8427253, 233.32268)

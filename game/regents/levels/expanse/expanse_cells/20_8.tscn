@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_0x8ea"]
+
+[node name="Cell_20_8" type="Node3D" unique_id=164881051]
+
+[node name="w_coal_rock_207" type="Marker3D" parent="." unique_id=2005564661]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1326.5067, 15.122743, 557.37573)
+gizmo_extents = 0.6
+script = ExtResource("1_0x8ea")
+point_id = "w_coal_rock_207"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="w_copper_rock_855" type="Marker3D" parent="." unique_id=1288063024]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1304.0537, 13.475834, 516.598)
+gizmo_extents = 0.6
+script = ExtResource("1_0x8ea")
+point_id = "w_copper_rock_855"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_poi_zone_144" type="Marker3D" parent="." unique_id=1384770268]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1331.7205, 14.816334, 523.31946)
+gizmo_extents = 10.0
+script = ExtResource("1_0x8ea")
+point_id = "w_poi_zone_144"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

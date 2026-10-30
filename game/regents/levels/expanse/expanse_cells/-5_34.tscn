@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_227wl"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_sdh1e"]
+
+[node name="Cell_-5_34" type="Node3D" unique_id=973851926]
+
+[node name="w_iron_rock_166" type="Marker3D" parent="." unique_id=1544074061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -295.95624, 12.596568, 2223.261)
+gizmo_extents = 0.6
+script = ExtResource("1_227wl")
+point_id = "w_iron_rock_166"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="bush_large_2660" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_sdh1e")]
+transform = Transform3D(0.1174606, 0, -0.8770966, 0, 0.8849268, 0, 0.8770966, 0, 0.1174606, -259.1026, 13.179067, 2192.9143)

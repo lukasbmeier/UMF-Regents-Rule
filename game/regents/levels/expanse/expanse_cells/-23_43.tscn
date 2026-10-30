@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_kaiog"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_e5rbn"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_fvg2b"]
+
+[node name="Cell_-23_43" type="Node3D" unique_id=1402691475]
+
+[node name="w_coal_rock_23" type="Marker3D" parent="." unique_id=1675107798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1428.4971, 15.316167, 2795.8137)
+gizmo_extents = 0.6
+script = ExtResource("1_kaiog")
+point_id = "w_coal_rock_23"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="w_iron_rock_56" type="Marker3D" parent="." unique_id=1435310019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1437.3182, 15.372278, 2759.607)
+gizmo_extents = 0.6
+script = ExtResource("1_kaiog")
+point_id = "w_iron_rock_56"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="grass_common_tall_1084" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_e5rbn")]
+transform = Transform3D(0.18424833, 0, -1.275347, 0, 1.2885873, 0, 1.275347, 0, 0.18424833, -1446.7374, 15.274562, 2760.999)
+
+[node name="rock_big_1_1085" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("3_fvg2b")]
+transform = Transform3D(1.0330251, 0, 0.46447614, 0, 1.1326425, 0, -0.46447614, 0, 1.0330251, -1464.1224, 14.613449, 2798.5457)

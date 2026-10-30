@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_20fyg"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_wolip"]
+
+[node name="Cell_34_-4" type="Node3D" unique_id=25649394]
+
+[node name="rock_big_1_5200" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_20fyg")]
+transform = Transform3D(1.0921526, 0, -0.44342372, 0, 1.1787374, 0, 0.44342372, 0, 1.0921526, 2182.8477, 2.405483, -245.57623)
+
+[node name="rock_big_1_5201" type="Node3D" parent="." unique_id=1575459579 instance=ExtResource("1_20fyg")]
+transform = Transform3D(0.49198097, 0, 0.9699486, 0, 1.087587, 0, -0.9699486, 0, 0.49198097, 2196.4475, 1.2191011, -250.0321)
+
+[node name="w_skeleton_195_1" type="Marker3D" parent="." unique_id=1572758526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2232.4763, -0.96357024, -216.47461)
+gizmo_extents = 0.5
+script = ExtResource("2_wolip")
+point_id = "w_skeleton_195_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_195_2" type="Marker3D" parent="." unique_id=755798820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2235.4763, -1.1842535, -212.97461)
+gizmo_extents = 0.5
+script = ExtResource("2_wolip")
+point_id = "w_skeleton_195_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_195_3" type="Marker3D" parent="." unique_id=572085655]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2236.4763, -1.4894686, -219.97461)
+gizmo_extents = 0.5
+script = ExtResource("2_wolip")
+point_id = "w_skeleton_195_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_195" type="Marker3D" parent="." unique_id=78130304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2232.4763, -0.96357024, -216.47461)
+gizmo_extents = 10.0
+script = ExtResource("2_wolip")
+point_id = "w_poi_skeletons_195"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

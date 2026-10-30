@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_rxsf1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_iwahv"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_tnewq"]
+
+[node name="Cell_21_11" type="Node3D" unique_id=34747062]
+
+[node name="w_iron_rock_362" type="Marker3D" parent="." unique_id=1582975990]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1391.2527, 19.677984, 717.6895)
+gizmo_extents = 0.6
+script = ExtResource("1_rxsf1")
+point_id = "w_iron_rock_362"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="w_iron_rock_363" type="Marker3D" parent="." unique_id=1924637474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1396.0798, 21.943348, 726.4961)
+gizmo_extents = 0.6
+script = ExtResource("1_rxsf1")
+point_id = "w_iron_rock_363"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="rock_medium_1_4425" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_iwahv")]
+transform = Transform3D(0.35855484, 0, -0.9691431, 0, 1.033344, 0, 0.9691431, 0, 0.35855484, 1375.8744, 22.07556, 710.85736)
+
+[node name="grass_common_tall_4426" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_tnewq")]
+transform = Transform3D(0.013611723, 0, 1.2604812, 0, 1.2605547, 0, -1.2604812, 0, 0.013611723, 1391.0549, 24.79515, 731.8014)

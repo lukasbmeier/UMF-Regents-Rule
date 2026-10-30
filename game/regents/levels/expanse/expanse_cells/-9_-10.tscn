@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ls6rx"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_wiias"]
+
+[node name="Cell_-9_-10" type="Node3D" unique_id=1087824750]
+
+[node name="w_iron_rock_139" type="Marker3D" parent="." unique_id=1369772528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -553.01733, 15.823318, -606.40686)
+gizmo_extents = 0.6
+script = ExtResource("1_ls6rx")
+point_id = "w_iron_rock_139"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="w_copper_rock_352" type="Marker3D" parent="." unique_id=151946870]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -536.53625, 15.461813, -635.1896)
+gizmo_extents = 0.6
+script = ExtResource("1_ls6rx")
+point_id = "w_copper_rock_352"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="fern_1_2259" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_wiias")]
+transform = Transform3D(-0.19653718, 0, -0.80872506, 0, 0.8322638, 0, 0.80872506, 0, -0.19653718, -516.0888, 14.031805, -578.03705)
+
+[node name="w_poi_zone_53" type="Marker3D" parent="." unique_id=983892849]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -512.5001, 13.204936, -630.7807)
+gizmo_extents = 10.0
+script = ExtResource("1_ls6rx")
+point_id = "w_poi_zone_53"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

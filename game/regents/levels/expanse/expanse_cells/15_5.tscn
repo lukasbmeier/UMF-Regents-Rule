@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_dkvvc"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_8fctt"]
+
+[node name="Cell_15_5" type="Node3D" unique_id=627186814]
+
+[node name="w_copper_rock_734" type="Marker3D" parent="." unique_id=1344065337]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 983.09766, 15.890458, 360.6335)
+gizmo_extents = 0.6
+script = ExtResource("1_dkvvc")
+point_id = "w_copper_rock_734"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_copper_rock_735" type="Marker3D" parent="." unique_id=205791326]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 989.6634, 15.4724865, 377.81458)
+gizmo_extents = 0.6
+script = ExtResource("1_dkvvc")
+point_id = "w_copper_rock_735"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="rock_medium_1_4096" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_8fctt")]
+transform = Transform3D(-0.6945333, 0, -0.39126465, 0, 0.79716027, 0, 0.39126465, 0, -0.6945333, 1020.5964, 17.801125, 332.70163)

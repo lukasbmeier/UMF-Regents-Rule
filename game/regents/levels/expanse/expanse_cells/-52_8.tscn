@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_813wr"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_q31ds"]
+
+[node name="Cell_-52_8" type="Node3D" unique_id=451440269]
+
+[node name="w_iron_rock_10" type="Marker3D" parent="." unique_id=1422408464]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3275.914, 13.340515, 530.7194)
+gizmo_extents = 0.6
+script = ExtResource("1_813wr")
+point_id = "w_iron_rock_10"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="bush_long_1_108" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_q31ds")]
+transform = Transform3D(0.04599683, 0, 0.7183701, 0, 0.7198411, 0, -0.7183701, 0, 0.04599683, -3272.0483, 12.781457, 524.49347)
+
+[node name="w_poi_zone_508" type="Marker3D" parent="." unique_id=690570336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3275.3743, 14.120672, 542.6358)
+gizmo_extents = 10.0
+script = ExtResource("1_813wr")
+point_id = "w_poi_zone_508"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

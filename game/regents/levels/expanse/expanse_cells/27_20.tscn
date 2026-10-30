@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_2ucd8"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_lb57k"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="3_jeotb"]
+
+[node name="Cell_27_20" type="Node3D" unique_id=852545277]
+
+[node name="grass_common_tall_4768" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_2ucd8")]
+transform = Transform3D(0.59469575, 0, -0.5623483, 0, 0.8184734, 0, 0.5623483, 0, 0.59469575, 1756.5729, 9.485229, 1296.6356)
+
+[node name="fern_1_4769" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_lb57k")]
+transform = Transform3D(-0.7286656, 0, 1.0622705, 0, 1.2881662, 0, -1.0622705, 0, -0.7286656, 1774.9391, 5.4369855, 1337.0431)
+
+[node name="w_poi_zone_156" type="Marker3D" parent="." unique_id=92413160]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1743.9371, 9.202038, 1306.7428)
+gizmo_extents = 10.0
+script = ExtResource("3_jeotb")
+point_id = "w_poi_zone_156"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")
+
+[node name="w_poi_zone_526" type="Marker3D" parent="." unique_id=649441599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1750.0369, 8.352842, 1312.7432)
+gizmo_extents = 10.0
+script = ExtResource("3_jeotb")
+point_id = "w_poi_zone_526"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_mar7k"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_5c2mf"]
+
+[node name="Cell_-34_14" type="Node3D" unique_id=553062031]
+
+[node name="rock_medium_1_613" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_mar7k")]
+transform = Transform3D(-0.9756014, 0, 0.64991856, 0, 1.1722594, 0, -0.64991856, 0, -0.9756014, -2133.6465, 9.828013, 906.23755)
+
+[node name="w_skeleton_36_1" type="Marker3D" parent="." unique_id=701894326]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2126.0557, 9.287509, 952.33984)
+gizmo_extents = 0.5
+script = ExtResource("2_5c2mf")
+point_id = "w_skeleton_36_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_36_2" type="Marker3D" parent="." unique_id=1873393358]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2123.0557, 8.660392, 955.83984)
+gizmo_extents = 0.5
+script = ExtResource("2_5c2mf")
+point_id = "w_skeleton_36_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_36_3" type="Marker3D" parent="." unique_id=1746217214]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2122.0557, 9.265713, 948.83984)
+gizmo_extents = 0.5
+script = ExtResource("2_5c2mf")
+point_id = "w_skeleton_36_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_36" type="Marker3D" parent="." unique_id=879797869]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2126.0557, 9.287509, 952.33984)
+gizmo_extents = 10.0
+script = ExtResource("2_5c2mf")
+point_id = "w_poi_skeletons_36"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")
+
+[node name="w_poi_zone_340" type="Marker3D" parent="." unique_id=2006047543]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2117.4158, 8.493154, 950.0807)
+gizmo_extents = 10.0
+script = ExtResource("2_5c2mf")
+point_id = "w_poi_zone_340"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

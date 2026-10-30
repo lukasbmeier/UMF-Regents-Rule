@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ebvs8"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_lvrgh"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_g02q4"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="4_bfpbw"]
+
+[node name="Cell_-44_13" type="Node3D" unique_id=958003707]
+
+[node name="w_coal_rock_9" type="Marker3D" parent="." unique_id=325307510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2796.4312, 14.166539, 880.7135)
+gizmo_extents = 0.6
+script = ExtResource("1_ebvs8")
+point_id = "w_coal_rock_9"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="bush_large_250" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_lvrgh")]
+transform = Transform3D(-0.41503817, 0, -1.3330629, 0, 1.3961781, 0, 1.3330629, 0, -0.41503817, -2796.4314, 13.740493, 835.2659)
+
+[node name="bush_long_1_251" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_g02q4")]
+transform = Transform3D(0.4920182, 0, -0.72852266, 0, 0.8791059, 0, 0.72852266, 0, 0.4920182, -2787.8596, 13.853005, 838.0505)
+
+[node name="grass_common_tall_252" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("4_bfpbw")]
+transform = Transform3D(1.2407671, 0, 0.5813741, 0, 1.3702185, 0, -0.5813741, 0, 1.2407671, -2802.4983, 13.469602, 836.2417)

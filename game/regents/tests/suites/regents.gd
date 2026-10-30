@@ -156,6 +156,11 @@ func _run_cells() -> void:
 	for t: StringName in genre.tables:
 		if str(tables.get(String(t), "")).contains("chunk:U32"):
 			_check(cfg.cell_tables.has(t), "%s has a chunk, so it is a cell table" % t)
+	# A region referee reads the genre's list (template 1.5), a player's game the net config's: the same tables.
+	var same: bool = genre.cell_tables.size() == cfg.cell_tables.size()
+	for t: StringName in cfg.cell_tables:
+		same = same and genre.cell_tables.has(t)
+	_check(same, "genre.tres's cell tables are the net config's, so a region referee asks for them by cell too (%s)" % str(genre.cell_tables))
 
 
 ## Combat's client side, with no server: kits, the combo's steps, the stance, the keys, the skill bar.

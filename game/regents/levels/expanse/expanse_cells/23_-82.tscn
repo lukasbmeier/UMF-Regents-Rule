@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_2268f"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_v7ku1"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_rqdhd"]
+
+[node name="Cell_23_-82" type="Node3D" unique_id=1005941438]
+
+[node name="w_oak_1420" type="Marker3D" parent="." unique_id=523024903]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1499.4026, -0.56424636, -5210.0513)
+gizmo_extents = 0.6
+script = ExtResource("1_2268f")
+point_id = "w_oak_1420"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_oak_1421" type="Marker3D" parent="." unique_id=954638976]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1484.4182, -1.0884246, -5216.7744)
+gizmo_extents = 0.6
+script = ExtResource("1_2268f")
+point_id = "w_oak_1421"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_3845" type="Marker3D" parent="." unique_id=713525410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1486.736, -0.2972277, -5224.578)
+gizmo_extents = 0.6
+script = ExtResource("1_2268f")
+point_id = "w_tree_3845"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="bush_large_4495" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_v7ku1")]
+transform = Transform3D(0.45052704, 0, -0.7175621, 0, 0.84727204, 0, 0.7175621, 0, 0.45052704, 1516.0433, -1.7608261, -5186.4775)
+
+[node name="bush_long_1_4496" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_rqdhd")]
+transform = Transform3D(-0.029575411, 0, -0.75285417, 0, 0.7534349, 0, 0.75285417, 0, -0.029575411, 1506.9305, -1.6880744, -5195.143)
+
+[node name="w_poi_zone_398" type="Marker3D" parent="." unique_id=785607342]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1495.7119, 0.9069571, -5231.004)
+gizmo_extents = 10.0
+script = ExtResource("1_2268f")
+point_id = "w_poi_zone_398"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

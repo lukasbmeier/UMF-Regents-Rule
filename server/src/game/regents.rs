@@ -794,9 +794,10 @@ fn yaw_of(point_id: &str) -> f32 {
 /// that has none yet.
 fn populate(ctx: &ReducerContext, world_id: u32) {
     let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
-    let nodes: Vec<String> = ctx.db.gather_node().world_id().filter(world_id).map(|n| n.point_id).collect();
+    // A set, not a list: the expanse has 10,000 nodes, and a list made each connection 100 million compares.
+    let nodes: std::collections::HashSet<String> = ctx.db.gather_node().world_id().filter(world_id).map(|n| n.point_id).collect();
     for p in level.points_of(rules::NODE_POINT) {
-        if nodes.iter().any(|id| id == p.id) {
+        if nodes.contains(p.id) {
             continue;
         }
         let Some(def) = p.tags.first().and_then(|t| rules::node_named(t)) else {
@@ -806,9 +807,9 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
         let id = crate::module::spawn_npc_internal(ctx, world_id, ENTITY_NODE, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
         ctx.db.gather_node().insert(GatherNode { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), def_id: def.id, point_id: p.id.to_string() });
     }
-    let stations: Vec<String> = ctx.db.station().world_id().filter(world_id).map(|s| s.point_id).collect();
+    let stations: std::collections::HashSet<String> = ctx.db.station().world_id().filter(world_id).map(|s| s.point_id).collect();
     for p in level.points_of(rules::STATION_POINT) {
-        if stations.iter().any(|id| id == p.id) {
+        if stations.contains(p.id) {
             continue;
         }
         let Some(st) = p.tags.first().and_then(|t| rules::station_keyed(t)) else {
@@ -2612,10 +2613,10 @@ fn foe_seed_of(ctx: &ReducerContext, entity_id: u64) -> Option<&'static rules::F
 /// or gone: a point waits for its own to come back).
 fn populate_foes(ctx: &ReducerContext, world_id: u32) {
     let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
-    let have: Vec<String> = ctx.db.foe().world_id().filter(world_id).map(|f| f.point_id).collect();
+    let have: std::collections::HashSet<String> = ctx.db.foe().world_id().filter(world_id).map(|f| f.point_id).collect();
     for seed in rules::FOES {
         for p in level.points_of(seed.key) {
-            if have.iter().any(|id| id == p.id) {
+            if have.contains(p.id) {
                 continue;
             }
             spawn_foe(ctx, world_id, seed, p);
@@ -2802,10 +2803,10 @@ fn reset_dummies(ctx: &ReducerContext) {
 /// brain "drives" (so the referee counts it as someone to hit), with `regents.dummy_hp` health.
 fn populate_dummies(ctx: &ReducerContext, world_id: u32) {
     let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
-    let have: Vec<String> = ctx.db.dummy().world_id().filter(world_id).map(|d| d.point_id).collect();
+    let have: std::collections::HashSet<String> = ctx.db.dummy().world_id().filter(world_id).map(|d| d.point_id).collect();
     let hp = hot_number(ctx, hot::DUMMY_HP) as f32;
     for p in level.points_of(rules::DUMMY_POINT) {
-        if have.iter().any(|id| id == p.id) {
+        if have.contains(p.id) {
             continue;
         }
         let id = crate::module::spawn_npc_internal(ctx, world_id, rules::ENTITY_DUMMY, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));

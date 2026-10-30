@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_mdpm6"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_yhy7y"]
+
+[node name="Cell_-15_52" type="Node3D" unique_id=1382279200]
+
+[node name="w_coal_rock_53" type="Marker3D" parent="." unique_id=204429797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -933.10724, 15.150142, 3382.1335)
+gizmo_extents = 0.6
+script = ExtResource("1_mdpm6")
+point_id = "w_coal_rock_53"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="fern_1_1705" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_yhy7y")]
+transform = Transform3D(-0.6727612, 0, -0.96260124, 0, 1.1743972, 0, 0.96260124, 0, -0.6727612, -919.15326, 15.541752, 3363.5376)

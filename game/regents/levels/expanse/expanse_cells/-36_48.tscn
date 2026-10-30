@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_mouu2"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_w4b1w"]
+
+[node name="Cell_-36_48" type="Node3D" unique_id=1514589701]
+
+[node name="w_copper_rock_62" type="Marker3D" parent="." unique_id=270929976]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2278.0754, -2.7155051, 3109.928)
+gizmo_extents = 0.6
+script = ExtResource("1_mouu2")
+point_id = "w_copper_rock_62"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="grass_common_tall_566" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_w4b1w")]
+transform = Transform3D(0.82404184, 0, -0.5818574, 0, 1.0087631, 0, 0.5818574, 0, 0.82404184, -2243.3123, -1.9845333, 3111.3184)

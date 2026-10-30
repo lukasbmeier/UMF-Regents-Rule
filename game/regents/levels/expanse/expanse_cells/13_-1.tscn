@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_gyjp3"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_mehm2"]
+
+[node name="Cell_13_-1" type="Node3D" unique_id=2137939508]
+
+[node name="rock_big_1_3954" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_gyjp3")]
+transform = Transform3D(0.65349597, 0, -0.41321778, 0, 0.7731791, 0, 0.41321778, 0, 0.65349597, 869.5377, 12.341366, -5.836399)
+
+[node name="w_skeleton_149_2" type="Marker3D" parent="." unique_id=929922066]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 883.86255, 11.812214, -62.663086)
+gizmo_extents = 0.5
+script = ExtResource("2_mehm2")
+point_id = "w_skeleton_149_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()

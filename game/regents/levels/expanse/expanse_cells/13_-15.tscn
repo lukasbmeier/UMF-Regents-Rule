@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_4eyp5"]
+
+[node name="Cell_13_-15" type="Node3D" unique_id=1222720213]
+
+[node name="w_poi_zone_124" type="Marker3D" parent="." unique_id=977583336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 881.21924, 169.84018, -928.4455)
+gizmo_extents = 10.0
+script = ExtResource("1_4eyp5")
+point_id = "w_poi_zone_124"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

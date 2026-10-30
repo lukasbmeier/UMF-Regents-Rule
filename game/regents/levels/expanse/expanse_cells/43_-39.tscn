@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_l57uf"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_ixgkb"]
+
+[node name="Cell_43_-39" type="Node3D" unique_id=1224949881]
+
+[node name="grass_common_tall_5645" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_l57uf")]
+transform = Transform3D(0.43116608, 0, -1.3134297, 0, 1.3823899, 0, 1.3134297, 0, 0.43116608, 2804.605, 13.16541, -2481.7004)
+
+[node name="w_skeleton_177_1" type="Marker3D" parent="." unique_id=1596029123]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2814.4968, 15.39569, -2456.7683)
+gizmo_extents = 0.5
+script = ExtResource("2_ixgkb")
+point_id = "w_skeleton_177_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_177" type="Marker3D" parent="." unique_id=1982587174]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2814.4968, 15.39569, -2456.7683)
+gizmo_extents = 10.0
+script = ExtResource("2_ixgkb")
+point_id = "w_poi_skeletons_177"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ihu2a"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_tat7m"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_tgvxe"]
+
+[node name="Cell_-26_8" type="Node3D" unique_id=1577317717]
+
+[node name="w_tree_809" type="Marker3D" parent="." unique_id=2083178885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1618.5363, 13.444938, 549.13995)
+gizmo_extents = 0.6
+script = ExtResource("1_ihu2a")
+point_id = "w_tree_809"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_yew_109" type="Marker3D" parent="." unique_id=135551154]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1611.0199, 12.779718, 558.45984)
+gizmo_extents = 0.6
+script = ExtResource("1_ihu2a")
+point_id = "w_yew_109"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_810" type="Marker3D" parent="." unique_id=836609128]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1643.8259, 13.857766, 551.0796)
+gizmo_extents = 0.6
+script = ExtResource("1_ihu2a")
+point_id = "w_tree_810"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="fern_1_914" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_tat7m")]
+transform = Transform3D(1.4606936, 0, 0.18579873, 0, 1.4724629, 0, -0.18579873, 0, 1.4606936, -1652.156, 11.306491, 514.062)
+
+[node name="bush_large_915" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_tgvxe")]
+transform = Transform3D(-0.88963145, 0, 0.06525157, 0, 0.89202124, 0, -0.06525157, 0, -0.88963145, -1640.3444, 13.763242, 560.6981)
+
+[node name="w_poi_zone_329" type="Marker3D" parent="." unique_id=175061901]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1637.3812, 12.8389435, 529.3284)
+gizmo_extents = 10.0
+script = ExtResource("1_ihu2a")
+point_id = "w_poi_zone_329"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

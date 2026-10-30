@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_tm0kr"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_mra83"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="3_eekom"]
+
+[node name="Cell_-29_46" type="Node3D" unique_id=619712094]
+
+[node name="fern_1_802" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_tm0kr")]
+transform = Transform3D(-0.4982253, 0, -0.6486738, 0, 0.81792796, 0, 0.6486738, 0, -0.4982253, -1845.6011, 11.622898, 3000.2026)
+
+[node name="bush_large_803" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_mra83")]
+transform = Transform3D(0.73106474, 0, -0.103739984, 0, 0.73838854, 0, 0.103739984, 0, 0.73106474, -1821.8287, 10.306764, 3002.385)
+
+[node name="w_poi_zone_334" type="Marker3D" parent="." unique_id=1964859186]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1792.1746, 10.854239, 2944.8716)
+gizmo_extents = 10.0
+script = ExtResource("3_eekom")
+point_id = "w_poi_zone_334"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

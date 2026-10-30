@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_m8mds"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_2lick"]
+
+[node name="Cell_32_-27" type="Node3D" unique_id=322827183]
+
+[node name="bush_large_5047" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_m8mds")]
+transform = Transform3D(0.6444398, 0, 0.8055571, 0, 1.0316128, 0, -0.8055571, 0, 0.6444398, 2075.4998, 7.692066, -1668.4647)
+
+[node name="w_poi_zone_246" type="Marker3D" parent="." unique_id=985926004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2083.6301, 8.707405, -1700.4211)
+gizmo_extents = 10.0
+script = ExtResource("2_2lick")
+point_id = "w_poi_zone_246"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

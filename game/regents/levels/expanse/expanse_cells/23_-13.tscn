@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_toske"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_ia05x"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_43s17"]
+
+[node name="Cell_23_-13" type="Node3D" unique_id=1783356498]
+
+[node name="w_yew_515" type="Marker3D" parent="." unique_id=1186124833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1520.7225, 8.6668825, -809.052)
+gizmo_extents = 0.6
+script = ExtResource("1_toske")
+point_id = "w_yew_515"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_3849" type="Marker3D" parent="." unique_id=1100876514]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1487.282, 8.49587, -826.13385)
+gizmo_extents = 0.6
+script = ExtResource("1_toske")
+point_id = "w_tree_3849"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3850" type="Marker3D" parent="." unique_id=573720756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1505.1477, 7.93012, -793.35144)
+gizmo_extents = 0.6
+script = ExtResource("1_toske")
+point_id = "w_tree_3850"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="fern_1_4513" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_ia05x")]
+transform = Transform3D(0.06116826, 0, 0.90315175, 0, 0.90522075, 0, -0.90315175, 0, 0.06116826, 1504.4241, 7.93012, -791.6602)
+
+[node name="bush_long_1_4514" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_43s17")]
+transform = Transform3D(0.26922372, 0, 0.76934874, 0, 0.8150944, 0, -0.76934874, 0, 0.26922372, 1517.8064, 8.4666605, -827.09467)
+
+[node name="bush_long_1_4515" type="Node3D" parent="." unique_id=819092627 instance=ExtResource("3_43s17")]
+transform = Transform3D(0.19087005, 0, -1.0430416, 0, 1.0603617, 0, 1.0430416, 0, 0.19087005, 1476.4451, 8.422617, -800.82635)

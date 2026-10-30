@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ap1u3"]
+
+[node name="Cell_1_34" type="Node3D" unique_id=715158402]
+
+[node name="w_tree_2742" type="Marker3D" parent="." unique_id=893069261]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.22897, 6.307731, 2196.3518)
+gizmo_extents = 0.6
+script = ExtResource("1_ap1u3")
+point_id = "w_tree_2742"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")

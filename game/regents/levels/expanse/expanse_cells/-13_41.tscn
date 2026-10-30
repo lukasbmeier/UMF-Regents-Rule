@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_gaoxm"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_de4hd"]
+
+[node name="Cell_-13_41" type="Node3D" unique_id=781167328]
+
+[node name="fern_1_1907" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_gaoxm")]
+transform = Transform3D(-1.1566011, 0, 0.32421026, 0, 1.201182, 0, -0.32421026, 0, -1.1566011, -807.07385, 7.6786833, 2631.6387)
+
+[node name="w_skeleton_117_1" type="Marker3D" parent="." unique_id=1361546780]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -801.1738, 7.92705, 2636.2275)
+gizmo_extents = 0.5
+script = ExtResource("2_de4hd")
+point_id = "w_skeleton_117_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_117_2" type="Marker3D" parent="." unique_id=1300745988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -798.1738, 7.886798, 2639.7275)
+gizmo_extents = 0.5
+script = ExtResource("2_de4hd")
+point_id = "w_skeleton_117_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_117_3" type="Marker3D" parent="." unique_id=1458909412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -797.1738, 8.034382, 2632.7275)
+gizmo_extents = 0.5
+script = ExtResource("2_de4hd")
+point_id = "w_skeleton_117_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_117" type="Marker3D" parent="." unique_id=398947498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -801.1738, 7.92705, 2636.2275)
+gizmo_extents = 10.0
+script = ExtResource("2_de4hd")
+point_id = "w_poi_skeletons_117"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

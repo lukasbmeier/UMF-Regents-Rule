@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_er0fn"]
+
+[node name="Cell_-58_20" type="Node3D" unique_id=1566818299]
+
+[node name="w_copper_rock_4" type="Marker3D" parent="." unique_id=30904707]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3675.9182, 3.3697574, 1285.0577)
+gizmo_extents = 0.6
+script = ExtResource("1_er0fn")
+point_id = "w_copper_rock_4"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_poi_zone_261" type="Marker3D" parent="." unique_id=981289175]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3695.2046, 2.070629, 1331.4366)
+gizmo_extents = 10.0
+script = ExtResource("1_er0fn")
+point_id = "w_poi_zone_261"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

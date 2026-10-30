@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_m8bjg"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_g6srj"]
+
+[node name="Cell_-32_50" type="Node3D" unique_id=1846655207]
+
+[node name="w_tree_624" type="Marker3D" parent="." unique_id=1342750345]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2034.8391, 4.9083123, 3235.868)
+gizmo_extents = 0.6
+script = ExtResource("1_m8bjg")
+point_id = "w_tree_624"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_625" type="Marker3D" parent="." unique_id=1732725126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2043.2256, 5.348073, 3216.217)
+gizmo_extents = 0.6
+script = ExtResource("1_m8bjg")
+point_id = "w_tree_625"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_626" type="Marker3D" parent="." unique_id=267319466]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2019.202, 5.692483, 3231.813)
+gizmo_extents = 0.6
+script = ExtResource("1_m8bjg")
+point_id = "w_tree_626"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="rock_big_1_700" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_g6srj")]
+transform = Transform3D(-1.1937512, 0, -0.54085135, 0, 1.310558, 0, 0.54085135, 0, -1.1937512, -1998.2732, 6.2881737, 3252.2808)
+
+[node name="w_poi_zone_95" type="Marker3D" parent="." unique_id=1362596703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2039.378, 5.608716, 3210.504)
+gizmo_extents = 10.0
+script = ExtResource("1_m8bjg")
+point_id = "w_poi_zone_95"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

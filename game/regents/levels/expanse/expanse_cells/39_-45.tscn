@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_baln3"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_4i4nh"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_1ckuy"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="4_q271p"]
+
+[node name="Cell_39_-45" type="Node3D" unique_id=1750177527]
+
+[node name="w_oak_1693" type="Marker3D" parent="." unique_id=708502836]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2523.4226, 11.642323, -2853.462)
+gizmo_extents = 0.6
+script = ExtResource("1_baln3")
+point_id = "w_oak_1693"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_4554" type="Marker3D" parent="." unique_id=1613639179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2520.8772, 10.747376, -2830.8103)
+gizmo_extents = 0.6
+script = ExtResource("1_baln3")
+point_id = "w_tree_4554"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_4555" type="Marker3D" parent="." unique_id=1807338444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2537.773, 11.2880125, -2837.0767)
+gizmo_extents = 0.6
+script = ExtResource("1_baln3")
+point_id = "w_tree_4555"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="rock_big_1_5432" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_4i4nh")]
+transform = Transform3D(1.1274823, 0, -0.19038716, 0, 1.1434437, 0, 0.19038716, 0, 1.1274823, 2554.4443, 11.78663, -2874.1643)
+
+[node name="rock_medium_1_5433" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_1ckuy")]
+transform = Transform3D(-0.78627324, 0, -0.5939629, 0, 0.9854022, 0, 0.5939629, 0, -0.78627324, 2526.4902, 12.044876, -2863.471)
+
+[node name="bush_long_1_5434" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("4_q271p")]
+transform = Transform3D(0.42841837, 0, 1.0345736, 0, 1.1197699, 0, -1.0345736, 0, 0.42841837, 2498.9517, 11.049719, -2825.502)

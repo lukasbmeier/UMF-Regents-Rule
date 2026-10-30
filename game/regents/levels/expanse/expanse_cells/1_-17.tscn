@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_bueo1"]
+
+[node name="Cell_1_-17" type="Node3D" unique_id=1222605908]
+
+[node name="rock_medium_1_3132" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_bueo1")]
+transform = Transform3D(-0.6276707, 0, 0.58524185, 0, 0.85818326, 0, -0.58524185, 0, -0.6276707, 82.370865, 7.851858, -1056.1465)

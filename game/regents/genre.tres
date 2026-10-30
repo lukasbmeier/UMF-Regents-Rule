@@ -16,6 +16,7 @@ display_name = "Regent's Rule"
 entity_definitions = Array[Resource]([ExtResource("2_adventurer"), ExtResource("3_node"), ExtResource("4_station"), ExtResource("6_dummy"), ExtResource("7_skel_w"), ExtResource("8_skel_a")])
 tables = Array[StringName]([&"gather_node", &"station", &"afk_work", &"work_result", &"skill_xp", &"recipe_log", &"work_order", &"order_filled", &"wielded", &"combat_state", &"dummy", &"foe", &"foe_kill", &"casting", &"spell_cooldown", &"spell_area", &"burning", &"node_seen"])
 world_tables = Array[StringName]([&"gather_node", &"station", &"afk_work", &"work_result", &"work_order", &"dummy", &"foe", &"wielded", &"combat_state", &"casting", &"spell_area", &"burning"])
+cell_tables = Array[StringName]([&"gather_node", &"station", &"dummy", &"foe", &"afk_work", &"work_result", &"wielded", &"combat_state", &"casting", &"spell_area", &"burning"])
 referee_tables = Array[StringName]([])
 scenes = Array[PackedScene]([ExtResource("5_hud")])
 content_id_base = 40000

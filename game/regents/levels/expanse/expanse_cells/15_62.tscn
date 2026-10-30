@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_ux2qp"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_g8mf3"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="3_8o4e6"]
+
+[node name="Cell_15_62" type="Node3D" unique_id=426841183]
+
+[node name="rock_medium_1_4126" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_ux2qp")]
+transform = Transform3D(0.044960286, 0, -0.98498964, 0, 0.9860152, 0, 0.98498964, 0, 0.044960286, 985.308, 2.6524127, 3982.312)
+
+[node name="rock_big_1_4127" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_g8mf3")]
+transform = Transform3D(-0.59322834, 0, 0.59143585, 0, 0.83768505, 0, -0.59143585, 0, -0.59322834, 985.2457, 2.6524127, 3985.8992)
+
+[node name="w_poi_zone_130" type="Marker3D" parent="." unique_id=869381620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1022.5703, 1.5408864, 4026.0513)
+gizmo_extents = 10.0
+script = ExtResource("3_8o4e6")
+point_id = "w_poi_zone_130"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

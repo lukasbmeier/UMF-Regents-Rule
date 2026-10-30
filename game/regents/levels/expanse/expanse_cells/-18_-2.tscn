@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_wsmef"]
+
+[node name="Cell_-18_-2" type="Node3D" unique_id=431601835]
+
+[node name="w_yew_167" type="Marker3D" parent="." unique_id=1476145100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1141.2323, 6.2501736, -69.46984)
+gizmo_extents = 0.6
+script = ExtResource("1_wsmef")
+point_id = "w_yew_167"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_1217" type="Marker3D" parent="." unique_id=298891559]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1117.9904, 6.0392637, -103.289444)
+gizmo_extents = 0.6
+script = ExtResource("1_wsmef")
+point_id = "w_tree_1217"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_485" type="Marker3D" parent="." unique_id=726707263]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1094.7388, 6.58282, -88.40534)
+gizmo_extents = 10.0
+script = ExtResource("1_wsmef")
+point_id = "w_poi_zone_485"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_48qs5"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_mv4r0"]
+
+[node name="Cell_-27_50" type="Node3D" unique_id=1722314688]
+
+[node name="w_copper_rock_113" type="Marker3D" parent="." unique_id=1048611184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1715.1451, 12.45839, 3228.633)
+gizmo_extents = 0.6
+script = ExtResource("1_48qs5")
+point_id = "w_copper_rock_113"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="bush_long_1_891" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_mv4r0")]
+transform = Transform3D(-0.67398334, 0, 0.20082174, 0, 0.7032659, 0, -0.20082174, 0, -0.67398334, -1703.7621, 12.852355, 3221.7932)
+
+[node name="w_poi_zone_92" type="Marker3D" parent="." unique_id=2081478386]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1695.016, 12.153421, 3258.8867)
+gizmo_extents = 10.0
+script = ExtResource("1_48qs5")
+point_id = "w_poi_zone_92"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

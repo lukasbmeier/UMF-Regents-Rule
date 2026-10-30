@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_tvuqj"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_w5x5h"]
+
+[node name="Cell_-7_62" type="Node3D" unique_id=982866327]
+
+[node name="w_coal_rock_77" type="Marker3D" parent="." unique_id=1490092526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -440.05063, 14.590174, 4000.1438)
+gizmo_extents = 0.6
+script = ExtResource("1_tvuqj")
+point_id = "w_coal_rock_77"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="grass_common_tall_2503" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_w5x5h")]
+transform = Transform3D(1.2949563, 0, 0.114085, 0, 1.299972, 0, -0.114085, 0, 1.2949563, -429.53485, 15.225676, 3993.5984)

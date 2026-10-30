@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_acjc3"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_mxerw"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_n3pld"]
+
+[node name="Cell_-23_17" type="Node3D" unique_id=127818709]
+
+[node name="rock_medium_1_1072" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_acjc3")]
+transform = Transform3D(0.31720725, 0, -1.241605, 0, 1.2814848, 0, 1.241605, 0, 0.31720725, -1418.1396, 5.777974, 1100.1372)
+
+[node name="grass_common_tall_1073" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_mxerw")]
+transform = Transform3D(0.8278614, 0, -0.48396268, 0, 0.95894444, 0, 0.48396268, 0, 0.8278614, -1456.8616, 4.492715, 1130.4874)
+
+[node name="rock_big_1_1074" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("3_n3pld")]
+transform = Transform3D(0.80751354, 0, -0.7821456, 0, 1.1242019, 0, 0.7821456, 0, 0.80751354, -1440.8501, 4.935793, 1121.8983)

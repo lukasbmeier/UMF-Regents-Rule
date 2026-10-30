@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_s3ubl"]
+
+[node name="Cell_35_-59" type="Node3D" unique_id=1249254221]
+
+[node name="w_copper_rock_1061" type="Marker3D" parent="." unique_id=557456755]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2253.1072, 14.393504, -3766.793)
+gizmo_extents = 0.6
+script = ExtResource("1_s3ubl")
+point_id = "w_copper_rock_1061"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="w_copper_rock_1062" type="Marker3D" parent="." unique_id=1598731137]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2260.3923, 14.582294, -3763.2373)
+gizmo_extents = 0.6
+script = ExtResource("1_s3ubl")
+point_id = "w_copper_rock_1062"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")

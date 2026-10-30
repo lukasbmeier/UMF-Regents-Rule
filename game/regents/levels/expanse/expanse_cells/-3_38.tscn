@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_eytgd"]
+
+[node name="Cell_-3_38" type="Node3D" unique_id=1007635249]
+
+[node name="w_oak_916" type="Marker3D" parent="." unique_id=1940601136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -143.58664, 2.8123376, 2450.7283)
+gizmo_extents = 0.6
+script = ExtResource("1_eytgd")
+point_id = "w_oak_916"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_yew_323" type="Marker3D" parent="." unique_id=810363928]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -153.5772, -0.11171693, 2484.7197)
+gizmo_extents = 0.6
+script = ExtResource("1_eytgd")
+point_id = "w_yew_323"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_2486" type="Marker3D" parent="." unique_id=1987834292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -170.18332, 3.4357321, 2438.1738)
+gizmo_extents = 0.6
+script = ExtResource("1_eytgd")
+point_id = "w_tree_2486"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")

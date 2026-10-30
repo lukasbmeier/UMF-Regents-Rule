@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_txsnj"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_bop8r"]
+
+[node name="Cell_46_-29" type="Node3D" unique_id=644079797]
+
+[node name="w_yew_654" type="Marker3D" parent="." unique_id=851608240]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2979.8896, 8.992911, -1806.8118)
+gizmo_extents = 0.6
+script = ExtResource("1_txsnj")
+point_id = "w_yew_654"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_4878" type="Marker3D" parent="." unique_id=2099349016]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2978.5605, 9.038965, -1829.5941)
+gizmo_extents = 0.6
+script = ExtResource("1_txsnj")
+point_id = "w_tree_4878"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="rock_big_1_5806" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_bop8r")]
+transform = Transform3D(-0.3244235, 0, -1.2282034, 0, 1.2703284, 0, 1.2282034, 0, -0.3244235, 2952.8447, 9.162553, -1823.6177)

@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_4dcoe"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_4psks"]
+
+[node name="Cell_43_-31" type="Node3D" unique_id=756306220]
+
+[node name="fern_1_5650" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_4dcoe")]
+transform = Transform3D(-0.11541527, 0, 1.018201, 0, 1.0247214, 0, -1.018201, 0, -0.11541527, 2772.8289, 9.448689, -1936.2944)
+
+[node name="w_poi_zone_449" type="Marker3D" parent="." unique_id=1122454894]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2809.312, 10.217759, -1979.5251)
+gizmo_extents = 10.0
+script = ExtResource("2_4psks")
+point_id = "w_poi_zone_449"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

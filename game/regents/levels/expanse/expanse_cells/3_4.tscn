@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_o5gjx"]
+
+[node name="Cell_3_4" type="Node3D" unique_id=942830300]
+
+[node name="w_poi_zone_364" type="Marker3D" parent="." unique_id=1701265284]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 231.70831, 10.214497, 257.17123)
+gizmo_extents = 10.0
+script = ExtResource("1_o5gjx")
+point_id = "w_poi_zone_364"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_v4obd"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_wb0vf"]
+
+[node name="Cell_21_-16" type="Node3D" unique_id=963717823]
+
+[node name="grass_common_tall_4407" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_v4obd")]
+transform = Transform3D(-0.5641225, 0, 1.1122848, 0, 1.2471614, 0, -1.1122848, 0, -0.5641225, 1384.1134, 13.361181, -987.18524)
+
+[node name="w_poi_zone_235" type="Marker3D" parent="." unique_id=1810222061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1347.8186, 12.398217, -1020.18555)
+gizmo_extents = 10.0
+script = ExtResource("2_wb0vf")
+point_id = "w_poi_zone_235"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

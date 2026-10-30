@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_5lsq3"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_qb7nv"]
+
+[node name="Cell_1_-7" type="Node3D" unique_id=1947787858]
+
+[node name="bush_long_1_3140" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("1_5lsq3")]
+transform = Transform3D(-0.2955092, 0, 1.454943, 0, 1.4846497, 0, -1.454943, 0, -0.2955092, 99.27814, 13.288108, -406.3417)
+
+[node name="bush_long_1_3141" type="Node3D" parent="." unique_id=1981592113 instance=ExtResource("1_5lsq3")]
+transform = Transform3D(-0.3019812, 0, 0.7758592, 0, 0.83255637, 0, -0.7758592, 0, -0.3019812, 117.454346, 12.878639, -444.73944)
+
+[node name="w_skeleton_96_1" type="Marker3D" parent="." unique_id=1398046992]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.89697, 11.428041, -425.84082)
+gizmo_extents = 0.5
+script = ExtResource("2_qb7nv")
+point_id = "w_skeleton_96_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_96_2" type="Marker3D" parent="." unique_id=965049961]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 69.89697, 11.428041, -422.34082)
+gizmo_extents = 0.5
+script = ExtResource("2_qb7nv")
+point_id = "w_skeleton_96_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_96_3" type="Marker3D" parent="." unique_id=345511992]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.89697, 11.401844, -429.34082)
+gizmo_extents = 0.5
+script = ExtResource("2_qb7nv")
+point_id = "w_skeleton_96_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_96" type="Marker3D" parent="." unique_id=905809229]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.89697, 11.428041, -425.84082)
+gizmo_extents = 10.0
+script = ExtResource("2_qb7nv")
+point_id = "w_poi_skeletons_96"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

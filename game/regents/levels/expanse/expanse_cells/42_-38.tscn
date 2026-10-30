@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_lfeyi"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_hi32v"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_gor0j"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="4_cw6ya"]
+
+[node name="Cell_42_-38" type="Node3D" unique_id=1185790617]
+
+[node name="w_coal_rock_360" type="Marker3D" parent="." unique_id=872784411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2704.0652, 13.883051, -2398.5105)
+gizmo_extents = 0.6
+script = ExtResource("1_lfeyi")
+point_id = "w_coal_rock_360"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Coal rock")
+
+[node name="bush_long_1_5584" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_hi32v")]
+transform = Transform3D(1.1335706, 0, -0.877566, 0, 1.4335635, 0, 0.877566, 0, 1.1335706, 2727.8972, 14.020754, -2389.2136)
+
+[node name="rock_medium_1_5585" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_gor0j")]
+transform = Transform3D(-0.48986682, 0, 1.0775998, 0, 1.183719, 0, -1.0775998, 0, -0.48986682, 2692.0222, 14.495854, -2422.4167)
+
+[node name="rock_big_1_5586" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("4_cw6ya")]
+transform = Transform3D(1.2393931, 0, -0.03954561, 0, 1.2400239, 0, 0.03954561, 0, 1.2393931, 2724.5522, 13.977562, -2388.687)

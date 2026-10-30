@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_gw4re"]
+
+[node name="Cell_8_-21" type="Node3D" unique_id=320678503]
+
+[node name="w_tree_3182" type="Marker3D" parent="." unique_id=1813281559]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 537.025, 15.726593, -1290.7646)
+gizmo_extents = 0.6
+script = ExtResource("1_gw4re")
+point_id = "w_tree_3182"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3183" type="Marker3D" parent="." unique_id=634467832]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 556.53564, 15.995948, -1307.6259)
+gizmo_extents = 0.6
+script = ExtResource("1_gw4re")
+point_id = "w_tree_3183"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_tree_3184" type="Marker3D" parent="." unique_id=112833184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 565.64996, 16.241528, -1323.9562)
+gizmo_extents = 0.6
+script = ExtResource("1_gw4re")
+point_id = "w_tree_3184"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_377" type="Marker3D" parent="." unique_id=872522161]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 546.7012, 16.194027, -1317.5681)
+gizmo_extents = 10.0
+script = ExtResource("1_gw4re")
+point_id = "w_poi_zone_377"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Oak woodcutting zone")

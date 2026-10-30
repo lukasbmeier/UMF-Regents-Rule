@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_sobmk"]
+
+[node name="Cell_50_-86" type="Node3D" unique_id=1190734626]
+
+[node name="w_oak_1867" type="Marker3D" parent="." unique_id=644501141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3216.2148, 1.5272722, -5448.777)
+gizmo_extents = 0.6
+script = ExtResource("1_sobmk")
+point_id = "w_oak_1867"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_yew_678" type="Marker3D" parent="." unique_id=2023534562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3258.9814, -1.6603318, -5447.9243)
+gizmo_extents = 0.6
+script = ExtResource("1_sobmk")
+point_id = "w_yew_678"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_skeleton_202_1" type="Marker3D" parent="." unique_id=1568875836]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3227.7703, -0.73046535, -5465.0576)
+gizmo_extents = 0.5
+script = ExtResource("1_sobmk")
+point_id = "w_skeleton_202_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_202_2" type="Marker3D" parent="." unique_id=1788330137]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3230.7703, -0.5553345, -5461.5576)
+gizmo_extents = 0.5
+script = ExtResource("1_sobmk")
+point_id = "w_skeleton_202_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_202_3" type="Marker3D" parent="." unique_id=755448106]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3231.7703, -1.1549461, -5468.5576)
+gizmo_extents = 0.5
+script = ExtResource("1_sobmk")
+point_id = "w_skeleton_202_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_202" type="Marker3D" parent="." unique_id=1291191047]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3227.7703, -0.73046535, -5465.0576)
+gizmo_extents = 10.0
+script = ExtResource("1_sobmk")
+point_id = "w_poi_skeletons_202"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

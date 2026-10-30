@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_m7wbq"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_klibf"]
+
+[node name="Cell_-10_70" type="Node3D" unique_id=240581290]
+
+[node name="rock_medium_1_2226" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_m7wbq")]
+transform = Transform3D(-0.7775243, 0, -1.1449782, 0, 1.3840228, 0, 1.1449782, 0, -0.7775243, -610.683, 7.723969, 4487.1323)
+
+[node name="w_poi_zone_481" type="Marker3D" parent="." unique_id=1945561103]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -615.3127, 7.3838153, 4491.271)
+gizmo_extents = 10.0
+script = ExtResource("2_klibf")
+point_id = "w_poi_zone_481"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Yew woodcutting zone")

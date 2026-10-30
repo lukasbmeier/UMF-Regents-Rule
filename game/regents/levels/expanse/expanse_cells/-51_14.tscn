@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_uqe76"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_4s1o4"]
+
+[node name="Cell_-51_14" type="Node3D" unique_id=1851888399]
+
+[node name="fern_1_138" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_uqe76")]
+transform = Transform3D(0.7417468, 0, 0.57546157, 0, 0.9387994, 0, -0.57546157, 0, 0.7417468, -3205.8196, 6.5357223, 951.9274)
+
+[node name="grass_common_tall_139" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_4s1o4")]
+transform = Transform3D(-0.8218408, 0, -0.04436933, 0, 0.8230377, 0, 0.04436933, 0, -0.8218408, -3247.2927, 7.853192, 928.2837)

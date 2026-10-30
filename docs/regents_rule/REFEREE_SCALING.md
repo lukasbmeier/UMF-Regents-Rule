@@ -226,3 +226,53 @@ At 100 bots: 29 % busy before, 25 % after. Round trips at 300 went from 11.2 to 
   `submit_input` 20 times a second, 128 ms/s of the module at 300).
 - The load test's limits still judge the bucketed p95s (50 is a bucket's edge, so they can hardly break);
   `module_busy_pct` (reported) is the one to judge, once agreed.
+
+## A Skyrim-size world: 300 players spread out (template 1.5.0-1.5.4, DECISIONS #290-#294; 2026-10-30)
+
+Luke (2026-10-30): "try it on a world close to the same size as skyrim with 300 players to see if there is a way
+to test how many refs I need and simulate that many bots with me playing a local user as well". Worried about
+running several referees on his machine.
+
+**The world**: the EXPANSE (level 22, PROGRESS step 25), the continent's map at 3.7 times its width: 8.3 x 11.1
+km, **36.9 km2 of land** (Skyrim's is about 37), the continent's test placement at the same density (10,245
+nodes, 220 skeleton camps, **660 skeletons**). 300 bots spread over its land: a fifth in a town round the spawn,
+the rest anywhere, each roaming 8 cells round home, walking on the ground's height (`load_expanse.json`).
+
+**What it found, in order** (each a fix; the first run had the server's queue at 99,000 operations):
+
+| found | where | fix | measured |
+|---|---|---|---|
+| every connection compared each of 10,400 node points with every node spawned (100 M string compares) | `regents.rs` `populate` | hash sets | a connect 275 ms → under 1 |
+| the ring's cell queries `world_id = W AND chunk = N` are not narrowed by SpacetimeDB; spread out, every player's 9 cells are its own (~2,700 a table) and every moved row was checked against all | template `cell_query` | `chunk = N` alone; another world's rows kept back where they arrive (#291) | the tick's subscription update 111 → 19 ms; a referee write's 55 → 7 |
+| the movement tick read every entity of the world (12,000) and asked of every still row whether a player drives it | template `tick_world_module` | still rows passed before any lookup (#292) | the tick's own code 16.9 → 7.3 ms |
+| region cuts by players alone: one referee of four got 328 of the 660 skeletons | the load test | cut by players and the level's NPCs (`npc_kinds`) (#292) | 148-177 skeletons each |
+| every awake camp's walk-map tile read the level on the main thread and baked at once | template `NpcNav` | one bake at a time, read when it starts; the level's bounds found once, not by searching 20,000 nodes on every brain's every ask (#293) | (the brains' share below) |
+| a skeleton idle in camp was stepped 60 times a second and written 20; every NPC's pose worked out every frame | template movement component, animation driver | a still frame for a body at rest dropped; a referee poses nobody (#294) | foes' writes ~1,000 → 146 in a 30 s window; ~250 MB a referee |
+| **the brains' world view held every movement row the referee had (~3,000 nodes in a region) and every skeleton's every think searched them all for the nearest player** | template `NpcWorldView` | indexed by kind; unchanged rows not decoded again; statuses from their rows (#294) | **referee frame p95 145 → 24-27 ms; its memory flat (it had climbed ~5 MB a second, a referee too far behind to keep up)** |
+
+300 bots, four region referees, after all of it (`expanse_watch.sh`, measured, then two minutes watched):
+
+| | worst referee frame p95 | the referees' cores, memory | the module | round trips p50 / p95 | per player |
+|---|---|---|---|---|---|
+| first run | 147 ms (two never reported) | 3.9, 4.9 GB and climbing | 100 % busy, queue 99,000 | 5-43 s | - |
+| after #294 | **27 ms** | 3.7 cores, **4.1 GB flat** (~1 GB each) | 77-89 % busy | ~32 / 75 ms | 17 KB/s, 2.4 others seen |
+| after 1.5.5 (no trees in a referee) and the bot fixes | **30 ms** | 3.9 cores, **4.0 GB** (700-730 MB static each) | 78 % | 38 ms p95 | 24 KB/s p95 |
+
+With 1.5.5 every limit holds at 300 except **referee net stalls** (7, worst 834 ms): two of the four referees
+(regions 1 and 2) lose their connection once or twice in the first minutes. The server closes the socket for
+idle timeout, which means the referee's main thread did nothing for 30 s, and this happens just after the last of
+its ~170 skeletons binds. They reconnect, rebuild their NPCs and carry on; the other two never do it. Ruled out:
+the animation trees (1.5.5), walk-map reads (1.5.3, one tile at a time). Not yet found: the next to look at.
+
+**What a referee costs on this world**: about 1 GB of memory (the level whole is ~375 MB of it: every referee
+loads all of it) and ~1 core when its region is busy. Its frames grow with the skeletons awake in its region,
+not the players (150 bots woke as many as 300: spread out, players come within 200 m of most camps).
+
+**What is left** (in order):
+0. The two referees' 30 s main-thread stall after their skeletons bind (above): what blocks, and fix it.
+1. The server: 77-89 % busy at 300 spread out (the movement tick 7.3 ms + its update 18 ms, 20 times a second).
+   The design levers (#289) are unchanged; the per-player bandwidth is 17 KB/s here (spread) against 120 dense.
+2. A region referee loads the whole level (~375 MB static of its ~1 GB): loading only its region's cells and
+   terrain would save a few hundred MB each.
+3. The skeletons' brains (the genre's `foe.gd`) and the movement step are what a busy referee spends now; the
+   combat overhaul is the place to set how often an idle foe thinks.

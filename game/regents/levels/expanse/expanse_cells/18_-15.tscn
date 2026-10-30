@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_l40i7"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_m0llf"]
+
+[node name="Cell_18_-15" type="Node3D" unique_id=616701399]
+
+[node name="w_copper_rock_792" type="Marker3D" parent="." unique_id=1635661633]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1195.8202, 10.215751, -943.4518)
+gizmo_extents = 0.6
+script = ExtResource("1_l40i7")
+point_id = "w_copper_rock_792"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Copper rock")
+
+[node name="bush_long_1_4256" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_m0llf")]
+transform = Transform3D(0.53219366, 0, 1.0068878, 0, 1.1388824, 0, -1.0068878, 0, 0.53219366, 1161.1973, 12.57321, -926.1868)

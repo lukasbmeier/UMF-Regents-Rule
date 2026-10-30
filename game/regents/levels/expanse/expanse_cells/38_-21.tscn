@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_bn8hb"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_1agau"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_qwidj"]
+
+[node name="Cell_38_-21" type="Node3D" unique_id=639314470]
+
+[node name="w_oak_1678" type="Marker3D" parent="." unique_id=249034733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2483.1826, 11.287717, -1295.9672)
+gizmo_extents = 0.6
+script = ExtResource("1_bn8hb")
+point_id = "w_oak_1678"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_yew_600" type="Marker3D" parent="." unique_id=530257884]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2442.816, 11.90234, -1303.839)
+gizmo_extents = 0.6
+script = ExtResource("1_bn8hb")
+point_id = "w_yew_600"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="bush_long_1_5398" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_1agau")]
+transform = Transform3D(0.33855057, 0, 1.0290108, 0, 1.0832727, 0, -1.0290108, 0, 0.33855057, 2474.103, 10.494178, -1312.6948)
+
+[node name="bush_large_5399" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_qwidj")]
+transform = Transform3D(-0.4204914, 0, -0.6562762, 0, 0.7794302, 0, 0.6562762, 0, -0.4204914, 2447.0684, 12.209133, -1301.1232)
+
+[node name="w_poi_zone_173" type="Marker3D" parent="." unique_id=170190136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2443.7837, 11.049927, -1316.4244)
+gizmo_extents = 10.0
+script = ExtResource("1_bn8hb")
+point_id = "w_poi_zone_173"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")
+
+[node name="w_poi_zone_252" type="Marker3D" parent="." unique_id=1009745589]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2479.1074, 8.391357, -1339.914)
+gizmo_extents = 10.0
+script = ExtResource("1_bn8hb")
+point_id = "w_poi_zone_252"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

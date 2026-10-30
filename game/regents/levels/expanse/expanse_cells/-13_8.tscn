@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_yuyee"]
+
+[node name="Cell_-13_8" type="Node3D" unique_id=1152561530]
+
+[node name="w_tree_1616" type="Marker3D" parent="." unique_id=181793705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -794.158, 11.180875, 536.8348)
+gizmo_extents = 0.6
+script = ExtResource("1_yuyee")
+point_id = "w_tree_1616"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_skeleton_186_2" type="Marker3D" parent="." unique_id=583875808]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -777.73755, 11.876927, 513.3911)
+gizmo_extents = 0.5
+script = ExtResource("1_yuyee")
+point_id = "w_skeleton_186_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()

@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_70gdh"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_ycltf"]
+
+[node name="Cell_18_-42" type="Node3D" unique_id=1221922636]
+
+[node name="w_iron_rock_324" type="Marker3D" parent="." unique_id=293782680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1189.4049, 14.115269, -2638.1252)
+gizmo_extents = 0.6
+script = ExtResource("1_70gdh")
+point_id = "w_iron_rock_324"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="fern_1_4244" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_ycltf")]
+transform = Transform3D(-0.8552062, 0, 0.9460306, 0, 1.2752849, 0, -0.9460306, 0, -0.8552062, 1168.218, 14.099787, -2635.3274)

@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_qo68p"]
+
+[node name="Cell_8_-42" type="Node3D" unique_id=2080651996]
+
+[node name="w_tree_3162" type="Marker3D" parent="." unique_id=648431841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 527.36426, 0.4045136, -2664.4485)
+gizmo_extents = 0.6
+script = ExtResource("1_qo68p")
+point_id = "w_tree_3162"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_oak_1169" type="Marker3D" parent="." unique_id=1289611795]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 531.2823, 0.5212368, -2662.313)
+gizmo_extents = 0.6
+script = ExtResource("1_qo68p")
+point_id = "w_oak_1169"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_oak_1170" type="Marker3D" parent="." unique_id=1286364070]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 560.3981, 2.7345576, -2651.925)
+gizmo_extents = 0.6
+script = ExtResource("1_qo68p")
+point_id = "w_oak_1170"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_skeleton_131_1" type="Marker3D" parent="." unique_id=1527723723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 553.97925, 0.5994265, -2673.648)
+gizmo_extents = 0.5
+script = ExtResource("1_qo68p")
+point_id = "w_skeleton_131_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_131_2" type="Marker3D" parent="." unique_id=2127308557]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 556.97925, 0.7727092, -2670.148)
+gizmo_extents = 0.5
+script = ExtResource("1_qo68p")
+point_id = "w_skeleton_131_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_131_3" type="Marker3D" parent="." unique_id=485595126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 557.97925, 0.3696351, -2677.148)
+gizmo_extents = 0.5
+script = ExtResource("1_qo68p")
+point_id = "w_skeleton_131_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_131" type="Marker3D" parent="." unique_id=1256326845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 553.97925, 0.5994265, -2673.648)
+gizmo_extents = 10.0
+script = ExtResource("1_qo68p")
+point_id = "w_poi_skeletons_131"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

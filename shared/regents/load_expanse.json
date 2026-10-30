@@ -1,0 +1,21 @@
+{
+  "_comment": "REGENT'S RULE'S LOAD TEST ON A SKYRIM-SIZE WORLD (PROGRESS step 25; LOAD=expanse, over shared/regents/load.json). World 0 plays it on the EXPANSE (level 22): the continent's map at 3.7 times its width, 8.3 x 11.1 km, 36.9 km2 of land (Skyrim's is about 37), with the continent's test placement at the same density (10,245 nodes, 220 skeleton camps, 660 skeletons). 300 bots spread over its land (template 1.5, tools/load/level.py): a fifth of them in a town of 6 x 6 cells round the spawn (the camp), the rest anywhere, each roaming within 8 cells of home; they walk on the ground's height (the bake's ground grid). The referees are cut where the bots live. Run it: game/regents/tests/expanse_watch.sh (watch and join), game/regents/tests/expanse_referees.sh (how many referees). The referees are cut so each has a like share of the bots and the skeletons (npc_kinds: each skeleton point weighs as a player).",
+  "level": 22,
+  "steps": [
+    300
+  ],
+  "spread": {
+    "over": "level",
+    "crowd_share": 0.2,
+    "crowd_cells": 6,
+    "roam_cells": 8
+  },
+  "referees": [
+    2,
+    2
+  ],
+  "npc_kinds": [
+    "skeleton_warrior",
+    "skeleton_axeman"
+  ]
+}

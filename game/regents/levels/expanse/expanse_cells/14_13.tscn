@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ccf1j"]
+
+[node name="Cell_14_13" type="Node3D" unique_id=1903338357]
+
+[node name="w_oak_1281" type="Marker3D" parent="." unique_id=213061205]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 911.2494, 14.508451, 859.3759)
+gizmo_extents = 0.6
+script = ExtResource("1_ccf1j")
+point_id = "w_oak_1281"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_yew_458" type="Marker3D" parent="." unique_id=905170875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 947.8924, 14.93851, 870.9615)
+gizmo_extents = 0.6
+script = ExtResource("1_ccf1j")
+point_id = "w_yew_458"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Yew")
+
+[node name="w_tree_3483" type="Marker3D" parent="." unique_id=824527530]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 911.7514, 15.059499, 870.25464)
+gizmo_extents = 0.6
+script = ExtResource("1_ccf1j")
+point_id = "w_tree_3483"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_131" type="Marker3D" parent="." unique_id=2023339374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 944.53625, 14.724135, 867.1293)
+gizmo_extents = 10.0
+script = ExtResource("1_ccf1j")
+point_id = "w_poi_zone_131"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

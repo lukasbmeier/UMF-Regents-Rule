@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_rw0jp"]
+
+[node name="Cell_-12_57" type="Node3D" unique_id=1428488195]
+
+[node name="w_oak_620" type="Marker3D" parent="." unique_id=303026691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -762.88776, 12.75537, 3662.3691)
+gizmo_extents = 0.6
+script = ExtResource("1_rw0jp")
+point_id = "w_oak_620"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Oak")
+
+[node name="w_tree_1743" type="Marker3D" parent="." unique_id=1661179724]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -721.7304, 12.100563, 3680.0525)
+gizmo_extents = 0.6
+script = ExtResource("1_rw0jp")
+point_id = "w_tree_1743"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_skeleton_114_1" type="Marker3D" parent="." unique_id=403635720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -713.792, 12.167843, 3675.7617)
+gizmo_extents = 0.5
+script = ExtResource("1_rw0jp")
+point_id = "w_skeleton_114_1"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_114_2" type="Marker3D" parent="." unique_id=1685150474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -710.792, 11.992337, 3679.2617)
+gizmo_extents = 0.5
+script = ExtResource("1_rw0jp")
+point_id = "w_skeleton_114_2"
+kind = "skeleton_axeman"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_skeleton_114_3" type="Marker3D" parent="." unique_id=1195484095]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -709.792, 12.1377, 3672.2617)
+gizmo_extents = 0.5
+script = ExtResource("1_rw0jp")
+point_id = "w_skeleton_114_3"
+kind = "skeleton_warrior"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_poi_skeletons_114" type="Marker3D" parent="." unique_id=327280935]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -713.792, 12.167843, 3675.7617)
+gizmo_extents = 10.0
+script = ExtResource("1_rw0jp")
+point_id = "w_poi_skeletons_114"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Skeleton camp")

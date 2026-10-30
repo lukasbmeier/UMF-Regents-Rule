@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_evvc1"]
+
+[node name="Cell_-5_3" type="Node3D" unique_id=1496936726]
+
+[node name="w_tree_2319" type="Marker3D" parent="." unique_id=1315258507]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -265.96512, 7.88128, 226.32994)
+gizmo_extents = 0.6
+script = ExtResource("1_evvc1")
+point_id = "w_tree_2319"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Tree")
+
+[node name="w_poi_zone_46" type="Marker3D" parent="." unique_id=1102415620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -287.05136, 10.467355, 239.25203)
+gizmo_extents = 10.0
+script = ExtResource("1_evvc1")
+point_id = "w_poi_zone_46"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Copper mining zone")

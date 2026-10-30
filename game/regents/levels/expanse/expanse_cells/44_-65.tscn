@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_tco1r"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_cf7ii"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_jmffh"]
+
+[node name="Cell_44_-65" type="Node3D" unique_id=735630001]
+
+[node name="w_iron_rock_489" type="Marker3D" parent="." unique_id=304292056]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2843.3347, 10.445098, -4137.5195)
+gizmo_extents = 0.6
+script = ExtResource("1_tco1r")
+point_id = "w_iron_rock_489"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="w_iron_rock_490" type="Marker3D" parent="." unique_id=2010170771]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2868.2249, 9.168192, -4132.253)
+gizmo_extents = 0.6
+script = ExtResource("1_tco1r")
+point_id = "w_iron_rock_490"
+kind = "node"
+radius = 0.6
+tags = PackedStringArray("Iron rock")
+
+[node name="bush_large_5678" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_cf7ii")]
+transform = Transform3D(-0.11684447, 0, 0.8879856, 0, 0.89564, 0, -0.8879856, 0, -0.11684447, 2828.456, 9.473238, -4112.4375)
+
+[node name="bush_long_1_5679" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_jmffh")]
+transform = Transform3D(1.1107533, 0, 0.29168987, 0, 1.1484145, 0, -0.29168987, 0, 1.1107533, 2867.4817, 10.094028, -4140.589)
+
+[node name="w_poi_zone_39" type="Marker3D" parent="." unique_id=1106427339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2879.5588, 8.98274, -4144.3525)
+gizmo_extents = 10.0
+script = ExtResource("1_tco1r")
+point_id = "w_poi_zone_39"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Coal mining zone")
+
+[node name="w_poi_zone_255" type="Marker3D" parent="." unique_id=712306799]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2860.0737, 8.18453, -4099.6997)
+gizmo_extents = 10.0
+script = ExtResource("1_tco1r")
+point_id = "w_poi_zone_255"
+kind = "poi"
+radius = 10.0
+tags = PackedStringArray("Iron mining zone")

@@ -1143,3 +1143,52 @@ integration suite.
 
 **Left for later**: judge `module_busy_pct` instead of the bucketed p95s (Luke); the "net stall" at 50 and
 100 (still once a referee, ~30 s after it starts).
+
+## Step 25: a Skyrim-size world, 300 bots spread over it, and how many referees (2026-10-30)
+
+Luke: "finish the server work and make sure referees/sidecars are in the best spot performance wise and then
+commit and ship everything for me to play test ... try it on a world close to the same size as skyrim with 300
+players to see if there is a way to test how many refs I need and simulate that many bots with me playing a
+local user as well to see them all run around and sync." Template 1.5.0-1.5.4 (DECISIONS #290-#294), pulled here.
+
+- **The expanse** (level 22, a TEST world): `build_continent.gd` now builds either world (`world` on its node;
+  the continent's settings are the defaults, so it comes out as before): `build_expanse.tscn` is the continent's
+  map at 3.7 times its width, 8.3 x 11.1 km, **36.9 km2 of land** (Skyrim's is ~37), hills and mountains twice
+  as tall, terrain at 4 m, the continent's test placement at the same density (10,245 nodes, 220 skeleton camps,
+  660 skeletons, 544 harvest zones), the decor thinned to 40 %, 7,248 cells; its bake writes the ground's height
+  too (`LevelInfo.bake_ground`) so bots walk on its hills. ~75 s to build. Never hand-edit it.
+- **300 bots over it**: `shared/regents/load_expanse.json` (`LOAD=expanse`): a fifth in a 6 x 6-cell town round
+  the camp, the rest anywhere on land, each roaming 8 cells round home; the referees cut so each has a like share
+  of bots and skeletons (`npc_kinds`).
+- **Watch, and play among them**: `tools\run.cmd game\regents\tests\expanse_watch.sh` measures one step, then
+  keeps the bots playing and opens the game on the test database for you (`PLAYER=0`: no window; `REFEREES=3x2`,
+  `STEPS=150`, `WATCH=900`). A line every 10 s: bots playing, the module's busy %, each referee's frames, what the
+  referees take of this machine. Ctrl+C stops it.
+- **How many referees**: `tools\run.cmd game\regents\tests\expanse_referees.sh` (the template's
+  `tests/referee_sweep.sh`): the step once per cut, then `build/load/sweep.md`.
+- **Found and fixed on the way** (`REFEREE_SCALING.md`, "A Skyrim-size world"): every connection compared each
+  node point with every node (`populate`, here: hash sets); and in the template the ring's queries the server
+  could not narrow, the tick reading 12,000 still rows, walk-map bakes all at once, idle skeletons stepped and
+  written every tick, and the big one, the brains' view searching every node for the nearest player.
+- The gatherer bots wait until the server has them in reach before tapping E, and walk on when no node is near.
+
+**Measured** (300 bots, four referees, this PC): worst referee frame p95 147 → **26-30 ms**; the four took
+3.9 cores and **4.0 GB, flat** (each 700-730 MB of its own: the whole level is ~375 MB of it); the module 78 %
+busy; round trips 38 ms p95; 24 KB/s a player at p95 (spread out: 2.4 others seen). ONE referee for the whole
+world drops out (7,513 swings refused with nobody judging): four is the least that runs it here.
+
+**Tested**: template unit 2272/0 (new: the ground bake and its negative, the cell queries by number and another
+world's rows kept back, and its negative, the walk-map queue, a still frame for a body at rest, the view's kind
+index), integration 644/0, e2e 11/0, ring 15+47/0, sidecar 13/0, regions 25/0, `test_load.py` 33/0 (spread,
+cuts, usage, the sweep table); here genre unit 2726/0, native 127/0, the expanse runs above.
+
+Template 1.5.5 (no animation trees in a referee) and three bot fixes after (a gatherer waits for the server to
+have it in reach, walks on when no node is near, and does not pick a node across a bay; a gatherer stopped at its
+spot and nudged by a correction walked no more): every bot moves, nothing is refused, and every limit holds at
+300 but one, **referee net stalls**: two of four referees lose their connection once or twice early on (a 30 s
+main-thread stall just after their skeletons bind; not found yet).
+
+**Left for later**: that stall first (`REFEREE_SCALING.md`); the server at 300 spread (77-89 % busy); a region
+referee loading only its part of the level; how often an idle skeleton thinks (the combat overhaul's to set);
+the sweep itself (`expanse_referees.sh`) was not run to the end this session: the stall breaks each cut's
+verdict, so its table would say "no cut held" until it is fixed.
