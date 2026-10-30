@@ -952,3 +952,8 @@ Code only (client and sidecar): restart the referees; a game republishes nothing
   node and stone the referee holds (~3,000 in a region there); unchanged rows are not decoded again; statuses
   come from their own rows.
 - Measured: With the world view below, four region referees on Regent's Rule's Skyrim-size world at 300 players: frame p95 145 to 24-27 ms, their memory flat at ~1 GB each (it had climbed ~5 MB a second each: a referee too far behind to apply what it was sent).
+
+## 1.5.5 — a referee builds no animation trees
+Code only: restart the referees.
+- `AnimationDriverComponent` in a referee builds no tree at all (1.5.4 built it and never advanced it): a clip's
+  length comes from the set (`shot_seconds`). ~70 MB less a referee with ~170 skeletons.

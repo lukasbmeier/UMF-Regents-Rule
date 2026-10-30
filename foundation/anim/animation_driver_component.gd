@@ -121,14 +121,15 @@ func _on_bound() -> void:
 	var cfg: MovementConfig = MovementConfig.shared()
 	if cfg != null and cfg.sprint_speed > 0.0:
 		_sprint_speed = cfg.sprint_speed
+	# A REFEREE DRAWS NOTHING (template 1.5.4; rule 11: no pose ever decides anything): no tree is built or
+	# advanced (a clip's length is read from the set, `shot_seconds`). Each NPC's pose every frame was a large
+	# part of a busy referee's frame, and building ~170 trees as a region's skeletons bound at once held a
+	# referee's main thread past the server's 30 s idle timeout (Regent's Rule's Skyrim-size world).
+	if SpaceTimeMovementComponent.is_authority_process():
+		return
 	if not _install():
 		return
 	_connect_siblings()
-	# A REFEREE DRAWS NOTHING (template 1.5.3; rule 11: no pose ever decides anything): its tree is built,
-	# so a clip's length can be read, but never advanced. Every NPC's pose worked out every frame was a
-	# large part of a busy referee's frame (Regent's Rule's Skyrim-size world: 150 skeletons a referee).
-	if SpaceTimeMovementComponent.is_authority_process():
-		return
 	if not is_local_authority:
 		AnimationRate.apply_range(_model, GraphicsQuality.detail)
 		if not Settings.changed.is_connected(_on_setting):
