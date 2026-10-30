@@ -533,6 +533,17 @@ func _run_regions() -> void:
 	_check(cols.size() == 5 and cols[0] == Vector2i(Cells.at(-1, -2), Cells.at(-1, 2)) and cols[4] == Vector2i(Cells.at(3, -2), Cells.at(3, 2)),
 		"what it asks for: one range of chunks a column, its cells and the border (%d columns)" % cols.size())
 	_check(cols[0].y - cols[0].x == 4, "a column's chunks are consecutive (5 cells)")
+	var wide: RefereeRegion = RefereeRegion.parse("-512,-512,-1,511")
+	_check(wide.columns().size() == 513, "a region to the grid's edge watches 513 columns")
+	wide.clip_to(AABB(Vector3(-100.0, -10.0, -50.0), Vector3(300.0, 20.0, 100.0)))
+	var clipped: Array[Vector2i] = wide.columns()
+	_check(clipped.size() == 4 and clipped[0] == Vector2i(Cells.at(-3, -2), Cells.at(-3, 1)) and clipped[3].x == Cells.at(0, -2),
+		"clipped to the level (a cell round it): its own columns and its border's, the level's rows only (%d columns)" % clipped.size())
+	var away: RefereeRegion = RefereeRegion.parse("100,100,110,110")
+	away.clip_to(AABB(Vector3(-100.0, -10.0, -50.0), Vector3(300.0, 20.0, 100.0)))
+	_check(away.columns().is_empty(), "a region the level does not reach asks for nothing")
+	wide.clip_to(AABB())
+	_check(wide.columns().size() == 513, "no bounds: no clip")
 	var im: Node = get_node(^"/root/InterestManager")
 	var prev_cols: Array[Vector2i] = im.region_columns
 	var prev_cfg: NetConfig = SpaceTimeSync.config
@@ -544,7 +555,12 @@ func _run_regions() -> void:
 		"subscribed: the cell tables by column (%d queries)" % q.size())
 	_check(q.any(func(x: String) -> bool: return x.begins_with("SELECT * FROM movement_state")), "movement among them")
 	var no_cols: Array[Vector2i] = []
+	im.region_on = true
 	im.region_columns = no_cols
+	q.assign(im.build_ring_queries(4))
+	_check(im.is_ring() and q.is_empty() and not im.build_queries(4).any(func(x: String) -> bool: return x.begins_with("SELECT * FROM movement_state")),
+		"a region with no columns asks for no cell of any table, never the whole world's")
+	im.region_on = false
 	_check(not im.is_ring(), "and a referee for the whole world: no cells of its own (it is sent the world)")
 	im.region_columns = prev_cols
 	SpaceTimeSync.config = prev_cfg

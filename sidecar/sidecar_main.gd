@@ -131,8 +131,13 @@ func _ready() -> void:
 		referee.may_judge = _judges
 		keeper.on_mine = _run_mine
 		keeper.on_not_mine = _let_go_of
-		InterestManager.region_columns = region.columns()
-		print("[Sidecar] a region referee: %s" % region.describe())
+		region.clip_to(NpcNav.level_bounds(world.level()))
+		InterestManager.set_region(region.columns())
+		world.level_shown.connect(func(level: Node3D) -> void:
+			region.clip_to(NpcNav.level_bounds(level))
+			InterestManager.set_region(region.columns())
+			print("[Sidecar] its level's cells: %d columns asked for" % region.columns().size()))
+		print("[Sidecar] a region referee: %s, %d columns asked for" % [region.describe(), region.columns().size()])
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	var mods: Array[GenreModule] = []

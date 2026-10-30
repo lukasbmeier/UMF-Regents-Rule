@@ -144,7 +144,11 @@ static func _key(level: Node3D, radius: float, height: float, at: Vector3 = Vect
 	return key
 
 
-## The part of the level worth baking: its LevelInfo's bake bounds, when it has one.
+## The part of the level worth baking: its LevelInfo's bake bounds, when it has one (an empty AABB without).
+static func level_bounds(level: Node3D) -> AABB:
+	return _bounds(level) if level != null else AABB()
+
+
 static func _bounds(level: Node3D) -> AABB:
 	for n: Node in level.find_children("*", "", true, false):
 		if n is LevelInfo:

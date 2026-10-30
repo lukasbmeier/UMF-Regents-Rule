@@ -17,6 +17,9 @@ class_name SimWorld extends Node3D
 ## Where entities are parented. The level scene may nominate one; otherwise this node.
 @export var entity_root_name: StringName = &"WorldRoot"
 
+## A level was put in place of the one before (`show_level`): a region referee clips what it asks for to it.
+signal level_shown(level: Node3D)
+
 var world_id: int = 0
 var sync: AuthoritySync = null
 ## The level the world runs (`world_level`), once the server has said: its scene replaces the one
@@ -84,6 +87,7 @@ func show_level(id: int) -> bool:
 		old.queue_free()
 	level_id = id
 	print("[Sidecar] world %d runs level %d: %s" % [world_id, id, bake.scene])
+	level_shown.emit(_level)
 	return true
 
 
