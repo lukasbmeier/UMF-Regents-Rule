@@ -35,6 +35,9 @@ const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entit
 var world_id: int = 0
 ## Off in tests: judged, not sent.
 var send: bool = true
+## A REGION REFEREE judges only the uses of those it runs (DECISIONS #288): (actor id) -> bool. A use it
+## does not is left for the referee whose region it is. Unset (one referee for the world): every use.
+var may_judge: Callable = Callable()
 
 ## Judged so far, and how: [{request_id, hit_id, reach, rewind_ms}], newest last (the last 32).
 var judged: Array[Dictionary] = []
@@ -212,6 +215,8 @@ func settle(now_usec: int) -> Array[Dictionary]:
 		if int(req["due_usec"]) + SETTLE_USEC > now_usec:
 			continue
 		_pending.erase(rid)
+		if may_judge.is_valid() and not bool(may_judge.call(int(req["actor_id"]))):
+			continue   # another region's: its referee answers
 		var verdict: Dictionary = judge(rid, req)
 		out.append(verdict)
 		judged.append(verdict)

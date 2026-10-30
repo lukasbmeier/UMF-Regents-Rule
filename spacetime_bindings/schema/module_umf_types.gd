@@ -31,6 +31,7 @@ const LobbyMember = preload('res://spacetime_bindings/schema/types/umf_lobby_mem
 const MovementStateRow = preload('res://spacetime_bindings/schema/types/umf_movement_state_row.gd')
 const Noise = preload('res://spacetime_bindings/schema/types/umf_noise.gd')
 const NpcBrainRow = preload('res://spacetime_bindings/schema/types/umf_npc_brain_row.gd')
+const NpcDriver = preload('res://spacetime_bindings/schema/types/umf_npc_driver.gd')
 const Player = preload('res://spacetime_bindings/schema/types/umf_player.gd')
 const Push = preload('res://spacetime_bindings/schema/types/umf_push.gd')
 const BodyContactWrite = preload('res://spacetime_bindings/schema/types/umf_body_contact_write.gd')

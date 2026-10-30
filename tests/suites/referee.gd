@@ -19,6 +19,7 @@ func run() -> void:
 	_run_two_sides()
 	_run_rows()
 	_run_feed()
+	_run_regions()
 	await _run_client_side()
 	await _run_stale()
 
@@ -503,6 +504,112 @@ func _run_feed() -> void:
 	SpaceTimeSync.read_only = was
 	SpaceTimeSync.get_row(&"referee_test_unasked", 1)
 	_check(not SpaceTimeSync._unasked.has(&"referee_test_unasked"), "a player's client (no list): reads anything")
+
+
+class _RowStub extends RefCounted:
+	var _v: Dictionary = {}
+	func _init(v: Dictionary) -> void:
+		_v = v
+	func _get(key: StringName) -> Variant:
+		return _v.get(key, null)
+
+
+## REGION REFEREES (DECISIONS #288): a referee for some cells of a world runs what stands in them and
+## watches a border round them; an NPC it drives is handed on only past its edge; what it subscribes is a
+## query per column; it judges only its own people's swings; the module's rows say what it drives.
+func _run_regions() -> void:
+	print("== referee: regions ==")
+	_check(RefereeRegion.parse("1,2") == null and RefereeRegion.parse("a,b,c,d") == null, "a region that is not four numbers: none")
+	var r: RefereeRegion = RefereeRegion.parse("2,-1,0,1")
+	_check(r.x0 == 0 and r.x1 == 2 and r.z0 == -1 and r.z1 == 1, "its corners in either order (%s)" % r.describe())
+	r.side_m = 10.0
+	r.hand_on_m = 2.0
+	_check(r.runs(Vector3(0.0, 0.0, -10.0)) and r.runs(Vector3(29.9, 0.0, 19.9)), "it runs what stands in its cells, edge to edge")
+	_check(not r.runs(Vector3(30.5, 0.0, 0.0)) and not r.runs(Vector3(-0.5, 0.0, 0.0)), "not what stands just past them")
+	_check(r.runs(Vector3(31.5, 0.0, 0.0), true) and not r.runs(Vector3(32.5, 0.0, 0.0), true),
+		"its own NPC: still its own up to 2 m past the edge, not further")
+	_check(r.watches(-1, -2) and r.watches(3, 2) and not r.watches(4, 0) and not r.watches(0, -3), "it watches one cell round them")
+	var cols: Array[Vector2i] = r.columns()
+	_check(cols.size() == 5 and cols[0] == Vector2i(Cells.at(-1, -2), Cells.at(-1, 2)) and cols[4] == Vector2i(Cells.at(3, -2), Cells.at(3, 2)),
+		"what it asks for: one range of chunks a column, its cells and the border (%d columns)" % cols.size())
+	_check(cols[0].y - cols[0].x == 4, "a column's chunks are consecutive (5 cells)")
+	var im: Node = get_node(^"/root/InterestManager")
+	var prev_cols: Array[Vector2i] = im.region_columns
+	var prev_cfg: NetConfig = SpaceTimeSync.config
+	SpaceTimeSync.config = NetConfig.new()
+	im.region_columns = cols
+	var q: Array[String] = []
+	q.assign(im.build_ring_queries(4))
+	_check(im.is_ring() and not q.is_empty() and q.all(func(x: String) -> bool: return x.contains("world_id = 4 AND chunk >= ")),
+		"subscribed: the cell tables by column (%d queries)" % q.size())
+	_check(q.any(func(x: String) -> bool: return x.begins_with("SELECT * FROM movement_state")), "movement among them")
+	var no_cols: Array[Vector2i] = []
+	im.region_columns = no_cols
+	_check(not im.is_ring(), "and a referee for the whole world: no cells of its own (it is sent the world)")
+	im.region_columns = prev_cols
+	SpaceTimeSync.config = prev_cfg
+
+	# What it asks the module for.
+	var seen: Array[Dictionary] = [
+		{"id": 1, "pos": Vector3(5.0, 0.0, 5.0), "mine": false},     # in its cells, not its own: take
+		{"id": 2, "pos": Vector3(31.0, 0.0, 5.0), "mine": true},     # its own, 1 m past the edge: keep
+		{"id": 3, "pos": Vector3(33.0, 0.0, 5.0), "mine": true},     # its own, 3 m past: let go
+		{"id": 4, "pos": Vector3(31.0, 0.0, 5.0), "mine": false},    # someone else's, past the edge: leave
+		{"id": 5, "pos": Vector3(5.0, 0.0, 5.0), "mine": true},      # its own, at home: keep
+	]
+	var ask: Dictionary = RegionKeeper.decide(seen, r)
+	_check(ask["take"] == [1] and ask["release"] == [3], "take what has come in, let go of what has gone 2 m out (take %s, let go %s)" % [ask["take"], ask["release"]])
+
+	# The keeper: the module's rows decide what it runs.
+	var me := PackedByteArray([1, 2, 3])
+	var other := PackedByteArray([9, 9, 9])
+	var rows: Dictionary = {
+		&"npc_driver": [_RowStub.new({&"entity_id": 11, &"world_id": 4, &"driver": me}),
+			_RowStub.new({&"entity_id": 12, &"world_id": 4, &"driver": other})],
+		&"player": [_RowStub.new({&"entity_id": 20})],
+		&"npc_brain": [_RowStub.new({&"entity_id": 11}), _RowStub.new({&"entity_id": 12}), _RowStub.new({&"entity_id": 13})],
+		&"body_state": [],
+		&"movement_state": [
+			_RowStub.new({&"entity_id": 11, &"world_id": 4, &"pos": Vector3(35.0, 0.0, 0.0)}),
+			_RowStub.new({&"entity_id": 12, &"world_id": 4, &"pos": Vector3(5.0, 0.0, 0.0)}),
+			_RowStub.new({&"entity_id": 13, &"world_id": 4, &"pos": Vector3(6.0, 0.0, 0.0)}),
+			_RowStub.new({&"entity_id": 20, &"world_id": 4, &"pos": Vector3(7.0, 0.0, 0.0)})],
+	}
+	var k := RegionKeeper.new()
+	k.region = r
+	k.world_id = 4
+	k.send = false
+	k.identity = me
+	k.rows_of = func(t: StringName) -> Array: return rows.get(t, [])
+	var started: Array[int] = []
+	var stopped: Array[int] = []
+	k.on_mine = func(eid: int) -> void: started.append(eid)
+	k.on_not_mine = func(eid: int) -> void: stopped.append(eid)
+	var asked: Dictionary = k.poll()
+	_check(started == [11] and stopped == [11], "the module says 11 is ours: run it; it stands 5 m out: let go (%s, %s)" % [started, stopped])
+	_check(asked["take"] == [12, 13] and asked["release"] == [11],
+		"ask for 12 and 13 in its cells (the module refuses 12 while another drives it), never the player")
+	k.poll()
+	_check(started == [11] and not k.drives(11), "let go, the row not yet changed: not run again")
+	(rows[&"movement_state"][0] as _RowStub)._v[&"pos"] = Vector3(10.0, 0.0, 0.0)
+	k.poll()
+	_check(k.drives(11) and started == [11, 11], "back in before the module heard: run again")
+	rows[&"npc_driver"] = [_RowStub.new({&"entity_id": 12, &"world_id": 4, &"driver": me})]
+	k.poll()
+	_check(k.drives(12) and not k.drives(11) and stopped.count(11) == 2, "the module gave it 12 and took 11 away: so it runs 12, not 11")
+	k.free()
+
+	# Judging: only its own people's swings.
+	var ref := ActionReferee.new()
+	ref.send = false
+	ref.world_id = 4
+	ref.may_judge = func(actor: int) -> bool: return actor == 5
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"action_request", null, _ReqRow.new(41, 5, 900, 4)))
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"action_request", null, _ReqRow.new(42, 6, 900, 4)))
+	var verdicts: Array[Dictionary] = ref.settle(10_000_000_000)
+	_check(verdicts.size() == 1 and int(verdicts[0]["request_id"]) == 41 and ref.pending_count() == 0,
+		"a swing of its own region's: judged; another region's: left for that referee (%d judged)" % verdicts.size())
+	ref.free()
 
 
 func _run_client_side() -> void:

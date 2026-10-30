@@ -478,6 +478,7 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     ctx.db.ability_state().entity_id().delete(entity_id);
     ctx.db.inventory_item().owner_entity_id().delete(entity_id);
     ctx.db.npc_brain().entity_id().delete(entity_id);
+    forget_driver(ctx, entity_id);
     ctx.db.equip_state().entity_id().delete(entity_id);
     ctx.db.appearance().entity_id().delete(entity_id);
     forget_damage(ctx, entity_id);

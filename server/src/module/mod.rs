@@ -52,6 +52,8 @@ mod characters;
 pub use characters::*;
 mod referee;
 pub use referee::*;
+mod regions;
+pub use regions::*;
 mod carry;
 pub use carry::*;
 mod noises;

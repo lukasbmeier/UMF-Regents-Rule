@@ -437,6 +437,27 @@ def limits_checks(w, srv, ref, limits, lag_limit):
     return out, valid
 
 
+# The cell grid's half width (foundation/net/cells.gd `HALF`): a region at the area's edge runs to the grid's.
+GRID_HALF = 512
+
+
+def regions(split, area_cells):
+    """REGION REFEREES (DECISIONS #288): `split` [columns, rows] cuts the bots' square (`area_cells` a side,
+    round the origin) into that many regions, as `--region=x0,z0,x1,z1` cell squares; those at its edges run
+    to the grid's, so the whole world has a referee. [1, 1]: none (one referee for the whole world)."""
+    cols, rows = max(1, int(split[0])), max(1, int(split[1]))
+    if cols == 1 and rows == 1:
+        return []
+    lo = -(area_cells // 2)
+
+    def cuts(n):
+        inner = [lo + (area_cells * k) // n for k in range(1, n)]
+        return [-GRID_HALF] + inner + [GRID_HALF]
+
+    xs, zs = cuts(cols), cuts(rows)
+    return ["%d,%d,%d,%d" % (xs[i], zs[j], xs[i + 1] - 1, zs[j + 1] - 1) for i in range(cols) for j in range(rows)]
+
+
 def load_config():
     with open(os.path.join(ROOT, "shared", "load.json"), encoding="utf-8") as f:
         cfg = json.load(f)

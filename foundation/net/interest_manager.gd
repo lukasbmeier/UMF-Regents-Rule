@@ -55,6 +55,8 @@ const WORLD_TABLES: Array[StringName] = [
 	&"input_queue",
 	# Also sidecar-only: a world's NPC brains, for its authority to resume after a restart.
 	&"npc_brain",
+	# And who drives each NPC, in a world split into regions (DECISIONS #288).
+	&"npc_driver",
 ]
 
 ## Tables whose rows carry the cell of a placed thing (`chunk`, template 1.0, DECISIONS #278): a RING
@@ -105,6 +107,10 @@ var own_entity: int = -1
 ## inside the set (the SDK pairs its delete and insert).
 var _ring_active: SubscriptionSet = null
 var _ring_incoming: SubscriptionSet = null
+## A REGION REFEREE'S cells (DECISIONS #288): the chunks it watches, one range a column
+## ([Vector2i(first, last)], `RefereeRegion.columns`). Set, the cell tables are asked for by these, in the
+## cells' set, whatever the config says; empty (every other client and referee), as before.
+var region_columns: Array[Vector2i] = []
 ## RING interest: the set of our own rows (by id), and the one replacing it (another character).
 var _own_active: SubscriptionSet = null
 var _own_incoming: SubscriptionSet = null
@@ -167,6 +173,12 @@ func build_queries(for_world: int) -> Array[String]:
 ## clients in the same cells ask the same queries, which the server works out once for both.
 func build_ring_queries(for_world: int) -> Array[String]:
 	var out: Array[String] = []
+	if not region_columns.is_empty():
+		for t: StringName in subscribed_tables():
+			if is_cell_table(t):
+				for col: Vector2i in region_columns:
+					out.append(region_query(t, for_world, col.x, col.y))
+		return out
 	if centre < 0:
 		return out
 	var cells: PackedInt64Array = Cells.ring(centre, Cells.ring_radius())
@@ -182,6 +194,11 @@ func build_ring_queries(for_world: int) -> Array[String]:
 ## (`tools/load/interest_dump.gd`), so they are sent what a real client is.
 func cell_query(table: StringName, for_world: int, cell: int) -> String:
 	return "SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [table, for_world, cell]
+
+
+## A REGION REFEREE: one cell table's rows in one column of its cells (chunks `first` to `last`).
+func region_query(table: StringName, for_world: int, first: int, last: int) -> String:
+	return "SELECT * FROM %s WHERE world_id = %d AND chunk >= %d AND chunk <= %d" % [table, for_world, first, last]
 
 
 ## RING interest: the query for one follow table's row of our own entity.
@@ -206,6 +223,8 @@ func build_own_queries() -> Array[String]:
 ## authority (a sidecar or referee takes the whole world it runs).
 func is_ring(cfg: NetConfig = null) -> bool:
 	var c: NetConfig = cfg if cfg != null else SpaceTimeSync.config
+	if not region_columns.is_empty():
+		return true   # a region referee: its cells, asked for the way a ring is
 	return c != null and c.interest == NetConfig.Interest.RING and not c.authority_process
 
 

@@ -300,5 +300,17 @@ class TheArithmetic(unittest.TestCase):
         self.assertFalse(valid, "bots whose loop is late by more than the limit make the step invalid")
 
 
+    def test_regions_cover_the_world_split_in_the_bots_square(self):
+        self.assertEqual(load_test.regions([1, 1], 8), [], "one referee: no regions")
+        four = load_test.regions([2, 2], 8)
+        self.assertEqual(four, ["-512,-512,-1,-1", "-512,0,-1,511", "0,-512,511,-1", "0,0,511,511"])
+        three = load_test.regions(["3", "1"], 8)
+        xs = [tuple(int(v) for v in r.split(",")) for r in three]
+        self.assertEqual(xs[0][0], -512, "the first runs to the grid's west edge")
+        self.assertEqual(xs[-1][2], 511, "the last to its east")
+        for a, b in zip(xs, xs[1:]):
+            self.assertEqual(a[2] + 1, b[0], "neighbours meet, with no gap and no overlap")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -53,11 +53,11 @@ pub struct RefereeOffer {
 }
 
 /// How long an offer stands: long enough for a sidecar to boot and connect.
-const OFFER_MICROS: i64 = 30_000_000;
+pub(crate) const OFFER_MICROS: i64 = 30_000_000;
 /// A request nobody answered by its landing time and this: a miss (the referee went away).
 pub(crate) const REQUEST_GRACE_MICROS: i64 = 3_000_000;
 /// The shortest code an offer takes.
-const MIN_CODE_LEN: usize = 16;
+pub(crate) const MIN_CODE_LEN: usize = 16;
 
 /// Whether the world's referee judges `def` (its row's `data` says `"judged":true`, as the bake writes
 /// it for content marked judged), rather than the module's coarse test.

@@ -533,6 +533,20 @@ nor its players each other's. DECISIONS #283.
   (Play again). Never players' raw inputs (`input_queue`): that was 80 % of what a referee was sent.
 - **Hitboxes** are each character's body (`collision_radius`, `collision_height` on its definition).
 
+### Several referees for one big world (regions)
+A world too busy for one referee (Regent's Rule's continent past ~100 players) is split into REGIONS, a referee
+each (DECISIONS #288). Each runs the NPCs and thrown bodies standing in its cells and judges the swings of the
+players there; it watches one cell round them so a swing or a brain near its edge sees over it. The server keeps
+track of who drives each NPC (`npc_driver`), so one walking over an edge is handed on (8 m past it), never driven
+twice, and one whose referee has died is taken by the next after 5 s.
+- **Start them** (a host): the first as usual (`offer_referee`), each other with `offer_region_referee`, then
+  `godot --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim=CODE --region=x0,z0,x1,z1
+  --name=r1` (cell squares, inclusive: a cell is 64 m, cell 0 starts at 0). Between them the regions must cover the
+  whole world; each needs its own `--name` (an identity of its own).
+- **The load test** splits its bots' square with `"referees": [2, 2]` in your `shared/<genre>/load.json`, or
+  `REFEREES=2x2` before the command. `toolsun.cmd testsegions_test.sh` checks the hand-off on a real server.
+- One referee for the whole world (Play in the editor, every game so far) is unchanged.
+
 ### Carrying (attach and carry)
 One entity can carry another (a wolf, a downed hen). A genre decides when, from its own rules, and
 calls `attach` / `detach` (`server/src/module/carry.rs`); the foundation does the rest: the carried

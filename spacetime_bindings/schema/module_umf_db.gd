@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"chat_message", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"challenge", &"chat_message", &"entity", &"equip_state", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"movement_state", &"noise", &"npc_brain", &"npc_driver", &"player", &"push", &"resource_state", &"session", &"session_match", &"session_member", &"status_state", &"timed_press", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -32,6 +32,7 @@ var lobby_member: UmfLobbyMemberTable
 var movement_state: UmfMovementStateTable
 var noise: UmfNoiseTable
 var npc_brain: UmfNpcBrainTable
+var npc_driver: UmfNpcDriverTable
 var player: UmfPlayerTable
 var push: UmfPushTable
 var resource_state: UmfResourceStateTable
@@ -72,6 +73,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	movement_state = preload('res://spacetime_bindings/schema/tables/umf_movement_state_table.gd').new(p_local_db)
 	noise = preload('res://spacetime_bindings/schema/tables/umf_noise_table.gd').new(p_local_db)
 	npc_brain = preload('res://spacetime_bindings/schema/tables/umf_npc_brain_table.gd').new(p_local_db)
+	npc_driver = preload('res://spacetime_bindings/schema/tables/umf_npc_driver_table.gd').new(p_local_db)
 	player = preload('res://spacetime_bindings/schema/tables/umf_player_table.gd').new(p_local_db)
 	push = preload('res://spacetime_bindings/schema/tables/umf_push_table.gd').new(p_local_db)
 	resource_state = preload('res://spacetime_bindings/schema/tables/umf_resource_state_table.gd').new(p_local_db)

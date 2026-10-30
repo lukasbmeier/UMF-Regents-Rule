@@ -60,6 +60,11 @@ var bodies: BodyReferee = null
 var recorder: SessionRecorder = null
 ## Started with `--referee`: judging only.
 var referee_only: bool = false
+## Started with `--region=x0,z0,x1,z1` too (DECISIONS #288): a referee for those cells of its world (and
+## `--border=N` cells round them it watches, 1 by default; `--hand-on=M` metres past its edge an NPC is handed
+## on, 8 by default); null, the whole world. What it runs is `keeper`'s.
+var region: RefereeRegion = null
+var keeper: RegionKeeper = null
 
 var _claim: String = ""
 var _parent_alive: String = ""
@@ -86,7 +91,27 @@ func _ready() -> void:
 	EntitySpawner.spawn_filter = is_bot_not_body if referee_only else is_not_body
 	if cfg.token_path.is_empty() or cfg.token_path == NetConfig.new().token_path:
 		cfg.token_path = "user://sidecar_token.dat"
+	# `--name=N`: an identity of its own (`user://sidecar_token_N.dat`), so several referees run on one machine.
+	var own_name: String = _value("--name=")
+	if not own_name.is_empty():
+		cfg.token_path = "user://sidecar_token_%s.dat" % own_name.validate_filename()
 	var world_id: int = _world_from_cli()
+	if referee_only and not _value("--region=").is_empty():
+		region = RefereeRegion.parse(_value("--region="))
+		if region == null:
+			push_error("[Sidecar] --region=%s is not x0,z0,x1,z1 (cell squares): refereeing the whole world" % _value("--region="))
+		else:
+			if _value("--border=").is_valid_int():
+				region.border = maxi(0, int(_value("--border=")))
+			if _value("--hand-on=").is_valid_float():
+				region.hand_on_m = maxf(0.0, float(_value("--hand-on=")))
+	if region != null:
+		keeper = RegionKeeper.new()
+		keeper.name = "Region"
+		keeper.region = region
+		keeper.world_id = world_id
+		add_child(keeper)
+		EntitySpawner.spawn_filter = func(eid: int, kind: int = -1) -> bool: return is_bot_not_body(eid, kind) and keeper.drives(eid)
 
 	world = SimWorld.new()
 	add_child(world)
@@ -101,6 +126,13 @@ func _ready() -> void:
 	bodies.world_id = world_id
 	bodies.tick_hz = float(cfg.server_tick_hz)
 	world.add_child(bodies)
+	if keeper != null:
+		bodies.may_fly = keeper.drives
+		referee.may_judge = _judges
+		keeper.on_mine = _run_mine
+		keeper.on_not_mine = _let_go_of
+		InterestManager.region_columns = region.columns()
+		print("[Sidecar] a region referee: %s" % region.describe())
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	var mods: Array[GenreModule] = []
@@ -129,6 +161,8 @@ func _ready() -> void:
 	if referee_only:
 		# A REFEREE ASKS FOR WHAT IT READS (DECISIONS #286), and reading anything else is an error.
 		cfg.core_tables = referee_feed(defs, mods, recorder != null)
+		if region != null:
+			cfg.core_tables.append(&"npc_driver")
 		InterestManager.extra_tables.erase(&"input_queue")
 		var asked: Dictionary[StringName, bool] = {}
 		for t: StringName in cfg.core_tables + InterestManager.extra_tables + InterestManager.ALWAYS_TABLES:
@@ -273,6 +307,30 @@ static func is_bot_not_body(entity_id: int, kind: int = -1) -> bool:
 	return is_bot(entity_id, kind) and not is_body(entity_id, kind)
 
 
+## A REGION REFEREE judges a use of someone it runs (an NPC it drives) or of a player standing in its cells.
+func _judges(actor_id: int) -> bool:
+	if keeper.drives(actor_id):
+		return true
+	var m: RefCounted = SpaceTimeSync.get_row(&"movement_state", actor_id)
+	return m != null and not is_bot(actor_id) and region.runs(m.get(&"pos") as Vector3)
+
+
+## The module gave this region referee `eid`: fly it (a body) or build and drive it (a bot).
+func _run_mine(eid: int) -> void:
+	if is_body(eid):
+		bodies.take_body(eid)
+	elif is_bot(eid) and EntitySpawner.get_entity_node(eid) == null:
+		EntitySpawner.spawn_now(eid)
+
+
+## It walked out of this region (or the module gave it to another): stop running it.
+func _let_go_of(eid: int) -> void:
+	bodies.let_go_body(eid)
+	if EntitySpawner.get_entity_node(eid) != null:
+		print("[Sidecar] entity %d leaves this region: handed on" % eid)
+		EntitySpawner.release(eid)
+
+
 ## A bot's brain row came (a bot added to the world after its entity row): a referee builds it now; its
 ## row gone, it lets it go.
 func _on_brain_row(ev: RowEvent) -> void:
@@ -282,7 +340,7 @@ func _on_brain_row(ev: RowEvent) -> void:
 		if SpaceTimeSync.get_row(&"npc_brain", ev.entity_id) == null:
 			EntitySpawner.release(ev.entity_id)
 		return
-	if is_bot(ev.entity_id) and EntitySpawner.get_entity_node(ev.entity_id) == null:
+	if is_bot(ev.entity_id) and EntitySpawner.get_entity_node(ev.entity_id) == null 			and (keeper == null or keeper.drives(ev.entity_id)):
 		EntitySpawner.spawn_now(ev.entity_id)
 
 
