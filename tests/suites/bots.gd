@@ -178,6 +178,8 @@ func _run_nav_tiled() -> void:
 	var far: RID = NpcNav.map_for(level, 0.4, 1.8, Vector3(1000, 0, 1000))
 	_check(near != far and NpcNav.map_for(level, 0.4, 1.8, Vector3(60, 0, 60)) == near,
 		"one map a tile: another tile's is another, a point in the same tile shares it")
+	_check(NpcNav.MAX_BAKES == 1 and NpcNav.waiting() == 1,
+		"one bake at a time: the second tile waits its turn, read from the level only when it starts (%d waiting)" % NpcNav.waiting())
 	var until: int = Time.get_ticks_msec() + 20000
 	while Time.get_ticks_msec() < until and not (NpcNav.ready(level, 0.4, 1.8, Vector3(0, 0, 5)) and NpcNav.ready(level, 0.4, 1.8, Vector3(1000, 0, 1000))):
 		await get_tree().physics_frame

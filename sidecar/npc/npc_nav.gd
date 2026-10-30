@@ -11,6 +11,12 @@ class_name NpcNav extends RefCounted
 ## walks the last stretch straight). Every bake runs on the navigation server's thread; until it is
 ## taken in, `path` is empty and a brain goes straight.
 ##
+## ONE BAKE AT A TIME (template 1.5.3, Regent's Rule's Skyrim-size world): every awake camp asked for its
+## tile at once, each read the level on the main thread (178 ms a tile there) and held a 256 m bake at
+## 0.15 m on the workers; in five minutes one of ~50 finished, and the referee's frames sat at 147 ms. Now
+## a tile asked for waits in a queue (`MAX_BAKES` at once), and is read from the level only when its bake
+## starts. And a level's bounds are found once, not by searching all its nodes on every brain's every ask.
+##
 ## What a body does NOT see here: walls entities put up (a shut gate, DECISIONS #229) and other
 ## bodies. A brain meets those as it walks, and decides (open the gate, go round).
 ##
@@ -23,12 +29,19 @@ const CELL: float = 0.15
 ## A big level's tiles, a side (each baked with half a tile round it: 256 m square). A level whose bounds
 ## are wider than two tiles is tiled; a smaller one is baked whole.
 const TILE_M: float = 128.0
+## Bakes running at once; the rest wait their turn, first asked, first baked.
+const MAX_BAKES: int = 1
 
 ## [level instance id, radius, height(, tile)] -> the map RID its mesh is on, its region, and the point a
 ## taken-in map is checked at (the tile's centre, or the level's origin).
 static var _maps: Dictionary = {}
 static var _regions: Dictionary = {}
 static var _centres: Dictionary = {}
+## Tiles asked for and not yet started: [key, mesh, level (weak), bounds, radius, height, where], oldest first.
+static var _queued: Array = []
+static var _baking: int = 0
+## A level's bake bounds by its instance id (found once: a big level has tens of thousands of nodes).
+static var _bounds_of: Dictionary = {}
 
 
 ## A path from `from` to `to` for a body of `radius` by `height` in `level` (the level node the
@@ -81,12 +94,6 @@ static func map_for(level: Node3D, radius: float, height: float, at: Vector3 = V
 	var bounds: AABB = area_of(level_bounds, at)
 	if bounds.size != Vector3.ZERO:
 		mesh.filter_baking_aabb = bounds
-	# Reading the level's collision is the main thread's (the parser's rule); the bake is not.
-	var parse_from: int = Time.get_ticks_msec()
-	var source := NavigationMeshSourceGeometryData3D.new()
-	NavigationServer3D.parse_source_geometry_data(mesh, source, level)
-	add_ground(level, bounds, source)
-	var parse_ms: int = Time.get_ticks_msec() - parse_from
 	var map: RID = NavigationServer3D.map_create()
 	NavigationServer3D.map_set_cell_size(map, mesh.cell_size)
 	NavigationServer3D.map_set_cell_height(map, mesh.cell_height)
@@ -97,13 +104,46 @@ static func map_for(level: Node3D, radius: float, height: float, at: Vector3 = V
 	_regions[key] = region
 	_centres[key] = bounds.get_center() if tiled else level.global_position
 	var where: String = (" round (%.0f, %.0f)" % [bounds.get_center().x, bounds.get_center().z]) if tiled else ""
-	var started: int = Time.get_ticks_msec()
-	# On the navigation server's thread: a big tile takes a second or more, and the referee must not wait.
-	NavigationServer3D.bake_from_source_geometry_data_async(mesh, source, func() -> void:
-		NavigationServer3D.region_set_navigation_mesh(region, mesh)
-		print("[Sidecar] a walk map for bodies %.2f m by %.2f m%s: %d polygons, read in %d ms, baked in %d ms" % [radius,
-			height, where, mesh.get_polygon_count(), parse_ms, Time.get_ticks_msec() - started]))
+	_queued.append([key, mesh, weakref(level), bounds, radius, height, where])
+	_start_bakes()
 	return map
+
+
+## Start queued bakes while fewer than `MAX_BAKES` run. Reading the level's collision is the main thread's
+## (the parser's rule), so it is done here, for one tile at a time; the bake is the navigation server's.
+static func _start_bakes() -> void:
+	while _baking < MAX_BAKES and not _queued.is_empty():
+		var q: Array = _queued.pop_front()
+		var key: String = q[0]
+		var mesh: NavigationMesh = q[1]
+		var level: Node3D = (q[2] as WeakRef).get_ref() as Node3D
+		var region: RID = _regions.get(key, RID())
+		if level == null or not level.is_inside_tree() or not region.is_valid():
+			continue   # its level was let go (another level shown), or the maps were cleared
+		var bounds: AABB = q[3]
+		var parse_from: int = Time.get_ticks_msec()
+		var source := NavigationMeshSourceGeometryData3D.new()
+		NavigationServer3D.parse_source_geometry_data(mesh, source, level)
+		add_ground(level, bounds, source)
+		var parse_ms: int = Time.get_ticks_msec() - parse_from
+		var started: int = Time.get_ticks_msec()
+		var radius: float = q[4]
+		var height: float = q[5]
+		var where: String = q[6]
+		_baking += 1
+		# On the navigation server's thread: a big tile takes a second or more, and the referee must not wait.
+		NavigationServer3D.bake_from_source_geometry_data_async(mesh, source, func() -> void:
+			_baking = maxi(0, _baking - 1)
+			if region.is_valid() and _regions.values().has(region):
+				NavigationServer3D.region_set_navigation_mesh(region, mesh)
+			print("[Sidecar] a walk map for bodies %.2f m by %.2f m%s: %d polygons, read in %d ms, baked in %d ms (%d waiting)" % [radius,
+				height, where, mesh.get_polygon_count(), parse_ms, Time.get_ticks_msec() - started, _queued.size()])
+			_start_bakes())
+
+
+## Walk maps asked for and not yet started (for tests and the log).
+static func waiting() -> int:
+	return _queued.size()
 
 
 ## Whether a level with these bounds is walked a tile at a time (wider than two tiles either way).
@@ -150,10 +190,16 @@ static func level_bounds(level: Node3D) -> AABB:
 
 
 static func _bounds(level: Node3D) -> AABB:
+	var id: int = level.get_instance_id()
+	if _bounds_of.has(id):
+		return _bounds_of[id]
+	var found := AABB()
 	for n: Node in level.find_children("*", "", true, false):
 		if n is LevelInfo:
-			return (n as LevelInfo).bake_bounds
-	return AABB()
+			found = (n as LevelInfo).bake_bounds
+			break
+	_bounds_of[id] = found
+	return found
 
 
 ## Forget every map (a test that builds its own levels).
@@ -165,3 +211,5 @@ static func clear() -> void:
 	_regions.clear()
 	_maps.clear()
 	_centres.clear()
+	_queued.clear()
+	_bounds_of.clear()

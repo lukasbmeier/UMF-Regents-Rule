@@ -932,3 +932,11 @@ Code only: a game republishes (no `--codegen`; data kept).
   a game's load config): by players alone, one referee of four got half of a world's 660 skeletons.
 - `EntityRegistry` says what it dropped (events for entities never built here) once a minute, not once an
   entity with a backtrace (a region referee printed thousands).
+
+## 1.5.3 — a referee's walk maps one at a time, and its level's bounds found once (DECISIONS #293)
+Sidecar code only: restart the referees (no republish).
+- `NpcNav` bakes one tile at a time (`MAX_BAKES`), the rest queued, each read from the level only when its
+  bake starts. Every awake camp asked at once before: on Regent's Rule's Skyrim-size world one of ~50 tiles
+  finished in five minutes and each read held the main thread 178 ms.
+- `NpcNav._bounds` (asked on every brain's every `ready` and `path`) searched every node of the level for its
+  LevelInfo each time: 20,000 nodes there. It is found once a level.
