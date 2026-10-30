@@ -111,6 +111,9 @@ var _ring_incoming: SubscriptionSet = null
 ## ([Vector2i(first, last)], `RefereeRegion.columns`). Set, the cell tables are asked for by these, in the
 ## cells' set, whatever the config says; empty (every other client and referee), as before.
 var region_columns: Array[Vector2i] = []
+## A region referee (set with its columns, `set_region`): its cell tables are only ever asked for by column,
+## none at all while it has no columns (its region and the level do not meet), never the whole world's.
+var region_on: bool = false
 ## RING interest: the set of our own rows (by id), and the one replacing it (another character).
 var _own_active: SubscriptionSet = null
 var _own_incoming: SubscriptionSet = null
@@ -173,7 +176,7 @@ func build_queries(for_world: int) -> Array[String]:
 ## clients in the same cells ask the same queries, which the server works out once for both.
 func build_ring_queries(for_world: int) -> Array[String]:
 	var out: Array[String] = []
-	if not region_columns.is_empty():
+	if region_on or not region_columns.is_empty():
 		for t: StringName in subscribed_tables():
 			if is_cell_table(t):
 				for col: Vector2i in region_columns:
@@ -194,6 +197,17 @@ func build_ring_queries(for_world: int) -> Array[String]:
 ## (`tools/load/interest_dump.gd`), so they are sent what a real client is.
 func cell_query(table: StringName, for_world: int, cell: int) -> String:
 	return "SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [table, for_world, cell]
+
+
+## A REGION REFEREE's cells changed (its level loaded, clipped to it): ask for these, keeping the old until
+## the new have applied, as a ring does.
+func set_region(columns: Array[Vector2i]) -> void:
+	if region_on and columns == region_columns:
+		return
+	region_on = true
+	region_columns = columns
+	if SpaceTimeSync.state == SpaceTimeSync.ConnectionState.CONNECTED and is_ring():
+		_apply_ring()
 
 
 ## A REGION REFEREE: one cell table's rows in one column of its cells (chunks `first` to `last`).
@@ -223,7 +237,7 @@ func build_own_queries() -> Array[String]:
 ## authority (a sidecar or referee takes the whole world it runs).
 func is_ring(cfg: NetConfig = null) -> bool:
 	var c: NetConfig = cfg if cfg != null else SpaceTimeSync.config
-	if not region_columns.is_empty():
+	if region_on or not region_columns.is_empty():
 		return true   # a region referee: its cells, asked for the way a ring is
 	return c != null and c.interest == NetConfig.Interest.RING and not c.authority_process
 
@@ -315,6 +329,9 @@ func _apply_ring() -> void:
 		return
 	var queries: Array[String] = build_ring_queries(world_id)
 	if queries.is_empty():
+		if region_on and _ring_active != null:
+			SpaceTimeSync.unsubscribe(_ring_active)   # a region the level no longer meets: none of its cells
+			_ring_active = null
 		return
 	_serial += 1
 	var set := SubscriptionSet.new()

@@ -19,6 +19,8 @@ var border: int = 1
 var hand_on_m: float = 8.0
 ## The side of a cell (`Cells.cell_m`); a test sets its own.
 var side_m: float = -1.0
+## The cells the level has (squares; `clip_to`): what it asks for stops there. Empty: the region's own.
+var clip: Rect2i = Rect2i()
 
 
 ## `--region=x0,z0,x1,z1` (squares, inclusive), or null when the text is not four whole numbers.
@@ -55,12 +57,33 @@ func watches(x: int, z: int) -> bool:
 	return x >= x0 - border and x <= x1 + border and z >= z0 - border and z <= z1 + border
 
 
+## Ask for no cell the level does not have (its bake bounds, a cell round them): a region at the world's edge
+## runs to the grid's, and a query for each of its 500 empty columns cost the server more than all the play
+## (Regent's Rule's load test: reducers queued 260 ms at 50 players). An empty `bounds`: no clip.
+func clip_to(bounds: AABB) -> void:
+	if bounds.size.x <= 0.0 or bounds.size.z <= 0.0:
+		clip = Rect2i()
+		return
+	var m: float = _side()
+	var a := Vector2i(Cells.axis(bounds.position.x, m) - 1, Cells.axis(bounds.position.z, m) - 1)
+	var b := Vector2i(Cells.axis(bounds.end.x, m) + 1, Cells.axis(bounds.end.z, m) + 1)
+	clip = Rect2i(a, b - a + Vector2i.ONE)
+
+
 ## The cells it watches, one range of chunks a column (`Cells.at`: a column's chunks are consecutive):
-## [Vector2i(first, last), ...], west to east. What it subscribes, a query per column per cell table.
+## [Vector2i(first, last), ...], west to east, within the level (`clip`). What it subscribes, a query per
+## column per cell table. None when its region and the level do not meet.
 func columns() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
-	for x: int in range(maxi(x0 - border, -Cells.HALF), mini(x1 + border, Cells.HALF - 1) + 1):
-		out.append(Vector2i(Cells.at(x, z0 - border), Cells.at(x, z1 + border)))
+	var lo := Vector2i(maxi(x0 - border, -Cells.HALF), maxi(z0 - border, -Cells.HALF))
+	var hi := Vector2i(mini(x1 + border, Cells.HALF - 1), mini(z1 + border, Cells.HALF - 1))
+	if clip.has_area():
+		lo = Vector2i(maxi(lo.x, clip.position.x), maxi(lo.y, clip.position.y))
+		hi = Vector2i(mini(hi.x, clip.end.x - 1), mini(hi.y, clip.end.y - 1))
+	if lo.x > hi.x or lo.y > hi.y:
+		return out
+	for x: int in range(lo.x, hi.x + 1):
+		out.append(Vector2i(Cells.at(x, lo.y), Cells.at(x, hi.y)))
 	return out
 
 
