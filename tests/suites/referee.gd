@@ -18,6 +18,7 @@ func run() -> void:
 	_run_who()
 	_run_two_sides()
 	_run_rows()
+	_run_feed()
 	await _run_client_side()
 	await _run_stale()
 
@@ -447,6 +448,61 @@ func _run_rows() -> void:
 	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"entity", _EntityRow.new(5, 0), null))
 	_check(not ref.may_be_hit(5) and ref.history(5) == null, "gone: forgotten, and where it was")
 	ref.free()
+
+
+## A REFEREE ASKS FOR WHAT IT READS (DECISIONS #286): its own tables, what its entities' components declare,
+## a genre's `referee_tables` (`*`: all of its tables), the recorder's while it records; never `input_queue`
+## (80 % of what a referee was sent at 300 players). Reading a table it does not ask for is loud.
+func _run_feed() -> void:
+	print("== referee: what it subscribes ==")
+	var defs: Array[EntityDefinition] = []
+	EntityDefinition.add_foundation_kinds(defs)
+	var bare: Array[StringName] = []
+	bare.assign(SidecarMain.referee_feed(defs, [] as Array[GenreModule], false))
+	_check(not bare.has(&"input_queue"), "no input_queue: only a sidecar that moves the players replays it")
+	var own: Array[StringName] = SidecarMain.REFEREE_TABLES
+	_check(own.all(func(t: StringName) -> bool: return bare.has(t)), "what it reads itself: %s" % ", ".join(own))
+	var player_scene: Array[StringName] = []
+	player_scene.assign(SidecarMain.scene_tables(defs[0].scene))
+	_check(player_scene.has(&"movement_state") and player_scene.has(&"status_state") and player_scene.has(&"hold_progress"),
+		"an entity scene's tables: its components' and the ones every entity is given (%s)" % ", ".join(player_scene))
+	_check(player_scene.has(&"lobby_member"), "and what they read themselves (`also_reads`: a status reads the lobby)")
+	_check(player_scene.all(func(t: StringName) -> bool: return t == &"input_queue" or bare.has(t)),
+		"every one its entities wait for is in its feed (or a bot would wait out its bind)")
+	_check(not bare.has(&"noise") and not bare.has(&"session"), "not recording: no noise, no session")
+	var rec: Array[StringName] = []
+	rec.assign(SidecarMain.referee_feed(defs, [] as Array[GenreModule], true))
+	_check(rec.has(&"noise") and rec.has(&"session") and rec.has(&"action_event") and not rec.has(&"input_queue"),
+		"recording: the recorder's tables too, and still no input_queue")
+	var all_of := GenreModule.new()
+	all_of.tables = [&"nest", &"hen"] as Array[StringName]
+	var listed := GenreModule.new()
+	listed.tables = [&"nest", &"hen"] as Array[StringName]
+	listed.referee_tables = [&"hen", &"session"] as Array[StringName]
+	var none := GenreModule.new()
+	none.tables = [&"nest", &"hen"] as Array[StringName]
+	none.referee_tables = [] as Array[StringName]
+	var f_all: Array[StringName] = []
+	f_all.assign(SidecarMain.referee_feed(defs, [all_of] as Array[GenreModule], false))
+	var f_listed: Array[StringName] = []
+	f_listed.assign(SidecarMain.referee_feed(defs, [listed] as Array[GenreModule], false))
+	var f_none: Array[StringName] = []
+	f_none.assign(SidecarMain.referee_feed(defs, [none] as Array[GenreModule], false))
+	_check(f_all.has(&"nest") and f_all.has(&"hen"), "a genre's `*` (the default): every one of its tables")
+	_check(f_listed.has(&"hen") and f_listed.has(&"session") and not f_listed.has(&"nest"), "a genre's list: those, and not the rest")
+	_check(not f_none.has(&"nest") and not f_none.has(&"hen"), "empty: none of them")
+	# Reading what it does not ask for: an error, once a table.
+	var was: Dictionary[StringName, bool] = SpaceTimeSync.read_only
+	SpaceTimeSync.read_only = {&"entity": true}
+	SpaceTimeSync.get_row(&"entity", 1)
+	_check(not SpaceTimeSync._unasked.has(&"entity"), "a table it asks for: read quietly")
+	SpaceTimeSync.get_row(&"referee_test_unasked", 1)
+	SpaceTimeSync.find_rows(&"referee_test_unasked", func(_r: RefCounted) -> bool: return true)
+	_check(SpaceTimeSync._unasked.has(&"referee_test_unasked"), "one it does not: an error naming it (once)")
+	SpaceTimeSync._unasked.erase(&"referee_test_unasked")
+	SpaceTimeSync.read_only = was
+	SpaceTimeSync.get_row(&"referee_test_unasked", 1)
+	_check(not SpaceTimeSync._unasked.has(&"referee_test_unasked"), "a player's client (no list): reads anything")
 
 
 func _run_client_side() -> void:

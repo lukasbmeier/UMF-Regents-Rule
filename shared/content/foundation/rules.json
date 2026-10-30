@@ -312,6 +312,42 @@
 					"number": 0.0,
 					"text": "",
 					"unit": ""
+				},
+				{
+					"key": "foundation.npc_tiers",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "foundation.npc_awake_m",
+					"kind": "number",
+					"max": 2000.0,
+					"min": 10.0,
+					"number": 200.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "foundation.npc_dormant_m",
+					"kind": "number",
+					"max": 4000.0,
+					"min": 10.0,
+					"number": 400.0,
+					"text": "",
+					"unit": "m"
+				},
+				{
+					"key": "foundation.npc_dormant_s",
+					"kind": "number",
+					"max": 600.0,
+					"min": 1.0,
+					"number": 30.0,
+					"text": "",
+					"unit": "s"
 				}
 			]
 		}

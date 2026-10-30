@@ -18,6 +18,12 @@ class_name GenreModule extends Resource
 @export var entity_definitions: Array[EntityDefinition] = []
 @export var tables: Array[StringName] = []
 @export var world_tables: Array[StringName] = []
+## The tables a REFEREE reads for this genre (DECISIONS #286): what its brains and its sidecar parts ask
+## `SpaceTimeSync` for themselves, the foundation's or its own. A referee subscribes only what it reads
+## (the tables its entity scenes' components declare come by themselves), so a table left off is never
+## there: reading one is an error in the referee, naming it. `*` (the default): every one of the genre's
+## `tables`, as before. Empty: none.
+@export var referee_tables: Array[StringName] = [&"*"]
 @export var scenes: Array[PackedScene] = []
 ## Where this genre's content ids start (ContentLibrary, DECISIONS #200): a new ability, item or
 ## species made for it gets the next free id at or above this, so two genres' content in one game

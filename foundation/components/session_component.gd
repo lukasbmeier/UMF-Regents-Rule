@@ -61,6 +61,10 @@ func optional_tables() -> Array[StringName]:
 	return [LOBBY_TABLE]
 
 
+func also_reads() -> Array[StringName]:
+	return [SESSION_TABLE, MATCH_TABLE]
+
+
 # --- read API ------------------------------------------------------------------------
 
 func get_session_id() -> int:

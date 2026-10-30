@@ -526,6 +526,11 @@ nor its players each other's. DECISIONS #283.
   an admin with no name; it gets a player entity like anything that connects, and nobody sees it.
 - **No referee, no guess.** While none is online a judged ability is refused ("no referee"); one
   that lands with nobody to answer is a miss.
+- **A referee is sent only what it reads** (DECISIONS #286): its own tables, what the components of
+  its entities' scenes declare, and what your genre's brains read, listed in `genre.tres` **Referee Tables**
+  (`*`, the default, is every one of your genre's tables; empty is none). A brain that reads a table not
+  listed gets an error in the referee's log naming it: add it there. No republish; restart the referee
+  (Play again). Never players' raw inputs (`input_queue`): that was 80 % of what a referee was sent.
 - **Hitboxes** are each character's body (`collision_radius`, `collision_height` on its definition).
 
 ### Carrying (attach and carry)
@@ -554,6 +559,13 @@ the LimboAI tab (the editor's main screen tabs): each step is a task, its number
 drag tasks to reorder them. A genre's tasks extend `BrainTask` (`sidecar/npc/brain_task.gd`), whose
 `brain()` is the bot that runs it. Nothing to republish: a tree is the referee's, and a restarted
 referee (Play again) reads it. The add-on ships libraries for Windows, Linux and macOS only.
+
+**NPCs asleep (tiers).** With the hot rule **Npc tiers** on (`foundation.npc_tiers`, an override in a game's
+rule set: Regent's Rule's is on), an NPC with no player within **Npc dormant m** (400) for **Npc dormant s** (30)
+sleeps: it neither thinks nor walks, and stands where it was, until a player comes within **Npc awake m** (200).
+Off (the default) every NPC is always awake, which bots playing a match need. Live on the Rules page; nothing to
+republish. A brain sees the others as they were at most a tenth of a second ago (one view shared a think
+period, DECISIONS #287).
 
 ### Bodies: things thrown that the referee flies
 A disc, a ball, an egg: something thrown that then flies by real physics is a BODY (DECISIONS #246).

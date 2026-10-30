@@ -149,7 +149,8 @@ set -e
 #   - AnimationSet is missing : the animation suite asserts an incomplete set is refused
 #   - InterestManager: subscription : the interest suite asserts a refused subscription is loud
 #   - Genres: ... no_such_genre : the genres suite asserts a genre with no genre.tres is reported
-expected_errors='no EntityDefinition registered for entity.kind 77|AnimationTreeBuilder: AnimationSet is missing|InterestManager: subscription|Genres: shared/game.json names .no_such_genre.'
+#   - referee read .referee_test_unasked. : the referee suite asserts a referee reading what it does not subscribe is loud
+expected_errors='no EntityDefinition registered for entity.kind 77|AnimationTreeBuilder: AnimationSet is missing|InterestManager: subscription|Genres: shared/game.json names .no_such_genre.|this referee read .referee_test_unasked.'
 
 echo "== unexpected engine/script errors =="
 if grep -E "SCRIPT ERROR|^ERROR:" "$out_file" | grep -vE "$expected_errors"; then

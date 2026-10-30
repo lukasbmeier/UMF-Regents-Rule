@@ -17,12 +17,25 @@ class_name NpcBrainComponent extends SpaceTimeComponent
 ## The brain changed its mind about what it is doing. `write_npc_brain` persists this for
 ## spectators and restarts; the debug overlay prints it.
 signal state_changed(state: StringName)
+## It went dormant (true) or woke (false): NPC tiers.
+signal tier_changed(is_dormant: bool)
 ## A write to `npc_brain` settled. For tests: persistence is otherwise invisible until a restart.
 signal persisted(ok: bool)
 ## Something the brain asked to do was sent ({do: hold|let_go|ability, ...}). For tests and the log.
 signal sent(act: Dictionary)
 
 const TABLE: StringName = &"npc_brain"
+
+## NPC TIERS (DECISIONS #287; Regent's Rule's RULE_DESIGN §6.1), with the hot flag on: an NPC with no
+## player within `npc_dormant_m` for `npc_dormant_s` goes DORMANT, neither thinking nor walking (its row
+## keeps where it stood; standing still it writes nothing), until a player comes within `npc_awake_m`.
+## Off (the default), every NPC is always awake: Fowl Play's and DiscGolf's bots play with nobody near.
+const TIERS: StringName = &"foundation.npc_tiers"
+const AWAKE_M: StringName = &"foundation.npc_awake_m"
+const DORMANT_M: StringName = &"foundation.npc_dormant_m"
+const DORMANT_S: StringName = &"foundation.npc_dormant_s"
+## How often it looks for a player.
+const TIER_CHECK_S: float = 1.0
 ## The spec's ceiling on how often a brain is written (SIDECAR_SPEC §2: "on change, <= 1 Hz").
 const PERSIST_MIN_SEC: float = 1.0
 
@@ -33,6 +46,11 @@ const PERSIST_MIN_SEC: float = 1.0
 @export var think_hz: float = 10.0
 
 var brain: NpcBrain = null
+## Dormant (NPC tiers): it neither thinks nor walks.
+var dormant: bool = false
+## How long it has had no player within `npc_dormant_m`.
+var alone_s: float = 0.0
+var _tier_accum: float = 0.0
 
 var _movement: SpaceTimeMovementComponent = null
 var _accum: float = 0.0
@@ -131,6 +149,13 @@ func _physics_process(delta: float) -> void:
 	var me: MovementState = _movement.get_authority_state()
 	if me == null:
 		return
+	_tier_accum += delta
+	if _tier_accum >= TIER_CHECK_S:
+		retier(_tier_accum, NpcWorldView.current(_space(), _level()).nearest_player_m(me.pos), HotRules.flag(TIERS),
+			HotRules.number(AWAKE_M), HotRules.number(DORMANT_M), HotRules.number(DORMANT_S))
+		_tier_accum = 0.0
+	if dormant:
+		return
 	_accum += delta
 	var period: float = 1.0 / maxf(think_hz, 1.0)
 	if _accum >= period:
@@ -146,6 +171,25 @@ func _physics_process(delta: float) -> void:
 		_lunge_at_msec = 0
 		f.dash = true   # its ability's lunge (DECISIONS #232), as a player's client presses it
 	_movement.push_authority_input(f)
+
+
+## One look for a player, `step` seconds after the last: the nearest is `nearest_m` away. Wakes within
+## `awake_m`; asleep after `dormant_s` with none within `dormant_m`; between the two it stays as it is.
+func retier(step: float, nearest_m: float, tiers_on: bool, awake_m: float, dormant_m: float, dormant_s: float) -> void:
+	if not tiers_on or nearest_m <= awake_m:
+		alone_s = 0.0
+		_set_dormant(false)
+		return
+	alone_s = alone_s + step if nearest_m > dormant_m else 0.0
+	if alone_s >= dormant_s:
+		_set_dormant(true)
+
+
+func _set_dormant(on: bool) -> void:
+	if on == dormant:
+		return
+	dormant = on
+	tier_changed.emit(on)
 
 
 # --- doing things (DECISIONS #230) ----------------------------------------------------------------

@@ -5,6 +5,7 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	await _run_npc_tests()
+	_run_tiers()
 
 
 
@@ -251,3 +252,57 @@ func _run_npc_tests() -> void:
 	spawner._world_ready = prev_ready
 	level.queue_free()
 	await get_tree().process_frame
+
+
+## THE BRAINS' COST (DECISIONS #287): one world view a think period, shared (not one a physics tick: at 300
+## players that rebuild was the brains' whole cost), and NPC TIERS: dormant with no player near, awake when
+## one comes, between the two as it was, and never with the flag off.
+func _run_tiers() -> void:
+	print("== NPC brains: one view a think period, and tiers ==")
+	NpcWorldView.invalidate()
+	var t: Array[int] = [5000]
+	NpcWorldView.clock_msec = func() -> int: return t[0]
+	var first: NpcWorldView = NpcWorldView.current()
+	t[0] += NpcWorldView.SHARED_MS - 1
+	_check(NpcWorldView.current() == first, "within a think period: the same view, shared")
+	t[0] += 1
+	var second: NpcWorldView = NpcWorldView.current()
+	_check(second != first, "a think period later: built again")
+	t[0] -= 10_000
+	_check(NpcWorldView.current() != second, "a clock that went back: built again, never stuck")
+	NpcWorldView.clock_msec = Callable()
+	NpcWorldView.invalidate()
+
+	var view := NpcWorldView.new()
+	var near := MovementState.new()
+	near.pos = Vector3(30.0, 0.0, 40.0)
+	var npc := MovementState.new()
+	view.states = {1: npc, 2: near}
+	view.players = {2: true}
+	_check(is_equal_approx(view.nearest_player_m(Vector3.ZERO), 50.0), "the nearest player: 50 m")
+	view.players = {}
+	_check(view.nearest_player_m(Vector3.ZERO) == INF, "no player: none near (INF)")
+
+	var b := NpcBrainComponent.new()
+	var changes: Array[bool] = []
+	b.tier_changed.connect(func(d: bool) -> void: changes.append(d))
+	b.retier(10.0, 500.0, true, 200.0, 400.0, 30.0)
+	b.retier(10.0, 500.0, true, 200.0, 400.0, 30.0)
+	_check(not b.dormant and is_equal_approx(b.alone_s, 20.0), "alone 20 s of 30: still awake")
+	b.retier(10.0, 500.0, true, 200.0, 400.0, 30.0)
+	_check(b.dormant and changes == [true], "alone 30 s: dormant")
+	b.retier(10.0, 300.0, true, 200.0, 400.0, 30.0)
+	_check(b.dormant, "a player at 300 m (between wake and sleep): still dormant")
+	b.retier(1.0, 150.0, true, 200.0, 400.0, 30.0)
+	_check(not b.dormant and changes == [true, false] and b.alone_s == 0.0, "a player within 200 m: awake")
+	b.retier(25.0, 500.0, true, 200.0, 400.0, 30.0)
+	b.retier(10.0, 300.0, true, 200.0, 400.0, 30.0)
+	b.retier(25.0, 500.0, true, 200.0, 400.0, 30.0)
+	_check(not b.dormant, "a player passing within 400 m starts the count again")
+	b.retier(10.0, 500.0, true, 200.0, 400.0, 30.0)
+	_check(b.dormant, "and 35 s alone after that: dormant")
+	b.retier(100.0, INF, false, 200.0, 400.0, 30.0)
+	_check(not b.dormant, "the flag off: awake, whoever is near")
+	b.retier(100.0, INF, false, 200.0, 400.0, 30.0)
+	_check(not b.dormant, "and it stays awake")
+	b.free()

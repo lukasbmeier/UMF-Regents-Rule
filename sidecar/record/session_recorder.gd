@@ -22,6 +22,10 @@ class_name SessionRecorder extends Node
 ##
 ## SERVER-ONLY (hard rule 7b).
 
+## What it reads: a referee that records asks for these too (DECISIONS #286).
+const TABLES: Array[StringName] = [&"session", &"session_member", &"entity", &"player", &"movement_state",
+	&"status_state", &"action_event", &"hold_progress", &"noise"]
+
 const DIR: String = "user://recordings"
 const FORMAT: int = 1
 ## How many recordings are kept: the oldest go as a new one starts.
