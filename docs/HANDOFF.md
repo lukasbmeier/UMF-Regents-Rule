@@ -1,45 +1,40 @@
-# Handoff — UMF Template, 2026-10-29 (night: the referee at 300 players; 1.2.2, 1.3.0, 1.4.0)
+# Handoff — UMF Template, 2026-10-30 (the server at 300 players, read right: 1.4.1)
 
 ## Where it stands
-**1.4.0, region referees** (DECISIONS #288) on top of **1.3.0** (#287) and **1.2.2** (#286): committed and
-pushed. Pulled into Regent's Rule (local merge commits there); NOT shipped to Fishing, Fowl Play, DiscGolf
-(`ship_template.sh` not run since 1.1.1: each has its codegen debug dump uncommitted, Luke's). 1.4.0 adds a
-table: each game republishes `--codegen` (data kept).
-Suites here: unit 2260/0; integration 644/0; sidecar 13/0; bodies 20/0 + 10/0; regions 25/0 (a keeper that
-never lets go fails 4); native 92/0; `tests/load/test_load.py` all green.
+**1.4.1** (DECISIONS #289) on 1.4.0 (#288), 1.3.0 (#287), 1.2.2 (#286): committed and pushed. Pulled into
+Regent's Rule (local merge commits there). NOT shipped to Fishing, Fowl Play, DiscGolf (`ship_template.sh`
+not run since 1.1.1: each has its codegen debug dump uncommitted, Luke's). 1.4.0 adds a table (each game
+republishes `--codegen`); 1.4.1 is code only.
+Suites for 1.4.1: integration 644/0 (the tick ignoring statuses fails 2); e2e 11/0; movement playtest
+(0/100/200 ms) 41/0; native green; `tests/load/test_load.py` 23/0 (the old harness fails it).
 
-## This session (all from Regent's Rule's load test, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
-- **1.2.2 (#286)**: a referee subscribes only what it reads (`SidecarMain.referee_feed`; `GenreModule.
-  referee_tables`, `*` by default; `SpaceTimeComponent.also_reads`), never `input_queue`; reading an unasked
-  table is an error in its log. The integration suite reads the feed from the bots' referee's log.
-- **1.3.0 (#287)**: the brains' world view once a think period (not every tick); NPC tiers behind
-  `foundation.npc_tiers` (off; 200 / 400 m / 30 s); FIXED: the view never knew who the players were.
-- **1.4.0 (#288)**: region referees (`--region`, `--border`, `--hand-on`, `--name`), `npc_driver` +
-  `drive_npcs` + `offer_region_referee`, `RegionKeeper`, `RefereeRegion` (clipped to the level's bake bounds;
-  no cell asked for until the world's level is known), `InterestManager.set_region`; the load test's
-  `referees` split; `tests/regions_test.sh`. HANDBOOK "Several referees for one big world", AGENTS verify loop.
-- Measured on Regent's continent: one referee 19.5 ms p95 at 100 bots, breaks at 200; four region referees
-  hold at 300 (21 ms p95 the worst of them; the server's tick 46 of 50, its reducers' wait 47.6 of 50).
+## This session (from Regent's Rule's load test, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
+- THE LOAD TEST READ THE SERVER WRONG: SpacetimeDB times each call as two transactions (`Reducer`, then
+  the subscription `Update`), and the harness summed them (every call counted twice); its p95s are guesses
+  inside 1/5/10/50 ms buckets. Now: exact means, each reducer's update apart, `busy ms/s`, the module's
+  busy % (`module_busy_pct`, `tick_movement_mean_ms` reported). `tools/load/load_test.py`, HANDBOOK.
+- Read right, 300 bots: the module 76 % busy, `tick_movement` 438 ms/s; `prune_action_events` 2 ms/s
+  and `work_tick` 5 (last handoff's "4 ms" was the bucket's guess: nothing to fix there).
+- `tick_world_module` (`module/movement.rs`) reads each world's rows once a tick, one delete a player's
+  frames, `write_movement_over` (`module/place.rs`; also `write_movement_batch`). The tick's own code
+  halved (3.2 ms at 300); its subscription update is 15.3 ms; the module 68 % busy.
 
 ## Next, in order
-1. Ship 1.2.0-1.4.0: `bash "../ship_template.sh" "1.4.0: region referees"` once Luke commits the games'
+1. Ship 1.2.0-1.4.1: `bash "../ship_template.sh" "1.4.1: the server at 300"` once Luke commits the games'
    debug dumps; each game republishes `--codegen` and runs its unit suite and its referee suites. Fowl Play
-   and DiscGolf keep `referee_tables = *` (their brains read genre tables) until they list theirs.
-2. The SERVER is now the ceiling at 300 (tick 46 ms, reducer wait 47.6 ms of 50): `prune_action_events`
-   scans the whole `action_event` table every time (4 ms at 300); `work_tick` 2.4 ms (Regent's); then the
-   reducers' queue.
-3. Genre cell tables are asked for whole by a region referee (its config has the foundation's cell tables
-   only): give the sidecar the game's net config's `cell_tables`.
+   and DiscGolf keep `referee_tables = *` until they list theirs.
+2. The load test's limits judge bucketed p95s (`tick_movement_p95_ms`, `reducer_wait_p95_ms`: 50 sits on a
+   bucket edge); judge `module_busy_pct` (say <= 80) instead, once Luke agrees.
+3. Genre cell tables are asked for whole by a region referee: give the sidecar the game's `cell_tables`.
 4. Template 1.0 milestone A's last measurement (OR'd ring query against nine one-cell ones).
 
 ## Waiting on Luke
-- The per-player bandwidth budget (`client_kb_per_s_p95`): ~120 KB/s at 300 dense; his home upload is
-  39 Mbit/s (fits ~30-40 dense players), so 300 means a rented host.
-- Fowl Play's `powers_playtest.sh` eagle check is stale (the eagle rests), not the template.
+- What is left at 300 is SpacetimeDB's subscription fan-out (~2/3 of the module): players x neighbours x
+  20 Hz. Levers are design: how dense players are (the test is a town everywhere, ~47 seen each), the cell
+  size (64 m), how often others' movement is written, `input_batch_size` (3: 20 calls a second each).
+- The per-player bandwidth budget (~120 KB/s at 300 dense; gzip saves 2.2x for ~14 % of the update cost).
 
 ## Watch out
-- A referee errors on any read of a table it does not subscribe: a component's `also_reads`, a genre's
-  `referee_tables`.
-- Region referees are static rectangles the operator gives; they must cover the world between them.
+- Python's text-mode write on Windows makes CRLF: `io.open(..., newline="")` or `sed -i 's/\r$//'` after.
 - SpacetimeDB on Windows answers on the 15.6 ms timer: round trips p95 ~15 ms whatever the load.
 - The load suite wipes the test database several times: run nothing else on the server meanwhile.
