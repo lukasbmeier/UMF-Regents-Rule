@@ -131,13 +131,18 @@ func _ready() -> void:
 		referee.may_judge = _judges
 		keeper.on_mine = _run_mine
 		keeper.on_not_mine = _let_go_of
-		region.clip_to(NpcNav.level_bounds(world.level()))
-		InterestManager.set_region(region.columns())
-		world.level_shown.connect(func(level: Node3D) -> void:
+		# No cell is asked for until the world's level is known (its row comes with the world's set): the
+		# level the scene starts with is not the world's, and asking for every column of a region to the
+		# grid's edge stalled four referees starting together for up to 1.6 s.
+		var none: Array[Vector2i] = []
+		InterestManager.set_region(none)
+		var clip_now: Callable = func(level: Node3D) -> void:
 			region.clip_to(NpcNav.level_bounds(level))
 			InterestManager.set_region(region.columns())
-			print("[Sidecar] its level's cells: %d columns asked for" % region.columns().size()))
-		print("[Sidecar] a region referee: %s, %d columns asked for" % [region.describe(), region.columns().size()])
+			print("[Sidecar] its level's cells: %d columns asked for" % region.columns().size())
+		world.level_shown.connect(clip_now)
+		SignalBus.world_ready.connect(func() -> void: clip_now.call(world.level()))
+		print("[Sidecar] a region referee: %s" % region.describe())
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	var mods: Array[GenreModule] = []
