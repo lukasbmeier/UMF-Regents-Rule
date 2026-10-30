@@ -269,6 +269,9 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
   (`<level folder>/<level>_cells/`); a player's game frees the level's own copy and loads the 5 x 5
   cells round them on a thread (`LevelStreamer`, which Boot adds to every game). The server, referees
   and sidecars keep the whole level. Bake again after moving anything under `Cells`.
+- **The ground's height for tools**: tick `LevelInfo.bake_ground` and the bake also writes
+  `shared/world/<level>_ground.bin`, the height every ray hit (template 1.5). The server never reads it; the
+  load test's bots walk on it, so on a hilly world they are drawn on the hills, not through them.
 - **The numbers** are the game's, in `shared/rules.json` `cells`: `cell_m` (64; changing it needs a
   `--fresh` publish, since rows store their cell), `ring` (1), `stream_ring` (2), `hysteresis_m` (4).
 
@@ -478,6 +481,31 @@ Hundreds of bot players, each a real connection to the server, and what each one
 - **The level it plays on** is `shared/load.json` `"level"` (0, the greybox); a game whose world is
   another level sets its id in `shared/<genre>/load.json` (Regent's Rule: 21, the continent). The bots walk
   the square round the level's origin, so a level whose origin is not where players are needs it moved.
+- **Bots over a whole world** (template 1.5): `"spread": {"over": "level", "crowd_share": 0.2,
+  "crowd_cells": 6, "roam_cells": 8}` gives each bot a home anywhere on the level's land (its bake says where
+  the sea is), a share of them in a town of `crowd_cells` round the spawn, each walking within `roam_cells` of
+  home and never into the sea; with `LevelInfo.bake_ground` baked they walk on the ground's height. The harness
+  and the bots compute the same homes, so region referees are cut where the bots live (each an equal share). A
+  bot alone in the wilds sees nobody, which is play: the check is then that some bots saw others.
+- **Another load config**: `LOAD=big` reads `shared/<genre>/load_big.json` over the game's `load.json` (a
+  bigger world, another crowd), e.g. `LOAD=expanse tools\run.cmd tests\load_test.sh`.
+- **The server is judged by its exact numbers** (template 1.5): `module_busy_pct` (80: the module's one
+  thread busy at most 80 % of the window) and `tick_movement_mean_ms` (25: half the tick's 50 ms). The p95s are
+  still shown, not judged.
+- **What each referee costs** (template 1.5): the report has a row for each referee (its region, frame
+  p95, stalls, entities, the CPU cores it kept busy, its memory) and one line for this machine (its CPUs and
+  memory, and what the referees, the bots and the server took together). Read it before running several
+  referees on one computer.
+- **Watch, and join them** (template 1.5): `WATCH=0 PLAYER=1 STEPS=300 tools\run.cmd tests\load_test.sh`
+  measures the step, then keeps the bots playing (`WATCH=600`: ten minutes; `0`: until Ctrl+C or the file
+  `build/load/<label>/stop_watch`), printing a line every 10 s (bots playing, the module's busy %, each
+  referee's frames, what they cost). `PLAYER=1` opens the game in a window on the test database
+  (`--db=<database>-test --token=watch`): press Play and walk among them. Close the window when done.
+- **How many referees a world needs**: `tools\run.cmd tests\referee_sweep.sh` (`GRIDS="1x1 2x2 3x3"`,
+  `STEPS=300`, `LOAD=...`) runs the step once per cut, then writes `build/load/sweep.md`: each cut's worst
+  referee, what they cost, whether the step held, and the fewest referees that held WITH ROOM (the worst
+  referee at most half its frame limit). About 4 minutes a cut. A step broken on the server's own limits
+  (the module busy) is not helped by more referees: the table says so.
 
 ### Chat
 Every game has CHAT (DECISIONS #273): **Enter** opens a line bottom left, **Enter** sends it to everyone
@@ -548,7 +576,10 @@ twice, and one whose referee has died is taken by the next after 5 s.
   --name=r1` (cell squares, inclusive: a cell is 64 m, cell 0 starts at 0). Between them the regions must cover the
   whole world; each needs its own `--name` (an identity of its own).
 - **The load test** splits its bots' square with `"referees": [2, 2]` in your `shared/<genre>/load.json`, or
-  `REFEREES=2x2` before the command. `toolsun.cmd testsegions_test.sh` checks the hand-off on a real server.
+  `REFEREES=2x2` before the command; `tools\run.cmd tests\referee_sweep.sh` tries several cuts and says how
+  many a world needs. `tools\run.cmd tests\regions_test.sh` checks the hand-off on a real server.
+- **A genre's tables of placed things** (rows with a `chunk`) go in `genre.tres` **Cell Tables** too
+  (template 1.5): a region referee then asks for them by its cells, not the whole world.
 - One referee for the whole world (Play in the editor, every game so far) is unchanged.
 
 ### Carrying (attach and carry)
@@ -1222,7 +1253,7 @@ each game scene's list against its entities' components).
 **A new table and reducer** (genre): declare them in `server/src/game/<genre>.rs`, then
 `GODOT=<path> ./tools/publish.sh --fresh --codegen`. Add the table to the game's
 `NetConfig.core_tables` (and `world_tables` if it has a `world_id` and each row belongs to one
-world), and read it in a component. The SDK logs `unknown table` if codegen was skipped, and
+world; and `cell_tables`, in `genre.tres` too, if its rows carry a `chunk`), and read it in a component. The SDK logs `unknown table` if codegen was skipped, and
 nothing else does.
 
 **A new held item** (a sword):

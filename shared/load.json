@@ -1,5 +1,5 @@
 {
-  "_comment": "THE LOAD TEST'S LIMITS (DECISIONS #284; tests/load_test.sh, tools/load/load_test.py). A step of the test HOLDS when every limit here holds; the first step that does not is where the game breaks on this machine. A limit of null is measured and reported but not judged. A genre may override any of them in shared/<genre>/load.json (later genres win). The 'keeps up' limits are engineering facts: the movement tick runs 20 times a second, so a tick that takes longer than its 50 ms falls behind. The per-client bandwidth limits are a design budget (Luke's to set: null until he does). 'module_busy_pct' is how much of the window the module's one thread was busy (exact; 100 is the ceiling) and 'tick_movement_mean_ms' the tick's own mean: the p95s are only as good as the server's buckets (1, 5, 10, 50 ms). 'referee_gone_refusals' counts judged abilities refused because the referee had dropped out. 'level' is the level world 0 plays the test on (a LevelDef id; 0 the greybox): a game whose world is elsewhere sets it in its own load.json. 'referees' [columns, rows] cuts the bots' square into that many regions, a referee each (DECISIONS #288); [1, 1] is one referee for the whole world.",
+  "_comment": "THE LOAD TEST'S LIMITS (DECISIONS #284; tests/load_test.sh, tools/load/load_test.py). A step of the test HOLDS when every limit here holds; the first step that does not is where the game breaks on this machine. A limit of null is measured and reported but not judged. A genre may override any of them in shared/<genre>/load.json (later genres win). The 'keeps up' limits are engineering facts: the movement tick runs 20 times a second, so a tick that takes longer than its 50 ms falls behind. The per-client bandwidth limits are a design budget (Luke's to set: null until he does). THE SERVER IS JUDGED BY ITS EXACT NUMBERS (template 1.5): 'module_busy_pct', how much of the window the module's one thread was busy (100 is the ceiling: 80 leaves room for a burst), and 'tick_movement_mean_ms', the movement tick's own mean (25: half its 50 ms, the rest for every other reducer). The p95s ('tick_movement_p95_ms', 'reducer_wait_p95_ms') are only as good as the server's buckets (1, 5, 10, 50 ms) and are reported, not judged. 'referee_gone_refusals' counts judged abilities refused because the referee had dropped out. 'level' is the level world 0 plays the test on (a LevelDef id; 0 the greybox): a game whose world is elsewhere sets it in its own load.json. 'referees' [columns, rows] cuts the bots' square into that many regions, a referee each (DECISIONS #288); [1, 1] is one referee for the whole world. 'spread' (template 1.5, tools/load/level.py): {\"over\": \"square\"} every bot anywhere in the area_cells square (the default); {\"over\": \"level\", \"crowd_share\": 0.2, \"crowd_cells\": 6, \"roam_cells\": 6} homes anywhere on the level's land (its bake), a share of them in a town round the spawn, each walking within roam_cells of home; the referees are then cut where the bots live. LOAD=<name> reads shared/<genre>/load_<name>.json over the game's load.json.",
   "level": 0,
   "steps": [50, 100, 300],
   "area_cells": 8,
@@ -7,10 +7,10 @@
   "settle_s": 15,
   "measure_s": 60,
   "limits": {
-    "tick_movement_p95_ms": 50,
-    "tick_movement_mean_ms": null,
-    "module_busy_pct": null,
-    "reducer_wait_p95_ms": 50,
+    "tick_movement_p95_ms": null,
+    "tick_movement_mean_ms": 25,
+    "module_busy_pct": 80,
+    "reducer_wait_p95_ms": null,
     "submit_input_rtt_p95_ms": 100,
     "input_ack_p95_ms": 250,
     "ring_swap_p95_ms": 1000,

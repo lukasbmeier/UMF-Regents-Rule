@@ -34,6 +34,7 @@ import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import wire  # noqa: E402
+import level as levels  # noqa: E402
 from cells import Cells  # noqa: E402
 
 MOVE_IDLE = 0
@@ -82,6 +83,9 @@ class Bot:
         self.paused = False
         self.spread_to = None
         self.spread_since = 0.0
+        # Where it lives and walks (`level.py`, shared/load.json "spread"): the harness computes the same.
+        self.home = levels.home_of(index, swarm.seed, swarm.spread_cfg, swarm.level, swarm.area_cells, swarm.cells.cell_m)
+        self.roam = levels.roam_rect(self.home, swarm.spread_cfg, swarm.level, swarm.area_cells, swarm.cells.cell_m)
         self._req = 0
         self._qset = 0
         self.pending = {}           # request id -> (reducer, sent at)
@@ -281,9 +285,10 @@ class Bot:
         if self.state == "joined":
             if sw.spread:
                 self.state = "spreading"
-                self.spread_to = sw.random_point(self.rng)
+                self.spread_to = self.home if sw.over_level() else sw.random_point(self.rng)
                 self.spread_since = now
-                self.call("teleport", {"x": self.spread_to[0], "y": p["y"], "z": self.spread_to[1]})
+                y = sw.ground(self.spread_to[0], self.spread_to[1])
+                self.call("teleport", {"x": self.spread_to[0], "y": p["y"] if y is None else y, "z": self.spread_to[1]})
             else:
                 self.start_walking()
         elif self.state == "spreading":
@@ -315,7 +320,7 @@ class Bot:
         yaw = 0.0
         if self.state == "walking" and not self.paused:
             if self.target is None:
-                self.target = sw.random_point(self.rng)
+                self.target = sw.next_target(self)
             dx, dz = self.target[0] - self.pos["x"], self.target[1] - self.pos["z"]
             d = math.hypot(dx, dz)
             step = sw.speed / sw.hz
@@ -328,6 +333,10 @@ class Bot:
                 # ASSUMPTION: Godot's forward is -Z, so facing (dx, dz) is atan2(-dx, -dz) (only animation reads it).
                 yaw = math.atan2(-dx, -dz)
                 moving = True
+            # On the level's ground where it was baked (`LevelInfo.bake_ground`): a bot climbs the hill it walks.
+            y = sw.ground(self.pos["x"], self.pos["z"])
+            if y is not None:
+                self.pos["y"] = y
         self.seq += 1
         self.frames.append({
             "seq": self.seq, "client_tick": tick_no, "move_x": 0.0, "move_y": -1.0 if moving else 0.0,
@@ -364,6 +373,11 @@ class Swarm:
         self.speed = float(a.speed if a.speed > 0 else mc.get("run_speed", 5.0))
         half = a.area_cells * self.cells.cell_m / 2.0
         self.area = (-half, half)
+        self.area_cells = a.area_cells
+        self.level = levels.Level.by_id(root, a.level_id)
+        self.spread_cfg = levels.spread_of({"spread": json.loads(a.spread) if a.spread else {}})
+        if self.spread_cfg["over"] == "level" and self.level is None:
+            raise SystemExit("bots: spread over the level, but level %d has no bake in shared/world" % a.level_id)
         self.schema = wire.Schema.fetch(self.host, self.db)
         self.player_identity_at = self.schema.column_offset("player", "identity")
         self.movement_entity_at = self.schema.column_offset("movement_state", "entity_id")
@@ -390,6 +404,24 @@ class Swarm:
 
     def random_point(self, rng):
         return (rng.uniform(*self.area), rng.uniform(*self.area))
+
+    def over_level(self):
+        return self.spread_cfg["over"] == "level" and self.level is not None
+
+    def ground(self, x, z):
+        return self.level.ground(x, z) if self.level is not None else None
+
+    def next_target(self, bot):
+        """Where `bot` walks next: anywhere in the area's square, or (spread over the level) a dry point within
+        its roam that it can walk to in a straight line without wading into the sea."""
+        if not self.over_level():
+            return self.random_point(bot.rng)
+        here = (bot.pos["x"], bot.pos["z"])
+        for _ in range(12):
+            p = self.level.random_land(bot.rng, bot.roam, tries=8)
+            if p is not None and self.level.segment_dry(here, p):
+                return p
+        return bot.home
 
     async def main(self):
         loop = asyncio.get_running_loop()
@@ -508,6 +540,8 @@ def main():
     p.add_argument("--speed", type=float, default=0.0, help="m/s; 0 = the game's run_speed")
     p.add_argument("--connect-rate", type=float, default=10.0, help="bots connected a second")
     p.add_argument("--no-spread", action="store_true", help="start everyone at the spawn instead of across the area")
+    p.add_argument("--level-id", type=int, default=0, help="the level world 0 plays (its bake: land and ground)")
+    p.add_argument("--spread", default="", help="shared/load.json's \"spread\", as JSON (level.py)")
     p.add_argument("--no-hooks", action="store_true")
     a = p.parse_args()
     if not a.db.endswith("-test"):

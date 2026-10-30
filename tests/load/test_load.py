@@ -337,6 +337,185 @@ class TheArithmetic(unittest.TestCase):
         for a, b in zip(xs, xs[1:]):
             self.assertEqual(a[2] + 1, b[0], "neighbours meet, with no gap and no overlap")
 
+    def test_regions_where_the_bots_live_share_them_out(self):
+        # Most bots in a town of a few cells at (1000, 1000), the rest strung out west: an even cut of the square would give one
+        # referee nearly all of them; cut where they live, each column and each row holds its share.
+        pts = [(1000.0 + 25.0 * (i % 10), 1000.0 + 25.0 * (i // 10)) for i in range(60)] + [(-3000.0 + 50 * i, 200.0 * (i % 7)) for i in range(40)]
+        cuts = [tuple(int(v) for v in r.split(",")) for r in load_test.regions_by_homes([2, 2], pts, 64.0)]
+        self.assertEqual(len(cuts), 4)
+        self.assertEqual(load_test.regions_by_homes([1, 1], pts, 64.0), [])
+
+        def inside(r, p):
+            cx, cz = math.floor(p[0] / 64.0), math.floor(p[1] / 64.0)
+            return r[0] <= cx <= r[2] and r[1] <= cz <= r[3]
+        for p in pts:
+            self.assertEqual(sum(1 for r in cuts if inside(r, p)), 1, "every bot is in exactly one region: %s" % (p,))
+        counts = [sum(1 for p in pts if inside(r, p)) for r in cuts]
+        self.assertLessEqual(max(counts), 40, "no region holds most of them (%s)" % counts)
+        self.assertEqual(min(c[0] for c in cuts), -512)
+        self.assertEqual(max(c[2] for c in cuts), 511)
+        # Everyone in one cell still makes valid, strictly ordered regions (no two share a column).
+        same = load_test.regions_by_homes([3, 1], [(5.0, 5.0)] * 30, 64.0)
+        xs = [tuple(int(v) for v in r.split(",")) for r in same]
+        for a, b in zip(xs, xs[1:]):
+            self.assertEqual(a[2] + 1, b[0])
+            self.assertLessEqual(b[0], b[2])
+
+    def test_a_spread_world_needs_only_some_bots_to_see_others(self):
+        w = load_test.window(self.lines(), 1000.0, 1010.0, 4)
+        w["_min_neighbours_seen"] = 0
+        w["_bots_saw_others"] = 2
+        self.assertTrue(any("every bot saw others" in t for t, ok in load_test.harness_checks(w, True) if not ok),
+                        "in a square, a bot seeing nobody is the harness failing")
+        self.assertTrue(all(ok for _, ok in load_test.harness_checks(w, True, over_level=True)),
+                        "over a world, a bot alone in the wilds is play")
+        w["_bots_saw_others"] = 0
+        self.assertFalse(all(ok for _, ok in load_test.harness_checks(w, True, over_level=True)), "but nobody seeing anyone is not")
+
+
+class TheLevel(unittest.TestCase):
+    """`level.py`: land, the ground's height, and where each bot lives, from a level's bake."""
+
+    def setUp(self):
+        import tempfile
+        self.dir = tempfile.mkdtemp()
+        # A 9 x 9 grid at 10 m from (0, 0): the sea in its east third, the ground rising 1 m every 10 m east and
+        # 0.5 m every 10 m south, no ground at all in one corner sample.
+        depth = bytearray(9 * 9)
+        for j in range(9):
+            for i in range(6, 9):
+                depth[j * 9 + i] = 20
+        ground = []
+        for j in range(9):
+            for i in range(9):
+                ground.append(65535 if (i, j) == (0, 8) else int(round((i * 1.0 + j * 0.5 + 10.0) * 10)))
+        with open(os.path.join(self.dir, "t_depth.bin"), "wb") as f:
+            f.write(bytes(depth))
+        with open(os.path.join(self.dir, "t_ground.bin"), "wb") as f:
+            f.write(struct.pack("<%dH" % len(ground), *ground))
+        self.doc = {"level": "t", "id": 7, "spawn": [20.0, 0.0, 20.0], "water_y": 0.0,
+                    "depth_grid": {"file": "t_depth.bin", "origin_x": 0.0, "origin_z": 0.0, "spacing": 10.0, "width": 9, "height": 9},
+                    "ground_grid": {"file": "t_ground.bin", "origin_x": 0.0, "origin_z": 0.0, "spacing": 10.0, "width": 9,
+                                    "height": 9, "base_y": -10.0}}
+        import level
+        self.L = level
+        self.lvl = level.Level(self.doc, self.dir)
+
+    def test_land_and_sea(self):
+        self.assertTrue(self.lvl.dry(20.0, 20.0))
+        self.assertFalse(self.lvl.dry(70.0, 20.0), "the sea is not land")
+        self.assertFalse(self.lvl.dry(-5.0, 20.0), "nor is off the level")
+        self.assertFalse(self.lvl.dry(1.0, 79.0), "nor where no ray hit the ground")
+        self.assertTrue(self.lvl.segment_dry((10.0, 10.0), (50.0, 40.0)))
+        self.assertFalse(self.lvl.segment_dry((10.0, 10.0), (80.0, 10.0)), "a walk into the sea is not dry")
+
+    def test_the_ground_between_samples(self):
+        self.assertAlmostEqual(self.lvl.ground(20.0, 20.0), -10.0 + 2.0 + 1.0 + 10.0)
+        self.assertAlmostEqual(self.lvl.ground(25.0, 20.0), -10.0 + 2.5 + 1.0 + 10.0, places=4)
+        self.assertAlmostEqual(self.lvl.ground(20.0, 25.0), -10.0 + 2.0 + 1.25 + 10.0, places=4)
+        self.assertIsNone(self.lvl.ground(-1.0, 0.0))
+        flat = self.L.Level(dict(self.doc, ground_grid=None), self.dir)
+        self.assertFalse(flat.has_ground())
+        self.assertIsNone(flat.ground(20.0, 20.0), "a level baked without its ground has none")
+
+    def test_homes_are_the_same_everywhere_and_on_land(self):
+        spread = self.L.spread_of({"spread": {"over": "level", "crowd_share": 0.5, "crowd_cells": 0.3, "roam_cells": 1}})
+        a = self.L.homes(40, 3, spread, self.lvl, 8, 64.0)
+        b = self.L.homes(40, 3, spread, self.lvl, 8, 64.0)
+        self.assertEqual(a, b, "the harness and every bot process compute the same homes")
+        self.assertNotEqual(a, self.L.homes(40, 4, spread, self.lvl, 8, 64.0), "another seed, other homes")
+        self.assertTrue(all(self.lvl.dry(*p) for p in a), "every home on land")
+        near = sum(1 for p in a if abs(p[0] - 20.0) <= 9.6 and abs(p[1] - 20.0) <= 9.6)
+        self.assertGreaterEqual(near, 12, "about half live round the spawn (%d of 40)" % near)
+        self.assertEqual(self.L.home_of(5, 3, spread, self.lvl, 8, 64.0), a[5], "one bot's home on its own is the same")
+        square = self.L.spread_of({})
+        self.assertEqual(square["over"], "square")
+        self.assertTrue(all(abs(x) <= 256.0 and abs(z) <= 256.0 for x, z in self.L.homes(20, 3, square, self.lvl, 8, 64.0)))
+
+
+class TheMachine(unittest.TestCase):
+    """What a process costs: this one, measured."""
+
+    def test_this_process(self):
+        u = load_test.proc_usage(os.getpid())
+        self.assertIsNotNone(u)
+        self.assertGreaterEqual(u[0], 0.0)
+        self.assertGreater(u[1], 1.0, "a Python process holds more than a megabyte")
+        self.assertIsNone(load_test.proc_usage(2 ** 30), "a process that is not there")
+        use = load_test.Usage({"me": os.getpid(), "nobody": None})
+        use.sample()
+        t = __import__("time").time()
+        while __import__("time").time() < t + 0.3:
+            sum(i * i for i in range(10000))
+        use.sample()
+        got = use.result()
+        self.assertEqual(list(got), ["me"])
+        self.assertGreater(got["me"]["cores"], 0.2, "busy for the window: most of a core")
+        m = load_test.machine()
+        self.assertGreater(m["cpus"], 0)
+
+    def test_each_referee_by_who_sent_it(self):
+        row = {"frame_ms_p_95": 5.0, "frame_ms_p_99": 6.0, "frame_ms_max": 9.0, "fps": 60.0, "spikes": 0, "rtt_ms": 1.0,
+               "rtt_ms_max": 2.0, "entities": 10, "memory_mb": 300.0}
+        rows = [dict(row, detail=json.dumps({"who": "load_r0 cells 0,0 to 3,3"})),
+                dict(row, frame_ms_p_95=9.0, detail=json.dumps({"who": "load_r0 cells 0,0 to 3,3"})),
+                dict(row, detail=json.dumps({"who": "load_r1 cells 4,0 to 9,3"})),
+                dict(row, detail="{}", identity=["0x00ab12cd34"])]
+        per = load_test.referees_summary(rows)
+        self.assertEqual(sorted(per), ["load_r0 cells 0,0 to 3,3", "load_r1 cells 4,0 to 9,3", "referee ab12cd34"])
+        self.assertEqual(per["load_r0 cells 0,0 to 3,3"]["frame_p95_ms"], 9.0, "a referee's worst window")
+        self.assertEqual(per["load_r0 cells 0,0 to 3,3"]["windows"], 2)
+
+    def test_referees_from_their_logs(self):
+        import tempfile
+        d = tempfile.mkdtemp()
+        path = os.path.join(d, "referee_2.log")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("Godot Engine\n[Sidecar] process 4242 load_r2\n[Sidecar] a region referee: cells 0,0 to 3,3\n")
+        bare = os.path.join(d, "referee.log")
+        with open(bare, "w", encoding="utf-8") as f:
+            f.write("[Sidecar] process 77\n")
+        got = load_test.referees_from_logs([path, bare, os.path.join(d, "missing.log")])
+        self.assertEqual(got[0], {"log": path, "name": "load_r2", "pid": 4242, "region": "cells 0,0 to 3,3"})
+        self.assertEqual((got[1]["name"], got[1]["pid"]), ("referee", 77), "one with no name is its log's")
+        self.assertIsNone(got[2]["pid"])
+
+
+class TheSweep(unittest.TestCase):
+    """tests/referee_sweep.sh's table: the fewest referees that held with room, from the reports."""
+
+    def report(self, d, label, n_refs, frames, holds=True, busy=0.5):
+        refs = {"load_r%d cells" % i: {"frame_p95_ms": f, "net_stalls": 0} for i, f in enumerate(frames)}
+        lim = [["referee_frame_p95_ms", max(frames), 50, max(frames) <= 50], ["module_busy_pct", busy * 100, 80, busy <= 0.8]]
+        step = {"bots_n": 300, "holds": holds and max(frames) <= 50 and busy <= 0.8, "valid": True, "checks": [["ok", True]],
+                "limits": lim, "referees": refs, "server": {"module_busy": busy},
+                "usage": {"load_r%d" % i: {"cores": 0.5, "memory_mb": 600.0} for i in range(n_refs)},
+                "machine": {"cpus": 18, "memory_gb": 31.4}}
+        os.makedirs(os.path.join(d, label), exist_ok=True)
+        with open(os.path.join(d, label, "report.json"), "w", encoding="utf-8") as f:
+            json.dump({"referees_n": n_refs, "steps": [step]}, f)
+
+    def test_the_fewest_with_room(self):
+        import tempfile
+        import sweep_report
+        d = tempfile.mkdtemp()
+        sweep_report.OUT = d
+        self.report(d, "a", 1, [140.0])
+        self.report(d, "b", 4, [40.0, 30.0, 20.0, 10.0])
+        self.report(d, "c", 6, [20.0, 18.0, 12.0, 9.0, 8.0, 5.0])
+        self.report(d, "e", 9, [9.0] * 9)
+        sweep_report.main(["a", "b", "c", "e"])
+        text = pathlib.Path(d, "sweep.md").read_text(encoding="utf-8")
+        self.assertIn("**6 referees hold 300 bots with room**", text, "4 hold but at 40 of 50: not with room")
+        self.assertIn("| 1 | 140.0 |", text)
+        self.assertIn("they took 3.0 cores and 3600 MB here", text)
+        sweep_report.main(["a"])
+        self.assertIn("**No cut tried held 300 bots**", pathlib.Path(d, "sweep.md").read_text(encoding="utf-8"))
+        self.report(d, "s", 9, [9.0] * 9, busy=0.95)
+        sweep_report.main(["s"])
+        text = pathlib.Path(d, "sweep.md").read_text(encoding="utf-8")
+        self.assertIn("more referees do not help", text, "a step broken on the server's limit says so")
+
 
 if __name__ == "__main__":
     unittest.main()

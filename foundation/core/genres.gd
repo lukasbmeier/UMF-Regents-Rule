@@ -56,6 +56,7 @@ static func modules() -> Array[GenreModule]:
 static func merge_tables(cfg: NetConfig, mods: Array[GenreModule]) -> void:
 	var core: Array[StringName] = cfg.core_tables.duplicate()
 	var world: Array[StringName] = cfg.world_tables.duplicate()
+	var cells: Array[StringName] = cfg.cell_tables.duplicate()
 	for m: GenreModule in mods:
 		for t: StringName in m.tables:
 			if not core.has(t):
@@ -63,8 +64,12 @@ static func merge_tables(cfg: NetConfig, mods: Array[GenreModule]) -> void:
 		for t: StringName in m.world_tables:
 			if not world.has(t):
 				world.append(t)
+		for t: StringName in m.cell_tables:
+			if not cells.has(t):
+				cells.append(t)
 	cfg.core_tables = core
 	cfg.world_tables = world
+	cfg.cell_tables = cells
 
 
 ## Every module's entity definitions, in order.

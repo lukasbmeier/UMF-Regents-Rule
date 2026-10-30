@@ -890,3 +890,23 @@ Code only: a game republishes (no `--codegen`; data kept).
   table is sorted by what each reducer cost the module a second (`busy ms/s`, exact, from the
   histograms' sums), and the report says how busy the module was. The p95s are bucket guesses (1, 5, 10,
   50 ms): the HANDBOOK says which numbers to read.
+
+## 1.5.0 — a world's worth of bots: spread over a level, watched, joined, and how many referees (DECISIONS #290)
+Code and tools only: a game republishes (no `--codegen`; data kept).
+- `LevelInfo.bake_ground`: the bake also writes `<level>_ground.bin`, the ground's height over the whole grid,
+  for tools (the server never reads it). Off by default: no level's bake changes.
+- The load test's bots can live anywhere on a level's land (`shared/load.json` `"spread": {"over": "level"}`,
+  `tools/load/level.py`): a share in a town round the spawn, each roaming near home, never into the sea, on
+  the ground's height when baked. Region referees are then cut where the bots live, an equal share each.
+- `LOAD=<name>`: a game's other load config (`shared/<genre>/load_<name>.json`).
+- The server is judged by its exact numbers: `module_busy_pct` 80 and `tick_movement_mean_ms` 25 (the bucketed
+  p95s are reported, not judged).
+- Each referee's own row in the report (its region, frames, stalls and when, cores, memory), and what this
+  machine's referees, bots and server took together. A referee prints its process (`[Sidecar] process N name`)
+  and names itself in its reports (`Telemetry.who`).
+- `WATCH=<s>` keeps the bots playing after the steps (0: until stopped); `PLAYER=1` opens the game on the test
+  database to join them.
+- `tests/referee_sweep.sh` (`tools/load/sweep_report.py`): the load test once per cut of the world, and the
+  fewest referees that held with room (`build/load/sweep.md`).
+- `GenreModule.cell_tables`: a genre's tables of placed things; a region referee asks for them by its cells
+  (its config never had the game's `cell_tables`, so it was sent every one of those rows in the world).

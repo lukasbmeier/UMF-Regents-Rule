@@ -16,6 +16,8 @@ const RAY_NUDGE: float = 0.0031
 ## The level's own collision layer (`SpaceTimeEntity.WORLD_MASK`; written out, because the baker runs
 ## from a `-s` script, before the autoloads that entity script names exist).
 const WORLD_MASK: int = 1
+## The ground grid's "no ray hit here" (`LevelInfo.bake_ground`).
+const GROUND_NONE: int = 65535
 
 
 ## The scene's LevelInfo, or null.
@@ -37,7 +39,7 @@ static func bake(root: Node3D, out_dir: String = "res://shared/world/", settings
 	if info != null:
 		s = {"level_name": info.level_name, "level_id": info.level_id, "water_y": info.water_y,
 			"wade_depth": info.wade_depth, "min_cast_depth": info.min_cast_depth,
-			"grid_spacing": info.grid_spacing,
+			"grid_spacing": info.grid_spacing, "bake_ground": info.bake_ground,
 			"bounds": AABB(info.global_transform * info.bake_bounds.position, info.bake_bounds.size)}
 	if str(s.get("level_name", "")).is_empty():
 		return {"ok": false, "error": "no LevelInfo with a Level Name in %s" % root.name}
@@ -52,6 +54,12 @@ static func bake(root: Node3D, out_dir: String = "res://shared/world/", settings
 	var bottom: float = bounds.position.y - RAY_MARGIN
 	var full := PackedByteArray()
 	full.resize(cols * rows)
+	# The ground's height for tools (`LevelInfo.bake_ground`): decimetres above `bottom`, GROUND_NONE where
+	# no ray hit, over the whole grid (not cropped: tools walk the dry land).
+	var with_ground: bool = bool(s.get("bake_ground", false))
+	var ground_dm := PackedByteArray()
+	if with_ground:
+		ground_dm.resize(cols * rows * 2)
 	var lo := Vector2i(cols, rows)
 	var hi := Vector2i(-1, -1)
 	for j: int in range(rows):
@@ -62,10 +70,14 @@ static func bake(root: Node3D, out_dir: String = "res://shared/world/", settings
 				Vector3(x + RAY_NUDGE, bottom, z + RAY_NUDGE), WORLD_MASK)
 			var hit: Dictionary = space.intersect_ray(q)
 			var dm: int = 0
+			var up: int = GROUND_NONE
 			if not hit.is_empty():
 				var ground: float = (hit["position"] as Vector3).y
 				dm = clampi(roundi((water - ground) * 10.0), 0, 255)
+				up = clampi(roundi((ground - bottom) * 10.0), 0, GROUND_NONE - 1)
 			full[j * cols + i] = dm
+			if with_ground:
+				ground_dm.encode_u16((j * cols + i) * 2, up)
 			if dm > 0:
 				lo = Vector2i(mini(lo.x, i), mini(lo.y, j))
 				hi = Vector2i(maxi(hi.x, i), maxi(hi.y, j))
@@ -108,6 +120,22 @@ static func bake(root: Node3D, out_dir: String = "res://shared/world/", settings
 	var json_path: String = out_dir.path_join(level_name + ".json")
 	var bin_path: String = out_dir.path_join(level_name + "_depth.bin")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	if with_ground:
+		doc["ground_grid"] = {
+			"file": level_name + "_ground.bin",
+			"origin_x": bounds.position.x,
+			"origin_z": bounds.position.z,
+			"spacing": step,
+			"width": cols,
+			"height": rows,
+			"base_y": bottom,
+			"unit": "u16 little-endian, decimetres above base_y; %d = no ground (for tools: the server never reads it)" % GROUND_NONE,
+		}
+		var gf: FileAccess = FileAccess.open(out_dir.path_join(level_name + "_ground.bin"), FileAccess.WRITE)
+		if gf == null:
+			return {"ok": false, "error": "cannot write %s_ground.bin" % level_name}
+		gf.store_buffer(ground_dm)
+		gf.close()
 	var bf: FileAccess = FileAccess.open(bin_path, FileAccess.WRITE)
 	if bf == null:
 		return {"ok": false, "error": "cannot write %s" % bin_path}

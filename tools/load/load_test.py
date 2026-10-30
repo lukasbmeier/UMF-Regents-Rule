@@ -17,8 +17,10 @@ nothing refused); the LIMITS say whether the game held at that step. Results: bu
 Run it through tests/load_test.sh, which publishes the test database, starts a referee and dumps the interest.
 """
 import argparse
+import bisect
 import datetime
 import json
+import math
 import os
 import platform
 import shutil
@@ -29,6 +31,8 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
+sys.path.insert(0, HERE)
+import level as levels  # noqa: E402
 ROLE_REFEREE = 1
 # The referee's report window during the test (tests/load_test.sh sets foundation.telemetry_window_s).
 REF_WINDOW_S = 10.0
@@ -169,17 +173,41 @@ def referee_windows(db, t0, t1):
     return out, ""
 
 
+def referee_who(row):
+    """Which referee sent a report: its name and region (Telemetry.who), else the end of its identity."""
+    try:
+        who = json.loads(row.get("detail") or "{}").get("who", "")
+    except (ValueError, TypeError, AttributeError):
+        who = ""
+    if who:
+        return who
+    ident = row.get("identity")
+    while isinstance(ident, (list, tuple)) and ident:
+        ident = ident[0]
+    return "referee %s" % (str(ident)[-8:] if ident is not None else "?")
+
+
+def referees_summary(rows):
+    """Each referee's own summary, by who sent it: {who: summary}."""
+    by = {}
+    for r in rows or []:
+        by.setdefault(referee_who(r), []).append(r)
+    return {k: referee_summary(v) for k, v in sorted(by.items())}
+
+
 def referee_summary(rows):
     if not rows:
         return None
     stalls = 0
     worst_stall = 0.0
+    stall_list = []   # [server seconds, ms] of each: when it was, to set beside what the referee was doing
     for r in rows:
         try:
             for s in json.loads(r.get("detail") or "{}").get("spikes", []):
                 if len(s) >= 3 and s[2] == "net":
                     stalls += 1
                     worst_stall = max(worst_stall, float(s[1]))
+                    stall_list.append([float(s[0]), float(s[1])])
         except (ValueError, TypeError):
             pass
     return {
@@ -191,11 +219,133 @@ def referee_summary(rows):
         "spikes": sum(r["spikes"] for r in rows),
         "net_stalls": stalls,
         "worst_stall_ms": worst_stall,
+        "stalls": sorted(stall_list),
         "rtt_ms": max(r["rtt_ms"] for r in rows),
         "rtt_max_ms": max(r["rtt_ms_max"] for r in rows),
         "entities": max(r["entities"] for r in rows),
         "memory_mb": max(r["memory_mb"] for r in rows),
     }
+
+
+# =============================================================================
+# WHAT EACH PROCESS COSTS THIS MACHINE
+# =============================================================================
+
+def proc_usage(pid):
+    """(CPU seconds used so far, resident MB now) of process `pid`, or None if it cannot be read."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            k32.OpenProcess.restype = wintypes.HANDLE
+            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            h = k32.OpenProcess(0x1000, False, int(pid))   # PROCESS_QUERY_LIMITED_INFORMATION
+            if not h:
+                return None
+            try:
+                ft = [wintypes.FILETIME() for _ in range(4)]
+                k32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+                if not k32.GetProcessTimes(h, *[ctypes.byref(f) for f in ft]):
+                    return None
+
+                def secs(f):
+                    return ((f.dwHighDateTime << 32) | f.dwLowDateTime) / 1e7
+
+                class Counters(ctypes.Structure):
+                    _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD)] + [
+                        (n, ctypes.c_size_t) for n in ("PeakWorkingSetSize", "WorkingSetSize", "QuotaPeakPagedPoolUsage",
+                                                     "QuotaPagedPoolUsage", "QuotaPeakNonPagedPoolUsage",
+                                                     "QuotaNonPagedPoolUsage", "PagefileUsage", "PeakPagefileUsage")]
+                c = Counters()
+                c.cb = ctypes.sizeof(Counters)
+                k32.K32GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+                if not k32.K32GetProcessMemoryInfo(h, ctypes.byref(c), c.cb):
+                    return None
+                return (secs(ft[2]) + secs(ft[3]), c.WorkingSetSize / 1048576.0)
+            finally:
+                k32.CloseHandle(h)
+        out = subprocess.run(["ps", "-o", "rss=,time=", "-p", str(int(pid))], capture_output=True, text=True)
+        fields = out.stdout.split()
+        if len(fields) < 2:
+            return None
+        days, _, clock = fields[1].rpartition("-")
+        parts = [float(x) for x in clock.split(":")]
+        while len(parts) < 3:
+            parts.insert(0, 0.0)
+        cpu = (float(days) if days else 0.0) * 86400.0 + parts[0] * 3600.0 + parts[1] * 60.0 + parts[2]
+        return (cpu, float(fields[0]) / 1024.0)
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def machine():
+    """This machine: logical CPUs and its memory in GB (None if unknown)."""
+    gb = None
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class Status(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong)] + [
+                    (n, ctypes.c_ulonglong) for n in ("ullTotalPhys", "ullAvailPhys", "ullTotalPageFile",
+                                                     "ullAvailPageFile", "ullTotalVirtual", "ullAvailVirtual",
+                                                     "ullAvailExtendedVirtual")]
+            st = Status()
+            st.dwLength = ctypes.sizeof(Status)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+                gb = st.ullTotalPhys / 1073741824.0
+        elif hasattr(os, "sysconf"):
+            gb = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1073741824.0
+    except (OSError, ValueError, AttributeError):
+        pass
+    return {"cpus": os.cpu_count() or 0, "memory_gb": gb}
+
+
+class Usage:
+    """CPU (cores busy on average) and memory (resident MB, the most seen) of some processes over a window."""
+
+    def __init__(self, procs):
+        self.procs = {k: v for k, v in procs.items() if v}     # name -> pid
+        self.first, self.last, self.peak = {}, {}, {}
+
+    def sample(self):
+        now = time.time()
+        for name, pid in self.procs.items():
+            u = proc_usage(pid)
+            if u is None:
+                continue
+            self.first.setdefault(name, (now, u[0]))
+            self.last[name] = (now, u[0])
+            self.peak[name] = max(self.peak.get(name, 0.0), u[1])
+
+    def result(self):
+        out = {}
+        for name in self.procs:
+            if name in self.first and self.last[name][0] > self.first[name][0]:
+                (t0, c0), (t1, c1) = self.first[name], self.last[name]
+                out[name] = {"cores": (c1 - c0) / (t1 - t0), "memory_mb": self.peak.get(name)}
+        return out
+
+
+def referees_from_logs(paths):
+    """The referees a suite started, from their logs: name, process id, region (as each one printed them)."""
+    out = []
+    for path in paths:
+        name, pid, region = os.path.splitext(os.path.basename(path))[0], None, ""
+        try:
+            with open(path, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if line.startswith("[Sidecar] process "):
+                        words = line.split()
+                        pid = int(words[2])
+                        name = words[3] if len(words) > 3 else name
+                    elif line.startswith("[Sidecar] a region referee: "):
+                        region = line.split(": ", 1)[1].strip()
+        except (OSError, ValueError):
+            pass
+        out.append({"log": path, "name": name, "pid": pid, "region": region})
+    return out
 
 
 # =============================================================================
@@ -226,6 +376,7 @@ class Workers:
                    "--connect-rate", str(self.a.connect_rate)]
             if self.a.no_spread:
                 cmd.append("--no-spread")
+            cmd += ["--level-id", str(self.a.level_id), "--spread", json.dumps(self.a.spread)]
             log = open(os.path.join(self.dir, "w%d.log" % i), "w", encoding="utf-8")
             self.procs.append((subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=ROOT), log))
             self.stats.append(stats)
@@ -269,6 +420,9 @@ class Workers:
             for k, v in s.items():
                 total[k] = total.get(k, 0) + v
         return total
+
+    def pids(self):
+        return {"bots %d" % i: p.pid for i, (p, _) in enumerate(self.procs)}
 
     def dead_workers(self):
         return [i for i, (p, _) in enumerate(self.procs) if p.poll() is not None]
@@ -420,7 +574,7 @@ def sample_gauges(host, dbid):
 # JUDGING A STEP
 # =============================================================================
 
-def harness_checks(w, ring):
+def harness_checks(w, ring, over_level=False):
     """Did the harness do what it says? Every one must hold, or the numbers mean nothing."""
     c = []
     c.append(("every bot connected, placed and walking the whole window (%d of %d)"
@@ -431,7 +585,13 @@ def harness_checks(w, ring):
     c.append(("every bot moved, as the server saw it (%d did not; %.0f m on average)"
               % (w["bots_not_moved"], w["metres_moved_mean"]), w["bots_not_moved"] == 0))
     fewest = w.get("_min_neighbours_seen")
-    c.append(("every bot saw others (the fewest any bot saw: %s)" % fewest, (fewest or 0) > 0))
+    if over_level:
+        # Spread over a world, a bot alone in the wilds rightly sees nobody: some must see others (the town).
+        saw = w.get("_bots_saw_others", 0)
+        c.append(("bots near others saw them (%d of %d saw someone; one alone in the wilds sees nobody)"
+                  % (saw, w["bots_expected"]), saw > 0))
+    else:
+        c.append(("every bot saw others (the fewest any bot saw: %s)" % fewest, (fewest or 0) > 0))
     c.append(("nothing was refused (%s)" % (", ".join("%s x%d" % kv for kv in list(w["refused"].items())[:3]) or "none"),
               not w["refused"]))
     played = w.get("refused_in_play", {})
@@ -492,14 +652,81 @@ def regions(split, area_cells):
     return ["%d,%d,%d,%d" % (xs[i], zs[j], xs[i + 1] - 1, zs[j + 1] - 1) for i in range(cols) for j in range(rows)]
 
 
+def _increasing(cuts, lo, hi):
+    """`cuts` made strictly increasing inside (lo, hi): no two regions share a column of cells."""
+    out, prev = [], lo
+    for c in cuts:
+        prev = min(max(int(c), prev + 1), hi - 1)
+        out.append(prev)
+    return out
+
+
+def regions_by_homes(split, points, cell_m):
+    """REGION REFEREES WHERE THE BOTS ARE (template 1.5): `split` [columns, rows], the columns cut so each holds
+    as many of `points` (where the bots live, `level.homes`) as the next, then each column's rows the same way;
+    the outer regions run to the grid's edge. A world mostly sea, or a town where many start, still gives each
+    referee its share of the players. [1, 1]: none (one referee for the whole world)."""
+    cols, rows = max(1, int(split[0])), max(1, int(split[1]))
+    if (cols == 1 and rows == 1) or not points:
+        return []
+
+    def cell(v):
+        return int(math.floor(v / cell_m))
+
+    def quantiles(vals, n):
+        # A cut is between two columns of cells: the one leaving nearest the k-th share of `vals` (sorted) before it.
+        out = []
+        for k in range(1, n):
+            target = len(vals) * k / n
+            best = min(sorted(set(vals)) + [vals[-1] + 1],
+                       key=lambda c: abs(bisect.bisect_left(vals, c) - target))
+            out.append(best)
+        return out
+
+    xs = sorted(cell(p[0]) for p in points)
+    xc = [-GRID_HALF] + _increasing(quantiles(xs, cols), -GRID_HALF, GRID_HALF) + [GRID_HALF]
+    out = []
+    for i in range(cols):
+        zs = sorted(cell(p[1]) for p in points if xc[i] <= cell(p[0]) < xc[i + 1])
+        inner = quantiles(zs, rows) if zs else [-GRID_HALF + (2 * GRID_HALF * k) // rows for k in range(1, rows)]
+        zc = [-GRID_HALF] + _increasing(inner, -GRID_HALF, GRID_HALF) + [GRID_HALF]
+        out += ["%d,%d,%d,%d" % (xc[i], zc[j], xc[i + 1] - 1, zc[j + 1] - 1) for j in range(rows)]
+    return out
+
+
+def cell_m():
+    with open(os.path.join(ROOT, "shared", "rules.json"), encoding="utf-8") as f:
+        return float(json.load(f).get("cells", {}).get("cell_m", 64))
+
+
+def region_args(cfg, split, n_bots, seed=1):
+    """The `--region=` of each referee for `split` [columns, rows] (tests/load_test.sh asks): round the bots'
+    square, or, spread over the level, where its `n_bots` bots live."""
+    spread = levels.spread_of(cfg)
+    if spread["over"] == "level":
+        level = levels.Level.by_id(ROOT, int(cfg.get("level", 0)))
+        if level is not None:
+            pts = levels.homes(n_bots, seed, spread, level, int(cfg["area_cells"]), cell_m())
+            return regions_by_homes(split, pts, cell_m())
+    return regions(split, int(cfg["area_cells"]))
+
+
 def load_config():
     with open(os.path.join(ROOT, "shared", "load.json"), encoding="utf-8") as f:
         cfg = json.load(f)
     with open(os.path.join(ROOT, "shared", "game.json"), encoding="utf-8") as f:
         genres = json.load(f).get("genres", [])
+    # A game's own load config over the foundation's, key by key; and LOAD=<name> (template 1.5) its other one,
+    # shared/<genre>/load_<name>.json, over that (a bigger world, another crowd).
+    variant = os.environ.get("LOAD", "").strip()
+    names = ["load.json"] + (["load_%s.json" % variant] if variant else [])
+    found_variant = not variant
     for g in genres:
-        path = os.path.join(ROOT, "shared", g, "load.json")
-        if os.path.exists(path):
+        for name in names:
+            path = os.path.join(ROOT, "shared", g, name)
+            if not os.path.exists(path):
+                continue
+            found_variant = found_variant or name != "load.json"
             with open(path, encoding="utf-8") as f:
                 over = json.load(f)
             for k, v in over.items():
@@ -507,6 +734,8 @@ def load_config():
                     cfg["limits"].update(v)
                 elif not k.startswith("_"):
                     cfg[k] = v
+    if not found_variant:
+        raise SystemExit("load_test: LOAD=%s, but no genre has shared/<genre>/load_%s.json" % (variant, variant))
     return cfg
 
 
@@ -560,6 +789,28 @@ def step_markdown(s):
             ref["spikes"], ref["net_stalls"], fmt(ref["worst_stall_ms"], 0), fmt(ref["rtt_ms"]), fmt(ref["rtt_max_ms"]), ref["entities"]))
     else:
         lines.append("Referee: no reports in the window (%s)." % (s.get("referee_note") or "none running?"))
+    refs = s.get("referees") or {}
+    use = s.get("usage") or {}
+    if len(refs) > 1 or use:
+        lines += ["", "| each referee | frame p95 | p99 | worst | net stalls | entities | its own memory MB | cores busy | resident MB |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        for who, r in refs.items():
+            # A named referee's report starts with its name (Telemetry.who), its usage is under it; one with no
+            # name reports as "referee <identity>", its usage is under its log's name, "referee".
+            u = use.get(who.split(" ")[0]) or {}
+            lines.append("| %s | %s | %s | %s | %d | %d | %s | %s | %s |" % (
+                who, fmt(r["frame_p95_ms"]), fmt(r["frame_p99_ms"]), fmt(r["frame_max_ms"]), r["net_stalls"],
+                r["entities"], fmt(r["memory_mb"], 0), fmt(u.get("cores"), 2), fmt(u.get("memory_mb"), 0)))
+        m = s.get("machine") or {}
+        ref_use = [u for k, u in use.items() if not k.startswith("bots") and k != "server"]
+        bots_use = [u for k, u in use.items() if k.startswith("bots")]
+        srv_use = use.get("server")
+        lines.append("")
+        lines.append("This machine: %d CPUs, %s GB. The referees together: %s cores, %s MB; the bots: %s cores; the server: %s cores, %s MB." % (
+            m.get("cpus", 0), fmt(m.get("memory_gb"), 0), fmt(sum(u["cores"] for u in ref_use), 2) if ref_use else "-",
+            fmt(sum(u["memory_mb"] or 0.0 for u in ref_use), 0) if ref_use else "-",
+            fmt(sum(u["cores"] for u in bots_use), 2) if bots_use else "-",
+            fmt(srv_use["cores"], 2) if srv_use else "-", fmt(srv_use["memory_mb"], 0) if srv_use else "-"))
     top = list(w["rows_per_s_by_table"].items())[:6]
     lines.append("Rows a second, all bots, by table: " + ", ".join("%s %.0f" % kv for kv in top) + ".")
     lines.append("Bots' own event loop: late by p95 %s ms, worst %s; ticks skipped %d (%s)." % (
@@ -592,7 +843,17 @@ def main():
     p.add_argument("--out", default=os.path.join(ROOT, "build", "load"))
     p.add_argument("--limit", action="append", default=[], help="name=value: override a limit (the suite's negative test)")
     p.add_argument("--no-referee", action="store_true", help="do not expect a referee's reports")
+    p.add_argument("--level-id", type=int, default=int(cfg.get("level", 0)), help="the level world 0 plays (its bake)")
+    p.add_argument("--referee-log", action="append", default=[], help="a referee's log (its process and region): what it costs")
+    p.add_argument("--watch", type=float, default=-1.0,
+                   help="after the steps, keep the bots playing this many seconds (0: until stopped) for a person to join")
     a = p.parse_args()
+    a.spread = levels.spread_of(cfg)
+    over_level = a.spread["over"] == "level"
+    if over_level and levels.Level.by_id(ROOT, a.level_id) is None:
+        sys.exit("load_test: the bots are spread over level %d, which has no bake in shared/world" % a.level_id)
+    refs = referees_from_logs(a.referee_log)
+    server_pid = find_server_pid()
     if not a.db.endswith("-test"):
         sys.exit("load_test: '%s' is not a test database (<database>-test): the load test never joins a play database" % a.db)
     limits = dict(cfg["limits"])
@@ -607,8 +868,8 @@ def main():
     with open(a.interest, encoding="utf-8") as f:
         ring = json.load(f)["interest"] == "ring"
     dbid = database_identity(a.host, a.db)
-    print("load_test: %s (%s interest), steps %s, %ds settle, %ds measured, %d x %d cells" % (
-        a.db, "ring" if ring else "world", steps, a.settle, a.measure, a.area_cells, a.area_cells), flush=True)
+    print("load_test: %s (%s interest), steps %s, %ds settle, %ds measured, %s" % (
+        a.db, "ring" if ring else "world", steps, a.settle, a.measure, where_bots(a)), flush=True)
     workers = Workers(a, out_dir)
     results = []
     try:
@@ -628,11 +889,18 @@ def main():
             time.sleep(a.settle)
             if not a.no_referee:
                 time.sleep(max(0.0, REF_WINDOW_S - a.settle))   # the referee's first report of the step starts inside it
+            procs = dict(workers.pids())
+            procs.update({r["name"]: r["pid"] for r in refs})
+            if server_pid:
+                procs["server"] = server_pid
+            usage = Usage(procs)
+            usage.sample()
             before = scrape(a.host)
             t0 = time.time()
             gauges = []
             while time.time() < t0 + a.measure:
                 time.sleep(1.0)
+                usage.sample()
                 try:
                     gauges.append(sample_gauges(a.host, dbid))
                 except OSError:
@@ -643,15 +911,18 @@ def main():
             lines = workers.lines(t0 - 2)
             w = window(lines, t0, t1, n)
             w["_min_neighbours_seen"] = min_seen(lines, t0, t1)
+            w["_bots_saw_others"] = saw_others(lines, t0, t1)
             srv = server_window(before, after, dbid, gauges, t1 - t0)
             # A report at `at` covers the referee's last window (10 s, set by the suite): only those inside [t0, t1].
             ref_rows, ref_note = (None, "not asked") if a.no_referee else referee_windows(a.db, t0 + REF_WINDOW_S, t1 + 1)
             ref = referee_summary(ref_rows) if ref_rows else None
-            checks = harness_checks(w, ring)
+            checks = harness_checks(w, ring, over_level)
             lim, valid = limits_checks(w, srv, ref, limits, cfg["bots_kept_up_lag_p95_ms"])
             ok_harness = all(ok for _, ok in checks)
             breaks = [x for x in lim if x[3] is False]
             step = {"bots_n": n, "t0": t0, "t1": t1, "bots": w, "server": srv, "referee": ref, "referee_note": ref_note,
+                    "referees": referees_summary(ref_rows) if ref_rows else {}, "usage": usage.result(),
+                    "machine": machine(), "regions": {r["name"]: r["region"] for r in refs},
                     "checks": checks, "limits": lim, "valid": valid,
                     "holds": (not breaks) if ok_harness and valid else None}
             results.append(step)
@@ -659,16 +930,21 @@ def main():
             if not ok_harness or not valid:
                 print("load_test: the harness did not work at %d bots: stopping here" % n, flush=True)
                 break
+        if a.watch >= 0:
+            watch(a, workers, refs, server_pid, dbid, out_dir)
+    except KeyboardInterrupt:
+        print("load_test: stopped (Ctrl+C)", flush=True)
     finally:
         workers.stop_all()
     report = {"label": a.label, "db": a.db, "when": datetime.datetime.now().isoformat(timespec="seconds"),
               "interest": "ring" if ring else "world", "area_cells": a.area_cells, "limits": limits,
+              "level": a.level_id, "spread": a.spread, "referees_n": max(1, len(refs)),
               "machine": "%s, %d logical CPUs" % (platform.platform(), os.cpu_count() or 0), "steps": results}
     with open(os.path.join(out_dir, "report.json"), "w", encoding="utf-8") as f:
         json.dump(report, f, indent=1, default=str)
     md = ["# Load test: %s, %s" % (a.label, report["when"]), "",
-          "%s on %s, %s interest, bots across %d x %d cells; %s (the server, the bots and the referee share it)."
-          % (a.db, a.host, report["interest"], a.area_cells, a.area_cells, report["machine"]), ""]
+          "%s on %s, %s interest, %s; %d referee(s); %s (the server, the bots and the referees share it)."
+          % (a.db, a.host, report["interest"], where_bots(a), report["referees_n"], report["machine"]), ""]
     md += [step_markdown(s) + "\n" for s in results]
     first_break = next((s["bots_n"] for s in results if s["holds"] is False), None)
     harness_ok = all(all(ok for _, ok in s["checks"]) and s["valid"] for s in results) and len(results) == len(steps)
@@ -680,6 +956,88 @@ def main():
     print("\nload_test: %s (%s)" % (verdict, os.path.join(out_dir, "report.md")), flush=True)
     print("RESULT %s" % ("HARNESS_FAILED" if not harness_ok else "HOLDS" if first_break is None else "BREAKS_AT %d" % first_break), flush=True)
     sys.exit(0 if harness_ok and first_break is None else 2 if harness_ok else 1)
+
+
+def where_bots(a):
+    if a.spread["over"] == "level":
+        return "bots spread over level %d (%d %% within %d cells of the spawn, each roaming %d cells)" % (
+            a.level_id, round(float(a.spread["crowd_share"]) * 100), int(a.spread["crowd_cells"]), int(a.spread["roam_cells"]))
+    return "bots across %d x %d cells" % (a.area_cells, a.area_cells)
+
+
+def find_server_pid():
+    """The local SpacetimeDB's process (`spacetimedb-standalone`), for what it costs; None if not found."""
+    try:
+        if os.name == "nt":
+            out = subprocess.run(["tasklist", "/FO", "CSV", "/NH", "/FI", "IMAGENAME eq spacetimedb-standalone.exe"],
+                                 capture_output=True, text=True).stdout
+            for line in out.splitlines():
+                cols = [c.strip('"') for c in line.split('","')]
+                if len(cols) > 1 and cols[0].lower().startswith("spacetimedb-standalone"):
+                    return int(cols[1])
+            return None
+        out = subprocess.run(["pgrep", "-f", "spacetimedb-standalone"], capture_output=True, text=True).stdout.split()
+        return int(out[0]) if out else None
+    except (OSError, ValueError):
+        return None
+
+
+WATCH_EVERY_S = 10.0
+
+
+def watch(a, workers, refs, server_pid, dbid, out_dir):
+    """THE BOTS KEEP PLAYING FOR A PERSON TO JOIN (template 1.5): a line every 10 s (bots playing, the module's
+    busy share, each referee's frames, what each costs) until `a.watch` seconds pass (0: until Ctrl+C or the
+    file `<out>/stop_watch` exists). Nothing is judged; the lines go to `<out>/watch.jsonl` too."""
+    stop = os.path.join(out_dir, "stop_watch")
+    if os.path.exists(stop):
+        os.remove(stop)
+    print("WATCHING: the bots play on %s until %s. Stop: Ctrl+C, or create %s" % (
+        a.db, "%d s pass" % a.watch if a.watch > 0 else "stopped", stop), flush=True)
+    procs = dict(workers.pids())
+    procs.update({r["name"]: r["pid"] for r in refs})
+    if server_pid:
+        procs["server"] = server_pid
+    end = time.time() + a.watch if a.watch > 0 else float("inf")
+    log = open(os.path.join(out_dir, "watch.jsonl"), "a", encoding="utf-8")
+    try:
+        while time.time() < end and not os.path.exists(stop):
+            usage = Usage(procs)
+            usage.sample()
+            before = scrape(a.host)
+            t0 = time.time()
+            while time.time() < t0 + WATCH_EVERY_S and not os.path.exists(stop):
+                time.sleep(1.0)
+            usage.sample()
+            t1 = time.time()
+            srv = server_window(before, scrape(a.host), dbid, [], t1 - t0)
+            rows, _ = referee_windows(a.db, t0 - REF_WINDOW_S, t1 + 1)
+            per = referees_summary(rows) if rows else {}
+            use = usage.result()
+            states = workers.latest_states()
+            refs_text = ", ".join("%s %s ms" % (who.split(" ")[0], fmt(r["frame_p95_ms"])) for who, r in per.items()) or "no reports"
+            ref_use = [u for k, u in use.items() if not k.startswith("bots") and k != "server"]
+            print("[watch %s] %d bots playing; module %s %% busy; referees' frame p95: %s; referees %s cores, %s MB; server %s cores" % (
+                time.strftime("%H:%M:%S"), states.get("walking", 0),
+                fmt(None if srv.get("module_busy") is None else srv["module_busy"] * 100.0, 0), refs_text,
+                fmt(sum(u["cores"] for u in ref_use), 1) if ref_use else "-",
+                fmt(sum(u["memory_mb"] or 0.0 for u in ref_use), 0) if ref_use else "-",
+                fmt((use.get("server") or {}).get("cores"), 1)), flush=True)
+            log.write(json.dumps({"t": t1, "states": states, "module_busy": srv.get("module_busy"),
+                                  "referees": per, "usage": use}, default=str) + "\n")
+            log.flush()
+    finally:
+        log.close()
+
+
+def saw_others(lines, t0, t1):
+    """How many bots saw someone else at some second of the window."""
+    best = {}
+    for d in lines:
+        if t0 < d["t"] <= t1:
+            for row in d["per_bot"]:
+                best[row[0]] = max(best.get(row[0], 0), row[5])
+    return sum(1 for v in best.values() if v > 0)
 
 
 def min_seen(lines, t0, t1):
