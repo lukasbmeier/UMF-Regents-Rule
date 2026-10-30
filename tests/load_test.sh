@@ -8,6 +8,10 @@
 #   GODOT=<path> ./tests/load_test.sh
 #   STEPS=50,100 MEASURE=30 ./tests/load_test.sh     other steps, a shorter window
 #   NEGATIVE=0 ./tests/load_test.sh                  without the two negative runs at the end
+#   LOAD=big ./tests/load_test.sh                    a game's other load config: shared/<genre>/load_big.json
+#   REFEREES=3x2 ./tests/load_test.sh                that many region referees (columns x rows)
+#   WATCH=0 PLAYER=1 STEPS=300 ./tests/load_test.sh  then keep the bots playing (0: until Ctrl+C; or seconds)
+#                                                    and open a game window on the test database to join them
 #
 # Exit 0: the harness worked and every step held. 2: the harness worked and a step broke (where, and the
 # numbers, are in build/load/ring/report.md). 1: the harness itself failed, or a negative run did not.
@@ -57,9 +61,11 @@ for mode in ring world; do
 done
 
 # REGION REFEREES (DECISIONS #288): shared/load.json "referees" [columns, rows] (or REFEREES=2x2) cuts the bots'
-# square into that many regions, a referee each; [1, 1] is one referee for the whole world.
-REGIONS="$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import load_test as L; c = L.load_config(); s = sys.argv[1].split('x') if sys.argv[1] else c.get('referees', [1, 1]); print(' '.join(L.regions(s, int(c['area_cells']))))" "${REFEREES:-}")" \
+# square into that many regions, a referee each; [1, 1] is one referee for the whole world. Bots spread over a
+# whole level ("spread": "level", template 1.5) are cut where they live, an equal share of them to each.
+REGIONS="$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import load_test as L; c = L.load_config(); s = sys.argv[1].split('x') if sys.argv[1] else c.get('referees', [1, 1]); n = max(int(x) for x in (sys.argv[2] or ','.join(str(v) for v in c['steps'])).split(',') if x.strip()); print(' '.join(L.region_args(c, s, n)))" "${REFEREES:-}" "${STEPS:-}")" \
   || { echo "could not read the referees from shared/load.json" >&2; exit 1; }
+ref_logs=()
 start_referee() {   # start_referee LOG OFFER_REDUCER [REGION NAME]
   local code="load$(date +%s)$RANDOM"
   spacetime call "$DB" "$2" 0 "\"$code\"" >/dev/null 2>&1 || { echo "$2 failed" >&2; exit 1; }
@@ -69,6 +75,7 @@ start_referee() {   # start_referee LOG OFFER_REDUCER [REGION NAME]
   "$GODOT" --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim="$code" --no-record $extra \
     >"$1" 2>&1 &
   ref_pids="$ref_pids $!"
+  ref_logs+=(--referee-log "$1")
   for _ in $(seq 1 60); do grep -q "claim_referee: registered" "$1" && break; sleep 0.5; done
   grep -q "claim_referee: registered" "$1" || { echo "the referee did not register:" >&2; tail -20 "$1" >&2; exit 1; }
 }
@@ -85,13 +92,22 @@ else
 fi
 echo "ok"
 
+# A PERSON JOINS THE BOTS (template 1.5): PLAYER=1 opens this game in a window on the test database (its own
+# identity, `--token=watch`), to walk among them while WATCH keeps them playing. Close it when done.
+if [ "${PLAYER:-0}" = "1" ]; then
+  echo "== a game window for you on $DB (press Play, walk among the bots) =="
+  "$GODOT" --path . -- --db="$DB" --token=watch >"$OUT/player.log" 2>&1 &
+  ref_pids="$ref_pids $!"
+fi
+
+LABEL="${LABEL:-ring}"
 echo "== the steps =="
-"$PYTHON" tools/load/load_test.py --db "$DB" --interest "$OUT/interest_ring.json" --label ring \
-  ${STEPS:+--steps "$STEPS"} ${MEASURE:+--measure "$MEASURE"}
+"$PYTHON" tools/load/load_test.py --db "$DB" --interest "$OUT/interest_ring.json" --label "$LABEL" \
+  ${STEPS:+--steps "$STEPS"} ${MEASURE:+--measure "$MEASURE"} ${WATCH:+--watch "$WATCH"} ${ref_logs[@]+"${ref_logs[@]}"}
 status=$?
 for p in $ref_pids; do kill "$p" 2>/dev/null; wait "$p" 2>/dev/null; done
 ref_pids=""
-[ "$status" = "1" ] && { echo "THE HARNESS FAILED: build/load/ring/report.md" >&2; exit 1; }
+[ "$status" = "1" ] && { echo "THE HARNESS FAILED: build/load/$LABEL/report.md" >&2; exit 1; }
 
 if [ "${NEGATIVE:-1}" != "0" ]; then
   neg_fail=0
@@ -124,5 +140,5 @@ EOF
 fi
 
 echo
-grep "^\*\*Verdict" build/load/ring/report.md
+grep "^\*\*Verdict" "build/load/$LABEL/report.md"
 exit "$status"

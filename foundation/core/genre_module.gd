@@ -18,6 +18,11 @@ class_name GenreModule extends Resource
 @export var entity_definitions: Array[EntityDefinition] = []
 @export var tables: Array[StringName] = []
 @export var world_tables: Array[StringName] = []
+## Of `world_tables`, those whose rows carry the cell of a placed thing (`chunk`, template 1.0): a ring client
+## and a REGION REFEREE (DECISIONS #288) ask for them by cell, not the whole world (template 1.5: before, a
+## referee's config never heard of the game's, and its region was sent every one of these rows). The same
+## list the game's NetConfig `cell_tables` has (either may name them; both are used).
+@export var cell_tables: Array[StringName] = []
 ## The tables a REFEREE reads for this genre (DECISIONS #286): what its brains and its sidecar parts ask
 ## `SpaceTimeSync` for themselves, the foundation's or its own. A referee subscribes only what it reads
 ## (the tables its entity scenes' components declare come by themselves), so a table left off is never

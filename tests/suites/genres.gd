@@ -35,6 +35,11 @@ func _run_genre_tests() -> void:
 			if not m.tables.has(t):
 				stray.append(t)
 		_check(stray.is_empty(), "%s's per-world tables are tables it subscribes %s" % [m.id, str(stray)])
+		var off_world: Array[StringName] = []
+		for t: StringName in m.cell_tables:
+			if not m.world_tables.has(t):
+				off_world.append(t)
+		_check(off_world.is_empty(), "%s's cell tables are per-world tables too %s" % [m.id, str(off_world)])
 	var cfg := NetConfig.new()
 	Genres.merge_tables(cfg, mods)
 	var once: bool = cfg.core_tables.has(&"entity")
@@ -49,6 +54,18 @@ func _run_genre_tests() -> void:
 	for t: StringName in cfg.core_tables:
 		twice = twice and cfg.core_tables.count(t) == 1
 	_check(twice, "merging twice adds nothing twice")
+	# A genre's cell tables reach the config (template 1.5): a region referee and a ring client ask for them by cell.
+	var celled := GenreModule.new()
+	celled.id = &"celled"
+	celled.tables = [&"crop"]
+	celled.world_tables = [&"crop"]
+	celled.cell_tables = [&"crop"]
+	var ccfg := NetConfig.new()
+	Genres.merge_tables(ccfg, [celled] as Array[GenreModule])
+	Genres.merge_tables(ccfg, [celled] as Array[GenreModule])
+	_check(ccfg.cell_tables.count(&"crop") == 1 and InterestManager.is_cell_table(&"crop", ccfg)
+		and not InterestManager.is_cell_table(&"crop", NetConfig.new()),
+		"a genre's cell tables are the config's, once: asked for by cell (a config without the genre: the whole world)")
 	# (Boot in a game scene, taking the genres' definitions and scenes, is each genre's own suite.)
 	# A genre scene named like one of the game scene's own children replaces it (DECISIONS #197):
 	# the foundation's HUD gives way to a genre's; a name nobody has is simply added.

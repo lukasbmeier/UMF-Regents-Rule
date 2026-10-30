@@ -95,6 +95,9 @@ func _ready() -> void:
 	var own_name: String = _value("--name=")
 	if not own_name.is_empty():
 		cfg.token_path = "user://sidecar_token_%s.dat" % own_name.validate_filename()
+		Telemetry.who = own_name
+	# The process, for a tool that watches what this referee costs the machine (tools/load/load_test.py).
+	print(("[Sidecar] process %d %s" % [OS.get_process_id(), own_name]).strip_edges())
 	var world_id: int = _world_from_cli()
 	if referee_only and not _value("--region=").is_empty():
 		region = RefereeRegion.parse(_value("--region="))
@@ -143,6 +146,7 @@ func _ready() -> void:
 		world.level_shown.connect(clip_now)
 		SignalBus.world_ready.connect(func() -> void: clip_now.call(world.level()))
 		print("[Sidecar] a region referee: %s" % region.describe())
+		Telemetry.who = ("%s %s" % [own_name, region.describe()]).strip_edges()
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
 	var mods: Array[GenreModule] = []

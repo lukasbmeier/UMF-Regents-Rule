@@ -41,6 +41,11 @@ class_name LevelInfo extends Node3D
 ## while the server keeps the whole level. Off: the level is loaded whole, as every level before 1.0.
 @export var streamed: bool = false
 
+## THE GROUND'S HEIGHT FOR TOOLS (template 1.5): the bake also writes `<level_name>_ground.bin`, the
+## height every ray hit, over the whole of `bake_bounds`. The server never reads it (it is not compiled
+## in); the load test's bots walk on it, so a hilly world's bots are drawn on its hills. Off: no file.
+@export var bake_ground: bool = false
+
 @export_tool_button("Bake For The Server", "Save") var bake_button: Callable = bake_in_editor
 
 ## What the last bake said.

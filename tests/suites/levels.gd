@@ -53,6 +53,29 @@ func _run_level_build_tests() -> void:
 	info.water_y = 5.0
 	var flooded: Dictionary = LevelBaker.bake(scene, out)
 	_check(int(flooded["wet"]) > int(r["wet"]) * 2, "and the water is read off the ground: raised, it floods the level (%d wet cells, was %d)" % [flooded["wet"], r["wet"]])
+	# The ground's height for tools (template 1.5, `bake_ground`): only when asked, the height every ray hit.
+	_check(not (r["doc"] as Dictionary).has("ground_grid"), "a level not asked for its ground bakes none (the shipped bake unchanged)")
+	info.bake_ground = true
+	var grounded: Dictionary = LevelBaker.bake(scene, out)
+	var gg: Dictionary = (grounded["doc"] as Dictionary).get("ground_grid", {}) as Dictionary
+	var gbytes: PackedByteArray = FileAccess.get_file_as_bytes(out.path_join(str(gg.get("file", "none"))))
+	var gw: int = int(gg.get("width", 0))
+	var gh: int = int(gg.get("height", 0))
+	var space: PhysicsDirectSpaceState3D = scene.get_world_3d().direct_space_state
+	var hits: int = 0
+	var worst: float = 0.0
+	for k: int in range(0, gw * gh, maxi(1, (gw * gh) / 40)):
+		var gx: float = float(gg["origin_x"]) + float(k % gw) * float(gg["spacing"]) + LevelBaker.RAY_NUDGE
+		var gz: float = float(gg["origin_z"]) + float(k / gw) * float(gg["spacing"]) + LevelBaker.RAY_NUDGE
+		var hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(gx, 200.0, gz), Vector3(gx, -200.0, gz), LevelBaker.WORLD_MASK))
+		var dm: int = gbytes.decode_u16(k * 2) if gbytes.size() >= (k + 1) * 2 else -1
+		if hit.is_empty() or dm == LevelBaker.GROUND_NONE:
+			continue
+		hits += 1
+		worst = maxf(worst, absf(float(gg["base_y"]) + float(dm) / 10.0 - (hit["position"] as Vector3).y))
+	_check(gbytes.size() == gw * gh * 2 and hits > 10 and worst <= 0.051,
+		"asked for, it writes the ground's height over the whole grid (%d x %d, %d samples checked against a ray, off by %.3f m at worst)" % [gw, gh, hits, worst])
+	info.bake_ground = false
 	scene.queue_free()
 	await get_tree().process_frame
 	# (The lakeside's baker-against-generator and barrier checks are fishing's: fishing_levels.)

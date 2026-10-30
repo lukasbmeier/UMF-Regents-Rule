@@ -37,6 +37,9 @@ var _row_gap_msec: int = 100000
 var _previous: Dictionary = {}
 ## A server with no `report_perf`: asked no more.
 var _unsupported: bool = false
+## Which process this is, when it names itself (a referee started with `--name=`, and its region): sent in
+## the report's detail, so several referees on one world are told apart. Empty: not sent.
+static var who: String = ""
 var _platform: String = ""
 ## Reports sent this run (for tests).
 var sent: int = 0
@@ -136,6 +139,10 @@ func send_window() -> void:
 	if float(s["window_s"]) >= MIN_WINDOW_S and not _unsupported and SpaceTimeSync.is_connected_to_server():
 		var detail: String = JSON.stringify({"spikes": s["spike_list"], "screen": "%dx%d" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y] if DisplayServer.get_name() != "headless" else "headless",
 			"physics_hz": Engine.physics_ticks_per_second, "max_fps": Engine.max_fps})
+		if not who.is_empty():
+			var d: Dictionary = JSON.parse_string(detail) as Dictionary
+			d["who"] = who
+			detail = JSON.stringify(d)
 		var req: ReducerRequest = SpaceTimeSync.call_reducer(&"report_perf", [SpaceTimeSync.bindings_fingerprint(), _platform,
 			float(s["window_s"]), int(s["frames"]), float(s["p50"]), float(s["p95"]), float(s["p99"]), float(s["max"]),
 			int(s["spikes"]), float(s["rtt_ms"]), float(s["rtt_max_ms"]), int(s["corrections"]), float(s["memory_mb"]), int(s["entities"]), detail],
