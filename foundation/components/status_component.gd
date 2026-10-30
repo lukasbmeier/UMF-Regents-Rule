@@ -44,6 +44,10 @@ func optional_tables() -> Array[StringName]:
 	return [TABLE]
 
 
+func also_reads() -> Array[StringName]:
+	return [&"lobby_member"]
+
+
 # --- read API ------------------------------------------------------------------------------------
 
 ## Its status's number.

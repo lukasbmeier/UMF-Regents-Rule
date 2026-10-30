@@ -357,11 +357,29 @@ func get_table(table: StringName) -> Object:
 ## Untyped primary-key lookup through the SDK's LocalDatabase. Returned row is the cache's
 ## own instance: read-only.
 func get_row(table: StringName, pk: Variant) -> RefCounted:
+	if not read_only.is_empty() and not read_only.has(table):
+		_read_unasked(table)
 	return _sdk_get_row_by_pk(table, pk)
+
+
+## A REFEREE asks only for the tables it reads (DECISIONS #286): these. Reading any other finds nothing,
+## ever, so it is an error, once a table, saying where to list it. Empty (every player's client): anything.
+var read_only: Dictionary[StringName, bool] = {}
+var _unasked: Dictionary[StringName, bool] = {}
+
+
+func _read_unasked(table: StringName) -> void:
+	if _unasked.has(table):
+		return
+	_unasked[table] = true
+	push_error("[SpaceTimeSync] this referee read '%s', which it does not subscribe: list it in the genre's " % table
+		+ "genre.tres `referee_tables` (or the foundation's `SidecarMain.REFEREE_TABLES`), DECISIONS #286")
 
 
 ## Every cached row of `table` that `pred` (row -> bool) accepts: the cache's own instances, read-only.
 func find_rows(table: StringName, pred: Callable) -> Array:
+	if not read_only.is_empty() and not read_only.has(table):
+		_read_unasked(table)
 	if _sdk == null:
 		return []
 	var ldb: Object = _sdk.call(&"get_local_database")

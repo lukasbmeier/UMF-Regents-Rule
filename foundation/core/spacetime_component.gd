@@ -41,6 +41,13 @@ func optional_tables() -> Array[StringName]:
 	return []
 
 
+## Tables it reads itself (`SpaceTimeSync.get_row` / `find_rows`) that are not routed to it: a row it looks
+## up by another key (a session by its id, a definition). A referee subscribes these too (DECISIONS #286),
+## so a component built there finds them; one left off is an error in the referee, naming it.
+func also_reads() -> Array[StringName]:
+	return []
+
+
 ## True while this component is in the middle of something a rebuild of the entity would lose
 ## (DECISIONS #166): a look chosen mid-game waits for it. Only state that lives nowhere but here
 ## counts (the fishing fight, played on this client); anything in a row is rebuilt from the row.

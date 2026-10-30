@@ -63,6 +63,10 @@ func optional_tables() -> Array[StringName]:
 	return [STATE_TABLE]
 
 
+func also_reads() -> Array[StringName]:
+	return [DEF_TABLE]
+
+
 # --- intent --------------------------------------------------------------------------------
 
 ## Use an ability. Returns the predicted id, or -1 if refused locally (unknown ability, still

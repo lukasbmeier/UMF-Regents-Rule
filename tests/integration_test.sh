@@ -1493,6 +1493,9 @@ kill "$BOT_PID" 2>/dev/null; wait "$BOT_PID" 2>/dev/null
 for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
   assert_ok "revoke_authority $REF_ID" "the bots' referee unregistered"
 done
+# A referee asks for what it reads (DECISIONS #286): no input_queue, and nothing it read was left out.
+check "$(grep -q "a referee's feed: " "$BOT_LOG" && ! grep "a referee's feed: " "$BOT_LOG" | grep -q "input_queue" && echo true || echo false)" "the referee's feed: what it reads, no input_queue"
+check "$(grep -q "this referee read" "$BOT_LOG" && echo false || echo true)" "and it read nothing it does not subscribe ($(grep -o "this referee read '[a-z_]*'" "$BOT_LOG" | head -3 | tr '\n' ' '))"
 rm -f "$BOT_LOG"
 
 # =============================================================================

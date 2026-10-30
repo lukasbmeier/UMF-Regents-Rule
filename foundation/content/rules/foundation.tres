@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=29 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -317,8 +317,48 @@ maximum = 1.0
 unit = ""
 description = "TWO SIDES (DECISIONS #283, Regent's Rule's skeletons hitting each other): whether a judged ability passes through its user's own side to reach the other: players never stop a player's swing, bots (anything a brain drives) never stop a bot's. Off (Fowl Play: anyone may be hit): the first person in its path is the one hit."
 
+[sub_resource type="Resource" id="Rule_npc_tiers"]
+script = ExtResource("2_rule")
+name = &"npc_tiers"
+kind = 2
+number = 0.0
+minimum = 0.0
+maximum = 1.0
+unit = ""
+description = "NPC TIERS (DECISIONS #287, Regent's Rule's RULE_DESIGN 6.1): on, an NPC with no player within Dormant range for Dormant after goes dormant (it neither thinks nor walks; its row keeps where it stood) until a player comes within Awake range. Off (Fowl Play, DiscGolf: bots play matches with nobody near), every NPC is always awake."
+
+[sub_resource type="Resource" id="Rule_npc_awake"]
+script = ExtResource("2_rule")
+name = &"npc_awake_m"
+kind = 0
+number = 200.0
+minimum = 10.0
+maximum = 2000.0
+unit = "m"
+description = "NPC tiers: a dormant NPC wakes when a player comes this close."
+
+[sub_resource type="Resource" id="Rule_npc_dormant"]
+script = ExtResource("2_rule")
+name = &"npc_dormant_m"
+kind = 0
+number = 400.0
+minimum = 10.0
+maximum = 4000.0
+unit = "m"
+description = "NPC tiers: an awake NPC with no player this close for Dormant after goes dormant. Wider than Awake range, so one at the edge does not flicker."
+
+[sub_resource type="Resource" id="Rule_npc_dormant_s"]
+script = ExtResource("2_rule")
+name = &"npc_dormant_s"
+kind = 0
+number = 30.0
+minimum = 1.0
+maximum = 600.0
+unit = "s"
+description = "NPC tiers: how long an NPC is alone (no player within Dormant range) before it goes dormant."
+
 [resource]
 script = ExtResource("1_set")
 display_name = "Foundation rules"
 designer_notes = "The foundation's hot rules: live-tunable by an admin (set_rule), served to every client. A game changes one for itself with an override in its genre's rule set, never by editing this file."
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_telemetry_where"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep"), SubResource("Rule_trait_strength"), SubResource("Rule_guests"), SubResource("Rule_characters"), SubResource("Rule_park"), SubResource("Rule_link_code"), SubResource("Rule_two_sides")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_interact"), SubResource("Rule_health"), SubResource("Rule_linger"), SubResource("Rule_status_grace"), SubResource("Rule_status_reset"), SubResource("Rule_hold_slack"), SubResource("Rule_hold_speed"), SubResource("Rule_press_credit"), SubResource("Rule_press_lead"), SubResource("Rule_press_easy"), SubResource("Rule_press_hard"), SubResource("Rule_rewind"), SubResource("Rule_friendly_collision"), SubResource("Rule_telemetry_window"), SubResource("Rule_telemetry_spike"), SubResource("Rule_telemetry_where"), SubResource("Rule_body_launch_lag"), SubResource("Rule_body_snap"), SubResource("Rule_body_correct"), SubResource("Rule_push_grace"), SubResource("Rule_loot_share_min"), SubResource("Rule_loot_share_forget"), SubResource("Rule_loot_pity_ramp"), SubResource("Rule_loot_pity_cap"), SubResource("Rule_ground_owner"), SubResource("Rule_ground_public"), SubResource("Rule_ground_pickup"), SubResource("Rule_chat_keep"), SubResource("Rule_trait_strength"), SubResource("Rule_guests"), SubResource("Rule_characters"), SubResource("Rule_park"), SubResource("Rule_link_code"), SubResource("Rule_two_sides"), SubResource("Rule_npc_tiers"), SubResource("Rule_npc_awake"), SubResource("Rule_npc_dormant"), SubResource("Rule_npc_dormant_s")])

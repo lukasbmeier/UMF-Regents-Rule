@@ -1,4 +1,4 @@
-extends Node
+class_name SidecarMain extends Node
 ## The sidecar's entry point: headless Godot as a world's motion authority.
 ##
 ##   godot --headless --path . res://sidecar/sidecar_main.tscn -- --world=1
@@ -17,7 +17,8 @@ extends Node
 ## TWO JOBS (DECISIONS #226). In a SIDECAR world it moves everyone and judges abilities; started with
 ## `--referee` it JUDGES (`ActionReferee`): the world's players move themselves (a MODULE world), and
 ## it builds only the world's BOTS (an entity with an `npc_brain` row and no player: DECISIONS #230),
-## driving each by its brain, with the walls of the level it loaded, as it would in a SIDECAR world. `--claim=CODE` presents an admin's
+## driving each by its brain, with the walls of the level it loaded, as it would in a SIDECAR world; it is
+## sent only the tables it reads, never `input_queue` (`referee_feed`, DECISIONS #286). `--claim=CODE` presents an admin's
 ## one-time code (`offer_referee`) to be registered for the world, and `--parent-alive=FILE` ends it
 ## when the game that started it does (`RefereeLauncher`, an editor run: the game keeps the file
 ## touched; stale or gone, the game is gone).
@@ -42,6 +43,14 @@ extends Node
 
 ## `entity_kind::BODY` (server/src/module/constants.rs).
 const BODY_KIND: int = 3
+
+## What a REFEREE reads itself (DECISIONS #286): the bots and who is a player, where everyone is and their
+## status (the brains' world view), the abilities it judges and the requests to judge, the level, bodies and
+## pushes, the brains it left behind. Its feed is these, the tables its entity scenes' components declare,
+## each genre's `referee_tables`, and the recorder's while it records; never `input_queue`, which only a
+## sidecar that MOVES the players replays (80 % of what a referee was sent: Regent's Rule's load test).
+const REFEREE_TABLES: Array[StringName] = [&"world_config", &"entity", &"player", &"movement_state",
+	&"status_state", &"ability_def", &"action_request", &"world_level", &"body_state", &"push", &"npc_brain"]
 
 var world: SimWorld = null
 var referee: ActionReferee = null
@@ -94,8 +103,9 @@ func _ready() -> void:
 	world.add_child(bodies)
 
 	var defs: Array[EntityDefinition] = entity_definitions.duplicate()
+	var mods: Array[GenreModule] = []
 	if load_genres:
-		var mods: Array[GenreModule] = Genres.modules()
+		mods = Genres.modules()
 		for d: EntityDefinition in Genres.definitions(mods):
 			if not defs.has(d):
 				defs.append(d)
@@ -116,17 +126,25 @@ func _ready() -> void:
 			recorder.kind_names[defn.kind] = defn.display_name
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
 
-	# The frames to replay. `input_queue` is already in InterestManager's world-filtered list, so
-	# this asks for THIS world's input and nobody else's (DECISIONS #104).
-	if not InterestManager.extra_tables.has(&"input_queue"):
-		InterestManager.extra_tables.append(&"input_queue")
-	# And the brains it left behind the last time it ran, so an NPC resumes instead of restarting.
-	if not InterestManager.extra_tables.has(&"npc_brain"):
-		InterestManager.extra_tables.append(&"npc_brain")
-	# What it judges, and the level it judges against (DECISIONS #226).
-	for t: StringName in [&"action_request", &"world_level", &"status_state", &"player", &"body_state", &"push"]:
-		if not InterestManager.extra_tables.has(t):
-			InterestManager.extra_tables.append(t)
+	if referee_only:
+		# A REFEREE ASKS FOR WHAT IT READS (DECISIONS #286), and reading anything else is an error.
+		cfg.core_tables = referee_feed(defs, mods, recorder != null)
+		InterestManager.extra_tables.erase(&"input_queue")
+		var asked: Dictionary[StringName, bool] = {}
+		for t: StringName in cfg.core_tables + InterestManager.extra_tables + InterestManager.ALWAYS_TABLES:
+			asked[t] = true
+		SpaceTimeSync.read_only = asked
+		print("[Sidecar] a referee's feed: %d tables (%s)" % [cfg.core_tables.size(), ", ".join(cfg.core_tables)])
+	else:
+		# The frames to replay. `input_queue` is already in InterestManager's world-filtered list, so
+		# this asks for THIS world's input and nobody else's (DECISIONS #104).
+		if not InterestManager.extra_tables.has(&"input_queue"):
+			InterestManager.extra_tables.append(&"input_queue")
+		# And what it reads itself: the brains it left behind the last time it ran (an NPC resumes instead
+		# of restarting), what it judges and the level it judges against (DECISIONS #226).
+		for t: StringName in REFEREE_TABLES:
+			if not InterestManager.extra_tables.has(t):
+				InterestManager.extra_tables.append(t)
 	InterestManager.world_id = world_id
 
 	SpaceTimeSync.identity_ready.connect(func(id: PackedByteArray) -> void:
@@ -187,6 +205,51 @@ func _value(prefix: String) -> String:
 		if arg.begins_with(prefix):
 			return arg.substr(prefix.length())
 	return ""
+
+
+## A REFEREE'S FEED (DECISIONS #286): what it reads itself (`REFEREE_TABLES`), what the components of every
+## entity it may build declare (`scene_tables`), what each genre says its brains read (`referee_tables`:
+## `*`, every one of its tables), and the recorder's while it records. Never `input_queue`.
+static func referee_feed(defs: Array[EntityDefinition], mods: Array[GenreModule], recording: bool) -> Array[StringName]:
+	var out: Array[StringName] = REFEREE_TABLES.duplicate()
+	var add: Callable = func(tables: Array[StringName]) -> void:
+		for t: StringName in tables:
+			if not out.has(t):
+				out.append(t)
+	for d: EntityDefinition in defs:
+		add.call(scene_tables(d.scene))
+	for m: GenreModule in mods:
+		add.call(m.tables if m.referee_tables.has(&"*") else m.referee_tables)
+	if recording:
+		add.call(SessionRecorder.TABLES)
+	out.erase(&"input_queue")
+	return out
+
+
+## Every table the components of an entity scene declare (`required_tables`, `also_reads`), the ones every entity is
+## given (`SpaceTimeEntity._ensure_status_component`) too: what an entity built from it waits for and is fed.
+static func scene_tables(scene: PackedScene) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if scene == null:
+		return out
+	var root: Node = scene.instantiate()
+	var parts: Array[Node] = []
+	var holder: Node = root.get_node_or_null(^"Components")
+	if holder != null:
+		parts.assign(holder.get_children())
+	for path: String in [SpaceTimeEntity.STATUS_COMPONENT, SpaceTimeEntity.HOLD_COMPONENT,
+			SpaceTimeEntity.TIMED_PRESS_COMPONENT, SpaceTimeEntity.CARRY_COMPONENT]:
+		parts.append((load(path) as Script).new() as Node)
+	for n: Node in parts:
+		var c: SpaceTimeComponent = n as SpaceTimeComponent
+		if c != null:
+			for t: StringName in c.required_tables() + c.also_reads():
+				if not out.has(t):
+					out.append(t)
+		if n.get_parent() == null:
+			n.free()
+	root.free()
+	return out
 
 
 ## A BOT: an entity with an `npc_brain` row and no player row (DECISIONS #230). A referee drives these.

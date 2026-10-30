@@ -847,3 +847,23 @@ No schema change: a game takes it with a pull; nothing to republish.
   128 m tiles (half a tile round each) on first asking, and every walk map off the main thread. On Regent's
   Rule's continent the whole-level bake was refused by the engine (no foe could path) and stalled the referee.
   The bots suite's new 3 km level: tiled maps bake and route round a wall; baked whole, it fails.
+
+## 1.2.2 — a referee is sent only what it reads (DECISIONS #286)
+No schema change: a game takes it with a pull; nothing to republish.
+- `--referee`: the sidecar subscribes `SidecarMain.referee_feed` (its own reads, its entity scenes' components'
+  tables, each genre's `GenreModule.referee_tables`, the recorder's while it records) and never `input_queue`
+  (80 % of its feed in Regent's Rule's load test; thin, the referee holds at 100 bots instead of 50).
+- `GenreModule.referee_tables` (`*` by default: every one of the genre's tables, as before). A game trims it to what
+  its brains read; reading a table not asked for is an error in the referee (`SpaceTimeSync.read_only`).
+- `SpaceTimeComponent.also_reads()`: the tables a component looks up itself (SessionComponent: `session`,
+  `session_match`; StatusComponent: `lobby_member`); a referee subscribes them. A genre's component that reads
+  a table by `get_row` / `find_rows` lists it there.
+- `sidecar_main.gd` is `class_name SidecarMain`. The referee suite's feed checks; `run_tests.sh` expects its one error.
+
+## 1.3.0 — the brains' cost: one world view a think period, and NPC tiers (DECISIONS #287)
+No schema change; four new hot rules, so a game republishes (no `--codegen`).
+- `NpcWorldView.current` is shared for `SHARED_MS` (100) instead of one physics tick: the rebuild was the brains'
+  whole cost at 300 players (286 ms a second of Regent's Rule's referee).
+- NPC tiers: `foundation.npc_tiers` (off), `npc_awake_m` 200, `npc_dormant_m` 400, `npc_dormant_s` 30. On, an NPC
+  alone sleeps (no think, no walk, no writes) until a player is near; `NpcBrainComponent.dormant`, `tier_changed`.
+- The npc suite's view and tier checks; the integration suite reads the referee's feed from its log (#286).

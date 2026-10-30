@@ -23,16 +23,22 @@ var players: Dictionary[int, bool] = {}
 var level: Node3D = null
 
 
-## ONE SNAPSHOT PER PHYSICS TICK, shared by every brain that asks for it. Each brain needs to
-## know about every entity, so building a view per brain would be quadratic in the number of
-## NPCs — at ten think ticks a second that is the difference between nothing and something.
+## ONE SNAPSHOT A THINK PERIOD (`SHARED_MS`), shared by every brain that asks for it. Each brain needs
+## to know about every entity, so building a view per brain would be quadratic in the number of NPCs.
+## Not one a physics tick (DECISIONS #287): brains think on different ticks, so a view a tick was
+## rebuilt every tick, and at 300 players that rebuild was the brains' whole cost (~280 ms a second of
+## the referee's, Regent's Rule's load test). A brain reasons ten times a second; what it reads of others
+## is at most one think period old (its own state is handed to it fresh).
+const SHARED_MS: int = 100
 static var _cache: NpcWorldView = null
-static var _cache_frame: int = -1
+static var _cache_msec: int = -1000000
+## TESTING: the clock, in msec (default: the engine's).
+static var clock_msec: Callable = Callable()
 
 
 static func current(space: PhysicsDirectSpaceState3D = null, p_level: Node3D = null) -> NpcWorldView:
-	var frame: int = Engine.get_physics_frames()
-	if _cache != null and _cache_frame == frame:
+	var now: int = int(clock_msec.call()) if clock_msec.is_valid() else Time.get_ticks_msec()
+	if _cache != null and now - _cache_msec < SHARED_MS and now >= _cache_msec:
 		return _cache
 	var view := NpcWorldView.new()
 	view.space = space
@@ -67,14 +73,14 @@ static func current(space: PhysicsDirectSpaceState3D = null, p_level: Node3D = n
 		if SpaceTimeSync.get_row(&"player", eid) != null:
 			view.players[eid] = true
 	_cache = view
-	_cache_frame = frame
+	_cache_msec = now
 	return view
 
 
 ## Drop the shared snapshot. Tests build their own worlds and must not inherit another's.
 static func invalidate() -> void:
 	_cache = null
-	_cache_frame = -1
+	_cache_msec = -1000000
 
 
 func state_of(entity_id: int) -> MovementState:
@@ -116,6 +122,16 @@ func nearest_of_kind(from: Vector3, kind: int, radius: float, except_id: int = 0
 		if d < best_d or (is_equal_approx(d, best_d) and (best == 0 or id < best)):
 			best = id
 			best_d = d
+	return best
+
+
+## The nearest PLAYER to `from`, in metres (INF with none): how an NPC knows whether to wake (DECISIONS #287).
+func nearest_player_m(from: Vector3) -> float:
+	var best: float = INF
+	for id: int in players:
+		var st: MovementState = states.get(id, null)
+		if st != null:
+			best = minf(best, from.distance_to(st.pos))
 	return best
 
 
