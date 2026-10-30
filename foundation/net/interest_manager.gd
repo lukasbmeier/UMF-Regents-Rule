@@ -135,10 +135,12 @@ func set_world(new_world: int) -> void:
 	if new_world == world_id and (_active != null or _incoming != null):
 		return
 	world_id = new_world
+	if is_ring():
+		SpaceTimeSync.show_ring_world(world_id, ring_table_set())   # rows held back for this world, shown
 	if SpaceTimeSync.state == SpaceTimeSync.ConnectionState.CONNECTED:
 		_apply()
 		if is_ring():
-			_apply_ring()   # the same cells in another world are other rows
+			_apply_ring()
 
 
 ## True once the core set for the current world has applied.
@@ -194,9 +196,23 @@ func build_ring_queries(for_world: int) -> Array[String]:
 
 
 ## RING interest: the query for one cell table's rows in one cell. Also what the load test's bots ask
-## (`tools/load/interest_dump.gd`), so they are sent what a real client is.
+## (`tools/load/interest_dump.gd`), so they are sent what a real client is. NO WORLD IN IT (template 1.5.1,
+## DECISIONS #291): SpacetimeDB narrows a subscription by a single `column = value` only, so with
+## `world_id = W AND` every moved row was checked against every client's every cell (Regent's Rule's
+## Skyrim-size world: the movement tick's update 111 ms, 19 ms without). Another world's rows in the same
+## cell are kept from the game where they arrive (`SpaceTimeSync.ring_world`). `for_world` is kept for
+## callers; the region referee's columns still name it (a range is not narrowed either way).
 func cell_query(table: StringName, for_world: int, cell: int) -> String:
-	return "SELECT * FROM %s WHERE world_id = %d AND chunk = %d" % [table, for_world, cell]
+	return "SELECT * FROM %s WHERE chunk = %d" % [table, cell]
+
+
+## The cell tables a ring asks for by cell, as a set (SpaceTimeSync keeps another world's rows of them back).
+func ring_table_set() -> Dictionary[StringName, bool]:
+	var out: Dictionary[StringName, bool] = {}
+	for t: StringName in subscribed_tables():
+		if is_cell_table(t):
+			out[t] = true
+	return out
 
 
 ## A REGION REFEREE's cells changed (its level loaded, clipped to it): ask for these, keeping the old until
@@ -328,6 +344,7 @@ func _apply_ring() -> void:
 	if SpaceTimeSync.state != SpaceTimeSync.ConnectionState.CONNECTED:
 		return
 	var queries: Array[String] = build_ring_queries(world_id)
+	SpaceTimeSync.show_ring_world(world_id, ring_table_set())
 	if queries.is_empty():
 		if region_on and _ring_active != null:
 			SpaceTimeSync.unsubscribe(_ring_active)   # a region the level no longer meets: none of its cells

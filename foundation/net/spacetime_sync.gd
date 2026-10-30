@@ -563,7 +563,66 @@ func _on_reconnect_failed() -> void:
 	SignalBus.notification_requested.emit("Lost connection to server.", 2)
 
 
+## A RING'S CELLS NAME NO WORLD (template 1.5.1, DECISIONS #291): SpacetimeDB narrows a subscription by
+## one `column = value`, never by `world_id = W AND chunk = N`, so a ring asked that way had every row moved
+## checked against every client's every cell query (on a world as big as Skyrim's, each player's nine
+## cells their own: the server's whole tick). A ring asks `chunk = N` alone, and the rows of another world
+## that share the cell number are kept from the game HERE: `ring_world` is the world shown (-1: nothing
+## kept back), `ring_tables` the cell tables. A row moving out of it is a delete, into it an insert; our
+## own entity's rows always pass (its world changes before the ring's does).
+var ring_world: int = -1
+var ring_tables: Dictionary[StringName, bool] = {}
+
+
+## Show world `world` of the ring's tables (InterestManager, on a world change): the cached rows of the
+## world left are deleted, the new world's (held back until now) inserted, as if they had just arrived.
+func show_ring_world(world: int, tables: Dictionary[StringName, bool]) -> void:
+	var was: int = ring_world
+	ring_world = world
+	ring_tables = tables
+	if was < 0 or was == world:
+		return
+	var own: int = EntityRegistry.local_entity_id
+	for t: StringName in tables:
+		for r: Variant in find_rows(t, func(row: RefCounted) -> bool: return _world_of(row) == was):
+			if RowEvent._extract_entity_id(r as RefCounted) != own:
+				_emit_row_now(RowEvent.Kind.DELETED, t, r as RefCounted, null)
+		for r: Variant in find_rows(t, func(row: RefCounted) -> bool: return _world_of(row) == world):
+			if RowEvent._extract_entity_id(r as RefCounted) != own:
+				_emit_row_now(RowEvent.Kind.INSERTED, t, null, r as RefCounted)
+
+
+static func _world_of(row: RefCounted) -> int:
+	var w: Variant = row.get(&"world_id") if row != null else null
+	return int(w) if w != null else -1
+
+
 func _emit_row(kind: RowEvent.Kind, table: StringName, old: RefCounted, new: RefCounted) -> void:
+	if ring_world >= 0 and ring_tables.has(table):
+		var row: RefCounted = new if new != null else old
+		if RowEvent._extract_entity_id(row) != EntityRegistry.local_entity_id or EntityRegistry.local_entity_id < 0:
+			var was_in: bool = old != null and _world_of(old) == ring_world
+			var is_in: bool = new != null and _world_of(new) == ring_world
+			match kind:
+				RowEvent.Kind.INSERTED:
+					if not is_in:
+						return
+				RowEvent.Kind.DELETED:
+					if not was_in:
+						return
+				_:
+					if was_in and not is_in:
+						kind = RowEvent.Kind.DELETED
+						new = null
+					elif is_in and not was_in:
+						kind = RowEvent.Kind.INSERTED
+						old = null
+					elif not is_in:
+						return
+	_emit_row_now(kind, table, old, new)
+
+
+func _emit_row_now(kind: RowEvent.Kind, table: StringName, old: RefCounted, new: RefCounted) -> void:
 	if _latency.is_passthrough():
 		_deliver_row(kind, table, old, new)
 	else:
