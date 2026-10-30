@@ -111,22 +111,44 @@ pub(crate) fn tick_world_module(
     tick: u64,
     cfg: &crate::sim::MovementConfig,
 ) {
+    use std::collections::{HashMap, HashSet};
     let rows: Vec<MovementStateRow> = ctx.db.movement_state().world_id().filter(world_id).collect();
     // Carried entities are not moved by their own frames: they are put on their carriers once the
     // carriers have moved (below, DECISIONS #228).
     let carried = carried_rows(ctx, world_id);
+    let carried_ids: HashSet<u64> = carried.iter().map(|(e, _)| *e).collect();
     // Where a player may stand in this world's level (REVIEW B2); the greybox (0) has no bake.
     let level = crate::level::by_id(world_level_of(ctx, world_id));
     let grace_ms = hot_number(ctx, crate::hot::foundation::STATUS_GRACE_MS) as i64;
+    let push_grace_s = hot_number(ctx, crate::hot::foundation::PUSH_GRACE_S) as f32;
+    let now = ctx.timestamp.to_micros_since_unix_epoch();
+    // WHAT EVERY ROW NEEDS, READ ONCE A TICK (the server at 300 players, Regent's Rule's load test: a
+    // lookup a table a row a tick was most of the module's time). The world's inputs, kinds and statuses
+    // by its index; bodies, pushes, dash windows and corrections whole (a handful of rows each; a push
+    // is cut where it happened, so not by this world). Inputs follow their entity: moving it to another
+    // world drops them (`move_entity_to_world`).
+    let mut inputs_of: HashMap<u64, Vec<InputQueueRow>> = HashMap::new();
+    for q in ctx.db.input_queue().world_id().filter(world_id) {
+        inputs_of.entry(q.entity_id).or_default().push(q);
+    }
+    let kinds: HashMap<u64, u8> = ctx.db.entity().world_id().filter(world_id).map(|e| (e.entity_id, e.kind)).collect();
+    let statuses: HashMap<u64, StatusStateRow> = ctx.db.status_state().world_id().filter(world_id).map(|r| (r.entity_id, r)).collect();
+    let bodies: HashSet<u64> = ctx.db.body_state().world_id().filter(world_id).map(|b| b.entity_id).collect();
+    let mut pushes_of: HashMap<u64, Vec<Push>> = HashMap::new();
+    for p in ctx.db.push().iter() {
+        pushes_of.entry(p.entity_id).or_default().push(p);
+    }
+    let dashes: HashMap<u64, DashWindowRow> = ctx.db.dash_window().iter().map(|d| (d.entity_id, d)).collect();
+    let mut corrections: HashMap<u64, Correction> = ctx.db.correction().iter().map(|c| (c.entity_id, c)).collect();
     for row in rows {
-        if carried.iter().any(|(e, _)| *e == row.entity_id) {
+        if carried_ids.contains(&row.entity_id) {
             continue;
         }
         // A body is the referee's to move (DECISIONS #246): the gravity twin would fight its writes.
-        if is_body(ctx, row.entity_id) {
+        if bodies.contains(&row.entity_id) {
             continue;
         }
-        let mut inputs: Vec<InputQueueRow> = ctx.db.input_queue().entity_id().filter(row.entity_id).collect();
+        let mut inputs: Vec<InputQueueRow> = inputs_of.remove(&row.entity_id).unwrap_or_default();
         inputs.sort_by_key(|q| q.frame.seq);
 
         let mut s = MovementState {
@@ -138,13 +160,13 @@ pub(crate) fn tick_world_module(
         };
         let mut last_seq = row.last_processed_seq;
         // Its kind's bound (its characters' movement profiles, #205), as its status allows (#206).
-        let kind_limits = crate::content::movement_limits(ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0));
-        let limits = status_limits(ctx, row.entity_id, kind_limits, grace_ms);
+        let kind_limits = crate::content::movement_limits(kinds.get(&row.entity_id).copied().unwrap_or(0));
+        let limits = status_limits(statuses.get(&row.entity_id), now, kind_limits, grace_ms);
         // And as fast as the pushes it is under make it go (DECISIONS #251: a blower, a pad).
-        let limits = push_limits(ctx, row.entity_id, limits);
+        let limits = push_limits(pushes_of.get(&row.entity_id).map_or(&[][..], |v| v.as_slice()), now, push_grace_s, limits);
         let mut epoch = row.correction_epoch;
         // Its dash counts only inside a dash's window (DECISIONS #256), opened by the frames' own presses.
-        let dash_row = ctx.db.dash_window().entity_id().find(row.entity_id);
+        let dash_row = dashes.get(&row.entity_id);
         let mut dash = dash_row.as_ref().map(|d| crate::status::DashWindow { open_frames: d.open_frames, cooldown_frames: d.cooldown_frames })
             .unwrap_or_default();
 
@@ -159,10 +181,18 @@ pub(crate) fn tick_world_module(
                 s = crate::sim::simulate(&s, &InputFrame::default(), cfg, SERVER_DT);
             }
         } else {
-            inputs.truncate(MAX_FRAMES_PER_TICK);
-            let mut correction = ctx.db.correction().entity_id().find(row.entity_id);
+            // Every frame queued is taken at once in one delete by the entity's index; past the tick's
+            // budget, only those taken, one by one (the rest wait for the next tick).
+            if inputs.len() <= MAX_FRAMES_PER_TICK {
+                ctx.db.input_queue().entity_id().delete(row.entity_id);
+            } else {
+                inputs.truncate(MAX_FRAMES_PER_TICK);
+                for q in &inputs {
+                    ctx.db.input_queue().id().delete(q.id);
+                }
+            }
+            let mut correction = corrections.remove(&row.entity_id);
             for q in &inputs {
-                ctx.db.input_queue().id().delete(q.id);
                 last_seq = q.frame.seq;
                 if q.frame.epoch != epoch {
                     // Produced before the client saw our last override: it describes a path the
@@ -201,12 +231,12 @@ pub(crate) fn tick_world_module(
                     // row is from the old path; a new epoch is how we will recognise it.
                     epoch = epoch.wrapping_add(1);
                     record_correction(ctx, row.entity_id, epoch, q.frame.seq);
-                    correction = ctx.db.correction().entity_id().find(row.entity_id);
+                    correction = Some(Correction { entity_id: row.entity_id, epoch, from_seq: q.frame.seq, at: ctx.timestamp });
                 }
             }
         }
 
-        let saved = dash_row.as_ref().map(|d| (d.open_frames, d.cooldown_frames)).unwrap_or((0.0, 0.0));
+        let saved = dash_row.map(|d| (d.open_frames, d.cooldown_frames)).unwrap_or((0.0, 0.0));
         if (dash.open_frames, dash.cooldown_frames) != saved {
             let r = DashWindowRow { entity_id: row.entity_id, open_frames: dash.open_frames, cooldown_frames: dash.cooldown_frames };
             match (dash_row.is_some(), dash == crate::status::DashWindow::default()) {
@@ -219,7 +249,7 @@ pub(crate) fn tick_world_module(
         let changed = s.pos != row.pos || s.vel != row.vel || s.grounded != row.grounded
             || last_seq != row.last_processed_seq || epoch != row.correction_epoch || row.teleport_flag;
         if changed {
-            write_movement(ctx, MovementStateRow {
+            write_movement_over(ctx, Some(&row), MovementStateRow {
                 entity_id: row.entity_id,
                 world_id: row.world_id,
                 chunk: 0,

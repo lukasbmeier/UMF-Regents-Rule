@@ -442,7 +442,11 @@ Hundreds of bot players, each a real connection to the server, and what each one
 - **What it measures, per step** (printed, and kept in `build/load/ring/report.md`):
   - per player: KB a second on the wire and decoded, rows and messages a second, how many others it saw;
   - each reducer's round trip as a bot timed it, and the SERVER's own timing of every reducer (its wall
-    time and how long it queued), from SpacetimeDB's metrics for this database only;
+    time, the subscription update after it, how long it queued), from SpacetimeDB's metrics for this
+    database only, busiest first. READ THE MEANS AND "busy ms/s", not the p95s: the server's histograms
+    jump 1, 5, 10, 50 ms, so a p95 of "46 ms" only says "between 10 and 50". "busy ms/s" is how much of
+    each second a reducer held the module; a database runs one reducer at a time, so "The module was
+    busy N %" under the table is how near the server is to its ceiling (100 %);
   - "input sent to processed": from a bot's inputs leaving to the server's movement row saying it
     took them (the movement tick runs 20 times a second, so ~25-50 ms is normal);
   - cell swaps (how often a bot's ring of cells moved, and how long the new ring took to arrive);

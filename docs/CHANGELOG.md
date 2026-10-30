@@ -878,3 +878,15 @@ A table and three reducers added: a game republishes with `--codegen` (data kept
 - `offer_region_referee`: one more referee for a world that has one.
 - The load test: `shared/load.json` `referees` [columns, rows], `REFEREES=2x2`; `tests/regions_test.sh` (25 checks).
 - A world with one referee is unchanged.
+
+## 1.4.1 — the server's movement tick reads each world once a tick; the load test reads the server right
+Code only: a game republishes (no `--codegen`; data kept).
+- `tick_movement` reads what every row needs once a tick for the world (its inputs, kinds and statuses by
+  the world's index; bodies, pushes, dash windows, corrections whole), takes a player's frames in one delete,
+  and writes each row without looking it up again (`write_movement_over`); `write_movement_batch` likewise.
+  `status_limits` and `push_limits` take the rows instead of looking them up.
+- The load test counted every server call twice: SpacetimeDB times each as two transactions, the reducer
+  and the subscription update after it. Now one call is one call, the update is its own column, the
+  table is sorted by what each reducer cost the module a second (`busy ms/s`, exact, from the
+  histograms' sums), and the report says how busy the module was. The p95s are bucket guesses (1, 5, 10,
+  50 ms): the HANDBOOK says which numbers to read.

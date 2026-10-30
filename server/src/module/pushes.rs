@@ -39,12 +39,11 @@ pub fn push_entity(ctx: &ReducerContext, entity_id: u64, vel: Vector3, by_id: u6
     Ok(ctx.db.push().insert(Push { id: 0, world_id: ent.world_id, chunk: chunk_of_entity(ctx, entity_id), entity_id, vel, by_id, at: ctx.timestamp }).id)
 }
 
-/// `limits` widened by the pushes `entity_id` is under (`crate::push::widened`).
-pub fn push_limits(ctx: &ReducerContext, entity_id: u64, limits: crate::content::MovementLimits) -> crate::content::MovementLimits {
-    let grace = hot_number(ctx, crate::hot::foundation::PUSH_GRACE_S) as f32;
-    let now = ctx.timestamp.to_micros_since_unix_epoch();
-    crate::push::widened(limits, ctx.db.push().entity_id().filter(entity_id)
-        .map(|p| (p.vel, ((now - p.at.to_micros_since_unix_epoch()).max(0) as f32) / 1_000_000.0)), grace)
+/// `limits` widened by `pushes`, the ones an entity is under (`crate::push::widened`), `grace_s`
+/// (`foundation.push_grace_s`) longer. The movement tick reads the pushes and the rule once a tick.
+pub fn push_limits(pushes: &[Push], now_micros: i64, grace_s: f32, limits: crate::content::MovementLimits) -> crate::content::MovementLimits {
+    crate::push::widened(limits, pushes.iter()
+        .map(|p| (p.vel, ((now_micros - p.at.to_micros_since_unix_epoch()).max(0) as f32) / 1_000_000.0)), grace_s)
 }
 
 /// Dev/test helper: push an entity, as a genre would. Gated like `teleport` (`require_dev_tools`).

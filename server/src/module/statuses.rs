@@ -74,15 +74,16 @@ pub fn is_targetable(ctx: &ReducerContext, entity_id: u64) -> bool {
 }
 
 /// An entity's Tier A bound with its status applied (`status::bound`): its kind's bound, scaled
-/// by the status, and for `grace_ms` after a change the wider of the old and new.
-pub fn status_limits(ctx: &ReducerContext, entity_id: u64, kind: crate::content::MovementLimits, grace_ms: i64)
+/// by the status (`row`, its status row; None: none), and for `grace_ms` after a change the wider of
+/// the old and new. The movement tick reads a world's status rows once a tick.
+pub fn status_limits(row: Option<&StatusStateRow>, now_micros: i64, kind: crate::content::MovementLimits, grace_ms: i64)
     -> crate::content::MovementLimits {
-    let Some(row) = ctx.db.status_state().entity_id().find(entity_id) else {
+    let Some(row) = row else {
         return crate::status::applied(kind, crate::status::normal(), false);
     };
     let cur = crate::status::find(row.status).unwrap_or_else(crate::status::normal);
     let prev = crate::status::find(row.prev_status).unwrap_or_else(crate::status::normal);
-    let since_ms = (ctx.timestamp.to_micros_since_unix_epoch() - row.since.to_micros_since_unix_epoch()).max(0) / 1000;
+    let since_ms = (now_micros - row.since.to_micros_since_unix_epoch()).max(0) / 1000;
     crate::status::bound(kind, cur, prev, since_ms, grace_ms)
 }
 
