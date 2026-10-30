@@ -1046,3 +1046,100 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
   spikes in 16 min, stalls of 3.0 s (22:03:41) and 4.5 s (22:06:49), its worst frame 144 ms. It now loads
   the whole continent (Terrain3D's full collision, ~600 entities, ~900 props wrapped solid): the first
   suspect, and exactly what the harness should measure.
+
+## Step 24: the load test on the continent, and what holds the referee back (2026-10-29)
+
+**The harness** is the template's (1.2.0, DECISIONS #284; 1.2.1 here, pushed there): `tests/load_test.sh`, light
+Python bots in steps, measured from both ends. Regent's Rule's part:
+- `game/regents/load_bot.py`, the bots' play: every bot wields its starter Copper axe; every third swings the
+  axe's two-step combo (judged by the referee; standing for each swing's committed part, as a client
+  slow-walks), the next gathers the nearest tree or copper rock AFK for 6-12 s after saying it saw it, the next
+  only walks. A node worked out as a bot reaches it is play (`EXPECTED_REFUSALS`); any other refusal fails the
+  run. `LOAD_BOT_PLAY=0`: every bot only walks.
+- `shared/regents/load.json`: the continent (level 21), steps 50, 100, 200, 300.
+- `game/regents/tests/load_300.sh`: the foundation's suite, then this game's checks that the bots really played
+  (swings, gathers, nodes seen, every step), and a negative (a report with no gathering fails them).
+- **To run it**: `tools\run.cmd game\regents\tests\load_300.sh` (~25 minutes, the test database).
+
+**What it found** (the full record and the order of fixes: `REFEREE_SCALING.md`):
+- The server keeps up at 300 (movement tick p95 23.6 ms of 50 with honest bots; reducers queue 44.5 ms at p95).
+- The referee breaks at 50-100 as it is. 80 % of what it is sent is `input_queue`, which it never reads. Sent only
+  what it reads, it holds at 100. A referee for a part of the world (5 x 5 cells, 5 of the 51 foes) holds at
+  300 with room (16 ms). Brains and foe writes are paid per NPC, whether a player is near or not.
+- Per player on the wire: ~35 KB/s at 50, ~80 at 200, ~120 at 300.
+
+**Found and fixed on the way**:
+- **The walk map on the continent** (template 1.2.1, DECISIONS #285): baking the whole continent was refused by the
+  engine, so no foe could go round anything, and the referee stalled trying. Now a tile at a time, off the main
+  thread. **Foes chase round obstacles** (`foe.gd`: `go_to`, the walk map), and a target lost from sight is
+  chased to where it was last seen for `FoeDef.lose_sight_ms` (2500, a default for Luke to tune) (#4).
+- **No roll in the air, on the server too** (#6): `may_fight` refuses it ("no roll in the air").
+- **The skeletons' family**: `family = &"undead"` sat above `script =` in their `.tres`, so Godot dropped it;
+  moved, baked.
+
+**Tested**: genre unit 2672/0 (the foe's chase round the walk map and its memory; the family; each fails with
+its fix taken out); native 35/0; integration 1068/0 (a roll in the air refused, the same roll on the ground
+taken; the old server takes it); combat playtest 51/0; continent playtest 22/0; content 18/0; `load_300.sh` run
+to the end with both negatives; template unit 2211/0 (the 3 km walk map fails baked whole). Published to
+`regents-rule` (data kept).
+
+**Also written**: `COMBAT_CURRENT.md`, the combat as built, for Luke's combat overhaul.
+
+### The referee's first two fixes (Luke, 2026-10-29: "lets do them in order", the suites each touches)
+Template 1.2.2 + 1.3.0 (DECISIONS #286, #287), pulled here (local merge commits):
+- **A referee is sent only what it reads** (#286): no `input_queue`; its tables, its entities' components'
+  (`required_tables`, the new `also_reads`), the genre's `referee_tables`, the recorder's while recording.
+  Here `game/regents/genre.tres` `referee_tables` is empty (the foes' brains read only the world view):
+  37 tables. `SkillingComponent.also_reads` names `work_order`. A read of anything else is an error in the
+  referee's log; `combat_playtest.sh` now fails on one, and on `input_queue` in its feed.
+- **NPC tiers on** (#287; RULE_DESIGN §6.1's numbers: awake within 200 m, asleep after 30 s with nobody within
+  400 m): `foundation.npc_tiers` overridden on in `game/regents/content/rules/regents.tres`. The brains' world
+  view is built once a think period. It had never known who the players were (fixed in the template).
+- **A swing cut short has its own refusal** (`combo_refusal`, `server/src/genre/regents/mod.rs`): the combo's
+  next step after a heavy's flinch or a roll is refused "the swing before was cut short: the combo starts
+  again", not "out of the combo's order". The load bots read no statuses, so that one is play for them
+  (`load_bot.py` `EXPECTED_REFUSALS`); any other order refusal still fails the run. Native check added.
+
+**Measured** (`REFEREE_SCALING.md`, "After fixes 1 and 2"): the referee holds at 100 bots with room (19.5 ms
+p95, was 127); it still breaks at 200 (118) and 300 (147). What is left grows with the players it watches:
+the next fix is region referees (template milestone).
+
+**Tested**: template unit 2237/0 (the feed: dropping the scenes' tables fails it; tiers: the count not
+restarted by a passing player fails it), template integration 644/0 (its referee's log: the feed, no
+`input_queue`, no unasked read; the first run caught a bot's SessionComponent reading `session_match`),
+sidecar 13/0, bodies 20/0 + 10/0, native 92/0; here: genre unit 2698/0, native 35/0, combat playtest 51/0
+(tiers on; with the old player lookup the foe never comes), `load_300.sh` to the end with both negatives.
+
+### Fix 3, region referees: 300 holds (Luke, 2026-10-29: "continue if there is more work on the load test")
+Template 1.4.0 (DECISIONS #288), pulled here and published to `regents-rule` with `--codegen` (a table added,
+data kept). Several referees for one world, each for a rectangle of cells; the module keeps who drives each NPC
+(`npc_driver`). Here `shared/regents/load.json` `"referees": [2, 2]`: the load test runs four.
+- **Measured** (`REFEREE_SCALING.md`, "After fix 3"): at 300 bots the worst referee is 16.2 ms p95, the
+  server's tick 46.0 and its reducers' wait 47.7 (both of 50). 300 holds. The server is the ceiling now.
+- A flaky integration check fixed: the dummy's Stagger (800 ms) is read before the server's log, not after.
+
+**Tested**: template unit 2260/0, integration 644/0, `regions_test.sh` 25/0 (its negative fails 4),
+`test_load.py`; here genre unit 2716/0, integration 1099/0, `load_300.sh` with four referees to the end, both negatives.
+
+**Left for later**: the server at 300 (`prune_action_events`' whole-table scan first); one unexplained "net
+stall" a referee at the 50 and 100 steps; the cast queue (server-side) and the LMB spam (#8) for the combat
+overhaul.
+
+### The server at 300, read right (Luke, 2026-10-30: "start on the server's headroom at 300")
+Template 1.4.1 (DECISIONS #289), pulled here. Code only: a plain republish, no `--codegen`.
+- **The load test misread the server**: each call is two transactions in SpacetimeDB's metrics (the reducer,
+  then its subscription update) and it summed them; its p95s are guesses inside 1/5/10/50 ms buckets. Read
+  right (exact means, `busy ms/s`, the module's busy %): `prune_action_events` costs 2 ms a second and
+  `work_tick` 5, so neither needed a fix. The movement tick was 438 ms a second, 76 % of the module busy at 300.
+- The tick now reads each world's rows once a tick: its own code halved (3.2 ms a tick at 300), the module
+  68 % busy, round trips p50 11.2 to 7.9 ms (`REFEREE_SCALING.md`, "The server at 300, read right").
+- What is left is SpacetimeDB's subscription updates (15 ms a tick at 300: each moved row to everyone who
+  sees it). The levers are design (Luke's): density, cell size, how often others' movement is written,
+  `input_batch_size`. Gzip stays (no compression: 14 % less update for 2.2x the bytes).
+
+**Tested**: template integration 644/0 (the tick ignoring statuses fails 2), e2e 11/0, movement playtest
+41/0, native, `test_load.py` 23/0; here `load_test.sh` at 100 and 300 (and 300 with no compression), the
+integration suite.
+
+**Left for later**: judge `module_busy_pct` instead of the bucketed p95s (Luke); the "net stall" at 50 and
+100 (still once a referee, ~30 s after it starts).

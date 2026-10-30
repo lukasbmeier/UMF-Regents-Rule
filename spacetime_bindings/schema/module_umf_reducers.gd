@@ -170,6 +170,12 @@ func distrust_issuer(issuer: String) -> SpacetimeDBReducerCall:
 func draw_bow(on: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('draw_bow', [on], [&'bool'], &'')
 
+## 0. world_id: int [br]
+## 1. take: Array of int [br]
+## 2. release: Array of int [br]
+func drive_npcs(world_id: int, take: Array[int], release: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('drive_npcs', [world_id, take, release], [&'u32', &'u64', &'u64'], &'')
+
 ## 0. item_id: int [br]
 ## 1. qty: int [br]
 func drop_item(item_id: int, qty: int) -> SpacetimeDBReducerCall:
@@ -258,6 +264,11 @@ func new_match(session_id: int) -> SpacetimeDBReducerCall:
 ## 1. code: String [br]
 func offer_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('offer_referee', [world_id, code], [&'u32', &'string'], &'')
+
+## 0. world_id: int [br]
+## 1. code: String [br]
+func offer_region_referee(world_id: int, code: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('offer_region_referee', [world_id, code], [&'u32', &'string'], &'')
 
 ## 0. ground_id: int [br]
 func pick_up(ground_id: int) -> SpacetimeDBReducerCall:

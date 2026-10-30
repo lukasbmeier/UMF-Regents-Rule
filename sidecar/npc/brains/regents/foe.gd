@@ -5,7 +5,8 @@ extends NpcBrain
 ## the same wind-ups, Swinging status, blocks, parries and flinches, judged by the same referee.
 ##
 ##   idle     stands at home (its level point)
-##   chase    a player came within `notice_m` and in sight: runs at them
+##   chase    a player came within `notice_m` and in sight: runs at them, round what is in the way (the
+##            level's walk map, `go_to`); out of sight, to where it last saw them, for `lose_sight_ms`
 ##   fight    within `reach_m`: stops, faces them, swings its kit's light combo, every `heavy_every`th
 ##            swing the heavy; each swing waits out the last one's lock, and a combo ends with `rest_ms`
 ##   return   past `leash_m` from home: walks back, deaf to players until it is home
@@ -26,6 +27,10 @@ var _step: int = 0
 ## Where to face this tick (in a fight), and whether to.
 var _face: Vector3 = Vector3.ZERO
 var _facing: bool = false
+## Where it last saw its target, when, and whether it sees them now.
+var _last_seen: Vector3 = Vector3.ZERO
+var _seen_at_ms: int = 0
+var _in_sight: bool = false
 
 
 func _init(_seed_value: int = 0) -> void:
@@ -69,9 +74,9 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 	var t: MovementState = world.state_of(target_id)
 	var to: Vector3 = t.pos - me.pos
 	to.y = 0.0
-	if to.length() > foe.reach_m:
+	if to.length() > foe.reach_m or not _in_sight:
 		state = &"chase"
-		set_goal(t.pos)
+		go_to(t.pos if _in_sight else _last_seen, me, world)
 		return
 	state = &"fight"
 	clear_goal()
@@ -82,15 +87,19 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 
 
 ## The nearest player in reach of its notice and in sight who is up; the one it has, while they stay
-## inside the leash's reach and in sight.
+## inside the leash's reach and in sight, or out of sight for no longer than `lose_sight_ms`.
 func _pick_target(me: MovementState, world: NpcWorldView) -> void:
 	if target_id != 0:
 		var held: MovementState = world.state_of(target_id)
 		var keep: bool = held != null and world.status_of(target_id) != SLAIN \
-			and Vector2(held.pos.x - home.x, held.pos.z - home.z).length() <= foe.leash_m \
-			and world.can_see(me.pos, held.pos)
+			and Vector2(held.pos.x - home.x, held.pos.z - home.z).length() <= foe.leash_m
 		if keep:
-			return
+			_in_sight = world.can_see(me.pos, held.pos)
+			if _in_sight:
+				_last_seen = held.pos
+				_seen_at_ms = now_ms()
+			if _in_sight or now_ms() - _seen_at_ms <= foe.lose_sight_ms:
+				return
 		target_id = 0
 	var found: int = world.nearest_of_kind(me.pos, 0, foe.notice_m, self_id)
 	if found == 0 or world.status_of(found) == SLAIN:
@@ -98,6 +107,9 @@ func _pick_target(me: MovementState, world: NpcWorldView) -> void:
 	var cand: MovementState = world.state_of(found)
 	if cand != null and world.can_see(me.pos, cand.pos):
 		target_id = found
+		_in_sight = true
+		_last_seen = cand.pos
+		_seen_at_ms = now_ms()
 
 
 ## One swing of its kit, aimed `aim`: the combo's next light, or the heavy every `heavy_every`th. The next

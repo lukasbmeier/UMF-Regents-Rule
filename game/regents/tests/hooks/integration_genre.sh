@@ -390,8 +390,9 @@ assert_ok "offer_referee 0 $C_CODE_T2" "a fresh referee (a claim lapses in secon
 spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T2" >/dev/null 2>&1
 assert_ok "use_ability_seen 40008 0 $C_AIM 933 100" "the overhead (the heavy) with the Heavy axe"
 assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 933" 1) $DUMMY" "it hits the dummy"
-check "$(logged "$MYENT's hit staggered $DUMMY")" "Heavy: its heavy Staggers what it hits"
+# The status first: a Stagger lasts 800 ms (`regents.stagger_ms`), and reading the server's log takes longer.
 assert_eq "$(sql_first "SELECT status FROM status_state WHERE entity_id = $DUMMY" 1)" "103" "the dummy is Staggered"
+check "$(logged "$MYENT's hit staggered $DUMMY")" "Heavy: its heavy Staggers what it hits"
 assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again (what follows counts on it)"
 check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q '"t"' && echo false || echo true)" "no traits left on it"
 assert_ok 'set_rule "foundation.trait_strength_pct" 0.0 ""' "(test) traits off"
@@ -766,6 +767,16 @@ assert_ok "saw_nodes [$SEEN_TREE]" "tree_1 again"
 assert_eq "$(seen_n)" "1" "seen once only"
 assert_rejected "saw_nodes [$(seq -s, 1 33)]" "at most 32" "33 at once: refused"
 assert_eq "$(spacetime sql --anonymous "$DB" "SELECT * FROM node_seen" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" "0" "another player is sent none of them"
+
+# --- NO ROLL IN THE AIR (Luke's continent playtest, 2026-10-24, #6): the server refuses it, as a swing ---
+# The CLI's player is offline, so the server's own gravity moves it (#70): 300 m up it falls for about 8 s,
+# in the air for the checks. The roll on the ground is the combat playtest's (a real client rolls and is answered).
+assert_ok 'teleport {"x":-9.0,"y":300.0,"z":-4.5}' "lift off: 300 m up"
+assert_eq "$(sql_first "SELECT grounded FROM movement_state WHERE entity_id = $MYENT" 1 | tr -d ' ')" "false" "in the air, as the server sees it"
+assert_rejected 'use_ability_seen 40010 0 {"x":0.0,"y":0.0,"z":-1.0} 1 0' "no roll in the air" "a roll in the air: refused"
+for _ in $(seq 1 30); do [ "$(sql_first "SELECT grounded FROM movement_state WHERE entity_id = $MYENT" 1 | tr -d ' ')" = "true" ] && break; sleep 0.5; done
+assert_eq "$(sql_first "SELECT grounded FROM movement_state WHERE entity_id = $MYENT" 1 | tr -d ' ')" "true" "landed"
+assert_ok 'use_ability_seen 40010 0 {"x":0.0,"y":0.0,"z":-1.0} 2 0' "on the ground, the same roll is taken"
 
 assert_ok "set_world_level 0 0" "back to the greybox"
 assert_eq "$(row_count 'SELECT * FROM gather_node')" "0" "a level change takes the glade's nodes away"

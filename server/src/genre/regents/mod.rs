@@ -496,6 +496,24 @@ pub fn combo_allows(step: u32, last_step: i32, since_ms: i64, window_ms: u32) ->
     step == 0 || (last_step == step as i32 - 1 && since_ms >= 0 && since_ms <= window_ms as i64)
 }
 
+/// The refusal of a light step the combo does not allow (`combo_allows`).
+pub const OUT_OF_ORDER: &str = "out of the combo's order";
+/// One after a swing that was cut short (a heavy's flinch or a roll in its wind-up): said apart, because the
+/// combo starts again and a client that saw the flinch already knows (the load test's bots are refused this
+/// as play; any other order is a bug).
+pub const CUT_SHORT: &str = "the swing before was cut short: the combo starts again";
+
+/// Why a light step may not start, or None. `prev` is the step before (-1 for none, or one cut short).
+pub fn combo_refusal(step: u32, prev: i32, prev_cut_short: bool, since_ms: i64, window_ms: u32) -> Option<&'static str> {
+    if combo_allows(step, prev, since_ms, window_ms) {
+        None
+    } else if prev_cut_short && step > 0 {
+        Some(CUT_SHORT)
+    } else {
+        Some(OUT_OF_ORDER)
+    }
+}
+
 /// THE SWING'S TIMELINE (owner, 2026-10-19: animation-locked, with a buffer): a swing used at 0 lands at
 /// `wind_up` and holds its fighter until `lock`. May a new swing start `t` ms after the last began?
 /// The combo's next light step from `wind_up + chain` (the recovery cancels into it); anything else

@@ -6,8 +6,8 @@
 [ext_resource type="Resource" path="res://game/regents/content/loot_table/skeleton_camp.tres" id="4_loot"]
 
 [resource]
-family = &"undead"
 script = ExtResource("1_foe")
+family = &"undead"
 key = &"skeleton_warrior"
 character = ExtResource("2_char")
 kit = ExtResource("3_kit")

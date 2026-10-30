@@ -32,6 +32,9 @@ class_name FoeDef extends ContentDef
 @export_range(0, 20) var heavy_every: int = 3
 ## A breath after each combo: the opening a player gets.
 @export_range(0, 5000, 50, "suffix:ms") var rest_ms: int = 900
+## A target lost from sight (behind a rock, round a hut) is chased to where it was last seen for this long
+## before the foe gives up on it (Luke's continent playtest, 2026-10-24, #4: one turned back at a bush).
+@export_range(0, 10000, 100, "suffix:ms") var lose_sight_ms: int = 2500
 
 ## Its FAMILY ("undead", "beast", "humanoid"): what a trait made against one reads (Hunter's: more against
 ## beasts, less against humanoids).

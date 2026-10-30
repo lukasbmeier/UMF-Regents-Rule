@@ -125,11 +125,11 @@
 		},
 		"shared/content/regents/foe.json": {
 			"count": 2,
-			"hash": "c3804451",
+			"hash": "23d66731",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/foe/skeleton_axeman.tres": "828a1c8e",
-				"game/regents/content/foe/skeleton_warrior.tres": "d6619e4c"
+				"game/regents/content/foe/skeleton_axeman.tres": "f4c55942",
+				"game/regents/content/foe/skeleton_warrior.tres": "a40363b0"
 			},
 			"type": "foe"
 		},
@@ -306,10 +306,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "f511606e",
+			"hash": "22dbb973",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "cd758708"
+				"game/regents/content/rules/regents.tres": "390e9e33"
 			},
 			"type": "rules"
 		},

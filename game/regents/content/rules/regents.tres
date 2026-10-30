@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=26 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -505,10 +505,16 @@ key = "foundation.referee_two_sides"
 number = 1.0
 reason = "Players against monsters (Luke's playtest 2026-10-24, notes 2 and 3: two skeletons side by side hit each other, never him): a skeleton's swing passes through skeletons, a player's through players."
 
+[sub_resource type="Resource" id="Over_npc_tiers"]
+script = ExtResource("3_over")
+key = "foundation.npc_tiers"
+number = 1.0
+reason = "RULE_DESIGN 6.1 (the NPC tiers, agreed 2026-10-13): a foe with no player within 400 m for 30 s sleeps until one comes within 200 m. The referee's brains were half its time at 300 players (REFEREE_SCALING.md)."
+
 [resource]
 script = ExtResource("1_set")
 rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days"), SubResource("Rule_crafted_traits_common"), SubResource("Rule_crafted_traits_fine"), SubResource("Rule_crafted_traits_masterwork"), SubResource("Rule_refit_bars"), SubResource("Rule_seen_reach")])
-overrides = Array[ExtResource("3_over")]([SubResource("Over_characters"), SubResource("Over_park"), SubResource("Over_two_sides")])
+overrides = Array[ExtResource("3_over")]([SubResource("Over_characters"), SubResource("Over_park"), SubResource("Over_two_sides"), SubResource("Over_npc_tiers")])
 id = 40000
 display_name = "Regent's Rule rules"
 designer_notes = "The skilling loop's numbers: active against AFK. Tuned live on the Rules page."

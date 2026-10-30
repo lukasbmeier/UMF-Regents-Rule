@@ -1,51 +1,36 @@
-# Handoff — Regent's Rule, 2026-10-27 (the continent playtest's dropped connection found and fixed; NEXT: the load test)
+# Handoff — Regent's Rule, 2026-10-30 (the server at 300, read right: template 1.4.1)
 
 ## Where it stands
-- **The continent playtest is GREEN again**: 22/0 headless (27 s), 23/0 windowed (`WINDOWED=1`), its new
-  discovery and M checks included. Regents unit suite 2661/0. Committed (this session's commit, after
-  `b06fdd0`); not pushed unless the closing note says so.
-- The fix is client-only (`game/regents/ui/world_map.gd`): the play database `regents-rule` needs no
-  republish (still on the continent, level 21, published with codegen 2026-10-26). Restart the game to get it.
-- Template 1.1.1 is pulled here; NOT yet shipped to the other games (the template's HANDOFF).
-- Not run this session: integration, accounts, skilling, combat (nothing they cover changed).
+- Template **1.2.2, 1.3.0, 1.4.0, 1.4.1** merged here (local merge commits, not pushed); template pushed.
+- This game's own work from 2026-10-29 and today's docs are **uncommitted** (PROGRESS step 24 lists it).
+  Published to the play database `regents-rule` (1.4.1, code only, data kept): restart the game.
+- Suites green: integration 1084/0 (its count moves with rolled loot and registered referees), the load test
+  at 100 and 300; 2026-10-29: genre unit 2716/0, native 35/0, combat playtest 51/0, `load_300.sh` to the end.
 
 ## This session
-- **The cause of the "dropped connection"**: not the network. Opening M froze the main thread ~90 s per
-  call, so the client answered no keep-alive and the server closed it for idle (30 s).
-  `RegentsWorldMap.icons_of` looked up each node point's content with `ContentLibrary.items`, which lists the
-  content folders and loads every piece on each call. That ran 545 times on the continent but only 38 in the
-  glade. Now the node defs are listed once per call, through `RegentsContent` (the genre's cache);
-  `node_named` uses it too.
-- Found by timing the playtest's steps: the 181 s gap sat between "M opens" and the next step. Restarting the
-  local `spacetime start` changed nothing; no bisect was needed.
-- New unit check (`game/regents/tests/suites/regents.gd`, `_run_polish`): the continent's icons in under 2 s,
-  every node known. With the per-point lookup put back it FAILS (19.6 s).
-- PROGRESS step 23, "The world map", records it.
+- The load test misread the server (template #289): every call counted twice (a call is a Reducer and an
+  Update transaction), p95s guessed inside 1/5/10/50 ms buckets. Now exact means and the module's busy %.
+- Read right at 300: `prune_action_events` 2 ms/s and `work_tick` 5 (no fix needed); the movement tick 438.
+- Template 1.4.1: the tick reads each world once a tick; its code halved; the module 76 → 68 % busy at 300.
+- What is left is SpacetimeDB's subscription fan-out (~2/3 of the module): `REFEREE_SCALING.md`, "The
+  server at 300, read right"; gzip measured (stays).
 
 ## Next, in order
-1. **The load test harness** (Tuesday after 5 pm), in the TEMPLATE: a light bot client, many connections in
-   one process; 50 -> 100 -> 300; rows and bytes a second, reducer p95, the referee's lag, cell swaps.
-   Note #1 (the referee's stalls) is for it.
-2. Before or with it: ship template 1.1.1 to the other games (the template's HANDOFF).
-3. The combat deep-dive: the LMB spam cut, foes pathing round obstacles (#4), a server refusal of a roll
-   in the air, the cast queue.
+1. Luke's call on the levers below; then judge `module_busy_pct` in the load test instead of the p95s.
+2. One "net stall" (0.5-0.8 s gap in a referee's rows) at the 50 and 100 steps, ~30 s after each referee
+   starts: unexplained (`REFEREE_SCALING.md`, "What is left" 2).
+3. Ship 1.2.0-1.4.1 to Fishing, Fowl Play, DiscGolf once Luke commits their debug dumps.
+4. The combat overhaul (Luke, from `COMBAT_CURRENT.md`).
 
 ## Waiting on Luke
-- His look: the Lunge whole; bushes passable (and are the shadows near them still odd?); does "Player 39"
-  still show (if so: where he walked from, and whether it was the body or only its name).
-- M, the world map: built (2026-10-26); his look at it on the continent.
-- Still open: the SpacetimeAuth client id (`shared/game.json` `sign_in`); trait ranks; #12 day/night.
+- The server's levers at 300 dense: how dense a real crowd is (the test is a town everywhere, ~47 seen each),
+  the cell size (64 m), how often others' movement is written (20 Hz), `input_batch_size` (3).
+- His playtest of the 10-29 changes (foes sleep far from players; the "cut short" refusal; no roll in air).
+- Where 300 is hosted (home upload fits ~30-40 dense players) and the per-player bandwidth budget (~120 KB/s).
+- The recorder in an MMO; `FoeDef.lose_sight_ms` 2500 (mine). Still open: SpacetimeAuth client id; trait ranks; #12.
 
 ## Watch out
-- **`ContentLibrary.items` / `find` rescan and reload every content file on each call** (right for the
-  editor and the bake). In game code use `RegentsContent.items`; never call either per point, per row or
-  per frame. Other direct callers remain (workbenches, `material_table.gd`, `make_ore_layouts.gd`: tools
-  and once-at-load, fine as they are). A foundation-level cache would be a template change.
-- The local `spacetime start` was restarted by this session (log `%TEMP%\spacetime_server.log`, the old one
-  `spacetime_server.old.log`, 27 MB). If it is down next time, start it again.
-- The playtest log prints `[Nameplate] nameplate: 39 = Player 39` for the CLI's player; the test still
-  finds it hidden as a tool. A lead for #7 if Luke still sees the name.
-- `continent_playtest.sh` polls the CLI every 3 s for the whole run; `continent.tscn` and its cells are
-  generated (never hand-edit); a game's hot-rule override is every client's and referee's default too.
-- Older traps: Terrain3D's region grid; rebuilding the continent is a ~16 MB diff; `TaskStop` leaves a
-  suite's children running; the CLI referee is online only 5 s after its claim.
+- Never kill all Godot/Python processes (it would take Luke's editor too): stop a stuck run by its PID.
+- Read the load report's server table by its means and busy ms/s, not its p95s.
+- A referee errors on any read of a table it does not subscribe: `also_reads`, or `genre.tres` `referee_tables`.
+- The load test's numbers are this PC's: the server, four referees and six bot processes share it.

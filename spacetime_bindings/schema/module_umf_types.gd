@@ -41,6 +41,7 @@ const MovementStateRow = preload('res://spacetime_bindings/schema/types/umf_move
 const NodeSeen = preload('res://spacetime_bindings/schema/types/umf_node_seen.gd')
 const Noise = preload('res://spacetime_bindings/schema/types/umf_noise.gd')
 const NpcBrainRow = preload('res://spacetime_bindings/schema/types/umf_npc_brain_row.gd')
+const NpcDriver = preload('res://spacetime_bindings/schema/types/umf_npc_driver.gd')
 const OrderFilled = preload('res://spacetime_bindings/schema/types/umf_order_filled.gd')
 const Player = preload('res://spacetime_bindings/schema/types/umf_player.gd')
 const Push = preload('res://spacetime_bindings/schema/types/umf_push.gd')

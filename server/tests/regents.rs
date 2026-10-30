@@ -339,6 +339,11 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     assert!(rules::combo_allows(1, 0, 400, 900) && rules::combo_allows(2, 1, 900, 900), "the next step, inside the window");
     assert!(!rules::combo_allows(1, 0, 901, 900), "too late: the combo is over");
     assert!(!rules::combo_allows(2, 0, 100, 900) && !rules::combo_allows(1, -1, 100, 900), "out of order: refused");
+    assert_eq!(rules::combo_refusal(1, 0, false, 400, 900), None, "the next step in time: no refusal");
+    assert_eq!(rules::combo_refusal(1, -1, true, 400, 900), Some(rules::CUT_SHORT), "after a swing cut short: the combo starts again");
+    assert_eq!(rules::combo_refusal(0, -1, true, 400, 900), None, "and its first step is allowed");
+    assert_eq!(rules::combo_refusal(1, -1, false, 400, 900), Some(rules::OUT_OF_ORDER), "the second with no first: out of order");
+    assert_eq!(rules::combo_refusal(1, 0, false, 901, 900), Some(rules::OUT_OF_ORDER), "too late: out of order, not cut short");
     let blade = rules::RECIPES.iter().find(|r| r.name == "Iron sword blade").unwrap();
     assert!(matches!(blade.minigame, rules::Minigame::Shape(_)) && blade.quality == rules::QUALITY_FROM_ROUND, "the blade is shaped at the anvil");
     let assembled = rules::RECIPES.iter().find(|r| r.name == "Iron sword").unwrap();

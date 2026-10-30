@@ -2309,6 +2309,13 @@ fn stop_block(ctx: &ReducerContext, entity_id: u64) {
 /// and a skill its mastery rank; a light step must follow the one before it; nobody swings while blocking.
 fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), String> {
     if ability_id == rules::ABILITY_DODGE {
+        // No roll in the air (Luke's continent playtest, 2026-10-24, #6: "a roll in the air should not
+        // happen"): the client holds Ctrl pressed there and rolls as it lands; the server refuses one sent
+        // before, as it refuses a swing.
+        if ctx.db.player().entity_id().find(actor).is_some()
+            && ctx.db.movement_state().entity_id().find(actor).is_some_and(|m| !m.grounded) {
+            return Err("no roll in the air".into());
+        }
         return Ok(());
     }
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return Ok(()) };   // not ours
@@ -2347,8 +2354,9 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
         let since = (micros(ctx.timestamp) - micros(s.combo_at)) / 1000;
         // The combo's next step: right after the step before, until the window after its lock.
         let prev = if sw.is_some() { last_step } else { s.combo };
-        if !rules::combo_allows(step, prev, since, (lock + kit.combo_window_ms as i64 + slack) as u32) {
-            return Err("out of the combo's order".into());
+        let cut_short = sw.as_ref().is_some_and(|w| w.cancelled);
+        if let Some(why) = rules::combo_refusal(step, prev, cut_short, since, (lock + kit.combo_window_ms as i64 + slack) as u32) {
+            return Err(why.into());
         }
     }
     if let Some(w) = &sw {

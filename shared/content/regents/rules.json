@@ -20,6 +20,11 @@
 					"key": "foundation.referee_two_sides",
 					"number": 1.0,
 					"text": ""
+				},
+				{
+					"key": "foundation.npc_tiers",
+					"number": 1.0,
+					"text": ""
 				}
 			],
 			"rules": [

@@ -212,6 +212,7 @@ func _run_combat() -> void:
 	_check(ctrl_dodges and not slow_ctrl and not dash_q, "Ctrl rolls (the foundation's dash), not Q (a skill here); slow-walk is on Alt")
 	_run_swing_timeline()
 	_run_foes()
+	_run_foe_brain()
 	_run_bow()
 	_run_staff()
 	await _run_grades()
@@ -728,10 +729,53 @@ func _run_foes() -> void:
 			_check(f.character.animation_set.has_exact(StringName("ability.%d" % a.id)), "%s plays its %s" % [f.display_name, a.display_name])
 	_check(FoeDef.by_kind(103) != null and FoeDef.by_kind(103).kit.key == &"sword" and FoeDef.by_kind(104).kit.key == &"axe",
 		"the warrior fights with the sword kit, the axeman with the axe kit (the weapons their models carry)")
+	# A property above `script =` in a .tres is dropped on load: the skeletons' family was so, unseen (2026-10-29).
+	_check(FoeDef.by_kind(103).family == &"undead" and FoeDef.by_kind(104).family == &"undead",
+		"both skeletons are undead, as loaded (what a family trait reads): %s, %s" % [FoeDef.by_kind(103).family, FoeDef.by_kind(104).family])
 	var bad := FoeDef.new()
 	_check(bad.validate().size() >= 3, "a foe with no key, character or kit is refused: %s" % str(bad.validate()))
 	_check(FoeDef.by_kind(103).loot_table != null and FoeDef.by_kind(103).loot_table.id == 40001 and FoeDef.by_kind(103).loot_table.lines[2].pity,
 		"its loot is the skeleton camp's table, the gem with pity")
+
+
+class _FoeWorld extends NpcWorldView:
+	var way: PackedVector3Array = PackedVector3Array()
+	var sight: bool = true
+	func path(_from: Vector3, _to: Vector3, _radius: float, _height: float) -> PackedVector3Array:
+		return way
+	func can_see(_a: Vector3, _b: Vector3) -> bool:
+		return sight
+
+
+## A FOE GOES ROUND THINGS, AND A TARGET OUT OF SIGHT IS NOT FORGOTTEN AT ONCE (Luke's continent playtest,
+## 2026-10-24, #4: "a bush blocks a skeleton's sight and it turns back").
+func _run_foe_brain() -> void:
+	print("== regents: a foe's chase ==")
+	var brain: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 1)
+	var t: Array[int] = [10000]
+	brain.clock = func() -> int: return t[0]
+	brain.self_id = 900
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = Vector3(6, 0, 0)
+	w.states = {900: me, 1: them}
+	w.kinds = {900: 103, 1: 0}
+	w.way = PackedVector3Array([Vector3.ZERO, Vector3(0, 0, 3), Vector3(6, 0, 3), Vector3(6, 0, 0)])
+	brain.think(me, w)
+	_check(brain.state == &"chase" and brain.target() == 1, "a player 6 m off and in sight: chased (%s)" % brain.describe())
+	_check(brain.route().size() == 3 and brain.route()[0] == Vector3(0, 0, 3),
+		"round what is in the way, the walk map's way, not straight at them (%s)" % str(brain.route()))
+	w.sight = false
+	them.pos = Vector3(9, 0, 0)
+	t[0] += 1500
+	brain.think(me, w)
+	var lost: FoeDef = FoeDef.by_kind(103)
+	_check(brain.target() == 1 and brain.state == &"chase" and brain.goal().is_equal_approx(Vector3(6, 0, 0)),
+		"out of sight %d ms: still after them, to where it last saw them, not where they are now (%s, goal %s)" % [1500, brain.describe(), str(brain.goal())])
+	t[0] += lost.lose_sight_ms
+	brain.think(me, w)
+	_check(brain.target() == 0, "out of sight past %d ms: given up (%s)" % [lost.lose_sight_ms, brain.describe()])
 
 
 func _run_swing_timeline() -> void:

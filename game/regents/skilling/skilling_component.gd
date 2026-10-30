@@ -89,6 +89,11 @@ func optional_tables() -> Array[StringName]:
 	return [TABLE_CHALLENGE, TABLE_AFK, TABLE_RESULT, TABLE_XP, TABLE_LOG, TABLE_FILLED]
 
 
+## The world's work orders, read by world (a referee that builds one subscribes them: DECISIONS #286).
+func also_reads() -> Array[StringName]:
+	return [TABLE_ORDER]
+
+
 func _on_bound() -> void:
 	set_physics_process(is_local_authority)
 	if not is_local_authority:

@@ -1,0 +1,6 @@
+{
+  "_comment": "REGENT'S RULE'S LOAD TEST (over the foundation's shared/load.json, key by key; run it with tools/run.cmd game/regents/tests/load_300.sh). World 0 plays it on the continent (level 21), the world players are in; the bots walk the 8 x 8 cells round its spawn. Their play besides walking: game/regents/load_bot.py. 200 is a step because the greybox's referee broke between 150 and 200. Four region referees, the bots' square cut 2 x 2 (template #288): one referee breaks at 200 (REFEREE_SCALING.md); REFEREES=1x1 runs one.",
+  "level": 21,
+  "steps": [50, 100, 200, 300],
+  "referees": [2, 2]
+}

@@ -62,6 +62,15 @@ if grep -E "SCRIPT ERROR" "$fight_log" >/dev/null; then
   echo "VIOLATION: script errors:" >&2; grep -E "SCRIPT ERROR" -A3 "$fight_log" | head -12 >&2; status=1
 fi
 echo "-- the referee"; grep -E "judged|ERROR" "$ref_log" | head -8
+# Its feed (template #286): what it reads, never input_queue, and nothing read that it does not ask for.
+feed="$(grep -m1 "a referee's feed: " "$ref_log")"
+echo "   ${feed#*\[Sidecar\] }"
+if [ -z "$feed" ] || echo "$feed" | grep -q "input_queue"; then
+  echo "  FAIL: the referee's feed is not what it reads (no feed line, or input_queue in it)" >&2; status=1
+fi
+if grep -q "this referee read" "$ref_log"; then
+  echo "  FAIL: the referee read a table it does not subscribe:" >&2; grep -o "this referee read '[a-z_]*'" "$ref_log" | sort -u >&2; status=1
+fi
 echo "-- the server's log"
 spacetime logs "$DB" 2>/dev/null | grep -E "regents: .* wields|Rolling|Blocking|parried" | tail -8
 exit "$status"
