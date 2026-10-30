@@ -254,7 +254,10 @@ static func scene_tables(scene: PackedScene) -> Array[StringName]:
 
 ## A BOT: an entity with an `npc_brain` row and no player row (DECISIONS #230). A referee drives these.
 static func is_bot(entity_id: int, _kind: int = -1) -> bool:
-	return SpaceTimeSync.get_row(&"npc_brain", entity_id) != null and SpaceTimeSync.get_row(&"player", entity_id) == null
+	if SpaceTimeSync.get_row(&"npc_brain", entity_id) == null:
+		return false
+	# A `player` row is keyed by its identity, so it is found by its entity, not looked up by it.
+	return SpaceTimeSync.find_rows(&"player", func(r: RefCounted) -> bool: return int(r.get(&"entity_id")) == entity_id).is_empty()
 
 
 ## A BODY (kind 3, DECISIONS #246): flown by the body referee, so no entity node simulates it.

@@ -866,4 +866,6 @@ No schema change; four new hot rules, so a game republishes (no `--codegen`).
   whole cost at 300 players (286 ms a second of Regent's Rule's referee).
 - NPC tiers: `foundation.npc_tiers` (off), `npc_awake_m` 200, `npc_dormant_m` 400, `npc_dormant_s` 30. On, an NPC
   alone sleeps (no think, no walk, no writes) until a player is near; `NpcBrainComponent.dormant`, `tier_changed`.
+- Fixed: the brains' view never knew who was a player (`player` is keyed by identity, and it was looked up by
+  entity id), so `NpcWorldView.players` was always empty; `SidecarMain.is_bot` had the same lookup.
 - The npc suite's view and tier checks; the integration suite reads the referee's feed from its log (#286).

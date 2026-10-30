@@ -67,10 +67,15 @@ static func current(space: PhysicsDirectSpaceState3D = null, p_level: Node3D = n
 		view.states[eid] = MovementState.from_row(row)
 		var e: RefCounted = SpaceTimeSync.get_row(&"entity", eid)
 		view.kinds[eid] = int(e.get(&"kind")) if e != null else -1
+	# Who is a player: a `player` row names its entity (its key is the identity, so it is never found by
+	# the entity's id: looked up that way no one was ever a player, DECISIONS #287).
+	var people: Dictionary[int, bool] = {}
+	for p: RefCounted in SpaceTimeSync.find_rows(&"player", func(_r: RefCounted) -> bool: return true):
+		people[int(p.get(&"entity_id"))] = true
 	for eid: int in view.states:
 		var s: RefCounted = SpaceTimeSync.get_row(&"status_state", eid)
 		view.statuses[eid] = int(s.get(&"status")) if s != null else 0
-		if SpaceTimeSync.get_row(&"player", eid) != null:
+		if people.has(eid):
 			view.players[eid] = true
 	_cache = view
 	_cache_msec = now
