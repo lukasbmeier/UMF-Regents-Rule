@@ -233,6 +233,32 @@ class TheArithmetic(unittest.TestCase):
         self.assertEqual(load_test.hist_quantile(b, 0.95), 0.1, "past the last bound: the last bound")
         self.assertIsNone(load_test.hist_quantile([], 0.5))
 
+    def test_means_and_busy_from_the_sums(self):
+        """The bucketed p95 cannot tell 15 ms from 49 (buckets 10 and 50): the sums can, and they say how much of
+        the module's one thread each reducer took."""
+        def scrape(n, wall, plus, wait):
+            # Each call is a Reducer and an Update transaction, alike in count (as the server's metrics are).
+            rows = []
+            for kind, secs in (("Reducer", wall), ("Update", wall / 10.0)):
+                rows += ['spacetime_txn_elapsed_time_sec_bucket{db="d",reducer="tick",txn_type="%s",le="0.05"} %d' % (kind, n),
+                         'spacetime_txn_elapsed_time_sec_bucket{db="d",reducer="tick",txn_type="%s",le="+Inf"} %d' % (kind, n),
+                         'spacetime_txn_elapsed_time_sec_sum{db="d",reducer="tick",txn_type="%s"} %f' % (kind, secs)]
+            return load_test.parse_metrics("\n".join(rows + [
+                'spacetime_reducer_plus_query_duration_sec_sum{db="d",reducer="tick"} %f' % plus,
+                'spacetime_reducer_wait_time_sec_sum{db="d",reducer="tick"} %f' % wait,
+                'spacetime_reducer_plus_query_duration_sec_sum{db="e",reducer="tick"} 99']))
+        before, after = scrape(100, 1.0, 1.5, 0.0), scrape(300, 3.0, 5.5, 0.4)
+        srv = load_test.server_window(before, after, "d", [], 10.0)
+        r = srv["reducers"]["tick"]
+        self.assertEqual(r["calls"], 200, "a call counted once, not as its two transactions")
+        self.assertAlmostEqual(r["wall_mean_ms"], 10.0, msg="the reducer's own time")
+        self.assertAlmostEqual(r["update_mean_ms"], 1.0, msg="its subscription update, apart")
+        self.assertAlmostEqual(r["plus_query_mean_ms"], 20.0)
+        self.assertAlmostEqual(r["wait_mean_ms"], 2.0)
+        self.assertAlmostEqual(r["busy_ms_per_s"], 400.0, msg="4 s of 10, another database's not counted")
+        self.assertAlmostEqual(srv["module_busy"], 0.4)
+        self.assertIsNone(load_test.server_window(before, after, "d", [])["module_busy"], "no window: no share")
+
     def lines(self, missing=None, refused=False, quiet=None, played=False, gone=False):
         out = []
         for s in range(1, 11):

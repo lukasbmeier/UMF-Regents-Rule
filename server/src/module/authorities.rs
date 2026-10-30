@@ -146,7 +146,8 @@ pub fn write_movement_batch(
         if crate::placed::stale(row.teleport_flag, row.pos, age_us, w.teleport_flag, w.pos) {
             continue;   // from before it saw the server move this entity: that move stands (#252)
         }
-        write_movement(ctx, MovementStateRow {
+        // `row` is the stored row, found just now: no second lookup.
+        write_movement_over(ctx, Some(&row), MovementStateRow {
             entity_id: w.entity_id,
             world_id,
             chunk: 0,

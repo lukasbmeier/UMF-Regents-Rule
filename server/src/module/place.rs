@@ -20,9 +20,16 @@ pub fn chunk_of_entity(ctx: &ReducerContext, entity_id: u64) -> u32 {
 
 /// Write an entity's movement row, its cell recut from where it now is; in a new cell or world,
 /// everything that follows it moves with it. Returns the row as written.
-pub fn write_movement(ctx: &ReducerContext, mut row: MovementStateRow) -> MovementStateRow {
+pub fn write_movement(ctx: &ReducerContext, row: MovementStateRow) -> MovementStateRow {
     let was = ctx.db.movement_state().entity_id().find(row.entity_id);
-    if was.as_ref().is_some_and(|w| w.chunk == crate::cell::NOWHERE) {
+    write_movement_over(ctx, was.as_ref(), row)
+}
+
+/// `write_movement` for a caller that has the stored row in hand (`was`, read in THIS transaction and
+/// not written since): the movement tick, which reads a world's rows once and writes each at most once.
+/// One lookup less a moving entity a tick (300 players: 6,000 a second).
+pub(crate) fn write_movement_over(ctx: &ReducerContext, was: Option<&MovementStateRow>, mut row: MovementStateRow) -> MovementStateRow {
+    if was.is_some_and(|w| w.chunk == crate::cell::NOWHERE) {
         // Parked: whatever moves it (gravity on an idle body), it stays put away until `unpark`.
         row.chunk = crate::cell::NOWHERE;
         return ctx.db.movement_state().entity_id().update(row);

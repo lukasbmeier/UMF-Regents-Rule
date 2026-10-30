@@ -111,6 +111,21 @@ def hist_quantile(buckets, q):
     return lo_bound
 
 
+def hist_sum(before, after, name, match):
+    """The histogram `name`'s summed values (`_sum`) between two scrapes, for series whose labels include `match`.
+    Exact, where a quantile is only as good as the buckets (SpacetimeDB's jump 1, 5, 10, 50 ms: a p95 of "46 ms"
+    is anywhere from 10 to 50)."""
+    total = 0.0
+    for (n, labels), v in after.items():
+        if n != name + "_sum":
+            continue
+        d = dict(labels)
+        if any(d.get(k) != val for k, val in match.items()):
+            continue
+        total += v - before.get((n, labels), 0.0)
+    return total
+
+
 def gauge(m, name, match):
     vals = [v for (n, labels), v in m.items() if n == name and all(dict(labels).get(k) == val for k, val in match.items())]
     return sum(vals) if vals else 0.0
@@ -350,7 +365,10 @@ def window(lines, t0, t1, n_bots):
     }
 
 
-def server_window(before, after, dbid, gauges):
+def server_window(before, after, dbid, gauges, seconds=0.0):
+    """Each reducer's times in the window, and how busy the module was: a database runs one reducer at a time,
+    so `busy_ms_per_s` (the reducer and its subscription queries, summed, a second of the window) over 1000 is
+    the share of that one thread it took; all of them together, `module_busy`, near 1 is the ceiling."""
     out = {"reducers": {}}
     names = set()
     for (n, labels) in after:
@@ -359,16 +377,30 @@ def server_window(before, after, dbid, gauges):
             if d.get("db") == dbid and d.get("reducer"):
                 names.add(d["reducer"])
     for r in sorted(names):
-        el = histogram(before, after, "spacetime_txn_elapsed_time_sec", {"db": dbid, "reducer": r})
-        cpu = histogram(before, after, "spacetime_txn_cpu_time_sec", {"db": dbid, "reducer": r})
+        # A call is two transactions in these two histograms: the reducer's (`Reducer`) and the subscription
+        # update after it (`Update`). Summed, they counted every call twice and mixed the two times.
+        el = histogram(before, after, "spacetime_txn_elapsed_time_sec", {"db": dbid, "reducer": r, "txn_type": "Reducer"})
+        cpu = histogram(before, after, "spacetime_txn_cpu_time_sec", {"db": dbid, "reducer": r, "txn_type": "Reducer"})
         wait = histogram(before, after, "spacetime_reducer_wait_time_sec", {"db": dbid, "reducer": r})
         calls = el[-1][1] if el else 0
         if calls <= 0:
             continue
         ms = lambda b, q: None if hist_quantile(b, q) is None else hist_quantile(b, q) * 1000.0  # noqa: E731
+        match = {"db": dbid, "reducer": r}
+        wall_s = hist_sum(before, after, "spacetime_txn_elapsed_time_sec", dict(match, txn_type="Reducer"))
+        update_s = hist_sum(before, after, "spacetime_txn_elapsed_time_sec", dict(match, txn_type="Update"))
+        plus_s = hist_sum(before, after, "spacetime_reducer_plus_query_duration_sec", match)
+        wait_s = hist_sum(before, after, "spacetime_reducer_wait_time_sec", match)
         out["reducers"][r] = {"calls": calls, "wall_p50_ms": ms(el, 0.5), "wall_p95_ms": ms(el, 0.95),
                               "wall_p99_ms": ms(el, 0.99), "cpu_p95_ms": ms(cpu, 0.95),
-                              "wait_p95_ms": ms(wait, 0.95), "wait_p99_ms": ms(wait, 0.99)}
+                              "wait_p95_ms": ms(wait, 0.95), "wait_p99_ms": ms(wait, 0.99),
+                              "wall_mean_ms": wall_s * 1000.0 / calls,
+                              "update_mean_ms": update_s * 1000.0 / calls,
+                              "plus_query_mean_ms": plus_s * 1000.0 / calls,
+                              "wait_mean_ms": wait_s * 1000.0 / calls,
+                              "busy_ms_per_s": plus_s * 1000.0 / seconds if seconds > 0 else None}
+    busy = [r["busy_ms_per_s"] for r in out["reducers"].values() if r["busy_ms_per_s"] is not None]
+    out["module_busy"] = sum(busy) / 1000.0 if busy else None
     out["outgoing_queue_disconnects"] = gauge(after, "spacetime_client_outgoing_queue_disconnects_total", {"db": dbid}) - \
         gauge(before, "spacetime_client_outgoing_queue_disconnects_total", {"db": dbid})
     out["max_send_queue"] = max([g[0] for g in gauges], default=0.0)
@@ -417,6 +449,8 @@ def limits_checks(w, srv, ref, limits, lag_limit):
     """Did the game hold at this step? [(name, measured, limit, holds)]; a null limit is reported only."""
     measured = {
         "tick_movement_p95_ms": srv["reducers"].get("tick_movement", {}).get("wall_p95_ms"),
+        "tick_movement_mean_ms": srv["reducers"].get("tick_movement", {}).get("wall_mean_ms"),
+        "module_busy_pct": None if srv.get("module_busy") is None else srv["module_busy"] * 100.0,
         "reducer_wait_p95_ms": max([r["wait_p95_ms"] or 0.0 for r in srv["reducers"].values()], default=None),
         "submit_input_rtt_p95_ms": w["rtt_ms"].get("submit_input", {}).get("p95"),
         "input_ack_p95_ms": w["input_ack_ms"]["p95"],
@@ -503,12 +537,20 @@ def step_markdown(s):
     d = w["ring_swap_ms"]
     lines.append("| ring swap applied (%.1f a bot a minute) | %s | %s | %s | %s |" % (
         w["ring_swaps_per_bot_min"], fmt(d["p50"]), fmt(d["p95"]), fmt(d["p99"]), fmt(d["max"])))
-    lines += ["", "| server, per reducer (ms) | calls | wall p50 | wall p95 | wall p99 | cpu p95 | queue wait p95 |",
-              "|---|---|---|---|---|---|---|"]
-    for k, r in srv["reducers"].items():
-        lines.append("| %s | %d | %s | %s | %s | %s | %s |" % (k, r["calls"], fmt(r["wall_p50_ms"], 2), fmt(r["wall_p95_ms"], 2),
-                                                             fmt(r["wall_p99_ms"], 2), fmt(r["cpu_p95_ms"], 2), fmt(r["wait_p95_ms"], 2)))
+    lines += ["", "| server, per reducer (ms) | calls | wall p50 | wall p95 | wall p99 | cpu p95 | queue wait p95 | wall mean | its update mean | wait mean | busy ms/s |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
+    by_busy = sorted(srv["reducers"].items(), key=lambda kv: -(kv[1].get("busy_ms_per_s") or 0.0))
+    for k, r in by_busy:
+        lines.append("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
+            k, r["calls"], fmt(r["wall_p50_ms"], 2), fmt(r["wall_p95_ms"], 2), fmt(r["wall_p99_ms"], 2),
+            fmt(r["cpu_p95_ms"], 2), fmt(r["wait_p95_ms"], 2), fmt(r.get("wall_mean_ms"), 2),
+            fmt(r.get("update_mean_ms"), 2), fmt(r.get("wait_mean_ms"), 2), fmt(r.get("busy_ms_per_s"), 0)))
     lines.append("")
+    if srv.get("module_busy") is not None:
+        lines.append("The module was busy %.0f %% of the window (its one thread: reducers and their subscription updates; "
+                     "the p95s above are only as good as the server's buckets, 1, 5, 10, 50 ms; the means and busy are exact; "
+                     "a reducer's update is the subscription work after it)." % (
+                         srv["module_busy"] * 100.0))
     lines.append("Server queues, worst sampled: subscription send %s, outgoing %s, module instance %s; outgoing-queue disconnects %s." % (
         fmt(srv["max_send_queue"], 0), fmt(srv["max_outgoing_queue"], 0), fmt(srv["max_instance_queue"], 0),
         fmt(srv["outgoing_queue_disconnects"], 0)))
@@ -601,7 +643,7 @@ def main():
             lines = workers.lines(t0 - 2)
             w = window(lines, t0, t1, n)
             w["_min_neighbours_seen"] = min_seen(lines, t0, t1)
-            srv = server_window(before, after, dbid, gauges)
+            srv = server_window(before, after, dbid, gauges, t1 - t0)
             # A report at `at` covers the referee's last window (10 s, set by the suite): only those inside [t0, t1].
             ref_rows, ref_note = (None, "not asked") if a.no_referee else referee_windows(a.db, t0 + REF_WINDOW_S, t1 + 1)
             ref = referee_summary(ref_rows) if ref_rows else None
