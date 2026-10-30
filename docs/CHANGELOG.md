@@ -940,3 +940,15 @@ Sidecar code only: restart the referees (no republish).
   finished in five minutes and each read held the main thread 178 ms.
 - `NpcNav._bounds` (asked on every brain's every `ready` and `path`) searched every node of the level for its
   LevelInfo each time: 20,000 nodes there. It is found once a level.
+
+## 1.5.4 — an idle NPC costs its referee nothing; a referee poses nobody (DECISIONS #294)
+Code only (client and sidecar): restart the referees; a game republishes nothing.
+- `push_authority_input` drops a still frame (no stick, jump, dash or aim) for a body at rest on the ground
+  with nothing pushing it: the body is idle as one nobody drives, not stepped and not written. A brain sends a
+  frame every physics tick, so every NPC standing still was stepped 60 times a second and written 20.
+- `AnimationDriverComponent` builds its tree in a referee (a clip's length can be read) but never advances
+  it: no pose decides anything (rule 11).
+- `NpcWorldView` is indexed by kind (`by_kind`): a search for the nearest player looks at players, not every
+  node and stone the referee holds (~3,000 in a region there); unchanged rows are not decoded again; statuses
+  come from their own rows.
+- Measured: With the world view below, four region referees on Regent's Rule's Skyrim-size world at 300 players: frame p95 145 to 24-27 ms, their memory flat at ~1 GB each (it had climbed ~5 MB a second each: a referee too far behind to apply what it was sent).

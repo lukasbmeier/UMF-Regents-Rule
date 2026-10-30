@@ -19,6 +19,9 @@ var world_mask: int = 1
 ## entity_id -> its status (`status_state`; 0, normal, when it has none), and which are players.
 var statuses: Dictionary[int, int] = {}
 var players: Dictionary[int, bool] = {}
+## kind -> its entities' ids (template 1.5.4): a search for the nearest of one kind looks at that kind only.
+## A big world's referee holds thousands of nodes and stones; every skeleton's every think looked at each.
+var by_kind: Dictionary[int, Array] = {}
 ## The level its world runs, for paths (`path`). Null in a test with none.
 var level: Node3D = null
 
@@ -32,6 +35,9 @@ var level: Node3D = null
 const SHARED_MS: int = 100
 static var _cache: NpcWorldView = null
 static var _cache_msec: int = -1000000
+## The rows the last view was built from, decoded: entity_id -> [its movement row, the state, its kind]. A row
+## the cache still holds unchanged (the same object: the SDK replaces a row it updates) is not decoded again.
+static var _decoded: Dictionary[int, Array] = {}
 ## TESTING: the clock, in msec (default: the engine's).
 static var clock_msec: Callable = Callable()
 
@@ -60,23 +66,37 @@ static func current(space: PhysicsDirectSpaceState3D = null, p_level: Node3D = n
 		view.kinds[ent.entity_id] = ent.definition.kind if ent.definition != null else -1
 	# EVERYONE ELSE, as the server has them (DECISIONS #230): a referee drives its bots and simulates
 	# nobody else (the players move themselves, the props stand), so the rest come from their rows.
+	var decoded: Dictionary[int, Array] = {}
 	for row: RefCounted in SpaceTimeSync.find_rows(&"movement_state", func(_r: RefCounted) -> bool: return true):
 		var eid: int = int(row.get(&"entity_id"))
 		if view.states.has(eid):
 			continue
-		view.states[eid] = MovementState.from_row(row)
-		var e: RefCounted = SpaceTimeSync.get_row(&"entity", eid)
-		view.kinds[eid] = int(e.get(&"kind")) if e != null else -1
+		var had: Array = _decoded.get(eid, [])
+		if not had.is_empty() and had[0] == row:
+			decoded[eid] = had   # unchanged since the last view (a node, a stone): kept as it was decoded
+		else:
+			var e: RefCounted = SpaceTimeSync.get_row(&"entity", eid)
+			decoded[eid] = [row, MovementState.from_row(row), int(e.get(&"kind")) if e != null else -1]
+		view.states[eid] = decoded[eid][1]
+		view.kinds[eid] = decoded[eid][2]
+	_decoded = decoded
 	# Who is a player: a `player` row names its entity (its key is the identity, so it is never found by
 	# the entity's id: looked up that way no one was ever a player, DECISIONS #287).
 	var people: Dictionary[int, bool] = {}
 	for p: RefCounted in SpaceTimeSync.find_rows(&"player", func(_r: RefCounted) -> bool: return true):
 		people[int(p.get(&"entity_id"))] = true
+	# Statuses from their own rows (few: who has one), not a lookup for every entity; none is normal (0).
+	for srow: RefCounted in SpaceTimeSync.find_rows(&"status_state", func(_r: RefCounted) -> bool: return true):
+		var sid: int = int(srow.get(&"entity_id"))
+		if view.states.has(sid):
+			view.statuses[sid] = int(srow.get(&"status"))
 	for eid: int in view.states:
-		var s: RefCounted = SpaceTimeSync.get_row(&"status_state", eid)
-		view.statuses[eid] = int(s.get(&"status")) if s != null else 0
 		if people.has(eid):
 			view.players[eid] = true
+		var k: int = view.kinds.get(eid, -1)
+		if not view.by_kind.has(k):
+			view.by_kind[k] = []
+		view.by_kind[k].append(eid)
 	_cache = view
 	_cache_msec = now
 	return view
@@ -86,6 +106,7 @@ static func current(space: PhysicsDirectSpaceState3D = null, p_level: Node3D = n
 static func invalidate() -> void:
 	_cache = null
 	_cache_msec = -1000000
+	_decoded.clear()
 
 
 func state_of(entity_id: int) -> MovementState:
@@ -100,10 +121,20 @@ func status_of(entity_id: int) -> int:
 ## Every entity of `kind`, by id.
 func all_of_kind(kind: int) -> Array[int]:
 	var out: Array[int] = []
+	for id: int in _of_kind(kind):
+		out.append(id)
+	out.sort()
+	return out
+
+
+## The ids of `kind`: from `by_kind` when the view was built, else (a view a test made by hand) by looking.
+func _of_kind(kind: int) -> Array:
+	if not by_kind.is_empty() or kinds.is_empty():
+		return by_kind.get(kind, [])
+	var out: Array = []
 	for id: int in kinds:
 		if kinds[id] == kind:
 			out.append(id)
-	out.sort()
 	return out
 
 
@@ -117,8 +148,8 @@ func path(from: Vector3, to: Vector3, radius: float, height: float) -> PackedVec
 func nearest_of_kind(from: Vector3, kind: int, radius: float, except_id: int = 0) -> int:
 	var best: int = 0
 	var best_d: float = radius * radius
-	for id: int in states:
-		if id == except_id or kinds.get(id, -1) != kind:
+	for id: int in _of_kind(kind):
+		if id == except_id:
 			continue
 		var st: MovementState = states[id]
 		if st == null:
