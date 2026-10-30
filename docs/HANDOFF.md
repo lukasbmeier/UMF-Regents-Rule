@@ -1,40 +1,42 @@
-# Handoff — UMF Template, 2026-10-30 (the server at 300 players, read right: 1.4.1)
+# Handoff — UMF Template, 2026-10-30 (a Skyrim-size world's worth of bots: 1.5.0-1.5.5)
 
 ## Where it stands
-**1.4.1** (DECISIONS #289) on 1.4.0 (#288), 1.3.0 (#287), 1.2.2 (#286): committed and pushed. Pulled into
-Regent's Rule (local merge commits there). NOT shipped to Fishing, Fowl Play, DiscGolf (`ship_template.sh`
-not run since 1.1.1: each has its codegen debug dump uncommitted, Luke's). 1.4.0 adds a table (each game
-republishes `--codegen`); 1.4.1 is code only.
-Suites for 1.4.1: integration 644/0 (the tick ignoring statuses fails 2); e2e 11/0; movement playtest
-(0/100/200 ms) 41/0; native green; `tests/load/test_load.py` 23/0 (the old harness fails it).
+**1.5.5** (DECISIONS #290-#294) on 1.4.1: committed and pushed. Pulled into Regent's Rule; shipped to Fishing,
+Fowl Play, DiscGolf with `ship_template.sh` (each republished `--codegen`: 1.4.0 added a table): see their
+HANDOFFs for their suites. Suites here: unit 2272/0 (the ground bake, the ring's world filter and the
+still-frame drop each failed by a negative), integration 644/0, e2e 11/0, ring 15+47/0, sidecar 13/0,
+regions 25/0, native 92/0, `tests/load/test_load.py` 33/0.
 
-## This session (from Regent's Rule's load test, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
-- THE LOAD TEST READ THE SERVER WRONG: SpacetimeDB times each call as two transactions (`Reducer`, then
-  the subscription `Update`), and the harness summed them (every call counted twice); its p95s are guesses
-  inside 1/5/10/50 ms buckets. Now: exact means, each reducer's update apart, `busy ms/s`, the module's
-  busy % (`module_busy_pct`, `tick_movement_mean_ms` reported). `tools/load/load_test.py`, HANDBOOK.
-- Read right, 300 bots: the module 76 % busy, `tick_movement` 438 ms/s; `prune_action_events` 2 ms/s
-  and `work_tick` 5 (last handoff's "4 ms" was the bucket's guess: nothing to fix there).
-- `tick_world_module` (`module/movement.rs`) reads each world's rows once a tick, one delete a player's
-  frames, `write_movement_over` (`module/place.rs`; also `write_movement_batch`). The tick's own code
-  halved (3.2 ms at 300); its subscription update is 15.3 ms; the module 68 % busy.
+## This session (from Regent's Rule's 300 bots on a Skyrim-size world, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
+- 1.5.0 (#290): `LevelInfo.bake_ground`; the load test spreads bots over a level's land (`tools/load/level.py`),
+  cuts region referees where they live, `LOAD=<name>`, `WATCH`/`PLAYER=1` (watch and join), each referee's
+  frames/cores/memory, judged by `module_busy_pct` 80 and the tick's mean 25; `tests/referee_sweep.sh`;
+  `GenreModule.cell_tables`.
+- 1.5.1 (#291): ring cell queries are `chunk = N` alone (SpacetimeDB narrows no conjunction: the tick's update
+  111 → 19 ms spread out); another world's rows kept back in `SpaceTimeSync._emit_row`, a world change replays.
+- 1.5.2 (#292): the movement tick passes still rows before any lookup; cuts weigh the level's NPCs (`npc_kinds`);
+  the registry's orphan warning once a minute.
+- 1.5.3 (#293): walk-map bakes one at a time; a level's bounds found once (it searched every node per brain ask).
+- 1.5.4/1.5.5 (#294): `NpcWorldView` indexed by kind (THE referee cost: every think searched every node); a
+  still frame for a body at rest dropped; a referee builds and advances no animation trees. Four referees on
+  the 37 km2 world at 300: frame p95 145 → 26-30 ms, memory flat ~1 GB each (it had climbed ~5 MB/s each).
 
 ## Next, in order
-1. Ship 1.2.0-1.4.1: `bash "../ship_template.sh" "1.4.1: the server at 300"` once Luke commits the games'
-   debug dumps; each game republishes `--codegen` and runs its unit suite and its referee suites. Fowl Play
-   and DiscGolf keep `referee_tables = *` until they list theirs.
-2. The load test's limits judge bucketed p95s (`tick_movement_p95_ms`, `reducer_wait_p95_ms`: 50 sits on a
-   bucket edge); judge `module_busy_pct` (say <= 80) instead, once Luke agrees.
-3. Genre cell tables are asked for whole by a region referee: give the sidecar the game's `cell_tables`.
-4. Template 1.0 milestone A's last measurement (OR'd ring query against nine one-cell ones).
+1. Two of four region referees on Regent's expanse stall their main thread ~30 s just after their skeletons
+   bind (the server drops them for idle timeout; they reconnect). Not animation, not walk-map reads. Find it
+   (a probe of `_process`/`_physics_process` parts, as in `REFEREE_SCALING.md`, during the binding).
+2. A region referee loads the whole level (~375 MB static on the expanse): load only its cells and terrain.
+3. The server at 300 spread out: 77-89 % busy (the tick 7.3 ms + its update 18 ms, 20 Hz). Design levers #289.
+4. Template 1.0 milestone A's last measurement (OR'd ring query against nine one-cell ones): note #291 first,
+   an OR is not narrowed either.
 
 ## Waiting on Luke
-- What is left at 300 is SpacetimeDB's subscription fan-out (~2/3 of the module): players x neighbours x
-  20 Hz. Levers are design: how dense players are (the test is a town everywhere, ~47 seen each), the cell
-  size (64 m), how often others' movement is written, `input_batch_size` (3: 20 calls a second each).
-- The per-player bandwidth budget (~120 KB/s at 300 dense; gzip saves 2.2x for ~14 % of the update cost).
+- The per-player bandwidth budget; the server's levers at 300 (#289).
+- Whether a referee may step NPCs and think less often when idle (it is most of a busy referee now).
 
 ## Watch out
-- Python's text-mode write on Windows makes CRLF: `io.open(..., newline="")` or `sed -i 's/\r$//'` after.
-- SpacetimeDB on Windows answers on the 15.6 ms timer: round trips p95 ~15 ms whatever the load.
+- Heredocs through the Bash tool turn `\r`/`\t` in text into control characters: write patch scripts with the
+  file tool (`chr(92)` for a backslash) — the HANDBOOK had a mangled path from it.
+- A ring now hears another world's rows in its cells and drops them in `SpaceTimeSync`: a component that reads
+  the SDK cache directly (`find_rows`) can still see them; filter by `world_id` there.
 - The load suite wipes the test database several times: run nothing else on the server meanwhile.
