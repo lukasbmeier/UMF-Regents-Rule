@@ -394,6 +394,8 @@ class TheLevel(unittest.TestCase):
         with open(os.path.join(self.dir, "t_ground.bin"), "wb") as f:
             f.write(struct.pack("<%dH" % len(ground), *ground))
         self.doc = {"level": "t", "id": 7, "spawn": [20.0, 0.0, 20.0], "water_y": 0.0,
+                    "points": [{"kind": "wolf", "x": 1.0, "z": 2.0}, {"kind": "tree", "x": 3.0, "z": 4.0},
+                               {"kind": "bear", "x": 5.0, "z": 6.0}],
                     "depth_grid": {"file": "t_depth.bin", "origin_x": 0.0, "origin_z": 0.0, "spacing": 10.0, "width": 9, "height": 9},
                     "ground_grid": {"file": "t_ground.bin", "origin_x": 0.0, "origin_z": 0.0, "spacing": 10.0, "width": 9,
                                     "height": 9, "base_y": -10.0}}
@@ -417,6 +419,10 @@ class TheLevel(unittest.TestCase):
         flat = self.L.Level(dict(self.doc, ground_grid=None), self.dir)
         self.assertFalse(flat.has_ground())
         self.assertIsNone(flat.ground(20.0, 20.0), "a level baked without its ground has none")
+
+    def test_the_npcs_a_referee_runs(self):
+        self.assertEqual(sorted(self.L.npc_points(self.lvl, ["wolf", "bear"])), [(1.0, 2.0), (5.0, 6.0)])
+        self.assertEqual(self.L.npc_points(self.lvl, []), [], "no npc_kinds: the cut is by players alone")
 
     def test_homes_are_the_same_everywhere_and_on_land(self):
         spread = self.L.spread_of({"spread": {"over": "level", "crowd_share": 0.5, "crowd_cells": 0.3, "roam_cells": 1}})

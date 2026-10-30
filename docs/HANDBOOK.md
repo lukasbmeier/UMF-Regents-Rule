@@ -493,6 +493,8 @@ Hundreds of bot players, each a real connection to the server, and what each one
   home and never into the sea; with `LevelInfo.bake_ground` baked they walk on the ground's height. The harness
   and the bots compute the same homes, so region referees are cut where the bots live (each an equal share). A
   bot alone in the wilds sees nobody, which is play: the check is then that some bots saw others.
+  List the kinds of level point your referees run (`"npc_kinds": ["skeleton_warrior"]`): the regions are then
+  cut so each referee has a like share of the players AND those NPCs (`npc_weight`, 1: one NPC weighs as a player).
 - **Another load config**: `LOAD=big` reads `shared/<genre>/load_big.json` over the game's `load.json` (a
   bigger world, another crowd), e.g. `LOAD=expanse tools\run.cmd tests\load_test.sh`.
 - **The server is judged by its exact numbers** (template 1.5): `module_busy_pct` (80: the module's one

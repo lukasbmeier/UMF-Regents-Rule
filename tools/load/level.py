@@ -30,6 +30,10 @@ class Level:
         self.d_w, self.d_h = int(g["width"]), int(g["height"])
         with open(os.path.join(folder, g["file"]), "rb") as f:
             self.depth = f.read()
+        # Every placed point, by kind: (x, z) (what a referee may run, `npc_points`).
+        self.points = {}
+        for pt in doc.get("points", []):
+            self.points.setdefault(pt.get("kind", ""), []).append((float(pt.get("x", 0.0)), float(pt.get("z", 0.0))))
         self.ground_grid = None
         gg = doc.get("ground_grid")
         if gg:
@@ -136,6 +140,14 @@ def home_of(index, seed, spread, level, area_cells, cell_m):
             return p
     p = level.random_land(rng, tries=400)
     return p if p is not None else (sx, sz)
+
+
+def npc_points(level, kinds):
+    """Where the level places the NPCs a referee runs (its points of `kinds`, the load config's `npc_kinds`)."""
+    out = []
+    for k in kinds or []:
+        out.extend(level.points.get(k, []))
+    return out
 
 
 def homes(n, seed, spread, level, area_cells, cell_m):
