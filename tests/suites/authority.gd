@@ -133,6 +133,21 @@ func _run_authority_tests() -> void:
 		"and carries every field MovementWrite declares (%s)" % str(write.keys()))
 	_check(mv.take_authority_write().is_empty(),
 		"taking a write clears it: the same state is not sent twice")
+	# A brain's still frames for a body at rest (template 1.5.3): nothing stepped, nothing written.
+	for i: int in range(40):
+		await get_tree().physics_frame
+	mv.take_authority_write()
+	var rest: Vector3 = mv.get_authority_state().pos
+	for i: int in range(10):
+		mv.push_authority_input(_frame(0, Vector2.ZERO))
+		await get_tree().physics_frame
+	_check(mv.take_authority_write().is_empty() and mv.get_authority_state().pos == rest,
+		"a body at rest given still frames (a skeleton idle in camp) is not stepped and owes no write")
+	for i: int in range(10):
+		mv.push_authority_input(_frame(0, Vector2(0.0, -1.0)))
+		await get_tree().physics_frame
+	_check(not mv.take_authority_write().is_empty() and mv.get_authority_state().pos.z < rest.z - 0.1,
+		"and a frame that walks still moves it")
 
 	# --- THE AGREEMENT. Same frames, same start, client prediction vs authority ------------
 	# If these two drift, every player in a sidecar world is corrected constantly. They run the

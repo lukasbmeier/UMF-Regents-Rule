@@ -593,6 +593,12 @@ func push_authority_input(frame: InputFrame) -> void:
 	if mode != Mode.SERVER_AUTHORITY:
 		push_error("push_authority_input is only valid in SERVER_AUTHORITY (mode %d)" % mode)
 		return
+	# A STILL FRAME FOR A BODY AT REST CHANGES NOTHING (template 1.5.3): no stick, jump, dash or aim, on the
+	# ground and not moving, nothing pushing it. Dropped, the body is idle as one nobody drives (no step, no
+	# write). A brain sends one every physics tick: each skeleton standing in its camp was stepped 60 times a
+	# second and written 20 (Regent's Rule's Skyrim-size world: most of a referee's 660 awake ones).
+	if _queue.is_empty() and _sim != null and _sim_verified and _sim.grounded and _sim.vel.length_squared() <= 0.0 			and frame.move_dir == Vector2.ZERO and not frame.jump and not frame.dash and not frame.face and _pushes.is_empty():
+		return
 	var highest: int = _queue[_queue.size() - 1].seq if not _queue.is_empty() else _sim_seq
 	frame.seq = highest + 1
 	_queue.append(frame)

@@ -124,6 +124,11 @@ func _on_bound() -> void:
 	if not _install():
 		return
 	_connect_siblings()
+	# A REFEREE DRAWS NOTHING (template 1.5.3; rule 11: no pose ever decides anything): its tree is built,
+	# so a clip's length can be read, but never advanced. Every NPC's pose worked out every frame was a
+	# large part of a busy referee's frame (Regent's Rule's Skyrim-size world: 150 skeletons a referee).
+	if SpaceTimeMovementComponent.is_authority_process():
+		return
 	if not is_local_authority:
 		AnimationRate.apply_range(_model, GraphicsQuality.detail)
 		if not Settings.changed.is_connected(_on_setting):

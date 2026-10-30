@@ -52,6 +52,13 @@ func _run_npc_tests() -> void:
 		"and finds nobody when nobody is in range")
 	_check(view.nearest_of_kind(Vector3.ZERO, 99, 50.0, 10) == 0,
 		"a kind nothing has matches nothing")
+	# A built view searches its kind index (template 1.5.4): thousands of nodes are never looked at for a player.
+	var indexed := NpcWorldView.new()
+	indexed.states = {10: npc_state, 11: player_state, 12: far_state, 13: player_state}
+	indexed.kinds = {10: 1, 11: 0, 12: 0, 13: 7}
+	indexed.by_kind = {1: [10], 0: [12], 7: [11, 13]}
+	_check(indexed.nearest_of_kind(Vector3.ZERO, 0, 100.0, 10) == 12 and indexed.all_of_kind(7) == [11, 13],
+		"a view built with its kind index searches by it (%d, %s)" % [indexed.nearest_of_kind(Vector3.ZERO, 0, 100.0, 10), str(indexed.all_of_kind(7))])
 
 	var chase := ChaseBrain.new(1)
 	chase.self_id = 10
