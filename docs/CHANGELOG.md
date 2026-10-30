@@ -869,3 +869,12 @@ No schema change; four new hot rules, so a game republishes (no `--codegen`).
 - Fixed: the brains' view never knew who was a player (`player` is keyed by identity, and it was looked up by
   entity id), so `NpcWorldView.players` was always empty; `SidecarMain.is_bot` had the same lookup.
 - The npc suite's view and tier checks; the integration suite reads the referee's feed from its log (#286).
+
+## 1.4.0 — region referees (DECISIONS #288)
+A table and three reducers added: a game republishes with `--codegen` (data kept; older builds keep playing).
+- `--region=x0,z0,x1,z1` (cell squares) `--border=1` `--hand-on=8` `--name=N`: a referee for part of a world, asking only
+  for its cells (one query a column), running the NPCs and bodies there and judging its own people's swings.
+- `npc_driver` and `drive_npcs`: the module gives each NPC (and body) to one referee at a time; `RegionKeeper`.
+- `offer_region_referee`: one more referee for a world that has one.
+- The load test: `shared/load.json` `referees` [columns, rows], `REFEREES=2x2`; `tests/regions_test.sh` (25 checks).
+- A world with one referee is unchanged.

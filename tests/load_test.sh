@@ -18,9 +18,9 @@ GODOT="${GODOT:-godot}"
 PYTHON="${PYTHON:-$(command -v python || command -v python3)}"
 OUT=build/load
 mkdir -p "$OUT"
-ref_pid=""
+ref_pids=""
 cleanup() {
-  [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null
+  for p in $ref_pids; do kill "$p" 2>/dev/null; done
   wait 2>/dev/null
 }
 trap cleanup EXIT
@@ -56,23 +56,41 @@ for mode in ring world; do
   grep "interest_dump:" "$OUT/interest_$mode.log" || { echo "the interest dump failed:" >&2; tail -20 "$OUT/interest_$mode.log" >&2; exit 1; }
 done
 
-echo "== the world's referee =="
-CODE="\"load$(date +%s)$RANDOM\""
-spacetime call "$DB" offer_referee 0 "$CODE" >/dev/null 2>&1 || { echo "offer_referee failed" >&2; exit 1; }
-"$GODOT" --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim="${CODE//\"/}" --no-record \
-  >"$OUT/referee.log" 2>&1 &
-ref_pid=$!
-for _ in $(seq 1 60); do grep -q "claim_referee: registered" "$OUT/referee.log" && break; sleep 0.5; done
-grep -q "claim_referee: registered" "$OUT/referee.log" || { echo "the referee did not register:" >&2; tail -20 "$OUT/referee.log" >&2; exit 1; }
+# REGION REFEREES (DECISIONS #288): shared/load.json "referees" [columns, rows] (or REFEREES=2x2) cuts the bots'
+# square into that many regions, a referee each; [1, 1] is one referee for the whole world.
+REGIONS="$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import load_test as L; c = L.load_config(); s = sys.argv[1].split('x') if sys.argv[1] else c.get('referees', [1, 1]); print(' '.join(L.regions(s, int(c['area_cells']))))" "${REFEREES:-}")" \
+  || { echo "could not read the referees from shared/load.json" >&2; exit 1; }
+start_referee() {   # start_referee LOG OFFER_REDUCER [REGION NAME]
+  local code="load$(date +%s)$RANDOM"
+  spacetime call "$DB" "$2" 0 "\"$code\"" >/dev/null 2>&1 || { echo "$2 failed" >&2; exit 1; }
+  local extra=""
+  [ -n "${3:-}" ] && extra="--region=$3 --name=$4"
+  # shellcheck disable=SC2086
+  "$GODOT" --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim="$code" --no-record $extra \
+    >"$1" 2>&1 &
+  ref_pids="$ref_pids $!"
+  for _ in $(seq 1 60); do grep -q "claim_referee: registered" "$1" && break; sleep 0.5; done
+  grep -q "claim_referee: registered" "$1" || { echo "the referee did not register:" >&2; tail -20 "$1" >&2; exit 1; }
+}
+if [ -z "$REGIONS" ]; then
+  echo "== the world's referee =="
+  start_referee "$OUT/referee.log" offer_referee
+else
+  echo "== the world's referees, a region each: $REGIONS =="
+  i=0
+  for r in $REGIONS; do
+    start_referee "$OUT/referee_$i.log" "$([ "$i" = 0 ] && echo offer_referee || echo offer_region_referee)" "$r" "load_r$i"
+    i=$((i + 1))
+  done
+fi
 echo "ok"
 
 echo "== the steps =="
 "$PYTHON" tools/load/load_test.py --db "$DB" --interest "$OUT/interest_ring.json" --label ring \
   ${STEPS:+--steps "$STEPS"} ${MEASURE:+--measure "$MEASURE"}
 status=$?
-kill "$ref_pid" 2>/dev/null
-wait "$ref_pid" 2>/dev/null
-ref_pid=""
+for p in $ref_pids; do kill "$p" 2>/dev/null; wait "$p" 2>/dev/null; done
+ref_pids=""
 [ "$status" = "1" ] && { echo "THE HARNESS FAILED: build/load/ring/report.md" >&2; exit 1; }
 
 if [ "${NEGATIVE:-1}" != "0" ]; then

@@ -136,6 +136,21 @@ func on_row(ev: RowEvent) -> void:
 				push_body(eid, row.get(&"vel") as Vector3)
 
 
+## A REGION REFEREE flies only the bodies it runs (DECISIONS #288): (entity id) -> bool. Unset (one
+## referee for the world): every one.
+var may_fly: Callable = Callable()
+
+
+## Fly body `eid` now, if it is in the world (a region referee was given it).
+func take_body(eid: int) -> void:
+	_follow_body(eid)
+
+
+## Stop flying body `eid` (a region referee let it go): its rows stay as last written, for the next.
+func let_go_body(eid: int) -> void:
+	_drop_body(eid)
+
+
 ## Body `eid`'s velocity changed by `vel` (a push), woken if it was at rest.
 func push_body(eid: int, vel: Vector3) -> void:
 	var b: FlyingBody = _bodies.get(eid, null)
@@ -159,6 +174,8 @@ func set_entity(entity_id: int, kind: int, player: bool = false, online: bool = 
 func _follow_body(eid: int) -> void:
 	if _bodies.has(eid):
 		return
+	if may_fly.is_valid() and not bool(may_fly.call(eid)):
+		return   # another region's (DECISIONS #288)
 	var b_row: RefCounted = SpaceTimeSync.get_row(&"body_state", eid)
 	var m_row: RefCounted = SpaceTimeSync.get_row(&"movement_state", eid)
 	if b_row == null or m_row == null:

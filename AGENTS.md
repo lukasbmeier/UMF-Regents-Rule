@@ -103,6 +103,7 @@ GODOT=<path> ./tests/hot_rules_test.sh     # hot rules on a real server: who may
 ./tests/telemetry_test.sh                  # the chronicle and the telemetry page on a real server (no Godot)
 GODOT=<path> ./tests/accounts_test.sh      # sign-in, accounts, link codes, characters, parking, against the suites' own OIDC issuer
 GODOT=<path> ./tests/ring_test.sh          # ring interest: a real client sent only the cells round it
+GODOT=<path> ./tests/regions_test.sh       # two region referees: an NPC handed on over the edge, one driver at a time
 GODOT=<path> ./tests/load_test.sh          # 50/100/300 bot players on the test database: bandwidth, reducer and tick times, the referee's lag
 GODOT=<path> ./tests/render_test.sh        # windowed: foliage, grass, lake, grip pictures, F11
 ```
