@@ -879,7 +879,7 @@ A table and three reducers added: a game republishes with `--codegen` (data kept
 - The load test: `shared/load.json` `referees` [columns, rows], `REFEREES=2x2`; `tests/regions_test.sh` (25 checks).
 - A world with one referee is unchanged.
 
-## 1.4.1 — the server's movement tick reads each world once a tick; the load test reads the server right
+## 1.4.1 — the server's movement tick reads each world once a tick; the load test reads the server right (DECISIONS #289)
 Code only: a game republishes (no `--codegen`; data kept).
 - `tick_movement` reads what every row needs once a tick for the world (its inputs, kinds and statuses by
   the world's index; bodies, pushes, dash windows, corrections whole), takes a player's frames in one delete,
