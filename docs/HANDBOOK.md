@@ -589,6 +589,10 @@ twice, and one whose referee has died is taken by the next after 5 s.
   `godot --headless --path . res://sidecar/sidecar_main.tscn -- --world=0 --referee --claim=CODE --region=x0,z0,x1,z1
   --name=r1` (cell squares, inclusive: a cell is 64 m, cell 0 starts at 0). Between them the regions must cover the
   whole world; each needs its own `--name` (an identity of its own).
+- **Cut them in strips** (template 1.6.3): regions each as tall as the level (`x0,-512,x1,511`, a cut like
+  `REFEREES=4x1`), side by side. A strip asks the server for its cells as one range a table; a region cut across
+  the level's height (`2x2`) asks a range per column of its cells, and the server checks every moved row
+  against every one of them (DECISIONS #297), so more referees cost it more.
 - **The load test** splits its bots' square with `"referees": [2, 2]` in your `shared/<genre>/load.json`, or
   `REFEREES=2x2` before the command; `tools\run.cmd tests\referee_sweep.sh` tries several cuts and says how
   many a world needs. `tools\run.cmd tests\regions_test.sh` checks the hand-off on a real server.
