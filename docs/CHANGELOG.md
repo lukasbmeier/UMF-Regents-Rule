@@ -976,3 +976,10 @@ Tool only: no republish.
   button and the shell run it as a scene. As a bare `-s` script it had no autoloads, `Cells` could not compile, and
   a streamed level's cut put every cell's scenery into one cell at the grid's corner (Regent's Rule's continent:
   484 cells became one). Shell: `godot --headless --path . res://tools/world/bake_level.tscn -- --scene=res://...`.
+
+## 1.6.2 — a referee looks for a changed project off its main thread (DECISIONS #296)
+Sidecar only: restart the referees.
+- Every 10 s a referee reads the time of every script, scene and resource in the project to see whether it is
+  out of date (#272). On Regent's Rule's (8,000 files, its streamed levels' cells) that took 0.4 s on a quiet
+  machine, more beside other referees, on the main thread: the "net stall" every referee reported every ~10 s
+  (and the continent's unexplained one). Now `ProjectStamp.look_async` runs it on a worker thread.
