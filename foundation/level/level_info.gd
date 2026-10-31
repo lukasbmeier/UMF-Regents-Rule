@@ -15,8 +15,9 @@ class_name LevelInfo extends Node3D
 ##
 ## into `shared/world/<level_name>.json` and its depth grid, the files `server/build.rs` compiles in
 ## and the client's `LevelBake` reads. Then republish (`tools/publish.sh`) so the server has it.
-## The bake runs headless (`tools/world/bake_level.gd`), the same as from a shell:
-##   godot --headless --path . -s res://tools/world/bake_level.gd -- --scene=res://foundation/level/example/example_level.tscn
+## The bake runs headless (`tools/world/bake_level.tscn`, a scene so the autoloads a streamed level's cut needs
+## are there), the same as from a shell:
+##   godot --headless --path . res://tools/world/bake_level.tscn -- --scene=res://foundation/level/example/example_level.tscn
 ##
 ## Place markers anywhere under the scene's root. Nothing here runs in the game.
 
@@ -69,7 +70,7 @@ func bake_in_editor() -> void:
 		return
 	var out: Array = []
 	var code: int = OS.execute(OS.get_executable_path(), ["--headless", "--path",
-		ProjectSettings.globalize_path("res://"), "-s", "res://tools/world/bake_level.gd", "--",
+		ProjectSettings.globalize_path("res://"), "res://tools/world/bake_level.tscn", "--",
 		"--scene=" + scene], out, true)
 	last_bake = ("Baked: " if code == 0 else "The bake failed: ") + "\n".join(PackedStringArray(out)).strip_edges().get_slice("\n", -1)
 	print("LevelInfo: ", "\n".join(PackedStringArray(out)))

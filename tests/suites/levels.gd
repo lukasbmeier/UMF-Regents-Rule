@@ -78,6 +78,14 @@ func _run_level_build_tests() -> void:
 	info.bake_ground = false
 	scene.queue_free()
 	await get_tree().process_frame
+	# THE BAKE BUTTON RUNS A SCENE (template 1.6.1): a bare `-s` script has no autoloads, and a streamed level's
+	# cut (Cells, which reads the hot rules) then put all its scenery into one cell at the grid's corner.
+	var button_src: String = FileAccess.get_file_as_string("res://foundation/level/level_info.gd")
+	var baker: Node = (load("res://tools/world/bake_level.tscn") as PackedScene).instantiate()
+	_check(button_src.contains("\"res://tools/world/bake_level.tscn\"") and not button_src.contains("\"-s\", \"res://tools/world/bake_level.gd\"")
+		and baker != null and baker.get_script() == load("res://tools/world/bake_level.gd"),
+		"LevelInfo's Bake button runs the baker as a scene, autoloads and all (never as a bare script)")
+	baker.free()
 	# (The lakeside's baker-against-generator and barrier checks are fishing's: fishing_levels.)
 	# --- the level on screen follows the world's -------------------------------------------------
 	var game := Node3D.new()
