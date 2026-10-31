@@ -522,6 +522,17 @@ class _RowStub extends RefCounted:
 		return _v.get(key, null)
 
 
+## Whether `ranges` hold every cell of the level (`r.clip`) that `r` watches, and no other cell of it.
+func _ranges_hold_watched(r: RefereeRegion, ranges: Array[Vector2i]) -> bool:
+	for x: int in range(r.clip.position.x, r.clip.end.x):
+		for z: int in range(r.clip.position.y, r.clip.end.y):
+			var c: int = Cells.at(x, z)
+			var held: bool = ranges.any(func(g: Vector2i) -> bool: return c >= g.x and c <= g.y)
+			if held != r.watches(x, z):
+				return false
+	return true
+
+
 ## REGION REFEREES (DECISIONS #288): a referee for some cells of a world runs what stands in them and
 ## watches a border round them; an NPC it drives is handed on only past its edge; what it subscribes is a
 ## query per column; it judges only its own people's swings; the module's rows say what it drives.
@@ -550,6 +561,23 @@ func _run_regions() -> void:
 	var away: RefereeRegion = RefereeRegion.parse("100,100,110,110")
 	away.clip_to(AABB(Vector3(-100.0, -10.0, -50.0), Vector3(300.0, 20.0, 100.0)))
 	_check(away.columns().is_empty(), "a region the level does not reach asks for nothing")
+	# What it subscribes (template 1.6.3): a strip as tall as the level is one range; a region cut across
+	# the level's height a range a column. Either way exactly the level's cells it watches, no other's.
+	var strip: Array[Vector2i] = wide.ranges()
+	_check(strip.size() == 1 and strip[0] == Vector2i(Cells.at(-3, -2), Cells.at(0, 1)),
+		"a strip as tall as the level: its columns as one range (%d)" % strip.size())
+	var cut: RefereeRegion = RefereeRegion.parse("-512,-512,-1,-1")
+	cut.clip_to(AABB(Vector3(-100.0, -10.0, -50.0), Vector3(300.0, 20.0, 100.0)))
+	var cut_ranges: Array[Vector2i] = cut.ranges()
+	_check(cut_ranges == cut.columns() and cut_ranges.size() == 4, "a region cut across the level's height: a range a column (%d)" % cut_ranges.size())
+	_check(_ranges_hold_watched(wide, strip) and _ranges_hold_watched(cut, cut_ranges),
+		"each holds the level's cells it watches and no other of the level's (the strip's gaps are outside it)")
+	_check(not _ranges_hold_watched(cut, [Vector2i(cut_ranges[0].x, cut_ranges[3].y)]),
+		"(the check's negative: one range over the cut region's columns takes in the region above it)")
+	_check(r.ranges() == r.columns(), "a region with no clip and not to the grid's edge: a range a column")
+	var whole: RefereeRegion = RefereeRegion.parse("-4,-512,3,511")
+	var whole_ranges: Array[Vector2i] = whole.ranges()
+	_check(whole_ranges.size() == 1 and whole_ranges[0] == Vector2i(Cells.at(-5, -512), Cells.at(4, 511)), "no clip, to the grid's edges: one range")
 	wide.clip_to(AABB())
 	_check(wide.columns().size() == 513, "no bounds: no clip")
 	var im: Node = get_node(^"/root/InterestManager")
@@ -561,6 +589,12 @@ func _run_regions() -> void:
 	q.assign(im.build_ring_queries(4))
 	_check(im.is_ring() and not q.is_empty() and q.all(func(x: String) -> bool: return x.contains("world_id = 4 AND chunk >= ")),
 		"subscribed: the cell tables by column (%d queries)" % q.size())
+	var by_column: int = q.size()
+	im.region_columns = strip
+	q.assign(im.build_ring_queries(4))
+	_check(q.size() * cols.size() == by_column and q.has("SELECT * FROM movement_state WHERE world_id = 4 AND chunk >= %d AND chunk <= %d" % [strip[0].x, strip[0].y]),
+		"a strip: one query a cell table (%d, against %d by column)" % [q.size(), by_column])
+	im.region_columns = cols
 	_check(q.any(func(x: String) -> bool: return x.begins_with("SELECT * FROM movement_state")), "movement among them")
 	var no_cols: Array[Vector2i] = []
 	im.region_on = true

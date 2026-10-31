@@ -143,8 +143,8 @@ func _ready() -> void:
 		InterestManager.set_region(none)
 		var clip_now: Callable = func(level: Node3D) -> void:
 			region.clip_to(NpcNav.level_bounds(level))
-			InterestManager.set_region(region.columns())
-			print("[Sidecar] its level's cells: %d columns asked for" % region.columns().size())
+			InterestManager.set_region(region.ranges())
+			print("[Sidecar] its level's cells: %d columns, %d ranges asked for" % [region.columns().size(), region.ranges().size()])
 		world.level_shown.connect(clip_now)
 		SignalBus.world_ready.connect(func() -> void: clip_now.call(world.level()))
 		print("[Sidecar] a region referee: %s" % region.describe())
