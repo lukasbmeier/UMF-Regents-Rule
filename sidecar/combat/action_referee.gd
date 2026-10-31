@@ -49,6 +49,9 @@ var _offline: Dictionary[int, bool] = {}
 var _players: Dictionary[int, bool] = {}
 ## Entities a brain drives (an `npc_brain` row): people, as the module counts them (`is_person`).
 var _brained: Dictionary[int, bool] = {}
+## Who may be a target at all (`_is_person`), kept as their rows come: a swing looks at the people, not at
+## every movement row it holds (a big world's nodes: ~3,800 rows for ~240 people in a strip, DECISIONS #300).
+var _people: Dictionary[int, bool] = {}
 ## request id -> {actor_id, ability_id, rewind_ms, due_usec}
 var _pending: Dictionary[int, Dictionary] = {}
 var _defs_by_kind: Dictionary[int, EntityDefinition] = {}
@@ -68,6 +71,9 @@ func _ready() -> void:
 func know(defn: EntityDefinition) -> void:
 	if defn != null:
 		_defs_by_kind[defn.kind] = defn
+		for eid: int in _kinds:
+			if _kinds[eid] == defn.kind:
+				_refresh_person(eid)
 
 
 func pending_count() -> int:
@@ -115,6 +121,7 @@ func on_row(ev: RowEvent) -> void:
 			else:
 				_kinds[eid] = int(row.get(&"kind"))
 				_place_wall(eid)
+			_refresh_person(eid)
 		&"status_state":
 			if ev.kind == RowEvent.Kind.DELETED:
 				_statuses.erase(eid)
@@ -128,11 +135,13 @@ func on_row(ev: RowEvent) -> void:
 			else:
 				_players[eid] = true
 				_offline[eid] = not bool(row.get(&"online"))
+			_refresh_person(eid)
 		&"npc_brain":
 			if ev.kind == RowEvent.Kind.DELETED:
 				_brained.erase(eid)
 			else:
 				_brained[eid] = true
+			_refresh_person(eid)
 
 
 ## Where `entity_id` was at server time `ts_usec` (its movement row).
@@ -155,6 +164,7 @@ func set_entity(entity_id: int, kind: int, status: int = 0, player: bool = false
 	if player:
 		_players[entity_id] = true
 		_offline[entity_id] = not online
+	_refresh_person(entity_id)
 	_place_wall(entity_id)
 
 
@@ -245,10 +255,11 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 	var seen_at: int = due - int(req["rewind_ms"]) * 1000
 	var targets: Array = []
 	var sides: bool = HotRules.flag(TWO_SIDES)
-	for eid: int in _histories.keys():
-		if eid == actor or not may_be_hit(eid) or (sides and is_player(eid) == is_player(actor)):
+	for eid: int in _people:
+		var h: TransformHistory = _histories.get(eid, null)
+		if h == null or eid == actor or not may_be_hit(eid) or (sides and is_player(eid) == is_player(actor)):
 			continue
-		var was: Dictionary = (_histories[eid] as TransformHistory).at(seen_at)
+		var was: Dictionary = h.at(seen_at)
 		if was.is_empty():
 			continue
 		var box: Dictionary = hitbox(_kinds.get(eid, 0))
@@ -264,15 +275,27 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 ## Someone it may hit: a person (a player, kinds 0 and 1, a playable character, anything a brain drives:
 ## the module's `is_person`) who is here, in a status that is targetable and hittable.
 func may_be_hit(eid: int) -> bool:
+	if not _is_person(eid) or bool(_offline.get(eid, false)):
+		return false
+	var st: StatusDef = StatusDef.find(int(_statuses.get(eid, StatusDef.NORMAL)))
+	return st == null or (st.targetable and st.hittable)
+
+
+## A person (a player, kinds 0 and 1, a playable character, anything a brain drives), whatever its status.
+func _is_person(eid: int) -> bool:
 	if not _kinds.has(eid):
 		return false
 	var kind: int = _kinds[eid]
 	var defn: EntityDefinition = _defs_by_kind.get(kind, null)
-	var person: bool = kind <= 1 or _players.has(eid) or _brained.has(eid) or (defn != null and defn.playable)
-	if not person or bool(_offline.get(eid, false)):
-		return false
-	var st: StatusDef = StatusDef.find(int(_statuses.get(eid, StatusDef.NORMAL)))
-	return st == null or (st.targetable and st.hittable)
+	return kind <= 1 or _players.has(eid) or _brained.has(eid) or (defn != null and defn.playable)
+
+
+## Its place among the people, as its rows now say (`_people`).
+func _refresh_person(eid: int) -> void:
+	if _is_person(eid):
+		_people[eid] = true
+	else:
+		_people.erase(eid)
 
 
 ## Someone a player plays (their `player` row): one side; everyone else (bots, NPCs, a training dummy) is

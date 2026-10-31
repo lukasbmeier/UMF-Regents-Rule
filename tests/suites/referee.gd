@@ -18,6 +18,7 @@ func run() -> void:
 	_run_who()
 	_run_two_sides()
 	_run_rows()
+	_run_people()
 	_run_feed()
 	_run_regions()
 	await _run_client_side()
@@ -457,6 +458,75 @@ func _run_rows() -> void:
 	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"entity", _EntityRow.new(5, 0), null))
 	_check(not ref.may_be_hit(5) and ref.history(5) == null, "gone: forgotten, and where it was")
 	ref.free()
+
+
+## A SWING LOOKS AT THE PEOPLE, NOT AT EVERY ROW (DECISIONS #300): a strip referee on Regent's Rule's
+## expanse holds ~3,800 movement rows (nodes, stones) for ~240 people, and looked at every one for every
+## swing. Who is a person is kept as the rows come, by each way one becomes one or stops.
+func _run_people() -> void:
+	print("== referee: a swing looks at the people ==")
+	var ref := ActionReferee.new()
+	ref.set_sweep(601, 1.6, 0.35, 0.6)
+	var one_side: RefCounted = _two_sides(0.0)   # anyone may hit anyone here (a game may set it on)
+	var add: Callable = func(table: StringName, row: RefCounted) -> void:
+		ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, table, null, row))
+	var drop: Callable = func(table: StringName, row: RefCounted) -> void:
+		ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, table, row, null))
+	var swing: Callable = func(rid: int) -> int:
+		ref.add_request(rid, 50, 601, 0, BASE)
+		return int(_by_request(ref.settle(BASE + ActionReferee.SETTLE_USEC)).get(rid, -1))
+	add.call(&"entity", _EntityRow.new(50, 0))
+	add.call(&"player", _PlayerRow.new(50))
+	add.call(&"movement_state", _MoveRow.new(50, Vector3.ZERO, BASE))
+	for i: int in 3000:   # nodes, some right in front: never hit, never looked at
+		add.call(&"entity", _EntityRow.new(1000 + i, 110))
+		add.call(&"movement_state", _MoveRow.new(1000 + i, Vector3(float(i % 7) * 0.1, 0, -0.8 - float(i % 5) * 0.1), BASE))
+	add.call(&"entity", _EntityRow.new(60, 117))
+	add.call(&"movement_state", _MoveRow.new(60, Vector3(0, 0, -1.3), BASE))
+	var people: Dictionary = ref.get(&"_people")
+	_check(people.size() == 1 and people.has(50), "3,000 nodes and a thing: the one person is the swinger (%d)" % people.size())
+	var hit: int = swing.call(1)
+	_check(hit == 0, "a genre's NPC with no brain, behind the nodes: missed (%d)" % hit)
+	add.call(&"npc_brain", _BrainRow.new(60))
+	hit = swing.call(2)
+	_check(hit == 60, "its brain's row comes: a person, hit (%d)" % hit)
+	drop.call(&"npc_brain", _BrainRow.new(60))
+	hit = swing.call(3)
+	_check(hit == 0, "its brain gone: a thing again (%d)" % hit)
+	var late := EntityDefinition.new()
+	late.kind = 117
+	late.playable = true
+	ref.know(late)
+	hit = swing.call(4)
+	_check(hit == 60, "its kind known late as playable: a person (%d)" % hit)
+	drop.call(&"entity", _EntityRow.new(60, 117))
+	hit = swing.call(5)
+	_check(hit == 0 and not people.has(60), "its entity gone: nobody there (%d)" % hit)
+	add.call(&"entity", _EntityRow.new(63, 130))
+	add.call(&"movement_state", _MoveRow.new(63, Vector3(0, 0, -1.3), BASE))
+	hit = swing.call(6)
+	_check(hit == 0, "a thing of a genre's kind: missed (%d)" % hit)
+	add.call(&"player", _PlayerRow.new(63))
+	hit = swing.call(7)
+	_check(hit == 63, "its player row comes (someone plays it): hit (%d)" % hit)
+	drop.call(&"player", _PlayerRow.new(63))
+	hit = swing.call(8)
+	_check(hit == 0 and people.size() == 1, "the player gone: a thing again (%d, %d people)" % [hit, people.size()])
+	_two_sides_back(one_side)
+	ref.free()
+
+
+class _PlayerRow extends RefCounted:
+	var entity_id: int = 0
+	var online: bool = true
+	func _init(eid: int) -> void:
+		entity_id = eid
+
+
+class _BrainRow extends RefCounted:
+	var entity_id: int = 0
+	func _init(eid: int) -> void:
+		entity_id = eid
 
 
 ## A REFEREE ASKS FOR WHAT IT READS (DECISIONS #286): its own tables, what its entities' components declare,

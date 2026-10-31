@@ -124,6 +124,8 @@ func _on_row_deleted(table, row) -> void           # default: _on_row_updated(ta
 - Wire types: `float`⇄`f64` default; `Vector3`⇄struct `{x,y,z: f32}` (our Rust `Vec3`); `u32/u8` need BSATN hints → use generated reducer wrappers for struct arguments (`submit_input`).
 - `LocalDatabase.first_by(table, field, value)` / `get_row_by_pk` work without generated wrappers.
 - Compression enum: `NONE 0, BROTLI 1, GZIP 2`. `confirmed_reads=false` for latency.
+- UMF PATCHES TO THE VENDORED SDK (keep them on an upgrade; `tests/suites/sdk_patches.gd` fails without them):
+  a btree index notes each row's place in its bucket, so an update swaps it in place (#300).
 
 ## 9. SpacetimeDB 2.10 Rust module facts
 

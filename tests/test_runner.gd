@@ -10,6 +10,7 @@ const SUITES: PackedStringArray = [
 	"config",
 	"rules",
 	"row_event",
+	"sdk_patches",
 	"interest",
 	"cells",
 	"authority",
