@@ -969,3 +969,10 @@ Project setting only: restart the editor (project.godot changed); no republish.
 - The bake raycasts the level's collision, so it now depends on Jolt's rays: the example level re-baked (152 of 1,156
   depth samples moved by 0.1 m at a rounding edge) and its probes regenerated. A game's level whose bake check
   fails after this pull: bake it again (LevelInfo's button) and regenerate its probes.
+
+## 1.6.1 — the level baker runs as a scene (a streamed level's cells were all cut into one)
+Tool only: no republish.
+- `tools/world/bake_level.tscn` (its script, `bake_level.gd`, is now a Node): LevelInfo's **Bake For The Server**
+  button and the shell run it as a scene. As a bare `-s` script it had no autoloads, `Cells` could not compile, and
+  a streamed level's cut put every cell's scenery into one cell at the grid's corner (Regent's Rule's continent:
+  484 cells became one). Shell: `godot --headless --path . res://tools/world/bake_level.tscn -- --scene=res://...`.

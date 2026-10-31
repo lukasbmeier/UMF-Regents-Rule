@@ -27,7 +27,7 @@ foundation/ui/splash_screen.gd the splash before the connect screen; game/splash
 foundation/level/              LevelInfo + LevelSpawn/LevelSpot/LevelPoint (a level built in the
                                editor), LevelBaker (scene -> server bake), LevelLoader (the level on
                                screen follows world_level)
-tools/world/bake_level.gd      bake a level scene: --scene=res://...tscn
+tools/world/bake_level.tscn    bake a level scene (a scene: autoloads): -- --scene=res://...tscn
 game/world/levels/meadow.tscn  the example level built in the editor (level 2)
 game/fishing/genre.tres        fishing's client half: definitions, tables, HUD + fishing_world.tscn
 tests/genres_test.sh           the server built from a game of no genres
