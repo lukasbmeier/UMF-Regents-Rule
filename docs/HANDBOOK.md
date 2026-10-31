@@ -523,6 +523,12 @@ arriving sees what was said in the last `foundation.chat_keep_s` (5 minutes). Th
 rate-limits each line (`rate_limits.send_chat` in `shared/rules.json`). Boot adds the box
 (`foundation/ui/chat_box.gd`); a genre with keys of its own on Enter rebinds the `chat` action.
 
+### The physics engine
+Every game runs **Jolt Physics** (`project.godot`, `physics/3d/physics_engine`, template 1.6.0, DECISIONS #295).
+Godot's own default engine stalled a referee for tens of seconds when ~170 NPCs on a big world first moved. A
+game keeps Jolt: the player's prediction and the referee resolve movement with the same engine, so changing
+it in one game changes how both move there (restart the editor after).
+
 ### Who moves things (motion authority)
 Each world picks one:
 - **MODULE (Tier A, what fishing uses):** your client simulates your movement and tells the

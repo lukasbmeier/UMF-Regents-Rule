@@ -302,7 +302,7 @@
     6,
     25
    ],
-   "depth_dm": 4,
+   "depth_dm": 3,
    "is_water": false,
    "spot": null,
    "can_stand": true
@@ -460,7 +460,7 @@
     8,
     9
    ],
-   "depth_dm": 4,
+   "depth_dm": 3,
    "is_water": false,
    "spot": null,
    "can_stand": true
@@ -644,7 +644,7 @@
     11,
     28
    ],
-   "depth_dm": 3,
+   "depth_dm": 4,
    "is_water": false,
    "spot": null,
    "can_stand": true
@@ -798,7 +798,7 @@
     28,
     26
    ],
-   "depth_dm": 3,
+   "depth_dm": 4,
    "is_water": false,
    "spot": null,
    "can_stand": true

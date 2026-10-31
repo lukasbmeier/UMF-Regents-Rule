@@ -957,3 +957,15 @@ Code only (client and sidecar): restart the referees; a game republishes nothing
 Code only: restart the referees.
 - `AnimationDriverComponent` in a referee builds no tree at all (1.5.4 built it and never advanced it): a clip's
   length comes from the set (`shot_seconds`). ~70 MB less a referee with ~170 skeletons.
+
+## 1.6.0 — Jolt Physics, every game (DECISIONS #295)
+Project setting only: restart the editor (project.godot changed); no republish.
+- `physics/3d/physics_engine = "Jolt Physics"` in the template's `project.godot` (DiscGolf already had it). The
+  project had never named one, so it ran Godot's default physics. On Regent's Rule's Skyrim-size world, a region
+  referee's frame in which its ~170 skeletons first moved took 15-65 s inside the default engine's step (scripts
+  5-14 ms, navigation none, ~350 pairs), and the server dropped it for idle timeout. On Jolt: none.
+- Client prediction and the referee both resolve with `move_and_slide` on the same engine, so they still agree;
+  the movement golden vectors use no engine (the flat ground) and are unchanged.
+- The bake raycasts the level's collision, so it now depends on Jolt's rays: the example level re-baked (152 of 1,156
+  depth samples moved by 0.1 m at a rounding edge) and its probes regenerated. A game's level whose bake check
+  fails after this pull: bake it again (LevelInfo's button) and regenerate its probes.
