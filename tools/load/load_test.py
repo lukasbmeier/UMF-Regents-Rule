@@ -159,6 +159,29 @@ def sql(db, query):
     return wire.owner_sql(db, query)
 
 
+def npcs_driven(db, world=0, looks=3):
+    """REGION REFEREES (template 1.6.4): (driven, npcs): how many of the world's NPCs (an `npc_brain` row, no
+    player) a referee drives (`npc_driver`), the best of `looks` a second apart (one handed on over an edge
+    is undriven for a poll or two). The module takes at most 256 a call: a referee that asked for more in one
+    drove none, and its frames were those of a referee with nothing to do."""
+    best = None
+    for i in range(looks):
+        if i:
+            time.sleep(1.0)
+        try:
+            people = {r["entity_id"] for r in sql(db, "SELECT entity_id FROM player")}
+            npcs = {r["entity_id"] for r in sql(db, "SELECT entity_id FROM npc_brain WHERE world_id = %d" % world)} - people
+            driven = {r["entity_id"] for r in sql(db, "SELECT entity_id FROM npc_driver WHERE world_id = %d" % world)}
+        except RuntimeError:
+            continue
+        got = (len(npcs & driven), len(npcs))
+        if best is None or got[1] - got[0] < best[1] - best[0]:
+            best = got
+        if got[0] == got[1]:
+            break
+    return best or (0, 0)
+
+
 def referee_windows(db, t0, t1):
     """The referee's perf reports that ended inside [t0, t1] (unix seconds)."""
     try:
@@ -921,6 +944,9 @@ def main():
             ref_rows, ref_note = (None, "not asked") if a.no_referee else referee_windows(a.db, t0 + REF_WINDOW_S, t1 + 1)
             ref = referee_summary(ref_rows) if ref_rows else None
             checks = harness_checks(w, ring, over_level)
+            if any(r["region"] for r in refs):
+                driven, npcs = npcs_driven(a.db)
+                checks.append(("every NPC is driven by a region referee (%d of %d)" % (driven, npcs), driven == npcs and npcs > 0))
             lim, valid = limits_checks(w, srv, ref, limits, cfg["bots_kept_up_lag_p95_ms"])
             ok_harness = all(ok for _, ok in checks)
             breaks = [x for x in lim if x[3] is False]

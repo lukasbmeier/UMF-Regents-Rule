@@ -11,6 +11,9 @@ class_name RegionKeeper extends Node
 
 ## How often it looks.
 const POLL_S: float = 0.25
+## The most NPCs one `drive_npcs` call names (the module's `MAX_DRIVE_BATCH`, module/regions.rs: it refuses
+## more). The rest are asked for at the next look.
+const MAX_BATCH: int = 256
 
 var region: RefereeRegion = null
 var world_id: int = 0
@@ -85,18 +88,20 @@ func poll() -> Dictionary:
 			_start(eid)
 		seen.append({"id": eid, "pos": pos, "mine": bool(driven.get(eid, false))})
 	var ask: Dictionary = decide(seen, region)
+	# At most `MAX_BATCH` a call, letting go first (template 1.6.4, DECISIONS #298): a referee that asked for
+	# all of its 330 skeletons at once was refused every look, and drove none of them.
 	var release: Array[int] = []
-	release.assign(ask["release"])
+	release.assign((ask["release"] as Array).slice(0, MAX_BATCH))
 	for eid: int in release:
 		_stop(eid)   # at once: the next referee waits for the module to hear it
 		_letting_go[eid] = true
 	var take: Array[int] = []
-	take.assign(ask["take"])
+	take.assign((ask["take"] as Array).slice(0, MAX_BATCH - release.size()))
 	if send and not (take.is_empty() and release.is_empty()):
 		taken += take.size()
 		let_go += release.size()
 		SpaceTimeSync.call_reducer(&"drive_npcs", [world_id, take, release], ["u32", "u64", "u64"])
-	return ask
+	return {"take": take, "release": release}
 
 
 ## What to take and let go of, from what it sees: [{id, pos, mine}]. Takes what stands in its cells and is

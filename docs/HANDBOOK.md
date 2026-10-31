@@ -595,6 +595,9 @@ twice, and one whose referee has died is taken by the next after 5 s.
   `REFEREES=4x1`), side by side. A strip asks the server for its cells as one range a table; a region cut across
   the level's height (`2x2`) asks a range per column of its cells, and the server checks every moved row
   against every one of them (DECISIONS #297), so more referees cost it more.
+- **A referee takes at most 256 NPCs a call** (template 1.6.5, #299): more wait a quarter of a second. The
+  load test checks the server's own record that every NPC has a referee driving it, and fails if not: before
+  1.6.5 a region with more than 256 drove none, and looked fine.
 - **The load test** splits its bots' square with `"referees": [2, 2]` in your `shared/<genre>/load.json`, or
   `REFEREES=2x2` before the command; `tools\run.cmd tests\referee_sweep.sh` tries several cuts and says how
   many a world needs. `tools\run.cmd tests\regions_test.sh` checks the hand-off on a real server.
