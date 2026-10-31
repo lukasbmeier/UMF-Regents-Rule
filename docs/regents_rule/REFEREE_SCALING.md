@@ -276,3 +276,43 @@ not the players (150 bots woke as many as 300: spread out, players come within 2
    terrain would save a few hundred MB each.
 3. The skeletons' brains (the genre's `foe.gd`) and the movement step are what a busy referee spends now; the
    combat overhaul is the place to set how often an idle foe thinks.
+
+## The referees' stalls found, and how many referees (template 1.6.0-1.6.2, DECISIONS #295, #296; 2026-10-30, late)
+
+Luke: "find what stalls the two expanse referees for 30 s after their skeletons bind, fix it, then run
+expanse_referees.sh to the end." Found with breadcrumbs (temporary, reverted): each suspect noted when it
+started, and a frame over 1.5 s printed the last ones.
+
+1. **The 15-65 s stall was the physics engine.** In that frame every one of a region's ~170 skeletons thought,
+   stepped and was written in the same millisecond (they were all started in one poll); the judge ran last; then
+   the frame held for 15-65 s with scripts at 5-14 ms, navigation at 0 (and off made no difference), ~350
+   collision pairs. The project had never named a physics engine, so it ran Godot's default. The same run on
+   Jolt (an override first): no such frame, no reconnect. Luke: "We definitely want to be using jolt". Template
+   1.6.0 sets Jolt in every game (DiscGolf already had it). The bake raycasts collision, so every level was baked
+   again on Jolt's rays (0.1 m at rounding edges); found on the way: the level baker run as a bare script cut a
+   streamed level's cells all into one (template 1.6.1: it is a scene now; the continent's cells were restored).
+2. **The rest were the project's own size.** On Jolt every cut still broke on "net stalls": 0.5-1.5 s, every
+   ~10 s, in every referee, while the bots saw no gap at all (the server never stalled). Every 10 s a referee
+   checks whether the project changed under it (#272), reading the time of every script, scene and resource:
+   8,217 files here since the expanse's cells, 0.4 s alone, on its main thread. Template 1.6.2: on a worker
+   thread. This was also the continent's unexplained "net stall ~30 s after a referee starts".
+
+**How many referees, 300 bots on the expanse** (`expanse_referees.sh`, after both; this PC, everything on it):
+
+| referees | worst frame p95 | net stalls | their cores | their memory (each) | module busy | the step |
+|---|---|---|---|---|---|---|
+| 1 | 145.8 ms | 0 | 1.2 | 3.4 GB | 32 % | breaks: the referee cannot keep up |
+| **2** | **38.8 ms** | **0** | **2.0** | **1.9 GB (0.95)** | **55 %** | **holds** |
+| 4 | 29.3 ms | 3 | 4.7 | 4.2 GB (1.1) | 82 % | breaks: the module, 3 stalls |
+| 6 | 13.8 ms | 3 | 5.1 | 5.7 GB (1.0) | 87 % | breaks: the module, 3 stalls |
+
+So on this machine **two region referees run 300 players on a Skyrim-size world** (each ~1 GB and one core),
+though not with room (38.8 of 50 ms). More referees give each more room but cost the SERVER more: its module
+went from 55 to 87 % busy, mostly the movement tick's subscription update (339 ms a second at two, 528 at six).
+A region referee asks for its cells one column at a time with `chunk >= a AND chunk <= b`, which SpacetimeDB
+cannot narrow (#291), so every moved row is checked against every referee's every column: ~65 columns each here.
+
+**What is left** (in order): 1. a region referee's queries the server can narrow (a strip of whole columns can
+be one range, a column at a time costs the server); 2. one ~0.9 s stall in some referees in a minute (not the
+walk maps: those read in 140 ms); 3. the rest of the earlier list (the level whole in each referee, idle
+skeletons' thinking).

@@ -1188,7 +1188,21 @@ spot and nudged by a correction walked no more): every bot moves, nothing is ref
 300 but one, **referee net stalls**: two of four referees lose their connection once or twice early on (a 30 s
 main-thread stall just after their skeletons bind; not found yet).
 
-**Left for later**: that stall first (`REFEREE_SCALING.md`); the server at 300 spread (77-89 % busy); a region
-referee loading only its part of the level; how often an idle skeleton thinks (the combat overhaul's to set);
-the sweep itself (`expanse_referees.sh`) was not run to the end this session: the stall breaks each cut's
-verdict, so its table would say "no cut held" until it is fixed.
+**The stall, found and fixed** (Luke: "find what stalls ... fix it, then run expanse_referees.sh to the end"):
+the 15-65 s frame was Godot's default physics engine (the project never named one): **Jolt** in every game now
+(Luke: "We definitely want to be using jolt"; template 1.6.0); every level re-baked on Jolt's rays (the
+continent's and the expanse's depth grids moved 0.1 m at rounding edges). The rest, a 0.5-1.5 s stall every 10 s
+in every referee, was its look for a changed project walking 8,217 files on the main thread (template 1.6.2: on
+a worker thread). And the level baker as a bare script cut a streamed level into one cell (template 1.6.1).
+**The sweep, to the end**: two region referees hold 300 bots on the expanse (38.8 ms frames, no stalls, ~1 GB
+and one core each, the module 55 % busy); one cannot; four and six give each referee room but break the
+server (82-87 % busy: their column queries are not narrowed; `REFEREE_SCALING.md`, last section).
+
+**Tested (the stall)**: template unit 2274/0 (new: the bake button runs a scene, and its negative; the
+referee's look on a worker thread), integration 644/0, movement playtest 41/0 at 0/100/200 ms, remote 30+7,
+e2e 47+11, sidecar 13/0, regions 25/0, press 6+7, native 92/0 (the example re-baked); here genre unit 2736/0,
+combat playtest 51/0, continent playtest 22/0, native 127/0, the sweep above.
+
+**Left for later**: region referees' queries the server can narrow (then four or more stop costing the server);
+one ~0.9 s stall in some referees a minute; a region referee loading only its part of the level; how often an
+idle skeleton thinks (the combat overhaul's to set).

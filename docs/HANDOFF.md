@@ -1,37 +1,36 @@
-# Handoff — Regent's Rule, 2026-10-30 (a Skyrim-size world, 300 bots, how many referees: step 25)
+# Handoff — Regent's Rule, 2026-10-30 (Jolt; the referees' stalls fixed; 2 referees hold 300 on the expanse)
 
 ## Where it stands
-- Template **1.5.5** merged (1.5.0-1.5.5, DECISIONS #290-#294). Everything committed and pushed (step 24's work
-  and step 25's). Play database `regents-rule` republished (code only, data kept): restart the game.
-- Suites green: genre unit 2735/0, native 127/0, integration 1100/0, combat playtest 51/0; the expanse load
-  test at 300 holds every limit but referee net stalls (below).
+- Template **1.6.2** merged (1.6.0 Jolt Physics, 1.6.1 the baker as a scene, 1.6.2 the referee's project look
+  on a thread; DECISIONS #295, #296). This game's step-25 work and the re-baked levels committed and pushed;
+  Luke's own uncommitted files left alone: `CLAUDE.md`, `GAME.md`, `docs/regents_rule/COMBAT_OVERHAUL.md`,
+  `docs/regents_rule/ANIMATIONS.md` (his combat overhaul in progress).
+- Play database `regents-rule` republished (code only, data kept). **Restart the editor** (project.godot now
+  names Jolt) and the game.
+- Suites green on Jolt: genre unit 2736/0, native 127/0, combat playtest 51/0, continent playtest 22/0; the
+  expanse sweep run to the end.
 
 ## This session
-- **The expanse** (level 22, a TEST world, PROGRESS step 25): the continent's map at 3.7x, 36.9 km2 of land
-  (Skyrim ~37), 10,245 nodes, 660 skeletons. `build_expanse.tscn` (the continent's generator, `world` setting).
-- **Watch and join**: `tools\run.cmd game\regents\tests\expanse_watch.sh` (300 bots, then a game window on the
-  test database). **How many referees**: `tools\run.cmd game\regents\tests\expanse_referees.sh`.
-- Found by it and fixed: `populate` compared every node with every node on each connect (hash sets, here);
-  in the template the ring's unnarrowable queries, the tick's still rows, walk maps all at once, idle foes
-  stepped every tick, and the big one, the brains' view searching every node per think
-  (`REFEREE_SCALING.md`, "A Skyrim-size world"). Four referees at 300: frames 147 → 26-30 ms, ~1 GB each, flat.
-- The bot hook's gatherers: wait for the server before E, walk on with no node near, never across a bay, and
-  no longer stay paused after a correction. A timing race in the integration hook's burn check fixed.
+- The 15-65 s referee stall: Godot's default physics engine (the project never named one). Jolt now, every
+  game (template 1.6.0). Levels re-baked on Jolt's rays: continent and expanse depth grids (0.1 m at edges).
+- The 0.5-1.5 s stall every 10 s: the referee's look for a changed project, 8,217 files, on its main thread
+  (template 1.6.2: a worker thread). The level baker as a bare script cut the continent into one cell (1.6.1).
+- `expanse_referees.sh` to the end: **2 referees hold 300 bots** (38.8 ms, no stalls, ~1 GB and a core each);
+  1 cannot; 4 and 6 break the server (82-87 % busy). `REFEREE_SCALING.md`, last section.
 
 ## Next, in order
-1. Two of four expanse referees (regions 1 and 2) stall ~30 s just after their skeletons bind; the server drops
-   them for idle timeout and they reconnect (the run's only broken limit: net stalls). Find what blocks.
-2. Then run `expanse_referees.sh` to the end for the table (each cut breaks on that stall until then). ONE
-   referee for the whole expanse drops out; four run it at ~30 ms.
-3. The combat overhaul (Luke, `COMBAT_CURRENT.md`): how often an idle skeleton thinks is its call.
+1. Region referees' queries the server can narrow (`chunk >= a AND chunk <= b` a column, #291): a strip of whole
+   columns as one range; then four or more referees stop costing the server.
+2. One ~0.9 s stall in some referees a minute (not walk maps: they read in 140 ms).
+3. The combat overhaul (Luke's `COMBAT_OVERHAUL.md`); how often an idle skeleton thinks belongs to it.
 
 ## Waiting on Luke
-- His playtest: `expanse_watch.sh` (walk among 300 bots), and the 10-29 changes on the continent.
-- The server's levers at 300 (density, cell size, write rate, input batch); the per-player bandwidth budget.
-- Where 300 is hosted; the recorder in an MMO; `FoeDef.lose_sight_ms`; SpacetimeAuth client id; trait ranks; #12.
+- His playtest: `tools\run.cmd game\regents\tests\expanse_watch.sh` (REFEREES=2x1 is the cut that holds).
+- The server's levers at 300; the per-player bandwidth budget; where 300 is hosted.
 
 ## Watch out
-- Never kill all Godot/Python processes (Luke's editor): stop a stuck run by its PID.
-- This PC has ~9 GB free with Luke's apps open: four expanse referees take ~4 GB; nine would not fit.
-- The expanse is generated: never hand-edit `levels/expanse/`; re-run `build_expanse.tscn` (~75 s, bakes too).
-- Heredocs through the Bash tool mangle `\r`/`\t` in text (paths): write patch scripts with the file tool.
+- Never copy a `.gd` into the project (even `build/`): Godot sees two of its class and every spawn fails
+  ("hides a global script class"). Back up outside `res://` or as `.keep`.
+- Bake a streamed level through `tools/world/bake_level.tscn` (or its button), never `-s bake_level.gd`.
+- Heredocs through the Bash tool mangle `\r`/`\t` in text: write patch scripts with the file tool.
+- Never kill all Godot/Python processes: by PID only (the godot_ai and wiki processes are Luke's).
