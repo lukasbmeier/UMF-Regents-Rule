@@ -39,6 +39,14 @@ func _run_stale() -> void:
 	_check(ProjectStamp.now() >= before - 86400 * 365 and ProjectStamp.now() > 0, "the project has one (its scripts, its bake, its bindings)")
 	_check(not ProjectStamp.newer_than(ProjectStamp.now()), "a sidecar just started: not stale")
 	_check(ProjectStamp.newer_than(ProjectStamp.now() - 5), "the project newer than it: stale, so it stops and a fresh one starts")
+	# The referee looks off its main thread (template 1.6.2: 0.4 s a look on a big project, every 10 s).
+	var asked_ms: int = Time.get_ticks_msec()
+	var task: int = ProjectStamp.look_async()
+	asked_ms = Time.get_ticks_msec() - asked_ms
+	var found: int = ProjectStamp.finish_look(task)
+	_check(task >= 0 and found == ProjectStamp.now() and asked_ms < 50,
+		"a referee's look at the project runs on a worker thread and finds the same stamp (%d; starting it took the caller %d ms)"
+			% [found, asked_ms])
 	# A picture is not code: writing one does not make a sidecar stale; a script does.
 	await get_tree().create_timer(1.1).timeout
 	var png: FileAccess = FileAccess.open(dir.path_join("c.png"), FileAccess.WRITE)

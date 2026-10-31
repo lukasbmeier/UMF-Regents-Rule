@@ -20,6 +20,28 @@ static func newer_than(stamp: int) -> bool:
 	return now() > stamp
 
 
+## A LOOK OFF THE MAIN THREAD (template 1.6.2): `now()` reads the time of every script, scene and resource in the
+## project, 0.4 s on Regent's Rule's (8,000 files, its streamed levels' cells); on a referee's main thread every
+## 10 s it was each one's "net stall". Begin one on a worker thread: its task id; `finish_look` gives what it found.
+## task id -> the one-slot array its thread writes the stamp into.
+static var _boxes: Dictionary[int, Array] = {}
+
+
+static func look_async() -> int:
+	var box: Array = [0]
+	var task: int = WorkerThreadPool.add_task(func() -> void: box[0] = now(), false, "project stamp")
+	_boxes[task] = box
+	return task
+
+
+## What the look `task` found (waiting for it, if it is not done: ask `WorkerThreadPool.is_task_completed` first).
+static func finish_look(task: int) -> int:
+	WorkerThreadPool.wait_for_task_completion(task)
+	var box: Array = _boxes.get(task, [0])
+	_boxes.erase(task)
+	return int(box[0])
+
+
 ## The newest modification time (unix seconds) of everything above that exists.
 static func now() -> int:
 	var newest: int = 0

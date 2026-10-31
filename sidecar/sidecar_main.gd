@@ -73,6 +73,8 @@ var _watch: float = 0.0
 var started_stamp: int = 0
 var _stamp_watch: float = 0.0
 const STAMP_EVERY_S: float = 10.0
+## The look runs on a worker thread (`ProjectStamp.look_async`, template 1.6.2): the task looking now (-1: none).
+var _stamp_task: int = -1
 ## Off with `--keep-when-stale` (a test that changes files under a running sidecar).
 var stop_when_stale: bool = true
 
@@ -223,11 +225,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_stamp_watch += delta
 	if stop_when_stale and _stamp_watch >= STAMP_EVERY_S:
-		_stamp_watch = 0.0
-		if is_stale():
-			print("[Sidecar] the project changed since it started (its code or content is newer): stopping, for one that runs it as it is")
-			AppExit.quit(get_tree())
-			return
+		if _stamp_task < 0:
+			_stamp_task = ProjectStamp.look_async()
+		elif WorkerThreadPool.is_task_completed(_stamp_task):
+			_stamp_watch = 0.0
+			var found: int = ProjectStamp.finish_look(_stamp_task)
+			_stamp_task = -1
+			if found > started_stamp:
+				print("[Sidecar] the project changed since it started (its code or content is newer): stopping, for one that runs it as it is")
+				AppExit.quit(get_tree())
+				return
 	if _parent_alive.is_empty():
 		return
 	_watch += delta
@@ -239,9 +246,10 @@ func _process(delta: float) -> void:
 		AppExit.quit(get_tree())
 
 
-## Whether the project is newer than this sidecar.
+## Whether the project is newer than this sidecar (on the calling thread: a test's, a one-off look).
 func is_stale() -> bool:
 	return ProjectStamp.newer_than(started_stamp)
+
 
 
 func _flag(name: String) -> bool:
