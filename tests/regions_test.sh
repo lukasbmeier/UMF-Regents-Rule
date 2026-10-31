@@ -104,10 +104,13 @@ check "$([ "$moved" -ge 3 ] && echo true || echo false)" "and it kept walking th
 
 echo "== the module: one driver at a time =="
 # The CLI is the admin (an authority for every world): a take of the bot while a live referee drives it is
-# skipped; the bot's driver stays that referee.
+# skipped; the bot's driver stays a live referee, never the admin. (Not "the same one": the bot wanders the edge,
+# and the two may hand it on in the second the call takes: 1.6.5 caught that once.)
 held="$(driver)"
 assert_ok "drive_npcs 0 [$BOT] []" "the admin asks to take it"
-check "$([ "$(driver)" = "$held" ] && echo true || echo false)" "skipped: a referee that is there keeps it"
+after="$(driver)"
+check "$([ -n "$held" ] && { [ "$after" = "$WEST" ] || [ "$after" = "$EAST" ]; } && echo true || echo false)" \
+  "skipped: a referee that is there keeps it (${held:0:8} before, ${after:0:8} after)"
 ME="$(sql_first "SELECT entity_id FROM player" 1)"
 assert_refused "drive_npcs 0 [$ME] []" "player" "a player is never taken (the CLI's own, $ME)"
 out="$(spacetime call --anonymous "$DB" drive_npcs 0 "[$BOT]" "[]" 2>&1)"

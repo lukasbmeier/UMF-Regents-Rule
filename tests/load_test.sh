@@ -67,7 +67,7 @@ REGIONS="$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import lo
   || { echo "could not read the referees from shared/load.json" >&2; exit 1; }
 ref_logs=()
 start_referee() {   # start_referee LOG OFFER_REDUCER [REGION NAME]
-  local code="load$(date +%s)$RANDOM"
+  local code="load$(date +%s)$(printf %05d "$RANDOM")"   # always 19 characters: the server wants 16 or more
   spacetime call "$DB" "$2" 0 "\"$code\"" >/dev/null 2>&1 || { echo "$2 failed" >&2; exit 1; }
   local extra=""
   [ -n "${3:-}" ] && extra="--region=$3 --name=$4"

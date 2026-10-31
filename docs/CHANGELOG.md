@@ -1012,3 +1012,21 @@ Client and sidecar: restart the game and the referees; nothing to republish.
   here on: they were capped, not good.
 - Found with a probe of where the rows stop (the socket, the SDK's parse thread, its drain, then each
   component's row): the method is in DECISIONS #298.
+
+## 1.6.5 — a region referee takes its NPCs 256 at a time; the load test checks every NPC is driven (DECISIONS #299)
+Sidecar and the load test: restart the referees; nothing to republish.
+- The module takes at most 256 NPCs a `drive_npcs` call (`MAX_DRIVE_BATCH`) and refuses the whole call past
+  that. `RegionKeeper` asked for every NPC standing in its cells in one call, four times a second: a region
+  referee with more than 256 (Regent's Rule's expanse cut in two: ~330 skeletons each) was refused every look
+  and drove NONE, and its frames were those of a referee with nothing to do. "Two referees hold 300" (1.6.2,
+  1.6.3) was two referees running no skeleton. Now it asks for at most `MAX_BATCH` (256) a call, letting go
+  first, and the rest at the next look; a unit check holds `MAX_BATCH` to the module's constant.
+- The load test now fails its HARNESS when region referees leave an NPC undriven: "every NPC is driven by a
+  region referee (n of m)", from the module's `npc_driver` rows (the best of three looks a second apart, for
+  one being handed on). With the old keeper: 0 of 665, failed.
+- `tests/load_test.sh`: a referee's claim code is always 19 characters (`$RANDOM` under 10 made it 15, and the
+  server refuses a code under 16: a six-referee run failed to start once in a few thousand).
+- `tests/regions_test.sh`: "a referee that is there keeps it" checks the bot's driver is still a live referee
+  (either), never the admin: the bot wanders the edge and was once handed on in the second the admin's call took.
+- Measured on the expanse, 300 bots, every skeleton driven (strips): one referee 883 ms frames (p95), two 310,
+  three 102, four 37.5 (holds), six 25.1 (holds); no net stall at any count; the module 32-39 % busy.

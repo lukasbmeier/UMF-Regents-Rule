@@ -657,6 +657,40 @@ func _run_regions() -> void:
 	_check(k.drives(12) and not k.drives(11) and stopped.count(11) == 2, "the module gave it 12 and took 11 away: so it runs 12, not 11")
 	k.free()
 
+	# Many at once (1.6.4, DECISIONS #298): the module takes at most 256 a call and refuses the whole call past
+	# that; a referee with 330 skeletons in its cells asked for all, every look, and drove none.
+	var module_src: String = FileAccess.get_file_as_string("res://server/src/module/regions.rs")
+	_check(module_src.contains("const MAX_DRIVE_BATCH: usize = %d;" % RegionKeeper.MAX_BATCH),
+		"the keeper's batch is the module's (MAX_DRIVE_BATCH = %d)" % RegionKeeper.MAX_BATCH)
+	var brains: Array = []
+	var moves: Array = []
+	var drivers: Array = []
+	for i: int in 310:
+		brains.append(_RowStub.new({&"entity_id": 1000 + i}))
+		moves.append(_RowStub.new({&"entity_id": 1000 + i, &"world_id": 4, &"pos": Vector3(5.0 if i < 300 else 35.0, 0.0, 0.0)}))
+		if i >= 300:
+			drivers.append(_RowStub.new({&"entity_id": 1000 + i, &"world_id": 4, &"driver": me}))   # its own, 5 m out
+	var many: Dictionary = {&"npc_driver": drivers, &"player": [], &"npc_brain": brains, &"body_state": [], &"movement_state": moves}
+	var kb := RegionKeeper.new()
+	kb.region = r
+	kb.world_id = 4
+	kb.send = false
+	kb.identity = me
+	kb.rows_of = func(t: StringName) -> Array: return many.get(t, [])
+	var first: Dictionary = kb.poll()
+	_check((first["release"] as Array).size() == 10 and (first["take"] as Array).size() == RegionKeeper.MAX_BATCH - 10,
+		"300 to take and 10 to let go: one call of %d, letting go first (%d taken, %d let go)" % [RegionKeeper.MAX_BATCH,
+		(first["take"] as Array).size(), (first["release"] as Array).size()])
+	var granted: Array = []
+	for eid: int in first["take"]:
+		granted.append(_RowStub.new({&"entity_id": eid, &"world_id": 4, &"driver": me}))
+	many[&"npc_driver"] = granted
+	var second: Dictionary = kb.poll()
+	_check((second["take"] as Array).size() == 300 - (RegionKeeper.MAX_BATCH - 10) and (second["release"] as Array).is_empty()
+		and not (second["take"] as Array).has(first["take"][0]),
+		"the module gave it those: the rest are asked for at the next look (%d)" % (second["take"] as Array).size())
+	kb.free()
+
 	# Judging: only its own people's swings.
 	var ref := ActionReferee.new()
 	ref.send = false
