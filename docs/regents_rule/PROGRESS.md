@@ -1203,6 +1203,17 @@ referee's look on a worker thread), integration 644/0, movement playtest 41/0 at
 e2e 47+11, sidecar 13/0, regions 25/0, press 6+7, native 92/0 (the example re-baked); here genre unit 2736/0,
 combat playtest 51/0, continent playtest 22/0, native 127/0, the sweep above.
 
-**Left for later**: region referees' queries the server can narrow (then four or more stop costing the server);
-one ~0.9 s stall in some referees a minute; a region referee loading only its part of the level; how often an
-idle skeleton thinks (the combat overhaul's to set).
+**A strip, one range** (2026-10-31; Luke: "make region referees ask for their cells in a way SpacetimeDB can
+narrow ... then rerun expanse_referees.sh"): template 1.6.3 (DECISIONS #297): a region as tall as the level asks
+for its columns as one range a table (it asked a range a column, 12-46 a referee, each checked against every moved
+row). The sweep cuts strips now (`expanse_referees.sh`: `1x1 2x1 3x1 4x1 6x1`). Result: the module 34-40 % busy at
+two to six referees (55-87 % before); two hold (40.0 ms); three, four and six break only on one ~0.9 s stall in
+each referee (six: 10-16 ms frames). `load_bot.py`: "you cannot while slain" is an in-play refusal (a skeleton
+killed a fighter as it swung). `REFEREE_SCALING.md`, last section.
+**Tested (the strip)**: template unit 2281/0 (new: a strip is one range, a region cut across the level a range a
+column, each holds exactly the level's cells it watches; their negative fails 3 with no merging), regions 25/0;
+the sweep above (2x1, 3x1, 4x1, 6x1, run twice).
+
+**Left for later**: the ~0.9 s stall once in each referee of three or more (then four or six strips hold with
+room); the middle strip of three's 104 ms frames; a region referee loading only its part of the level; how often
+an idle skeleton thinks (the combat overhaul's to set).

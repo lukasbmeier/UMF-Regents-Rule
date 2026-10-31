@@ -316,3 +316,37 @@ cannot narrow (#291), so every moved row is checked against every referee's ever
 be one range, a column at a time costs the server); 2. one ~0.9 s stall in some referees in a minute (not the
 walk maps: those read in 140 ms); 3. the rest of the earlier list (the level whole in each referee, idle
 skeletons' thinking).
+
+## A strip of columns, one range: the server no longer pays for more referees (template 1.6.3, DECISIONS #297; 2026-10-31)
+
+Luke: "make region referees ask for their cells in a way SpacetimeDB can narrow (a strip of columns as one
+range), then rerun expanse_referees.sh." A region referee asked for each cell table a range of chunks a column
+of its cells (12 to 46 columns a referee here). SpacetimeDB narrows no range (#291), so every moved row was
+checked against every column of every referee. Chunks are `x * 1024 + z`: a region as tall as the level (a
+STRIP, a cut `Nx1`) now asks for all its columns as ONE range a table (`RefereeRegion.ranges()`); the chunks
+between one column's last row and the next's first are cells outside the level, where nothing is. A region cut
+across the level's height (`2x2`) keeps a range a column, as one range would take in the regions above and
+below it, so the sweep now cuts strips (`1x1 2x1 3x1 4x1 6x1`). Every referee's log reads "N columns, 1 ranges".
+
+**300 bots on the expanse, strips** (run from a worktree at the merge, on its own database, while the combat
+session worked in this checkout):
+
+| referees | worst frame p95 | net stalls | their cores | their memory (each) | module busy | the step |
+|---|---|---|---|---|---|---|
+| **2** | **40.0 ms** | **0** | **2.0** | **1.9 GB (0.94)** | **34 %** (55 before) | **holds** |
+| 3 | 104.0 ms | 3 | 4.0 | 3.0 GB (1.0) | 37 % | breaks: one referee's frames, 3 stalls |
+| 4 | 44.5 ms | 3 | 4.8 | 4.1 GB (1.2) | 38 % (82 before, as 2x2) | breaks: 3 stalls |
+| 6 | 15.8 ms | 4 | 5.6 | 5.7 GB (1.0) | 40 % (87 before, as 3x2) | breaks: 4 stalls |
+
+**The server is fixed**: its module is 34-40 % busy whatever the number of referees (it was 55 % at two and
+87 % at six). More referees now give each one room (six: 10-16 ms frames) for no cost to the server, only to the
+machine (about a core and 1 GB each). **What still breaks three or more is the referees' own stall**: one
+0.86-1.05 s net stall per referee in most of them, each at its own moment (not the server: no two together),
+never with two. The middle strip of three (the town and its crowd) also ran 104 ms frames at p95.
+The first six-referee run also failed the harness once: a skeleton killed a fighter bot as it swung, and the
+server refused the swing ("you cannot while slain"). That is play, and the bot reads no health, so it is now in
+`load_bot.py`'s in-play refusals (as "the swing before was cut short" is). The rerun had no refusal.
+
+**What is left** (in order): 1. the ~0.9 s stall once in each referee of three or more (then four or six strips
+hold 300 with room); 2. why the middle strip of three runs 104 ms frames; 3. the earlier list (the level whole in
+each referee, how often an idle skeleton thinks).

@@ -5,11 +5,11 @@
 # memory the referees took on this machine, and the fewest that held with room to spare. On the TEST database;
 # about 4 to 5 minutes a cut.
 #
-#   tools\run.cmd game\regents\tests\expanse_referees.sh                         (1, 2, 4, 6 and 9 referees)
-#   GRIDS="2x2 3x3 4x3" tools\run.cmd game\regents\tests\expanse_referees.sh     other cuts
+#   tools\run.cmd game\regents\tests\expanse_referees.sh                         (1, 2, 3, 4 and 6 referees, in strips)
+#   GRIDS="2x2 3x3 4x3" tools\run.cmd game\regents\tests\expanse_referees.sh     other cuts (rows cost the server more, #297)
 #   STEPS=150 ...                                                                another crowd
 set -uo pipefail
 cd "$(dirname "$0")/../../.."
 export LOAD=expanse
-export GRIDS="${GRIDS:-1x1 2x1 2x2 3x2 3x3}"
+export GRIDS="${GRIDS:-1x1 2x1 3x1 4x1 6x1}"
 exec ./tests/referee_sweep.sh

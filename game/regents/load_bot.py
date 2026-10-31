@@ -36,6 +36,10 @@ EXPECTED_REFUSALS = [
     # A skeleton's heavy flinched the bot's first swing: a client that saw it starts the combo again; a bot,
     # which reads no statuses, finds out by this refusal (any other combo refusal is a bug).
     r"^use_ability_seen: use_ability: the swing before was cut short",
+    # A skeleton killed the fighter as it swung (first seen with six region referees on the expanse, whose
+    # skeletons each think more often): a client sees itself fall and stops; a bot, which reads no health,
+    # finds out by this refusal.
+    r"^use_ability_seen: use_ability: you cannot while slain",
 ]
 
 _bags = {}           # entity id -> {item id: bag row id}
