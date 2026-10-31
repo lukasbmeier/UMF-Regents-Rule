@@ -115,6 +115,11 @@ static func files() -> Array[Dictionary]:
 	return out
 
 
+## The content files in one folder and below it (a type's, as `folder_for` names it): paths, sorted.
+static func files_in(folder: String) -> Array[String]:
+	return _tres_under(folder)
+
+
 ## Every piece of content, loaded: [{ owner, path, def }] (def is null for a file that is not
 ## content; the bake reports those). `fresh`: read the files as they are on disk now, not the
 ## editor's open copies (the bake wants disk; the dock wants what the Inspector is editing).
@@ -127,13 +132,17 @@ static func load_all(fresh: bool = false) -> Array[Dictionary]:
 	return out
 
 
-## A type's pieces, by id.
+## A type's pieces, by id. Only the type's own folders are read (`folder_for`, one an owner): the bake keeps
+## every piece in its type's folder, or stops the build. Reading every piece to keep one type's loaded all
+## of a game's content each time (1.7 s for Regent's Rule's 181 files, freed again as the call returned),
+## and a referee asking for its kits as a skeleton first swung froze for 0.9 s (template 1.6.4).
 static func items(type: StringName) -> Array[ContentDef]:
 	var out: Array[ContentDef] = []
-	for e: Dictionary in load_all():
-		var def: ContentDef = e["def"]
-		if def != null and def.content_type() == type:
-			out.append(def)
+	for owner: String in owners():
+		for path: String in files_in(folder_for(type, owner)):
+			var def: ContentDef = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) as ContentDef
+			if def != null and def.content_type() == type:
+				out.append(def)
 	out.sort_custom(func(a: ContentDef, b: ContentDef) -> bool: return a.id < b.id)
 	return out
 

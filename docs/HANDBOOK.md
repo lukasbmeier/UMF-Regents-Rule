@@ -396,6 +396,8 @@ frame times (median, 95th, 99th, worst), each SPIKE with the moment it happened 
 `foundation.telemetry_spike_ms`, or the server's rows stopping for 0.4 s: a network stall), ping,
 corrections, memory, entities, and the machine coarsely (OS, CPU, GPU, memory). Nothing personal, and
 nothing a client receives: the tables are private, read by the database's owner.
+- A frame's time is the clock's (1.6.4): the engine caps the `delta` a script sees at about 133 ms, so before
+  1.6.4 no report's worst frame was over ~148 ms and a frozen game showed only as a network stall.
 - **Feedback: F8** (or Send feedback in the Escape menu). The moment is marked as the key is pressed;
   they pick Bug, Lag, Idea or Other and write. The server adds who, where (their position), the level,
   the round and the phase from its own rows. While you host, it shows up in `tools\host.cmd`'s window

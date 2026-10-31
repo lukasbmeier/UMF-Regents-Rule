@@ -142,11 +142,15 @@ static func wants_referee() -> bool:
 		var a: AbilityDef = d as AbilityDef
 		if a != null and a.judged:
 			return true
-	var no_genres: bool = Genres.listed().is_empty()
-	for e: Dictionary in ContentLibrary.load_all():
-		var b: BodyDef = e["def"] as BodyDef
-		if b != null and (no_genres or String(e["owner"]) != ContentLibrary.FOUNDATION):
-			return true
+	var owners: PackedStringArray = ContentLibrary.owners()
+	var no_genres: bool = owners.size() == 1   # the foundation alone
+	for owner: String in owners:
+		if owner == ContentLibrary.FOUNDATION and not no_genres:
+			continue
+		# The body folders only (`ContentLibrary.items`, 1.6.4): the whole library is seconds to load.
+		for path: String in ContentLibrary.files_in(ContentLibrary.folder_for(&"body", owner)):
+			if ResourceLoader.load(path) is BodyDef:
+				return true
 	return false
 
 

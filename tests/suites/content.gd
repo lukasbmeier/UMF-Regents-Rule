@@ -90,6 +90,32 @@ func _run_library_tests() -> void:
 	_check(ContentLibrary.items(&"ability").size() == 4 and ContentLibrary.find(&"ability", 10001) != null
 		and ContentLibrary.find(&"ability", 10001).display_name == "Flap",
 		"the library lists every owner's pieces and finds one by id")
+	# A type's pieces are read from its own folders only (1.6.4): a whole library read for one type was seconds.
+	var stray_dir: String = root.path_join("foundation/content/movement")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(stray_dir))
+	var stray := AbilityDef.new()
+	stray.id = 77
+	ResourceSaver.save(stray, stray_dir.path_join("stray.tres"))
+	_check(ContentLibrary.items(&"ability").size() == 4 and ContentLibrary.find(&"ability", 77) == null
+		and ContentLibrary.files_in(stray_dir).size() == 1,
+		"an ability outside its type's folder is not one of its pieces (the bake refuses it), read from the ability folders only")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(stray_dir.path_join("stray.tres")))
+	# Whether a game needs a referee, from its bodies' folders: a genre's body, or the foundation's in a game with none.
+	var no_body: bool = RefereeLauncher.wants_referee()
+	var body_dir: String = root.path_join("foundation/content/body")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(body_dir))
+	ResourceSaver.save(BodyDef.new(), body_dir.path_join("ball.tres"))
+	var foundation_body: bool = RefereeLauncher.wants_referee()
+	ContentLibrary.genres_override = PackedStringArray()
+	var foundation_alone: bool = RefereeLauncher.wants_referee()
+	ContentLibrary.genres_override = PackedStringArray(["testgenre"])
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(root.path_join("game/testgenre/content/body")))
+	ResourceSaver.save(BodyDef.new(), root.path_join("game/testgenre/content/body/disc.tres"))
+	var genre_body: bool = RefereeLauncher.wants_referee()
+	_check(not no_body and not foundation_body and foundation_alone and genre_body,
+		"a referee is wanted for a genre's body, or the foundation's in a game with no genre: %s" % str([no_body, foundation_body, foundation_alone, genre_body]))
+	_wipe(body_dir)
+	_wipe(root.path_join("game/testgenre/content/body"))
 	_check(ContentLibrary.create(&"ability", "nobody", "X", errors).is_empty() and not errors.is_empty(),
 		"an owner the game does not have cannot make content: %s" % str(errors))
 
