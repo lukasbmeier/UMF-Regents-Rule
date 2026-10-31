@@ -5,7 +5,7 @@
 # fewest referees that held with room to spare. Each run is a whole load test step: about 4 minutes each.
 #
 #   tools\run.cmd tests\referee_sweep.sh                                   (Windows)
-#   GRIDS="1x1 2x2 3x3" STEPS=300 ./tests/referee_sweep.sh
+#   GRIDS="1x1 2x2 3x3" STEPS=300 ./tests/referee_sweep.sh               other cuts (rows too: dearer for the server)
 #   LOAD=expanse GRIDS="2x2 3x2 4x3" ./tests/referee_sweep.sh               a game's other load config
 #
 # "Holds": every limit of shared/load.json held. "With room": the worst referee's frame p95 is at most half its
@@ -14,7 +14,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 PYTHON="${PYTHON:-$(command -v python || command -v python3)}"
-GRIDS="${GRIDS:-1x1 2x1 2x2 3x2 3x3}"
+# Strips by default (1.6.3): a region as tall as the level asks the server for one range a table, a region cut
+# across it a range a column, which the server checks every moved row against (DECISIONS #297).
+GRIDS="${GRIDS:-1x1 2x1 3x1 4x1 6x1}"
 STEPS="${STEPS:-$("$PYTHON" -c "import sys; sys.path.insert(0, 'tools/load'); import load_test as L; print(max(L.load_config()['steps']))")}"
 labels=""
 for g in $GRIDS; do

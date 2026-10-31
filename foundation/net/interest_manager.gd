@@ -107,8 +107,8 @@ var own_entity: int = -1
 ## inside the set (the SDK pairs its delete and insert).
 var _ring_active: SubscriptionSet = null
 var _ring_incoming: SubscriptionSet = null
-## A REGION REFEREE'S cells (DECISIONS #288): the chunks it watches, one range a column
-## ([Vector2i(first, last)], `RefereeRegion.columns`). Set, the cell tables are asked for by these, in the
+## A REGION REFEREE'S cells (DECISIONS #288): the chunks it watches, as ranges ([Vector2i(first, last)],
+## `RefereeRegion.ranges`: one a column, or one for a strip of whole columns, template 1.6.3). Set, the cell tables are asked for by these, in the
 ## cells' set, whatever the config says; empty (every other client and referee), as before.
 var region_columns: Array[Vector2i] = []
 ## A region referee (set with its columns, `set_region`): its cell tables are only ever asked for by column,
@@ -226,7 +226,8 @@ func set_region(columns: Array[Vector2i]) -> void:
 		_apply_ring()
 
 
-## A REGION REFEREE: one cell table's rows in one column of its cells (chunks `first` to `last`).
+## A REGION REFEREE: one cell table's rows in one range of its cells (chunks `first` to `last`: a column, or a
+## strip of whole columns, `RefereeRegion.ranges`).
 func region_query(table: StringName, for_world: int, first: int, last: int) -> String:
 	return "SELECT * FROM %s WHERE world_id = %d AND chunk >= %d AND chunk <= %d" % [table, for_world, first, last]
 

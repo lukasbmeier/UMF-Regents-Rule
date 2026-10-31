@@ -983,3 +983,14 @@ Sidecar only: restart the referees.
   out of date (#272). On Regent's Rule's (8,000 files, its streamed levels' cells) that took 0.4 s on a quiet
   machine, more beside other referees, on the main thread: the "net stall" every referee reported every ~10 s
   (and the continent's unexplained one). Now `ProjectStamp.look_async` runs it on a worker thread.
+
+## 1.6.3 — a region referee as tall as its level asks for its cells as one range (DECISIONS #297)
+Sidecar only: restart the referees.
+- A region referee subscribed each cell table a range of chunks a COLUMN of its cells (`chunk >= a AND chunk <=
+  b`), some 50 queries a table a referee on Regent's Rule's expanse. SpacetimeDB narrows no range (#291), so
+  every moved row was checked against every one of every referee: four or six referees took the module from
+  55 to 82-87 % busy. Now `RefereeRegion.ranges()`: a region that runs the level's whole height (a STRIP, cut
+  `Nx1`) asks for its columns as ONE range a table (chunks are `x * 1024 + z`: between one column's last row
+  and the next's first lie only cells outside the level, where nothing is). A region cut across the level's
+  height keeps a range a column (one range would take in the regions above and below it).
+- `tests/referee_sweep.sh` sweeps strips by default (`1x1 2x1 3x1 4x1 6x1`).

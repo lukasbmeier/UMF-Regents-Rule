@@ -71,20 +71,46 @@ func clip_to(bounds: AABB) -> void:
 
 
 ## The cells it watches, one range of chunks a column (`Cells.at`: a column's chunks are consecutive):
-## [Vector2i(first, last), ...], west to east, within the level (`clip`). What it subscribes, a query per
-## column per cell table. None when its region and the level do not meet.
+## [Vector2i(first, last), ...], west to east, within the level (`clip`). None when its region and the level
+## do not meet. What it subscribes is `ranges()`.
 func columns() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
+	var span: Array[Vector2i] = _span()
+	if span.is_empty():
+		return out
+	for x: int in range(span[0].x, span[1].x + 1):
+		out.append(Vector2i(Cells.at(x, span[0].y), Cells.at(x, span[1].y)))
+	return out
+
+
+## WHAT IT SUBSCRIBES, a query a range per cell table (template 1.6.3). SpacetimeDB narrows no range (#291):
+## each moved row is checked against every range every referee asks for, so a range a column (some 50 a
+## referee on Regent's Rule's expanse) took the module from 55 to 82-87 % busy with four or six referees. A
+## region as tall as the level (a STRIP: its cut has one row) asks for its columns as ONE range: between one
+## column's last row and the next's first lie only cells outside the level and the cell round it, where
+## nothing is. A region cut across the level's height keeps a range a column, as one range over them would
+## take in the region above's and below's rows too.
+func ranges() -> Array[Vector2i]:
+	var span: Array[Vector2i] = _span()
+	if span.is_empty():
+		return []
+	var bottom: int = maxi(clip.position.y, -Cells.HALF) if clip.has_area() else -Cells.HALF
+	var top: int = mini(clip.end.y - 1, Cells.HALF - 1) if clip.has_area() else Cells.HALF - 1
+	if span[0].y == bottom and span[1].y == top:
+		return [Vector2i(Cells.at(span[0].x, bottom), Cells.at(span[1].x, top))]
+	return columns()
+
+
+## The squares it watches within the level, [lowest corner, highest] (inclusive), or none.
+func _span() -> Array[Vector2i]:
 	var lo := Vector2i(maxi(x0 - border, -Cells.HALF), maxi(z0 - border, -Cells.HALF))
 	var hi := Vector2i(mini(x1 + border, Cells.HALF - 1), mini(z1 + border, Cells.HALF - 1))
 	if clip.has_area():
 		lo = Vector2i(maxi(lo.x, clip.position.x), maxi(lo.y, clip.position.y))
 		hi = Vector2i(mini(hi.x, clip.end.x - 1), mini(hi.y, clip.end.y - 1))
 	if lo.x > hi.x or lo.y > hi.y:
-		return out
-	for x: int in range(lo.x, hi.x + 1):
-		out.append(Vector2i(Cells.at(x, lo.y), Cells.at(x, hi.y)))
-	return out
+		return []
+	return [lo, hi]
 
 
 func describe() -> String:
