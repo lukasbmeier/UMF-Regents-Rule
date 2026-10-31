@@ -6,7 +6,7 @@
 # skeletons near them. A line every 10 s says how the server and each referee are doing.
 #
 #   tools\run.cmd game\regents\tests\expanse_watch.sh                 (Windows; Ctrl+C in this window to stop)
-#   REFEREES=3x2 tools\run.cmd game\regents\tests\expanse_watch.sh    with six referees instead of four
+#   REFEREES=6x1 tools\run.cmd game\regents\tests\expanse_watch.sh    with six referees instead of four (strips: #297)
 #   STEPS=150 WATCH=900 tools\run.cmd game\regents\tests\expanse_watch.sh   150 bots, for 15 minutes
 #   PLAYER=0 ...                                                       no game window (watch the numbers only)
 #

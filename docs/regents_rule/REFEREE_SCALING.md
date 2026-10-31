@@ -306,6 +306,8 @@ started, and a frame over 1.5 s printed the last ones.
 | 4 | 29.3 ms | 3 | 4.7 | 4.2 GB (1.1) | 82 % | breaks: the module, 3 stalls |
 | 6 | 13.8 ms | 3 | 5.1 | 5.7 GB (1.0) | 87 % | breaks: the module, 3 stalls |
 
+(CORRECTED 2026-10-31, last section: these two referees drove no skeleton, refused by the module's 256 a
+call. With every skeleton driven, four hold.)
 So on this machine **two region referees run 300 players on a Skyrim-size world** (each ~1 GB and one core),
 though not with room (38.8 of 50 ms). More referees give each more room but cost the SERVER more: its module
 went from 55 to 87 % busy, mostly the movement tick's subscription update (339 ms a second at two, 528 at six).
@@ -350,3 +352,42 @@ server refused the swing ("you cannot while slain"). That is play, and the bot r
 **What is left** (in order): 1. the ~0.9 s stall once in each referee of three or more (then four or six strips
 hold 300 with room); 2. why the middle strip of three runs 104 ms frames; 3. the earlier list (the level whole in
 each referee, how often an idle skeleton thinks).
+
+## The last stall, and two referees that drove nothing (template 1.6.4-1.6.5, DECISIONS #298, #299; 2026-10-31)
+
+Luke: "find the ~0.9 s stall in each region referee of three or more, fix it, then rerun expanse_referees.sh."
+
+**The stall** was a frozen main thread, not the network. A probe stamped every step a row takes (the socket, the
+SDK's parse thread, its drain, each message, each row and the component it went to) and printed the stamps when
+the rows stopped: every time, the last was `SpaceTimeActionComponent` handling a skeleton's first swing, whose
+`CombatComponent._began` asks `KitDef.all()` for the kit that has it. `ContentLibrary.items(type)` loaded EVERY
+content file to keep one type's, and freed the rest as it returned: 1.7 s a call here (181 files), 2.5 s cold.
+Template 1.6.4 reads only the type's own folders (the bake keeps every piece there): the first kit lookup 116 ms,
+the next 1 ms. **Why it read as a "net stall"**: Godot hands a script a `delta` of at most ~133 ms however long the
+frame was (a 600 ms frame arrives as 124 ms), so no referee's worst frame was ever reported over ~148 ms. Telemetry
+now times a frame by the clock: worst frames read higher from here (200-370 ms: a nav tile read, a first kit).
+
+**Rerunning the sweep found the bigger one.** The two-referee runs (1.6.2, 1.6.3 and today) reported 0 entities:
+each referee asked the module for all of its ~330 skeletons in one `drive_npcs` call, the module refuses more than
+256 at once, and the referee was refused four times a second and drove none. "Two referees hold" (the sections
+above) was two referees with nothing to do. Template 1.6.5: the keeper asks for 256 at a time; the load test's
+harness now fails if any NPC has no driver (with the old keeper: "0 of 665", failed).
+
+**300 bots on the expanse, strips, every skeleton driven** (`expanse_referees.sh`, run from a worktree on its own
+database while the combat session worked in this checkout; `build/load/strip_sweep_165/`):
+
+| referees | worst frame p95 | net stalls | their cores | their memory (each) | module busy | the step |
+|---|---|---|---|---|---|---|
+| 1 | 882.9 ms | 0 | 1.2 | 3.2 GB | 32 % | breaks |
+| 2 | 310.4 ms | 0 | 2.7 | 3.3 GB (1.7) | 34 % | breaks: ~330 skeletons each |
+| 3 | 102.2 ms | 0 | 4.0 | 3.0 GB (1.0) | 36 % | breaks: the middle strip (the town) |
+| **4** | **37.5 ms** | **0** | **4.8** | **3.9 GB (1.0)** | **37 %** | **holds** |
+| 6 | 25.1 ms | 0 | 5.4 | 5.6 GB (1.0) | 39 % | holds, room (25.1 of 50) |
+
+So **four strip referees run 300 players and 665 skeletons on a Skyrim-size world** on this machine (about a core
+and 1 GB each), and six give each half its budget. No referee stalls at any count; the server's module stays near
+a third busy however many there are. `expanse_watch.sh` now cuts four strips (`load_expanse.json`).
+
+**What is left** (in order): 1. the middle strip of three (the town): why a strip with the crowd runs 2x the others;
+2. a region referee loads the whole level (~375 MB here) where its own part would do; 3. how often an idle skeleton
+thinks (the combat overhaul's to set); 4. the start-up stalls (2-3 s as a referee's skeletons bind, before players).

@@ -1214,6 +1214,22 @@ killed a fighter as it swung). `REFEREE_SCALING.md`, last section.
 column, each holds exactly the level's cells it watches; their negative fails 3 with no merging), regions 25/0;
 the sweep above (2x1, 3x1, 4x1, 6x1, run twice).
 
-**Left for later**: the ~0.9 s stall once in each referee of three or more (then four or six strips hold with
-room); the middle strip of three's 104 ms frames; a region referee loading only its part of the level; how often
-an idle skeleton thinks (the combat overhaul's to set).
+**The last stall, and two referees that drove nothing** (2026-10-31; Luke: "find the ~0.9 s stall in each
+region referee of three or more, fix it, then rerun expanse_referees.sh"): template 1.6.4 (#298): a skeleton's
+first swing asked for every kit, and `ContentLibrary.items` loaded the whole library for it (1.7 s a call): now a
+type's own folders only (116 ms cold, 1 ms after); Telemetry times a frame by the clock (Godot caps `delta` near
+133 ms, so the freeze read only as rows stopping). Template 1.6.5 (#299): a region referee asked the module for
+all its NPCs in one call and the module refuses past 256: the two-referee runs drove NO skeleton ("two hold" was
+wrong); now 256 a call, and the load test fails if an NPC has no driver. **Result**, every skeleton driven: four
+strips hold 300 (37.5 ms), six with room (25.1 ms); one, two and three break; no net stall at any count.
+`load_expanse.json` cuts four strips (`expanse_watch.sh`). `REFEREE_SCALING.md`, last section.
+**Tested (the last stall)**: template unit 2285/0 then 2287/0 (new: a frozen frame by the clock, a type read from
+its folders, wants_referee, the keeper's batches and its cap read from regions.rs; each negative fails), sidecar
+13/0, regions 25/0 (once 24/1: its admin check read a hand-off over the edge as the admin's take; it now
+allows either live referee), the load test's own tests (33); every game's unit suite after the merges (Fishing 3066/0, Fowl
+Play 2570/0, DiscGolf 2360/0, here 2748/0); the harness's NPC check failed on the old keeper ("0 of 665"); the
+sweep above.
+
+**Left for later**: the middle strip of three (the town) at 2x the others' frames; a region referee loading only
+its part of the level; how often an idle skeleton thinks (the combat overhaul's to set); the 2-3 s start-up
+stalls as a referee's skeletons bind.
