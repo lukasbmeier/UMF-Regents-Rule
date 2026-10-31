@@ -994,3 +994,21 @@ Sidecar only: restart the referees.
   and the next's first lie only cells outside the level, where nothing is). A region cut across the level's
   height keeps a range a column (one range would take in the regions above and below it).
 - `tests/referee_sweep.sh` sweeps strips by default (`1x1 2x1 3x1 4x1 6x1`).
+
+## 1.6.4 — a type's content is read from its own folder; a frame's time is the clock's (DECISIONS #298)
+Client and sidecar: restart the game and the referees; nothing to republish.
+- `ContentLibrary.items(type)` read EVERY content file to keep one type's, so each call loaded a game's whole
+  library and freed most of it again as it returned (1.7 s for Regent's Rule's 181 files, 2.5 s cold). A region
+  referee on the Skyrim-size expanse asked for its kits as a skeleton first swung (`KitDef.all()`, from
+  `CombatComponent._began`) and froze for 0.85-0.9 s, once each: the "net stall" of three or more referees. Now
+  `items` reads only `folder_for(type, owner)` for each owner (the bake already keeps every piece there, or stops
+  the build): the first kit lookup 116 ms, the next 1 ms. New `ContentLibrary.files_in(folder)`.
+  `RefereeLauncher.wants_referee()` reads the body folders the same way (it loaded the whole library as a
+  player's game started), and takes "no genres" from the library's own owners.
+- `Telemetry` measured a frame by the engine's `delta`, which Godot clamps to about `max_physics_steps_per_frame`
+  physics ticks (133 ms at 60 Hz: a 600 ms frame arrives as 124 ms). No report's worst frame was ever over ~148
+  ms, and a frozen main thread showed only as the rows stopping. A frame is now the longer of `delta` and the
+  clock since the last one (`Telemetry.frame_ms`); `note_frame(ms)` records one. Worst frames read higher from
+  here on: they were capped, not good.
+- Found with a probe of where the rows stop (the socket, the SDK's parse thread, its drain, then each
+  component's row): the method is in DECISIONS #298.

@@ -24,6 +24,8 @@ const MIN_WINDOW_S: float = 1.0
 ## The current window: each frame's time (ms), when it began, its spikes ([server s, ms, cause]).
 var _frames: PackedFloat32Array = PackedFloat32Array()
 var _started_msec: int = 0
+## When the last frame began (the clock, for `frame_ms`); 0 before the first.
+var _last_frame_usec: int = 0
 var _spikes: Array = []
 var _spike_count: int = 0
 var _rtt_sum: float = 0.0
@@ -67,10 +69,9 @@ static func is_authority() -> bool:
 
 
 func _process(delta: float) -> void:
-	var ms: float = delta * 1000.0
-	_frames.append(ms)
-	if ms > HotRules.number(&"foundation.telemetry_spike_ms"):
-		_spike(ms, "frame")
+	var now_usec: int = Time.get_ticks_usec()
+	note_frame(frame_ms(delta, now_usec - _last_frame_usec if _last_frame_usec > 0 else 0))
+	_last_frame_usec = now_usec
 	var rtt: float = float(ClockSync.rtt_usec()) / 1000.0
 	if rtt > 0.0:
 		_rtt_sum += rtt
@@ -78,6 +79,21 @@ func _process(delta: float) -> void:
 		_rtt_max = maxf(_rtt_max, rtt)
 	if Time.get_ticks_msec() - _started_msec >= int(window_s() * 1000.0):
 		send_window()
+
+
+## One frame of `ms` into the window (a spike when slow).
+func note_frame(ms: float) -> void:
+	_frames.append(ms)
+	if ms > HotRules.number(&"foundation.telemetry_spike_ms"):
+		_spike(ms, "frame")
+
+
+## A frame's time (ms): the engine's `delta`, or the clock since the last frame when that is longer. The
+## engine hands `_process` at most about `max_physics_steps_per_frame` physics ticks' worth (133 ms at 60 Hz):
+## a 600 ms frame arrives as 124 ms. Read from `delta` alone no frame was ever worse than ~148 ms, and a
+## referee's main thread frozen for 0.9 s showed only as the rows stopping ("net", Regent's Rule's expanse).
+static func frame_ms(delta: float, since_last_usec: int) -> float:
+	return maxf(delta * 1000.0, float(since_last_usec) / 1000.0)
 
 
 ## How long a window is (`foundation.telemetry_window_s`, at least a second).

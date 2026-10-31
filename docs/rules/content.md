@@ -16,6 +16,8 @@ add to it without reworking it.
 4. **One layout:** `<root>/<content_type>/<name>.tres`, roots `foundation/content/` and
    `game/<genre>/content/`. One type per folder, nothing but content in it (a stray file is an
    error, never skipped).
+   At run time a type's pieces are read from its folders alone (`ContentLibrary.items`, 1.6.4, #298):
+   a piece outside them is not listed (and the bake refuses it).
 5. **Ids are unique per type across the whole game**, checked by the bake and again by build.rs.
    A new piece takes the next free id at or above its owner's base (0 for the foundation, the
    genre's `GenreModule.content_id_base`), so two genres in one game never collide. Ids are what

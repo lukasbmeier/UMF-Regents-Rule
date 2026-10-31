@@ -10,8 +10,33 @@ extends "res://tests/suite_base.gd"
 
 func run() -> void:
 	_run_window()
+	await _run_frozen_frame()
 	_run_stalls()
 	await _run_feedback_page()
+
+
+## The engine hands `_process` a `delta` of at most ~8 physics ticks (133 ms at 60 Hz) however long the frame
+## was: a frozen main thread must still be reported as long as it froze, by the clock.
+func _run_frozen_frame() -> void:
+	print("== telemetry: a frozen frame, by the clock ==")
+	var t := Telemetry.new()
+	add_child(t)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	t.set(&"_frames", PackedFloat32Array())
+	t.set(&"_spikes", [])
+	t.set(&"_spike_count", 0)
+	OS.delay_msec(600)   # this frame: 600 ms on the main thread
+	await get_tree().process_frame
+	var engine_ms: float = get_process_delta_time() * 1000.0
+	await get_tree().process_frame
+	var s: Dictionary = t.summary()
+	_check(float(s["max"]) >= 600.0 and int(s["spikes"]) >= 1 and String((s["spike_list"] as Array)[0][2]) == "frame",
+		"a 600 ms frame is reported as %.0f ms, a slow frame (the engine's delta: %.0f ms)" % [float(s["max"]), engine_ms])
+	_check(is_equal_approx(Telemetry.frame_ms(0.016, 0), 16.0) and is_equal_approx(Telemetry.frame_ms(0.124, 616000), 616.0)
+		and is_equal_approx(Telemetry.frame_ms(0.020, 5000), 20.0),
+		"a frame's time: the delta, or the clock when that is longer, never shorter than the delta")
+	t.queue_free()
 
 
 func _run_window() -> void:
@@ -21,15 +46,15 @@ func _run_window() -> void:
 	t.set_process(false)
 	t.set(&"_frames", PackedFloat32Array())
 	for i: int in 99:
-		t.call(&"_process", 0.010)   # 10 ms frames
-	t.call(&"_process", 0.120)   # one 120 ms hitch
+		t.note_frame(10.0)   # 10 ms frames
+	t.note_frame(120.0)   # one 120 ms hitch
 	var s: Dictionary = t.summary()
 	_check(int(s["frames"]) == 100 and is_equal_approx(float(s["p50"]), 10.0) and is_equal_approx(float(s["max"]), 120.0),
 		"a hundred frames, one of them a hitch: median 10 ms, worst 120 (%s)" % str([s["p50"], s["max"]]))
 	_check(is_equal_approx(float(s["p99"]), 10.0) and int(s["spikes"]) == 1 and String((s["spike_list"] as Array)[0][2]) == "frame",
 		"the 99th still 10 ms (one in a hundred), and the hitch a spike of its own: when, how long, a slow frame")
 	for i: int in 40:
-		t.call(&"_process", 0.200)
+		t.note_frame(200.0)
 	s = t.summary()
 	_check(int(s["spikes"]) == 41 and (s["spike_list"] as Array).size() == Telemetry.MAX_SPIKES,
 		"every spike counted (%d), a dozen described: a report stays small" % int(s["spikes"]))
