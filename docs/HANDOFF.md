@@ -1,37 +1,34 @@
-# Handoff — UMF Template, 2026-10-31 (1.6.4-1.6.5: the referees' last stall, and two that drove nothing)
+# Handoff — UMF Template, 2026-10-31 (1.6.6: the town strip's frames)
 
 ## Where it stands
-**1.6.5**, committed and pushed (1.6.4 `023a8c6`, 1.6.5 `5e3e94b`), merged into all four games and pushed. Client and
-sidecar only: restart a game and its referees; nothing to republish. Suites here: unit 2288/0, sidecar 13/0, regions
-25/0 (once 24/1: see Watch out), the load test's own 33/0. Each game's unit suite green after the 1.6.4 merge
-(Fishing 3066, Fowl Play 2570, DiscGolf 2360, Regent's 2748); Regent's referee/content/telemetry at 1.6.5 206/0.
+**1.6.6** committed and pushed (`d747a3d`), NOT yet merged into any game. Client, sidecar and the vendored
+SDK: restart a game and its referees; nothing to republish. Suites here: unit 2309/0, e2e 11/0, sidecar 13/0,
+regions 25/0; every negative of the new checks fails (7 mutations).
 
-## This session (Regent's Rule's referees, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`, last section)
-- 1.6.4 (#298): `ContentLibrary.items(type)` reads only the type's folders (`files_in(folder_for(...))`); it loaded
-  every content file each call (1.7 s in Regent's). A skeleton's first swing asked for every kit: the ~0.9 s
-  "net stall" of every referee of three or more. `RefereeLauncher.wants_referee` reads the body folders the same way.
-- 1.6.4: `Telemetry` times a frame by the clock (`frame_ms`, `note_frame`): Godot caps `delta` near 133 ms, so a
-  frozen main thread never read as a slow frame. Worst frames read higher from now on.
-- 1.6.5 (#299): `RegionKeeper` asks `drive_npcs` for at most `MAX_BATCH` (256, the module's cap; a unit check reads
-  regions.rs). A region with more drove NONE before: "two referees hold" on the expanse was two idle referees.
-- 1.6.5: the load test fails its harness when an NPC has no driver (`npcs_driven`, from `npc_driver`); claim codes
-  always 19 characters; regions_test's admin check allows a hand-off between the two live referees.
-- Found with a stamped ring of where rows go (socket, SDK parse thread, drain, message, row, component), printed
-  when rows stop: the method is in #298.
+## This session (Regent's Rule's referees, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
+- 1.6.6 (#300): the SDK's `_ModuleTableBTreeIndex` searched its bucket for every updated row; every
+  movement row of a world is one `world_id` bucket (~4,000 on the expanse): ~85 us a row, the town strip's
+  2x. Now `_slots` (row -> index), order unchanged. FIRST UMF PATCH TO THE VENDORED SDK:
+  `tests/suites/sdk_patches.gd` holds it (hard rule 3's one exception).
+- 1.6.6: `ActionReferee._people`: a swing looks at people, not ~3,800 movement rows.
+- Expanse sweep (300 bots, strips): 1 ref 433 ms p95, 2 146, 3 43.7 (holds now), 4 30.4, 6 21.2 (room).
+  Reports in `../Regents Rule/build/load/strip_sweep_166/` (gitignored).
 
 ## Next, in order
-1. Regent's Rule: why the strip with the town runs 2x the others' frames (three strips: 102 ms p95).
-2. A region referee loads the whole level (~375 MB on the expanse); its part would do.
-3. The 2-3 s start-up stalls as a referee's skeletons bind (before players; not counted).
+1. Ship 1.6.6 to the four games: merge `d747a3d` (not this HANDOFF commit: Regent's HANDOFF is dirty) by
+   hand into each (Regent's has the combat session's ~59 uncommitted files: none overlap), run each unit
+   suite, push; a HANDOFF note in each game.
+2. Regent's docs: `REFEREE_SCALING.md` new last section, PROGRESS step 25, `load_expanse.json` (three
+   strips now hold; four kept for room is Luke's call), memory `load-test-harness.md`.
+3. Offer the btree patch upstream (plaught-armor SDK): outward-facing, ask Luke first.
+4. A region referee loads the whole level (~375 MB); the 2-3 s start-up stalls.
 
 ## Waiting on Luke
-- The per-player bandwidth budget; the server's levers at 300 (#289). Fowl Play: the eagle and its playtest.
+- How many strips the expanse runs by default (three hold at 43.7 of 50 ms; four have room).
+- Whether to send the SDK fix upstream. The bandwidth budget; the server's levers at 300.
 
 ## Watch out
-- Regent's Rule has a combat session at work (uncommitted, ~48 files): its sweeps ran from a worktree on
-  `regents-rule-sweep-test`. That game's HANDOFF is that session's: merge with care (a dirty HANDOFF stops a merge).
-- A worktree in the scratchpad needs a short name: cargo's build-script paths pass Windows' 260 limit (LNK1104).
-- regions_test's bot wanders the edge; a check that reads a driver twice must allow a hand-off between them.
-- Never put a `.gd` copy inside a project (even `build/`): two of a class and every spawn fails.
-- Heredocs through the Bash tool mangle backslashes (`\r`, `\t`, a Windows path): write patch scripts with the
-  file tool, or edit with Edit.
+- The sweep worktree `rs` (scratchpad, db `regents-rule-sweep-test`) still exists: remove it when done.
+- `run_tests.sh` passes no arguments: run one suite with `godot --headless --path . res://tests/test_runner.tscn -- --only=x`.
+- The runner prints failures to stderr: grep "failed" counts, not "FAIL" on stdout.
+- Heredocs through the Bash tool mangle backslashes: write patch scripts with the file tool.
