@@ -30,7 +30,17 @@ AnimationSet, the generated tree, the driver, held poses, the upper body, IK, ar
   `play_action(semantic)` fires a genre's own one-shot. The pose lets go while the body moves.
 - A one-shot that fully covers the body stops Godot processing the state machine under it, so a
   travel asked for meanwhile lands when the one-shot ends. A test that revives after a
-  full-body action waits for the action to finish.
+  full-body action waits for the action to finish. DYING is the exception (#301): `died` fades both
+  action slots and the upper-body one-shot, ends a commitment and lets the held poses go, so the fall
+  plays at once and never under a swing.
+- TWO ACTION SLOTS (#301): `action` and `action2`. An action fired while one plays goes to the OTHER slot
+  and fades in over it while the old one fades out (`_fire_action`): swing follows swing as a
+  cross-fade, where re-firing one slot snapped the new clip in. Always fire through `_fire_action`
+  (`play_action`, an ability, an interact), never `_fire` on one slot; `action_clip()` is the newest's.
+- A HIT-STOP (#301): `hold_still(seconds)` stops ADVANCING the tree (not an advance of 0, which still
+  blends that frame's weights and creeps); the clip's clock stands still and carries on after. A
+  genre's hit feedback asks it of both sides of a blow. Procedural parts (feet on the ground, a head
+  turning) keep moving: test a hit-stop by a clip's `current_position`, not the bones.
 - THE UPPER BODY (#158): `play_upper(semantic)` fires a one-shot filtered to
   `AnimationTreeBuilder.upper_body(set)` (the set's `upper_body_filter`, else the chest, arms and
   fingers): drawing or stowing while the legs walk. Moving does not cancel it. It sits over the

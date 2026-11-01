@@ -321,6 +321,46 @@ func _run_animation_scene_tests() -> void:
 			ability_clip = defn.animation_set.anim_name(AnimationSet.INTERACT)
 		_check(driver.action_clip() == ability_clip,
 			"and an ability plays its clip (%s, want %s)" % [driver.action_clip(), ability_clip])
+		# SWING FOLLOWS SWING (DECISIONS #301): an action fired while one plays goes to the other slot and fades in
+		# over it, the one playing fading out under it, where re-firing one slot snapped the new clip in.
+		var atree: AnimationTree = driver.animation_tree()
+		var slot_before: int = driver._action_slot
+		action.action_started.emit(0, 2)
+		await _anim_frames(movement, seq, 2, Vector2.ZERO)
+		var both: bool = bool(atree.get(AnimationTreeBuilder.P_ACTION_ACTIVE)) and bool(atree.get(AnimationTreeBuilder.P_ACTION2_ACTIVE))
+		_check(driver._action_slot != slot_before and both and driver.action_clip() == ability_clip,
+			"a second action while the first plays: the other slot (%d -> %d), both on while it fades in" % [slot_before, driver._action_slot])
+		await _anim_frames(movement, seq, 30, Vector2.ZERO)
+		var old_on: bool = bool(atree.get(AnimationTreeBuilder.P_ACTION2_ACTIVE if slot_before == 1 else AnimationTreeBuilder.P_ACTION_ACTIVE))
+		_check(not old_on and driver.action_playing(), "and the first is gone (faded) while the second plays on")
+		# A HIT-STOP (DECISIONS #301): held, the swing's clip stands still; let go, it moves on. (Its clock, not
+		# the bones: the feet keep finding the ground and the head keeps turning while it is held.)
+		action.action_started.emit(0, 4)
+		await _anim_frames(movement, seq, 2, Vector2.ZERO)
+		var clip_at: String = "parameters/%s/current_position" % String(
+			AnimationTreeBuilder.NODE_ACTION2_CLIP if driver._action_slot == 1 else AnimationTreeBuilder.NODE_ACTION_CLIP)
+		driver.hold_still(0.3)
+		await _anim_frames(movement, seq, 1, Vector2.ZERO)
+		var held_at: float = float(atree.get(clip_at))
+		await _anim_frames(movement, seq, 8, Vector2.ZERO)
+		var during: float = float(atree.get(clip_at))
+		_check(driver.held_still() and is_equal_approx(during, held_at), "a hit-stop holds the swing's clip still (%.3f s, then %.3f s)" % [held_at, during])
+		await _anim_seconds(movement, seq, 0.35, Vector2.ZERO)
+		var after: float = float(atree.get(clip_at))
+		_check(not driver.held_still() and after > held_at + 0.01, "and lets it go after its time: the clip moves on (%.3f s)" % after)
+		# DEATH INTERRUPTS AT ONCE (DECISIONS #301): a committed action under way, then the body dies: the action
+		# fades and nothing is committed, so the fall plays at once rather than after the swing.
+		if health != null:
+			action.action_started.emit(0, 3)
+			driver.commit_action(2.0)
+			await _anim_frames(movement, seq, 3, Vector2.ZERO)
+			var swinging: bool = driver.action_playing()
+			health.died.emit(0)
+			await _anim_frames(movement, seq, 30, Vector2.ZERO)
+			_check(swinging and not driver.action_committed() and not driver.action_playing(),
+				"dying mid-swing: the swing is let go and fades (committed %s, playing %s)" % [driver.action_committed(), driver.action_playing()])
+			health.revived.emit()
+			await _anim_frames(movement, seq, 10, Vector2.ZERO)
 
 	# (The fishing half of this suite, the heave pose and the rod in the hand, is fishing's:
 	# game/fishing/tests/suites/fishing_animation_scene.gd.)

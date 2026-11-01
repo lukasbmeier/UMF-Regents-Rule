@@ -892,6 +892,13 @@ set; never build one by hand. Gameplay asks for semantic names only.
 - **A pose on the arms only** (DECISIONS #266): `driver.hold_upper_pose(semantic, weight, at)` every frame
   it should hold (a bow drawn: `at` how far), `release_upper_pose()` to let it go. The legs keep walking
   under it; `hold_pose` is the whole body.
+- **Weight on a blow** (DECISIONS #301): `driver.hold_still(seconds)` freezes the character's animation for
+  that long (a hit-stop: ~0.06 s on a hit, more on a big one), then it carries on. Ask it of both the
+  hitter and the hit. Only the picture waits: nothing in the game does.
+- **Swing after swing** blends: an action started while one plays fades in over it (two action slots,
+  #301), so a combo reads as one motion instead of clips snapping in. Nothing to set up.
+- **Death stops everything**: a swing or a draw under way fades the moment the body dies, so the fall
+  plays at once (#301).
 
 ### Held items: rods, swords, shields, bows (`foundation/held/`)
 An item held in a hand is a `HeldItem` scene (its root at the item's grip point) with an

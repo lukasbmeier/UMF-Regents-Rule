@@ -1048,3 +1048,14 @@ Client, sidecar and the vendored SDK: restart the game and its referees; nothing
 - Measured on the expanse, 300 bots, strips, every skeleton driven: the strip with the town at the others'
   frame time (38.9 ms p95 against 35.8 and 34.9, three referees; it was 97 against 53), so three hold;
   one referee 433 ms (was 883), two 146 (310), three 43.7 (102: now holds), four 30.4 (37.5), six 21.2 (25.1, with room); no net stall; every skeleton driven. Found by timing every part of a referee's frame by part and by table (#300 says how).
+
+## 1.6.7 — death stops a swing; a hit-stop; two action slots (DECISIONS #301)
+Client only: restart the game; nothing to republish.
+- DEATH INTERRUPTS AT ONCE: a body that died mid-swing travelled to Dead under the swing's one-shot and
+  played its fall only when the clip ended ("players and skeletons can attack while dying"). The driver now
+  fades both action slots and the upper-body one-shot on `died`, ends a commitment, and lets held poses go.
+- A HIT-STOP: `AnimationDriverComponent.hold_still(seconds)`, the tree not advanced for that long (an
+  advance of 0 still blended the frame's new weights). A genre asks it of both sides of a blow.
+- TWO ACTION SLOTS: the generated graph has `action2` over `action` (18 nodes). An action fired while one
+  plays takes the other slot and fades in over it, the old fading out: swing follows swing without a pop.
+  Every action fires through `_fire_action`; `action_clip()` is the newest's.
