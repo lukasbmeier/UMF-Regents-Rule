@@ -391,3 +391,42 @@ a third busy however many there are. `expanse_watch.sh` now cuts four strips (`l
 **What is left** (in order): 1. the middle strip of three (the town): why a strip with the crowd runs 2x the others;
 2. a region referee loads the whole level (~375 MB here) where its own part would do; 3. how often an idle skeleton
 thinks (the combat overhaul's to set); 4. the start-up stalls (2-3 s as a referee's skeletons bind, before players).
+
+## The strip with the town, and the rows of one world in one list (template 1.6.6, DECISIONS #300; 2026-10-31)
+
+Luke: "find why the strip with the town runs about twice the other strips' frame times, and fix it."
+
+**Where its time went.** Every part of a referee's frame was timed (each `_process`/`_physics_process`, the SDK's
+drain, each message type, each table's apply and each table's row handlers), and summed again over the frames
+slower than 50 ms. The town strip spent the same as the others on the skeletons' brains (~260 ms a second), and
+more on two things that grow with players: applying rows (322 ms a second against ~230) and judging swings (162
+against ~100). Of the rows, `movement_state`'s apply cost 260 ms a second where its handlers took 57: the rest
+was the SDK's own. **The SDK's index on `world_id`** keeps a list per world, and every movement row of world 0
+is in it (~4,000: every node and stone has one); each updated row was found in that list by a search, and the
+players' rows, the last in, sit at its end: ~85 us a row. The town strip has the most players, so the most
+rows (2,430 a second against ~1,600). **The judge** looked at every movement row it held (~3,800) for every
+swing, to find ~240 people, and the town strip judges the most swings (30 a second against 16-19).
+
+**The fix** (template 1.6.6): the index notes where each row sits and swaps an updated row in place (the first
+UMF patch to the vendored SDK; `tests/suites/sdk_patches.gd` keeps it through an upgrade); the judge keeps who is
+a person as their rows come and looks at those only. The town strip's row apply fell from 322 to 156 ms a
+second, its judging from 162 to 95.
+
+**300 bots on the expanse, strips, every skeleton driven** (`expanse_referees.sh` from a worktree on its own
+database; `build/load/strip_sweep_166/`):
+
+| referees | worst frame p95 | before (1.6.5) | each strip | net stalls | their cores | module busy | the step |
+|---|---|---|---|---|---|---|---|
+| 1 | 432.8 ms | 882.9 | | 0 | 1.3 | 32 % | breaks |
+| 2 | 146.4 ms | 310.4 | 146.4, 131.7 | 0 | 2.9 | 34 % | breaks |
+| **3** | **43.7 ms** | 102.2 | 35.8, **43.7** (the town), 36.7 | **0** | **3.9** | **35 %** | **holds** |
+| 4 | 30.4 ms | 37.5 | 25.4, 30.4, 27.9, 28.1 | 0 | 4.4 | 36 % | holds |
+| 6 | 21.2 ms | 25.1 | 18.5-21.2 | 0 | 5.2 | 38 % | holds, room (21.2 of 50) |
+
+So **three strip referees now run 300 players and 665 skeletons** (43.7 of the 50 ms limit: no room), and the
+town's strip runs at its neighbours' frame time. `expanse_watch.sh` still cuts four (room for the next camp);
+three or four is Luke's call.
+
+**What is left** (in order): 1. a region referee loads the whole level (~375 MB here) where its own part would do;
+2. how often an idle skeleton thinks (the combat overhaul's to set: the brains are now most of a referee's frame);
+3. the start-up stalls (2-3 s as a referee's skeletons bind, before players).

@@ -1230,6 +1230,16 @@ allows either live referee), the load test's own tests (33); every game's unit s
 Play 2570/0, DiscGolf 2360/0, here 2748/0); the harness's NPC check failed on the old keeper ("0 of 665"); the
 sweep above.
 
-**Left for later**: the middle strip of three (the town) at 2x the others' frames; a region referee loading only
-its part of the level; how often an idle skeleton thinks (the combat overhaul's to set); the 2-3 s start-up
-stalls as a referee's skeletons bind.
+**The strip with the town** (2026-10-31; Luke: "find why the strip with the town runs about twice the other
+strips' frame times, and fix it"): template 1.6.6 (#300). A referee's frame timed by part and by table: the SDK's
+index on `world_id` searched its list of every movement row of the world (~4,000, nodes included) for each row
+that moved, ~85 us a row, and the town strip gets the most player rows; the judge looked at every movement row
+for each swing. Now the index notes each row's place (the first UMF patch to the vendored SDK, kept by
+`tests/suites/sdk_patches.gd`), and the judge looks at the people only. **Result**: three strips hold 300 (43.7 ms,
+the town at its neighbours' frame time; was 102), four 30.4, six 21.2. `REFEREE_SCALING.md`, last section.
+**Tested (the town strip)**: template unit 2309/0 (new: the index's slots through 1,500 updates, a removal, a move
+between worlds; who is a person by each row; 7 mutations each fail 1-3 checks), e2e 11/0, sidecar 13/0, regions
+25/0; every game's unit suite after the merge; the sweep above.
+
+**Left for later**: a region referee loading only its part of the level; how often an idle skeleton thinks (the
+combat overhaul's to set); the 2-3 s start-up stalls as a referee's skeletons bind; three strips or four (Luke's).
