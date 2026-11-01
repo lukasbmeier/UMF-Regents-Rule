@@ -79,6 +79,7 @@ spacetime_bindings/    GENERATED from the module: never edit
 tools/                 generators: the level, character looks, animation sets, sounds, fight tuning
 tests/                 every test layer (section 10)
 addons/                the SpacetimeDB SDK (vendored), Terrain3D, the godot-ai editor bridge
+                       (the SDK carries UMF patches: tests/suites/sdk_patches.gd lists them; keep them on an upgrade)
 ```
 
 ---
@@ -598,6 +599,9 @@ twice, and one whose referee has died is taken by the next after 5 s.
 - **A referee takes at most 256 NPCs a call** (template 1.6.5, #299): more wait a quarter of a second. The
   load test checks the server's own record that every NPC has a referee driving it, and fails if not: before
   1.6.5 a region with more than 256 drove none, and looked fine.
+- **Rows of one world in one index bucket** (template 1.6.6, #300): the SDK's index on `world_id` holds
+  every movement row of a world, and it used to search that list for every row that moved. It now
+  remembers where each row sits. Nothing to do; a referee or client with thousands of rows got faster.
 - **The load test** splits its bots' square with `"referees": [2, 2]` in your `shared/<genre>/load.json`, or
   `REFEREES=2x2` before the command; `tools\run.cmd tests\referee_sweep.sh` tries several cuts and says how
   many a world needs. `tools\run.cmd tests\regions_test.sh` checks the hand-off on a real server.

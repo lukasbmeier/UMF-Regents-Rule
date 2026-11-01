@@ -41,7 +41,7 @@ A game's own design docs live in that game's repo (Fowl Play: `docs/fowl_play/`)
 ## Hard rules (violations fail review)
 1. Strictly typed GDScript. Every var/param/return typed. `:=` only when the RHS is a constructor.
 2. No `@rpc`, `MultiplayerSynchronizer`, `MultiplayerSpawner`, `ENetMultiplayerPeer`.
-3. Only `foundation/net/spacetime_sync.gd` may reference SDK types, the `SpacetimeDB` autoload, or `spacetime_bindings/`. `tests/run_tests.sh` greps for this.
+3. Only `foundation/net/spacetime_sync.gd` may reference SDK types, the `SpacetimeDB` autoload, or `spacetime_bindings/`. `tests/run_tests.sh` greps for this. (One exception: `tests/suites/sdk_patches.gd` tests this project's own patches to the vendored SDK, #300.)
 4. Components never own authoritative state. They receive it via `_on_row_updated(table, old, new)`. They may own `predicted` and presentation state only.
 5. Components never reference UI. Low-frequency, `entity_id`-first events go on `SignalBus`. Position/velocity never go on `SignalBus`.
 6. Rows delivered by the SDK are the cache's own `Resource` instances. **Never mutate one.** Copy values out (`MovementState.from_row`) or `duplicate()`.

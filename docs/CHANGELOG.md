@@ -1030,3 +1030,21 @@ Sidecar and the load test: restart the referees; nothing to republish.
   (either), never the admin: the bot wanders the edge and was once handed on in the second the admin's call took.
 - Measured on the expanse, 300 bots, every skeleton driven (strips): one referee 883 ms frames (p95), two 310,
   three 102, four 37.5 (holds), six 25.1 (holds); no net stall at any count; the module 32-39 % busy.
+
+## 1.6.6 — a btree index swaps an updated row in place; a swing looks at the people only (DECISIONS #300)
+Client, sidecar and the vendored SDK: restart the game and its referees; nothing to republish.
+- THE SDK'S BTREE INDEX searched its bucket for every updated row (`Array.find`), and every movement row
+  of a world shares its `world_id`, so that index is one bucket of the whole table. On Regent's Rule's
+  expanse a strip referee holds ~4,000 movement rows (every node and stone has one) and the players'
+  rows, the last in, sit at the end: ~60 us a step, ~85 us a row in all, 200 ms of every second for the
+  strip with the town. `_ModuleTableBTreeIndex` now notes each row's place in its bucket (`_slots`, by
+  instance id) and swaps an updated row in place; a removal renumbers the rows behind it, so a slot is
+  always right. The bucket's rows and their order are as before. The first UMF patch to the vendored SDK
+  (`addons/SpacetimeDB`, #10): `tests/suites/sdk_patches.gd` holds it, so an SDK upgrade that loses it
+  fails a test (hard rule 3's one exception: that suite names SDK types).
+- THE REFEREE'S JUDGE looked at every movement row it held for every swing (~3,800, for ~240 people).
+  `ActionReferee` keeps who is a person (`_people`) as the entity, player and `npc_brain` rows come (and a
+  kind known late), and a swing looks at those only.
+- Measured on the expanse, 300 bots, strips, every skeleton driven: the strip with the town at the others'
+  frame time (38.9 ms p95 against 35.8 and 34.9, three referees; it was 97 against 53), so three hold;
+  one referee 433 ms (was 883), two 146 (310), three 43.7 (102: now holds), four 30.4 (37.5), six 21.2 (25.1, with room); no net stall; every skeleton driven. Found by timing every part of a referee's frame by part and by table (#300 says how).

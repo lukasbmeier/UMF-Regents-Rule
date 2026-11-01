@@ -22,6 +22,15 @@ var _sorted_keys: Array = []
 ## so base-class range queries can read it (the typed [code]_cache[/code] lives on the
 ## generated subclass).
 var _cache_ref: Dictionary = { }
+## UMF PATCH (DECISIONS #300; keep it on an SDK upgrade): where each cached row sits in
+## its bucket, by the row's instance id, so an update that keeps its key swaps the row in
+## place instead of searching the bucket for it. One bucket can hold a whole table (every
+## movement row of a world shares its [code]world_id[/code]): Regent's Rule's referees
+## searched 4,000 rows for every player's step, ~60 us each. Exact at all times: a
+## removal renumbers the rows behind it. Order in a bucket is unchanged.
+var _slots: Dictionary[int, int] = { }
+## TESTING (UMF): how many times a bucket was searched for a row (a slot was wrong).
+var searches: int = 0
 
 
 ## Whether [param k] is a value [method Array.bsearch] can order. Bytes-backed keys
@@ -128,6 +137,7 @@ func _connect_cache_to_db(cache: Dictionary, db: LocalDatabase) -> void:
 func _clear_cache() -> void:
 	_cache_ref.clear()
 	_sorted_keys.clear()
+	_slots.clear()
 
 
 ## Insert listener — appends the row to its key's bucket, creating the bucket (and
@@ -137,7 +147,7 @@ func _on_insert(r: _ModuleTableType) -> void:
 	if not _cache_ref.has(col_val):
 		_cache_ref[col_val] = []
 		_key_added(col_val)
-	_cache_ref[col_val].append(r)
+	_append(_cache_ref[col_val], r)
 
 
 ## Update listener — moves the row between buckets when its key changed, else swaps
@@ -148,24 +158,25 @@ func _on_update(p: _ModuleTableType, r: _ModuleTableType) -> void:
 
 	if previous_col_val != col_val:
 		if _cache_ref.has(previous_col_val):
-			_cache_ref[previous_col_val].erase(p)
-			if _cache_ref[previous_col_val].is_empty():
-				_cache_ref.erase(previous_col_val)
-				_key_removed(previous_col_val)
+			_remove(previous_col_val, p)
 		if not _cache_ref.has(col_val):
 			_cache_ref[col_val] = []
 			_key_added(col_val)
-		_cache_ref[col_val].append(r)
+		_append(_cache_ref[col_val], r)
 	elif _cache_ref.has(col_val):
 		# Same key — swap the stale instance for the new one in place.
-		var idx: int = _cache_ref[col_val].find(p)
+		var bucket: Array = _cache_ref[col_val]
+		var idx: int = _slot_of(bucket, p)
 		if idx != -1:
-			_cache_ref[col_val][idx] = r
+			bucket[idx] = r
+			_slots.erase(p.get_instance_id())
+			_slots[r.get_instance_id()] = idx
 		else:
-			_cache_ref[col_val].append(r)
+			_append(bucket, r)
 	else:
-		_cache_ref[col_val] = [r]
+		_cache_ref[col_val] = []
 		_key_added(col_val)
+		_append(_cache_ref[col_val], r)
 
 
 ## Delete listener — drops the row from its bucket, emptying the bucket (and
@@ -173,7 +184,39 @@ func _on_update(p: _ModuleTableType, r: _ModuleTableType) -> void:
 func _on_delete(r: _ModuleTableType) -> void:
 	var col_val: Variant = r[_field_name]
 	if _cache_ref.has(col_val):
-		_cache_ref[col_val].erase(r)
-		if _cache_ref[col_val].is_empty():
-			_cache_ref.erase(col_val)
-			_key_removed(col_val)
+		_remove(col_val, r)
+
+
+## UMF PATCH (#300): [param r] onto the end of [param bucket], its slot noted.
+func _append(bucket: Array, r: _ModuleTableType) -> void:
+	bucket.append(r)
+	_slots[r.get_instance_id()] = bucket.size() - 1
+
+
+## UMF PATCH (#300): where [param r] is in [param bucket] (-1: not there), by its slot;
+## searched for only if the slot is wrong, which the renumbering keeps from happening.
+func _slot_of(bucket: Array, r: _ModuleTableType) -> int:
+	var idx: int = _slots.get(r.get_instance_id(), -1)
+	if idx >= 0 and idx < bucket.size() and bucket[idx] == r:
+		return idx
+	searches += 1
+	idx = bucket.find(r)
+	if idx != -1:
+		_slots[r.get_instance_id()] = idx
+	return idx
+
+
+## UMF PATCH (#300): [param r] out of its key's bucket (nothing if it is not there, as
+## [code]erase[/code] did), the rows behind it renumbered, and the key dropped with its
+## last row.
+func _remove(col_val: Variant, r: _ModuleTableType) -> void:
+	var bucket: Array = _cache_ref[col_val]
+	var idx: int = _slot_of(bucket, r)
+	if idx != -1:
+		bucket.remove_at(idx)
+		_slots.erase(r.get_instance_id())
+		for i: int in range(idx, bucket.size()):
+			_slots[(bucket[i] as Object).get_instance_id()] = i
+	if bucket.is_empty():
+		_cache_ref.erase(col_val)
+		_key_removed(col_val)
