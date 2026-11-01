@@ -48,7 +48,7 @@ const ALWAYS_TABLES: Array[StringName] = [&"hot_rule", &"authority",
 
 const WORLD_TABLES: Array[StringName] = [
 	&"entity", &"movement_state", &"health_state", &"session", &"action_event", &"equip_state",
-	&"appearance", &"lobby_member", &"world_level", &"session_match", &"status_state", &"hold_progress", &"hold_member", &"attachment", &"noise",
+	&"appearance", &"lobby_member", &"world_level", &"session_match", &"status_state", &"status_effect", &"hold_progress", &"hold_member", &"attachment", &"noise",
 	&"body_state", &"body_contact", &"push", &"ground_item", &"resource_state", &"chat_message",
 	# Not in the client's core set, but a sidecar adds it and it is the highest-volume table
 	# there is: an authority for world 3 must not be fed every other world's input.
@@ -64,7 +64,7 @@ const WORLD_TABLES: Array[StringName] = [
 ## walks; everything else stays in the world's set, which only a change of world swaps. Every one is
 ## also a WORLD table (what a WORLD client asks).
 const CELL_TABLES: Array[StringName] = [
-	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state",
+	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state", &"status_effect",
 	&"attachment", &"resource_state", &"hold_progress", &"body_state",
 	&"noise", &"body_contact", &"push", &"action_event", &"ground_item",
 ]
@@ -72,7 +72,7 @@ const CELL_TABLES: Array[StringName] = [
 ## Of `CELL_TABLES`, those whose rows describe an entity by `entity_id` and follow it: a RING client is
 ## always sent its own player's, by id, wherever the cells are (and before it knows where it is).
 const FOLLOW_TABLES: Array[StringName] = [
-	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state",
+	&"entity", &"movement_state", &"health_state", &"equip_state", &"appearance", &"status_state", &"status_effect",
 	&"attachment", &"resource_state", &"hold_progress", &"body_state",
 ]
 

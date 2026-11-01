@@ -93,6 +93,8 @@ enum Interest { WORLD, RING }
 	&"session_match",
 	# Each entity's status: downed, out, a genre's own (StatusComponent, DECISIONS #206)
 	&"status_state",
+	# And the effects alongside it: slowed while blocking (StatusComponent, DECISIONS #302)
+	&"status_effect",
 	# What is being held on each entity, and who holds what (HoldComponent, DECISIONS #209)
 	&"hold_progress",
 	&"hold_member",

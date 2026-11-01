@@ -12,6 +12,7 @@ func run() -> void:
 	await _run_genre_replaces()
 	_run_hover()
 	await _run_movement()
+	await _run_effects()
 	await _run_presentation()
 	await _run_spectate()
 	_run_every_entity_has_one()
@@ -33,6 +34,23 @@ class _StatusRow extends RefCounted:
 		status = st
 		serial = p_serial
 		lasts_ms = p_lasts_ms
+		since = ClockSync.server_usec()
+
+
+class _EffectRow extends RefCounted:
+	var id: int = 0
+	var entity_id: int = 0
+	var world_id: int = 0
+	var status: int = 0
+	var since: int = 0
+	var lasts_ms: int = 0
+	var by_entity: int = 0
+	var serial: int = 1
+	func _init(p_id: int, eid: int, st: int, p_serial: int = 1) -> void:
+		id = p_id
+		entity_id = eid
+		status = st
+		serial = p_serial
 		since = ClockSync.server_usec()
 
 
@@ -221,6 +239,58 @@ func _run_movement() -> void:
 	for e: Array in [normal, down, hurt]:
 		(e[0] as Node).free()
 	await get_tree().process_frame
+
+
+## EFFECTS (DECISIONS #302): statuses alongside the state. Downed as an EFFECT over a Normal state: it crawls
+## as Downed (the stricter), cannot jump or sprint, cannot act; the state changes under it and the crawl
+## stays; taken off, it runs again. The same bound as the module's (`status::stricter`).
+func _run_effects() -> void:
+	print("== status: effects alongside the state ==")
+	var cfg: MovementConfig = MovementConfig.shared()
+	var e: Array = _entity_with_status(9201, StatusDef.NORMAL)
+	var m: SpaceTimeMovementComponent = e[1]
+	var st: StatusComponent = e[2]
+	var heard: Array[String] = []
+	st.effect_changed.connect(func(n: int, on: bool) -> void: heard.append("%d %s" % [n, "on" if on else "off"]))
+	st.receive_row_event(RowEvent.make(RowEvent.Kind.INSERTED, &"status_effect", null, _EffectRow.new(77, 9201, StatusDef.DOWNED)))
+	_check(st.effects().size() == 1 and st.effects()[0] == StatusDef.DOWNED and st.has_effect(StatusDef.DOWNED) and st.status() == StatusDef.NORMAL and heard == ["2 on"],
+		"an effect goes on beside the state: Downed on, the state still Normal (%s)" % str(heard))
+	_check(not st.can_act() and st.def().can_act, "the state lets it act; the effect does not, so it cannot")
+	var f := InputFrame.new()
+	f.jump = true
+	f.sprint = true
+	var filtered: InputFrame = st.filter_input(f)
+	_check(not filtered.jump and not filtered.sprint, "its presses as the effect allows: no jump, no sprint")
+	var c: MovementConfig = st.movement_config(cfg)
+	var downed: StatusDef = StatusDef.find(StatusDef.DOWNED)
+	_check(is_equal_approx(c.run_speed, cfg.run_speed * downed.speed) and is_equal_approx(c.sprint_speed, c.run_speed),
+		"it moves as the stricter: a crawl at %.2f m/s" % c.run_speed)
+	_drive(m, 120, true, false)
+	var crawl: float = Vector2(m.get_predicted_state().vel.x, m.get_predicted_state().vel.z).length()
+	_check(is_equal_approx(crawl, cfg.run_speed * downed.speed), "predicted, sprinting: it crawls (%.2f m/s)" % crawl)
+	# The state changes under it (Injured: a burst): the effect is still the stricter.
+	st.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", _StatusRow.new(9201, StatusDef.NORMAL),
+		_StatusRow.new(9201, StatusDef.INJURED, 2)))
+	c = st.movement_config(cfg)
+	_check(st.has_effect(StatusDef.DOWNED) and is_equal_approx(c.run_speed, cfg.run_speed * downed.speed),
+		"a new state does not wipe the effect (the bug: a block wiped Slowed): still a crawl")
+	var stricter: MovementConfig = StatusComponent.stricter(StatusDef.find(StatusDef.INJURED).apply_to(cfg, true), downed.apply_to(cfg))
+	_check(is_equal_approx(stricter.run_speed, minf(cfg.run_speed * StatusDef.find(StatusDef.INJURED).speed * StatusDef.find(StatusDef.INJURED).burst, cfg.run_speed * downed.speed))
+		and is_equal_approx(stricter.dash_impulse, minf(cfg.dash_impulse, 0.0 if not downed.can_dash else cfg.dash_impulse)),
+		"the stricter of two configs: the least of each gait and of the dash")
+	# Refreshed (the same row, a new serial): still one effect.
+	st.receive_row_event(RowEvent.make(RowEvent.Kind.UPDATED, &"status_effect", _EffectRow.new(77, 9201, StatusDef.DOWNED),
+		_EffectRow.new(77, 9201, StatusDef.DOWNED, 2)))
+	_check(st.effects().size() == 1 and heard.size() == 2 and heard[1] == "2 on", "refreshed: still one effect, heard again")
+	st.receive_row_event(RowEvent.make(RowEvent.Kind.DELETED, &"status_effect", _EffectRow.new(77, 9201, StatusDef.DOWNED, 2), null))
+	c = st.movement_config(cfg)
+	_check(st.effects().is_empty() and st.can_act() and heard.back() == "2 off" and c.run_speed > cfg.run_speed * downed.speed,
+		"taken off: no effects, it may act, and moves as its state again (%.2f m/s)" % c.run_speed)
+	(e[0] as Node).free()
+	await get_tree().process_frame
+	_check(NetConfig.new().core_tables.has(&"status_effect") and (_autoload("InterestManager").get(&"CELL_TABLES") as Array).has(&"status_effect")
+		and (_autoload("InterestManager").get(&"FOLLOW_TABLES") as Array).has(&"status_effect"),
+		"every client subscribes status_effect, by cell, and its own player's wherever it is")
 
 
 func _run_presentation() -> void:

@@ -1227,6 +1227,16 @@ one in its bench and run **moves** (how fast a character crawls in it, whether i
 **Try a status on yourself**. In code, a genre sets one with `set_status_internal` and hears changes
 in `on_status_changed`; when one runs out, `on_status_expired` may choose what it becomes.
 
+**Effects: a status ALONGSIDE the state** (DECISIONS #302). An entity is in one state (downed, a genre's
+Blocking) but may be under several effects at once (slowed AND shielded): put one on with
+`add_effect_internal(entity, status, lasts_ms, by)` (the same one again refreshes its time), take it off
+with `remove_effect_internal`; a timed one comes off by itself. Any status can be an effect: the same
+content. The entity moves as the STRICTEST of its state and its effects (a slow stays while you block),
+and may act only if all of them let it. Use an effect for what lands ON someone (a slow, a shield, a
+weakness) and the state for what they are DOING (blocking, rolling, downed). The sidecar and an admin may
+use `set_effect(entity, status, lasts_ms, on)`; a genre hears changes in `on_effect_changed`. On the
+client, `StatusComponent.effects()` lists them and `effect_changed` fires.
+
 **Holds: something done by holding E (help up, lay an egg).** Content panel, type `hold`. The
 foundation's **Help up**: hold E on a downed teammate (or NPC) for 4 s, faster together (2.5 s with
 two, 2 with three), and they are back on their feet; moving away or being hurt lets go, and the help
