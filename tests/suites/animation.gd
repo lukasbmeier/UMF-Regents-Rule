@@ -146,8 +146,8 @@ func _run_animation_tests() -> void:
 	if tree == null:
 		return
 	var root: AnimationNodeBlendTree = tree.tree_root as AnimationNodeBlendTree
-	_check(root != null and root.get_node_list().size() == 16,
-		"the graph is the sixteen documented nodes: body, pose and the upper-body pose (each + its clip, scale, seek), upper, hit, action (%s)"
+	_check(root != null and root.get_node_list().size() == 18,
+		"the graph is the eighteen documented nodes: body, pose and the upper-body pose (each + its clip, scale, seek), upper, hit, the two action slots (%s)"
 			% str(root.get_node_list()))
 	# THE UPPER BODY (DECISIONS #158): a one-shot that moves the chest, arms and hands and leaves
 	# the hips and legs to the body under it.
@@ -174,8 +174,9 @@ func _run_animation_tests() -> void:
 	_check(typeof(tree.get(AnimationTreeBuilder.P_BLEND)) == TYPE_VECTOR2,
 		"a strafing set blends on a PLANE: %s takes a Vector2" % AnimationTreeBuilder.P_BLEND)
 	_check(typeof(tree.get(AnimationTreeBuilder.P_HIT_REQUEST)) == TYPE_INT
-		and typeof(tree.get(AnimationTreeBuilder.P_ACTION_REQUEST)) == TYPE_INT,
-		"both one-shots take a request")
+		and typeof(tree.get(AnimationTreeBuilder.P_ACTION_REQUEST)) == TYPE_INT
+		and typeof(tree.get(AnimationTreeBuilder.P_ACTION2_REQUEST)) == TYPE_INT,
+		"the one-shots take a request (the second action slot too)")
 
 	var sm: AnimationNodeStateMachine = root.get_node(AnimationTreeBuilder.NODE_BODY) as AnimationNodeStateMachine
 	for state: StringName in [AnimationTreeBuilder.STATE_GROUNDED, AnimationTreeBuilder.STATE_JUMP_START,
@@ -330,7 +331,8 @@ func _loop_faults(tree: AnimationTree) -> Array[String]:
 		return ["no tree"]
 	var one_shots: Array[String] = [String(AnimationTreeBuilder.STATE_JUMP_START),
 		String(AnimationTreeBuilder.STATE_LAND), String(AnimationTreeBuilder.STATE_DEAD),
-		String(AnimationTreeBuilder.NODE_HIT_CLIP), String(AnimationTreeBuilder.NODE_ACTION_CLIP)]
+		String(AnimationTreeBuilder.NODE_HIT_CLIP), String(AnimationTreeBuilder.NODE_ACTION_CLIP),
+		String(AnimationTreeBuilder.NODE_ACTION2_CLIP)]
 	var nodes: Dictionary[String, AnimationNodeAnimation] = _clip_nodes(tree)
 	for label: String in nodes:
 		var node: AnimationNodeAnimation = nodes[label]
@@ -351,7 +353,7 @@ func _clip_nodes(tree: AnimationTree) -> Dictionary[String, AnimationNodeAnimati
 	var root: AnimationNodeBlendTree = tree.tree_root as AnimationNodeBlendTree
 	if root == null:
 		return out
-	for n: StringName in [AnimationTreeBuilder.NODE_HIT_CLIP, AnimationTreeBuilder.NODE_ACTION_CLIP]:
+	for n: StringName in [AnimationTreeBuilder.NODE_HIT_CLIP, AnimationTreeBuilder.NODE_ACTION_CLIP, AnimationTreeBuilder.NODE_ACTION2_CLIP]:
 		out[String(n)] = root.get_node(n) as AnimationNodeAnimation
 	var sm: AnimationNodeStateMachine = root.get_node(
 		AnimationTreeBuilder.NODE_BODY) as AnimationNodeStateMachine

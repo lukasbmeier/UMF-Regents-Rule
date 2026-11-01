@@ -8,7 +8,7 @@ class_name AnimationTreeBuilder
 ## and a character that is missing a clip gets the fallback chain rather than a T-pose.
 ##
 ## THE GRAPH
-##   output <- action(OneShot) <- hit(OneShot) <- upper(OneShot) <- pose(Blend2) <- body(StateMachine)
+##   output <- action2(OneShot) <- action(OneShot) <- hit(OneShot) <- upper(OneShot) <- pose(Blend2) <- body(StateMachine)
 ##     body: Grounded  BlendSpace1D over normalised speed [idle, walk, run]
 ##           JumpStart -> Air -> Land -> Grounded, and anything -> Dead
 ##     pose:   a clip HELD over the body — looping, or frozen at a point of its length that a
@@ -18,6 +18,8 @@ class_name AnimationTreeBuilder
 ##             the legs keep walking (DECISIONS #158)
 ##     hit:    a reaction fired over whatever the body is doing
 ##     action: interact / an ability, same idea, layered last so it wins
+##     action2: a second action slot (DECISIONS #301): an action fired while one plays goes to the other
+##             slot and fades in over it, so swing follows swing without a pop
 ##
 ## The driver writes `parameters/body/Grounded/blend_position`, travels the state machine
 ## through `parameters/body/playback`, fires the two one-shots and holds the pose (its blend, its
@@ -50,6 +52,8 @@ const NODE_HIT: StringName = &"hit"
 const NODE_HIT_CLIP: StringName = &"hit_clip"
 const NODE_ACTION: StringName = &"action"
 const NODE_ACTION_CLIP: StringName = &"action_clip"
+const NODE_ACTION2: StringName = &"action2"
+const NODE_ACTION2_CLIP: StringName = &"action2_clip"
 const NODE_POSE: StringName = &"pose"
 const NODE_POSE_CLIP: StringName = &"pose_clip"
 const NODE_POSE_SCALE: StringName = &"pose_scale"
@@ -70,6 +74,8 @@ const P_HIT_REQUEST: String = "parameters/hit/request"
 const P_HIT_ACTIVE: String = "parameters/hit/active"
 const P_ACTION_REQUEST: String = "parameters/action/request"
 const P_ACTION_ACTIVE: String = "parameters/action/active"
+const P_ACTION2_REQUEST: String = "parameters/action2/request"
+const P_ACTION2_ACTIVE: String = "parameters/action2/active"
 const P_POSE_BLEND: String = "parameters/pose/blend_amount"
 const P_POSE_SCALE: String = "parameters/pose_scale/scale"
 const P_POSE_SEEK: String = "parameters/pose_seek/seek_request"
@@ -139,6 +145,8 @@ static func build(set: AnimationSet, cfg: MovementConfig = null) -> AnimationTre
 	root.add_node(NODE_HIT, _one_shot(set, AnimationSet.HIT), Vector2(-40.0, 0.0))
 	root.add_node(NODE_ACTION_CLIP, _clip_node(set, AnimationSet.INTERACT), Vector2(140.0, 140.0))
 	root.add_node(NODE_ACTION, _one_shot(set, AnimationSet.INTERACT), Vector2(300.0, 0.0))
+	root.add_node(NODE_ACTION2_CLIP, _clip_node(set, AnimationSet.INTERACT), Vector2(460.0, 140.0))
+	root.add_node(NODE_ACTION2, _one_shot(set, AnimationSet.INTERACT), Vector2(620.0, 0.0))
 	root.connect_node(NODE_POSE_SCALE, 0, NODE_POSE_CLIP)
 	root.connect_node(NODE_POSE_SEEK, 0, NODE_POSE_SCALE)
 	# Blend2 input 0 is the body, input 1 the pose; OneShot input 0 is the pass-through, input 1
@@ -155,7 +163,9 @@ static func build(set: AnimationSet, cfg: MovementConfig = null) -> AnimationTre
 	root.connect_node(NODE_HIT, 1, NODE_HIT_CLIP)
 	root.connect_node(NODE_ACTION, 0, NODE_HIT)
 	root.connect_node(NODE_ACTION, 1, NODE_ACTION_CLIP)
-	root.connect_node(NODE_OUTPUT, 0, NODE_ACTION)
+	root.connect_node(NODE_ACTION2, 0, NODE_ACTION)
+	root.connect_node(NODE_ACTION2, 1, NODE_ACTION2_CLIP)
+	root.connect_node(NODE_OUTPUT, 0, NODE_ACTION2)
 
 	tree.tree_root = root
 	tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE

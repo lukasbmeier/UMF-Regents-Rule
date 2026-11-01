@@ -59,6 +59,10 @@ var _shown_yaw: float = 0.0
 var _shown_yaw_valid: bool = false
 var _sprint_speed: float = 8.0
 var _dead: bool = false
+## Which action slot (0 `action`, 1 `action2`) holds the newest action (DECISIONS #301).
+var _action_slot: int = 0
+## Until when (msec) the tree is given no time: a HIT-STOP (`hold_still`).
+var _held_still_until: int = -1
 var _state: StringName = &""
 ## Has the character actually left the ground since the jump started? On the frame the jump is
 ## pressed the body is still touching the floor, and without this the take-off clip is
@@ -179,7 +183,8 @@ func hit_playing() -> bool:
 
 
 func action_playing() -> bool:
-	return _tree != null and bool(_tree.get(AnimationTreeBuilder.P_ACTION_ACTIVE))
+	return _tree != null and (bool(_tree.get(AnimationTreeBuilder.P_ACTION_ACTIVE))
+		or bool(_tree.get(AnimationTreeBuilder.P_ACTION2_ACTIVE)))
 
 
 ## The held pose's clip, or "" before one was asked for.
@@ -286,7 +291,19 @@ func face_motion(seconds: float) -> void:
 func play_action(semantic: StringName) -> void:
 	if animation_set == null or not animation_set.has_exact(semantic):
 		return
-	_fire(AnimationTreeBuilder.NODE_ACTION_CLIP, AnimationTreeBuilder.P_ACTION_REQUEST, semantic)
+	_fire_action(semantic)
+
+
+## A HIT-STOP (DECISIONS #301): the character's animation stands still for `seconds` (the tree is given no
+## time), then carries on where it was. A genre's hit feedback asks it of both sides of a blow so the blow
+## lands with weight. Presentation only (hard rule 11): nothing simulated waits. A longer ask wins.
+func hold_still(seconds: float) -> void:
+	_held_still_until = maxi(_held_still_until, Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0))
+
+
+## Whether a hit-stop holds the animation now.
+func held_still() -> bool:
+	return Time.get_ticks_msec() < _held_still_until
 
 
 ## Fire `semantic` on the UPPER BODY only (`AnimationTreeBuilder.upper_body`): the chest, arms and
@@ -334,7 +351,7 @@ func action_clip() -> StringName:
 	if _blend_tree == null:
 		return &""
 	var node: AnimationNodeAnimation = _blend_tree.get_node(
-		AnimationTreeBuilder.NODE_ACTION_CLIP) as AnimationNodeAnimation
+		AnimationTreeBuilder.NODE_ACTION2_CLIP if _action_slot == 1 else AnimationTreeBuilder.NODE_ACTION_CLIP) as AnimationNodeAnimation
 	return node.animation if node != null else &""
 
 
@@ -349,8 +366,10 @@ func _process(delta: float) -> void:
 	if s != null:
 		_drive(s, delta)
 	# Advanced here, never by the tree itself (AnimationRate): even with nothing to drive it, as the
-	# tree's own process did.
-	_advance(delta)
+	# tree's own process did. In a hit-stop it is not advanced at all (`hold_still`): an advance of 0 still
+	# blends this frame's weights, and the pose would creep.
+	if not held_still():
+		_advance(delta)
 
 
 func _drive(s: MovementState, delta: float) -> void:
@@ -380,8 +399,9 @@ func _drive(s: MovementState, delta: float) -> void:
 	_update_pose(delta, speed)
 	_update_upper_pose(delta)
 	_follow_state(s, delta)
-	_action_weight = _ease_shot(_action_weight, AnimationTreeBuilder.NODE_ACTION,
-		AnimationTreeBuilder.P_ACTION_ACTIVE, delta)
+	_action_weight = _ease_shot(_action_weight,
+		AnimationTreeBuilder.NODE_ACTION2 if _action_slot == 1 else AnimationTreeBuilder.NODE_ACTION,
+		AnimationTreeBuilder.P_ACTION2_ACTIVE if _action_slot == 1 else AnimationTreeBuilder.P_ACTION_ACTIVE, delta)
 	_hit_weight = _ease_shot(_hit_weight, AnimationTreeBuilder.NODE_HIT,
 		AnimationTreeBuilder.P_HIT_ACTIVE, delta)
 	_upper_weight = _ease_shot(_upper_weight, AnimationTreeBuilder.NODE_UPPER,
@@ -601,12 +621,11 @@ func _update_upper_pose(delta: float) -> void:
 func _cancel_action_if_moving(s: MovementState) -> void:
 	if action_cancel_speed <= 0.0 or _tree == null:
 		return
-	if not bool(_tree.get(AnimationTreeBuilder.P_ACTION_ACTIVE)) or action_committed():
+	if not action_playing() or action_committed():
 		return
 	if Vector2(s.vel.x, s.vel.z).length() <= action_cancel_speed:
 		return
-	_tree.set(AnimationTreeBuilder.P_ACTION_REQUEST,
-		AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+	_fade_actions()
 
 
 ## The model eases round to the way the body faces. The body itself snaps, because its yaw is
@@ -697,6 +716,16 @@ func _on_damaged(_amount: float, _source_id: int) -> void:
 func _on_died(_killer_id: int) -> void:
 	_dead = true
 	_travel(AnimationTreeBuilder.STATE_DEAD)
+	# DEATH INTERRUPTS AT ONCE (DECISIONS #301): an action or upper-body clip under way, or a held pose, would
+	# play on over the fall (a swing finishing on a body already dying). They fade; nothing is committed.
+	_action_committed_until = 0
+	_held_still_until = -1
+	if _tree != null:
+		_fade_actions()
+		if bool(_tree.get(AnimationTreeBuilder.P_UPPER_ACTIVE)):
+			_tree.set(AnimationTreeBuilder.P_UPPER_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+	release_pose()
+	release_upper_pose()
 
 
 func _on_revived() -> void:
@@ -705,8 +734,7 @@ func _on_revived() -> void:
 
 
 func _on_interact_requested(_target_id: int) -> void:
-	_fire(AnimationTreeBuilder.NODE_ACTION_CLIP, AnimationTreeBuilder.P_ACTION_REQUEST,
-		AnimationSet.INTERACT)
+	_fire_action(AnimationSet.INTERACT)
 
 
 ## A genre names its ability clips `ability.<id>`; anything it has not authored falls back to
@@ -715,7 +743,7 @@ func _on_action_started(ability_id: int, _predicted_id: int) -> void:
 	var semantic: StringName = StringName("ability.%d" % ability_id)
 	if animation_set != null and not animation_set.has_exact(semantic):
 		semantic = AnimationSet.INTERACT
-	_fire(AnimationTreeBuilder.NODE_ACTION_CLIP, AnimationTreeBuilder.P_ACTION_REQUEST, semantic)
+	_fire_action(semantic)
 
 
 # --- internals ---------------------------------------------------------------------------
@@ -835,13 +863,35 @@ func _set_state_clip(state: StringName, semantic: StringName) -> void:
 		animation_set, semantic)
 
 
+## Fire `semantic` as the action one-shot: in the slot that holds the newest, unless an action still plays,
+## when it goes to the OTHER slot (DECISIONS #301) and the one playing fades out under it: swing follows swing
+## with a cross-fade, where re-firing one slot snapped the new clip in.
+func _fire_action(semantic: StringName) -> void:
+	if _tree == null or _blend_tree == null:
+		return
+	if action_playing():
+		var old: String = AnimationTreeBuilder.P_ACTION2_REQUEST if _action_slot == 1 else AnimationTreeBuilder.P_ACTION_REQUEST
+		_action_slot = 1 - _action_slot
+		_tree.set(old, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+	if _action_slot == 1:
+		_fire(AnimationTreeBuilder.NODE_ACTION2_CLIP, AnimationTreeBuilder.P_ACTION2_REQUEST, semantic)
+	else:
+		_fire(AnimationTreeBuilder.NODE_ACTION_CLIP, AnimationTreeBuilder.P_ACTION_REQUEST, semantic)
+
+
+## Both action slots fade out (moving off an uncommitted action, a death).
+func _fade_actions() -> void:
+	for p: String in [AnimationTreeBuilder.P_ACTION_REQUEST, AnimationTreeBuilder.P_ACTION2_REQUEST]:
+		_tree.set(p, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+
+
 func _fire(clip_node: StringName, request_param: String, semantic: StringName) -> void:
 	if _tree == null or _blend_tree == null or animation_set == null:
 		return
 	var node: AnimationNodeAnimation = _blend_tree.get_node(clip_node) as AnimationNodeAnimation
 	if not AnimationTreeBuilder.apply_clip(node, animation_set, semantic):
 		return
-	if clip_node == AnimationTreeBuilder.NODE_ACTION_CLIP:
+	if clip_node == AnimationTreeBuilder.NODE_ACTION_CLIP or clip_node == AnimationTreeBuilder.NODE_ACTION2_CLIP:
 		_action_semantic = semantic
 	elif clip_node == AnimationTreeBuilder.NODE_UPPER_CLIP:
 		_upper_semantic = semantic
