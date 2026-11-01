@@ -1059,3 +1059,14 @@ Client only: restart the game; nothing to republish.
 - TWO ACTION SLOTS: the generated graph has `action2` over `action` (18 nodes). An action fired while one
   plays takes the other slot and fades in over it, the old fading out: swing follows swing without a pop.
   Every action fires through `_fire_action`; `action_clip()` is the newest's.
+
+## 1.7.0 — statuses that stack: effects alongside the state (DECISIONS #302)
+A table added (`status_effect`) and a reducer (`set_effect`): publish with `--codegen` (data kept); restart.
+- An entity keeps ONE state (`status_state`) and may now be under several EFFECTS at once (`status_effect`):
+  any status put on with `add_effect_internal` stands beside the state instead of replacing it (a slow
+  survives a block). The same effect again refreshes its time; a timed one comes off by itself.
+- What an entity may do is its state's and every effect's: it moves as the STRICTEST of them
+  (`status::stricter`, mirrored by `StatusComponent.movement_config` so prediction agrees) and acts only if
+  all of them let it (`require_can_act`, `is_targetable`, the new `is_hittable`).
+- `set_effect(entity, status, lasts_ms, on)` for authorities; `on_effect_changed` for genres;
+  `StatusComponent.effects()`, `has_effect`, `can_act()` and `effect_changed` on the client.

@@ -132,6 +132,10 @@ pub(crate) fn tick_world_module(
         inputs_of.entry(q.entity_id).or_default().push(q);
     }
     let statuses: HashMap<u64, StatusStateRow> = ctx.db.status_state().world_id().filter(world_id).map(|r| (r.entity_id, r)).collect();
+    let mut effects: HashMap<u64, Vec<StatusEffectRow>> = HashMap::new();
+    for e in ctx.db.status_effect().world_id().filter(world_id) {
+        effects.entry(e.entity_id).or_default().push(e);
+    }
     let bodies: HashSet<u64> = ctx.db.body_state().world_id().filter(world_id).map(|b| b.entity_id).collect();
     let mut pushes_of: HashMap<u64, Vec<Push>> = HashMap::new();
     for p in ctx.db.push().iter() {
@@ -169,6 +173,8 @@ pub(crate) fn tick_world_module(
         let kind = ctx.db.entity().entity_id().find(row.entity_id).map(|e| e.kind).unwrap_or(0);
         let kind_limits = crate::content::movement_limits(kind);
         let limits = status_limits(statuses.get(&row.entity_id), now, kind_limits, grace_ms);
+        // And as strictly as its effects ask (#302).
+        let limits = effect_limits(limits, effects.get(&row.entity_id).map_or(&[][..], |v| v.as_slice()), now, kind_limits, grace_ms);
         // And as fast as the pushes it is under make it go (DECISIONS #251: a blower, a pad).
         let limits = push_limits(pushes_of.get(&row.entity_id).map_or(&[][..], |v| v.as_slice()), now, push_grace_s, limits);
         let mut epoch = row.correction_epoch;

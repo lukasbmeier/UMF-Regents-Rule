@@ -78,6 +78,10 @@ pub trait Genre: Sync {
     /// A genre reacts here (a downed hen drops what it carried, an escaped one scores).
     fn on_status_changed(&self, _ctx: &ReducerContext, _entity_id: u64, _from: u8, _now: &StatusStateRow) {}
 
+    /// An effect went on (`on`, or was refreshed) or came off an entity (DECISIONS #302), after its row is
+    /// written. A genre reacts here (a shield's glow, a slow's frost).
+    fn on_effect_changed(&self, _ctx: &ReducerContext, _entity_id: u64, _status: u8, _on: bool) {}
+
     /// A status's time is up: what it becomes, or None to leave it to the status's own `then`. The
     /// first genre to answer decides (a downed hen bleeds out unless a teammate is reviving it).
     fn on_status_expired(&self, _ctx: &ReducerContext, _row: &StatusStateRow) -> Option<u8> {
@@ -263,6 +267,12 @@ pub fn on_interact(ctx: &ReducerContext, player_entity_id: u64, target: &Entity,
 pub fn on_status_changed(ctx: &ReducerContext, entity_id: u64, from: u8, now: &StatusStateRow) {
     for g in GENRES {
         g.on_status_changed(ctx, entity_id, from, now);
+    }
+}
+
+pub fn on_effect_changed(ctx: &ReducerContext, entity_id: u64, status: u8, on: bool) {
+    for g in GENRES {
+        g.on_effect_changed(ctx, entity_id, status, on);
     }
 }
 

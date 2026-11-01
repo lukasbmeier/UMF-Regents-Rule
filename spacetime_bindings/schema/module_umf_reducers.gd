@@ -277,6 +277,13 @@ func set_character_of(entity_id: int, kind: int) -> SpacetimeDBReducerCall:
 func set_dev_tools(enabled: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_dev_tools', [enabled], [&'bool'], &'')
 
+## 0. entity_id: int [br]
+## 1. status: int [br]
+## 2. lasts_ms: int [br]
+## 3. on: bool [br]
+func set_effect(entity_id: int, status: int, lasts_ms: int, on: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_effect', [entity_id, status, lasts_ms, on], [&'u64', &'u8', &'u32', &'bool'], &'')
+
 ## 0. state: int [br]
 func set_equip_state(state: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_equip_state', [state], [&'u8'], &'')

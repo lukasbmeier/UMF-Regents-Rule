@@ -1015,6 +1015,39 @@ SEQ=$((SEQ + 1))
 send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
 assert_eq "$(field correction_epoch)" "$EPOCH" "and running, the same step is taken"
 
+echo "== effects: statuses alongside the state (DECISIONS #302) =="
+effect_of() { sql_rows "SELECT status FROM status_effect WHERE entity_id = $1" | tr -d ' ' | sort -n | paste -sd, -; }
+out="$(spacetime call --anonymous "$DB" set_effect "$NEAR" 2 0 true 2>&1)"
+check "$(echo "$out" | grep -qi "only an authority" && echo true || echo false)" "a player cannot put an effect on someone else"
+assert_ok "set_status $NEAR 1 $UNTIL_CHANGED \"\"" "the NPC is injured (its state)"
+assert_ok "set_effect $NEAR 2 $UNTIL_CHANGED true" "and downed as an EFFECT, until taken off"
+assert_eq "$(status_of $NEAR)" "1" "its state is untouched (a block no longer wipes a slow)"
+assert_eq "$(effect_of $NEAR)" "2" "the effect stands beside it"
+assert_eq "$(sql_rows_anon "SELECT * FROM status_effect WHERE entity_id = $NEAR" | wc -l | tr -d ' ')" "1" "public: every client shows it"
+assert_ok "set_status $NEAR 0 $UNTIL_CHANGED \"\"" "the state changes"
+assert_eq "$(effect_of $NEAR)" "2" "and the effect stays"
+assert_ok "set_effect $NEAR 2 $UNTIL_CHANGED true" "the same effect again"
+assert_eq "$(row_count "SELECT * FROM status_effect WHERE entity_id = $NEAR")" "1" "refreshes it: still one"
+assert_eq "$(sql_first "SELECT serial FROM status_effect WHERE entity_id = $NEAR" 1)" "2" "(its serial counts the refresh)"
+assert_ok "set_effect $NEAR 1 1500 true" "a second effect, for 1.5 s"
+assert_eq "$(effect_of $NEAR)" "1,2" "two effects at once"
+sleep 3
+assert_eq "$(effect_of $NEAR)" "2" "the timed one comes off on its own; the other stays"
+assert_eq "$(row_count "SELECT * FROM effect_expiry")" "0" "and no timer is left behind"
+assert_ok "set_effect $NEAR 2 0 false" "taken off"
+assert_eq "$(effect_of $NEAR)" "" "none left"
+assert_rejected "set_effect $NEAR 2 0 false" "is not under effect 2" "taking off one it is not under is refused"
+# What an effect allows: downed as an effect, a normal player cannot act, and crawls.
+assert_ok "set_effect $MYENT 2 $UNTIL_CHANGED true" "the CLI player: downed as an effect, its state normal"
+assert_rejected "use_ability 0 $NEAR $AIM 54" "cannot while downed" "an effect that cannot act stops an ability"
+EPOCH=$(field correction_epoch); SEQ=$(field last_processed_seq); read -r SX SY SZ <<< "$(pos_of)"
+sleep 1
+SEQ=$((SEQ + 1))
+send_frames "[$(frame $SEQ "$(python -c "print($SX + 0.1)")" "$SY" "$SZ" "$EPOCH")]"
+check "$([ "$(field correction_epoch)" != "$EPOCH" ] && echo true || echo false)" "and a running step is clamped to the effect's crawl"
+assert_ok "set_effect $MYENT 2 0 false" "taken off"
+assert_ok "use_ability 0 $NEAR $AIM 55" "it may act again"
+
 echo "== the referee: abilities a sidecar judges (DECISIONS #226) =="
 # The module's side. A judged ability is queued for its world's referee, not resolved; with nobody
 # judging it is refused; a referee is registered by presenting an admin's one-time code; its answer is

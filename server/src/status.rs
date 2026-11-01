@@ -82,6 +82,20 @@ pub fn bound(kind: MovementLimits, cur: &StatusSeed, prev: &StatusSeed, since_ms
     }
 }
 
+/// THE STRICTER OF TWO BOUNDS (DECISIONS #302): an entity in a state (`status_state`) and under effects
+/// (`status_effect`) moves as the most restrictive of them allows: each gait, the lift and the dash the least
+/// of the two. The dash frames and cooldown are the kind's, whoever bounds it.
+pub fn stricter(a: MovementLimits, b: MovementLimits) -> MovementLimits {
+    MovementLimits {
+        run: a.run.min(b.run),
+        sprint: a.sprint.min(b.sprint),
+        burst: a.burst.min(b.burst),
+        lift: a.lift.min(b.lift),
+        dash: a.dash.min(b.dash),
+        ..a
+    }
+}
+
 /// A kind's bound in one status, bursting or not. Its speed scales the gaits, NOT the dash
 /// (DECISIONS #256): a status allows a dash or does not, and one it allows is the whole dash. A slow
 /// status (a committed swing) can then roll out at full length while its walk stays bounded.

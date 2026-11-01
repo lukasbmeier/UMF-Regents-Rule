@@ -119,3 +119,17 @@ fn a_replay_may_hold_one_dash() {
     let no_dash = MovementLimits { dash: 0.0, ..KIND };
     assert_eq!(status::DashWindow::default().replay(30.0, &no_dash), 0.0, "a kind with no dash: none");
 }
+
+#[test]
+fn a_state_and_an_effect_bound_by_the_stricter() {
+    // DECISIONS #302: Downed (a crawl, no jump or dash) as an effect over a state of Normal: the crawl wins;
+    // over Out (no movement at all): Out wins. Neither loosens the other.
+    let crawl = applied(KIND, find(status::DOWNED).unwrap(), false);
+    let free = applied(KIND, normal(), false);
+    let both = status::stricter(free, crawl);
+    assert_eq!(both, crawl, "Normal under a crawl moves as the crawl");
+    assert_eq!(status::stricter(crawl, free), crawl, "and the same whichever comes first");
+    let out = applied(KIND, find(status::OUT).unwrap(), false);
+    assert_eq!(status::stricter(crawl, out).run, out.run.min(crawl.run), "the least of each gait");
+    assert_eq!(both.dash_frames, KIND.dash_frames, "the dash's frames are the kind's");
+}

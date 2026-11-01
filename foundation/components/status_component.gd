@@ -12,11 +12,19 @@ class_name StatusComponent extends SpaceTimeComponent
 ## The server decides every status (`set_status`, a genre's rules, the timers). This only shows it
 ## and moves by it (hard rule 11). Every entity has one: `SpaceTimeEntity` adds it when its scene
 ## does not, so a genre's own entity scenes get statuses too.
+##
+## EFFECTS (DECISIONS #302): statuses held ALONGSIDE the state (`status_effect` rows: Slowed while blocking,
+## Shielded and Slowed at once). The entity moves as the strictest of its state and its effects allow (the
+## module's `effect_limits`, mirrored in `movement_config`), and acts only when all of them let it
+## (`can_act`). `effects()` names them; `effect_changed` says when one goes on or comes off.
 
 ## The status changed (`from` -> `to`, numbers), or the same one was set again (`from == to`).
 signal status_changed(from: int, to: int)
+## An effect went on (or was refreshed: `on` again) or came off.
+signal effect_changed(status: int, on: bool)
 
 const TABLE: StringName = &"status_state"
+const EFFECT_TABLE: StringName = &"status_effect"
 
 var _status: int = StatusDef.NORMAL
 var _def: StatusDef = null
@@ -28,6 +36,10 @@ var _serial: int = -1
 ## Movement configs already worked out for this status: [base, bursting] -> config.
 var _cfg_cache: Dictionary = {}
 var _cfg_cache_serial: int = -2
+## Its effects, by their row's id: {"status", "since" (server usec), "lasts_ms", "serial"}.
+var _effects: Dictionary[int, Dictionary] = {}
+## Counts every change to the effects, for the movement configs worked out from them.
+var _effects_version: int = 0
 
 # Presentation state
 var _holding_pose: bool = false
@@ -36,12 +48,12 @@ var _rig: CameraRig = null
 
 
 func required_tables() -> Array[StringName]:
-	return [TABLE]
+	return [TABLE, EFFECT_TABLE]
 
 
-## No row: normal. Nobody waits for one (DECISIONS #69).
+## No row: normal; no effects. Nobody waits for one (DECISIONS #69).
 func optional_tables() -> Array[StringName]:
-	return [TABLE]
+	return [TABLE, EFFECT_TABLE]
 
 
 func also_reads() -> Array[StringName]:
@@ -87,6 +99,37 @@ func data() -> String:
 	return _data
 
 
+## The effects it is under (DECISIONS #302), their numbers, in no order.
+func effects() -> Array[int]:
+	var out: Array[int] = []
+	for e: Dictionary in _effects.values():
+		out.append(int(e["status"]))
+	return out
+
+
+func has_effect(n: int) -> bool:
+	return effects().has(n)
+
+
+## Whether its state and every effect let it use things and abilities (the module's `require_can_act`).
+func can_act() -> bool:
+	if not def().can_act:
+		return false
+	for d: StatusDef in _effect_defs():
+		if not d.can_act:
+			return false
+	return true
+
+
+func _effect_defs() -> Array[StatusDef]:
+	var out: Array[StatusDef] = []
+	for e: Dictionary in _effects.values():
+		var d: StatusDef = StatusDef.find(int(e["status"]))
+		if d != null:
+			out.append(d)
+	return out
+
+
 ## The entity it is watching instead of itself (a spectate status), or null.
 func spectating() -> SpaceTimeEntity:
 	return _spectating if is_instance_valid(_spectating) else null
@@ -95,31 +138,57 @@ func spectating() -> SpaceTimeEntity:
 # --- movement --------------------------------------------------------------------------------
 
 ## The movement config to step by in this status: `base` with the status applied (`StatusDef.apply_to`),
-## the burst included while it lasts. The same object frame after frame while nothing changes.
+## the burst included while it lasts, and made as strict as each effect asks (`stricter`, the module's
+## `status::stricter`). The same object frame after frame while nothing changes.
 func movement_config(base: MovementConfig) -> MovementConfig:
 	var d: StatusDef = def()
-	if d.moves_as_usual():
+	var effect_defs: Array[StatusDef] = []
+	for e: StatusDef in _effect_defs():
+		if not e.moves_as_usual():
+			effect_defs.append(e)
+	if d.moves_as_usual() and effect_defs.is_empty():
 		return base
-	if _cfg_cache_serial != _serial:
+	if _cfg_cache_serial != _serial * 100003 + _effects_version:
 		_cfg_cache.clear()
-		_cfg_cache_serial = _serial
+		_cfg_cache_serial = _serial * 100003 + _effects_version
 	var bursting: bool = d.bursting_at(elapsed_sec())
 	var key: Array = [base.get_instance_id(), bursting]
 	var c: MovementConfig = _cfg_cache.get(key) as MovementConfig
 	if c == null:
 		c = d.apply_to(base, bursting)
+		for e: StatusDef in effect_defs:
+			c = stricter(c, e.apply_to(base, false))
 		_cfg_cache[key] = c
 	return c
 
 
-## The input to step by in this status: presses it cannot act on taken out (`StatusDef.filter_input`).
+## THE STRICTER OF TWO CONFIGS (DECISIONS #302): each gait, the dash and the flaps the least of the two. Twin of
+## the module's `status::stricter`.
+static func stricter(a: MovementConfig, b: MovementConfig) -> MovementConfig:
+	var c: MovementConfig = a.duplicate() as MovementConfig
+	c.walk_speed = minf(a.walk_speed, b.walk_speed)
+	c.run_speed = minf(a.run_speed, b.run_speed)
+	c.sprint_speed = minf(a.sprint_speed, b.sprint_speed)
+	c.dash_impulse = minf(a.dash_impulse, b.dash_impulse)
+	c.flap_charges = mini(a.flap_charges, b.flap_charges)
+	return c
+
+
+## The input to step by in this status and its effects: presses any of them cannot act on taken out
+## (`StatusDef.filter_input`).
 func filter_input(frame: InputFrame) -> InputFrame:
-	return def().filter_input(frame)
+	var f: InputFrame = def().filter_input(frame)
+	for d: StatusDef in _effect_defs():
+		f = d.filter_input(f)
+	return f
 
 
 # --- rows ------------------------------------------------------------------------------------
 
-func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> void:
+func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> void:
+	if table == EFFECT_TABLE:
+		_on_effect_row(old, new)
+		return
 	if table != TABLE:
 		return
 	var from: int = _status
@@ -148,6 +217,25 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 		SignalBus.entity_status_changed.emit(entity_id, from, _status)
 		if is_local_authority and from != _status:
 			_tell_player(from)
+
+
+## An effect's row: on (inserted or refreshed) or off (deleted).
+func _on_effect_row(old: RefCounted, new: RefCounted) -> void:
+	if new == null:
+		if old == null:
+			return
+		var gone: Dictionary = _effects.get(int(old.get(&"id")), {})
+		_effects.erase(int(old.get(&"id")))
+		_effects_version += 1
+		if not gone.is_empty() and is_bound():
+			effect_changed.emit(int(gone["status"]), false)
+		return
+	var id: int = int(new.get(&"id"))
+	_effects[id] = {"status": int(new.get(&"status")), "since": int(new.get(&"since")),
+		"lasts_ms": int(new.get(&"lasts_ms")), "serial": int(new.get(&"serial"))}
+	_effects_version += 1
+	if is_bound():
+		effect_changed.emit(int(new.get(&"status")), true)
 
 
 func _on_bound() -> void:

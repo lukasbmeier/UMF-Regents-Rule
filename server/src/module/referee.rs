@@ -179,7 +179,7 @@ pub fn resolve_action(ctx: &ReducerContext, request_id: u64, hit_id: u64) -> Res
         if !is_person(ctx, hit_id) {
             return Err("resolve_action: not someone (a thing is not hit)".into());
         }
-        if !is_targetable(ctx, hit_id) || !status_seed(ctx, hit_id).hittable {
+        if !is_targetable(ctx, hit_id) || !is_hittable(ctx, hit_id) {
             return Err("resolve_action: they cannot be hit".into());
         }
         outcome = OUTCOME_HIT;

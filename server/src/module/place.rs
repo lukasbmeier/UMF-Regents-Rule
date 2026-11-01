@@ -83,6 +83,12 @@ pub fn follow(ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32) {
             ctx.db.status_state().entity_id().update(StatusStateRow { world_id, chunk, ..r });
         }
     }
+    // Its effects (#302), as its state.
+    for r in ctx.db.status_effect().entity_id().filter(entity_id).collect::<Vec<_>>() {
+        if off(r.world_id, r.chunk) {
+            ctx.db.status_effect().id().update(StatusEffectRow { world_id, chunk, ..r });
+        }
+    }
     if let Some(r) = ctx.db.attachment().entity_id().find(entity_id) {
         if off(r.world_id, r.chunk) {
             ctx.db.attachment().entity_id().update(Attachment { world_id, chunk, ..r });
