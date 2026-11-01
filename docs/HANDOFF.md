@@ -1,23 +1,23 @@
-# Handoff — UMF Template, 2026-10-31 (1.6.6: the town strip's frames)
+# Handoff — UMF Template, 2026-10-31 (1.6.7: death stops a swing, a hit-stop, two action slots)
 
 ## Where it stands
-**1.6.6** committed and pushed (`d747a3d`), merged into all four games and pushed. Client, sidecar and the vendored
-SDK: restart a game and its referees; nothing to republish. Games' unit suites after the merge: Fishing 3090/0,
-Fowl Play 2594/0, DiscGolf 2384/0, Regent's 2884/0. Suites here: unit 2309/0, e2e 11/0, sidecar 13/0,
-regions 25/0; every negative of the new checks fails (7 mutations).
+**1.6.7** committed and pushed (`8178aa7`, DECISIONS #301), merged into Regent's Rule only; NOT yet into Fishing,
+Fowl Play or DiscGolf. Client only: restart a game; nothing to republish. Suites here: unit 2314/0 (the animation
+and animation-scene suites hold it); three mutations of the driver, each caught by its own check.
+1.6.6 (#300) is in all four games (the referee session).
 
-## This session (Regent's Rule's referees, `../Regents Rule/docs/regents_rule/REFEREE_SCALING.md`)
-- 1.6.6 (#300): the SDK's `_ModuleTableBTreeIndex` searched its bucket for every updated row; every
-  movement row of a world is one `world_id` bucket (~4,000 on the expanse): ~85 us a row, the town strip's
-  2x. Now `_slots` (row -> index), order unchanged. FIRST UMF PATCH TO THE VENDORED SDK:
-  `tests/suites/sdk_patches.gd` holds it (hard rule 3's one exception).
-- 1.6.6: `ActionReferee._people`: a swing looks at people, not ~3,800 movement rows.
-- Expanse sweep (300 bots, strips): 1 ref 433 ms p95, 2 146, 3 43.7 (holds now), 4 30.4, 6 21.2 (room).
-  Reports in `../Regents Rule/build/load/strip_sweep_166/` (gitignored).
+## This session (Regent's Rule's combat feel, Luke's feedback 4098/4099; his call: the foundation's part here)
+- `AnimationDriverComponent._on_died`: both action slots and the upper-body one-shot fade, a commitment ends,
+  held poses go: a body that dies mid-swing falls at once (it fell under the swing, after the clip).
+- `hold_still(seconds)`: the tree is not advanced (an advance of 0 re-blended and the pose crept 0.001 rad).
+  Tested by the clip's `current_position`: the feet (ground) and head (look) keep moving by design.
+- The graph's second action slot (`action2` over `action`, 18 nodes): `_fire_action` takes the other slot when
+  one plays and fades the old one out: swing follows swing as a cross-fade.
+- `tests/suites/sdk_patches.gd.uid` (1.6.6's file, its uid never committed) went in with 1.6.7.
 
 ## Next, in order
-1. (Done: shipped; Regent's `REFEREE_SCALING.md` last section, PROGRESS step 25.) The combat session ships
-   1.6.7 next (animation driver and tree builder, DECISIONS #301).
+1. Merge 1.6.7 into Fishing, Fowl Play and DiscGolf (by hand or `ship_template.sh`), run each unit suite, push.
+   Fishing's `fishing_animation_scene.gd` uses the driver: watch its one-shots.
 2. Offer the btree patch upstream (plaught-armor SDK): outward-facing, ask Luke first.
 3. A region referee loads the whole level (~375 MB); the 2-3 s start-up stalls.
 
@@ -26,6 +26,7 @@ regions 25/0; every negative of the new checks fails (7 mutations).
 - Whether to send the SDK fix upstream. The bandwidth budget; the server's levers at 300.
 
 ## Watch out
+- `_fire` on one action slot is internal: every action goes through `_fire_action` (rules/animation.md).
 - The sweep's test database `regents-rule-sweep-test` is left on the local server (the worktree is removed).
 - `run_tests.sh` passes no arguments: run one suite with `godot --headless --path . res://tests/test_runner.tscn -- --only=x`.
 - The runner prints failures to stderr: grep "failed" counts, not "FAIL" on stdout.
