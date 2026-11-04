@@ -1,33 +1,35 @@
-# Handoff — Regent's Rule, 2026-11-04 (everything committed and shipped; foes stop at rocks: PROGRESS 36)
+# Handoff — Regent's Rule, 2026-11-04 (integration hardened: PROGRESS 37; the armor review; foes stop at rocks: 36)
 
 ## Where it stands
-- **Committed and pushed** (Luke's go, 2026-11-04): steps 26-35 (`f27e0924`), template 1.7.1 + 1.7.2 merged
-  (`b9c16b49`), then step 36 (this session's walls). The template is pushed too, and shipped to Fishing, Fowl Play
-  and DiscGolf (each republished `--codegen`, unit suites green, pushed).
-- Play database `regents-rule`: republished at the end (content manifest; data kept; no `--codegen` needed). Restart
-  the game and its referee.
-- Last runs: unit 3138/0; `game/regents/tests/walls_playtest.sh` 16/0 (and its negative fails 4); integration
-  1268/15 with NO host running (so the host was not the cause): the same CLI-timed referee family as last session's
-  20 and 25 (the overhead's cancel race cascading, mana regrown between calls, the Frost Ring after it) plus "the hold
-  tick runs while something is held". Not run: cargo (no server change), the skilling and combat playtests.
+- Committed and pushed: step 36 (`9612bd64`), then step 37 (the integration suite's referee checks) with template
+  1.7.3 merged (tests only: nothing to republish). Template 1.7.3 pushed and merged into every game.
+- **Uncommitted on purpose**: `GAME.md` and `.claude/rules/regents-genre.md`, the armor review session's (Luke's
+  leanings, American spelling). Commit them with that work.
+- Play database `regents-rule`: as published after step 36 (restart the game and its referee for the walls).
+- Last runs: integration 1328/0, 1328/1 (a template check, fixed in 1.7.3), 1298/0; its negative (Cleave past the
+  hold, the roll past the wind-up) fails exactly those 3 checks. Template integration 667/0. Unit 3138/0 (step 36);
+  `walls_playtest.sh` 16/0.
 
-## This session
-- Shipped: template 1.7.1 (#303) and 1.7.2 (#304) committed, pushed, merged into all four games (`ship_template.sh`).
-- Fowl Play's gate half ran in its own session: bot hens open a shut gate, predators shoulder it open (Fowl Play
-  `d54407e`, its `gates_test.sh` 19/0).
-- Fishing: its copies of two foundation checks updated (`game/fishing/tests/suites/`): 3147/0. DiscGolf 2441/0.
-- **#8196 fixed here**: `sidecar/genres/regents.gd` sizes each rock (its model's meshes x scale), tree (trunk:
-  `NodeComponent.TRUNK_RADIUS`/`TRUNK_HEIGHT`) and station (body + pieces) for the referee; `node.tres` Blocks In =
-  [Normal]. Tests: the regents suite's `_run_referee_walls`; `walls_playtest.sh` (a real referee, bot round copper
-  rock 20 in the glade, through it once worked out).
+## Sessions today
+- Step 37 (this one): `game/regents/tests/timed_calls.py` (steps over one HTTP connection, each a set time after the
+  last, with `sql`/`sqlwait` reads the next steps use); in `hooks/integration_genre.sh`: a stand-in referee that keeps
+  beating (`standin_up`/`standin_down`), `hits` (a string, each swing answered at once, health read after), the spells
+  in timed runs, the camp's respawn 40 s for the test. Template 1.7.3: the hold tick, the 5 s effect, the timed press's
+  start read early, failures name the server's words.
+- The armor review (session 2): reviewed Luke's outside critique of `ARMOUR_PREP.md`. Its wrong facts: a foe's
+  finisher is UNBLOCKABLE ("34 to 6 on a full block" in the doc AND in A7.1 is wrong); the 14/34 are raw ability
+  damage, a skeleton lands them at `damage_pct` 50-55 % (7-19); its Padded/Warded contradict `LOOT_AND_STYLES.md` §6
+  and there are no damage kinds; its bow/staff role names are invented. Luke leans against player poise and against
+  weight slowing movement (`GAME.md`); not decided. American spelling is Luke's call; the sweep is not done.
+- Step 36: `sidecar/genres/regents.gd` sizes rocks, trees and stations for the referee (#8196); `node.tres` Blocks In
+  = [Normal]; `walls_playtest.sh`. Template 1.7.1/1.7.2 shipped; Fowl Play's gates in its own session.
 
 ## Next, in order
 1. Luke: restart the game; spar by a copper rock, a tree, the anvil: the skeleton should go round.
-2. Luke's answers to `ARMOUR_PREP.md` (A1-A6 start the build); then build it by its §4 order.
+2. Luke's answers to `ARMOUR_PREP.md` (A1-A6 start the build; A2 is the open one: weight and poise); then build it
+   by its §4 order. The American-spelling sweep (player text first) before or with it.
 3. Watch the continent under load: a node worked out or back re-bakes its 256 m walk map tile (1 s after, at most
    every 5 s a map, one at a time). Run `load_300.sh` once and look for `[Sidecar] a walk map ... again` piling up.
-4. Harden integration's referee checks (`game/regents/tests/hooks/integration_genre.sh`): 15 fail with no host; start
-   at "the overhead is cancelled" (the rest cascade from it), then the hold tick (a foundation check: template?).
 
 ## Waiting on Luke
 - `ARMOUR_PREP.md` A1-A10.
@@ -35,14 +37,14 @@
   "Not Luke's" list; a loot table with swords; which foes are bosses.
 
 ## Watch out
-- The template's walk-map read warns "parsed RenderingServer meshes at runtime" (`NpcNav._source_with_walls`, once per
-  area, kept): harmless in the glade; a template look if the continent's reads are slow.
-- `walls_playtest.sh` is laid out in the glade's own placement (copper rock 20 at (23, 14)): moving the glade's nodes
-  moves its lane; it checks the rock is there first.
-- A `-s` SceneTree script in this project starts a referee of its own (an autoload): stop both by PID; time things
-  inside the unit suite instead.
+- A new referee check in integration: use `standin_up`, and send what must land inside a window (a request's 3 s, a
+  missile's 3 s, a cast, a string's 2 s, a dummy's 4 s reset) as one `timed`/`hits` run, reading the result in the
+  run; a CLI call here takes 0.5-3 s. The pass count moves ~30 between runs (loops over random rolls).
+- A heredoc through Git Bash turns `\\n` in Python source into a real newline: write patch scripts with the Write tool.
+- The template's walk-map read warns "parsed RenderingServer meshes at runtime" (`NpcNav._source_with_walls`).
+- `walls_playtest.sh` is laid out in the glade's own placement (copper rock 20 at (23, 14)).
+- A `-s` SceneTree script in this project starts a referee of its own (an autoload): stop both by PID.
 - The foundation's `content` check "a script runs from the repo root" is flaky under load (600 headless frames).
 - `RegentsContent` caches in a running game: a test that writes content must use `ContentLibrary.root_override` or
   call `RegentsContent.clear()`.
-- A published table is never removed (`poise` stays declared); the integration CLI is slow; never run two server
-  suites at once; never kill all Godot/Python processes, by PID only.
+- Never run two server suites at once; never kill all Godot/Python processes, by PID only.

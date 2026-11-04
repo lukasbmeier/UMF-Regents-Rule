@@ -23,6 +23,73 @@ bot() {
   BOT_PLAYED="$(printf '%s\n' "$out" | grep '^PLAYED ' | sed 's/^PLAYED //' | tr -d '\r')"
   [ -n "$BOT_RESULT" ] || echo "  bot: no result: $(printf '%s' "$out" | tail -3)" >&2
 }
+# THE REFEREE CHECKS' TWO TOOLS (2026-11-04). A run on a busy machine failed 15 to 25 of them on the CLI's pace,
+# not the game's: a `spacetime call` takes 0.5 to 2 s to start.
+#  - A STAND-IN REFEREE THAT STAYS: a referee counts as there 5 s after it last beat, and an anonymous CLI claim
+#    never beats, so a string or a shot took longer than its referee lasted. `standin_up CODE LABEL` claims world 0
+#    as a fresh identity (minted over HTTP) and beats twice a second until `standin_down` (which also revokes it).
+#    The admin (this CLI) still answers its requests (`resolve_action`, `report_body_contacts`).
+#  - TIMED CALLS: presses that must land a set time apart (a Cleave in the overhead's hold, a roll in its wind-up)
+#    go over one kept-alive connection with this CLI's token (game/regents/tests/timed_calls.py).
+UMF_HTTP="${UMF_HTTP:-http://127.0.0.1:3000}"
+CLI_TOKEN="$(spacetime login show --token 2>&1 | grep -oE 'ey[A-Za-z0-9._-]+' | head -1)"
+STANDIN_PID=""; STANDIN_TOKEN=""
+standin_post() {   # standin_post REDUCER JSON_ARGS -> the HTTP status, as the stand-in
+  curl -s -m 5 -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $STANDIN_TOKEN" \
+    -H 'Content-Type: application/json' "$UMF_HTTP/v1/database/$DB/call/$1" -d "$2"
+}
+standin_down() {
+  if [ -n "$STANDIN_PID" ]; then kill "$STANDIN_PID" 2>/dev/null; wait "$STANDIN_PID" 2>/dev/null; STANDIN_PID=""; fi
+  for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+    spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
+  done
+}
+standin_up() {   # standin_up CODE(JSON-quoted) LABEL
+  standin_down
+  assert_ok "offer_referee 0 $1" "$2: offered"
+  STANDIN_TOKEN="$(curl -s -m 5 -X POST "$UMF_HTTP/v1/identity" | python -c 'import json, sys; print(json.load(sys.stdin)["token"])')"
+  check "$([ "$(standin_post claim_referee "[0,$1]")" = "200" ] && echo true || echo false)" "$2: claimed"
+  # It beats until standin_down, or this suite's shell is gone, or 10 minutes have passed.
+  ( n=0; while [ "$n" -lt 1200 ] && kill -0 $$ 2>/dev/null; do standin_post heartbeat '[0]' >/dev/null; sleep 0.5; n=$((n + 1)); done ) &
+  STANDIN_PID=$!
+}
+# timed STEPS (lines of "<ms after the last> <reducer> <JSON args>", or "<ms> sql|sqlwait NAME <query>": the
+# helper's own words) -> TIMED_OUT, a line a step ("<reducer> ok <ms>", "<reducer> error <ms> <why>", "sql NAME <v> <ms>")
+timed() { TIMED_OUT="$(printf '%s\n' "$1" | python game/regents/tests/timed_calls.py "$DB" "$CLI_TOKEN")"; }
+timed_line() { printf '%s\n' "$TIMED_OUT" | sed -n "${1}p"; }
+timed_ok() { check "$(timed_line "$1" | grep -qE '^[a-z_0-9]+ ok ' && echo true || echo false)" "$2 ($(timed_line "$1"))"; }
+# timed_val NAME: what a sql step found ("-": no row)
+timed_val() { printf '%s\n' "$TIMED_OUT" | awk -v n="$1" '$1 == "sql" && $2 == n {print $3}'; }
+timed_refused() { check "$(timed_line "$1" | grep -qE "^[a-z_0-9]+ error .*$2" && echo true || echo false)" "$3 ($(timed_line "$1"))"; }
+# hits LABEL TARGET ABILITY:PREDICTED[:MS] ...: each swing used (MS after the last answer, 0 when left out), its request
+# found and answered as hitting TARGET at once, all in one timed run: a request runs out 3 s after it is due, and a
+# CLI call or two between the use and the answer took longer on a busy machine (2026-11-04). Two checks a swing.
+# After each answer the target's health is read (`timed_val HP<predicted>`: a dummy is whole again 4 s after its last
+# hit, sooner than a slow CLI's read), and HITS_READ, a query, when set (`timed_val READ<predicted>`).
+hits() {
+  local label="$1" target="$2" steps="" spec ability pred ms i=0 stride=4
+  shift 2
+  [ -n "${HITS_READ:-}" ] && stride=5
+  for spec in "$@"; do
+    IFS=: read -r ability pred ms <<< "$spec"
+    steps="$steps${ms:-0} use_ability_seen [$ability,0,$C_AIM,$pred,100]
+0 sqlwait R$pred SELECT id FROM action_request WHERE predicted_id = $pred
+0 resolve_action [{R$pred},$target]
+0 sql HP$pred SELECT current FROM health_state WHERE entity_id = $target
+"
+    [ -n "${HITS_READ:-}" ] && steps="${steps}0 sql READ$pred $HITS_READ
+"
+  done
+  timed "$steps"
+  for spec in "$@"; do
+    IFS=: read -r ability pred ms <<< "$spec"
+    timed_ok $((i * stride + 1)) "$label: $ability used"
+    timed_ok $((i * stride + 3)) "$label: $ability hits"
+    i=$((i + 1))
+  done
+}
+# num_is VALUE EXPECTED LABEL: the same number (the server's JSON says 50.0 where the CLI says 50)
+num_is() { check "$(python -c "import sys; print('true' if abs(float(sys.argv[1]) - float(sys.argv[2])) < 1e-3 else 'false')" "$1" "$2" 2>/dev/null || echo false)" "$3 ($1)"; }
 round_cid() { sql_first "SELECT id FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT" 1; }
 round_field() { sql_first "SELECT $2 FROM challenge WHERE id = $1" 1; }
 # play_round KIND DEF WAIT_S -> plays the round the server just dealt, after its time, and submits it
@@ -315,29 +382,34 @@ assert_rejected "use_ability_seen 40008 0 $C_AIM 903 100" "out of the combo's or
 assert_rejected "use_ability_seen 40007 0 $C_AIM 9030 100" "unknown ability\|that move is retired" "the old second chop (retired with the heavy, COMBAT_OVERHAUL.md §3): refused"
 assert_rejected "use_ability_seen 40009 0 $C_AIM 904 100" "no referee" "Cleave (Q, rank 1) passes the game's checks; with nobody judging, the foundation refuses it"
 C_CODE='"regentscombatrefereecode"'
-assert_ok "offer_referee 0 $C_CODE" "a referee for world 0 (the admin judges here)"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE" >/dev/null 2>&1
+standin_up "$C_CODE" "a referee for world 0 (the admin judges here)"
 HP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
-assert_ok "use_ability_seen 40006 0 $C_AIM 905 100" "a chop: queued for the referee"
-R905="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 905" 1)"
-# Answered at once: a request runs out 3 s after it is due, and the slow CLI's four calls below took longer (2026-11-02).
-assert_ok "resolve_action $R905 $DUMMY" "the referee: the chop hit the dummy"
-assert_ok "use_ability_seen 40008 0 $C_AIM 906 100" "the string's second, the overhead, once the chop's follow-through is over (320 + 200 ms): allowed"
-# In the overhead's hold (its clip's 1048 ms, less the slack): a CLI call lands well inside it. (Inside the
-# chop's 474 ms it missed on a busy night, 2026-11-01, and Cleave was taken.)
-assert_rejected "use_ability_seen 40009 0 $C_AIM 9050 100" "still swinging" "Cleave while the overhead holds you: refused"
-R906="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 906" 1)"
-assert_ok "resolve_action $R906 $DUMMY" "and the overhead"
-HP1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+# The string as a player plays it, timed calls (one CLI call after another ran past the string's 2 s window, or past
+# the overhead's hold so Cleave was taken, on a busy machine: 2026-11-01 and -04): a chop, answered; the overhead
+# 600 ms on (the chop's follow-through is 520); Cleave 300 ms into the overhead's hold (its clip's 1048 ms, less the
+# slack); the overhead answered once its wind-up (550 ms) is over.
+timed "$(printf '%s\n' \
+  "0 use_ability_seen [40006,0,$C_AIM,905,100]" \
+  "0 sqlwait R905 SELECT id FROM action_request WHERE predicted_id = 905" \
+  "0 resolve_action [{R905},$DUMMY]" \
+  "600 use_ability_seen [40008,0,$C_AIM,906,100]" \
+  "300 use_ability_seen [40009,0,$C_AIM,9050,100]" \
+  "0 sqlwait R906 SELECT id FROM action_request WHERE predicted_id = 906" \
+  "300 resolve_action [{R906},$DUMMY]" \
+  "0 sql HP1 SELECT current FROM health_state WHERE entity_id = $DUMMY")"
+timed_ok 1 "a chop: queued for the referee"
+timed_ok 3 "the referee: the chop hit the dummy"
+timed_ok 4 "the string's second, the overhead, once the chop's follow-through is over (320 + 200 ms): allowed"
+timed_refused 5 "still swinging" "Cleave 300 ms into the overhead's hold: refused"
+timed_ok 7 "and the overhead"
+HP1="$(timed_val HP1)"
 assert_eq "$(python -c "print(round($HP0 - $HP1, 2))")" "26.6" "12 + 26 damage at the copper axe's 70 %: 26.6 off the dummy"
 assert_eq "$(xp_of 40007)" "7" "axemanship XP: half a point a damage, half again on a dummy (2 + 5)"
 logged() { spacetime logs "$DB" 2>/dev/null | tail -60 | grep -qE "$1" && echo true || echo false; }
 check "$(logged "finisher staggered $DUMMY for 800 ms")" "the overhead is the axe's finisher: it staggered the dummy (regents.stagger_ms)"
 assert_ok "use_ability_seen 40010 0 $C_AIM 907 100" "Ctrl: the dodge roll"
 check "$(logged "entity $MYENT: status [0-9]+ -> 101 \(Rolling\) for 550 ms")" "rolling for regents.roll_ms: nothing hits you, and its burst carries you"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
-done
+standin_down
 sleep 0.6
 # A CLI call leaves at once, and leaving lowers a block: what it did is in the log; a block HELD by a
 # connected player (and no swing behind it) is the playtest's.
@@ -376,28 +448,26 @@ assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMM
 # A ROLL CANCELS A SWING: in the overhead's wind-up (550 ms) the roll; the referee finds the dummy, and
 # the hit never lands.
 C_CODE2='"regentscombatrefereecodetwo"'
-assert_ok "offer_referee 0 $C_CODE2" "a referee again"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE2" >/dev/null 2>&1
+standin_up "$C_CODE2" "a referee again"
 HPC="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
-assert_ok "use_ability_seen 40006 0 $C_AIM 910 100" "a chop, to start the string"
-sleep 0.6
-# The roll is sent a set 0.3 s behind the overhead, both calls under way at once: one after the other they arrived
-# further apart than the overhead's 550 ms wind-up when a CLI call took a second (2026-11-01).
-OVER_OUT="$(mktemp)"
-spacetime call "$DB" use_ability_seen 40008 0 "$C_AIM" 911 100 >"$OVER_OUT" 2>&1 &
-OVER_PID=$!
-sleep 0.3
-assert_ok "use_ability_seen 40010 0 $C_AIM 912 100" "Ctrl in its wind-up: the roll"
-wait "$OVER_PID"
-check "$(grep -qiE "^error|error:" "$OVER_OUT" && echo false || echo true)" "the overhead: queued (its wind-up 550 ms)"
-rm -f "$OVER_OUT"
-assert_eq "$(sql_first "SELECT cancelled FROM swing WHERE entity_id = $MYENT" 1)" "true" "the overhead is cancelled"
-R911="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 911" 1)"
-assert_ok "resolve_action $R911 $DUMMY" "the referee: its sweep found the dummy"
-assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" "$HPC" "but a cancelled swing never lands: no damage"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
-done
+# A chop, the overhead 700 ms on (the chop's follow-through is 520), the roll 250 ms into the overhead's 550 ms
+# wind-up: timed calls (CLI calls one after another arrived further apart than the wind-up, 2026-11-01 and -04).
+timed "$(printf '%s\n' \
+  "0 use_ability_seen [40006,0,$C_AIM,910,100]" \
+  "700 use_ability_seen [40008,0,$C_AIM,911,100]" \
+  "250 use_ability_seen [40010,0,$C_AIM,912,100]" \
+  "0 sql CANCELLED SELECT cancelled FROM swing WHERE entity_id = $MYENT" \
+  "0 sqlwait R911 SELECT id FROM action_request WHERE predicted_id = 911" \
+  "0 resolve_action [{R911},$DUMMY]" \
+  "0 sql HPC_AFTER SELECT current FROM health_state WHERE entity_id = $DUMMY")"
+timed_ok 1 "a chop, to start the string"
+timed_ok 2 "the overhead: queued (its wind-up 550 ms)"
+timed_ok 3 "Ctrl in its wind-up: the roll"
+assert_eq "$(timed_val CANCELLED)" "true" "the overhead is cancelled"
+timed_ok 6 "the referee: its sweep found the dummy"
+# Read in the run: a CLI read came after the dummy was whole again (4 s), and passed even when the hit landed (2026-11-04).
+num_is "$(timed_val HPC_AFTER)" "$HPC" "but a cancelled swing never lands: no damage"
+standin_down
 # --- TRAITS (template DECISIONS #275): what changes how a weapon plays, never its Power. A dev reducer
 # gives them here (a designer trying one); the playtest makes a tool with a handle's. Ids: the content's
 # (game/regents/content/trait/). ---
@@ -405,23 +475,19 @@ T_BALANCED=40003; T_HEAVY=40004; T_BRUTAL=40005; T_SWIFT=40007
 assert_rejected "set_item_traits $AXE_ROW [99999]" "no trait 99999" "a trait that is not one: refused"
 assert_rejected "set_item_traits $AXE_ROW [$T_SWIFT]" "is not on a copper axe" "Swift Draw is a bow's: refused on an axe"
 C_CODE_T='"regentstraitsrefereecode"'
-assert_ok "offer_referee 0 $C_CODE_T" "a referee for the traits"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T" >/dev/null 2>&1
+standin_up "$C_CODE_T" "a referee for the traits"
 sleep 1.0
 HPT0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
-assert_ok "use_ability_seen 40006 0 $C_AIM 931 100" "a plain chop"
+hits "a plain chop" "$DUMMY" 40006:931
 W0="$(sql_first "SELECT wind_up_ms FROM swing WHERE entity_id = $MYENT" 1)"; L0="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
-assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 931" 1) $DUMMY" "it hits the dummy"
-HPT1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+HPT1="$(timed_val HP931)"
 assert_eq "$(python -c "print(round($HPT0 - $HPT1, 2))")" "8.4" "12 at the copper axe's 70 %: 8.4 (no traits)"
 assert_ok "set_item_traits $AXE_ROW [$T_BALANCED,$T_BRUTAL]" "(dev) the axe made Balanced and Brutal"
 check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW" 1 | grep -q "\"t\":\[$T_BALANCED,$T_BRUTAL\]" && echo true || echo false)" "its row carries them"
 sleep 1.2
 # A referee is online 5 s after it was last seen, and the CLI's never calls again: the calls above can take
 # that long (failed twice on 2026-10-24), so a fresh one judges this chop.
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the first traits referee unregistered)"
-done
+standin_down
 # The dummy is whole again `regents.dummy_reset_s` after its last hit: wait for it, so the traited hit is
 # measured from full health whatever the calls above took (a reset between the two hits read -0.77).
 for _ in $(seq 1 20); do
@@ -430,27 +496,19 @@ for _ in $(seq 1 20); do
 done
 HPT1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
 assert_eq "$HPT1" "500" "(the dummy whole again before the traited chop)"
-assert_ok "offer_referee 0 $C_CODE_T" "(a fresh referee for the traited chop)"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T" >/dev/null 2>&1
-assert_ok "use_ability_seen 40006 0 $C_AIM 932 100" "a chop with the Balanced, Brutal axe"
+standin_up "$C_CODE_T" "(a fresh referee for the traited chop)"
+hits "a chop with the Balanced, Brutal axe" "$DUMMY" 40006:932
 L1="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
 assert_eq "$L1" "$(python -c "import math; print($W0 + int(math.floor(($L0 - $W0) * 0.85 + 0.5)))")" "Balanced: its recovery 15% shorter ($L0 -> $L1 ms, the wind-up $W0 as it was)"
-assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 932" 1) $DUMMY" "it hits the dummy"
-HPT2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
+HPT2="$(timed_val HP932)"
 assert_eq "$(python -c "print(round($HPT1 - $HPT2, 2))")" "7.56" "Brutal, the dummy above 30 %: a tenth less (8.4 -> 7.56)"
 assert_ok "set_item_traits $AXE_ROW [$T_HEAVY]" "(dev) now Heavy"
 sleep 1.2
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the last referee unregistered first)"
-done
+standin_down
 C_CODE_T2='"regentstraitsrefereecode2"'
-assert_ok "offer_referee 0 $C_CODE_T2" "a fresh referee (a claim lapses in seconds)"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T2" >/dev/null 2>&1
-assert_ok "use_ability_seen 40006 0 $C_AIM 9330 100" "a chop with the Heavy axe, to start the string"
-assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 9330" 1) $DUMMY" "it hits the dummy"
-sleep 0.4
-assert_ok "use_ability_seen 40008 0 $C_AIM 933 100" "then the overhead, its finisher"
-assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 933" 1) $DUMMY" "it hits the dummy"
+standin_up "$C_CODE_T2" "a fresh referee (a claim lapses in seconds)"
+# A chop with the Heavy axe, then the overhead 600 ms on (the chop's follow-through is 520): its finisher.
+hits "the Heavy axe's string" "$DUMMY" 40006:9330 40008:933:600
 # The Staggered status as it was set (its own log line: a 1 s stagger is over before a slow CLI query reads it).
 check "$(logged "entity $DUMMY: status [0-9]+ -> 103 \(Staggered\) for 800 ms")" "the dummy is Staggered"
 check "$(logged "$MYENT's finisher staggered $DUMMY for 800 ms")" "Heavy no longer lengthens a stagger (800 ms): it wears poise (POISE, below)"
@@ -459,68 +517,46 @@ check "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_ROW
 assert_ok 'set_rule "foundation.trait_strength_pct" 0.0 ""' "(test) traits off"
 assert_ok "set_item_traits $AXE_ROW [$T_BALANCED]" "(dev) Balanced again"
 sleep 1.2
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the last referee unregistered first)"
-done
+standin_down
 C_CODE_T3='"regentstraitsrefereecode3"'
-assert_ok "offer_referee 0 $C_CODE_T3" "a fresh referee"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_T3" >/dev/null 2>&1
-assert_ok "use_ability_seen 40006 0 $C_AIM 934 100" "a chop, traits off"
+standin_up "$C_CODE_T3" "a fresh referee"
+hits "a chop, traits off" "$DUMMY" 40006:934
 assert_eq "$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)" "$L0" "the dial at 0: the kit's own lock"
-assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 934" 1) $DUMMY" "(its hit, so nothing is left waiting)"
 assert_ok 'reset_rule "foundation.trait_strength_pct"' "(test) traits back on"
 
 # --- POISE (Luke, 2026-11-02: option A, a bar that breaks, with a short B, Steadied): a melee hit wears a foe's or a
 # dummy's poise (regents.poise_light 10, the string's last regents.poise_finisher 40); only the last hit breaks it: a
 # stagger, then Steadied (nothing wears it). Heavy: the last hit wears 35 % more. Read off the public poise_state row.
-poise_left() { sql_first "SELECT left FROM poise_state WHERE entity_id = $DUMMY" 1 | tr -d ' '; }
-poise_ref() {   # a fresh stand-in referee: one lapses 5 s after its claim, and a string takes the slow CLI longer
-  for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-    spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
-  done
-  spacetime call "$DB" offer_referee 0 "\"$1\"" >/dev/null 2>&1
-  spacetime call --anonymous "$DB" claim_referee 0 "\"$1\"" >/dev/null 2>&1
-}
-poise_hit() {   # poise_hit ABILITY PREDICTED: a use, the referee says it hit the dummy
-  assert_ok "use_ability_seen $1 0 $C_AIM $2 100" "(a swing, $1)"
-  assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = $2" 1) $DUMMY" "(it hits the dummy)"
-}
+poise_ref() { standin_up "\"$1\"" "a fresh stand-in referee for the string"; }
+# poise_string LABEL ABILITY:PREDICTED[:MS] ...: a string at the dummy in one run, its poise read after each hit
+# (READ<predicted>): one call after another ran past the string's window on a busy machine (2026-11-04).
+poise_string() { local label="$1"; shift; HITS_READ="SELECT left FROM poise_state WHERE entity_id = $DUMMY" hits "$label" "$DUMMY" "$@"; }
 assert_ok 'set_rule "regents.dummy_poise" 60.0 ""' "(test) a dummy's poise: 60"
-assert_ok 'set_rule "regents.poise_regen_ms" 30000.0 ""' "(test) whole again only after 30 s unhit: the slow CLI's string adds up"
-assert_ok 'set_rule "regents.combo_window_ms" 5000.0 ""' "(test) the string's window 5 s long (its bound): the CLI is slow"
+assert_ok 'set_rule "regents.poise_regen_ms" 30000.0 ""' "(test) whole again only after 30 s unhit: the slow CLI's strings add up"
 assert_ok 'set_rule "regents.steadied_ms" 20000.0 ""' "(test) Steadied 20 s: the slow CLI's next chop lands inside it"
 assert_ok "set_item_traits $AXE_ROW []" "(dev) a plain axe"
 sleep 1.2
 poise_ref regentspoisereferee1
-poise_hit 40006 9601
-assert_eq "$(poise_left)" "50" "a chop wears 10 of the dummy's 60 (regents.poise_light)"
-sleep 0.4
-poise_hit 40008 9602
-assert_eq "$(poise_left)" "10" "the string's last wears 40 (regents.poise_finisher): 10 left"
+poise_string "a plain string" 40006:9601 40008:9602:600
+num_is "$(timed_val READ9601)" 50 "a chop wears 10 of the dummy's 60 (regents.poise_light)"
+num_is "$(timed_val READ9602)" 10 "the string's last wears 40 (regents.poise_finisher): 10 left"
 check "$([ "$(logged "$MYENT broke $DUMMY's poise")" = "false" ] && echo true || echo false)" "NEGATIVE: not broken (no stagger)"
 sleep 1.2
-poise_ref regentspoisereferee2
-poise_hit 40006 9603
-assert_eq "$(poise_left)" "1" "NEGATIVE: a light never breaks it: it stops at 1"
-sleep 0.4
-poise_hit 40008 9604
+poise_string "a second string" 40006:9603 40008:9604:600
+num_is "$(timed_val READ9603)" 1 "NEGATIVE: a light never breaks it: it stops at 1"
 check "$(logged "$MYENT broke $DUMMY's poise")" "the next last hit breaks it"
 check "$(logged "$MYENT's finisher staggered $DUMMY for 800 ms")" "and staggers it (regents.stagger_ms)"
-assert_eq "$(poise_left)" "60" "broken, it is whole again"
+num_is "$(timed_val READ9604)" 60 "broken, it is whole again"
 sleep 1.2
-poise_ref regentspoisereferee3
-poise_hit 40006 9605
-assert_eq "$(poise_left)" "60" "STEADIED (regents.steadied_ms after the stagger): a chop wears nothing"
+poise_string "a chop, Steadied" 40006:9605
+num_is "$(timed_val READ9605)" 60 "STEADIED (regents.steadied_ms after the stagger): a chop wears nothing"
 # HEAVY, on the other dummy (this one is Steadied): one string breaks it.
 assert_ok "set_item_traits $AXE_ROW [$T_HEAVY]" "(dev) a Heavy axe"
 DUMMY_A="$DUMMY"
 DUMMY="$(sql_first "SELECT entity_id FROM dummy WHERE point_id = 'dummy_2'" 1)"
 sleep 1.2
-poise_ref regentspoisereferee4
-poise_hit 40006 9606
-sleep 0.4
-poise_hit 40008 9607
-assert_eq "$(poise_left)" "60" "Heavy: one string breaks 60 (10 + 40 x 1.35 = 64; a plain one leaves 10)"
+poise_string "a Heavy string" 40006:9606 40008:9607:600
+num_is "$(timed_val READ9607)" 60 "Heavy: one string breaks 60 (10 + 40 x 1.35 = 64; a plain one leaves 10)"
 check "$(logged "$MYENT broke $DUMMY's poise")" "(the second dummy's poise broke)"
 DUMMY="$DUMMY_A"
 assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
@@ -528,13 +564,9 @@ assert_ok 'set_rule "regents.dummy_poise" 0.0 ""' "(test) a dummy without poise 
 assert_ok 'reset_rule "regents.poise_regen_ms"' "(test) poise's own regrowth"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
 assert_ok 'reset_rule "regents.steadied_ms"' "(test) Steadied as it was"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the poise checks' referee unregistered)"
-done
+standin_down
 assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the traits' referee unregistered"
-done
+standin_down
 sleep 5
 # --- ROLES BY THE HANDLE (COMBAT_OVERHAUL.md §5, Luke 2026-11-01), the sword first: a hilt fits a sword only;
 # RE-HILTING changes the role (the old hilt lost); the server fires the string's last hit the HANDLE gives, whatever
@@ -559,17 +591,14 @@ assert_ok "wield $SW" "wield the sword with the crossguard hilt"
 # played the moment a stand-in referee claims the world (it counts as there for 5 s after: three steps with the
 # answers between outlasted it, 2026-11-01). Only the last step is answered; the first two lapse as misses.
 assert_ok 'set_rule "regents.combo_window_ms" 5000.0 ""' "(test) the string's window 5 s long (its bound)"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(any referee before unregistered)"
-done
+standin_down
 for _ in $(seq 1 20); do
   [ "$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)" = "500" ] && break
   sleep 0.5
 done
 assert_rejected "use_ability_seen 40022 0 $C_AIM 940 100" "out of the combo's order" "the pommel bash first: refused (it is the string's last step)"
 C_CODE_R='"regentsrolesrefereecode"'
-assert_ok "offer_referee 0 $C_CODE_R" "a referee for the roles"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_R" >/dev/null 2>&1
+standin_up "$C_CODE_R" "a referee for the roles"
 HPR0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
 assert_ok "use_ability_seen 40001 0 $C_AIM 941 100" "the string's first"
 assert_ok "use_ability_seen 40002 0 $C_AIM 942 100" "its second"
@@ -589,21 +618,16 @@ check "$(logged "$MYENT asked for 40003; their handle's last hit is 40022")" "(t
 assert_ok "admin_give_item $MYENT 40019 1 650" "(a second Fine iron sword, plain)"
 SW2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40019 AND instance_data = '{\"q\":650}'" 1)"
 assert_ok "wield $SW2" "wield the plain sword"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the last referee unregistered: a claim lapses in seconds)"
-done
+standin_down
 C_CODE_RN='"regentsrolesrefereecodeneg"'
-assert_ok "offer_referee 0 $C_CODE_RN" "a fresh referee"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_RN" >/dev/null 2>&1
+standin_up "$C_CODE_RN" "a fresh referee"
 assert_ok "use_ability_seen 40001 0 $C_AIM 951 100" "the string's first"
 assert_ok "use_ability_seen 40002 0 $C_AIM 952 100" "its second"
 assert_ok "use_ability_seen 40022 0 $C_AIM 953 100" "its last, asked for as the pommel bash"
 assert_eq "$(sql_first "SELECT ability_id FROM action_request WHERE predicted_id = 953" 1)" "40003" "the server fires the plain grip's own: the PIERCING THRUST"
 assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 953" 1) $DUMMY" "(its hit, so nothing is left waiting)"
 check "$(logged "$MYENT's finisher staggered $DUMMY for 800 ms")" "the thrust staggers as any last hit (800 ms)"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the roles' referee unregistered)"
-done
+standin_down
 # RE-HILT AGAIN: the banner hilt; the crossguard hilt it had is lost, not given back.
 assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "back at the workbench"
 assert_ok "refit $BENCH $SW [40041,40012] []" "re-hilt: the banner hilt on the sword"
@@ -618,8 +642,7 @@ for _ in $(seq 1 20); do
   sleep 0.5
 done
 C_CODE_R2='"regentsrolesrefereecode2"'
-assert_ok "offer_referee 0 $C_CODE_R2" "a fresh referee"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_R2" >/dev/null 2>&1
+standin_up "$C_CODE_R2" "a fresh referee"
 PHR0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 for step in 1 2 3; do
   assert_ok "use_ability_seen 4000$step 0 $C_AIM 96$step 100" "step $step of the string"
@@ -627,12 +650,8 @@ done
 assert_ok "resolve_action $(sql_first "SELECT id FROM action_request WHERE predicted_id = 963" 1) $DUMMY" "its last lands on the dummy"
 assert_eq "$(sql_first "SELECT ability_id FROM swing WHERE entity_id = $MYENT" 1)" "40023" "its last was the RALLYING CUT"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$PHR0" "off a training dummy it heals nothing"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(that referee unregistered)"
-done
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the last roles referee unregistered)"
-done
+standin_down
+standin_down
 assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
 assert_ok "wield $AXE_ROW" "the axe again (what follows counts on it)"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
@@ -645,12 +664,12 @@ assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $SKEL" 1)
 assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = $SKEL" 1)" "\"regents/foe\"" "and the foe brain (the referee drives it)"
 assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_2'" 1)" 1)" "104" "skeleton_2 is an axeman"
 assert_ok 'set_rule "regents.foe_corpse_s" 1.0 ""' "(test) a body lies 1 s"
-assert_ok 'set_rule "regents.foe_respawn_s" 15.0 ""' "(test) and its foe is back after 15"
+# (40 s: the slow CLI's checks between the kill and "the camp waits" took over 15 on a busy machine, 2026-11-04.)
+assert_ok 'set_rule "regents.foe_respawn_s" 40.0 ""' "(test) and its foe is back after 40"
 assert_ok 'set_rule "regents.player_respawn_s" 1.0 ""' "(test) a slain player is up after 1"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":0.4}' "stand by skeleton_1"
 C_CODE3='"regentscombatrefereecodethree"'
-assert_ok "offer_referee 0 $C_CODE3" "a referee for the fight"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE3" >/dev/null 2>&1
+standin_up "$C_CODE3" "a referee for the fight"
 # ITS SWING ON YOU: as its brain asks (the authority's use_ability_as), at 50 % (its FoeDef's damage).
 PHP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 assert_ok "use_ability_as $SKEL 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "the skeleton slashes (the sword kit's first light)"
@@ -663,29 +682,31 @@ check "$(python -c "print('true' if abs(($PHP0 - $PHP1) - $SLASH * 0.5) < 1e-3 e
 # lands nothing; then it is whole again (an authority's negative damage) for what follows.
 sleep 1.0
 # A fresh referee (the one above is online 5 s after its claim, and the calls since took about that, 2026-11-01).
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the fight's first referee unregistered: an offer waits for none)"
-done
+standin_down
 assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the dead skeleton's swing is measured (its first hit is 8 s old by now)"
 C_CODE3B='"regentscombatrefereecodethreeb"'
-assert_ok "offer_referee 0 $C_CODE3B" "a fresh referee"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE3B" >/dev/null 2>&1
-assert_ok "use_ability_as $SKEL 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "it slashes once more"
-RSD="$(sql_rows "SELECT id FROM action_request WHERE actor_id = $SKEL" | tr -d ' ' | sort -n | tail -1)"
-assert_ok "apply_damage $SKEL 1000.0 0" "(test) it dies before the sweep is judged"
-PHPD="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
-assert_ok "resolve_action $RSD $MYENT" "the referee: its sweep found you"
+standin_up "$C_CODE3B" "a fresh referee"
+# Its swing, its death and the answer in one timed run (the CLI's calls between them outlasted the request, 2026-11-04).
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]" \
+  "0 sqlwait RSD SELECT id FROM action_request WHERE actor_id = $SKEL" \
+  "0 apply_damage [$SKEL,1000.0,0]" \
+  "0 sql PHPD SELECT current FROM health_state WHERE entity_id = $MYENT" \
+  "0 resolve_action [{RSD},$MYENT]")"
+timed_ok 1 "it slashes once more"
+timed_ok 3 "(test) it dies before the sweep is judged"
+PHPD="$(timed_val PHPD)"
+timed_ok 5 "the referee: its sweep found you"
 sleep 0.5
-assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$PHPD" "a dead skeleton's swing lands nothing"
+PHPD_NOW="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+check "$(python -c "print('true' if abs(float('$PHPD_NOW') - float('$PHPD')) < 1e-3 else 'false')" 2>/dev/null || echo false)" \
+  "a dead skeleton's swing lands nothing ($PHPD -> $PHPD_NOW)"
 assert_ok 'reset_rule "regents.regen_delay_s"' "(test) regeneration back to its own"
 check "$(logged "$SKEL is dead: its 40001 lands nothing")" "(the server's log says why)"
 assert_ok "apply_damage $SKEL -- -1000.0 0" "(test) whole again"
 # (A fresh stand-in referee: the calls above outlast the last one's 5 s.)
-for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
-done
-spacetime call "$DB" offer_referee 0 '"regentscombatrefereecodedeath"' >/dev/null 2>&1
-spacetime call --anonymous "$DB" claim_referee 0 '"regentscombatrefereecodedeath"' >/dev/null 2>&1
+standin_down
+standin_up '"regentscombatrefereecodedeath"' "a fresh stand-in referee"
 # WHO MAY HURT WHOM (owner's playtest, 2026-10-20): its sweep catching the skeleton beside it does nothing.
 SK_NEXT="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_2'" 1)"
 NH0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SK_NEXT" 1)"
@@ -700,16 +721,11 @@ C0="$(QTY 40007)"; I0="$(QTY 40008)"; G0="$(QTY 40009)"; XP0="$(xp_of 40007)"
 assert_ok "apply_damage $SKEL 118 0" "(test) worn down to 2"
 sleep 1.2
 # (A fresh stand-in referee: the last one lapses while the checks above run.)
-for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
-done
-spacetime call "$DB" offer_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
-spacetime call --anonymous "$DB" claim_referee 0 '"regentscombatrefereecodefour"' >/dev/null 2>&1
+standin_down
+standin_up '"regentscombatrefereecodefour"' "a fresh stand-in referee"
 # THE META (PROGRESS step 16): an alarm for a single hit, so this kill's period closes into one.
 assert_ok 'set_rule "regents.meta_alarm_min_hits" 1.0 ""' "(test) a single hit can be a meta alarm"
-assert_ok "use_ability_seen 40006 0 $C_AIM 921 100" "a chop at it"
-RK="$(sql_first "SELECT id FROM action_request WHERE predicted_id = 921" 1)"
-assert_ok "resolve_action $RK $SKEL" "the referee: the chop hit"
+hits "a chop at it" "$SKEL" 40006:921
 # Its row, or (gone: the test's body lies 1 s, and the CLI is slow) the log's Slain below.
 DEAD="$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $SKEL" 1 | tr -d ' ')"
 check "$([ "$DEAD" = "true" ] || { [ -z "$DEAD" ] && [ "$(logged "entity $SKEL: status [0-9]+ -> 106")" = "true" ]; } && echo true || echo false)" "its health ran out (is_dead '$DEAD')"
@@ -751,7 +767,7 @@ sleep 1
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" "0" "a second on, its body is gone"
 assert_eq "$(sql_first "SELECT gone FROM foe WHERE entity_id = $SKEL" 1)" "true" "and the camp waits for it"
 SKEL2=""
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
   SKEL2="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
   [ -n "$SKEL2" ] && [ "$SKEL2" != "$SKEL" ] && break
   sleep 1
@@ -777,8 +793,7 @@ assert_ok "gather $TREE true" "a round of branch dodge, then..."
 assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "1" "(the round is open)"
 PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 assert_ok "apply_damage $MYENT $(python -c "print($PHP2 - 1)") 0" "(test) you are worn down to 1"
-assert_ok "offer_referee 0 $C_CODE3" "a referee again"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE3" >/dev/null 2>&1
+standin_up "$C_CODE3" "a referee again"
 assert_ok "use_ability_as $SKEL2 40001 0 {\"x\":0.0,\"y\":0.0,\"z\":1.0} 0" "the new skeleton slashes"
 RS2="$(sql_first "SELECT id FROM action_request WHERE actor_id = $SKEL2" 1)"
 assert_ok "resolve_action $RS2 $MYENT" "and hits you"
@@ -794,9 +809,7 @@ import re
 v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', '''$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)''')][:3]
 print('true' if abs(v[0]) < 0.5 and abs(v[2] - 8.0) < 0.5 else 'false')
 ")" "at the spawn"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
-done
+standin_down
 assert_ok 'reset_rule "regents.foe_corpse_s"' "(test) rules back"
 assert_ok 'reset_rule "regents.foe_respawn_s"' "(test) rules back"
 assert_ok 'reset_rule "regents.player_respawn_s"' "(test) rules back"
@@ -809,8 +822,7 @@ SKR="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":0.4}' "stand by skeleton_1"
 sleep 1.0
 C_CODE_R3='"regentsrolesrefereecode3"'
-assert_ok "offer_referee 0 $C_CODE_R3" "a fresh referee"
-spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE_R3" >/dev/null 2>&1
+standin_up "$C_CODE_R3" "a fresh referee"
 PHR1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 for step in 1 2 3; do
   assert_ok "use_ability_seen 4000$step 0 $C_AIM 97$step 100" "step $step of the string, at the skeleton"
@@ -822,9 +834,7 @@ check "$(logged "$MYENT's rallying cut heals 0 near \(8 each\) and itself 8")" "
 assert_ok "apply_damage $SKR -- -1000.0 0" "(test) the skeleton whole again"
 assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) and you"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "(the rallying cut's referee unregistered)"
-done
+standin_down
 
 # --- THE YEW BOW (owner, 2026-10-20): draw, loose at a target (the server aims and rolls), what an arrow
 # hits (the referee reports it), point blank, the arrows used and the share back from a kill ---
@@ -836,14 +846,10 @@ assert_rejected "loose_arrow 0 {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "draw first" "a
 SKB="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten metres from skeleton_1"
 C_CODE4='"regentsbowrefereecode"'
-bow_referee() {   # the stand-in referee leaves with each CLI call: claimed again before a shot
-  # (the last one revoked first: an offer is refused while it still counts as running, and then it lapses)
-  for OLD_REF in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-    spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
-  done
-  spacetime call "$DB" offer_referee 0 "$C_CODE4" >/dev/null 2>&1
-  spacetime call --anonymous "$DB" claim_referee 0 "$C_CODE4" >/dev/null 2>&1
-}
+# No regrowth while the shots are measured (put back after the staff's): the skeleton healed between two slow reads and
+# the point-blank shot read as a gain (2026-11-04).
+assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the shots are measured"
+bow_referee() { standin_up "$C_CODE4" "the stand-in referee for the shot"; }   # (one that stays: standin_up)
 newest_arrow() { sql_rows "SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = 40001" | tr -d ' ' | sort -n | tail -1; }
 hit_report() {   # hit_report ARROW TARGET Z: the referee says the arrow hit TARGET at (33, 1, Z)
   assert_ok "report_body_contacts 0 [{\"body_id\":$1,\"other_id\":$2,\"pos\":{\"x\":33.0,\"y\":1.0,\"z\":$3},\"normal\":{\"x\":0.0,\"y\":0.0,\"z\":1.0},\"speed\":40.0}]" "$4"
@@ -895,9 +901,7 @@ v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
 print('true' if len(v) == 3 and v[0] > 15 and abs(v[2]) < 0.5 else 'false')
 " "$A4_VEL")" "it flies east, as aimed ($A4_VEL)"
 assert_rejected "draw_bow true" "no arrows" "out of arrows, no draw"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
-done
+standin_down
 spacetime call "$DB" draw_bow false >/dev/null 2>&1   # never leave the section drawn (a walk's bound)
 assert_ok "wield $AXE_ROW" "the axe again"
 
@@ -924,42 +928,58 @@ NORTH="$(vec 0.0 0.0 -1.0)"
 NONE="$(vec 0.0 0.0 0.0)"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "stand eight metres south of skeleton_2"
 assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "needs Sorcery rank 3" "Frost Ring needs Sorcery rank 3"
+# The Bolt's hit is old before the slow Fireball lands: skeleton_2 would be healing (regents.regen_delay_s) while
+# its health is read, and the fire looked 3 to 6 short of its 9 (2026-10-31; the server's log showed every tick).
+# No healing until the fire is measured.
+assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the spells are measured"
 bow_referee
 H0="$(HP "$SK2")"
-assert_ok "cast_spell 40012 $SK2 $NORTH $NONE" "a Bolt at skeleton_2"
-B1="$(newest_body 40002)"
-check "$( [ -n "$B1" ] && echo true || echo false)" "a bolt flies, flown by the referee ($B1)"
-assert_eq "$(row_count "SELECT * FROM spell_cooldown WHERE entity_id = $MYENT AND ability = 40012")" "1" "the Bolt's own cooldown begun"
 SXP0="$(xp_of 40009)"
-assert_ok "report_body_contacts 0 [{\"body_id\":$B1,\"other_id\":$SK2,\"pos\":$(vec "$X2" 1.0 "$Z2"),\"normal\":$NORTH,\"speed\":30.0}]" "the referee: it hit"
+# The Bolt and its hit, timed calls: a missile lives 3 s, and on a busy machine the CLI's calls between the cast and
+# the report took longer (about 3 s each, 2026-11-04): the hit came for a body already gone, and nothing was hurt.
+timed "$(printf '%s\n' \
+  "0 cast_spell [40012,$SK2,$NORTH,$NONE]" \
+  "0 sqlwait B1 SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = 40002" \
+  "0 sql CD SELECT ability FROM spell_cooldown WHERE entity_id = $MYENT AND ability = 40012" \
+  "0 report_body_contacts [0,[{\"body_id\":{B1},\"other_id\":$SK2,\"pos\":$(vec "$X2" 1.0 "$Z2"),\"normal\":$NORTH,\"speed\":30.0}]]")"
+timed_ok 1 "a Bolt at skeleton_2"
+B1="$(timed_val B1)"
+check "$( [ "$B1" != "-" ] && [ -n "$B1" ] && echo true || echo false)" "a bolt flies, flown by the referee ($B1)"
+assert_eq "$(timed_val CD)" "40012" "the Bolt's own cooldown begun"
+timed_ok 4 "the referee: it hit"
 check "$(python -c "print('true' if abs(($H0 - $(HP "$SK2")) - 9.0) < 1e-3 else 'false')")" "the Bolt's 9 ($H0 -> $(HP "$SK2"))"
 check "$(python -c "print('true' if $(xp_of 40009) > $SXP0 else 'false')")" "Sorcery XP"
 sleep 0.7
-assert_ok 'set_rule "regents.cast_time_pct" 500.0 ""' "(test) casts five times slower, so a CLI can see one going"
-# The Bolt's hit is 8 s old before the slow Fireball lands: skeleton_2 would be healing (regents.regen_delay_s)
-# while its health is read, and the fire looked 3 to 6 short of its 9 (2026-10-31; the server's log showed
-# every tick). No healing until the fire is measured.
-assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the fire is measured"
+assert_ok 'set_rule "regents.cast_time_pct" 500.0 ""' "(test) casts five times slower, so the cast can be seen going"
 H2="$(HP "$SK2")"; H3="$(HP "$SK3")"
-# One stand-in referee, claimed just before the cast: it counts as there 5 s, past the landing at 3 s. (A second
-# one claimed after the cast revoked the first and, on a slow CLI, was not claimed yet when the cast landed: no
-# referee, no missile, 2026-11-01.)
 bow_referee
-assert_ok "cast_spell 40013 $SK2 $NORTH $NONE" "Fireball: a 0.6 s cast (3 s at the test's pace)"
-assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "1" "being cast"
-assert_eq "$(MANA)" "100" "not paid until it lands"
-assert_rejected "cast_spell 40012 $SK2 $NORTH $NONE" "already casting" "one cast at a time"
-# (A missile lives 3 s: its hit is reported the moment it flies, before anything else is read.)
-for _ in $(seq 1 30); do F1="$(newest_body 40003)"; [ -n "$F1" ] && break; sleep 0.1; done
-assert_ok "report_body_contacts 0 [{\"body_id\":$F1,\"other_id\":$SK2,\"pos\":$(vec "$X3" 1.0 "$Z3"),\"normal\":$NORTH,\"speed\":20.0}]" "it hits skeleton_2 beside skeleton_3"
-FIRE_AT="$(python -c "import time; print(time.time())")"
-check "$( [ -n "$F1" ] && echo true || echo false)" "a fireball flew when the cast landed ($F1)"
-# Read at once: the burn lasts 3 s, and the five calls below took longer than that on a busy machine.
-assert_eq "$(sql_first "SELECT dps FROM burning WHERE entity_id = $SK2" 1)" "3" "skeleton_2 burns, 3 a second"
-assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "landed"
-assert_eq "$(MANA)" "75" "and paid: 25 mana"
+# The Fireball's cast, what is read while it goes, its missile's hit and what is read after: timed calls, each read the
+# moment it can be (its cast is 3 s at the test's pace, its missile lives 3 s, its burn lasts 3 s).
+MANA_Q="SELECT stored FROM resource_state WHERE entity_id = $MYENT AND resource_id = 40001"
+timed "$(printf '%s\n' \
+  "0 cast_spell [40013,$SK2,$NORTH,$NONE]" \
+  "100 sql CASTING SELECT entity_id FROM casting WHERE entity_id = $MYENT" \
+  "0 sql M_CASTING $MANA_Q" \
+  "0 cast_spell [40012,$SK2,$NORTH,$NONE]" \
+  "0 sqlwait F1 SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = 40003" \
+  "0 report_body_contacts [0,[{\"body_id\":{F1},\"other_id\":$SK2,\"pos\":$(vec "$X3" 1.0 "$Z3"),\"normal\":$NORTH,\"speed\":20.0}]]" \
+  "0 sql BURN SELECT dps FROM burning WHERE entity_id = $SK2" \
+  "0 sql CASTING2 SELECT entity_id FROM casting WHERE entity_id = $MYENT" \
+  "0 sql M_PAID $MANA_Q" \
+  "0 cast_spell [40013,$SK2,$NORTH,$NONE]")"
+FIRE_AT="$(python -c "import time; print(time.time())")"   # (after the hit: the fire is waited for from here)
+timed_ok 1 "Fireball: a 0.6 s cast (3 s at the test's pace)"
+assert_eq "$(timed_val CASTING)" "$MYENT" "being cast"
+check "$(python -c "print('true' if abs(float('$(timed_val M_CASTING)') - 100.0) < 1e-3 else 'false')")" "not paid until it lands ($(timed_val M_CASTING))"
+timed_refused 4 "already casting" "one cast at a time"
+F1="$(timed_val F1)"
+check "$( [ "$F1" != "-" ] && [ -n "$F1" ] && echo true || echo false)" "a fireball flew when the cast landed ($F1)"
+timed_ok 6 "it hits skeleton_2 beside skeleton_3"
+num_is "$(timed_val BURN)" 3 "skeleton_2 burns, 3 a second"
+assert_eq "$(timed_val CASTING2)" "-" "landed"
+check "$(python -c "print('true' if abs(float('$(timed_val M_PAID)') - 75.0) < 1e-3 else 'false')")" "and paid: 25 mana ($(timed_val M_PAID))"
+timed_refused 10 "not ready" "Fireball again at once: its own 7 s cooldown"
 check "$(logged "$MYENT's spell hit $SK2 for 20\.0")" "Fireball's 20 to skeleton_2 (the server's log of the hit)"
-assert_rejected "cast_spell 40013 $SK2 $NORTH $NONE" "not ready" "Fireball again at once: its own 7 s cooldown"
 assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts back to their pace"
 check "$(python -c "print('true' if abs(($H3 - $(HP "$SK3")) - 8.0) < 1e-3 else 'false')")" "and 40 % (8) to skeleton_3 within 3 m ($H3 -> $(HP "$SK3"))"
 # Waited by the clock: the fire is out 3 s after the hit, whatever the queries in between took.
@@ -971,31 +991,34 @@ assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 10"
 FROST_AT="$(vec "$X3" "$Y3" "$Z3")"
 assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X2" 0.0 "$(python -c "print($Z2 - 40)")")" "too far" "Frost Ring past its 20 m"
 M0="$(MANA)"
-assert_ok "cast_spell 40014 0 $NORTH $FROST_AT" "Frost Ring on skeleton_3: a 1 s cast"
-assert_ok "cancel_cast" "let go"
+# Let go 200 ms into its 1 s cast, timed calls (a CLI's cancel came after the cast had landed, 2026-11-04).
+timed "$(printf '0 cast_spell [40014,0,%s,%s]\n200 cancel_cast []' "$NORTH" "$FROST_AT")"
+timed_ok 1 "Frost Ring on skeleton_3: a 1 s cast"
+timed_ok 2 "let go, 200 ms in"
 assert_eq "$(row_count "SELECT * FROM casting WHERE entity_id = $MYENT")" "0" "a cast let go: gone"
 assert_eq "$(MANA)" "$M0" "and costs nothing"
 # Its circle goes down as the cast ends and lands a second later: read from the server's own times (the cast's end on
-# its `casting` row, the circle's landing on its row), not by racing a query against the second (a query takes up
-# to a second here: it read the circle after it had landed, 2026-11-01). The cast is made 3 s long to read its row.
+# its `casting` row, the circle's landing on its row). Then its Slowed, an EFFECT (template #302) beside the
+# skeleton's state, so its own swing (a state, set while it is Slowed) no longer wipes it; then Blink. Timed calls:
+# the cast is 3 s, the slow 3 s, and the CLI's calls between outlasted both on a busy machine (2026-11-01 and -04).
 assert_ok 'set_rule "regents.cast_time_pct" 300.0 ""' "(test) a 3 s cast, to read its row"
-assert_ok "cast_spell 40014 0 $NORTH $FROST_AT" "Frost Ring again"
-CAST_ENDS="$(sql_first "SELECT lands FROM casting WHERE entity_id = $MYENT" 1)"
-assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts as they were (this one keeps its 3 s)"
-CIRCLE_LANDS=""
-for _ in $(seq 1 80); do CIRCLE_LANDS="$(sql_first "SELECT lands FROM spell_area WHERE owner = $MYENT" 1)"; [ -n "$CIRCLE_LANDS" ] && break; sleep 0.1; done
+timed "$(printf '%s\n' \
+  "0 cast_spell [40014,0,$NORTH,$FROST_AT]" \
+  "0 sql CAST_ENDS SELECT lands FROM casting WHERE entity_id = $MYENT" \
+  "0 sqlwait CIRCLE_LANDS SELECT lands FROM spell_area WHERE owner = $MYENT" \
+  "0 sqlwait SLOW SELECT status FROM status_effect WHERE entity_id = $SK3 AND status = 108" \
+  "0 set_status [$SK3,104,400,\"\"]" \
+  "0 cast_spell [40015,0,$(vec 1.0 0.0 0.0),$NONE]")"
+assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts as they were"
+timed_ok 1 "Frost Ring again"
+CAST_ENDS="$(timed_val CAST_ENDS)"; CIRCLE_LANDS="$(timed_val CIRCLE_LANDS)"
 check "$(python -c "
-from datetime import datetime
-c, a = datetime.fromisoformat('${CAST_ENDS}'), datetime.fromisoformat('${CIRCLE_LANDS:-1970-01-01T00:00:00+00:00}')
-print('true' if 1.0 <= (a - c).total_seconds() < 1.1 else 'false')
-")" "cast: its circle on the ground as the cast ends ($CAST_ENDS), landing a second later ($CIRCLE_LANDS)"
-assert_ok "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "Blink east"
-# The circle lands a second after it was cast; its Slowed lasts 3 s, an EFFECT (template #302): beside the
-# skeleton's state, so its own swing or a stagger no longer wipes it. Looked for at once (the CLI calls below
-# can outlast it on a busy machine).
-for _ in $(seq 1 10); do [ "$(sql_first "SELECT status FROM status_effect WHERE entity_id = $SK3" 1)" = "108" ] && break; sleep 0.2; done
-assert_eq "$(sql_first "SELECT status FROM status_effect WHERE entity_id = $SK3" 1)" "108" "it landed: skeleton_3 is Slowed, an effect"
-assert_ok "set_status $SK3 104 400 \"\"" "(test) it swings (Swinging, its state)"
+c, a = '$CAST_ENDS', '$CIRCLE_LANDS'
+print('true' if c.isdigit() and a.isdigit() and 1.0 <= (int(a) - int(c)) / 1e6 < 1.1 else 'false')
+")" "cast: its circle on the ground as the cast ends ($CAST_ENDS us), landing a second later ($CIRCLE_LANDS us)"
+assert_eq "$(timed_val SLOW)" "108" "it landed: skeleton_3 is Slowed, an effect"
+timed_ok 5 "(test) it swings (Swinging, its state), while Slowed"
+timed_ok 6 "Blink east"
 # The slow is read from the server's log of it (a query after the state could outlast its 3 s, 2026-11-01): it came
 # off on its own time, after the state was set, not when it was.
 sleep 3.2
@@ -1030,9 +1053,7 @@ H5="$(HP "$SK2")"
 assert_ok "cast_spell 40016 0 $NORTH $NONE" "Gale, the mana back"
 assert_eq "$(row_count "SELECT * FROM push WHERE entity_id = $SK2 AND by_id = $MYENT")" "1" "skeleton_2 is thrown back"
 check "$(logged "$MYENT's spell hit $SK2 for 7\.6")" "and hurt: Gale's 6 at Sorcery 10 (+27 %: 7.6, the server's log)"
-for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
-  assert_ok "revoke_authority $REF_ID" "the test referee unregistered"
-done
+standin_down
 assert_ok "wield $AXE_ROW" "the axe again"
 assert_eq "$(row_count "SELECT * FROM resource_state WHERE entity_id = $MYENT AND resource_id = 40001")" "1" "your mana stays yours, as it was"
 

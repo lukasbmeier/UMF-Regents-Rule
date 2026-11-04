@@ -1808,3 +1808,36 @@ through. Work a rock out and it walks over the rubble.
 most every 5 s a map, one at a time); not measured under `load_300.sh` (watch for `[Sidecar] a walk map ... again`
 lines piling up). The template's walk map read of the level warns that it parses visual meshes at runtime (once per
 area, kept): a template look if the continent's reads are slow.
+
+## Step 37: the integration suite's referee checks hold on a busy machine (2026-11-04)
+
+**Why**: integration failed 15 to 26 of its referee checks every run (1268/15 with no host running), all on the CLI's
+pace, not the game's: a `spacetime call` takes 0.5 to 3 s to start here. A stand-in referee claimed by an anonymous
+CLI call counts as there for 5 s and never beats again, so a string outlasted it; a request runs out 3 s after it is
+due, a missile lives 3 s, a cast is 1 s, a string's window is 2 s, a dummy is whole 4 s after its last hit, and the
+CLI's calls between the two ends of each ran past them.
+
+**Built** (tests only; no game, table or rule change):
+- `game/regents/tests/timed_calls.py`: steps sent over one kept-alive HTTP connection with the CLI's own token, each a
+  set number of ms after the last; `sql NAME <query>` / `sqlwait NAME <query>` steps read a value the next steps use
+  as `{NAME}` (a request's id, a missile's id).
+- `game/regents/tests/hooks/integration_genre.sh`:
+  - `standin_up CODE LABEL` / `standin_down`: a stand-in referee minted over HTTP that beats twice a second until it
+    is let go, in place of every offer + anonymous claim (and the "a fresh referee: the last one lapsed" dances).
+  - `timed`, `timed_ok`, `timed_refused`, `timed_val`, `num_is`; `hits LABEL TARGET ABILITY:PREDICTED[:MS] ...`: a
+    string of swings, each answered at once and the target's health (and `HITS_READ`) read after each answer.
+  - In timed runs: the first string (chop, overhead, Cleave in its hold), the roll that cancels the overhead, the
+    traits' and poise's strings, the dying skeleton's swing, the slaying chop, the Bolt and the Fireball (cast, reads
+    while it goes, its missile's hit, the burn, the price, its cooldown), Frost Ring let go 200 ms in, and Frost Ring
+    again (its circle's times, its Slowed, the skeleton's swing while Slowed, then Blink).
+  - The camp's respawn 40 s for the test (was 15: the checks between the kill and "the camp waits" took longer).
+- Template 1.7.3 (tests only, merged here): `tests/integration_test.sh` looks for the hold tick while the first
+  helper holds alone, and a failed call names the server's words, not the CLI's "UNSTABLE" warning.
+
+**Tested**: integration 1328/0, then 1328/1 (the template's timed-press check: fixed in 1.7.3), then 1298/0 (the
+count moves by about 30 between runs, as it did before: loops over random rolls). Its negative: the Cleave sent past
+the overhead's hold and the roll past its wind-up (the run otherwise the same) fail exactly "Cleave ... refused", "the
+overhead is canceled" and "no damage" (481.8). The first negative showed "no damage" passing anyway (read by the CLI
+after the dummy was whole again): it is read in the run now. Template integration 667/0.
+
+**Left**: the integration suite still takes ~25 min (the CLI's pace); the remaining CLI-timed checks pass with room.
