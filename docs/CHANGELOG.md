@@ -1102,3 +1102,12 @@ Regent's Rule's playtest (#8196: a skeleton walked through the copper mine's ore
 - A `patrol` brain: to and fro between where it started and `to` in its memory, round things.
 - `--referee-genre=res://...gd` on the sidecar (a test's own genre). `tests/walls_test.sh`: a real referee, a bot
   round a node's wall and one straight through a node given none, then the wall let down.
+
+## 1.7.3 — the integration suite on a busy machine (tests only)
+Nothing to republish. Found by Regent's Rule's integration run, 15 failures with no host running (2026-11-04).
+- `tests/integration_test.sh`: the hold tick is looked for while the first helper holds alone (5 s); read after all
+  three joined, a slow CLI found their 2 s already run and the tick stopped.
+- A failed `assert_ok`/`assert_rejected` names the server's words (`said`), not the CLI's "UNSTABLE" warning line.
+- "Two effects at once": the timed effect lasts 5 s (was 1.5: the next CLI read came after it had come off).
+- The timed press's start is read while its row stands (the row goes a moment after the last press; read after it,
+  the judgement check had no start and printed nothing).
