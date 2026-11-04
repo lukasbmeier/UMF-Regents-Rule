@@ -31,6 +31,14 @@ SERVER_AUTHORITY worlds, the headless authority process, and the brains it runs.
   (`go_to`, `hold`, `use_ability`...): a task never moves anything itself. The blackboard holds the
   brain WEAKLY (`brain` is a WeakRef): the tree is the brain's, not the other way round. Trees and
   tasks live under `sidecar/` like every brain (hard rule 7b).
+- WALLS IN THE WALK MAPS (DECISIONS #304): `NpcNav` holds every wall the referee builds while it is up
+  (`set_wall`/`drop_wall`, from `ActionReferee._place_wall` only) and carves them into its bakes. A change
+  re-bakes the maps it touches through the same one-at-a-time queue (`REBAKE_AFTER_MS`, `REBAKE_GAP_MS`);
+  never bake on the main thread, never bake per brain. A level's read is kept per area (`SOURCE_KEEP`).
+  A region goes on its map WITH its first mesh (on an empty map first, Godot 4.7.1 sometimes never took
+  the mesh in). Call `set_wall` freely: a wall given again where it was marks nothing.
+- A GENRE'S SAY (`RefereeGenre`, `res://sidecar/genres/<id>.gd`): per-entity walls for the referee, from rows
+  and content, never a scene. Referee only: the client's collision is the genre's scene's.
 
 ## BODIES (DECISIONS #246)
 - A body (kind 3) is flown ONLY by `BodyReferee`, in both of a sidecar's jobs; the spawner never builds

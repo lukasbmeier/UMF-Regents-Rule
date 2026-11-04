@@ -15,6 +15,7 @@ func run() -> void:
 	_run_sweep()
 	await _run_walls_and_rewind()
 	await _run_walls_put_up()
+	await _run_genre_walls()
 	_run_who()
 	_run_two_sides()
 	_run_rows()
@@ -319,6 +320,115 @@ func _run_walls_put_up() -> void:
 	_check(int(pounce.call()["hit_id"]) == 2, "turned along the path (its heading), it no longer stands across it")
 	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"entity", _EntityRow.new(9, 50), null))
 	_check(ref.wall_of(9) == null, "the gate gone, its wall goes with it")
+	root.queue_free()
+	await get_tree().process_frame
+
+
+## A GENRE'S ROCKS AND TREES, ONE KIND (DECISIONS #304: Regent's Rule's gathering nodes, every skeleton
+## walking through them): it sizes each node from a row of its own (`nodes` here stands in for its table).
+class _NodesGenre extends RefereeGenre:
+	const KIND: int = 60
+	## entity id -> its box's size (what the genre's row and content would say).
+	var sizes: Dictionary[int, Vector3] = {}
+	var asked: int = 0
+	func sizes_kind(kind: int) -> bool:
+		return kind == KIND
+	func walls(entity_id: int, _kind: int) -> Array[AABB]:
+		asked += 1
+		var out: Array[AABB] = []
+		if sizes.has(entity_id):
+			out.append(RefereeGenre.box(sizes[entity_id], Vector3(0, sizes[entity_id].y * 0.5, 0)))
+		return out
+	func wall_tables() -> Array[StringName]:
+		return [&"test_node"]
+
+
+class _NodeRow extends RefCounted:
+	var entity_id: int = 0
+	func _init(eid: int) -> void:
+		entity_id = eid
+
+
+func _run_genre_walls() -> void:
+	print("== referee: walls a genre sizes per entity ==")
+	NpcNav.clear()
+	var normal := StatusDef.new()
+	normal.status = StatusDef.NORMAL
+	var node_def := EntityDefinition.new()
+	node_def.kind = _NodesGenre.KIND
+	node_def.blocks_in = [normal]   # up while it stands; a worked-out node (status 100) is rubble
+	_check(not node_def.has_blocker() and node_def.blocks_in_status(0) and not node_def.blocks_in_status(100),
+		"a kind with no box of its own still says which statuses its walls are up in")
+	var g := _NodesGenre.new()
+	g.sizes[11] = Vector3(3.2, 2.0, 3.0)   # a rock 3.2 m wide
+	g.sizes[12] = Vector3(0.9, 4.0, 0.9)   # a tree's trunk
+	# 13: a node the genre has no row for yet
+	var root := Node3D.new()
+	add_child(root)
+	var ref := ActionReferee.new()
+	ref.send = false
+	root.add_child(ref)
+	ref.know(node_def)
+	ref.know(_gate_def())
+	# The negative: no genre's say, the kind puts up nothing (what every foe walked through).
+	ref.set_entity(11, _NodesGenre.KIND, 0)
+	ref.record(11, BASE, Vector3(0, 0, -2), 0.0)
+	_check(ref.wall_of(11) == null and NpcNav.wall_count() == 0, "no genre's say and no box on the kind: no wall (the bug)")
+	ref.add_genre(g)
+	_check(ref.wall_of(11) != null and ref.wall_of(11).boxes()[0].size == Vector3(3.2, 2.0, 3.0) and ref.wall_of(11).is_blocking(),
+		"given the genre, the rock has its own wall, at once")
+	ref.set_entity(12, _NodesGenre.KIND, 0)
+	ref.record(12, BASE, Vector3(6, 0, -2), PI / 2.0)
+	ref.set_entity(13, _NodesGenre.KIND, 0)
+	ref.record(13, BASE, Vector3(-6, 0, -2), 0.0)
+	_check(ref.wall_of(12) != null and ref.wall_of(12).boxes()[0].size == Vector3(0.9, 4.0, 0.9),
+		"the tree, the same kind, its trunk's: one wall per entity, not per kind")
+	_check(ref.wall_of(13) == null, "a node the genre has nothing for: none")
+	_check(NpcNav.wall_count() == 2, "both walls are given to the walk maps (%d)" % NpcNav.wall_count())
+	_check(ref.wall_tables() == ([&"test_node"] as Array[StringName]), "the tables its walls read, for the referee's feed")
+	var feed: Array[StringName] = []
+	var defs: Array[EntityDefinition] = []
+	feed.assign(SidecarMain.referee_feed(defs, [] as Array[GenreModule], false, ref.wall_tables()))
+	_check(feed.has(&"test_node"), "the referee is sent them without listing them anywhere else")
+	# Its row comes (or changes): asked again for that entity.
+	g.sizes[13] = Vector3(2.0, 1.0, 2.0)
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"test_node", null, _NodeRow.new(13)))
+	_check(ref.wall_of(13) != null and ref.wall_of(13).boxes()[0].size == Vector3(2.0, 1.0, 2.0) and NpcNav.wall_count() == 3,
+		"its row came: asked again, it has its wall")
+	g.sizes[11] = Vector3(1.5, 1.6, 1.5)
+	ref.on_row(RowEvent.make(RowEvent.Kind.UPDATED, &"test_node", _NodeRow.new(11), _NodeRow.new(11)))
+	_check(ref.wall_of(11).boxes()[0].size == Vector3(1.5, 1.6, 1.5) and ref.wall_of(11).get_child_count() == 1,
+		"its row changed: the same wall, reshaped (one shape, the new size)")
+	# A worked-out node is rubble: its status switches its wall, here and in the walk maps.
+	ref.on_row(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", null, _StatusRow.new(11, 100)))
+	_check(not ref.wall_of(11).is_blocking() and NpcNav.wall_count() == 2, "worked out (status 100): down, and out of the walk maps")
+	ref.on_row(RowEvent.make(RowEvent.Kind.UPDATED, &"status_state", null, _StatusRow.new(11, 0)))
+	_check(ref.wall_of(11).is_blocking() and NpcNav.wall_count() == 3, "back (Normal): up again, and in them")
+	# In the referee's space as it is: a sweep through the rock stops at it.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var space: PhysicsDirectSpaceState3D = ref.get_world_3d().direct_space_state
+	var behind: Array = [{"id": 2, "pos": Vector3(0, 0, -3.4), "radius": 0.3, "height": 1.8, "center_y": 0.9}]
+	var swing: Dictionary = LungeJudge.judge(space, Vector3.ZERO, 0.0, 4.0, 0.3, 1.0, behind)
+	_check(int(swing["hit_id"]) == 0, "a swing at someone behind the rock stops at it (%.2f m)" % float(swing["reach"]))
+	# The gate's kind is no genre's: its character's box, as before.
+	ref.set_entity(9, 50, 150)
+	ref.record(9, BASE, Vector3(0, 0, 8), 0.0)
+	_check(ref.wall_of(9) != null and ref.wall_of(9).boxes()[0].size == Vector3(2.0, 1.5, 0.2) and ref.wall_of(9).is_blocking(),
+		"a kind no genre sizes keeps its character's box")
+	# Cheap for everyone else: a player's every row asks no genre.
+	var asked: int = g.asked
+	ref.set_entity(1, 0, 0, true)
+	for i: int in 20:
+		ref.record(1, BASE + i * 50_000, Vector3(float(i) * 0.1, 0, 0), 0.0)
+	_check(g.asked == asked and ref.wall_of(1) == null, "a moving player's rows ask the genre nothing")
+	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"entity", _EntityRow.new(12, _NodesGenre.KIND), null))
+	_check(ref.wall_of(12) == null and NpcNav.wall_count() == 3, "a node gone: its wall too, here and in the walk maps (the gate's is there)")
+	_check(RefereeGenre.load_for("no_such_genre") == null and RefereeGenre.load_for("", "res://../x.gd") == null,
+		"a genre with no file has no say; a path out of the project is refused")
+	var test_genre: RefereeGenre = RefereeGenre.load_for("", "res://tests/e2e/walls_genre.gd")
+	_check(test_genre != null and test_genre.sizes_kind(2) and not test_genre.sizes_kind(0), "a genre's file is made from its path (the walls test's)")
+	NpcNav.clear()
 	root.queue_free()
 	await get_tree().process_frame
 
