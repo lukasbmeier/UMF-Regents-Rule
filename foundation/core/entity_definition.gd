@@ -76,7 +76,9 @@ class_name EntityDefinition extends ContentDef
 ## A WALL IT PUTS UP (DECISIONS #229): a box (size, and its centre from its feet in its own terms:
 ## x right, y up, -z ahead) that stops bodies, and a referee's sweeps and sight, while it is in one of
 ## `blocks_in` (a gate while shut; empty: always). Zero size: none. Others are kept out of it by the
-## level's layer, as by a fence (`EntityBlocker`).
+## level's layer, as by a fence (`EntityBlocker`). A genre that sizes each entity of a kind on its own
+## (a referee's `RefereeGenre`, DECISIONS #304) leaves the size at zero and still sets `blocks_in` here: the
+## statuses its entities' walls are up in.
 ## FRIENDLY COLLISION (DECISIONS #238): a physics layer (5-32) this character's bodies share with
 ## their own kind, solid to each other when the rule `foundation.friendly_collision` is on (a lobby's
 ## griefing toggle: hens blocking a gap for each other). 0: never (they pass through each other, as
@@ -194,10 +196,18 @@ func has_blocker() -> bool:
 	return blocker_size != Vector3.ZERO
 
 
+## Its wall as a box from its feet, in its own terms (`blocker_size` round `blocker_offset`).
+func blocker_box() -> AABB:
+	return AABB(blocker_offset - blocker_size * 0.5, blocker_size)
+
+
 ## Whether its wall is up in status `status` (always, when `blocks_in` is empty).
 func blocks_when(status: int) -> bool:
-	if not has_blocker():
-		return false
+	return has_blocker() and blocks_in_status(status)
+
+
+## Whether a wall of its is up in status `status`, whoever sized it (`blocks_in`; empty: every status).
+func blocks_in_status(status: int) -> bool:
 	if blocks_in.is_empty():
 		return true
 	for st: StatusDef in blocks_in:

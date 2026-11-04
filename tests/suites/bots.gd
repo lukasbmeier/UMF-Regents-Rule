@@ -6,6 +6,8 @@ extends "res://tests/suite_base.gd"
 ##   - a brain asks to hold, let go and use an ability, and its component sends each once
 ##   - it walks a route point by point, round what is in the way
 ##   - the walk map: a small body is routed under a low hole a big one is not
+##   - walls entities put up are in it, and one placed, moved or let down later re-bakes it (DECISIONS #304)
+##   - a patrol walks to and fro, and keeps its ends over a restart
 ## The server's side (add_bot, a referee driving a bot in a MODULE world): tests/integration_test.sh.
 
 
@@ -16,6 +18,8 @@ func run() -> void:
 	_run_route()
 	await _run_nav()
 	await _run_nav_tiled()
+	await _run_nav_walls()
+	_run_patrol()
 	_run_ground()
 	_run_tree()
 
@@ -195,6 +199,138 @@ func _run_nav_tiled() -> void:
 	NpcNav.clear()
 	level.queue_free()
 	await get_tree().process_frame
+
+
+## WALLS ENTITIES PUT UP ARE IN THE WALK MAP (DECISIONS #304: a skeleton walked through the copper mine's
+## ore). A rock 6 m wide across a way: with no wall given, the way is straight (the negative); given before
+## the bake, the way goes round it, its body's radius clear; let down after, the map is baked again and the
+## way is straight; placed again later, round again. A wall far off marks no map; one that did not move
+## marks none either. A second body size's bake reads the level from what was kept.
+func _run_nav_walls() -> void:
+	print("== bots: walls entities put up are in the walk map ==")
+	NpcNav.clear()
+	var level := Node3D.new()
+	add_child(level)
+	var info := LevelInfo.new()
+	info.bake_bounds = AABB(Vector3(-12, -2, -12), Vector3(24, 6, 24))
+	level.add_child(info)
+	_wall(level, Vector3(0, -0.5, 0), Vector3(24, 1, 24))   # the ground, nothing on it
+	for i: int in 3:
+		await get_tree().physics_frame
+	var r: float = 0.4
+	var hgt: float = 1.8
+	var from := Vector3(0, 0, 5)
+	var to := Vector3(0, 0, -5)
+	var rock: Array[AABB] = [RefereeGenre.box(Vector3(6, 2, 1), Vector3(0, 1, 0))]
+	var length := func(p: PackedVector3Array) -> float:
+		var d: float = 0.0
+		for i: int in range(1, p.size()):
+			d += p[i - 1].distance_to(p[i])
+		return d
+	# Clear of the rock: the way's closest point to its centre line, sideways (x), where it crosses z = 0.
+	var clear_of := func(p: PackedVector3Array) -> float:
+		var best: float = INF
+		for i: int in range(1, p.size()):
+			var a: Vector3 = p[i - 1]
+			var b: Vector3 = p[i]
+			if (a.z - 0.5) * (b.z - 0.5) <= 0.0 or (a.z + 0.5) * (b.z + 0.5) <= 0.0 or absf(a.z) <= 0.5:
+				for t: float in [0.0, 0.25, 0.5, 0.75, 1.0]:
+					var q: Vector3 = a.lerp(b, t)
+					if absf(q.z) <= 0.5:
+						best = minf(best, absf(q.x))
+		return best
+	var wait_ready := func() -> bool:
+		var until: int = Time.get_ticks_msec() + 15000
+		while Time.get_ticks_msec() < until and not (NpcNav.ready(level, r, hgt) and not NpcNav.is_dirty(level, r, hgt)):
+			await get_tree().physics_frame
+		# The new mesh is set on the region as its bake ends: give the map its sync.
+		for i: int in 4:
+			await get_tree().physics_frame
+		return NpcNav.ready(level, r, hgt) and not NpcNav.is_dirty(level, r, hgt)
+
+	# The negative: no wall given, a straight way.
+	NpcNav.map_for(level, r, hgt)
+	_check(await wait_ready.call(), "the walk map (no walls) is taken in")
+	var straight: PackedVector3Array = NpcNav.path(level, from, to, r, hgt)
+	_check(straight.size() >= 2 and absf(float(length.call(straight)) - 10.0) < 0.3,
+		"no wall given: the way is straight through where the rock would be (%.1f m, %d points)" % [float(length.call(straight)), straight.size()])
+	NpcNav.clear()
+
+	# Given before the bake: in it, and round it.
+	NpcNav.set_wall(7, Transform3D.IDENTITY, rock)
+	_check(NpcNav.wall_count() == 1, "a wall given is held for the walk maps")
+	var reads_before: int = NpcNav.reads
+	NpcNav.map_for(level, r, hgt)
+	_check(await wait_ready.call(), "the walk map with the rock is taken in")
+	var round_it: PackedVector3Array = NpcNav.path(level, from, to, r, hgt)
+	var cleared: float = float(clear_of.call(round_it))
+	print("   round the rock: %.1f m, %d points, %.2f m from its centre line where it crosses" % [float(length.call(round_it)), round_it.size(), cleared])
+	_check(round_it.size() >= 3 and float(length.call(round_it)) > 11.0 and cleared >= 3.0 + r - 0.2,
+		"given before the bake: the way goes round its end, its radius clear (%.2f m from the centre; the rock's half is 3)" % cleared)
+	_check(NpcNav.reads == reads_before + 1, "the bake read the level once")
+	NpcNav.map_for(level, 0.28, 0.7)
+	var until: int = Time.get_ticks_msec() + 15000
+	while Time.get_ticks_msec() < until and not NpcNav.ready(level, 0.28, 0.7):
+		await get_tree().physics_frame
+	_check(NpcNav.ready(level, 0.28, 0.7) and NpcNav.reads == reads_before + 1,
+		"a second body's bake is made from the kept read, not the level again (%d reads)" % (NpcNav.reads - reads_before))
+
+	# Not moved: nothing to bake. Far off: nothing either.
+	NpcNav.set_wall(7, Transform3D.IDENTITY, rock)
+	_check(not NpcNav.is_dirty(level, r, hgt), "a wall given again where it was (its every row): no bake")
+	NpcNav.set_wall(8, Transform3D(Basis.IDENTITY, Vector3(100, 0, 100)), rock)
+	_check(not NpcNav.is_dirty(level, r, hgt), "a wall far outside the map's area: no bake")
+	NpcNav.drop_wall(8)
+	_check(not NpcNav.is_dirty(level, r, hgt), "and let down there: none")
+
+	# Let down later (a rock worked out): baked again, straight.
+	var rebakes: int = NpcNav.rebakes
+	NpcNav.drop_wall(7)
+	_check(NpcNav.is_dirty(level, r, hgt) and NpcNav.wall_count() == 0, "let down after the bake: its map is to be baked again")
+	_check(NpcNav.path(level, from, to, r, hgt).size() >= 3, "until it is, the old map is walked (round it)")
+	_check(await wait_ready.call(), "baked again, off the main thread, and taken in")
+	var after: PackedVector3Array = NpcNav.path(level, from, to, r, hgt)
+	_check(NpcNav.rebakes > rebakes and after.size() >= 2 and absf(float(length.call(after)) - 10.0) < 0.3,
+		"the way is straight again (%.1f m, %d points)" % [float(length.call(after)), after.size()])
+
+	# Placed later, turned: round again.
+	var turned := Transform3D(Basis(Vector3.UP, 0.3), Vector3.ZERO)
+	NpcNav.set_wall(7, turned, rock)
+	_check(NpcNav.is_dirty(level, r, hgt), "placed after the bake: baked again")
+	_check(await wait_ready.call(), "and taken in")
+	var again: PackedVector3Array = NpcNav.path(level, from, to, r, hgt)
+	_check(again.size() >= 3 and float(length.call(again)) > 11.0, "round it again (%.1f m)" % float(length.call(again)))
+	_check(NpcNav.REBAKE_GAP_MS >= NpcNav.REBAKE_AFTER_MS and NpcNav.SOURCE_KEEP >= 1 and NpcNav.MAX_BAKES == 1,
+		"re-bakes wait for a burst to end, at most one a map every %d ms, one bake at a time" % NpcNav.REBAKE_GAP_MS)
+	NpcNav.clear()
+	_check(NpcNav.wall_count() == 0, "clear forgets the walls too")
+	level.queue_free()
+	await get_tree().process_frame
+
+
+## A PATROL (DECISIONS #304): to its `to` and back home, round things, turning at each end; its ends are its
+## memory, so a restarted referee carries on.
+func _run_patrol() -> void:
+	print("== bots: a patrol ==")
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"patrol", 3)
+	_check(b is PatrolBrain, "a patrol is made by name (its script)")
+	var p: PatrolBrain = b as PatrolBrain
+	var me := MovementState.new()
+	me.pos = Vector3(1, 0, 2)
+	p.think(me, null)
+	_check(not p.has_goal() and p.state == &"idle", "with nowhere to go it stands")
+	p.load_state({"to": [1.0, 0.0, -8.0]})
+	p.think(me, null)
+	_check(p.has_goal() and p.goal() == Vector3(1, 0, -8) and p.state == &"out", "given `to`, it goes there")
+	me.pos = Vector3(1, 0, -7.8)
+	p.think(me, null)
+	_check(p.goal() == Vector3(1, 0, 2) and p.state == &"back", "there, it turns for home (where it started)")
+	var q: PatrolBrain = NpcBrainComponent.make_brain(&"patrol", 3) as PatrolBrain
+	q.load_state(JSON.parse_string(JSON.stringify(p.save_state())) as Dictionary)
+	me.pos = Vector3(5, 0, 5)
+	q.think(me, null)
+	_check(q.home == Vector3(1, 0, 2) and q.to == Vector3(1, 0, -8) and q.goal() == Vector3(1, 0, 2),
+		"its ends and its leg survive a restart (its memory), not where it stands now")
 
 
 class _Ground extends Node3D:

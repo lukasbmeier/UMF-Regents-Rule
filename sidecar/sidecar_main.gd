@@ -172,11 +172,26 @@ func _ready() -> void:
 		bodies.know(defn)
 		if recorder != null:
 			recorder.kind_names[defn.kind] = defn.display_name
+	# WHAT EACH GENRE TELLS ITS REFEREE (DECISIONS #304): `res://sidecar/genres/<id>.gd`, and a test's own
+	# (`--referee-genre=res://...gd`).
+	var says: Array[RefereeGenre] = []
+	for id: String in (Genres.listed() if load_genres else PackedStringArray()):
+		says.append(RefereeGenre.load_for(id))
+	if not _value("--referee-genre=").is_empty():
+		var given: RefereeGenre = RefereeGenre.load_for("", _value("--referee-genre="))
+		if given == null:
+			push_error("[Sidecar] --referee-genre=%s is not a RefereeGenre script" % _value("--referee-genre="))
+		says.append(given)
+	for g: RefereeGenre in says:
+		if g != null:
+			referee.add_genre(g)
+			print("[Sidecar] a genre's say: %s (its walls read %s)" % [(g.get_script() as Script).resource_path,
+				", ".join(g.wall_tables()) if not g.wall_tables().is_empty() else "no table"])
 	EntitySpawner.world_root_path = EntitySpawner.get_path_to(world.entity_root())
 
 	if referee_only:
 		# A REFEREE ASKS FOR WHAT IT READS (DECISIONS #286), and reading anything else is an error.
-		cfg.core_tables = referee_feed(defs, mods, recorder != null)
+		cfg.core_tables = referee_feed(defs, mods, recorder != null, referee.wall_tables())
 		if region != null:
 			cfg.core_tables.append(&"npc_driver")
 		InterestManager.extra_tables.erase(&"input_queue")
@@ -265,8 +280,10 @@ func _value(prefix: String) -> String:
 
 ## A REFEREE'S FEED (DECISIONS #286): what it reads itself (`REFEREE_TABLES`), what the components of every
 ## entity it may build declare (`scene_tables`), what each genre says its brains read (`referee_tables`:
-## `*`, every one of its tables), and the recorder's while it records. Never `input_queue`.
-static func referee_feed(defs: Array[EntityDefinition], mods: Array[GenreModule], recording: bool) -> Array[StringName]:
+## `*`, every one of its tables), the tables its genres' walls read (`walls`, DECISIONS #304), and the
+## recorder's while it records. Never `input_queue`.
+static func referee_feed(defs: Array[EntityDefinition], mods: Array[GenreModule], recording: bool,
+		walls: Array[StringName] = []) -> Array[StringName]:
 	var out: Array[StringName] = REFEREE_TABLES.duplicate()
 	var add: Callable = func(tables: Array[StringName]) -> void:
 		for t: StringName in tables:
@@ -276,6 +293,7 @@ static func referee_feed(defs: Array[EntityDefinition], mods: Array[GenreModule]
 		add.call(scene_tables(d.scene))
 	for m: GenreModule in mods:
 		add.call(m.tables if m.referee_tables.has(&"*") else m.referee_tables)
+	add.call(walls)
 	if recording:
 		add.call(SessionRecorder.TABLES)
 	out.erase(&"input_queue")

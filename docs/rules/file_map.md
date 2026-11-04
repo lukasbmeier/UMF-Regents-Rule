@@ -92,7 +92,8 @@ foundation/camera/             CameraRig (and `watch`) + first_person.tres / thi
 foundation/input/              ChargeMeter · AimCharge (DECISIONS #249); foundation/ui/charge_bar.gd draws one
 foundation/anim/               AnimationSet · AnimationClipRef · AnimationTreeBuilder · AnimationDriverComponent
 sidecar/                       SERVER-ONLY: sidecar_main · sim_world · authority_sync · sidecar_net_config.tres
-sidecar/npc/                   NpcBrain (and its behaviour tree: run_tree) · BrainTask · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd
+sidecar/npc/                   NpcBrain (and its behaviour tree: run_tree) · BrainTask · NpcWorldView · NpcBrainComponent · brains/wander.gd · brains/chase.gd · brains/patrol.gd · NpcNav (walk maps, walls carved in)
+sidecar/referee_genre.gd       RefereeGenre: what a genre tells its referee (per-entity walls); a genre's is sidecar/genres/<id>.gd
 addons/limboai/                LimboAI 1.8.1 (GDExtension): bots' behaviour trees (DECISIONS #245); Windows, Linux, macOS libraries only
 foundation/physics/            FlyingBody (the one flight) · BodyForces (a genre's flight hook) · BodyLaunch (the thrower's view) (DECISIONS #246)
 foundation/content/body_def.gd BodyDef; foundation/content/body/ball.tres (the greybox's ball); foundation/entities/body.tscn + content/character/body.tres (kind 3)

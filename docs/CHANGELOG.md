@@ -1070,3 +1070,35 @@ A table added (`status_effect`) and a reducer (`set_effect`): publish with `--co
   all of them let it (`require_can_act`, `is_targetable`, the new `is_hittable`).
 - `set_effect(entity, status, lasts_ms, on)` for authorities; `on_effect_changed` for genres;
   `StatusComponent.effects()`, `has_effect`, `can_act()` and `effect_changed` on the client.
+
+## 1.7.1 — the game says which ability a press is, and what a drop is made with (DECISIONS #303)
+Server only, no table or reducer changed: republish (no `--codegen`); older clients keep working.
+- `Genre::resolve_ability(ctx, actor, ability_id) -> Option<u32>`: asked first in `use_ability_from`; the
+  first genre to answer decides which ability the use is (every check, the cooldown, the referee's request
+  and the event are the answer's). Regent's Rule: a sword's last hit is the one its handle's shape gives.
+- `Genre::loot_data(ctx, item_id, roll) -> Option<String>`: the `instance_data` a dropped item is made with
+  (bag or ground), from a roll of its own (0..`loot::ROLL`); an item given data does not stack.
+- `StatusComponent.seconds_total()`, `effect_seconds_left(n)`, `effect_seconds_total(n)`: how long a status and an
+  effect last and have left, for a game's status bars (Regent's Rule shows a target's stagger draining).
+- `tests/integration_test.sh`: the cells section reads its push before the six queries after the teleport (the
+  push lives 5 s; on a slow CLI they outlasted it).
+
+## 1.7.2 — a genre sizes each entity's wall for its referee; foes path round walls (DECISIONS #304)
+Sidecar only, no table or reducer changed: nothing to republish; restart the referee (Play again). Found by
+Regent's Rule's playtest (#8196: a skeleton walked through the copper mine's ore).
+- `RefereeGenre` (`sidecar/referee_genre.gd`): what a genre tells its referee, in `res://sidecar/genres/<id>.gd`
+  (list it in the genre's manifest). `sizes_kind(kind)`, `walls(entity_id, kind) -> Array[AABB]` (boxes from the
+  entity's feet, turned with it, from the rows and content the referee holds), `wall_tables()` (asked again when
+  one of their rows changes; the referee is sent them). Its answer replaces the kind's `blocker_size` in the
+  referee; the kind's `blocks_in` still switches it. Referee only: clients build their own collision from the scene.
+- `EntityBlocker.of_boxes`/`set_boxes` (several boxes, reshaped in place; with no character, it blocks in every
+  status); `EntityDefinition.blocker_box()`, `blocks_in_status()`.
+- Walls are in the walk maps: `NpcNav.set_wall`/`drop_wall` (the referee calls them); a bake carves each wall in;
+  a wall placed, moved, raised or let down later re-bakes the maps it touches (1 s after, at most every 5 s a map,
+  one bake at a time off the main thread, the old map walked meanwhile); the level's collision a bake read is kept
+  (4 areas) so re-bakes do not read the level again. A shut gate is in the map now too.
+- Fixed: a walk map's region now goes on its map with its first mesh; put on it empty, the map now and then never
+  took the mesh in (Godot 4.7.1) and a brain walked straight for good.
+- A `patrol` brain: to and fro between where it started and `to` in its memory, round things.
+- `--referee-genre=res://...gd` on the sidecar (a test's own genre). `tests/walls_test.sh`: a real referee, a bot
+  round a node's wall and one straight through a node given none, then the wall let down.

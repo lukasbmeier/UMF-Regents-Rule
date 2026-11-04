@@ -550,6 +550,12 @@ looks at the level's real walls and at everyone where the attacker saw them (rew
 player's screen showed, at most `foundation.rewind_max_ms`, 150 ms, favouring the attacker), as the
 ability lands (its wind-up after the press). It answers hit or miss; what a hit does is the genre's
 (Fowl Play: a hen injured, then downed), or the ability's damage. DECISIONS #226.
+**Which ability a press is, the game may say** (`resolve_ability`, DECISIONS #303): before anything is
+checked, a genre may answer that a use of one ability is really another (Regent's Rule: the last hit of a
+sword's string is the one its handle gives). Every check, the cooldown, the referee's request and the event
+are then the answer's, so the server, not the client, decides what fires, and an older client asking for the
+old one still fires the right one. A client predicts the same where it can; when it guesses wrong it sees the
+server's answer in the event.
 A sweep hits the first person in its path. With the hot rule **Referee two sides** on
 (`foundation.referee_two_sides`, an override in a game's rule set) it passes through its user's own
 side (the players, or everyone else) to the first of the other: an MMO's monsters do not block each other's swings,
@@ -628,6 +634,9 @@ each baked on first asking off the main thread: DECISIONS #285), and holds, lets
 player would, so
 the server judges a bot as it judges a player. A genre's brains are scripts in
 `sidecar/npc/brains/<genre>/` (Fowl Play's `chicken/hen`, `chicken/wolf`). DECISIONS #230.
+The foundation's own brains: `wander`, `chase`, `stand`, and `patrol` (to and fro between where it started and
+the point `to` in its memory, round things: give it one with `write_npc_brain`, `{"to": [x, y, z]}`). A brain
+walks round the walls entities put up too (a rock, a shut gate: DECISIONS #304).
 
 A brain may run a **behaviour tree** (LimboAI, in `addons/limboai`, DECISIONS #245): its `think`
 calls `run_tree("res://sidecar/npc/brains/<genre>/<name>_tree.tres", me, world)`. Open the tree in
@@ -686,6 +695,9 @@ does not count). A genre's server code calls `crate::module::drop_loot(ctx, targ
 decides something is slain; it gives each player theirs (into the bag until ground items exist) and says
 who got what. A new or changed table needs a bake and a publish. Tested by the `loot` suite,
 `server/tests/loot.rs` and a genre's integration hook.
+**What a drop is made with** (`loot_data`, DECISIONS #303): a genre may give a dropped item its
+`instance_data` (Regent's Rule: a dropped sword's hilt, rolled 50 / 25 / 25), from a roll of the drop's own;
+an item given data does not stack. None: as before.
 
 **Where it lands: on the ground** (DECISIONS #269). A line marked `to_bag` (marks, a quest item) goes
 straight into the bag; everything else falls where the thing died, a SACK with a ring glowing in its
@@ -768,6 +780,28 @@ from its feet, in its own terms) and `blocks_in` (the statuses it blocks in; emp
 own, so a pounce stops at it too. The server's module never sees it: a genre that raises one keeps
 people out of it first. A genre moves an entity at once (a vault, into a hiding place) with
 `place_entity`. DECISIONS #229.
+
+**One size for each entity, not for the kind (template 1.7.2, DECISIONS #304).** A box on the character fits
+every entity of that kind the same. When entities of one kind differ (Regent's Rule's gathering nodes: a tree's
+thin trunk, a boulder three metres wide, each from its own NodeDef), the genre tells its **referee** each one's
+size in a script, `sidecar/genres/<genre id>.gd` (extend `RefereeGenre`; add the file to
+`tools/template/genres/<id>.paths`):
+- `sizes_kind(kind)`: true for the kinds it sizes.
+- `walls(entity_id, kind)`: the boxes that entity puts in the way, from its feet, turned with it
+  (`RefereeGenre.box(size, centre)`), read from its rows (`SpaceTimeSync.get_row(&"<table>", entity_id)`) and
+  its content. Empty: none.
+- `wall_tables()`: the tables `walls` reads. When one of their rows changes, it is asked again for that entity.
+  The referee is sent these tables by itself.
+Leave `blocker_size` at zero on such a character and set **Blocks In** to the statuses its walls are up in
+(Regent's nodes: Normal, so a worked-out rock's rubble does not block). This is the **referee's** view only:
+your genre still builds the collision players bump into on their clients from the scene, so keep the two
+from the same numbers (the NodeDef's model and scale), or a skeleton stops where a player walks.
+Nothing to republish; restart the referee (Play again).
+
+**Foes go round walls.** Every wall the referee builds, while it is up, is in the walk maps its brains path by,
+so a skeleton walks round a rock instead of into it. A wall that comes or goes later (a rock worked out, a
+gate shut) has its walk map baked again about a second later (at most every five seconds for one map, one at a
+time, in the background; the old map is used until then). A brain sent to a shut gate still walks up to it.
 
 ---
 
@@ -1235,7 +1269,8 @@ content. The entity moves as the STRICTEST of its state and its effects (a slow 
 and may act only if all of them let it. Use an effect for what lands ON someone (a slow, a shield, a
 weakness) and the state for what they are DOING (blocking, rolling, downed). The sidecar and an admin may
 use `set_effect(entity, status, lasts_ms, on)`; a genre hears changes in `on_effect_changed`. On the
-client, `StatusComponent.effects()` lists them and `effect_changed` fires.
+client, `StatusComponent.effects()` lists them and `effect_changed` fires; `seconds_left()` / `seconds_total()` and
+`effect_seconds_left(n)` / `effect_seconds_total(n)` say how long each has left of its whole (a status bar's fill).
 
 **Holds: something done by holding E (help up, lay an egg).** Content panel, type `hold`. The
 foundation's **Help up**: hold E on a downed teammate (or NPC) for 4 s, faster together (2.5 s with
@@ -1408,6 +1443,7 @@ and the example level (`foundation/level/example/`, level 200).
 | Multiclient | `./tests/multiclient_test.sh` | yes (`umf-test`) | two players see each other |
 | Playtests | `fishing_playtest.sh`, `playtest_test.sh`, `remote_playtest.sh`, `press_playtest.sh`, `connect_playtest.sh` | yes (`umf-test`) | the game played through real keys. `SHOTS=grip_pictures/play` before `fishing_playtest.sh` plays it in a window and saves a picture of every moment there: look at them after a change to how anything looks |
 | Sidecar, export | `sidecar_test.sh`, `export_test.sh` | yes (`umf-test`) | the authority process, the builds |
+| Walls on a referee | `walls_test.sh` | yes (the test database) | a genre sizes a node's wall for the referee: a bot goes round it both ways, a bot crossing a node given no wall walks through, and a node worked out lets its wall down (DECISIONS #304) |
 | Accounts | `./tests/accounts_test.sh` | yes (the test database) | signing in makes an account, another machine finds it, link codes, characters, parking, guests off; a real client signs in and comes back silently. Its sign-in service is the suites' own (`tests/lib/oidc_issuer.py`), trusted by the test database only |
 | The ring | `./tests/ring_test.sh` | yes (the test database) | a ring client sees its cells' neighbours and nobody beyond, keeps one walking between its cells, gains and loses them as it moves |
 | The load test | `./tests/load_test.sh` | yes (the test database) | 50, 100 and 300 bot players walking cell to cell with the referee running: bandwidth and rows per player, reducer and tick times, cell swaps, the referee's frame times and stalls; where the game breaks on this machine ("The load test", section 3) |

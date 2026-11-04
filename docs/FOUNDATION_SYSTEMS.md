@@ -225,6 +225,18 @@ LEFT FOR LATER: Regent's Rule's own `load_300.sh` on its continent with a hook t
 query against nine (1.0 milestone A); the per-player bandwidth budget (Luke's); a run with the bots on
 another machine.
 
+## Referee walls sized per entity (2026-11-03, DECISIONS #304; 1.7.2, asked for by Regent's Rule: feedback #8196)
+BUILT: `RefereeGenre` (`sidecar/referee_genre.gd`): a genre's `sidecar/genres/<id>.gd` sizes each entity's wall
+for its referee from rows and content (`sizes_kind`, `walls`, `wall_tables`); the kind's `blocks_in` still
+switches it; referee only. Every wall is carved into the walk maps (`NpcNav.set_wall`), and a change re-bakes the
+maps it touches (debounced, one bake at a time, level reads kept). A `patrol` brain. Fixed: a walk map whose mesh
+was set on a region already on its map was sometimes never taken in.
+HOW TO SEE IT: `tools\run.cmd tests\walls_test.sh` (SpacetimeDB running; ~3 minutes; the test database).
+TESTED: `bots` and `referee` unit suites (each three times in a row), the full unit sweep, `walls_test.sh` 21/21,
+and its negative (the referee without the genre's say: the bot walks straight through, 4 checks fail).
+LEFT FOR LATER: Regent's Rule's own hook (its HANDOFF, Next 3); whether the expanse's busy mines keep its bake
+queue full; Fowl Play's bots suites after the pull (shut gates are now in its walk maps).
+
 ## Owner decisions in force (2026-10-07)
 Lag compensation capped at 150 ms, favouring the attacker; hosting a friend-hosted bundle first; the
 hatch also starts Dawn; the first-person predator shows no body. Each is a hot rule where it is a number.
