@@ -107,12 +107,14 @@ pub fn drop_loot(ctx: &ReducerContext, target_id: u64, table_id: u32) -> Vec<(u6
         let on_ground = drops.iter().filter(|d| !d.to_bag).count();
         let mut i = 0;
         for d in &drops {
+            // What the game makes it with (DECISIONS #303: a dropped sword's hilt), from a roll of its own.
+            let data = crate::game::loot_data(ctx, d.item, rng());
             if d.to_bag || at.is_none() {
-                if let Err(e) = grant_item_internal(ctx, player_entity, d.item, d.qty) {
+                if let Err(e) = grant_stack_internal(ctx, player_entity, d.item, d.qty, &data) {
                     log::warn!("drop_loot: {player_entity} rolled {} x{} but: {e}", d.item, d.qty);
                 }
             } else if let Some((world_id, pos)) = at {
-                drop_to_ground(ctx, world_id, crate::ground::scatter(pos, i, on_ground), d.item, d.qty, String::new(), player_entity);
+                drop_to_ground(ctx, world_id, crate::ground::scatter(pos, i, on_ground), d.item, d.qty, data, player_entity);
                 i += 1;
             }
         }
