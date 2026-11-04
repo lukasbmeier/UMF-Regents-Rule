@@ -39,5 +39,6 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 ```bash
 GODOT=<path> ./tests/run_tests.sh -- --only=regents         # the genre's unit suite
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh       # the whole chain by a real client at 150 ms
+GODOT=<path> ./game/regents/tests/walls_playtest.sh         # a real referee: a bot goes round a rock, through it once worked out
 GODOT=<path> ./game/regents/tests/load_300.sh                # 50-300 bots on the continent (~25 min): docs/regents_rule/REFEREE_SCALING.md
 ```

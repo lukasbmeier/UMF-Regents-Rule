@@ -1769,3 +1769,42 @@ Luke's answers before any armour is built.
 
 **Left**: #8196 (the template change above, Luke's go-ahead); the foundation's `content` check "a script runs from the
 repo root" failed 2 of 5 unit runs here (it waits 600 headless frames for Git Bash under load: flaky, a template fix).
+
+## Step 36: foes stop at rocks, trees and stations (#8196, template 1.7.2) (2026-11-04)
+Luke, 2026-11-04: "Lets get everything up to date and committed/pushed so we can fix the walls on the map". Template
+1.7.1 and 1.7.2 (DECISIONS #303, #304) were committed and shipped to every game, this repo's steps 26-35 committed
+first; then Regent's half of #8196 ("Sparring skeleton walks right through the copper mine ore").
+
+**Built**:
+- `sidecar/genres/regents.gd` (in `tools/template/genres/regents.paths`): Regent's say to its referee (`RefereeGenre`).
+  It sizes nodes (kind 100) and stations (kind 101) per entity, from the same numbers the client builds its collision
+  from: a ROCK, the box of each mesh of the model `NodeComponent` picks for that entity id, times `model_scale`
+  (measured once per model); a TREE, its trunk only (`NodeComponent.TRUNK_RADIUS` x `model_scale`, `TRUNK_HEIGHT`
+  tall: new constants the client's cylinder now reads too); a STATION, its body box and each piece's meshes where its
+  StationDef places them (the client's fallback box with neither). It reads `gather_node` and `station` (the referee is
+  sent them for it), and puts up nothing until the entity's row has come.
+- `content/character/node.tres`: Blocks In = [Normal], so a worked-out node (Depleted, 100: rubble, a stump) puts up
+  no wall and the walk map is baked again round it; `blocker_size` stays zero (the genre sizes).
+- No table, reducer or client change (the trunk constants are the same numbers); the play database republished (the
+  content manifest moved). Restart the game and its referee.
+
+**How to play it**: a skeleton chasing you round a copper rock, a tree or the anvil goes round it now, where it walked
+through. Work a rock out and it walks over the rubble.
+
+**Tested**:
+- Unit (the regents suite, `_run_referee_walls`): the genre loads as the referee loads it; each of the copper and
+  iron rocks' models, the tree and the four stations: the referee's walls cover the client's own hulls and are no more
+  than 15 % wider; nothing before a row, nothing with no def; the node's wall up in Normal and down in Depleted.
+  Its negative: the rock scaled to 0.6, a 0.3 m trunk and a station with no body fail 7 checks. Full sweep 3138/0.
+- `game/regents/tests/walls_playtest.sh` (new): the world's real referee in the glade, a bot patrolling along z = 14
+  straight through copper rock 20 at (23, 14): standing, it crossed the rock's line 2.30 / 2.33 m off its lane both
+  ways and reached each end; worked out (status Depleted), the map was baked again and it walked straight through
+  (0.08 / 0.00 m off). 16/0. Its negative: with `sidecar/genres/regents.gd` taken away (Luke's bug), the walk map had
+  0 wall boxes and the bot crossed through the rock (0.00 m): 4 checks fail.
+- Integration 1268/15, run with no host on the server: the same CLI-timed referee checks as step 35's 20 and 25 (the
+  overhead's cancel race and what cascades from it, mana regrown between calls) and the hold tick; to harden.
+
+**Left**: the continent with busy mines: a node worked out or back re-bakes its 256 m walk map tile (1 s after, at
+most every 5 s a map, one at a time); not measured under `load_300.sh` (watch for `[Sidecar] a walk map ... again`
+lines piling up). The template's walk map read of the level warns that it parses visual meshes at runtime (once per
+area, kept): a template look if the continent's reads are slow.

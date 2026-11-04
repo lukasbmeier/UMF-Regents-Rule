@@ -22,3 +22,4 @@ shared/world/expanse_ground.bin
 shared/golden/level/continent_probes.json
 sidecar/npc/brains/regents/
 .claude/rules/regents-*.md
+sidecar/genres/regents.gd

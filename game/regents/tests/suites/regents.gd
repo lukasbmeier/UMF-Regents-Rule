@@ -34,6 +34,7 @@ func run() -> void:
 	await _run_tester_page()
 	await _run_crafting_choice()
 	await _run_solid()
+	_run_referee_walls()
 	_run_cells()
 	_run_continent()
 	await _run_streamed_solids()
@@ -595,6 +596,74 @@ func _run_solid() -> void:
 	_check(sp.made_solid == [big] and walls.size() == 1, "a level's rock is made solid, its grass and its bush are not (%d bodies)" % walls.size())
 	_check(wall_box.has_point(Vector3(10, 0.5, 0)), "where the rock stands (%s)" % wall_box)
 	level.free()
+
+
+## THE REFEREE'S WALLS (template 1.7.2, DECISIONS #304; Luke's play, 2026-11-03, #8196: a skeleton walked
+## through the copper mine's ore): `sidecar/genres/regents.gd` sizes each rock, tree and station from the
+## same numbers the client builds its collision from, so a foe stops where a player does.
+func _run_referee_walls() -> void:
+	print("== regents: the referee's walls ==")
+	var g: RefereeGenre = RefereeGenre.load_for("regents")
+	_check(g != null, "the genre has a say for its referee (sidecar/genres/regents.gd)")
+	if g == null:
+		return
+	var script: GDScript = g.get_script() as GDScript
+	_check(g.sizes_kind(100) and g.sizes_kind(101) and not g.sizes_kind(0) and not g.sizes_kind(40000),
+		"it sizes nodes and stations, nothing else")
+	_check(g.wall_tables() == ([&"gather_node", &"station"] as Array[StringName]), "asked again on a node's or a station's row")
+	_check(g.walls(987654321, 100).is_empty() and g.walls(987654321, 101).is_empty(), "nothing before an entity's row has come")
+	var node_char: EntityDefinition = load("res://game/regents/content/character/node.tres") as EntityDefinition
+	_check(node_char.blocks_in_status(StatusDef.NORMAL) and not node_char.blocks_in_status(NodeComponent.STATUS_DEPLETED) and not node_char.has_blocker(),
+		"a node's wall is up while it stands and down worked out, sized by the genre alone")
+	# A rock: its model's own box, as wide as the client's hulls and no wider (each model, two ores).
+	for which: Array in [[40004, 3], [40004, 4], [40005, 3], [40005, 4]]:
+		var rock: Array = _node_entity(NodeDef.by_id(int(which[0])), int(which[1]))
+		var nc: NodeComponent = rock[1]
+		var hulls: AABB = _points_box(nc.solid.get_children() if nc.solid != null else [])
+		var w: Array[AABB] = []
+		w.assign(script.call(&"node_walls", nc.def, int(which[1])))
+		var wall: AABB = _union(w)
+		_check(not w.is_empty() and wall.grow(0.05).encloses(hulls) and wall.size.x <= hulls.size.x * 1.15 + 0.1 and wall.size.z <= hulls.size.z * 1.15 + 0.1,
+			"%s (entity %d): the referee's wall %s is where the player's hulls are %s" % [nc.def.display_name, int(which[1]), wall, hulls])
+		(rock[0] as Node).free()
+	# A tree: its trunk only, the client's cylinder.
+	var tree: Array = _node_entity(NodeDef.by_id(40001), 1)
+	var trunk: AABB = _points_box((tree[1] as NodeComponent).solid.get_children())
+	var tw: Array[AABB] = []
+	tw.assign(script.call(&"node_walls", NodeDef.by_id(40001), 1))
+	_check(tw.size() == 1 and tw[0].position.is_equal_approx(trunk.position) and tw[0].size.is_equal_approx(trunk.size),
+		"a tree: its trunk only, the client's own (%s, the client %s)" % [tw[0] if not tw.is_empty() else AABB(), trunk])
+	(tree[0] as Node).free()
+	# A station: wherever it is drawn (its body, every piece).
+	for key: StringName in [&"anvil", &"workbench", &"orders", &"furnace"]:
+		var ent := Node3D.new()
+		var comps := Node.new()
+		comps.name = "Components"
+		ent.add_child(comps)
+		var look := Node3D.new()
+		look.name = "Visual"
+		ent.add_child(look)
+		add_child(ent)
+		var sc := StationComponent.new()
+		comps.add_child(sc)
+		sc.def = StationDef.by_key(key)
+		sc.key = key
+		sc._build()
+		var held: AABB = _points_box(sc.solid.get_children() if sc.solid != null else [])
+		var sw: Array[AABB] = []
+		sw.assign(script.call(&"station_walls", sc.def))
+		var wall: AABB = _union(sw)
+		_check(not sw.is_empty() and wall.grow(0.05).encloses(held) and wall.size.x <= held.size.x * 1.15 + 0.1 and wall.size.z <= held.size.z * 1.15 + 0.1,
+			"the %s: the referee's walls %s are where the player's are %s" % [key, wall, held])
+		ent.free()
+	_check((script.call(&"node_walls", null, 1) as Array).is_empty() and (script.call(&"station_walls", null) as Array).is_empty(), "no def, no wall")
+
+
+static func _union(boxes: Array[AABB]) -> AABB:
+	var out := AABB()
+	for i: int in boxes.size():
+		out = boxes[i] if i == 0 else out.merge(boxes[i])
+	return out
 
 
 ## One rock of `def` (entity `id`): solid across its shape, its ore where its model's layout puts it, not

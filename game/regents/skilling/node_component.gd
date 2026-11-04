@@ -14,6 +14,10 @@ const STATUS_DEPLETED: int = 100
 const NUGGET: String = "res://game/regents/art/nature/Pebble_Round_1.gltf"
 ## How many nuggets a rock shows when its model has no layout.
 const NUGGETS: int = 5
+## A tree's trunk, what blocks the way (times its NodeDef's `model_scale`); the referee walls it the same
+## (`sidecar/genres/regents.gd`).
+const TRUNK_RADIUS: float = 0.45
+const TRUNK_HEIGHT: float = 3.0
 
 ## It was worked out (true) or came back (false). For every client.
 signal depleted_changed(depleted: bool)
@@ -101,8 +105,8 @@ func _set_def(d: NodeDef) -> void:
 		solid.collision_mask = 0
 		var trunk := CollisionShape3D.new()
 		var c: CylinderShape3D = CylinderShape3D.new()
-		c.radius = 0.45 * d.model_scale
-		c.height = 3.0
+		c.radius = TRUNK_RADIUS * d.model_scale
+		c.height = TRUNK_HEIGHT
 		trunk.shape = c
 		trunk.position = Vector3(0, c.height * 0.5, 0)
 		solid.add_child(trunk)
