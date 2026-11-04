@@ -128,7 +128,10 @@ func choices_at(station: StationComponent) -> Array[Dictionary]:
 	# One a recipe (its parts are picked in the window, MATERIALS.md step 3), grouped by what it makes: a
 	# cell of the material table by its pattern, then its material's tier; the rest after, as listed.
 	var recipes: Array[RecipeDef] = station.recipes()
-	recipes.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return _order_key(a) < _order_key(b))
+	var keys: Dictionary[int, String] = {}
+	for r: RecipeDef in recipes:
+		keys[r.id] = _order_key(r)   # once each, not once a comparison (a station window looks every 500 ms)
+	recipes.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return keys[a.id] < keys[b.id])
 	for r: RecipeDef in recipes:
 		out.append({"recipe": r})
 	# REFIT (owner, 2026-10-23): each item in the bag made here of parts, last, under its own heading.
@@ -146,14 +149,26 @@ func choices_at(station: StationComponent) -> Array[Dictionary]:
 static func _order_key(r: RecipeDef) -> String:
 	var it: ItemDef = r.output
 	if it != null and it.pattern != null and it.material != null:
-		return "0 %06d %02d %06d" % [it.pattern.id, it.material.tier, r.id]
+		return "0 %06d %06d %02d %06d" % [group_pattern(it.pattern).id, it.pattern.id, it.material.tier, r.id]
 	return "1 000000 00 %06d" % r.id
 
 
 ## The heading a recipe sits under in a station's list ("Axes", "Bars"; "Other" for what is no cell).
 static func group_of(r: RecipeDef) -> String:
 	var it: ItemDef = r.output if r != null else null
-	return it.pattern.display_name + "s" if it != null and it.pattern != null else "Other"
+	if it == null or it.pattern == null:
+		return "Other"
+	return group_pattern(it.pattern).display_name + "s"
+
+
+## The pattern `p` is listed with: itself, or for a handle's SHAPE (a sword's hilts) the plain pattern of its kind,
+## so the hilts list under Handles beside the handles, not under a second Handles heading further down (2026-11-01).
+static func group_pattern(p: PatternDef) -> PatternDef:
+	if p != null and (p.role != null or p.fits_kit != &""):
+		for plain: PatternDef in MaterialTable.patterns():
+			if plain.part_tag == p.part_tag and plain.role == null and plain.fits_kit == &"":
+				return plain
+	return p
 
 
 ## The item in each of `r`'s part slots: the one picked there, while it is still of the slot's kind; else
@@ -596,6 +611,20 @@ func afk_progress(now_us: int) -> float:
 
 func stop_afk() -> ReducerRequest:
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"work_stop", [], [])
+	_watch(req)
+	return req
+
+
+## Leave the refining or crafting round being played (`round_cancel`, Luke's play 2026-11-03): the server withdraws
+## it before it is judged, so nothing is used and nothing made. Forgotten here at once, so nothing submits it after.
+## A gathering round is not left this way: it is ended by sending what was played (`submit_round`). Null: no round.
+func cancel_round() -> ReducerRequest:
+	if round_id < 0 or not (round_def is RecipeDef):
+		return null
+	var id: int = round_id
+	round_id = -1
+	round_def = null
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"round_cancel", [id], ["u64"])
 	_watch(req)
 	return req
 

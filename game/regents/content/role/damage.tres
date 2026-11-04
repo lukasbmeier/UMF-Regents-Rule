@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RoleDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/role_def.gd" id="1_role"]
+
+[resource]
+script = ExtResource("1_role")
+key = &"damage"
+plain = true
+threat_pct = 100
+drop_rule = &"drop_handle_damage_pct"
+badge_color = Color(0.93, 0.48, 0.3, 1)
+guard_words = "a light guard: it takes the edge off a blow in front"
+id = 40001
+display_name = "Damage"
+designer_notes = "The plain role (a weapon whose handle names none: the plain grip, the plain handle). A light guard, plain threat. Its name is for code and docs only: the player sees its badge (a point) and what the handle does."

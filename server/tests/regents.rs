@@ -98,14 +98,17 @@ fn handles_are_parts_and_their_wood_is_the_tools_trait() {
     let axe = rules::RECIPES.iter().find(|r| r.name == "Iron axe").unwrap();
     assert!(axe.part_slot >= 0, "the iron axe has a part slot");
     let plain = rules::item(axe.inputs[axe.part_slot as usize].0).unwrap();
-    let handles: Vec<&str> = rules::ITEMS.iter().filter(|i| i.part_tag == plain.part_tag).map(|i| i.name).collect();
-    assert_eq!(handles, vec!["Handle", "Oak handle", "Yew handle"], "three handles fill it");
-    let oak = rules::ITEMS.iter().find(|i| i.name == "Oak handle").unwrap();
-    let yew = rules::ITEMS.iter().find(|i| i.name == "Yew handle").unwrap();
+    // The grips that fit an axe: every shape in every wood (Luke, 2026-11-01: one family of three shapes for every
+    // tool and weapon).
+    let made = rules::item(axe.output);
+    let handles: Vec<&str> = rules::ITEMS.iter().filter(|i| rules::part_fits(i, plain.part_tag, made)).map(|i| i.name).collect();
+    assert_eq!(handles, vec!["Grip", "Oak grip", "Yew grip", "Crossguard grip", "Banner grip", "Oak crossguard grip", "Oak banner grip", "Yew crossguard grip", "Yew banner grip"], "nine grips fill it: three shapes in each wood");
+    let oak = rules::ITEMS.iter().find(|i| i.name == "Oak grip").unwrap();
+    let yew = rules::ITEMS.iter().find(|i| i.name == "Yew grip").unwrap();
     let trait_of = |h: &rules::ItemSeed| traits::find(h.handle_trait).map(|t| t.key);
     assert_eq!((trait_of(oak), trait_of(yew), trait_of(plain)), (Some("steady"), Some("springy"), None),
         "oak gives Steady, yew Springy, a plain handle nothing (template DECISIONS #275)");
-    for (h, logs) in [("Oak handle", "Oak logs"), ("Yew handle", "Yew logs")] {
+    for (h, logs) in [("Oak grip", "Oak logs"), ("Yew grip", "Yew logs")] {
         let r = rules::RECIPES.iter().find(|r| r.name == h).expect(h);
         assert_eq!(rules::item(r.inputs[0].0).map(|i| i.name), Some(logs), "{h} is carved from {logs}");
     }
@@ -209,7 +212,7 @@ fn every_minigame_scores_a_real_round_and_refuses_what_is_not_one() {
     assert_eq!(head.minigame.score(5, 100, &[0.0, 3.5]), None, "a column is a whole number");
     let bar = rules::RECIPES.iter().find(|r| r.name == "Copper bar").unwrap();
     assert_eq!(bar.minigame.duration_ms(), 11_000, "the smelt: the heat and the pour");
-    assert!(matches!(rules::RECIPES.iter().find(|r| r.name == "Handle").unwrap().minigame, rules::Minigame::None), "a handle has no round");
+    assert!(matches!(rules::RECIPES.iter().find(|r| r.name == "Grip").unwrap().minigame, rules::Minigame::None), "a handle has no round");
 }
 
 use umf_module::genre::regents::{crack, shape, smelt};
@@ -322,7 +325,13 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     assert_eq!(rules::skill(axe.skill).map(|s| s.key), Some("axemanship"));
     assert_eq!(sword.light.len(), 3, "the sword's light combo: three swings");
     assert_eq!(rules::kit_of_ability(sword.light[1]).map(|(k, s)| (k.key, s)), Some(("sword", rules::KitSlot::Light(1))));
-    assert_eq!(rules::kit_of_ability(sword.heavy).map(|(_, s)| s), Some(rules::KitSlot::Heavy));
+    // THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the string's last step, no other.
+    assert!(sword.is_finisher(rules::KitSlot::Light(2)) && !sword.is_finisher(rules::KitSlot::Light(1))
+        && !sword.is_finisher(rules::KitSlot::Skill(0, 1)), "the sword's finisher is its third step, and only that");
+    assert!(axe.light.len() == 2 && axe.is_finisher(rules::KitSlot::Light(1)), "the axe: Chop, then its finisher");
+    assert!(rules::kit_of_ability(40004).is_none() && rules::kit_of_ability(40007).is_none(), "the old heavy cut and second chop are no kit's");
+    assert!(rules::RETIRED_ABILITIES.iter().all(|a| umf_module::content::ABILITIES.iter().all(|c| c.ability_id != *a)),
+        "and no content names a retired id (the server refuses them by name)");
     assert_eq!(rules::kit_of_ability(sword.skills[0].0).map(|(_, s)| s), Some(rules::KitSlot::Skill(0, 1)), "Q unlocks at rank 1");
     assert!(rules::kit_of_ability(rules::ABILITY_DODGE).is_none(), "the roll is everyone's: no kit");
     let iron_sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").unwrap();
@@ -359,15 +368,17 @@ fn a_swing_holds_its_fighter_for_its_clip_and_the_combo_chains_from_its_hit() {
         assert!(*lock >= 200 && *lock <= 2500, "a lock from a clip's length, not a placeholder ({a}: {lock} ms)");
     }
     assert!(axe.lock_ms(axe.light[0]) > 0 && axe.lock_ms(99) == 0, "a lock for each of its abilities; none for another's");
-    // Chop: lands at 260 ms, holds 578 ms (its clip), the combo may chain 60 ms after the hit.
-    let (wind, chain, lock, slack) = (260, 60, 578, 120);
-    assert!(!rules::swing_allows(false, 300, wind, chain, lock, slack, false), "a heavy 300 ms in: still swinging");
-    assert!(rules::swing_allows(false, lock - slack, wind, chain, lock, slack, false), "the lock's end (less the network's slack): free");
-    assert!(!rules::swing_allows(true, 150, wind, chain, lock, slack, false), "the next combo step before the hit lands: not yet");
-    assert!(rules::swing_allows(true, wind + chain - slack, wind, chain, lock, slack, false), "from just after the hit: the combo chains");
-    assert!(rules::swing_allows(false, 10, wind, chain, lock, slack, true), "a swing a roll cancelled holds nothing");
-    assert!(!rules::swing_allows(true, 50, 500, 60, 400, 0, false) && rules::swing_allows(true, 400, 500, 60, 400, 0, false),
-        "a chain is never later than the lock");
+    // Chop: lands at 320 ms, holds its clip; the next step may start once its 200 ms follow-through is over.
+    assert_eq!(axe.follow_ms, &[200, 200], "a follow-through per step, from the content");
+    let (wind, follow, lock, slack) = (320, axe.follow_of(0) as i64, axe.lock_ms(axe.light[0]) as i64, 120);
+    assert!(!rules::swing_allows(false, 400, wind, follow, lock, slack, false), "a skill 400 ms into a chop: still swinging");
+    assert!(rules::swing_allows(false, lock - slack, wind, follow, lock, slack, false), "the lock's end (less the network's slack): free");
+    assert!(!rules::swing_allows(true, wind + 60, wind, follow, lock, slack, false),
+        "the next step 60 ms after the hit (the old chain): refused, the arc is not through (Luke's #8)");
+    assert!(rules::swing_allows(true, wind + follow - slack, wind, follow, lock, slack, false), "after the follow-through: the string goes on");
+    assert!(rules::swing_allows(false, 10, wind, follow, lock, slack, true), "a swing a roll cancelled holds nothing");
+    assert!(!rules::swing_allows(true, 50, 500, 200, 400, 0, false) && rules::swing_allows(true, 400, 500, 200, 400, 0, false),
+        "a follow-through is never later than the lock");
 }
 
 #[test]
@@ -383,7 +394,27 @@ fn the_skeleton_camp_is_content() {
         let t = umf_module::loot::find(f.loot_table).unwrap_or_else(|| panic!("{} drops from table {}, which is not baked", f.name, f.loot_table));
         assert!(!t.one_of && t.lines.iter().any(|l| l.pity), "{}: the camp's table, its gem with pity", f.name);
     }
-    assert_eq!((warrior.kit, axeman.kit), ("sword", "axe"), "each with the weapon its model carries");
+    assert_eq!((warrior.kit, axeman.kit), ("skeleton_sword", "skeleton_axe"), "each with a foe kit of its own (COMBAT_OVERHAUL.md §2)");
+}
+
+#[test]
+fn a_foe_finisher_is_unblockable_and_a_player_has_nothing_unblockable() {
+    // COMBAT_OVERHAUL.md §2 (2026-10-31): a foe's string ends in an unblockable finisher, glinting red; `hit`
+    // lets no block or parry stop it. No weapon fights with a foe kit, and no player kit has one.
+    for f in rules::FOES.iter() {
+        let kit = rules::kit_keyed(f.kit).unwrap();
+        let last = *kit.light.last().unwrap();
+        assert!(kit.unblockable(last), "{}: its finisher {last} is unblockable", f.name);
+        assert!(kit.light[..kit.light.len() - 1].iter().all(|a| !kit.unblockable(*a)), "{}: its lights may be parried", f.name);
+        assert!(rules::ITEMS.iter().all(|i| i.weapon_kit != f.kit), "no weapon wields {}", f.kit);
+        let (k, slot) = rules::kit_of_ability(last).unwrap();
+        assert_eq!((k.key, slot), (f.kit, rules::KitSlot::Light(kit.light.len() as u32 - 1)), "the finisher is its kit's last light");
+    }
+    for key in ["sword", "axe", "bow", "staff"] {
+        let k = rules::kit_keyed(key).unwrap();
+        assert!(k.unblockable.is_empty(), "a player's {key} has nothing unblockable");
+        assert!(k.light.iter().chain(k.skills.iter().map(|(a, _)| a)).all(|a| !k.unblockable(*a)));
+    }
 }
 
 #[test]
@@ -473,9 +504,8 @@ fn a_miss_flies_wide_and_point_blank_costs() {
 }
 
 #[test]
-fn a_kit_with_no_heavy_claims_no_ability_0() {
-    // The bow bakes its heavy as 0; ability 0 is the foundation's melee, no kit's (found by the integration suite).
-    assert!(rules::kit_keyed("bow").is_some_and(|k| k.heavy == 0));
+fn no_kit_claims_ability_0() {
+    // Ability 0 is the foundation's melee, no kit's (found by the integration suite, when the bow baked its heavy as 0).
     assert!(rules::kit_of_ability(0).is_none(), "ability 0 is no kit's");
     assert!(matches!(rules::kit_of_ability(40011), Some((k, rules::KitSlot::Light(0))) if k.key == "bow"));
 }
@@ -574,7 +604,6 @@ fn a_weapons_traits_reach_its_actions() {
     let last = axe.light.len() as u32 - 1;
     assert_eq!(rules::action_tags(axe, rules::KitSlot::Light(0)), vec!["basic"]);
     assert_eq!(rules::action_tags(axe, rules::KitSlot::Light(last)), vec!["basic", "combo_last"], "the combo's last hit");
-    assert_eq!(rules::action_tags(axe, rules::KitSlot::Heavy), vec!["heavy"]);
     assert_eq!(rules::action_tags(axe, rules::KitSlot::Skill(0, 1)), vec!["skill"]);
     let none = traits::Against::default();
     let id = |k: &str| traits::by_key(k).unwrap().id;
@@ -583,8 +612,11 @@ fn a_weapons_traits_reach_its_actions() {
     assert_eq!(rules::lock_with(900, 400, 1.0), 900, "no traits: the kit's lock");
     let heavy_basic = traits::mult(&[id("heavy")], "recovery", &["basic"], &none, 1.0);
     assert_eq!(rules::lock_with(900, 400, heavy_basic), 400 + 575, "Heavy: a basic recovers 15 % slower");
-    assert!((traits::value(&[id("heavy")], "stagger", &["basic", "combo_last"], &none, 1.0) - 100.0).abs() < 1e-4
-        && traits::value(&[id("heavy")], "stagger", &["basic"], &none, 1.0) == 0.0, "Heavy staggers on the combo's last hit, not its first");
+    // HEAVY, ON POISE (Luke, 2026-11-02): the string's last hit wears 35 % more poise; no longer a longer stagger.
+    assert!((traits::mult(&[id("heavy")], "poise", &["basic", "combo_last"], &none, 1.0) - 1.35).abs() < 1e-5
+        && traits::mult(&[id("heavy")], "poise", &["basic"], &none, 1.0) == 1.0, "Heavy wears more poise with the last hit, not a first step");
+    assert_eq!(traits::mult(&[id("heavy")], "stagger_time", &["basic", "combo_last"], &none, 1.0), 1.0, "and no longer lengthens a stagger");
+    assert!(traits::value(&[id("heavy")], "stagger", &["basic", "combo_last"], &none, 1.0) == 0.0, "and no longer rolls a stagger of its own");
     let low = traits::Against { target_pct: Some(20.0), family: "undead" };
     let high = traits::Against { target_pct: Some(90.0), family: "beast" };
     assert!((traits::mult(&[id("brutal")], "damage", &["basic"], &low, 1.0) - 1.25).abs() < 1e-5, "Brutal: the target below 30 %");
@@ -686,4 +718,301 @@ fn a_part_offers_the_trait_that_fits() {
 
 fn crate_trait_key(id: u32) -> &'static str {
     umf_module::traits::find(id).map_or("", |t| t.key)
+}
+
+
+#[test]
+fn the_guard_parries_the_hit_as_seen_blocks_in_front_and_opens_a_riposte() {
+    // COMBAT_OVERHAUL.md §4. A press arriving at 1.000 s, its trip 75 ms, swings shown 100 ms late: made as
+    // the player saw the swing at 0.825 s on the server's clock.
+    let s = 1_000_000i64;
+    assert_eq!(rules::press_seen_us(s, 75, 100, 150), s - 175_000);
+    assert_eq!(rules::press_seen_us(s, 75, 900, 150), s - 225_000, "a delay claimed past the referee's cap gains nothing");
+    // THE PARRY: within parry_ms before the hit as seen, or late_ms after.
+    let land = 900_000i64;
+    assert!(rules::parries(land - 150_000, land, 200, 50), "pressed 150 ms before the hit landed: parried");
+    assert!(rules::parries(land + 40_000, land, 200, 50), "40 ms after (the hand forgiven): parried");
+    assert!(!rules::parries(land - 250_000, land, 200, 50), "250 ms early: no parry (held early is not a read)");
+    assert!(!rules::parries(land + 80_000, land, 200, 50), "80 ms late: no parry");
+    // The same press with no credit for the trip or the view: judged at its arrival, 100 ms too late. The
+    // lag is what makes the seen hit parryable.
+    assert!(rules::parries(rules::press_seen_us(land + 150_000, 75, 100, 150), land, 200, 50)
+        && !rules::parries(land + 150_000, land, 200, 50), "a press 25 ms before the hit as seen, arriving 150 ms after it lands");
+    // THE PRESS'S TRIP: measured by the server when it has (#210), else the client's half round trip; capped.
+    assert_eq!(rules::guard_credit_ms(Some(150), 40, 120), 75, "measured: half the quickest round trip, whatever the client says");
+    assert_eq!(rules::guard_credit_ms(None, 75, 120), 75, "none measured yet: the client's half round trip");
+    assert_eq!(rules::guard_credit_ms(None, 900, 120), 120, "a claim past the cap gains nothing");
+    // A hit waits for the latest press that could still parry it.
+    assert_eq!(rules::parry_deadline_us(land, 50, 150, 120), land + 320_000);
+    // THE WHIFF LOCKOUT.
+    assert!(rules::whiff_locked(s + 300_000, Some(s), false, 400), "a press 300 ms after one that parried nothing: locked");
+    assert!(!rules::whiff_locked(s + 450_000, Some(s), false, 400), "450 ms after: counts");
+    assert!(!rules::whiff_locked(s + 100_000, Some(s), true, 400), "after a parry: never locked (a second foe)");
+    assert!(!rules::whiff_locked(s, None, false, 400), "the first press counts");
+    // FRONT-ONLY: yaw 0 faces -z.
+    assert!(rules::in_guard_arc(0.0, 0.0, -2.0, 120.0), "straight in front");
+    assert!(rules::in_guard_arc(0.0, 1.0, -1.0, 120.0), "45 degrees off: inside 120");
+    assert!(!rules::in_guard_arc(0.0, 2.0, 0.0, 120.0), "to the side (90 degrees): outside 120");
+    assert!(!rules::in_guard_arc(0.0, 0.0, 2.0, 120.0), "from behind: outside");
+    assert!(rules::in_guard_arc(std::f32::consts::PI, 0.0, 2.0, 120.0), "turned round, behind is in front");
+    // THE BLOCKS: the Tank role's full guard, the others' light one (COMBAT_OVERHAUL.md §5).
+    let role = |k: &str| rules::role_keyed(k).unwrap();
+    assert_eq!(rules::blocked_damage(20.0, role("tank").full_block, 25.0, 60.0), 5.0);
+    assert_eq!(rules::blocked_damage(20.0, role("damage").full_block, 25.0, 60.0), 12.0);
+    assert_eq!(rules::blocked_damage(20.0, role("support").full_block, 25.0, 60.0), 12.0);
+    // THE RIPOSTE: the first step, begun inside the window after a parry.
+    assert!(rules::is_riposte(true, s + 500_000, Some(s), 1000), "the first step half a second after: a riposte");
+    assert!(!rules::is_riposte(true, s + 1_200_000, Some(s), 1000), "1.2 s after: too late");
+    assert!(!rules::is_riposte(false, s + 500_000, Some(s), 1000), "a second step: no riposte");
+    assert!(!rules::is_riposte(true, s - 1, Some(s), 1000) && !rules::is_riposte(true, s, None, 1000), "before the parry, or with none");
+}
+
+#[test]
+fn the_string_steps_up_and_the_kits_kill_at_a_like_pace() {
+    // COMBAT_OVERHAUL.md §3: each step a little heavier and slower; the sword and the axe close in pace.
+    let dmg = |id: u32| umf_module::content::ABILITIES.iter().find(|a| a.ability_id == id).map(|a| (a.damage, a.wind_up_ms)).unwrap();
+    for key in ["sword", "axe"] {
+        let k = rules::kit_keyed(key).unwrap();
+        for w in k.light.windows(2) {
+            let (a, b) = (dmg(w[0]), dmg(w[1]));
+            assert!(b.0 > a.0 && b.1 > a.1, "{key}: each step hits harder and winds up longer ({a:?} then {b:?})");
+        }
+    }
+    let rate = |key: &str| {
+        let k = rules::kit_keyed(key).unwrap();
+        let mut ms = 0u32;
+        let mut total = 0.0f32;
+        for (i, a) in k.light.iter().enumerate() {
+            let (d, wind) = dmg(*a);
+            total += d;
+            ms += if i + 1 < k.light.len() { (wind + k.follow_of(i as u32)).min(k.lock_ms(*a)) } else { k.lock_ms(*a) };
+        }
+        total / ms as f32 * 1000.0
+    };
+    let axe = rate("axe");
+    // ROLES (Luke, 2026-11-01): the plain grip's piercing thrust is the biggest hit (26, +30 %), so a plain sword
+    // kills fastest; a crossguard or banner hilt trades pace for what its last hit does (a longer stagger, a
+    // heal). The axe, with no roles yet, kills inside that range.
+    let sword = rules::kit_keyed("sword").unwrap();
+    let role_rate = |r: &rules::RoleSeed| {
+        let mut ms = 0u32;
+        let mut total = 0.0f32;
+        for (i, a) in sword.light.iter().enumerate() {
+            let a = if i + 1 == sword.light.len() { sword.finisher_for(r) } else { *a };
+            let (d, wind) = dmg(a);
+            total += d;
+            ms += if i + 1 < sword.light.len() { (wind + sword.follow_of(i as u32)).min(sword.lock_ms(a)) } else { sword.lock_ms(a) };
+        }
+        total / ms as f32 * 1000.0
+    };
+    let plain = role_rate(rules::plain_role());
+    assert!((plain - rate("sword")).abs() < 1e-3, "the plain role's string is the kit's own");
+    let others: Vec<f32> = rules::ROLES.iter().filter(|r| !r.plain).map(role_rate).collect();
+    assert!(others.iter().all(|o| *o < plain), "every other role kills slower than the plain one ({plain:.1}/s; {others:?})");
+    let slowest = others.iter().cloned().fold(plain, f32::min);
+    assert!(axe >= slowest && axe <= plain, "the axe ({axe:.1}/s) kills inside the sword's roles ({slowest:.1} to {plain:.1}/s)");
+}
+
+#[test]
+fn a_handles_shape_is_its_role() {
+    // COMBAT_OVERHAUL.md §5, Luke 2026-11-01: three roles, one plain; the Tank's guard full, the others' light.
+    assert_eq!(rules::ROLES.len(), 3);
+    assert_eq!(rules::plain_role().key, "damage", "the plain role is Damage");
+    let role = |k: &str| rules::role_keyed(k).unwrap();
+    assert!(role("tank").full_block && !role("damage").full_block && !role("support").full_block);
+    // THE SHAPED GRIPS: pinned ids, each crossed with the woods, a grip for any tool or weapon (Luke, 2026-11-01).
+    let names = [(40040, "Crossguard grip"), (40041, "Banner grip"), (40042, "Oak crossguard grip"), (40043, "Oak banner grip"),
+        (40044, "Yew crossguard grip"), (40045, "Yew banner grip")];
+    for (id, name) in names {
+        let it = rules::item(id).unwrap_or_else(|| panic!("item {id}"));
+        assert_eq!((it.name, it.part_tag, it.fits_kit), (name, "handle", ""), "item {id}");
+        assert_eq!(rules::role_of_parts(&[id]).key, if name.to_lowercase().contains("crossguard") { "tank" } else { "support" }, "{name}'s role");
+    }
+    assert_eq!(rules::item(40042).unwrap().weapon_trait, rules::item(40016).unwrap().weapon_trait, "an oak hilt has oak's trait (Heavy)");
+    assert_eq!(rules::item(40044).unwrap().handle_trait, rules::item(40017).unwrap().handle_trait, "a yew hilt has yew's");
+    // The same cost and Crafting rank as the handle of its wood (a role is a choice, not a tier).
+    for (hilt, handle) in [(40040, 40013), (40041, 40013), (40042, 40016), (40043, 40016), (40044, 40017), (40045, 40017)] {
+        let r = |out: u32| rules::RECIPES.iter().find(|r| r.output == out).unwrap();
+        let (a, b) = (r(hilt), r(handle));
+        assert_eq!((a.inputs, a.min_rank, a.afk_ms, a.xp, a.station), (b.inputs, b.min_rank, b.afk_ms, b.xp, b.station), "{} costs as {}", a.name, b.name);
+    }
+    // The role from a weapon's parts: the first shape that gives one, else the plain role.
+    assert_eq!(rules::role_of_parts(&[]).key, "damage", "no parts: plain");
+    assert_eq!(rules::role_of_parts(&[40013, 40012]).key, "damage", "the plain handle and copper rivets: plain");
+    assert_eq!(rules::role_of_parts(&[40042, 40038]).key, "tank", "an oak crossguard hilt and iron rivets");
+    assert_eq!(rules::role_of_parts(&rules::parts_of_row(r#"{"q":500,"h":40045,"p":[40045,40012],"t":[]}"#)).key, "support");
+    assert_eq!(rules::role_of_parts(&rules::parts_of_row(r#"{"q":500,"h":40016}"#)).key, "damage", "made before parts: its handle");
+    // Every shape fits a sword's, an axe's and a pickaxe's grip slot, and not a binding's.
+    let sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").unwrap();
+    let axe = rules::ITEMS.iter().find(|i| i.name == "Iron axe").unwrap();
+    let pick = rules::ITEMS.iter().find(|i| i.name == "Iron pickaxe").unwrap();
+    let hilt = rules::item(40040).unwrap();
+    assert!([sword, axe, pick].iter().all(|m| rules::part_fits(hilt, "handle", Some(m))), "a crossguard grip fits a sword, an axe, a pickaxe");
+    assert!(!rules::part_fits(hilt, "binding", Some(sword)), "not a binding slot");
+    // NEGATIVE: a part that names one kit (`fits_kit`, still the content's to use) fits only that kit's.
+    let only_swords = rules::ItemSeed { id: 1, name: "Test hilt", max_stack: 1, tool_tag: "", tool_tier: 0, tool_speed_pct: 100, weapon_kit: "",
+        weapon_damage_pct: 100, part_tag: "handle", handle_trait: 0, weapon_trait: 0, ammo_for: "", ammo_damage_pct: 100, role: 0, fits_kit: "sword" };
+    assert!(rules::part_fits(&only_swords, "handle", Some(sword)) && !rules::part_fits(&only_swords, "handle", Some(axe))
+        && !rules::part_fits(&only_swords, "handle", Some(pick)), "a part for swords alone fits no axe or pickaxe");
+    let plain = rules::item(40013).unwrap();
+    assert!([sword, axe, pick].iter().all(|m| rules::part_fits(plain, "handle", Some(m))), "the plain handle fits all three");
+}
+
+#[test]
+fn each_role_ends_the_sword_with_its_own_last_hit() {
+    // Luke's three (2026-11-01): Piercing thrust 26, 2.4 m, 380 ms; Pommel bash 14, 340 ms, a 1.2 s stagger;
+    // Rallying cut 14, 400 ms, a wider arc, a heal of 8 near you.
+    let sword = rules::kit_keyed("sword").unwrap();
+    let role = |k: &str| rules::role_keyed(k).unwrap();
+    assert_eq!([sword.finisher_for(role("damage")), sword.finisher_for(role("tank")), sword.finisher_for(role("support"))], [40003, 40022, 40023]);
+    assert_eq!(sword.finisher_for(role("damage")), *sword.light.last().unwrap(), "the plain role's is the string's own last step");
+    let a = |id: u32| umf_module::content::ABILITIES.iter().find(|a| a.ability_id == id).unwrap();
+    let data = |id: u32, k: &str| serde_json::from_str::<serde_json::Value>(a(id).data).unwrap()[k].as_f64().unwrap();
+    assert_eq!((a(40003).damage, a(40003).wind_up_ms), (26.0, 380));
+    assert!((data(40003, "reach") - 2.4).abs() < 1e-6, "the thrust reaches 2.4 m");
+    assert_eq!((a(40022).damage, a(40022).wind_up_ms), (14.0, 340));
+    assert_eq!((a(40023).damage, a(40023).wind_up_ms), (14.0, 400));
+    assert!(data(40023, "radius") > data(40003, "radius") && data(40023, "radius") > data(40022, "radius"), "the rallying cut's arc is the widest");
+    assert_eq!(sword.role_finisher(40022).map(|r| r.stagger_pct), Some(150), "the pommel bash staggers 1.5 times as long (1.2 s of 800)");
+    let rally = sword.role_finisher(40023).unwrap();
+    assert_eq!((rally.heal, rally.heal_radius_m), (8.0, 6.0), "the rallying cut heals 8 within 6 m");
+    assert_eq!(sword.role_finisher(40003).map(|r| (r.stagger_pct, r.heal)), Some((100, 0.0)), "the thrust staggers as any last hit, heals nothing");
+    // Every last hit is the string's last step: its armour, its flinch, its stagger (`is_finisher`).
+    for id in [40003, 40022, 40023] {
+        assert_eq!(rules::kit_of_ability(id).map(|(k, s)| (k.key, s)), Some(("sword", rules::KitSlot::Light(2))), "{id} is the sword's last step");
+        assert!(sword.ends_string(id) && sword.lock_ms(id) > 0, "{id} ends the string, with a lock");
+    }
+    assert!(!sword.ends_string(sword.light[1]) && !sword.ends_string(sword.skills[0].0), "a middle step or Q ends nothing");
+    // NEGATIVE: a kit with no role map ends with its own last step whatever the role.
+    let axe = rules::kit_keyed("axe").unwrap();
+    assert!(axe.roles.is_empty() && axe.finisher_for(role("tank")) == *axe.light.last().unwrap(), "the axe has no roles yet");
+}
+
+#[test]
+fn a_dropped_sword_rolls_its_handles_shape() {
+    // Luke, 2026-11-01: 50 % plain, 25 / 25, a live rule each. Its handle is the plain wood's (no trait).
+    let sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").unwrap();
+    let weights = |d: f64, t: f64, s: f64| move |r: &rules::RoleSeed| match r.key { "damage" => d, "tank" => t, _ => s };
+    let w = weights(50.0, 25.0, 25.0);
+    let mut seen = [0u32; 3];
+    for roll in (0..1_000_000).step_by(1000) {
+        match rules::drop_handle(sword, roll, 1_000_000, &w) {
+            Some(40013) => seen[0] += 1,
+            Some(40040) => seen[1] += 1,
+            Some(40041) => seen[2] += 1,
+            other => panic!("roll {roll}: {other:?}"),
+        }
+    }
+    assert_eq!(seen, [500, 250, 250], "half plain, a quarter each shape");
+    // The weights are live: all on the crossguard, always a crossguard; none at all, no shape (as before roles).
+    assert!((0..1000).step_by(37).all(|r| rules::drop_handle(sword, r * 1000, 1_000_000, &weights(0.0, 25.0, 0.0)) == Some(40040)));
+    assert_eq!(rules::drop_handle(sword, 0, 1_000_000, &weights(0.0, 0.0, 0.0)), None);
+    // NEGATIVE: an axe (no roles yet), logs: nothing rolled.
+    let axe = rules::ITEMS.iter().find(|i| i.name == "Iron axe").unwrap();
+    assert_eq!(rules::drop_handle(axe, 0, 1_000_000, &w), None, "an axe has no roles yet");
+    // Its data: the handle as its part, no traits on purpose; read back as the role.
+    let data = rules::dropped_data(40041);
+    assert_eq!(rules::parts_of_row(&data), vec![40041]);
+    assert_eq!(rules::role_of_parts(&rules::parts_of_row(&data)).key, "support");
+    assert!(rules::traits_of_row(&data).is_empty() && rules::quality_of(&data).is_none(), "no traits, no quality: {data}");
+}
+
+#[test]
+fn threat_is_stored_and_healing_draws_no_more_than_damage() {
+    // Stored for step 6 (threat targeting): the guard handle's multiplier and its scope are live rules.
+    assert_eq!(rules::threat_pct(250.0, false, false), 250.0, "every foe");
+    assert_eq!(rules::threat_pct(250.0, true, false), 100.0, "bosses only: a plain foe counts it as plain");
+    assert_eq!(rules::threat_pct(250.0, true, true), 250.0, "bosses only: a boss counts it");
+    assert!(rules::FOES.iter().all(|f| !f.boss), "no foe is a boss yet");
+    // Healing: a point healed is at most a point of damage, at the healer's threat.
+    let support = rules::role_keyed("support").unwrap();
+    assert_eq!(support.threat_pct, 100, "the banner handle draws no extra threat");
+    assert!(rules::heal_threat(8.0, support.threat_pct as f64) <= 8.0 * support.threat_pct as f64 / 100.0);
+    assert_eq!(rules::role_keyed("tank").unwrap().threat_rule, "regents.guard_threat_pct");
+    assert_eq!(rules::role_keyed("tank").unwrap().threat_scope_rule, "regents.guard_threat_bosses_only");
+    // THE RALLYING CUT's own share: all of it alone, the live share with others near.
+    assert_eq!(rules::rally_self_heal(8.0, 0, 50.0), 8.0);
+    assert_eq!(rules::rally_self_heal(8.0, 2, 50.0), 4.0);
+    assert_eq!(rules::rally_self_heal(8.0, 1, 0.0), 0.0);
+}
+
+#[test]
+fn the_tutorial_walks_a_sword_from_wood_to_its_grip() {
+    use umf_module::genre::regents::Deed;
+    // THE RUN (Luke, 2026-11-01: make your own sword, then the fight with it): fifteen lessons, in order.
+    let names: Vec<u32> = rules::LESSONS.iter().map(|l| l.order).collect();
+    assert!(names.windows(2).all(|w| w[0] < w[1]) && rules::LESSONS.len() == 15, "fifteen lessons, in order: {names:?}");
+    let deeds: Vec<u8> = rules::LESSONS.iter().map(|l| l.deed).collect();
+    assert_eq!(deeds, vec![0, 1, 0, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9], "gather, make ... then the fight, the grip's shape last");
+    let item = |name: &str| rules::ITEMS.iter().find(|i| i.name == name).unwrap_or_else(|| panic!("{name}")).id;
+    let chain: Vec<u32> = rules::LESSONS.iter().take(8).map(|l| l.item).collect();
+    assert_eq!(chain, vec![item("Logs"), item("Grip"), item("Copper ore"), item("Copper bar"), item("Copper sword blade"),
+        item("Copper rivets"), item("Copper sword"), item("Copper sword")]);
+    // A KIND counts where the lesson says: any grip carves the grip, any sword makes the sword ...
+    let grip = &rules::LESSONS[1];
+    assert!(grip.ticked_by(Deed::Made, item("Oak crossguard grip")) && grip.ticked_by(Deed::Made, item("Grip")));
+    let sword = &rules::LESSONS[6];
+    assert!(sword.ticked_by(Deed::Made, item("Iron sword")) && sword.ticked_by(Deed::Made, item("Copper sword")));
+    // NEGATIVE: ... and nothing else does: a sword blade is no sword, an axe no sword, logs gathered make no grip.
+    assert!(!sword.ticked_by(Deed::Made, item("Copper sword blade")) && !sword.ticked_by(Deed::Made, item("Iron axe")));
+    assert!(!grip.ticked_by(Deed::Gathered, item("Logs")) && !grip.ticked_by(Deed::Made, item("Copper rivets")));
+    // NEGATIVE: an exact lesson takes its own item only (oak logs are not the logs).
+    assert!(rules::LESSONS[0].ticked_by(Deed::Gathered, item("Logs")) && !rules::LESSONS[0].ticked_by(Deed::Gathered, item("Oak logs")));
+    // TICKS: a deed ticks every lesson it matches not yet done; doing them all finishes the run.
+    let (first, all) = rules::lessons_ticked(&[], Deed::Parried, 0);
+    assert_eq!((first, all), (vec![rules::LESSONS[10].id], false), "a parry ticks the parry, in any order");
+    let (again, _) = rules::lessons_ticked(&[rules::LESSONS[10].id], Deed::Parried, 0);
+    assert!(again.is_empty(), "NEGATIVE: a lesson is ticked once");
+    let (both, _) = rules::lessons_ticked(&[], Deed::Made, item("Copper sword"));
+    assert_eq!(both, vec![rules::LESSONS[6].id], "a sword made ticks the making, not the holding");
+    let mut done: Vec<u32> = rules::LESSONS.iter().take(14).map(|l| l.id).collect();
+    let (last, all) = rules::lessons_ticked(&done, Deed::ShapedLastHit, 0);
+    assert!(all && last == vec![rules::LESSONS[14].id], "the grip's shape is the last");
+    done.pop();
+    assert!(!rules::lessons_ticked(&done, Deed::ShapedLastHit, 0).1, "NEGATIVE: with one left undone, not finished");
+}
+
+#[test]
+fn a_roll_clears_a_swing_judged_a_miss() {
+    // A swing judged a miss: rolled through by a player still rolling (a tenth over, for the status's tick), within its
+    // reach and a metre.
+    assert!(rules::rolled_clear(300, 2.0, 2.0));
+    assert!(rules::rolled_clear(-99, 3.0, 2.0), "just after the roll's end, a metre over its reach");
+    // NEGATIVE: the roll long over (they stepped clear, not rolled), or out of reach (it was never at them).
+    assert!(!rules::rolled_clear(-100, 1.0, 2.0));
+    assert!(!rules::rolled_clear(300, 3.1, 2.0));
+    // The guide is the genre's own kind, and no foe's.
+    assert!(rules::CLAIMS.entity_kinds.contains(&rules::ENTITY_GUIDE) && !rules::FOE_KINDS.contains(&rules::ENTITY_GUIDE));
+    // The sparring partner: soft, slow, no XP, and its last swing glints (goes through a guard).
+    let spar = rules::FOES.iter().find(|f| f.key == "sparring_skeleton").expect("the sparring skeleton");
+    assert!(spar.damage_pct <= 15 && spar.xp_pct == 0 && spar.loot_table == 0);
+    let kit = rules::kit_keyed(spar.kit).unwrap();
+    assert!(kit.unblockable(*kit.light.last().unwrap()) && !kit.unblockable(kit.light[0]));
+}
+
+#[test]
+fn poise_breaks_only_on_the_last_hit_and_steadies() {
+    // Luke, 2026-11-02 (A with a short B): lights wear poise but never break it; the string's last hit breaks it.
+    let (most, light, last) = (70.0, 10.0, 40.0);
+    let (a, broke) = rules::poise_hit(most, most, light, false, false);
+    assert_eq!((a, broke), (60.0, false), "a light wears 10");
+    let (b, _) = rules::poise_hit(a, most, light, false, false);
+    let (c, broke) = rules::poise_hit(b, most, last, true, false);
+    assert_eq!((c, broke), (10.0, false), "the sword's first string (10 + 10 + 40) leaves a skeleton 10 of 70: no stagger");
+    let (d, _) = rules::poise_hit(c, most, light, false, false);
+    assert_eq!(d, 1.0, "NEGATIVE: a light never breaks it, it stops at 1");
+    let (e, broke) = rules::poise_hit(d, most, last, true, false);
+    assert_eq!((e, broke), (most, true), "the next last hit breaks it: a stagger, and it is whole again");
+    // HEAVY: 35 % more on the last hit breaks a 70-poise foe in one string (10 + 10 + 54 = 74).
+    let (h, broke) = rules::poise_hit(50.0, most, last * 1.35, true, false);
+    assert!(broke && h == most, "Heavy breaks it with the first string");
+    // STEADIED (B): nothing wears it.
+    assert_eq!(rules::poise_hit(5.0, most, last, true, true), (5.0, false), "NEGATIVE: steadied, the last hit does nothing to it");
+    // No poise (0): handled by the caller as the old rule; here nothing changes.
+    assert_eq!(rules::poise_hit(0.0, 0.0, last, true, false), (0.0, false));
+    // WHOLE AGAIN, unhit for regen_ms.
+    assert_eq!(rules::poise_now(12.0, most, 2999, 3000.0), 12.0);
+    assert_eq!(rules::poise_now(12.0, most, 3000, 3000.0), most);
+    // Every foe has poise; the dummy's is a live rule.
+    assert!(rules::FOES.iter().all(|f| f.poise > 0), "every foe has poise");
 }

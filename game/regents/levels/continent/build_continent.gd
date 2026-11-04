@@ -378,10 +378,11 @@ func _make_barrier() -> void:
 # WHAT FILLS IT
 # =============================================================================================
 
-## The frontier glade's camp, at the origin: its nodes, stations, dummies, foes and decor, as they are there.
+## The frontier glade's camp, at the origin: its nodes, stations, dummies, yard (the tutorial's guide and partner), foes and decor, as
+## they are there.
 func _make_camp() -> void:
 	var glade: Node3D = (load(FRONTIER) as PackedScene).instantiate() as Node3D
-	for group: String in ["Nodes", "Stations", "Dummies", "Foes", "Decor", "Places"]:
+	for group: String in ["Nodes", "Stations", "Dummies", "Yard", "Foes", "Decor", "Places"]:
 		var holder: Node = glade.get_node_or_null(group)
 		if holder == null:
 			push_error("build_continent: the frontier has no %s" % group)

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RoleDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/role_def.gd" id="1_role"]
+
+[resource]
+script = ExtResource("1_role")
+key = &"tank"
+full_block = true
+threat_pct = 100
+threat_rule = &"guard_threat_pct"
+threat_scope_rule = &"guard_threat_bosses_only"
+drop_rule = &"drop_handle_tank_pct"
+badge = 1
+badge_color = Color(0.45, 0.66, 0.96, 1)
+guard_words = "a full guard: it stops most of a blow in front"
+id = 40002
+display_name = "Tank"
+designer_notes = "The guard handle (the sword's crossguard hilt). A full guard (regents.block_damage_pct); its threat is the live rule regents.guard_threat_pct, for every foe or bosses only (regents.guard_threat_bosses_only: Luke, 2026-11-01, to be tested). Threat targets nothing until step 6. The player sees a shield badge, never the word."

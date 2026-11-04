@@ -3,7 +3,8 @@
 # chopper chops (AFK and a round), mines a round, smelts a round, makes rivets AFK, carves a handle, shapes
 # an iron axe head in a round, assembles an Iron axe and chops with it; the buddy chops tree_1 beside them.
 # When the chopper prints GRANT_ORE <entity>, this gives it two copper ore (two to a bar); at GRANT_ME, two
-# iron bars, two logs and two oak logs (a fresh character's iron and oak need ranks, more than a test's minutes).
+# iron bars, two logs and two oak logs (a fresh character's iron and oak need ranks, more than a test's minutes); at
+# GRANT_SWORD, two copper bars and two rivets (the tutorial's sword, made last).
 #
 #   GODOT=/path/to/godot ./game/regents/tests/skilling_playtest.sh     # 150 ms round trip, 20 ms jitter
 #
@@ -40,7 +41,7 @@ buddy_pid=$!
 CHOP_HEADLESS="--headless"; [ -n "${SHOTS:-}" ] && CHOP_HEADLESS="--resolution 1280x720"
 "$GODOT" $CHOP_HEADLESS --path . "$SCENE" -- --token=chopper --role=chopper --latency="$LATENCY" --jitter="$JITTER" --autoconnect --shots="${SHOTS:-}" >"$chop_log" 2>&1 &
 chop_pid=$!
-granted=""; ore_given=""
+granted=""; ore_given=""; sword_given=""
 while kill -0 "$chop_pid" 2>/dev/null; do
   if [ -z "$ore_given" ]; then
     ent="$(grep -oE '^GRANT_ORE [0-9]+' "$chop_log" | head -1 | awk '{print $2}')"
@@ -58,6 +59,15 @@ while kill -0 "$chop_pid" 2>/dev/null; do
       spacetime call "$DB" grant_item "$ent" 40003 2 >/dev/null 2>&1
       granted="yes"
       echo "   gave entity $ent two iron bars, two logs and two oak logs"
+    fi
+  fi
+  if [ -z "$sword_given" ]; then
+    ent="$(grep -oE '^GRANT_SWORD [0-9]+' "$chop_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      spacetime call "$DB" grant_item "$ent" 40010 2 >/dev/null 2>&1
+      spacetime call "$DB" grant_item "$ent" 40012 2 >/dev/null 2>&1
+      sword_given="yes"
+      echo "   gave entity $ent two copper bars and two copper rivets (the tutorial's sword)"
     fi
   fi
   sleep 0.5

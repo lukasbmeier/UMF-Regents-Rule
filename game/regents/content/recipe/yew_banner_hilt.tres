@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_88m77"]
+[ext_resource type="Resource" path="res://game/regents/content/item/yew_logs.tres" id="2_sov2w"]
+[ext_resource type="Resource" path="res://game/regents/content/item/yew_banner_hilt.tres" id="3_tpko2"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_85g2p"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_2o62f"]
+
+[resource]
+script = ExtResource("4_85g2p")
+station = &"workbench"
+skill = ExtResource("5_2o62f")
+inputs = Array[ExtResource("1_88m77")]([ExtResource("2_sov2w")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("3_tpko2")
+xp = 24
+min_rank = 4
+afk_ms = 4000
+part_slots = PackedInt32Array()
+from_table = true
+id = 40037
+display_name = "Yew banner grip"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Yew in Banner hilt): its numbers are yours to tune. The same cost, time and Crafting rank as the handle of its wood (Luke, 2026-11-01: a role is a choice, not a tier)."

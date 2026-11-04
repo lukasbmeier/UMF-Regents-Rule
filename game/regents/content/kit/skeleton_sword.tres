@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_rusted_cut.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_rusted_backswing.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_skull_splitter.tres" id="a2"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"skeleton_sword"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
+unblockable = Array[Resource]([ExtResource("a2")])
+skill_ranks = PackedInt32Array()
+id = 40005
+display_name = "Skeleton sword"
+designer_notes = "A FOE KIT (COMBAT_OVERHAUL.md section 2, 2026-10-31): the skeleton warrior's own swings, slow enough to read. No weapon names it, so no player wields it. Its last light is its finisher, unblockable."

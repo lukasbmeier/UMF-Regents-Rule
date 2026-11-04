@@ -142,7 +142,7 @@ func part_choices(slot: int = -1) -> Array[ItemDef]:
 	out.append(inputs[slot])
 	for d: ContentDef in RegentsContent.items(&"item"):
 		var it: ItemDef = d as ItemDef
-		if it != null and it != inputs[part_slot] and it.part_tag == kind:
+		if it != null and it != inputs[slot] and it.part_tag == kind and it.fits(output):
 			out.append(it)
 	return out
 

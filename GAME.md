@@ -89,6 +89,13 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   Undercroft (M8, M25); the 300-bot load test. Movement feel from the template and Fishing that Regent's
   lost (the camera orbiting a still character without turning it; diagonal strafing that blends well) is
   noted for when it suits, likely with combat.
+- **The order of work from here** (Luke, 2026-11-03): after his melee spot check and its fixes, (1) **ARMOUR** next:
+  the equipment slots and their stats, planned first in a prep session (as `ROLES_PREP.md` was for roles; the prep
+  doc is not written yet: the next session starts with it); (2) **the rest of the combat deep-dive** (overhaul steps
+  5-7: mastery picks, threat and Support, content fill; the cast queue, crits, NPC tiers); (3) **a MINIGAME
+  OVERHAUL**: the skilling minigames made fun and engaging, so the skill that earns Fine and Masterwork materials is
+  real, with progression as a skill levels up; before the in-game lookup; (4) **the in-game lookup**; (5)
+  **herbalism and the economy**; (6) writs, potions, death and shrines; (7) party, duels, the lair, the Undercroft.
 - **Bushes are not solid** (Luke's playtest note, 2026-10-24; CONFIRMED 2026-10-26: "bushes should be passable
   like the other grass foliage"): of a level's props only ROCKS stop you and a foe's sight
   (`RegentsSolidProps.solid_models`); bushes, grass and flowers are walked and seen through. Narrows his
@@ -138,6 +145,88 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   players to see ... how many refs I need ... with me playing a local user as well". The **expanse** (level 22,
   PROGRESS step 25) is that: the continent's map 3.7 times as wide, ~37 km2 of land, its test placement at the
   continent's density. A TEST world for the load test (the test database only); the continent stays the world.
+- **The combat overhaul** (2026-10-30, `docs/regents_rule/COMBAT_OVERHAUL.md`, which wins over the 2026-10-19
+  Combat line, the 2026-10-20 controls and `RULE_DESIGN.md` §4 where they differ). From the playtester's "too
+  fast, at the same time, hard to read" and Luke's "generic":
+  - **Pace: deliberate.** Foes get their own abilities (wind-ups ~550-850 ms), rest 1.5-2.5 s, and at most 1-2
+    attack one player at once (attack tokens, a ~600 ms gap counted from each swing's landing, hit or not). A
+    foe's aim tracks, then locks for the last ~300 ms. TTK about 12 s attacking only, 7-8 s played well; HP
+    moves only if play says so; loot judged per minute. **Built 2026-10-31** (PROGRESS step 26) but loot per
+    minute, waiting on the playtest.
+  - **No Break/poise spine and no bar** (Luke: it would be min-maxed over damage and utility). Stagger is a
+    payoff; systems stay varied but simple.
+  - **One combo, no separate heavy**: LMB taps a string, each step a little heavier; **the last hit is the
+    finisher and the heavy** (armour, flinches a light, staggers). No hold-LMB on melee. A swing at air still
+    advances the combo. The window is a hot rule, 2000 ms; follow-through replaces `chain_ms` (fixes #8).
+    The Heavy trait becomes a longer stagger on the finisher.
+  - **RMB is only defence**: tap = parry for every kit and role (judged on the hit as you saw it; a missed
+    parry locks parrying ~400 ms); hold = a front block, real for the Tank, **weak for Damage and Support**.
+    **A parry pays stagger + a riposte** that counts as combo step 1; the bow's riposte makes the next draw
+    fill twice as fast. Bow: RMB while drawing lets the draw go and parries.
+  - **Built 2026-10-31** (PROGRESS step 27), the string and the guard, with Luke's three calls that day: **the
+    riposte is the string's first step with bonus damage** (`regents.riposte_damage_pct`, no clip of its
+    own); **the parry is front-only like the block** (one arc, `regents.guard_arc_deg`); **every player has
+    the weak block until roles come** (step 4). The staff's riposte waits.
+  - **Feel first, numbers after** (Luke, 2026-10-31, after playing steps 1-2: "we can adjust values after
+    stagger has visual clarity and animations feel better"). His calls for the first feel pass: a HIT-STOP
+    and a SPARK where the blow lands; no screen shake, no finisher shove, no sound yet; the foundation's part
+    in the template, then pulled (1.6.7, #301). Built: PROGRESS step 28.
+  - **Roles, settled before building them** (Luke, 2026-11-01, answering `docs/regents_rule/ROLES_PREP.md`):
+    - **SHOW, DON'T NAME.** "Let's avoid naming conventions specifically, same with the tutorial: we can show
+      the player without telling them behind the scenes or using explicit gamer titles." The roles (Damage,
+      Tank, Support) and the "finisher" are words for code and docs only: the player sees a badge and what a
+      handle DOES ("holds a full guard; foes come for you"), and the last hit of the string has no name on
+      screen (each weapon's own last hit is named in its tooltip: "Piercing thrust").
+    - **A handle pattern per role** (the sword: grip, crossguard hilt, banner hilt), each crossed with the woods,
+      a real item; the **same cost and Crafting rank** as the plain handle; **one mesh** per weapon for now.
+    - **Each role carries its block and threat only**; passives come later. **Healing draws no more threat
+      than damage.** Whether the guard handle's extra threat applies to every foe or only bosses is to be TESTED:
+      its multiplier and its scope are live rules.
+    - **Support works solo**: its heals reach you; with players near, your own share goes down (the ratio after
+      playing it solo and grouped: a live rule).
+    - **The sword's three last hits to start**: Piercing thrust (26, reach 2.4 m, 380 ms), Pommel bash (14, a
+      1.2 s stagger that holds the foe, 340 ms), Rallying cut (14, a wider arc, heals players near you, 400 ms).
+    - **Drops** roll a handle shape: 50 % plain, 25 / 25 (a live rule). **Re-hilting** loses the old handle.
+    - **The tutorial**: in the camp's yard, offered (a reminder after the first death), replayable; taught
+      mostly by playing, with a few words and the first friendly NPC (a camp character); a closing ring as a
+      parry aid in the yard only. **Roles first**, then the tutorial. (Mastery pick pools, D7, wait.)
+    - **Built for the sword 2026-11-01** (PROGRESS step 30): the crossguard and banner hilts (each wood), the role
+      map and its three last hits, the server choosing which fires (template 1.7.1), re-hilting, drops, badges
+      and words. The starting values and choices that were not his (the live rules' first numbers, the rallying
+      cut not healing off a dummy, the badges, the words) are listed in PROGRESS step 30 for his look.
+  - **Roles by the handle's SHAPE** (Damage / Tank / Support; Option B, not an off-hand slot); its MATERIAL
+    still sets the trait (#22 intact). **The role changes only the finisher.** Changing role = re-hilting at
+    the workbench. The sword's three roles first.
+  - **Mastery picks at 3/6/9** (tall or wide: the next active, an upgrade, or a passive), changeable out of
+    combat.
+  - **Telegraphs: the pose plus one red glint**, for unblockable attacks only. **Ranged keeps its hit roll.**
+  - Still his: the 12 role finishers and the pick pools, the bow's Q, a respec's cost, the combat triangle as
+    foe design.
+- **Luke's first look at roles** (2026-11-01, built: PROGRESS 31): the sparks and glint were untextured squares; the
+  swing snapped back to idle; a status bar under the target's health; a stagger that roots and dazes ("we can
+  experiment with both": the Staggered status's `speed`, 0 now, 0.4 before); the workbench's doubled Handles heading.
+  Then: the tutorial, "a walk through with crafting + combat to teach the basics".
+  And (2026-11-02): no "Staggered" word floating over the body: the status bar under its health says it, and how long.
+  **Stagger by POISE** (Luke, 2026-11-02, choosing option A with a short B, after "the guard grip plus Heavy staggers
+  almost forever"): every melee hit wears a foe's poise, only the last hit breaks it, then a stagger and a short
+  Steadied; Heavy breaks it sooner instead of staggering longer. **Shown on the target marker**, not a bar under the
+  health ("the top status is getting clutter"): an arc round the ring under your target. Players keep the old rule
+  (a foe's last hit staggers you). The banner cut's clip changed (it looked jumpy).
+- **Handles: one family of three SHAPES for every tool and weapon** (Luke, 2026-11-01, option (b) of three; built,
+  PROGRESS 32): the grip (the plain handle, renamed), the crossguard grip and the banner grip, each in every wood; any
+  tool or weapon takes any shape; a shape matters only when swung, and only on a weapon whose kit has roles (the
+  sword so far). Tools as weak weapons with kits of their own (option (c)) are later.
+- **The tutorial** (Luke, 2026-11-01, answering two questions): it walks a new player through MAKING THEIR OWN SWORD
+  first (chop a tree and carve a grip; mine copper, smelt a bar, smith a blade; assemble a copper sword at the
+  workbench, picking its grip's shape), then the fighting lessons with that sword, ending on what its grip's shape
+  does. PROGRESS IS ON THE SERVER, per character, each lesson ticked by the server seeing it done. With T1-T5 (the
+  camp's yard, offered, mostly play, a few words, a friendly camp character, the parry ring in the yard only).
+  First pass built (PROGRESS 33): the Drillmaster by the yard, fifteen lessons, a sparring skeleton, the ring.
+- **Leaving a round** (Luke's play, 2026-11-03, feedback #8193: "need to be able to cancel out of anvil minigame if you
+  accidentally started one, maybe for all games, for harvesting can reward what we get, for refining/crafting can just
+  cancel and not use resources"): built (PROGRESS 35): **Escape** ends a gathering round at once and pays what was
+  played; a refining or crafting round is dropped, nothing used, nothing made.
+- **Armour prep** (2026-11-03): `docs/regents_rule/ARMOUR_PREP.md`, decisions A1-A10, waiting on his answers.
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
@@ -146,12 +235,17 @@ trees (Tree, Oak, Yew), copper, iron and coal rocks, and a camp with a furnace, 
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**, then an iron
 pickaxe for coal and **steel** (the ladder: copper, iron, steel; `MATERIALS.md`, the material table): at a node or a
 station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, bellows then
-pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). The
+pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). **Escape** during a minigame leaves it (gathering keeps what you got; making uses nothing). The
 camp's **order board** wants rotating batches for bonus XP; crafting pays for the work in its inputs, a
 first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**.
 **Combat, the first slice**: wield a weapon from the bag (I), Tab onto one of camp's training dummies (a
-ring under it), LMB for the light combo, hold LMB for a heavy, hold RMB to block, Ctrl to roll, Q for the
-kit's first skill; the world's referee judges every swing (an editor run starts it). The server replays every round from its
+ring under it), tap LMB for the string (its last hit the finisher, which staggers), tap RMB to parry a hit
+as it lands (then tap LMB at once: the riposte), hold RMB to block what is in front, Ctrl to roll, Q for the
+kit's first skill; the world's referee judges every swing (an editor run starts it). A sword's HANDLE picks its
+last hit (a plain grip a piercing thrust, a crossguard hilt a pommel bash and a full guard, a banner hilt a
+rallying cut that mends those near you): make or re-hilt one at the workbench. **The tutorial**: the Drillmaster by the training yard
+(walk up, E, E again) walks you through making your own copper sword, then fighting with it against a slow sparring
+skeleton (a ring closes on each of its blows); N sets it aside. Each lesson ticks when the server sees it done. The server replays every round from its
 inputs; mastery ranks 1-10 per skill gate the better nodes. How to play it, what makes it, how it is
 tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alone:
 `game/regents/skilling/skilling_lab.tscn` (F6).

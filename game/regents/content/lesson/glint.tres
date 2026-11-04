@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 140
+done_when = 8
+any_of_its_kind = false
+at = &"poi_training"
+words = "A swing that glints red goes through any guard. Roll out of it."
+id = 40014
+display_name = "The red glint"

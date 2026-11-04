@@ -6,8 +6,8 @@
 script = ExtResource("1_ability")
 cooldown_ms = 450
 range_m = 1.7
-wind_up_ms = 180
-damage = 8.0
+wind_up_ms = 240
+damage = 10.0
 animation = &"ability.40002"
 key = &"regents.combat"
 judged = true

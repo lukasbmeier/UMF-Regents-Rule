@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_sword_blade.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 50
+done_when = 1
+item = ExtResource("2_item")
+any_of_its_kind = false
+at = &"anvil"
+words = "At the anvil, beat two bars into a sword blade."
+id = 40005
+display_name = "Smith a blade"

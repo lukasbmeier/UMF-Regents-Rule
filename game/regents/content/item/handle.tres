@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="ItemDef" format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
 [ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="t_material"]
@@ -8,9 +8,9 @@
 script = ExtResource("1_item")
 max_stack = 100
 part_tag = &"handle"
-color = Color(0.70, 0.52, 0.32, 1)
-description = "A plain handle, carved from logs: no trait."
-id = 40013
-display_name = "Handle"
+color = Color(0.7, 0.52, 0.32, 1)
+description = "A plain grip, carved from logs, for any tool or weapon: no trait."
 material = ExtResource("t_material")
 pattern = ExtResource("t_pattern")
+id = 40013
+display_name = "Grip"

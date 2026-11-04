@@ -26,6 +26,10 @@ echo "== publish (fresh data) =="
 (cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1 \
   || { echo "publish failed" >&2; exit 1; }
 spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 || { echo "set_dev_tools failed" >&2; exit 1; }   # the client steps to the dummy
+# The bow's shots are rolled (92 % at 10 m): a roll is the native and integration suites' to prove; here every
+# shot hits, so a played check never fails one time in twelve on a rolled miss (2026-10-31: "92 % to hit: wide").
+spacetime call "$DB" set_rule '"regents.hit_near_pct"' 100.0 '""' >/dev/null 2>&1
+spacetime call "$DB" set_rule '"regents.hit_far_pct"' 100.0 '""' >/dev/null 2>&1
 sleep 2
 
 ref_log="$(mktemp)"; fight_log="$(mktemp)"; ref_pid=""; fight_pid=""
@@ -42,10 +46,40 @@ if ! grep -q "claim_referee: registered" "$ref_log"; then
 fi
 
 echo "== a fighter at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
-timeout 400 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
+timeout 760 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
 fight_pid=$!
 bow_given=""
+swords_given=""
+heals=0
+hurts=0
 while kill -0 "$fight_pid" 2>/dev/null; do
+  # HEAL <entity>: the fighter whole again between the camp's phases (an authority's negative damage), so
+  # one phase's hits never leave the next too weak to run.
+  asked="$(grep -cE '^HEAL [0-9]+' "$fight_log")"
+  if [ "$asked" -gt "$heals" ]; then
+    ent="$(grep -oE '^HEAL [0-9]+' "$fight_log" | tail -1 | awk '{print $2}')"
+    spacetime call "$DB" apply_damage "$ent" -- -200.0 0 >/dev/null 2>&1
+    heals="$asked"
+  fi
+  # HURT <entity>: the fighter hurt 30 (an authority's damage), for the rallying cut to heal.
+  asked_h="$(grep -cE '^HURT [0-9]+' "$fight_log")"
+  if [ "$asked_h" -gt "$hurts" ]; then
+    ent="$(grep -oE '^HURT [0-9]+' "$fight_log" | tail -1 | awk '{print $2}')"
+    spacetime call "$DB" apply_damage "$ent" 30.0 0 >/dev/null 2>&1
+    hurts="$asked_h"
+  fi
+  # GRANT_SWORDS <entity>: three Fine iron swords (no parts noted), a crossguard and a banner hilt, iron bars
+  # for the re-hilts (ROLES, COMBAT_OVERHAUL.md §5).
+  if [ -z "$swords_given" ]; then
+    ent="$(grep -oE '^GRANT_SWORDS [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      for _ in 1 2 3; do spacetime call "$DB" admin_give_item "$ent" 40019 1 650 >/dev/null 2>&1; done
+      spacetime call "$DB" grant_item "$ent" 40040 1 >/dev/null 2>&1
+      spacetime call "$DB" grant_item "$ent" 40041 1 >/dev/null 2>&1
+      spacetime call "$DB" grant_item "$ent" 40011 4 >/dev/null 2>&1
+      swords_given=1
+    fi
+  fi
   if [ -z "$bow_given" ]; then
     ent="$(grep -oE '^GRANT_BOW [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
     if [ -n "$ent" ]; then

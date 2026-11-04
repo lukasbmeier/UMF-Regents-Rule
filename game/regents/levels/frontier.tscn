@@ -380,6 +380,24 @@ point_id = "dummy_2"
 kind = "dummy"
 radius = 0.5
 
+[node name="Yard" type="Node3D" parent="."]
+
+[node name="guide" type="Marker3D" parent="Yard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.0, 0, 22.5)
+gizmo_extents = 0.6
+script = ExtResource("s_point")
+point_id = "guide"
+kind = "guide"
+radius = 0.5
+
+[node name="sparring_1" type="Marker3D" parent="Yard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0, 24.5)
+gizmo_extents = 0.6
+script = ExtResource("s_point")
+point_id = "sparring_1"
+kind = "sparring_skeleton"
+radius = 0.5
+
 [node name="Foes" type="Node3D" parent="."]
 
 [node name="skeleton_1" type="Marker3D" parent="Foes"]

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_sword.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 80
+done_when = 2
+item = ExtResource("2_item")
+any_of_its_kind = true
+at = &""
+words = "Open your bag (I) and take your sword in hand."
+id = 40008
+display_name = "Take it in hand"

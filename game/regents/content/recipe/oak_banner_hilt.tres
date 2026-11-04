@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_8jc1o"]
+[ext_resource type="Resource" path="res://game/regents/content/item/oak_logs.tres" id="2_ye1bq"]
+[ext_resource type="Resource" path="res://game/regents/content/item/oak_banner_hilt.tres" id="3_4pbbc"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_bjy57"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_fl7b1"]
+
+[resource]
+script = ExtResource("4_bjy57")
+station = &"workbench"
+skill = ExtResource("5_fl7b1")
+inputs = Array[ExtResource("1_8jc1o")]([ExtResource("2_ye1bq")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("3_4pbbc")
+xp = 14
+min_rank = 2
+afk_ms = 3500
+part_slots = PackedInt32Array()
+from_table = true
+id = 40035
+display_name = "Oak banner grip"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Oak in Banner hilt): its numbers are yours to tune. The same cost, time and Crafting rank as the handle of its wood (Luke, 2026-11-01: a role is a choice, not a tier)."

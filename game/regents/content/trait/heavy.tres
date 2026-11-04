@@ -1,19 +1,13 @@
-[gd_resource type="Resource" script_class="TraitDef" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="TraitDef" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/trait_def.gd" id="1_trait"]
 [ext_resource type="Script" path="res://foundation/content/trait_atom.gd" id="2_atom"]
 
-[sub_resource type="Resource" id="Atom_0"]
-script = ExtResource("2_atom")
-what = &"stagger"
-on = &"heavy"
-value = 100.0
-
 [sub_resource type="Resource" id="Atom_1"]
 script = ExtResource("2_atom")
-what = &"stagger"
+what = &"poise"
 on = &"combo_last"
-value = 100.0
+mult = 1.35
 
 [sub_resource type="Resource" id="Atom_2"]
 script = ExtResource("2_atom")
@@ -26,9 +20,9 @@ cost = true
 script = ExtResource("1_trait")
 key = &"heavy"
 applies_to = Array[StringName]([&"melee"])
-gives = "heavies and the combo's last hit stagger"
+gives = "the third blow knocks a foe off balance sooner (35% more)"
 costs = "basics recover 15% slower"
-atoms = Array[ExtResource("2_atom")]([SubResource("Atom_0"), SubResource("Atom_1"), SubResource("Atom_2")])
+atoms = Array[ExtResource("2_atom")]([SubResource("Atom_1"), SubResource("Atom_2")])
 id = 40004
 display_name = "Heavy"
-designer_notes = "Stagger: the target is Staggered (a cast interrupted, a swing cut off)."
+designer_notes = "POISE (Luke, 2026-11-02): the string's last hit wears 35% more of a foe's poise (`poise`, of `regents.poise_finisher`), so it breaks sooner; paid with slower basics. Was (2026-10-31): the finisher's stagger 35% longer (`stagger_time`), which with the guard grip staggered a foe almost forever."

@@ -90,6 +90,33 @@ func seconds_left() -> float:
 	return maxf(0.0, float(_lasts_ms) / 1000.0 - elapsed_sec())
 
 
+## Its status's whole length in seconds, or INF when it lasts until changed (a status bar's full width).
+func seconds_total() -> float:
+	return float(_lasts_ms) / 1000.0 if _lasts_ms > 0 else INF
+
+
+## Seconds until effect `n` comes off on its own (INF: when taken off; -1: not under it). The longest, if twice.
+func effect_seconds_left(n: int) -> float:
+	var best: float = -1.0
+	for e: Dictionary in _effects.values():
+		if int(e["status"]) != n:
+			continue
+		var lasts: int = int(e["lasts_ms"])
+		if lasts <= 0:
+			return INF
+		var left: float = float(lasts) / 1000.0 - float(ClockSync.server_usec() - int(e["since"])) / 1_000_000.0
+		best = maxf(best, maxf(0.0, left))
+	return best
+
+
+## Effect `n`'s whole length in seconds (INF: until taken off; -1: not under it).
+func effect_seconds_total(n: int) -> float:
+	for e: Dictionary in _effects.values():
+		if int(e["status"]) == n:
+			return float(int(e["lasts_ms"])) / 1000.0 if int(e["lasts_ms"]) > 0 else INF
+	return -1.0
+
+
 ## Who put it in its status (0: nobody), and the genre's words about it.
 func by_entity() -> int:
 	return _by_entity

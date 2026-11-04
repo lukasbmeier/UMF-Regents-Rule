@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_sword.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 70
+done_when = 1
+item = ExtResource("2_item")
+any_of_its_kind = true
+at = &"workbench"
+words = "At the workbench, put blade, grip and rivets together. Pick the grip's shape: it changes how your last blow lands."
+id = 40007
+display_name = "Make your sword"

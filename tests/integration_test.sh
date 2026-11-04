@@ -1620,10 +1620,11 @@ assert_ok "dev_push $MYENT {\"x\":0.0,\"y\":3.0,\"z\":0.0}" "a push where they s
 assert_eq "$(sql_first "SELECT chunk FROM push WHERE entity_id = $MYENT" 1)" "$FAR" "an event is cut in the cell it happened in"
 assert_ok "set_dev_tools false" "(dev tools off)"
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "home again"
+# The push first: it lives 5 s, and six queries after a slow CLI's teleport outlasted it (2026-11-01).
+assert_eq "$(sql_first "SELECT chunk FROM push WHERE entity_id = $MYENT" 1)" "$FAR" "the push stays where it happened"
 for t in entity movement_state health_state status_state appearance equip_state; do
   assert_eq "$(sql_first "SELECT chunk FROM $t WHERE entity_id = $MYENT" 1)" "$HOME" "$t comes home with them"
 done
-assert_eq "$(sql_first "SELECT chunk FROM push WHERE entity_id = $MYENT" 1)" "$FAR" "the push stays where it happened"
 assert_ok "set_status $MYENT 0 4294967295 \"\"" "(normal again)"
 
 run_genre_hooks integration_end   # a genre's checks that end a match or change what follows (Fowl Play: a new match is a new night)

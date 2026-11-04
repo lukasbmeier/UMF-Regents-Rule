@@ -4,17 +4,17 @@
 
 [resource]
 script = ExtResource("1_ability")
-cooldown_ms = 900
+cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 450
-damage = 24.0
-animation = &"ability.40004"
+wind_up_ms = 580
+damage = 16.0
+animation = &"ability.40018"
 key = &"regents.combat"
 judged = true
 reach_m = 2.0
-radius_m = 0.55
+radius_m = 0.5
 height_m = 0.9
 lunges = false
-id = 40004
-display_name = "Heavy cut"
-designer_notes = "Hold the left button: a slow, heavy cut. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."
+id = 40018
+display_name = "Rusted backswing"
+designer_notes = "A FOE'S OWN SWING: the skeleton warrior's second light (Sword_Heavy_B at 0.75: its hit is late in the clip, so the recovery is short)."

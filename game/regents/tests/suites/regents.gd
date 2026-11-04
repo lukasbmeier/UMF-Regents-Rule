@@ -37,6 +37,9 @@ func run() -> void:
 	_run_cells()
 	_run_continent()
 	await _run_streamed_solids()
+	await _run_roles()
+	_run_status_bars()
+	_run_tutorial()
 
 
 ## THE CONTINENT (PROGRESS step 23): the generated level is baked as level 21, streamed, with the glade's
@@ -169,9 +172,21 @@ func _run_combat() -> void:
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var axe: KitDef = KitDef.by_key(&"axe")
 	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
-	_check(sword.light.size() == 3 and sword.heavy != null and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 3,
-		"the sword: a three-swing combo, a heavy, Lunge on Q at rank 1 (E would be 3)")
-	for a: AbilityDef in sword.light + axe.light + [sword.heavy, axe.heavy]:
+	_check(sword.light.size() == 3 and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 3,
+		"the sword: a string of three, Lunge on Q at rank 1 (E would be 3)")
+	# THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the last step, a little heavier and slower each.
+	_check(sword.is_finisher(sword.light[2]) and not sword.is_finisher(sword.light[1]) and axe.light.size() == 2 and axe.is_finisher(axe.light[1]),
+		"the finisher is the string's last step: the sword's third, the axe's second")
+	for k: KitDef in [sword, axe]:
+		for i: int in range(1, k.light.size()):
+			_check(k.light[i].damage > k.light[i - 1].damage and k.light[i].wind_up_ms > k.light[i - 1].wind_up_ms,
+				"%s: %s hits harder and winds up longer than %s" % [k.key, k.light[i].display_name, k.light[i - 1].display_name])
+	_check(ContentLibrary.find(&"ability", 40004) == null and ContentLibrary.find(&"ability", 40007) == null,
+		"the old heavy cut and second chop are gone (their ids retired)")
+	var no_follow: KitDef = sword.duplicate() as KitDef
+	no_follow.follow_ms = PackedInt32Array([200, 200, 200, 200])
+	_check(no_follow.validate().any(func(e: String) -> bool: return e.contains("follow_ms")), "a follow-through for a step it does not have: refused")
+	for a: AbilityDef in sword.light + axe.light:
 		_check(a.judged and a.reach_m > 1.0 and a.wind_up_ms >= AbilityDef.MIN_WIND_UP_MS and a.key == &"regents.combat",
 			"%s: judged by the referee along the body's facing, reaching %.1f m, on the combat component's keys" % [a.display_name, a.reach_m])
 	var iron_sword: ItemDef = ItemDef.by_id(40019)
@@ -195,14 +210,30 @@ func _run_combat() -> void:
 	c.combo_step = 2
 	_check(c.next_light_step(now) == 0, "after the third: the first again")
 	c.combo_step = 0
-	c.combo_ms = now - sword.combo_window_ms - 1
-	_check(c.next_light_step(now) == 0, "too late: the combo starts over")
+	c.combo_ms = now - CombatComponent.combo_window_ms() - 1
+	_check(CombatComponent.combo_window_ms() == 2000 and c.next_light_step(now) == 0, "too late (the window, a hot rule: 2 s): the string starts over")
+	c.combo_step = 0
+	c.combo_ms = now - 1500
+	_check(c.next_light_step(now) == 1, "1.5 s after: still the second (the old window was 0.9 s)")
+	# THE RIPOSTE: a parry seen opens it; the next tap is the first step, whatever the string was at.
+	c.combo_step = 1
+	c.combo_ms = now - 100
+	c.parried_ms = now - 300
+	c.swing_at_ms = now - 2000
+	_check(c.riposte_open(now) and c.next_light_step(now) == 0, "a parry 300 ms ago: the tap is the riposte (the first step)")
+	_check(not c.riposte_open(now + int(HotRules.number(&"regents.riposte_ms"))), "past the riposte window: none")
+	c.swing_at_ms = now - 100
+	_check(not c.riposte_open(now) and c.next_light_step(now) == 2, "a swing since the parry: the riposte is spent, the string goes on")
+	c.parried_ms = -100000
 	_check(not c.in_stance(), "a weapon, no target, no swing: no stance (Q and E work stations)")
 	c.target_id = 7
 	_check(c.in_stance(), "a target picked: in stance (Q E R F are skills)")
 	c.weapon = iron_sword
 	var bar: String = RegentsHud.skill_bar(c, null)
-	_check(bar.contains("Iron sword") and bar.contains("LMB Slash") and bar.contains("Q Lunge") and bar.contains("RMB block"), "the skill bar: %s" % bar)
+	# The string by its moves' names, the last the plain grip's (no row in a bag: the plain role); never "finisher".
+	_check(bar.contains("Iron sword") and bar.contains("LMB Slash - Slash (second) - Piercing thrust") and bar.contains("Q Lunge")
+		and bar.contains("RMB tap parry, hold for a light guard") and not bar.contains("hold LMB") and not bar.to_lower().contains("finisher"),
+		"the skill bar: %s" % bar)
 	c.free()
 	CombatComponent.bind_keys()
 	var ctrl_dodges: bool = false
@@ -405,15 +436,52 @@ func _run_polish() -> void:
 	hf.entity = body
 	hf._on_health_changed(90.0, 100.0, -10.0)
 	_check(hf.flashes.back() == &"hit" and mesh.material_overlay != null, "a hit: the body flashes")
+	# A SPARK WHERE THE BLOW LANDS (Luke's feedback 4098): a burst and a streak at the chest, gone soon after.
+	_check(hf.sparks.back() == &"hit" and body.get_node_or_null(^"Spark") != null, "and a spark bursts from it")
+	hf._on_health_changed(65.0, 100.0, -25.0)
+	_check(hf.sparks.back() == &"big", "a big hit (25): a bigger spark")
+	_check(hf.hit_stops.size() == 2 and is_equal_approx(hf.hit_stops[0], HotRules.number(&"regents.hitstop_ms") / 1000.0)
+		and is_equal_approx(hf.hit_stops[1], HotRules.number(&"regents.hitstop_big_ms") / 1000.0) and hf.hit_stops[1] > hf.hit_stops[0],
+		"each hit asks a hit-stop, a big one longer (%s s)" % str(hf.hit_stops))
 	var st := StatusComponent.new()
 	st._status = HitFeedbackComponent.STATUS_BLOCKING
 	hf._status = st
 	hf._on_health_changed(85.0, 100.0, -5.0)
-	_check(hf.flashes.back() == &"block", "a hit taken while blocking: the block's flash")
+	_check(hf.flashes.back() == &"block" and hf.sparks.back() == &"block", "a hit taken while blocking: the block's flash, a steel spark")
 	hf._on_status_changed(0, HitFeedbackComponent.STATUS_STAGGERED)
-	_check(hf.flashes.back() == &"stagger", "staggered (a parried swing): the stagger's flash")
+	_check(hf.flashes.back() == &"stagger" and hf.sparks.back() == &"stagger", "staggered (a parried swing): the stagger's flash, a gold spark")
 	hf._on_health_changed(95.0, 100.0, 10.0)
-	_check(hf.flashes.size() == 3, "a heal flashes nothing")
+	_check(hf.flashes.size() == 4 and hf.sparks.size() == 4, "a heal flashes nothing and sparks nothing")
+	# THE STAGGER READS (Luke's feedback 4098, and 2026-11-01: "keep them in one spot and dazed animation for the
+	# length"): a guard knocked aside once (`react.stagger`, the hit feedback's), then a dazed sway held while it lasts
+	# (`react.dazed`, its pose), ROOTED (speed 0); the player and the skeletons alike (one set); a flinch keeps the hit.
+	var staggered: StatusDef = load("res://game/regents/content/status/staggered.tres") as StatusDef
+	var adv_anim: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
+	_check(staggered.pose == &"react.dazed" and adv_anim.anim_name(&"react.dazed") == &"extra/Zombie_Idle" and adv_anim.clip(&"react.dazed").loop
+		and adv_anim.anim_name(&"react.stagger") == &"extra/Idle_Shield_Break" and HitFeedbackComponent.STAGGER_REACTION == &"react.stagger"
+		and (load("res://game/regents/content/status/flinched.tres") as StatusDef).pose == &"react.hit",
+		"Staggered: %s once, then holds %s; Flinched the hit react" % [adv_anim.anim_name(&"react.stagger"), adv_anim.anim_name(&"react.dazed")])
+	_check(is_zero_approx(staggered.speed) and not staggered.can_act, "Staggered roots its body (speed 0) and it cannot act")
+	# THE SWING'S RECOVERY (2026-11-01: "swing -> snap back"): each strike whose clip has a `_Rec` has its recovery
+	# in the set, at the strike's speed, and every recovery clip is in the library.
+	# (Read through the set's own libraries: a strike may be the game's own cut, `cuts/`, game/regents/tools/cut_clips.gd.)
+	var recs: int = 0
+	for sem: StringName in adv_anim.clips.keys():
+		if not String(sem).begins_with("ability."):
+			continue
+		var strike: AnimationClipRef = adv_anim.clip(sem)
+		var rec_sem: StringName = StringName(String(sem).replace("ability.", "recover."))
+		var lib_name: String = String(strike.anim_name).get_slice("/", 0) if String(strike.anim_name).contains("/") else ""
+		var lib: AnimationLibrary = adv_anim.libraries.get(StringName(lib_name), null)
+		var short: String = String(strike.anim_name).get_slice("/", 1) if lib_name != "" else String(strike.anim_name)
+		var has_rec: bool = lib != null and (lib.has_animation(StringName(short + "_Rec")) or (short == "Sword_Light_C" and lib.has_animation(&"SwordLight_C_Rec")))
+		if has_rec:
+			var rec: AnimationClipRef = adv_anim.clip(rec_sem) if adv_anim.has_exact(rec_sem) else null
+			var rec_short: String = String(rec.anim_name).get_slice("/", 1) if rec != null else ""
+			_check(rec != null and lib.has_animation(StringName(rec_short)) and is_equal_approx(rec.speed_scale, strike.speed_scale),
+				"%s's strike (%s) is followed by its recovery (%s)" % [sem, strike.anim_name, rec.anim_name if rec != null else "none"])
+			recs += 1
+	_check(recs >= 12, "%d strikes have a recovery to blend back through" % recs)
 	hf._unflash()
 	_check(mesh.material_overlay == null, "the flash over, the body is its own again")
 	st.free()
@@ -699,7 +767,7 @@ func _run_grades() -> void:
 func _run_bow() -> void:
 	print("== regents: the bow ==")
 	var bow: KitDef = KitDef.by_key(&"bow")
-	_check(bow != null and bow.draws and bow.draw_full_ms == 800 and bow.heavy == null and bow.light.size() == 1, "the bow kit: drawn, full at 800 ms, one shot")
+	_check(bow != null and bow.draws and bow.draw_full_ms == 800 and bow.light.size() == 1, "the bow kit: drawn, full at 800 ms, one shot")
 	var aset: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
 	_check(aset.has_exact(&"pose.bow_draw") and aset.has_exact(&"pose.bow_aim") and aset.clip(&"ability.40011").anim_name == &"extra/Bow_Shoot",
 		"the set draws, aims and looses (Bow_Notch, Bow_Aim_Neutral, Bow_Shoot)")
@@ -722,7 +790,8 @@ func _run_bow() -> void:
 func _run_foes() -> void:
 	print("== regents: foes ==")
 	var foes: Array[FoeDef] = FoeDef.all()
-	_check(foes.size() == 2, "two foes: %s" % ", ".join(foes.map(func(f: FoeDef) -> String: return String(f.key))))
+	# The camp's two, and the tutorial's sparring partner (Luke, 2026-11-01).
+	_check(foes.size() == 3 and foes.any(func(f: FoeDef) -> bool: return f.key == &"sparring_skeleton"), "three foes: %s" % ", ".join(foes.map(func(f: FoeDef) -> String: return String(f.key))))
 	var genre: Resource = load("res://game/regents/genre.tres")
 	var defs: Array = genre.get(&"entity_definitions") as Array
 	for f: FoeDef in foes:
@@ -732,8 +801,25 @@ func _run_foes() -> void:
 			"%s has the foe brain, the adventurer's animations and its Bestiary model" % f.display_name)
 		for a: AbilityDef in f.kit.abilities():
 			_check(f.character.animation_set.has_exact(StringName("ability.%d" % a.id)), "%s plays its %s" % [f.display_name, a.display_name])
-	_check(FoeDef.by_kind(103) != null and FoeDef.by_kind(103).kit.key == &"sword" and FoeDef.by_kind(104).kit.key == &"axe",
-		"the warrior fights with the sword kit, the axeman with the axe kit (the weapons their models carry)")
+	_check(FoeDef.by_kind(103) != null and FoeDef.by_kind(103).kit.key == &"skeleton_sword" and FoeDef.by_kind(104).kit.key == &"skeleton_axe",
+		"the warrior fights with a skeleton sword, the axeman a skeleton axe: kits of their own, never a player's (COMBAT_OVERHAUL.md §2)")
+	# FOES YOU CAN READ (COMBAT_OVERHAUL.md §2, 2026-10-31): slow swings, the last unblockable; no weapon wields a foe kit.
+	for f: FoeDef in foes:
+		var lights: Array[AbilityDef] = f.kit.light
+		for a: AbilityDef in lights:
+			_check(a.wind_up_ms >= 500, "%s's %s winds up %d ms: long enough to see coming (500 or more)" % [f.display_name, a.display_name, a.wind_up_ms])
+		var last: AbilityDef = lights[lights.size() - 1]
+		_check(f.kit.unblockable.size() == 1 and f.kit.unblockable[0] == last and KitDef.is_unblockable(last.id) and last.wind_up_ms >= 800,
+			"%s's string ends in its finisher, %s: unblockable, winding up %d ms" % [f.display_name, last.display_name, last.wind_up_ms])
+		for it: ItemDef in RegentsContent.items(&"item").map(func(d: ContentDef) -> ItemDef: return d as ItemDef):
+			_check(it == null or it.weapon_kit != f.kit.key, "no weapon fights with %s's kit (%s)" % [f.display_name, it.display_name if it != null else "?"])
+	for key: StringName in [&"sword", &"axe", &"bow", &"staff"]:
+		var k: KitDef = KitDef.by_key(key)
+		_check(k.unblockable.is_empty() and not k.abilities().any(func(a: AbilityDef) -> bool: return KitDef.is_unblockable(a.id)),
+			"a player's %s has nothing unblockable" % key)
+	var odd := KitDef.new()
+	odd.unblockable = [FoeDef.by_kind(103).kit.light[2]]
+	_check(odd.validate().any(func(m: String) -> bool: return m.contains("unblockable")), "a kit that lists another kit's ability as unblockable is refused")
 	# A property above `script =` in a .tres is dropped on load: the skeletons' family was so, unseen (2026-10-29).
 	_check(FoeDef.by_kind(103).family == &"undead" and FoeDef.by_kind(104).family == &"undead",
 		"both skeletons are undead, as loaded (what a family trait reads): %s, %s" % [FoeDef.by_kind(103).family, FoeDef.by_kind(104).family])
@@ -781,6 +867,103 @@ func _run_foe_brain() -> void:
 	t[0] += lost.lose_sight_ms
 	brain.think(me, w)
 	_check(brain.target() == 0, "out of sight past %d ms: given up (%s)" % [lost.lose_sight_ms, brain.describe()])
+	_run_foe_turns()
+	_run_foe_aim()
+
+
+## FOES TAKE TURNS (COMBAT_OVERHAUL.md §2, 2026-10-31; the playtest: "attacks came at the same time"): three
+## skeletons round one player for 30 s. At most `regents.attack_tokens` fight at once, the rest circle; no two
+## swings land closer than `regents.token_gap_ms`; each swings its whole string, then rests and lets another in.
+func _run_foe_turns() -> void:
+	print("== regents: foes take turns ==")
+	var tokens: int = int(HotRules.number(&"regents.attack_tokens"))
+	var gap: int = int(HotRules.number(&"regents.token_gap_ms"))
+	var t: Array[int] = [50000]
+	var w := _FoeWorld.new()
+	var player := MovementState.new()
+	w.states = {7001: player}
+	w.kinds = {7001: 0}
+	var brains: Array[NpcBrain] = []
+	for i: int in 3:
+		var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 11 + i)
+		b.clock = func() -> int: return t[0]
+		b.self_id = 7101 + i
+		var s := MovementState.new()
+		s.pos = Vector3(1.5, 0, 0).rotated(Vector3.UP, TAU * i / 3.0)
+		w.states[b.self_id] = s
+		w.kinds[b.self_id] = 103
+		brains.append(b)
+	var lands: Array[int] = []
+	var by_foe: Dictionary[int, Array] = {}
+	var most_fighting: int = 0
+	var circled: bool = false
+	var kit: KitDef = FoeDef.by_kind(103).kit
+	while t[0] < 80000:
+		var fighting: int = 0
+		for b: NpcBrain in brains:
+			b.think(w.states[b.self_id], w)
+			fighting += 1 if b.state == &"fight" else 0
+			circled = circled or b.state == &"circle"
+			for act: Dictionary in b.take_acts():
+				if String(act.get("do", "")) != "ability":
+					continue
+				var a: AbilityDef = null
+				for k: AbilityDef in kit.light:
+					if k.id == int(act["ability"]):
+						a = k
+				lands.append(t[0] + (a.wind_up_ms if a != null else 0))
+				if not by_foe.has(b.self_id):
+					by_foe[b.self_id] = []
+				by_foe[b.self_id].append(int(act["ability"]))
+		most_fighting = maxi(most_fighting, fighting)
+		t[0] += 100
+	lands.sort()
+	var least: int = 1 << 30
+	for i: int in range(1, lands.size()):
+		least = mini(least, lands[i] - lands[i - 1])
+	_check(most_fighting >= 1 and most_fighting <= tokens and circled,
+		"at most %d of 3 fight at once (most seen %d); the others circle" % [tokens, most_fighting])
+	_check(lands.size() >= 6 and least >= gap, "%d swings landed, never two within %d ms (the least gap %d ms)" % [lands.size(), gap, least])
+	_check(by_foe.size() == 3, "every one of the three got its turn in 30 s (%d did)" % by_foe.size())
+	var order: Array = by_foe.values()[0]
+	_check(order.size() >= 3 and order[0] == kit.light[0].id and order[1] == kit.light[1].id and order[2] == kit.light[2].id,
+		"a turn is the whole string, light, light, finisher: %s" % str(order))
+
+
+## A FOE'S AIM TRACKS, THEN LOCKS (COMBAT_OVERHAUL.md §2): it turns after its target through the wind-up and
+## stops `regents.foe_aim_lock_ms` before the hit (the referee sweeps along its facing at the landing).
+func _run_foe_aim() -> void:
+	print("== regents: a foe's aim locks before the hit ==")
+	var lock: int = int(HotRules.number(&"regents.foe_aim_lock_ms"))
+	var t: Array[int] = [200000]
+	var w := _FoeWorld.new()
+	var player := MovementState.new()
+	player.pos = Vector3(0, 0, -1.5)
+	var me := MovementState.new()
+	w.states = {7201: player, 7301: me}
+	w.kinds = {7201: 0, 7301: 103}
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 5)
+	b.clock = func() -> int: return t[0]
+	b.self_id = 7301
+	b.think(me, w)
+	var acts: Array[Dictionary] = b.take_acts()
+	_check(b.state == &"fight" and acts.size() == 1, "in reach with a free turn: it swings at once (%s)" % b.describe())
+	var wind: int = FoeDef.by_kind(103).kit.light[0].wind_up_ms
+	var yaw_at_press: float = b.frame(me).look_yaw
+	# Early in the wind-up the player steps aside: it turns after them.
+	t[0] += wind - lock - 150
+	player.pos = Vector3(1.5, 0, 0)
+	b.think(me, w)
+	var yaw_tracked: float = b.frame(me).look_yaw
+	_check(absf(angle_difference(yaw_tracked, yaw_at_press)) > 1.0, "a step aside %d ms before the hit: it turns after them (%.2f -> %.2f rad)" % [lock + 150, yaw_at_press, yaw_tracked])
+	# Inside the lock it holds its aim, wherever they go.
+	t[0] += 200
+	player.pos = Vector3(-1.5, 0, 0)
+	b.think(me, w)
+	_check(is_equal_approx(b.frame(me).look_yaw, yaw_tracked), "a step %d ms before the hit (inside its %d ms lock): its aim holds, so the swing misses" % [lock - 50, lock])
+	t[0] += 400
+	b.think(me, w)
+	_check(absf(angle_difference(b.frame(me).look_yaw, yaw_tracked)) > 1.0, "after the hit it turns to them again")
 
 
 func _run_swing_timeline() -> void:
@@ -800,12 +983,23 @@ func _run_swing_timeline() -> void:
 	c.swing_hit_ms = chop.wind_up_ms
 	c.swing_lock_ms = axe.lock_ms(chop)
 	c.combo_step = 0
-	_check(c.swinging(10) and not c.may_start(axe.heavy, -1, 300), "a chop just begun holds you: no heavy 300 ms in")
-	_check(c.may_start(axe.heavy, -1, axe.lock_ms(chop)), "free when its clip ends (%d ms)" % axe.lock_ms(chop))
-	_check(not c.may_start(axe.light[1], 1, chop.wind_up_ms), "the combo's second waits for the first to land")
-	_check(c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.chain_ms), "and chains just after it lands (%d ms)" % (chop.wind_up_ms + axe.chain_ms))
+	var cleave: AbilityDef = axe.skills[0]
+	_check(c.swinging(10) and not c.may_start(cleave, -1, 300), "a chop just begun holds you: no skill 300 ms in")
+	_check(c.may_start(cleave, -1, axe.lock_ms(chop)), "free when its clip ends (%d ms)" % axe.lock_ms(chop))
+	_check(not c.may_start(axe.light[1], 1, chop.wind_up_ms), "the string's second waits for the first to land")
+	_check(not c.may_start(axe.light[1], 1, chop.wind_up_ms + 60), "and for its FOLLOW-THROUGH: not 60 ms after the hit (the old chain cut the arc, Luke's #8)")
+	_check(c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.follow_for(0)), "the next step once the follow-through is over (%d ms)" % (chop.wind_up_ms + axe.follow_for(0)))
+	# STAGGERED, A PRESS WAITS (Luke's feedback 4097: "cant do this while staggered" in the middle of the screen):
+	# the client holds it, as the server would refuse it, and sends it once the stagger is over.
+	var stag := StatusComponent.new()
+	stag._status = HitFeedbackComponent.STATUS_STAGGERED
+	c._status = stag
+	_check(not c.can_act() and not c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.follow_for(0)), "staggered: no swing starts (it waits)")
+	c._status = null
+	_check(c.can_act() and c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.follow_for(0)), "the stagger over: it may")
+	stag.free()
 	c.swing_cancelled = true
-	_check(not c.swinging(10) and c.may_start(axe.heavy, -1, 10), "a swing a roll cancelled holds nothing")
+	_check(not c.swinging(10) and c.may_start(cleave, -1, 10), "a swing a roll cancelled holds nothing")
 	c.free()
 	var adv: PackedScene = load("res://game/regents/adventurer.tscn") as PackedScene
 	var body: Node = adv.instantiate()
@@ -840,7 +1034,7 @@ func _run_foe_bench() -> void:
 		"its damage rule is the server's: a chop at 70 %% is 7.7; quality and rank 10 add a fifth and 27 %%")
 	var sheet: String = await bench.run_named_test(&"sheet")
 	var r: Dictionary = FoeWorkbench.rhythm(warrior)
-	_check(sheet.contains("120 health") and int(bench.last_measure["swings"]) == maxi(warrior.heavy_every, warrior.kit.light.size()) and float(bench.last_measure["dps"]) > 0.0,
+	_check(sheet.contains("120 health") and int(bench.last_measure["swings"]) == warrior.kit.light.size() and float(bench.last_measure["dps"]) > 0.0,
 		"the sheet: %s" % sheet)
 	var slash: float = FoeWorkbench.hit_damage(warrior.kit.light[0].damage, warrior.damage_pct, 0, 1)
 	_check(is_equal_approx(float((r["swings"] as Array)[0]["damage"]), slash) and int(r["ms"]) >= warrior.rest_ms,
@@ -985,17 +1179,50 @@ func _run_crafting_choice() -> void:
 	w.refresh()
 	w.open()
 	await get_tree().process_frame
+	# Every heading in the list, in order (not by node name: a second "Group_Handles" is renamed by Godot, and so hid
+	# the doubled Handles heading Luke saw, 2026-11-01).
 	var heads: Array[String] = []
-	for n: Node in w.find_children("Group_*", "Label", true, false):
-		heads.append((n as Label).text)
-	_check(heads == ["Handles", "Axes", "Swords", "Pickaxes", "Other"], "the workbench's list: one line a recipe, under Handles, Axes, Swords, Pickaxes, Other %s" % str(heads))
+	for n: Node in w._list.get_children():
+		if n is Label:
+			heads.append((n as Label).text)
+	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Other, each once %s" % str(heads))
+	# The window looks again every 500 ms while it is open; with nothing changed that look must cost next to nothing
+	# (Luke's play, 2026-11-03, feedback #8194/#8195: by the workbench a 140-210 ms frame every half second, the
+	# game at 50-70 fps: each look listed the patterns folder from disk once per comparison of its sort).
+	var look0: int = Time.get_ticks_usec()
+	for i: int in 10:
+		w.refresh()
+	var look_ms: float = float(Time.get_ticks_usec() - look0) / 10000.0
+	_check(look_ms < 4.0, "the workbench window's look with nothing changed: %.2f ms (under 4)" % look_ms)
+	# The prompt facing the workbench is written every frame (its list asked twice): a frame's share, not a frame.
+	var say0: int = Time.get_ticks_usec()
+	for i: int in 10:
+		RegentsHud.station_prompt(sk, st, inv)
+	var say_ms: float = float(Time.get_ticks_usec() - say0) / 10000.0
+	_check(say_ms < 1.5, "the workbench's prompt, written each frame: %.2f ms (under 1.5)" % say_ms)
+	# Escape leaves a round (Luke's play, 2026-11-03, #8193): a recipe's is withdrawn and forgotten here at once (so
+	# nothing submits it after); a gathering round is not withdrawn (it is ended by sending what was played).
+	sk.round_id = 77
+	sk.round_def = NodeDef.by_id(40001)
+	_check(sk.cancel_round() == null and sk.round_id == 77, "a gathering round is not withdrawn by leaving it")
+	sk.round_def = axe
+	_check(sk.cancel_round() != null and sk.round_id == -1 and sk.round_def == null, "a crafting round left: withdrawn, forgotten here")
+	_check(sk.cancel_round() == null, "and with no round on, there is nothing to leave")
+	var hilt_at: int = -1
+	var buttons: Array[String] = []
+	for n: Node in w._list.get_children():
+		if n is Button:
+			buttons.append((n as Button).text)
+	hilt_at = buttons.find("Crossguard grip")
+	_check(hilt_at >= 0 and hilt_at < buttons.find(buttons.filter(func(t: String) -> bool: return t.ends_with("axe"))[0]),
+		"the shaped grips list under Grips, before the axes (%s)" % str(buttons.slice(0, 10)))
 	_check(w.pick_named("Iron axe"), "the iron axe picked")
 	var core: OptionButton = w.find_child("Core", true, false) as OptionButton
 	_check(core != null and core.item_count == 3 and core.get_selected_id() == 2 and core.get_item_text(0).contains("Masterwork iron axe head")
 		and not core.is_item_disabled(0) and not core.is_item_disabled(1) and core.is_item_disabled(2),
 		"its head is a list by grade: Masterwork picked, Fine there, Common greyed (none)")
 	var part_list: OptionButton = w.find_child("Part_0", true, false) as OptionButton
-	_check(part_list != null and part_list.item_count == 3 and part_list.get_selected_id() == 40013 and part_list.get_item_text(1).ends_with("Oak handle: Steady"),
+	_check(part_list != null and part_list.item_count == 9 and part_list.get_selected_id() == 40013 and part_list.get_item_text(1).ends_with("Oak grip: Steady"),
 		"its handle slot lists the three handles, the plain one picked, each with the trait it gives (\"%s\")" % (part_list.get_item_text(1) if part_list != null else ""))
 	_check(w.traits_line() == "A Masterwork iron axe holds 3 traits", "the traits, said plainly, no quality number (%s)" % w.traits_line())
 	w.pick_grade(1)
@@ -1047,7 +1274,7 @@ func _run_crafting_choice() -> void:
 	await get_tree().process_frame
 	cost_line = w.find_child("RefitCost", true, false) as Label
 	refit_b = w.find_child("Refit", true, false) as Button
-	_check(cost_line.text == "Costs: 1 Oak handle (you have 1), 2 Iron bar (you have 3)" and not refit_b.disabled
+	_check(cost_line.text == "Costs: 1 Oak grip (you have 1), 2 Iron bar (you have 3)" and not refit_b.disabled
 		and sk.refit_args(1, 7, axe, data) == [1, 7, [40016, 40012], [steady, gentle]],
 		"the oak handle swapped in: it costs the handle and 2 iron bars (the head's metal), REFIT ready, Steady joins Gentle (%s)" % cost_line.text)
 	inv._stacks.erase(8)
@@ -1060,6 +1287,501 @@ func _run_crafting_choice() -> void:
 	sk.free()
 	inv.free()
 	await get_tree().process_frame
+
+
+## ROLES BY THE HANDLE (COMBAT_OVERHAUL.md §5, Luke 2026-11-01), the sword first: three roles, one plain; the
+## hilts, fitting a sword only; the role map and its last hits, each clip's hand fastest at its wind-up; what the
+## craft window, the bag and the key line show: badges and words, never a role's name.
+func _run_roles() -> void:
+	print("== regents: roles by the handle ==")
+	var roles: Array[RoleDef] = RoleDef.all()
+	var keys: Array[StringName] = []
+	for r: RoleDef in roles:
+		keys.append(r.key)
+	var damage: RoleDef = RoleDef.by_id(40001)
+	var tank: RoleDef = RoleDef.by_id(40002)
+	var support: RoleDef = RoleDef.by_id(40003)
+	_check(keys == [&"damage", &"tank", &"support"] and RoleDef.plain_role() == damage, "three roles, the plain one Damage %s" % str(keys))
+	_check(tank.full_block and not damage.full_block and not support.full_block, "the guard handle's guard is full, the others' light")
+	var all_roles: Array[ContentDef] = []
+	all_roles.assign(roles)
+	for r: RoleDef in roles:
+		_check(r.validate().is_empty() and r.validate_with(all_roles).is_empty(), "%s is valid %s" % [r.key, str(r.validate() + r.validate_with(all_roles))])
+	_check(is_equal_approx(tank.threat_now(), HotRules.number(&"regents.guard_threat_pct")) and damage.threat_now() == 100.0
+		and support.threat_now() <= damage.threat_now(), "threat: the guard handle's a live rule; the banner's (healing) no more than the plain's")
+	# NEGATIVE: a role that names itself on screen, a rule nobody declares, a second plain role.
+	var bad := RoleDef.new()
+	bad.id = 40099
+	bad.key = &"bad"
+	bad.display_name = "Bad"
+	bad.guard_words = "a tank's guard"
+	bad.threat_rule = &"no_such_rule"
+	var probs: Array[String] = bad.validate()
+	_check(probs.any(func(p: String) -> bool: return p.contains("name a role")) and probs.any(func(p: String) -> bool: return p.contains("no rule set declares")),
+		"a role whose words name it, or whose rule is nowhere, is refused %s" % str(probs))
+	bad.plain = true
+	var with_bad: Array[ContentDef] = all_roles.duplicate()
+	with_bad.append(bad)
+	_check(not bad.validate_with(with_bad).is_empty(), "two plain roles are refused")
+	# THE ROLE MAP: each role's last hit, the string's other steps its own.
+	var sword: KitDef = KitDef.by_key(&"sword")
+	var thrust: AbilityDef = ContentLibrary.find(&"ability", 40003) as AbilityDef
+	var bash: AbilityDef = ContentLibrary.find(&"ability", 40022) as AbilityDef
+	var rally: AbilityDef = ContentLibrary.find(&"ability", 40023) as AbilityDef
+	_check(sword.finisher_for(damage) == thrust and sword.finisher_for(tank) == bash and sword.finisher_for(support) == rally and sword.finisher_for(null) == thrust,
+		"the sword's last hit: a piercing thrust, a pommel bash, a rallying cut (none known: the plain one's)")
+	_check(sword.light_at(2, tank) == bash and sword.light_at(1, tank) == sword.light[1] and sword.light_at(0, support) == sword.light[0] and sword.light_at(3, tank) == null,
+		"a handle changes only the string's last step")
+	_check(sword.is_finisher(bash) and sword.is_finisher(rally) and sword.is_finisher(thrust) and not sword.is_finisher(sword.light[1]) and not sword.is_finisher(sword.skills[0]),
+		"every role's last hit is the finisher (armour, the flinch, the stagger); a middle step and Q are not")
+	_check(CombatComponent.action_tags(sword, bash) == [&"basic", &"combo_last"] and CombatComponent.action_tags(sword, sword.light[0]) == [&"basic"]
+		and CombatComponent.action_tags(sword, sword.skills[0]) == [&"skill"], "traits read a role's last hit as the string's last (Heavy lengthens its stagger)")
+	_check(sword.abilities().has(bash) and sword.abilities().has(rally) and sword.validate().is_empty(), "the kit lists every last hit, and is valid %s" % str(sword.validate()))
+	_check([thrust.damage, bash.damage, rally.damage] == [26.0, 14.0, 14.0] and [thrust.wind_up_ms, bash.wind_up_ms, rally.wind_up_ms] == [380, 340, 400]
+		and is_equal_approx(thrust.reach_m, 2.4) and rally.radius_m > thrust.radius_m, "Luke's numbers: 26 / 14 / 14, 380 / 340 / 400 ms, the thrust 2.4 m, the rallying cut's arc widest")
+	_check(sword.role_entry(tank).stagger_pct == 150 and is_equal_approx(sword.role_entry(support).heal, 8.0) and sword.role_entry(damage).heal == 0.0,
+		"the pommel bash staggers 1.5 times as long; the rallying cut heals 8")
+	# The server's locks are this client's (it predicts the lock of the last hit it fires).
+	var baked: Dictionary = {}
+	var kits: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://shared/content/regents/kit.json"))
+	for k: Dictionary in (kits as Dictionary)["items"]:
+		if String(k["key"]) == "sword":
+			for pair: Array in k["locks"]:
+				baked[int(pair[0])] = int(pair[1])
+	_check(int(baked.get(40022, -1)) == sword.lock_ms(bash) and int(baked.get(40023, -1)) == sword.lock_ms(rally) and int(baked.get(40003, -1)) == sword.lock_ms(thrust),
+		"the server's locks for the three are the client's (%s)" % str(baked))
+	# EACH CLIP'S HAND IS FASTEST AT ITS WIND-UP (ANIMATIONS.md §3): where the blow lands is where it looks to.
+	var set: AnimationSet = sword.timing_set
+	for a: AbilityDef in [thrust, bash, rally]:
+		var t: int = _fastest_hand_ms(set, StringName("ability.%d" % a.id))
+		_check(absi(t - a.wind_up_ms) <= 20, "%s: its clip's hand is fastest at %d ms, its wind-up %d" % [a.display_name, t, a.wind_up_ms])
+	# EACH LAST HIT FLOWS ON from the second slash (Luke, 2026-11-02: the rallying cut "looks more jumpy"; its clip began
+	# turned away, so the blend whipped the body round): the chest's turn while it fades in from the second slash's
+	# recovery stays near the thrust's and the bash's, which look fluid (604 and 815 deg/s; the old cut 1258).
+	var after_b: StringName = StringName("recover.%d" % sword.light[1].id)
+	for a: AbilityDef in [thrust, bash, rally]:
+		var turn: int = _fade_in_turn(set, after_b, StringName("ability.%d" % a.id))
+		_check(turn > 0 and turn <= 1000, "%s fades in from the second slash turning the chest at most %d deg/s (1000 at most)" % [a.display_name, turn])
+	# NEGATIVE: the old clip (Sword_Heavy_C at 1.21) whips round past it.
+	var old := AnimationSet.new()
+	old.libraries = set.libraries
+	old.clips = {after_b: set.clip(after_b), &"ability.old": AnimationClipRef.make(&"extra/Sword_Heavy_C", false, 0.15, 1.21)}
+	_check(_fade_in_turn(old, after_b, &"ability.old") > 1000, "NEGATIVE: the old rallying cut's clip whips the chest round faster (%d deg/s)" % _fade_in_turn(old, after_b, &"ability.old"))
+	# NEGATIVE: a role map gone wrong is refused.
+	var k2 := KitDef.new()
+	k2.id = 40099
+	k2.key = &"test"
+	k2.skill = sword.skill
+	k2.light = sword.light.duplicate()
+	var e1 := KitRole.new()
+	e1.role = damage
+	e1.finisher = bash
+	e1.does = "a hit"
+	var e2 := KitRole.new()
+	e2.role = tank
+	e2.finisher = sword.light[1]
+	e2.does = "the tank's own"
+	k2.roles = [e1, e2]
+	var p2: Array[String] = k2._validate_roles()
+	_check(p2.any(func(p: String) -> bool: return p.contains("plain role's last hit")) and p2.any(func(p: String) -> bool: return p.contains("a step or a skill"))
+		and p2.any(func(p: String) -> bool: return p.contains("names a role")), "a plain role not ending the string, a step reused, a role named: each refused %s" % str(p2))
+	e2.finisher = bash
+	e2.does = "a hit"
+	k2.roles = [e2]
+	_check(k2._validate_roles().any(func(p: String) -> bool: return p.contains("no plain role")), "a role map with no plain role is refused")
+	# THE SHAPES: every grip slot takes nine (three shapes in each wood), the axe's too (Luke, 2026-11-01).
+	var iron_sword: ItemDef = ItemDef.by_id(40019)
+	var iron_axe: ItemDef = ItemDef.by_id(40015)
+	var cg: ItemDef = ItemDef.by_id(40040)
+	_check(cg.role == tank and ItemDef.by_id(40043).role == support and cg.fits(iron_sword) and cg.fits(iron_axe) and ItemDef.by_id(40013).fits(iron_axe),
+		"a crossguard grip gives the guard role and fits a sword and an axe alike; so does the plain grip")
+	var only_swords := ItemDef.new()
+	only_swords.part_tag = &"handle"
+	only_swords.fits_kit = &"sword"
+	_check(only_swords.fits(iron_sword) and not only_swords.fits(iron_axe), "NEGATIVE: a part for swords alone (`fits_kit`) fits no axe")
+	var sword_r: RecipeDef = RecipeDef.by_id(40010)
+	var axe_r: RecipeDef = RecipeDef.by_id(40006)
+	_check(sword_r.part_choices(sword_r.pick_slots()[0]).size() == 9 and axe_r.part_choices(axe_r.pick_slots()[0]).size() == 9,
+		"the iron sword's grip list: nine; the iron axe's: nine")
+	_check(ItemDef.role_of(iron_sword, "{\"q\":500,\"h\":40042,\"p\":[40042,40012],\"t\":[]}") == tank and ItemDef.role_of(iron_sword, "{\"q\":500,\"h\":40016}") == damage
+		and ItemDef.role_of(iron_sword, "") == damage and ItemDef.role_of(iron_axe, "{\"q\":500,\"p\":[40013,40012]}") == null,
+		"a sword's role from its parts (an oak crossguard hilt: the guard role; an old one's oak handle, or none: plain); an axe has none yet")
+	var odd := ItemDef.new()
+	odd.id = 40099
+	odd.display_name = "Odd"
+	odd.role = tank
+	_check(odd.validate().any(func(p: String) -> bool: return p.contains("no part")), "a shape that gives a role but is no part is refused")
+	# BADGES: three shapes, three colours; none for no role.
+	var tb: ImageTexture = RegentsRoleBadge.texture(tank)
+	var db: ImageTexture = RegentsRoleBadge.texture(damage)
+	var sb: ImageTexture = RegentsRoleBadge.texture(support)
+	_check(tb != null and db != null and sb != null and tb.get_image().get_data() != db.get_image().get_data() and sb.get_image().get_data() != db.get_image().get_data()
+		and RegentsRoleBadge.texture(null) == null, "three badges, each its own; no role, no badge")
+	# WORDS: what a handle does, never a role's name (show, don't name).
+	for r: RoleDef in roles:
+		var line: String = RegentsRoleBadge.does_line(iron_sword, r)
+		_check(not line.is_empty() and not _names_a_role(line), "%s's handle, in words: %s" % [r.key, line])
+	_check(RegentsRoleBadge.does_line(iron_sword, tank).contains("pommel bash") and RegentsRoleBadge.does_line(iron_sword, tank).contains("a full guard")
+		and RegentsRoleBadge.does_line(iron_sword, support).contains("rallying cut") and RegentsRoleBadge.does_line(iron_axe, tank) == "",
+		"the crossguard says its pommel bash and full guard, the banner its rallying cut; an axe says nothing yet")
+	_check(RegentsHud._string_names(sword, tank) == "Slash - Slash (second) - Pommel bash" and RegentsHud._string_names(sword, null) == "Slash - Slash (second) - Piercing thrust",
+		"the key line names the string's moves, the last the handle's: %s" % RegentsHud._string_names(sword, tank))
+	# THE CRAFT WINDOW: the iron sword's handle row, badges and a line; the axe's, neither.
+	var sk := SkillingComponent.new()
+	var inv := SpaceTimeInventoryComponent.new()
+	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40018, 1, 0, "{\"q\":650}")
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, 40040, 1, 1)
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40012, 4, 2)
+	var st := StationComponent.new()
+	st.key = &"workbench"
+	st.def = StationDef.by_key(&"workbench")
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var w := RegentsStationWindow.new()
+	w.skilling = sk
+	w.inventory = inv
+	w.station = st
+	w.target = 1
+	layer.add_child(w)
+	w.refresh()
+	w.open()
+	await get_tree().process_frame
+	_check(w.pick_named("Iron sword"), "the iron sword picked")
+	var handles: OptionButton = w.find_child("Part_0", true, false) as OptionButton
+	var icons: int = 0
+	for i: int in (handles.item_count if handles != null else 0):
+		icons += 1 if handles.get_item_icon(i) != null else 0
+	_check(handles != null and handles.item_count == 9 and icons == 9, "its handle list: nine, each with its badge (%d)" % icons)
+	_check(w.role_line().contains("piercing thrust") and not _names_a_role(w.role_line()), "the plain handle picked: %s" % w.role_line())
+	w.pick_part(0, 40040)
+	await get_tree().process_frame
+	_check(w.role_line().contains("pommel bash") and w.role_line().contains("a full guard") and not _names_a_role(w.role_line()),
+		"the crossguard hilt picked: %s" % w.role_line())
+	_check(w.pick_named("Iron axe"), "the iron axe picked")
+	await get_tree().process_frame
+	var axe_handles: OptionButton = w.find_child("Part_0", true, false) as OptionButton
+	_check(axe_handles != null and axe_handles.item_count == 9 and axe_handles.get_item_icon(0) == null and w.role_line() == "",
+		"the axe's grip row: all nine shapes, no badges, no line (a shape matters only where the kit has roles: not the axe yet)")
+	# THE BAG: a sword with a banner hilt wears its badge and says what it does; an axe neither.
+	inv._stacks[4] = SpaceTimeInventoryComponent.Stack.new(4, 40019, 1, 3, "{\"q\":650,\"h\":40041,\"p\":[40041,40012],\"t\":[]}")
+	inv._stacks[5] = SpaceTimeInventoryComponent.Stack.new(5, 40015, 1, 4, "{\"q\":650,\"h\":40013,\"p\":[40013,40012],\"t\":[]}")
+	var bag := RegentsBagWindow.new()
+	bag.inventory = inv
+	layer.add_child(bag)
+	bag.picked_row = 4
+	bag.open()
+	await get_tree().process_frame
+	var s4: UiSlot = bag.find_child("Slot_4", true, false) as UiSlot
+	var s5: UiSlot = bag.find_child("Slot_5", true, false) as UiSlot
+	_check(s4 != null and s4.find_child("RoleBadge", false, false) != null and s5 != null and s5.find_child("RoleBadge", false, false) == null,
+		"the sword's slot wears its badge; the axe's none")
+	_check(s4 != null and s4.tooltip_text.contains("Its last hit: Rallying cut") and not _names_a_role(s4.tooltip_text), "its tooltip: %s" % (s4.tooltip_text if s4 != null else ""))
+	_check(bag.role_line().contains("Rallying cut") and bag.role_line().contains("mends") and not _names_a_role(bag.role_line()), "its detail: %s" % bag.role_line())
+	bag.picked_row = 5
+	bag.refresh()
+	await get_tree().process_frame
+	_check(bag.role_line() == "", "the axe's detail: no role line")
+	layer.queue_free()
+	st.free()
+	sk.free()
+	inv.free()
+	await get_tree().process_frame
+
+
+## THE TARGET'S STATUS BARS (Luke, 2026-11-01: "a status bar under the enemy hp ... how long the enemy is staggered
+## for"): what was done to it, with its time left, longest first; never its own swing; an effect too.
+func _run_status_bars() -> void:
+	print("== regents: the target's status bars ==")
+	var st := StatusComponent.new()
+	st.entity_id = 77
+	var now: int = ClockSync.server_usec()
+	st._status = 103   # Staggered, by another, 1.2 s, begun 0.2 s ago
+	st._lasts_ms = 1200
+	st._since_usec = now - 200_000
+	st._by_entity = 5
+	st._effects[1] = {"status": 108, "since": now - 1_000_000, "lasts_ms": 3000, "serial": 1}   # Slowed, 2 s left
+	var rows: Array[Dictionary] = RegentsHud.status_rows(st)
+	_check(rows.size() == 2 and String(rows[0]["name"]) == "Slowed" and String(rows[1]["name"]) == "Staggered"
+		and absf(float(rows[1]["left"]) - 1.0) < 0.1 and is_equal_approx(float(rows[1]["total"]), 1.2) and is_equal_approx(float(rows[0]["total"]), 3.0),
+		"a staggered, slowed target: two bars, the longest left first, each its time left of its whole (%s)" % str(rows))
+	st._status = 104   # its own swing (by itself)
+	st._by_entity = 77
+	st._effects.clear()
+	_check(RegentsHud.status_rows(st).is_empty(), "its own swing shows no bar")
+	st._status = 106   # Slain: no time on it
+	st._by_entity = 5
+	st._lasts_ms = 0
+	_check(RegentsHud.status_rows(st).is_empty(), "a status with no end shows no bar")
+	_check(RegentsHud.status_rows(null).is_empty(), "no target, no bars")
+	st.free()
+	# ITS POISE, READ FOR THE MARKER (Luke, 2026-11-02): worn as the server works it out, whole again unhit, steadied.
+	var pf := HitFeedbackComponent.new()
+	var now_us: int = ClockSync.server_usec()
+	var regen_ms: float = HotRules.number(&"regents.poise_regen_ms")
+	var prow := PoiseRow.new()
+	prow.left = 21.0
+	prow.most = 70.0
+	prow.hit_at = now_us - 500_000
+	prow.steady_until = 0
+	pf.set_poise(prow)
+	_check(is_equal_approx(pf.poise_worn(now_us), 0.7) and not pf.poise_steadied(now_us), "21 of 70 left, hit half a second ago: 70 %% worn (%.2f)" % pf.poise_worn(now_us))
+	_check(is_zero_approx(pf.poise_worn(prow.hit_at + int(regen_ms * 1000.0) + 1)), "NEGATIVE: unhit for regents.poise_regen_ms, it is whole: nothing worn")
+	var broke: Array[bool] = []
+	pf.poise_broke.connect(func() -> void: broke.append(true))
+	var after := PoiseRow.new()
+	after.left = 70.0
+	after.most = 70.0
+	after.hit_at = now_us
+	after.steady_until = now_us + 3_800_000
+	pf._on_row_updated(&"poise_state", prow, after)
+	_check(broke == [true] and pf.poise_steadied(now_us) and is_zero_approx(pf.poise_worn(now_us)), "broken: it bursts once, whole, and steadied")
+	pf._on_row_updated(&"poise_state", after, after)
+	_check(broke.size() == 1, "NEGATIVE: the same row again is no second burst")
+	pf.free()
+	# THE BAR SAYS IT (Luke, 2026-11-02): a stagger flashes the body, and no word floats over it.
+	var fb := HitFeedbackComponent.new()
+	fb._on_status_changed(0, 103)
+	_check(fb.flashes.has(&"stagger") and not fb.said.has("Staggered"), "a stagger: the gold flash, no word over the body (said %s)" % str(fb.said))
+	fb.say("Blocked", Color.WHITE)
+	_check(fb.said == ["Blocked"], "NEGATIVE: the other words are still said (%s)" % str(fb.said))
+	fb.free()
+
+
+class PoiseRow extends RefCounted:
+	var left: float
+	var most: float
+	var hit_at: int
+	var steady_until: int
+
+
+class TutorialRow extends RefCounted:
+	var entity_id: int
+	var state: int
+	var done: Array = []
+
+
+func _tutorial_row(state: int, done: Array) -> TutorialRow:
+	var r := TutorialRow.new()
+	r.entity_id = 9
+	r.state = state
+	r.done = done
+	return r
+
+
+## THE TUTORIAL (Luke, 2026-11-01: make your own sword, then the fight with it; progress on the server): the
+## lessons as content, their checks, the component reading its row, the guide's card, the yard's partner and ring.
+func _run_tutorial() -> void:
+	print("== regents: the tutorial ==")
+	var all: Array[LessonDef] = LessonDef.all()
+	var names: Array[String] = []
+	var problems: Array[String] = []
+	for l: LessonDef in all:
+		names.append(l.display_name)
+		for pr: String in l.validate() + l.validate_with(RegentsContent.items(&"lesson")):
+			problems.append("%s: %s" % [l.display_name, pr])
+	_check(names == ["Chop wood", "Carve a grip", "Mine copper", "Smelt copper", "Smith a blade", "Smith rivets", "Make your sword",
+		"Take it in hand", "Three in a row", "Roll through", "Parry", "Strike back", "Hold your guard", "The red glint", "Your grip"],
+		"fifteen lessons in order: the sword made, then the fight, the grip's shape last (%s)" % str(names))
+	_check(problems.is_empty(), "every lesson passes its checks %s" % str(problems))
+	_check(all.all(func(l: LessonDef) -> bool: return not _names_a_role(l.words) and not _names_a_role(l.display_name)),
+		"no lesson names a role or the last hit (show, don't name)")
+	# Each lesson sends the player somewhere on the frontier that is there.
+	var points: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://shared/world/frontier.json")) as Dictionary)["points"]
+	var ids: Array[String] = []
+	for pt: Dictionary in points:
+		ids.append(String(pt["id"]))
+	var nowhere: Array[String] = []
+	for l: LessonDef in all:
+		if l.at != &"" and not ids.has(String(l.at)):
+			nowhere.append("%s -> %s" % [l.display_name, l.at])
+	_check(nowhere.is_empty() and ids.has("guide") and ids.has("sparring_1"), "every lesson's place, the guide and the partner are on the frontier %s" % str(nowhere))
+	# WANTS: a kind where the lesson says so.
+	var grip: LessonDef = all[1]
+	var sword: LessonDef = all[6]
+	_check(grip.wants(ItemDef.by_id(40042)) and grip.wants(ItemDef.by_id(40013)) and not grip.wants(ItemDef.by_id(40012)),
+		"any grip carves the grip (an oak crossguard grip too); rivets do not")
+	_check(sword.wants(ItemDef.by_id(40019)) and not sword.wants(ItemDef.by_id(40027)) and not sword.wants(null),
+		"any sword makes the sword; NEGATIVE: a sword blade does not")
+	_check(not all[0].wants(ItemDef.by_id(40007)), "NEGATIVE: chopping wants logs, nothing else")
+	# THE CHECKS, NEGATIVE: an item where the deed names none; a kind with no item; a role word; a weapon that is none.
+	var odd := LessonDef.new()
+	odd.id = 1
+	odd.display_name = "Odd"
+	odd.done_when = LessonDef.Done.PARRIED
+	odd.item = ItemDef.by_id(40002)
+	odd.any_of_its_kind = true
+	odd.words = "Land the finisher"
+	var said: Array[String] = odd.validate()
+	_check(said.any(func(p: String) -> bool: return p.contains("names none")) and said.any(func(p: String) -> bool: return p.contains("any_of_its_kind"))
+		and said.any(func(p: String) -> bool: return p.contains("never its name")), "a lesson with an item it cannot use, and a role's word, is refused %s" % str(said))
+	odd.done_when = LessonDef.Done.WIELDED
+	odd.any_of_its_kind = false
+	odd.words = "Hold it"
+	_check(odd.validate().any(func(p: String) -> bool: return p.contains("no weapon")), "NEGATIVE: logs cannot be wielded")
+	odd.order = all[3].order
+	_check(odd.validate_with(RegentsContent.items(&"lesson")).any(func(p: String) -> bool: return p.contains("too")), "NEGATIVE: two lessons at one place in the run")
+	# THE COMPONENT reads its row: the lesson now, its place, the ticks seen.
+	var tut := TutorialComponent.new()
+	tut.entity_id = 9
+	_check(tut.state == TutorialComponent.NONE and tut.current() == null and RegentsTutorialCard.card_text(tut, false).is_empty(),
+		"no row (a server from before): nothing shown")
+	tut._on_row_updated(&"tutorial", null, _tutorial_row(TutorialComponent.OFFERED, []))
+	var offered: Dictionary = RegentsTutorialCard.card_text(tut, false)
+	var offer: Dictionary = RegentsTutorialCard.card_text(tut, true)
+	_check(tut.current() == null and String(offered.get("keys", "")).contains("press E") and String(offer["body"]) == tut.greeting
+		and String(offer["keys"]).contains("E: show me") and String(offer["keys"]).contains("N: not now"),
+		"offered: the card says the guide is by the yard; E on them: their greeting, E to begin, N not now (%s)" % str(offer))
+	tut._bound = true
+	var ticked: Array[String] = []
+	tut.lesson_ticked.connect(func(l: LessonDef) -> void: ticked.append(l.display_name))
+	var finished: Array[bool] = []
+	tut.finished.connect(func() -> void: finished.append(true))
+	tut._on_row_updated(&"tutorial", _tutorial_row(TutorialComponent.OFFERED, []), _tutorial_row(TutorialComponent.ON, []))
+	var card: Dictionary = RegentsTutorialCard.card_text(tut, false)
+	_check(tut.current() == all[0] and tut.place() == Vector2i(1, 15) and String(card["title"]) == "Chop wood   1 / 15" and String(card["body"]) == all[0].words,
+		"under way: the first lesson, 1 of 15, in the guide's words (%s)" % str(card))
+	tut._on_row_updated(&"tutorial", _tutorial_row(TutorialComponent.ON, []), _tutorial_row(TutorialComponent.ON, [all[0].id, all[10].id]))
+	_check(ticked == ["Chop wood", "Parry"] and tut.current() == all[1] and tut.place() == Vector2i(2, 15),
+		"two ticks (one out of order): both seen, the lesson now the first not done (%s)" % str(ticked))
+	_check(RegentsTutorialCard.card_text(tut, true).get("body", "") == all[1].words, "E on the guide under way: the lesson now again, no offer")
+	var every: Array = []
+	for l: LessonDef in all:
+		every.append(l.id)
+	tut._on_row_updated(&"tutorial", _tutorial_row(TutorialComponent.ON, [all[0].id]), _tutorial_row(TutorialComponent.FINISHED, every))
+	_check(finished == [true] and tut.current() == null and RegentsTutorialCard.card_text(tut, false).is_empty()
+		and RegentsTutorialCard.card_text(tut, true).get("body", "") == tut.again, "finished: the farewell once, nothing shown, the guide offers it again")
+	for t: Dictionary in [offered, offer, card]:
+		_check(not _names_a_role(String(t.get("title", "")) + String(t.get("body", "")) + String(t.get("keys", ""))), "the card names no role: %s" % str(t))
+	_check(not _names_a_role(tut.greeting + tut.again + tut.farewell), "the guide's own words name no role")
+	tut.free()
+	# The adventurer carries it, after the skilling (so its E is asked first, then the skilling's).
+	var adv: Node = (load("res://game/regents/adventurer.tscn") as PackedScene).instantiate()
+	var comps: Array[String] = []
+	for c: Node in adv.get_node(^"Components").get_children():
+		comps.append(c.name)
+	_check(comps.has("Tutorial") and comps.find("Tutorial") > comps.find("Skilling"), "the adventurer has the tutorial, after the skilling %s" % str(comps))
+	adv.free()
+	# THE GUIDE AND THE PARTNER: the guide's kind is the component's, both are drawn; only the partner shows the ring.
+	var genre: GenreModule = load("res://game/regents/genre.tres") as GenreModule
+	var kinds: Array[int] = []
+	for d: EntityDefinition in genre.entity_definitions:
+		kinds.append(d.kind)
+	var guide: EntityDefinition = load("res://game/regents/content/character/guide.tres") as EntityDefinition
+	_check(guide.kind == TutorialComponent.GUIDE_KIND and kinds.has(guide.kind) and kinds.has(105) and genre.tables.has(&"tutorial"),
+		"the guide (kind %d) and the sparring skeleton are drawn; the tutorial's table is the genre's" % guide.kind)
+	var spar: FoeDef = FoeDef.by_kind(105)
+	_check(spar != null and spar.parry_ring and spar.xp_pct == 0 and spar.loot_table == null
+		and FoeDef.all().filter(func(f: FoeDef) -> bool: return f.parry_ring).size() == 1,
+		"the sparring skeleton alone shows the parry ring, and pays nothing")
+	var set: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
+	var slow: bool = true
+	for a: AbilityDef in spar.kit.light:
+		slow = slow and a.wind_up_ms >= 900 and set.clip(StringName("ability.%d" % a.id)) != null and set.clip(StringName("recover.%d" % a.id)) != null
+	_check(slow and spar.kit.unblockable.size() == 1 and spar.kit.unblockable[0] == spar.kit.light[2],
+		"its swings are slow (900 ms or more), each with its clip and recovery; its last glints")
+	# The swing's blow in each clip lands at its wind-up (the ring shuts as it lands).
+	for a: AbilityDef in spar.kit.light:
+		var hand: int = _fastest_hand_ms(set, StringName("ability.%d" % a.id))
+		_check(absi(hand - a.wind_up_ms) <= 60, "%s: the blow at %d ms in its clip, its wind-up %d ms" % [a.display_name, hand, a.wind_up_ms])
+
+
+## Whether `text` names a role or the last hit's slot (Luke, 2026-11-01: show, don't name).
+static func _names_a_role(text: String) -> bool:
+	var t: String = text.to_lower()
+	for w: String in ["tank", "damage", "support", "finisher", "dps", "healer"]:
+		if t.contains(w):
+			return true
+	return false
+
+
+## When the right hand moves fastest in clip `sem` of `set`, at its speed (ms): the blow (ANIMATIONS.md §3).
+func _fastest_hand_ms(set: AnimationSet, sem: StringName) -> int:
+	var ref: AnimationClipRef = set.clip(sem)
+	var anim: Animation = AnimationTreeBuilder.clip_animation(set, sem)
+	if ref == null or anim == null:
+		return -1
+	var scene: Node3D = (load("res://game/characters/mannequin_f.glb") as PackedScene).instantiate() as Node3D
+	var skel: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var hand: int = skel.find_bone("hand_r")
+	var dt: float = 1.0 / 120.0
+	var prev: Vector3 = Vector3.ZERO
+	var best_t: float = 0.0
+	var best_v: float = 0.0
+	var t: float = 0.0
+	while t <= anim.length:
+		for tr: int in anim.get_track_count():
+			var b: int = skel.find_bone(String(anim.track_get_path(tr).get_concatenated_subnames()))
+			if b < 0:
+				continue
+			match anim.track_get_type(tr):
+				Animation.TYPE_ROTATION_3D:
+					skel.set_bone_pose_rotation(b, anim.rotation_track_interpolate(tr, t))
+				Animation.TYPE_POSITION_3D:
+					skel.set_bone_pose_position(b, anim.position_track_interpolate(tr, t))
+		var p: Vector3 = _bone_origin(skel, hand)
+		if t > 0.0 and (p - prev).length() / dt > best_v:
+			best_v = (p - prev).length() / dt
+			best_t = t
+		prev = p
+		t += dt
+	scene.free()
+	return roundi(best_t * 1000.0 / (ref.speed_scale if ref.speed_scale > 0.0 else 1.0))
+
+
+## THE CHEST'S PEAK TURN (deg/s) while clip `to` of `set` fades in over its blend time from `from` playing (as the
+## driver's one-shot cross-fades), at 60 Hz: the angle between frames, so no axis is assumed.
+func _fade_in_turn(set: AnimationSet, from: StringName, to: StringName) -> int:
+	var a: Animation = AnimationTreeBuilder.clip_animation(set, from)
+	var b: Animation = AnimationTreeBuilder.clip_animation(set, to)
+	var ra: AnimationClipRef = set.clip(from)
+	var rb: AnimationClipRef = set.clip(to)
+	if a == null or b == null:
+		return -1
+	var scene: Node3D = (load("res://game/characters/mannequin_f.glb") as PackedScene).instantiate() as Node3D
+	var skel: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var chest: int = skel.find_bone("spine_03")
+	var dt: float = 1.0 / 60.0
+	var peak: float = 0.0
+	var prev: Quaternion = Quaternion.IDENTITY
+	var t: float = 0.0
+	while t <= rb.blend_time + 0.0001:
+		var w: float = clampf(t / rb.blend_time, 0.0, 1.0)
+		for tr: int in b.get_track_count():
+			if b.track_get_type(tr) != Animation.TYPE_ROTATION_3D:
+				continue
+			var path: NodePath = b.track_get_path(tr)
+			var bone: int = skel.find_bone(String(path.get_concatenated_subnames()))
+			var ta: int = a.find_track(path, Animation.TYPE_ROTATION_3D)
+			if bone < 0 or ta < 0:
+				continue
+			var qa: Quaternion = a.rotation_track_interpolate(ta, minf(t * ra.speed_scale, a.length))
+			skel.set_bone_pose_rotation(bone, qa.slerp(b.rotation_track_interpolate(tr, minf(t * rb.speed_scale, b.length)), w))
+		var q: Quaternion = Quaternion(_bone_basis(skel, chest))
+		if t > 0.0:
+			peak = maxf(peak, rad_to_deg(prev.angle_to(q)) / dt)
+		prev = q
+		t += dt
+	scene.free()
+	return roundi(peak)
+
+
+static func _bone_basis(skel: Skeleton3D, b: int) -> Basis:
+	var x: Basis = Basis(skel.get_bone_pose_rotation(b))
+	var parent: int = skel.get_bone_parent(b)
+	while parent >= 0:
+		x = Basis(skel.get_bone_pose_rotation(parent)) * x
+		parent = skel.get_bone_parent(parent)
+	return x.orthonormalized()
+
+
+## Bone `b`'s place in the skeleton's space, from the poses set (no tree, no update needed).
+static func _bone_origin(skel: Skeleton3D, b: int) -> Vector3:
+	var x: Transform3D = Transform3D(Basis(skel.get_bone_pose_rotation(b)), skel.get_bone_pose_position(b))
+	var parent: int = skel.get_bone_parent(b)
+	while parent >= 0:
+		x = Transform3D(Basis(skel.get_bone_pose_rotation(parent)), skel.get_bone_pose_position(parent)) * x
+		parent = skel.get_bone_parent(parent)
+	return x.origin
 
 
 ## The pattern with key `key`.
@@ -1117,6 +1839,19 @@ func _run_tester_page() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_check(buttons == 1 and count.call() == 1, "added once, not every frame (%d, then %d)" % [buttons, count.call()])
+	# WHAT WAS REFUSED GOES TO THE SIDE (Luke's feedback 4097): its own column at the right, a few at most;
+	# the middle keeps what you got.
+	var middle: int = hud._notices.get_child_count()
+	for why: String in ["no roll in the air", "use_ability: you cannot while staggered", "still swinging", "not now"]:
+		hud.refused(why)
+	await get_tree().process_frame
+	var column: Rect2 = hud.refusals.get_global_rect()
+	var screen: Vector2 = hud.get_viewport().get_visible_rect().size
+	_check(hud._notices.get_child_count() == middle and hud.refusals.get_child_count() == RegentsHud.REFUSALS_SHOWN
+		and (hud.refusals.get_child(hud.refusals.get_child_count() - 1) as Label).text == "Not now"
+		and is_equal_approx(hud.refusals.anchor_left, 1.0) and absf(column.end.x - (screen.x - 24.0)) < 1.0,
+		"refusals in a column pinned to the right edge (%d shown, the newest last; its edge at %.0f of %.0f), none in the middle"
+		% [hud.refusals.get_child_count(), column.end.x, screen.x])
 	hud.queue_free()
 	menu.queue_free()
 	await get_tree().process_frame
@@ -1185,21 +1920,21 @@ func _run_content() -> void:
 	_check(made.get("Copper bar", []) == ["furnace", ["Copper ore"]] and made.get("Iron bar", []) == ["furnace", ["Iron ore"]],
 		"the furnace: ore into bars")
 	_check(made.get("Iron axe head", []) == ["anvil", ["Iron bar"]] and made.get("Copper rivets", []) == ["anvil", ["Copper bar"]], "the anvil: bars into a head, rivets")
-	_check(made.get("Handle", []) == ["workbench", ["Logs"]] and made.get("Iron axe", []) == ["workbench", ["Iron axe head", "Handle", "Copper rivets"]],
+	_check(made.get("Grip", []) == ["workbench", ["Logs"]] and made.get("Iron axe", []) == ["workbench", ["Iron axe head", "Grip", "Copper rivets"]],
 		"the workbench: logs into a handle; a head, a handle and rivets into an iron axe")
 	var head: RecipeDef = RecipeDef.by_id(40004)
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 12 and RecipeDef.at(&"workbench").size() == 16 and RecipeDef.at(&"orders").is_empty(),
-		"three recipes at the furnace (copper, iron, steel bars), twelve at the anvil (rivets, an axe head, a sword blade and a pickaxe head of each metal), sixteen at the workbench (three handles; an axe, a sword and a pickaxe of each metal; the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
-	_check(made.get("Oak handle", []) == ["workbench", ["Oak logs"]] and made.get("Yew handle", []) == ["workbench", ["Yew logs"]],
+	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 12 and RecipeDef.at(&"workbench").size() == 22 and RecipeDef.at(&"orders").is_empty(),
+		"three recipes at the furnace (copper, iron, steel bars), twelve at the anvil (rivets, an axe head, a sword blade and a pickaxe head of each metal), twenty-two at the workbench (three handles and six sword hilts; an axe, a sword and a pickaxe of each metal; the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
+	_check(made.get("Oak grip", []) == ["workbench", ["Oak logs"]] and made.get("Yew grip", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
 	var choices: Array[String] = []
 	for it: ItemDef in axe.part_choices():
 		choices.append(it.display_name)
-	_check(axe.part_slot == 1 and choices == ["Handle", "Oak handle", "Yew handle"], "the iron axe's handle slot takes any handle, plain first: %s" % str(choices))
+	_check(axe.part_slot == 1 and choices == ["Grip", "Oak grip", "Yew grip", "Crossguard grip", "Banner grip", "Oak crossguard grip", "Oak banner grip", "Yew crossguard grip", "Yew banner grip"], "the iron axe's grip slot takes any grip, plain first: %s" % str(choices))
 	_check(RecipeDef.by_id(40001).part_choices().is_empty(), "a recipe with no part slot has no choices")
 	var oak_h: ItemDef = ItemDef.by_id(40016)
 	var yew_h: ItemDef = ItemDef.by_id(40017)
@@ -1232,8 +1967,8 @@ func _run_material_table() -> void:
 	for p: PatternDef in MaterialTable.patterns():
 		pkeys.append(p.key)
 	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel"]
-		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets"],
-		"six materials and nine patterns: %s x %s" % [str(keys), str(pkeys)])
+		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets", &"crossguard_hilt", &"banner_hilt"],
+		"six materials and eleven patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5): %s x %s" % [str(keys), str(pkeys)])
 	var bad: Array[String] = []
 	for type: StringName in [&"material", &"pattern"]:
 		for d: ContentDef in ContentLibrary.items(type):
@@ -1243,7 +1978,9 @@ func _run_material_table() -> void:
 	# The ids players hold, pinned: each cell IS the file it was (MATERIALS.md §2).
 	var pinned: Dictionary[String, int] = {"copper:bar": 40010, "iron:bar": 40011, "iron:axe_head": 40014, "iron:sword_blade": 40018,
 		"iron:axe": 40015, "iron:sword": 40019, "plain_wood:handle": 40013, "oak:handle": 40016, "yew:handle": 40017,
-		"copper:axe": 40001, "copper:pickaxe": 40006, "steel:bar": 40025, "copper:rivets": 40012}
+		"copper:axe": 40001, "copper:pickaxe": 40006, "steel:bar": 40025, "copper:rivets": 40012,
+		"plain_wood:crossguard_hilt": 40040, "plain_wood:banner_hilt": 40041, "oak:crossguard_hilt": 40042, "oak:banner_hilt": 40043,
+		"yew:crossguard_hilt": 40044, "yew:banner_hilt": 40045}
 	var got: Dictionary[String, int] = {}
 	for c: Dictionary in MaterialTable.plan():
 		var m: MaterialDef = c["material"]
@@ -1253,8 +1990,8 @@ func _run_material_table() -> void:
 	var kept: bool = true
 	for k: String in pinned:
 		kept = kept and got.get(k, -1) == pinned[k]
-	_check(got.size() == 27 and kept and not got.values().has(-1),
-		"27 cells (three metals in eight patterns, three woods in one), every one made; the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
+	_check(got.size() == 33 and kept and not got.values().has(-1),
+		"33 cells (three metals in eight patterns, three woods in three), every one made; the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
 	var problems: Array[String] = MaterialTable.problems()
 	_check(problems.is_empty(), "the table is current: every cell and recipe as the table makes it%s" % ("" if problems.is_empty() else ": " + "; ".join(problems)))
 	var dry: Dictionary = MaterialTable.generate(false)
@@ -1263,8 +2000,8 @@ func _run_material_table() -> void:
 	var iron: MaterialDef = MaterialDef.by_key(&"iron")
 	var plain: MaterialDef = MaterialDef.by_key(&"plain_wood")
 	var axe_p: PatternDef = MaterialTable.cell(iron, MaterialTable.patterns()[4]).pattern
-	_check(axe_p.item_name(iron) == "Iron axe" and MaterialTable.patterns()[3].item_name(plain) == "Handle",
-		"names: \"{m} axe\" of iron is \"Iron axe\"; \"{m} handle\" of plain wood is \"Handle\"")
+	_check(axe_p.item_name(iron) == "Iron axe" and MaterialTable.patterns()[3].item_name(plain) == "Grip",
+		"names: \"{m} axe\" of iron is \"Iron axe\"; \"{m} grip\" of plain wood is \"Grip\"")
 	var wants: Dictionary = MaterialTable.item_wants(iron, axe_p)
 	_check(wants["tool_tier"] == 2 and wants["tool_speed_pct"] == 85 and wants["weapon_damage_pct"] == 100 and wants["tool_tag"] == &"axe",
 		"an iron axe's tier, tool speed and Power are iron's: %s" % str(wants))
@@ -1273,7 +2010,7 @@ func _run_material_table() -> void:
 	var ins: Array[String] = []
 	for it: ItemDef in rw["inputs"] as Array:
 		ins.append(it.display_name)
-	_check(errs.is_empty() and ins == ["Iron axe head", "Handle", "Copper rivets"] and rw["part_slot"] == 1 and rw["input_qty"] == PackedInt32Array([1, 1, 2]),
+	_check(errs.is_empty() and ins == ["Iron axe head", "Grip", "Copper rivets"] and rw["part_slot"] == 1 and rw["input_qty"] == PackedInt32Array([1, 1, 2]),
 		"its recipe from the slots: the iron head (the core), any handle (plain listed, the player's pick), two rivets: %s" % str(ins))
 	# A cell gone wrong, in memory only: the bake refuses it through the material's own check.
 	var axe: ItemDef = ItemDef.by_id(40015)
@@ -1786,8 +2523,6 @@ func _run_looks() -> void:
 	for k: KitDef in KitDef.all():
 		var abilities: Array[AbilityDef] = []
 		abilities.assign(k.light + k.skills)
-		if k.heavy != null:
-			abilities.append(k.heavy)   # a bow has none
 		for a: AbilityDef in abilities:
 			# The driver plays an ability as `ability.<id>` (anything else falls back to Interact: owner, 2026-10-19).
 			_check(a.animation == StringName("ability.%d" % a.id) and aset.has_exact(a.animation) and aset.clip(a.animation).anim_name != aset.clip(&"interact").anim_name,
@@ -2039,8 +2774,19 @@ func _run_traits() -> void:
 	# The twins (the server's `action_tags`, `lock_with`, `draw_full_with`).
 	var axe_kit: KitDef = KitDef.by_key(&"axe")
 	_check(CombatComponent.action_tags(axe_kit, axe_kit.light[0]) == [&"basic"] and CombatComponent.action_tags(axe_kit, axe_kit.light[-1]) == [&"basic", &"combo_last"]
-		and CombatComponent.action_tags(axe_kit, axe_kit.heavy) == [&"heavy"] and CombatComponent.action_tags(axe_kit, axe_kit.skills[0]) == [&"skill"],
-		"what an action is: basic, the combo's last, heavy, skill")
+		and CombatComponent.action_tags(axe_kit, axe_kit.skills[0]) == [&"skill"],
+		"what an action is: basic, the string's last (its finisher), skill")
+	# HEAVY, ON POISE (Luke, 2026-11-02): the last hit wears 35 % more of a foe's poise; a stagger is no longer longer.
+	var heavy_ids: Array[int] = [_trait_id(&"heavy")]
+	_check(is_equal_approx(Traits.mult(heavy_ids, &"poise", [&"basic", &"combo_last"]), 1.35) and is_equal_approx(Traits.mult(heavy_ids, &"poise", [&"basic"]), 1.0)
+		and is_equal_approx(Traits.mult(heavy_ids, &"stagger_time", [&"basic", &"combo_last"]), 1.0),
+		"Heavy: the last hit wears poise x1.35, a first step's untouched, no stagger lengthened")
+	var heavy_def: TraitDef = load("res://game/regents/content/trait/heavy.tres") as TraitDef
+	_check(not _names_a_role(heavy_def.gives) and heavy_def.gives.contains("off balance"), "Heavy says what it does, no move's name: \"%s\"" % heavy_def.gives)
+	# THE GUARD FACES FORWARD: the server's `in_guard_arc`, twinned (yaw 0 faces -z; 120 degrees in all).
+	_check(CombatComponent.guard_stops(0.0, 0.0, -2.0) and CombatComponent.guard_stops(0.0, 1.0, -1.0) and not CombatComponent.guard_stops(0.0, 2.0, 0.0)
+		and not CombatComponent.guard_stops(0.0, 0.0, 2.0) and CombatComponent.guard_stops(PI, 0.0, 2.0),
+		"the guard stops a hit in front or 45 degrees off; not from the side or behind; turned round, behind is in front")
 	var balanced: Array[int] = [_trait_id(&"balanced")]
 	var heavy: Array[int] = [_trait_id(&"heavy")]
 	_check(CombatComponent.lock_with(900, 400, Traits.mult(balanced, &"recovery", [&"basic"])) == 825

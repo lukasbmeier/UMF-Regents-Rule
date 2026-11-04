@@ -1,8 +1,10 @@
 class_name RegentsBagWindow extends UiWindow
 ## THE BAG (I, owner 2026-10-20: dedicated UI, not text on screen): every stack as a slot, a made item's
 ## edge in its grade's colour; click one and below it says what it is (its graded name, its quality and
-## handle, its POWER against the weapon you wield, a tool's work and tier, a weapon's kit, a handle's
-## trait), with WIELD / PUT AWAY on a weapon. It follows the bag as the server changes it. Grades and
+## handle, its POWER against the weapon you wield, a tool's work and tier, a weapon's kit and moves, a handle's
+## trait), with WIELD / PUT AWAY on a weapon. A weapon of a kit with roles wears its handle's BADGE in a corner,
+## and says what its handle does and names its last hit (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: show, don't
+## name: never the role's name). It follows the bag as the server changes it. Grades and
 ## Power: `RegentsGrade`.
 
 const COLUMNS: int = 6
@@ -50,6 +52,13 @@ func refresh() -> void:
 		s.selected = st.id == picked_row
 		var def: ItemDef = ItemDef.by_id(st.item_def_id)
 		s.tooltip_text = ("%s  x%d" % [_name(st), st.qty] if st.qty > 1 else _name(st)) + ("\n" + def.tooltip_for().get_slice("\n", 1) if def != null and def.tooltip_for().contains("\n") else "")
+		var role: RoleDef = ItemDef.role_of(def, st.instance_data)
+		if role != null:
+			var badge: TextureRect = RegentsRoleBadge.rect(role, 12)
+			badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			badge.position = Vector2(-14, 2)
+			s.add_child(badge)
+			s.tooltip_text += "\n" + role_tooltip(def, role)
 		var row: int = st.id
 		s.pressed.connect(func() -> void:
 			picked_row = row
@@ -102,11 +111,23 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 		_detail.add_child(UiKit.note("A tool: works %s nodes up to tier %d, from the bag." % [it.tool_tag, it.tool_tier]))
 	if it.weapon_kit != &"":
 		var kit: KitDef = KitDef.by_key(it.weapon_kit)
+		var role: RoleDef = ItemDef.role_of(it, st.instance_data)
 		var moves: PackedStringArray = PackedStringArray()
 		if kit != null:
-			for a: AbilityDef in kit.abilities():
+			for a: AbilityDef in (kit.string_for(role) + kit.skills if kit.has_roles() else kit.abilities()):
 				moves.append(a.display_name)
 		_detail.add_child(UiKit.note("A weapon: the %s kit. %s" % [it.weapon_kit, ", ".join(moves)]))
+		if role != null:
+			var line := HBoxContainer.new()
+			line.name = "RoleLine"
+			line.add_theme_constant_override(&"separation", 6)
+			line.add_child(RegentsRoleBadge.rect(role))
+			var words := UiKit.note(role_tooltip(it, role))
+			words.name = "RoleWords"
+			words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			line.add_child(words)
+			_detail.add_child(line)
 	# What it leads to (owner, 2026-10-23): as a part, the trait it gives tools and weapons; what it makes.
 	for line: String in it.part_lines():
 		_detail.add_child(UiKit.note("As a %s, %s" % [it.part_tag, line[0].to_lower() + line.substr(1)]))
@@ -132,6 +153,18 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 		var qty: int = st.qty
 		d.pressed.connect(func() -> void: inventory.request_drop(row, qty))
 		buttons.add_child(d)
+
+
+## A weapon's role in words, for its tooltip: its last hit by name, what its handle does ("Its last hit: Pommel
+## bash. The string ends in ... Held, a full guard: ..."). Never the role's name.
+static func role_tooltip(it: ItemDef, role: RoleDef) -> String:
+	return "Its last hit: %s. %s" % [RegentsRoleBadge.last_hit_name(it, role), RegentsRoleBadge.does_line(it, role)]
+
+
+## What the role line says now (tests): "" for none.
+func role_line() -> String:
+	var l: Label = _detail.find_child("RoleWords", true, false) as Label if _detail != null else null
+	return l.text if l != null else ""
 
 
 ## Its name with its grade ("Fine iron axe").

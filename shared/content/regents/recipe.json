@@ -171,7 +171,7 @@
 			],
 			"min_rank": 1,
 			"minigame": {},
-			"name": "Handle",
+			"name": "Grip",
 			"output": 40013,
 			"output_qty": 1,
 			"part_slot": -1,
@@ -226,7 +226,7 @@
 			],
 			"min_rank": 2,
 			"minigame": {},
-			"name": "Oak handle",
+			"name": "Oak grip",
 			"output": 40016,
 			"output_qty": 1,
 			"part_slot": -1,
@@ -248,7 +248,7 @@
 			],
 			"min_rank": 4,
 			"minigame": {},
-			"name": "Yew handle",
+			"name": "Yew grip",
 			"output": 40017,
 			"output_qty": 1,
 			"part_slot": -1,
@@ -1115,6 +1115,138 @@
 			"skill": 40004,
 			"station": "anvil",
 			"xp": 15
+		},
+		{
+			"afk_ms": 3000,
+			"afk_quality": 350,
+			"id": 40032,
+			"inputs": [
+				[
+					40002,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Crossguard grip",
+			"output": 40040,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 8
+		},
+		{
+			"afk_ms": 3000,
+			"afk_quality": 350,
+			"id": 40033,
+			"inputs": [
+				[
+					40002,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Banner grip",
+			"output": 40041,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 8
+		},
+		{
+			"afk_ms": 3500,
+			"afk_quality": 350,
+			"id": 40034,
+			"inputs": [
+				[
+					40003,
+					2
+				]
+			],
+			"min_rank": 2,
+			"minigame": {},
+			"name": "Oak crossguard grip",
+			"output": 40042,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 14
+		},
+		{
+			"afk_ms": 3500,
+			"afk_quality": 350,
+			"id": 40035,
+			"inputs": [
+				[
+					40003,
+					2
+				]
+			],
+			"min_rank": 2,
+			"minigame": {},
+			"name": "Oak banner grip",
+			"output": 40043,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 14
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40036,
+			"inputs": [
+				[
+					40004,
+					2
+				]
+			],
+			"min_rank": 4,
+			"minigame": {},
+			"name": "Yew crossguard grip",
+			"output": 40044,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 24
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40037,
+			"inputs": [
+				[
+					40004,
+					2
+				]
+			],
+			"min_rank": 4,
+			"minigame": {},
+			"name": "Yew banner grip",
+			"output": 40045,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 24
 		}
 	],
 	"owner": "regents",

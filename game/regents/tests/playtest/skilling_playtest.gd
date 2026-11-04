@@ -7,10 +7,18 @@ extends Node
 ##                     for what a fresh character cannot reach in a test (two logs, two iron bars); carves a
 ##                     handle AFK; picks the axe head with Q and shapes it in a round; assembles an Iron axe;
 ##                     chops again with the iron axe in the hand, at its speed
-##   `--role=buddy`    chops tree_1 AFK beside them, gets logs too (or sees it fall), and sees them swing
+##                     THE TUTORIAL (Luke, 2026-11-01): first E on the camp's guide twice (the offer, then taken), so
+##                     the chain's real work ticks its lessons; last a copper sword (the shell's bars and rivets:
+##                     GRANT_SWORD), blade at the anvil and sword at the workbench, each ticked as it is made
+##   `--role=buddy`    chops tree_1 AFK beside them, gets logs too (or sees it fall), and sees them swing; offered the
+##                     tutorial, not begun: the card says where the guide is
 ## Every step checks what the server paid, the skill's XP, and how it looks. Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 260.0
+const OVERALL_TIMEOUT_SEC: float = 330.0
+## The camp's guide (the glade's `guide` point).
+const GUIDE: Vector3 = Vector3(5.0, 0.0, 22.5)
+const BLADE: int = 40027
+const COPPER_SWORD: int = 40028
 const TREE_1: Vector3 = Vector3(-9.0, 0.0, -6.0)
 const COPPER_1: Vector3 = Vector3(14.0, 0.0, 16.0)
 const FURNACE: Vector3 = Vector3(-6.0, 0.0, 14.0)
@@ -47,6 +55,7 @@ var look: SkillingLook
 ## The axe head's round score (its quality).
 var shaped_q: int = 0
 var driver: AnimationDriverComponent
+var tutorial: TutorialComponent
 
 
 func _ready() -> void:
@@ -68,6 +77,7 @@ func _run() -> void:
 	interaction = me.find_component(InteractionComponent) as InteractionComponent
 	look = me.find_component(SkillingLook) as SkillingLook
 	driver = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	tutorial = me.find_component(TutorialComponent) as TutorialComponent
 	_check(skilling != null and inv != null and hud != null and look != null, "the adventurer has skilling, a bag and its look; the genre's HUD is up")
 	if skilling == null or inv == null or hud == null:
 		_finish()
@@ -87,6 +97,7 @@ func _run() -> void:
 
 
 func _chopper(tree_id: int) -> void:
+	await _tutorial_begin()
 	# --- WOODCUTTING: tap E (AFK), then hold E (a round, A and D) ---
 	await _stand_by(TREE_1)
 	await _chat_with_buddy()
@@ -265,7 +276,7 @@ func _chopper(tree_id: int) -> void:
 	_check(hud.station_window.draws == drawn0, "open and idle for 2 s: drawn %d more times (none)" % (hud.station_window.draws - drawn0))
 	hud.station_window.close()
 	await get_tree().create_timer(0.3).timeout
-	_check(await _make("Handle"), "the workbench's window: a handle, MAKE")
+	_check(await _make("Grip"), "the workbench's window: a handle, MAKE")
 	await _until(func() -> bool: return inv.count(HANDLE) >= 1, 6.0)
 	_check(inv.count(HANDLE) >= 1, "a handle carved from logs, AFK")
 	if skilling.afk_target == bench:
@@ -276,7 +287,7 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return skilling.afk_target == -1, 4.0)
 	_check(skilling.afk_target == -1, "STOP stops the carving")
 	_check(skilling.rank_in(SkillDef.by_key(&"crafting")) >= 2, "the first handle's first-make bonus: crafting rank %d" % skilling.rank_in(SkillDef.by_key(&"crafting")))
-	_check(await _make("Oak handle"), "the window: the oak handle, MAKE")
+	_check(await _make("Oak grip"), "the window: the oak handle, MAKE")
 	await _until(func() -> bool: return inv.count(OAK_HANDLE) >= 1 and skilling.afk_target == -1, 12.0)
 	_check(inv.count(OAK_HANDLE) == 1 and inv.count(OAK_LOGS) == 0, "an oak handle carved from oak logs; out of them, it stops by itself")
 	# One line a recipe; the handle is picked in its slot's list, and the traits under it (MATERIALS.md step 3).
@@ -296,7 +307,7 @@ func _chopper(tree_id: int) -> void:
 	hud.toggle_bag()
 	hud.skills_window.close()
 	var said: String = RegentsHud.station_prompt(skilling, SkillingComponent.station_of(bench), inv)
-	_check(said.contains("Steady") and said.contains("1 Oak handle (1)"), "it says its trait and takes the oak handle: \"%s\"" % said.replace("\n", " / "))
+	_check(said.contains("Steady") and said.contains("1 Oak grip (1)"), "it says its trait and takes the oak handle: \"%s\"" % said.replace("\n", " / "))
 	var make_button: Button = hud.station_window.find_child("Make", true, false) as Button
 	_check(make_button != null and not make_button.disabled, "MAKE is ready: the bag has what it takes")
 	if make_button != null:
@@ -343,6 +354,7 @@ func _chopper(tree_id: int) -> void:
 	await _tap(&"interact", 0.08)
 	await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
 	_check(skilling.afk_target == -1, "a second tap stops the work")
+	await _tutorial_sword()
 
 
 ## CHAT (DECISIONS #273), beside the buddy at tree_1: Enter, a line (typing W walks nowhere), Enter; it
@@ -473,7 +485,83 @@ func _buddy(tree_id: int) -> void:
 	var node: NodeComponent = SkillingComponent.node_of(tree_id)
 	await _until(func() -> bool: return inv.count(LOGS) > 0 or node.depleted, 9.0)
 	print("   buddy: %d logs, the tree %s" % [inv.count(LOGS), "fell" if node.depleted else "stands"])
+	_check(tutorial != null and tutorial.state == TutorialComponent.OFFERED and hud.tutorial_card.visible
+		and hud.tutorial_card._body.text.contains("training yard"), "the buddy, not begun: offered, the card says where the guide is")
 	_check(inv.count(LOGS) > 0 or node.depleted, "two at one tree: the buddy gets logs too (or sees it fall)")
+
+
+## THE TUTORIAL BEGUN AT THE GUIDE: offered (a new character's), the card says where; E on the guide, their offer;
+## E again, taken: the card shows the first lesson.
+func _tutorial_begin() -> void:
+	_check(tutorial != null, "the adventurer has the tutorial")
+	if tutorial == null:
+		return
+	await _until(func() -> bool: return tutorial.state != TutorialComponent.NONE, 5.0)
+	_check(tutorial.state == TutorialComponent.OFFERED and hud.tutorial_card.visible and hud.tutorial_card._keys.text.contains("press E"),
+		"a new character is offered the tutorial: the card says the guide is by the yard (state %d)" % tutorial.state)
+	await _stand_by(GUIDE)
+	# (Looked for as we wait: just stepped here, the guide's entity may still be on its way to us.)
+	await _until(func() -> bool: return TutorialComponent.is_guide(interaction.get_target()), 4.0)
+	var guide: int = interaction.get_target()
+	await _until(func() -> bool: return hud._prompt.text.contains("talk to the drillmaster"), 1.0)   # the HUD's next frame
+	var guides: Array[String] = []
+	for id: int in EntityRegistry.all_entity_ids():
+		if TutorialComponent.is_guide(id):
+			guides.append("%d at %s" % [id, str((EntityRegistry.get_entity(id) as Node3D).global_position)])
+	_check(TutorialComponent.is_guide(guide) and hud._prompt.text.contains("talk to the drillmaster"),
+		"facing the guide, E is to talk to them (\"%s\"; target %d; guides %s; me at %s)" % [hud._prompt.text, guide, str(guides), str(me.global_position)])
+	await _tap(&"interact", 0.08)
+	await get_tree().process_frame
+	_check(hud.tutorial_card.offering() and hud.tutorial_card._body.text == tutorial.greeting and hud.tutorial_card._keys.text.contains("E: show me"),
+		"E: the guide offers the lessons in their words (\"%s\")" % hud.tutorial_card._body.text)
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return tutorial.state == TutorialComponent.ON, 4.0)
+	await get_tree().process_frame
+	_check(tutorial.state == TutorialComponent.ON and hud.tutorial_card._title.text.begins_with("Chop wood") and hud.tutorial_card._title.text.ends_with("1 / 15"),
+		"E again: taken; the card shows the first lesson (\"%s\")" % hud.tutorial_card._title.text)
+
+
+## THE SWORD MADE (the tutorial's chain, finished by hand): the chain's work so far ticked its lessons; the shell's two
+## bars become a copper sword blade at the anvil, which with a grip and two rivets is a copper sword at the workbench.
+func _tutorial_sword() -> void:
+	if tutorial == null or tutorial.state != TutorialComponent.ON:
+		return
+	var names: Array[String] = []
+	for id: int in tutorial.done:
+		names.append(LessonDef.by_id(id).display_name)
+	_check(names.has("Chop wood") and names.has("Carve a grip") and names.has("Mine copper") and names.has("Smelt copper") and names.has("Smith rivets"),
+		"the chain's own work ticked its lessons, seen by the server: %s" % str(names))
+	await get_tree().process_frame
+	_check(hud.tutorial_card._title.text.begins_with("Smith a blade"), "the card now: \"%s\"" % hud.tutorial_card._title.text)
+	print("GRANT_SWORD %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(COPPER_BAR) >= 2 and inv.count(RIVETS) >= 2, 10.0)
+	var ticked: Array[String] = []
+	tutorial.lesson_ticked.connect(func(l: LessonDef) -> void: ticked.append(l.display_name))
+	await _stand_by(ANVIL)
+	await _until(func() -> bool: return interaction.get_target() == _station_id(ANVIL), 3.0)
+	_check(await _make("Copper sword blade", "Make"), "at the anvil: a copper sword blade, MAKE 1")
+	await _until(func() -> bool: return inv.count(BLADE) >= 1, 12.0)
+	hud.station_window.close()
+	await _until(func() -> bool: return ticked.has("Smith a blade"), 4.0)
+	_check(inv.count(BLADE) >= 1 and ticked.has("Smith a blade"), "a blade smithed: its lesson ticked (%s)" % str(ticked))
+	await _stand_by(BENCH)
+	await _until(func() -> bool: return interaction.get_target() == _station_id(BENCH), 3.0)
+	_check(await _make("Copper sword", "Make"), "at the workbench: a copper sword, MAKE 1")
+	await _until(func() -> bool: return inv.count(COPPER_SWORD) >= 1, 12.0)
+	hud.station_window.close()
+	await _until(func() -> bool: return ticked.has("Make your sword"), 4.0)
+	await get_tree().process_frame
+	_check(inv.count(COPPER_SWORD) == 1 and ticked.has("Make your sword") and hud.tutorial_card._title.text.begins_with("Take it in hand"),
+		"a copper sword of your own: its lesson ticked; the card: \"%s\"" % hud.tutorial_card._title.text)
+
+
+func _station_id(at: Vector3) -> int:
+	var st: int = -1
+	for id: int in EntityRegistry.all_entity_ids():
+		var s: StationComponent = SkillingComponent.station_of(id)
+		if s != null and (EntityRegistry.get_entity(id) as Node3D).global_position.distance_to(at) < 0.6:
+			st = id
+	return st
 
 
 ## Hold E on the target until the server deals its round and the HUD shows it. True when it did.

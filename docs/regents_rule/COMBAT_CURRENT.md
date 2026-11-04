@@ -1,5 +1,14 @@
 # Regent's Rule: combat as built (2026-10-29), for the combat overhaul
 
+> **Kept current through the overhaul.** Step 1 (2026-10-31, PROGRESS step 26: foe kits, turns, the aim lock,
+> unblockable) is in §11; step 2 (2026-10-31, PROGRESS step 27: one string whose last hit is the finisher,
+> follow-throughs, the parry on the seen hit, the riposte, weak and full front blocks) rewrote §2-§5, §7, §9
+> and §13. Step 4 (2026-11-01, PROGRESS step 30: ROLES by the handle's shape, the sword first) added §3.3 and
+> touched §2, §3.1, §5, §7, §12-§15. POISE (2026-11-02, PROGRESS step 34: a foe staggers only when the last hit
+> breaks its poise, shown on the target marker) touched §4, §7, §9, §12, §13; the tutorial's yard (PROGRESS step 33:
+> the sparring skeleton, the parry ring) is in §11. Where this doc and `COMBAT_OVERHAUL.md` differ, this one says
+> what is built.
+
 A complete account of the combat that exists in the game today: what the player does, what happens, every
 number, how it is timed, who decides what, where it lives in the code, and what is known to be wrong or
 missing. Written to be handed to someone (or another model) designing the overhaul, the way the materials
@@ -31,9 +40,10 @@ global cooldown: each ability has its own, and the swing's **animation lock** pa
 
 | Input | Melee kit (axe, sword) | Bow | Staff |
 |---|---|---|---|
-| **LMB tap** | the next step of the light combo | — | Bolt |
-| **LMB hold** | the heavy (fires once held `heavy_hold_ms`, 350 ms) | draw; **release looses** (a release under 120 ms lets the draw go) | — |
-| **RMB hold** | block (a hit within `parry_ms` of raising it is parried) | lets the draw go | — |
+| **LMB tap** | the next step of the string; its last is the FINISHER (no hold-LMB: the heavy merged in) | — | Bolt |
+| **LMB hold** | — | draw; **release looses** (a release under 120 ms lets the draw go) | — |
+| **RMB tap** | THE GUARD: a parry, judged on the hit as you saw it (§5) | lets the draw go AND parries with the stave | a parry |
+| **RMB hold** | the block, front-only: a FULL guard with a guard handle (a sword's crossguard hilt: 25 % through), else light (60 %) | (the block) | (the block) |
 | **Ctrl** | dodge roll (everyone, any weapon or none) | same; ends the draw | same; ends a cast |
 | **Q E R F** | the kit's skills, at mastery ranks 1 / 3 / 6 / 9, **in stance only** | (none yet) | Fireball, Frost Ring, Blink, Gale |
 | **Tab** | next target in front (25 m, a 120° arc, nearest the crosshair first): a ring under it, its health at the top | same | same |
@@ -56,23 +66,27 @@ Client code: `CombatComponent._unhandled_input`, `_process` (`game/regents/comba
 
 ## 3. The kits (content: `game/regents/content/kit/`, baked to `shared/content/regents/kit.json`)
 
-A `KitDef` has: a key, the mastery skill it trains, its light combo (in order), its heavy, its skills (with
-the ranks they unlock at, default 1/3/6/9), `combo_window_ms` (900), `heavy_hold_ms` (350), `chain_ms`
-(60), `draws` / `draw_full_ms` for a bow, a `resource` for a caster, and a `timing_set` (the animation set
-whose clip lengths ARE the locks, below).
+A `KitDef` has: a key, the mastery skill it trains, its STRING (`light`, in order; its last step is the
+FINISHER), a FOLLOW-THROUGH per step (`follow_ms`, 200 each: how long after a step lands the next may start),
+its skills (with the ranks they unlock at, default 1/3/6/9), `unblockable` (a foe's finisher), `draws` /
+`draw_full_ms` for a bow, a `resource` for a caster, and a `timing_set` (the animation set whose clip
+lengths ARE the locks, below). The string's window is the hot rule `regents.combo_window_ms` (2 s). Retired
+with the heavy (2026-10-31): `heavy`, `heavy_hold_ms`, `chain_ms`, the kit's `combo_window_ms`.
 
 ### 3.1 Every ability (`content/ability/`; the foundation's `AbilityDef`)
 
 | id | name | kit / slot | damage | wind-up ms | cooldown ms | reach m | radius m | lock ms (clip) |
 |---|---|---|---|---|---|---|---|---|
-| 40001 | Slash | sword light 1 | 8 | 180 | 450 | 1.7 | 0.45 | 458 |
-| 40002 | Slash (second) | sword light 2 | 8 | 180 | 450 | 1.7 | 0.45 | 510 |
-| 40003 | Slash (finisher) | sword light 3 | 13 | 220 | 700 | 1.9 | 0.5 | 867 |
-| 40004 | Heavy cut | sword heavy | 24 | 450 | 900 | 2.0 | 0.55 | 917 |
+| 40001 | Slash | sword step 1 | 8 | 220 | 450 | 1.7 | 0.45 | 442 |
+| 40002 | Slash (second) | sword step 2 | 10 | 240 | 450 | 1.7 | 0.45 | 417 |
+| 40003 | Piercing thrust | sword step 3 with a plain grip (the plain role's FINISHER) | 26 | 380 | 700 | 2.4 | 0.5 | 734 |
+| 40022 | Pommel bash | sword step 3 with a crossguard hilt (stagger x1.5: 1.2 s) | 14 | 340 | 700 | 2.1 | 0.5 | 635 |
+| 40023 | Rallying cut | sword step 3 with a banner hilt (heals 8 within 6 m) | 14 | 400 | 700 | 2.1 | 0.9 | 579 |
+| ~~40004~~ | ~~Heavy cut~~ | retired 2026-10-31 (the server refuses it) | | | | | | |
 | 40005 | Lunge | sword skill (rank 1, Q) | 16 | 250 | 6000 | 3.2 | 0.45 | 1250 (lunges: moves the body) |
-| 40006 | Chop | axe light 1 | 11 | 260 | 550 | 1.6 | 0.45 | 578 |
-| 40007 | Chop (second) | axe light 2 | 15 | 300 | 650 | 1.7 | 0.5 | 667 |
-| 40008 | Overhead | axe heavy | 32 | 600 | 900 | 1.9 | 0.55 | 909 |
+| 40006 | Chop | axe step 1 | 12 | 320 | 550 | 1.6 | 0.45 | 594 |
+| ~~40007~~ | ~~Chop (second)~~ | retired 2026-10-31 (the server refuses it) | | | | | | |
+| 40008 | Overhead | axe step 2, the FINISHER | 26 | 550 | 900 | 1.9 | 0.55 | 1048 |
 | 40009 | Cleave | axe skill (rank 1, Q) | 18 | 350 | 7000 | 2.2 | 0.9 | 875 |
 | 40010 | Dodge roll | everyone | — | 100 | 1500 | — | — | (the roll, 550 ms) |
 | 40011 | Loose | bow | 30 (full draw) | 100 | — | range 40 | — | 556 |
@@ -89,6 +103,39 @@ animation set and the swing's timing follows on both sides. A lock is never shor
 so in practice the lock is what paces them; skills have long cooldowns of their own.
 
 The sword's E/R/F and the axe's E/R/F are empty (only Q exists). The bow has no skills.
+
+### 3.3 Roles by the handle (step 4, 2026-11-01; `COMBAT_OVERHAUL.md` §5, Luke's calls in `GAME.md`)
+
+**The handle's SHAPE sets the role; its MATERIAL still sets the trait.** The role changes only the string's
+last hit, and carries its guard and its threat. SHOW, DON'T NAME: the player sees a BADGE (a point, a shield, a
+cross) and what the handle does; "Damage", "Tank", "Support" and "finisher" are for code and docs only.
+
+| role (`RoleDef`, `content/role/`) | sword handle (items, ids pinned) | its last hit | guard | threat (stored, step 6) |
+|---|---|---|---|---|
+| Damage (40001, the PLAIN role) | the grip: Grip 40013, Oak 40016, Yew 40017 (any grip that names no role) | Piercing thrust 40003: 26, 2.4 m, 380 ms | light (60 %) | 100 % |
+| Tank (40002) | Crossguard grip 40040, Oak 40042, Yew 40044 | Pommel bash 40022: 14, 340 ms, stagger x1.5 (1.2 s) | FULL (25 %) | `regents.guard_threat_pct` (250 %), scope `guard_threat_bosses_only` (off: every foe) |
+| Support (40003) | Banner grip 40041, Oak 40043, Yew 40045 | Rallying cut 40023: 14, 400 ms, a wider sweep (0.9 m), heals players within 6 m for 8 | light (60 %) | 100 % (healing no more than damage) |
+
+- **Items** (since 2026-11-01, PROGRESS 32: one family of three SHAPES for every tool and weapon): the grip (the
+  plain handle, renamed), the crossguard grip (40010) and the banner grip (40011), each in every wood by Make the table,
+  each with its wood's trait, the same cost, time and Crafting rank as the plain grip of its wood (recipes
+  40032-40037). Any tool or weapon takes any shape; the shape gives its role only on a weapon whose kit has roles (the
+  sword so far). One mesh.
+- **The role map** (`KitDef.roles`, a `KitRole` each: role, last hit, `stagger_pct`, `heal`, `heal_radius_m`,
+  `does`: the one line the player reads). The plain role's last hit is the string's own last step.
+- **The server decides which last hit fires** (`resolve_ability`, template 1.7.1, DECISIONS #303): a player
+  pressing the string's last step fires the one their wielded weapon's handle gives (`role_of`: the first
+  part, `"p"`, whose shape gives a role, else the plain one), whatever the client asked for; a build from
+  before roles asks for the thrust and gets its handle's. The client predicts the same (`CombatComponent.role()`,
+  `KitDef.light_at`): its clip and its lock.
+- **The rallying cut's heal**: landing on a foe (not a training dummy, as Thirsting), every other living,
+  online player within 6 m gets 8; its user all 8 alone, `regents.rally_self_share_pct` (50 %) of it with
+  players near; each through `healing_received` (Thirsting). One hit per swing (`resolve_action` lands one).
+- **Re-hilting** is the refit (§9 of `MATERIALS.md`): the new hilt used up, the old one LOST, plus
+  `regents.refit_bars` of the head's metal.
+- **A dropped sword rolls its handle's shape** (template `loot_data`, #303): of the plain-wood handles,
+  weighted by `regents.drop_handle_damage_pct` / `_tank_pct` / `_support_pct` (50 / 25 / 25), its data
+  `{"h":H,"p":[H],"t":[]}`. NO LOOT TABLE DROPS A SWORD YET: dormant until one does.
 
 ### 3.2 The weapons (items; `content/item/`)
 
@@ -121,12 +168,13 @@ press ─► 0 ── wind-up ──► HIT (judged) ── +chain_ms ─► (ne
 
 - **The hit lands at the wind-up.** The referee judges it then (§6).
 - **The lock** = the clip's length (table above). Until it ends nothing else starts, except:
-- **Chaining**: the combo's NEXT light step may start from `wind_up + chain_ms` (60 ms after the hit),
-  cancelling the rest of the recovery. This is why "spamming LMB cuts the second swing's animation" (#8):
-  the next light starts right after the last one's hit.
-- **The combo**: each tap is the next light step if it comes within `combo_window_ms` (900 ms) after the
-  last step's lock, else step 1 again. The server refuses a step out of order ("out of the combo's order").
-  After the last step the combo starts over.
+- **The follow-through** (2026-10-31): the string's NEXT step may start from `wind_up + follow` (the step's
+  `KitDef.follow_ms`, 200 ms after its hit), cancelling the rest of the recovery. (It was `chain_ms`, 60 ms:
+  why "spamming LMB cut the second swing's animation", #8.)
+- **The string**: each tap is the next step if it comes within `regents.combo_window_ms` (2 s) after the last
+  step's lock, else step 1 again; a guard press restarts the window, a roll ends the string. The server
+  refuses a step out of order ("out of the combo's order"). After the finisher the string starts over. A
+  sword's string: Slash 220, Slash 240, the finisher 380 ms wind-ups; an axe's: Chop 320, Overhead 550.
 - **The buffer (client)**: a press while you are held is QUEUED (one deep; the latest press wins) and fires
   the moment it may; it lapses after `combo_window_ms`. Mashing gives one swing per animation, never faster,
   and no press is lost. This buffer is client-side only; the server has no queue.
@@ -138,10 +186,11 @@ press ─► 0 ── wind-up ──► HIT (judged) ── +chain_ms ─► (ne
 - **No swing in the air or mid-roll**: the server refuses both ("not in the air", "still rolling"); the
   client holds the press until you land or the roll is over.
 - **No swing while blocking** ("lower your block to swing").
-- **The heavy**: hold LMB 350 ms. Its wind-up has **armor** (a heavy is never flinched).
-- **Heavies flinch lights**: a heavy that hits someone in a light swing's wind-up cancels that swing (it
-  never lands) and gives the **Flinched** status for `flinch_ms` (350 ms: no acting, speed ×0.5). Lights
-  never interrupt anything.
+- **The finisher** (the string's last step; the heavy merged in, 2026-10-31): its wind-up has **armour**
+  (never flinched); it **flinches** a step in its wind-up that it hits (cancels it: it never lands; the
+  **Flinched** status for `flinch_ms`, 350 ms); and when it lands unblocked it **staggers** (`stagger_ms`,
+  800 ms: no acting, a cast let go): a player always, a foe or a dummy only when it breaks their POISE (§7, 8).
+  Other steps never interrupt anything. Foes use the same grammar: a skeleton's finisher staggers you.
 - **Lunge** (sword Q): moves the body itself; its animation is held its whole clip.
 - **Animations**: swings play in place (root motion taken out); others see your swing from the same
   ability event; a hit plays `react.hit` on what was hit, held while Flinched/Staggered.
@@ -155,10 +204,23 @@ the swing, sets Swinging), `hit` (what a hit does). Client: `CombatComponent.may
 
 ## 5. Defence: block, parry, roll
 
-- **Block (RMB held)**: the **Blocking** status (speed ×0.5, no sprint/jump). A hit on you while blocking
-  deals `block_damage_pct` (25 %). Blocking is all-round (no facing check).
-- **Parry**: a hit within `parry_ms` (200 ms) of raising the block deals **0**, and the ATTACKER is
-  **Staggered** for `stagger_ms` (800 ms: no acting, speed ×0.4). Foes can be parried the same way.
+- **The guard** (RMB, every kit; `guard(on, seen_delay_ms)`, 2026-10-31; `block` still works for old builds):
+  - **The parry** (the press): a hit **in front** landing within `parry_ms` (200 ms) before the press, or
+    `parry_late_ms` (50) after, deals **0**, and the ATTACKER is **Staggered** for `stagger_ms` (800 ms).
+    It is judged on the hit **as the player saw it**: the press's arrival less its trip (half the round trip
+    the server measured, #210, or the client's own until one is) and how late the client shows another's
+    swing (its half round trip), at most `foundation.rewind_max_ms`. Every hit on a player WAITS for a press
+    still on its way (`held_hit`, until ~320 ms after it landed; an unparryable one as long, so hits keep the
+    spacing they landed with), then is dealt as judged.
+  - **The whiff lockout**: a press under `parry_whiff_ms` (400) after one that parried nothing parries
+    nothing (it still blocks); after a parry, never.
+  - **The riposte**: the string's first step begun within `riposte_ms` (1 s) of a parry deals
+    `riposte_damage_pct` (150 %); the next tap after a parry is always that first step. A bow's draw begun in
+    the window fills in `riposte_draw_pct` (50 %) of its time. (The staff's riposte is not built.)
+  - **The block** (held): the **Blocking** status (speed ×0.5, no sprint/jump); a hit **in front** deals the
+    role's share (§3.3): a full guard's `block_damage_pct` (25 %) with a guard handle (the crossguard hilt),
+    else the light `weak_block_pct` (60 %). **Front-only**: `guard_arc_deg` (120°) for the parry and the block
+    both; from behind, full damage. An unblockable swing (a foe's finisher) goes through either.
 - **Dodge roll (Ctrl)**: the Dodge roll ability (cooldown 1500 ms) gives **Rolling** for `roll_ms`
   (550 ms): not hittable (i-frames), can act, no jump/sprint. The movement is the foundation's **dash**
   (the adventurer's profile: a 16 m/s impulse over 15 ticks, its own cooldown 84 ticks = 1.4 s), moved by
@@ -199,17 +261,26 @@ hittable (Rolling and Slain are not hittable).
 In order:
 1. `hurts`: a foe hurts only players; a player hurts anything but players (no PvP, no friendly fire).
 2. A swing cancelled in its wind-up (roll, flinch) does nothing.
-3. A heavy flinches a target in a light's wind-up (§4).
-4. **Damage** = `ability damage × weapon_damage_pct/100 × quality × mastery`
+3. A finisher flinches a target in a step's wind-up (§4).
+4. **The guard** (§5), for a player hit from in front by anything not unblockable: a parry already pressed
+   takes it; one that may still arrive holds it (`held_hit`) until it could; then it is dealt (`deal`).
+5. **Damage** = `ability damage × weapon_damage_pct/100 × quality × mastery` (× `riposte_damage_pct` for a riposte)
    - quality: `1 + quality/5000` (+0 to +20 %); mastery: `1 + 3 % per rank above 1` (at most +27 % at
      rank 10). A foe uses its `FoeDef.damage_pct` and no quality or mastery.
-   - then the weapon's **traits** (§9) on damage, by the action (`basic`, `combo_last`, `heavy`, `skill`)
+   - then the weapon's **traits** (§9) on damage, by the action (`basic`, `combo_last`, `skill`)
      and the target's health and family.
-5. **Block / parry** on the target (§5).
+6. **Through the block** if it was up and faced the hit (§5).
 6. A **training dummy** never falls (it keeps 1 hp) and is whole again `dummy_reset_s` (4 s) after its last
    hit; `dummy_hp` 500.
 7. The damage is dealt (`damage_entity`); the target's regeneration waits (`regen_delay_s`).
-8. On-hit traits: Heavy's stagger chance, Thirsting's heal (not off a dummy).
+8. **The last hit staggers** what it lands on unblocked: a PLAYER every time; a FOE or a DUMMY only when it breaks
+   their **POISE** (Luke, 2026-11-02): every melee hit wears it (`poise_light` 10, the last `poise_finisher` 40, Heavy
+   ×1.35 on the last), a light never below 1; broken, it is whole again, the stagger (the role's `stagger_pct`: the
+   pommel bash ×1.5), then **Steadied** (`steadied_ms` 3 s after the stagger: nothing wears it); unhit for
+   `poise_regen_ms` (8 s) it is whole. A foe's poise is its `FoeDef.poise` (70), a dummy's `dummy_poise` (50); a
+   parry staggers whatever the poise (a punish). Shown on the TARGET MARKER: an arc round the ring under your target
+   fills as it wears, pale to red, bursts as it breaks, grey while Steadied (no bar: Luke); Thirsting heals (not off a dummy); the rallying cut heals players
+   near (§3.3, not off a dummy).
 9. **Mastery XP** to the attacker: `damage × combat_xp_per_damage (0.5) × share`, at least 1. The share is
    `dummy_xp_pct` (50 %) on a dummy, else the foe's `xp_pct` (100 %). The XP goes to the kit's skill
    (Swordsmanship, Axemanship, Archery, Sorcery).
@@ -278,7 +349,7 @@ A crafted weapon holds 1/2/3 traits by grade (`crafted_traits_*`), chosen from w
 | trait | on | gives | costs |
 |---|---|---|---|
 | Balanced | any weapon | basic attacks' recovery ×0.85 (a lock of 900 becomes 825) | skills' damage ×0.9 |
-| Heavy | melee | heavies and the combo's last hit Stagger what they hit (100 %) | basic recovery ×1.15 (975 for 900) |
+| Heavy | melee | the last hit wears 35 % more poise (`poise`, 2026-11-02; was the stagger ×1.35) | basic recovery ×1.15 (975 for 900) |
 | Brutal | any weapon | ×1.25 damage when the target is under 30 % health | ×0.9 when it is above |
 | Thirsting | any weapon | basic hits heal you 5 % of their damage | out-of-fight regeneration ×0.85 |
 | Swift Draw | bow | draw time ×0.8 (640 for 800) | arrow speed ×0.85 |
@@ -296,7 +367,7 @@ Warded (armour), Reaching (per-wielder reach for the referee).
 |---|---|---|---|---|---|---|---|---|---|
 | Rolling | 101 | `roll_ms` 550 | ×1 | yes | yes | no | no | **no** | yes |
 | Blocking | 102 | while held | ×0.5 | yes | yes | no | no | yes | yes |
-| Staggered | 103 | `stagger_ms` 800 | ×0.4 | **no** | no | no | no | yes | yes |
+| Staggered | 103 | `stagger_ms` 800 (the pommel bash 1200) | ×0 (rooted, 2026-11-01) | **no** | no | no | no | yes | yes |
 | Swinging | 104 | wind-up + 80 − 120 slack | ×0.25 | yes | yes | no | no | yes | yes |
 | Flinched | 105 | `flinch_ms` 350 | ×0.5 | **no** | no | no | no | yes | yes |
 | Slain | 106 | until up / gone | 0 | no | no | no | no | no | no |
@@ -310,10 +381,14 @@ own table, not a status.
 
 ## 11. Foes (`content/foe/`, `FoeDef`; brain `sidecar/npc/brains/regents/foe.gd`)
 
-| foe | kind | kit | hp | damage % | xp % | family |
-|---|---|---|---|---|---|---|
-| Skeleton warrior | 103 | sword | 120 | 50 | 100 | undead |
-| Skeleton axeman | 104 | axe | 150 | 55 | 100 | undead |
+| foe | kind | kit | hp | damage % | xp % | family | poise |
+|---|---|---|---|---|---|---|---|
+| Skeleton warrior | 103 | sword | 120 | 50 | 100 | undead | 70 |
+| Skeleton axeman | 104 | axe | 150 | 55 | 100 | undead | 70 |
+| Sparring skeleton (the tutorial's yard, `sparring_1`) | 105 | sparring_sword (950 / 950 / 1200 ms, the last glints) | 1500 | 10 | 0 | undead | 70 |
+
+The sparring skeleton notices you at 4 m (leash 8 m), rests 2.5 s, drops nothing, and shows the PARRY RING
+(`FoeDef.parry_ring`): the only foe with it (PROGRESS step 33).
 
 Behaviour (FoeDef defaults, both): notices a player within `notice_m` 10 m **and in sight** (a ray at eye
 height against the level); chases at 4.2 m/s (a player runs 5, so you can always get away); stops at
@@ -342,13 +417,38 @@ lost from sight is chased to where it was last seen for `lose_sight_ms` (2500) b
 
 - Numbers float up from what was hit; a little shake; a heal floats green.
 - Flashes: what you hit lights white, you light red and the screen's edge pulses red (more for a bigger
-  hit); a hit taken while blocking flashes steel blue "Blocked"; a stagger flashes gold "Staggered".
+  hit); a hit the guard stopped flashes steel blue "Blocked"; a stagger flashes gold (no word since 2026-11-02:
+  the status bar under the target's health says it); your own parry says "Parried".
+- **The target marker** (a gold ring under your target) carries its POISE (2026-11-02): an arc just outside it fills
+  as poise wears, pale to red, bursts as it breaks, grey while Steadied (`CombatComponent._place_poise_arc`).
+- **The parry ring** (`FoeDef.parry_ring`, the tutorial's sparring skeleton only): a ring closes on each swing, shut
+  as the blow lands.
+- **Weight** (Luke's feedback 4098, 2026-10-31): a SPARK where the blow lands (warm, bigger on a hit of 20+,
+  steel on a block, gold on a stagger), and a HIT-STOP: both bodies' animation stands still
+  `regents.hitstop_ms` (60), a big hit or a stagger `regents.hitstop_big_ms` (110); the local player's own
+  swing is not held (it played before the server's word). The template's `hold_still` (#301).
+- **The stagger reads** (2026-11-01, PROGRESS 31): the guard knocked aside once (`react.stagger`, Q2
+  `Idle_Shield_Break`), then a dazed sway held for its length (`react.dazed`, Q2 `Zombie_Idle`), ROOTED (speed 0);
+  the player and the skeletons alike; a flinch keeps the quick hit react. Under the target's health, a draining bar
+  for each status done to it ("Staggered 1.1 s") and each effect.
+- **A swing comes back**: each strike is followed by its recovery (`recover.<id>`, the clip's `_Rec`), cross-faded in
+  as it ends; the lock is still the strike's. Sparks, streaks and the glint are soft light; the flash is a rim.
+- **Death interrupts at once** (feedback 4099): the server cancels a falling fighter's swing and drops its
+  hits held for a parry, and lands nothing a dead fighter swung; on screen the swing fades as the fall
+  begins (template #301). **Swing follows swing** with a cross-fade (two action slots, #301).
 - Bottom left: health, the Staff's mana while wielded, the roll's cooldown bar. The action bar text names
-  the kit's keys ("Copper axe: LMB Chop  hold LMB Overhead  RMB block  Ctrl roll  Tab target | Q Cleave").
+  the kit's keys, the string by its moves' own names, its last the handle's, and the guard by what it does
+  ("Iron sword:  LMB Slash - Slash (second) - Pommel bash   RMB tap parry, hold for a full guard   Ctrl roll
+  Tab target | Q Lunge"). Never a role's name nor "finisher".
+- **Roles shown** (§3.3): the craft window's handle list puts each handle's BADGE beside it and, under the row,
+  one line on what the picked one does; the bag puts the badge in a sword's slot corner, and its tooltip and
+  detail name its last hit and say what the handle does (`RegentsRoleBadge`, `game/regents/ui/role_badge.gd`).
 - Tab target: a ring under it, its health at the top. Bow: the draw bar and "to hit N %". Staff: each
   spell's cost and cooldown, a cast bar, an area spell's ring filling on the ground. A burning thing
   flickers with fire.
-- Refusals come back as a line ("No skill on that key yet", "Sorcery rank 3 needed", "No arrows").
+- Refusals come back as a line in a small column at the right (feedback 4097: not the middle of the screen),
+  three at most ("No skill on that key yet", "Sorcery rank 3 needed", "No arrows"). A swing or a roll pressed
+  while staggered, flinched or slain waits until you can act, rather than being sent to be refused.
 - `game/regents/combat/hit_feedback_component.gd`, `combat_look.gd`, `spell_looks.gd`, `regents_hud.gd`.
 
 ---
@@ -358,10 +458,21 @@ lost from sight is chased to where it was last seen for `lose_sight_ms` (2500) b
 | rule | value | what |
 |---|---|---|
 | roll_ms | 550 ms | how long Rolling lasts (i-frames) |
-| parry_ms | 200 ms | a block raised this recently parries |
-| stagger_ms | 800 ms | a parried (or Heavy-trait) attacker is staggered this long |
-| block_damage_pct | 25 % | what a blocked hit still deals |
-| flinch_ms | 350 ms | a heavy's flinch |
+| combo_window_ms | 2000 ms | the string's next step this long after a lock (2026-10-31; was the kit's 900) |
+| parry_ms / parry_late_ms | 200 / 50 ms | a guard press this long before (or after) the hit as seen parries |
+| parry_whiff_ms | 400 ms | a press this soon after one that parried nothing is no parry |
+| riposte_ms / riposte_damage_pct / riposte_draw_pct | 1000 ms / 150 % / 50 % | the riposte window, its damage, a bow's draw in it |
+| stagger_ms | 800 ms | a parried attacker, a player a last hit lands on, or a foe whose poise breaks, is staggered this long |
+| poise_light / poise_finisher | 10 / 40 | what a melee hit wears off a foe's or a dummy's poise (a light never below 1; Heavy x1.35 on the last) |
+| poise_regen_ms / steadied_ms | 8000 / 3000 ms | unhit this long, poise is whole; after a break's stagger, this long nothing wears it |
+| dummy_poise | 50 | a training dummy's poise (a foe's is `FoeDef.poise`, 70) |
+| block_damage_pct | 25 % | the full guard (a guard handle: the crossguard hilt): what a blocked hit still deals |
+| weak_block_pct | 60 % | the light guard (a plain or banner handle) |
+| guard_threat_pct / guard_threat_bosses_only | 250 % / off | the guard handle's threat and its scope (stored for step 6; nothing targets by it yet) |
+| rally_self_share_pct | 50 % | the rallying cut's heal for its user with players near (alone: all of it) |
+| drop_handle_damage_pct / _tank_pct / _support_pct | 50 / 25 / 25 | a dropped weapon's handle shape, by weight |
+| guard_arc_deg | 120° | the parry and the block stop only a hit inside this arc in front |
+| flinch_ms | 350 ms | a finisher's flinch |
 | swing_hold_ms | 80 ms | committed this long after the hit |
 | swing_slack_ms | 120 ms | network forgiveness on swing and roll timing |
 | combat_xp_per_damage | 0.5 | mastery XP per point of damage |
@@ -400,9 +511,11 @@ needs a bake and a publish. Hot rules need neither.
 Rule 13: clients send inputs; servers derive outcomes. No reducer takes a client's result.
 
 ### 14.2 The rows and reducers
-- Player-callable: `wield`, `unwield`, `block`, `use_ability` / `use_ability_seen` (the foundation's; every
+- Player-callable: `wield`, `unwield`, `guard` (and `block`, old builds'), `use_ability` / `use_ability_seen` (the foundation's; every
   swing and the roll), `draw_bow`, `loose_arrow`, `cast_spell`, `cancel_cast`, `set_item_traits` (dev).
 - Tables (genre): `wielded` (public), `combat_state` (combo, block), `swing` (the swing's timeline),
+  `guard_state` (private: the last counting press as seen, the last parry), `held_hit` (private, scheduled:
+  a hit waiting for a parry that may still arrive),
   `foe`, `foe_kill`, `hurt` (recent damage for loot shares), `arrow`, `stuck_arrow`, `casting`,
   `spell_cooldown`, `missile`, `spell_area`, `burning`, `spell_timer`, `dummy`, `meta_tally`, `meta_share`.
   Foundation: `ability_def`, `action_request`, `status_state`, `health_state`, `resource_state`,
@@ -439,6 +552,17 @@ Every player-callable combat reducer spends from a per-player bucket (rule 14).
 - The sword's light combo kills slower than the axe's (the foe bench: warrior 5.6 s to the iron sword,
   4.6 s to the iron axe). A balance question.
 - The draw scaling the bow's damage: Luke was torn; look again.
+
+**Roles (step 4, 2026-11-01): what is left**
+- THREAT is stored, not used: `RoleDef` and the two live rules exist, `role_threat_pct` and `rules::threat_pct`
+  / `heal_threat` compute it, nothing targets by it (step 6). So the guard handle's line says its full guard,
+  not "foes come for you". No foe is a boss yet (`FoeDef.boss`), so the bosses-only scope changes nothing.
+- The rallying cut's share with players NEAR is checked natively and by the server's log, not by two real
+  clients (the playtest is one); alone, all 8 is checked end to end.
+- No loot table drops a sword: the dropped-weapon roll is wired and unit-checked, dormant in play.
+- The three last hits' clips are placeholders (the thrust plays the old finisher's `Sword_Light_C`;
+  `ANIMATIONS.md` §5); one mesh for every handle (Luke: meshes later, with the art).
+- Only the sword has roles; the axe, bow and staff role maps are step 7 (content fill).
 
 **Design (RULE_DESIGN §4) not built**
 - **The server-side cast queue** (§4.3: one queued ability, re-validated at the end of the cast/recovery,
@@ -487,6 +611,7 @@ Every player-callable combat reducer spends from a per-player bucket (rule 14).
 | the HUD | `game/regents/regents_hud.gd` |
 | content types | `game/regents/content/kit_def.gd`, `spell_def.gd`, `foe_def.gd`, trait and item defs |
 | content | `game/regents/content/{kit,ability,spell,status,foe,item,trait,resource}/` (baked to `shared/content/regents/`) |
+| ROLES (§3.3): the role, the kit's role map, the hilts, the badge | `game/regents/content/role_def.gd`, `kit_role.gd`, `role/`, `pattern/{crossguard,banner}_hilt.tres`; `game/regents/ui/role_badge.gd`; the server's `role_of`, `resolve_last_hit`, `rally`, `dropped_weapon_data` |
 | hot rules | `game/regents/content/rules/regents.tres` |
 | the server's combat | `server/src/game/regents.rs` (from `wielded` ~line 1417 to the dummies ~2800) |
 | the pure maths (damage, combo, draw, hit chance, arcs, lock, ranks) | `server/src/genre/regents/mod.rs` |

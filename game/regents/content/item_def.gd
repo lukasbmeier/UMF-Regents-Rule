@@ -42,6 +42,11 @@ class_name ItemDef extends ContentDef
 ## The trait it offers a WEAPON (oak: Heavy, iron rivets: Brutal). An item that is both (an axe) takes the
 ## tool's. None: nothing for weapons.
 @export var part_weapon_trait: TraitDef
+## A HANDLE'S SHAPE (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: grip, crossguard, banner, for every tool and weapon):
+## the role a weapon made with it has, when its kit has roles (the sword). Empty: the plain role.
+@export var role: RoleDef
+## The one kit it is a part of ("sword": a hilt fits a sword, not an axe). Empty: any made of its kind.
+@export var fits_kit: StringName = &""
 @export_group("How it shows")
 ## What a tool looks like in the hand while it works (a `HeldItem` scene), if it is a tool.
 @export var held_scene: PackedScene
@@ -93,6 +98,8 @@ func to_bake() -> Dictionary:
 		"part_tag": String(part_tag),
 		"handle_trait": ContentDef.ref(handle_trait),
 		"weapon_trait": ContentDef.ref(part_weapon_trait),
+		"role": ContentDef.ref(role),
+		"fits_kit": String(fits_kit),
 	}
 
 
@@ -158,6 +165,10 @@ func validate() -> Array[String]:
 		out.append("its weapon trait (%s) is not one a weapon may have: its `applies_to` names no weapon" % part_weapon_trait.display_name)
 	if part_tag == &"" and part_weapon_trait != null:
 		out.append("it has a weapon trait but is no part: set `part_tag`")
+	if part_tag == &"" and (role != null or fits_kit != &""):
+		out.append("it has a handle's shape (`role`, `fits_kit`) but is no part: set `part_tag`")
+	if fits_kit != &"" and KitDef.by_key(fits_kit) == null:
+		out.append("it fits the kit \"%s\", which is no kit" % fits_kit)
 	if (material == null) != (pattern == null):
 		out.append("a cell of the material table names both its material and its pattern (or neither: an item by hand)")
 	if by_hand and material == null:
@@ -205,7 +216,7 @@ func uses() -> PackedStringArray:
 			continue
 		var takes_it: bool = r.inputs.has(self)
 		for slot: int in r.pick_slots():
-			takes_it = takes_it or (part_tag != &"" and r.inputs[slot] != null and r.inputs[slot].part_tag == part_tag)
+			takes_it = takes_it or (part_tag != &"" and r.inputs[slot] != null and r.inputs[slot].part_tag == part_tag and fits(r.output))
 		if takes_it and not out.has(r.output.display_name):
 			out.append(r.output.display_name)
 	out.sort()
@@ -237,6 +248,28 @@ func tooltip_for(made: ItemDef = null) -> String:
 	if not u.is_empty():
 		lines.append("Makes: " + ", ".join(u))
 	return "\n".join(lines)
+
+
+## Whether it may go in a part slot of `made` (its kind matches, and it fits `made`'s kit when it names one).
+## The server's twin: `parts_for` (game/regents.rs).
+func fits(made: ItemDef) -> bool:
+	return fits_kit == &"" or (made != null and made.weapon_kit == fits_kit)
+
+
+## THE ROLE of `made` assembled as `instance_data` says (its parts, `"p"`, or its handle, `"h"`): the first part
+## whose shape gives one, else the plain role. Null for a weapon whose kit has no roles, or no weapon. The
+## server's twin: `role_of`.
+static func role_of(made: ItemDef, instance_data: String) -> RoleDef:
+	var kit: KitDef = KitDef.by_key(made.weapon_kit) if made != null and made.weapon_kit != &"" else null
+	if kit == null or not kit.has_roles():
+		return null
+	var data: Dictionary = RegentsGrade.data_of(instance_data)
+	var parts: Array = data.get("p", [data["h"]] if data.has("h") else [])
+	for p: Variant in parts:
+		var it: ItemDef = ItemDef.by_id(int(p))
+		if it != null and it.role != null:
+			return it.role
+	return RoleDef.plain_role()
 
 
 ## The item with content id `item_id`, or null.

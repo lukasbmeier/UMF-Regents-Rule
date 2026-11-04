@@ -3,14 +3,15 @@ class_name RegentsContent extends RefCounted
 ## every piece each time it is asked (right for the editor and the bake, where content changes), and the
 ## HUD asks every frame: at the workbench its prompt asked dozens of times a frame and the game ran at
 ## 10 fps (owner's feedback, 2026-10-19). In a running game content does not change, so each type is
-## listed once here; in the editor every ask goes to the library, so edits show at once.
+## listed once here; in the editor every ask goes to the library, so edits show at once, and so does a scratch
+## project's (`ContentLibrary.root_override`: a test that writes content as it goes).
 
 static var _cache: Dictionary[StringName, Array] = {}
 
 
 ## Every piece of `type`, by id (the library's list).
 static func items(type: StringName) -> Array[ContentDef]:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() or not ContentLibrary.root_override.is_empty():
 		return ContentLibrary.items(type)
 	if not _cache.has(type):
 		_cache[type] = ContentLibrary.items(type)

@@ -1243,3 +1243,529 @@ between worlds; who is a person by each row; 7 mutations each fail 1-3 checks), 
 
 **Left for later**: a region referee loading only its part of the level; how often an idle skeleton thinks (the
 combat overhaul's to set); the 2-3 s start-up stalls as a referee's skeletons bind; three strips or four (Luke's).
+
+## Step 26: the combat overhaul, step 1: foes you can read (2026-10-31)
+
+Luke: "let's get started on the ground work and first steps" of `COMBAT_OVERHAUL.md` (the playtest: combat
+too fast, the skeletons' attacks landing together and hard to read). Its §9 step 1, pace and readability.
+
+- **Foe kits of their own** (`game/regents/content/kit/skeleton_sword.tres`, `skeleton_axe.tres`; abilities
+  40017-40021, `content/ability/foe_*.tres`): the warrior swings Rusted cut (550 ms wind-up), Rusted backswing
+  (580), Skull splitter (850, unblockable); the axeman Hack (590), Crushing overhead (880, unblockable). The
+  clips are UAL2's already in the project, slowed (`anim/adventurer.tres`, `ability.40017`-`40021`), each wind-up
+  set where the clip's hand moves fastest (measured on the bones, matching the old Slash and Heavy cut to ~30 ms).
+  Damage per hit is bigger and rarer: warrior 7 / 8 / 14, axeman 11 / 18.7. Player kits untouched; no weapon names
+  a foe kit (both suites check).
+- **Unblockable** (`KitDef.unblockable`, baked, `KitSeed::unblockable`): `hit` lets no block or parry stop it
+  (`server/src/game/regents.rs`). **The red glint**: a foe's `HitFeedbackComponent` hears the use start
+  (`started_elsewhere`) and, for an unblockable ability, flares a red spark at its head and flashes it red.
+- **Turns** (`sidecar/npc/brains/regents/foe.gd`, per referee): at most `regents.attack_tokens` (2) foes swing at
+  one player; the others CIRCLE at reach + 1.5 m, facing them; no foe swing lands sooner than
+  `regents.token_gap_ms` (600) after another landed on that player, whatever it did; a turn is a whole string,
+  given back when the finisher's lock ends. Rests 2 s ± 0.5 s (`FoeDef.rest_ms`, `rest_jitter_ms`).
+- **Aim tracks, then locks** (`regents.foe_aim_lock_ms`, 300): the foe stops turning 300 ms before its hit
+  lands. FOUND: the referee already judged along the foe's facing AT THE LANDING, and the brain turned to you every
+  think, so foes tracked you to the hit (the spec said the opposite; corrected). No template change was needed.
+- **The foe bench** shows hits on you a second, the least gap between its own hits, and the group's rule.
+- Not done: **loot per minute** (judged once the playtest says how much kills slowed; foe HP untouched).
+
+**How to play it**: restart the game (the play database is republished, data kept). Walk to the skeleton camp.
+Two skeletons at most come at you; the third circles. Watch for the red glint on a skeleton's head: that swing
+cannot be blocked; roll (Ctrl) or step out late in its wind-up. Hold the right button against the others' lights
+(a quarter comes through). The rule numbers are live on the Rules page (`regents.attack_tokens`, `token_gap_ms`,
+`foe_aim_lock_ms`); a foe's swings, rest and damage are its `FoeDef` and kit in the Inspector.
+
+**Tested**: genre unit 2843/0 (new: foe kits slow and their finisher unblockable, no weapon wields one, nothing a
+player has is unblockable, a kit listing another's ability refused; three skeletons on one player for 30 s: at most
+two fight, the third circles, 48 swings never within 600 ms, each takes its turn, a turn is the whole string; the
+aim follows a step 450 ms before the hit, holds for one 250 ms before, and turns again after; both negatives: no
+gap gives a 0 ms gap, no lock lets the aim follow); native 128/0 (a foe finisher is unblockable, a player kit
+has none); **combat playtest 55/0 at 150 ms** (new: blocking against the camp, a finisher glinted, came through
+the block in full, 14.0 and 18.7, lights still blocked, 1.75 / 2.0 / 2.75, hits never two together: least gap
+608-649 ms over four runs; negative: with `hit`'s rule off the finisher came through at 3.5 and the check failed).
+The old playtest's "chop it back" now waits, guarded, for the warrior to step in: a circling foe is out of reach,
+and two skeletons kill a player who stands there unguarded.
+`load_300.sh` (continent, four referees; the referee session's CPU-heavy sweep ran on this PC for part of it): **300 bots hold every limit** (referee frames 6.9 ms p95, no stalls, the module 39.7 % busy, 64.9 swings a second judged); 200 holds; 100 says BREAKS on ONE referee net stall (714 ms; run again alone: 708 ms), the stall `REFEREE_SCALING.md` already records at 50 and 100 (~30 s after a referee starts), not the foes; both negatives fail as they should.
+
+**Left for later**: the step-2 rules (the finisher's armour, so a player's heavy no longer flinches a foe's
+finisher; the parry judged on the seen hit); "Blocked" still floats up when an unblockable hit lands on a
+block; the clips are slowed placeholders until `ANIMATIONS.md` §3's foe clips; loot per minute; threat (step 6)
+decides who gets a turn first (today: the first to ask).
+
+## Step 27: the combat overhaul, step 2: one string and the guard (2026-10-31)
+
+Luke: "skip the playtest for now: start combat overhaul step 2 (the merged finisher, parry on the seen hit,
+riposte, blocks)". `COMBAT_OVERHAUL.md` §3-§4. His three calls before it was built (in `GAME.md`): the riposte
+is the string's first step with bonus damage; the parry is front-only like the block; every player has the
+weak block until roles come (step 4).
+
+- **One string; its last hit is the finisher** (`KitDef`: `heavy`, `heavy_hold_ms`, `chain_ms` and the kit's
+  `combo_window_ms` retired). The sword: Slash 220 ms / 8, Slash 240 / 10, the finisher 380 / 20 (reach 2.1);
+  the axe: Chop 320 / 12, the Overhead 550 / 26. Their clips retimed so each hit is where the hand moves
+  fastest (`anim/adventurer.tres`; the axe's finisher now plays the old heavy cut's `Sword_Heavy_A`). The heavy
+  cut (40004) and the second chop (40007) are retired: a database kept across publishes still has their rows,
+  so the server refuses them by name (`RETIRED_ABILITIES`). The sword and the axe kill at a like pace (both
+  about 24 a second at 100 %, a string of 38 in ~1.57 s; a native test holds them within a tenth).
+- **The finisher** (`hit`, `deal`): armour (never flinched); it flinches a step in its wind-up; landing
+  unblocked it STAGGERS (`regents.stagger_ms`). Foes have the same grammar: a skeleton's finisher staggers you.
+- **The follow-through** (`KitDef.follow_ms`, one per step, 200 ms): the next step waits for the arc (Luke's
+  #8). **The window** is the hot rule `regents.combo_window_ms`, 2 s; a guard press restarts it.
+- **The guard** (`guard(on, seen_delay_ms)`; `block` stays for old builds): a press PARRIES a hit in front
+  landing within `regents.parry_ms` (200) before it or `parry_late_ms` (50) after, judged ON THE HIT AS SEEN:
+  the press's arrival less its trip (half the round trip the server measured, #210; until one is, the
+  client's own half round trip, capped by `foundation.press_credit_cap_ms`) and how late the client shows
+  another's swing (half a round trip: a swing's animation starts as its event arrives; capped by
+  `foundation.rewind_max_ms`). Every hit on a player WAITS for a press still on its way (`held_hit`, a
+  private scheduled table, until ~320 ms after the landing), then is dealt as it was judged; an unparryable
+  one (unblockable, from behind) waits as long, so hits keep the spacing they landed with (the playtest
+  caught a 457 ms gap against the 600 ms rule when only parryable ones waited).
+  A parry: nothing dealt, the attacker Staggered, a riposte window. **The whiff lockout**
+  (`parry_whiff_ms`, 400): a press that soon after one that parried nothing parries nothing. **Front-only**
+  (`guard_arc_deg`, 120°) for the parry and the block. **The weak block** (`weak_block_pct`, 60 % through) for
+  every player (`role_of` says Damage until step 4; the Tank's is `block_damage_pct`, 25 %).
+- **The riposte** (`riposte_ms` 1 s, `riposte_damage_pct` 150 %): the first step begun inside it; the client
+  sees its parry as the attacker Staggered by it just after its press, and the next tap is the riposte. **The
+  bow's**: a draw begun in the window is full in `riposte_draw_pct` (50 %) of its time; RMB while drawing lets
+  the draw go and parries. The staff's riposte is not built.
+- **Heavy, repurposed**: the finisher's stagger ×1.35 (`stagger_time`, on `combo_last`); the old 100 % stagger
+  roll is gone. Oak handles still offer it; nothing in a bag changed.
+- **Feedback**: "Blocked" only when the guard stopped it (in front, not a glinted swing); "Parried" over you
+  when yours lands. The HUD's key line: "LMB Slash - Slash, the finisher ...   RMB tap parry, hold block".
+- New tables `guard_state`, `held_hit` (both private) and the `guard` reducer: published with `--codegen`.
+
+**How to play it**: restart the game. Wield the sword or axe: tap LMB for the string; the last hit staggers
+the dummy (a gold flash). At the skeleton camp, tap RMB just as a skeleton's swing lands (not when it starts)
+and face it: "Parried", the skeleton staggers gold; tap LMB at once for the riposte (half again the damage).
+Hold RMB to block what is in front (60 % comes through); from behind it does nothing. The red-glinting
+finisher goes through any guard: roll. Every number is on the Rules page (`regents.combo_window_ms`,
+`parry_ms`, `parry_late_ms`, `parry_whiff_ms`, `riposte_*`, `weak_block_pct`, `guard_arc_deg`); a step's
+damage, wind-up and follow-through are the kit and ability in the Inspector.
+
+**Tested**: genre unit 2857/0 (new: the finisher is the last step and only it; each step heavier and slower;
+the retired ids gone; a stray follow-through refused; the 2 s window; the riposte opens on a parry and closes on a
+swing or the window; the follow-through holds the next step past the old 60 ms chain; Heavy's stagger x1.35; the
+guard's arc twinned with the server's); native 130/0 (new: the parry as seen, with and without the credit; the
+deadline; the whiff lockout; the arc; the blocks; the riposte; the press's trip, measured or reported, capped; the
+string steps up and the sword and axe kill within a tenth); **combat playtest 60/0 at 150 ms** (new: the
+string, the overhead in place, the finisher staggers the dummy, mashing never faster than a follow-through; at the
+camp a press a whole wind-up early parries nothing and the light lands in full (8.0); a press 60 ms before a
+light lands as shown PARRIES it (the skeleton staggered by us, no damage); the tap after is the riposte, 12.6
+(the chop's 8.4 at 150 %); blocking, an unblockable finisher through in full (14.0, 18.7), a light through the
+weak block (6.6 = 11 at 60 %); with the back turned a light in full (7.0); foe hits never closer than 593 ms
+against the 600 ms rule); integration 1080/2 (new: the string's second only after its first's follow-through,
+26.6 off the dummy, the finisher's stagger logged; the retired chop refused; `guard` raises the block and a
+second press in the lockout parries nothing; Heavy's 1080 ms stagger; the two failures are outside this step:
+the Slain status read after a 1 s corpse went on a busy machine, and the fireball's fire at 6 of ~9);
+**load_300 HOLDS** at 50-300 (300 bots: module 38.9 % busy, referee frame p95 16.0 ms, no net stalls,
+64.9 swings/s; `land_held_hit` 0.5 ms p95 a call).
+**Negatives**, each caught: no lag correction on the press (the playtest's parry failed, 2 tries); the guard
+facing everything (the back-turned lights came through blocked: 4.2, 4.8, 6.6); no riposte bonus (8.40, not
+12.60); the client never opening the riposte (the unit suite); only parryable hits held (the playtest: two foe
+hits shown 457 ms apart: why every hit on a player is held).
+
+**Left for later**: the staff's riposte (a point-blank bolt); the axe finisher's cleave (two targets); roles
+(step 4) bring the Tank's full block; a hit held for a parry shows on the player's health up to ~0.3 s after
+it lands (the price of judging the parry where it was seen); the clips are placeholders (`ANIMATIONS.md`).
+
+## Step 28: the combat overhaul's first feel pass (2026-10-31)
+
+Luke played steps 1-2 and left three notes in the game (feedback 4097-4099): the refusals "in the middle of the
+screen"; "the stagger needs a animation for player and enemy, right now the hits dont have any weight to them
+... spamming left click looks weird with the animations"; "players and skeletons can attack or move while
+dying". And: "we can adjust values after stagger has visual clarity and animations feel better". His calls for
+this pass (in `GAME.md`): a HIT-STOP and a SPARK where the blow lands; no screen shake, no finisher shove, no
+sound yet; the foundation's part in the template, then pulled.
+
+- **Refusals to the side** (`regents_hud.gd` `refused`): a small column pinned to the right edge, three at
+  most, the newest last; the middle keeps what you got. And fewer of them: a swing or a roll pressed while
+  Staggered, Flinched or Slain WAITS on the client (`CombatComponent.can_act`) and goes once you can act,
+  where it was sent and refused.
+- **The stagger reads**: the Staggered status holds its own clip, `react.stagger` (Q2 `Idle_Shield_Break`, a
+  guard knocked aside; `anim/adventurer.tres`), on the player and the skeletons (one set); Flinched keeps
+  the quick hit react.
+- **Weight**: a SPARK at the chest where the blow lands, facing the attacker (`HitFeedbackComponent.spark`:
+  warm, bigger on a hit of 20+, steel on a block, gold on a stagger or your own parry); a HIT-STOP, both
+  bodies' animation held `regents.hitstop_ms` (60), a big hit or a stagger `regents.hitstop_big_ms` (110),
+  live on the Rules page. The local player's own swing is not held: it played before the server's word, and
+  holding it then would stop it a round trip after its blow.
+- **Death interrupts at once**: the server cancels a falling fighter's swing and drops its hits held for a
+  parry (`die_mid_swing`, from `fell`), and `hit` lands nothing a dead fighter swung. On screen the template's
+  driver fades the swing as the fall begins (1.6.7).
+- **Swing follows swing** with a cross-fade: the template's second action slot (1.6.7).
+- **Template 1.6.7** (DECISIONS #301, `../UMF Template`, pushed; merged here `37e1b136`, pushed; NOT yet in
+  Fishing, Fowl Play or DiscGolf): `AnimationDriverComponent.hold_still`, death fading both action slots and the
+  upper one-shot, two action slots (`action2` over `action`).
+- **The fireball check** (Luke: "look into the fireball's fire dealing 6 instead of ~9"): the game was right.
+  A kept server log showed all 12 ticks (9 of fire). The Bolt's hit was 8 s old before the slow test Fireball
+  landed, so the skeleton was REGENERATING while the check read its health (+3 to +6). The hook now holds
+  regeneration off while it measures, and waits for the fire by the clock. Two other checks were fixed the same
+  way: the Slain status read from the server's log (the test's 1 s body went before the read), and a stand-in
+  referee re-claimed after the new death check (its 5 s lapsed).
+
+**How to play it**: restart the game. At the skeleton camp: each blow sparks and both bodies catch for a
+moment; a parry or a finisher sends the skeleton reeling (a guard knocked aside), gold; mash LMB and the steps
+blend into each other; a skeleton killed mid-swing drops it and falls. Pressing while staggered no longer
+complains: the press goes once you can act. Refusals show small at the right. Tune the hit-stop on the Rules
+page (`regents.hitstop_ms`, `hitstop_big_ms`; 0 turns it off).
+
+**Tested**: unit 2890/0 (all suites, the template's animation ones too; new: a hit sparks, a big hit a bigger spark, a
+block a steel one, a stagger a gold one, a heal none; each hit asks a hit-stop, a big one longer; Staggered holds
+`react.stagger`, Flinched the hit react; refusals in the right-hand column, three at most, none in the middle;
+staggered, a swing waits and goes once it may); native 130/0; **integration 1091/0** (new: a skeleton that swings
+and dies before the sweep is judged lands nothing, "91 is dead: its 40001 lands nothing"; the fireball's fire
+measured with regeneration held off, 29 of 29; Slain read from the server's log); **combat playtest 60/0 at 150 ms**
+with template 1.6.7 under it (the string, the parry, the riposte, the blocks; its bow shots made certain by rule,
+since a rolled miss failed one run in twelve: "92 % to hit: wide"); template 1.6.7: unit 2314/0 and three
+mutations of the driver, each caught (no slot switch, no hit-stop, no death fade). Published to `regents-rule`
+(data kept, no codegen).
+
+**Left for later**: hit reactions from four sides; sounds (Luke: not yet); a per-clip cross-fade time (the
+slots fade at the interact clip's 0.15 s); 1.6.7 into the other three games; the values (Luke: after the feel).
+
+## Step 29: the combat overhaul, step 3: statuses that stack (2026-11-01)
+
+Luke, going to bed: "finish any pre role work that needs done". `COMBAT_OVERHAUL.md` §9 step 3, the one step
+of code the order puts before roles (its decisions for roles are `ROLES_PREP.md`, his to answer).
+
+- **Template 1.7.0** (`../UMF Template`, DECISIONS #302, pushed; merged here `19cb55a6`, pushed; NOT yet in
+  Fishing, Fowl Play or DiscGolf): EFFECTS, statuses held alongside an entity's one state (`status_effect`,
+  public, a cell and follow table; `effect_expiry`). `add_effect_internal` / `remove_effect_internal` / the
+  authority reducer `set_effect`; the same effect again refreshes it. What an entity may do is its state's and
+  every effect's: it moves as the STRICTER (`status::stricter`, mirrored by `StatusComponent.movement_config`),
+  acts only if all let it (`require_can_act`; `StatusComponent.can_act()`), is hit only if all allow
+  (`is_hittable`).
+- **Here**: the Frost Ring's Slowed is an EFFECT (`add_effect_internal`), so a slowed skeleton's own swing
+  (Swinging) or a stagger no longer wipes it; arrows and spells ask `is_hittable`; the combat component's
+  `can_act` reads the state and the effects. Published with `--codegen` (data kept).
+- Ready for roles: Shielded, Weakened and a Support's help can now be effects beside Blocking or Swinging.
+
+**How to play it**: restart the game. Frost Ring a skeleton: it stays slowed while it swings at you.
+
+**Tested**: template 1.7.0: unit 2324/0, native 93/0 (the stricter of two bounds), integration 667/0 (effects
+beside a state, refreshed, two at once, a timed one off alone, off and off again refused, one that cannot act
+stops an ability, a step clamped to its crawl), e2e 47/0 + 11/0; two mutations (the client ignoring effects, a
+`stricter` that loosened), each caught. Here: unit 2900/0 (one re-run: the workbench's 300 ms cooldown check
+slipped once on a loaded machine), native 131/0, **integration 1146/0** (new: the Frost Ring's Slowed lands as an
+effect and stays while the skeleton swings), **combat playtest 60/0 at 150 ms** on a client subscribed to effects.
+Published to `regents-rule` with `--codegen` (data kept).
+
+**Left for later**: an effect's own pose or tag on screen (today a genre shows effects through
+`effect_changed`); 1.6.7 and 1.7.0 into the other three games.
+
+## Step 30: the combat overhaul, step 4: roles by the handle, the sword first (2026-11-01)
+
+Luke answered `ROLES_PREP.md` (2026-11-01, in `GAME.md` "Roles, settled before building them"); this builds
+`COMBAT_OVERHAUL.md` §9 step 4 for the sword, exactly as settled. SHOW, DON'T NAME: the roles' names and
+"finisher" are in code and docs only; the player sees a badge and what a handle does.
+
+- **Three handle shapes** (`content/pattern/crossguard_hilt.tres` 40010, `banner_hilt.tres` 40011; Make the
+  table): the plain grip is today's handle (Handle 40013, Oak 40016, Yew 40017: the plain role); Crossguard hilt
+  40040, Oak 40042, Yew 40044; Banner hilt 40041, Oak 40043, Yew 40045, each with its wood's trait. Recipes
+  40032-40037, the same cost, time and Crafting rank as the handle of the same wood. `fits_kit` "sword": an
+  axe or a pickaxe refuses one. One mesh. Listed under Handles at the workbench.
+- **`RoleDef`** (new type, `content/role/`: damage 40001 the plain one, tank 40002, support 40003): the guard
+  (full: `block_damage_pct`; light: `weak_block_pct`), threat (`threat_pct`, or a live rule:
+  `regents.guard_threat_pct` and its scope `regents.guard_threat_bosses_only` for the guard handle; healing
+  draws no more than damage), the drop weight's rule, a badge (shape and colour) and its guard in words.
+  THREAT IS STORED, NOT USED (step 6): `role_threat_pct`, `rules::threat_pct`, `heal_threat`; `FoeDef.boss`
+  added for the scope (no foe is one yet).
+- **The role map on `KitDef`** (`roles`, a `KitRole` each: role, last hit, `stagger_pct`, `heal`,
+  `heal_radius_m`, `does`): the sword's Piercing thrust (40003, retuned: 26, 2.4 m, 380 ms), Pommel bash
+  (40022: 14, 340 ms, stagger x1.5 = 1.2 s), Rallying cut (40023: 14, 400 ms, a sweep of 0.9 m against 0.5,
+  heals players within 6 m for 8; you all 8 alone, `regents.rally_self_share_pct` with players near).
+- **Clips** (`anim/adventurer.tres`; `ANIMATIONS.md` §5), each wind-up where the hand moves fastest (measured on
+  the bones; the unit suite now measures it too): Pommel bash Q2 `Melee_Hook` x0.735 (340 ms, lock 635), Rallying
+  cut `Sword_Heavy_C` x1.21 (399 ms, lock 579). The thrust keeps `Sword_Light_C` x1.18: Q2's real thrust
+  (`Sword_Light_D`) holds the arm out 1.3 s, a 2.1 s lock.
+- **The server picks the last hit** (template 1.7.1, DECISIONS #303, `resolve_ability`): pressing the string's
+  last step fires the one the wielded weapon's handle gives (`role_of`: its parts, `"p"`), whatever the client
+  asked for; an older build always asks for the thrust and gets its handle's. The client predicts the same
+  (`CombatComponent.role()`, `KitDef.light_at`): the clip and the lock.
+- **The guard by role**: `blocked_damage` reads the role's `full_block` (the crossguard: 25 % through).
+- **Re-hilting** is the refit at the workbench: the new hilt used up, the old one lost, plus 2 bars.
+- **Drops** (template 1.7.1 `loot_data`): a dropped weapon of a kit with roles rolls a plain-wood handle by the
+  roles' weights (`regents.drop_handle_damage_pct` / `_tank_pct` / `_support_pct`: 50 / 25 / 25). NO LOOT TABLE
+  DROPS A SWORD YET: dormant until one does (Luke's loot to decide).
+- **UI** (`game/regents/ui/role_badge.gd`, `RegentsRoleBadge`): the craft window's handle list badges each handle
+  and says under the row what the picked one does (the refit too); the bag puts the badge in a sword's corner,
+  and its tooltip and detail name its last hit and say what the handle does; the HUD key line names the string
+  by its moves ("LMB Slash - Slash (second) - Pommel bash   RMB tap parry, hold for a full guard"). No role word
+  anywhere (the unit suite checks every line for one).
+- **No table or reducer added** (a "once a swing" table for the heal was dropped: `resolve_action` lands one
+  hit a swing), so no `--codegen` and the schema fingerprint did not move: friends' builds keep connecting.
+- The native "the sword and the axe kill at a like pace" check is restated for roles: the plain sword kills
+  fastest (the +30 % thrust), the other roles slower, the roleless axe inside that range.
+
+**Not Luke's, chosen to build it (his to confirm or change)**: the live rules' first values (the guard handle's
+threat 250 %, every foe; the rallying cut's own share with players near 50 %, the sheet's "half"); the rallying
+cut heals only off a foe, not a training dummy (as Thirsting); the pommel bash's and rallying cut's reach 2.1 m
+(today's last hit's; his table left them blank) and the rallying cut's sweep 0.9 m for "a wider arc"; "holds the
+foe" built as the longer stagger alone; the badges (a point, a shield, a cross; warm, steel blue, green); the
+words (each `does` line and guard words); dropped handles are the plain wood's (no trait); the placeholder clips.
+
+**How to play it**: restart the game (the play database is republished, data kept). Make a sword at the
+workbench and pick its handle: each shows its badge, and the line under it says what it does. Or re-hilt a
+sword you have (it is listed under Refit). Wield it: the key line names your string's last hit. At the dummy
+the crossguard's pommel bash staggers it longer; at the skeleton camp hold RMB with it and a light barely
+scratches; with the banner hilt, land the string's last cut on a skeleton while hurt and you mend 8. The Tester
+page gives any hilt (40040-40045). Live: `regents.guard_threat_pct`, `guard_threat_bosses_only`,
+`rally_self_share_pct`, `drop_handle_*_pct`.
+
+**Tested**: genre unit 623/0, all suites 2953/0 (new `_run_roles`: three roles, one plain; the guards; threat live;
+each sword last hit per role and only the last step changes; every last hit the finisher to traits; Luke's numbers;
+the server's baked locks equal the client's; EACH LAST HIT'S CLIP HAS ITS HAND FASTEST AT ITS WIND-UP, measured on
+the bones; the hilts fit a sword and not an axe (nine handles against three); a weapon's role from its parts;
+badges distinct; every line on screen free of role words; the craft window's handle list badged with its line, an
+axe's neither; the bag's corner badge, tooltip and detail; negatives: a role naming itself, an undeclared rule,
+two plain roles, a role map with the plain role not last, a step reused, a role named, no plain role, a shaped
+part that is no part; mutation: the pommel bash's wind-up set to 300 was caught, 2 failures). Native 135/0 (new: a
+handle's shape is its role, the hilts' ids, costs and fit; each role's last hit and Luke's numbers; the drop roll
+50 / 25 / 25, live, none for an axe; threat and its scope, healing no more than damage, the rally's own share; the
+like-pace check restated for roles). **Combat playtest 90/0 at 150 ms** (new: two swords re-hilted at the
+workbench through its window, the handle list badged and its line read; each of the three handles wielded, its
+key line, its last hit PREDICTED by the client and FIRED by the server, its clip, its damage 29.38 / 15.82 /
+15.82, its stagger 800 / 1200 / 800; the bag's three badges; the crossguard's full guard at the camp: lights
+through at 1.75 / 2.0 / 2.75; the rallying cut landing on a skeleton heals you 8). Mutation run: the client
+predicting the plain last hit (A) and the server's `role_of` always plain (B) together failed 10 checks (A: the
+prediction, the clip; B: what the server fired, the damage, the 1.2 s stagger, the full guard). Integration: every
+roles check passed in each of the last seven runs; the best whole run 1279/1 (run 7; its one failure, the Frost
+Ring's circle, fixed and passing since); the last, 1185/5, all five in the combat section's oldest axe checks (a
+chop's answer expiring behind slow calls; a roll that must land inside a 550 ms wind-up), which need sub-second CLI
+calls the busy local server no longer gave (each call 0.5-1 s by the end). NOT a clean green run: those two want
+the same hardening (answer the chop before the overhead; the roll sent over HTTP or retried) (new: a hilt in an axe refused; re-hilting keeps the quality, uses the hilt, LOSES the old one;
+an old client's thrust fires the crossguard's pommel bash, its lock 635, 14 dealt, 1.2 s stagger; a plain sword
+asking for the pommel bash fires the thrust; the pommel bash first in the string refused; the rallying cut heals
+nothing off a dummy, 8 off a foe alone). Template 1.7.1: `cargo check` (wasm) and `cargo test` green.
+The playtest's older camp checks were hardened while this ran (they read one skeleton when the sweep hit its
+neighbour, gave up while the player was staggered, or stopped the block phase at 45 health after ~5 s): each now
+reads every skeleton, waits until the player can act, and keeps the phase going with the shell's heal. So were
+the integration suite's older wall-clock checks, which a ~1 s CLI call had begun to miss (they passed in the first
+two runs, failed in later ones): the roll is sent 0.3 s behind the overhead it must cancel; a stagger is read from
+its status's own log line; the foe section and each string get a fresh stand-in referee (online 5 s after a claim)
+and hold regeneration off while measuring; the slow's "a state no longer wipes it" is read from the effect's on/off
+log times; the Frost Ring's circle from the server's own times (the cast's end, the circle's landing: 1 s apart);
+the Fireball's stand-in referee is claimed once, before its cast (a second claim after it revoked the first,
+and on a slow CLI the cast landed with no referee and no missile); and the foundation's push check (template
+1.7.1, mirrored) reads its 5 s push first.
+
+**Left for later**: threat targeting (step 6) and the guard handle's "foes come for you"; the rallying cut's share
+with players near played by two clients; a loot table that drops swords; real clips for the three; the axe, bow
+and staff role maps (step 7); a hilt's own mesh.
+
+## Step 31: Luke's look at roles: the hit's light, the swing's return, the stagger (2026-11-01)
+
+Luke, after playing step 30: the glint and the hit spark "are just billboards with no texture"; "the end of the swing
+animation transition back to the idle/locomotion animation is instant ... swing -> snap back ... feels rushed"; "a
+status bar under the enemy hp ... so the player can see how long the enemy is staggered for (with heavy trait plus
+tank handle, hard to know what the time is with both modifiers)"; "the enemy keeps moving while staggered ... a stagger
+should keep them in one spot and dazed animation for the length? we can experiment with both"; and the workbench
+showed "two handle sections".
+
+- **The hit's light** (`combat/hit_feedback_component.gd`): FOUND the squares were every ember drawn a whole metre
+  wide: a billboard ignores its node's and particle's scale unless `billboard_keep_scale` is on. Now every spark,
+  streak and glint is SOFT LIGHT (a round fall-off texture, `soft_light()`), embers fade over their life, the glint is
+  a red STAR (a core and two crossed streaks, drawn over rather than added, so it stays red on a pale skull), and the
+  body's flash is a RIM of light round its edge (`_rim_shader`), not a flat white wash the bloom blew into a block.
+  Checked by renders of the dummy hit and glinted.
+- **The swing's return** (`combat_component.gd`, `anim/adventurer.tres`): each strike clip is followed by its own
+  recovery (the Quaternius `_Rec` clip: `recover.<ability id>` in the set, at the strike's speed), cross-faded in
+  through the second action slot 0.15 s before the strike ends. Presentation only: the lock is still the strike's, so
+  the pace (and the server) is unchanged; moving or the next swing cuts the recovery. Every body's swings, the
+  skeletons' too. 13 strikes have one (the lunge's clip has none).
+- **The stagger shows its time**: under the target's health, a draining bar for each status done to it ("Staggered
+  1.1 s"), and every effect ("Slowed"); never its own swing or block (`regents_hud.gd`, `status_rows`). It needed the
+  foundation's `StatusComponent` to say a status's whole length and an effect's time left (`seconds_total`,
+  `effect_seconds_left`, `effect_seconds_total`): template 1.7.1, uncommitted, mirrored here.
+- **The stagger roots and dazes** (`content/status/staggered.tres`): speed 0 (was 0.4); the guard knocked aside plays
+  once (`react.stagger`, the hit feedback's), then a dazed sway is held for its length (`react.dazed`: Q2
+  `Zombie_Idle`, a groggy, hunched sway). The player's and the skeletons' alike. To try it moving: `speed` on the
+  Staggered status (0.4 was the old), then bake and publish.
+- **One Handles heading**: the hilts' patterns sorted after the pickaxes, so a second "Handles" heading came further
+  down; they now sort with the plain handle (`SkillingComponent.group_pattern`). The unit check had missed it (it found
+  headings by node name, and Godot renamed the second): it now reads every heading in order.
+
+**How to play it**: restart the game. Hit the dummy: a streak and a spray of embers, the dummy rimmed in light. A
+skeleton's red-glinting swing shows a red star at its head. Swing the string and stop: the arm comes back down. Parry a
+skeleton or land the pommel bash: it stands swaying, dazed, rooted, and the bar under its health counts the stagger
+down. The workbench lists Handles once, the hilts with them.
+
+**Tested**: all unit suites 2973/0 (new: the stagger rooted and dazed, its reaction once; 13 strikes with a recovery at
+their speed, each clip in the library; the target's status bars: two at once, the longest first, its own swing none,
+a status with no end none; the workbench's headings each once and the hilts under Handles: with the old sort the check
+failed, "Handles" twice). Native 135/0. **Combat playtest 95/0 at 150 ms** (new: the overhead blends back through
+`Sword_Heavy_A_Rec`; a parried skeleton stands rooted, 0.00 m, in the dazed sway; under the dummy's health its stagger
+shows and drains, for each of the three last hits). Integration not run again this round (the change to the server is
+the Staggered status's speed; the integration's stagger checks read its time). Published to `regents-rule` (no codegen).
+
+**Left for later**: Luke's call on the handles (below in GAME.md: one family of shaped handles for every tool and
+weapon, or as now); a real dazed clip (`ANIMATIONS.md`); the tutorial (next).
+
+## Step 32: one family of grips for every tool and weapon (2026-11-01)
+
+Luke chose option (b): "one family of three shapes (grip, guard, banner) for every tool and weapon; a shape only
+matters when swung".
+
+- **Names** (Make the table; ids kept): the plain handle pattern is the GRIP (items Grip 40013, Oak grip 40016, Yew grip
+  40017); the shaped ones are the CROSSGUARD GRIP (40040, 40042, 40044) and the BANNER GRIP (40041, 40043, 40045). The
+  patterns' keys (`handle`, `crossguard_hilt`, `banner_hilt`) are internal and unchanged. The workbench lists them under
+  Grips.
+- **Every tool and weapon takes any shape**: the shaped patterns no longer name `fits_kit` (the mechanism stays, for
+  content that wants a part for one kit; unit and native negatives keep it honest). An axe or a pickaxe lists all nine.
+- **A shape matters only where it is swung with roles**: the server's `role_of` gives the shape's role only to a weapon
+  whose kit has a role map (the sword); a crossguard axe guards as any axe. The client already showed no badge or line
+  for a kit without roles. Tools as weak weapons (a pickaxe's own kit) are later (option (c)).
+
+**Tested**: all unit suites 2974/0 (the axe's grip slot nine, no badges; the plain and shaped grips fit sword and axe; a
+part for swords alone fits no axe); native 135/0 (nine grips fit an axe; a sword-only part fits no axe or pickaxe);
+combat playtest 95/0 at 150 ms (the rallying cut's +8 now read from each health update: a skeleton's hit in the same
+frame hid it once); skilling playtest 63/0 + 7/0 (it makes a Grip and an Oak grip). Integration: its roles section's
+"a crossguard in an axe is refused" became "is taken"; not run again this round. Published to `regents-rule`.
+
+## Step 33: the tutorial's first pass: make your own sword, then fight with it (2026-11-01)
+
+Luke: "a walk through with crafting + combat to teach the basics", then two answers: MAKE YOUR OWN SWORD first, and
+PROGRESS ON THE SERVER. With T1-T5 (ROLES_PREP.md §4-5): the camp's yard, offered, mostly play, a few words, the first
+friendly NPC, the parry ring in the yard only.
+
+- **Lessons are content** (`LessonDef`, `game/regents/content/lesson/`, fifteen, ids 40001-40015): each its place in the
+  run (`order`), the deed that ticks it (`done_when`: gathered, made, wielded, the string's last hit, a roll through a
+  swing, a parry, a strike back, a held guard, a roll through the glint, a shaped grip's last hit), the item it wants
+  (or any of its kind: any grip, any sword), where it sends you (`at`, a level point) and the guide's few `words`. Its
+  checks: words naming a role or "finisher" are refused, an item where the deed names none, a kind with no item, a
+  weapon that is none, two at one place. The run: Chop wood, Carve a grip, Mine copper, Smelt copper, Smith a blade,
+  Smith rivets, Make your sword (pick the grip's shape), Take it in hand, Three in a row, Roll through, Parry, Strike
+  back, Hold your guard, The red glint, Your grip.
+- **The server ticks them** (`server/src/game/regents.rs`, "the tutorial"): a `tutorial` table, one row a character
+  (state offered / under way / finished / set aside, the lessons done, reminded), each player sent only their own;
+  `lesson_done` called where each deed happens (a node's yield, a station's make, `wield`, the last hit's stagger,
+  `parried`, the riposte, a block, and a ROLL THROUGH: a foe's swing the referee judged a miss while the player was
+  rolling in its reach, `on_ability_missed`); any lesson not yet done is ticked, in any order. (A first try judged the
+  roll by the swing's nominal landing; at 150 ms a roll begun as the blow is seen starts after it, so the playtest
+  never ticked: the referee's miss is the truth.) `tutorial_begin` (at a guide only; finished, from the start), `tutorial_set_aside`. A new
+  character, and one from before, is offered it; one who set it aside is offered it again after a death, once.
+  Add-only: published with `--codegen`; older builds keep playing.
+- **The Drillmaster** (`content/character/guide.tres`, kind 120): stands on the glade's `guide` point by the yard
+  (a private `guide` table says which); nobody can hurt them. E on them: their offer (`TutorialComponent.greeting`,
+  editable in the Inspector on the adventurer's Tutorial node); E again begins; N sets it aside.
+- **The sparring skeleton** (`content/foe/sparring_skeleton.tres`, kind 105, on `sparring_1`): the warrior's model,
+  its own kit (`sparring_sword`: 950, 950 and a 1200 ms glinting overhead), 10 % damage, no XP or loot, notices you at
+  4 m. `FoeDef.parry_ring`: a ring closes on each of its swings, shut as the blow lands (`HitFeedbackComponent`); it is
+  the only foe with it.
+- **The card** (`ui/tutorial_card.gd`): left of the screen under the bag's line: offered, where the guide is; E on them,
+  their words and the keys; under way, the lesson now ("Chop wood   1 / 15") in the guide's words; each tick a green
+  "Done: ..." notice; the last, the farewell.
+- **The continent** copies the glade's camp: its generator takes the new `Yard` group too (rebuilt; only the camp's
+  cell and the scene changed besides Godot's random node ids, which were put back).
+
+**How to play it**: restart the game (a new table). A new character sees the card; walk to the Drillmaster by the
+training yard (west of the dummies), E, E. Make the sword at the furnace, anvil and workbench as the card says; take it
+in hand (I); then the yard: the dummy for three in a row, the sparring skeleton for the rest. N sets it aside.
+
+**Not built yet** (next passes): the minimap pointing to a lesson's `at`; the "two foes" lesson (ROLES_PREP §4.6); the
+guide facing the yard (its yaw is the point's hash, as every placed thing's); a private copy of the yard; the yard on
+the expanse (a test world, not rebuilt).
+
+**Tested**: unit 3062/0 (the lessons as content and their checks with negatives, the component reading its row, the
+card's words with no role names, the partner's clips and slowness); native 137/0 (the run, kinds and their negatives,
+ticks once, finishing; the roll's miss rule and its negatives; mutations of `ticked_by` and the roll rule each failed
+it); integration 1225/0 (the guide and partner placed; begun away from the guide refused, twice refused, set aside and
+taken; the suite's own real work ticked six lessons; set aside, a wield ticks nothing; the death's reminder once; a
+blade smithed in a round ticks; the level change takes the guide and partner away); skilling playtest 73/0 + 8/0 at
+150 ms (E on the guide, the offer, begun; the chain's work ticks its lessons; a copper sword made, blade and sword
+ticked; the buddy offered, not begun); combat playtest 108/0 at 150 ms (the yard: parry, strike back, held guard, roll
+through, the glint, three in a row, each the server's tick; a ring over each of its swings' wind-ups). Published to
+`regents-rule` with `--codegen`, then again for the roll's miss rule.
+
+**Luke's to decide**: the guide's and lessons' words (first drafts); the partner's numbers (950/950/1200 ms, 10 %,
+notice 4 m); whether the sword lessons should give the copper (a new character must mine 8 ore); whether "Your grip"
+should ask for a re-fit when the sword was made with a plain grip (it does now: "give your sword a crossguard or a
+banner grip at the workbench").
+
+**Luke, 2026-11-02**: no "Staggered" word over the foe's body (the status bar under its health says it, and how long);
+a stagger still flashes gold and sparks. `HitFeedbackComponent.said` records the words (a unit check, with "Blocked"
+still said as its negative). Client only: no publish.
+
+**Luke, 2026-11-02, the banner grip's last hit "looks more jumpy"** than the other two: its clip (`Sword_Heavy_C`) began
+turned away, so the blend from the second slash whipped the body round (the chest 1258 deg/s in the fade; the thrust
+604, the bash 815). Now `Sword_Light_D` at 0.75, a wide sweep facing forward (279 deg/s), cut into a strike and a
+recovery by `game/regents/tools/cut_clips.gd` into the game's own library (`anim/regents_cuts.res`, named `cuts` in
+the set): its lock 667 ms (was 579; baked, published). The regents suite holds every last hit's fade-in to 1000 deg/s
+(the old clip, its negative, fails). And his stagger question (tank plus Heavy staggers almost forever): the options
+are in `COMBAT_OVERHAUL.md` §8, his to choose.
+
+## Step 34: poise, shown on the target marker (2026-11-02)
+
+Luke: "tank sword seems too strong as the heavy trait plus its role allows for almost infinite stagger. even the
+normal stagger is a lot when fighting one enemy"; then, of the options (`COMBAT_OVERHAUL.md` §8): "lets try option A
+with short B after each"; for showing it, not a bar under the health: "lets do target marker".
+
+- **Poise** (`server/src/game/regents.rs` `wear_poise`, `steady`; the rules `genre/regents/mod.rs` `poise_hit`,
+  `poise_now`): a foe's (`FoeDef.poise`, 70 for all three) or a dummy's (`regents.dummy_poise`, 50: any weapon's first
+  string breaks it). Every melee hit wears it (`regents.poise_light` 10; the string's last `regents.poise_finisher` 40);
+  only the last hit can break it, a light stops at 1. Broken: whole again, the stagger as before (the pommel bash's
+  ×1.5), then **Steadied** for `regents.steadied_ms` (3 s) after the stagger, when nothing wears it. Unhit for
+  `regents.poise_regen_ms` (8 s; at 3 s one fighter's strings never added up) it is whole. A parry staggers whatever
+  the poise; a player has none (a foe's last hit staggers you as before). FoeDef.poise 0: the old rule.
+- **Heavy** now wears 35 % more poise with the last hit (`poise`), not a 35 % longer stagger; its words: "the third
+  blow knocks a foe off balance sooner (35% more)". With 70 poise: a plain sword string (10 + 10 + 40) leaves 10, the
+  next one breaks it; a Heavy one (10 + 10 + 54) breaks it at once.
+- **The target marker** (`CombatComponent._place_poise_arc`, `HitFeedbackComponent.poise_worn`): an arc just outside
+  the ring under your target fills clockwise from the front as its poise wears, pale turning red near the break; it
+  bursts as it breaks and is grey while Steadied; nothing for a player. Its state is the public `poise_state` table
+  (by cell, as every placed thing of ours); the private `poise` table published an hour before it is retired, kept
+  declared (a published table is never removed).
+
+**Tested**: native (poise_hit: lights stop at 1, the last hit breaks, Steadied wears nothing, Heavy breaks 70 in one
+string; poise_now), unit (Heavy's poise and words; the marker's reading: worn, whole again unhit, steadied, a burst once
+and not twice), integration (a real referee: a chop wears 10 of 60, the last hit leaves 10 and no stagger, a light stops
+at 1, the next last hit breaks and staggers, Steadied a chop wears nothing, Heavy breaks a fresh 60 in one string; the
+older stagger checks run on a dummy without poise), combat playtest (a chop fills a fifth of the arc; broken, the arc is
+grey; the yard's three in a row breaks the partner). The camp phases now bring a slain player back (three skeletons
+killed it once). A render of the arc at 30 / 75 / 98 % and Steadied checked by eye.
+
+**Luke's to tune** (live rules and FoeDef): poise 70 / dummy 50, wear 10 and 40, Heavy x1.35, Steadied 3 s, regrowth
+8 s. Players without poise for now.
+
+## Step 35: Luke's play of 2026-11-03 (feedback #8193-#8196); the armour prep sheet (2026-11-03)
+
+Four notes sent with F8 while hosting (`tools\feedback.cmd` has them, with the frame and ping numbers of each).
+
+- **#8194 / #8195 "lag spikes ... common short freezes", "fps stuck at 50-70, dropping to 30s"**: not the server
+  (0 network stalls, ping ~40 ms). The perf reports showed single frames of almost exactly 139 or 208 ms, up to 100 in
+  30 s, in two bursts; the chronicle placed both by the WORKBENCH (4, 15), none at the anvil 4 m away. The station
+  window looks again every 500 ms (`RegentsStationWindow.refresh`) and its list's sort compared recipes by
+  `SkillingComponent._order_key`, whose `group_pattern` (the handle shapes, PROGRESS 32) called
+  `MaterialTable.patterns()`, which listed the patterns folder from disk (`ContentLibrary.items`) on every comparison:
+  **199 ms a look** at the workbench. Fixed: `MaterialTable.materials()`/`patterns()` go through `RegentsContent` (the
+  genre's cache; it now also skips its cache while `ContentLibrary.root_override` points at a scratch project, where a
+  test writes content), and the sort computes each key once. A look is now under 4 ms; the HUD's prompt facing a
+  station (written every frame) under 1.5 ms.
+- **#8193 "need to be able to cancel out of anvil minigame if you accidentally started one, maybe for all games, for
+  harvesting can reward what we get, for refining/crafting can just cancel and not use resources"**: built as he said.
+  **Escape during a round leaves it** (`RegentsHud._input` / `leave_round`, before `MouseCapture`, so the menu does not
+  open; a line under the time bar says what Escape does). A GATHERING round (chop, crack) ends at once and sends what
+  was played: their scores count only the work done (clean chops, hits over a target), so it pays what was got, no
+  more. A REFINING or CRAFTING round (smelt, shape) is withdrawn by the new reducer **`round_cancel(challenge_id)`**
+  (`server/src/game/regents.rs`; rate `round_cancel` in `shared/rules.json`): inputs are only taken when a round
+  resolves, so nothing is used and nothing made ("Stopped: nothing used."). It refuses a gathering round, a round that
+  is over, and someone else's.
+- **#8196 "Sparring skeleton walks right through the copper mine ore"**: found, NOT fixed (needs the foundation). The
+  referee builds only the NPCs it drives; nodes and stations exist there only as the foundation's wall boxes
+  (`EntityDefinition.blocker_size`, DECISIONS #229), which no Regent's definition sets, so every foe walks through every
+  rock, tree and station (the player is stopped by the client's own hulls, `RegentsSolid`). One box per definition
+  cannot fit both a 0.9 m trunk and a 3.2 m rock (all nodes are kind 100), and changing kinds would strand every node
+  already in the play database. Proposed to Luke: a template change so a genre sizes a referee's wall per entity (a
+  rock its footprint from its NodeDef, a tree its trunk, a station its box), with the walk map routing round them.
+
+**Tested**: unit 3081/0 (the workbench window's look under 4 ms: it failed at 199.39 ms before the fix, the negative;
+the prompt under 1.5 ms; leaving a crafting round forgets it here, a gathering one is not withdrawn); native
+`cargo test` 138/0 (the full set, the first since poise); integration (`round_cancel`: a gathering round refused, a
+round that is not there refused, an anvil round left: gone, both bars still in the bag, no head, and it cannot be sent
+after; the suite 1284/20 then 1289/25, every
+failure a CLI-timed referee check, both runs while Luke's host ran on the same server: to rerun with it stopped). Not run: the skilling and combat playtests (no flow they drive changed but Escape, which they do not press).
+
+**The armour prep sheet**: `docs/regents_rule/ARMOUR_PREP.md` (A1-A10, each with options and a recommendation), for
+Luke's answers before any armour is built.
+
+**Left**: #8196 (the template change above, Luke's go-ahead); the foundation's `content` check "a script runs from the
+repo root" failed 2 of 5 unit runs here (it waits 600 headless frames for Git Bash under load: flaky, a template fix).

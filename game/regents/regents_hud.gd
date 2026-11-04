@@ -14,6 +14,8 @@ class_name RegentsHud extends Node
 ## (`RegentsMinimap`); M the world map (`RegentsWorldMap`).
 
 const NOTICE_S: float = 3.0
+## The most refusals the side column shows at once (the oldest goes).
+const REFUSALS_SHOWN: int = 3
 ## How long a round's end screen stays before the game comes back.
 const ROUND_END_S: float = 1.6
 const HOLD_REASON: StringName = &"regents_round"
@@ -25,16 +27,22 @@ var _layer: CanvasLayer
 var _status: Label
 var _prompt: Label
 var _notices: VBoxContainer
+## WHAT WAS REFUSED, off to the side (Luke's feedback 4097, 2026-10-31: "keep the debug text off the side
+## instead of right in the middle of the screen"): smaller, at the right, newest at the bottom.
+var refusals: VBoxContainer
 var _bag: Label
 var _skills: Label
 var _round_box: Control
 var _inventory: SpaceTimeInventoryComponent = null
 var _interaction: InteractionComponent = null
-var _input: LocalInputComponent = null
+var _local_input: LocalInputComponent = null
 var combat: CombatComponent = null
 var _target_box: VBoxContainer
 var _target_label: Label
 var _target_bar: ProgressBar
+## Under its health, a draining bar for each status on it (Luke's feedback, 2026-11-01: "a status bar under the enemy
+## hp ... so the player can see how long the enemy is staggered for"), one a status, newest data each frame.
+var _target_statuses: VBoxContainer
 var _skillbar: Label
 ## A bow's draw, under the crosshair while it is drawn.
 var _draw_bar: ProgressBar
@@ -63,6 +71,9 @@ var _bag_weapon_row: int = -2
 ## THE TESTER PAGE (owner, 2026-10-23): the Escape menu's "Tester (admin)", for the admin only
 ## (`RegentsTesterPage`). Added once the menu exists; its button follows the local player's role.
 var tester_page: RegentsTesterPage = null
+## THE TUTORIAL (Luke, 2026-11-01): the player's progress and the guide's card.
+var tutorial: TutorialComponent = null
+var tutorial_card: RegentsTutorialCard = null
 var _tester_button: Button = null
 
 
@@ -85,6 +96,8 @@ func _ready() -> void:
 	_status = _label(base, Vector2(16, 12), 18)
 	_bag = _label(base, Vector2(16, 44), 15)
 	_bag.modulate = Color(1, 1, 1, 0.6)
+	tutorial_card = RegentsTutorialCard.new()
+	base.add_child(tutorial_card)
 	_skills = _label(base, Vector2(16, 0), 17)
 	_skills.visible = false
 	bag_window = RegentsBagWindow.new()
@@ -110,6 +123,15 @@ func _ready() -> void:
 	_notices.offset_right = 300.0
 	_notices.alignment = BoxContainer.ALIGNMENT_END
 	base.add_child(_notices)
+	refusals = VBoxContainer.new()
+	refusals.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	refusals.offset_left = -440.0
+	refusals.offset_right = -24.0
+	refusals.offset_top = -40.0
+	refusals.offset_bottom = 160.0
+	refusals.alignment = BoxContainer.ALIGNMENT_END
+	refusals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	base.add_child(refusals)
 	_round_box = Control.new()
 	_round_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_round_box.offset_left = -480.0
@@ -133,6 +155,11 @@ func _ready() -> void:
 	_target_bar.custom_minimum_size = Vector2(320, 18)
 	_target_bar.show_percentage = false
 	_target_box.add_child(_target_bar)
+	_target_statuses = VBoxContainer.new()
+	_target_statuses.name = "TargetStatuses"
+	_target_statuses.add_theme_constant_override(&"separation", 2)
+	_target_statuses.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_target_box.add_child(_target_statuses)
 	base.add_child(_target_box)
 	_draw_bar = ProgressBar.new()
 	_draw_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -273,18 +300,18 @@ func _find_player() -> void:
 	skilling = s
 	_inventory = me.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent
 	_interaction = me.find_component(InteractionComponent) as InteractionComponent
-	_input = me.find_component(LocalInputComponent) as LocalInputComponent
+	_local_input = me.find_component(LocalInputComponent) as LocalInputComponent
 	s.round_dealt.connect(_on_round_dealt)
 	s.round_closed.connect(_on_round_closed)
 	s.worked.connect(_on_worked)
 	s.xp_changed.connect(func(_id: int, _xp: int) -> void: _show_skills())
-	s.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
+	s.refused.connect(refused)
 	combat = me.find_component(CombatComponent) as CombatComponent
 	_health = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
 	if _health != null:
 		_health.health_changed.connect(_on_my_health)
 	if combat != null:
-		combat.refused.connect(func(why: String) -> void: notice(why, Color(1, 0.6, 0.5)))
+		combat.refused.connect(refused)
 		combat.slew.connect(_on_slew)
 	if _inventory != null:
 		_inventory.inventory_changed.connect(_show_bag)
@@ -294,6 +321,12 @@ func _find_player() -> void:
 	station_window.skilling = s
 	station_window.inventory = _inventory
 	s.station_opened.connect(func(t: int) -> void: station_window.show_station(t))
+	tutorial = me.find_component(TutorialComponent) as TutorialComponent
+	tutorial_card.tutorial = tutorial
+	if tutorial != null:
+		tutorial.guide_pressed.connect(func(_t: int) -> void: talk_to_guide())
+		tutorial.lesson_ticked.connect(func(l: LessonDef) -> void: notice("Done: %s" % l.display_name, Color(0.6, 1.0, 0.6)))
+		tutorial.finished.connect(func() -> void: notice(tutorial.farewell, Color(0.95, 0.82, 0.5)))
 	_show_bag()
 	_show_skills()
 
@@ -348,8 +381,31 @@ func _update_prompt() -> void:
 			_prompt_next_ms = now + 250
 			_prompt_target = target
 			_prompt.text = "" if station_window.is_open() else station_prompt(skilling, station, _inventory)
+	elif target >= 0 and TutorialComponent.is_guide(target) and tutorial != null:
+		_prompt.text = "E: talk to the %s" % tutorial.guide_name.to_lower()
 	else:
 		_prompt.text = ""
+
+
+## E ON THE GUIDE: their offer taken when it is up (a second E), else the offer (or the lesson now) shown.
+## Public so a playtest can talk.
+func talk_to_guide() -> void:
+	if tutorial == null:
+		return
+	if tutorial_card.offering():
+		tutorial_card.offer_until_ms = 0
+		tutorial.begin()
+	else:
+		tutorial_card.guide_pressed()
+
+
+## N: the guide's offer, or the lessons under way, set aside.
+func set_tutorial_aside() -> bool:
+	if tutorial == null or not (tutorial_card.offering() or tutorial.state == TutorialComponent.OFFERED or tutorial.state == TutorialComponent.ON):
+		return false
+	tutorial_card.offer_until_ms = 0
+	tutorial.set_aside()
+	return true
 
 
 ## What the prompt says at `station`: the choice Q has picked (a recipe, with its handle, what it takes,
@@ -410,11 +466,40 @@ func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: in
 	_round_box.add_child(game)
 	station_window.close()
 	game.round_finished.connect(_on_round_finished)
+	game.leave_hint = LEAVE_MAKING if skilling != null and skilling.round_def is RecipeDef else LEAVE_GATHERING
 	_round_box.visible = true
-	if _input != null:
-		_input.hold_still(HOLD_REASON, true)
+	if _local_input != null:
+		_local_input.hold_still(HOLD_REASON, true)
 	MouseCapture.hold_free(HOLD_REASON, true)
 	game.begin(seed_value, params)
+
+
+## ESCAPE LEAVES A ROUND (Luke's play, 2026-11-03, feedback #8193: "need to be able to cancel out of anvil minigame
+## if you accidentally started one ... for harvesting can reward what we get, for refining/crafting can just cancel and
+## not use resources"). Before `MouseCapture` (an autoload hears `_input` last), so it does not open the menu.
+func _input(event: InputEvent) -> void:
+	if _round_box.visible and event.is_action_pressed(MouseCapture.RELEASE_ACTION) and not event.is_echo() and leave_round():
+		get_viewport().set_input_as_handled()
+
+
+const LEAVE_GATHERING: String = "Esc: stop here and keep what you got"
+const LEAVE_MAKING: String = "Esc: stop, nothing used"
+
+
+## Leave the round being played: a gathering round ends now and sends what was played (its score counts only the
+## work done, so it pays what was got); a refining or crafting round is withdrawn, nothing used. False: none on.
+func leave_round() -> bool:
+	if skilling == null or game == null or game.state != SkillMinigame.State.PLAYING or skilling.round_id < 0:
+		return false
+	if skilling.round_def is RecipeDef:
+		skilling.cancel_round()
+		game.queue_free()
+		game = null
+		_close_round()
+		notice("Stopped: nothing used.", Color(0.85, 0.85, 0.85))
+	else:
+		game.finish()
+	return true
 
 
 func _on_round_finished(_live: Dictionary, _replayed: Dictionary) -> void:
@@ -432,8 +517,8 @@ func _close_round() -> void:
 	if game != null and game.state == SkillMinigame.State.PLAYING:
 		return
 	_round_box.visible = false
-	if _input != null:
-		_input.hold_still(HOLD_REASON, false)
+	if _local_input != null:
+		_local_input.hold_still(HOLD_REASON, false)
 	MouseCapture.hold_free(HOLD_REASON, false)
 
 
@@ -538,12 +623,47 @@ func _update_combat() -> void:
 		_target_label.text = "%s   %d / %d" % [t.definition.display_name if t.definition != null else "?", roundi(h.get_current()), roundi(h.get_max())]
 		_target_bar.max_value = h.get_max()
 		_target_bar.value = h.get_current()
+	_show_statuses(status_rows(t.find_component(StatusComponent) as StatusComponent if t != null else null))
 	_skillbar.text = skill_bar(combat, skilling)
 	_draw_bar.visible = combat.drawing() or combat.casting()
 	_draw_bar.value = combat.draw_progress() if combat.drawing() else combat.cast_progress()
 	if bag_window.is_open() and combat.weapon_row != _bag_weapon_row:
 		_bag_weapon_row = combat.weapon_row
 		bag_window.refresh()
+
+
+## THE TARGET'S STATUSES, as bars to show: what was done TO it with a time on it (its state, when another put it there:
+## Staggered, Flinched; never its own swing or block), and every effect on it (Slowed). Each {name, left, total,
+## colour}, seconds, the longest left first. None for no target.
+static func status_rows(st: StatusComponent) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if st == null:
+		return out
+	var d: StatusDef = st.def()
+	if st.status() != StatusDef.NORMAL and st.by_entity() != st.entity_id and is_finite(st.seconds_left()) and d != null:
+		out.append({"name": d.display_name, "left": st.seconds_left(), "total": st.seconds_total(), "colour": d.color})
+	for n: int in st.effects():
+		var ed: StatusDef = StatusDef.find(n)
+		var left: float = st.effect_seconds_left(n)
+		if ed != null and left >= 0.0 and is_finite(left):
+			out.append({"name": ed.display_name, "left": left, "total": st.effect_seconds_total(n), "colour": ed.color})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["left"]) > float(b["left"]))
+	return out
+
+
+## The status bars under the target's health, one a row of `rows` (made or dropped to match).
+func _show_statuses(rows: Array[Dictionary]) -> void:
+	while _target_statuses.get_child_count() > rows.size():
+		var last: Node = _target_statuses.get_child(_target_statuses.get_child_count() - 1)
+		_target_statuses.remove_child(last)
+		last.queue_free()
+	while _target_statuses.get_child_count() < rows.size():
+		_bar(_target_statuses, Color.WHITE, 14.0, "Status_%d" % _target_statuses.get_child_count())
+	for i: int in rows.size():
+		var b: ProgressBar = _target_statuses.get_child(i) as ProgressBar
+		var r: Dictionary = rows[i]
+		(b.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = Color(r["colour"] as Color, 0.85)
+		set_bar(b, float(r["left"]), float(r["total"]), "%s  %.1f s" % [String(r["name"]), float(r["left"])])
 
 
 ## What the skill bar says: the weapon, its moves, each skill key (locked ones with the rank they need).
@@ -564,12 +684,15 @@ static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
 			parts.append("%s %s %d%s" % [keys[i], a.display_name, roundi(sp.cost) if sp != null else 0, note])
 		return "   |   ".join(parts) + ("" if c.in_stance() else "   (spells in stance)")
 	if c.kit.draws:
-		var line: String = "%s:  hold LMB draw, let go loose   RMB let go   Ctrl roll   Tab target   |   %d arrows" % [
+		var line: String = "%s:  hold LMB draw, let go loose   RMB let go and parry   Ctrl roll   Tab target   |   %d arrows" % [
 			c.weapon.display_name if c.weapon != null else "?", c.ammo_count()]
 		var chance: float = c.hit_chance_now()
 		return line + ("   |   to hit %d%%" % roundi(chance) if chance >= 0.0 else "   |   no target: it flies where you aim")
-	parts.append("%s:  LMB %s   hold LMB %s   RMB block   Ctrl roll   Tab target" % [c.weapon.display_name if c.weapon != null else "?",
-		c.kit.light[0].display_name, c.kit.heavy.display_name if c.kit.heavy != null else "-"])
+	# The string by its moves' own names, the last the one the handle gives (no word for it: show, don't name).
+	var role: RoleDef = c.role()
+	var guard: String = "hold for " + role.guard_words.get_slice(":", 0) if role != null and not role.guard_words.is_empty() else "hold block"
+	parts.append("%s:  LMB %s   RMB tap parry, %s   Ctrl roll   Tab target" % [c.weapon.display_name if c.weapon != null else "?",
+		_string_names(c.kit, role), guard])
 	var rank: int = sk.rank_in(c.kit.skill) if sk != null else 1
 	for i: int in 4:
 		if i < c.kit.skills.size():
@@ -591,6 +714,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif k.physical_keycode == KEY_M:
 		toggle_world_map()
 		get_viewport().set_input_as_handled()
+	elif k.physical_keycode == KEY_N and set_tutorial_aside():
+		get_viewport().set_input_as_handled()
 
 
 ## Open or close the world map (M) on the level shown.
@@ -608,6 +733,27 @@ func toggle_world_map() -> void:
 func toggle_bag() -> void:
 	bag_window.combat = combat
 	bag_window.toggle()
+
+
+## Something refused (a key the game would not take, and why): in the side column, smaller, a few at most.
+func refused(why: String) -> void:
+	if why.is_empty():
+		return
+	var l: Label = Label.new()
+	l.text = why.left(1).to_upper() + why.substr(1)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_outline(l, 16)
+	l.add_theme_color_override(&"font_color", Color(1, 0.7, 0.6))
+	refusals.add_child(l)
+	while refusals.get_child_count() > REFUSALS_SHOWN:
+		var old: Node = refusals.get_child(0)
+		refusals.remove_child(old)
+		old.queue_free()
+	var tw: Tween = l.create_tween()
+	tw.tween_interval(NOTICE_S)
+	tw.tween_property(l, ^"modulate:a", 0.0, 0.6)
+	tw.tween_callback(l.queue_free)
 
 
 func notice(text: String, color: Color = Color.WHITE) -> void:
@@ -640,3 +786,12 @@ func _show_skills() -> void:
 		var p: Vector2i = s.progress(xp)
 		lines.append("%s  %d%s" % [s.display_name, s.rank_of(xp), ("   %d / %d" % [p.x, p.y]) if p.y > 0 else "   (max)"])
 	_skills.text = "\n".join(lines)
+
+
+## A kit's string as the key line names it, its last step the one `role`'s handle gives ("Slash - Slash -
+## Pommel bash").
+static func _string_names(k: KitDef, role: RoleDef = null) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for a: AbilityDef in k.string_for(role):
+		names.append(a.display_name)
+	return " - ".join(names)

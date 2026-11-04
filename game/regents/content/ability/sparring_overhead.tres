@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 500
+range_m = 2.2
+wind_up_ms = 1200
+damage = 24.0
+animation = &"ability.40026"
+key = &"regents.combat"
+judged = true
+reach_m = 2.2
+radius_m = 0.6
+height_m = 0.9
+lunges = false
+id = 40026
+display_name = "Sparring overhead"
+designer_notes = "THE YARD'S SPARRING PARTNER: its last swing, UNBLOCKABLE (its kit lists it): it glints red the whole of a long wind-up (Sword_Light_C at 0.375, ~1200 ms), so a new player sees it and rolls."

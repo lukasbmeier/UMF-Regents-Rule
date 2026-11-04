@@ -211,6 +211,11 @@ func grant_item(entity_id: int, item_def_id: int, qty: int) -> SpacetimeDBReduce
 func grant_xp(entity_id: int, skill_id: int, xp: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('grant_xp', [entity_id, skill_id, xp], [&'u64', &'u32', &'u32'], &'')
 
+## 0. on: bool [br]
+## 1. seen_delay_ms: int [br]
+func guard(on: bool, seen_delay_ms: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('guard', [on, seen_delay_ms], [&'bool', &'u32'], &'')
+
 ## 0. world_id: int [br]
 func heartbeat(world_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('heartbeat', [world_id], [&'u32'], &'')
@@ -336,6 +341,10 @@ func resolve_action(request_id: int, hit_id: int) -> SpacetimeDBReducerCall:
 func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('revoke_authority', [identity], [&'identity'], &'')
 
+## 0. challenge_id: int [br]
+func round_cancel(challenge_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('round_cancel', [challenge_id], [&'u64'], &'')
+
 ## 0. node_ids: Array of int [br]
 func saw_nodes(node_ids: Array[int]) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('saw_nodes', [node_ids], [&'u64'], &'')
@@ -373,6 +382,13 @@ func set_craft_grade(grade: int) -> SpacetimeDBReducerCall:
 ## 0. enabled: bool [br]
 func set_dev_tools(enabled: bool) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_dev_tools', [enabled], [&'bool'], &'')
+
+## 0. entity_id: int [br]
+## 1. status: int [br]
+## 2. lasts_ms: int [br]
+## 3. on: bool [br]
+func set_effect(entity_id: int, status: int, lasts_ms: int, on: bool) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_effect', [entity_id, status, lasts_ms, on], [&'u64', &'u8', &'u32', &'bool'], &'')
 
 ## 0. state: int [br]
 func set_equip_state(state: int) -> SpacetimeDBReducerCall:
@@ -462,6 +478,14 @@ func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 ## 2. name: String [br]
 func trust_issuer(issuer: String, audience: String, name: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('trust_issuer', [issuer, audience, name], [&'string', &'string', &'string'], &'')
+
+
+func tutorial_begin() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('tutorial_begin', [], [], &'')
+
+
+func tutorial_set_aside() -> SpacetimeDBReducerCall:
+	return _client.call_reducer('tutorial_set_aside', [], [], &'')
 
 
 func unwield() -> SpacetimeDBReducerCall:

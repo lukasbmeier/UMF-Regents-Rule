@@ -55,6 +55,24 @@
 			"movement": 40002,
 			"name": "Skeleton axeman",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40007,
+			"kind": 105,
+			"movement": 40002,
+			"name": "Sparring skeleton",
+			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "stand",
+			"id": 40008,
+			"kind": 120,
+			"movement": 40001,
+			"name": "Drillmaster",
+			"playable": false
 		}
 	],
 	"owner": "regents",

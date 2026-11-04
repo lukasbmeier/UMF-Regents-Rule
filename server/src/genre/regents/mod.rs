@@ -36,7 +36,7 @@ pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE],
     // The foes' kinds are content (`FoeDef`, `content/foe/`): the genre keeps 103-119 for them (FOE_KINDS).
     entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
-        117, 118, 119],
+        117, 118, 119, ENTITY_GUIDE],
     phases: &[],
     session_kinds: &[],
 };
@@ -62,6 +62,42 @@ pub struct ItemSeed {
     /// As ammo: the kit it is shot from ("bow"; empty: not ammo), and its hits in percent.
     pub ammo_for: &'static str,
     pub ammo_damage_pct: u32,
+    /// As a handle: the role its SHAPE gives the weapon made with it (a `RoleSeed` id; 0: none, the plain one).
+    pub role: u32,
+    /// As a part: the one kit it fits ("sword": a hilt; empty: any made of its kind).
+    pub fits_kit: &'static str,
+}
+
+/// A ROLE (`RoleDef`, COMBAT_OVERHAUL.md §5, Luke 2026-11-01): what a weapon is for, by its handle's SHAPE.
+/// What every weapon of it shares: its held guard and its threat. Its name is for code: the player sees a badge.
+#[derive(Debug)]
+pub struct RoleSeed {
+    pub id: u32,
+    pub key: &'static str,
+    /// The role of a weapon whose handle names none (the plain grip, an old item). One role.
+    pub plain: bool,
+    /// A held block takes `regents.block_damage_pct` of a hit in front; else `regents.weak_block_pct`.
+    pub full_block: bool,
+    /// THREAT (stored for step 6): its damage and healing count this % toward a foe's choice, unless
+    /// `threat_rule` (a hot rule's key) sets it live; `threat_scope_rule` (a hot flag), on, keeps it to bosses.
+    pub threat_pct: u32,
+    pub threat_rule: &'static str,
+    pub threat_scope_rule: &'static str,
+    /// A hot rule's key: its weight when a dropped weapon rolls its handle's shape ("": never rolled).
+    pub drop_rule: &'static str,
+}
+
+/// One entry of a kit's ROLE MAP (`KitRole`): the string's last hit for weapons of `role`, and what it does
+/// besides its damage.
+#[derive(Debug)]
+pub struct RoleFinisher {
+    pub role: u32,
+    pub ability: u32,
+    /// Its stagger, % of `regents.stagger_ms` (before the Heavy trait's).
+    pub stagger_pct: u32,
+    /// Landing, it heals players within `heal_radius_m` of its user this much (0: none), once a swing.
+    pub heal: f32,
+    pub heal_radius_m: f32,
 }
 
 /// A skill (`SkillDef`): XP to reach each rank from 2 up.
@@ -234,20 +270,22 @@ pub struct KitSeed {
     pub key: &'static str,
     /// Its mastery skill.
     pub skill: u32,
-    /// The light combo, in order.
+    /// The string, in order; its last step is the FINISHER (COMBAT_OVERHAUL.md §3: the heavy merged in).
     pub light: &'static [u32],
-    pub heavy: u32,
+    /// Each step's FOLLOW-THROUGH: after it lands, this long before the next step may start.
+    pub follow_ms: &'static [u32],
     /// Q, E, R, F: (ability, the mastery rank it unlocks at).
     pub skills: &'static [(u32, u32)],
-    pub combo_window_ms: u32,
-    /// After a light swing lands, this long before the combo's next step may start.
-    pub chain_ms: u32,
     /// Each ability's lock: how long a swing holds its fighter (its clip's length, baked).
     pub locks: &'static [(u32, u32)],
     /// A drawn kit (a bow): its full draw, in ms. 0: a melee kit.
     pub draw_full_ms: u32,
     /// A casting kit (the Staff): its pool's resource id (mana); its abilities are spells. 0: none.
     pub resource: u32,
+    /// Its abilities no block or parry stops (COMBAT_OVERHAUL.md §2: a foe's finisher).
+    pub unblockable: &'static [u32],
+    /// THE ROLE MAP (COMBAT_OVERHAUL.md §5): per role, the string's last hit. Empty: no roles yet.
+    pub roles: &'static [RoleFinisher],
 }
 
 /// A SPELL (`SpellDef`, owner 2026-10-20): how a casting kit's ability lands.
@@ -335,9 +373,29 @@ pub fn flat_dist(a: crate::sim::Vector3, b: crate::sim::Vector3) -> f32 {
 }
 
 impl KitSeed {
+    /// The string's last hit for a weapon of role `role` (its role map's; else the string's last).
+    pub fn finisher_for(&self, role: &RoleSeed) -> u32 {
+        self.roles.iter().find(|r| r.role == role.id).map_or_else(|| self.light.last().copied().unwrap_or(0), |r| r.ability)
+    }
+
+    /// The role map's entry whose last hit is `ability_id`, if any.
+    pub fn role_finisher(&self, ability_id: u32) -> Option<&'static RoleFinisher> {
+        self.roles.iter().find(|r| r.ability == ability_id)
+    }
+
+    /// Whether `ability_id` is this kit's string's last hit, for any role.
+    pub fn ends_string(&self, ability_id: u32) -> bool {
+        self.light.last() == Some(&ability_id) || self.roles.iter().any(|r| r.ability == ability_id)
+    }
+
     /// How long `ability_id` locks its fighter (0: not this kit's).
     pub fn lock_ms(&self, ability_id: u32) -> u32 {
         self.locks.iter().find(|(a, _)| *a == ability_id).map_or(0, |(_, ms)| *ms)
+    }
+
+    /// Whether no block or parry stops `ability_id` (roll, or step out of its sweep).
+    pub fn unblockable(&self, ability_id: u32) -> bool {
+        self.unblockable.contains(&ability_id)
     }
 }
 
@@ -361,6 +419,10 @@ pub struct FoeSeed {
     pub loot_table: u32,
     /// Its family ("undead", "beast"): what a trait made against one reads.
     pub family: &'static str,
+    /// A BOSS: what a guard handle's threat counts against when `regents.guard_threat_bosses_only` is on.
+    pub boss: bool,
+    /// Its poise (`FoeDef.poise`; 0: none, every last hit staggers it).
+    pub poise: u32,
 }
 
 /// The entity kinds a foe may be (CLAIMS keeps them for this genre).
@@ -369,9 +431,8 @@ pub const FOE_KINDS: std::ops::RangeInclusive<u8> = 103..=119;
 /// Where an ability sits in its kit.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KitSlot {
-    /// The light combo's step (0 first).
+    /// The string's step (0 first; the last is the finisher).
     Light(u32),
-    Heavy,
     /// A skill key (0 Q .. 3 F) and the rank it needs.
     Skill(u32, u32),
 }
@@ -380,6 +441,10 @@ include!(concat!(env!("OUT_DIR"), "/regents_data.rs"));
 
 /// The dodge roll (`content/ability/dodge.tres`): everyone's, whatever they wield.
 pub const ABILITY_DODGE: u32 = 40010;
+/// ABILITIES RETIRED (COMBAT_OVERHAUL.md §3, 2026-10-31: the heavy cut and the second chop, when the heavy
+/// merged into the finisher). A database kept across publishes still has their rows (the abilities follow
+/// the build, but are never dropped), so the server refuses them by name; their ids are never reused.
+pub const RETIRED_ABILITIES: &[u32] = &[40004, 40007];
 /// Statuses (`content/status/`): a roll's moment (nothing hits), holding a block, staggered by a parry.
 pub const STATUS_ROLLING: u8 = 101;
 pub const STATUS_BLOCKING: u8 = 102;
@@ -397,6 +462,101 @@ pub const ARROW_GRAVITY: f32 = 9.8;
 /// The training dummy's entity kind (`content/character/dummy.tres`) and its level points.
 pub const ENTITY_DUMMY: u8 = 102;
 pub const DUMMY_POINT: &str = "dummy";
+/// THE CAMP'S GUIDE (the tutorial, Luke 2026-11-01): its entity kind (`content/character/guide.tres`) and its
+/// level points. Nobody hurts it.
+pub const ENTITY_GUIDE: u8 = 120;
+pub const GUIDE_POINT: &str = "guide";
+
+/// A character's tutorial (`tutorial.state`): offered (the guide offers it; a new character's), under way,
+/// finished, set aside ("not now").
+pub const TUTORIAL_OFFERED: u8 = 0;
+pub const TUTORIAL_ON: u8 = 1;
+pub const TUTORIAL_FINISHED: u8 = 2;
+pub const TUTORIAL_SET_ASIDE: u8 = 3;
+
+/// What the server saw that ticks a lesson (`LessonDef.Done`, in its order).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Deed {
+    Gathered = 0,
+    Made = 1,
+    Wielded = 2,
+    LastHit = 3,
+    RolledThrough = 4,
+    Parried = 5,
+    Riposte = 6,
+    Blocked = 7,
+    RolledGlint = 8,
+    ShapedLastHit = 9,
+}
+
+/// A LESSON of the tutorial (`LessonDef`): its place in the run, its deed, and the item a gathered, made or
+/// wielded one wants (0: any; `any_of_its_kind`: any item of that one's part or kit).
+#[derive(Debug)]
+pub struct LessonSeed {
+    pub id: u32,
+    pub order: u32,
+    pub deed: u8,
+    pub item: u32,
+    pub any_of_its_kind: bool,
+}
+
+impl LessonSeed {
+    /// Whether deed `deed` with item `item` (0: none) ticks this lesson.
+    pub fn ticked_by(&self, deed: Deed, item: u32) -> bool {
+        if self.deed != deed as u8 {
+            return false;
+        }
+        if self.item == 0 || self.item == item {
+            return true;
+        }
+        if !self.any_of_its_kind {
+            return false;
+        }
+        let (Some(want), Some(got)) = (crate::genre::regents::item(self.item), crate::genre::regents::item(item)) else { return false };
+        (!want.part_tag.is_empty() && got.part_tag == want.part_tag) || (!want.weapon_kit.is_empty() && got.weapon_kit == want.weapon_kit)
+    }
+}
+
+/// The lessons a deed ticks, of those not yet `done`, and whether every lesson is then done: what a deed
+/// changes in a character's tutorial (`game::regents::lesson_done`).
+pub fn lessons_ticked(done: &[u32], deed: Deed, item: u32) -> (Vec<u32>, bool) {
+    let newly: Vec<u32> = LESSONS.iter().filter(|l| !done.contains(&l.id) && l.ticked_by(deed, item)).map(|l| l.id).collect();
+    let all = LESSONS.iter().all(|l| done.contains(&l.id) || newly.contains(&l.id));
+    (newly, all && !LESSONS.is_empty())
+}
+
+/// POISE (Luke, 2026-11-02: "the guard handle plus Heavy allows for almost infinite stagger"; option A, a bar that
+/// breaks, with a short B, Steadied, after each break): a hit of `wear` on poise `left` (of `most`). Every hit wears
+/// it; only the string's LAST hit (`last`) can break it, so a light stops at 1. Broken, it is whole again and the hit
+/// STAGGERS. While `steadied` nothing wears it. Returns what is left, and whether it broke.
+pub fn poise_hit(left: f32, most: f32, wear: f32, last: bool, steadied: bool) -> (f32, bool) {
+    if steadied || most <= 0.0 {
+        return (left, false);
+    }
+    let after = left - wear.max(0.0);
+    if last && after <= 0.0 {
+        return (most, true);
+    }
+    (after.max(1.0_f32.min(left)), false)
+}
+
+/// Poise `left` (of `most`) `since_ms` after its last hit: whole again once `regen_ms` have passed unhit.
+pub fn poise_now(left: f32, most: f32, since_ms: i64, regen_ms: f32) -> f32 {
+    if since_ms as f32 >= regen_ms {
+        most
+    } else {
+        left.min(most)
+    }
+}
+
+/// Whether a player ROLLED THROUGH a foe's swing the referee judged a MISS: they were rolling as it was judged (`left_ms`
+/// of their roll left; a tenth of a second over, for the status's own tick) and in its reach (`dist_m` from the
+/// foe, its reach `reach_m`, with a metre's slack: the roll moves them). Judged by the miss, not by the swing's
+/// nominal landing: at 150 ms a roll begun as the blow is SEEN starts after that moment, and the referee, which
+/// judges the blow later, still finds nobody there (the 2026-11-02 playtest).
+pub fn rolled_clear(left_ms: i64, dist_m: f32, reach_m: f32) -> bool {
+    left_ms > -100 && dist_m <= reach_m + 1.0
+}
 
 /// The foe that is entity kind `kind`, if any.
 pub fn foe_of_kind(kind: u8) -> Option<&'static FoeSeed> {
@@ -465,15 +625,15 @@ pub fn kit_keyed(key: &str) -> Option<&'static KitSeed> {
     KITS.iter().find(|k| k.key == key)
 }
 
-/// The kit `ability_id` is part of, and where in it; None for an ability no kit has (the dodge).
+/// The kit `ability_id` is part of, and where in it (any role's last hit is the string's last step); None for
+/// an ability no kit has (the dodge).
 pub fn kit_of_ability(ability_id: u32) -> Option<(&'static KitSeed, KitSlot)> {
     for k in KITS {
         if let Some(i) = k.light.iter().position(|a| *a == ability_id) {
             return Some((k, KitSlot::Light(i as u32)));
         }
-        // A kit with no heavy (a bow) bakes its heavy as 0, which is also an ability (the foundation's melee).
-        if k.heavy != 0 && k.heavy == ability_id {
-            return Some((k, KitSlot::Heavy));
+        if !k.light.is_empty() && k.roles.iter().any(|r| r.ability == ability_id) {
+            return Some((k, KitSlot::Light(k.light.len() as u32 - 1)));
         }
         if let Some(i) = k.skills.iter().position(|(a, _)| *a == ability_id) {
             return Some((k, KitSlot::Skill(i as u32, k.skills[i].1)));
@@ -498,7 +658,7 @@ pub fn combo_allows(step: u32, last_step: i32, since_ms: i64, window_ms: u32) ->
 
 /// The refusal of a light step the combo does not allow (`combo_allows`).
 pub const OUT_OF_ORDER: &str = "out of the combo's order";
-/// One after a swing that was cut short (a heavy's flinch or a roll in its wind-up): said apart, because the
+/// One after a swing that was cut short (a finisher's flinch or a roll in its wind-up): said apart, because the
 /// combo starts again and a client that saw the flinch already knows (the load test's bots are refused this
 /// as play; any other order is a bug).
 pub const CUT_SHORT: &str = "the swing before was cut short: the combo starts again";
@@ -516,14 +676,167 @@ pub fn combo_refusal(step: u32, prev: i32, prev_cut_short: bool, since_ms: i64, 
 
 /// THE SWING'S TIMELINE (owner, 2026-10-19: animation-locked, with a buffer): a swing used at 0 lands at
 /// `wind_up` and holds its fighter until `lock`. May a new swing start `t` ms after the last began?
-/// The combo's next light step from `wind_up + chain` (the recovery cancels into it); anything else
-/// once the lock is over. `slack` forgives the network; a cancelled swing (a roll) holds nothing.
-pub fn swing_allows(next_is_chain: bool, t: i64, wind_up: i64, chain: i64, lock: i64, slack: i64, cancelled: bool) -> bool {
+/// The string's next step from `wind_up + follow` (its FOLLOW-THROUGH, COMBAT_OVERHAUL.md §3: the arc
+/// finishes, then the recovery cancels into the next); anything else once the lock is over. `slack`
+/// forgives the network; a cancelled swing (a roll) holds nothing.
+pub fn swing_allows(next_is_chain: bool, t: i64, wind_up: i64, follow: i64, lock: i64, slack: i64, cancelled: bool) -> bool {
     if cancelled {
         return true;
     }
-    let from = if next_is_chain { (wind_up + chain).min(lock) } else { lock };
+    let from = if next_is_chain { (wind_up + follow).min(lock) } else { lock };
     t >= from - slack
+}
+
+impl KitSeed {
+    /// Step `step`'s follow-through (200 ms when the bake has none for it).
+    pub fn follow_of(&self, step: u32) -> u32 {
+        self.follow_ms.get(step as usize).copied().unwrap_or(200)
+    }
+
+    /// Whether `slot` is the FINISHER: the string's last step (armour, it flinches a light, it staggers).
+    pub fn is_finisher(&self, slot: KitSlot) -> bool {
+        matches!(slot, KitSlot::Light(step) if step as usize + 1 == self.light.len())
+    }
+}
+
+// --- THE GUARD (COMBAT_OVERHAUL.md §4, 2026-10-31): the right button. A tap PARRIES, judged on the hit as the
+// player saw it; held, it BLOCKS (a role's block, front-only). Pure, so the native suite checks each rule.
+
+// --- ROLES (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): by the handle's SHAPE. Pure, for the native suite.
+
+/// The role with content id `id`, if any.
+pub fn role(id: u32) -> Option<&'static RoleSeed> {
+    ROLES.iter().find(|r| r.id == id)
+}
+
+/// The role keyed `key` ("tank"), if any.
+pub fn role_keyed(key: &str) -> Option<&'static RoleSeed> {
+    ROLES.iter().find(|r| r.key == key)
+}
+
+/// THE PLAIN ROLE: a weapon's whose handle names none.
+pub fn plain_role() -> &'static RoleSeed {
+    ROLES.iter().find(|r| r.plain).unwrap_or(&ROLES[0])
+}
+
+/// THE ROLE of a weapon assembled from `parts` (its `"p"`, or its handle alone): the first part whose shape
+/// gives one, else the plain role. The client's twin: `ItemDef.role_of`.
+pub fn role_of_parts(parts: &[u32]) -> &'static RoleSeed {
+    parts.iter().filter_map(|p| item(*p)).find_map(|it| role(it.role)).unwrap_or_else(plain_role)
+}
+
+/// Whether part `part` may go in a part slot of `made`: of the slot's kind `kind`, and fitting `made`'s kit when
+/// it names one (a crossguard hilt fits a sword, not an axe). The client's twin: `ItemDef.fits`.
+pub fn part_fits(part: &ItemSeed, kind: &str, made: Option<&ItemSeed>) -> bool {
+    !kind.is_empty() && part.part_tag == kind && (part.fits_kit.is_empty() || made.is_some_and(|m| m.weapon_kit == part.fits_kit))
+}
+
+/// A DROPPED WEAPON's handle (Luke, 2026-11-01: 50 % plain, 25 / 25, live): of the plain-wood handles that fit
+/// `weapon` (a kit with roles), the one `roll` (0..`roll_of`) picks by each role's weight (`weight(role)`);
+/// None for a weapon of a kit with no roles, or no weight at all.
+pub fn drop_handle(weapon: &ItemSeed, roll: u32, roll_of: u32, weight: &dyn Fn(&RoleSeed) -> f64) -> Option<u32> {
+    let kit = kit_keyed(weapon.weapon_kit).filter(|k| !k.roles.is_empty())?;
+    let recipe = RECIPES.iter().find(|r| r.output == weapon.id && !r.part_slots.is_empty())?;
+    let kind = item(recipe.inputs[recipe.part_slots[0] as usize].0)?.part_tag;
+    // Each role of the kit, its plainest handle (no trait: the plain wood's).
+    let mut choices: Vec<(u32, f64)> = Vec::new();
+    for rf in kit.roles {
+        let r = role(rf.role)?;
+        let handle = ITEMS.iter().find(|it| part_fits(it, kind, Some(weapon)) && role_of_parts(&[it.id]).id == r.id
+            && it.handle_trait == 0 && it.weapon_trait == 0)?;
+        choices.push((handle.id, weight(r).max(0.0)));
+    }
+    let total: f64 = choices.iter().map(|(_, w)| w).sum();
+    if total <= 0.0 {
+        return None;
+    }
+    let mut at = roll.min(roll_of.saturating_sub(1)) as f64 / roll_of.max(1) as f64 * total;
+    for (h, w) in &choices {
+        if at < *w {
+            return Some(*h);
+        }
+        at -= w;
+    }
+    choices.last().map(|(h, _)| *h)
+}
+
+/// The `instance_data` of a dropped weapon with handle `handle`: its parts (the handle), no traits on purpose.
+pub fn dropped_data(handle: u32) -> String {
+    format!("{{\"h\":{handle},\"p\":[{handle}],\"t\":[]}}")
+}
+
+/// A role's THREAT in percent against a foe (stored for step 6: nothing targets by it yet): `live_pct` (its
+/// rule's, else its own), unless `bosses_only` keeps it to bosses and this is none (then the plain 100).
+pub fn threat_pct(live_pct: f64, bosses_only: bool, foe_is_boss: bool) -> f64 {
+    if bosses_only && !foe_is_boss { 100.0 } else { live_pct.max(0.0) }
+}
+
+/// THREAT FROM HEALING (Luke, 2026-11-01: "healing draws no more threat than damage"): `healed` points count as
+/// at most as many points of damage, at the healer's threat.
+pub fn heal_threat(healed: f32, threat_pct: f64) -> f64 {
+    healed.max(0.0) as f64 * threat_pct.max(0.0) / 100.0
+}
+
+/// THE RALLYING CUT'S HEAL for its user: all of `heal` alone; `self_share_pct` of it with other players near.
+pub fn rally_self_heal(heal: f32, others_near: usize, self_share_pct: f64) -> f32 {
+    if others_near == 0 { heal } else { heal * (self_share_pct.clamp(0.0, 100.0) / 100.0) as f32 }
+}
+
+/// When a guard press arriving at `arrived_us` (server micros) was made, ON THE SERVER'S CLOCK OF THE SWING
+/// THE PLAYER SAW: less its trip here (`credit_ms`, the foundation's: half the quickest round trip the server
+/// measured) and how late their client shows another's swing (`seen_delay_ms`: a swing's animation starts as
+/// its event arrives, half a round trip after the server began it; as the client reports it, at most
+/// `cap_ms`, the referee's `foundation.rewind_max_ms`, so a client claiming more gains nothing past it).
+pub fn press_seen_us(arrived_us: i64, credit_ms: u32, seen_delay_ms: u32, cap_ms: u32) -> i64 {
+    arrived_us - (credit_ms as i64 + seen_delay_ms.min(cap_ms) as i64) * 1000
+}
+
+/// A guard press's trip here, in ms: half the quickest round trip the server measured (`press_credit_ms`,
+/// DECISIONS #210), or, with none measured yet (a player who never played a timed press), the client's own
+/// half round trip as it reports it; at most `cap_ms` (`foundation.press_credit_cap_ms`) either way. Without
+/// the fallback a parry is judged half a ping late until a minigame happens to measure one.
+pub fn guard_credit_ms(measured_rtt_ms: Option<u32>, reported_half_ms: u32, cap_ms: u32) -> u32 {
+    measured_rtt_ms.map_or(reported_half_ms, |r| r / 2).min(cap_ms)
+}
+
+/// Whether a press seen at `seen_us` PARRIES a hit that landed at `land_us`: it came within `parry_ms`
+/// before the hit, or at most `late_ms` after it.
+pub fn parries(seen_us: i64, land_us: i64, parry_ms: u32, late_ms: u32) -> bool {
+    seen_us >= land_us - parry_ms as i64 * 1000 && seen_us <= land_us + late_ms as i64 * 1000
+}
+
+/// The latest a press that could still parry a hit landing at `land_us` may arrive: a press made `late_ms`
+/// after it, as seen, carrying the most credit and view delay the server allows. Until then the hit waits.
+pub fn parry_deadline_us(land_us: i64, late_ms: u32, view_cap_ms: u32, credit_cap_ms: u32) -> i64 {
+    land_us + (late_ms as i64 + view_cap_ms as i64 + credit_cap_ms as i64) * 1000
+}
+
+/// THE WHIFF LOCKOUT: whether a guard press at `now_us` is no parry, because the last press (at `last_us`)
+/// came under `whiff_ms` before it and parried nothing. A press after a parry is never locked (two foes).
+pub fn whiff_locked(now_us: i64, last_us: Option<i64>, last_parried: bool, whiff_ms: u32) -> bool {
+    !last_parried && last_us.is_some_and(|l| now_us - l < whiff_ms as i64 * 1000)
+}
+
+/// Whether a guard facing `yaw` (the body's: forward is (-sin, -cos)) stops a hit from an attacker at
+/// (`dx`, `dz`) from it: inside `arc_deg` (the whole arc) in front. On top of each other: in front.
+pub fn in_guard_arc(yaw: f32, dx: f32, dz: f32, arc_deg: f32) -> bool {
+    let len = (dx * dx + dz * dz).sqrt();
+    if len < 1e-3 {
+        return true;
+    }
+    let cos = (-yaw.sin() * dx - yaw.cos() * dz) / len;
+    cos >= (arc_deg.clamp(0.0, 360.0) * 0.5).to_radians().cos() - 1e-6
+}
+
+/// A held block's damage through: a full guard (the Tank role's) takes `full_pct`, a light one `weak_pct`.
+pub fn blocked_damage(dmg: f32, full_block: bool, full_pct: f32, weak_pct: f32) -> f32 {
+    dmg * (if full_block { full_pct } else { weak_pct }).clamp(0.0, 100.0) / 100.0
+}
+
+/// Whether a swing begun at `swing_at_us` is a RIPOSTE: the string's first step, begun within
+/// `riposte_ms` of its fighter's last parry (at `parried_at_us`).
+pub fn is_riposte(first_step: bool, swing_at_us: i64, parried_at_us: Option<i64>, riposte_ms: u32) -> bool {
+    first_step && parried_at_us.is_some_and(|p| swing_at_us >= p && swing_at_us - p <= riposte_ms as i64 * 1000)
 }
 
 pub fn item(id: u32) -> Option<&'static ItemSeed> {
@@ -764,13 +1077,12 @@ pub fn item_tags(it: &ItemSeed) -> Vec<&'static str> {
     out
 }
 
-/// WHAT AN ACTION IS, for traits (`TraitAtom.on`): a light step is "basic" (and "combo_last" for its
-/// kit's last), a heavy "heavy", a skill "skill".
+/// WHAT AN ACTION IS, for traits (`TraitAtom.on`): a step of the string is "basic" (and "combo_last" for its
+/// last, the finisher), a skill "skill". ("heavy" is retired with the heavy, COMBAT_OVERHAUL.md §3.)
 pub fn action_tags(kit: &KitSeed, slot: KitSlot) -> Vec<&'static str> {
     match slot {
         KitSlot::Light(step) if step as usize + 1 == kit.light.len() => vec!["basic", "combo_last"],
         KitSlot::Light(_) => vec!["basic"],
-        KitSlot::Heavy => vec!["heavy"],
         KitSlot::Skill(..) => vec!["skill"],
     }
 }

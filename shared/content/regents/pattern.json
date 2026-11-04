@@ -92,8 +92,8 @@
 			"id": 40004,
 			"key": "handle",
 			"max_stack": 100,
-			"name": "Handle",
-			"name_format": "{m} handle",
+			"name": "Grip",
+			"name_format": "{m} grip",
 			"not_made_of": [],
 			"output_qty": 1,
 			"part_tag": "handle",
@@ -305,6 +305,62 @@
 			"quality": 0,
 			"skill": 40004,
 			"station": "anvil",
+			"tool_tag": "",
+			"weapon_kit": ""
+		},
+		{
+			"carries_trait": true,
+			"family": 1,
+			"id": 40010,
+			"key": "crossguard_hilt",
+			"max_stack": 100,
+			"name": "Crossguard grip",
+			"name_format": "{m} crossguard grip",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "handle",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "logs",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"weapon_kit": ""
+		},
+		{
+			"carries_trait": true,
+			"family": 1,
+			"id": 40011,
+			"key": "banner_hilt",
+			"max_stack": 100,
+			"name": "Banner grip",
+			"name_format": "{m} banner grip",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "handle",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "logs",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
 			"tool_tag": "",
 			"weapon_kit": ""
 		}

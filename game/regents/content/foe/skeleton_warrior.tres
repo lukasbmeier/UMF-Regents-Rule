@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
 [ext_resource type="Resource" path="res://game/regents/content/character/skeleton_warrior.tres" id="2_char"]
-[ext_resource type="Resource" path="res://game/regents/content/kit/sword.tres" id="3_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/kit/skeleton_sword.tres" id="3_kit"]
 [ext_resource type="Resource" path="res://game/regents/content/loot_table/skeleton_camp.tres" id="4_loot"]
 
 [resource]

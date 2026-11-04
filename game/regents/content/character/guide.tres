@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/characters/looks/noble_m.tscn" id="3_look"]
+[ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="4_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/adventurer.tres" id="5_move"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40008
+kind = 120
+scene = ExtResource("2_scene")
+brain = &"stand"
+visual_scene = ExtResource("3_look")
+visual_yaw_deg = 180.0
+animation_set = ExtResource("4_anim")
+movement_profile = ExtResource("5_move")
+display_name = "Drillmaster"
+designer_notes = "THE CAMP'S GUIDE (Luke, 2026-11-01, T3: the first friendly NPC): stands on a level's `guide` point by the yard. E on them offers the tutorial (the lessons, content/lesson/); what they say is the lessons' words and the Tutorial component's greeting. Nobody can hurt them. A look of the template's humanoid (noble_m) for now."

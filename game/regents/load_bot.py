@@ -20,9 +20,9 @@ import os
 
 AXE = 40001          # the Copper axe: a weapon of the axe kit and a tool tagged axe
 PICKAXE = 40006      # the Copper pickaxe: a tool tagged pick
-LIGHT = (40006, 40007)   # the axe kit's light attacks, in combo order (shared/content/regents/kit.json)
+LIGHT = (40006, 40008)   # the axe kit's string: Chop, then the Overhead, its finisher (shared/content/regents/kit.json)
 # How long each stands for its committed part: the wind-up and `regents.swing_hold_ms` (80), and a little.
-COMMIT_S = {40006: 0.26 + 0.12, 40007: 0.30 + 0.12}
+COMMIT_S = {40006: 0.32 + 0.12, 40008: 0.55 + 0.12}
 NODE_TOOL = {40001: AXE, 40004: PICKAXE}   # the Tree and the Copper rock: rank 1, a tier-1 tool
 VIEW_DELAY_MS = 100  # how far behind a client at this machine's latency sees others (a real client's is close)
 REACH_M = 1.5        # where a gatherer stops from a node's centre (regents.work_reach_m is 3)
@@ -33,13 +33,14 @@ FIND_RADIUS_M = 120.0
 # foundation's limit `referee_gone_refusals`).
 EXPECTED_REFUSALS = [
     r"^gather: gather: the [a-z ]+ is worked out",
-    # A skeleton's heavy flinched the bot's first swing: a client that saw it starts the combo again; a bot,
+    # A skeleton's finisher flinched the bot's first swing: a client that saw it starts the string again; a bot,
     # which reads no statuses, finds out by this refusal (any other combo refusal is a bug).
     r"^use_ability_seen: use_ability: the swing before was cut short",
     # A skeleton killed the fighter as it swung (first seen with six region referees on the expanse, whose
-    # skeletons each think more often): a client sees itself fall and stops; a bot, which reads no health,
-    # finds out by this refusal.
-    r"^use_ability_seen: use_ability: you cannot while slain",
+    # skeletons each think more often), or its finisher STAGGERED it (COMBAT_OVERHAUL.md §3, 2026-10-31: a
+    # foe's finisher staggers what it lands on): a client sees it and waits; a bot, which reads no health or
+    # statuses, finds out by this refusal.
+    r"^use_ability_seen: use_ability: you cannot while (slain|staggered|flinched)",
 ]
 
 _bags = {}           # entity id -> {item id: bag row id}
@@ -143,8 +144,9 @@ def tick(bot, now):
         else:
             bot.wander()
     if s["role"] == "fighter" and s["wielded"] and now >= s["next_swing"]:
-        # A combo as a player swings it: each light in order, the next once the last's lock is over (578 and
-        # 667 ms) and well inside the kit's 900 ms window; then a pause, after which it starts again.
+        # A string as a player swings it: the Chop, then the Overhead once the Chop's follow-through is over
+        # (320 + 200 ms) and well inside `regents.combo_window_ms` (2 s); then a pause past the finisher's lock
+        # (1048 ms), after which it starts again.
         ability = LIGHT[s["combo"]]
         s["combo"] = (s["combo"] + 1) % len(LIGHT)
         s["next_swing"] = now + (0.75 if s["combo"] else bot.rng.uniform(1.5, 3.0))

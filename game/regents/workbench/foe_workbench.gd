@@ -4,10 +4,11 @@ class_name FoeWorkbench extends Workbench
 ## its fight worked out from the content, so a foe is tuned in the Inspector and its effect read here.
 ## The damage is the server's own rule (`genre::regents::hit_damage`, mirrored in `hit_damage` below);
 ## the swing's rhythm its brain's (`sidecar/npc/brains/regents/foe.gd`: each swing waits out its lock, a
-## combo ends with `rest_ms`, every `heavy_every`th swing is the heavy).
+## string ends, with its finisher, in `rest_ms`).
 ##
-##   sheet    health, its swings and what each does to you, its damage a second over a whole rhythm, the
-##            XP a kill pays
+##   sheet    health, its swings and what each does to you, its damage a second over a whole rhythm, its hits
+##            on you a second and the least gap between two of them (COMBAT_OVERHAUL.md §2), the XP a kill
+##            pays
 ##   versus   how long each weapon in the game takes to kill it (its light combo, rank 1, an unmade
 ##            weapon), and how long it takes to kill you
 ##   loot     what a kill drops on average, and how many kills a rare drop takes
@@ -85,7 +86,7 @@ func _play_swings() -> void:
 		return
 	var aset: AnimationSet = f.character.animation_set
 	var clips: Array[StringName] = []
-	for a: AbilityDef in f.kit.light + ([f.kit.heavy] if f.kit.heavy != null else []):
+	for a: AbilityDef in f.kit.light:
 		var clip: StringName = aset.anim_name(StringName("ability.%d" % a.id))
 		if _player.has_animation(clip):
 			clips.append(clip)
@@ -110,32 +111,36 @@ static func hit_damage(ability_damage: float, weapon_pct: int, quality_pm: int, 
 	return ability_damage * float(weapon_pct) / 100.0 * quality * mastery
 
 
-## Its rhythm, as its brain swings: [{ability, damage, wait_ms}] over one whole pattern (until the heavy
-## comes round again, or one combo when it never swings its heavy), and the time it takes.
+## Its rhythm, as its brain swings: [{ability, damage, wait_ms}] over its string (the finisher last, then
+## its rest), and the time it takes.
 static func rhythm(f: FoeDef) -> Dictionary:
 	var swings: Array[Dictionary] = []
 	var total_ms: int = 0
 	var kit: KitDef = f.kit
-	var n: int = maxi(f.heavy_every, kit.light.size()) if f.heavy_every > 0 and kit.heavy != null else kit.light.size()
-	var step: int = 0
-	for i: int in range(1, n + 1):
-		var heavy: bool = f.heavy_every > 0 and kit.heavy != null and i % f.heavy_every == 0
-		var a: AbilityDef = kit.heavy if heavy else kit.light[step % kit.light.size()]
-		step = 0 if heavy else step + 1
+	for i: int in kit.light.size():
+		var a: AbilityDef = kit.light[i]
 		var wait: int = kit.lock_ms(a)
-		if heavy or step >= kit.light.size():
-			step = 0
+		if i + 1 == kit.light.size():
 			wait += f.rest_ms
 		swings.append({"ability": a, "damage": hit_damage(a.damage, f.damage_pct, 0, 1), "wait_ms": wait})
 		total_ms += wait
 	var dmg: float = 0.0
 	for s: Dictionary in swings:
 		dmg += float(s["damage"])
-	return {"swings": swings, "ms": total_ms, "damage": dmg, "dps": dmg / maxf(float(total_ms) / 1000.0, 0.001)}
+	# Its own hits' least gap: one lands its wind-up after it starts, the next starts the wait after it.
+	var least_gap: int = 0
+	for i: int in swings.size():
+		var a: AbilityDef = swings[i]["ability"]
+		var b: AbilityDef = swings[(i + 1) % swings.size()]["ability"]
+		var gap: int = int(swings[i]["wait_ms"]) - a.wind_up_ms + b.wind_up_ms
+		least_gap = gap if i == 0 else mini(least_gap, gap)
+	var secs: float = maxf(float(total_ms) / 1000.0, 0.001)
+	return {"swings": swings, "ms": total_ms, "damage": dmg, "dps": dmg / secs, "hits_per_s": float(swings.size()) / secs,
+		"least_gap_ms": least_gap}
 
 
-## A weapon's light combo against a foe of `hp`: its damage a second at rank 1 (each swing waits out its
-## lock, a combo chains as soon as the kit lets it), and the seconds to kill.
+## A weapon's string against a foe of `hp`: its damage a second at rank 1 (each step starts the moment its
+## follow-through lets it; the finisher waits out its lock), and the seconds to kill.
 static func weapon_versus(weapon: ItemDef, hp: float) -> Dictionary:
 	var kit: KitDef = KitDef.by_key(weapon.weapon_kit)
 	if kit == null:
@@ -145,8 +150,8 @@ static func weapon_versus(weapon: ItemDef, hp: float) -> Dictionary:
 	for i: int in kit.light.size():
 		var a: AbilityDef = kit.light[i]
 		dmg += hit_damage(a.damage, weapon.weapon_damage_pct, 0, 1)
-		# The next step may start just after this one lands; the last waits out its lock.
-		ms += a.wind_up_ms + kit.chain_ms if i + 1 < kit.light.size() else kit.lock_ms(a)
+		# The next step may start once this one's follow-through is over; the last waits out its lock.
+		ms += mini(a.wind_up_ms + kit.follow_for(i), kit.lock_ms(a)) if i + 1 < kit.light.size() else kit.lock_ms(a)
 	var dps: float = dmg / maxf(float(ms) / 1000.0, 0.001)
 	return {"weapon": weapon.display_name, "dps": dps, "seconds": hp / maxf(dps, 0.001)}
 
@@ -156,11 +161,13 @@ static func sheet(f: FoeDef) -> String:
 		return "%s: no kit" % f.display_name
 	var r: Dictionary = rhythm(f)
 	var swings: PackedStringArray = PackedStringArray()
-	for a: AbilityDef in f.kit.light + ([f.kit.heavy] if f.kit.heavy != null else []):
+	for a: AbilityDef in f.kit.light:
 		swings.append("%s %.1f" % [a.display_name, hit_damage(a.damage, f.damage_pct, 0, 1)])
 	var xp: int = roundi(float(f.hp) * rule(&"combat_xp_per_damage") * float(f.xp_pct) / 100.0)
-	return "%s   %d health\nits swings: %s\n%.1f damage a second; a player dies in %.0f s\na kill pays about %d mastery XP" % [
-		f.display_name, f.hp, ", ".join(swings), float(r["dps"]), PLAYER_HP / maxf(float(r["dps"]), 0.001), xp]
+	return ("%s   %d health\nits swings: %s\n%.1f damage a second; a player dies in %.0f s\n%.2f hits on you a second, its own at least %d ms apart; " +
+		"a group: %d at a time, at least %d ms apart\na kill pays about %d mastery XP") % [
+		f.display_name, f.hp, ", ".join(swings), float(r["dps"]), PLAYER_HP / maxf(float(r["dps"]), 0.001),
+		float(r["hits_per_s"]), int(r["least_gap_ms"]), int(rule(&"attack_tokens")), int(rule(&"token_gap_ms")), xp]
 
 
 ## What one kill drops on average, to each player who earns a roll: {item name: count} (its loot table's).

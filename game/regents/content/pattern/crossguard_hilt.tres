@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_slot"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="3_pattern"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="4_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/role/tank.tres" id="5_role"]
+
+[sub_resource type="Resource" id="Slot_logs"]
+script = ExtResource("2_slot")
+name = "logs"
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("3_pattern")
+key = &"crossguard_hilt"
+name_format = "{m} crossguard grip"
+family = 1
+max_stack = 100
+part_tag = &"handle"
+carries_trait = true
+role = ExtResource("5_role")
+skill = ExtResource("4_skill")
+parts = Array[ExtResource("2_slot")]([SubResource("Slot_logs")])
+xp = 8
+description = "A grip with a broad crossguard, carved from logs, for any tool or weapon: swung, a full guard (a sword ends its string in a pommel bash). Its wood is its trait."
+id = 40010
+display_name = "Crossguard grip"
+designer_notes = "A HANDLE'S SHAPE (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: one family of three shapes, grip, crossguard, banner, for every tool and weapon, a shape mattering only when swung): the same cost and Crafting rank as the plain grip of its wood, one mesh. It gives its role to a weapon whose kit has roles (the sword); elsewhere it is a grip with its wood's trait."

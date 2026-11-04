@@ -44,3 +44,7 @@ paths:
 - The weapon and tool GRIPS (`*_grip.tres`, `*_grip_preview.tscn`) are Luke's to fix himself: never
   restore, rewrite or commit his edits to them; ask.
 - A content change publishes (`tools\publish.cmd`): the server takes content from the bake.
+- A FOE STAGGERS BY POISE (Luke, 2026-11-02, PROGRESS step 34): only the string's last hit breaks it; a new FoeDef
+  sets `poise` (0 = every last hit staggers). Shown on the target marker, never a bar under the health.
+- The TUTORIAL's lessons are content (`content/lesson/`, `LessonDef`); the server ticks them where a deed happens
+  (`lesson_done`): a new deed is a new `LessonDef.Done` and `rules::Deed`, and a call where it happens.

@@ -13,12 +13,12 @@
 			"radius": 0.45,
 			"range": 1.7,
 			"reach": 1.7,
-			"wind_up_ms": 180
+			"wind_up_ms": 220
 		},
 		{
 			"ability_id": 40002,
 			"cooldown_ms": 450,
-			"damage": 8.0,
+			"damage": 10.0,
 			"height": 0.9,
 			"judged": true,
 			"lunges": false,
@@ -26,33 +26,20 @@
 			"radius": 0.45,
 			"range": 1.7,
 			"reach": 1.7,
-			"wind_up_ms": 180
+			"wind_up_ms": 240
 		},
 		{
 			"ability_id": 40003,
 			"cooldown_ms": 700,
-			"damage": 13.0,
+			"damage": 26.0,
 			"height": 0.9,
 			"judged": true,
 			"lunges": false,
-			"name": "Slash (finisher)",
+			"name": "Piercing thrust",
 			"radius": 0.5,
-			"range": 1.9,
-			"reach": 1.9,
-			"wind_up_ms": 220
-		},
-		{
-			"ability_id": 40004,
-			"cooldown_ms": 900,
-			"damage": 24.0,
-			"height": 0.9,
-			"judged": true,
-			"lunges": false,
-			"name": "Heavy cut",
-			"radius": 0.55,
-			"range": 2.0,
-			"reach": 2.0,
-			"wind_up_ms": 450
+			"range": 2.4,
+			"reach": 2.4,
+			"wind_up_ms": 380
 		},
 		{
 			"ability_id": 40005,
@@ -70,7 +57,7 @@
 		{
 			"ability_id": 40006,
 			"cooldown_ms": 550,
-			"damage": 11.0,
+			"damage": 12.0,
 			"height": 0.9,
 			"judged": true,
 			"lunges": false,
@@ -78,25 +65,12 @@
 			"radius": 0.45,
 			"range": 1.6,
 			"reach": 1.6,
-			"wind_up_ms": 260
-		},
-		{
-			"ability_id": 40007,
-			"cooldown_ms": 650,
-			"damage": 15.0,
-			"height": 0.9,
-			"judged": true,
-			"lunges": false,
-			"name": "Chop (second)",
-			"radius": 0.5,
-			"range": 1.7,
-			"reach": 1.7,
-			"wind_up_ms": 300
+			"wind_up_ms": 320
 		},
 		{
 			"ability_id": 40008,
 			"cooldown_ms": 900,
-			"damage": 32.0,
+			"damage": 26.0,
 			"height": 0.9,
 			"judged": true,
 			"lunges": false,
@@ -104,7 +78,7 @@
 			"radius": 0.55,
 			"range": 1.9,
 			"reach": 1.9,
-			"wind_up_ms": 600
+			"wind_up_ms": 550
 		},
 		{
 			"ability_id": 40009,
@@ -209,6 +183,136 @@
 			"range": 8.0,
 			"reach": 1.4,
 			"wind_up_ms": 100
+		},
+		{
+			"ability_id": 40017,
+			"cooldown_ms": 500,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Rusted cut",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 550
+		},
+		{
+			"ability_id": 40018,
+			"cooldown_ms": 500,
+			"damage": 16.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Rusted backswing",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 580
+		},
+		{
+			"ability_id": 40019,
+			"cooldown_ms": 500,
+			"damage": 28.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Skull splitter",
+			"radius": 0.6,
+			"range": 2.2,
+			"reach": 2.2,
+			"wind_up_ms": 850
+		},
+		{
+			"ability_id": 40020,
+			"cooldown_ms": 500,
+			"damage": 20.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Hack",
+			"radius": 0.55,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 590
+		},
+		{
+			"ability_id": 40021,
+			"cooldown_ms": 500,
+			"damage": 34.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Crushing overhead",
+			"radius": 0.6,
+			"range": 2.2,
+			"reach": 2.2,
+			"wind_up_ms": 880
+		},
+		{
+			"ability_id": 40022,
+			"cooldown_ms": 700,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Pommel bash",
+			"radius": 0.5,
+			"range": 2.1,
+			"reach": 2.1,
+			"wind_up_ms": 340
+		},
+		{
+			"ability_id": 40023,
+			"cooldown_ms": 700,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Rallying cut",
+			"radius": 0.9,
+			"range": 2.1,
+			"reach": 2.1,
+			"wind_up_ms": 400
+		},
+		{
+			"ability_id": 40024,
+			"cooldown_ms": 500,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Sparring cut",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 950
+		},
+		{
+			"ability_id": 40025,
+			"cooldown_ms": 500,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Sparring backswing",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 950
+		},
+		{
+			"ability_id": 40026,
+			"cooldown_ms": 500,
+			"damage": 24.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Sparring overhead",
+			"radius": 0.6,
+			"range": 2.2,
+			"reach": 2.2,
+			"wind_up_ms": 1200
 		}
 	],
 	"owner": "regents",

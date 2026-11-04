@@ -3,28 +3,46 @@
 	"format": 1,
 	"items": [
 		{
+			"boss": false,
 			"damage_pct": 50,
 			"family": "undead",
 			"hp": 120,
 			"id": 40001,
 			"key": "skeleton_warrior",
 			"kind": 103,
-			"kit": "sword",
+			"kit": "skeleton_sword",
 			"loot_table": 40001,
 			"name": "Skeleton warrior",
+			"poise": 70,
 			"xp_pct": 100
 		},
 		{
+			"boss": false,
 			"damage_pct": 55,
 			"family": "undead",
 			"hp": 150,
 			"id": 40002,
 			"key": "skeleton_axeman",
 			"kind": 104,
-			"kit": "axe",
+			"kit": "skeleton_axe",
 			"loot_table": 40001,
 			"name": "Skeleton axeman",
+			"poise": 70,
 			"xp_pct": 100
+		},
+		{
+			"boss": false,
+			"damage_pct": 10,
+			"family": "undead",
+			"hp": 1500,
+			"id": 40003,
+			"key": "sparring_skeleton",
+			"kind": 105,
+			"kit": "sparring_sword",
+			"loot_table": -1,
+			"name": "Sparring skeleton",
+			"poise": 70,
+			"xp_pct": 0
 		}
 	],
 	"owner": "regents",

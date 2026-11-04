@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="1_5tsii"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/banner_hilt.tres" id="2_cbho3"]
+[ext_resource type="Resource" path="res://game/regents/content/role/support.tres" id="3_00x5e"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="4_dqw1l"]
+
+[resource]
+script = ExtResource("4_dqw1l")
+max_stack = 100
+part_tag = &"handle"
+role = ExtResource("3_00x5e")
+color = Color(0.7, 0.52, 0.32, 1)
+description = "A plain grip with a banner ring, carved from logs, for any tool or weapon: swung, a sword ends its string in a rallying cut that mends those near you. No trait."
+material = ExtResource("1_5tsii")
+pattern = ExtResource("2_cbho3")
+id = 40041
+display_name = "Banner grip"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Plain wood in Banner hilt): made by Make the table."

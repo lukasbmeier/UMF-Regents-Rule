@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FoeDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
+[ext_resource type="Resource" path="res://game/regents/content/character/sparring_skeleton.tres" id="2_char"]
+[ext_resource type="Resource" path="res://game/regents/content/kit/sparring_sword.tres" id="3_kit"]
+
+[resource]
+script = ExtResource("1_foe")
+family = &"undead"
+key = &"sparring_skeleton"
+character = ExtResource("2_char")
+kit = ExtResource("3_kit")
+hp = 1500
+damage_pct = 10
+xp_pct = 0
+notice_m = 4.0
+leash_m = 8.0
+rest_ms = 2500
+rest_jitter_ms = 300
+parry_ring = true
+id = 40003
+display_name = "Sparring skeleton"
+designer_notes = "THE TUTORIAL'S SPARRING PARTNER (Luke, 2026-11-01: ROLES_PREP.md section 4, T1-T5): stands in the camp's yard (a `sparring_skeleton` point) and fights whoever steps within notice_m, slowly (its kit) and softly (10 % damage); a ring closes on each blow (parry_ring, the yard only). No XP, no loot: it is for learning. Lots of health, so it rarely falls; if it does, it is back after regents.foe_respawn_s."

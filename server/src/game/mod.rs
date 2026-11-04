@@ -145,6 +145,22 @@ pub trait Genre: Sync {
         Ok(())
     }
 
+    /// WHICH ABILITY A USE IS (DECISIONS #303): `actor_id` asked for `ability_id`, and the genre may answer
+    /// another (Regent's Rule: the string's last step is the one the wielded handle gives), so the server, not
+    /// the client, decides what a press fires, and an older client's press still fires the right one. None:
+    /// as asked. Asked first: every check, the cooldown, the referee's request and the event are the answer's.
+    /// The first genre to answer decides.
+    fn resolve_ability(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32) -> Option<u32> {
+        None
+    }
+
+    /// WHAT A DROPPED ITEM IS MADE WITH (DECISIONS #303): the `instance_data` loot of item `item_id` gets
+    /// (Regent's Rule: a dropped sword's hilt), from `roll` (0..`loot::ROLL`, this drop's own). None: none, and
+    /// it stacks as usual. The first genre to answer decides.
+    fn loot_data(&self, _ctx: &ReducerContext, _item_id: u32, _roll: u32) -> Option<String> {
+        None
+    }
+
     /// BODIES THE REFEREE MOVES (DECISIONS #246). `launcher_id` is about to throw body `def_id` with
     /// `launch_body` (its kind may, the throw is inside the body's bounds): Err refuses it, with the reason
     /// its player sees (a disc golfer too far from their lie). Every genre is asked; the first refusal stands.
@@ -321,6 +337,16 @@ pub fn may_use_ability(ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> 
         g.may_use_ability(ctx, actor_id, ability_id).map_err(|e| format!("use_ability: {e}"))?;
     }
     Ok(())
+}
+
+/// The ability a use of `ability_id` by `actor_id` really is: the first genre's answer, else as asked.
+pub fn resolve_ability(ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> u32 {
+    GENRES.iter().find_map(|g| g.resolve_ability(ctx, actor_id, ability_id)).unwrap_or(ability_id)
+}
+
+/// The `instance_data` a drop of `item_id` is made with: the first genre's answer, else none ("").
+pub fn loot_data(ctx: &ReducerContext, item_id: u32, roll: u32) -> String {
+    GENRES.iter().find_map(|g| g.loot_data(ctx, item_id, roll)).unwrap_or_default()
 }
 
 /// The genres that hear about an entity of `kind`: the one that claims it, or, for a kind no genre

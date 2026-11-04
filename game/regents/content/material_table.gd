@@ -19,25 +19,27 @@ class_name MaterialTable extends RefCounted
 ## be in players' bags). The bake refuses a table out of date (`MaterialDef.validate_with`: `problems`).
 
 const ITEM_FIELDS: PackedStringArray = ["display_name", "max_stack", "tool_tag", "tool_tier", "tool_speed_pct",
-	"weapon_kit", "weapon_damage_pct", "part_tag", "handle_trait", "part_weapon_trait"]
+	"weapon_kit", "weapon_damage_pct", "part_tag", "handle_trait", "part_weapon_trait", "role", "fits_kit"]
 const RECIPE_FIELDS: PackedStringArray = ["display_name", "station", "skill", "inputs", "output", "output_qty",
 	"quality", "part_slot", "part_slots"]
 const HOW: String = "Make the table (the button on any material or pattern)"
 
 
-## Every material, by id.
+## Every material, by id. Through `RegentsContent` (listed once in a running game, every time in the editor): a
+## station window sorts its list by pattern every half second (Luke's play, 2026-11-03: listing the folder from disk on
+## each comparison made the workbench window cost ~200 ms a look).
 static func materials() -> Array[MaterialDef]:
 	var out: Array[MaterialDef] = []
-	for d: ContentDef in ContentLibrary.items(&"material"):
+	for d: ContentDef in RegentsContent.items(&"material"):
 		if d is MaterialDef:
 			out.append(d as MaterialDef)
 	return out
 
 
-## Every pattern, by id.
+## Every pattern, by id (through `RegentsContent`, as `materials`).
 static func patterns() -> Array[PatternDef]:
 	var out: Array[PatternDef] = []
-	for d: ContentDef in ContentLibrary.items(&"pattern"):
+	for d: ContentDef in RegentsContent.items(&"pattern"):
 		if d is PatternDef:
 			out.append(d as PatternDef)
 	return out
@@ -84,6 +86,8 @@ static func item_wants(m: MaterialDef, p: PatternDef) -> Dictionary:
 		"part_tag": p.part_tag,
 		"handle_trait": m.part_trait if p.carries_trait else null,
 		"part_weapon_trait": m.part_weapon_trait if p.carries_trait else null,
+		"role": p.role,
+		"fits_kit": p.fits_kit,
 	}
 
 

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RoleDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/role_def.gd" id="1_role"]
+
+[resource]
+script = ExtResource("1_role")
+key = &"support"
+threat_pct = 100
+drop_rule = &"drop_handle_support_pct"
+badge = 2
+badge_color = Color(0.5, 0.86, 0.46, 1)
+guard_words = "a light guard: it takes the edge off a blow in front"
+id = 40003
+display_name = "Support"
+designer_notes = "The banner handle (the sword's banner hilt). A light guard; healing draws no more threat than damage (Luke, 2026-11-01: 100 %). The player sees a cross badge, never the word."

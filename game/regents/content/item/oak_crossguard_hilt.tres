@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/steady.tres" id="1_03ods"]
+[ext_resource type="Resource" path="res://game/regents/content/material/oak.tres" id="2_8g2en"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/heavy.tres" id="3_x35xt"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/crossguard_hilt.tres" id="4_qj44d"]
+[ext_resource type="Resource" path="res://game/regents/content/role/tank.tres" id="5_qos4s"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="6_qpudm"]
+
+[resource]
+script = ExtResource("6_qpudm")
+max_stack = 100
+part_tag = &"handle"
+handle_trait = ExtResource("1_03ods")
+part_weapon_trait = ExtResource("3_x35xt")
+role = ExtResource("5_qos4s")
+color = Color(0.55, 0.38, 0.2, 1)
+description = "A grip with a broad crossguard, carved from logs, for any tool or weapon: swung, a full guard (a sword ends its string in a pommel bash). Its wood is its trait."
+material = ExtResource("2_8g2en")
+pattern = ExtResource("4_qj44d")
+id = 40042
+display_name = "Oak crossguard grip"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Oak in Crossguard hilt): made by Make the table."

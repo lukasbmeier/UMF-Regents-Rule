@@ -3,10 +3,12 @@
 	"format": 1,
 	"items": [
 		{
-			"chain_ms": 60,
-			"combo_window_ms": 900,
 			"draw_full_ms": 0,
-			"heavy": 40004,
+			"follow_ms": [
+				200,
+				200,
+				200
+			],
 			"id": 40001,
 			"key": "sword",
 			"light": [
@@ -17,19 +19,23 @@
 			"locks": [
 				[
 					40001,
-					458
+					442
 				],
 				[
 					40002,
-					510
+					417
 				],
 				[
 					40003,
-					867
+					734
 				],
 				[
-					40004,
-					917
+					40022,
+					635
+				],
+				[
+					40023,
+					667
 				],
 				[
 					40005,
@@ -38,37 +44,58 @@
 			],
 			"name": "Sword",
 			"resource": 0,
+			"roles": [
+				{
+					"finisher": 40003,
+					"heal": 0.0,
+					"heal_radius_m": 6.0,
+					"role": 40001,
+					"stagger_pct": 100
+				},
+				{
+					"finisher": 40022,
+					"heal": 0.0,
+					"heal_radius_m": 6.0,
+					"role": 40002,
+					"stagger_pct": 150
+				},
+				{
+					"finisher": 40023,
+					"heal": 8.0,
+					"heal_radius_m": 6.0,
+					"role": 40003,
+					"stagger_pct": 100
+				}
+			],
 			"skill": 40006,
 			"skills": [
 				[
 					40005,
 					1
 				]
-			]
+			],
+			"unblockable": []
 		},
 		{
-			"chain_ms": 60,
-			"combo_window_ms": 900,
 			"draw_full_ms": 0,
-			"heavy": 40008,
+			"follow_ms": [
+				200,
+				200
+			],
 			"id": 40002,
 			"key": "axe",
 			"light": [
 				40006,
-				40007
+				40008
 			],
 			"locks": [
 				[
 					40006,
-					578
-				],
-				[
-					40007,
-					667
+					594
 				],
 				[
 					40008,
-					909
+					1048
 				],
 				[
 					40009,
@@ -77,19 +104,21 @@
 			],
 			"name": "Axe",
 			"resource": 0,
+			"roles": [],
 			"skill": 40007,
 			"skills": [
 				[
 					40009,
 					1
 				]
-			]
+			],
+			"unblockable": []
 		},
 		{
-			"chain_ms": 60,
-			"combo_window_ms": 900,
 			"draw_full_ms": 800,
-			"heavy": 0,
+			"follow_ms": [
+				200
+			],
 			"id": 40003,
 			"key": "bow",
 			"light": [
@@ -103,14 +132,16 @@
 			],
 			"name": "Bow",
 			"resource": 0,
+			"roles": [],
 			"skill": 40008,
-			"skills": []
+			"skills": [],
+			"unblockable": []
 		},
 		{
-			"chain_ms": 60,
-			"combo_window_ms": 900,
 			"draw_full_ms": 0,
-			"heavy": 0,
+			"follow_ms": [
+				200
+			],
 			"id": 40004,
 			"key": "staff",
 			"light": [
@@ -140,6 +171,7 @@
 			],
 			"name": "Staff",
 			"resource": 40001,
+			"roles": [],
 			"skill": 40009,
 			"skills": [
 				[
@@ -158,6 +190,112 @@
 					40016,
 					9
 				]
+			],
+			"unblockable": []
+		},
+		{
+			"draw_full_ms": 0,
+			"follow_ms": [
+				200,
+				200,
+				200
+			],
+			"id": 40005,
+			"key": "skeleton_sword",
+			"light": [
+				40017,
+				40018,
+				40019
+			],
+			"locks": [
+				[
+					40017,
+					1048
+				],
+				[
+					40018,
+					680
+				],
+				[
+					40019,
+					1635
+				]
+			],
+			"name": "Skeleton sword",
+			"resource": 0,
+			"roles": [],
+			"skill": 40006,
+			"skills": [],
+			"unblockable": [
+				40019
+			]
+		},
+		{
+			"draw_full_ms": 0,
+			"follow_ms": [
+				200,
+				200
+			],
+			"id": 40006,
+			"key": "skeleton_axe",
+			"light": [
+				40020,
+				40021
+			],
+			"locks": [
+				[
+					40020,
+					1128
+				],
+				[
+					40021,
+					1273
+				]
+			],
+			"name": "Skeleton axe",
+			"resource": 0,
+			"roles": [],
+			"skill": 40007,
+			"skills": [],
+			"unblockable": [
+				40021
+			]
+		},
+		{
+			"draw_full_ms": 0,
+			"follow_ms": [
+				200,
+				200,
+				200
+			],
+			"id": 40007,
+			"key": "sparring_sword",
+			"light": [
+				40024,
+				40025,
+				40026
+			],
+			"locks": [
+				[
+					40024,
+					1820
+				],
+				[
+					40025,
+					1092
+				],
+				[
+					40026,
+					2311
+				]
+			],
+			"name": "Sparring sword",
+			"resource": 0,
+			"roles": [],
+			"skill": 40006,
+			"skills": [],
+			"unblockable": [
+				40026
 			]
 		}
 	],

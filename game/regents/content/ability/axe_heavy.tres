@@ -6,8 +6,8 @@
 script = ExtResource("1_ability")
 cooldown_ms = 900
 range_m = 1.9
-wind_up_ms = 600
-damage = 32.0
+wind_up_ms = 550
+damage = 26.0
 animation = &"ability.40008"
 key = &"regents.combat"
 judged = true
@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40008
 display_name = "Overhead"
-designer_notes = "Hold the left button: an overhead chop. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."
+designer_notes = "The axe string's FINISHER (COMBAT_OVERHAUL.md §3): the heaviest single hit; armour, flinches a light, staggers."

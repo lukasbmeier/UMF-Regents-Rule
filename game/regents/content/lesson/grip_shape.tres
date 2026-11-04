@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 150
+done_when = 9
+any_of_its_kind = false
+at = &"workbench"
+words = "Your grip's shape changes your third blow. Give your sword a crossguard or a banner grip at the workbench, then land three in a row."
+id = 40015
+display_name = "Your grip"

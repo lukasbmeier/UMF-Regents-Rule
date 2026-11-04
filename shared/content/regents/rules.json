@@ -504,6 +504,222 @@
 					"number": 25.0,
 					"text": "",
 					"unit": "m"
+				},
+				{
+					"key": "regents.attack_tokens",
+					"kind": "number",
+					"max": 6.0,
+					"min": 1.0,
+					"number": 2.0,
+					"text": "",
+					"unit": "foes"
+				},
+				{
+					"key": "regents.token_gap_ms",
+					"kind": "number",
+					"max": 3000.0,
+					"min": 0.0,
+					"number": 600.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.foe_aim_lock_ms",
+					"kind": "number",
+					"max": 1500.0,
+					"min": 0.0,
+					"number": 300.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.combo_window_ms",
+					"kind": "number",
+					"max": 5000.0,
+					"min": 300.0,
+					"number": 2000.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.parry_late_ms",
+					"kind": "number",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.parry_whiff_ms",
+					"kind": "number",
+					"max": 2000.0,
+					"min": 0.0,
+					"number": 400.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.riposte_ms",
+					"kind": "number",
+					"max": 3000.0,
+					"min": 0.0,
+					"number": 1000.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.riposte_damage_pct",
+					"kind": "number",
+					"max": 400.0,
+					"min": 100.0,
+					"number": 150.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.riposte_draw_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 10.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.weak_block_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.guard_arc_deg",
+					"kind": "number",
+					"max": 360.0,
+					"min": 0.0,
+					"number": 120.0,
+					"text": "",
+					"unit": "deg"
+				},
+				{
+					"key": "regents.hitstop_ms",
+					"kind": "number",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.hitstop_big_ms",
+					"kind": "number",
+					"max": 400.0,
+					"min": 0.0,
+					"number": 110.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.guard_threat_pct",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 250.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.guard_threat_bosses_only",
+					"kind": "flag",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 0.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "regents.rally_self_share_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.drop_handle_damage_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.drop_handle_tank_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 25.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.drop_handle_support_pct",
+					"kind": "number",
+					"max": 100.0,
+					"min": 0.0,
+					"number": 25.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.poise_light",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 10.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "regents.poise_finisher",
+					"kind": "number",
+					"max": 1000.0,
+					"min": 0.0,
+					"number": 40.0,
+					"text": "",
+					"unit": ""
+				},
+				{
+					"key": "regents.poise_regen_ms",
+					"kind": "number",
+					"max": 30000.0,
+					"min": 0.0,
+					"number": 8000.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.steadied_ms",
+					"kind": "number",
+					"max": 30000.0,
+					"min": 0.0,
+					"number": 3000.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.dummy_poise",
+					"kind": "number",
+					"max": 10000.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": ""
 				}
 			]
 		}

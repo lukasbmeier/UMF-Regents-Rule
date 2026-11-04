@@ -404,6 +404,24 @@
       "tags": []
     },
     {
+      "id": "guide",
+      "kind": "guide",
+      "x": 5.0,
+      "y": 0.0,
+      "z": 22.5,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "sparring_1",
+      "kind": "sparring_skeleton",
+      "x": 13.5,
+      "y": 0.0,
+      "z": 24.5,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
       "id": "skeleton_1",
       "kind": "skeleton_warrior",
       "x": 33.0,

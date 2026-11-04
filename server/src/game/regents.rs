@@ -27,7 +27,7 @@ use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTIT
 use crate::hot::regents as hot;
 use crate::module::{
     ability_def, challenge, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
-    world_config, world_level, Challenge, InventoryItem, ItemDef, StatusStateRow, DEFAULT_WORLD,
+    world_config, world_level, client_rtt, Challenge, InventoryItem, ItemDef, StatusStateRow, DEFAULT_WORLD,
 };
 use crate::sim::Vector3;
 
@@ -307,6 +307,9 @@ fn follow_place(ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32)
     if let Some(r) = ctx.db.combat_state().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
         ctx.db.combat_state().entity_id().update(CombatState { world_id, chunk, ..r });
     }
+    if let Some(r) = ctx.db.poise_state().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.poise_state().entity_id().update(PoiseState { world_id, chunk, ..r });
+    }
 }
 
 fn is_depleted(ctx: &ReducerContext, node_id: u64) -> bool {
@@ -473,7 +476,9 @@ fn parts_for(r: &RecipeSeed, parts: &[u32]) -> Result<Vec<u32>, String> {
         }
         let kind = rules::item(own).map_or("", |i| i.part_tag);
         match rules::item(want) {
-            Some(p) if !kind.is_empty() && p.part_tag == kind => Ok(want),
+            // A part of the slot's kind that fits what is made (a crossguard hilt fits a sword, not an axe).
+            Some(p) if rules::part_fits(p, kind, rules::item(r.output)) => Ok(want),
+            Some(p) if !kind.is_empty() && p.part_tag == kind => Err(format!("a {} fits a {} only, not the {}", p.name.to_lowercase(), p.fits_kit, r.name.to_lowercase())),
             _ => Err(format!("a {} takes a {kind} there, not item {want}", r.name)),
         }
     }).collect()
@@ -553,6 +558,7 @@ fn make_batch(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, round_qualit
         }
         _ => give_made(ctx, entity_id, r.output, r.output_qty, quality, None),
     }
+    lesson_done(ctx, entity_id, rules::Deed::Made, r.output);
     Some(quality.map_or(-1, |q| q as i32))
 }
 
@@ -820,6 +826,7 @@ fn populate(ctx: &ReducerContext, world_id: u32) {
         ctx.db.station().insert(Station { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), key: st.key.to_string(), point_id: p.id.to_string() });
     }
     populate_dummies(ctx, world_id);
+    populate_guides(ctx, world_id);
     populate_foes(ctx, world_id);
 }
 
@@ -828,7 +835,8 @@ fn clear_world(ctx: &ReducerContext, world_id: u32) {
     let ids: Vec<u64> = ctx.db.gather_node().world_id().filter(world_id).map(|n| n.entity_id)
         .chain(ctx.db.station().world_id().filter(world_id).map(|s| s.entity_id))
         .chain(ctx.db.dummy().world_id().filter(world_id).map(|d| d.entity_id))
-        .chain(ctx.db.foe().world_id().filter(world_id).map(|f| f.entity_id)).collect();
+        .chain(ctx.db.foe().world_id().filter(world_id).map(|f| f.entity_id))
+        .chain(ctx.db.guide().world_id().filter(world_id).map(|g| g.entity_id)).collect();
     let orders: Vec<u64> = ctx.db.work_order().world_id().filter(world_id).map(|o| o.id).collect();
     for id in orders {
         for f in ctx.db.order_filled().order_id().filter(id).map(|f| f.id).collect::<Vec<_>>() {
@@ -841,6 +849,7 @@ fn clear_world(ctx: &ReducerContext, world_id: u32) {
         ctx.db.gather_node().entity_id().delete(id);
         ctx.db.station().entity_id().delete(id);
         ctx.db.foe().entity_id().delete(id);
+        ctx.db.guide().entity_id().delete(id);
         if ctx.db.entity().entity_id().find(id).is_some() {
             forget_body(ctx, id);
         }
@@ -918,6 +927,9 @@ fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u6
         }
     }
     give_items(ctx, entity_id, def.yield_item, got, None);
+    if got > 0 {
+        lesson_done(ctx, entity_id, rules::Deed::Gathered, def.yield_item);
+    }
     if rare > 0 {
         give_items(ctx, entity_id, def.rare_item, rare, None);
     }
@@ -1261,6 +1273,27 @@ pub fn work_stop(ctx: &ReducerContext) -> Result<(), String> {
     Ok(())
 }
 
+/// LEAVE A REFINING OR CRAFTING ROUND UNPLAYED (Luke's play, 2026-11-03, feedback #8193: "cancel out of the anvil
+/// minigame if you accidentally started one ... for refining/crafting can just cancel and not use resources"): your
+/// own round of a recipe is withdrawn before it is judged, so nothing is used and nothing made (its inputs are taken
+/// only when a round resolves, `make_batch`). A GATHERING round is not dropped here: the client ends it by sending
+/// what was played, and its score counts only the work done (clean chops, hits), so it pays what was got.
+#[reducer]
+pub fn round_cancel(ctx: &ReducerContext, challenge_id: u64) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "round_cancel")?;
+    let ch = ctx.db.challenge().id().find(challenge_id).ok_or("that round is over")?;
+    if ch.entity_id != me {
+        return Err("not your round".into());
+    }
+    let (_, def_id, _) = rules::parse_payload(&ch.payload).ok_or("not a round of work")?;
+    if rules::recipe(def_id).filter(|r| r.minigame.challenge_kind() == ch.kind).is_none() {
+        return Err("a gathering round ends by sending what was played".into());
+    }
+    crate::module::withdraw_challenge(ctx, challenge_id);
+    Ok(())
+}
+
 /// AFK work, four times a second: an item (or batch) when one is due; stopped by moving away, the node
 /// working out, the tool leaving the bag, the inputs running out, or the player leaving. Old results go.
 #[reducer]
@@ -1405,14 +1438,16 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
 // --- combat (owner, 2026-10-19: the first slice) -------------------------------------------------------
 //
 // THE WEAPON IS THE KIT. A player WIELDS one weapon from the bag (`wield`); its `ItemDef.weapon_kit`
-// names the KitDef whose light combo, heavy and skills (Q E R F, at mastery 1/3/6/9) they may use: every
-// other kit's ability is refused (`may_use_ability`). A swing is a foundation ability the world's REFEREE
-// judges (a sweep along the way the body faces: aimed, never auto-hit; the client's target ring is for
-// reference). What a hit does is ours (`on_ability_hit`): the ability's damage x the weapon x its
-// quality x the mastery rank; a BLOCK takes `regents.block_damage_pct` of it, a block raised within
-// `regents.parry_ms` of the hit takes none and STAGGERS the attacker; a dodge roll (`Rolling`) is not hit
-// at all. Every hit pays mastery XP in the kit's skill. The training DUMMY (camp's `dummy` points) never
-// falls and is whole again `regents.dummy_reset_s` after its last hit.
+// names the KitDef whose STRING (its last step the FINISHER: armour, it flinches a light, it staggers;
+// COMBAT_OVERHAUL.md §3) and skills (Q E R F, at mastery 1/3/6/9) they may use: every other kit's ability
+// is refused (`may_use_ability`). A swing is a foundation ability the world's REFEREE judges (a sweep along
+// the way the body faces: aimed, never auto-hit; the client's target ring is for reference). What a hit does
+// is ours (`on_ability_hit`): the ability's damage x the weapon x its quality x the mastery rank. THE GUARD
+// (§4, `guard`): a press PARRIES a hit in front that lands within `regents.parry_ms` of it AS THE PLAYER SAW
+// IT (no damage, the attacker staggered, a riposte window; a hit a press on its way could still parry
+// waits for it, `held_hit`); held, it BLOCKS a hit in front (their ROLE's guard, by the handle: full or light).
+// A dodge roll (`Rolling`) is not hit at all. Every hit pays mastery XP in the kit's skill. The training
+// DUMMY (camp's `dummy` points) never falls and is whole again `regents.dummy_reset_s` after its last hit.
 
 /// What a player fights with: a row of their bag (its item and kit). Public: everyone draws it.
 #[table(accessor = wielded, public)]
@@ -1459,6 +1494,44 @@ pub struct Swing {
     pub lock_ms: u32,
     pub light_step: i32,
     pub cancelled: bool,
+}
+
+/// A fighter's GUARD (COMBAT_OVERHAUL.md §4, 2026-10-31): the last guard press that counted, as the moment
+/// they SAW (`rules::press_seen_us`), and whether it parried; when the last press of any kind arrived (the
+/// whiff lockout); when they last parried (the riposte window). Server micros, 0 for never. Private: the
+/// server's own judging (a client learns of a parry from its attacker's Staggered status).
+#[table(accessor = guard_state)]
+pub struct Guard {
+    #[primary_key]
+    pub entity_id: u64,
+    pub world_id: u32,
+    pub seen_us: i64,
+    pub parried: bool,
+    pub pressed_us: i64,
+    pub parried_us: i64,
+}
+
+/// A HIT WAITING FOR ITS PARRY (§4): a hit on a player that a guard press still on its way could parry (the
+/// press is made as the player SEES the hit, which reaches them later), held until the latest such press
+/// could arrive (`rules::parry_deadline_us`), then dealt as it was judged. A press that parries it takes it
+/// first. EVERY hit on a player is held as long, parryable or not (an unblockable one, one from behind), so
+/// hits arrive as far apart as they landed (`regents.token_gap_ms`). Private.
+#[table(accessor = held_hit, scheduled(land_held_hit))]
+pub struct HeldHit {
+    #[primary_key]
+    #[auto_inc]
+    pub scheduled_id: u64,
+    pub scheduled_at: ScheduleAt,
+    pub actor: u64,
+    #[index(btree)]
+    pub target: u64,
+    pub ability_id: u32,
+    /// When it landed (server micros), as the referee judged it.
+    pub land_us: i64,
+    /// The target's block was up and faced it as it was judged (it is dealt through the block).
+    pub blocked: bool,
+    /// A guard press may parry it (in front, not unblockable).
+    pub parryable: bool,
 }
 
 /// A FOE on a level point (owner, 2026-10-19: the first enemies): which foe (`FoeDef`), and when it fell.
@@ -1671,7 +1744,12 @@ pub fn loose_arrow(ctx: &ReducerContext, target_id: u64, aim: Vector3) -> Result
     let draw_ms = (micros(ctx.timestamp) - micros(st.since)) / 1000;
     // The bow's traits: Swift Draw draws to full sooner, and its arrows fly slower.
     let (traits, k, none) = (weapon_traits(ctx, me), trait_strength(ctx), crate::traits::Against::default());
-    let full_ms = rules::draw_full_with(kit.draw_full_ms, crate::traits::mult(&traits, "draw_time", &[], &none, k));
+    let mut full_ms = rules::draw_full_with(kit.draw_full_ms, crate::traits::mult(&traits, "draw_time", &[], &none, k));
+    // THE BOW'S RIPOSTE (COMBAT_OVERHAUL.md §4): a draw begun soon after a parry fills faster.
+    let parried_us = ctx.db.guard_state().entity_id().find(me).map(|g| g.parried_us).filter(|p| *p > 0);
+    if rules::is_riposte(true, micros(st.since), parried_us, hot_number(ctx, hot::RIPOSTE_MS).max(0.0) as u32) {
+        full_ms = ((full_ms as f64 * hot_number(ctx, hot::RIPOSTE_DRAW_PCT).clamp(1.0, 100.0) / 100.0).round() as u32).max(1);
+    }
     let power = rules::draw_power(draw_ms, full_ms, hot_number(ctx, hot::DRAW_MIN_POWER_PCT) as f32);
     let speed = (hot_number(ctx, hot::ARROW_SPEED_MIN) as f32 + (hot_number(ctx, hot::ARROW_SPEED_MAX) - hot_number(ctx, hot::ARROW_SPEED_MIN)) as f32 * power)
         * crate::traits::mult(&traits, "projectile_speed", &[], &none, k);
@@ -1724,8 +1802,7 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
     let Some(a) = ctx.db.arrow().entity_id().find(body_id) else { return };
     ctx.db.arrow().entity_id().delete(body_id);
     if other_id != 0 && other_id != a.owner && hurts(ctx, a.owner, other_id) {
-        let hittable = ctx.db.status_state().entity_id().find(other_id)
-            .and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
+        let hittable = crate::module::is_hittable(ctx, other_id);
         if let (true, Some(h)) = (hittable, ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead)) {
             let (dx, dz) = (pos.x - a.from.x, pos.z - a.from.z);
             let point_blank = (dx * dx + dz * dz).sqrt() < hot_number(ctx, hot::POINT_BLANK_M) as f32;
@@ -2128,7 +2205,8 @@ fn missile_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) 
     crate::module::despawn_entity_internal(ctx, body_id);
 }
 
-/// A CIRCLE LANDS: every foe in it (no player) takes its damage and its status (Slowed).
+/// A CIRCLE LANDS: every foe in it (no player) takes its damage and its status (Slowed) as an EFFECT (template
+/// DECISIONS #302): alongside its state, so the foe's own swing (Swinging) or a stagger no longer wipes it.
 fn land_area(ctx: &ReducerContext, area_id: u64) {
     let Some(mut a) = ctx.db.spell_area().id().find(area_id) else { return };
     let spell = rules::spell_of(a.ability);
@@ -2140,7 +2218,7 @@ fn land_area(ctx: &ReducerContext, area_id: u64) {
         if spell_hurt(ctx, a.owner, a.skill_id, id, a.damage, a.world_id) {
             if let Some(s) = spell.filter(|s| s.status > 0) {
                 if ctx.db.health_state().entity_id().find(id).is_some_and(|h| !h.is_dead) {
-                    if let Err(e) = crate::module::set_status_internal(ctx, id, s.status as u8, s.status_ms.max(1) as u32, a.owner, String::new()) {
+                    if let Err(e) = crate::module::add_effect_internal(ctx, id, s.status as u8, s.status_ms.max(1) as u32, a.owner) {
                         log::warn!("regents: frost on {id}, but: {e}");
                     }
                 }
@@ -2158,7 +2236,7 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
         return false;
     }
     let dmg = traited_damage(ctx, owner, other_id, &["skill"], dmg);
-    let hittable = ctx.db.status_state().entity_id().find(other_id).and_then(|s| crate::status::find(s.status)).is_none_or(|s| s.hittable);
+    let hittable = crate::module::is_hittable(ctx, other_id);
     let Some(h) = ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead) else { return false };
     if !hittable {
         return false;
@@ -2255,6 +2333,7 @@ pub fn wield(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
         crate::module::ensure_resource(ctx, me, res)?;
     }
     end_cast(ctx, me);
+    lesson_done(ctx, me, rules::Deed::Wielded, it.id);
     log::info!("regents: {me} wields a {}", it.name);
     Ok(())
 }
@@ -2270,11 +2349,26 @@ pub fn unwield(ctx: &ReducerContext) -> Result<(), String> {
     Ok(())
 }
 
-/// BLOCK: raise it (`on`, holding the right button) or lower it. Raised, hits take
-/// `regents.block_damage_pct`; one within `regents.parry_ms` of raising it is parried.
+/// THE GUARD (COMBAT_OVERHAUL.md §4, 2026-10-31): the right button pressed (`on`) or let go. A press is a
+/// PARRY: a hit in front landing within `regents.parry_ms` of it, as this player saw it (`seen_delay_ms`:
+/// how late their client shows another's swing, its half round trip, as it reports it, at most
+/// `foundation.rewind_max_ms`), deals nothing and staggers its attacker; one under `regents.parry_whiff_ms`
+/// after a press that parried nothing is no parry (the whiff lockout). Held, the block is up: a hit in front
+/// is dealt through it. Either way the string's window starts again.
+#[reducer]
+pub fn guard(ctx: &ReducerContext, on: bool, seen_delay_ms: u32) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    guard_from(ctx, me, on, seen_delay_ms)
+}
+
+/// BLOCK, as builds from before the guard (2026-10-31) send it: a guard with no delay credited.
 #[reducer]
 pub fn block(ctx: &ReducerContext, on: bool) -> Result<(), String> {
     let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    guard_from(ctx, me, on, 0)
+}
+
+fn guard_from(ctx: &ReducerContext, me: u64, on: bool, seen_delay_ms: u32) -> Result<(), String> {
     crate::module::spend_rate(ctx, me, "block")?;
     if !on {
         stop_block(ctx, me);
@@ -2284,14 +2378,98 @@ pub fn block(ctx: &ReducerContext, on: bool) -> Result<(), String> {
     if wielded_weapon(ctx, me).is_none() {
         return Err("block: wield a weapon to block".into());
     }
+    guard_press(ctx, me, seen_delay_ms);
     let mut s = combat_state_of(ctx, me);
+    // A guard pauses the string's decay (its window starts again from here); it does not end it.
+    if s.combo >= 0 {
+        s.combo_at = ctx.timestamp;
+    }
     if !s.blocking {
         s.blocking = true;
         s.block_since = ctx.timestamp;
-        s.combo = -1;
         save_combat_state(ctx, s);
         crate::module::set_status_internal(ctx, me, rules::STATUS_BLOCKING, 0, me, String::new())?;
+    } else {
+        save_combat_state(ctx, s);
     }
+    Ok(())
+}
+
+fn guard_of(ctx: &ReducerContext, entity_id: u64) -> Guard {
+    ctx.db.guard_state().entity_id().find(entity_id).unwrap_or_else(|| Guard {
+        entity_id, world_id: place_of(ctx, entity_id).0, seen_us: 0, parried: false, pressed_us: 0, parried_us: 0,
+    })
+}
+
+fn save_guard(ctx: &ReducerContext, g: Guard) {
+    if ctx.db.guard_state().entity_id().find(g.entity_id).is_some() {
+        ctx.db.guard_state().entity_id().update(g);
+    } else {
+        ctx.db.guard_state().insert(g);
+    }
+}
+
+/// A guard PRESS by `me`: unless the whiff lockout holds it, it counts, judged as they saw it, and parries
+/// any held hit on them it is in time for.
+fn guard_press(ctx: &ReducerContext, me: u64, seen_delay_ms: u32) {
+    let now = micros(ctx.timestamp);
+    let mut g = guard_of(ctx, me);
+    let last = (g.pressed_us > 0).then_some(g.pressed_us);
+    let locked = rules::whiff_locked(now, last, g.parried, hot_number(ctx, hot::PARRY_WHIFF_MS).max(0.0) as u32);
+    g.pressed_us = now;
+    if locked {
+        log::info!("regents: {me}'s guard press came in the whiff lockout: no parry");
+        save_guard(ctx, g);
+        return;
+    }
+    let min_rtt = ctx.db.client_rtt().entity_id().find(me).map(|r| r.min_ms);
+    let credit = rules::guard_credit_ms(min_rtt, seen_delay_ms, hot_number(ctx, crate::hot::foundation::PRESS_CREDIT_CAP_MS).max(0.0) as u32);
+    let cap = hot_number(ctx, crate::hot::foundation::REWIND_MAX_MS).clamp(0.0, 1000.0) as u32;
+    g.seen_us = rules::press_seen_us(now, credit, seen_delay_ms, cap);
+    g.parried = false;
+    save_guard(ctx, g);
+    let (parry_ms, late_ms) = parry_window(ctx);
+    let seen = guard_of(ctx, me).seen_us;
+    for h in ctx.db.held_hit().target().filter(me).collect::<Vec<HeldHit>>() {
+        if h.parryable && rules::parries(seen, h.land_us, parry_ms, late_ms) {
+            ctx.db.held_hit().scheduled_id().delete(h.scheduled_id);
+            parried(ctx, h.actor, me, h.ability_id);
+        }
+    }
+}
+
+/// `regents.parry_ms` and `regents.parry_late_ms`.
+fn parry_window(ctx: &ReducerContext) -> (u32, u32) {
+    (hot_number(ctx, hot::PARRY_MS).max(0.0) as u32, hot_number(ctx, hot::PARRY_LATE_MS).max(0.0) as u32)
+}
+
+/// `target` PARRIED `actor`'s `ability_id`: nothing dealt, the attacker Staggered (a cast let go), and the
+/// target's riposte window open (`regents.riposte_ms`).
+fn parried(ctx: &ReducerContext, actor: u64, target: u64, ability_id: u32) {
+    let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
+    let _ = crate::module::set_status_internal(ctx, actor, rules::STATUS_STAGGERED, ms, target, String::new());
+    end_cast(ctx, actor);
+    let mut g = guard_of(ctx, target);
+    g.parried = true;
+    g.parried_us = micros(ctx.timestamp);
+    save_guard(ctx, g);
+    lesson_done(ctx, target, rules::Deed::Parried, 0);
+    log::info!("regents: {target} parried {actor}'s {ability_id}");
+}
+
+/// A HELD HIT's time is up: no press parried it, so it is dealt as it was judged.
+#[reducer]
+pub fn land_held_hit(ctx: &ReducerContext, h: HeldHit) -> Result<(), String> {
+    if ctx.sender() != ctx.database_identity() {
+        return Err("land_held_hit: scheduler only".into());
+    }
+    let Some(target) = ctx.db.entity().entity_id().find(h.target) else { return Ok(()) };
+    let Some((kit, slot)) = rules::kit_of_ability(h.ability_id) else { return Ok(()) };
+    let Some(def) = ctx.db.ability_def().ability_id().find(h.ability_id) else { return Ok(()) };
+    if is_dead(ctx, h.target) || is_dead(ctx, h.actor) {
+        return Ok(());   // either fell while it was held: the dead land nothing
+    }
+    deal(ctx, h.actor, &target, kit, slot, &def, h.blocked);
     Ok(())
 }
 
@@ -2318,6 +2496,9 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
             return Err("no roll in the air".into());
         }
         return Ok(());
+    }
+    if rules::RETIRED_ABILITIES.contains(&ability_id) {
+        return Err("that move is retired".into());
     }
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return Ok(()) };   // not ours
     if ctx.db.player().entity_id().find(actor).is_none() {
@@ -2356,14 +2537,16 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
         // The combo's next step: right after the step before, until the window after its lock.
         let prev = if sw.is_some() { last_step } else { s.combo };
         let cut_short = sw.as_ref().is_some_and(|w| w.cancelled);
-        if let Some(why) = rules::combo_refusal(step, prev, cut_short, since, (lock + kit.combo_window_ms as i64 + slack) as u32) {
+        let window = hot_number(ctx, hot::COMBO_WINDOW_MS).max(0.0) as i64;
+        if let Some(why) = rules::combo_refusal(step, prev, cut_short, since, (lock + window + slack) as u32) {
             return Err(why.into());
         }
     }
     if let Some(w) = &sw {
         let t = (micros(ctx.timestamp) - micros(w.at)) / 1000;
         let chain = matches!(slot, rules::KitSlot::Light(step) if step > 0 && w.light_step == step as i32 - 1);
-        if !rules::swing_allows(chain, t, w.wind_up_ms as i64, kit.chain_ms as i64, w.lock_ms as i64, slack, w.cancelled) {
+        let follow = if w.light_step >= 0 { kit.follow_of(w.light_step as u32) } else { 0 };
+        if !rules::swing_allows(chain, t, w.wind_up_ms as i64, follow as i64, w.lock_ms as i64, slack, w.cancelled) {
             return Err("still swinging".into());
         }
     }
@@ -2484,48 +2667,102 @@ fn close_meta_hours(ctx: &ReducerContext) {
 }
 
 /// What a hit by `actor` with `ability_id` on `target` does (true: done here). Ours when it is a kit's.
+/// JUDGED as it lands: a cancelled swing does nothing; a finisher flinches a light in its wind-up; on a
+/// player, a parry already pressed takes it, or it waits for one still on its way (`held_hit`: every hit
+/// on a player waits as long, so hits keep their spacing); else it is dealt (`deal`).
 fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return false };
     let Some(def) = ctx.db.ability_def().ability_id().find(ability_id) else { return false };
     if !hurts(ctx, actor, target.entity_id) {
         return true;   // a foe's sweep catching another foe, a player's a friend: nothing
     }
-    // A swing a roll (or a flinch) cancelled in its wind-up never lands.
-    if ctx.db.swing().entity_id().find(actor).is_some_and(|w| w.ability_id == ability_id && w.cancelled) {
+    // A swing a roll (or a flinch, or its fighter's death) cancelled never lands; nor anything a dead one swung.
+    let sw = ctx.db.swing().entity_id().find(actor).filter(|w| w.ability_id == ability_id);
+    if is_dead(ctx, actor) {
+        log::info!("regents: {actor} is dead: its {} lands nothing", def.ability_id);
+        return true;
+    }
+    if sw.as_ref().is_some_and(|w| w.cancelled) {
         log::info!("regents: {actor}'s {} was cancelled before it landed", def.ability_id);
         return true;
     }
-    // HEAVIES FLINCH LIGHTS: a heavy hit in a light swing's wind-up cancels it (a heavy's wind-up has armor).
-    if slot == rules::KitSlot::Heavy {
+    let land_us = sw.as_ref().map_or(micros(ctx.timestamp), |w| micros(w.at) + w.wind_up_ms as i64 * 1000);
+    // THE FINISHER FLINCHES A LIGHT (COMBAT_OVERHAUL.md §3: the old heavy's rule): it cancels a step in its
+    // wind-up. A finisher has armour: it is never flinched, nor is a skill.
+    if kit.is_finisher(slot) {
         if let Some(mut w) = ctx.db.swing().entity_id().find(target.entity_id) {
             let t = (micros(ctx.timestamp) - micros(w.at)) / 1000;
-            if w.light_step >= 0 && !w.cancelled && t < w.wind_up_ms as i64 {
+            let flinchable = rules::kit_of_ability(w.ability_id).is_some_and(|(k, s)| matches!(s, rules::KitSlot::Light(_)) && !k.is_finisher(s));
+            if flinchable && !w.cancelled && t < w.wind_up_ms as i64 {
                 w.cancelled = true;
                 w.lock_ms = t.max(0) as u32;
                 ctx.db.swing().entity_id().update(w);
                 let ms = hot_number(ctx, hot::FLINCH_MS).max(0.0) as u32;
                 let _ = crate::module::set_status_internal(ctx, target.entity_id, rules::STATUS_FLINCHED, ms, actor, String::new());
-                log::info!("regents: {actor}'s heavy flinched {}", target.entity_id);
+                log::info!("regents: {actor}'s finisher flinched {}", target.entity_id);
             }
         }
     }
+    // THE GUARD (§4): only a player guards, only a hit from in front, never an unblockable one.
+    let guards = ctx.db.player().entity_id().find(target.entity_id).is_some() && !kit.unblockable(ability_id)
+        && wielded_weapon(ctx, target.entity_id).is_some() && faces(ctx, target.entity_id, actor);
+    let blocked = guards && combat_state_of(ctx, target.entity_id).blocking;
+    if kit.unblockable(ability_id) && combat_state_of(ctx, target.entity_id).blocking {
+        log::info!("regents: {actor}'s {} was unblockable: {} guarded in vain", def.ability_id, target.entity_id);
+    }
+    if ctx.db.player().entity_id().find(target.entity_id).is_some() {
+        let (parry_ms, late_ms) = parry_window(ctx);
+        let g = guard_of(ctx, target.entity_id);
+        if guards && g.seen_us > 0 && rules::parries(g.seen_us, land_us, parry_ms, late_ms) {
+            parried(ctx, actor, target.entity_id, ability_id);
+            return true;
+        }
+        let deadline = rules::parry_deadline_us(land_us, late_ms,
+            hot_number(ctx, crate::hot::foundation::REWIND_MAX_MS).clamp(0.0, 1000.0) as u32,
+            hot_number(ctx, crate::hot::foundation::PRESS_CREDIT_CAP_MS).max(0.0) as u32);
+        if deadline > micros(ctx.timestamp) {
+            ctx.db.held_hit().insert(HeldHit {
+                scheduled_id: 0, scheduled_at: ScheduleAt::Time(Timestamp::from_micros_since_unix_epoch(deadline)),
+                actor, target: target.entity_id, ability_id, land_us, blocked, parryable: guards,
+            });
+            return true;
+        }
+    }
+    deal(ctx, actor, target, kit, slot, &def, blocked);
+    true
+}
+
+/// Whether `target` faces `attacker`: the attacker inside `regents.guard_arc_deg` in front of it.
+fn faces(ctx: &ReducerContext, target: u64, attacker: u64) -> bool {
+    let (Some(m), Some(a)) = (ctx.db.movement_state().entity_id().find(target), pos_of(ctx, attacker)) else { return true };
+    rules::in_guard_arc(m.yaw, a.x - m.pos.x, a.z - m.pos.z, hot_number(ctx, hot::GUARD_ARC_DEG) as f32)
+}
+
+/// THE HIT DEALT: its damage (a riposte's more), through a block when `blocked` (the target's role's block);
+/// a finisher that lands unblocked STAGGERS (`regents.stagger_ms`, the Heavy trait longer); then the dummy's
+/// rule, the weapon's on-hit traits, mastery XP, the meta's tally, a fall.
+fn deal(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, kit: &'static rules::KitSeed, slot: rules::KitSlot,
+    def: &crate::module::AbilityDef, blocked: bool) {
+    let ability_id = def.ability_id;
     let (pct, quality) = match foe_seed_of(ctx, actor) {
         Some(f) => (f.damage_pct, 0),
         None => wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q)),
     };
     let ons = rules::action_tags(kit, slot);
     let mut dmg = traited_damage(ctx, actor, target.entity_id, &ons, rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill)));
-    let t = combat_state_of(ctx, target.entity_id);
-    if t.blocking {
-        let since_ms = (micros(ctx.timestamp) - micros(t.block_since)) / 1000;
-        if since_ms <= hot_number(ctx, hot::PARRY_MS) as i64 {
-            dmg = 0.0;
-            let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
-            let _ = crate::module::set_status_internal(ctx, actor, rules::STATUS_STAGGERED, ms, target.entity_id, String::new());
-            log::info!("regents: {} parried {actor}'s {}", target.entity_id, def.ability_id);
-        } else {
-            dmg *= hot_number(ctx, hot::BLOCK_DAMAGE_PCT) as f32 / 100.0;
-        }
+    // THE RIPOSTE (§4): the string's first step begun soon after its fighter parried.
+    let first = slot == rules::KitSlot::Light(0) && ctx.db.player().entity_id().find(actor).is_some();
+    let swung_us = ctx.db.swing().entity_id().find(actor).filter(|w| w.ability_id == ability_id).map(|w| micros(w.at));
+    let parried_us = ctx.db.guard_state().entity_id().find(actor).map(|g| g.parried_us).filter(|p| *p > 0);
+    if swung_us.is_some_and(|at| rules::is_riposte(first, at, parried_us, hot_number(ctx, hot::RIPOSTE_MS).max(0.0) as u32)) {
+        dmg *= hot_number(ctx, hot::RIPOSTE_DAMAGE_PCT).max(0.0) as f32 / 100.0;
+        lesson_done(ctx, actor, rules::Deed::Riposte, 0);
+        log::info!("regents: {actor}'s riposte on {}", target.entity_id);
+    }
+    if blocked {
+        lesson_done(ctx, target.entity_id, rules::Deed::Blocked, 0);
+        dmg = rules::blocked_damage(dmg, role_of(ctx, target.entity_id).full_block, hot_number(ctx, hot::BLOCK_DAMAGE_PCT) as f32,
+            hot_number(ctx, hot::WEAK_BLOCK_PCT) as f32);
     }
     let dummy = ctx.db.dummy().entity_id().find(target.entity_id);
     if dmg > 0.0 {
@@ -2542,7 +2779,34 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
         if dummy.is_none() {
             hurt_now(ctx, target.entity_id, target.world_id);
         }
-        on_hit_traits(ctx, actor, target.entity_id, &ons, dmg, dummy.is_some());
+        // THE LAST HIT STAGGERS (§3) what it lands on unblocked: no acting, a cast let go. A foe or a dummy only when it
+        // breaks their POISE (Luke, 2026-11-02: `wear_poise`); a player as before, every last hit.
+        let alive = ctx.db.health_state().entity_id().find(target.entity_id).is_some_and(|h| !h.is_dead);
+        let breaks = !blocked && alive && if ctx.db.player().entity_id().find(target.entity_id).is_some() {
+            kit.is_finisher(slot)
+        } else {
+            wear_poise(ctx, actor, target.entity_id, kit.is_finisher(slot), &ons)
+        };
+        if breaks {
+            // The role's last hit staggers its own share longer (the sword's pommel bash: 150 %, 1.2 s).
+            let role_pct = kit.role_finisher(ability_id).map_or(100, |r| r.stagger_pct) as f32 / 100.0;
+            let ms = (hot_number(ctx, hot::STAGGER_MS).max(0.0) as f32 * role_pct).round() as u32;
+            if crate::module::set_status_internal(ctx, target.entity_id, rules::STATUS_STAGGERED, ms, actor, String::new()).is_ok() {
+                steady(ctx, target.entity_id, ms);
+                end_cast(ctx, target.entity_id);
+                lesson_done(ctx, actor, rules::Deed::LastHit, 0);
+                if !role_of(ctx, actor).plain {
+                    lesson_done(ctx, actor, rules::Deed::ShapedLastHit, 0);
+                }
+                log::info!("regents: {actor}'s finisher staggered {} for {ms} ms", target.entity_id);
+            }
+        }
+        on_hit_traits(ctx, actor, &ons, dmg, dummy.is_some());
+        if let Some(rf) = kit.role_finisher(ability_id).filter(|r| r.heal > 0.0) {
+            if dummy.is_none() {
+                rally(ctx, actor, rf);
+            }
+        }
     }
     if ctx.db.player().entity_id().find(actor).is_some() && dmg > 0.0 {
         let share = if dummy.is_some() {
@@ -2559,13 +2823,79 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
     if dmg > 0.0 && ctx.db.health_state().entity_id().find(target.entity_id).is_some_and(|h| h.is_dead) {
         fell(ctx, target.entity_id, actor);
     }
-    true
 }
 
-/// WHAT A WEAPON'S TRAITS DO AS ITS HIT LANDS (template DECISIONS #275): `stagger` (Heavy: its heavies and
-/// the combo's last hit Stagger what they hit, a chance in percent) and `heal_on_hit` (Thirsting: a share
-/// of the damage back as health; not off a training dummy).
-fn on_hit_traits(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], dmg: f32, dummy: bool) {
+/// A fighter's ROLE (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): from the SHAPE of the handle of the weapon they
+/// wield (its parts, `"p"`, or its handle, `"h"`); the plain role for a plain grip, no weapon, or a foe. A shape
+/// matters only on a weapon whose kit has roles (Luke, 2026-11-01: every tool and weapon takes any shape; the axe has
+/// none yet, so a crossguard axe guards as any axe). The client's twin: `ItemDef.role_of`.
+fn role_of(ctx: &ReducerContext, entity_id: u64) -> &'static rules::RoleSeed {
+    ctx.db.wielded().entity_id().find(entity_id)
+        .and_then(|w| ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == entity_id))
+        .filter(|r| rules::item(r.item_def_id).and_then(|i| rules::kit_keyed(i.weapon_kit)).is_some_and(|k| !k.roles.is_empty()))
+        .map_or_else(rules::plain_role, |r| rules::role_of_parts(&rules::parts_of_row(&r.instance_data)))
+}
+
+/// A role's THREAT against foe `foe` now, in percent (stored for combat overhaul step 6, threat targeting: nothing
+/// reads it yet): its rule's live value (`regents.guard_threat_pct` for the guard handle), within its scope
+/// (`regents.guard_threat_bosses_only`: on, only against a boss).
+#[allow(dead_code)]
+fn role_threat_pct(ctx: &ReducerContext, role: &rules::RoleSeed, foe: u64) -> f64 {
+    let rule = |key: &str| crate::hot::ALL.iter().find(|r| !key.is_empty() && r.key == key);
+    let live = rule(role.threat_rule).map_or(role.threat_pct as f64, |r| hot_number(ctx, r));
+    let bosses_only = rule(role.threat_scope_rule).is_some_and(|r| hot_number(ctx, r) != 0.0);
+    rules::threat_pct(live, bosses_only, foe_seed_of(ctx, foe).is_some_and(|f| f.boss))
+}
+
+/// THE RALLYING CUT LANDED (the sword's banner hilt; Luke 2026-11-01): it heals every other living player within
+/// `rf.heal_radius_m` of `actor` by `rf.heal`, and `actor` too: in full alone, its `regents.rally_self_share_pct`
+/// with players near. Each through their weapon's `healing_received` (Thirsting). Once a swing: a swing is judged
+/// to one hit (`resolve_action`); a sweep that lands on several (the axe's cleave, later) must heal once.
+fn rally(ctx: &ReducerContext, actor: u64, rf: &rules::RoleFinisher) {
+    let Some(me) = ctx.db.movement_state().entity_id().find(actor) else { return };
+    // The players only (300 at most), not the world's every moving row.
+    let near: Vec<u64> = ctx.db.player().iter().filter(|p| p.online && p.entity_id != actor)
+        .filter(|p| ctx.db.movement_state().entity_id().find(p.entity_id)
+            .is_some_and(|m| m.world_id == me.world_id && flat_dist(m.pos, me.pos) <= rf.heal_radius_m))
+        .filter(|p| !is_dead(ctx, p.entity_id))
+        .map(|p| p.entity_id).collect();
+    let mine = rules::rally_self_heal(rf.heal, near.len(), hot_number(ctx, hot::RALLY_SELF_SHARE_PCT));
+    for (who, amount) in near.iter().map(|p| (*p, rf.heal)).chain(std::iter::once((actor, mine))) {
+        let k = crate::traits::mult(&weapon_traits(ctx, who), "healing_received", &[], &crate::traits::Against::default(), trait_strength(ctx));
+        if let Some(mut h) = ctx.db.health_state().entity_id().find(who).filter(|h| !h.is_dead) {
+            h.current = (h.current + amount * k.max(0.0)).min(h.max);
+            ctx.db.health_state().entity_id().update(h);
+        }
+    }
+    log::info!("regents: {actor}'s rallying cut heals {} near ({} each) and itself {mine}", near.len(), rf.heal);
+}
+
+/// WHICH LAST HIT A PRESS FIRES (template DECISIONS #303): a player's string's last step is the one their
+/// handle's shape gives (`KitSeed::finisher_for`), whichever last hit their client asked for (a build from
+/// before roles always asks for the plain one). None for anything else.
+fn resolve_last_hit(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Option<u32> {
+    let (kit, _) = rules::kit_of_ability(ability_id).filter(|(k, _)| k.ends_string(ability_id) && !k.roles.is_empty())?;
+    ctx.db.player().entity_id().find(actor)?;
+    wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key)?;
+    let resolved = kit.finisher_for(role_of(ctx, actor));
+    (resolved != ability_id).then(|| {
+        log::info!("regents: {actor} asked for {ability_id}; their handle's last hit is {resolved}");
+        resolved
+    })
+}
+
+/// A DROPPED WEAPON's HANDLE (Luke, 2026-11-01: 50 % plain, 25 / 25, each a live rule): a weapon of a kit with
+/// roles gets a plain-wood handle of a shape rolled by `roll` (0..`loot::ROLL`) against each role's weight.
+fn dropped_weapon_data(ctx: &ReducerContext, item_id: u32, roll: u32) -> Option<String> {
+    let weapon = rules::item(item_id).filter(|i| !i.weapon_kit.is_empty())?;
+    let weight = |r: &rules::RoleSeed| crate::hot::ALL.iter().find(|h| !r.drop_rule.is_empty() && h.key == r.drop_rule).map_or(0.0, |h| hot_number(ctx, h));
+    rules::drop_handle(weapon, roll, crate::loot::ROLL, &weight).map(rules::dropped_data)
+}
+
+/// WHAT A WEAPON'S TRAITS DO AS ITS HIT LANDS (template DECISIONS #275): `heal_on_hit` (Thirsting: a share
+/// of the damage back as health; not off a training dummy). (Heavy's `stagger_time` lengthens the finisher's
+/// stagger, in `deal`.)
+fn on_hit_traits(ctx: &ReducerContext, actor: u64, ons: &[&str], dmg: f32, dummy: bool) {
     if ctx.db.player().entity_id().find(actor).is_none() {
         return;
     }
@@ -2574,15 +2904,6 @@ fn on_hit_traits(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], dm
         return;
     }
     let (k, none) = (trait_strength(ctx), crate::traits::Against::default());
-    let stagger_pm = (crate::traits::value(&traits, "stagger", ons, &none, k) * 10.0).round() as i64;
-    let alive = ctx.db.health_state().entity_id().find(target).is_some_and(|h| !h.is_dead);
-    if stagger_pm > 0 && alive && (rules::roll_permille((micros(ctx.timestamp) as u64) ^ actor.rotate_left(13) ^ target) as i64) < stagger_pm {
-        let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
-        if crate::module::set_status_internal(ctx, target, rules::STATUS_STAGGERED, ms, actor, String::new()).is_ok() {
-            end_cast(ctx, target);
-            log::info!("regents: {actor}'s hit staggered {target}");
-        }
-    }
     let heal_pct = crate::traits::value(&traits, "heal_on_hit", ons, &none, k);
     if heal_pct > 0.0 && !dummy {
         if let Some(mut h) = ctx.db.health_state().entity_id().find(actor).filter(|h| !h.is_dead) {
@@ -2594,9 +2915,36 @@ fn on_hit_traits(ctx: &ReducerContext, actor: u64, target: u64, ons: &[&str], dm
 
 // --- foes (owner, 2026-10-19: the first enemies, a skeleton camp) ------------------------------------
 
+/// DEATH INTERRUPTS AT ONCE (Luke's feedback 4099, 2026-10-31: "players and skeletons can attack while dying"):
+/// a fighter that falls has its swing cancelled (one still winding up, or landing, never lands; the referee may
+/// still report its sweep, which `hit` then drops) and its hits held for a parry go with it.
+fn die_mid_swing(ctx: &ReducerContext, entity_id: u64) {
+    end_cast(ctx, entity_id);
+    if let Some(mut w) = ctx.db.swing().entity_id().find(entity_id) {
+        if !w.cancelled {
+            let t = ((micros(ctx.timestamp) - micros(w.at)) / 1000).max(0);
+            w.cancelled = true;
+            w.lock_ms = (t as u32).min(w.lock_ms);
+            ctx.db.swing().entity_id().update(w);
+        }
+    }
+    let held: Vec<u64> = ctx.db.held_hit().iter().filter(|h| h.actor == entity_id).map(|h| h.scheduled_id).collect();
+    for id in held {
+        ctx.db.held_hit().scheduled_id().delete(id);
+    }
+}
+
+/// Whether `entity_id` is dead (its health out): it lands nothing.
+fn is_dead(ctx: &ReducerContext, entity_id: u64) -> bool {
+    ctx.db.health_state().entity_id().find(entity_id).is_some_and(|h| h.is_dead)
+}
+
 /// The foe entity `entity_id` is (its kind's `FoeSeed`), if it is one.
 /// Whether `actor` may hurt `target` (`rules::may_hurt`): a foe only players; a player not players.
 fn hurts(ctx: &ReducerContext, actor: u64, target: u64) -> bool {
+    if ctx.db.guide().entity_id().find(target).is_some() {
+        return false;   // the camp's guide: nobody's to hurt
+    }
     rules::may_hurt(ctx.db.foe().entity_id().find(actor).is_some(), ctx.db.player().entity_id().find(actor).is_some(),
         ctx.db.player().entity_id().find(target).is_some())
 }
@@ -2647,6 +2995,7 @@ const FOE_BRAIN: &str = "regents/foe";
 /// is Slain `regents.player_respawn_s`, then gets up at the spawn (`on_status_expired`).
 fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
     stop_block(ctx, entity_id);
+    die_mid_swing(ctx, entity_id);
     if let Some(mut f) = ctx.db.foe().entity_id().find(entity_id) {
         if f.fell_at.is_some() {
             return;
@@ -2683,6 +3032,7 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
         if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_SLAIN, ms.max(1), killer, String::new()) {
             log::warn!("regents: player {entity_id} fell, but: {e}");
         }
+        remind_tutorial(ctx, entity_id);
         log::info!("regents: player {entity_id} was slain by {killer}");
     }
 }
@@ -2779,6 +3129,11 @@ fn forget_body(ctx: &ReducerContext, entity_id: u64) {
     crate::module::despawn_entity_internal(ctx, entity_id);
     ctx.db.combat_state().entity_id().delete(entity_id);
     ctx.db.swing().entity_id().delete(entity_id);
+    ctx.db.guard_state().entity_id().delete(entity_id);
+    ctx.db.poise_state().entity_id().delete(entity_id);
+    for h in ctx.db.held_hit().target().filter(entity_id).map(|h| h.scheduled_id).collect::<Vec<_>>() {
+        ctx.db.held_hit().scheduled_id().delete(h);
+    }
 }
 
 /// World `world_id`'s dummies whole again `regents.dummy_reset_s` after their last hit.
@@ -2822,6 +3177,253 @@ fn populate_dummies(ctx: &ReducerContext, world_id: u32) {
     }
 }
 
+// --- the tutorial -------------------------------------------------------------------------------------
+// THE TUTORIAL (Luke, 2026-11-01: ROLES_PREP.md §4, T1-T5; "make your own sword" first, then the fight with it).
+// The camp's GUIDE (a `guide` point: an entity nobody hurts) offers it; a character's progress is their
+// `tutorial` row, and each LESSON (`LessonDef`, `rules::LESSONS`) is ticked by the server seeing its deed done
+// (`lesson_done`, called where the deed happens: a node's yield, a station's make, a wield, the string's last hit,
+// a roll through a swing, a parry, a riposte, a block). A new character is offered it; one who set it aside is
+// offered it again after their first death. The yard's sparring partner is a foe (`content/foe/`).
+
+/// RETIRED the day it was made (2026-11-02): `poise_state` replaced it, public, so the target marker can show it. Kept
+/// declared and unused: a published table is never removed (AGENTS.md rule 17).
+#[table(accessor = poise)]
+pub struct Poise {
+    #[primary_key]
+    pub entity_id: u64,
+    pub left: f32,
+    pub hit_at: Timestamp,
+    pub steady_until: Timestamp,
+}
+
+/// A FOE'S OR A DUMMY'S POISE (Luke, 2026-11-02; `rules::poise_hit`): what is left of its whole (`most`), when it was
+/// last worn, and until when it is Steadied (nothing wears it). Made at its first hit. Public, by cell: the target
+/// marker shows it (Luke: on the ring under your target, not a bar), worked out again from `hit_at` and
+/// `regents.poise_regen_ms` as the server does.
+#[table(accessor = poise_state, public)]
+pub struct PoiseState {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    /// The cell it is in (`crate::cell`): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
+    pub left: f32,
+    pub most: f32,
+    pub hit_at: Timestamp,
+    pub steady_until: Timestamp,
+}
+
+/// `entity_id`'s whole poise: its FoeDef's, a dummy's `regents.dummy_poise`; 0 for anything else.
+fn poise_of(ctx: &ReducerContext, entity_id: u64) -> f32 {
+    if ctx.db.dummy().entity_id().find(entity_id).is_some() {
+        return hot_number(ctx, hot::DUMMY_POISE).max(0.0) as f32;
+    }
+    foe_seed_of(ctx, entity_id).map_or(0.0, |f| f.poise as f32)
+}
+
+/// A MELEE HIT WEARS `target`'s POISE (`regents.poise_light`, its string's last `regents.poise_finisher`, which the
+/// Heavy trait raises: `poise`): whether it broke (only the last hit can). No poise (0): every last hit breaks it.
+fn wear_poise(ctx: &ReducerContext, actor: u64, target: u64, last: bool, ons: &[&str]) -> bool {
+    let most = poise_of(ctx, target);
+    if most <= 0.0 {
+        return last;
+    }
+    let now = micros(ctx.timestamp);
+    let (world_id, chunk) = place_of(ctx, target);
+    let row = ctx.db.poise_state().entity_id().find(target).unwrap_or(PoiseState {
+        entity_id: target, world_id, chunk, left: most, most, hit_at: ctx.timestamp, steady_until: Timestamp::from_micros_since_unix_epoch(0),
+    });
+    let left = rules::poise_now(row.left, most, (now - micros(row.hit_at)) / 1000, hot_number(ctx, hot::POISE_REGEN_MS) as f32);
+    let base = hot_number(ctx, if last { hot::POISE_FINISHER } else { hot::POISE_LIGHT }).max(0.0) as f32;
+    let heavier = if ctx.db.player().entity_id().find(actor).is_some() {
+        crate::traits::mult(&weapon_traits(ctx, actor), "poise", ons, &crate::traits::Against::default(), trait_strength(ctx))
+    } else {
+        1.0
+    };
+    let steadied = now < micros(row.steady_until);
+    let (after, broke) = rules::poise_hit(left, most, base * heavier.max(0.0), last, steadied);
+    let fresh = PoiseState { left: after, most, hit_at: if steadied { row.hit_at } else { ctx.timestamp }, ..row };
+    if ctx.db.poise_state().entity_id().find(target).is_some() {
+        ctx.db.poise_state().entity_id().update(fresh);
+    } else {
+        ctx.db.poise_state().insert(fresh);
+    }
+    if broke {
+        log::info!("regents: {actor} broke {target}'s poise");
+    } else if !steadied {
+        log::info!("regents: {actor} wore {target}'s poise to {after:.0} of {most:.0}");
+    }
+    broke
+}
+
+/// STEADIED (option B): broken and staggered `stagger_ms`, `target`'s poise cannot be worn until `regents.steadied_ms`
+/// after the stagger is over.
+fn steady(ctx: &ReducerContext, target: u64, stagger_ms: u32) {
+    if let Some(mut p) = ctx.db.poise_state().entity_id().find(target) {
+        let until = micros(ctx.timestamp) + (stagger_ms as i64 + hot_number(ctx, hot::STEADIED_MS).max(0.0) as i64) * 1000;
+        p.steady_until = Timestamp::from_micros_since_unix_epoch(until);
+        ctx.db.poise_state().entity_id().update(p);
+    }
+}
+
+/// A CHARACTER'S TUTORIAL: offered, under way, finished or set aside (`rules::TUTORIAL_*`), and the lessons
+/// done. Each player is sent only their own.
+#[table(accessor = tutorial, public)]
+pub struct Tutorial {
+    #[primary_key]
+    pub entity_id: u64,
+    pub world_id: u32,
+    pub state: u8,
+    /// The lessons done (`LessonDef` ids), in the order they were.
+    pub done: Vec<u32>,
+    /// Offered again after a death once already.
+    pub reminded: bool,
+    pub updated_at: Timestamp,
+}
+
+#[client_visibility_filter]
+const TUTORIAL_MINE: Filter = Filter::Sql(
+    "SELECT t.* FROM tutorial t JOIN player p ON t.entity_id = p.entity_id WHERE p.identity = :sender",
+);
+
+fn save_tutorial(ctx: &ReducerContext, mut t: Tutorial) {
+    t.updated_at = ctx.timestamp;
+    if ctx.db.tutorial().entity_id().find(t.entity_id).is_some() {
+        ctx.db.tutorial().entity_id().update(t);
+    } else {
+        ctx.db.tutorial().insert(t);
+    }
+}
+
+/// A character with no tutorial row (new, or from before it) is offered it, once.
+fn offer_tutorial(ctx: &ReducerContext, entity_id: u64) {
+    if ctx.db.tutorial().entity_id().find(entity_id).is_none() {
+        let (world_id, _) = place_of(ctx, entity_id);
+        save_tutorial(ctx, Tutorial { entity_id, world_id, state: rules::TUTORIAL_OFFERED, done: Vec::new(), reminded: false, updated_at: ctx.timestamp });
+    }
+}
+
+/// THE REMINDER (T2): a character who set the tutorial aside is offered it again after a death, once.
+fn remind_tutorial(ctx: &ReducerContext, entity_id: u64) {
+    if let Some(mut t) = ctx.db.tutorial().entity_id().find(entity_id).filter(|t| t.state == rules::TUTORIAL_SET_ASIDE && !t.reminded) {
+        t.state = rules::TUTORIAL_OFFERED;
+        t.reminded = true;
+        save_tutorial(ctx, t);
+        log::info!("regents: {entity_id} fell: the tutorial is offered again");
+    }
+}
+
+/// DEED `deed` (with item `item`, 0 for none) DONE by `entity_id`: every lesson of theirs it ticks, while their
+/// tutorial is under way; the last ticked finishes it.
+fn lesson_done(ctx: &ReducerContext, entity_id: u64, deed: rules::Deed, item: u32) {
+    let Some(mut t) = ctx.db.tutorial().entity_id().find(entity_id).filter(|t| t.state == rules::TUTORIAL_ON) else { return };
+    let (newly, all) = rules::lessons_ticked(&t.done, deed, item);
+    if newly.is_empty() {
+        return;
+    }
+    log::info!("regents: {entity_id} did lesson(s) {newly:?} ({deed:?})");
+    t.done.extend(newly);
+    if all {
+        t.state = rules::TUTORIAL_FINISHED;
+        log::info!("regents: {entity_id} finished the tutorial");
+    }
+    save_tutorial(ctx, t);
+}
+
+/// A ROLL THROUGH A SWING: foe `actor`'s `ability_id` was judged a miss; every player with the tutorial under way who
+/// was rolling in its reach as it was rolled through it (`rules::rolled_clear`). A swing that goes through a guard
+/// (the red glint) ticks its own lesson too.
+fn rolled_through(ctx: &ReducerContext, actor: u64, ability_id: u32) {
+    let (Some(foe), Some(def), Some((kit, _))) = (ctx.db.foe().entity_id().find(actor), ctx.db.ability_def().ability_id().find(ability_id),
+        rules::kit_of_ability(ability_id)) else { return };
+    let Some(at) = pos_of(ctx, actor) else { return };
+    let now = micros(ctx.timestamp);
+    let rollers: Vec<u64> = ctx.db.tutorial().iter().filter(|t| t.state == rules::TUTORIAL_ON && t.world_id == foe.world_id).map(|t| t.entity_id).collect();
+    for who in rollers {
+        let Some(st) = ctx.db.status_state().entity_id().find(who).filter(|st| st.status == rules::STATUS_ROLLING) else { continue };
+        let left = st.lasts_ms as i64 - (now - micros(st.since)) / 1000;
+        if pos_of(ctx, who).is_some_and(|me| rules::rolled_clear(left, flat_dist(me, at), def.range)) {
+            lesson_done(ctx, who, rules::Deed::RolledThrough, 0);
+            if kit.unblockable(ability_id) {
+                lesson_done(ctx, who, rules::Deed::RolledGlint, 0);
+            }
+        }
+    }
+}
+
+/// Which guide stands on which point (the server's: a client knows a guide by its kind).
+#[table(accessor = guide)]
+pub struct Guide {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub point_id: String,
+}
+
+/// THE GUIDE on every `guide` point of world `world_id`'s level that has none yet: an entity a stand-still
+/// brain "drives". Nobody hurts it (`hurts`); E on it offers the tutorial (the client's).
+fn populate_guides(ctx: &ReducerContext, world_id: u32) {
+    let Some(level) = crate::level::by_id(crate::module::world_level_of(ctx, world_id)) else { return };
+    let have: std::collections::HashSet<String> = ctx.db.guide().world_id().filter(world_id).map(|g| g.point_id).collect();
+    for p in level.points_of(rules::GUIDE_POINT) {
+        if have.contains(p.id) {
+            continue;
+        }
+        let id = crate::module::spawn_npc_internal(ctx, world_id, rules::ENTITY_GUIDE, Vector3::new(p.x as f32, p.y as f32, p.z as f32), yaw_of(p.id));
+        ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
+            entity_id: id, world_id, brain: "stand".into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
+        });
+        ctx.db.guide().insert(Guide { entity_id: id, world_id, point_id: p.id.to_string() });
+    }
+}
+
+/// BEGIN THE LESSONS (the guide's offer taken): at a guide, within `regents.work_reach_m`. Finished, they begin
+/// again from the first.
+#[reducer]
+pub fn tutorial_begin(ctx: &ReducerContext) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    let here = pos_of(ctx, me).ok_or("tutorial_begin: you are nowhere")?;
+    let (world_id, _) = place_of(ctx, me);
+    let near = ctx.db.guide().world_id().filter(world_id).filter_map(|g| pos_of(ctx, g.entity_id))
+        .any(|g| flat_dist(g, here) <= reach(ctx) * RESOLVE_REACH_MULT);
+    if !near {
+        return Err("tutorial_begin: talk to the drillmaster at the yard".into());
+    }
+    let mut t = ctx.db.tutorial().entity_id().find(me).unwrap_or(Tutorial {
+        entity_id: me, world_id, state: rules::TUTORIAL_OFFERED, done: Vec::new(), reminded: false, updated_at: ctx.timestamp,
+    });
+    if t.state == rules::TUTORIAL_ON {
+        return Err("tutorial_begin: the lessons are under way".into());
+    }
+    if t.state == rules::TUTORIAL_FINISHED {
+        t.done.clear();
+    }
+    t.state = rules::TUTORIAL_ON;
+    t.world_id = world_id;
+    save_tutorial(ctx, t);
+    log::info!("regents: {me} began the tutorial");
+    Ok(())
+}
+
+/// NOT NOW: the lessons set aside (offered again after a death, once; the guide offers them any time).
+#[reducer]
+pub fn tutorial_set_aside(ctx: &ReducerContext) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    let (world_id, _) = place_of(ctx, me);
+    let mut t = ctx.db.tutorial().entity_id().find(me).unwrap_or(Tutorial {
+        entity_id: me, world_id, state: rules::TUTORIAL_OFFERED, done: Vec::new(), reminded: false, updated_at: ctx.timestamp,
+    });
+    if t.state == rules::TUTORIAL_FINISHED {
+        return Err("tutorial_set_aside: the lessons are finished".into());
+    }
+    t.state = rules::TUTORIAL_SET_ASIDE;
+    save_tutorial(ctx, t);
+    Ok(())
+}
+
 impl crate::game::Genre for Regents {
     fn claims(&self) -> &'static crate::genre::Claims {
         &rules::CLAIMS
@@ -2831,12 +3433,25 @@ impl crate::game::Genre for Regents {
         may_fight(ctx, actor_id, ability_id)
     }
 
+    fn resolve_ability(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32) -> Option<u32> {
+        resolve_last_hit(ctx, actor_id, ability_id)
+    }
+
+    fn loot_data(&self, ctx: &ReducerContext, item_id: u32, roll: u32) -> Option<String> {
+        dropped_weapon_data(ctx, item_id, roll)
+    }
+
     fn on_ability_used(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32, _aim: Vector3) {
         fought(ctx, actor_id, ability_id);
     }
 
     fn on_ability_hit(&self, ctx: &ReducerContext, actor_id: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
         hit(ctx, actor_id, target, ability_id)
+    }
+
+    /// A swing the referee judged a miss: a player rolling through it learns the roll (the tutorial).
+    fn on_ability_missed(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32) {
+        rolled_through(ctx, actor_id, ability_id);
     }
 
     /// An arrow hit something (the referee saw it).
@@ -2867,6 +3482,7 @@ impl crate::game::Genre for Regents {
         ensure_schedule(ctx);
         ensure_frontier(ctx);
         starter_kit(ctx, entity_id);
+        offer_tutorial(ctx, entity_id);
     }
 
     fn on_player_returned(&self, ctx: &ReducerContext, entity_id: u64) {
@@ -2874,6 +3490,7 @@ impl crate::game::Genre for Regents {
         ensure_schedule(ctx);
         ensure_frontier(ctx);
         starter_kit(ctx, entity_id);
+        offer_tutorial(ctx, entity_id);
     }
 
     fn on_player_left(&self, ctx: &ReducerContext, entity_id: u64) {

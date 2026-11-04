@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 60
+done_when = 1
+item = ExtResource("2_item")
+any_of_its_kind = false
+at = &"anvil"
+words = "And two rivets to hold it together, a bar each."
+id = 40006
+display_name = "Smith rivets"

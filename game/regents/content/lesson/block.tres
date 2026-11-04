@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 130
+done_when = 7
+any_of_its_kind = false
+at = &"poi_training"
+words = "Hold RMB facing it: most of a blow stops. Turn your back and nothing does."
+id = 40013
+display_name = "Hold your guard"

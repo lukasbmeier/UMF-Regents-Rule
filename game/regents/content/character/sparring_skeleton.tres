@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/foe.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/art/monsters/Skeleton_B.glb" id="3_look"]
+[ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="4_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/skeleton.tres" id="5_move"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40007
+kind = 105
+scene = ExtResource("2_scene")
+brain = &"regents/foe"
+visual_scene = ExtResource("3_look")
+visual_yaw_deg = 180.0
+animation_set = ExtResource("4_anim")
+movement_profile = ExtResource("5_move")
+display_name = "Sparring skeleton"
+designer_notes = "THE TUTORIAL'S SPARRING PARTNER (Luke, 2026-11-01): a bound skeleton the camp keeps in its yard. The skeleton warrior's model (Skeleton_B) for now; what it does is its FoeDef's (content/foe/sparring_skeleton.tres)."

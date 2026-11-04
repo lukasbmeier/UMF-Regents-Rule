@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 110
+done_when = 5
+any_of_its_kind = false
+at = &"poi_training"
+words = "Tap RMB just as its blow lands. The ring closing on it shows you when."
+id = 40011
+display_name = "Parry"

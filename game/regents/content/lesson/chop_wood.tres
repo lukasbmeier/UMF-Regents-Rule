@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LessonDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/lesson_def.gd" id="1_lesson"]
+[ext_resource type="Resource" path="res://game/regents/content/item/logs.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_lesson")
+order = 10
+done_when = 0
+item = ExtResource("2_item")
+any_of_its_kind = false
+at = &"poi_workshop"
+words = "Every sword starts with its grip, and a grip with wood. Chop a tree: tap E to work it, or hold E and swing in time for more."
+id = 40001
+display_name = "Chop wood"

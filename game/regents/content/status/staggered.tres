@@ -5,13 +5,13 @@
 [resource]
 script = ExtResource("1_status")
 status = 103
-speed = 0.4
+speed = 0.0
 can_sprint = false
 can_jump = false
 can_dash = false
 can_act = false
-pose = &"react.hit"
+pose = &"react.dazed"
 color = Color(1, 0.6, 0.4, 1)
 id = 40004
 display_name = "Staggered"
-designer_notes = "Parried (owner, 2026-10-19): a moment you cannot act (regents.stagger_ms)."
+designer_notes = "Parried, or a finisher landed (owner, 2026-10-19; COMBAT_OVERHAUL.md §3): a moment you cannot act (regents.stagger_ms; the pommel bash longer). ROOTED and DAZED (Luke's feedback, 2026-11-01: \"a stagger should keep them in one spot and dazed animation for the length; we can experiment with both\"): speed 0 (0.4 lets them stagger about); its pose is the adventurer set's react.dazed (Q2 Zombie_Idle, a groggy sway) held for its length, after react.stagger (Idle_Shield_Break, a guard knocked aside) played once over it by the hit feedback. The player's and the skeletons' alike."

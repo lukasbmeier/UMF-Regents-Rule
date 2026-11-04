@@ -2,17 +2,26 @@ extends Node
 ## COMBAT, PLAYED (game/regents/tests/combat_playtest.sh starts this beside the world's real referee): a
 ## real client through the latency simulator, at the frontier camp's training dummy, through the real
 ## keys, clicks and the bag panel. Wields the copper axe (the bag's button), Tabs onto the dummy (the
-## ring, the target frame), taps the light combo and holds a heavy (each judged by the referee; the
-## numbers float up; axemanship XP), waits for the dummy to be whole, rolls (Ctrl: further than a run in
-## the same time), blocks (no swing behind it), and lets the target go (Esc). Exits 0/1.
+## ring, the target frame), taps the string (a chop, then the overhead, its finisher, which staggers; each
+## judged by the referee; the numbers float up; axemanship XP), waits for the dummy to be whole, rolls (Ctrl:
+## further than a run in the same time), blocks (no swing behind it); at the skeleton camp PARRIES a light it
+## saw (and fails one pressed too early), ripostes, blocks the rest; ROLES: re-hilts two swords at the workbench
+## and plays each handle's last hit (COMBAT_OVERHAUL.md §5); and lets the target go (Esc). Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 220.0
+const OVERALL_TIMEOUT_SEC: float = 680.0
+## The camp's guide and the yard's sparring skeleton (the glade's `guide` and `sparring_1` points).
+const GUIDE: Vector3 = Vector3(5.0, 0.0, 22.5)
+const SPARRING: Vector3 = Vector3(13.5, 0.0, 24.5)
+const SPARRING_KIND: int = 105
 const DUMMY_1: Vector3 = Vector3(7.0, 0.0, 20.0)
 const AXE: int = 40001
 const AXEMANSHIP: int = 40007
 const DUMMY_KIND: int = 102
 const BOW: int = 40020
 const ARROWS: int = 40022
+const IRON_SWORD: int = 40019
+const CROSSGUARD: int = 40040
+const BANNER: int = 40041
 
 var _passes: int = 0
 var _failures: int = 0
@@ -88,34 +97,48 @@ func _run() -> void:
 	var dh: SpaceTimeHealthComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
 	var feed: HitFeedbackComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(HitFeedbackComponent) as HitFeedbackComponent
 
-	# --- THE LIGHT COMBO, AND A HEAVY ---
+	# --- THE STRING: a chop, then the overhead, the axe's finisher (COMBAT_OVERHAUL.md §3) ---
 	var driver: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
 	await _click(0.06)
 	_check(driver.action_clip() == &"extra/Sword_Regular_A", "a chop plays its own swing, not Interact (%s)" % driver.action_clip())
 	await _until(func() -> bool: return dh.get_current() < 500.0, 3.0)
 	var hit1: float = 500.0 - dh.get_current()
-	_check(is_equal_approx(snappedf(hit1, 0.01), 7.7), "a tap of the left button: a chop the referee judged a hit, 11 at the copper axe's 70 %% (%.2f)" % hit1)
+	_check(is_equal_approx(snappedf(hit1, 0.01), 8.4), "a tap of the left button: a chop the referee judged a hit, 12 at the copper axe's 70 %% (%.2f)" % hit1)
+	# ITS POISE ON THE MARKER (Luke, 2026-11-02): the chop wore 10 of the dummy's 50, shown round the ring under it.
+	var arc_worn: Callable = func() -> float:
+		var m: ShaderMaterial = combat.poise_arc.material_override as ShaderMaterial if combat.poise_arc != null else null
+		return float(m.get_shader_parameter(&"worn")) if m != null else -1.0
+	await _until(func() -> bool: return float(arc_worn.call()) > 0.0, 2.0)
+	_check(combat.poise_arc != null and combat.poise_arc.visible and absf(float(arc_worn.call()) - 0.2) < 0.02,
+		"the chop wore a fifth of the dummy's poise, filled round the ring under it (%.2f)" % float(arc_worn.call()))
 	await _click(0.06)
-	await _until(func() -> bool: return dh.get_current() < 500.0 - hit1 - 1.0, 3.0)
-	var hit2: float = 500.0 - hit1 - dh.get_current()
-	_check(is_equal_approx(snappedf(hit2, 0.01), 10.5), "a second tap inside the window: the combo's second chop, 15 (%.2f)" % hit2)
-	await get_tree().create_timer(1.0).timeout
-	var before_heavy: float = dh.get_current()
-	await _click(0.6)
-	# The overhead's clip steps 0.85 m forward in its source; played in place, the model never leaves the body.
+	# The overhead's clip steps forward in its source; played in place, the model never leaves the body.
 	var skel: Skeleton3D = me.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	var root_bone: int = skel.find_bone("root")
 	var drift: float = 0.0
+	var overhead_clip: StringName = &""
 	for i: int in range(40):
 		await get_tree().process_frame
 		drift = maxf(drift, skel.get_bone_pose_position(root_bone).length())
-	_check(driver.action_clip() == &"extra/Sword_Heavy_B" and drift < 0.05,
-		"the overhead plays in place: its root moved %.3f m (its clip steps 0.85 m), so nothing snaps back" % drift)
-	await _until(func() -> bool: return dh.get_current() < before_heavy - 1.0, 3.0)
-	_check(is_equal_approx(snappedf(before_heavy - dh.get_current(), 0.01), 22.4), "held: the overhead, 32 (%.2f)" % (before_heavy - dh.get_current()))
-	_check(feed != null and feed.shown.size() >= 3 and is_equal_approx(snappedf(feed.shown[0], 0.01), 7.7), "the numbers floated up from the dummy: %s" % str(feed.shown if feed != null else []))
-	await _until(func() -> bool: return int(skilling.xp.get(AXEMANSHIP, 0)) >= 9, 3.0)
-	_check(int(skilling.xp.get(AXEMANSHIP, 0)) >= 9, "axemanship XP for the hits (%d)" % int(skilling.xp.get(AXEMANSHIP, 0)))
+		var clip_now: String = String(driver.action_clip())
+		if driver.action_playing() and overhead_clip == &"" and clip_now != "extra/Sword_Regular_A" and not clip_now.ends_with("_Rec"):
+			overhead_clip = driver.action_clip()
+	_check(overhead_clip == &"extra/Sword_Heavy_A" and drift < 0.05,
+		"a second tap inside the window: the overhead (%s), played in place: its root moved %.3f m, so nothing snaps back" % [overhead_clip, drift])
+	var rec0: int = combat.recoveries
+	await _until(func() -> bool: return driver.action_playing() and String(driver.action_clip()) == "extra/Sword_Heavy_A_Rec", 2.5)
+	_check(combat.recoveries > rec0 and String(driver.action_clip()) == "extra/Sword_Heavy_A_Rec",
+		"the overhead blends back through its recovery (%s), not a snap to idle (Luke, 2026-11-01)" % driver.action_clip())
+	await _until(func() -> bool: return dh.get_current() < 500.0 - hit1 - 1.0, 3.0)
+	var hit2: float = 500.0 - hit1 - dh.get_current()
+	_check(is_equal_approx(snappedf(hit2, 0.01), 18.2), "the string's last: the overhead, its finisher, 26 (%.2f)" % hit2)
+	await _until(func() -> bool: return feed != null and feed.flashes.has(&"stagger"), 2.0)
+	_check(feed != null and feed.flashes.has(&"stagger"), "the finisher STAGGERED the dummy (the old heavy's job, now the string's last)")
+	var arc_steady: float = float((combat.poise_arc.material_override as ShaderMaterial).get_shader_parameter(&"steady")) if combat.poise_arc != null else -1.0
+	_check(arc_steady > 0.5 and feed.poise_steadied(ClockSync.server_usec()), "its poise broke: the ring's arc is the grey of Steadied")
+	_check(feed != null and feed.shown.size() >= 2 and is_equal_approx(snappedf(feed.shown[0], 0.01), 8.4), "the numbers floated up from the dummy: %s" % str(feed.shown if feed != null else []))
+	await _until(func() -> bool: return int(skilling.xp.get(AXEMANSHIP, 0)) >= 7, 3.0)
+	_check(int(skilling.xp.get(AXEMANSHIP, 0)) >= 7, "axemanship XP for the hits (%d)" % int(skilling.xp.get(AXEMANSHIP, 0)))
 	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
 	_check(is_equal_approx(dh.get_current(), 500.0), "the dummy is whole again a few seconds on")
 
@@ -137,21 +160,21 @@ func _run() -> void:
 	for i: int in range(1, starts.size()):
 		gaps.append(starts[i] - starts[i - 1])
 	var axe: KitDef = combat.kit
-	var least: int = axe.light[0].wind_up_ms + axe.chain_ms
-	_check(starts.size() >= 3 and starts.size() <= 5 and gaps.all(func(g: int) -> bool: return g >= least - 20),
-		"mashing for 1.5 s swings %d times, never faster than a swing lands and chains (gaps %s ms, at least %d)" % [starts.size(), str(gaps), least])
+	var least: int = axe.light[0].wind_up_ms + axe.follow_for(0)
+	_check(starts.size() >= 2 and starts.size() <= 4 and gaps.all(func(g: int) -> bool: return g >= least - 20),
+		"mashing for 1.5 s swings %d times, never faster than a swing lands and follows through (gaps %s ms, at least %d)" % [starts.size(), str(gaps), least])
 	_check(refusals.is_empty(), "and the server took every one: the client's timeline is the server's (%s)" % str(refusals))
 	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
 
-	# --- A ROLL IN A HEAVY'S WIND-UP: the swing never lands ---
+	# --- A ROLL IN A SWING'S WIND-UP: the swing never lands ---
 	var before_roll: float = dh.get_current()
-	await _click(0.45)   # held: the overhead (its wind-up 600 ms)
+	await _click(0.03)   # a chop (its wind-up 320 ms)
 	await _key(KEY_CTRL)
-	_check(combat.swing_cancelled, "Ctrl in the overhead's wind-up cancels it here")
+	_check(combat.swing_cancelled, "Ctrl in the chop's wind-up cancels it here")
 	await _until(func() -> bool: return driver.action_clip() == &"Roll", 1.0)
 	_check(driver.action_clip() == &"Roll", "and the roll plays its Roll (%s)" % driver.action_clip())
 	await get_tree().create_timer(1.5).timeout
-	_check(is_equal_approx(dh.get_current(), before_roll), "the cancelled overhead never landed on the dummy (%.1f)" % dh.get_current())
+	_check(is_equal_approx(dh.get_current(), before_roll), "the cancelled chop never landed on the dummy (%.1f)" % dh.get_current())
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
 
 	# --- A COMMITTED SWING: you walk until it lands ---
@@ -327,22 +350,62 @@ func _run() -> void:
 			return my_hp.get_current() < hp0 and not swung_clip.is_empty(), 8.0)
 		_check(my_hp.get_current() < hp0 and not swung_clip.is_empty(),
 			"it swung its sword (%s) and hit you: %.1f -> %.1f" % [swung_clip[0] if not swung_clip.is_empty() else &"no swing seen", hp0, my_hp.get_current()])
-		var shp: SpaceTimeHealthComponent = foe_ent.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
-		var s0: float = shp.get_current()
-		var to_it: Vector3 = foe_ent.global_position - me.global_position
-		input.set_look(atan2(-to_it.x, -to_it.z), 0.0)
-		await get_tree().create_timer(0.4).timeout
-		await _click(0.06)
-		await _until(func() -> bool: return shp.get_current() < s0, 3.0)
-		_check(shp.get_current() < s0, "your chop hit it back: %.1f -> %.1f" % [s0, shp.get_current()])
+		await _heal(my_hp)
+		await _parrying_the_camp(my_hp)
+		await _back_at_camp(my_hp, home)
+		await _blocking_the_camp(me, my_hp)
+		await _back_at_camp(my_hp, home)
+		await _blocked_from_behind(my_hp)
+		await _back_at_camp(my_hp, home)
+		# A sweep hits the first body in its path: with the camp round you that may be the skeleton beside this one
+		# (2026-11-01: two runs running), so what the chop did is read off the camp's skeletons, the most any lost.
+		var camp_hp: Dictionary[int, float] = {}
+		for id: int in EntityRegistry.all_entity_ids():
+			var ce: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+			if ce != null and ce.definition != null and FoeDef.by_kind(ce.definition.kind) != null:
+				var ch: SpaceTimeHealthComponent = ce.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+				if ch != null:
+					camp_hp[id] = ch.get_current()
+		var chopped: Callable = func() -> float:
+			var most: float = 0.0
+			for id: int in camp_hp:
+				var ce: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+				var ch: SpaceTimeHealthComponent = ce.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent if ce != null else null
+				if ch != null:
+					most = maxf(most, camp_hp[id] - ch.get_current())
+			return most
+		# Waiting its turn a foe circles out of reach (COMBAT_OVERHAUL.md §2): hit back when it steps in.
+		# Guarded while it does (two skeletons at once kill a player who stands there), then the guard drops.
+		var fights_at: float = FoeDef.by_kind(103).reach_m + 0.2
+		combat.set_block(true)
+		await _until(func() -> bool: return foe_ent.global_position.distance_to(me.global_position) < fights_at, 12.0)
+		combat.set_block(false)
+		await _until(func() -> bool: return not combat.blocking, 2.0)
+		# A skeleton's finisher staggers you (COMBAT_OVERHAUL.md §3), and a press made then waits for it: each try
+		# waits until you can act, faces it, chops (2026-11-01: three skeletons kept a single chop waiting past
+		# the check, two runs running).
+		for attempt: int in 4:
+			if float(chopped.call()) > 0.01:
+				break
+			await _until(func() -> bool: return combat.can_act() and not combat.swinging(Time.get_ticks_msec()), 3.0)
+			var to_it: Vector3 = foe_ent.global_position - me.global_position
+			input.set_look(atan2(-to_it.x, -to_it.z), 0.0)
+			await get_tree().create_timer(0.3).timeout
+			await _click(0.06)
+			await _until(func() -> bool: return float(chopped.call()) > 0.01, 2.0)
+		_check(float(chopped.call()) > 0.01, "your chop hit a skeleton back: %.1f off it" % float(chopped.call()))
 		# Run: past its leash (25 m from home) it gives up and walks home.
 		await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+		var hurt_hp: float = my_hp.get_current()
 		await _until(func() -> bool: return foe_ent.global_position.distance_to(home) < 2.0, 20.0)
 		_check(foe_ent.global_position.distance_to(home) < 2.0, "out of its reach, it walked home (%.1f m from its point)" % foe_ent.global_position.distance_to(home))
-		# Out of the fight, health comes back (regents.regen_delay_s, then regen_pct_per_s).
-		var hurt_hp: float = my_hp.get_current()
+		# Out of the fight, health comes back (regents.regen_delay_s, then regen_pct_per_s): measured from
+		# leaving it, since the walk home may outlast the delay.
 		await _until(func() -> bool: return my_hp.get_current() > hurt_hp + 3.0 or my_hp.get_current() >= my_hp.get_max(), 20.0)
 		_check(my_hp.get_current() > hurt_hp, "out of the fight, your health comes back: %.1f -> %.1f" % [hurt_hp, my_hp.get_current()])
+
+	# --- ROLES BY THE HANDLE (COMBAT_OVERHAUL.md §5): the sword's three, re-hilted at the workbench ---
+	await _roles(dummy, dh)
 
 	# --- THE YEW BOW (owner, 2026-10-20): drawn on the move, loosed at the Tab target; the arrow flies in
 	# the referee's world and what it hits is the server's; free aim; RMB lets the draw go ---
@@ -402,9 +465,11 @@ func _run() -> void:
 	_mouse(MOUSE_BUTTON_LEFT, false)
 	await get_tree().create_timer(0.8).timeout
 	var st_bow: StatusComponent = me.find_component(StatusComponent) as StatusComponent
-	_check(not combat.drawing() and inv.count(ARROWS) == arrows1 and st_bow.status() != 107, "RMB lets the draw go: no arrow, no Drawing")
+	_check(not combat.drawing() and inv.count(ARROWS) == arrows1 and st_bow.status() != 107, "RMB lets the draw go (and parries with the stave): no arrow, no Drawing")
 	combat.wield(-1)
 	await get_tree().create_timer(0.5).timeout
+
+	await _yard()
 
 	# --- LET THE TARGET GO ---
 	await _key(KEY_ESCAPE)
@@ -413,7 +478,560 @@ func _run() -> void:
 	_finish()
 
 
+## THE YARD (the tutorial, Luke 2026-11-01): begun at the guide (E twice, as the HUD answers it); a sword taken in
+## hand; then against the sparring skeleton, reading each swing as this client sees it start: the parry and the
+## strike back, the held guard, a roll through a light and through the glinting overhead, and three in a row. Each
+## lesson is the SERVER's tick, seen in the tutorial's row; the ring closes on each of its swings, over its wind-up.
+func _yard() -> void:
+	var tut: TutorialComponent = me.find_component(TutorialComponent) as TutorialComponent
+	var my_hp: SpaceTimeHealthComponent = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	_check(tut != null and tut.state == TutorialComponent.OFFERED, "the yard: the tutorial is offered (state %d)" % (tut.state if tut != null else -9))
+	if tut == null:
+		return
+	await _heal(my_hp)
+	await _stand_at(GUIDE + Vector3(0, 0.05, 1.5), GUIDE)
+	hud.talk_to_guide()
+	_check(hud.tutorial_card.offering(), "E on the guide: their offer")
+	hud.talk_to_guide()
+	await _until(func() -> bool: return tut.state == TutorialComponent.ON, 4.0)
+	_check(tut.state == TutorialComponent.ON, "E again: the lessons begun")
+	var ticked: Array[String] = []
+	tut.lesson_ticked.connect(func(l: LessonDef) -> void: ticked.append(l.display_name))
+	var sword_row: int = -1
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		if st.item_def_id == IRON_SWORD:
+			sword_row = st.id
+	combat.wield(sword_row)
+	await _until(func() -> bool: return ticked.has("Take it in hand"), 4.0)
+	_check(ticked.has("Take it in hand"), "a sword taken in hand: ticked (%s)" % str(ticked))
+	var partner: SpaceTimeEntity = null
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and e.definition.kind == SPARRING_KIND:
+			partner = e
+	_check(partner != null, "the sparring skeleton stands in the yard")
+	if partner == null:
+		return
+	var feed: HitFeedbackComponent = partner.find_component(HitFeedbackComponent) as HitFeedbackComponent
+	var seen: Array[Dictionary] = []
+	(partner.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent).started_elsewhere.connect(func(ability_id: int) -> void:
+		seen.append({"ability": ability_id, "at": Time.get_ticks_msec()}))
+	var parried_by: Array[int] = []
+	combat.parried.connect(func(by: int) -> void: parried_by.append(by))
+	var swings: Array[int] = []
+	combat.swung.connect(func(_ab: int) -> void: swings.append(Time.get_ticks_msec()))
+	await _stand_at(SPARRING + Vector3(0, 0.05, 2.2), SPARRING)
+	_face(partner)
+	var want: Array[String] = ["Parry", "Strike back", "Hold your guard", "Roll through", "The red glint", "Three in a row"]
+	var until_ms: int = Time.get_ticks_msec() + 75_000
+	while Time.get_ticks_msec() < until_ms and not want.all(func(w: String) -> bool: return ticked.has(w)):
+		if my_hp.get_current() < 40.0:
+			await _heal(my_hp)
+		if partner.global_position.distance_to(me.global_position) > 3.0:
+			await _stand_at(partner.global_position + Vector3(0, 0.05, 2.2), partner.global_position)
+		_face(partner)
+		var n: int = seen.size()
+		await _until(func() -> bool: return seen.size() > n, 6.0)
+		if seen.size() <= n:
+			# Its rest (or it waits): three in a row on it, if that is still to do.
+			if not ticked.has("Three in a row"):
+				for i: int in 3:
+					var n1: int = swings.size()
+					await _click(0.06)
+					await _until(func() -> bool: return swings.size() > n1, 1.0)
+					await get_tree().create_timer(0.45).timeout
+			continue
+		var swing: Dictionary = seen[seen.size() - 1]
+		var a: AbilityDef = null
+		for x: AbilityDef in FoeDef.by_kind(SPARRING_KIND).kit.light:
+			if x.id == int(swing["ability"]):
+				a = x
+		if a == null:
+			continue
+		var lands: int = int(swing["at"]) + a.wind_up_ms
+		if KitDef.is_unblockable(a.id) or not ticked.has("Roll through"):
+			# ROLL through it: begun 200 ms before it lands as seen.
+			await _until(func() -> bool: return Time.get_ticks_msec() >= lands - 200, 2.0)
+			await _key(KEY_CTRL)
+		elif not ticked.has("Parry") or not ticked.has("Strike back"):
+			# PARRY, as the ring shuts (60 ms before it lands as seen), then strike at once.
+			await _until(func() -> bool: return Time.get_ticks_msec() >= lands - 60, 2.0)
+			var p0: int = parried_by.size()
+			combat.set_block(true)
+			await get_tree().create_timer(0.05).timeout
+			combat.set_block(false)
+			await _until(func() -> bool: return parried_by.size() > p0, 1.5)
+			if parried_by.size() > p0:
+				_face(partner)
+				await _click(0.03)
+		elif not ticked.has("Hold your guard"):
+			# THE HELD GUARD through it, facing it.
+			await _until(func() -> bool: return Time.get_ticks_msec() >= lands - 400, 2.0)
+			combat.set_block(true)
+			await get_tree().create_timer(0.8).timeout
+			combat.set_block(false)
+		# Its combo over (the glinting overhead is its last), it rests: three in a row on it, while that is to do.
+		if KitDef.is_unblockable(a.id) and not ticked.has("Three in a row"):
+			await _until(func() -> bool: return Time.get_ticks_msec() >= lands + 150 and combat.can_act(), 2.0)
+			_face(partner)
+			# Each tap once the swing before it has begun, a beat after (as the dummy's string is played above).
+			for i: int in 3:
+				var n0: int = swings.size()
+				await _click(0.06)
+				await _until(func() -> bool: return swings.size() > n0, 1.0)
+				await get_tree().create_timer(0.45).timeout
+			continue
+		await get_tree().create_timer(0.5).timeout
+	print("   the yard's lessons ticked: %s; the rings: %s" % [str(ticked), str(feed.rings if feed != null else [])])
+	for w: String in want:
+		_check(ticked.has(w), "the yard: \"%s\" ticked by the server" % w)
+	var winds: Array[int] = []
+	for a: AbilityDef in FoeDef.by_kind(SPARRING_KIND).kit.light:
+		winds.append(a.wind_up_ms)
+	_check(feed != null and not feed.rings.is_empty() and feed.rings.all(func(w: int) -> bool: return winds.has(w)),
+		"a ring closed on each of its swings, over its wind-up (%s)" % str(feed.rings if feed != null else []))
+	_check(hud.tutorial_card.visible and not hud.tutorial_card._title.text.is_empty(), "the card shows the lesson now: \"%s\"" % hud.tutorial_card._title.text)
+	combat.set_target(-1)
+	await _stand_at(GUIDE + Vector3(0, 0.05, 1.5), GUIDE)
+	combat.wield(-1)
+	await get_tree().create_timer(0.5).timeout
+
+
 ## Run forward for `secs` (rolling with Ctrl at the start when `roll`): how far the body went.
+## FOES YOU CAN READ (COMBAT_OVERHAUL.md §2, 2026-10-31): held up against the camp for 16 s, a block stops
+## the skeletons' lights (a quarter through) but not their finisher: it glints red as it winds up (the
+## client saw it start) and lands in full. And their hits on you come in turns, never two together.
+func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, through_pct: float = -1.0) -> void:
+	var feeds: Array[HitFeedbackComponent] = []
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null:
+			var f: HitFeedbackComponent = e.find_component(HitFeedbackComponent) as HitFeedbackComponent
+			if f != null:
+				feeds.append(f)
+	# What each foe's hits do through a block (the server's rule: the ability's damage at the foe's %, through
+	# the wielded weapon's guard: the light one, unless `through_pct` says the full one's).
+	var block: float = (through_pct if through_pct >= 0.0 else HotRules.number(&"regents.weak_block_pct")) / 100.0
+	var whole: Array[float] = []
+	var blocked: Array[float] = []
+	for f: FoeDef in FoeDef.all():
+		for a: AbilityDef in f.kit.light:
+			var d: float = snappedf(a.damage * float(f.damage_pct) / 100.0, 0.01)
+			if f.kit.unblockable.has(a):
+				whole.append(d)
+			else:
+				blocked.append(snappedf(d * block, 0.01))
+	combat.set_block(true)
+	await _until(func() -> bool: return combat.blocking, 3.0)
+	var drops: Array[float] = []
+	var at_ms: Array[int] = []
+	var last: float = my_hp.get_current()
+	var until: int = Time.get_ticks_msec() + 16000
+	var heals_asked: int = 0
+	var raised_ms: int = 0
+	# The camp's three take ~60 health in 5 s: worn low, the shell's HEAL (a rise, never counted) keeps the 16 s
+	# going (2026-11-01: stopping at 45 health left one run 5 s and no light from in front).
+	while Time.get_ticks_msec() < until and my_hp.get_current() > 0.0:
+		await get_tree().process_frame
+		_face_nearest_foe()   # the guard stops only what is in front
+		if not combat.blocking and Time.get_ticks_msec() - raised_ms > 300:
+			raised_ms = Time.get_ticks_msec()
+			combat.set_block(true)   # a stagger or a hit may drop it: hold it up again (not every frame: the rate limit)
+		var now_hp: float = my_hp.get_current()
+		if now_hp < last - 0.01:
+			drops.append(snappedf(last - now_hp, 0.01))
+			at_ms.append(Time.get_ticks_msec())
+		last = now_hp
+		if now_hp < 50.0 and heals_asked < 6:
+			heals_asked += 1
+			print("HEAL %d" % me.entity_id)
+			await _until(func() -> bool: return my_hp.get_current() > 60.0, 4.0)
+			last = my_hp.get_current()
+	combat.set_block(false)
+	var glinted: bool = feeds.any(func(f: HitFeedbackComponent) -> bool: return f.flashes.has(&"glint"))
+	_check(glinted, "a skeleton's finisher glinted red as it wound up (%d foes watched)" % feeds.size())
+	_check(drops.any(func(d: float) -> bool: return whole.any(func(w: float) -> bool: return is_equal_approx(d, w))),
+		"the finisher came through the block in full (one of %s): hits taken %s" % [str(whole), str(drops)])
+	_check(drops.any(func(d: float) -> bool: return blocked.any(func(b: float) -> bool: return is_equal_approx(d, b))),
+		"a light was still blocked (the guard: %d%% through, one of %s): hits taken %s" % [roundi(block * 100.0), str(blocked), str(drops)])
+	# Hits are seen on this client: the referee's settle and the round trip's jitter move each by up to
+	# ~50 ms, so two hits the server spaced by the gap show at least the gap less 100 ms apart.
+	var gap: int = int(HotRules.number(&"regents.token_gap_ms"))
+	var least: int = 1 << 30
+	for i: int in range(1, at_ms.size()):
+		least = mini(least, at_ms[i] - at_ms[i - 1])
+	_check(at_ms.size() >= 2 and least >= gap - 100, "%d hits held up against them, never two together: the least gap %d ms (the rule %d)" % [at_ms.size(), least, gap])
+
+
+## THE PARRY, PLAYED (COMBAT_OVERHAUL.md §4): against the camp, a guard press made a whole wind-up before a
+## light SEEN starting (too early: no parry, it lands in full), then one made just before a light lands as
+## this client shows it (parried: no damage, the skeleton staggered by us), then a tap at once: the riposte.
+func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
+	var seen: Array[Dictionary] = []
+	var foes: Dictionary[int, SpaceTimeEntity] = {}
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null:
+			foes[id] = e
+			var act: SpaceTimeActionComponent = e.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+			if act != null:
+				act.started_elsewhere.connect(func(ability_id: int) -> void:
+					seen.append({"foe": id, "ability": ability_id, "at": Time.get_ticks_msec()}))
+	var parried_by: Array[int] = []
+	combat.parried.connect(func(by: int) -> void: parried_by.append(by))
+	var light_of: Callable = func(ability_id: int) -> AbilityDef:
+		if KitDef.is_unblockable(ability_id):
+			return null   # a finisher: no parry stops it
+		for f: FoeDef in FoeDef.all():
+			for a: AbilityDef in f.kit.light:
+				if a.id == ability_id:
+					return a
+		return null
+	# TOO EARLY: pressed (a tap) as a light is seen starting, a whole wind-up before it lands.
+	var early_ok: bool = false
+	var early_taken: float = -1.0
+	var tries: int = 0
+	while not early_ok and tries < 4 and my_hp.get_current() > 60.0:
+		tries += 1
+		var n: int = seen.size()
+		await _until(func() -> bool: return seen.size() > n and light_of.call(int(seen[seen.size() - 1]["ability"])) != null, 10.0)
+		if seen.size() <= n:
+			break
+		var swing: Dictionary = seen[seen.size() - 1]
+		var a: AbilityDef = light_of.call(int(swing["ability"]))
+		var foe: SpaceTimeEntity = foes[int(swing["foe"])]
+		_face(foe)
+		var hp: float = my_hp.get_current()
+		combat.set_block(true)
+		await get_tree().create_timer(0.05).timeout
+		combat.set_block(false)
+		var whole: float = snappedf(a.damage * float(FoeDef.by_kind(foe.definition.kind).damage_pct) / 100.0, 0.01)
+		await _until(func() -> bool: return my_hp.get_current() < hp - 0.01, float(a.wind_up_ms) / 1000.0 + 1.0)
+		early_taken = snappedf(hp - my_hp.get_current(), 0.01)
+		early_ok = is_equal_approx(early_taken, whole) and not parried_by.has(foe.entity_id)
+		await get_tree().create_timer(0.8).timeout
+	_check(early_ok, "a guard pressed as a light is seen starting (a whole wind-up early) parries nothing: it lands in full (%.2f)" % early_taken)
+	await _heal(my_hp)
+	# IN TIME: pressed 60 ms before the light lands as this client shows it (its clip's hit). Judged with no
+	# credit for the trips (the press's and the swing's), it would count 90 ms late: past the window.
+	var parried_ok: bool = false
+	var riposte_dealt: float = -1.0
+	var riposte_want: float = 0.0
+	tries = 0
+	while not parried_ok and tries < 6 and my_hp.get_current() > 40.0:
+		tries += 1
+		var n: int = seen.size()
+		await _until(func() -> bool: return seen.size() > n and light_of.call(int(seen[seen.size() - 1]["ability"])) != null, 10.0)
+		if seen.size() <= n:
+			break
+		var swing: Dictionary = seen[seen.size() - 1]
+		var a: AbilityDef = light_of.call(int(swing["ability"]))
+		var foe: SpaceTimeEntity = foes[int(swing["foe"])]
+		_face(foe)
+		var press_at: int = int(swing["at"]) + a.wind_up_ms - 60
+		await _until(func() -> bool: return Time.get_ticks_msec() >= press_at, 2.0)
+		var hp: float = my_hp.get_current()
+		var p0: int = parried_by.size()
+		combat.set_block(true)
+		await get_tree().create_timer(0.05).timeout
+		combat.set_block(false)
+		await _until(func() -> bool: return parried_by.size() > p0, 1.5)
+		if parried_by.size() > p0 and parried_by[parried_by.size() - 1] == foe.entity_id:
+			parried_ok = is_equal_approx(my_hp.get_current(), hp) or my_hp.get_current() >= hp
+			# STAGGERED, IT STANDS DAZED (Luke, 2026-11-01: "keep them in one spot and dazed animation for the
+			# length"): it does not move, and holds the dazed sway.
+			var fst: StatusComponent = foe.find_component(StatusComponent) as StatusComponent
+			var fdrv: AnimationDriverComponent = foe.find_component(AnimationDriverComponent) as AnimationDriverComponent
+			var at0: Vector3 = foe.global_position
+			var dazed: bool = false
+			for i: int in 12:
+				await get_tree().physics_frame
+				dazed = dazed or (fdrv != null and String(fdrv.pose_clip()) == "extra/Zombie_Idle" and fdrv.pose_weight() > 0.3)
+			var moved: float = Vector2(foe.global_position.x - at0.x, foe.global_position.z - at0.z).length()
+			if fst != null and fst.status() == 103:
+				_check(moved < 0.1 and dazed, "the parried skeleton stands rooted (moved %.2f m) and dazed (%s)" % [moved, fdrv.pose_clip() if fdrv != null else &"?"])
+			# THE RIPOSTE: a tap at once, at the staggered skeleton. A sweep hits the first body in its path, so
+			# it is read off whichever skeleton it landed on (2026-11-01: once the one beside the parried one).
+			var before: Dictionary[int, float] = {}
+			for id: int in foes:
+				var h: SpaceTimeHealthComponent = foes[id].find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+				before[id] = h.get_current() if h != null else 0.0
+			var drop: Callable = func() -> float:
+				var most: float = 0.0
+				for id: int in foes:
+					var h: SpaceTimeHealthComponent = foes[id].find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+					if h != null:
+						most = maxf(most, float(before[id]) - h.get_current())
+				return most
+			var chop: AbilityDef = combat.kit.light[0]
+			riposte_want = snappedf(chop.damage * float(combat.weapon.weapon_damage_pct) / 100.0 * HotRules.number(&"regents.riposte_damage_pct") / 100.0, 0.01)
+			_face(foe)
+			var step: int = combat.next_light_step(Time.get_ticks_msec())
+			await _click(0.03)
+			await _until(func() -> bool: return float(drop.call()) > 0.01, 2.0)
+			riposte_dealt = snappedf(float(drop.call()), 0.01)
+			_check(step == 0, "after the parry the tap is the riposte: the string's first step (%d)" % step)
+		await get_tree().create_timer(0.8).timeout
+	_check(parried_ok, "a guard pressed 60 ms before a light lands as seen PARRIES it: no damage, the skeleton staggered by us (%d tries)" % tries)
+	_check(is_equal_approx(riposte_dealt, riposte_want), "the riposte at once: the chop at %d%%: %.2f (%.2f)" % [int(HotRules.number(&"regents.riposte_damage_pct")), riposte_want, riposte_dealt])
+
+
+## THE GUARD FACES FORWARD: the block held, turned away from the nearest skeleton, a light comes through in
+## full (COMBAT_OVERHAUL.md §4: a hit from behind takes full damage).
+func _blocked_from_behind(my_hp: SpaceTimeHealthComponent) -> void:
+	var whole: Array[float] = []
+	for f: FoeDef in FoeDef.all():
+		for a: AbilityDef in f.kit.light:
+			if not f.kit.unblockable.has(a):
+				whole.append(snappedf(a.damage * float(f.damage_pct) / 100.0, 0.01))
+	var drops: Array[float] = []
+	var last: float = my_hp.get_current()
+	var until: int = Time.get_ticks_msec() + 12000
+	combat.set_block(true)
+	while Time.get_ticks_msec() < until and my_hp.get_current() > 25.0 and not drops.any(func(d: float) -> bool: return whole.has(d)):
+		await get_tree().process_frame
+		_face_nearest_foe()
+		input.set_look(input.get_look_yaw() + PI, 0.0)   # the back to it
+		if not combat.blocking:
+			combat.set_block(true)
+		var now_hp: float = my_hp.get_current()
+		if now_hp < last - 0.01:
+			drops.append(snappedf(last - now_hp, 0.01))
+		last = now_hp
+	combat.set_block(false)
+	_check(drops.any(func(d: float) -> bool: return whole.has(d)),
+		"blocking with the back to them: a light comes through in full (one of %s): hits taken %s" % [str(whole), str(drops)])
+
+
+## ROLES BY THE HANDLE, PLAYED (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): three Fine iron swords from the shell; two
+## RE-HILTED at the workbench through its window (a crossguard hilt, a banner hilt: the badge and the line on what
+## each does); then each wielded and its string played at the dummy: its last hit the one its handle gives,
+## predicted here (clip, lock) and fired by the server; the pommel bash's longer stagger; the crossguard's FULL
+## guard against the camp; the rallying cut's heal, landing on a skeleton.
+func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
+	print("GRANT_SWORDS %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(IRON_SWORD) == 3 and inv.count(CROSSGUARD) == 1 and inv.count(BANNER) == 1, 20.0)
+	_check(inv.count(IRON_SWORD) == 3 and inv.count(CROSSGUARD) == 1 and inv.count(BANNER) == 1, "the shell gave three Fine iron swords, a crossguard hilt and a banner hilt")
+	var swords: Array[int] = []
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == IRON_SWORD:
+			swords.append(s.id)
+	swords.sort()
+	# RE-HILT at the workbench, through its window: the refit entry, the hilt picked (its badge, its words), REFIT.
+	combat.wield(-1)
+	combat.set_target(-1)
+	var bench: int = -1
+	for id: int in EntityRegistry.all_entity_ids():
+		var sc: StationComponent = SkillingComponent.station_of(id)
+		if sc != null and sc.key == &"workbench":
+			bench = id
+	_check(bench > 0, "the camp's workbench")
+	var bench_at: Vector3 = (EntityRegistry.get_entity(bench) as Node3D).global_position
+	await _stand_at(bench_at + Vector3(0, 0.05, 1.5), bench_at)
+	for pair: Array in [[swords[1], CROSSGUARD, "pommel bash"], [swords[2], BANNER, "rallying cut"]]:
+		var row: int = pair[0]
+		hud.station_window.show_station(bench)
+		await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
+		var w: RegentsStationWindow = hud.station_window
+		var idx: int = -1
+		for i: int in w.choices.size():
+			if int(w.choices[i].get("refit", -1)) == row:
+				idx = i
+		w.pick(idx)
+		await get_tree().process_frame
+		w.pick_part(0, int(pair[1]))
+		await get_tree().process_frame
+		# No traits (the copper rivets offer Thirsting, which heals and takes healing): the numbers below are the role's.
+		if idx >= 0:
+			var c: Dictionary = w.choices[idx]
+			for t: TraitDef in skilling.refit_traits(row, c["made_by"], String(c["data"])):
+				w.want_trait(t.id, false)
+			await get_tree().process_frame
+		var list: OptionButton = w.find_child("Part_0", true, false) as OptionButton
+		_check(idx >= 0 and list != null and list.item_count == 9 and list.get_item_icon(0) != null and w.role_line().contains(String(pair[2]))
+			and not w.role_line().to_lower().contains("finisher"), "the workbench refits sword %d: its handle list badged, the hilt picked says \"%s\"" % [row, w.role_line()])
+		var go: Button = w.find_child("Refit", true, false) as Button
+		if go != null and not go.disabled:
+			go.pressed.emit()
+		await _until(func() -> bool: return _data_of(row).contains("\"p\":[%d" % int(pair[1])) and inv.count(int(pair[1])) == 0, 5.0)
+		_check(_data_of(row).contains("\"p\":[%d" % int(pair[1])) and inv.count(int(pair[1])) == 0, "re-hilted: its parts %s; the hilt used up" % _data_of(row))
+		w.close()
+		await get_tree().create_timer(0.3).timeout
+	# EACH HANDLE'S LAST HIT, at the dummy.
+	var act: SpaceTimeActionComponent = me.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	var driver: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
+	var dst: StatusComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(StatusComponent) as StatusComponent
+	var sword_kit: KitDef = KitDef.by_key(&"sword")
+	for case: Array in [[swords[0], 40003, &"extra/Sword_Light_C", 26.0, 100], [swords[1], 40022, &"extra/Melee_Hook", 14.0, 150],
+			[swords[2], 40023, &"cuts/Sword_Light_D_Cut", 14.0, 100]]:
+		var row: int = case[0]
+		var want: int = case[1]
+		combat.wield(row)
+		await _until(func() -> bool: return combat.weapon_row == row and combat.kit != null, 5.0)
+		var role: RoleDef = combat.role()
+		var last: AbilityDef = sword_kit.finisher_for(role)
+		await _until(func() -> bool: return hud._skillbar.text.contains(last.display_name), 2.0)
+		_check(hud._skillbar.text.contains("Slash - Slash (second) - %s" % last.display_name) and hud._skillbar.text.contains("hold for " + role.guard_words.get_slice(":", 0))
+			and not hud._skillbar.text.to_lower().contains("finisher"), "wielded, the key line: \"%s\"" % hud._skillbar.text)
+		await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
+		combat.set_target(dummy)
+		await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
+		var mine: Array[int] = []
+		var theirs: Array[int] = []
+		var on_swung: Callable = func(id: int) -> void: mine.append(id)
+		var on_resolved: Callable = func(id: int, _pid: int, _outcome: int, _target: int) -> void: theirs.append(id)
+		combat.swung.connect(on_swung)
+		act.action_resolved.connect(on_resolved)
+		var rank: int = skilling.rank_in(sword_kit.skill)
+		var clip: StringName = &""
+		var staggered_ms: int = -1
+		var bar_text: String = ""
+		var hp_before_last: float = 0.0
+		for step: int in 3:
+			if step == 2:
+				hp_before_last = dh.get_current()
+			await _click(0.04)
+			var deadline: int = Time.get_ticks_msec() + 1200
+			while Time.get_ticks_msec() < deadline:
+				await get_tree().physics_frame
+				if step == 2 and driver.action_playing() and String(driver.action_clip()) == String(case[2]):
+					clip = driver.action_clip()
+				if step == 2 and dst != null and dst.status() == 103 and staggered_ms < 0:
+					staggered_ms = dst._lasts_ms
+					var bar: Label = hud._target_statuses.get_node_or_null(^"Status_0/Text") as Label
+					bar_text = bar.text if bar != null else ""
+			if step < 2:
+				await _until(func() -> bool: return not combat.swinging(Time.get_ticks_msec()) or Time.get_ticks_msec() >= combat.swing_hit_ms + sword_kit.follow_for(step), 1.0)
+		await _until(func() -> bool: return theirs.size() >= 3, 3.0)
+		await _until(func() -> bool: return dst != null and dst.status() == 103, 1.0)
+		if staggered_ms < 0 and dst != null and dst.status() == 103:
+			staggered_ms = dst._lasts_ms
+		combat.swung.disconnect(on_swung)
+		act.action_resolved.disconnect(on_resolved)
+		var name: String = last.display_name
+		_check(mine.size() == 3 and mine[2] == want and combat.lock_for(last) == sword_kit.lock_ms(last), "%s: this client predicted its last hit (%s), and its lock (%d ms)" % [name, str(mine), sword_kit.lock_ms(last)])
+		_check(theirs.size() >= 3 and theirs[theirs.size() - 1] == want, "%s: the server fired the same (%s)" % [name, str(theirs)])
+		_check(clip == StringName(case[2]), "%s plays its own clip (%s)" % [name, clip])
+		var dealt: float = snappedf(hp_before_last - dh.get_current(), 0.01)
+		var expect: float = snappedf(float(case[3]) * 1.13 * (1.0 + float(mini(3 * (rank - 1), 27)) / 100.0), 0.01)
+		_check(is_equal_approx(dealt, expect), "%s hit the dummy for %.2f (%.0f at Fine quality 650: %.2f)" % [name, dealt, float(case[3]), expect])
+		var stagger_want: int = roundi(HotRules.number(&"regents.stagger_ms") * float(case[4]) / 100.0)
+		_check(staggered_ms == stagger_want, "%s staggered the dummy %d ms (want %d)" % [name, staggered_ms, stagger_want])
+		_check(bar_text.begins_with("Staggered") and absf(bar_text.get_slice("  ", 1).to_float() - float(stagger_want) / 1000.0) < 0.35,
+			"%s: under the dummy's health its stagger shows, draining (\"%s\")" % [name, bar_text])
+		await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
+	# THE BAG: each sword wears its handle's badge.
+	hud.toggle_bag()
+	await get_tree().process_frame
+	var badges: int = 0
+	for row: int in swords:
+		var slot: UiSlot = hud.bag_window.find_child("Slot_%d" % row, true, false) as UiSlot
+		badges += 1 if slot != null and slot.find_child("RoleBadge", false, false) != null else 0
+	_check(badges == 3, "in the bag, each sword wears its handle's badge (%d of 3)" % badges)
+	hud.toggle_bag()
+	combat.set_target(-1)
+	# THE CROSSGUARD'S FULL GUARD against the camp: a light comes through at `block_damage_pct`.
+	var my_hp: SpaceTimeHealthComponent = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	await _heal(my_hp)
+	combat.wield(swords[1])
+	await _until(func() -> bool: return combat.weapon_row == swords[1], 5.0)
+	await _stand_at(Vector3(33.0, 0.05, 3.0), Vector3(33.0, 0.0, -1.0))
+	await _blocking_the_camp(me, my_hp, HotRules.number(&"regents.block_damage_pct"))
+	await _heal(my_hp)
+	# THE RALLYING CUT: hurt, it lands on a skeleton and heals you 8 (nobody near: all of it).
+	combat.wield(swords[2])
+	await _until(func() -> bool: return combat.weapon_row == swords[2], 5.0)
+	print("HURT %d" % me.entity_id)
+	await _until(func() -> bool: return my_hp.get_current() < my_hp.get_max() - 20.0, 6.0)
+	# Each health update as it arrives (a heal and a skeleton's hit in one frame hid the +8 from a per-frame look,
+	# 2026-11-01): the rises among them.
+	var rises: Array[float] = []
+	var on_health: Callable = func(_current: float, _most: float, delta: float) -> void:
+		if delta > 0.01:
+			rises.append(snappedf(delta, 0.01))
+	my_hp.health_changed.connect(on_health)
+	var landed: bool = false
+	var until: int = Time.get_ticks_msec() + 45000
+	var heals_asked: int = 0
+	combat.set_block(false)
+	# The camp's three keep you hurt (and staggered): the string is mashed whenever you can act; worn low, the
+	# shell's HEAL sets you whole (a big rise, never 8), and their hits bring you down again.
+	while Time.get_ticks_msec() < until and not landed:
+		var foe: SpaceTimeEntity = _nearest_foe()
+		if foe == null:
+			break
+		if my_hp.get_current() < 35.0 and heals_asked < 6:
+			heals_asked += 1
+			print("HEAL %d" % me.entity_id)
+			await _until(func() -> bool: return my_hp.get_current() > 60.0, 4.0)
+			continue   # the foe found before the wait may be gone (slain, its body freed): find one again
+		_face(foe)
+		if combat.can_act() and foe.global_position.distance_to(me.global_position) < FoeDef.by_kind(103).reach_m + 0.4:
+			await _click(0.04)
+		for i: int in 6:
+			await get_tree().physics_frame
+		landed = rises.any(func(r: float) -> bool: return is_equal_approx(r, 8.0))
+	my_hp.health_changed.disconnect(on_health)
+	_check(landed, "the rallying cut landed on a skeleton and healed you 8, all of it with nobody near (rises %s)" % str(rises))
+	combat.set_target(-1)
+	await _heal(my_hp)
+	await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+
+
+## The bag row `row`'s `instance_data` ("" for none).
+func _data_of(row: int) -> String:
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.id == row:
+			return s.instance_data
+	return ""
+
+
+## The nearest foe, or null.
+func _nearest_foe() -> SpaceTimeEntity:
+	var best: SpaceTimeEntity = null
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null \
+				and (best == null or e.global_position.distance_to(me.global_position) < best.global_position.distance_to(me.global_position)):
+			best = e
+	return best
+
+
+## Whole again (the shell's HEAL: an authority's negative damage), between the camp's phases.
+## Between the camp's phases: whole again, and, if the camp slew you in the last one (three skeletons can, 2026-11-02),
+## up at the spawn and back by `home`, where the phases expect you.
+func _back_at_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
+	if my_hp.is_dead():
+		print("   (the camp slew you: up at the spawn, and back)")
+		await _until(func() -> bool: return not my_hp.is_dead(), 12.0)
+		await _stand_at(home + Vector3(0, 0.05, 2.4), home)
+	await _heal(my_hp)
+
+
+func _heal(my_hp: SpaceTimeHealthComponent) -> void:
+	print("HEAL %d" % me.entity_id)
+	await _until(func() -> bool: return my_hp.get_current() >= my_hp.get_max() - 0.01, 6.0)
+
+
+## Look (and so face, in stance) at `foe`, its target.
+func _face(foe: SpaceTimeEntity) -> void:
+	combat.set_target(foe.entity_id)
+	var to_it: Vector3 = foe.global_position - me.global_position
+	input.set_look(atan2(-to_it.x, -to_it.z), 0.0)
+
+
+## Face the nearest foe (the guard stops only a hit in front).
+func _face_nearest_foe() -> void:
+	var best: SpaceTimeEntity = null
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null \
+				and (best == null or e.global_position.distance_to(me.global_position) < best.global_position.distance_to(me.global_position)):
+			best = e
+	if best != null:
+		_face(best)
+
+
 func _run_for(secs: float, roll: bool) -> float:
 	await get_tree().create_timer(0.6).timeout
 	var from: Vector3 = me.global_position

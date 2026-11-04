@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/axemanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_hack.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_crushing_overhead.tres" id="a1"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"skeleton_axe"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1")])
+unblockable = Array[Resource]([ExtResource("a1")])
+skill_ranks = PackedInt32Array()
+id = 40006
+display_name = "Skeleton axe"
+designer_notes = "A FOE KIT (COMBAT_OVERHAUL.md section 2, 2026-10-31): the skeleton axeman's own swings: one heavy hack, then an unblockable overhead. No weapon names it, so no player wields it."

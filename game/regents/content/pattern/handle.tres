@@ -14,7 +14,7 @@ core = true
 [resource]
 script = ExtResource("3_sf0t6")
 key = &"handle"
-name_format = "{m} handle"
+name_format = "{m} grip"
 family = 1
 max_stack = 100
 part_tag = &"handle"
@@ -22,6 +22,6 @@ carries_trait = true
 skill = ExtResource("4_v01y4")
 parts = Array[ExtResource("2_tv5fa")]([SubResource("Resource_w0bv1")])
 xp = 8
-description = "Carved from logs at the workbench: its wood is its trait."
+description = "A plain grip, carved from logs at the workbench: for any tool or weapon. Its wood is its trait."
 id = 40004
-display_name = "Handle"
+display_name = "Grip"

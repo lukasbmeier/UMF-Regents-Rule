@@ -25,6 +25,11 @@ class_name PatternDef extends ContentDef
 @export var part_tag: StringName = &""
 ## Its cells give their material's trait (a handle: oak's Steady).
 @export var carries_trait: bool = false
+## A HANDLE'S SHAPE (COMBAT_OVERHAUL.md §5): the role a weapon made with its cells has (the crossguard hilt's).
+## Empty: the plain role.
+@export var role: RoleDef
+## The one kit its cells are a part of ("sword"). Empty: any made of its kind.
+@export var fits_kit: StringName = &""
 @export_group("The recipe")
 ## The station it is made at ("furnace", "anvil", "workbench").
 @export var station: StringName = &"workbench"

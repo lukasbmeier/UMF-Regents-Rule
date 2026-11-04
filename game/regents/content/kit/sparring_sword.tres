@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sparring_cut.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sparring_backswing.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sparring_overhead.tres" id="a2"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"sparring_sword"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
+unblockable = Array[Resource]([ExtResource("a2")])
+skill_ranks = PackedInt32Array()
+id = 40007
+display_name = "Sparring sword"
+designer_notes = "A FOE KIT for the tutorial's sparring partner (Luke, 2026-11-01): the skeleton warrior's three swings, slowed to learn on (950, 950, 1200 ms). Its last is unblockable and glints: the lesson on rolling it."

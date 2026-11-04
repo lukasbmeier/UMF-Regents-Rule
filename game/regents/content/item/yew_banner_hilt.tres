@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/trait/springy.tres" id="1_fdw1i"]
+[ext_resource type="Resource" path="res://game/regents/content/material/yew.tres" id="2_y5np7"]
+[ext_resource type="Resource" path="res://game/regents/content/trait/balanced.tres" id="3_p2ggq"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/banner_hilt.tres" id="4_klmta"]
+[ext_resource type="Resource" path="res://game/regents/content/role/support.tres" id="5_tkdka"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="6_tub4o"]
+
+[resource]
+script = ExtResource("6_tub4o")
+max_stack = 100
+part_tag = &"handle"
+handle_trait = ExtResource("1_fdw1i")
+part_weapon_trait = ExtResource("3_p2ggq")
+role = ExtResource("5_tkdka")
+color = Color(0.78, 0.62, 0.36, 1)
+description = "A grip with a banner ring, carved from logs, for any tool or weapon: swung, a sword ends its string in a rallying cut that mends those near you. Its wood is its trait."
+material = ExtResource("2_y5np7")
+pattern = ExtResource("4_klmta")
+id = 40045
+display_name = "Yew banner grip"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Yew in Banner hilt): made by Make the table."

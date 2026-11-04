@@ -4,7 +4,8 @@ class_name RegentsStationWindow extends UiWindow
 ## under what it makes: Axes, Bars...); right, the one picked: what it makes, what it takes (have / need, in
 ## the style's good and bad; each PART SLOT a choice of any part of its kind, MATERIALS.md step 3), the
 ## TRAITS (the grade it will be made at and how many traits that holds, each trait its parts offer, ticked in
-## use or not, owner 2026-10-23), what it pays, and the buttons: MAKE 1, MAKE X (the number
+## use or not, owner 2026-10-23); a weapon's HANDLE row each handle with its role's BADGE and, under it, one line
+## on what the picked one does (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: show, don't name), what it pays, and the buttons: MAKE 1, MAKE X (the number
 ## beside it) or MAKE ALL work it AFK that many times (owner, 2026-10-21; it stays open, a bar fills to each
 ## batch, says how many are done, and offers STOP), PLAY A ROUND starts the round (and closes). At the order board, each
 ## order and FILL. The pick is the station's (`SkillingComponent.recipe_pick`), so holding E there plays
@@ -270,6 +271,8 @@ func _fill_detail(c: Dictionary) -> void:
 		else:
 			row.add_child(UiKit.line("%d / %d  %s" % [have, need, it.display_name], &"good" if have >= need else &"bad"))
 		_detail.add_child(row)
+		if n >= 0:
+			_add_role_line(r, slots[n], it, r.output)
 	if not slots.is_empty() and r.quality != RecipeDef.Quality.NONE:
 		var g: int = skilling.grade_of(r, inventory)
 		_traits_section(r.output, g, SkillingComponent.offered_traits(skilling.parts_of(r), r.output), skilling.traits_of(r),
@@ -342,10 +345,15 @@ func _part_list(r: RecipeDef, n: int, slot: int, now: ItemDef, need: int, made: 
 	var pick := OptionButton.new()
 	pick.name = "Part_%d" % n
 	pick.custom_minimum_size = Vector2(260, 0)
+	var roles: bool = role_slot(r, slot)
 	for it: ItemDef in r.part_choices(slot):
 		var have: int = inventory.count(it.id) if inventory != null else 0
 		var t: TraitDef = it.trait_for(made)
-		pick.add_item("%d / %d  %s%s" % [have, need, it.display_name, ": " + t.display_name if t != null else ""], it.id)
+		var text: String = "%d / %d  %s%s" % [have, need, it.display_name, ": " + t.display_name if t != null else ""]
+		if roles:
+			pick.add_icon_item(RegentsRoleBadge.texture(RegentsRoleBadge.role_of_part(it, made)), text, it.id)
+		else:
+			pick.add_item(text, it.id)
 		pick.set_item_tooltip(pick.item_count - 1, it.tooltip_for(made))
 		if it == now:
 			pick.select(pick.item_count - 1)
@@ -354,6 +362,42 @@ func _part_list(r: RecipeDef, n: int, slot: int, now: ItemDef, need: int, made: 
 	pick.tooltip_text = "Any %s: its trait is offered for what this makes." % (now.part_tag if now != null else "part")
 	pick.item_selected.connect(func(idx: int) -> void: on_pick.call(n, pick.get_item_id(idx)))
 	return pick
+
+
+## Whether part slot `slot` of `r` is where its weapon's ROLE comes from: one of its choices has a shape that
+## gives one (a sword's handle slot: the plain grip, the crossguard and banner hilts).
+static func role_slot(r: RecipeDef, slot: int) -> bool:
+	var made: ItemDef = r.output
+	var kit: KitDef = KitDef.by_key(made.weapon_kit) if made != null and made.weapon_kit != &"" else null
+	if kit == null or not kit.has_roles():
+		return false
+	for it: ItemDef in r.part_choices(slot):
+		if it.role != null:
+			return true
+	return false
+
+
+## Under a role slot's row: the picked handle's badge and what it does on `made` (its last hit, its guard).
+func _add_role_line(r: RecipeDef, slot: int, now: ItemDef, made: ItemDef) -> void:
+	if not role_slot(r, slot):
+		return
+	var role: RoleDef = RegentsRoleBadge.role_of_part(now, made)
+	var row := HBoxContainer.new()
+	row.name = "RoleLine"
+	row.add_theme_constant_override(&"separation", 6)
+	row.add_child(RegentsRoleBadge.rect(role))
+	var words := UiKit.note(RegentsRoleBadge.does_line(made, role))
+	words.name = "RoleWords"
+	words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(words)
+	_detail.add_child(row)
+
+
+## What the role line says now (tests): "" for none.
+func role_line() -> String:
+	var l: Label = _detail.find_child("RoleWords", true, false) as Label if _detail != null else null
+	return l.text if l != null else ""
 
 
 ## THE HEAD, BY GRADE (owner, 2026-10-23): "Masterwork iron axe head (1)", "Fine ... (2)", "Common ... (0)"
@@ -450,6 +494,7 @@ func _refit_detail(c: Dictionary) -> void:
 		row.add_child(_slot_of(now[n], 0))
 		row.add_child(_part_list(r, n, slots[n], now[n], r.input_qty[slots[n]], r.output, func(idx: int, id: int) -> void: pick_part(idx, id)))
 		_detail.add_child(row)
+		_add_role_line(r, slots[n], now[n], r.output)
 	_traits_section(r.output, RegentsGrade.of_quality(q), SkillingComponent.offered_traits(now, r.output), skilling.refit_traits(row_id, r, data), "")
 	_detail.add_child(UiKit.divider())
 	var cost: Array = skilling.refit_cost(row_id, r, data)

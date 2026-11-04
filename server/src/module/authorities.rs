@@ -297,6 +297,8 @@ pub fn use_ability_from(
     predicted_id: u32,
     view_delay_ms: u32,
 ) -> Result<(), String> {
+    // The game's word on which ability this use is (DECISIONS #303): everything below is about that one.
+    let ability_id = crate::game::resolve_ability(ctx, actor, ability_id);
     let def = ctx.db.ability_def().ability_id().find(ability_id).ok_or("use_ability: unknown ability")?;
     // A downed or carried player cannot (their status, DECISIONS #206).
     require_can_act(ctx, actor, "use_ability")?;

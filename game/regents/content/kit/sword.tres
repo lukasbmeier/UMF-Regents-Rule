@@ -1,20 +1,48 @@
-[gd_resource type="Resource" script_class="KitDef" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="KitDef" load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_a.tres" id="a0"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_b.tres" id="a1"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_slash_c.tres" id="a2"]
-[ext_resource type="Resource" path="res://game/regents/content/ability/sword_heavy.tres" id="a3"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_lunge.tres" id="a4"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_pommel_bash.tres" id="a5"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_rallying_cut.tres" id="a6"]
+[ext_resource type="Script" path="res://game/regents/content/kit_role.gd" id="3_kit_role"]
+[ext_resource type="Resource" path="res://game/regents/content/role/damage.tres" id="r_damage"]
+[ext_resource type="Resource" path="res://game/regents/content/role/tank.tres" id="r_tank"]
+[ext_resource type="Resource" path="res://game/regents/content/role/support.tres" id="r_support"]
+
+[sub_resource type="Resource" id="Role_damage"]
+script = ExtResource("3_kit_role")
+role = ExtResource("r_damage")
+finisher = ExtResource("a2")
+does = "The string ends in a piercing thrust: the hardest hit, and the longest reach."
+
+[sub_resource type="Resource" id="Role_tank"]
+script = ExtResource("3_kit_role")
+role = ExtResource("r_tank")
+finisher = ExtResource("a5")
+stagger_pct = 150
+does = "The string ends in a pommel bash that holds the foe reeling longer."
+
+[sub_resource type="Resource" id="Role_support"]
+script = ExtResource("3_kit_role")
+role = ExtResource("r_support")
+finisher = ExtResource("a6")
+heal = 8.0
+heal_radius_m = 6.0
+does = "The string ends in a wide rallying cut that mends you and the players near you."
 
 [resource]
 script = ExtResource("1_kit")
 key = &"sword"
 skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
-heavy = ExtResource("a3")
+follow_ms = PackedInt32Array(200, 200, 200)
+roles = Array[ExtResource("3_kit_role")]([SubResource("Role_damage"), SubResource("Role_tank"), SubResource("Role_support")])
 skills = Array[Resource]([ExtResource("a4")])
 skill_ranks = PackedInt32Array(1, 3, 6, 9)
 id = 40001
 display_name = "Sword"
+designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut."

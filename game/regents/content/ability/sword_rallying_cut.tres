@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 700
+range_m = 2.1
+wind_up_ms = 400
+damage = 14.0
+animation = &"ability.40023"
+key = &"regents.combat"
+judged = true
+reach_m = 2.1
+radius_m = 0.9
+height_m = 0.9
+lunges = false
+id = 40023
+display_name = "Rallying cut"
+designer_notes = "THE SWORD'S LAST HIT with a banner hilt (the Support role, COMBAT_OVERHAUL.md §5; Luke 2026-11-01): 14, 400 ms, a wider arc (its sweep's radius 0.9 m against 0.5), and landing it heals players near you for 8 (the kit's role map: `heal`, `heal_radius_m`); you too, in full alone, `regents.rally_self_share_pct` with players near. Its clip is a placeholder: Q2 Sword_Heavy_C x1.21, a wide sweep, its hand fastest at 399 ms (ANIMATIONS.md §5)."

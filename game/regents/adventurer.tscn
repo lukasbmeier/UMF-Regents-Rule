@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://game/regents/skilling/skilling_component.gd" id="2_skilling"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://game/regents/combat/combat_look.gd" id="5_combat_look"]
 [ext_resource type="Script" path="res://game/regents/combat/hit_feedback_component.gd" id="6_hits"]
 [ext_resource type="Script" path="res://foundation/components/resource_component.gd" id="7_pools"]
+[ext_resource type="Script" path="res://game/regents/tutorial/tutorial_component.gd" id="8_tutorial"]
 
 [node name="Adventurer" instance=ExtResource("1_player")]
 
@@ -30,3 +31,6 @@ action_cancel_speed = 1.6
 
 [node name="Pools" type="Node" parent="Components"]
 script = ExtResource("7_pools")
+
+[node name="Tutorial" type="Node" parent="Components"]
+script = ExtResource("8_tutorial")

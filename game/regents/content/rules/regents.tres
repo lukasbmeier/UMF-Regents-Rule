@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=27 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -128,7 +128,7 @@ number = 200.0
 minimum = 0.0
 maximum = 1000.0
 unit = "ms"
-description = "COMBAT: a hit this soon after a block went up is PARRIED: no damage, and the attacker is staggered."
+description = "THE PARRY (COMBAT_OVERHAUL.md section 4): a hit that lands this soon after a guard press (the right button), judged as the player SAW it (the press less its trip and the view delay), is PARRIED: no damage, the attacker staggered, a riposte window opened."
 
 [sub_resource type="Resource" id="Rule_stagger"]
 script = ExtResource("2_rule")
@@ -137,7 +137,52 @@ number = 800.0
 minimum = 0.0
 maximum = 3000.0
 unit = "ms"
-description = "COMBAT: how long a parried attacker cannot act."
+description = "COMBAT: how long a parried attacker, or one whose poise the string's last hit breaks (a player: any last hit), cannot act (the guard grip's bash longer)."
+
+[sub_resource type="Resource" id="Rule_poise_light"]
+script = ExtResource("2_rule")
+name = &"poise_light"
+number = 10.0
+minimum = 0.0
+maximum = 1000.0
+unit = ""
+description = "COMBAT, POISE (Luke, 2026-11-02): how much of a foe's or a dummy's poise a melee hit wears (a light, a skill); it never breaks it (it stops at 1). FoeDef.poise is a foe's whole."
+
+[sub_resource type="Resource" id="Rule_poise_finisher"]
+script = ExtResource("2_rule")
+name = &"poise_finisher"
+number = 40.0
+minimum = 0.0
+maximum = 1000.0
+unit = ""
+description = "COMBAT, POISE: how much the string's last hit wears (the Heavy trait more); emptied, it breaks: a stagger (regents.stagger_ms), then Steadied."
+
+[sub_resource type="Resource" id="Rule_poise_regen"]
+script = ExtResource("2_rule")
+name = &"poise_regen_ms"
+number = 8000.0
+minimum = 0.0
+maximum = 30000.0
+unit = "ms"
+description = "COMBAT, POISE: unhit this long, a foe's poise is whole again. Longer than the gap between a foe's openings (its combo and its rest, ~5 s), so one fighter's strings add up: at 3 s they never did (the combat playtest, 2026-11-02)."
+
+[sub_resource type="Resource" id="Rule_steadied"]
+script = ExtResource("2_rule")
+name = &"steadied_ms"
+number = 3000.0
+minimum = 0.0
+maximum = 30000.0
+unit = "ms"
+description = "COMBAT, POISE: after a stagger from broken poise, this long when nothing wears it (Steadied): no stagger again at once."
+
+[sub_resource type="Resource" id="Rule_dummy_poise"]
+script = ExtResource("2_rule")
+name = &"dummy_poise"
+number = 50.0
+minimum = 0.0
+maximum = 10000.0
+unit = ""
+description = "COMBAT, POISE: a training dummy's poise (a foe's is its FoeDef's): 50 breaks on any weapon's first string."
 
 [sub_resource type="Resource" id="Rule_block_pct"]
 script = ExtResource("2_rule")
@@ -146,7 +191,7 @@ number = 25.0
 minimum = 0.0
 maximum = 100.0
 unit = "%"
-description = "COMBAT: a blocked hit takes this share of its damage."
+description = "THE FULL BLOCK (the Tank role's: a sword with a crossguard hilt; `RoleDef.full_block`): a held block takes this share of a hit in front. The others' is `weak_block_pct`."
 
 [sub_resource type="Resource" id="Rule_xp_dmg"]
 script = ExtResource("2_rule")
@@ -511,9 +556,180 @@ key = "foundation.npc_tiers"
 number = 1.0
 reason = "RULE_DESIGN 6.1 (the NPC tiers, agreed 2026-10-13): a foe with no player within 400 m for 30 s sleeps until one comes within 200 m. The referee's brains were half its time at 300 players (REFEREE_SCALING.md)."
 
+[sub_resource type="Resource" id="Rule_attack_tokens"]
+script = ExtResource("2_rule")
+name = &"attack_tokens"
+number = 2.0
+minimum = 1.0
+maximum = 6.0
+unit = "foes"
+description = "FOE PACE (COMBAT_OVERHAUL.md section 2, 2026-10-31): at most this many foes swing at one player at a time; the rest circle, waiting their turn."
+
+[sub_resource type="Resource" id="Rule_token_gap"]
+script = ExtResource("2_rule")
+name = &"token_gap_ms"
+number = 600.0
+minimum = 0.0
+maximum = 3000.0
+unit = "ms"
+description = "FOE PACE: no foe's swing lands on a player sooner than this after another foe's swing landed on them (hit, parried, rolled through or missed), so two hits never arrive together."
+
+[sub_resource type="Resource" id="Rule_foe_aim_lock"]
+script = ExtResource("2_rule")
+name = &"foe_aim_lock_ms"
+number = 300.0
+minimum = 0.0
+maximum = 1500.0
+unit = "ms"
+description = "FOE AIM: a foe turns to follow its target through its wind-up, then stops turning this long before the hit lands. A step aside in that time slips the swing; one earlier does not."
+
+[sub_resource type="Resource" id="Rule_combo_window"]
+script = ExtResource("2_rule")
+name = &"combo_window_ms"
+number = 2000.0
+minimum = 300.0
+maximum = 5000.0
+unit = "ms"
+description = "THE STRING (COMBAT_OVERHAUL.md section 3, 2026-10-31): a tap this long after a step's lock ends is still the next step; later the string starts over. A guard press restarts it; a roll ends it."
+
+[sub_resource type="Resource" id="Rule_parry_late"]
+script = ExtResource("2_rule")
+name = &"parry_late_ms"
+number = 50.0
+minimum = 0.0
+maximum = 300.0
+unit = "ms"
+description = "THE PARRY: a guard press up to this long AFTER the hit landed, as the player saw it, still parries it (the eye and the hand forgiven a little)."
+
+[sub_resource type="Resource" id="Rule_parry_whiff"]
+script = ExtResource("2_rule")
+name = &"parry_whiff_ms"
+number = 400.0
+minimum = 0.0
+maximum = 2000.0
+unit = "ms"
+description = "THE PARRY'S WHIFF LOCKOUT: a guard press this soon after one that parried nothing is no parry (it still blocks), so tapping the right button nonstop does not work."
+
+[sub_resource type="Resource" id="Rule_riposte"]
+script = ExtResource("2_rule")
+name = &"riposte_ms"
+number = 1000.0
+minimum = 0.0
+maximum = 3000.0
+unit = "ms"
+description = "THE RIPOSTE: a string's first step begun this soon after a parry is the riposte (bonus damage, `riposte_damage_pct`), and a bow's draw begun in it fills faster (`riposte_draw_pct`)."
+
+[sub_resource type="Resource" id="Rule_riposte_damage"]
+script = ExtResource("2_rule")
+name = &"riposte_damage_pct"
+number = 150.0
+minimum = 100.0
+maximum = 400.0
+unit = "%"
+description = "THE RIPOSTE: its damage, as a share of the first step's."
+
+[sub_resource type="Resource" id="Rule_riposte_draw"]
+script = ExtResource("2_rule")
+name = &"riposte_draw_pct"
+number = 50.0
+minimum = 10.0
+maximum = 100.0
+unit = "%"
+description = "THE BOW'S RIPOSTE: a draw begun in the riposte window is full in this share of its usual time."
+
+[sub_resource type="Resource" id="Rule_weak_block"]
+script = ExtResource("2_rule")
+name = &"weak_block_pct"
+number = 60.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE WEAK BLOCK (the Damage and Support roles: a plain or banner handle): a held block takes this share of a hit in front. The Tank's full block is `block_damage_pct`."
+
+[sub_resource type="Resource" id="Rule_guard_arc"]
+script = ExtResource("2_rule")
+name = &"guard_arc_deg"
+number = 120.0
+minimum = 0.0
+maximum = 360.0
+unit = "deg"
+description = "THE GUARD FACES FORWARD: a block or parry stops only a hit from within this arc in front (the whole arc); from behind, the full damage."
+
+[sub_resource type="Resource" id="Rule_hitstop"]
+script = ExtResource("2_rule")
+name = &"hitstop_ms"
+number = 60.0
+minimum = 0.0
+maximum = 300.0
+unit = "ms"
+description = "FEEL (Luke's feedback 4098, 2026-10-31: hits with weight): a landed hit holds both bodies' animation still this long (a hit-stop). On screen only."
+
+[sub_resource type="Resource" id="Rule_hitstop_big"]
+script = ExtResource("2_rule")
+name = &"hitstop_big_ms"
+number = 110.0
+minimum = 0.0
+maximum = 400.0
+unit = "ms"
+description = "FEEL: the hit-stop of a big hit (20 or more) or a stagger (a parry's, a finisher's)."
+
+[sub_resource type="Resource" id="Rule_guard_threat"]
+script = ExtResource("2_rule")
+name = &"guard_threat_pct"
+number = 250.0
+minimum = 0.0
+maximum = 1000.0
+unit = "%"
+description = "THREAT (stored for combat overhaul step 6; nothing targets by threat yet): a weapon with a guard handle (the sword's crossguard hilt, the Tank role) counts its damage this much toward a foe's choice of target. Luke, 2026-11-01: to be tested, with its scope (`guard_threat_bosses_only`)."
+
+[sub_resource type="Resource" id="Rule_guard_threat_scope"]
+script = ExtResource("2_rule")
+name = &"guard_threat_bosses_only"
+kind = 2
+number = 0.0
+minimum = 0.0
+maximum = 1.0
+description = "THREAT's SCOPE: on, `guard_threat_pct` counts against bosses only (every other foe counts a guard handle's damage as plain); off, against every foe. Luke, 2026-11-01: 'maybe bosses only; test it'."
+
+[sub_resource type="Resource" id="Rule_rally_self"]
+script = ExtResource("2_rule")
+name = &"rally_self_share_pct"
+number = 50.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "THE RALLYING CUT (the sword's banner hilt): its user's own share of the heal when other players are near (alone, all of it). Luke, 2026-11-01: full solo, less with players near; the ratio after playing it solo and grouped."
+
+[sub_resource type="Resource" id="Rule_drop_damage"]
+script = ExtResource("2_rule")
+name = &"drop_handle_damage_pct"
+number = 50.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "A DROPPED WEAPON's handle shape (a sword's: the plain grip): its weight against the others' (Luke, 2026-11-01: 50 % plain, 25 / 25)."
+
+[sub_resource type="Resource" id="Rule_drop_tank"]
+script = ExtResource("2_rule")
+name = &"drop_handle_tank_pct"
+number = 25.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "A DROPPED WEAPON's handle shape: the guard handle's weight (a sword's crossguard hilt)."
+
+[sub_resource type="Resource" id="Rule_drop_support"]
+script = ExtResource("2_rule")
+name = &"drop_handle_support_pct"
+number = 25.0
+minimum = 0.0
+maximum = 100.0
+unit = "%"
+description = "A DROPPED WEAPON's handle shape: the banner handle's weight (a sword's banner hilt)."
+
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days"), SubResource("Rule_crafted_traits_common"), SubResource("Rule_crafted_traits_fine"), SubResource("Rule_crafted_traits_masterwork"), SubResource("Rule_refit_bars"), SubResource("Rule_seen_reach")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days"), SubResource("Rule_crafted_traits_common"), SubResource("Rule_crafted_traits_fine"), SubResource("Rule_crafted_traits_masterwork"), SubResource("Rule_refit_bars"), SubResource("Rule_seen_reach"), SubResource("Rule_attack_tokens"), SubResource("Rule_token_gap"), SubResource("Rule_foe_aim_lock"), SubResource("Rule_combo_window"), SubResource("Rule_parry_late"), SubResource("Rule_parry_whiff"), SubResource("Rule_riposte"), SubResource("Rule_riposte_damage"), SubResource("Rule_riposte_draw"), SubResource("Rule_weak_block"), SubResource("Rule_guard_arc"), SubResource("Rule_hitstop"), SubResource("Rule_hitstop_big"), SubResource("Rule_guard_threat"), SubResource("Rule_guard_threat_scope"), SubResource("Rule_rally_self"), SubResource("Rule_drop_damage"), SubResource("Rule_drop_tank"), SubResource("Rule_drop_support"), SubResource("Rule_poise_light"), SubResource("Rule_poise_finisher"), SubResource("Rule_poise_regen"), SubResource("Rule_steadied"), SubResource("Rule_dummy_poise")])
 overrides = Array[ExtResource("3_over")]([SubResource("Over_characters"), SubResource("Over_park"), SubResource("Over_two_sides"), SubResource("Over_npc_tiers")])
 id = 40000
 display_name = "Regent's Rule rules"

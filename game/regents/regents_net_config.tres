@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_cfg")
 interest = 1
-cell_tables = Array[StringName]([&"gather_node", &"station", &"dummy", &"foe", &"afk_work", &"work_result", &"wielded", &"combat_state", &"casting", &"spell_area", &"burning"])
+cell_tables = Array[StringName]([&"gather_node", &"station", &"dummy", &"foe", &"afk_work", &"work_result", &"wielded", &"combat_state", &"casting", &"spell_area", &"burning", &"poise_state"])
 follow_tables = Array[StringName]([&"afk_work", &"wielded", &"combat_state", &"casting", &"burning"])

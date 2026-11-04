@@ -104,21 +104,11 @@
 					"against": "",
 					"condition": "always",
 					"cost": false,
-					"mult": 1.0,
-					"on": "heavy",
-					"threshold_pct": 30.0,
-					"value": 100.0,
-					"what": "stagger"
-				},
-				{
-					"against": "",
-					"condition": "always",
-					"cost": false,
-					"mult": 1.0,
+					"mult": 1.35,
 					"on": "combo_last",
 					"threshold_pct": 30.0,
-					"value": 100.0,
-					"what": "stagger"
+					"value": 0.0,
+					"what": "poise"
 				},
 				{
 					"against": "",

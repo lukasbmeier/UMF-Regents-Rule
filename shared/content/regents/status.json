@@ -61,7 +61,7 @@
 			"id": 40004,
 			"lasts_ms": 0,
 			"name": "Staggered",
-			"speed": 0.4,
+			"speed": 0.0,
 			"status": 103,
 			"targetable": true,
 			"then": -1
