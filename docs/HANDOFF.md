@@ -1,31 +1,30 @@
-# Handoff — UMF Template, 2026-11-04 (1.7.1 and 1.7.2 committed, pushed and shipped to every game)
+# Handoff — UMF Template, 2026-11-04 (1.7.3: the integration suite on a busy machine; shipped to every game)
 
 ## Where it stands
-- **1.7.2** (DECISIONS #304, referee walls sized per entity) and **1.7.1** (#303) committed and pushed (1.7.1's five
-  files first, then 1.7.2 with both releases' docs), and merged into Fishing, Fowl Play, DiscGolf and Regent's
-  Rule by `ship_template.sh` (Luke's go, 2026-11-04). The games that had not taken 1.6.7-1.7.0 took them too.
-- Green before shipping: the unit sweep 2366/0; `bots` + `referee` three times in a row; `tests/walls_test.sh`
-  21/21 (and its negative, the referee without the genre's say, fails 4 checks).
-- 1.7.0 added a table (`status_effect`): each game republishes with `--codegen`. 1.7.2 is sidecar only.
+- **1.7.3** (tests only, nothing to republish) committed, pushed and merged into Fishing, Fowl Play, DiscGolf and
+  Regent's Rule. 1.7.1 (#303) and 1.7.2 (#304) shipped earlier today.
+- Green: `tests/integration_test.sh` 667/0 here; Regent's integration (which runs it) 1328/0, 1298/0.
 
 ## This session
-- Committed and shipped; no foundation code changed after the 1.7.2 session (see its CHANGELOG entry).
+- Found from Regent's Rule's integration runs (a CLI call there takes 0.5-3 s), in `tests/integration_test.sh`:
+  - the hold tick is looked for while the first helper holds alone (read after three joined, their 2 s had run);
+  - "two effects at once": the timed effect lasts 5 s (was 1.5);
+  - the timed press's `starts_at` is read while its row stands (the judgement check printed nothing without it);
+  - a failed `assert_ok`/`assert_rejected` names the server's words (`said`), not the CLI's "UNSTABLE" line.
+- Regent's Rule's own half (its step 37) is a stand-in referee that keeps beating and timed HTTP calls
+  (`game/regents/tests/timed_calls.py`): a pattern the foundation's referee checks could take if they flake here.
 
 ## Next, in order
-1. Regent's Rule: its half of the walls (its HANDOFF): `sidecar/genres/regents.gd` sizing rocks, trees, stations.
-2. Fowl Play: its shut gates are in its bots' walk maps now; its own half is game work in its repo: brains that
-   open a gate (hens) or break it (predators) instead of walking up to it.
-3. From before: effects' own presentation; the SDK btree patch upstream (ask Luke); a region referee's ~375 MB level load.
+1. From before: effects' own presentation; the SDK btree patch upstream (ask Luke); a region referee's ~375 MB level load.
 
 ## Waiting on Luke
 - From before: how many strips the expanse runs by default; the SDK fix upstream; the bandwidth budget.
 
 ## Watch out
-- A kind whose character names a brain (the NPC's `wander`) drives its bots by that one, whatever `add_bot` names:
-  the walls test's bots are kind 0 for that reason (existing behaviour, `SidecarMain.attach_brain`).
-- A patrol runs: `spacetime sql` sampling (~1.4 s a look) misses its turns; the test reads its "reached its far end" log.
+- A CLI-timed check that must land inside a window (a status's time, a request's 3 s, a row that goes) reads too late
+  on a busy machine: read what you need the moment it exists, or lengthen the window for the test.
+- A kind whose character names a brain (the NPC's `wander`) drives its bots by that one, whatever `add_bot` names.
 - `tests/walls_test.sh` keeps the referee's log with `WALLS_LOG=<file>`.
-- Python through a Bash heredoc eats `\` line continuations: patch scripts as files.
+- Python through a Bash heredoc mangles `\` (line continuations, `\n`): write patch scripts as files.
 - `run_tests.sh` passes no arguments: one suite is `godot --headless --path . res://tests/test_runner.tscn -- --only=x`.
-- The foundation's `content` check "a script runs from the repo root" is flaky under load (600 headless frames):
-  2 fails in 5 runs in Regent's Rule, 2026-11-03.
+- The foundation's `content` check "a script runs from the repo root" is flaky under load (600 headless frames).

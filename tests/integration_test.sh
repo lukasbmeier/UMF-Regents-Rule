@@ -34,13 +34,15 @@ sql_first() {
 }
 assert_eq() { if [ "$1" = "$2" ]; then pass; else fail "$3 (expected '$2', got '$1')"; fi }
 # A reducer that must be refused, with a message containing $2.
+# What a call said, for a failure: its first line that is not the CLI's own warning.
+said() { echo "$1" | grep -v "UNSTABLE" | grep -m1 . ; }
 assert_rejected() {
   local out; out="$(spacetime call "$DB" $1 2>&1)"
-  if echo "$out" | grep -qi "$2"; then pass; else fail "$3 (output: $(echo "$out" | head -1))"; fi
+  if echo "$out" | grep -qi "$2"; then pass; else fail "$3 (output: $(said "$out"))"; fi
 }
 assert_ok() {
   local out; out="$(spacetime call "$DB" $1 2>&1)"
-  if echo "$out" | grep -qiE "^error|error:"; then fail "$2 ($(echo "$out" | head -1))"; else pass; fi
+  if echo "$out" | grep -qiE "^error|error:"; then fail "$2 ($(said "$out"))"; else pass; fi
 }
 
 echo "== preflight =="
@@ -404,6 +406,8 @@ assert_eq "$(sql_first "SELECT period_ms FROM timed_press WHERE challenge_id = $
 assert_eq "$(sql_first "SELECT rounds FROM timed_press WHERE challenge_id = $TP" 1)" "3" "three presses"
 assert_eq "$(sql_rows_anon "SELECT * FROM timed_press" | wc -l | tr -d ' ')" "0" "private to its player (row-level security)"
 SEEN=$(sql_first "SELECT seen_ms FROM timed_press WHERE challenge_id = $TP" 1)
+# Read now: the row goes a moment after the last press, and on a busy machine the reads after it came later (2026-11-04).
+TP_START=$(sql_first "SELECT starts_at FROM timed_press WHERE challenge_id = $TP" 1)
 check "$([ "$SEEN" -gt 0 ] && echo true || echo false)" "the server timed that round trip itself ($SEEN ms)"
 assert_ok "challenge_seen $TP" "a second acknowledgement"
 assert_eq "$(sql_first "SELECT seen_ms FROM timed_press WHERE challenge_id = $TP" 1)" "$SEEN" "changes nothing"
@@ -420,7 +424,6 @@ assert_rejected "challenge_press $TP" "no such challenge" "a fourth press is ref
 # quality its distance from that press's target (the seed's).
 JUDGED="$(spacetime logs "$DB" 2>/dev/null | grep "challenge $TP: press" | tail -3)"
 SCORE_P1=$(sql_first "SELECT score FROM session_member WHERE entity_id = $MYENT" 1)
-TP_START=$(sql_first "SELECT starts_at FROM timed_press WHERE challenge_id = $TP" 1)
 VERDICT=$(python - "$JUDGED" "$(centers_of "$TP_SEED")" "$MINRTT" "$((SCORE_P1 - SCORE_P0))" "$TP_START" <<'PY'
 import re, sys
 from datetime import datetime
@@ -1029,9 +1032,10 @@ assert_eq "$(effect_of $NEAR)" "2" "and the effect stays"
 assert_ok "set_effect $NEAR 2 $UNTIL_CHANGED true" "the same effect again"
 assert_eq "$(row_count "SELECT * FROM status_effect WHERE entity_id = $NEAR")" "1" "refreshes it: still one"
 assert_eq "$(sql_first "SELECT serial FROM status_effect WHERE entity_id = $NEAR" 1)" "2" "(its serial counts the refresh)"
-assert_ok "set_effect $NEAR 1 1500 true" "a second effect, for 1.5 s"
+# (5 s: a busy machine's CLI read it after 1.5 s had run, 2026-11-04.)
+assert_ok "set_effect $NEAR 1 5000 true" "a second effect, for 5 s"
 assert_eq "$(effect_of $NEAR)" "1,2" "two effects at once"
-sleep 3
+sleep 6
 assert_eq "$(effect_of $NEAR)" "2" "the timed one comes off on its own; the other stays"
 assert_eq "$(row_count "SELECT * FROM effect_expiry")" "0" "and no timer is left behind"
 assert_ok "set_effect $NEAR 2 0 false" "taken off"
@@ -1405,9 +1409,11 @@ assert_eq "$(status_of $NEAR)" "2" "the target still downed"
 assert_ok "reset_rule foundation.hold_speed" "holds at their own speed again"
 move_npc "$H1" 1.5 0.8; move_npc "$H2" 0.5 0.8; move_npc "$H3" 1.0 -0.8
 assert_ok "begin_interact_as $H1 $NEAR 0" "three help"
+# Looked for while the first holds alone (5 s): after all three joined, a busy machine's CLI read it once their 2 s
+# had run and the tick had stopped (2026-11-04).
+assert_eq "$(row_count "SELECT * FROM hold_tick")" "1" "the hold tick runs while something is held"
 assert_ok "begin_interact_as $H2 $NEAR 0" "together"
 assert_ok "begin_interact_as $H3 $NEAR 0" "again"
-assert_eq "$(row_count "SELECT * FROM hold_tick")" "1" "the hold tick runs while something is held"
 sleep 3
 assert_eq "$(status_of $NEAR)" "0" "done: the target is back on its feet (Help up's then: normal)"
 assert_eq "$(sql_first "SELECT by_entity FROM status_state WHERE entity_id = $NEAR" 1)" "$H1" "helped up by the first to begin"
