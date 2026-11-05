@@ -6,7 +6,7 @@ playing in game, and write which candidate won. Sections follow the overhaul's o
 top of the list is what is needed first.
 
 Scanned 2026-10-30: Quaternius UAL1 and UAL2 (every clip, with its length, read from Luke's files), Mixamo (its
-catalogue searched by weapon, reaction and foe terms), and other free or licensed sources (§2).
+catalog searched by weapon, reaction and foe terms), and other free or licensed sources (§2).
 
 ---
 
@@ -14,7 +14,7 @@ catalogue searched by weapon, reaction and foe terms), and other free or license
 
 **Sources** (the codes used below):
 
-| code | source | licence | rig |
+| code | source | license | rig |
 |---|---|---|---|
 | **Q1** | Quaternius Universal Animation Library 1 (127 clips) | CC0 (no credit needed) | our 65-bone skeleton: no retarget |
 | **Q2** | Quaternius Universal Animation Library 2 (135 clips) | CC0 | our skeleton: no retarget |
@@ -100,7 +100,7 @@ fastest (divided by its speed): set the ability's `wind_up_ms` to it when you sw
 
 ---
 
-## 4. Step 2: the combo and defence (the player)
+## 4. Step 2: the combo and defense (the player)
 
 ### Every weapon
 - [ ] **Combat idle per weapon**
@@ -235,7 +235,7 @@ The finishers are first proposals (`COMBAT_OVERHAUL.md` §5); Luke settles them,
 - **Staff draw and sheathe**, **blowing a horn**: nothing found; a stand-in or hand-keyed.
 
 Sources: [Quaternius UAL](https://quaternius.com/packs/universalanimationlibrary.html) ·
-[Mixamo](https://www.mixamo.com) (licence: [Adobe's Mixamo FAQ, as quoted in its forum](https://community.adobe.com/t5/mixamo-discussions/mixamo-faq-licensing-royalties-ownership-eula-and-tos/td-p/13234775)) ·
+[Mixamo](https://www.mixamo.com) (license: [Adobe's Mixamo FAQ, as quoted in its forum](https://community.adobe.com/t5/mixamo-discussions/mixamo-faq-licensing-royalties-ownership-eula-and-tos/td-p/13234775)) ·
 [Kevin Iglesias, Human Melee Animations](https://kevdev.itch.io/human-melee-animations) ·
 [Rokoko free magic animations](https://www.rokoko.com/resources/rokoko-mocap-free-magic-themed-animations) ·
 [CMU mocap](http://mocap.cs.cmu.edu/). Not usable: Bandai Namco's mocap set (non-commercial only).

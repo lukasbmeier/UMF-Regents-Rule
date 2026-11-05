@@ -385,8 +385,8 @@ func _run_polish() -> void:
 		all_in = all_in and area.has_point(Vector2(float(pt["x"]), float(pt["z"])))
 	_check(all_in and area.size.x >= RegentsMinimap.CAPTURE_MIN_M and area.size.x <= RegentsMinimap.CAPTURE_MAX_M and is_equal_approx(area.size.x, area.size.y),
 		"the frontier's picture: a square holding every point of its bake (%.0f m)" % area.size.x)
-	_check(RegentsMinimap.colour_of(0) == RegentsMinimap.PLAYER and RegentsMinimap.colour_of(103) == RegentsMinimap.FOE
-		and RegentsMinimap.colour_of(101) == RegentsMinimap.STATION and RegentsMinimap.colour_of(100) == RegentsMinimap.TREE,
+	_check(RegentsMinimap.color_of(0) == RegentsMinimap.PLAYER and RegentsMinimap.color_of(103) == RegentsMinimap.FOE
+		and RegentsMinimap.color_of(101) == RegentsMinimap.STATION and RegentsMinimap.color_of(100) == RegentsMinimap.TREE,
 		"dots: players white, foes yellow, stations blue, trees green")
 	# The work's progress: from the run's start to the next piece, then piece to piece.
 	var sk := SkillingComponent.new()
@@ -814,10 +814,10 @@ func _run_grades() -> void:
 		"slots: the iron axe Masterwork, the copper Common, the logs ungraded")
 	var title: Label = bag.find_child("ItemName", true, false) as Label
 	_check(title != null and title.text == "Masterwork iron axe" and title.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().grade_colors[2]),
-		"its name: Masterwork iron axe, in the Masterwork colour")
+		"its name: Masterwork iron axe, in the Masterwork color")
 	var pw: Label = bag.find_child("Power", true, false) as Label
 	_check(pw != null and pw.text == "Power 117  (+43 on your Copper axe)" and pw.get_theme_color(&"font_color").is_equal_approx(UiStyle.current().good),
-		"Power 117, 43 over the copper axe you wield, in the good colour (%s)" % (pw.text if pw != null else "none"))
+		"Power 117, 43 over the copper axe you wield, in the good color (%s)" % (pw.text if pw != null else "none"))
 	bag.picked_row = 2
 	bag.refresh()
 	await get_tree().process_frame
@@ -1067,8 +1067,8 @@ func _run_swing_timeline() -> void:
 	c._status = null
 	_check(c.can_act() and c.may_start(axe.light[1], 1, chop.wind_up_ms + axe.follow_for(0)), "the stagger over: it may")
 	stag.free()
-	c.swing_cancelled = true
-	_check(not c.swinging(10) and c.may_start(cleave, -1, 10), "a swing a roll cancelled holds nothing")
+	c.swing_canceled = true
+	_check(not c.swinging(10) and c.may_start(cleave, -1, 10), "a swing a roll canceled holds nothing")
 	c.free()
 	var adv: PackedScene = load("res://game/regents/adventurer.tscn") as PackedScene
 	var body: Node = adv.instantiate()
@@ -1289,7 +1289,7 @@ func _run_crafting_choice() -> void:
 	var core: OptionButton = w.find_child("Core", true, false) as OptionButton
 	_check(core != null and core.item_count == 3 and core.get_selected_id() == 2 and core.get_item_text(0).contains("Masterwork iron axe head")
 		and not core.is_item_disabled(0) and not core.is_item_disabled(1) and core.is_item_disabled(2),
-		"its head is a list by grade: Masterwork picked, Fine there, Common greyed (none)")
+		"its head is a list by grade: Masterwork picked, Fine there, Common grayed (none)")
 	var part_list: OptionButton = w.find_child("Part_0", true, false) as OptionButton
 	_check(part_list != null and part_list.item_count == 9 and part_list.get_selected_id() == 40013 and part_list.get_item_text(1).ends_with("Oak grip: Steady"),
 		"its handle slot lists the three handles, the plain one picked, each with the trait it gives (\"%s\")" % (part_list.get_item_text(1) if part_list != null else ""))
@@ -1338,7 +1338,7 @@ func _run_crafting_choice() -> void:
 	var cost_line: Label = w.find_child("RefitCost", true, false) as Label
 	var refit_b: Button = w.find_child("Refit", true, false) as Button
 	_check(cost_line != null and cost_line.text == "Costs: 2 Iron bar (you have 3)" and refit_b != null and refit_b.disabled,
-		"as it is, nothing to change: only the bars would be paid, so REFIT is greyed (%s)" % (cost_line.text if cost_line != null else "none"))
+		"as it is, nothing to change: only the bars would be paid, so REFIT is grayed (%s)" % (cost_line.text if cost_line != null else "none"))
 	w.pick_part(0, 40016)
 	await get_tree().process_frame
 	cost_line = w.find_child("RefitCost", true, false) as Label
@@ -1349,7 +1349,7 @@ func _run_crafting_choice() -> void:
 	inv._stacks.erase(8)
 	w.refresh()
 	await get_tree().process_frame
-	_check((w.find_child("Refit", true, false) as Button).disabled, "no iron bars: REFIT greyed")
+	_check((w.find_child("Refit", true, false) as Button).disabled, "no iron bars: REFIT grayed")
 	sk.bag = null
 	layer.queue_free()
 	st.free()
@@ -1402,7 +1402,7 @@ func _run_roles() -> void:
 	_check(sword.light_at(2, tank) == bash and sword.light_at(1, tank) == sword.light[1] and sword.light_at(0, support) == sword.light[0] and sword.light_at(3, tank) == null,
 		"a handle changes only the string's last step")
 	_check(sword.is_finisher(bash) and sword.is_finisher(rally) and sword.is_finisher(thrust) and not sword.is_finisher(sword.light[1]) and not sword.is_finisher(sword.skills[0]),
-		"every role's last hit is the finisher (armour, the flinch, the stagger); a middle step and Q are not")
+		"every role's last hit is the finisher (armor, the flinch, the stagger); a middle step and Q are not")
 	_check(CombatComponent.action_tags(sword, bash) == [&"basic", &"combo_last"] and CombatComponent.action_tags(sword, sword.light[0]) == [&"basic"]
 		and CombatComponent.action_tags(sword, sword.skills[0]) == [&"skill"], "traits read a role's last hit as the string's last (Heavy lengthens its stagger)")
 	_check(sword.abilities().has(bash) and sword.abilities().has(rally) and sword.validate().is_empty(), "the kit lists every last hit, and is valid %s" % str(sword.validate()))
@@ -1480,7 +1480,7 @@ func _run_roles() -> void:
 	odd.display_name = "Odd"
 	odd.role = tank
 	_check(odd.validate().any(func(p: String) -> bool: return p.contains("no part")), "a shape that gives a role but is no part is refused")
-	# BADGES: three shapes, three colours; none for no role.
+	# BADGES: three shapes, three colors; none for no role.
 	var tb: ImageTexture = RegentsRoleBadge.texture(tank)
 	var db: ImageTexture = RegentsRoleBadge.texture(damage)
 	var sb: ImageTexture = RegentsRoleBadge.texture(support)
@@ -2262,11 +2262,11 @@ func _run_material_table_writes() -> void:
 	t_axe.color = Color(1, 0, 0)
 	ResourceSaver.save(t_axe, t_axe.resource_path)
 	var says: Array[String] = MaterialTable.problems()
-	_check(says.size() == 1 and says[0].contains("tin_axe.tres") and says[0].contains("display_name"), "a renamed cell is out of date, its tuned XP and colour are not: %s" % str(says))
+	_check(says.size() == 1 and says[0].contains("tin_axe.tres") and says[0].contains("display_name"), "a renamed cell is out of date, its tuned XP and color are not: %s" % str(says))
 	var fix: Dictionary = MaterialTable.generate()
 	var reread: ItemDef = load(t_axe.resource_path) as ItemDef
 	_check((fix["updated"] as Array).size() == 1 and reread.display_name == "Tin axe" and reread.color == Color(1, 0, 0) and r.xp == 999,
-		"making it puts the name back and keeps the colour and the XP")
+		"making it puts the name back and keeps the color and the XP")
 	# The material moves.
 	tin.tier = 4
 	ResourceSaver.save(tin, tin.resource_path)
@@ -2827,7 +2827,7 @@ func _run_traits() -> void:
 				_check(d.validate().is_empty(), "%s is a trait that trades (%s)" % [d.key, str(d.validate())])
 	keys.sort()
 	_check(keys == ["balanced", "brutal", "gentle", "heavy", "hunters", "lucky", "prospectors", "springy", "steady", "swift_draw", "thirsting"],
-		"the v1 pools, less what waits for crits, armour and reach: %s" % str(keys))
+		"the v1 pools, less what waits for crits, armor and reach: %s" % str(keys))
 	var iron_axe: ItemDef = ItemDef.by_id(40015)
 	var bow: ItemDef = null
 	for d: ContentDef in RegentsContent.items(&"item"):

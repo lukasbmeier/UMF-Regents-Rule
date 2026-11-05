@@ -4,9 +4,9 @@ class_name RegentsGrade
 ##
 ##   QUALITY   a made item's 0-1000 (thousandths, its row's `instance_data` `{"q":734}`): the round that
 ##             made it sets it, and it adds a little per point (a weapon's damage, a tool's speed).
-##   GRADE     a BAND of quality, for the colour, the name and (later) the trait count: Common, Fine
+##   GRADE     a BAND of quality, for the color, the name and (later) the trait count: Common, Fine
 ##             from `regents.grade_fine_q` (400), Masterwork from `regents.grade_masterwork_q` (800).
-##             A material (no quality) has none. The colours are the style's (`UiStyle.grade_colors`).
+##             A material (no quality) has none. The colors are the style's (`UiStyle.grade_colors`).
 ##   TIER      the item itself (copper, iron): its `weapon_damage_pct`. Tier DOMINATES: the best of a
 ##             tier never reaches the worst of the next (`tier_overlaps`; an item's `validate` says so).
 ##   POWER     the one number to compare: the weapon's damage in percent of its kit's, its quality

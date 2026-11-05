@@ -168,8 +168,8 @@ func _draw_trunk(tx: float, gy: float) -> void:
 		var top: float = gy - (j + 1) * SEGMENT_H
 		if top + SEGMENT_H < HUD_TOP:
 			break
-		var colour: Color = HEAD_TINT if j == 1 else (BARK if j % 2 == 0 else BARK_DARK.lerp(BARK, 0.5))
-		draw_rect(Rect2(tx, top, TRUNK_W, SEGMENT_H), colour)
+		var color: Color = HEAD_TINT if j == 1 else (BARK if j % 2 == 0 else BARK_DARK.lerp(BARK, 0.5))
+		draw_rect(Rect2(tx, top, TRUNK_W, SEGMENT_H), color)
 		draw_line(Vector2(tx + 10.0, top + 2.0), Vector2(tx + TRUNK_W - 10.0, top + 2.0), BARK_DARK, 2.0)
 		var b: int = model.segments[model.cut + j]
 		if b != ChopModel.BRANCH_NONE:

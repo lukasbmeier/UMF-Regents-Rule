@@ -1,6 +1,6 @@
 //! SMELTING'S BELLOWS THEN POUR, THE SERVER'S TWIN of `game/regents/skilling/smelting/smelt_model.gd`
 //! (`SmeltModel`), in ticks of 50 ms: keep the heat in a drifting, narrowing band, then pour the
-//! crucible to the mould's line (from `pour_ready_ms` after the heat; tilting again tops it up). Inputs
+//! crucible to the mold's line (from `pour_ready_ms` after the heat; tilting again tops it up). Inputs
 //! are (time, code): 1 pump, 2 pour, 3 stop. Held to
 //! `shared/golden/regents/smelt.json` (`game/regents/tests/make_skill_goldens.py`).
 
@@ -53,7 +53,7 @@ fn tri(x: i64, period: i64) -> i64 {
     }
 }
 
-/// The round's seeded numbers: the band's phase and the mould's line.
+/// The round's seeded numbers: the band's phase and the mold's line.
 pub fn seeded(seed: u64, p: &SmeltParams) -> (i64, i64) {
     let mut st = seed_state(seed);
     let phase = ((next_u32(&mut st) >> 8) as i64) % p.band_period_ticks.max(1);
@@ -64,12 +64,12 @@ pub fn seeded(seed: u64, p: &SmeltParams) -> (i64, i64) {
 /// The band at heat tick `k`: its middle and half-width.
 pub fn band(p: &SmeltParams, phase: i64, k: i64) -> (i64, i64) {
     let heat_ticks = (p.heat_ms / TICK_MS).max(1);
-    let centre = p.band_center + p.band_amp * tri(k + phase, p.band_period_ticks.max(1)) / 1000;
+    let center = p.band_center + p.band_amp * tri(k + phase, p.band_period_ticks.max(1)) / 1000;
     let half = p.band_half_start + (p.band_half_end - p.band_half_start) * k / heat_ticks;
-    (centre, half)
+    (center, half)
 }
 
-/// The furnace and the mould as a round runs.
+/// The furnace and the mold as a round runs.
 struct Run<'a> {
     p: &'a SmeltParams,
     phase: i64,

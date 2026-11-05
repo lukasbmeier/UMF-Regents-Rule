@@ -83,19 +83,28 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   a machine), template work pulled here, one wipe; (2b, Luke 2026-10-24) **the load test** on the continent
   (PROGRESS step 23 the continent; the harness next, in the template), the combat talk alongside;
   (3) **the combat deep-dive**, folding in equipment and
-  armour (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **the in-game lookup**
+  armor (the five slots, stats), the server-side cast queue, crits and NPC tiers; (4) **the in-game lookup**
   (added 2026-10-24, below); (5) **herbalism and the
   economy** (marks, vendors). After those: writs, potions, death and shrines; party, duels, the lair and the
   Undercroft (M8, M25); the 300-bot load test. Movement feel from the template and Fishing that Regent's
   lost (the camera orbiting a still character without turning it; diagonal strafing that blends well) is
   noted for when it suits, likely with combat.
-- **The order of work from here** (Luke, 2026-11-03): after his melee spot check and its fixes, (1) **ARMOUR** next:
+- **The order of work from here** (Luke, 2026-11-03): after his melee spot check and its fixes, (1) **ARMOR** next:
   the equipment slots and their stats, planned first in a prep session (as `ROLES_PREP.md` was for roles; the prep
   doc is not written yet: the next session starts with it); (2) **the rest of the combat deep-dive** (overhaul steps
   5-7: mastery picks, threat and Support, content fill; the cast queue, crits, NPC tiers); (3) **a MINIGAME
   OVERHAUL**: the skilling minigames made fun and engaging, so the skill that earns Fine and Masterwork materials is
   real, with progression as a skill levels up; before the in-game lookup; (4) **the in-game lookup**; (5)
   **herbalism and the economy**; (6) writs, potions, death and shrines; (7) party, duels, the lair, the Undercroft.
+  **REPLACED 2026-11-04**, below ("The order of work, armor parked").
+- **The order of work, armor parked** (Luke, 2026-11-04: "it seems we may be too early for armor without more
+  resources and content"): (1) **the American-spelling pass**; (2) **the MINIGAME OVERHAUL** (as above: Fine and
+  Masterwork take real skill, progression as a skill levels up); (3) **herbalism and hunting**: fiber and hides, and
+  the creatures hunted for them (foe design too: the place for foes that push, poison or slow); (4) **ARMOR**, back
+  with cloth, leather and real threats (`ARMOR_PREP.md`, parked). Not yet placed by Luke, the agent's proposal: the
+  rest of the combat deep-dive (overhaul steps 5-7: mastery picks, threat and Support, content fill; the cast queue,
+  crits, NPC tiers) AFTER hunting, so its new creatures give them something to work against; the in-game lookup, the
+  economy (marks, vendors), writs, potions, death and shrines, party, duels, the lair and the Undercroft after that.
 - **Bushes are not solid** (Luke's playtest note, 2026-10-24; CONFIRMED 2026-10-26: "bushes should be passable
   like the other grass foliage"): of a level's props only ROCKS stop you and a foe's sight
   (`RegentsSolidProps.solid_models`); bushes, grass and flowers are walked and seen through. Narrows his
@@ -123,7 +132,7 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   trait the new parts offer; a lower-grade batch keeps the FIRST traits in the order wanted.
 - **After his playtest of the crafting rework** (2026-10-23): the traits header says the grade without the
   quality number; **the head (any core) is picked BY GRADE** in a list ("Masterwork iron axe head (1)"), a
-  grade not in the bag greyed, and a run uses only that grade; **metal rivets now** (not after herbalism):
+  grade not in the bag grayed, and a run uses only that grade; **metal rivets now** (not after herbalism):
   rivets are a pattern (copper, iron, steel), the binding slot takes any; **every part offers a tool trait and
   a weapon trait** (only one that fits the item counts: an axe takes the tool's): oak Steady / Heavy, yew
   Springy / Balanced, copper rivets Gentle / Thirsting, iron Lucky / Brutal, steel Prospector's / none until
@@ -138,7 +147,7 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **Load test before combat** (2026-10-24): the 300-bot load test moves ahead of the combat deep-dive, the
   combat design talk alongside it. It runs on **the continent** (PROGRESS step 23), Luke's map's main
   landmass (no islands; the name on the map, Aethel, not taken): **about 3 km across**, the camp in the
-  **centre-west lowlands**. A greybox for testing: its node and skeleton placement is a test one, and the
+  **center-west lowlands**. A greybox for testing: its node and skeleton placement is a test one, and the
   world's regions, roads, towns, the lair and the Undercroft are Luke's to design later. A fresh database
   still starts in the glade (level 20); the continent is level 21 (`set_world_level 0 21`).
 - **A Skyrim-size test world** (2026-10-30): "try it on a world close to the same size as skyrim with 300
@@ -156,10 +165,10 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   - **No Break/poise spine and no bar** (Luke: it would be min-maxed over damage and utility). Stagger is a
     payoff; systems stay varied but simple.
   - **One combo, no separate heavy**: LMB taps a string, each step a little heavier; **the last hit is the
-    finisher and the heavy** (armour, flinches a light, staggers). No hold-LMB on melee. A swing at air still
+    finisher and the heavy** (armor, flinches a light, staggers). No hold-LMB on melee. A swing at air still
     advances the combo. The window is a hot rule, 2000 ms; follow-through replaces `chain_ms` (fixes #8).
     The Heavy trait becomes a longer stagger on the finisher.
-  - **RMB is only defence**: tap = parry for every kit and role (judged on the hit as you saw it; a missed
+  - **RMB is only defense**: tap = parry for every kit and role (judged on the hit as you saw it; a missed
     parry locks parrying ~400 ms); hold = a front block, real for the Tank, **weak for Damage and Support**.
     **A parry pays stagger + a riposte** that counts as combo step 1; the bow's riposte makes the next draw
     fill twice as fast. Bow: RMB while drawing lets the draw go and parries.
@@ -226,7 +235,33 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   accidentally started one, maybe for all games, for harvesting can reward what we get, for refining/crafting can just
   cancel and not use resources"): built (PROGRESS 35): **Escape** ends a gathering round at once and pays what was
   played; a refining or crafting round is dropped, nothing used, nothing made.
-- **Armour prep** (2026-11-03): `docs/regents_rule/ARMOUR_PREP.md`, decisions A1-A10, waiting on his answers.
+- **Armor prep** (2026-11-03): `docs/regents_rule/ARMOR_PREP.md`, decisions A1-A10, waiting on his answers.
+  His first pass (2026-11-04, an outside review of the sheet): AGAINST player poise (hard to track, feels bad when it
+  breaks: poise stays a foe mechanic) and AGAINST weight slowing movement (good players avoid damage and go light).
+  The sheet is revised with both (revision 2, every decision with a proposed answer); a second outside review found
+  the metal-only traits dead and too few parts for the grades.
+- **ARMOR PARKED** (Luke, 2026-11-04) until cloth, hides and new foes exist (the order of work above). **Settled now**,
+  because no new content changes them (`ARMOR_PREP.md` §0):
+  - **Defense**: each piece a Defense, worn pieces add up, a hit becomes `damage x K / (K + Defense)`, K the hot rule
+    `regents.defense_k` (67 to start); never a flat cut. The guard first, then armor, then traits, MULTIPLIED, never
+    added. `FoeDef.defense` (0 on today's skeletons). Quality raises Defense as it raises damage (+20 % at 1000).
+  - **No armor weight and no player poise**: armor never costs the roll or sprint; POISE IS A FOE MECHANIC ONLY; a
+    foe's last hit that lands unblocked always staggers a player. (A short Steadied after a player's stagger is an
+    idea for duels, not decided.)
+  - **Wearing**: from the bag (I), a paper doll of head, chest, legs and trinket; out of combat only
+    (`regen_delay_s`); others see it (a public row, by the ring).
+  - **The look**: the Quaternius Modular Fantasy outfits, recolored by material; helms always shown (a toggle later);
+    the chestpiece draws the arms, the leggings the feet; the five slots stay.
+  - **Words**: a piece shows its Defense as a number (as Power is) and what wearing it does to you ("you'd take 19 %
+    less, now 13 %"); the doll shows the total; never Light / Medium / Heavy.
+  - Later, as recommended: the trinket empty until herbalism; armor crafted first, on drops with the loot-table pass;
+    gear XP by being hit when ranks are built.
+  - **Open, for when armor comes back**: the parts and traits (plates + what secondary parts; each piece needs enough
+    trait-bearing parts for Fine and Masterwork), which traits (Padded and Warded likely move to the lining), what
+    makes lighter armor worth wearing (the combat triangle), the materials' tiers and the numbers.
+- **American spelling** (Luke, 2026-11-04): "all spelling in the game is not English version, but American": armor,
+  defense, color, gray, center, meter, canceled. Everything a player reads, and every new name, rule and doc from now
+  on (`regents.defense_k`). The first sweep was done 2026-11-04 (PROGRESS step 38).
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade

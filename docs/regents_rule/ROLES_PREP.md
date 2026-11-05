@@ -47,7 +47,7 @@ Sub-questions under (a):
   shaft / censer shaft.
 - **D1.2** Do Tank and Support handles cost more, or need a Crafting rank? (Recommend: the same cost and rank
   as the plain handle: the role is a choice, not a tier.)
-- **D1.3** How the weapon names its role: in the name, as a badge, or a colour? (Recommend: a small badge and a
+- **D1.3** How the weapon names its role: in the name, as a badge, or a color? (Recommend: a small badge and a
   tooltip line; the name stays the material's.)
 - **D1.4** Does the model change? Each handle could need a mesh (a crossguard shows). (Recommend: one mesh
   per weapon for now, the role on the badge; meshes later with the art.)

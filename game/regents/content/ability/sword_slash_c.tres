@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40003
 display_name = "Piercing thrust"
-designer_notes = "THE SWORD'S LAST HIT with a plain grip (the Damage role, COMBAT_OVERHAUL.md §5; Luke 2026-11-01): the biggest hit, a longer reach (26, 2.4 m, 380 ms). Every last hit has armour (never flinched), flinches a light it hits, and staggers. Its clip is a placeholder (Sword_Light_C x1.18: the real thrust, Sword_Light_D, holds the arm out 1.3 s, a 2.1 s lock; ANIMATIONS.md §5). Its key is the combat component's (game/regents/combat/), not the foundation's attack key."
+designer_notes = "THE SWORD'S LAST HIT with a plain grip (the Damage role, COMBAT_OVERHAUL.md §5; Luke 2026-11-01): the biggest hit, a longer reach (26, 2.4 m, 380 ms). Every last hit has armor (never flinched), flinches a light it hits, and staggers. Its clip is a placeholder (Sword_Light_C x1.18: the real thrust, Sword_Light_D, holds the arm out 1.3 s, a 2.1 s lock; ANIMATIONS.md §5). Its key is the combat component's (game/regents/combat/), not the foundation's attack key."

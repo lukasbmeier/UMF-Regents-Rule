@@ -463,10 +463,10 @@ timed "$(printf '%s\n' \
 timed_ok 1 "a chop, to start the string"
 timed_ok 2 "the overhead: queued (its wind-up 550 ms)"
 timed_ok 3 "Ctrl in its wind-up: the roll"
-assert_eq "$(timed_val CANCELLED)" "true" "the overhead is cancelled"
+assert_eq "$(timed_val CANCELLED)" "true" "the overhead is canceled"
 timed_ok 6 "the referee: its sweep found the dummy"
 # Read in the run: a CLI read came after the dummy was whole again (4 s), and passed even when the hit landed (2026-11-04).
-num_is "$(timed_val HPC_AFTER)" "$HPC" "but a cancelled swing never lands: no damage"
+num_is "$(timed_val HPC_AFTER)" "$HPC" "but a canceled swing never lands: no damage"
 standin_down
 # --- TRAITS (template DECISIONS #275): what changes how a weapon plays, never its Power. A dev reducer
 # gives them here (a designer trying one); the playtest makes a tool with a handle's. Ids: the content's
@@ -844,7 +844,7 @@ BOW_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYE
 assert_ok "wield $BOW_ROW" "wield the bow"
 assert_rejected "loose_arrow 0 {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "draw first" "a loose with no draw is refused"
 SKB="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
-assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten metres from skeleton_1"
+assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten meters from skeleton_1"
 C_CODE4='"regentsbowrefereecode"'
 # No regrowth while the shots are measured (put back after the staff's): the skeleton healed between two slow reads and
 # the point-blank shot read as a gain (2026-11-04).
@@ -867,15 +867,15 @@ SH0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
 AXP0="$(xp_of 40008)"
 hit_report "$A1" "$SKB" -1.0 "the referee: it hit the skeleton"
 SH1="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
-check "$(python -c "print('true' if abs(($SH0 - $SH1) - 30.0) < 1e-3 else 'false')")" "a full draw from ten metres: the shot's 30 ($SH0 -> $SH1)"
+check "$(python -c "print('true' if abs(($SH0 - $SH1) - 30.0) < 1e-3 else 'false')")" "a full draw from ten meters: the shot's 30 ($SH0 -> $SH1)"
 check "$(python -c "print('true' if $(xp_of 40008) > $AXP0 else 'false')")" "archery XP"
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $A1")" "0" "and the arrow is gone"
-# Point blank: a quick draw, hitting two metres from where it left the bow.
+# Point blank: a quick draw, hitting two meters from where it left the bow.
 bow_referee
 assert_ok "draw_bow true" "draw again"
 assert_ok "loose_arrow $SKB {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "loosed at once"
 A2="$(newest_arrow)"
-hit_report "$A2" "$SKB" 7.0 "it hit two metres out"
+hit_report "$A2" "$SKB" 7.0 "it hit two meters out"
 SH2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKB" 1)"
 check "$(python -c "d = $SH1 - $SH2; print('true' if 0 < d <= 30.0 * 0.6 + 1e-3 else 'false')")" "point blank: at most 60 % of a full 30 ($SH1 -> $SH2)"
 # The last arrow kills it: three stuck in it, 40 % of them (one) back to the bag.
@@ -926,7 +926,7 @@ read -r X2 Y2 Z2 <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE e
 read -r X3 Y3 Z3 <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $SK3" 1)")"
 NORTH="$(vec 0.0 0.0 -1.0)"
 NONE="$(vec 0.0 0.0 0.0)"
-assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "stand eight metres south of skeleton_2"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "stand eight meters south of skeleton_2"
 assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "needs Sorcery rank 3" "Frost Ring needs Sorcery rank 3"
 # The Bolt's hit is old before the slow Fireball lands: skeleton_2 would be healing (regents.regen_delay_s) while
 # its health is read, and the fire looked 3 to 6 short of its 9 (2026-10-31; the server's log showed every tick).
@@ -1040,8 +1040,8 @@ print('true' if on and st and off and st < off and (off - on).total_seconds() >=
 ")"
 check "$SLOWED" "and stays Slowed: a state no longer wipes the slow (it came off on its own 3 s, after the state: $SLOWED)"
 read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)")"
-check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight metres east, at once ($BX, $BZ)"
-assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five metres south of skeleton_2"
+check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight meters east, at once ($BX, $BZ)"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five meters south of skeleton_2"
 assert_ok 'set_rule "regents.mana_cost_pct" 300.0 ""' "(test) spells three times dearer: Gale 105, more than mana holds"
 assert_rejected "cast_spell 40016 0 $NORTH $NONE" "not enough mana" "too little mana: refused, nothing spent"
 assert_ok 'reset_rule "regents.mana_cost_pct"' "(test) costs back"

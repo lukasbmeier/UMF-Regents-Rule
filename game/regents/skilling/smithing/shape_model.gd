@@ -1,7 +1,7 @@
 class_name ShapeModel extends RefCounted
 ## SMITHING'S MINIGAME, SHAPE TO THE OUTLINE (owner, 2026-10-19): the hot bar is a row of columns, each
 ## a height. Strike a column: it is beaten down `hammer_drop` (no lower than nothing) and `spread_pct` of
-## that is pushed into each neighbour. Match the part's outline. The bar is workable until it cools
+## that is pushed into each neighbor. Match the part's outline. The bar is workable until it cools
 ## (`heat_ms` after the round begins or after a reheat); a strike on a cold bar does nothing. Reheating
 ## (column -1) takes `reheat_ms`. The score is how close the bar ends to the outline.
 ## Inputs are (time, column), column -1 a reheat. A PURE MODEL (its Rust twin: `genre::regents::shape`,

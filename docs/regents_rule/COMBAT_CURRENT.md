@@ -169,7 +169,7 @@ press ─► 0 ── wind-up ──► HIT (judged) ── +chain_ms ─► (ne
 - **The hit lands at the wind-up.** The referee judges it then (§6).
 - **The lock** = the clip's length (table above). Until it ends nothing else starts, except:
 - **The follow-through** (2026-10-31): the string's NEXT step may start from `wind_up + follow` (the step's
-  `KitDef.follow_ms`, 200 ms after its hit), cancelling the rest of the recovery. (It was `chain_ms`, 60 ms:
+  `KitDef.follow_ms`, 200 ms after its hit), canceling the rest of the recovery. (It was `chain_ms`, 60 ms:
   why "spamming LMB cut the second swing's animation", #8.)
 - **The string**: each tap is the next step if it comes within `regents.combo_window_ms` (2 s) after the last
   step's lock, else step 1 again; a guard press restarts the window, a roll ends the string. The server
@@ -186,7 +186,7 @@ press ─► 0 ── wind-up ──► HIT (judged) ── +chain_ms ─► (ne
 - **No swing in the air or mid-roll**: the server refuses both ("not in the air", "still rolling"); the
   client holds the press until you land or the roll is over.
 - **No swing while blocking** ("lower your block to swing").
-- **The finisher** (the string's last step; the heavy merged in, 2026-10-31): its wind-up has **armour**
+- **The finisher** (the string's last step; the heavy merged in, 2026-10-31): its wind-up has **armor**
   (never flinched); it **flinches** a step in its wind-up that it hits (cancels it: it never lands; the
   **Flinched** status for `flinch_ms`, 350 ms); and when it lands unblocked it **staggers** (`stagger_ms`,
   800 ms: no acting, a cast let go): a player always, a foe or a dummy only when it breaks their POISE (§7, 8).
@@ -195,14 +195,14 @@ press ─► 0 ── wind-up ──► HIT (judged) ── +chain_ms ─► (ne
 - **Animations**: swings play in place (root motion taken out); others see your swing from the same
   ability event; a hit plays `react.hit` on what was hit, held while Flinched/Staggered.
 
-Server: the `swing` table (one row per fighter: ability, start, wind-up, lock, light step, cancelled),
+Server: the `swing` table (one row per fighter: ability, start, wind-up, lock, light step, canceled),
 `combat_state` (combo step, when, blocking, block_since); `may_fight` (every refusal), `fought` (records
 the swing, sets Swinging), `hit` (what a hit does). Client: `CombatComponent.may_start`, `swing`, `press`,
 `_try`, the queue in `_process`.
 
 ---
 
-## 5. Defence: block, parry, roll
+## 5. Defense: block, parry, roll
 
 - **The guard** (RMB, every kit; `guard(on, seen_delay_ms)`, 2026-10-31; `block` still works for old builds):
   - **The parry** (the press): a hit **in front** landing within `parry_ms` (200 ms) before the press, or
@@ -244,8 +244,8 @@ the swing, sets Swinging), `hit` (what a hit does). Client: `CombatComponent.may
    `action_request` for the referee (refused when no referee is online: "nobody is judging world N").
 3. The referee keeps every entity's movement history. At the request's landing time (+80 ms to settle) it
    places the user where it was, everyone else where they were `rewind` ms earlier (the user's view delay,
-   capped at `foundation.rewind_max_ms`, 150 ms: favours the attacker), and sweeps a capsule of the
-   ability's `radius` and `height` forward `reach` metres along the aim, against the level's walls and the
+   capped at `foundation.rewind_max_ms`, 150 ms: favors the attacker), and sweeps a capsule of the
+   ability's `radius` and `height` forward `reach` meters along the aim, against the level's walls and the
    bodies. With `foundation.referee_two_sides` ON (Regent's Rule turns it on), the sweep passes through its
    user's own side (players, or everyone else) to the first of the other.
 4. It reports the first body hit (`resolve_action`). The module checks again (who may hurt whom) and the
@@ -260,7 +260,7 @@ hittable (Rolling and Slain are not hittable).
 
 In order:
 1. `hurts`: a foe hurts only players; a player hurts anything but players (no PvP, no friendly fire).
-2. A swing cancelled in its wind-up (roll, flinch) does nothing.
+2. A swing canceled in its wind-up (roll, flinch) does nothing.
 3. A finisher flinches a target in a step's wind-up (§4).
 4. **The guard** (§5), for a player hit from in front by anything not unblockable: a parry already pressed
    takes it; one that may still arrive holds it (`held_hit`) until it could; then it is dealt (`deal`).
@@ -279,7 +279,7 @@ In order:
    pommel bash ×1.5), then **Steadied** (`steadied_ms` 3 s after the stagger: nothing wears it); unhit for
    `poise_regen_ms` (8 s) it is whole. A foe's poise is its `FoeDef.poise` (70), a dummy's `dummy_poise` (50); a
    parry staggers whatever the poise (a punish). Shown on the TARGET MARKER: an arc round the ring under your target
-   fills as it wears, pale to red, bursts as it breaks, grey while Steadied (no bar: Luke); Thirsting heals (not off a dummy); the rallying cut heals players
+   fills as it wears, pale to red, bursts as it breaks, gray while Steadied (no bar: Luke); Thirsting heals (not off a dummy); the rallying cut heals players
    near (§3.3, not off a dummy).
 9. **Mastery XP** to the attacker: `damage × combat_xp_per_damage (0.5) × share`, at least 1. The share is
    `dummy_xp_pct` (50 %) on a dummy, else the foe's `xp_pct` (100 %). The XP goes to the kit's skill
@@ -357,7 +357,7 @@ A crafted weapon holds 1/2/3 traits by grade (`crafted_traits_*`), chosen from w
 
 Recovery is the part of the lock after the wind-up: `lock = wind_up + (lock - wind_up) × recovery`. The
 client predicts the same lock. Waiting on systems that do not exist: Keen (crits, Bleeding), Padded and
-Warded (armour), Reaching (per-wielder reach for the referee).
+Warded (armor), Reaching (per-wielder reach for the referee).
 
 ---
 
@@ -390,7 +390,7 @@ own table, not a status.
 The sparring skeleton notices you at 4 m (leash 8 m), rests 2.5 s, drops nothing, and shows the PARRY RING
 (`FoeDef.parry_ring`): the only foe with it (PROGRESS step 33).
 
-Behaviour (FoeDef defaults, both): notices a player within `notice_m` 10 m **and in sight** (a ray at eye
+Behavior (FoeDef defaults, both): notices a player within `notice_m` 10 m **and in sight** (a ray at eye
 height against the level); chases at 4.2 m/s (a player runs 5, so you can always get away); stops at
 `reach_m` 1.9 m and fights; every `heavy_every` 3rd swing is its heavy; each swing waits out the last one's
 lock; a combo ends with `rest_ms` 900 (your opening); past `leash_m` 25 m from home it walks back, deaf to
@@ -420,7 +420,7 @@ lost from sight is chased to where it was last seen for `lose_sight_ms` (2500) b
   hit); a hit the guard stopped flashes steel blue "Blocked"; a stagger flashes gold (no word since 2026-11-02:
   the status bar under the target's health says it); your own parry says "Parried".
 - **The target marker** (a gold ring under your target) carries its POISE (2026-11-02): an arc just outside it fills
-  as poise wears, pale to red, bursts as it breaks, grey while Steadied (`CombatComponent._place_poise_arc`).
+  as poise wears, pale to red, bursts as it breaks, gray while Steadied (`CombatComponent._place_poise_arc`).
 - **The parry ring** (`FoeDef.parry_ring`, the tutorial's sparring skeleton only): a ring closes on each swing, shut
   as the blow lands.
 - **Weight** (Luke's feedback 4098, 2026-10-31): a SPARK where the blow lands (warm, bigger on a hit of 20+,
@@ -572,7 +572,7 @@ Every player-callable combat reducer spends from a per-player bucket (rule 14).
   rows): basics today are all sweeps (HITSCAN-like, judged by the referee) or missiles.
 - The **Effect → Status pipeline as content** (`EffectDef` atoms, `AbilityDef.kind`, `effects[]`): each
   spell kind and swing is code today (`land_spell`, `hit`), with numbers in content.
-- **Stats** (power, defense, a `stats` view), **armour** (head, chest, legs, trinket slots: only the weapon
+- **Stats** (power, defense, a `stats` view), **armor** (head, chest, legs, trinket slots: only the weapon
   slot exists), crits (10 % × 1.5 in the design), the ±5 % damage roll, the design's damage formula
   `base × (1 + power/100) × 100/(100 + defense)`.
 - **One resource per kit** (stamina / focus / mana in the design; Luke reversed it on 2026-10-20: mana is the

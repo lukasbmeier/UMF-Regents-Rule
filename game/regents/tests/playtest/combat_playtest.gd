@@ -135,7 +135,7 @@ func _run() -> void:
 	await _until(func() -> bool: return feed != null and feed.flashes.has(&"stagger"), 2.0)
 	_check(feed != null and feed.flashes.has(&"stagger"), "the finisher STAGGERED the dummy (the old heavy's job, now the string's last)")
 	var arc_steady: float = float((combat.poise_arc.material_override as ShaderMaterial).get_shader_parameter(&"steady")) if combat.poise_arc != null else -1.0
-	_check(arc_steady > 0.5 and feed.poise_steadied(ClockSync.server_usec()), "its poise broke: the ring's arc is the grey of Steadied")
+	_check(arc_steady > 0.5 and feed.poise_steadied(ClockSync.server_usec()), "its poise broke: the ring's arc is the gray of Steadied")
 	_check(feed != null and feed.shown.size() >= 2 and is_equal_approx(snappedf(feed.shown[0], 0.01), 8.4), "the numbers floated up from the dummy: %s" % str(feed.shown if feed != null else []))
 	await _until(func() -> bool: return int(skilling.xp.get(AXEMANSHIP, 0)) >= 7, 3.0)
 	_check(int(skilling.xp.get(AXEMANSHIP, 0)) >= 7, "axemanship XP for the hits (%d)" % int(skilling.xp.get(AXEMANSHIP, 0)))
@@ -170,11 +170,11 @@ func _run() -> void:
 	var before_roll: float = dh.get_current()
 	await _click(0.03)   # a chop (its wind-up 320 ms)
 	await _key(KEY_CTRL)
-	_check(combat.swing_cancelled, "Ctrl in the chop's wind-up cancels it here")
+	_check(combat.swing_canceled, "Ctrl in the chop's wind-up cancels it here")
 	await _until(func() -> bool: return driver.action_clip() == &"Roll", 1.0)
 	_check(driver.action_clip() == &"Roll", "and the roll plays its Roll (%s)" % driver.action_clip())
 	await get_tree().create_timer(1.5).timeout
-	_check(is_equal_approx(dh.get_current(), before_roll), "the cancelled chop never landed on the dummy (%.1f)" % dh.get_current())
+	_check(is_equal_approx(dh.get_current(), before_roll), "the canceled chop never landed on the dummy (%.1f)" % dh.get_current())
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
 
 	# --- A COMMITTED SWING: you walk until it lands ---

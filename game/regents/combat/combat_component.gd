@@ -5,7 +5,7 @@ class_name CombatComponent extends SpaceTimeComponent
 ## referee judges along the way the body faces, and the server says what a hit does (`game/regents.rs`).
 ##
 ##   LMB tap    the kit's STRING: each tap the next step, inside `regents.combo_window_ms`; its last is the
-##              FINISHER (COMBAT_OVERHAUL.md §3: the heavy merged in: armour, it flinches a light, it staggers),
+##              FINISHER (COMBAT_OVERHAUL.md §3: the heavy merged in: armor, it flinches a light, it staggers),
 ##              the one the wielded weapon's HANDLE gives (its role, §5: `role()`, `KitDef.light_at`). The server
 ##              resolves the same from the bag row; this client predicts it, its clip and its lock.
 ##   RMB        THE GUARD (§4): the press PARRIES a hit in front landing within `regents.parry_ms` of it, as
@@ -108,12 +108,12 @@ var target_id: int = -1
 var combo_step: int = -1
 var combo_ms: int = -100000
 ## The swing now (or last): its ability, when it began, lands and lets go (msec), and whether it was
-## cancelled (a roll, a flinch).
+## canceled (a roll, a flinch).
 var swing_ability: AbilityDef = null
 var swing_at_ms: int = -100000
 var swing_hit_ms: int = -100000
 var swing_lock_ms: int = -100000
-var swing_cancelled: bool = false
+var swing_canceled: bool = false
 ## The press waiting for the swing to let go: {"kind": light/skill, "slot", "at"}; {} for none.
 var queued: Dictionary = {}
 var _slowing: bool = false
@@ -139,7 +139,7 @@ var _status: StatusComponent = null
 var _ring: MeshInstance3D = null
 ## THE TARGET'S POISE ON ITS MARKER (Luke, 2026-11-02: "lets do target marker", not a bar under its health): an arc
 ## just outside the ring fills round as its poise wears, hotter near the break; it bursts when it breaks, and is a
-## grey ring while it is Steadied. Its material's `worn` and `steady` are what it shows (tests read them).
+## gray ring while it is Steadied. Its material's `worn` and `steady` are what it shows (tests read them).
 var poise_arc: MeshInstance3D = null
 var _arc_feed: HitFeedbackComponent = null
 ## This client's draw: when it began (msec), or -1.
@@ -286,9 +286,9 @@ func riposte_open(now_ms: int) -> bool:
 	return now_ms - parried_ms <= int(HotRules.number(&"regents.riposte_ms")) and swing_at_ms < parried_ms
 
 
-## Whether a swing holds us at `now_ms` (between its start and its lock, not cancelled).
+## Whether a swing holds us at `now_ms` (between its start and its lock, not canceled).
 func swinging(now_ms: int) -> bool:
-	return swing_ability != null and not swing_cancelled and now_ms < swing_lock_ms
+	return swing_ability != null and not swing_canceled and now_ms < swing_lock_ms
 
 
 ## Whether ability `a` (a light step `step`, -1 for anything else) may start at `now_ms`: on the ground, able
@@ -333,7 +333,7 @@ func swing(a: AbilityDef, step: int = -1) -> int:
 	swing_at_ms = now
 	swing_hit_ms = now + a.wind_up_ms
 	swing_lock_ms = now + lock_for(a)
-	swing_cancelled = false
+	swing_canceled = false
 	combo_step = step
 	combo_ms = swing_lock_ms
 	swung.emit(a.id)
@@ -403,7 +403,7 @@ func dodge() -> int:
 	_cast_over()   # and lets a cast go (the server ends it too)
 	var now: int = Time.get_ticks_msec()
 	if swinging(now):
-		swing_cancelled = now < swing_hit_ms
+		swing_canceled = now < swing_hit_ms
 		swing_lock_ms = now
 	roll_until_ms = now + int(HotRules.number(&"regents.roll_ms"))
 	queued = {}
@@ -491,7 +491,7 @@ func _let_go() -> void:
 func _on_revoked(ability_id: int, _predicted_id: int, why: String) -> void:
 	if swing_ability != null and swing_ability.id == ability_id and swinging(Time.get_ticks_msec()):
 		swing_lock_ms = Time.get_ticks_msec()
-		swing_cancelled = true
+		swing_canceled = true
 		combo_step = -1
 		_let_go()
 	refused.emit(why)
@@ -616,7 +616,7 @@ func _process(_delta: float) -> void:
 	# Flinched or staggered by the server: the swing is over, and so is what was queued.
 	var st: StatusComponent = _status
 	if st != null and (st.status() == STATUS_FLINCHED or st.status() == STATUS_STAGGERED) and swinging(now):
-		swing_cancelled = true
+		swing_canceled = true
 		swing_lock_ms = now
 		queued = {}
 		combo_step = -1
@@ -635,7 +635,7 @@ func _process(_delta: float) -> void:
 			queued = {}
 	# THE COMMITTED SWING: walk from its start until just after it lands. Slow-walk until the server's
 	# Swinging status arrives, which then bounds the run to the same walk (both at once would crawl).
-	var commit: bool = (swing_ability != null and not swing_cancelled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS \
+	var commit: bool = (swing_ability != null and not swing_canceled and now < swing_hit_ms + COMMIT_AFTER_HIT_MS \
 		and (st == null or st.status() != STATUS_SWINGING)) or (drawing() and (st == null or st.status() != STATUS_DRAWING))
 	if commit != _slowing:
 		_slowing = commit
@@ -903,7 +903,7 @@ func cast(a: AbilityDef) -> bool:
 	swing_ability = a
 	swing_at_ms = now
 	swing_hit_ms = now + cast_ms
-	swing_cancelled = false
+	swing_canceled = false
 	if cast_ms > 0:
 		cast_spell = spell
 		cast_until_ms = now + cast_ms
@@ -1100,7 +1100,7 @@ static var _arc_code: Shader = null
 
 
 ## The arc: a thin band round the marker, the worn share of it filled clockwise from the front, pale (apart from the
-## marker's gold) turning red near the break; a grey band while steadied; a bright widening ring as it bursts.
+## marker's gold) turning red near the break; a gray band while steadied; a bright widening ring as it bursts.
 static func _arc_shader() -> Shader:
 	if _arc_code == null:
 		_arc_code = Shader.new()

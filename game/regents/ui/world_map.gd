@@ -7,7 +7,7 @@ class_name RegentsWorldMap extends UiWindow
 ## wheel zooms where the mouse is; drag to pan. M (the HUD's) or Escape closes it. Presentation only.
 
 const MAP_PX: Vector2 = Vector2(760, 560)
-## Room round the level's points (metres).
+## Room round the level's points (meters).
 const MARGIN_M: float = 80.0
 ## The picture's side in pixels.
 const CAPTURE_PX: int = 1024
@@ -17,7 +17,7 @@ const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 12.0
 
 ## A point of interest: a level's `poi` point, its first tag its name; tagged "minor" (a camp's workshop), its
-## name shows only once zoomed in to this many metres a pixel or nearer.
+## name shows only once zoomed in to this many meters a pixel or nearer.
 const POI_KIND: String = "poi"
 const MINOR_LABEL_M_PER_PX: float = 1.0
 const POI: Color = Color(1.0, 0.85, 0.35)
@@ -28,7 +28,7 @@ var level_id: int = -1
 var area: Rect2 = Rect2()
 ## The view: how far zoomed in (1: the whole level), and the world point at the canvas's middle.
 var zoom: float = 1.0
-var centre: Vector2 = Vector2.ZERO
+var center: Vector2 = Vector2.ZERO
 ## What the mouse is over: its label, or "".
 var hovered: String = ""
 
@@ -53,7 +53,7 @@ func _init() -> void:
 	content.add_child(_canvas)
 
 
-## Open on level `id` (the one shown), centred on you; the picture is taken again for another level.
+## Open on level `id` (the one shown), centered on you; the picture is taken again for another level.
 func show_level(id: int) -> void:
 	var bake: LevelBake = LevelBake.by_id(id)
 	if bake == null:
@@ -66,7 +66,7 @@ func show_level(id: int) -> void:
 		_take_picture()
 	_seen = RegentsDiscovery.seen_points()
 	zoom = 1.0
-	centre = area.get_center()
+	center = area.get_center()
 	open()
 
 
@@ -132,17 +132,17 @@ static func label_of(icon: Dictionary, seen: Dictionary) -> String:
 
 # --- drawing --------------------------------------------------------------------------------
 
-## Metres per canvas pixel at this zoom.
+## Meters per canvas pixel at this zoom.
 func _m_per_px() -> float:
 	return area.size.x / (minf(MAP_PX.x, MAP_PX.y) * zoom)
 
 
 func to_canvas(world: Vector2) -> Vector2:
-	return MAP_PX * 0.5 + (world - centre) / _m_per_px()
+	return MAP_PX * 0.5 + (world - center) / _m_per_px()
 
 
 func to_world(px: Vector2) -> Vector2:
-	return centre + (px - MAP_PX * 0.5) * _m_per_px()
+	return center + (px - MAP_PX * 0.5) * _m_per_px()
 
 
 func _draw_map() -> void:
@@ -211,14 +211,14 @@ func _on_canvas_input(event: InputEvent) -> void:
 		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 			var before: Vector2 = to_world(mb.position)
 			zoom = clampf(zoom * (1.25 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 0.8), ZOOM_MIN, ZOOM_MAX)
-			centre += before - to_world(mb.position)   # the point under the mouse stays under it
+			center += before - to_world(mb.position)   # the point under the mouse stays under it
 			_canvas.accept_event()
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			_panning = mb.pressed
 		return
 	var mm: InputEventMouseMotion = event as InputEventMouseMotion
 	if mm != null and _panning:
-		centre -= mm.relative * _m_per_px()
+		center -= mm.relative * _m_per_px()
 
 
 ## The level from straight above, north up (not headless: nothing is drawn there).

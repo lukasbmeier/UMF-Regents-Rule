@@ -27,7 +27,7 @@ class_name FoeDef extends ContentDef
 ## Mastery XP for hitting it, as a share of the usual (a dummy pays `regents.dummy_xp_pct`).
 @export_range(0, 1000, 1, "suffix:%") var xp_pct: int = 100
 
-@export_group("Behaviour")
+@export_group("Behavior")
 ## It notices a player this near (and in sight).
 @export_range(1.0, 100.0, 0.5, "suffix:m") var notice_m: float = 10.0
 ## It gives up and walks home once this far from home.

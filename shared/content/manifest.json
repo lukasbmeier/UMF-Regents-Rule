@@ -81,7 +81,7 @@
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
 				"game/regents/content/ability/axe_cleave.tres": "af886adf",
-				"game/regents/content/ability/axe_heavy.tres": "760376e7",
+				"game/regents/content/ability/axe_heavy.tres": "f976c1b2",
 				"game/regents/content/ability/blink.tres": "abf6228b",
 				"game/regents/content/ability/bow_loose.tres": "7d47acb5",
 				"game/regents/content/ability/dodge.tres": "0b524f44",
@@ -102,7 +102,7 @@
 				"game/regents/content/ability/sword_rallying_cut.tres": "837d0797",
 				"game/regents/content/ability/sword_slash_a.tres": "1db742b2",
 				"game/regents/content/ability/sword_slash_b.tres": "16ecb95d",
-				"game/regents/content/ability/sword_slash_c.tres": "31ee0d2d"
+				"game/regents/content/ability/sword_slash_c.tres": "a7971408"
 			},
 			"type": "ability"
 		},

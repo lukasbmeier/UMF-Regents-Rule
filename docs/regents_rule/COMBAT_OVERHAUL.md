@@ -32,7 +32,7 @@ What was looked at and turned down:
   axe, and it overrides the five slots. Roles come from the handle instead (§5). A shield off-hand for the sword
   and axe can come later on top.
 - **"Parry jumps your combo to the finisher"**: replaced by a riposte (§4).
-- **Three telegraph colours** (white parry, red dodge, purple interrupt): replaced by the pose plus one red
+- **Three telegraph colors** (white parry, red dodge, purple interrupt): replaced by the pose plus one red
   glint (§2).
 - **Shots that fly true where aimed**: the bow and Staff keep their hit roll on a Tab target (as built).
 
@@ -81,7 +81,7 @@ parry, tap ─ tap       RIPOSTE (= step 1) ─ L2 ─ FINISHER
 
 - **LMB taps one string.** Each step is a little heavier and slower (more damage, a longer wind-up): a rhythm
   you feel and foes can read. **No hold-LMB on melee**: the old hold-LMB heavy is gone.
-- **The last hit is the finisher AND the heavy**: armour (never flinched), it flinches a light it hits (the old
+- **The last hit is the finisher AND the heavy**: armor (never flinched), it flinches a light it hits (the old
   heavy's rule), and it **staggers** (`stagger_ms`). Stagger only on the finisher: on every hit it would
   stunlock, and foes use the same grammar.
 - **Your role changes only the finisher** (§5).
@@ -110,7 +110,7 @@ bench's kill times should land close together (today the axe kills faster: `COMB
 
 ---
 
-## 4. Defence: RMB is only defence (step 2)
+## 4. Defense: RMB is only defense (step 2)
 
 | | Damage | Tank | Support |
 |---|---|---|---|
@@ -212,14 +212,14 @@ its own: how you smith a weapon decides how you fight with it.
 - The 12 role finishers and the pick pools (the tables in §5 and §6 are first proposals; the sword first).
 - The bow's Q; the bow's skills.
 - A respec's cost once testing is over.
-- The combat triangle as FOE design (armoured, caster and archer foes, each weak to one style), not PvP rules.
-- Armour weight (light, medium, heavy) arrives with the armour slots, not in this overhaul.
+- The combat triangle as FOE design (armored, caster and archer foes, each weak to one style), not PvP rules.
+- Armor weight (light, medium, heavy) arrives with the armor slots, not in this overhaul.
 - The exact numbers: every timing above is a starting point, tuned in play (hot rules where it says so).
 - **HOW OFTEN A STAGGER** (SETTLED 2026-11-02: Luke chose A with a short B, shown on the target marker, not a bar;
   built, PROGRESS 34) (Luke, 2026-11-02: "tank sword seems too strong as the heavy trait plus its role allows for
   almost infinite stagger. even the normal stagger is a lot when fighting one enemy"). Why: every finisher staggers,
   and the sword's string comes round in ~1.2-1.4 s: a plain stagger is 800 ms, the guard grip's bash 1200, with Heavy
-  1620, so the foe never gets a swing off (and one it starts is flinched by the next finisher's armour). The options,
+  1620, so the foe never gets a swing off (and one it starts is flinched by the next finisher's armor). The options,
   for Luke to choose (the 2026-11-02 brainstorm):
   - **A. Poise, a bar that breaks** (the souls games' poise; Lost Ark's and Guild Wars 2's boss bars): each foe has
     poise (FoeDef), each hit takes some (lights a little, the finisher a lot); empty, it staggers, and fills again
@@ -239,7 +239,7 @@ its own: how you smith a weapon decides how you fight with it.
 | step | what | where |
 |---|---|---|
 | 1 | **Pace and readability** (§2): foe kits, aim track-then-lock, tokens with the gap, rests, unblockable plus the glint, loot per minute. Hand to the tester. **Built 2026-10-31** (PROGRESS step 26) but loot per minute: judged after the playtest. | foe brain, foe content, `regents.rs` `hit` |
-| 2 | **The combo and defence** (§3, §4): the merged finisher, follow-through, the window hot rule, parry on the seen hit, the whiff lockout, riposte (the bow's fast draw), weak and full front blocks, the Heavy trait repurposed. **Built 2026-10-31** (PROGRESS step 27) but the staff's riposte and the axe finisher's cleave. | `combat_component.gd`, `kit_def.gd`, `regents.rs`, `genre/regents/mod.rs`, trait content |
+| 2 | **The combo and defense** (§3, §4): the merged finisher, follow-through, the window hot rule, parry on the seen hit, the whiff lockout, riposte (the bow's fast draw), weak and full front blocks, the Heavy trait repurposed. **Built 2026-10-31** (PROGRESS step 27) but the staff's riposte and the axe finisher's cleave. | `combat_component.gd`, `kit_def.gd`, `regents.rs`, `genre/regents/mod.rs`, trait content |
 | 3 | **Statuses that stack** (§7). **Built 2026-11-01**: template 1.7.0 (#302), pulled (PROGRESS step 29) | the template, pulled |
 | 4 | **Roles** (§5), the sword first: handle patterns, `RoleDef`, the role map, the role finishers, re-hilt, loot. **Built 2026-11-01** for the sword (PROGRESS step 30; template 1.7.1, #303: the server resolves which last hit fires); threat stored for step 6 | material table, kit content, `regents.rs` |
 | 4b | **Poise** (§8, "How often a stagger": Luke chose A with a short B): a foe staggers only when the last hit breaks its poise; Steadied after; Heavy wears more; shown on the target marker. **Built 2026-11-02** (PROGRESS step 34) | `regents.rs` `wear_poise`, `combat_component.gd` |
@@ -249,7 +249,7 @@ its own: how you smith a weapon decides how you fight with it.
 
 ## 10. How it is tested
 
-- Unit suite (`--only=regents`) and native `cargo test`: the string and its finisher (armour, flinch, stagger),
+- Unit suite (`--only=regents`) and native `cargo test`: the string and its finisher (armor, flinch, stagger),
   follow-through, the window, parry on the seen hit, the whiff lockout, riposte as step 1, weak vs full block and
   front-only, unblockable, role from parts, picks. Each with its negative: a riposte outside its window refused,
   an unblockable never parried, a parry inside the lockout fails, a block from behind takes full damage, a pick

@@ -1438,7 +1438,7 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
 // --- combat (owner, 2026-10-19: the first slice) -------------------------------------------------------
 //
 // THE WEAPON IS THE KIT. A player WIELDS one weapon from the bag (`wield`); its `ItemDef.weapon_kit`
-// names the KitDef whose STRING (its last step the FINISHER: armour, it flinches a light, it staggers;
+// names the KitDef whose STRING (its last step the FINISHER: armor, it flinches a light, it staggers;
 // COMBAT_OVERHAUL.md §3) and skills (Q E R F, at mastery 1/3/6/9) they may use: every other kit's ability
 // is refused (`may_use_ability`). A swing is a foundation ability the world's REFEREE judges (a sweep along
 // the way the body faces: aimed, never auto-hit; the client's target ring is for reference). What a hit does
@@ -1483,7 +1483,7 @@ pub struct CombatState {
 
 /// A fighter's swing (owner, 2026-10-19: animation-locked): when it began, when it lands (its wind-up),
 /// how long it holds them (its clip's length: the kit's lock), its light step (-1: not a light), and
-/// whether a roll or a heavy hit cancelled it (it never lands). Public: tests and tools read it.
+/// whether a roll or a heavy hit canceled it (it never lands). Public: tests and tools read it.
 #[table(accessor = swing, public)]
 pub struct Swing {
     #[primary_key]
@@ -2667,7 +2667,7 @@ fn close_meta_hours(ctx: &ReducerContext) {
 }
 
 /// What a hit by `actor` with `ability_id` on `target` does (true: done here). Ours when it is a kit's.
-/// JUDGED as it lands: a cancelled swing does nothing; a finisher flinches a light in its wind-up; on a
+/// JUDGED as it lands: a canceled swing does nothing; a finisher flinches a light in its wind-up; on a
 /// player, a parry already pressed takes it, or it waits for one still on its way (`held_hit`: every hit
 /// on a player waits as long, so hits keep their spacing); else it is dealt (`deal`).
 fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability_id: u32) -> bool {
@@ -2676,19 +2676,19 @@ fn hit(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, ability
     if !hurts(ctx, actor, target.entity_id) {
         return true;   // a foe's sweep catching another foe, a player's a friend: nothing
     }
-    // A swing a roll (or a flinch, or its fighter's death) cancelled never lands; nor anything a dead one swung.
+    // A swing a roll (or a flinch, or its fighter's death) canceled never lands; nor anything a dead one swung.
     let sw = ctx.db.swing().entity_id().find(actor).filter(|w| w.ability_id == ability_id);
     if is_dead(ctx, actor) {
         log::info!("regents: {actor} is dead: its {} lands nothing", def.ability_id);
         return true;
     }
     if sw.as_ref().is_some_and(|w| w.cancelled) {
-        log::info!("regents: {actor}'s {} was cancelled before it landed", def.ability_id);
+        log::info!("regents: {actor}'s {} was canceled before it landed", def.ability_id);
         return true;
     }
     let land_us = sw.as_ref().map_or(micros(ctx.timestamp), |w| micros(w.at) + w.wind_up_ms as i64 * 1000);
     // THE FINISHER FLINCHES A LIGHT (COMBAT_OVERHAUL.md §3: the old heavy's rule): it cancels a step in its
-    // wind-up. A finisher has armour: it is never flinched, nor is a skill.
+    // wind-up. A finisher has armor: it is never flinched, nor is a skill.
     if kit.is_finisher(slot) {
         if let Some(mut w) = ctx.db.swing().entity_id().find(target.entity_id) {
             let t = (micros(ctx.timestamp) - micros(w.at)) / 1000;
@@ -2916,7 +2916,7 @@ fn on_hit_traits(ctx: &ReducerContext, actor: u64, ons: &[&str], dmg: f32, dummy
 // --- foes (owner, 2026-10-19: the first enemies, a skeleton camp) ------------------------------------
 
 /// DEATH INTERRUPTS AT ONCE (Luke's feedback 4099, 2026-10-31: "players and skeletons can attack while dying"):
-/// a fighter that falls has its swing cancelled (one still winding up, or landing, never lands; the referee may
+/// a fighter that falls has its swing canceled (one still winding up, or landing, never lands; the referee may
 /// still report its sweep, which `hit` then drops) and its hits held for a parry go with it.
 fn die_mid_swing(ctx: &ReducerContext, entity_id: u64) {
     end_cast(ctx, entity_id);

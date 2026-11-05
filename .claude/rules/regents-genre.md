@@ -45,6 +45,12 @@ paths:
   restore, rewrite or commit his edits to them; ask.
 - A content change publishes (`tools\publish.cmd`): the server takes content from the bake.
 - A FOE STAGGERS BY POISE (Luke, 2026-11-02, PROGRESS step 34): only the string's last hit breaks it; a new FoeDef
-  sets `poise` (0 = every last hit staggers). Shown on the target marker, never a bar under the health.
+  sets `poise` (0 = every last hit staggers). Shown on the target marker, never a bar under the health. PLAYERS HAVE
+  NO POISE (Luke, 2026-11-04): a foe's unblocked last hit always staggers them. Armor (parked) has no weight: it never
+  costs the roll or sprint.
+- AMERICAN SPELLING (Luke, 2026-11-04): armor, defense, color, gray, center, meter, canceled, behavior, mold, in
+  everything a player reads and in every new name, rule, table and doc. Old names already published (tables, hot
+  rules, ids) are renamed only where rule 17 allows. Swept 2026-11-04 (PROGRESS 38); British on purpose: the
+  `swing` table's `cancelled` column, and the foundation's `UiKit.colour`, `InterestManager.centre`, `Cells.recentre`.
 - The TUTORIAL's lessons are content (`content/lesson/`, `LessonDef`); the server ticks them where a deed happens
   (`lesson_done`): a new deed is a new `LessonDef.Done` and `rules::Deed`, and a call where it happens.

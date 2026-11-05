@@ -37,7 +37,7 @@ enum Badge {
 ## 25 / 25). Empty: never rolled.
 @export var drop_rule: StringName = &""
 @export_group("How it shows")
-## Its badge (craft window, bag, tooltip): a shape and a colour, never a word.
+## Its badge (craft window, bag, tooltip): a shape and a color, never a word.
 @export var badge: Badge = Badge.POINT
 @export var badge_color: Color = Color(0.9, 0.75, 0.4)
 ## What its held guard does, in the player's words ("stops most of a blow in front").

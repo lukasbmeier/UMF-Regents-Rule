@@ -2,7 +2,7 @@ extends Node
 ## MAKES A STARTING ORE LAYOUT FOR EACH ROCK MODEL (owner, 2026-10-21; `RegentsOreSpots`): the rock and
 ## five nuggets snapped onto its surface, saved as `ore/<model>_ore.tscn`. Then open one in the editor and
 ## move, turn or size the nuggets (Ore1, Ore2, ...: add or delete some too) and save: every rock of that
-## model shows its ore so. The nuggets show grey here; in the game they take their ore's colour.
+## model shows its ore so. The nuggets show gray here; in the game they take their ore's color.
 ## A layout that is already there is left alone (yours); --force writes it again.
 ##
 ##   godot --headless --path . res://game/regents/skilling/mining/make_ore_layouts.tscn [-- --force]

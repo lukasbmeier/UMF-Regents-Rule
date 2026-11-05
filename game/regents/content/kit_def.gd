@@ -3,7 +3,7 @@ class_name KitDef extends ContentDef
 ## A WEAPON KIT (owner, 2026-10-19: the weapon is the kit): what a weapon of this kind fights with. A
 ## weapon names its kit (`ItemDef.weapon_kit`); wielding it gives its STRING (tap the left mouse button:
 ## each tap the next in `light`, inside `regents.combo_window_ms` of the last), whose LAST step is the
-## FINISHER (COMBAT_OVERHAUL.md §3, 2026-10-31: the heavy merged into it: armour, it flinches a light it
+## FINISHER (COMBAT_OVERHAUL.md §3, 2026-10-31: the heavy merged into it: armor, it flinches a light it
 ## hits, it staggers), and its SKILLS on Q, E, R and F, each unlocked at its mastery rank in `skill`
 ## (`skill_ranks`: 1, 3, 6, 9). The guard (the right button: a tap parries, held it blocks) and the dodge
 ## roll (Ctrl) are everyone's.
@@ -88,7 +88,7 @@ func follow_for(step: int) -> int:
 	return follow_ms[step] if step >= 0 and step < follow_ms.size() else DEFAULT_FOLLOW_MS
 
 
-## Whether `a` is this kit's FINISHER: its string's last step (armour, flinches a light, staggers), any role's.
+## Whether `a` is this kit's FINISHER: its string's last step (armor, flinches a light, staggers), any role's.
 func is_finisher(a: AbilityDef) -> bool:
 	if a == null or light.is_empty():
 		return false

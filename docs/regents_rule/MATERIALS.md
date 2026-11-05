@@ -15,8 +15,8 @@ cell a real item, so the bag, loot lines, stacks, the tool picker and Power work
 Raw materials never have qualities; quality is made at the anvil and the workbench.
 
 ## 2. Data: a generated table (decision 1)
-- **`MaterialDef`**: key, name, tier, the families it serves (metal, wood, fibre, hide...), its look
-  (colour, metallic, roughness: one model per pattern, recoloured), and the trait it carries when it is
+- **`MaterialDef`**: key, name, tier, the families it serves (metal, wood, fiber, hide...), its look
+  (color, metallic, roughness: one model per pattern, recolored), and the trait it carries when it is
   a secondary part, per rank.
 - **`PatternDef`**: what is made (axe head, sword blade, handle, binding; the assembled axe), its kit or
   tool tag, speed and reach (the TYPE's, never the material's: `LOOT_AND_STYLES.md` §7.1), its smithing
@@ -25,7 +25,7 @@ Raw materials never have qualities; quality is made at the anvil and the workben
   recipes with ids of their own, written as ordinary content files and marked (`ItemDef.material` /
   `pattern`, `RecipeDef.from_table`), so the bake, the server and the client need nothing new. It sets
   only the table's fields (names, tier, Power, tool, part, trait; a recipe's inputs, station, output) and
-  keeps the designer's (colour, looks, words; a recipe's XP, rank, time, quantities, round). Any one cell
+  keeps the designer's (color, looks, words; a recipe's XP, rank, time, quantities, round). Any one cell
   may be written by hand (`by_hand`). The ids already in players' bags (iron axe head 40014, iron axe
   40015, oak handle 40016...) are kept: today's files ARE the cells. The bake refuses a table out of date.
 - **A Materials bench** (a genre workbench): the table as a grid, each cell's Power, tier overlaps
@@ -41,7 +41,7 @@ Raw materials never have qualities; quality is made at the anvil and the workben
 - **Bows and staves** (decision 5): WOOD core (a yew bow is the tier-3 bow); metal (copper imbued into
   the tips, a ferrule) and the binding are the secondary parts. Same machinery: the core is whichever
   slot the pattern marks as the core.
-- Bindings: fibre from herbalism, hide and sinew from creature drops. Copper rivets are the plain binding
+- Bindings: fiber from herbalism, hide and sinew from creature drops. Copper rivets are the plain binding
   (no trait). No Hunting skill and no separate grip slot (the spec's fourth part is cut).
 - An item's `instance_data` grows add-only keys: its parts (`"p"`), the traits chosen (`"t"` as now),
   their ranks, and its gear XP. Old rows (`{"q","h","t"}`) read as before.
@@ -96,7 +96,7 @@ Tiers 4-6 and their names (a new setting: not Runite or Mithril) come later.
    the pickaxe patterns, coal and its rock, steel as tier 3 (its bar a cell by hand).
 3. **Built 2026-10-23 (PROGRESS step 20)**: assembly with slots: the station rework (slots shown, the grade's
    trait count, the player's pick; several part slots a recipe; `craft_choosing`).
-4. Bindings from fibre and drops; bows and staves with a wood core.
+4. Bindings from fiber and drops; bows and staves with a wood core.
 5. Gear XP on the item; trait ranks and the upgrade recipe (bulk + catalyst + XP).
 6. Catalysts from the rank gap (the gem and the nest first).
 7. The Materials bench.
@@ -104,7 +104,7 @@ Tiers 4-6 and their names (a new setting: not Runite or Mithril) come later.
 ## 11. Luke's answers (2026-10-23) and what is still his
 - **The bindings' traits** (revised after his playtest): METAL RIVETS NOW. Each part offers a tool trait and a
   weapon trait: oak Steady / Heavy, yew Springy / Balanced, copper rivets Gentle / Thirsting, iron Lucky /
-  Brutal, steel Prospector's / (Keen, with crits). Fibre wraps and oils, and their traits: with herbalism.
+  Brutal, steel Prospector's / (Keen, with crits). Fiber wraps and oils, and their traits: with herbalism.
 - **Changing an item after assembly** (revised after his playtest, the same day): **swap a part at the
   workbench**, at a cost (the new part, the old lost, bars of the head's metal); traits re-picked within the
   grade's room. The head and quality never change.
@@ -114,4 +114,4 @@ Tiers 4-6 and their names (a new setting: not Runite or Mithril) come later.
   hand it to a friend, or sell it for more for the hours put in.
 - **Gear XP per rank, and what earns it**: hot rules, starting from base numbers (to be set when step 5 is
   built), tuned live.
-- **Names for tiers 4-6, the fibres and the hides**: with herbalism.
+- **Names for tiers 4-6, the fibers and the hides**: with herbalism.

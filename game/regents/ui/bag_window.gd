@@ -1,6 +1,6 @@
 class_name RegentsBagWindow extends UiWindow
 ## THE BAG (I, owner 2026-10-20: dedicated UI, not text on screen): every stack as a slot, a made item's
-## edge in its grade's colour; click one and below it says what it is (its graded name, its quality and
+## edge in its grade's color; click one and below it says what it is (its graded name, its quality and
 ## handle, its POWER against the weapon you wield, a tool's work and tier, a weapon's kit and moves, a handle's
 ## trait), with WIELD / PUT AWAY on a weapon. A weapon of a kit with roles wears its handle's BADGE in a corner,
 ## and says what its handle does and names its last hit (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: show, don't

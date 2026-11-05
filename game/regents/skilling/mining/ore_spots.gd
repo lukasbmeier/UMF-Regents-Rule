@@ -5,14 +5,14 @@ class_name RegentsOreSpots extends RefCounted
 ##   its LAYOUT   `ore/<rock model's file name>_ore.tscn` beside this script: the rock model and its
 ##                nuggets, real nugget models, placed by hand. Open it, move, turn or size a nugget (any
 ##                child whose name starts with "Ore"), save: every rock of that model shows them so, in
-##                any colour of ore. A new rock model gets one from `make_ore_layouts.gd`.
+##                any color of ore. A new rock model gets one from `make_ore_layouts.gd`.
 ##   ON SURFACE   none made yet: nuggets around its upper half, each dropped onto the rock's own surface
 ##                (a ray against its triangles) and turned to lie flat on it, so none floats.
 ##
 ## Spots are in the MODEL's own space (unscaled): the nuggets are its children.
 
 const LAYOUT_DIR: String = "res://game/regents/skilling/mining/ore/"
-## How far a nugget sinks into the surface it lies on (metres, model space): it sits in, not on.
+## How far a nugget sinks into the surface it lies on (meters, model space): it sits in, not on.
 const SINK_M: float = 0.03
 ## A snapped nugget's size (the pebble model's, times this).
 const NUGGET_SCALE: float = 0.9

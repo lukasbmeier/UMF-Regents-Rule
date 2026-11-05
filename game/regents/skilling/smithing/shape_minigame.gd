@@ -1,7 +1,7 @@
 class_name ShapeMinigame extends SkillMinigame
 ## SMITHING'S SHAPE TO THE OUTLINE, PLAYED (`ShapeModel` says what happens; this draws it and takes the
 ## strikes). The hot bar is a row of columns on the anvil, the part's outline over it in white; click a
-## column to beat it down (some of it spreads into its neighbours). The bar cools as you work: right click
+## column to beat it down (some of it spreads into its neighbors). The bar cools as you work: right click
 ## or R puts it back in the fire. Match the outline: the closer, the better the part.
 
 const HOT: Color = Color(1.0, 0.55, 0.18)

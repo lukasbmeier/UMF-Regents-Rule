@@ -376,7 +376,7 @@ fn a_swing_holds_its_fighter_for_its_clip_and_the_combo_chains_from_its_hit() {
     assert!(!rules::swing_allows(true, wind + 60, wind, follow, lock, slack, false),
         "the next step 60 ms after the hit (the old chain): refused, the arc is not through (Luke's #8)");
     assert!(rules::swing_allows(true, wind + follow - slack, wind, follow, lock, slack, false), "after the follow-through: the string goes on");
-    assert!(rules::swing_allows(false, 10, wind, follow, lock, slack, true), "a swing a roll cancelled holds nothing");
+    assert!(rules::swing_allows(false, 10, wind, follow, lock, slack, true), "a swing a roll canceled holds nothing");
     assert!(!rules::swing_allows(true, 50, 500, 200, 400, 0, false) && rules::swing_allows(true, 400, 500, 200, 400, 0, false),
         "a follow-through is never later than the lock");
 }
@@ -877,7 +877,7 @@ fn each_role_ends_the_sword_with_its_own_last_hit() {
     let rally = sword.role_finisher(40023).unwrap();
     assert_eq!((rally.heal, rally.heal_radius_m), (8.0, 6.0), "the rallying cut heals 8 within 6 m");
     assert_eq!(sword.role_finisher(40003).map(|r| (r.stagger_pct, r.heal)), Some((100, 0.0)), "the thrust staggers as any last hit, heals nothing");
-    // Every last hit is the string's last step: its armour, its flinch, its stagger (`is_finisher`).
+    // Every last hit is the string's last step: its armor, its flinch, its stagger (`is_finisher`).
     for id in [40003, 40022, 40023] {
         assert_eq!(rules::kit_of_ability(id).map(|(k, s)| (k.key, s)), Some(("sword", rules::KitSlot::Light(2))), "{id} is the sword's last step");
         assert!(sword.ends_string(id) && sword.lock_ms(id) > 0, "{id} ends the string, with a lock");
@@ -975,9 +975,9 @@ fn the_tutorial_walks_a_sword_from_wood_to_its_grip() {
 #[test]
 fn a_roll_clears_a_swing_judged_a_miss() {
     // A swing judged a miss: rolled through by a player still rolling (a tenth over, for the status's tick), within its
-    // reach and a metre.
+    // reach and a meter.
     assert!(rules::rolled_clear(300, 2.0, 2.0));
-    assert!(rules::rolled_clear(-99, 3.0, 2.0), "just after the roll's end, a metre over its reach");
+    assert!(rules::rolled_clear(-99, 3.0, 2.0), "just after the roll's end, a meter over its reach");
     // NEGATIVE: the roll long over (they stepped clear, not rolled), or out of reach (it was never at them).
     assert!(!rules::rolled_clear(-100, 1.0, 2.0));
     assert!(!rules::rolled_clear(300, 3.1, 2.0));

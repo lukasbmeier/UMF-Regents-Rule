@@ -3,9 +3,9 @@ class_name NodeComponent extends SpaceTimeComponent
 ## its `gather_node` row (a `NodeDef`: its look, picked by the entity's id so every client draws the same);
 ## whether it can be worked, from its status: Depleted (100) until the server lifts it. A tree tips over
 ## and leaves a stump; a rock crumbles to rubble; it grows (or rises) back when it comes back. Ore shows on
-## a rock as coloured nuggets (where its model's ore layout puts them, else snapped onto its surface:
+## a rock as colored nuggets (where its model's ore layout puts them, else snapped onto its surface:
 ## `RegentsOreSpots`). A tree's trunk, or a rock's whole shape (`RegentsSolid`: owner, 2026-10-21, a rock
-## three metres wide stopped you at three quarters of one), blocks the way while it stands; what is left
+## three meters wide stopped you at three quarters of one), blocks the way while it stands; what is left
 ## does not.
 
 const TABLE_NODE: StringName = &"gather_node"
@@ -116,7 +116,7 @@ func _set_def(d: NodeDef) -> void:
 	_show(depleted, false)
 
 
-## Ore on the rock: nuggets of its colour where its model's layout puts them, else snapped onto its surface.
+## Ore on the rock: nuggets of its color where its model's layout puts them, else snapped onto its surface.
 func _add_ore(color: Color, scene: PackedScene) -> void:
 	var nugget: PackedScene = load(NUGGET) as PackedScene
 	if nugget == null:

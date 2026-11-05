@@ -12,7 +12,7 @@ class_name MaterialTable extends RefCounted
 ##   an item     its name, stack, tool and tier, weapon and Power, part and trait (`ITEM_FIELDS`)
 ##   a recipe    its name, station, skill, inputs, output, how many it makes, quality, part slots
 ##               (`RECIPE_FIELDS`)
-## Everything else is the designer's and stays: an item's id, colour, looks and words; a recipe's id, XP,
+## Everything else is the designer's and stays: an item's id, color, looks and words; a recipe's id, XP,
 ## rank, AFK time, how many of each input, its round. A new cell starts those from its pattern and
 ## material ("New cells start with"). A cell written by hand (`ItemDef.by_hand`) is left alone.
 ## A file is never deleted: a cell the table no longer makes is a problem to settle by hand (its id may

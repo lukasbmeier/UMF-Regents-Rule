@@ -7,7 +7,7 @@ amendments below override the body where they differ**; the body follows, as the
 
 1. **Grades are bands of quality, not three steps.** Quality stays a 0-1000 number on the item (the
    minigame round sets it, and it moves damage and tool speed a little per point). Common / Fine /
-   Masterwork are bands of it (cut points hot), for the colour, the name and the trait count. Power is
+   Masterwork are bands of it (cut points hot), for the color, the name and the trait count. Power is
    derived from tier and quality.
 2. **Durability and repair: kept as an option**, not "never". `ItemDef.durability` is optional and a
    rule switches wear on; built after the loot work. (This doc's §9 said no durability; RULE_DESIGN
@@ -16,7 +16,7 @@ amendments below override the body where they differ**; the body follows, as the
    for every kit): melee is paced by its combo and the roll, the bow by its arrows.
 4. **Every trait trades.** Today's handle traits (oak: quality, yew: speed) are pure gains and get a
    cost side.
-5. **Melee always lands what it reaches**: no hit roll, only armour reduces it (and may block a weak
+5. **Melee always lands what it reaches**: no hit roll, only armor reduces it (and may block a weak
    hit). **Ranged rolls to hit**: the bow and the Staff (Bolt) at a target, the chance falling with
    distance and a moving target, and later an accuracy-vs-evasion pair. (Answers §11 question 2.)
 6. **No global cooldown**: each ability its own cooldown, MOBA-style. The cast queue is only input
@@ -33,7 +33,7 @@ amendments below override the body where they differ**; the body follows, as the
 **Built** (2026-10-20, PROGRESS steps 9-13): grade bands and Power, loot tables with personal rolls and
 pity, ground items, the Staff with mana, icons from the models. **Then** (2026-10-21, PROGRESS step 15): trait atoms, `TraitDef`
 and the v1 pools, handles as traits (oak Steady, yew Springy, toned to the early game; the materials
-deep-dive later); Keen, Padded, Warded and Reaching wait for crits, armour and per-swing reach. The server-side cast queue is not built
+deep-dive later); Keen, Padded, Warded and Reaching wait for crits, armor and per-swing reach. The server-side cast queue is not built
 (the client holds a press through a cast and sends it when it ends).
 
 **Order** (§10 with two additions): grade bands and Power; loot tables with personal rolls (and the
@@ -53,7 +53,7 @@ This closes three items the design doc had left open: **#2 resource** (mana, on 
 | Word | Meaning | Lives on |
 |---|---|---|
 | **Tier** | the material / design level: iron, steel, mithril. Sets the power band. | `ItemDef` (fixed) |
-| **Grade** | how well made this one is: **Common, Fine, Masterwork** (three in v1; collapse any extra existing quality steps into these). Moves within the band. **This is the colour.** | item instance |
+| **Grade** | how well made this one is: **Common, Fine, Masterwork** (three in v1; collapse any extra existing quality steps into these). Moves within the band. **This is the color.** | item instance |
 | **Frequency** | how often a thing drops: a chance on a loot-table line. Never stored on the item. | loot table line |
 | **Power** | one number per item combining tier and grade. The only thing a player needs to compare. | derived, shown on every card |
 | **Trait** | a qualitative modifier that changes how an item plays and **never changes Power**. | item instance (0 / 1 / 2 by grade) |
@@ -70,7 +70,7 @@ Tier **strictly dominates**: every steel item beats every iron item; grade decid
 | Steel | 16 | 19 | 22 |
 | Mithril | 25 | 29 | 33 |
 
-Names read "Fine Steel Axe"; the border is the grade colour; the number is Power; traits are italic lines. Nothing is ever called "4.1".
+Names read "Fine Steel Axe"; the border is the grade color; the number is Power; traits are italic lines. Nothing is ever called "4.1".
 
 ---
 
@@ -80,13 +80,13 @@ Names read "Fine Steel Axe"; the border is the grade colour; the number is Power
 | Bag, corpse window, or ground? | **Ground**, as a template system: `ground_item{stack, pos, chunk, owner, owner_until, despawn_at}`. Loot lines may say `to_bag: true` (currency, writ items), which keeps today's into-the-bag path. **No corpse loot window.** | Ground items serve every game (foe drops, node drops, player drops, Chain Reaction's pads). A corpse window is UI plus corpse persistence and nothing reusable. | **M** |
 | Can players drop? Can others pick up? | **Yes, both.** `drop_item` makes a ground item owned by the dropper with the same timing as a kill drop. | A trade path without building a trade window; friends-scale risk accepted. | S on top |
 | Who may loot, how long, groups? | **Personal rolls.** Every contributor (≥ 5% of damage, hot) gets their own run of the table. Each result is **visible only to its owner for 60 s** (RLS), then **public for 60 s**, then despawns (120 s total, hot). No need/greed, no round robin, no master looter. | No ninja looting, no loot UI, works with strangers at a lair, and the pity counter is naturally per player. | S |
-| 3D models or a generic bag? Despawn? | **Generic sack with a grade-coloured glow**; `ItemDef.world_model` is an optional override later. Boss drops land in a chest `node` with a 10 min life. | One model and one shader; rows stay cheap. | S |
+| 3D models or a generic bag? Despawn? | **Generic sack with a grade-colored glow**; `ItemDef.world_model` is an optional override later. Boss drops land in a chest `node` with a 10 min life. | One model and one shader; rows stay cheap. | S |
 | Icons | **Rendered from the 3D model at workbench intake** (offscreen viewport, fixed camera and light, cached PNG). The UI overlays the grade border and a small trait badge; **Power is on the card** with a green/red delta against the equipped item. | Zero per-item art; consistent across packs and games; content-as-data needs it. | **M once** |
 
 ## 2. Rarity vs the quality we already have
 | Question | Decision | Because | Cost |
 |---|---|---|---|
-| Same thing or separate axis? | **One visible axis: grade.** "Rarity" as a colour *is* the grade. "Rarity" as how-often is a line frequency, not an item property. Tier is the third word and it dominates (§0). Drops roll a grade from a **distribution on the loot line**, using the engine crafting already uses. | The quality system exists and already makes one axe better than another. A second axis doubles balancing and tooltips for no new play; Albion-style fog comes from overlapping axes, so there is no overlap. | S |
+| Same thing or separate axis? | **One visible axis: grade.** "Rarity" as a color *is* the grade. "Rarity" as how-often is a line frequency, not an item property. Tier is the third word and it dominates (§0). Drops roll a grade from a **distribution on the loot line**, using the engine crafting already uses. | The quality system exists and already makes one axe better than another. A second axis doubles balancing and tooltips for no new play; Albion-style fog comes from overlapping axes, so there is no overlap. | S |
 | Random affixes or fixed items? | **Fixed items with pooled traits.** No random affixes, now or planned. | Affixes (Diablo: 1–6 random modifiers with random ranges from a pool of hundreds) need a stat system where anything can modify anything, generated tooltips and endless balancing. Traits are hand-authored, bounded, and are what handles already are. | avoids **L** |
 | Can crafted match or beat dropped? | **Yes.** All standard gear is craftable to Masterwork (skill rank, minigame round, tool grade and input grades shift the grade roll). Drops reach the same grades by luck. The only exceptions are **uniques** (`unique: true`, boss-only, not craftable; grade rolls from the boss line's distribution) and **recipes that drop**. | OSRS-shaped: most gear is made, the few best things are found, so gathering and smithing stay relevant forever. Rare components raise the *tier* of what you can make, never the grade; the grade is the smith's. | S |
 | Traits (how many, where from) | Count by grade: **Common 0, Fine 1, Masterwork 2** (a hot dial; 1 / 1 / 2 is the alternative). **Crafted items choose traits through components** (handle carries the first, fitting the second — today's handles system); **dropped items roll** from the `ItemDef`'s pool. Rule for every `TraitDef`: **it trades or it is situational, never a pure gain.** | A pure-gain trait becomes mandatory within a week. Component-chosen traits make a smith someone you ask for a *specific* axe. | S–M (modifier atoms, §6) |
@@ -114,7 +114,7 @@ Four players kill the Warden: the server runs this **four times**. Anna: bones h
 |---|---|---|---|
 | Classes or weapon? | **The weapon decides** (standing). Third style for this slice: **Staff** (a caster). Spear, mace, dagger, greataxe later as content. | Three kits to balance, not nine classes; already the template's position. | — |
 | Mage resource | A **generic `resource` system** on the template (`ResourceDef{name, max, regen_in_combat, regen_out}`), **attached only to the Staff as mana** for now (`kit.resource` is optional). Melee and bow stay cooldown-only. **Reagents** come later as an optional `reagent_cost` on any ability (consumes a bag item). | One system; the two existing kits don't need rebalancing today; reagents are a cheap later hook that ties gathering to combat and is the natural cost for summons and utility spells. | S now, S later |
-| Casting while moving | **Per ability**: instants and casts under 0.8 s may move; longer casts root and are cancelled by movement (`cast_while_moving` flag). | Keeps the chain fluid, gives big spells a tell. | — |
+| Casting while moving | **Per ability**: instants and casts under 0.8 s may move; longer casts root and are canceled by movement (`cast_while_moving` flag). | Keeps the chain fluid, gives big spells a tell. | — |
 | Projectiles, instants, areas | **All three, on what exists**: **Bolt** = targeted basic with the bow's server-rolled hit chance; **Fireball** = a body (as arrows are) with a splash applied on its hit report; **Frost Ring** = a ground circle resolved **in the module** by a scheduled reducer against position rows at fire time (1 s delay); **Blink** = module-validated teleport (walkable mask, max 8 m). | No new authority machinery for the slice; referee rewind for aimed abilities is a later refinement, not a prerequisite. | **M** (the Staff kit as a whole) |
 
 ## 5. Spells vs abilities
@@ -140,8 +140,8 @@ Four players kill the Warden: the server runs this **four times**. Anna: bones h
 | Thirsting | weapons | 5% of basic damage as HP | healing received −15% |
 | Swift Draw | bow | draw 20% faster | projectile 15% slower |
 | Hunter's | bow | +15% vs beasts | −15% vs humanoids |
-| Padded | armour | impulses move you 25% less | sprint 5% slower |
-| Warded | armour | Burning / Slowed on you 30% shorter | Stunned 15% longer |
+| Padded | armor | impulses move you 25% less | sprint 5% slower |
+| Warded | armor | Burning / Slowed on you 30% shorter | Stunned 15% longer |
 | Gentle | tools | depletion chance halved | rounds 15% longer |
 | Lucky | tools | 10% chance of an extra yield roll | depletion ×1.3 |
 | Prospector's | tools | 5% rare component per success | base yield −1 |
@@ -150,8 +150,8 @@ Four players kill the Warden: the server runs this **four times**. Anna: bones h
 ## 7. Weapon viability (standing principles, so the agent builds the atoms with them in mind)
 1. **Equal DPS at equal Power is the baseline, not the goal.** At Power 19: sword 19 / 0.8 s, greataxe 38 / 1.6 s, dagger 9.5 / 0.4 s. Tier scales Power only; speed, reach, stagger and cleave belong to the weapon *type* and never change with tier.
 2. **Abilities scale from per-hit damage, not DPS**, so slow weapons are the burst kits by construction.
-3. **Foes ask different questions**: flat armour per hit (favours heavy hits), percent armour (favours status stacks), interruptible casters (favours stagger), swarms (cleave), kiting (reach, projectiles), low-HP fodder (fast, less overkill). Encounter content must carry all of these or we have rebuilt the scimitar.
-4. **Pareto check in CI** (on the existing balance sim, **M**): every weapon type at equal Power against a fixed dummy set (bare, flat armour 5, percent armour 30%, three-target swarm, interruptible caster, 20-HP fodder), traits off. Fail the build if any weapon is top-two in every column or top-two in none; print the table.
+3. **Foes ask different questions**: flat armor per hit (favors heavy hits), percent armor (favors status stacks), interruptible casters (favors stagger), swarms (cleave), kiting (reach, projectiles), low-HP fodder (fast, less overkill). Encounter content must carry all of these or we have rebuilt the scimitar.
+4. **Pareto check in CI** (on the existing balance sim, **M**): every weapon type at equal Power against a fixed dummy set (bare, flat armor 5, percent armor 30%, three-target swarm, interruptible caster, 20-HP fodder), traits off. Fail the build if any weapon is top-two in every column or top-two in none; print the table.
 5. **Live meta telemetry** (**S**, owner priority): a scheduled reducer rolls `hit` rows (attacker, ability, kind, at) joined to the activity (overworld / lair / dungeon / duel) into `meta_share{hour, activity, weapon_type, share}` hourly; queryable live, dashboarded, with a hot alarm threshold (45%). Same rollup for trait share, kit share and time-to-kill by foe. All of it is already in the database; this is one reducer and one table.
 6. **Make slow feel good**: hitstop, stagger animation and sound on heavies; fast weapons win on feel alone otherwise.
 
@@ -173,8 +173,8 @@ Four players kill the Warden: the server runs this **four times**. Anna: bones h
 
 ## 10. Order
 **This slice**
-1. Vocabulary in data and UI: three grades, tier dominates, Power on every card with the compare delta, grade colours (S).
-2. Loot tables: `each` / `one-of`, bake normalisation + lint, pity, personal rolls per contributor; the Warden fixture above as the test (S).
+1. Vocabulary in data and UI: three grades, tier dominates, Power on every card with the compare delta, grade colors (S).
+2. Loot tables: `each` / `one-of`, bake normalization + lint, pity, personal rolls per contributor; the Warden fixture above as the test (S).
 3. Ground items: table, drop and pickup, sack + glow, visibility windows, despawn sweep (**M**). The foundation piece of the slice.
 4. The Staff kit with the generic resource and four abilities on existing machinery (**M**).
 5. In parallel: icons rendered at intake (**M once**).

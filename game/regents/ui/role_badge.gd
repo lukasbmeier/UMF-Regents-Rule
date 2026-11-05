@@ -1,5 +1,5 @@
 class_name RegentsRoleBadge extends RefCounted
-## A ROLE'S BADGE (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: SHOW, DON'T NAME): a small shape in the role's colour
+## A ROLE'S BADGE (COMBAT_OVERHAUL.md §5; Luke 2026-11-01: SHOW, DON'T NAME): a small shape in the role's color
 ## (`RoleDef.badge`, `badge_color`), never a word. Drawn here, once a role and size, so the craft window's handle
 ## list, the bag and its tooltip need no art yet: a point, a shield, a cross.
 

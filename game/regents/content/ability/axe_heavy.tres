@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40008
 display_name = "Overhead"
-designer_notes = "The axe string's FINISHER (COMBAT_OVERHAUL.md §3): the heaviest single hit; armour, flinches a light, staggers."
+designer_notes = "The axe string's FINISHER (COMBAT_OVERHAUL.md §3): the heaviest single hit; armor, flinches a light, staggers."

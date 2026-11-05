@@ -7,7 +7,7 @@ class_name KitRole extends Resource
 
 ## The role (`RoleDef`).
 @export var role: RoleDef
-## The string's last hit with this role: armour, it flinches a light in its wind-up, it staggers.
+## The string's last hit with this role: armor, it flinches a light in its wind-up, it staggers.
 @export var finisher: AbilityDef
 ## Its stagger, in percent of `regents.stagger_ms` (the sword's pommel bash: 150, so 1.2 s), before the Heavy
 ## trait's.

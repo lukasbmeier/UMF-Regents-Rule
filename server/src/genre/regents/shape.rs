@@ -1,5 +1,5 @@
 //! SMITHING'S SHAPE TO THE OUTLINE, THE SERVER'S TWIN of `game/regents/skilling/smithing/shape_model.gd`
-//! (`ShapeModel`): a strike beats a column of the hot bar down and pushes some into its neighbours; the
+//! (`ShapeModel`): a strike beats a column of the hot bar down and pushes some into its neighbors; the
 //! closer the bar ends to the part's outline, the better. Inputs are (time, column), -1 a reheat. Held to
 //! `shared/golden/regents/shape.json` (`game/regents/tests/make_skill_goldens.py`).
 

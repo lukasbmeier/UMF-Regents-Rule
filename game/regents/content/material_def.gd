@@ -37,7 +37,7 @@ enum Family { METAL, WOOD }
 @export_range(10, 1000, 1, "suffix:%") var work_scale_pct: int = 100
 ## A new cell's recipe needs this rank at least (the rank its node needs).
 @export_range(1, 99) var rank: int = 1
-## A new cell's colour in the bag, until it has an icon.
+## A new cell's color in the bag, until it has an icon.
 @export var color: Color = Color(0.7, 0.7, 0.7)
 @export_group("")
 ## MAKE THE TABLE: writes every cell of every material and pattern that is missing or out of date (what

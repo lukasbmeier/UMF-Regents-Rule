@@ -54,13 +54,13 @@ class_name ItemDef extends ContentDef
 @export var world_model: PackedScene
 ## A hand-drawn icon, used before the one drawn from its model (template DECISIONS #271).
 @export var icon_picture: Texture2D
-## Its colour in the bag until it has an icon.
+## Its color in the bag until it has an icon.
 @export var color: Color = Color(0.75, 0.6, 0.4)
 @export_multiline var description: String = ""
 @export_group("In the material table")
 ## A CELL of the material table (`docs/regents_rule/MATERIALS.md`): made of this material in this
 ## pattern. `MaterialTable` keeps its name, stack, tool, weapon, part and trait as the two say (Make the
-## table); its colour, looks and words are yours. Both empty: an item written by hand (ore, rivets).
+## table); its color, looks and words are yours. Both empty: an item written by hand (ore, rivets).
 @export var material: MaterialDef
 @export var pattern: PatternDef
 ## The cell is yours: the table leaves it and its recipe alone (an alloy made from two ores, say).

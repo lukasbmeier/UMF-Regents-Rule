@@ -424,7 +424,7 @@ database; `build/load/strip_sweep_166/`):
 | 6 | 21.2 ms | 25.1 | 18.5-21.2 | 0 | 5.2 | 38 % | holds, room (21.2 of 50) |
 
 So **three strip referees now run 300 players and 665 skeletons** (43.7 of the 50 ms limit: no room), and the
-town's strip runs at its neighbours' frame time. `expanse_watch.sh` still cuts four (room for the next camp);
+town's strip runs at its neighbors' frame time. `expanse_watch.sh` still cuts four (room for the next camp);
 three or four is Luke's call.
 
 **What is left** (in order): 1. a region referee loads the whole level (~375 MB here) where its own part would do;

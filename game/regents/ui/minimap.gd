@@ -4,7 +4,7 @@ class_name RegentsMinimap extends Control
 ## you is up; north is the N on its rim. The ground is the level itself, drawn once from straight above
 ## when it loads (a hidden camera over the level's bake: its points and spawn, with a margin); on it, a dot
 ## for everyone and everything nearby: you (the arrow, your facing), other players (white), foes (yellow),
-## trees (green), rocks (grey), stations (blue), the training dummy (orange). The mouse wheel over it zooms.
+## trees (green), rocks (gray), stations (blue), the training dummy (orange). The mouse wheel over it zooms.
 ## Presentation only.
 ##
 ## A level bigger than one picture (the continent, streamed: only the cells round you are there to picture)
@@ -16,10 +16,10 @@ class_name RegentsMinimap extends Control
 
 const SIZE_PX: float = 196.0
 const MARGIN_PX: float = 16.0
-## How far its rim is, in metres (the wheel moves it within these).
+## How far its rim is, in meters (the wheel moves it within these).
 const RADIUS_MIN_M: float = 15.0
 const RADIUS_MAX_M: float = 90.0
-## The picture of the level: its side in pixels, and the margin round the bake's points (metres).
+## The picture of the level: its side in pixels, and the margin round the bake's points (meters).
 const CAPTURE_PX: int = 1024
 const CAPTURE_MARGIN_M: float = 30.0
 const CAPTURE_MIN_M: float = 80.0
@@ -46,12 +46,12 @@ const KIND_NODE: int = 100
 const KIND_STATION: int = 101
 const KIND_DUMMY: int = 102
 
-## How far the rim is now (metres).
+## How far the rim is now (meters).
 var radius_m: float = 40.0
-## The level's picture: where its top-left corner is (x, z) and how wide it is (metres); none until taken.
+## The level's picture: where its top-left corner is (x, z) and how wide it is (meters); none until taken.
 var area_origin: Vector2 = Vector2.ZERO
 var area_m: float = 0.0
-## The dots drawn last frame: [Vector2 on the map (from its centre, pixels), Color], for tests.
+## The dots drawn last frame: [Vector2 on the map (from its center, pixels), Color], for tests.
 var dots: Array = []
 ## Which way is up on the map: the camera's facing, as an angle from north (radians, clockwise).
 var angle: float = 0.0
@@ -131,7 +131,7 @@ void fragment() {
 	return sh
 
 
-## WHERE SOMETHING IS ON THE MAP: `rel` (metres east and south of you) as pixels from the map's centre, the
+## WHERE SOMETHING IS ON THE MAP: `rel` (meters east and south of you) as pixels from the map's center, the
 ## map turned so that `facing` (radians clockwise from north) is up, at `px_per_m`.
 static func to_map(rel: Vector2, facing: float, px_per_m: float) -> Vector2:
 	var c: float = cos(-facing)
@@ -164,8 +164,8 @@ static func area_of(bake: LevelBake) -> Rect2:
 	return Rect2(mid - Vector2(side, side) * 0.5, Vector2(side, side))
 
 
-## The dot colour for entity kind `kind` (a node by what works it), or a clear colour for none.
-static func colour_of(kind: int, node: NodeComponent = null) -> Color:
+## The dot color for entity kind `kind` (a node by what works it), or a clear color for none.
+static func color_of(kind: int, node: NodeComponent = null) -> Color:
 	match kind:
 		KIND_PLAYER:
 			return PLAYER
@@ -232,12 +232,12 @@ func _collect(me: Node3D, here: Vector2) -> void:
 		if e == null or e == me or not e.is_visible_in_tree() or e.definition == null:
 			continue
 		var node: NodeComponent = e.find_component(NodeComponent) as NodeComponent if e.definition.kind == KIND_NODE else null
-		var colour: Color = colour_of(e.definition.kind, node)
-		if colour.a == 0.0 or (node != null and node.depleted):
+		var color: Color = color_of(e.definition.kind, node)
+		if color.a == 0.0 or (node != null and node.depleted):
 			continue
 		var at: Vector2 = to_map(Vector2(e.global_position.x, e.global_position.z) - here, angle, px_per_m)
 		if at.length() <= inside:
-			dots.append([at, colour])
+			dots.append([at, color])
 
 
 func _draw_dots() -> void:

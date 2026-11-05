@@ -2,7 +2,7 @@
 class_name ShapeParams extends Resource
 ## ONE PART'S SMITHING ROUND (shape to the outline: `ShapeModel`). The hot bar is a row of columns;
 ## strike a column and it is beaten down `hammer_drop`, pushing `spread_pct` of that into each
-## neighbour. Match the part's `outline` (one height per column). The bar is workable for `heat_ms`;
+## neighbor. Match the part's `outline` (one height per column). The bar is workable for `heat_ms`;
 ## reheating (right click, R) costs `reheat_ms`. Whole numbers only: the server replays it in Rust.
 
 @export var display_name: String = "Part"
@@ -15,7 +15,7 @@ class_name ShapeParams extends Resource
 ## The bar's height to start with (every column), and up to this much more at random per column.
 @export_range(1, 100) var start_height: int = 20
 @export_range(0, 20) var start_jitter: int = 2
-## How much a strike beats a column down, and the share of that pushed into each neighbour.
+## How much a strike beats a column down, and the share of that pushed into each neighbor.
 @export_range(1, 50) var hammer_drop: int = 4
 @export_range(0, 50, 1, "suffix:%") var spread_pct: int = 20
 ## The part's silhouette: one height per column (the bar has as many columns).

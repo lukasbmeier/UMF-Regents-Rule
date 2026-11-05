@@ -25,7 +25,7 @@ LIGHT = (40006, 40008)   # the axe kit's string: Chop, then the Overhead, its fi
 COMMIT_S = {40006: 0.32 + 0.12, 40008: 0.55 + 0.12}
 NODE_TOOL = {40001: AXE, 40004: PICKAXE}   # the Tree and the Copper rock: rank 1, a tier-1 tool
 VIEW_DELAY_MS = 100  # how far behind a client at this machine's latency sees others (a real client's is close)
-REACH_M = 1.5        # where a gatherer stops from a node's centre (regents.work_reach_m is 3)
+REACH_M = 1.5        # where a gatherer stops from a node's center (regents.work_reach_m is 3)
 FIND_RADIUS_M = 120.0
 
 # Refusals that are play, not faults ("reducer: its text"): a node worked out, by this bot or another, just as
@@ -195,7 +195,7 @@ def _gather(bot, s, now):
             bot.wander()            # none near (a bot living in the mountains): walk on and look again
             return
         s["node"] = best
-        # Stand REACH_M short of its centre, on the side the bot comes from.
+        # Stand REACH_M short of its center, on the side the bot comes from.
         dx, dz = bot.pos["x"] - best[2], bot.pos["z"] - best[3]
         d = math.hypot(dx, dz) or 1.0
         s["stand"] = (best[2] + dx / d * REACH_M, best[3] + dz / d * REACH_M)

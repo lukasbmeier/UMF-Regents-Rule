@@ -551,7 +551,7 @@ pub fn poise_now(left: f32, most: f32, since_ms: i64, regen_ms: f32) -> f32 {
 
 /// Whether a player ROLLED THROUGH a foe's swing the referee judged a MISS: they were rolling as it was judged (`left_ms`
 /// of their roll left; a tenth of a second over, for the status's own tick) and in its reach (`dist_m` from the
-/// foe, its reach `reach_m`, with a metre's slack: the roll moves them). Judged by the miss, not by the swing's
+/// foe, its reach `reach_m`, with a meter's slack: the roll moves them). Judged by the miss, not by the swing's
 /// nominal landing: at 150 ms a roll begun as the blow is SEEN starts after that moment, and the referee, which
 /// judges the blow later, still finds nobody there (the 2026-11-02 playtest).
 pub fn rolled_clear(left_ms: i64, dist_m: f32, reach_m: f32) -> bool {
@@ -678,7 +678,7 @@ pub fn combo_refusal(step: u32, prev: i32, prev_cut_short: bool, since_ms: i64, 
 /// `wind_up` and holds its fighter until `lock`. May a new swing start `t` ms after the last began?
 /// The string's next step from `wind_up + follow` (its FOLLOW-THROUGH, COMBAT_OVERHAUL.md §3: the arc
 /// finishes, then the recovery cancels into the next); anything else once the lock is over. `slack`
-/// forgives the network; a cancelled swing (a roll) holds nothing.
+/// forgives the network; a canceled swing (a roll) holds nothing.
 pub fn swing_allows(next_is_chain: bool, t: i64, wind_up: i64, follow: i64, lock: i64, slack: i64, cancelled: bool) -> bool {
     if cancelled {
         return true;
@@ -693,7 +693,7 @@ impl KitSeed {
         self.follow_ms.get(step as usize).copied().unwrap_or(200)
     }
 
-    /// Whether `slot` is the FINISHER: the string's last step (armour, it flinches a light, it staggers).
+    /// Whether `slot` is the FINISHER: the string's last step (armor, it flinches a light, it staggers).
     pub fn is_finisher(&self, slot: KitSlot) -> bool {
         matches!(slot, KitSlot::Light(step) if step as usize + 1 == self.light.len())
     }

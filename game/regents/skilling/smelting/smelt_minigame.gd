@@ -2,7 +2,7 @@ class_name SmeltMinigame extends SkillMinigame
 ## SMELTING'S BELLOWS THEN POUR, PLAYED (`SmeltModel` says what happens; this draws it and takes presses).
 ## HEAT: mash Space or click to pump the bellows (every press counts); keep the needle inside the green
 ## band as it drifts and narrows, never past the red burn line. POUR: a moment after the heat, hold Space
-## or the mouse to tilt the crucible, let go to stop, tilt again to top up; end at the mould's line; past
+## or the mouse to tilt the crucible, let go to stop, tilt again to top up; end at the mold's line; past
 ## the brim it spills.
 
 const HOT: Color = Color(1.0, 0.55, 0.15)
@@ -112,19 +112,19 @@ func _draw() -> void:
 	draw_rect(Rect2(gauge.position.x + 10.0, hy, gauge.size.x - 20.0, gauge.end.y - hy), HOT.darkened(0.15) if heat_phase else HOT.darkened(0.6))
 	draw_line(Vector2(gauge.position.x - 14, hy), Vector2(gauge.end.x + 14, hy), Color.WHITE, 3.0)
 	draw_string(font, Vector2(gauge.position.x - 20, gauge.end.y + 28), "HEAT", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE if heat_phase else Color(1, 1, 1, 0.4))
-	# The mould, right.
-	var mould: Rect2 = Rect2(size.x * 0.62, size.y * 0.35, 150.0, size.y * 0.5)
-	draw_rect(mould, Color(0.25, 0.23, 0.22))
-	var fy: float = mould.end.y - clampf(float(model.fill) / 1000.0, 0.0, 1.0) * mould.size.y
-	draw_rect(Rect2(mould.position.x + 8.0, fy, mould.size.x - 16.0, mould.end.y - fy), METAL)
-	var ty: float = mould.end.y - float(model.target) / 1000.0 * mould.size.y
-	draw_line(Vector2(mould.position.x - 16, ty), Vector2(mould.end.x + 16, ty), Color.WHITE, 3.0)
-	draw_string(font, Vector2(mould.position.x, mould.end.y + 28), "POUR", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE if not heat_phase else Color(1, 1, 1, 0.4))
+	# The mold, right.
+	var mold: Rect2 = Rect2(size.x * 0.62, size.y * 0.35, 150.0, size.y * 0.5)
+	draw_rect(mold, Color(0.25, 0.23, 0.22))
+	var fy: float = mold.end.y - clampf(float(model.fill) / 1000.0, 0.0, 1.0) * mold.size.y
+	draw_rect(Rect2(mold.position.x + 8.0, fy, mold.size.x - 16.0, mold.end.y - fy), METAL)
+	var ty: float = mold.end.y - float(model.target) / 1000.0 * mold.size.y
+	draw_line(Vector2(mold.position.x - 16, ty), Vector2(mold.end.x + 16, ty), Color.WHITE, 3.0)
+	draw_string(font, Vector2(mold.position.x, mold.end.y + 28), "POUR", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE if not heat_phase else Color(1, 1, 1, 0.4))
 	if model.fill > 1000:
-		draw_string(font, Vector2(mould.position.x - 10, mould.position.y - 14), "Spilled!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, BURN)
+		draw_string(font, Vector2(mold.position.x - 10, mold.position.y - 14), "Spilled!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, BURN)
 	# The crucible, tilting while it pours.
 	var tilt: float = -0.9 if model.pouring else -0.15
-	draw_set_transform(Vector2(mould.position.x - 30.0, mould.position.y - 80.0), tilt)
+	draw_set_transform(Vector2(mold.position.x - 30.0, mold.position.y - 80.0), tilt)
 	draw_rect(Rect2(-60, -40, 90, 70), Color(0.45, 0.42, 0.40))
 	draw_rect(Rect2(-54, -34, 78, 20), METAL)
 	draw_set_transform(Vector2.ZERO)

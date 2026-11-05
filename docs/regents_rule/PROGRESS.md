@@ -84,7 +84,7 @@ Play it: press Play. A Bronze axe AND a Bronze pickaxe in your bag; the skills a
     keep the needle in the green band (it drifts and narrows; red is burning); then hold to pour the
     crucible and let go at the white line (past the brim, it spills).
   - anvil: Copper rivets (1 bar makes 4, AFK only); Iron axe head (2 iron bars). **Shape to the outline**:
-    click a column of the hot bar to beat it down (some spreads to its neighbours) until it matches the
+    click a column of the hot bar to beat it down (some spreads to its neighbors) until it matches the
     white outline; it cools as you work (right click or R reheats). The head's **quality** is your score
     (AFK makes a 35 % one).
   - workbench: Handle (2 logs), **Iron axe** (the head, a handle, 2 rivets; as good as its head). AFK.
@@ -276,7 +276,7 @@ skeleton). Three stand at a camp east of the spawn (the frontier's `Foes` points
 
 **Adding a foe is content, no code**: a character (`content/character/`: its model, the animation set,
 a movement profile, `brain = "regents/foe"`, a kind 103-119), listed in `genre.tres`'s entity
-definitions; a FoeDef (`content/foe/`: its key, character, kit, health, damage %, XP %, behaviour, loot);
+definitions; a FoeDef (`content/foe/`: its key, character, kit, health, damage %, XP %, behavior, loot);
 level points of kind = its key (a LevelPoint in the level scene, then bake the level). Bake the content
 and republish. A foe whose weapon is not part of its model needs a held item (not done yet).
 
@@ -293,7 +293,7 @@ loot table worth having; foes in groups pulling together.
 ## Step 7: windows instead of text (owner, 2026-10-20)
 
 "Dedicated UI preferred", matching the Escape menu, its look changeable later for a fantasy theme. The
-foundation now has a UI kit (template DECISIONS #265): one style file (`UiStyle`: colours, sizes, fonts)
+foundation now has a UI kit (template DECISIONS #265): one style file (`UiStyle`: colors, sizes, fonts)
 draws every control in the game, and a window, an item slot and row pieces to build screens with. To
 reskin Regent's Rule later: a `UiStyle` `.tres` and the project setting `umf/ui/style` (handbook, "The
 game's look").
@@ -367,7 +367,7 @@ the hands: `combat/weapons/yew_bow_grip_preview.tscn`, pick `pose.bow_aim` (and 
 it upright in the left fist.
 
 Proven: native tests (the draw's power, the hit chance, a hit's arc landing on the target, a miss
-landing beside it, point blank); the integration (a draw, a loose at a skeleton ten metres off with the
+landing beside it, point blank); the integration (a draw, a loose at a skeleton ten meters off with the
 server's roll, the arrow taken, the referee's hit for 14, Archery XP, point blank under 60 %, the killing
 arrow and one of three back, free aim flying east, no arrows no draw); the combat playtest with a real
 referee (draw, walk, the arms, an arrow that flies and hits the dummy for 14, free aim hits, RMB lets
@@ -381,8 +381,8 @@ quiver slot (arrows come from the bag), the draw-scales-damage question.
 - **Grades are bands of quality.** A made item keeps its 0-1000 quality; **Common** under
   `regents.grade_fine_q` (400), **Fine** from it, **Masterwork** from `regents.grade_masterwork_q` (800).
   Both are hot rules. A material has no grade.
-- **The grade is a colour**: a slot's edge (two wide; a picked slot keeps it) and the item's name. The
-  colours are the game's style (`UiStyle.grade_colors`: grey, green, gold), so a fantasy reskin recolours
+- **The grade is a color**: a slot's edge (two wide; a picked slot keeps it) and the item's name. The
+  colors are the game's style (`UiStyle.grade_colors`: gray, green, gold), so a fantasy reskin recolors
   them (template DECISIONS #267).
 - **Names**: "Fine iron axe", "Masterwork iron sword"; a Common one keeps its plain name.
 - **Power**: the one number to compare, the weapon's damage in percent of its kit's with its quality in:
@@ -390,7 +390,7 @@ quiver slot (arrows come from the bag), the draw-scales-damage question.
   the server deals. Tools show their tier and work instead (a node asks for a tier).
 - **The bag** shows it all: the graded name, "Masterwork · quality 85% · oak handle", and
   "Power 117 (+6 on your Fine iron sword)" in green (red when worse) against the weapon you wield. A
-  crafted item's notice is in its grade's colour.
+  crafted item's notice is in its grade's color.
 - **Tier dominates**, checked: an item's check in the Content Dock (and the bake) refuses a weapon whose
   best reaches the next tier's worst in its kit.
 - Fixed on the way: a made item with a handle showed a garbage quality in the bag (`"q":850,"h":40016`
@@ -398,7 +398,7 @@ quiver slot (arrows come from the bag), the draw-scales-damage question.
 
 Code: `content/item_grade.gd` (`RegentsGrade`), the bag window, the HUD's notice. Proven: the regents
 suite (bands, names, Power against the server's damage rule, tier dominance and a bronze axe at 90 %
-caught, the bag window's slots, name colour and Power lines); negative: Power ignoring quality and the
+caught, the bag window's slots, name color and Power lines); negative: Power ignoring quality and the
 bag ignoring grades fail six checks.
 
 ## Step 10: loot tables and personal rolls (owner, 2026-10-20, `LOOT_AND_STYLES.md` order item 2)
@@ -419,7 +419,7 @@ Loot is now foundation content (template DECISIONS #268), so every game gets it.
 ## Step 11: items on the ground (order item 3)
 
 Template DECISIONS #269. A kill's drops fall where it died as **sacks**, a ring under each glowing in its
-grade's colour and its name above. Each is **yours alone for a minute** (nobody else is even sent it),
+grade's color and its name above. Each is **yours alone for a minute** (nobody else is even sent it),
 then **anyone's for a minute**, then gone (`foundation.ground_owner_s`, `ground_public_s`). **Walk over a
 sack to pick it up.** The bag has a **Drop** button (not on what you wield): yours a minute, then anyone's:
 a way to hand a friend something. Lines marked `to_bag` (none yet; currency later) skip the ground.
@@ -530,7 +530,7 @@ what it gives and what it costs, and the bag's card shows them under the item.
 - **The v1 pools**: Balanced, Heavy, Brutal (the *target's* health, your call), Thirsting (weapons);
   Swift Draw, Hunter's (bows); Gentle, Lucky, Prospector's (tools). Prospector's costs "work 15% slower"
   instead of "base yield -1" (a success yields one, so -1 would be nothing).
-- **Waiting**: Keen (needs crits and Bleeding), Padded and Warded (need armour), Reaching (needs the
+- **Waiting**: Keen (needs crits and Bleeding), Padded and Warded (need armor), Reaching (needs the
   referee to judge each swing at the wielder's own reach: a new side table). **Drops roll traits by grade**
   once drops roll a grade (the loot line's grade distribution is not built; nothing drops gear yet).
 - **Trying one**: `set_item_traits <bag row> [<trait ids>]` (dev tools on) gives an item exactly those.
@@ -593,7 +593,7 @@ rollups, **a place every 5 s**, and **a local dashboard**). The foundation's par
 
 **THE POLISH ROUND** (Luke: "more visually telling and easy to read"):
 - **Health bar** bottom left (under the chat), with the Staff's **mana** under it while it is wielded and
-  a thin **roll** bar that refills over the roll's 1.5 s cooldown (grey while it does; its tooltip says
+  a thin **roll** bar that refills over the roll's 1.5 s cooldown (gray while it does; its tooltip says
   how long).
 - **A work bar** under the prompt while you work AFK: it fills to the next piece (bar, batch, ore, log),
   piece after piece, from the server's own `next_at`. The station's window shows the same bar.
@@ -602,7 +602,7 @@ rollups, **a place every 5 s**, and **a local dashboard**). The foundation's par
   works until the bag runs out (what Make did before). The prompt and the window say "Making 2 of 5".
 - **The minimap**, top right, OSRS style: round, turning with the camera so ahead is up, N on the rim, the
   level drawn once from straight above when it loads, dots for players (white), foes (yellow), trees
-  (green), rocks (grey), stations (blue) and the dummy (orange), your arrow in the middle. The mouse
+  (green), rocks (gray), stations (blue) and the dummy (orange), your arrow in the middle. The mouse
   wheel over it zooms (15 to 90 m) while the cursor is free (a window open, or Alt). Open for iterations: click-to-walk, a world map, quest markers.
 - **Hits flash**: whatever is hit lights up white for a moment, you light up red, and the screen's edge
   pulses red (more for a bigger hit); a hit taken while blocking flashes steel blue and says "Blocked";
@@ -612,7 +612,7 @@ rollups, **a place every 5 s**, and **a local dashboard**). The foundation's par
 **Tested**: native `regents` (the meta's period, shares and alarm; each weapon type's skill); the
 integration hook (a chop on a foe tallies one axe hit of 2 damage; the dummy never counts; the period
 closes into one share: axe, 1 hit, 100 %, an alarm); the template's `telemetry_test.sh` (21 checks on a
-real server); the regents suite's polish checks (the minimap's sums and colours, the work's progress and
+real server); the regents suite's polish checks (the minimap's sums and colors, the work's progress and
 Make X counting, the flashes, the bars; flipping the map's turn fails two, losing the block flash one); the
 skilling playtest (Make X of 1 makes exactly one batch of rivets and stops by itself, the work bar fills,
 then Make all uses the rest).
@@ -637,7 +637,7 @@ dungeons, duels once they exist); the meta alarm on screen in game for an admin.
 - **The ore on the rocks, by hand**: `game/regents/skilling/mining/ore/<rock model>_ore.tscn`, one per rock
   model (Rock_Medium_1, Rock_Medium_2, Rock_Big_1: copper and iron use them). **Open one, move, turn or
   size the nuggets (`Ore1`..`Ore5`; add or delete some), save**: every rock of that model, copper or iron,
-  shows its ore so (grey in the scene, the ore's colour in the game). They start snapped onto the surface,
+  shows its ore so (gray in the scene, the ore's color in the game). They start snapped onto the surface,
   so none floats. A new rock model: run `make_ore_layouts.tscn` (headless) for its starting layout; with
   none, nuggets are snapped onto the surface at runtime (`RegentsOreSpots`).
 - **The skeletons face the way they fight**: the same Quaternius rig as the adventurer, now turned the
@@ -674,7 +674,7 @@ table's cells, with every id kept, and the baked `item.json` and `recipe.json` a
   `godot --headless --path . -s res://game/regents/tools/make_material_table.gd` (`-- --check` only says).
   It writes the cells that are missing and sets, on the ones there, ONLY what the table decides: an item's
   name, stack, tool and tier, weapon and Power, part and trait; a recipe's name, station, skill, inputs,
-  output and part slot. **Everything else is yours and stays**: an item's colour, look and words; a
+  output and part slot. **Everything else is yours and stays**: an item's color, look and words; a
   recipe's XP, rank, AFK time, how many of each input and its round (so the recipe bench keeps working).
   A new cell starts those from its pattern and material ("New cells start with": the pattern's XP and
   time scaled by the material's `work_scale_pct`, at the material's `rank`).
@@ -698,7 +698,7 @@ iron's own check with the file, the field and the fix, copper's silent; iron to 
 alone; a recipe's inputs drifting caught; tuned XP never stale; a cell with no pattern, a pattern with no
 core or no {m}, a table recipe for a non-cell, refused; in a scratch project a new metal and wood made for
 real (four cells, four recipes, tier, speed, Power and trait from the material, new ids and files, seeded
-XP and time), made again a no-op, a renamed cell restored with its colour and XP kept, a tier change
+XP and time), made again a no-op, a renamed cell restored with its color and XP kept, a tier change
 touching the axe alone, a hole that keeps its file, `by_hand` left alone). Each negative proven by
 breaking the table: drift never reported (6 checks fail), links equal whatever their id (1), `by_hand`
 made over (1), a tool's tier not its material's (3). The bake: `item.json` and `recipe.json` unchanged;
@@ -819,7 +819,7 @@ Tested: regents suite 2454/0 (new: traits by grade from the hot rules; the iron 
 handle to start; the oak picked offers Steady, sent to `craft_choosing` with it; unticked, none is sent; the
 yew re-ticks its Springy; logs are no handle; headings; the window: sixteen lines under five headings, the
 slot's list of three handles, "Made Fine (quality 650): holds 2 traits", Steady first and in use, unticked
-left out, a Common head's room for one, MAKE greyed with the oak handle gone); native `cargo test` all (the
+left out, a Common head's room for one, MAKE grayed with the oak handle gone); native `cargo test` all (the
 room by grade; the player's order; a lower grade keeps the first; offered only, none twice; none on purpose
 stays none, an old tool still has its handle's); integration 1024/0 (`craft_choosing` refuses a copper bar
 as a handle, a trait no part offers, one twice, two parts for one slot, a part for a recipe with none, an
@@ -832,10 +832,10 @@ any trait (2 integration checks). Published with `--codegen` (data kept). Not se
 ## Step 21: after Luke's first look at the crafting rework (2026-10-23)
 
 Luke, with the station window open: the wording should lose the quality number; pick WHICH head (a Common
-or a Masterwork), greyed when you have none; there is no benefit to more than one trait yet (only handles
+or a Masterwork), grayed when you have none; there is no benefit to more than one trait yet (only handles
 offer one); and earlier materials should say what to expect at the workbench. His calls (`GAME.md`):
 - **The head by grade**: in Takes, the head is a list, "1 / 1  Masterwork iron axe head", "Fine ...",
-  "Common ..." (a grade you lack greyed; none at all, the list greyed). The window sends it
+  "Common ..." (a grade you lack grayed; none at all, the list grayed). The window sends it
   (`set_craft_grade`, then `craft_choosing`); every batch of that run takes only that grade's heads and the
   run stops when they run out (`craft_grade`). When the grade picked is gone from the bag, the list shows the
   best you have. An older build's `craft` takes the best of any grade, as before.
@@ -863,9 +863,9 @@ offer one); and earlier materials should say what to expect at the workbench. Hi
 
 Tested (step 21): regents suite 2469/0 (each part's trait by what it is made into; two part slots, copper
 rivets' Gentle by default; the oak's Steady and Heavy; a sword's Heavy and Thirsting; the head's list by grade
-with the missing grade greyed and the best as fallback; "A Fine iron axe holds 2 traits"; a checkbox drawn
+with the missing grade grayed and the best as fallback; "A Fine iron axe holds 2 traits"; a checkbox drawn
 as one; Gentle with no room at Common, moving up when Steady is left out; the refit line, its cost, REFIT
-greyed when nothing changes or bars are short; tooltips: what a material makes, a part's traits); native
+grayed when nothing changes or bars are short; tooltips: what a material makes, a part's traits); native
 `cargo test` all (regents 35/0: the trait that fits, grades, the parts noted); integration 1051/0 (rivets'
 traits by kind; the grade refused when absent, kept, forgotten by an older build's craft; refit's refusals,
 its cost paid, the row rewritten with its parts and traits, nothing-to-change refused); skilling playtest
@@ -924,9 +924,9 @@ template's ring suite (foundation only, unchanged here). Not seen by Luke yet.
 
 Luke, with his map (`game/regents/levels/continent/continent_map.webp`): load test first, but on a world bigger
 than the glade (which fits inside one ring, so nothing in it ever crosses cells). His calls: the main
-continent only (no islands, no name), **about 3 km across its widest**, the camp in the **centre-west
+continent only (no islands, no name), **about 3 km across its widest**, the camp in the **center-west
 lowlands**.
-- **The shape is read off the map** (`continent_shape.gd`): its green is land, its grey-brown ridge the
+- **The shape is read off the map** (`continent_shape.gd`): its green is land, its gray-brown ridge the
   mountain spine, the rest sea; only the largest landmass is kept. 2.25 x 3 km, peaks to ~160 m, the sea at
   y = -6, and the camp's point flattened to y = 0 at the world's origin.
 - **The level is generated** (`build_continent.tscn`, seeded, re-run to change anything; ~20 s): Terrain3D
@@ -997,10 +997,10 @@ Nine notes (`tools\feedback.cmd`), most at the camp, one out on the continent. S
     foe's rows come in cell sets.
   - **#7 WORKED ON 2026-10-26** (template 1.1.1): "Player 39" is the database CLI's own player (an admin with no
     name, at the spawn), drawn though `PresenceComponent` hides a tool. Its exact cause on Luke's night is not
-    proven; two real foundation bugs found on the way are fixed: (a) `Cells.recentre` held the old ring centre
+    proven; two real foundation bugs found on the way are fixed: (a) `Cells.recentre` held the old ring center
     after a long jump onto a cell's EDGE, and the spawn (0, 0, 8) is on one: back at the camp from far away a
-    player kept a ring 600 m off and was sent nothing round them (now a jump past the neighbouring cells
-    re-centres at once); (b) a nameless player whose admin row comes after theirs is asked after again
+    player kept a ring 600 m off and was sent nothing round them (now a jump past the neighboring cells
+    re-centers at once); (b) a nameless player whose admin row comes after theirs is asked after again
     (`is_tool_row`). The continent playtest now keeps the CLI coming back every 3 s (as the host's watcher
     did), checks it is hidden as a tool at the camp, and again after a trip out and back (19/0). If Luke still
     sees it, the next look is the nameplate/presence of an entity that re-enters the ring.
@@ -1236,7 +1236,7 @@ index on `world_id` searched its list of every movement row of the world (~4,000
 that moved, ~85 us a row, and the town strip gets the most player rows; the judge looked at every movement row
 for each swing. Now the index notes each row's place (the first UMF patch to the vendored SDK, kept by
 `tests/suites/sdk_patches.gd`), and the judge looks at the people only. **Result**: three strips hold 300 (43.7 ms,
-the town at its neighbours' frame time; was 102), four 30.4, six 21.2. `REFEREE_SCALING.md`, last section.
+the town at its neighbors' frame time; was 102), four 30.4, six 21.2. `REFEREE_SCALING.md`, last section.
 **Tested (the town strip)**: template unit 2309/0 (new: the index's slots through 1,500 updates, a removal, a move
 between worlds; who is a person by each row; 7 mutations each fail 1-3 checks), e2e 11/0, sidecar 13/0, regions
 25/0; every game's unit suite after the merge; the sweep above.
@@ -1287,7 +1287,7 @@ The old playtest's "chop it back" now waits, guarded, for the warrior to step in
 and two skeletons kill a player who stands there unguarded.
 `load_300.sh` (continent, four referees; the referee session's CPU-heavy sweep ran on this PC for part of it): **300 bots hold every limit** (referee frames 6.9 ms p95, no stalls, the module 39.7 % busy, 64.9 swings a second judged); 200 holds; 100 says BREAKS on ONE referee net stall (714 ms; run again alone: 708 ms), the stall `REFEREE_SCALING.md` already records at 50 and 100 (~30 s after a referee starts), not the foes; both negatives fail as they should.
 
-**Left for later**: the step-2 rules (the finisher's armour, so a player's heavy no longer flinches a foe's
+**Left for later**: the step-2 rules (the finisher's armor, so a player's heavy no longer flinches a foe's
 finisher; the parry judged on the seen hit); "Blocked" still floats up when an unblockable hit lands on a
 block; the clips are slowed placeholders until `ANIMATIONS.md` §3's foe clips; loot per minute; threat (step 6)
 decides who gets a turn first (today: the first to ask).
@@ -1306,7 +1306,7 @@ weak block until roles come (step 4).
   cut (40004) and the second chop (40007) are retired: a database kept across publishes still has their rows,
   so the server refuses them by name (`RETIRED_ABILITIES`). The sword and the axe kill at a like pace (both
   about 24 a second at 100 %, a string of 38 in ~1.57 s; a native test holds them within a tenth).
-- **The finisher** (`hit`, `deal`): armour (never flinched); it flinches a step in its wind-up; landing
+- **The finisher** (`hit`, `deal`): armor (never flinched); it flinches a step in its wind-up; landing
   unblocked it STAGGERS (`regents.stagger_ms`). Foes have the same grammar: a skeleton's finisher staggers you.
 - **The follow-through** (`KitDef.follow_ms`, one per step, 200 ms): the next step waits for the arc (Luke's
   #8). **The window** is the hot rule `regents.combo_window_ms`, 2 s; a guard press restarts it.
@@ -1466,7 +1466,7 @@ Luke answered `ROLES_PREP.md` (2026-11-01, in `GAME.md` "Roles, settled before b
 - **`RoleDef`** (new type, `content/role/`: damage 40001 the plain one, tank 40002, support 40003): the guard
   (full: `block_damage_pct`; light: `weak_block_pct`), threat (`threat_pct`, or a live rule:
   `regents.guard_threat_pct` and its scope `regents.guard_threat_bosses_only` for the guard handle; healing
-  draws no more than damage), the drop weight's rule, a badge (shape and colour) and its guard in words.
+  draws no more than damage), the drop weight's rule, a badge (shape and color) and its guard in words.
   THREAT IS STORED, NOT USED (step 6): `role_threat_pct`, `rules::threat_pct`, `heal_threat`; `FoeDef.boss`
   added for the scope (no foe is one yet).
 - **The role map on `KitDef`** (`roles`, a `KitRole` each: role, last hit, `stagger_pct`, `heal`,
@@ -1537,7 +1537,7 @@ an old client's thrust fires the crossguard's pommel bash, its lock 635, 14 deal
 asking for the pommel bash fires the thrust; the pommel bash first in the string refused; the rallying cut heals
 nothing off a dummy, 8 off a foe alone). Template 1.7.1: `cargo check` (wasm) and `cargo test` green.
 The playtest's older camp checks were hardened while this ran (they read one skeleton when the sweep hit its
-neighbour, gave up while the player was staggered, or stopped the block phase at 45 health after ~5 s): each now
+neighbor, gave up while the player was staggered, or stopped the block phase at 45 health after ~5 s): each now
 reads every skeleton, waits until the player can act, and keeps the phase going with the shell's heal. So were
 the integration suite's older wall-clock checks, which a ~1 s CLI call had begun to miss (they passed in the first
 two runs, failed in later ones): the roll is sent 0.3 s behind the overhead it must cancel; a stagger is read from
@@ -1561,7 +1561,7 @@ tank handle, hard to know what the time is with both modifiers)"; "the enemy kee
 should keep them in one spot and dazed animation for the length? we can experiment with both"; and the workbench
 showed "two handle sections".
 
-- **The hit's light** (`combat/hit_feedback_component.gd`): FOUND the squares were every ember drawn a whole metre
+- **The hit's light** (`combat/hit_feedback_component.gd`): FOUND the squares were every ember drawn a whole meter
   wide: a billboard ignores its node's and particle's scale unless `billboard_keep_scale` is on. Now every spark,
   streak and glint is SOFT LIGHT (a round fall-off texture, `soft_light()`), embers fade over their life, the glint is
   a red STAR (a core and two crossed streaks, drawn over rather than added, so it stays red on a pale skull), and the
@@ -1711,7 +1711,7 @@ with short B after each"; for showing it, not a bar under the health: "lets do t
   next one breaks it; a Heavy one (10 + 10 + 54) breaks it at once.
 - **The target marker** (`CombatComponent._place_poise_arc`, `HitFeedbackComponent.poise_worn`): an arc just outside
   the ring under your target fills clockwise from the front as its poise wears, pale turning red near the break; it
-  bursts as it breaks and is grey while Steadied; nothing for a player. Its state is the public `poise_state` table
+  bursts as it breaks and is gray while Steadied; nothing for a player. Its state is the public `poise_state` table
   (by cell, as every placed thing of ours); the private `poise` table published an hour before it is retired, kept
   declared (a published table is never removed).
 
@@ -1720,13 +1720,13 @@ string; poise_now), unit (Heavy's poise and words; the marker's reading: worn, w
 and not twice), integration (a real referee: a chop wears 10 of 60, the last hit leaves 10 and no stagger, a light stops
 at 1, the next last hit breaks and staggers, Steadied a chop wears nothing, Heavy breaks a fresh 60 in one string; the
 older stagger checks run on a dummy without poise), combat playtest (a chop fills a fifth of the arc; broken, the arc is
-grey; the yard's three in a row breaks the partner). The camp phases now bring a slain player back (three skeletons
+gray; the yard's three in a row breaks the partner). The camp phases now bring a slain player back (three skeletons
 killed it once). A render of the arc at 30 / 75 / 98 % and Steadied checked by eye.
 
 **Luke's to tune** (live rules and FoeDef): poise 70 / dummy 50, wear 10 and 40, Heavy x1.35, Steadied 3 s, regrowth
 8 s. Players without poise for now.
 
-## Step 35: Luke's play of 2026-11-03 (feedback #8193-#8196); the armour prep sheet (2026-11-03)
+## Step 35: Luke's play of 2026-11-03 (feedback #8193-#8196); the armor prep sheet (2026-11-03)
 
 Four notes sent with F8 while hosting (`tools\feedback.cmd` has them, with the frame and ping numbers of each).
 
@@ -1764,8 +1764,8 @@ round that is not there refused, an anvil round left: gone, both bars still in t
 after; the suite 1284/20 then 1289/25, every
 failure a CLI-timed referee check, both runs while Luke's host ran on the same server: to rerun with it stopped). Not run: the skilling and combat playtests (no flow they drive changed but Escape, which they do not press).
 
-**The armour prep sheet**: `docs/regents_rule/ARMOUR_PREP.md` (A1-A10, each with options and a recommendation), for
-Luke's answers before any armour is built.
+**The armor prep sheet**: `docs/regents_rule/ARMOR_PREP.md` (A1-A10, each with options and a recommendation), for
+Luke's answers before any armor is built.
 
 **Left**: #8196 (the template change above, Luke's go-ahead); the foundation's `content` check "a script runs from the
 repo root" failed 2 of 5 unit runs here (it waits 600 headless frames for Git Bash under load: flaky, a template fix).
@@ -1841,3 +1841,30 @@ overhead is canceled" and "no damage" (481.8). The first negative showed "no dam
 after the dummy was whole again): it is read in the run now. Template integration 667/0.
 
 **Left**: the integration suite still takes ~25 min (the CLI's pace); the remaining CLI-timed checks pass with room.
+
+## Step 38: American spelling, and armor parked (2026-11-04)
+**Why**: Luke, 2026-11-04: "all spelling in the game is not English version, but American" (`GAME.md`). The same
+sit-down parked armor (`ARMOR_PREP.md` §0) and set the order of work: this pass, the minigame overhaul, herbalism
+and hunting, then armor.
+
+**Built** (no game rule, table or behavior change):
+- Every genre file (the manifest's, less the GENERATED level cells, `continent.tscn`/`expanse.tscn` and bakes), plus
+  `GAME.md`, `CLAUDE.md` and this repo's rules: about 370 words in 53 files (most: color, armor, center, gray,
+  canceled, meter, mold), by a word-by-word map of British to American
+  forms (snake_case and camelCase parts, case kept).
+- `ARMOUR_PREP.md` renamed `ARMOR_PREP.md`, every link with it.
+- Genre-only code names renamed with their uses: `CombatComponent.swing_canceled`, `RegentsMinimap.color_of`, the
+  HUD's status rows' `"color"` key, locals and parameters (`color`, `gray`, `mold`, `center`).
+- KEPT, not ours to rename: the `swing` table's `cancelled` column (published: rule 17; the server's field and the
+  integration suite's SQL read it); the foundation's `UiKit.colour`, `InterestManager.centre`, `Cells.recentre`.
+- Content rebaked (two abilities' designer notes changed: only the manifest moves).
+
+**Found**: the genre's player-facing text was already American; the pass changed notes, docs, test messages and code
+names. The one British word a player sees is the FOUNDATION's: "Cancelled." on the connect screen
+(`foundation/ui/connect_screen.gd`), a template change for every game: Luke's call.
+
+**Tested**: `cargo check --target wasm32-unknown-unknown`; `cargo test --test regents` 45/0; the unit suite (lints +
+regents) below. No server behavior changed, so no integration run; nothing to publish but the manifest (content).
+
+**Left**: the foundation's "Cancelled." (template); older docs outside this repo's genre (the template's) stay as
+the template writes them.

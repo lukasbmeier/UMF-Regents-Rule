@@ -5,7 +5,7 @@ class_name SmeltModel extends RefCounted
 ##        2026-10-19). A band drifts (a triangle wave around `band_center`, its phase from the seed) and
 ##        narrows; a tick inside it counts for the heat, a tick past `burn_line` against it.
 ##   POUR (the next `pour_ms`): from `pour_ready_ms` in (so mashing the bellows never tilts it), press to
-##        tilt the crucible, release to stop, tilt again to top up; while it pours the mould fills
+##        tilt the crucible, release to stop, tilt again to top up; while it pours the mold fills
 ##        `pour_rate` a tick. It is scored by how near the line (from the seed) the fill ends; past the
 ##        brim (1000) it spilled.
 ## Inputs are (time, code): 1 pump, 2 pour, 3 stop. A PURE MODEL (its Rust twin: `genre::regents::smelt`,
@@ -67,9 +67,9 @@ static func tri(x: int, period: int) -> int:
 ## The band at tick `k` of the heat: its middle and half-width.
 func band(k: int) -> Vector2i:
 	var p: SmeltParams = params
-	var centre: int = p.band_center + p.band_amp * tri(k + phase_offset, maxi(1, p.band_period_ticks)) / 1000
+	var center: int = p.band_center + p.band_amp * tri(k + phase_offset, maxi(1, p.band_period_ticks)) / 1000
 	var half: int = p.band_half_start + (p.band_half_end - p.band_half_start) * k / maxi(1, heat_ticks(p))
-	return Vector2i(centre, half)
+	return Vector2i(center, half)
 
 
 func in_heat() -> bool:

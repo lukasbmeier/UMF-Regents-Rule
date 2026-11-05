@@ -401,7 +401,7 @@ func role_line() -> String:
 
 
 ## THE HEAD, BY GRADE (owner, 2026-10-23): "Masterwork iron axe head (1)", "Fine ... (2)", "Common ... (0)"
-## (a grade the bag lacks greyed); a run uses only the grade picked. None at all: the list itself greyed.
+## (a grade the bag lacks grayed); a run uses only the grade picked. None at all: the list itself grayed.
 func _core_list(r: RecipeDef, core: ItemDef, need: int) -> OptionButton:
 	var pick := OptionButton.new()
 	pick.name = "Core"

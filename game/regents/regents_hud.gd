@@ -213,15 +213,15 @@ func _ready() -> void:
 	base.add_child(_skillbar)
 
 
-## A bar of `colour`, `height` tall, its words (`name`'s label, a child named Text) on it.
-func _bar(parent: Control, colour: Color, height: float, bar_name: String) -> ProgressBar:
+## A bar of `color`, `height` tall, its words (`name`'s label, a child named Text) on it.
+func _bar(parent: Control, color: Color, height: float, bar_name: String) -> ProgressBar:
 	var b := ProgressBar.new()
 	b.name = bar_name
 	b.custom_minimum_size = Vector2(0, height)
 	b.show_percentage = false
 	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = colour
+	fill.bg_color = color
 	fill.set_corner_radius_all(3)
 	var back := StyleBoxFlat.new()
 	back.bg_color = Color(0.05, 0.05, 0.06, 0.72)
@@ -524,7 +524,7 @@ func _close_round() -> void:
 
 func _on_worked(r: Dictionary) -> void:
 	var item: ItemDef = ItemDef.by_id(int(r["item_id"]))
-	var colour: Color = item.color if item != null else Color.WHITE
+	var color: Color = item.color if item != null else Color.WHITE
 	var board: StationComponent = SkillingComponent.station_of(int(r["target_id"]))
 	if bool(r["ran_out"]):
 		notice("Out of %s" % item_name(int(r["item_id"])), Color(1, 0.75, 0.5))
@@ -536,7 +536,7 @@ func _on_worked(r: Dictionary) -> void:
 		var round_note: String = "   (round %d%%)" % (int(r["score_pm"]) / 10) if bool(r["active"]) else ""
 		var graded: Color = UiStyle.current().grade_color(RegentsGrade.of_quality(q))
 		notice("+%d %s%s%s" % [int(r["qty"]), RegentsGrade.item_name(item, q) if item != null else item_name(int(r["item_id"])), quality, round_note],
-			graded if graded.a > 0.0 else colour)
+			graded if graded.a > 0.0 else color)
 	elif bool(r["active"]):
 		notice("Nothing from that round (%d%%)" % (int(r["score_pm"]) / 10), Color(1, 0.75, 0.5))
 	var skill: SkillDef = SkillDef.by_id(int(r["skill_id"]))
@@ -634,19 +634,19 @@ func _update_combat() -> void:
 
 ## THE TARGET'S STATUSES, as bars to show: what was done TO it with a time on it (its state, when another put it there:
 ## Staggered, Flinched; never its own swing or block), and every effect on it (Slowed). Each {name, left, total,
-## colour}, seconds, the longest left first. None for no target.
+## color}, seconds, the longest left first. None for no target.
 static func status_rows(st: StatusComponent) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if st == null:
 		return out
 	var d: StatusDef = st.def()
 	if st.status() != StatusDef.NORMAL and st.by_entity() != st.entity_id and is_finite(st.seconds_left()) and d != null:
-		out.append({"name": d.display_name, "left": st.seconds_left(), "total": st.seconds_total(), "colour": d.color})
+		out.append({"name": d.display_name, "left": st.seconds_left(), "total": st.seconds_total(), "color": d.color})
 	for n: int in st.effects():
 		var ed: StatusDef = StatusDef.find(n)
 		var left: float = st.effect_seconds_left(n)
 		if ed != null and left >= 0.0 and is_finite(left):
-			out.append({"name": ed.display_name, "left": left, "total": st.effect_seconds_total(n), "colour": ed.color})
+			out.append({"name": ed.display_name, "left": left, "total": st.effect_seconds_total(n), "color": ed.color})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["left"]) > float(b["left"]))
 	return out
 
@@ -662,7 +662,7 @@ func _show_statuses(rows: Array[Dictionary]) -> void:
 	for i: int in rows.size():
 		var b: ProgressBar = _target_statuses.get_child(i) as ProgressBar
 		var r: Dictionary = rows[i]
-		(b.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = Color(r["colour"] as Color, 0.85)
+		(b.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = Color(r["color"] as Color, 0.85)
 		set_bar(b, float(r["left"]), float(r["total"]), "%s  %.1f s" % [String(r["name"]), float(r["left"])])
 
 

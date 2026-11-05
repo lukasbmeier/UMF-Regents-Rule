@@ -1,9 +1,9 @@
 extends Node3D
 ## GENERATES THE CONTINENT (Luke, 2026-10-24: the main continent of his map, ~3 km, the camp in the
-## centre-west lowlands; a greybox to test the ring and streaming in a world bigger than the glade).
+## center-west lowlands; a greybox to test the ring and streaming in a world bigger than the glade).
 ## Writes `continent.tscn` beside this file and everything it loads, then bakes it:
 ##
-##   terrain/data/                   Terrain3D regions (heights, texture control, colour)
+##   terrain/data/                   Terrain3D regions (heights, texture control, color)
 ##   terrain/continent_assets.tres   the ground's textures (terrain/textures/: generated noise, tinted)
 ##   continent.tscn                  the level: LevelInfo (level 21, streamed), its Cells, the sea, the wall
 ##   continent_cells/                one scene per 64 m cell (the bake's cut, for players' games)
@@ -40,7 +40,7 @@ var _textures_dir: String = _dir + "terrain/textures/"
 ## The level's number and name.
 var _level_id: int = 21
 var _level_name: String = "continent"
-## Metres between the terrain's vertices (the server needs none of it: it is the client's and referee's).
+## Meters between the terrain's vertices (the server needs none of it: it is the client's and referee's).
 var _spacing: float = 2.0
 ## The landmass's widest side, and how much taller its hills and mountains are (ContinentShape).
 var _width_m: float = ContinentShape.WIDTH_M
@@ -51,7 +51,7 @@ var _decor_share: float = 1.0
 var _bake_ground: bool = false
 ## Terrain3D's region, vertices a side (its default).
 const REGION_VERTS: float = 256.0
-## Metres between the server's depth samples (the bake's grid; 4 is its coarsest).
+## Meters between the server's depth samples (the bake's grid; 4 is its coarsest).
 const BAKE_SPACING: float = 4.0
 ## Sea round the landmass that the terrain still covers, m.
 const MARGIN_M: float = 200.0
@@ -273,7 +273,7 @@ func _paint(x: float, z: float, h: float) -> int:
 	return Tex.GRASS
 
 
-## A plain tileable noise picture (the ground's grain; its colour comes from the texture asset), or a flat
+## A plain tileable noise picture (the ground's grain; its color comes from the texture asset), or a flat
 ## normal map with a little of the grain in it. Every texture the same size and format, with mipmaps.
 static func _noise_texture(seed_value: int, normal: bool) -> ImageTexture:
 	var n := FastNoiseLite.new()
@@ -575,7 +575,7 @@ func _make_environment() -> void:
 	var glade: Node3D = (load(FRONTIER) as PackedScene).instantiate() as Node3D
 	var env_node: WorldEnvironment = glade.get_node("WorldEnvironment") as WorldEnvironment
 	var env: Environment = env_node.environment.duplicate(true) as Environment
-	# Farther to see across a continent: the glade's fog closed it in at a hundred metres.
+	# Farther to see across a continent: the glade's fog closed it in at a hundred meters.
 	env.fog_density = 0.0022
 	var we := WorldEnvironment.new()
 	we.name = "WorldEnvironment"

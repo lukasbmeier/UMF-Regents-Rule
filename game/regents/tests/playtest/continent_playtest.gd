@@ -107,7 +107,7 @@ func _run() -> void:
 	SpaceTimeSync.call_reducer(&"teleport", [stand], ["vector3[f32,f32,f32]"])
 	await _until(func() -> bool: return Vector2(me.global_position.x, me.global_position.z).distance_to(Vector2(stand.x, stand.z)) < 1.5, 6.0)
 	await _until(func() -> bool: return InterestManager.centre == Cells.chunk_of(stand) and _node_near(far) > 0, 10.0)
-	_check(InterestManager.centre == Cells.chunk_of(stand), "the ring moved with them (centre %d, there %d)" % [InterestManager.centre, Cells.chunk_of(stand)])
+	_check(InterestManager.centre == Cells.chunk_of(stand), "the ring moved with them (center %d, there %d)" % [InterestManager.centre, Cells.chunk_of(stand)])
 	_check(_node_near(far) > 0, "the tree out there is sent and drawn")
 	await _until(func() -> bool: return _node_near(TREE_1) < 0, 6.0)
 	_check(_node_near(TREE_1) < 0, "the camp's tree_1 is no longer sent (it is 600 m behind)")
@@ -146,7 +146,7 @@ func _run() -> void:
 		shared += 1
 		if after[id] != before[id]:
 			respawned.append(id)
-	_check(InterestManager.centre == Cells.chunk_of(east), "a cell east, the ring re-centred")
+	_check(InterestManager.centre == Cells.chunk_of(east), "a cell east, the ring re-centered")
 	_check(shared > 0 and respawned.is_empty(), "the %d nodes both rings share were kept, none spawned again (%s)" % [shared, str(respawned)])
 
 	# --- BACK TO THE CAMP: what left the ring and came back is whole (Luke's "Player 39": the CLI's player,
@@ -161,7 +161,7 @@ func _run() -> void:
 	await _until(func() -> bool: return _node_near(TREE_1) > 0, 8.0)
 	await _until(func() -> bool: return not _tools().is_empty() and _tools_drawn() == 0, 3.0)
 	_check(tools_before.is_empty() and not _tools().is_empty() and _tools_drawn() == 0,
-		"back at the camp (centre %d, home %d) the CLI's player is spawned again and still hidden as a tool (%s, %d not; at %s)"
+		"back at the camp (center %d, home %d) the CLI's player is spawned again and still hidden as a tool (%s, %d not; at %s)"
 			% [InterestManager.centre, Cells.chunk_of(home), str(_tools()), _tools_drawn(), str(me.global_position)])
 	print("   cells loaded %d of %d; nodes drawn %d of %d; entities in the registry %d" % [streamer.loaded_cells().size(),
 		total_cells, _node_ids().size(), total_nodes, EntityRegistry.all_entity_ids().size()])
@@ -181,7 +181,7 @@ func _check_streamed(where: String, total: int) -> void:
 		"%s: %d of the continent's %d cells loaded, all round the player (beyond: %s)" % [where, cells.size(), total, str(out_of_reach)])
 
 
-## Every node drawn is in the 3 x 3 cells round the ring's centre, and they are a fraction of the world's.
+## Every node drawn is in the 3 x 3 cells round the ring's center, and they are a fraction of the world's.
 func _check_ring(where: String, total: int) -> void:
 	var ring: PackedInt64Array = Cells.ring(InterestManager.centre, Cells.ring_radius())
 	var outside: int = 0

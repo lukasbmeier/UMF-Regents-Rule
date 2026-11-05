@@ -45,7 +45,7 @@ enum Depleted { STUMP, RUBBLE }
 ## What is left when it is worked out: a stump (it tips over) or rubble (it crumbles).
 @export var depleted: Depleted = Depleted.STUMP
 @export var depleted_color: Color = Color(0.42, 0.29, 0.18)
-## Ore showing on a rock (its nuggets' colour); transparent for none.
+## Ore showing on a rock (its nuggets' color); transparent for none.
 @export var ore_color: Color = Color(0, 0, 0, 0)
 
 static var _by_id: Dictionary[int, NodeDef] = {}

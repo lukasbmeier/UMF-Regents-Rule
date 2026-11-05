@@ -1,9 +1,9 @@
 class_name ContinentShape extends RefCounted
 ## THE CONTINENT'S SHAPE, READ OFF LUKE'S MAP (2026-10-24: "build the main continent here ... so we can test
 ## the chunk loading in a space bigger than the glade"). `continent_map.webp` is the source: its green is
-## land, its grey-brown ridge is the mountain spine, everything else (parchment, the coast's wash) is sea.
+## land, its gray-brown ridge is the mountain spine, everything else (parchment, the coast's wash) is sea.
 ## Only the largest landmass is kept (the islands are left out, as asked). The widest side of that landmass
-## is `WIDTH_M` metres, and the starting camp's point (`CAMP_PX`, the centre-west lowlands) is the world's
+## is `WIDTH_M` meters, and the starting camp's point (`CAMP_PX`, the center-west lowlands) is the world's
 ## origin, flattened to y = 0, so the frontier glade's camp drops in unchanged.
 ##
 ## A GREYBOX: no regions, roads or towns (those are Luke's, later). Change the map, a number here, and run
@@ -11,7 +11,7 @@ class_name ContinentShape extends RefCounted
 ## world.
 
 const MAP_PATH: String = "res://game/regents/levels/continent/continent_map.webp"
-## The landmass's widest side, metres (Luke: "about 3 km").
+## The landmass's widest side, meters (Luke: "about 3 km").
 const WIDTH_M: float = 3000.0
 ## The camp, as a point on the map (pixels): the big plain west of the ridge.
 const CAMP_PX: Vector2 = Vector2(572.0, 508.0)
@@ -20,7 +20,7 @@ const SEA_Y: float = -6.0
 ## The camp's flat ground: whole to this radius, blended into the land by the second.
 const CAMP_FLAT_M: float = 85.0
 const CAMP_BLEND_M: float = 175.0
-## The land: how high the shore rises in its first metres, the hills inland, the mountains.
+## The land: how high the shore rises in its first meters, the hills inland, the mountains.
 const SHORE_RISE_M: float = 6.0
 const SHORE_WIDTH_M: float = 120.0
 const HILL_M: float = 14.0
@@ -38,7 +38,7 @@ var ridge: PackedFloat32Array = PackedFloat32Array()
 var coast: PackedFloat32Array = PackedFloat32Array()
 var map_w: int = 0
 var map_h: int = 0
-## Metres per map pixel, and the landmass's extent in world metres (x0, z0, x1, z1).
+## Meters per map pixel, and the landmass's extent in world meters (x0, z0, x1, z1).
 var m_per_px: float = 1.0
 var extent: Rect2 = Rect2()
 
@@ -69,7 +69,7 @@ func _init(p_width_m: float = WIDTH_M, p_relief: float = 1.0) -> void:
 # THE GROUND
 # =============================================================================================
 
-## The ground's height at world (x, z), metres.
+## The ground's height at world (x, z), meters.
 func height(x: float, z: float) -> float:
 	var p: Vector2 = to_map(x, z)
 	var d_m: float = _sample(coast, p) * m_per_px
@@ -92,7 +92,7 @@ func height(x: float, z: float) -> float:
 	return h
 
 
-## Whether (x, z) is on the continent (not the sea), and how far from its coast, metres (negative: at sea).
+## Whether (x, z) is on the continent (not the sea), and how far from its coast, meters (negative: at sea).
 func coast_distance(x: float, z: float) -> float:
 	return _sample(coast, to_map(x, z)) * m_per_px
 
@@ -142,24 +142,24 @@ func _read_map() -> void:
 	g = _blur(g, 2)
 	b = _blur(b, 2)
 	var green: PackedByteArray = PackedByteArray()
-	var grey: PackedByteArray = PackedByteArray()
+	var gray: PackedByteArray = PackedByteArray()
 	green.resize(n)
-	grey.resize(n)
+	gray.resize(n)
 	for i: int in range(n):
 		var c := Color(r[i], g[i], b[i])
-		# Land: yellow to deep green, saturated. Ridge: grey-brown (red at least green), unsaturated.
+		# Land: yellow to deep green, saturated. Ridge: gray-brown (red at least green), unsaturated.
 		green[i] = 1 if c.h > 0.15 and c.h < 0.42 and c.s > 0.32 and c.v > 0.18 else 0
-		grey[i] = 1 if c.s < 0.36 and c.v > 0.28 and c.v < 0.8 and c.r >= c.g * 0.98 else 0
+		gray[i] = 1 if c.s < 0.36 and c.v > 0.28 and c.v < 0.8 and c.r >= c.g * 0.98 else 0
 	# The ridge counts as land only beside green land (the parchment's pale patches are not mountains).
 	var near_green: PackedByteArray = _dilate(green, 12)
 	var any_land: PackedByteArray = PackedByteArray()
 	any_land.resize(n)
 	for i: int in range(n):
-		any_land[i] = 1 if green[i] == 1 or (grey[i] == 1 and near_green[i] == 1) else 0
+		any_land[i] = 1 if green[i] == 1 or (gray[i] == 1 and near_green[i] == 1) else 0
 	any_land = _erode(_dilate(any_land, 2), 2)
 	var main: PackedByteArray = _largest(any_land)
 	main = _fill_holes(main)
-	# The mountains: the grey inside the continent, widened a little and smoothed.
+	# The mountains: the gray inside the continent, widened a little and smoothed.
 	var mtn: PackedFloat32Array = PackedFloat32Array()
 	mtn.resize(n)
 	var x0: int = map_w
@@ -174,11 +174,11 @@ func _read_map() -> void:
 				y0 = mini(y0, y)
 				x1 = maxi(x1, x)
 				y1 = maxi(y1, y)
-				mtn[i] = 1.0 if grey[i] == 1 and green[i] == 0 else 0.0
-	# A lone grey speck is a smudge, not a mountain: only grey with grey round it.
+				mtn[i] = 1.0 if gray[i] == 1 and green[i] == 0 else 0.0
+	# A lone gray speck is a smudge, not a mountain: only gray with gray round it.
 	mtn = _blur(mtn, 3)
 	coast = _signed_distance(main)
-	# The map's dark shading along the shore reads as grey: mountains start a little way inland.
+	# The map's dark shading along the shore reads as gray: mountains start a little way inland.
 	for i: int in range(n):
 		mtn[i] = smoothstep(0.35, 0.8, mtn[i]) * smoothstep(8.0, 18.0, coast[i])
 	ridge = _blur(mtn, 4)

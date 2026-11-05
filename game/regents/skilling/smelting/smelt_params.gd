@@ -3,7 +3,7 @@ class_name SmeltParams extends Resource
 ## ONE SMELT'S ROUND (bellows, then pour: `SmeltModel`). First the HEAT: the furnace cools every tick;
 ## each pump of the bellows heats it; keep it inside a band that drifts and narrows (and never past the
 ## burn line): mash faster to heat it, ease off to cool it. Then the POUR: hold to tilt the crucible, let
-## go to stop; tilt again to top it up; end at the mould's line; past the brim it spills. Whole numbers
+## go to stop; tilt again to top it up; end at the mold's line; past the brim it spills. Whole numbers
 ## only (the server replays it in Rust); heat and fill are thousandths.
 
 @export var display_name: String = "Smelt"
@@ -30,9 +30,9 @@ class_name SmeltParams extends Resource
 @export_range(5, 500) var band_half_end: int = 60
 ## Heat above this burns the ore (a tick there counts against the heat).
 @export_range(0, 1000) var burn_line: int = 900
-## How fast the mould fills while pouring (thousandths per tick).
+## How fast the mold fills while pouring (thousandths per tick).
 @export_range(1, 500) var pour_rate: int = 28
-## The mould's line falls somewhere between these (thousandths of the mould).
+## The mold's line falls somewhere between these (thousandths of the mold).
 @export_range(0, 1000) var target_lo: int = 620
 @export_range(0, 1000) var target_hi: int = 820
 ## How far off the line scores nothing for the pour.

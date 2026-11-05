@@ -38,11 +38,11 @@ const FLASH_HURT: Color = Color(1.0, 0.18, 0.12, 0.8)
 const FLASH_BLOCK: Color = Color(0.45, 0.72, 1.0, 0.85)
 const FLASH_STAGGER: Color = Color(1.0, 0.82, 0.25, 0.85)
 const FLASH_S: float = 0.18
-## The glint of an unblockable swing: its colour, how long it flares, and how high it shows.
+## The glint of an unblockable swing: its color, how long it flares, and how high it shows.
 const GLINT: Color = Color(1.0, 0.1, 0.05, 0.95)
 const GLINT_S: float = 0.35
 const GLINT_Y: float = 1.9
-## The sparks: their colours, how long a burst lives, how high on the body it shows, and how far towards
+## The sparks: their colors, how long a burst lives, how high on the body it shows, and how far towards
 ## the attacker.
 const SPARK_HIT: Color = Color(1.0, 0.75, 0.35, 1.0)
 const SPARK_BLOCK: Color = Color(0.55, 0.8, 1.0, 1.0)
@@ -237,8 +237,8 @@ func parry_ring(wind_up_ms: int) -> void:
 static var _ring_shader: Shader = null
 
 
-## A camera-facing quad drawing a thin ring of `colour` (a 1 m ring at scale 1).
-static func _ring_quad(colour: Color) -> MeshInstance3D:
+## A camera-facing quad drawing a thin ring of `color` (a 1 m ring at scale 1).
+static func _ring_quad(color: Color) -> MeshInstance3D:
 	if _ring_shader == null:
 		_ring_shader = Shader.new()
 		_ring_shader.code = """shader_type spatial;
@@ -257,7 +257,7 @@ void fragment() {
 """
 	var mat := ShaderMaterial.new()
 	mat.shader = _ring_shader
-	mat.set_shader_parameter(&"tint", colour)
+	mat.set_shader_parameter(&"tint", color)
 	var mi := MeshInstance3D.new()
 	var quad := QuadMesh.new()
 	quad.size = Vector2(2.0, 2.0)
@@ -356,7 +356,7 @@ func spark(kind: StringName, from_id: int) -> void:
 	var ent: Node3D = entity as Node3D
 	if ent == null or not ent.is_inside_tree():
 		return
-	var colour: Color = {&"block": SPARK_BLOCK, &"stagger": SPARK_STAGGER}.get(kind, SPARK_HIT)
+	var color: Color = {&"block": SPARK_BLOCK, &"stagger": SPARK_STAGGER}.get(kind, SPARK_HIT)
 	var size: float = 1.6 if kind == &"big" or kind == &"stagger" else 1.0
 	var toward: Vector3 = Vector3.ZERO
 	var from: Node3D = EntityRegistry.get_entity(from_id) as Node3D if from_id > 0 else null
@@ -389,7 +389,7 @@ func spark(kind: StringName, from_id: int) -> void:
 	embers.color_ramp = fade
 	var dot := QuadMesh.new()
 	dot.size = Vector2(1, 1)
-	var ember_mat: StandardMaterial3D = _glow(colour)
+	var ember_mat: StandardMaterial3D = _glow(color)
 	ember_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	ember_mat.vertex_color_use_as_albedo = true
 	dot.material = ember_mat
@@ -399,7 +399,7 @@ func spark(kind: StringName, from_id: int) -> void:
 	var streak := MeshInstance3D.new()
 	var bar := QuadMesh.new()
 	bar.size = Vector2(0.9 * size, 0.07 * size)
-	var mat: StandardMaterial3D = _glow(colour)
+	var mat: StandardMaterial3D = _glow(color)
 	bar.material = mat
 	streak.mesh = bar
 	root.add_child(streak)
@@ -410,9 +410,9 @@ func spark(kind: StringName, from_id: int) -> void:
 	tw.tween_callback(root.queue_free)
 
 
-## An additive, unshaded, camera-facing material in `colour`, drawn over the body: SOFT LIGHT (`soft_light`), bright
+## An additive, unshaded, camera-facing material in `color`, drawn over the body: SOFT LIGHT (`soft_light`), bright
 ## in the middle and fading to nothing at the edge, so a quad never shows as a square.
-static func _glow(colour: Color) -> StandardMaterial3D:
+static func _glow(color: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -422,7 +422,7 @@ static func _glow(colour: Color) -> StandardMaterial3D:
 	# square (Luke's screenshot, 2026-11-01).
 	m.billboard_keep_scale = true
 	m.no_depth_test = true
-	m.albedo_color = colour
+	m.albedo_color = color
 	m.albedo_texture = soft_light()
 	return m
 
@@ -468,10 +468,10 @@ func is_local() -> bool:
 	return entity_id > 0 and entity_id == EntityRegistry.local_entity_id
 
 
-## LIGHT IT UP: every mesh of its look shows `kind`'s colour over itself, fading over `FLASH_S`.
+## LIGHT IT UP: every mesh of its look shows `kind`'s color over itself, fading over `FLASH_S`.
 func flash(kind: StringName) -> void:
 	flashes.append(kind)
-	var colour: Color = {&"hit": FLASH_HIT, &"hurt": FLASH_HURT, &"block": FLASH_BLOCK, &"stagger": FLASH_STAGGER, &"glint": GLINT}.get(kind, FLASH_HIT)
+	var color: Color = {&"hit": FLASH_HIT, &"hurt": FLASH_HURT, &"block": FLASH_BLOCK, &"stagger": FLASH_STAGGER, &"glint": GLINT}.get(kind, FLASH_HIT)
 	var ent: Node3D = entity as Node3D
 	if ent == null or not ent.is_inside_tree():
 		return
@@ -486,12 +486,12 @@ func flash(kind: StringName) -> void:
 			continue   # its numbers, and anything that already has an overlay of its own (a grade's glow)
 		g.material_overlay = _flash_mat
 		_flash_meshes.append(g)
-	_flash_mat.set_shader_parameter(&"tint", colour)
+	_flash_mat.set_shader_parameter(&"tint", color)
 	if _flash_tween != null:
 		_flash_tween.kill()
 	_flash_tween = create_tween()
-	_flash_tween.tween_method(func(a: float) -> void: _flash_mat.set_shader_parameter(&"tint", Color(colour, a)),
-		colour.a, 0.0, FLASH_S).set_ease(Tween.EASE_IN)
+	_flash_tween.tween_method(func(a: float) -> void: _flash_mat.set_shader_parameter(&"tint", Color(color, a)),
+		color.a, 0.0, FLASH_S).set_ease(Tween.EASE_IN)
 	_flash_tween.tween_callback(_unflash)
 
 
@@ -523,7 +523,7 @@ func _unflash() -> void:
 
 
 ## A word over it for a moment ("Blocked", "Parried"), smaller than a number.
-func say(text: String, colour: Color) -> void:
+func say(text: String, color: Color) -> void:
 	said.append(text)
 	var ent: Node3D = entity as Node3D
 	if ent == null or not ent.is_inside_tree():
@@ -536,7 +536,7 @@ func say(text: String, colour: Color) -> void:
 	l.pixel_size = 0.0022
 	l.font_size = 30
 	l.outline_size = 8
-	l.modulate = Color(colour, 1.0)
+	l.modulate = Color(color, 1.0)
 	l.position = Vector3(0, 2.3, 0)
 	ent.add_child(l)
 	var tw: Tween = l.create_tween()
