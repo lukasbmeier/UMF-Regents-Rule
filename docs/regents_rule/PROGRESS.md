@@ -1891,3 +1891,18 @@ step).
 **Tested**: nothing to test (a doc only; no code or content changed).
 
 **Left**: Luke's answers to M1-M10, then the sheet's §8.
+
+**Revision 2 (2026-11-05)**: an outside review, checked against the code, folded in (`MINIGAMES_PREP.md` §9 lists
+taken and not). Found while checking: a round scored 80 % pays exactly AFK (1.25 x 0.8), so only near-perfect play
+gains; each hold of E is one round and the panel closes after it; assembly takes the BEST input's quality
+(`make_batch`, `QUALITY_FROM_INPUTS`), harmless today but a Masterwork grip would lift a Common blade once grips have
+a quality. New in the sheet: §3.1 (two anvil strikes, a rhythmic bellows, sound from the start), §4.1 (the core alone
+sets an assembled item's quality; a part's grade starts its trait higher), §5.3 (gathering's rounds back to back in a
+side panel), M11-M12, §9. The review's wrong claims (one bar a smelting round; latency) and invented numbers are not
+taken.
+
+**A second note on revision 2 (2026-11-05)**, all three taken in some form (`MINIGAMES_PREP.md` §9): a gathering run
+goes on hands free once started (holding E while tapping A / D is a claw grip), ending on E, Escape, the node worked
+out, or a round with no input (added here); each round is paid as it ends, as the code already does (the sheet's
+wording fixed); the anvil's buttons become a UI setting so Luke tries LMB strike / RMB tap / R reheat against
+LMB / Shift+LMB / RMB in step 2.

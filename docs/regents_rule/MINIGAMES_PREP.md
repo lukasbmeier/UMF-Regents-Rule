@@ -1,4 +1,9 @@
-# Before the minigame overhaul: where they stand, what is coming, and the decisions that are yours (2026-11-04)
+# Before the minigame overhaul: where they stand, what is coming, and the decisions that are yours (2026-11-04, revised 2026-11-05)
+
+**Revision 2 (2026-11-05)** folds in an outside review of the first version, checked against the code (§9 lists what
+was taken, what was not, and why). New: what active play really pays (§1.2, §4), the two cadences, gathering and
+making (§5.3), how an assembled item's quality is decided (§4.1), two strikes on the anvil, a rhythmic bellows, a
+quench that never destroys a part, and decisions M11-M12.
 
 Luke, 2026-11-04: "Let's start the minigame rework. First summarize where we are currently, and forecast ones we
 will need in the future (herbalism, crafting for each complex weapon/armor/tool?, other skills). I think tiers
@@ -33,14 +38,19 @@ Each is a params resource (content, edited in the Inspector), a pure GDScript mo
 
 ### 1.2 What a round pays today
 - **Gathering** (woodcutting, mining): items = AFK rate x 1.25 x score. Rares x 1.3. Score never touches quality (raw
-  materials have none, `MATERIALS.md` §1).
-- **Smelting**: batches = the same formula. Bars stack and have no quality, so **smelting skill never reaches Fine or
-  Masterwork.**
+  materials have none, `MATERIALS.md` §1). **A round scored 80 % pays exactly what AFK does** (1.25 x 0.8 = 1.0): a
+  tree round (10 s, AFK one log in 4 s) is 2.5 logs AFK, about 3 played perfectly. Only near-perfect play gains.
+- **Smelting**: batches = the same formula, so a round is several bars: a perfect copper round about 4-5 bars from
+  about 9 ore, steel 2-3. Bars stack and have no quality, so **smelting skill never reaches Fine or Masterwork**, and
+  its pay is the same thin edge as gathering's.
+- **One round per hold of E**: the panel opens, plays 10-15 s, closes; another round is another hold. Gathering a
+  stack of logs is the panel opening and closing several times a minute.
 - **Smithing**: quality = the score (thousandths), one part a round; AFK makes 350 (Common). **The only minigame that
   sets a grade.**
 - **The workbench** (grips, hilts, rivets at the anvil, assembly, the yew bow and staff, arrows): **no minigame.**
-  Assembly takes the head's quality; **grips, bows and staves have no quality at all**, so a wood-core weapon (the bow,
-  the staff) can never be Fine or Masterwork from crafting.
+  Assembly takes the **best** quality among the inputs it uses (`make_batch`, `QUALITY_FROM_INPUTS`: the max), which
+  is the head's today because nothing else has one; **grips, bows and staves have no quality at all**, so a wood-core
+  weapon (the bow, the staff) can never be Fine or Masterwork from crafting.
 - **Rank** only gates (which nodes and recipes you may use); it never changes how a round plays. A better TOOL swings
   faster in branch dodge and the seam (`SkillMinigames.with_speed`).
 
@@ -72,6 +82,8 @@ touching a rule, a Rust twin or a golden.
 ### 1.6 Found while looking
 - The copper and steel axe heads' rounds are titled "Iron axe head", both sword blades' "Iron sword blade" (the
   params' `display_name`, copied when they were made). A one-line fix each, in the first build step.
+- **A trap for woodworking (M5)**: because assembly takes the best input's quality, the day a grip has a quality a
+  Masterwork grip on a Common blade makes a Masterwork sword. §4.1 and M12 settle it before carving is built.
 
 ## 2. What is coming: every skill that will want a minigame
 Most new skills fit one of **five families** the built ones already are. A family is one model with params; a new
@@ -81,9 +93,13 @@ skill in a family is mostly content and a UI skin, not a new model.
 |---|---|---|
 | **Dodge** (timed sides) | branch dodge | act on a rhythm, read what is coming, punish the wrong side |
 | **Trace** (a path) | follow the seam | strike or follow points along a seeded path |
-| **Heat** (hold in a band) | bellows, then pour | keep a drifting value in a band, then finish to a line |
-| **Shape** (match a profile) | shape to the outline | work columns toward a silhouette |
-| **Tension** (pull without snapping) | not built (§7.2 of the design) | hold to pull while a strain rises; too far snaps |
+| **Heat** (hold in a band) | bellows, then pour | keep a drifting value in a band, then finish to a line. **Revised: no mashing** (§3.1) |
+| **Shape** (match a profile) | shape to the outline | work columns toward a silhouette; the family with the most choice in it (which column, the spread, when to reheat), and smithing (adds metal sideways) and carving (only takes wood away) feel different on it |
+| **Tension** (pull without snapping) | not built (§7.2 of the design) | hold to pull while a strain rises; too far snaps. The plant TREMBLES (seen and heard) before a spike, so the player reads the root, not a meter |
+
+Four of the five are timing and reflex. Choice inside a round (§3.1's two strikes, a band's quirks) is what keeps a
+craft played hundreds of times from going stale, so each family's band layers should add a choice where they can,
+not only a tighter window.
 
 | Skill (product) | When | Proposed minigame (Luke's to decide) | Family | Score decides |
 |---|---|---|---|---|
@@ -125,15 +141,31 @@ What the band's new thing could be (proposals, one each, to play before deciding
 
 | Skill | Band 1 (today's game) | Band 2: the new thing | Band 3 |
 |---|---|---|---|
-| Woodcutting | branches on your side | **knots**: a knotted piece takes two chops from the same side in a beat | **deadwood falls**: a piece dropping from above must be stepped away from |
+| Woodcutting | branches on your side | **knots**: a knotted piece takes two chops from the same side in a beat | **deadwood falls**: a piece dropping from above: hold your swing (a pause beat), still A / D only, no third key |
 | Mining | the seam, outline shown | **brittle notches**: strike on the rock's ring (a beat); too soon and the seam cracks wrong | **a fault**: two seams cross; follow the wrong branch and the split closes |
-| Smelting | the band, then the pour | **slag**: skim it (a key) when it rises, or the bar comes out short | a two-metal melt: two bands to hold at once (alloys) |
-| Smithing | shape to the outline | **heat colors**: metal only moves in its working color; struck too cold it cracks (a mark you can't hammer out) | **the quench**: release at the right color at the end; a good quench lifts the score, a bad one cracks the part |
+| Smelting | the band (pumped in rhythm, §3.1), then the pour | **slag**: skim it (a key) when it rises, or the bar comes out short | a two-metal melt: two bands to hold at once (alloys) |
+| Smithing | shape to the outline, with **two strikes** (§3.1) | **heat colors**: metal only moves in its working color; struck too cold it cracks (a mark you can't hammer out); **hard and soft spots** show on a column as you strike it, so the order you work in changes | **the quench**: a short (~2 s) close to the round: released at the right color it lifts the score; badly, it lowers it, capped, and **never destroys the part** |
 | Woodworking | carve to the profile | **grain**: cutting against the grain tears deeper | figured wood: a pattern to keep in the face |
 | Herbalism | pull the root | **roots that branch**: two strains to watch | a wilting plant: a timer on the whole pull |
 
 Smithing goes first (§8) because it is the one that sets the grade, and it is the only skill whose tiers are the
 same game today.
+
+### 3.1 Changes to the base games (band 1), from the review
+- **Smithing, two strikes**: LMB a **heavy strike** (beats a column down a lot and spreads hard into its neighbors:
+  roughing out) and a **light tap** (moves one column a little with no spread: finishing the line). Today's single
+  strike sits between the two. Which buttons is for Luke's hands in step 2, built as a setting of the UI (never the
+  model) so both can be tried: **LMB strike, RMB tap, R reheat** (the two used most on the two mouse buttons;
+  reheat is a couple of presses a round and R already reheats) or LMB strike, Shift+LMB tap, RMB reheat (reheat where it is today).
+  Add-only params (`tap_drop`, `tap_spread_pct`; a 0
+  switches the tap off, so today's rounds replay unchanged).
+- **Smelting, no mashing**: the bellows pump on a RHYTHM (press as the bellows fill: in time adds the most heat, off
+  time little), not as fast as a hand can go. Mashing for 7 s a round, hundreds of rounds a session, hurts hands and
+  invites a macro. (Luke's 2026-10-19 "the bellows take every press" stays true: no press is dropped, a press off
+  the beat just does less.) This changes the model: a new challenge kind (§1.4).
+- **Sound in every round from the start of the overhaul**: the clang pitching down as the bar cools, the bellows'
+  breath, wood cracking, the root's strain. Sound is how a player reads heat, rhythm and strain without staring at a
+  bar, so it is part of each minigame's rules being readable, not a polish pass after.
 
 ## 4. Showing skill, and paying for it
 - **The grade is the reward for making.** Today quality = the score, so a 400 round is Fine and an 800 Masterwork.
@@ -144,12 +176,30 @@ same game today.
 - **Higher tiers pay more for the same skill**: a Masterwork steel blade is worth more than a Masterwork copper one
   (tier sets Power), so the harder band's Masterwork is the prize, and copper Masterwork staying easy for a veteran
   is fine.
-- **Gathering pays in amount and rares**: today a perfect round is 1.25x AFK and 1.3x rares. Proposed: leave the
-  multipliers, and make "rares" mean the catalysts (`MATERIALS.md` §6) so a skilled gatherer feeds trait ranks.
-- **Smelting**: bars stay without quality (they stack). Its skill pays in bars per ore. (Open: §7 M6.)
+- **Gathering and smelting pay in amount and rares, and today that pay is thin** (§1.2: a round scored 80 % pays
+  what AFK does; only near-perfect play gains, by a quarter). Luke chose 1.25x as "a modest edge so AFK is never a
+  non-option", and AFK must stay worth doing; but a good-not-perfect player, focused for the whole round, earning
+  nothing over AFK reads as a bug, not as modest. Proposed (M11), the shape, not the numbers:
+  - **A good round beats AFK, a poor one still falls short** (Luke's #23 kept): the break-even moves down from 80 % to
+    about half, with a floor, `yield = AFK x (floor + (mult - floor) x score)` (say a floor of 0.75: 50 % pays AFK,
+    100 % the full multiplier), or the multiplier rises. Either is a hot rule; the readout (§6) and Luke's play set
+    the numbers.
+  - **The catalysts lean hard to active play**: "rares" are the catalysts (`MATERIALS.md` §6), and played rounds
+    find them several times as often as AFK (today 1.3x), so skilled gatherers are where trait ranks come from. AFK
+    still finds them, slowly.
+- **Smelting**: bars stay without quality (they stack). Its skill pays in bars per ore and in the catalysts, as
+  gathering does. (Open: M6.)
 - **Bots**: a scripted client can play any of these perfectly (the accepted risk, design §13 #19). The more
-  Masterwork is worth, the more that matters; a later step, not this one.
+  active play pays, the more that matters; a later step, not this one.
 
+### 4.1 An assembled item's quality (the trap in §1.6)
+Today assembly takes the BEST input's quality. Once grips have one, that lets a Masterwork grip lift a Common blade.
+Proposed (M12): **the CORE part alone sets the assembled item's quality and grade**, as it already sets the tier
+(`MATERIALS.md` §1); a **secondary part's grade feeds its own trait**: a Fine or Masterwork grip's trait starts a
+rank higher (the "a better-made part starts higher" path of trait ranks Luke liked on 2026-10-23 and left undecided,
+`MATERIALS.md` §5). So every part's minigame matters, each for its own thing, and no weighting formula is needed.
+Not proposed: an average of the parts (a Fine grip would pull a Masterwork blade down to Fine, making extra parts a
+penalty), or a weighted mix (harder to read than "the blade makes the sword").
 ## 5. The look
 ### 5.1 Three ways to make them look like the game
 | | What it is | Cost | Good | Bad |
@@ -159,7 +209,9 @@ same game today.
 | **C. A 3D stage in the panel** | the panel shows a small 3D scene (a `SubViewport`) built from the game's own Quaternius models and lit like the world, with 2D readouts (heat, the outline) in a proper theme on top, plus particles and sound | medium | matches the 3D assets exactly, costs nothing in art, reversible, the world camera untouched; can become B later | a 3D stage per minigame to build |
 
 **Proposed: C, prototyped on smithing first** (the anvil, the hot bar as a mesh glowing by its heat, the hammer,
-sparks, a clang), shown to Luke before the others. A 2D readout stays where 2D is clearer (the target outline).
+sparks, a clang), shown to Luke before the others. A 2D readout stays where 2D is clearer (the target outline). B
+stays out for now: in an open world the close camera fights uneven ground, foliage, light and other players walking
+through the shot.
 
 ### 5.2 Assets, and the Gemini idea
 - **Our own 3D assets first**: Quaternius's packs (CC0) already have the anvil, rocks, trees and tools; a 3D stage
@@ -176,6 +228,22 @@ sparks, a clang), shown to Luke before the others. A 2D readout stays where 2D i
   images. **AI-generated art** in a shipped game must be disclosed on Steam's store page, and its style would have to
   match Quaternius's; a sound reason to prefer the game's own 3D assets. If Luke does mock ideas in Gemini, a
   short screen recording or the HTML file is enough to work from.
+
+### 5.3 Two cadences: making and gathering
+A big centered panel suits MAKING: one part you care about, its grade the prize, a round worth stopping for. It
+tires out GATHERING: a stack of logs or ore is the panel opening and closing several times a minute. Proposed (M11):
+- **Making** (smithing, carving, later stitching): the 3D stage in the panel (C), a round a part, as now.
+- **Gathering and smelting**: hold E to start, as now; then **rounds run back to back on their own** (the next
+  starts as the last ends, a running tally, no close and reopen), in a **smaller panel at the side of the screen** so
+  the character and the node stay in view. E is NOT held through the run: holding E while tapping A / D with the
+  same hand is a claw grip, and a minute of holding any key cramps. The run ends when the node is worked out or the
+  furnace runs out of ore, on E or Escape, or **after a round with no input at all** (a player called away mid-run
+  never sits in rounds scoring below AFK). Movement keys don't end it: woodcutting plays on A / D.
+- **Each round is paid when it ends**, as now (the client sends its inputs at the round's end, the server replays
+  and pays it then); the tally only adds up what was already paid. Leaving mid-round pays what that round got
+  (gathering) or uses nothing (making), the settled Escape rule, so a run left in round 4 keeps rounds 1-3 whole.
+  No model change.
+- Not proposed: one long round paying a bulk haul (one mistake costs too much, and it is a model change).
 
 ## 6. Measuring it: the difficulty readout
 "Masterwork takes real skill" needs a number, not a feeling. Proposed tool (first build step): **simulated players
@@ -199,25 +267,77 @@ Each with the proposed answer. The bold part is what needs his yes or no.
   (§4: fresh band Fine ~50 %, Masterwork ~10 %; three ranks on, Masterwork ~33 %). Luke's numbers win.
 - **M5. Woodworking gets a minigame.** **Proposed: yes, carve to the line**, so grips, bows and staves get a quality
   and a grade (today they can't). Assembly stays a choice screen with no minigame.
-- **M6. Smelting's reward.** **Proposed: bars stay without quality; the score pays in bars per ore.** Or a good smelt
-  makes a better bar that starts the smith's round closer to the outline (more to track, more reason to smelt well).
-- **M7. The look.** **Proposed: C, a 3D stage in the panel, on smithing first** (§5.1), sound and particles
-  included. Or A (2D re-skin) or B (in the world).
+- **M6. Smelting's reward and its bellows.** **Proposed: bars stay without quality; the score pays in bars and
+  catalysts as gathering does (M11); the bellows pump in rhythm, not mashing** (§3.1). Or a good smelt makes a
+  better bar that starts the smith's round closer to the outline (more to track, more reason to smelt well).
+- **M7. The look.** **Proposed: C, a 3D stage in the panel, for the making minigames, smithing first** (§5.1), sound
+  from the start (§3.1); gathering in a smaller side panel (§5.3). Or A (2D re-skin) or B (in the world).
 - **M8. Art sources.** **Proposed: the game's own Quaternius models plus CC0 (Kenney, freesound); Gemini for mockups
   only.** His calls: paid packs yes or no; AI-generated art yes or no.
-- **M9. Each band's new thing** (§3's table). **Proposed: start with smithing's heat colors (band 2) and the quench
-  (band 3)**; the others are proposals to prototype in the lab and play before deciding.
+- **M9. Each band's new thing** (§3's table). **Proposed: smithing's two strikes in band 1 (§3.1), heat colors with
+  hard and soft spots in band 2, a quench that lifts or lowers but never destroys in band 3**; the others are
+  proposals to prototype in the lab and play before deciding.
 - **M10. The new skills' minigames** (§2's table): herbalism's pull-the-root and skinning's cut line are the next
   two needed (herbalism and hunting come right after this). **Proposed: as in the table**; decided with those steps.
+- **M11. What active gathering and smelting pay, and how often the panel opens** (§4, §5.3). **Proposed: a good
+  round beats AFK and a poor one still falls short (break-even near half, not 80 %); the catalysts lean hard to active play; rounds
+  run back to back on their own once started (E or Escape ends the run, as does a round with no input), in a
+  smaller side panel, each round paid as it ends.** The numbers come from the readout and Luke's play,
+  never from this sheet. This revisits Luke's 2026-10-18 "1.25x, a modest edge": his call whether the edge grows or
+  only its shape changes.
+- **M12. An assembled item's quality** (§4.1). **Proposed: the core part alone sets it; a secondary part's grade
+  starts its trait a rank higher.** Settled before woodworking (M5) gives grips a quality. This also decides the
+  "better-made part starts higher" half of trait ranks (`MATERIALS.md` §5).
 
 ## 8. The order of work (once answered)
 1. **The readout and the fixes**: the simulated players and the share readout (§6), pinned in the unit suite and
-   shown in the lab; the copied round titles (§1.6).
-2. **The look, on smithing**: the 3D stage (or M7's choice), sparks, sound, a proper font and theme. Luke plays it.
-3. **Smithing's ladder**: heat colors (band 2), the quench (band 3), rank easing (M3), tuned to M4's targets with the
-   readout. Luke plays copper, iron and steel heads.
-4. **The other three**: mining, woodcutting and smelting get the look and their band's new thing, one at a time,
-   each played by Luke.
-5. **Woodworking's carve to the line** (M5): grips, hilts, bows and staves get a quality.
-6. Then herbalism and hunting (`GAME.md`'s item 3), whose minigames (pull the root, skinning) are built to this bar
+   shown in the lab; the copied round titles (§1.6); assembly's quality from the core only (M12), before any other
+   part has a quality.
+2. **The look, on smithing**: the 3D stage (or M7's choice), sparks, sound, a proper font and theme, and the two
+   strikes (§3.1). Luke plays it.
+3. **Smithing's ladder**: heat colors with hard and soft spots (band 2), the quench (band 3), rank easing (M3), tuned
+   to M4's targets with the readout. Luke plays copper, iron and steel heads.
+4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the side panel, the new edge and the
+   catalysts' lean, tuned with the readout.
+5. **The other three**: mining, woodcutting and smelting (its rhythmic bellows) get the look and their band's new
+   thing, one at a time, each played by Luke.
+6. **Woodworking's carve to the line** (M5): grips, hilts, bows and staves get a quality; a grip's grade starts its
+   trait higher (M12).
+7. Then herbalism and hunting (`GAME.md`'s item 3), whose minigames (pull the root, skinning) are built to this bar
    from the start.
+
+## 9. The outside review (2026-11-05): what was taken, and what was not
+Each claim was checked against the code and content before it was taken.
+
+**Taken**: the active edge is too thin to pay for focus (and more so than the review said: a round scored 80 % pays
+exactly AFK; §1.2, §4, M11); the panel opening every round tires gathering (confirmed: one round per hold of E; §5.3,
+M11); catalysts leaning to active play (§4); mashing the bellows (§3.1, M6); a heavy strike and a light tap on the
+anvil, and hard and soft spots (§3.1, §3, M9); a quench that never destroys 15 s of good work (§3); the band-3
+woodcutting kept to A / D (§3); the root's tremors (§2); sound as a way to read a round (§3.1); keeping B out (§5.1).
+Its question about multi-part quality found a real trap (§1.6, §4.1, M12), though the review guessed the rule
+wrong (it assumed an average; the code takes the best input).
+
+**Not taken, and why**:
+- "Smelting makes one bar per 12-second round": wrong; a round is several bars (§1.2). Its fix, 5-10 ore a round,
+  is already how it works.
+- "Every family is pure reflex": the shape family already has choice in it; true of the other four (§2).
+- "Latency": the server replays a round from the times the client recorded, so lag never judges one. Bots are the
+  accepted risk, and choices inside a round do not stop a bot (a bot can solve them too).
+- Its numbers (yield 1.5-1.75x, catalysts 2.5-3x, "40 % of the polish budget on sound", "matches FFXIV and WoW
+  curves"): not from evidence. The multipliers are hot rules set by the readout and Luke's play.
+- Spending a bar to re-finish a part up to Masterwork: it buys the grade with materials, against "Masterwork takes
+  real skill"; trait ranks are already the material sink.
+- Weighting the parts' qualities (blade 65 %, guard 20 %, grip 15 %): the core alone (§4.1) is simpler to read and
+  matches "the core sets the tier".
+- One long gathering round for a bulk haul: one mistake costs too much, and it is a model change (§5.3).
+- Its answers to M1-M10: a second opinion; the decisions are Luke's.
+
+**A second note (2026-11-05), on revision 2**, three points, all taken in some form:
+- **Holding E through a run is a claw grip** (E held while A / D are tapped by the same hand) and cramps over a
+  minute: TAKEN. The run goes on hands free once started (§5.3). Added here: a round with no input ends the run, so
+  nobody AFK sits in rounds that pay below AFK.
+- **Pay each round as it ends, not the run at its end**: already how it works (the client sends a round's inputs as
+  it ends and the server pays it then); revision 2's "letting go of E ends the run and pays it" read otherwise and is
+  reworded (§5.3).
+- **The anvil's buttons**: TAKEN as a test for step 2, both mappings a UI setting (§3.1). RMB for the tap with R to
+  reheat (R already reheats today) rather than its Space.
