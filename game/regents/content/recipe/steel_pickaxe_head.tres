@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_uv3ku"]
 script = ExtResource("3_uymgj")
-display_name = "Pickaxe head"
+display_name = "Steel pickaxe head"
 outline = PackedInt32Array(10, 12, 14, 16, 18, 20, 22, 24, 24, 22, 20, 18, 16, 14, 12, 10)
 
 [resource]

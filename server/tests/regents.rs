@@ -357,6 +357,17 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     assert!(matches!(blade.minigame, rules::Minigame::Shape(_)) && blade.quality == rules::QUALITY_FROM_ROUND, "the blade is shaped at the anvil");
     let assembled = rules::RECIPES.iter().find(|r| r.name == "Iron sword").unwrap();
     assert!(assembled.part_slot >= 0 && assembled.quality == rules::QUALITY_FROM_INPUTS, "the sword takes any handle, as good as its blade");
+    // Only the core sets an assembled item's quality (Luke's M12, 2026-11-05): the blade does, a picked part never.
+    for r in rules::RECIPES.iter().filter(|r| r.quality == rules::QUALITY_FROM_INPUTS) {
+        let cores: Vec<usize> = (0..r.inputs.len()).filter(|i| rules::sets_quality(r, *i)).collect();
+        assert!(!cores.is_empty(), "{}: some input sets its quality", r.name);
+        for s in r.part_slots {
+            assert!(!rules::sets_quality(r, *s as usize), "{}: its picked part (input {s}) never sets its quality", r.name);
+        }
+    }
+    let blade_at = assembled.inputs.iter().position(|(i, _)| rules::item(*i).map(|it| it.name) == Some("Iron sword blade")).unwrap();
+    assert!(rules::sets_quality(assembled, blade_at), "the iron sword's blade sets its quality");
+    assert!(!rules::sets_quality(assembled, assembled.part_slot as usize), "its grip never does");
 }
 
 #[test]

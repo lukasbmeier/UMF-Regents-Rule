@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/regents/tests/minigame_readout_cli.gd" id="1_cli"]
+
+[node name="MinigameReadoutCli" type="Node"]
+script = ExtResource("1_cli")

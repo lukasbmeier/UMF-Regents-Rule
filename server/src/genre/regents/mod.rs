@@ -240,6 +240,13 @@ pub const QUALITY_NONE: u8 = 0;
 pub const QUALITY_FROM_ROUND: u8 = 1;
 pub const QUALITY_FROM_INPUTS: u8 = 2;
 
+/// Whether input `input` of `r` sets a `QUALITY_FROM_INPUTS` item's quality: only its CORE does, the inputs no
+/// part slot names (Luke's M12, 2026-11-05, `MINIGAMES_PREP.md` §4.1). A picked part (a grip, a binding) never
+/// does, whatever its own grade: a Masterwork grip on a Common blade makes a Common sword.
+pub fn sets_quality(r: &RecipeSeed, input: usize) -> bool {
+    !r.part_slots.iter().any(|s| *s >= 0 && *s as usize == input)
+}
+
 /// A recipe (`RecipeDef`).
 #[derive(Debug)]
 pub struct RecipeSeed {

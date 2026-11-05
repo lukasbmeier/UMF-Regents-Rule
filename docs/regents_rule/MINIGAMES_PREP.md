@@ -1,5 +1,9 @@
 # Before the minigame overhaul: where they stand, what is coming, and the decisions that are yours (2026-11-04, revised 2026-11-05)
 
+**ANSWERED (Luke, 2026-11-05): every decision as proposed, except** M2 (as proposed, but where band 3 starts waits on
+which metals come after steel) and M7 (as proposed, and **gathering is a 3D stage too, in the smaller side panel, as a
+test**). The answers are in `GAME.md` ("The minigame overhaul, ANSWERED"); §8 is now the order of work.
+
 **Revision 2 (2026-11-05)** folds in an outside review of the first version, checked against the code (§9 lists what
 was taken, what was not, and why). New: what active play really pays (§1.2, §4), the two cadences, gathering and
 making (§5.3), how an assembled item's quality is decided (§4.1), two strikes on the anvil, a rhythmic bellows, a
@@ -290,14 +294,17 @@ Each with the proposed answer. The bold part is what needs his yes or no.
   "better-made part starts higher" half of trait ranks (`MATERIALS.md` §5).
 
 ## 8. The order of work (once answered)
-1. **The readout and the fixes**: the simulated players and the share readout (§6), pinned in the unit suite and
+1. **DONE 2026-11-05 (PROGRESS 40)**: the readout and its first numbers (the anvil's ceiling is ~80 %, so Masterwork
+   is the seed's; active smelting pays less than AFK for all but a flawless player), the titles, the core-only rule.
+   **The readout and the fixes**: the simulated players and the share readout (§6), pinned in the unit suite and
    shown in the lab; the copied round titles (§1.6); assembly's quality from the core only (M12), before any other
    part has a quality.
 2. **The look, on smithing**: the 3D stage (or M7's choice), sparks, sound, a proper font and theme, and the two
    strikes (§3.1). Luke plays it.
 3. **Smithing's ladder**: heat colors with hard and soft spots (band 2), the quench (band 3), rank easing (M3), tuned
    to M4's targets with the readout. Luke plays copper, iron and steel heads.
-4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the side panel, the new edge and the
+4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the side panel as a 3D
+   stage (M7's test: one gathering skill first, Luke judges it before the rest), the new edge and the
    catalysts' lean, tuned with the readout.
 5. **The other three**: mining, woodcutting and smelting (its rhythmic bellows) get the look and their band's new
    thing, one at a time, each played by Luke.

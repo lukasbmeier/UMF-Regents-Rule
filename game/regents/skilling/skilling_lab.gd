@@ -3,7 +3,12 @@ extends Control
 ## feel and tune it. A button per node and per recipe that has a round (game/regents/content/node/,
 ## recipe/: edit its `minigame` in the Inspector and play again); Space or Enter starts a round on a new
 ## seed (or the one on show); 1-9 pick a button. The end screen shows the score and whether the server's
-## replay of your inputs agrees with what you saw.
+## replay of your inputs agrees with what you saw. T shows the DIFFICULTY READOUT for the round on show: four
+## simulated players of set skill play it on many seeds, and how their scores fall (`MinigameReadout`,
+## `MINIGAMES_PREP.md` §6): tune its numbers in the Inspector, T again.
+
+## How many seeds each simulated player plays for T.
+const READOUT_ROUNDS: int = 100
 
 ## What each button plays: the content that names the round, and the round's params.
 var choices: Array[ContentDef] = []
@@ -11,6 +16,7 @@ var choice_index: int = 0
 var buttons: Array[Button] = []
 var game: SkillMinigame = null
 var _info: Label
+var _readout: Label
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
@@ -45,6 +51,16 @@ func _ready() -> void:
 	_info.offset_top = -34.0
 	_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_info)
+	_readout = Label.new()
+	_readout.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_readout.offset_left = 16.0
+	_readout.offset_bottom = -44.0
+	_readout.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var mono: SystemFont = SystemFont.new()
+	mono.font_names = PackedStringArray(["Consolas", "Menlo", "monospace"])
+	_readout.add_theme_font_override(&"font", mono)
+	_readout.add_theme_color_override(&"font_shadow_color", Color(0, 0, 0, 0.8))
+	add_child(_readout)
 	if not choices.is_empty():
 		pick(0)
 
@@ -72,6 +88,7 @@ func pick(i: int) -> void:
 		move_child(game, 0)
 		game.round_finished.connect(func(_live: Dictionary, _replayed: Dictionary) -> void: _show_info())
 	game.preview(_rng.randi(), p)
+	_readout.text = ""
 	_show_info()
 
 
@@ -79,7 +96,7 @@ func _show_info() -> void:
 	var playing: bool = game != null and game.state == SkillMinigame.State.PLAYING
 	for b: Button in buttons:
 		b.disabled = playing
-	_info.text = "%s   seed %d" % ["Playing: " + game.how_to() if playing else "Space / Enter: new round   buttons or 1-9: pick the round",
+	_info.text = "%s   seed %d" % ["Playing: " + game.how_to() if playing else "Space / Enter: new round   buttons or 1-9: pick the round   T: the difficulty readout",
 		game.seed_value if game != null else 0]
 
 
@@ -92,7 +109,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		game.begin(game.seed_value if game.state == SkillMinigame.State.READY else _rng.randi(), params())
 		_show_info()
 		get_viewport().set_input_as_handled()
+	elif k.keycode == KEY_T:
+		show_readout()
+		get_viewport().set_input_as_handled()
 	elif k.keycode >= KEY_1 and k.keycode <= KEY_9:
 		pick(k.keycode - KEY_1)
 	elif k.keycode >= KEY_KP_1 and k.keycode <= KEY_KP_9:
 		pick(k.keycode - KEY_KP_1)
+
+
+## The difficulty readout of the round on show, as its params are now (`rounds` seeds a simulated player).
+func show_readout(rounds: int = READOUT_ROUNDS) -> void:
+	if choices.is_empty():
+		return
+	_readout.text = MinigameReadout.report(params(), rounds)

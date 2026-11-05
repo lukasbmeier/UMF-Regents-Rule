@@ -22,6 +22,7 @@ func run() -> void:
 	_run_skill_goldens()
 	_run_chops()
 	_run_perfect_and_replay()
+	_run_readout()
 	_run_looks()
 	_run_registry()
 	await _run_minigame()
@@ -1234,6 +1235,10 @@ func _run_crafting_choice() -> void:
 	sk.grade_pick[axe.id] = 0
 	_check(sk.grade_of(axe, inv) == 2, "Common picked but none in the bag: the best there is")
 	sk.grade_pick.clear()
+	# Only the core sets it (Luke's M12, 2026-11-05): a handle of quality 1000 never lifts a 900 head.
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, 40016, 1, 1, "{\"q\":1000}")
+	_check(sk.made_quality(axe, inv) == 900, "a Masterwork handle on a 900 head: the axe is the head's, 900 (got %d)" % sk.made_quality(axe, inv))
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, 40016, 1, 1)
 	var st := StationComponent.new()
 	st.key = &"workbench"
 	st.def = StationDef.by_key(&"workbench")
@@ -2573,6 +2578,59 @@ func _run_perfect_and_replay() -> void:
 		"one swing moved under a branch: the replay scores the hit and what it cost (%s vs %s)" % [str(tr), str(pr)])
 
 
+## THE DIFFICULTY READOUT (`MINIGAMES_PREP.md` §6, Luke's M4 2026-11-05): simulated players of set skill play every
+## round in the content through its own model. Pinned here: each simulated round is a real one (its replay is what
+## the bot saw), the readout is the same every run, more skill never scores less, and nobody pressing scores
+## nothing. The grade-share targets are pinned when smithing's ladder is tuned (§8 step 3).
+func _run_readout() -> void:
+	print("== regents: the difficulty readout ==")
+	const N: int = 16
+	var rounds: Array[Resource] = []
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame != null:
+			rounds.append(n.minigame)
+	for r: RecipeDef in RecipeDef.all():
+		if r.minigame != null:
+			rounds.append(r.minigame)
+	var sims: Array[SimPlayer] = SimPlayer.presets()
+	var disagree: Array[String] = []
+	var unordered: Array[String] = []
+	for p: Resource in rounds:
+		var means: Array[int] = []
+		for sim: SimPlayer in sims:
+			var m: Dictionary = MinigameReadout.measure(p, sim, N)
+			means.append(int(m["mean"]))
+			if not bool(m["agree"]):
+				disagree.append("%s by %s" % [p.get(&"display_name"), sim.display_name])
+		# Flawless never below anyone; skilled never below careless.
+		if means[0] < means.max() or means[1] < means[3]:
+			unordered.append("%s %s" % [p.get(&"display_name"), str(means)])
+	_check(rounds.size() >= 18 and disagree.is_empty(),
+		"%d rounds x %d players x %d seeds: every simulated round replays as it was played (disagree: %s)" % [rounds.size(), sims.size(), N, str(disagree)])
+	_check(unordered.is_empty(), "more skill never scores less: flawless the best, skilled above careless (out of order: %s)" % str(unordered))
+	var tree: Resource = (NodeDef.all_by_tier()[0] as NodeDef).minigame
+	var a: Dictionary = MinigameReadout.measure(tree, sims[2], N)
+	var b: Dictionary = MinigameReadout.measure(tree, sims[2], N)
+	_check(a["scores"] == b["scores"] and not (a["scores"] as PackedInt32Array).is_empty(), "the readout is the same every run: %s" % str(a["scores"]))
+	var flawless_trees: bool = true
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame is ChopParams:
+			flawless_trees = flawless_trees and int(MinigameReadout.measure(n.minigame, sims[0], N)["mean"]) == 1000
+	_check(flawless_trees, "the flawless player chops every tree to a full score")
+	# The negative: a player too slow ever to press scores what an untouched round does (a bar left on the anvil is
+	# already partly the shape: up to ~30 % on the pickaxe head), never a Fine part, never more than AFK.
+	var absent: SimPlayer = SimPlayer.make("Absent", 60000, 0, 0, 0, 1, false)
+	var gained: Array[String] = []
+	for p: Resource in rounds:
+		var m: Dictionary = MinigameReadout.measure(p, absent, 4)
+		var untouched: int = int(SkillMinigames.play(1, p, PackedInt32Array()).get("score_pm", -1))
+		if int(m["fine_pct"]) != 0 or int(m["beats_afk_pct"]) != 0 or not bool(m["agree"]) or int((m["scores"] as PackedInt32Array)[0]) != untouched:
+			gained.append("%s %s" % [p.get(&"display_name"), str(m["scores"])])
+	_check(gained.is_empty(), "nobody pressing: each round scores as untouched, no Fine part, no gain on AFK (gained: %s)" % str(gained))
+	var text: String = MinigameReadout.report(tree, 4)
+	_check(text.contains("Flawless") and text.contains("Careless") and text.contains("beats AFK"), "the readout reads: %s" % text.get_slice("\n", 1))
+
+
 ## Working, shown: each skill's pose in the adventurer's set (UAL clips), each tool a held item fitted to its
 ## skill's pose, and the adventurer carries the skilling and the look of it.
 func _run_looks() -> void:
@@ -2810,6 +2868,12 @@ func _run_lab() -> void:
 		game.finish()
 		buttons[7].pressed.emit()
 		_check(lab.get("game") is ShapeMinigame, "after it, the axe head's button shows shape to the outline")
+	# T: the difficulty readout of the round on show (MINIGAMES_PREP.md §6), cleared when another is picked.
+	lab.call("show_readout", 4)
+	var shown: String = (lab.get("_readout") as Label).text
+	_check(shown.begins_with("Tree") and shown.contains("Flawless") and shown.contains("beats AFK"), "T: the tree's readout, four players: %s" % shown.get_slice("\n", 1))
+	lab.call("pick", 1)
+	_check((lab.get("_readout") as Label).text.is_empty(), "another round picked: its readout waits for T")
 	lab.queue_free()
 	await get_tree().process_frame
 

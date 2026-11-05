@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_nd745"]
 script = ExtResource("3_kcvl5")
-display_name = "Iron axe head"
+display_name = "Steel axe head"
 outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
 
 [resource]

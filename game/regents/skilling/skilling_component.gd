@@ -371,21 +371,22 @@ func refit(target: int, row: int, r: RecipeDef, instance_data: String) -> Reduce
 	return req
 
 
-## The quality `r` would make now (the best of its inputs in the bag, as the server takes them: best
-## first), or -1 when nothing it takes has one (or its output has none). `inv`: the bag to read (none: ours).
+## The quality `r` would make now (the best of its CORE in the bag, as the server takes it: best first), or
+## -1 when the core has none (or its output has none). Only the core sets it, never a picked part (Luke's M12,
+## 2026-11-05: the server's `rules::sets_quality`). `inv`: the bag to read (none: ours).
 func made_quality(r: RecipeDef, inv: SpaceTimeInventoryComponent = null) -> int:
 	if r == null or r.quality != RecipeDef.Quality.FROM_INPUTS:
 		return -1
 	inv = inv if inv != null else _bag()
-	if inv == null:
+	var core: ItemDef = core_of(r)
+	if inv == null or core == null:
 		return -1
 	var grade: int = grade_of(r, inv)
 	var best: int = -1
-	for it: ItemDef in _inputs_now(r):
-		for s: SpaceTimeInventoryComponent.Stack in inv.items():
-			var q: int = RegentsGrade.quality_of(s.instance_data)
-			if s.item_def_id == it.id and (grade < 0 or q < 0 or RegentsGrade.of_quality(q) == grade):
-				best = maxi(best, q)
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		var q: int = RegentsGrade.quality_of(s.instance_data)
+		if s.item_def_id == core.id and (grade < 0 or q < 0 or RegentsGrade.of_quality(q) == grade):
+			best = maxi(best, q)
 	return mini(best, 1000)
 
 

@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_syfcc"]
 script = ExtResource("3_dqmqq")
-display_name = "Iron sword blade"
+display_name = "Copper sword blade"
 outline = PackedInt32Array(6, 10, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 10, 4)
 
 [resource]

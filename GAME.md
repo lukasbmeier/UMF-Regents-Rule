@@ -262,8 +262,35 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **Minigame prep** (2026-11-04; revision 2 2026-11-05 after an outside review): `docs/regents_rule/MINIGAMES_PREP.md`,
   decisions M1-M12 (the ladder's shape, the bands, rank easing a round, what a score is worth, woodworking's minigame,
   smelting's reward and bellows, the look, art sources, each band's new thing, the new skills' minigames, what active
-  gathering pays and how often its panel opens, an assembled item's quality), waiting on his answers. Nothing built
-  until then.
+  gathering pays and how often its panel opens, an assembled item's quality).
+- **The minigame overhaul, ANSWERED** (Luke, 2026-11-05: "all as proposed except for below"; the sheet's §7 says each
+  in full, §8 is the order of work):
+  - **One game per skill for life** (M1): numbers tighten within a band; each new band adds ONE new thing on top.
+  - **Bands** (M2): band 1 = tiers 1-2 (copper, iron; tree, oak), band 2 = tier 3 and up (steel, coal, yew). Where
+    band 2 ends and band 3 starts **waits on which metals come after steel** (Luke's, with the next metals).
+  - **Rank eases the round** (M3): a few percent wider windows a rank above the requirement, capped at three (hot rules).
+  - **Quality = the score** (M4), the difficulty tuned to target shares: a fresh band Fine ~50 %, Masterwork ~10 %;
+    three ranks on, Masterwork ~33 %. Measured by simulated players (the readout), AFK always Common.
+  - **Woodworking gets carve to the line** (M5): grips, hilts, bows and staves get a quality. Assembly stays a choice
+    screen.
+  - **Smelting** (M6): bars stay without quality; the score pays in bars and catalysts; the bellows pump in RHYTHM,
+    never mashing.
+  - **The look** (M7): a 3D stage in the panel (`SubViewport`, the game's own Quaternius models, lit like the world),
+    sound from the start; smithing first. **Gathering ALSO as a 3D stage, in the smaller side panel, as a TEST**
+    (Luke: "lets do gathering as 3d too with smaller side panel as a test").
+  - **Art** (M8): the game's own models plus CC0 (Kenney, freesound); Gemini for mockups only. (Paid packs and AI art
+    not chosen.)
+  - **Each band's new thing** (M9): smithing first: two strikes in band 1 (the buttons a UI setting, tried both ways),
+    heat colors with hard and soft spots in band 2, a quench in band 3 that lifts or lowers but never destroys a part;
+    the others' band things are prototyped and played before deciding.
+  - **New skills** (M10): pull the root (herbalism), the cut line (skinning) and the rest as the sheet's §2 table,
+    each confirmed with its step.
+  - **Active pay** (M11, revisiting 2026-10-18's 1.25x): a good round beats AFK and a poor one still falls short
+    (break-even near half a score, not 80 %: a floor); the catalysts lean hard to active play; gathering and smelting
+    rounds run back to back hands free once started (E or Escape ends a run, as does a round with no input), each
+    round paid as it ends. The numbers come from the readout and his play.
+  - **An assembled item's quality** (M12): the CORE part alone sets it; a secondary part's grade starts its trait a
+    rank higher (this settles the "a better-made part starts higher" half of trait ranks, `MATERIALS.md` §5).
 - **American spelling** (Luke, 2026-11-04): "all spelling in the game is not English version, but American": armor,
   defense, color, gray, center, meter, canceled. Everything a player reads, and every new name, rule and doc from now
   on (`regents.defense_k`). The first sweep was done 2026-11-04 (PROGRESS step 38).
@@ -288,7 +315,9 @@ rallying cut that mends those near you): make or re-hilt one at the workbench. *
 skeleton (a ring closes on each of its blows); N sets it aside. Each lesson ticks when the server sees it done. The server replays every round from its
 inputs; mastery ranks 1-10 per skill gate the better nodes. How to play it, what makes it, how it is
 tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alone:
-`game/regents/skilling/skilling_lab.tscn` (F6).
+`game/regents/skilling/skilling_lab.tscn` (F6); **T** there shows the round's **difficulty readout** (four simulated
+players of set skill on many seeds: their mean, Fine and Masterwork shares, how often they beat AFK), and
+`tools\run.cmd game\regents\tests\minigame_readout.sh` prints it for every round (`MINIGAMES_PREP.md` §6).
 
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms

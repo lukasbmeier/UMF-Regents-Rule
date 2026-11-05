@@ -1906,3 +1906,47 @@ goes on hands free once started (holding E while tapping A / D is a claw grip), 
 out, or a round with no input (added here); each round is paid as it ends, as the code already does (the sheet's
 wording fixed); the anvil's buttons become a UI setting so Luke tries LMB strike / RMB tap / R reheat against
 LMB / Shift+LMB / RMB in step 2.
+
+## Step 40: the minigame overhaul, step 1: the difficulty readout, the core sets quality, the round titles (2026-11-05)
+**Why**: Luke answered `MINIGAMES_PREP.md` (2026-11-05: "all as proposed" but M2's band 3 waits on the metals after
+steel, and M7 tries gathering as a 3D stage in the side panel too; `GAME.md` "The minigame overhaul, ANSWERED"), then
+"Lets start on the work". This is the sheet's §8 step 1.
+
+**Built**:
+- **The difficulty readout** (§6): `SimPlayer` (a Resource: reaction, timing spread, aim spread, slips, mash rate,
+  plans a strike ahead or not; four presets, flawless, skilled, average, careless, their numbers a first guess at
+  human hands, `# ASSUMPTION:` in the file) and `MinigameReadout` (`game/regents/skilling/`): each preset plays a
+  round of any minigame through its own model on many seeds; every simulated round is a real one (its inputs
+  replayed through `SkillMinigames.play` must give what the bot saw); it reports the mean, the Fine and Masterwork
+  shares (the anvil) or how often a round beats AFK (gathering, smelting; break-even 1 / `regents.active_yield_mult`).
+  In the lab: **T** (`skilling_lab.gd`); from a shell: `tools\run.cmd game\regents\tests\minigame_readout.sh [rounds]`
+  (a scene, `minigame_readout_cli.tscn`, so the hot rules' autoload is there; ~11 s at 200 seeds).
+- **The core alone sets an assembled item's quality** (M12): `rules::sets_quality` (an input no part slot names);
+  `make_batch` takes every input but keeps only the core's qualities (it took the best of ALL inputs); the client's
+  `SkillingComponent.made_quality` the same (the core only). Nothing plays differently today (no part has a quality
+  yet); it is in before carving gives grips one.
+- **Round titles**: the material table copied a pattern's round title and all ("Iron axe head" on the copper and
+  steel heads); it now titles the round as its recipe (`material_table.gd`), and the seven copied titles are fixed.
+  Content rebaked (the manifest).
+
+**Found, by the readout at 200 seeds** (what steps 2-5 work against):
+- **The anvil** (shape to the outline): almost nobody makes Common (careless 0-2 %); a flawless player makes
+  Masterwork axe heads 59 % of the time, a careless one 14 %; sword blades: average 77 % Masterwork. **The game's
+  ceiling is ~80 %**: a search three strikes ahead with all the time and heat in the world reaches 801 on average
+  (best 840) from a starting error of 110 (the outline's tall columns only rise by spread). So Masterwork is the
+  seed's more than the hand's. Copper, iron and steel heads read the same (known). Step 3 starts here.
+- **Smelting**: only the flawless player beats AFK (skilled 20 % of copper rounds, 0-2 % of iron and steel): playing
+  it actively pays LESS than AFK for nearly everyone (M11).
+- **Gathering**: the tree, oak and copper rock max out for any attentive player; iron and coal split average from
+  skilled (54 % / 39 % beat AFK).
+
+**Tested**: the unit suite (lints + regents) 3147/0, up 9: every simulated round replays as played (18 rounds x 4
+players x 16 seeds), more skill never scores less, the readout is the same every run, the flawless player maxes every
+tree, a player who never presses scores an untouched round (no Fine, no gain on AFK), the readout reads; the lab's
+T; a Masterwork handle never lifts a 900 head (client). Its negative: the flawless player made to slip half the
+time fails the ordering and the trees. `cargo test --test regents` 45/0 with a new check (only the core sets quality;
+negative: every input setting it fails); `cargo check --target wasm32-unknown-unknown`. Not run: integration (the
+server change keeps today's play: no part has a quality), so the play database is unpublished for this step.
+
+**Left**: §8 step 2, the look on smithing (a 3D stage in the panel, sparks, sound, the two strikes); the readout's
+target shares (M4) pinned when smithing's ladder is tuned (step 3); the presets' numbers set against Luke's own play.

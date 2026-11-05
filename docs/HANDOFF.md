@@ -1,45 +1,44 @@
-# Handoff — Regent's Rule, 2026-11-05 (the minigame prep sheet, revision 2: PROGRESS 39)
+# Handoff — Regent's Rule, 2026-11-05 (the minigame overhaul, step 1: PROGRESS 40)
 
 ## Where it stands
-- Pushed through step 38 (`b0fac474`). Step 39's first version committed (`13d16e99`), not pushed.
-- **NOT committed**: revision 2 of the sheet, docs only: `MINIGAMES_PREP.md`, `GAME.md`, `CLAUDE.md`, PROGRESS 39,
-  this file.
-- Play database `regents-rule`: as published after step 36. Step 38's rebaked manifest goes out with the next publish.
-- Suites: unchanged since step 38 (unit 3138/0, `cargo test --test regents` 45/0; integration 1298/0 at step 37).
-  Nothing run for 39 (no code or content changed).
+- Pushed through step 38 (`b0fac474`). Committed, not pushed: `13d16e99`, `2a46b0ab` (the prep sheet, revisions 1-2).
+- **NOT committed**: Luke's answers (`GAME.md`, the sheet's top), PROGRESS 40 (the readout, core-only quality, the
+  round titles), `CLAUDE.md` (the readout's command), this file.
+- Play database `regents-rule`: as published after step 36. NOT published since: step 38's manifest, step 40's
+  server change (core-only quality: no play difference today) and rebaked content (round titles). Publish with the
+  next step that changes play.
+- Last runs (step 40): unit (lints + regents) 3147/0; `cargo test --test regents` 45/0; `cargo check --target
+  wasm32-unknown-unknown`. Not run: integration (last 1298/0 at step 37).
 
 ## This session
-- The minigame overhaul's prep sheet, `MINIGAMES_PREP.md`: §1 where the four built minigames stand (what each score
-  pays, the tier ladder, cost, the look); §2 every coming skill in five model families, one minigame per craft;
-  §3 tiers "harder but similar" (one game a skill, a new thing per band, rank easing the round); §4 what a score is
-  worth; §5 the look (2D re-skin / in the world / a 3D stage in the panel) and assets (Gemini as mockups only);
-  §6 a difficulty readout; §7 decisions M1-M10 with proposed answers; §8 the order of work.
-- Revision 2 (2026-11-05): an outside review checked against the code and folded in (§9: taken and not); §3.1 two
-  anvil strikes, rhythmic bellows, sound; §4.1 the core alone sets an assembled item's quality; §5.3 gathering's
-  rounds back to back in a side panel (hands free once started, a second note); M11-M12.
-- Found: a round scored 80 % pays exactly AFK; assembly takes the BEST input's quality; smithing's tiers are identical; bars, grips, bows and staves have no quality; rank never changes a round;
-  the copper/steel heads' and the sword blades' rounds are titled "Iron ..." (params `display_name`).
+- `MINIGAMES_PREP.md`: written, revised twice after outside reviews (§9), ANSWERED by Luke (`GAME.md` "The minigame
+  overhaul, ANSWERED": all as proposed; M2's band 3 waits on the metals after steel; M7 gathering as a 3D stage too).
+- Step 1 built (PROGRESS 40): `SimPlayer` + `MinigameReadout` (lab T; `game/regents/tests/minigame_readout.sh`);
+  `rules::sets_quality` + `make_batch` + `SkillingComponent.made_quality` (the core alone sets quality); the material
+  table titles a round as its recipe, seven titles fixed.
+- The readout's findings: the anvil's ceiling is ~80 % (Masterwork is the seed's); active smelting pays less than
+  AFK for all but a flawless player; trees and copper max out for anyone attentive.
 
 ## Next, in order
-1. Luke answers M1-M12 (`MINIGAMES_PREP.md` §7); his answers go to `GAME.md`.
-2. `MINIGAMES_PREP.md` §8 step 1: the difficulty readout (simulated players, grade shares per tier and rank, pinned in
-   the unit suite, shown in the lab), the round titles fix, assembly's quality from the core only (M12).
-3. §8 step 2: the look on smithing (M7's choice), for Luke to play; then smithing's ladder, the other three, carving.
-4. Then herbalism and hunting; armor after (`ARMOR_PREP.md` §0).
-5. Still owed: run `load_300.sh` once, watching for `[Sidecar] a walk map ... again` piling up.
+1. `MINIGAMES_PREP.md` §8 step 2: the look on smithing: a 3D stage in the panel (`SubViewport`, the Quaternius anvil,
+   the bar as a mesh glowing by heat), sparks, sound, a font and theme, and the two strikes (§3.1: add-only params
+   `tap_drop`, `tap_spread_pct`, three models + goldens; the buttons a UI setting, both mappings). Luke plays it.
+2. Step 3, smithing's ladder: first fix the ceiling (the outline must be reachable: the tap helps; check the readout's
+   flawless player reaches ~100 %), then heat colors, the quench, rank easing; pin M4's target shares in the suite.
+3. Then gathering's cadence and pay (M11, the 3D side panel test), the other three, carving.
 
 ## Waiting on Luke
-- M1-M12 (`MINIGAMES_PREP.md` §7); in particular M11 (revisits his 1.25x edge), M12, M2 (does "copper, iron tier 1, steel+ tier 2" replace 2026-10-18's
-  bands 1-3 / 4-5 / 6), M7 (the look) and M8 (paid packs, AI-generated art).
+- The metals after steel (sets where band 3 starts, M2).
+- Whether the readout's presets feel like real hands: play a few rounds of the copper bar and an axe head in the lab
+  and compare with its Skilled / Average lines (T).
 - From before: "Cancelled." on the connect screen (a template change); where combat steps 5-7 and the lookup go;
   the tutorial's words; PROGRESS 30's list; a loot table with swords; which foes are bosses.
 
 ## Watch out
+- A `--script` run can't see autoloads (`HotRules`): a tool that needs them is a scene (`minigame_readout_cli.tscn`).
+- Restoring a file with `git checkout --` also drops your own uncommitted edits to it: back it up first.
+- Python patch strings in a Bash heredoc mangle `\r`, `\t` (GAME.md got a CR once): write patch scripts with Write.
 - The minigame UIs only draw their models: a new look must not touch a model, a Rust twin or a golden. A new
-  mechanic in a model is add-only params defaulting off (today's rounds replay unchanged), or a new challenge kind.
+  mechanic is add-only params defaulting off, or a new challenge kind.
 - New text and names in American spelling; never rename the kept British names (`.claude/rules/regents-genre.md`).
-- Python here writes through Windows text mode: open with `newline=""` to keep LF.
-- A heredoc through Git Bash can mangle backslashes in Python source: write patch scripts with the Write tool.
-- `RegentsContent` caches in a running game: a test that writes content uses `ContentLibrary.root_override` or
-  `RegentsContent.clear()`.
 - Never run two server suites at once; never kill all Godot/Python processes, by PID only.

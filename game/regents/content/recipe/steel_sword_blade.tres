@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_ntd8t"]
 script = ExtResource("3_ognjv")
-display_name = "Iron sword blade"
+display_name = "Steel sword blade"
 outline = PackedInt32Array(6, 10, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 10, 4)
 
 [resource]

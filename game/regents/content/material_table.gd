@@ -260,6 +260,10 @@ static func generate(write: bool = true) -> Dictionary:
 			r.designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (%s in %s): its numbers are yours to tune." % [m.display_name, p.display_name]
 			_apply(r, wants)
 			r.input_qty = wants["input_qty"]
+			# The round is the pattern's copied, title and all: it is titled as this cell's recipe is (the copper
+			# and steel heads' rounds said "Iron axe head", MINIGAMES_PREP.md §1.6).
+			if r.minigame != null and r.minigame.get(&"display_name") is String:
+				r.minigame.set(&"display_name", r.display_name)
 			var path: String = _new_path(&"recipe", owner, r.display_name) if write else "(new) recipe " + r.display_name
 			if write and not _save(r, path, errors):
 				continue

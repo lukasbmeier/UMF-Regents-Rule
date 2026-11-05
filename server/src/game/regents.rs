@@ -539,9 +539,13 @@ fn make_batch(ctx: &ReducerContext, entity_id: u64, r: &RecipeSeed, round_qualit
     if missing_input(ctx, entity_id, r, parts, grade).is_some() {
         return None;
     }
+    // Every input is used; only the CORE's qualities (the inputs no part slot names) make the item's (Luke's M12,
+    // 2026-11-05, `MINIGAMES_PREP.md` §4.1: a Masterwork grip never lifts a Common blade).
     let mut taken: Vec<u32> = Vec::new();
-    for (item, qty) in inputs_with(r, parts) {
-        take_graded(ctx, entity_id, item, qty, grade, &mut taken);
+    let mut parts_taken: Vec<u32> = Vec::new();
+    for (i, (item, qty)) in inputs_with(r, parts).into_iter().enumerate() {
+        let into = if rules::sets_quality(r, i) { &mut taken } else { &mut parts_taken };
+        take_graded(ctx, entity_id, item, qty, grade, into);
     }
     let quality = match r.quality {
         rules::QUALITY_FROM_ROUND => Some(round_quality.min(1000)),
