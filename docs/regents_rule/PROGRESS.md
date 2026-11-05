@@ -1868,3 +1868,26 @@ regents) below. No server behavior changed, so no integration run; nothing to pu
 
 **Left**: the foundation's "Cancelled." (template); older docs outside this repo's genre (the template's) stay as
 the template writes them.
+
+## Step 39: the minigame prep sheet (2026-11-04)
+**Why**: Luke, 2026-11-04: "Let's start the minigame rework. First summarize where we are currently, and forecast ones
+we will need in the future", with tiers "increasingly hard but similar" and the 2D minigames' look "a little low
+compared to the 3d assets". Item (2) of `GAME.md`'s order of work.
+
+**Written**: `docs/regents_rule/MINIGAMES_PREP.md` (as `ARMOR_PREP.md` was for armor): the four built minigames and
+what each score pays; the tier ladder today; what a minigame costs; why they look as they do; every coming skill
+sorted into five model families; one minigame per craft (a pattern feeds it data) rather than per item; tiers as one
+game per skill with a new thing per band and rank easing the round; what a score is worth; three ways to the look
+(2D re-skin, in the world, a 3D stage in the panel) and the assets (Gemini as a mockup tool only); a difficulty
+readout by simulated players; decisions M1-M10 with proposed answers; the order of work once answered.
+
+**Found** (checked against the content): smithing's copper, iron and steel rounds are identical (only the pattern's
+outline differs), so Masterwork steel is as easy as Masterwork copper; bars have no quality, so smelting skill never
+reaches a grade; grips, the yew bow and the yew staff have no minigame and no quality, so a wood-core weapon can never
+be Fine or Masterwork from crafting; rank never changes how a round plays; the copper and steel axe heads' rounds are
+titled "Iron axe head" and both sword blades' "Iron sword blade" (params `display_name`; fix in the overhaul's first
+step).
+
+**Tested**: nothing to test (a doc only; no code or content changed).
+
+**Left**: Luke's answers to M1-M10, then the sheet's §8.

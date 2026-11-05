@@ -259,6 +259,9 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   - **Open, for when armor comes back**: the parts and traits (plates + what secondary parts; each piece needs enough
     trait-bearing parts for Fine and Masterwork), which traits (Padded and Warded likely move to the lining), what
     makes lighter armor worth wearing (the combat triangle), the materials' tiers and the numbers.
+- **Minigame prep** (2026-11-04): `docs/regents_rule/MINIGAMES_PREP.md`, decisions M1-M10 (the ladder's shape, the
+  bands, rank easing a round, what a score is worth, woodworking's minigame, smelting's reward, the look, art sources,
+  each band's new thing, the new skills' minigames), waiting on his answers. Nothing built until then.
 - **American spelling** (Luke, 2026-11-04): "all spelling in the game is not English version, but American": armor,
   defense, color, gray, center, meter, canceled. Everything a player reads, and every new name, rule and doc from now
   on (`regents.defense_k`). The first sweep was done 2026-11-04 (PROGRESS step 38).
