@@ -26,8 +26,10 @@ The movement model, Tier A trust, gaits, facing and the input path. Moved verbat
 - Facing follows the camera only while there is movement input OR the frame is aiming
   (`InputFrame.face`, held by `LocalInputComponent.hold_facing(reason, on)`), and `module.rs`
   applies the same rule to the same frame. Change one side and you have changed the other.
-- The camera's yaw and the body's heading are different numbers: free look freezes the second.
-  `move_dir` is relative to the heading, never to the camera.
+- The camera's yaw and the body's heading are different numbers: free look freezes the second, and a genre
+  may set it (`LocalInputComponent.hold_body_yaw(reason, on, yaw)`, DECISIONS #305: the body faces a yaw of the
+  genre's, the camera stays the player's; an aim wins over it). `move_dir` is relative to the heading, never to the
+  camera.
 
 ## INPUT AND AIMING RULES (DECISIONS #89-#93)
 - The mouse's up and down may be LENT (`LocalInputComponent.borrow_mouse_y`, DECISIONS #249): while any

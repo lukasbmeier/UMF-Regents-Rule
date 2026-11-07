@@ -81,6 +81,9 @@ var _regain_cursor: bool = false
 ## Why the body is being held facing the camera while it stands still (`hold_facing`). A set
 ## rather than a flag so two things aiming at once cannot switch each other off.
 var _face_holds: Dictionary[StringName, bool] = {}
+## Why the body is being held facing a yaw of a genre's, not the camera's (`hold_body_yaw`), and that yaw.
+var _yaw_holds: Dictionary[StringName, bool] = {}
+var _held_yaw: float = 0.0
 ## Reasons the player is held still (`hold_still`): a page over the game (the lobby screen) that
 ## the movement keys must not walk them out from under.
 var _still_holds: Dictionary[StringName, bool] = {}
@@ -265,6 +268,25 @@ func is_facing_held() -> bool:
 	return not _face_holds.is_empty()
 
 
+## TURN THE BODY, NOT THE CAMERA (DECISIONS #305): while any reason holds it, the body faces `yaw` (a world yaw,
+## as the look's: -Z at 0) whether or not it is moving, and `move_dir` is relative to it, while the camera stays
+## wherever the player turns it. On the wire as aiming is (`InputFrame.face`, the frame's `look_yaw` the held one),
+## so everyone sees it. For a genre facing the player at something without taking their view: Regent's Rule turns
+## a worker to the tree it works. An aim (`hold_facing`) wins over it; the last holder's yaw is the one faced. Let
+## go, the body keeps the heading until the player moves (it then follows the camera, as ever). A genre holds its
+## own reason and releases only that.
+func hold_body_yaw(reason: StringName, on: bool, yaw: float = 0.0) -> void:
+	if on:
+		_yaw_holds[reason] = true
+		_held_yaw = wrapf(yaw, -PI, PI)
+	else:
+		_yaw_holds.erase(reason)
+
+
+func is_body_yaw_held() -> bool:
+	return not _yaw_holds.is_empty()
+
+
 ## LEND THE MOUSE'S UP AND DOWN (DECISIONS #249): while any reason holds it, moving the mouse up and
 ## down does not tilt the view but adds up for whoever borrowed it (`take_borrowed_y`: radians, as the
 ## view would have turned, up positive). Side to side still turns the view. A throw's release angle is
@@ -336,9 +358,12 @@ func sample() -> InputFrame:
 	f.client_tick = _client_tick
 	_client_tick += 1
 	var aiming: bool = not _face_holds.is_empty()
-	if aiming or not _free_look():
+	var turned: bool = not aiming and not _yaw_holds.is_empty()
+	if turned:
+		_body_yaw = _held_yaw   # a genre's yaw (`hold_body_yaw`): the camera is left alone
+	elif aiming or not _free_look():
 		_body_yaw = _look_yaw
-	f.face = aiming
+	f.face = aiming or turned
 	var still: bool = is_held_still()
 	f.move_dir = Vector2.ZERO if still else _sample_move_dir()
 	f.look_yaw = _body_yaw

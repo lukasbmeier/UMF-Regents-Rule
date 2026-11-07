@@ -179,6 +179,27 @@ func _run_input_tests() -> void:
 	_check(not c.sample().face and not c.is_facing_held(), "and the last one letting go ends it")
 	c.set_look(0.0, 0.0)
 
+	# --- hold_body_yaw: the body turned, the camera left alone (#305) -------------------------
+	c.set_look(0.3, 0.0)
+	c.hold_body_yaw(&"work", true, 2.0)
+	var turned_frame: InputFrame = c.sample()
+	_check(turned_frame.face and absf(turned_frame.look_yaw - 2.0) < 1e-6 and absf(c.get_look_yaw() - 0.3) < 1e-6,
+		"a held body yaw: the frame faces it (face=%s, yaw %.2f) and the camera stays (%.2f)" % [turned_frame.face, turned_frame.look_yaw, c.get_look_yaw()])
+	Input.action_press(LocalInputComponent.ACTION_BACK)
+	var back_frame: InputFrame = c.sample()
+	Input.action_release(LocalInputComponent.ACTION_BACK)
+	_check(back_frame.move_dir.distance_to(Vector2(sin(2.0), cos(2.0))) < 1e-4,
+		"and the keys walk relative to the body: back is away from where it faces (%s)" % str(back_frame.move_dir))
+	c.hold_facing(&"bow", true)
+	var aim_wins: InputFrame = c.sample()
+	c.hold_facing(&"bow", false)
+	_check(aim_wins.face and absf(aim_wins.look_yaw - 0.3) < 1e-6, "an aim wins over it: the frame faces the camera (%.2f)" % aim_wins.look_yaw)
+	c.hold_body_yaw(&"work", false)
+	var let_go: InputFrame = c.sample()
+	_check(not let_go.face and absf(let_go.look_yaw - 0.3) < 1e-6 and not c.is_body_yaw_held(),
+		"let go: the frame no longer asks to face, and the look is the camera's again (%.2f)" % let_go.look_yaw)
+	c.set_look(0.0, 0.0)
+
 	# --- mouse look only while the cursor is ours -------------------------------------------
 	# Without this gate the view swings whenever the pointer moves — across a menu, or on its
 	# way out of the window. That is the other half of "the mouse is not captured": not only

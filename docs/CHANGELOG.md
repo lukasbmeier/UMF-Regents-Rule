@@ -1111,3 +1111,11 @@ Nothing to republish. Found by Regent's Rule's integration run, 15 failures with
 - "Two effects at once": the timed effect lasts 5 s (was 1.5: the next CLI read came after it had come off).
 - The timed press's start is read while its row stands (the row goes a moment after the last press; read after it,
   the judgement check had no start and printed nothing).
+
+## 1.7.4 — a genre may turn the body without the camera (DECISIONS #305)
+Client only: nothing to republish, no codegen.
+- `LocalInputComponent.hold_body_yaw(reason, on, yaw)`: the body faces a yaw of the genre's (on the wire as aiming:
+  `face`, the frame's `look_yaw`), the keys walk relative to it, the camera stays the player's. An aim wins over it.
+  Found by Regent's Rule's work spot (turning a worker to the tree it works without swinging the view round).
+- `tests/suites/input.gd`: the frame faces the held yaw and the camera stays; back walks away from it; an aim wins;
+  let go, the look is the camera's again.
