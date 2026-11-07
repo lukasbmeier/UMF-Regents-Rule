@@ -104,6 +104,7 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
 	_check(interaction.get_target() == tree_id, "facing it, the tree is the target (got %d)" % interaction.get_target())
 	_check(hud._prompt.text.contains("Hold E"), "the prompt says tap or hold: \"%s\"" % hud._prompt.text)
+	_cam_yaw0 = (me.find_component(LocalInputComponent) as LocalInputComponent).get_look_yaw()
 	await _tap(&"interact", 0.08)
 	await _until(func() -> bool: return skilling.afk_target == tree_id, 6.0)
 	_check(skilling.afk_target == tree_id and hud._prompt.text.contains("(AFK)"), "a tap of E: working the tree AFK (\"%s\")" % hud._prompt.text)
@@ -151,6 +152,7 @@ func _chopper(tree_id: int) -> void:
 	await _stand_by(COPPER_1)
 	await _until(func() -> bool: return interaction.get_target() == rock_id, 3.0)
 	_check(interaction.get_target() == rock_id and hud._prompt.text.contains("mine"), "at the copper rock: \"%s\"" % hud._prompt.text)
+	_cam_yaw0 = (me.find_component(LocalInputComponent) as LocalInputComponent).get_look_yaw()
 	if await _hold_for_round():
 		_check_work_spot(rock_id, "the copper rock")
 		var crack: CrackMinigame = hud.game as CrackMinigame
@@ -577,16 +579,26 @@ func _station_id(at: Vector3) -> int:
 	return st
 
 
-## THE WORK SPOT (Luke, 2026-11-06, PROGRESS 44): working a node, the player has turned to face it and stepped to
-## where the swing meets its drawn surface (no more step wanted from here).
+## THE WORK SPOT (Luke, 2026-11-06, PROGRESS 44): working a node, the player's BODY has turned to face it (the camera
+## left where it was: "have the model face them but allow the camera to rotate") and stepped to where the swing meets
+## its drawn surface (no more step wanted from here).
+var _cam_yaw0: float = 0.0
+
+
 func _check_work_spot(target: int, what: String) -> void:
 	var node: NodeComponent = SkillingComponent.node_of(target)
 	var input: LocalInputComponent = me.find_component(LocalInputComponent) as LocalInputComponent
+	var mv: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
 	var to: Vector3 = (EntityRegistry.get_entity(target) as Node3D).global_position - me.global_position
-	var off: float = absf(angle_difference(input.get_body_yaw(), atan2(-to.x, -to.z)))
+	var off: float = absf(angle_difference(mv.get_predicted_state().yaw, atan2(-to.x, -to.z)))
+	var cam: float = absf(angle_difference(input.get_look_yaw(), _cam_yaw0))
 	var need: float = skilling.work_spot_need(node)
-	_check(node != null and not skilling.stepping() and absf(need) < 0.12 and off < 0.12,
-		"working %s, the player faces it (%.0f degrees off) at the work spot (%.2f m more wanted)" % [what, rad_to_deg(off), need])
+	_check(node != null and not skilling.stepping() and absf(need) < 0.12 and off < 0.12 and cam < 0.001 and not input.is_body_yaw_held(),
+		"working %s, the body faces it (%.0f degrees off), the camera did not turn (%.1f degrees), at the work spot (%.2f m more wanted)"
+		% [what, rad_to_deg(off), rad_to_deg(cam), need])
+	# Luke (2026-11-06): no more than a few moments between E and the work ("0.5 maybe less").
+	_check(skilling.step_took_s <= 0.6, "the step there took %.2f s (half a second or so at most)" % skilling.step_took_s)
+	print("   the step to %s took %.2f s" % [what, skilling.step_took_s])
 
 
 ## Hold E on the target until the server deals its round and the HUD shows it (after the step to the work spot). True

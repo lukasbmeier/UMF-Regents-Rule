@@ -2149,9 +2149,15 @@ against them the tool went 0.5-0.97 m inside; from farther off it swung at the a
   spot, then calls `work` there (AFK stops after `regents.afk_stop_moving_m`, so the step comes first). Luke, after
   the first version: "move the player as visuals and server body should match in case they get attacked or shot at
   while harvesting ... just make sure its smooth and not jarring when you move them, facing them is probaly the right
-  call too". So: the view eases round to face the node (`set_look`, the body held facing it), then the walk key and
-  slow are held for the player (a walk, not a run: frames as their own, bounded by the server) until the body would
-  slide the rest; at rest and facing it, the work starts. Gives up after 3 s (a wall); a turn under 4 degrees and a
+  call too". So: the body eases round to face the node, then the walk key and slow are held for the player (a walk,
+  not a run: frames as their own, bounded by the server, relative to the body) until the body would slide the rest;
+  at rest and facing it, the work starts. Then Luke: "have the model face them but allow the camera to rotate as it
+  is since we are standing still": a first version turned the view (`set_look`) to turn the body; the template's
+  1.7.4 (`LocalInputComponent.hold_body_yaw`, DECISIONS #305, made in the template and shipped to every game) turns
+  the body alone, the camera untouched. And: "the walk back when reposition is too slow ... dont want to wait more
+  than a few moments (.5 maybe less?) and should be natural": the step is taken at the plain gait (5 m/s, back 0.65 of
+  it) not the slow walk (1.2 m/s, back 0.78 m/s: over a second for 0.9 m), and the turn eases faster; the playtest
+  holds the step to 0.6 s (`step_took_s`). Gives up after 3 s (a wall); a turn under 4 degrees and a
   step under 6 cm are not taken. (A first version pushed at run speed with `force_move`, which cannot walk.)
   Exports on the adventurer's Skilling node: `swing_front` (by skill pose: (height, reach) points; a skill not listed,
   a station's, never steps) and `work_spot_clearance_m` (0.04).
@@ -2163,7 +2169,8 @@ against them the tool went 0.5-0.97 m inside; from farther off it swung at the a
   `godot --path . res://game/regents/tests/work_spot_shot.tscn -- <out dir>`.
 
 **Tested**: the skilling playtest (a real client at 150 ms): after a tap of E at the tree and a hold at the copper
-rock, the player faces the node and stands at the work spot (`_check_work_spot`): 79 + 8 / 0; negative (no step):
+rock, the BODY faces the node (its predicted heading), the camera's yaw is as it was before E, and it stands at the
+work spot (`_check_work_spot`): 79 + 8 / 0; negative (no step):
 both fail (the tree wanted 0.16 m in, the rock 0.83 m back). Unit (lints + regents) 3168/0. The shot: copper rock 0.97 m inside, now 0.03 m short; oak 0.72 inside, 0.01 short; yew 0.73 inside,
 0.05 short; the common tree 0.48 inside, 0.13 short. Unit: `_run_work_spot` (pressed against the copper rock it steps
 back ~1 m and then needs no more; 1.6 m farther it steps in by the rest; facing away 0; out of reach 0; kept inside

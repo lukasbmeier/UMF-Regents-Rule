@@ -1,13 +1,16 @@
 # Handoff — Regent's Rule, 2026-11-06 (the minigame overhaul: PROGRESS 40-44, a multi-day run, ends here)
 
 ## Where it stands
-- Pushed through step 38 (`b0fac474`). Committed, not pushed: `13d16e99`, `2a46b0ab` (the prep sheet), `7e788480`
-  (step 40). **NOT committed: steps 41-44** and their docs (Luke commits; the editor's six `T_Trim_*.png.import`
-  changes are his editor's, not ours: leave them out of a commit unless he says).
+- Steps 41-44 COMMITTED (`bfb35c98`) and the template's 1.7.4 merged (`3dfa9560`), all PUSHED with the ship;
+  the body-facing and quicker step on top (`git log -3`), all pushed.
+- Left uncommitted ON PURPOSE (Luke's editor): 13 `.png.import` re-imports, `game/regents/anim/adventurer.tres` (an
+  editor re-save) and `game/regents/skilling/mining/mine_stage.tscn` (LUKE MOVED the pick's `PickRest`/`PickHit`
+  markers in the editor, 2026-11-06: his pose; ask before committing or touching it).
 - Play database `regents-rule`: PUBLISHED with step 44 (2026-11-06, no wipe: content + server). Restart the game.
-- Last runs (all on step 44): unit (lints + regents) 3168/0; `cargo test` all green (regents 45/0); wasm check;
-  skilling playtest 78 + 8 / 0; integration 1330 / 3 (known timing flakes only, none in skilling: "Watch out");
-  the work-spot shot: every node's swing lands 1-13 cm short of the surface, the big iron rock too.
+- Last runs: unit (lints + regents) 3172/0 and the skilling playtest 81 + 8 / 0 on the final work spot (the body
+  turns, the camera stays, the step takes 0.13-0.37 s); before it, on step 44: `cargo test` all green (regents 45/0),
+  wasm check, integration 1330 / 3 (known timing flakes only, none in skilling: "Watch out"); the work-spot shot:
+  every node's swing lands 1-13 cm short of the surface, the big iron rock too.
 - The plan: `docs/regents_rule/MINIGAMES_PREP.md` (its §7 is Luke's decisions M1-M12, §8 the order of work);
   Luke's calls are in `GAME.md` (search "The look (M7)", "THE WORK SPOT", "THE WORK REACH", "The anvil, after").
 
@@ -20,7 +23,8 @@
   960 x 620 MIDDLE panel; NO character on a stage: the tool floats (`FloatingTool`: rest and hit poses are
   `Marker3D`s in each stage scene, each holding an editor-only tool preview: drag them); the pick lands point first;
   the stump wears the tree's bark; all sounds synthesized by `game/regents/tools/make_skill_sounds.py`.
-- 44: THE WORK SPOT: E at a node turns the player to face it (eased) and WALKS them back or in until the swing's
+- 44: THE WORK SPOT: E at a node turns the BODY to face it (eased; the camera stays the player's: the template's
+  `hold_body_yaw`, 1.7.4, DECISIONS #305) and WALKS them back or in until the swing's
   front (`SkillingComponent.swing_front`, per skill pose, measured by `game/regents/tests/work_spot_shot.tscn`)
   meets the drawn rock or bark, then the work starts (`WorkSpot`, `SkillingComponent.begin`). The server's work
   reach is now from a node's EDGE (`NodeDef.radii_cm`, baked from the models: a rock as drawn, a tree its trunk).

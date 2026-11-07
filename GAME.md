@@ -286,7 +286,10 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     picture-only stand-off and moving the player, Luke chose **"Move the player"**: pressing E at a node first walks
     the player back (or in) to where the swing meets the rock or the bark, facing it, then the work starts there.
     "Visuals and server body should match in case they get attacked or shot at while harvesting ... smooth and not
-    jarring ... facing them": an eased turn to the node, then a walk (not a run).
+    jarring ... facing them": an eased turn to the node, then a walk (not a run). Then (same day): "have the model
+    face them but allow the camera to rotate as it is since we are standing still": the BODY turns, the camera stays
+    the player's (the template's `hold_body_yaw`, 1.7.4, DECISIONS #305). And "dont want to wait more than a few
+    moments (.5 maybe less?)": the step goes at the plain gait (a run), about half a second.
   - **THE WORK REACH IS FROM A NODE'S EDGE** (Luke, 2026-11-06: "Measure from its edge"): `regents.work_reach_m` (3 m)
     is counted from where a body walking up is stopped, not from the node's middle: a rock's drawn footprint, a tree's
     trunk (`NodeDef.radii_cm`, baked from the models). The big iron rock (2.57 m) fits its work spot now.

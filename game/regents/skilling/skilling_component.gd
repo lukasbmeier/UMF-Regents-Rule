@@ -100,7 +100,10 @@ var _step_from: Vector3 = Vector3.ZERO
 var _step_need: float = 0.0
 var _step_s: float = 0.0
 var _step_key: StringName = &""
-## Why the body is held facing the node while it steps (`LocalInputComponent.hold_facing`).
+## The body's yaw as it turns to the node (eased toward `_step_yaw`).
+var _step_turned: float = 0.0
+## Why the body is held facing the node while it steps (`LocalInputComponent.hold_body_yaw`, DECISIONS #305: the body
+## turns, the camera stays the player's; Luke, 2026-11-06: "have the model face them but allow the camera to rotate").
 const STEP_FACING: StringName = &"regents.work_spot"
 ## A step shorter than this, or a turn smaller than this, is not taken; the step gives up after this long (a wall
 ## behind, a fence ahead). Luke (2026-11-06): "smooth and not jarring ... facing them".
@@ -108,8 +111,12 @@ const STEP_LEAST_M: float = 0.06
 const STEP_LEAST_TURN: float = 0.07
 const STEP_MOST_S: float = 3.0
 ## How fast the turn to the node eases (per second), and how near it must be before the walk starts (radians).
-const STEP_TURN_EASE: float = 9.0
-const STEP_WALK_WITHIN: float = 0.35
+## Luke (2026-11-06): "dont want to wait more than a few moments (.5 maybe less?) and should be natural": the step is
+## taken at the plain gait (a run: 5 m/s, back 0.65 of it), not the slow walk; the turn eases quickly.
+const STEP_TURN_EASE: float = 16.0
+const STEP_WALK_WITHIN: float = 0.5
+## How long the last step to a work spot took, from the press to the work (seconds; tests read it).
+var step_took_s: float = 0.0
 var _interaction: InteractionComponent = null
 
 
@@ -566,9 +573,10 @@ func _physics_process(delta: float) -> void:
 
 
 ## START WORKING `target` from the press: at a node, first to its WORK SPOT (`WorkSpot`; Luke, 2026-11-06: "move the
-## player as visuals and server body should match ... smooth and not jarring ... facing them"): the player turns to
-## face it (eased), walks there at a walk (the walk key and slow held for them: frames as their own, which the server
-## bounds as any), then `work` starts there. Public so a test can press.
+## player as visuals and server body should match ... smooth and not jarring ... facing them"): the body turns to
+## face it (eased; the camera stays the player's), steps there at the plain gait (the walk key held for them, relative
+## to the body: frames as their own, which the server bounds as any; about half a second), then `work` starts there.
+## Public so a test can press.
 func begin(target: int, active: bool) -> void:
 	var node: NodeComponent = node_of(target)
 	var input: LocalInputComponent = _local_input()
@@ -584,7 +592,8 @@ func begin(target: int, active: bool) -> void:
 		return
 	var yaw: float = atan2(-to.x, -to.z)   # forward is -Z at yaw 0
 	var need: float = work_spot_need(node, to)
-	if absf(need) < STEP_LEAST_M and absf(angle_difference(input.get_body_yaw(), yaw)) < STEP_LEAST_TURN:
+	var heading: float = _body_heading(input)
+	if absf(need) < STEP_LEAST_M and absf(angle_difference(heading, yaw)) < STEP_LEAST_TURN:
 		work(target, active)
 		return
 	_step_target = target
@@ -595,7 +604,8 @@ func begin(target: int, active: bool) -> void:
 	_step_need = absf(need) if absf(need) >= STEP_LEAST_M else 0.0
 	_step_s = 0.0
 	_step_key = &""
-	input.hold_facing(STEP_FACING, true)
+	_step_turned = heading
+	input.hold_body_yaw(STEP_FACING, true, heading)
 
 
 ## How far this player would step back to work `node` from where they stand, facing it (or along `toward`; negative:
@@ -623,9 +633,8 @@ func stepping() -> bool:
 	return _step_target >= 0
 
 
-## Each physics tick of the step: the view (and with it the body, held facing) eases round to the node; once nearly
-## round, the walk key (and slow) is held until the body would slide the rest of the way; at rest and facing it, the
-## work starts.
+## Each physics tick of the step: the body eases round to the node (the camera left alone); once nearly round, the
+## walk key is held until the body would slide the rest of the way; at rest and facing it, the work starts.
 func _step(delta: float) -> void:
 	_step_s += delta
 	var input: LocalInputComponent = _local_input()
@@ -633,10 +642,11 @@ func _step(delta: float) -> void:
 	if input == null or body == null:
 		_end_step(false)
 		return
-	var yaw: float = input.get_look_yaw()
-	var off: float = angle_difference(yaw, _step_yaw)
+	var off: float = angle_difference(_step_turned, _step_yaw)
 	if absf(off) > 0.002:
-		input.set_look(yaw + off * (1.0 - exp(-STEP_TURN_EASE * delta)), input.get_look_pitch())
+		_step_turned += off * (1.0 - exp(-STEP_TURN_EASE * delta))
+		off = angle_difference(_step_turned, _step_yaw)
+	input.hold_body_yaw(STEP_FACING, true, _step_turned)
 	var moved: float = (body.global_position - _step_from).dot(_step_dir)
 	# Stop holding the key when the body would slide the rest of the way (its speed, braked at the friction).
 	var speed: float = Vector2(body.velocity.x, body.velocity.z).length()
@@ -660,27 +670,32 @@ func _hold_step_key(key: StringName) -> void:
 		return
 	if _step_key != &"":
 		Input.action_release(_step_key)
-		Input.action_release(LocalInputComponent.ACTION_SLOW)
 	_step_key = key
 	if key != &"" and InputMap.has_action(key):
 		Input.action_press(key)
-		if InputMap.has_action(LocalInputComponent.ACTION_SLOW):
-			Input.action_press(LocalInputComponent.ACTION_SLOW)
 
 
 func _end_step(then_work: bool) -> void:
 	var target: int = _step_target
 	_step_target = -1
+	step_took_s = _step_s
 	_hold_step_key(&"")
 	var input: LocalInputComponent = _local_input()
 	if input != null:
-		input.hold_facing(STEP_FACING, false)
+		input.hold_body_yaw(STEP_FACING, false)
 	if then_work and target >= 0:
 		work(target, _step_active)
 
 
 func _exit_tree() -> void:
 	_hold_step_key(&"")   # never leave a walk key held
+
+
+## Where the body faces now (its predicted heading), else where it is told to.
+func _body_heading(input: LocalInputComponent) -> float:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var mv: SpaceTimeMovementComponent = ent.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent if ent != null else null
+	return mv.get_predicted_state().yaw if mv != null and mv.get_predicted_state() != null else input.get_body_yaw()
 
 
 func _local_input() -> LocalInputComponent:
