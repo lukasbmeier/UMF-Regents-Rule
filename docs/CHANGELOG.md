@@ -1119,3 +1119,12 @@ Client only: nothing to republish, no codegen.
   Found by Regent's Rule's work spot (turning a worker to the tree it works without swinging the view round).
 - `tests/suites/input.gd`: the frame faces the held yaw and the camera stays; back walks away from it; an aim wins;
   let go, the look is the camera's again.
+
+## 1.7.5 — a hosted referee writes its own log (DECISIONS #306)
+Tools only: nothing to republish, no codegen, no restart of the editor. Restart `tools\host.cmd` to use it.
+- `tools/host.sh` starts the referee with `--log-file build/host/referee.log`: it no longer also writes the
+  project's default `user://logs/godot.log`, the file a game exported from the project writes on the hosting PC
+  (both wrote into it at once, each over the other, so the host's own game lost its crash's last lines).
+- The run before is kept as `build/host/referee.prev.log` when the host starts the referee again (a crash, a sleep).
+- Proved on the template's test database: the referee registers, its lines are in `build/host/referee.log` only (no
+  new `godot.log`), and a killed referee comes back with the run that stopped in `referee.prev.log`.

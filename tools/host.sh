@@ -14,7 +14,8 @@
 # Plays on the game's own database (shared/game.json `database`), the one you publish to (UMF_DB: a
 # test's). Players
 # connect to this PC's address (port 3000: the firewall rule and the router's forward, or Tailscale:
-# docs/HANDBOOK.md, "Playing with a friend"). Logs: build/host/.
+# docs/HANDBOOK.md, "Playing with a friend"). Logs: build/host/ (the referee's: referee.log, the run
+# before it: referee.prev.log); the game you play on this PC keeps its own (Escape, Open log folder).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 [ -f tools/local.env ] && . tools/local.env
@@ -82,8 +83,16 @@ while true; do
     echo "host: could not offer a referee: $out" >&2
     exit 1
   fi
-  "$GODOT" --headless --path . res://sidecar/sidecar_main.tscn -- --world="$WORLD" --referee --claim="$CODE" \
-    > build/host/referee.log 2>&1 &
+  # ITS OWN LOG (1.7.5, DECISIONS #306): `--log-file` gives the referee build/host/referee.log and nothing
+  # else. Without it Godot also wrote the default log, user://logs/godot.log, the very file a game exported
+  # from this project writes on this PC: two processes in one file, each writing over the other, so a
+  # player's crash lost its last lines (Regent's Rule, 2026-11-06). The run before stays as referee.prev.log:
+  # when it stops (a crash) and comes back, the run that stopped is the one worth reading.
+  [ -f build/host/referee.log ] && mv -f build/host/referee.log build/host/referee.prev.log
+  REF_LOG="$PWD/build/host/referee.log"
+  command -v cygpath >/dev/null 2>&1 && REF_LOG="$(cygpath -m "$REF_LOG")"   # Godot on Windows wants C:/...
+  "$GODOT" --headless --log-file "$REF_LOG" --path . res://sidecar/sidecar_main.tscn -- --world="$WORLD" --referee \
+    --claim="$CODE" > /dev/null 2>&1 &
   ref_pid=$!
   echo "$ref_pid" > build/host/referee.pid
   for _ in $(seq 1 60); do grep -q "claim_referee: registered" build/host/referee.log 2>/dev/null && break; kill -0 "$ref_pid" 2>/dev/null || break; sleep 1; done

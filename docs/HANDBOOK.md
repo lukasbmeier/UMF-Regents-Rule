@@ -320,7 +320,14 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
    notarization settings, which Godot can do from Windows. They type your address on the connect screen, pick a name and a
    character, and connect.
 4. **If something breaks:** Escape, then Open log folder; they send you `godot.log`. A crash at start or a
-   slow game on a laptop: "Running well on a weak computer", below.
+   slow game on a laptop: "Running well on a weak computer", below. The host's side is in `build\host\`:
+   `referee.log` (the referee now; `referee.prev.log` is the run before, when it stopped and came back),
+   `spacetime.log` (the server, if `host.cmd` started it) and `chronicle.log`. Your own game, played on the
+   hosting PC, keeps its own `godot.log` (Escape, Open log folder): the referee no longer writes into it
+   (1.7.5, DECISIONS #306). A game that closes with no message has usually crashed: the time is in Event
+   Viewer (Windows Logs, Application, "Application Error"), and a PC set to keep crash dumps (the registry key
+   `HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps`, which some installers add; not there
+   by default) has one in `%LOCALAPPDATA%\CrashDumps\` (`<game>.exe.<number>.dmp`): send it with the log.
 5. **After you change the server**, publish with `--codegen`. Their build keeps working unless you
    changed something it uses; the unit tests tell you before you publish (the release snapshot),
    and if you did it on purpose, bump `compat` and send a new build.
