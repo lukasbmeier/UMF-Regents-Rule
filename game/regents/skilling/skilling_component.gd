@@ -49,6 +49,10 @@ signal station_opened(target: int)
 		Vector2(1.65, 0.99), Vector2(1.75, 0.89), Vector2(1.85, 0.78)]),
 }
 @export_range(0.0, 0.3, 0.01, "suffix:m") var work_spot_clearance_m: float = 0.04
+## MOVING STOPS AFK WORK (Luke's play, 2026-11-06: "i tap e, it moves me forward or backward then I can press s or w for
+## a few moments and it keeps harvesting"): this player's client stops its AFK work once the body is this far from
+## where the work began (the work spot). The server's own stop (`regents.afk_stop_moving_m`, 1 m) is the backstop.
+@export_range(0.05, 1.0, 0.01, "suffix:m") var afk_leave_m: float = 0.15
 
 ## The node or station worked AFK (an entity id), or -1; and its row's values.
 var afk_target: int = -1
@@ -89,6 +93,9 @@ var recipe_log: Dictionary[int, Dictionary] = {}
 var orders_filled: Dictionary[int, bool] = {}
 var _press_target: int = -1
 var _press_ms: int = -1
+## Where the body stood when this AFK work began, and whether the stop for walking off it has been asked.
+var _afk_at: Vector3 = Vector3.ZERO
+var _afk_left: bool = false
 ## The step to the work spot under way: the node, a round or AFK, the yaw that faces the node, which way the walk
 ## goes (flat, world: away from the node or toward it), from where, how far, for how long so far, and the key it
 ## holds down (`ACTION_BACK` or `ACTION_FORWARD`, or none). -1: none.
@@ -557,6 +564,7 @@ func claim_press(target: int) -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	_stop_afk_if_moved()
 	if _step_target >= 0:
 		_step(delta)
 		return
@@ -783,6 +791,19 @@ func afk_progress(now_us: int) -> float:
 	return clampf(float(now_us - afk_from_us) / float(afk_next_us - afk_from_us), 0.0, 1.0)
 
 
+## AFK work stops when the player moves off where it began (`afk_leave_m`): asked once per run.
+func _stop_afk_if_moved() -> void:
+	if afk_target < 0 or _afk_left:
+		return
+	var body: CharacterBody3D = (entity as SpaceTimeEntity).body if entity != null else null
+	if body == null:
+		return
+	var off: Vector3 = body.global_position - _afk_at
+	if Vector2(off.x, off.z).length() > afk_leave_m:
+		_afk_left = true
+		stop_afk()
+
+
 func stop_afk() -> ReducerRequest:
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"work_stop", [], [])
 	_watch(req)
@@ -890,6 +911,10 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				if t < 0:
 					make_limit = 0
 					made = 0
+				else:
+					var body: CharacterBody3D = (entity as SpaceTimeEntity).body if entity is SpaceTimeEntity else null
+					_afk_at = body.global_position if body != null else Vector3.ZERO
+					_afk_left = body == null
 				afk_changed.emit(t >= 0, t)
 		TABLE_RESULT:
 			if new != null and old == null and is_bound():

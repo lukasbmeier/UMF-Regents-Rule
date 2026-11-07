@@ -10,9 +10,9 @@ class_name MineStage extends SubViewportContainer
 ## strike. The pick swings from one to the other, so keep them in the pick's own plane (turned about its local Z) for
 ## the point to lead. The sounds are `game/regents/art/sound/mining/` (`make_skill_sounds.py`).
 
-## The pick, and its point in its own space (the point that lands: the left one, curving down from the head).
+## The pick, and its point in its own space (the point that lands: the left end of its head, as the model has it).
 @export var pick: PackedScene = preload("res://game/regents/skilling/mining/pickaxe.tscn")
-@export var pick_tip: Vector3 = Vector3(-0.31, 0.52, 0.0)
+@export var pick_tip: Vector3 = Vector3(-0.31, 0.67, 0.0)
 ## Every rock stands this tall on the stage (the models differ a lot: the big rock is over 4 m), its front this far
 ## toward the camera from the middle of the stage.
 @export var rock_height: float = 1.9

@@ -131,6 +131,16 @@ func _chopper(tree_id: int) -> void:
 	tree_id = await _standing_node(1, &"axe")
 	await _stand_by((EntityRegistry.get_entity(tree_id) as Node3D).global_position)
 	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
+	# MOVING STOPS AFK WORK (Luke's play, 2026-11-06): a short step off the work spot, well inside the server's 1 m.
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == tree_id, 6.0)
+	var spot: Vector3 = me.global_position
+	var working: bool = skilling.afk_target == tree_id
+	await _tap(&"move_back", 0.12)
+	await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
+	var moved: float = Vector2(me.global_position.x - spot.x, me.global_position.z - spot.z).length()
+	_check(working and skilling.afk_target == -1 and moved < 0.9, "a short step off the work spot (%.2f m) stops the AFK work" % moved)
+	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
 	var logs1: int = inv.count(LOGS)
 	if await _hold_for_round():
 		var stood: Vector3 = me.global_position

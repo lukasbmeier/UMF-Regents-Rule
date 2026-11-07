@@ -123,13 +123,13 @@ mesh = SubResource("Ground")
 [node name="Rock" type="Node3D" parent="Viewport/Stage" unique_id=265123891]
 
 [node name="PickRest" type="Marker3D" parent="Viewport/Stage" unique_id=1875784549]
-transform = Transform3D(0.9435, -0.2373, -0.2311, -0.04376, 0.6023, -0.797, 0.3283, 0.7622, 0.558, 0.5317, 1.156, 1.551)
+transform = Transform3D(-0.9435, 0.2373, -0.2311, -0.04376, 0.6023, 0.797, 0.3283, 0.7622, -0.558, -0.5317, 1.156, 1.551)
 gizmo_extents = 0.15
 
 [node name="Preview" parent="Viewport/Stage/PickRest" instance=ExtResource("9_pick")]
 
 [node name="PickHit" type="Marker3D" parent="Viewport/Stage" unique_id=129908914]
-transform = Transform3D(-0.07346, -0.9701, -0.2311, 0.5861, 0.1455, -0.797, 0.8069, -0.194, 0.5579, 0.4817, 1.056, 1.451)
+transform = Transform3D(0.07346, 0.9701, -0.2311, 0.5861, 0.1455, 0.797, 0.8069, -0.194, -0.5579, -0.4817, 1.056, 1.451)
 gizmo_extents = 0.15
 
 [node name="Preview" parent="Viewport/Stage/PickHit" instance=ExtResource("9_pick")]

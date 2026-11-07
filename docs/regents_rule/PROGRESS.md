@@ -2123,6 +2123,9 @@ wears the round's bark, `WoodStage.set_tree`); "the pick swings more like a hamm
 now swings in its own plane, the point leading, and lands on the point: `pick_tip` (-0.31, 0.52, 0), new `PickRest`
 and `PickHit`); "the pick is instantiated later so cant edit it in editor" (each pose marker now holds a preview of
 the tool, `Preview`, taken away in play by `FloatingTool.marker`: drag the marker and see the tool move).
+Then (2026-11-06): "make it like the original but with the swing coming in left to right": `PickRest` and `PickHit`
+mirrored across the rock's middle (each turned half round its handle, so the point still leads); and the pick's point
+is the model's own (-0.31, 0.67, 0): 0.52 was guessed from a picture and landed the head ~15 cm off the notch.
 
 **Also asked (2026-11-06)**: the world character's pick and axe clip into big rocks and trees while gathering:
 PROGRESS 44.
@@ -2161,6 +2164,10 @@ against them the tool went 0.5-0.97 m inside; from farther off it swung at the a
   step under 6 cm are not taken. (A first version pushed at run speed with `force_move`, which cannot walk.)
   Exports on the adventurer's Skilling node: `swing_front` (by skill pose: (height, reach) points; a skill not listed,
   a station's, never steps) and `work_spot_clearance_m` (0.04).
+- MOVING STOPS AFK WORK (Luke's play, 2026-11-06: after the step he could walk with S or W and keep harvesting,
+  the server stopping AFK only at `regents.afk_stop_moving_m`, 1 m): the client stops its AFK run once the body is
+  `SkillingComponent.afk_leave_m` (0.15 m) from where it began (`_stop_afk_if_moved`); the server's 1 m stays the
+  backstop. The skilling playtest: a short step back stops it.
 - `NodeComponent.surface_along` (the side session's): how far along a ray the node's drawn model is; only a face the
   ray goes INTO counts.
 - `game/regents/tests/work_spot_shot.tscn` (the side session's shot, reworked): a character with the real tool and

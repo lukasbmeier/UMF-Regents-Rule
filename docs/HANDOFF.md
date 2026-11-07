@@ -28,6 +28,8 @@
   front (`SkillingComponent.swing_front`, per skill pose, measured by `game/regents/tests/work_spot_shot.tscn`)
   meets the drawn rock or bark, then the work starts (`WorkSpot`, `SkillingComponent.begin`). The server's work
   reach is now from a node's EDGE (`NodeDef.radii_cm`, baked from the models: a rock as drawn, a tree its trunk).
+  Moving 0.15 m off the spot stops AFK work (`afk_leave_m`, the client's; the server's 1 m is the backstop). The
+  pick swings in from the left, its point the model's own (-0.31, 0.67, 0).
 
 ## Next, in order
 1. LUKE PLAYS (nothing below is decided until he has): the anvil per band (copper, iron, steel heads and blades),
