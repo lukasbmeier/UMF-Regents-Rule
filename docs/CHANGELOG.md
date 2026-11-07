@@ -1128,3 +1128,18 @@ Tools only: nothing to republish, no codegen, no restart of the editor. Restart 
 - The run before is kept as `build/host/referee.prev.log` when the host starts the referee again (a crash, a sleep).
 - Proved on the template's test database: the referee registers, its lines are in `build/host/referee.log` only (no
   new `godot.log`), and a killed referee comes back with the run that stopped in `referee.prev.log`.
+
+## 1.7.6 — a debug build for hunting a crash (DECISIONS #307)
+Tools only: nothing to republish, no codegen.
+- `tools\release.cmd --debug` exports the Windows client on Godot's DEBUG template to `build/client-debug/` and zips
+  it to `build/releases/<title>-<fingerprint>-debug.zip` (and records the build's contract, as a release does).
+  Godot's release template has no crash handler: a native crash leaves nothing in `godot.log`. The debug template
+  checks scripts as they run, so a freed object used in a typed assign (Regent's Rule's playtest crash) is a
+  `SCRIPT ERROR` naming the script, line and backtrace, and the game carries on. Slower: for play while a crash is
+  hunted only.
+- It checks the build is the debug template, that every GDExtension's debug library is beside it, and that it starts
+  with no script errors (pointed at a closed port, so no server is needed).
+- Proved on Regent's Rule: the debug build connects to its test database and plays, its warnings carry their
+  GDScript backtrace; the start check stopped a build exported from a checkout with another session's half-written
+  script in it. On a probe project the debug template reported "Trying to assign invalid previously freed instance"
+  at the line, where the release template ran on.

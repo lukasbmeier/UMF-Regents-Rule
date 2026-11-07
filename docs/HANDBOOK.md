@@ -328,6 +328,13 @@ The plan and Luke's calls: `docs/TEMPLATE_1_0.md` §6 (DECISIONS #278).
    Viewer (Windows Logs, Application, "Application Error"), and a PC set to keep crash dumps (the registry key
    `HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps`, which some installers add; not there
    by default) has one in `%LOCALAPPDATA%\CrashDumps\` (`<game>.exe.<number>.dmp`): send it with the log.
+   **A crash that keeps coming back: a debug build.** The normal build cannot say where it crashed (Godot's
+   release template has no crash handler, so `godot.log` just stops). `tools\release.cmd --debug` makes
+   `build\releases\<game>-<version>-debug.zip`: the same game on Godot's debug template, which checks scripts
+   as they run, so most such crashes (a freed object used, a null read) become a `SCRIPT ERROR` in
+   `godot.log` naming the script, line and the calls that led there, and the game carries on. It runs
+   slower, so play it only while hunting a crash, then go back to the normal build (1.7.6, DECISIONS #307).
+   It exports what is on disk: make it from a checkout with nothing half-done in it.
 5. **After you change the server**, publish with `--codegen`. Their build keeps working unless you
    changed something it uses; the unit tests tell you before you publish (the release snapshot),
    and if you did it on purpose, bump `compat` and send a new build.

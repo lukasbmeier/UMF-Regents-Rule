@@ -1,9 +1,14 @@
-# Handoff — UMF Template, 2026-11-06 (1.7.5: a hosted referee writes its own log)
+# Handoff — UMF Template, 2026-11-07 (1.7.6: a debug build for hunting a crash; 1.7.5: the referee's own log)
 
 ## Where it stands
-- **1.7.5** (tools only: nothing to republish, no codegen) committed and pushed, and merged into Regent's Rule only
-  (by hand: `ship_template.sh` stops while a game has uncommitted work, and Regent's Rule holds Luke's editor edits).
-  Fishing, Fowl Play and DiscGolf get it with the next `ship_template.sh`. 1.7.4 shipped to every game earlier today.
+- **1.7.6** and **1.7.5** (tools and docs only: nothing to republish, no codegen) committed and pushed, and merged
+  into Regent's Rule only (by hand: `ship_template.sh` stops while a game has uncommitted work, and Regent's Rule holds
+  Luke's editor edits and another session's smelting work). Fishing, Fowl Play and DiscGolf get both with the next
+  `ship_template.sh`. 1.7.4 shipped to every game on 2026-11-06.
+- 1.7.6 (DECISIONS #307): `toolselease.cmd --debug`, the Windows client on Godot's debug template, for play while a
+  crash is hunted. Godot's RELEASE template has no crash handler (measured: its binary lacks the handler's text), so
+  script call stacks as a Settings toggle (Luke's ask) could never name a native crash's line; the debug template
+  turns a freed-object typed assign into a SCRIPT ERROR at the line. Proved on Regent's Rule (CHANGELOG 1.7.6).
 - Proved by a real `tools/host.sh` run on `umf-template-test` (world 1): see CHANGELOG 1.7.5. No suite covers host.sh.
 
 ## This session (a small fix found in a Regent's Rule session, made here: `umf-session.md`, Across repos)
@@ -17,13 +22,15 @@
 - HANDBOOK "Playing with a friend" step 4: the host's logs, the client's own, Event Viewer and crash dumps.
 
 ## Next, in order
-1. Ship 1.7.5 to Fishing, Fowl Play and DiscGolf with the next release (`ship_template.sh`).
+1. Ship 1.7.5 and 1.7.6 to Fishing, Fowl Play and DiscGolf with the next release (`ship_template.sh`).
 2. From before: effects' own presentation; the SDK btree patch upstream (ask Luke); a region referee's ~375 MB level load.
 
 ## Waiting on Luke
 - From before: how many strips the expanse runs by default; the SDK fix upstream; the bandwidth budget.
 
 ## Watch out
+- `release.sh --debug` (and every export) packs what is ON DISK: from a checkout another session is editing it packs
+  half-written scripts (its start check stops that build). Make it from a clean worktree then.
 - Two editor instances of one game (and an export run beside the editor) still share `user://logs/godot.log`, each
   writing over the other: read a log from a run that had the PC to itself, or the crash dump.
 - A referee that dies before Godot's logger is up leaves nothing (its console goes to /dev/null): run its line by hand.
