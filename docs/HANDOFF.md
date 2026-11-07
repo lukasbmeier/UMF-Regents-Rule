@@ -1,18 +1,16 @@
-# Handoff — UMF Template, 2026-11-04 (1.7.3: the integration suite on a busy machine; shipped to every game)
+# Handoff — UMF Template, 2026-11-06 (1.7.4: a genre may turn the body without the camera; shipped to every game)
 
 ## Where it stands
-- **1.7.3** (tests only, nothing to republish) committed, pushed and merged into Fishing, Fowl Play, DiscGolf and
-  Regent's Rule. 1.7.1 (#303) and 1.7.2 (#304) shipped earlier today.
-- Green: `tests/integration_test.sh` 667/0 here; Regent's integration (which runs it) 1328/0, 1298/0.
+- **1.7.4** (client only: nothing to republish, no codegen) committed, pushed and merged into Fishing, Fowl Play,
+  DiscGolf and Regent's Rule by `ship_template.sh`. 1.7.3 shipped 2026-11-04.
+- Green: unit (`tests/run_tests.sh`) 2370/0 here; negative: the held yaw not applied fails both new checks.
 
-## This session
-- Found from Regent's Rule's integration runs (a CLI call there takes 0.5-3 s), in `tests/integration_test.sh`:
-  - the hold tick is looked for while the first helper holds alone (read after three joined, their 2 s had run);
-  - "two effects at once": the timed effect lasts 5 s (was 1.5);
-  - the timed press's `starts_at` is read while its row stands (the judgement check printed nothing without it);
-  - a failed `assert_ok`/`assert_rejected` names the server's words (`said`), not the CLI's "UNSTABLE" line.
-- Regent's Rule's own half (its step 37) is a stand-in referee that keeps beating and timed HTTP calls
-  (`game/regents/tests/timed_calls.py`): a pattern the foundation's referee checks could take if they flake here.
+## This session (a small fix found in a Regent's Rule session, made here: `umf-session.md`, Across repos)
+- `LocalInputComponent.hold_body_yaw(reason, on, yaw)` (DECISIONS #305): the body faces a genre's yaw (on the wire
+  as aiming: `face`, the frame's `look_yaw`), the keys walk relative to it, the camera's own yaw is untouched; an
+  aim (`hold_facing`) wins over it; let go, the body keeps its heading until it moves. Regent's Rule turns a worker
+  to the tree or rock it works without swinging the player's view round (its PROGRESS 44, the work spot).
+- `tests/suites/input.gd`: four checks. `docs/rules/movement.md` (GAITS AND FACING), CHANGELOG 1.7.4.
 
 ## Next, in order
 1. From before: effects' own presentation; the SDK btree patch upstream (ask Luke); a region referee's ~375 MB level load.
@@ -21,6 +19,7 @@
 - From before: how many strips the expanse runs by default; the SDK fix upstream; the bandwidth budget.
 
 ## Watch out
+- `hold_body_yaw` keeps ONE yaw: two genre holders at once face the last one's (DECISIONS #305's "revisit").
 - A CLI-timed check that must land inside a window (a status's time, a request's 3 s, a row that goes) reads too late
   on a busy machine: read what you need the moment it exists, or lengthen the window for the test.
 - A kind whose character names a brain (the NPC's `wander`) drives its bots by that one, whatever `add_bot` names.
