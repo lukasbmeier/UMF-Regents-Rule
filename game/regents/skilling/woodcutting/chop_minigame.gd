@@ -3,6 +3,11 @@ class_name ChopMinigame extends SkillMinigame
 ## presses). A trunk in the middle, the woodcutter beside it; A / Left or a click on the left half chops
 ## from the left, D / Right or a click on the right half from the right. A branch at your head on the side
 ## you chop from hits you: the swing is lost and you are staggered.
+## THE LOOK (`MINIGAMES_PREP.md` §5, Luke's M7, 2026-11-05): the trunk and the woodcutter are a 3D stage behind this
+## panel (`WoodStage`); this draws only the words over it. Without the stage (a panel not in the tree) it draws the
+## round flat, as before.
+
+const STAGE: PackedScene = preload("res://game/regents/skilling/woodcutting/wood_stage.tscn")
 
 const SEGMENT_H: float = 64.0
 const TRUNK_W: float = 92.0
@@ -24,6 +29,18 @@ var last_event: int = ChopModel.IGNORED
 var last_event_ms: int = -100000
 var _acts_seen: int = 0
 var _flying: Array[Piece] = []
+var _stage: WoodStage = null
+
+
+func _ready() -> void:
+	theme = MinigameLook.theme()
+	_stage = STAGE.instantiate() as WoodStage
+	_stage.show_behind_parent = true   # drawn under this panel's own words
+	add_child(_stage)
+	move_child(_stage, 0)
+	if model != null:
+		_stage.set_tree(tree().display_name)
+		_show_stage()
 
 
 ## A chopped piece in the air: where, how fast, turned how far and how fast (pixels, seconds, radians).
@@ -60,6 +77,13 @@ func _new_model() -> void:
 	last_event_ms = -100000
 	_acts_seen = 0
 	_flying.clear()
+	if _stage != null:
+		_stage.set_tree(tree().display_name)
+		_show_stage()
+
+
+func _show_stage() -> void:
+	_stage.show_trunk(model.segments, model.cut, model.side)
 
 
 func _model_result() -> Dictionary:
@@ -83,7 +107,13 @@ func _follow() -> void:
 	_acts_seen = model.acts
 	last_event = model.last_act
 	last_event_ms = model.last_act_ms
-	if last_event == ChopModel.CLEAN:
+	if _stage != null:
+		_show_stage()
+		if last_event == ChopModel.CLEAN:
+			_stage.chop()
+		elif last_event == ChopModel.HIT:
+			_stage.hit()
+	elif last_event == ChopModel.CLEAN:
 		_throw_piece(model.side)
 	queue_redraw()
 
@@ -147,6 +177,9 @@ func _trunk_x() -> float:
 
 
 func _draw() -> void:
+	if _stage != null:
+		_draw_words()
+		return
 	var gy: float = _ground_y()
 	var tx: float = _trunk_x()
 	draw_rect(Rect2(0, 0, size.x, size.y), SKY)
@@ -159,6 +192,22 @@ func _draw() -> void:
 		draw_set_transform(f.pos, f.angle)
 		draw_rect(Rect2(-TRUNK_W * 0.5, -SEGMENT_H * 0.5, TRUNK_W, SEGMENT_H), BARK)
 		draw_set_transform(Vector2.ZERO)
+	_draw_frame("Logs %d   Combo %d   Hits %d" % [model.clean, model.combo, model.hits] if model != null else "")
+
+
+## Over the 3D stage: the round's counts, the "Ouch!" of a hit over the woodcutter's side, the keys.
+func _draw_words() -> void:
+	var font: Font = get_theme_default_font()
+	if model != null:
+		var t: int = elapsed_ms() if state == State.PLAYING else model.last_t_ms
+		var since: int = t - last_event_ms
+		if last_event == ChopModel.HIT and since >= 0 and since < tree().stagger_ms:
+			var left: bool = model.side == ChopModel.SIDE_LEFT
+			MinigameLook.text(self, font, Vector2(size.x * (0.12 if left else 0.62), size.y * 0.30 - since * 0.04), "Ouch!", 30,
+				Color(1.0, 0.45, 0.4))
+		if state == State.PLAYING:
+			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), "A / D or click a side: chop from the side with no branch above",
+				15, MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
 	_draw_frame("Logs %d   Combo %d   Hits %d" % [model.clean, model.combo, model.hits] if model != null else "")
 
 

@@ -4,6 +4,11 @@ class_name CrackMinigame extends SkillMinigame
 ## glows. Click it with the pick: the crack opens to it and chips fly. Open the whole seam and the rock
 ## splits (Crack!) and the next seam shows. A strike off the seam jars the pick (Clang!) and staggers you.
 ## Clicking ahead during a swing is fine: the strike is held and lands when the pick is back up.
+## THE LOOK (`MINIGAMES_PREP.md` §5, Luke's M7, 2026-11-05): the rock and the pick are a 3D stage behind this panel
+## (`MineStage`); the seam is drawn over the rock (the face square sits on it). Without the stage (a panel not in
+## the tree) the rock is drawn flat, as before.
+
+const STAGE: PackedScene = preload("res://game/regents/skilling/mining/mine_stage.tscn")
 
 const ROCK: Color = Color(0.46, 0.44, 0.42)
 const ROCK_DARK: Color = Color(0.30, 0.28, 0.27)
@@ -18,6 +23,25 @@ var last_event_ms: int = -100000
 var last_at: Vector2 = Vector2.ZERO
 var _acts_seen: int = 0
 var _chips: Array[Chip] = []
+var _stage: MineStage = null
+
+
+func _ready() -> void:
+	theme = MinigameLook.theme()
+	_stage = STAGE.instantiate() as MineStage
+	_stage.show_behind_parent = true   # drawn under the seam
+	add_child(_stage)
+	move_child(_stage, 0)
+	if params != null:
+		_stage.set_rock(node_of(rock()))
+
+
+## The node whose round this is (for its rock model and ore), or null.
+static func node_of(p: CrackParams) -> NodeDef:
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame == p or (n.minigame is CrackParams and p != null and (n.minigame as CrackParams).display_name == p.display_name):
+			return n
+	return null
 
 
 class Chip:
@@ -52,6 +76,8 @@ func _new_model() -> void:
 	last_event_ms = -100000
 	_acts_seen = 0
 	_chips.clear()
+	if _stage != null:
+		_stage.set_rock(node_of(rock()))
 
 
 func _model_result() -> Dictionary:
@@ -62,9 +88,15 @@ func _end_model() -> void:
 	model.finish()
 
 
-## The rock face's square on screen.
+## The rock face's square on screen: on the 3D rock (its middle, most of its height), else in the panel's middle.
 func face() -> Rect2:
 	var side: float = minf(size.x * 0.8, size.y - 120.0)
+	if _stage != null and size.x > 0.0:
+		var r: Rect2 = _stage.rock_rect()
+		if r.size.x > 1.0:
+			side = minf(side, minf(r.size.x, r.size.y) * 0.82)
+			var c: Vector2 = r.get_center()
+			return Rect2(c.x - side * 0.5, clampf(c.y - side * 0.5, 80.0, size.y - side - 20.0), side, side)
 	return Rect2(size.x * 0.5 - side * 0.5, 80.0, side, side)
 
 
@@ -98,6 +130,12 @@ func _follow() -> void:
 	last_event = model.last_act
 	last_event_ms = model.last_act_ms
 	last_at = from_face(model.last_act_at)
+	if _stage != null:
+		if last_event == CrackModel.HIT:
+			_stage.strike(last_at, model.k % rock().notches == 0)
+		elif last_event == CrackModel.JAR:
+			_stage.jar(last_at)
+		return
 	if last_event == CrackModel.HIT:
 		var n: int = 14 if model.k % rock().notches == 0 else 5   # the rock split: more flies
 		for i: int in n:
@@ -112,6 +150,10 @@ func _process(delta: float) -> void:
 	if state == State.PLAYING and model != null:
 		model.settle(elapsed_ms())
 		_follow()
+		if _stage != null:
+			var f: Rect2 = face()
+			var m: Vector2 = get_local_mouse_position()
+			_stage.hover(Vector2(clampf(m.x, f.position.x, f.end.x), clampf(m.y, f.position.y, f.end.y)))
 	super(delta)
 
 
@@ -153,20 +195,22 @@ func _crack(a: Vector2, b: Vector2, color: Color, width: float) -> void:
 
 func _draw() -> void:
 	var font: Font = get_theme_default_font()
-	draw_rect(Rect2(0, 0, size.x, size.y), Color(0.16, 0.15, 0.15))
+	if _stage == null:
+		draw_rect(Rect2(0, 0, size.x, size.y), Color(0.16, 0.15, 0.15))
 	var f: Rect2 = face()
 	var t: int = elapsed_ms() if state == State.PLAYING else (model.last_t_ms if model != null else 0)
 	var since: int = t - last_event_ms
 	var jarred: bool = last_event == CrackModel.JAR and since < rock().stagger_ms
 	var shake: Vector2 = Vector2(sin(float(since) * 0.09) * 5.0, 0.0) if jarred else Vector2.ZERO
-	var outline: PackedVector2Array = _rock_shape(f, shake)
-	draw_colored_polygon(outline, ROCK)
-	var inner: PackedVector2Array = PackedVector2Array()
-	for p: Vector2 in outline:
-		inner.append(f.get_center() + shake + (p - f.get_center() - shake) * 0.86 + Vector2(-6, -8))
-	draw_colored_polygon(inner, ROCK.lightened(0.06))
-	outline.append(outline[0])
-	draw_polyline(outline, ROCK_DARK, 4.0)
+	if _stage == null:
+		var outline: PackedVector2Array = _rock_shape(f, shake)
+		draw_colored_polygon(outline, ROCK)
+		var inner: PackedVector2Array = PackedVector2Array()
+		for p: Vector2 in outline:
+			inner.append(f.get_center() + shake + (p - f.get_center() - shake) * 0.86 + Vector2(-6, -8))
+		draw_colored_polygon(inner, ROCK.lightened(0.06))
+		outline.append(outline[0])
+		draw_polyline(outline, ROCK_DARK, 4.0)
 	if model != null:
 		var n: int = rock().notches
 		var seam: int = model.seam_of(model.k)
@@ -198,9 +242,12 @@ func _draw() -> void:
 			if model.held:
 				draw_circle(from_face(Vector2i(model.held_x, model.held_y)) + shake, 6.0, Color(1, 1, 1, 0.5))
 		if jarred:
-			draw_string(font, last_at + Vector2(-30, -20), "Clang!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, JAR)
+			MinigameLook.text(self, font, last_at + Vector2(-30, -20), "Clang!", 24, JAR)
 		elif last_event == CrackModel.HIT and since < 700 and model.k % n == 0 and model.k > 0:
-			draw_string(font, f.get_center() + Vector2(-50, 0), "Crack!", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, GLOW)
+			MinigameLook.text(self, font, f.get_center() + Vector2(-50, 0), "Crack!", 40, GLOW)
+		if state == State.PLAYING and _stage != null:
+			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), "Click the glowing notch, then the next", 15,
+				MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
 	for c: Chip in _chips:
 		draw_rect(Rect2(c.pos, Vector2(c.size, c.size)), ROCK_DARK)
 	_draw_frame("Notches %d / %d   Jars %d" % [model.hits, rock().target_hits, model.jars] if model != null else "")

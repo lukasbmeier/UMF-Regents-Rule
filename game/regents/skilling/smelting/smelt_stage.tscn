@@ -1,0 +1,239 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smelting/smelt_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/FirePit.gltf" id="2_fire"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Bellows.gltf" id="3_bellows"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smelting/bellows.wav" id="4_breath"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smelting/pour.wav" id="5_pour"]
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.06, 0.05, 0.05, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.6, 0.52, 0.46, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.06
+glow_hdr_threshold = 0.9
+
+[sub_resource type="StandardMaterial3D" id="FloorMat"]
+albedo_color = Color(0.28, 0.25, 0.22, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="Floor"]
+material = SubResource("FloorMat")
+size = Vector2(30, 30)
+
+[sub_resource type="StandardMaterial3D" id="WallMat"]
+albedo_color = Color(0.30, 0.28, 0.27, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="Wall"]
+material = SubResource("WallMat")
+size = Vector3(12, 4, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="ClayMat"]
+albedo_color = Color(0.42, 0.30, 0.24, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="CrucibleMesh"]
+material = SubResource("ClayMat")
+top_radius = 0.13
+bottom_radius = 0.1
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="MeltMat"]
+albedo_color = Color(0.3, 0.1, 0.02, 1)
+emission_enabled = true
+emission = Color(1, 0.55, 0.12, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="CylinderMesh" id="MeltMesh"]
+top_radius = 0.115
+bottom_radius = 0.115
+height = 0.02
+
+[sub_resource type="CylinderMesh" id="StreamMesh"]
+material = SubResource("MeltMat")
+top_radius = 0.018
+bottom_radius = 0.012
+height = 0.36
+
+[sub_resource type="StandardMaterial3D" id="StandMat"]
+albedo_color = Color(0.36, 0.26, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Stand"]
+material = SubResource("StandMat")
+size = Vector3(0.56, 0.42, 0.34)
+
+[sub_resource type="StandardMaterial3D" id="MoldMat"]
+albedo_color = Color(0.18, 0.17, 0.17, 1)
+metallic = 0.4
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="MoldBox"]
+material = SubResource("MoldMat")
+size = Vector3(0.46, 0.13, 0.28)
+
+[sub_resource type="BoxMesh" id="MetalBox"]
+material = SubResource("MeltMat")
+size = Vector3(0.38, 0.12, 0.2)
+
+[sub_resource type="CylinderMesh" id="SpillMesh"]
+material = SubResource("MeltMat")
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.01
+
+[sub_resource type="Gradient" id="Soft"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="SoftDot"]
+gradient = SubResource("Soft")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+width = 32
+height = 32
+
+[sub_resource type="StandardMaterial3D" id="FlameMat"]
+albedo_texture = SubResource("SoftDot")
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="FlameMesh"]
+material = SubResource("FlameMat")
+size = Vector2(0.2, 0.26)
+
+[sub_resource type="Gradient" id="FlameColors"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(1, 0.85, 0.4, 1, 1, 0.45, 0.1, 0.8, 0.5, 0.1, 0.02, 0)
+
+[sub_resource type="Curve" id="Shrink"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.2), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="SmeltStage" type="SubViewportContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+script = ExtResource("1_stage")
+
+[node name="Viewport" type="SubViewport" parent="."]
+own_world_3d = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(960, 620)
+render_target_update_mode = 4
+
+[node name="Stage" type="Node3D" parent="Viewport"]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage"]
+environment = SubResource("Env")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 0.984, 0.178, 0, -0.178, 0.984, -0.8, 1.5, 4.4)
+current = true
+fov = 38.0
+
+[node name="KeyLight" type="DirectionalLight3D" parent="Viewport/Stage"]
+transform = Transform3D(0.781, 0.476, -0.406, 0, 0.65, 0.761, 0.625, -0.594, 0.507, 0, 3, 0)
+light_color = Color(1, 0.9, 0.8, 1)
+light_energy = 0.55
+shadow_enabled = true
+
+[node name="FireGlow" type="OmniLight3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 1.05, 0.35)
+light_color = Color(1, 0.5, 0.18, 1)
+light_energy = 2.0
+shadow_enabled = true
+omni_range = 4.0
+
+[node name="Floor" type="MeshInstance3D" parent="Viewport/Stage"]
+mesh = SubResource("Floor")
+
+[node name="Wall" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -1.3)
+mesh = SubResource("Wall")
+
+[node name="FirePit" parent="Viewport/Stage" instance=ExtResource("2_fire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, 0)
+
+[node name="Fire" type="CPUParticles3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.82, 0)
+amount = 40
+lifetime = 0.7
+mesh = SubResource("FlameMesh")
+emission_shape = 1
+emission_sphere_radius = 0.18
+direction = Vector3(0, 1, 0)
+spread = 18.0
+gravity = Vector3(0, 0.6, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.8
+scale_amount_min = 0.6
+scale_amount_max = 1.2
+scale_amount_curve = SubResource("Shrink")
+color_ramp = SubResource("FlameColors")
+
+[node name="Bellows" parent="Viewport/Stage" instance=ExtResource("3_bellows")]
+transform = Transform3D(0, 0, 0.8, 0, 0.8, 0, -0.8, 0, 0, -1.2, 0, 0.15)
+
+[node name="Crucible" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 1.12, 0)
+mesh = SubResource("CrucibleMesh")
+
+[node name="Melt" type="MeshInstance3D" parent="Viewport/Stage/Crucible"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+mesh = SubResource("MeltMesh")
+material_override = SubResource("MeltMat")
+
+[node name="Stream" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.73, 0)
+visible = false
+mesh = SubResource("StreamMesh")
+
+[node name="Mold" type="Node3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, 0, 0)
+
+[node name="Stand" type="MeshInstance3D" parent="Viewport/Stage/Mold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+mesh = SubResource("Stand")
+
+[node name="Tray" type="MeshInstance3D" parent="Viewport/Stage/Mold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.485, 0)
+mesh = SubResource("MoldBox")
+
+[node name="Metal" type="MeshInstance3D" parent="Viewport/Stage/Mold"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+visible = false
+mesh = SubResource("MetalBox")
+
+[node name="Spill" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 0.01, 0.25)
+visible = false
+mesh = SubResource("SpillMesh")
+
+[node name="Bellows" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_breath")
+volume_db = -8.0
+max_polyphony = 4
+bus = &"Effects"
+
+[node name="Pour" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_pour")
+volume_db = -10.0
+bus = &"Effects"

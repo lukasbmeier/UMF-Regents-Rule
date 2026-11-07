@@ -14,6 +14,7 @@ import os
 import random
 
 M32 = 0xFFFFFFFF
+TAP = 1000  # smithing: a light tap on column c is sent as TAP + c
 
 
 def tdiv(a, b):
@@ -258,6 +259,52 @@ def smelt_bot(seed, p, pump_bias, pour_late_ms):
 
 
 # --- shape to the outline --------------------------------------------------------------------------
+DONE, LAY, LIFT = 2000, 2001, 2002  # smithing: set the part down (and quench it), lay the template on, lift it off
+
+
+def g(p, k):
+    """A param added later (2026-11-05): absent in older cases, so 0 (off)."""
+    return p.get(k, 0)
+
+
+def shape_outline(seed, p):
+    """The round's outline: the part's, varied from the seed by up to `outline_vary` (three smooth bumps), the
+    total kept (so every variant takes as much beating off)."""
+    base = list(p["outline"])
+    vary = g(p, "outline_vary")
+    n = len(base)
+    if vary <= 0:
+        return base
+    st = seed_state(seed)
+    for _ in range(n):
+        st = next_u32(st)  # the bar's own draws (start heights)
+    offs = [0] * n
+    for _ in range(3):
+        st = next_u32(st)
+        c = (st >> 8) % n
+        st = next_u32(st)
+        a = (st >> 8) % (2 * vary + 1) - vary
+        for j in range(-2, 3):
+            if 0 <= c + j < n:
+                w = 3 - abs(j)
+                offs[c + j] += (1 if a >= 0 else -1) * (abs(a) * w // 3)
+    out = [max(1, base[i] + offs[i]) for i in range(n)]
+    total = sum(out) - sum(base)
+    st = next_u32(st)
+    i = (st >> 8) % n
+    for _ in range(100000):
+        if total == 0:
+            break
+        if total > 0 and out[i] > 1:
+            out[i] -= 1
+            total -= 1
+        elif total < 0:
+            out[i] += 1
+            total += 1
+        i = (i + 1) % n
+    return out
+
+
 class Shape:
     def __init__(self, seed, p):
         self.p = p
@@ -266,8 +313,22 @@ class Shape:
         for _ in range(len(p["outline"])):
             st = next_u32(st)
             self.h.append(p["start_height"] + (st >> 8) % (p["start_jitter"] + 1))
+        self.outline = shape_outline(seed, p)
         self.hot_until, self.next_ok, self.last_t, self.held = p["heat_ms"], 0, -1, None
         self.strikes = self.colds = self.reheats = 0
+        self.lays = self.cracks = 0
+        self.laid = g(p, "hide_outline") > 0
+        self.done_ms = -1
+
+    def valid(self, c):
+        p, n = self.p, len(self.h)
+        if c >= DONE:
+            if c == DONE:
+                return g(p, "max_reheats") > 0
+            return g(p, "hide_outline") > 0 and c in (LAY, LIFT)
+        if c >= TAP:
+            return g(p, "tap_drop") > 0 and c - TAP < n
+        return -1 <= c < n
 
     def settle(self, t):
         if self.held is not None and self.held[0] <= t:
@@ -278,13 +339,24 @@ class Shape:
         return 0
 
     def strike(self, t, c):
-        """A strike during a swing or a reheat is HELD (the latest) and lands when it ends."""
-        if t < self.last_t:
+        """A strike during a swing or a reheat is HELD (the latest) and lands when it ends. Setting the part down
+        and the template are instant, never held; after the part is set down, nothing more."""
+        if t < self.last_t or self.done_ms >= 0:
             return 0
         self.last_t = t
         self.settle(t)
-        if t < 0 or t > self.p["duration_ms"] or c < -1 or c >= len(self.h):
+        if t < 0 or t > self.p["duration_ms"] or not self.valid(c):
             return 0
+        if c == DONE:
+            self.held = None
+            self.done_ms = t
+            return 6
+        if c == LAY or c == LIFT:
+            if self.laid == (c == LAY):
+                return 0
+            self.laid = c == LAY
+            self.lays += int(c == LAY)
+            return 7
         if t < self.next_ok:
             self.held = (self.next_ok, c)
             return 4
@@ -293,17 +365,27 @@ class Shape:
     def act(self, t, c):
         p = self.p
         if c == -1:
+            if 0 < g(p, "max_reheats") <= self.reheats:
+                return 0
             self.reheats += 1
             self.next_ok = t + p["reheat_ms"]
             self.hot_until = t + p["reheat_ms"] + p["heat_ms"]
             return 3
+        if self.laid:
+            return 0  # no strikes while the template is on the bar
         self.next_ok = t + p["swing_ms"]
         if t >= self.hot_until:
             self.colds += 1
             return 2
-        d = min(self.h[c], p["hammer_drop"])
+        if t >= self.hot_until - g(p, "red_ms"):
+            self.cracks += 1  # struck red: it does not move, it cracks
+            return 5
+        tap = c >= TAP
+        if tap:
+            c -= TAP
+        d = min(self.h[c], p["tap_drop"] if tap else p["hammer_drop"])
         self.h[c] -= d
-        side = d * p["spread_pct"] // 100
+        side = d * (p["tap_spread_pct"] if tap else p["spread_pct"]) // 100
         if c > 0:
             self.h[c - 1] += side
         if c < len(self.h) - 1:
@@ -311,11 +393,29 @@ class Shape:
         self.strikes += 1
         return 1
 
+    def heat_pm(self, t):
+        return max(0, min(1000, (self.hot_until - t) * 1000 // self.p["heat_ms"])) if self.hot_until > t else 0
+
     def result(self):
-        self.settle(self.p["duration_ms"])
-        err = sum(abs(a - b) for a, b in zip(self.h, self.p["outline"]))
-        return {"strikes": self.strikes, "colds": self.colds, "reheats": self.reheats, "error": err,
-                "score_pm": max(0, 1000 - err * 1000 // self.p["error_scale"])}
+        p = self.p
+        if self.done_ms < 0:
+            self.settle(p["duration_ms"])
+        err = sum(abs(a - b) for a, b in zip(self.h, self.outline))
+        raw = max(0, 1000 - err * 1000 // p["error_scale"])
+        ceiling = max(0, 1000 - self.reheats * g(p, "reheat_cost_pm") - self.lays * g(p, "lay_cost_pm")
+                      - self.cracks * g(p, "crack_cost_pm"))
+        quench = 0
+        lo, hi = g(p, "quench_lo_pm"), g(p, "quench_hi_pm")
+        if hi > 0:
+            h = self.heat_pm(self.done_ms if self.done_ms >= 0 else p["duration_ms"])
+            if lo <= h <= hi:
+                quench = g(p, "quench_bonus_pm")
+            else:
+                dist = lo - h if h < lo else h - hi
+                quench = -min(g(p, "quench_loss_pm"), dist * g(p, "quench_loss_pm") // max(1, hi - lo))
+        return {"strikes": self.strikes, "colds": self.colds, "reheats": self.reheats, "lays": self.lays,
+                "cracks": self.cracks, "error": err, "ceiling_pm": ceiling, "quench_pm": quench,
+                "score_pm": max(0, min(ceiling, raw + quench))}
 
 
 def shape_play(seed, p, inputs):
@@ -326,22 +426,46 @@ def shape_play(seed, p, inputs):
 
 
 def shape_bot(seed, p, reheat_margin_ms):
-    """Strikes the column furthest above the outline each swing; reheats when the bar is nearly cold."""
+    """Strikes the column furthest above the outline each swing (a light tap once it is closer than a heavy
+    strike's drop, when taps are on); reheats when the bar is nearly cold (before it goes red), while it has heats
+    left. A round with a template lifts it first and lays it again every tenth strike; a round with heats sets
+    the part down when done (in the quench window, if it has one)."""
     m = Shape(seed, p)
     out = []
     t = 0
-    while t <= p["duration_ms"]:
-        if t >= m.next_ok:
-            if m.hot_until - t < reheat_margin_ms:
-                out.append([t, -1])
-                m.strike(t, -1)
+    struck = 0
+
+    def send(c):
+        out.append([t, c])
+        m.strike(t, c)
+
+    while t <= p["duration_ms"] and m.done_ms < 0:
+        if m.laid:
+            if t >= 400:
+                send(LIFT)
+        elif t >= m.next_ok:
+            left = g(p, "max_reheats") == 0 or m.reheats < g(p, "max_reheats")
+            over = [m.h[i] - m.outline[i] for i in range(len(m.h))]
+            c = max(range(len(over)), key=lambda i: over[i])
+            if over[c] <= 0 or (not left and t >= m.hot_until - g(p, "red_ms")):
+                if g(p, "max_reheats") > 0:
+                    hi = g(p, "quench_hi_pm")
+                    if hi == 0 or m.heat_pm(t) <= (g(p, "quench_lo_pm") + hi) // 2:
+                        send(DONE)
+                        break
+                    t += 10
+                    continue
+                break
+            if m.hot_until - g(p, "red_ms") - t < reheat_margin_ms and left:
+                send(-1)
+            elif g(p, "hide_outline") > 0 and struck > 0 and struck % 10 == 0:
+                send(LAY)
+                struck += 1
             else:
-                over = [m.h[i] - p["outline"][i] for i in range(len(m.h))]
-                c = max(range(len(over)), key=lambda i: over[i])
-                if over[c] <= 0:
-                    break
-                out.append([t, c])
-                m.strike(t, c)
+                if g(p, "tap_drop") > 0 and over[c] < p["hammer_drop"]:
+                    c += TAP
+                send(c)
+                struck += 1
         t += 10
     return out
 
@@ -418,7 +542,7 @@ def main():
     def add_shape(name, seed, p, inputs):
         m = Shape(seed, p)
         shape.append(dict(name=name, **seed_fields(seed), params=p, inputs=inputs, start=list(m.h),
-                          expected=shape_play(seed, p, inputs)))
+                          outline=list(m.outline), expected=shape_play(seed, p, inputs)))
 
     add_shape("a careful smith", 7, shape_p, shape_bot(7, shape_p, 400))
     add_shape("a high-bit seed, never reheats", 0xFEDCBA9876543210, shape_p, shape_bot(0xFEDCBA9876543210, shape_p, -100000))
@@ -429,6 +553,36 @@ def main():
     heavy = dict(shape_p, hammer_drop=7, spread_pct=40, heat_ms=3000, start_jitter=5)
     add_shape("a heavy hammer, a quick-cooling bar", 31337, heavy, shape_bot(31337, heavy, 600))
     add_shape("nothing struck", 42, shape_p, [])
+    # The light tap (2026-11-05): a heavy strike that spreads, and a tap to finish the line.
+    two = dict(shape_p, hammer_drop=6, spread_pct=17, tap_drop=1, tap_spread_pct=0)
+    add_shape("two strikes: rough out, then tap to the line", 7, two, shape_bot(7, two, 400))
+    add_shape("taps switched off: every tap ignored", 7, shape_p, [[300 * i, TAP + i % 16] for i in range(12)] + [[3610, 3]])
+    spready = dict(two, tap_drop=2, tap_spread_pct=50)
+    taps = [[t, rng.choice([TAP + rng.randint(-2, 17), rng.randint(-2, 17), 999, TAP + 16, TAP + 15, TAP])]
+            for t in sorted(rng.randint(-100, 15200) for _ in range(120))]
+    add_shape("taps that spread, taps off the bar", 0x1234567890ABCDEF, spready, taps)
+    # The anvil's bands, a test (Luke, 2026-11-05): heats instead of a clock, each costing the ceiling; the outline
+    # varies and shows only when the template is laid on (no strikes while it is); iron also pays for each lay;
+    # steel cracks when struck red and ends in a quench.
+    band1 = dict(two, duration_ms=60000, reheat_ms=600, max_reheats=5, reheat_cost_pm=40, hide_outline=1, outline_vary=3)
+    band2 = dict(band1, hammer_drop=5, spread_pct=20, start_height=23, lay_cost_pm=30)
+    band3 = dict(band2, red_ms=1200, crack_cost_pm=60, quench_lo_pm=250, quench_hi_pm=450, quench_bonus_pm=60,
+                 quench_loss_pm=150)
+    add_shape("band 1: template, heats, set down", 7, band1, shape_bot(7, band1, 300))
+    add_shape("band 2: harder metal, each lay costs", 0xFEDCBA9876543210, band2, shape_bot(0xFEDCBA9876543210, band2, 300))
+    add_shape("band 3: red strikes crack, quenched", 99, band3, shape_bot(99, band3, 300))
+    add_shape("the outline varies, nothing else", 5, dict(shape_p, outline_vary=4), [])
+    add_shape("struck under the template: nothing", 3, band1,
+              [[100, 4], [200, LAY], [300, LIFT], [400, 4], [500, LAY], [700, 5], [900, LIFT], [900, 5], [1300, LIFT]])
+    reheats = [[t * 700, -1] for t in range(9)]
+    add_shape("heats run out: the sixth reheat is not one", 3, dict(band1, hide_outline=0), reheats)
+    add_shape("set down: nothing after counts", 3, dict(band1, hide_outline=0), [[100, 2], [500, DONE], [900, 2], [1300, -1]])
+    add_shape("no heats, no set down (an old round)", 3, dict(shape_p, hide_outline=0), [[100, 2], [500, DONE], [900, 2]])
+    add_shape("no template: lay and lift are nothing", 3, dict(band1, hide_outline=0), [[100, LAY], [200, 2], [600, LIFT]])
+    red = [[300, LIFT], [3900, 1], [4300, 2], [4700, 3], [5100, 4], [5400, DONE]]
+    add_shape("struck red, then quenched cold", 11, band3, red)
+    add_shape("quenched in the window", 11, band3, [[300, LIFT], [400, 1], [700, 2], [3600, DONE]])
+    add_shape("quenched too hot", 11, band3, [[300, LIFT], [400, 1], [700, 2], [1000, DONE]])
 
     here = os.path.dirname(os.path.abspath(__file__))
     outdir = os.path.join(here, "..", "..", "..", "shared", "golden", "regents")

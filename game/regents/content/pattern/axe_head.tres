@@ -10,6 +10,17 @@
 [sub_resource type="Resource" id="Resource_spjns"]
 script = ExtResource("1_krmqu")
 display_name = "Iron axe head"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+outline_vary = 3
+error_scale = 50
 outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
 
 [sub_resource type="Resource" id="Resource_v63yl"]

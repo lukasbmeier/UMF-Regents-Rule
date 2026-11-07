@@ -1,44 +1,56 @@
-# Handoff — Regent's Rule, 2026-11-05 (the minigame overhaul, step 1: PROGRESS 40)
+# Handoff — Regent's Rule, 2026-11-06 (the minigame overhaul: PROGRESS 40-44, a multi-day run, ends here)
 
 ## Where it stands
-- Pushed through step 38 (`b0fac474`). Committed, not pushed: `13d16e99`, `2a46b0ab` (the prep sheet, revisions 1-2).
-- **NOT committed**: Luke's answers (`GAME.md`, the sheet's top), PROGRESS 40 (the readout, core-only quality, the
-  round titles), `CLAUDE.md` (the readout's command), this file.
-- Play database `regents-rule`: as published after step 36. NOT published since: step 38's manifest, step 40's
-  server change (core-only quality: no play difference today) and rebaked content (round titles). Publish with the
-  next step that changes play.
-- Last runs (step 40): unit (lints + regents) 3147/0; `cargo test --test regents` 45/0; `cargo check --target
-  wasm32-unknown-unknown`. Not run: integration (last 1298/0 at step 37).
+- Pushed through step 38 (`b0fac474`). Committed, not pushed: `13d16e99`, `2a46b0ab` (the prep sheet), `7e788480`
+  (step 40). **NOT committed: steps 41-44** and their docs (Luke commits; the editor's six `T_Trim_*.png.import`
+  changes are his editor's, not ours: leave them out of a commit unless he says).
+- Play database `regents-rule`: PUBLISHED with step 44 (2026-11-06, no wipe: content + server). Restart the game.
+- Last runs (all on step 44): unit (lints + regents) 3168/0; `cargo test` all green (regents 45/0); wasm check;
+  skilling playtest 78 + 8 / 0; integration 1330 / 3 (known timing flakes only, none in skilling: "Watch out");
+  the work-spot shot: every node's swing lands 1-13 cm short of the surface, the big iron rock too.
+- The plan: `docs/regents_rule/MINIGAMES_PREP.md` (its §7 is Luke's decisions M1-M12, §8 the order of work);
+  Luke's calls are in `GAME.md` (search "The look (M7)", "THE WORK SPOT", "THE WORK REACH", "The anvil, after").
 
-## This session
-- `MINIGAMES_PREP.md`: written, revised twice after outside reviews (§9), ANSWERED by Luke (`GAME.md` "The minigame
-  overhaul, ANSWERED": all as proposed; M2's band 3 waits on the metals after steel; M7 gathering as a 3D stage too).
-- Step 1 built (PROGRESS 40): `SimPlayer` + `MinigameReadout` (lab T; `game/regents/tests/minigame_readout.sh`);
-  `rules::sets_quality` + `make_batch` + `SkillingComponent.made_quality` (the core alone sets quality); the material
-  table titles a round as its recipe, seven titles fixed.
-- The readout's findings: the anvil's ceiling is ~80 % (Masterwork is the seed's); active smelting pays less than
-  AFK for all but a flawless player; trees and copper max out for anyone attentive.
+## What was built (PROGRESS 40-44)
+- 40: the difficulty readout (`MinigameReadout`, `SimPlayer`: four simulated hands, shares per grade); titles.
+- 41-42: SMITHING on a 3D stage (`AnvilStage`), heavy strike + light tap, 5 heats (each costs the ceiling), the
+  pattern (Space; no strikes while on), a varying outline; bands as a TEST: copper 1, iron 2 (each look costs),
+  steel 3 (red heat cracks, the quench). `ShapeModel` + Rust twin `shape.rs` + goldens (21 cases).
+- 43: woodcutting, mining, smelting on 3D stages (`WoodStage`, `MineStage`, `SmeltStage`); every round in the
+  960 x 620 MIDDLE panel; NO character on a stage: the tool floats (`FloatingTool`: rest and hit poses are
+  `Marker3D`s in each stage scene, each holding an editor-only tool preview: drag them); the pick lands point first;
+  the stump wears the tree's bark; all sounds synthesized by `game/regents/tools/make_skill_sounds.py`.
+- 44: THE WORK SPOT: E at a node turns the player to face it (eased) and WALKS them back or in until the swing's
+  front (`SkillingComponent.swing_front`, per skill pose, measured by `game/regents/tests/work_spot_shot.tscn`)
+  meets the drawn rock or bark, then the work starts (`WorkSpot`, `SkillingComponent.begin`). The server's work
+  reach is now from a node's EDGE (`NodeDef.radii_cm`, baked from the models: a rock as drawn, a tree its trunk).
 
 ## Next, in order
-1. `MINIGAMES_PREP.md` §8 step 2: the look on smithing: a 3D stage in the panel (`SubViewport`, the Quaternius anvil,
-   the bar as a mesh glowing by heat), sparks, sound, a font and theme, and the two strikes (§3.1: add-only params
-   `tap_drop`, `tap_spread_pct`, three models + goldens; the buttons a UI setting, both mappings). Luke plays it.
-2. Step 3, smithing's ladder: first fix the ceiling (the outline must be reachable: the tap helps; check the readout's
-   flawless player reaches ~100 %), then heat colors, the quench, rank easing; pin M4's target shares in the suite.
-3. Then gathering's cadence and pay (M11, the 3D side panel test), the other three, carving.
+1. LUKE PLAYS (nothing below is decided until he has): the anvil per band (copper, iron, steel heads and blades),
+   the three gathering stages, the work spot at trees and rocks (the big iron rock too).
+2. From his play: smithing's numbers (the steel sword blade is very hard: average 97 % Common in the readout),
+   M3 rank easing and M4 grade shares (tune with `tools\run.cmd game\regents\tests\minigame_readout.sh`); tool poses.
+3. `MINIGAMES_PREP.md` §8 step 4: gathering's back-to-back runs and pay (M11), from the work spot.
+4. §8 step 5's rest: each band's new rule for woodcutting, mining, smelting (knots, brittle notches, slag): prototype,
+   Luke plays each before the next. Then §8 step 6 (woodworking's carve to the line), 7 (herbalism, hunting).
+5. The XP curve (GAME.md "Outranked XP": steep, so a lower tier is never worth it for XP).
 
 ## Waiting on Luke
-- The metals after steel (sets where band 3 starts, M2).
-- Whether the readout's presets feel like real hands: play a few rounds of the copper bar and an axe head in the lab
-  and compare with its Skilled / Average lines (T).
-- From before: "Cancelled." on the connect screen (a template change); where combat steps 5-7 and the lookup go;
-  the tutorial's words; PROGRESS 30's list; a loot table with swords; which foes are bosses.
+- His play of steps 41-44; whether the synthesized sounds stay or CC0 recordings replace them; the tap buttons.
+- The metals after steel (M2's band 3); whether the readout's presets feel like real hands.
+- The work spot only steps for the node ahead (where the camera faces), not one at the side of the 120 degree arc.
+- From before the overhaul: "Cancelled." on the connect screen; combat steps 5-7 and the lookup; the tutorial's
+  words; PROGRESS 30's list; a loot table with swords; which foes are bosses.
 
 ## Watch out
-- A `--script` run can't see autoloads (`HotRules`): a tool that needs them is a scene (`minigame_readout_cli.tscn`).
-- Restoring a file with `git checkout --` also drops your own uncommitted edits to it: back it up first.
-- Python patch strings in a Bash heredoc mangle `\r`, `\t` (GAME.md got a CR once): write patch scripts with Write.
-- The minigame UIs only draw their models: a new look must not touch a model, a Rust twin or a golden. A new
-  mechanic is add-only params defaulting off, or a new challenge kind.
-- New text and names in American spelling; never rename the kept British names (`.claude/rules/regents-genre.md`).
-- Never run two server suites at once; never kill all Godot/Python processes, by PID only.
+- INTEGRATION FLAKES (none from this work; seen across 4 runs): the loot reads of `foe_kill` after its row expired;
+  the pommel bash ("no such request (answered, or run out)", or 0 damage: the dummy is whole again 4 s after a hit and
+  the CLI's reads took longer: the local `spacetimedb-standalone` has run since 11/3, restarting it may help); and once (likely the
+  order board's random order taking the iron axe head the workbench check needs later) a crossguard craft and 3 after.
+- The skilling playtest's pass count moves by one between runs (a check that runs only on some timings).
+- A `.tscn` writes a Transform3D's basis by ROWS. The headless playtest's viewport is 64 x 64: measure from edges.
+- A scratch script under `game/` or `tools/` trips the lints (a bare `quit()`): use `AppExit.quit`.
+- Never run Godot imports or windowed shots during a server suite (timing checks fail); never two server suites.
+- Heredocs with Python patch strings break in this shell: write patch scripts with the Write tool.
+- New minigame input codes must be positive (the server refuses a round with a value under -1); a new round param
+  defaults to 0 = off (old rounds replay); recipes copy a pattern's round once (edit the recipes too).

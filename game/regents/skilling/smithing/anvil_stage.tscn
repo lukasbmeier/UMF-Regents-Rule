@@ -1,0 +1,146 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/anvil_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Anvil.gltf" id="2_anvil"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/Hammer_Medium_Bronze.gltf" id="3_hammer"]
+[ext_resource type="PackedScene" path="res://game/regents/art/props/FirePit.gltf" id="4_fire"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smithing/clang.wav" id="5_clang"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smithing/tap.wav" id="6_tap"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smithing/cold.wav" id="7_cold"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/smithing/reheat.wav" id="8_reheat"]
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.045, 0.035, 0.035, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.52, 0.46, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.9
+glow_bloom = 0.08
+glow_hdr_threshold = 0.85
+
+[sub_resource type="StandardMaterial3D" id="SparkMat"]
+albedo_color = Color(0, 0, 0, 1)
+emission_enabled = true
+emission = Color(1, 0.62, 0.22, 1)
+emission_energy_multiplier = 6.0
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="SparkMesh"]
+material = SubResource("SparkMat")
+size = Vector2(0.007, 0.007)
+
+[sub_resource type="Curve" id="SparkFade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="AnvilStage" type="SubViewportContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+script = ExtResource("1_stage")
+
+[node name="Viewport" type="SubViewport" parent="."]
+own_world_3d = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(960, 620)
+render_target_update_mode = 4
+
+[node name="Stage" type="Node3D" parent="Viewport"]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage"]
+environment = SubResource("Env")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 0.959, 0.283, 0, -0.283, 0.959, 0, 0.95, 1.05)
+current = true
+fov = 34.0
+
+[node name="KeyLight" type="DirectionalLight3D" parent="Viewport/Stage"]
+transform = Transform3D(0.781, 0.476, -0.406, 0, 0.65, 0.761, 0.625, -0.594, 0.507, 0, 2, 0)
+light_color = Color(1, 0.93, 0.84, 1)
+light_energy = 0.9
+shadow_enabled = true
+
+[node name="ForgeGlow" type="OmniLight3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0.55, -0.45)
+light_color = Color(1, 0.48, 0.16, 1)
+light_energy = 2.4
+omni_range = 2.6
+
+[node name="Anvil" parent="Viewport/Stage" instance=ExtResource("2_anvil")]
+
+[node name="FirePit" parent="Viewport/Stage" instance=ExtResource("4_fire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, 0, -1.6)
+
+[node name="Bar" type="Node3D" parent="Viewport/Stage"]
+
+[node name="Hammer" type="Node3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.75, 0)
+
+[node name="Model" parent="Viewport/Stage/Hammer" instance=ExtResource("3_hammer")]
+transform = Transform3D(0, -1, 0, -1, 0, 0, 0, 0, -1, -0.1, 0, 0)
+
+[node name="Sparks" type="CPUParticles3D" parent="Viewport/Stage"]
+emitting = false
+amount = 40
+lifetime = 0.55
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SparkMesh")
+direction = Vector3(0, 1, 0.4)
+spread = 65.0
+gravity = Vector3(0, -5.5, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+scale_amount_min = 0.6
+scale_amount_max = 1.4
+scale_amount_curve = SubResource("SparkFade")
+
+[node name="TapSparks" type="CPUParticles3D" parent="Viewport/Stage"]
+emitting = false
+amount = 8
+lifetime = 0.35
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SparkMesh")
+direction = Vector3(0, 1, 0.4)
+spread = 50.0
+gravity = Vector3(0, -5.5, 0)
+initial_velocity_min = 0.25
+initial_velocity_max = 0.6
+scale_amount_min = 0.4
+scale_amount_max = 0.8
+scale_amount_curve = SubResource("SparkFade")
+
+[node name="Clang" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_clang")
+volume_db = -4.0
+max_polyphony = 3
+bus = &"Effects"
+
+[node name="Tap" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_tap")
+volume_db = -9.0
+max_polyphony = 3
+bus = &"Effects"
+
+[node name="Cold" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_cold")
+volume_db = -6.0
+bus = &"Effects"
+
+[node name="Reheat" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_reheat")
+volume_db = -8.0
+bus = &"Effects"

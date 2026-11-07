@@ -101,7 +101,11 @@ play_round() {
   speed="${payload##* }"
   ROUND_PAYLOAD="$payload"
   bot "$1" "$2" "$seed" "$speed"
-  sleep "$3"
+  # At least as long as the round the bot played: the server refuses an input stamped later than the time since the
+  # round was dealt (an anvil round has no clock since 2026-11-05: the part is set down when done, ~25 s for a blade).
+  local played
+  played="$(python -c "import json,math; v=json.loads('${BOT_RESULT:-[]}'); a=3 if '$1'=='crack' else 2; print(max($3, math.ceil(max(v[0::a] or [0]) / 1000) + 2))")"
+  sleep "$played"
   assert_ok "submit_challenge_result $cid $BOT_RESULT" "a round of $1 submitted once its time has passed"
   ROUND_CID="$cid"
 }
@@ -189,6 +193,11 @@ assert_eq "$(qty_of 40002)" "$LOGS1" "...pays nothing: you have to be where you 
 # --- mining, and the rank a node needs ---
 assert_ok 'teleport {"x":-18.0,"y":0.0,"z":16.5}' "stand by iron_1"
 assert_rejected "gather $IRON true" "needs Mining rank 2" "an iron rock needs mining rank 2 (a new miner has 1)"
+# The reach is from a node's EDGE (Luke, 2026-11-06): the copper rock stands ~2 m from its middle (baked footprint).
+assert_ok 'teleport {"x":14.0,"y":0.0,"z":20.4}' "stand 4.4 m from copper_1's middle (some 2.3 m from its edge)"
+assert_ok "gather $COPPER false" "worked from its edge's reach, though over 3 m from its middle"
+assert_ok 'teleport {"x":14.0,"y":0.0,"z":21.6}' "stand 5.6 m from its middle (over 3 m from its edge)"
+assert_rejected "gather $COPPER false" "from its edge" "past the reach from its edge: refused"
 assert_ok 'teleport {"x":14.0,"y":0.0,"z":14.5}' "stand by copper_1"
 ORE0="$(qty_of 40007)"
 assert_ok "gather $COPPER true" "hold E at the copper rock: a round of crack the rock"

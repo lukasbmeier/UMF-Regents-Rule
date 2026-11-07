@@ -18,6 +18,11 @@
 				"target_chops": 20
 			},
 			"name": "Tree",
+			"radii_cm": [
+				45,
+				45,
+				45
+			],
 			"rare_item": 40005,
 			"rare_permille": 5,
 			"regrow_ms": 30000,
@@ -43,6 +48,11 @@
 				"target_chops": 24
 			},
 			"name": "Oak",
+			"radii_cm": [
+				45,
+				45,
+				45
+			],
 			"rare_item": 40005,
 			"rare_permille": 5,
 			"regrow_ms": 45000,
@@ -68,6 +78,11 @@
 				"target_chops": 28
 			},
 			"name": "Yew",
+			"radii_cm": [
+				37,
+				37,
+				37
+			],
 			"rare_item": 40005,
 			"rare_permille": 5,
 			"regrow_ms": 90000,
@@ -97,6 +112,10 @@
 				"target_hits": 16
 			},
 			"name": "Copper rock",
+			"radii_cm": [
+				205,
+				207
+			],
 			"rare_item": 40009,
 			"rare_permille": 5,
 			"regrow_ms": 25000,
@@ -126,6 +145,10 @@
 				"target_hits": 17
 			},
 			"name": "Iron rock",
+			"radii_cm": [
+				257,
+				169
+			],
 			"rare_item": 40009,
 			"rare_permille": 8,
 			"regrow_ms": 45000,
@@ -155,6 +178,10 @@
 				"target_hits": 19
 			},
 			"name": "Coal rock",
+			"radii_cm": [
+				257,
+				169
+			],
 			"rare_item": 40009,
 			"rare_permille": 9,
 			"regrow_ms": 50000,

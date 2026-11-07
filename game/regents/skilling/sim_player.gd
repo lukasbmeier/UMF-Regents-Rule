@@ -20,9 +20,15 @@ class_name SimPlayer extends Resource
 ## Whether they think a strike ahead (the anvil: the strike that brings the bar closest to the outline,
 ## spread and all) or hit wherever the bar bulges most.
 @export var plans: bool = false
+## THE ANVIL'S TEMPLATE (2026-11-05): how many strikes after a look at the pattern they still have it exactly in mind
+## (after that each column is remembered a little off), and whether they lay it on again to check before they finish
+## (once the picture has blurred and only the finishing taps are left), or never look again after the first.
+@export_range(0, 1000) var memory_strikes: int = 1000
+@export var looks_again: bool = false
 
 
-static func make(name: String, react: int, jitter: int, aim: int, slip: int, mash: int, plan: bool) -> SimPlayer:
+static func make(name: String, react: int, jitter: int, aim: int, slip: int, mash: int, plan: bool, memory: int = 1000,
+		looks: bool = false) -> SimPlayer:
 	var s: SimPlayer = SimPlayer.new()
 	s.display_name = name
 	s.react_ms = react
@@ -31,17 +37,20 @@ static func make(name: String, react: int, jitter: int, aim: int, slip: int, mas
 	s.slip_pct = slip
 	s.mash_hz = mash
 	s.plans = plan
+	s.memory_strikes = memory
+	s.looks_again = looks
 	return s
 
 
 ## The four the readout reports, best first. A FLAWLESS player is the ceiling (no human plays it); SKILLED is
 ## a good player paying attention; AVERAGE someone who knows the game; CARELESS someone half watching.
 ## ASSUMPTION: these numbers are a first guess at human hands (react ~200-380 ms, timing spread 45-120 ms),
-## to be set against Luke's own play of the same rounds.
+## to be set against Luke's own play of the same rounds. Memory (the anvil's pattern) is a guess too: a flawless
+## smith never forgets it; a careless one forgets it in a few strikes and never looks again.
 static func presets() -> Array[SimPlayer]:
 	return [
 		make("Flawless", 0, 0, 0, 0, 14, true),
-		make("Skilled", 200, 45, 20, 3, 10, true),
-		make("Average", 280, 75, 35, 8, 7, false),
-		make("Careless", 380, 120, 55, 18, 5, false),
+		make("Skilled", 200, 45, 20, 3, 10, true, 20, true),
+		make("Average", 280, 75, 35, 8, 7, false, 10, true),
+		make("Careless", 380, 120, 55, 18, 5, false, 6, false),
 	]

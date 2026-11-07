@@ -1950,3 +1950,242 @@ server change keeps today's play: no part has a quality), so the play database i
 
 **Left**: §8 step 2, the look on smithing (a 3D stage in the panel, sparks, sound, the two strikes); the readout's
 target shares (M4) pinned when smithing's ladder is tuned (step 3); the presets' numbers set against Luke's own play.
+
+## Step 41: the minigame overhaul, step 2: smithing's look and its two strikes (2026-11-05)
+**Why**: `MINIGAMES_PREP.md` §8 step 2 (Luke, 2026-11-05: "Commit, start step 2"): the look on smithing first (M7:
+a 3D stage in the panel, sound from the start), and band 1's new thing, the two strikes (M9, §3.1).
+
+**Built**:
+- **Two strikes** (§3.1): the strike is now the HEAVY one; a LIGHT TAP is sent as column `ShapeModel.TAP + c`
+  (1000 + c) and beats the column down `tap_drop` with `tap_spread_pct` into its neighbors. Add-only params on
+  `ShapeParams` (default 0: a tap is then ignored and costs no swing, so every round from before replays unchanged),
+  in all three models (`shape_model.gd`, `server/src/genre/regents/shape.rs`, `make_skill_goldens.py`) and the build
+  step (`server/build/regents.rs`: a bake without them reads 0). Goldens: three new cases (two strikes rough and
+  finish; taps switched off; taps that spread and taps off the bar); the old six unchanged.
+- **The content**: the nine anvil recipes and their three patterns: heavy 6 down, 17 % a side (1 a side), tap 1 down,
+  no spread. **Found doing it**: at 4 x 20 % the spread was 0.8, rounded to 0, so a column could never rise: the
+  outline's columns taller than the bar were out of reach, half of step 40's ~80 % ceiling.
+- **Which buttons tap is a setting** (Controls, "Smithing: the light tap", `ShapeMinigame.SETTING`), both ways:
+  left click strikes; right click taps and R reheats (the default), or Shift + left click taps and right click
+  reheats. A round with no tap reheats on right click in both. The lab's **B** switches it.
+- **The 3D stage** (`AnvilStage`, `game/regents/skilling/smithing/anvil_stage.tscn`, its own world): Quaternius's anvil,
+  the bronze hammer (follows the mouse over the bar, falls on a strike), the fire pit behind with its light flaring as
+  the bar goes back in; the bar as 16 glowing columns (emission by heat squared; the struck column flashes white);
+  sparks (many for a strike, a few for a tap), a little camera shake. The 2D readouts stay where 2D is clearer: the
+  outline drawn over the 3D bar (projected), the heat bar, the words. Presentation only: it is told what
+  `ShapeModel` landed and decides nothing. Designers move the camera, lights and props in the scene.
+- **Sound** (ours, synthesized: `game/regents/tools/make_skill_sounds.py` -> `art/sound/smithing/`, CC0): the
+  clang (pitched down as the bar cools), the tap, a cold strike's thud, the reheat's whoosh. On the Effects bus.
+- **Type**: `MinigameLook` (the machine's book serif, warm ink and gold, a shadow under words over a 3D stage), on
+  smithing now, the others as they get their look (§8 step 5).
+- **The readout's smith taps**: a planner strikes what brings the bar nearest (a spread counted) and plays the round
+  both ways (planned and by the tallest bulge), keeping the better, so its top lines are the round's ceiling (on the
+  pickaxe head the plain way scored 1 per mille more; a two-strikes-ahead planner changed nothing and was 25x slower).
+
+**The readout now** (60 seeds; Fine at 40 %, Masterwork at 80 %): axe heads flawless 88 % (Masterwork 100 %), skilled
+87 % (98 %), average 79 % (45 %), careless 69 % (1 %); sword blades 87 / 85 / 70 (8 %) / 53 (7 % Common); pickaxe heads
+89 / 88 / 89 / 81 (73 %). The ceiling rose from ~80 % to ~89 %; Masterwork is now too easy for skilled hands, which is
+step 3's to tune (M4's targets) with Luke's play.
+
+**How to play it**: the lab (`skilling_lab.tscn`, F6), any axe head, sword blade or pickaxe head: left click a column
+to rough it out, right click to tap it to the line, R before it goes cold. **B** tries the other buttons. In the game:
+the anvil's round, the same.
+
+**Tested**: the unit suite (lints + regents) 3160/0, up 13: the two strikes in the model (a heavy strike spreads,
+a tap does not, a tap is held through a swing, off the bar is no tap, tap_drop 0 ignores taps at no swing's cost),
+every anvil recipe has both, the readout's smith taps and taps lift the ceiling, the setting (Controls, two
+choices), both mappings by real clicks on the 3D bar (every column is clicked where it is drawn), a round with no
+tap reheats on right click, the stage flashes and sparks where the model landed. Its negative: right click made to
+strike fails the mappings check. Goldens: Rust plays every case (45/0); its negative (a tap that drops as a heavy
+strike) fails the new two-strikes case. `cargo check --target wasm32-unknown-unknown`. The skilling playtest (a
+real client at 150 ms on the test database) 73 + 8 / 0: the iron axe head shaped by left and right clicks, reheated
+with R, 840, the server's replay the same. Looked at in windowed shots (the lab, and the 960 x 620 game panel).
+Not run: integration. Published to the play database (no wipe).
+
+**Left**: Luke's play (the look, the sounds, the strikes' numbers, which buttons); step 3, smithing's ladder (tune
+Masterwork to M4's targets: it is now too easy for skilled hands); the other minigames' look (step 5) uses
+`MinigameLook` and a stage of their own.
+
+## Step 42: the anvil's bands, a test: heats, the pattern, a varying outline, red heat, the quench (2026-11-05)
+**Why**: Luke played step 41 ("the time between hitting reheat and then being able to use the hammer again was too
+long, could only ever get two reheats"; the 15 s clock fitted two) and chose (`GAME.md`, "The anvil, after playing
+step 2" and "The anvil's bands, A TEST"): a set number of heats instead of a clock, each reheat lowering the
+ceiling; the outline varying every round; the pattern laid on to see the outline, no strikes while it is on; and
+as a test, copper band 1, iron band 2 (harder metal, each lay costs too), steel band 3 (red heat, the quench). Also
+"rank eases the numbers, a band adds one rule" for every skill (Luke: yes), and a direction on outranked XP.
+
+**Built** (`ShapeModel`, its Rust twin and the Python goldens' copy; every rule a new param, 0 off, so all
+earlier rounds replay unchanged; new inputs are positive codes an old server ignores, since the server refuses a
+round with any value under -1):
+- **Heats, not a clock** (`max_reheats`, `reheat_cost_pm`): only so many reheats (the sixth is ignored); the smith
+  SETS THE PART DOWN (`DONE`, 2000: Enter or a button; nothing counts after); `duration_ms` is then only a cap
+  (60 s); the round also ends when cold with no heats left. Each reheat takes its cost off the CEILING (the best
+  the part can be); the score is the shape's, never above the ceiling.
+- **The pattern** (`hide_outline`, `lay_cost_pm`): the round starts with it on the bar; `LIFT` (2002) and `LAY`
+  (2001) by Space or a button, or a click while it is on (which strikes nothing); NO STRIKES while it is on (a
+  reheat may). Iron and steel take `lay_cost_pm` off the ceiling for each lay after the first.
+- **The outline varies** (`outline_vary`): three smooth seeded bumps on the part's outline, the total kept (the
+  same metal to beat off); drawn from the seed after the bar's own draws.
+- **Red heat** (`red_ms`, `crack_cost_pm`): the last 1.2 s of a heat the bar is red; a strike then does not move
+  it, it CRACKS (a mark stays on the column; `crack_cost_pm` off the ceiling).
+- **The quench** (`quench_lo_pm`..`quench_hi_pm`, `quench_bonus_pm`, `quench_loss_pm`): on steel, Enter quenches;
+  set down while the bar's heat is in the window (25-45 %, just above red, marked gold on the heat bar) +6 %; outside
+  it, up to -15 % (a window's width out: all of it); never above the ceiling nor below nothing.
+- **The content** (the nine anvil recipes; the three patterns carry band 1): all: 5 heats at 4 % each, reheat 0.6 s,
+  the pattern, outline varying by 3, `error_scale` 50 (at 100 being off the line cost so little that the
+  cheapest player won: the readout's careless smith beat the skilled one), heavy 6 / 17 %, tap 1, the bar 23 high.
+  Iron and steel: heavy 5 / 20 %, a bar 25 high, each lay 3 %. Steel: red 1.2 s and a crack 6 %, the quench.
+- **The UI** (`ShapeMinigame`): heats left as marks and "The best it can be now" where the clock was; "Lift the
+  pattern / Lay the pattern on (Space)" and "Set it down / Quench (Enter)" buttons; the outline shown only with the
+  pattern on (a pale plate) and after the round; the heat bar's red end and the quench's gold window; the words say
+  what to do. `AnvilStage`: a red bar when red, crack marks. `SkillMinigame`: a round may end early (`is_over`) and
+  hide its clock (`shows_clock`).
+- **The readout's smiths** learn it: they look, lift, and work from MEMORY (`SimPlayer.memory_strikes`, then each
+  column remembered a little off; `looks_again`: lay it on once more before finishing, never during roughing,
+  which the first try did and paid for); reheat only while a heat is worth its cost; set down, in the quench's
+  window when there is one (a heat spent to get back into it). The integration hook's bot (`skill_bot_cli.gd`)
+  plays the new rules too.
+
+**The readout now** (60 seeds; Fine 40 %, Masterwork 80 %; skilled / average / careless): copper axe head 87 / 82 / 68
+% (Masterwork 98 / 90 / 8 %); iron 78 / 69 / 63 (28 / 0 / 5 %); steel 74 / 67 / 34 (0 / 0 / 0; careless 52 % Common).
+Sword blades the hardest (steel: average 97 % Common). Every part: each metal harder than the last for every hand.
+
+**How to play it**: the lab (F6): a copper, iron or steel axe head. The pattern is on at the start: look, then
+click (or Space) to lift it; strike from memory; Space to look again (iron and steel: 3 % each); R to reheat (5
+heats, 4 % each); Enter to set it down, or on steel to quench when the heat bar is in the gold mark. Don't strike
+while the bar is red (steel).
+
+## Step 43: the minigame overhaul, step 5 (the look): woodcutting, mining and smelting on 3D stages (2026-11-05)
+**Why**: Luke, 2026-11-05: "lets move on to the other minigames for now (we can always change or tweak the games
+themself) to get them looking like smithing". `MINIGAMES_PREP.md` §8 step 5's look, ahead of step 4 (gathering's
+cadence, M11: not built); his M7: gathering as a 3D stage too, in a smaller side panel, as a test.
+
+**Built** (presentation only: no model, twin, golden or content changed; every round plays and replays as before):
+- **`StageWorker`** (`game/regents/skilling/`): a character on a stage: one of the adventurer's looks, the animation
+  set's own clips on a plain `AnimationPlayer` (no AnimationTree: rule 11's is the body's), the skill's real tool by
+  its grip (`HeldItem.attach`). A swing starts its clip just before the clip's own blow (measured: chop 0.26 s,
+  mine 0.14 s), so the blow lands when the model says; a swing or a flinch plays once, then rest (`Idle`).
+- **Woodcutting** (`WoodStage`, `woodcutting/wood_stage.tscn`): the trunk in a glade (bark by tree: yew twisted, oak
+  pine-barked, else common), its pieces and branches with leaf clumps, the woodcutter beside it with the copper axe
+  on the model's side; a clean chop swings, throws chips and the piece (it lands with a thud), the trunk drops; a
+  branch at the head: a flinch, leaves, "Ouch!".
+- **Mining** (`MineStage`, `mining/mine_stage.tscn`): the node's own rock model with its ore nuggets in the ore's
+  color (`RegentsOreSpots`, as the world), sized to one height, the miner beside it with the copper pick; the seam
+  stays the 2D readout, its face square placed on the rock; a strike throws chips and dust from the notch's spot on
+  the rock, a split jolts the rock, a jar sparks and makes the miner flinch.
+- **Smelting** (`SmeltStage`, `smelting/smelt_stage.tscn`): the brazier's fire (brighter with the heat), the game's
+  bellows prop (squashes on each pump) worked by the smelter (`Push` clip), the crucible on the fire, carried to the
+  mold and tilted to pour a molten stream, the metal rising in the mold, a spill when over. The heat's band and the
+  mold's line stay 2D gauges at the panel's edges.
+- **Sounds** (ours, synthesized: `game/regents/tools/make_skill_sounds.py`, which replaces the smithing-only script
+  and makes smithing's the same, byte for byte): woodcutting's chop, branch, fall; mining's strike, split, miss;
+  smelting's bellows and pour. `MinigameLook`'s type on all four.
+- **The side panel** (M7's test, `regents_hud.gd` `place_round_box`): woodcutting and mining in a 460 x 600 panel at
+  the right side of the screen (the character and the node stay in view); smelting and smithing in the 960 x 620
+  middle one.
+
+**How to play it**: the lab (F6): a tree, oak or yew; a copper, iron or coal rock; a copper, iron or steel bar (the
+lab is full screen). In the game (after a publish): hold E at a tree or rock: the round opens at the right side.
+
+**Tested**: unit (lints + regents) 3166/0, up 3: each stage follows its model (the woodcutter on the model's side,
+a clean chop throws the piece, a branch makes them flinch; mining's rock is the node's own and the seam's face sits
+on it, chips on a strike, sparks on a jar; smelting's pump works the bellows, pouring shows the stream and the
+metal, stopping stops it), each round's replay unchanged. Negative: the woodcutter kept on one side fails it. The
+skilling playtest checks each round's panel (side for gathering, middle for making) and its stage: SEE HANDOFF.
+Looked at in windowed shots at the side panel's and the middle panel's sizes.
+
+**Left**: Luke plays the four; the back-to-back gathering runs and their pay (M11, §8 step 4); each band's new rule
+for the other three (M9: knots, brittle notches, slag; prototyped and played first); the character wears one of
+the adventurer's looks, not the player's own (the player's look on the stage: later, if wanted).
+
+**Revised after Luke's look (2026-11-06)**: "the positioning of the minigame is right where the minimap is" and "does
+it feel weird to have a character on a small panel while you see your main character ... consistent with hammer
+floating, pick floating, axe floating" (his calls: `GAME.md` M7).
+- Every round in the 960 x 620 middle panel (`place_round_box()`, no side panel).
+- No character on any stage: `StageWorker` deleted, `FloatingTool` (`game/regents/skilling/floating_tool.gd`) in its
+  place: the tool scene's model alone, resting in one pose and swinging to another (two `Marker3D`s in the stage's
+  scene a designer moves: `AxeRest`/`AxeHit`, `PickRest`/`PickHit`), `aim` puts its head (the axe's edge, the pick's
+  tip) on a point; a blow falls fast and rises slower; a jar bounces back with a shudder.
+- Woodcutting: the axe chops at an angle into the side the model says (the right side mirrors the left's poses); a
+  branch knocks it back (the view shakes, the leaves, "Ouch!"). The camera is closer.
+- Mining: the pick hovers raised by the mouse (kept on the seam's face) and comes down with its tip on the strike;
+  a jar bounces it. The camera is centered and closer.
+- Smelting: the bellows pump on their own.
+- The tests: the stages' check now asks for no character on any stage (`_no_character`: no `Skeleton3D`), the axe's
+  blow on the model's side at the bottom piece (both sides seen), the pick's tip landing on the strike's point, a
+  jar marking the tool; the skilling playtest asks for every round in the middle panel. Unit (lints + regents)
+  3166/0; negative: the axe never mirrored and the pick never aimed fail both stage checks. Skilling
+  playtest 76 + 8 / 0 (77 on the run before: a check that only runs on some timings; every panel check passed).
+  Looked at in windowed shots (at rest and at the blow).
+
+**Then, from Luke's play of the stages (2026-11-06)**: "the tree base bark doesnt seem to change" (the stump now
+wears the round's bark, `WoodStage.set_tree`); "the pick swings more like a hammer than with its point" (the pick
+now swings in its own plane, the point leading, and lands on the point: `pick_tip` (-0.31, 0.52, 0), new `PickRest`
+and `PickHit`); "the pick is instantiated later so cant edit it in editor" (each pose marker now holds a preview of
+the tool, `Preview`, taken away in play by `FloatingTool.marker`: drag the marker and see the tool move).
+
+**Also asked (2026-11-06)**: the world character's pick and axe clip into big rocks and trees while gathering:
+PROGRESS 44.
+
+## Step 44: the work spot: the player steps to where the swing meets the rock or the bark (2026-11-06)
+**Asked** (Luke, 2026-11-06, with two shots): gathering in the world, the pick swung deep into a big rock and the axe
+sat inside a big trunk. "Is there a good/easy way to make the tools collide/stop animation when they hit the rock."
+A side session ("Stop gathering tools clipping into rocks and trees") found the cause and first built a picture-only
+stand-off (the drawn model slid back, then also in, from the body); Luke chose **"Move the player"** (`GAME.md`), so
+that was replaced by this.
+
+**The cause** (measured): a worker works wherever it stopped walking (the server's `work_reach_m` is 3 m from the
+node's middle), and walking up stops the body at its 0.4 m capsule against the node's collider. The swing reaches
+much farther: the pick ~1.25 m in front of the feet low down, the axe ~1.07 m but only high (1.4-1.6 m). Trees are
+worse: the trunk that blocks the way is `TRUNK_RADIUS` 0.45 m x `model_scale`, the drawn trunk ~0.7-1.1 m. Pressed
+against them the tool went 0.5-0.97 m inside; from farther off it swung at the air (the yew at 2.95 m: 1.46 m short).
+
+**Built**:
+- `WorkSpot` (`game/regents/skilling/work_spot.gd`): how far to step BACK (or, negative, IN) so the swing's front
+  stops `clearance` short of the node's DRAWN surface, looking along where the player faces; 0 when the node is not
+  ahead (its middle behind, or not met within reach + 2 m); never back past the server's reach (`regents.work_reach_m`
+  less 0.3 m from the node's middle). The swing's front is a profile by height.
+- `SkillingComponent.begin(target, active)`: a press on a node (tap or hold) first takes the player to the work
+  spot, then calls `work` there (AFK stops after `regents.afk_stop_moving_m`, so the step comes first). Luke, after
+  the first version: "move the player as visuals and server body should match in case they get attacked or shot at
+  while harvesting ... just make sure its smooth and not jarring when you move them, facing them is probaly the right
+  call too". So: the view eases round to face the node (`set_look`, the body held facing it), then the walk key and
+  slow are held for the player (a walk, not a run: frames as their own, bounded by the server) until the body would
+  slide the rest; at rest and facing it, the work starts. Gives up after 3 s (a wall); a turn under 4 degrees and a
+  step under 6 cm are not taken. (A first version pushed at run speed with `force_move`, which cannot walk.)
+  Exports on the adventurer's Skilling node: `swing_front` (by skill pose: (height, reach) points; a skill not listed,
+  a station's, never steps) and `work_spot_clearance_m` (0.04).
+- `NodeComponent.surface_along` (the side session's): how far along a ray the node's drawn model is; only a face the
+  ray goes INTO counts.
+- `game/regents/tests/work_spot_shot.tscn` (the side session's shot, reworked): a character with the real tool and
+  clip at each node, shot at the swing's deepest frame where it stopped walking, then at the work spot; prints the
+  gap and the swing's FRONT profile (paste it into `swing_front` after a clip or tool changes).
+  `godot --path . res://game/regents/tests/work_spot_shot.tscn -- <out dir>`.
+
+**Tested**: the skilling playtest (a real client at 150 ms): after a tap of E at the tree and a hold at the copper
+rock, the player faces the node and stands at the work spot (`_check_work_spot`): 79 + 8 / 0; negative (no step):
+both fail (the tree wanted 0.16 m in, the rock 0.83 m back). Unit (lints + regents) 3168/0. The shot: copper rock 0.97 m inside, now 0.03 m short; oak 0.72 inside, 0.01 short; yew 0.73 inside,
+0.05 short; the common tree 0.48 inside, 0.13 short. Unit: `_run_work_spot` (pressed against the copper rock it steps
+back ~1 m and then needs no more; 1.6 m farther it steps in by the rest; facing away 0; out of reach 0; kept inside
+the server's reach; the smith never steps). Negatives: facing away first asked for 1.5 m (rays from behind the feet
+began inside the rock: fixed by the node's middle having to be ahead); stepping in turned off fails the check.
+
+**The reach from a node's edge** (Luke, 2026-11-06, for the big iron rock: pressed against it the feet were 2.72 m
+from its middle, past the 2.7 m the step could go, so it did not step and the pick still went in): "Measure from its
+edge". `NodeDef.radii_cm()` is each model's footprint in whole centimeters, worked out from the model at bake time
+(nothing typed): a rock's farthest drawn point under 2 m from its middle (it is solid as drawn), a tree's trunk
+(`NodeComponent.TRUNK_RADIUS` x scale: its crown and low boughs are walked under; measured as drawn, a yew's low
+boughs came to 4 m). Baked into `node.json` (`radii_cm`: tree, oak 45; yew 37; copper 205/207; iron and coal 257/169),
+compiled into `NodeSeed.radii_cm` (`server/build/regents.rs`; absent: 0, from the middle) and picked by entity as the
+client picks the look (`NodeSeed::radius_m`). `gather` and a round's scoring (`resolve_round`) measure from the edge;
+a station's reach is still from its middle. The client's step cap is the same (`NodeDef.radius_for`). Tested: the
+Rust suite (the iron rock's two footprints, by entity; every tree's under 50 cm), integration (4.4 m from the copper
+rock's middle works; 5.6 m is refused "from its edge"), the shot: the big iron rock now steps back 0.93 m and stops
+0.05 m short (it went 0.88 m in); from 2.95 m off, the copper rock steps in 0.31 m (0.03 short) and the yew 1.42 m
+(0.05 short). Published to `regents-rule` (no wipe).
+
+**Left** (Luke's calls):
+- The step only looks straight ahead (where the camera faces): a node off to one side of the 120 degree arc is
+  worked from where the player stands.
+- Stations (the anvil) do not step.
+

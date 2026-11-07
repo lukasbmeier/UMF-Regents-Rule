@@ -31,6 +31,10 @@ var solid: StaticBody3D = null
 ## The nuggets on it, in its model's space (tests read them).
 var nuggets: Array[Node3D] = []
 var _tween: Tween = null
+## Its model's meshes, for `surface_along` (found once per model).
+var _meshes: Array[MeshInstance3D] = []
+## Each mesh's triangles, for `surface_along` (worked out once per mesh: a glade of one tree costs one).
+static var _tris: Dictionary = {}
 
 
 func required_tables() -> Array[StringName]:
@@ -67,6 +71,7 @@ func _set_def(d: NodeDef) -> void:
 		return
 	if _model != null:
 		_model.queue_free()
+	_meshes.clear()
 	var scene: PackedScene = null
 	if not d.models.is_empty():
 		scene = d.models[absi(entity_id) % d.models.size()]
@@ -136,6 +141,38 @@ func _add_ore(color: Color, scene: PackedScene) -> void:
 			mi.add_to_group(&"not_solid")
 		_model.add_child(n)
 		nuggets.append(n)
+
+
+## How far along `dir` from `from` (world space) its DRAWN surface is, in meters, or INF when the ray misses it
+## within `max_dist`, and while it is worked out. PRESENTATION: where a worker's tool meets it (`SkillingLook`'s
+## stand-off). The model's own triangles, not its collider: a big tree's trunk is wider than the trunk that
+## blocks the way (`TRUNK_RADIUS`).
+func surface_along(from: Vector3, dir: Vector3, max_dist: float) -> float:
+	if _model == null or depleted or not _model.visible or not _model.is_inside_tree():
+		return INF
+	if _meshes.is_empty():
+		for n: Node in _model.find_children("*", "MeshInstance3D", true, false):
+			if (n as MeshInstance3D).mesh != null:
+				_meshes.append(n as MeshInstance3D)
+	var best: float = INF
+	for mi: MeshInstance3D in _meshes:
+		if not is_instance_valid(mi) or not mi.is_inside_tree():
+			continue
+		var tm: TriangleMesh = _tris.get(mi.mesh) as TriangleMesh
+		if tm == null:
+			tm = mi.mesh.generate_triangle_mesh()
+			_tris[mi.mesh] = tm
+		if tm == null:
+			continue
+		var xf: Transform3D = mi.global_transform
+		var inv: Transform3D = xf.affine_inverse()
+		var local_dir: Vector3 = inv.basis * dir
+		var hit: Dictionary = tm.intersect_ray(inv * from, local_dir)
+		# Only a face the ray goes INTO counts: a ray that starts inside the model (a worker with their back to it)
+		# first meets a face on its way out, which is not a surface ahead.
+		if not hit.is_empty() and (hit["normal"] as Vector3).dot(local_dir) < 0.0:
+			best = minf(best, from.distance_to(xf * (hit["position"] as Vector3)))
+	return best if best <= max_dist else INF
 
 
 static func _aabb_of(n: Node3D) -> AABB:

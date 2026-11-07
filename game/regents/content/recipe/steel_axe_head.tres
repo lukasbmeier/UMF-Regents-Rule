@@ -10,6 +10,24 @@
 [sub_resource type="Resource" id="Resource_nd745"]
 script = ExtResource("3_kcvl5")
 display_name = "Steel axe head"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 25
+hammer_drop = 5
+spread_pct = 20
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+lay_cost_pm = 30
+outline_vary = 3
+red_ms = 1200
+crack_cost_pm = 60
+quench_lo_pm = 250
+quench_hi_pm = 450
+quench_bonus_pm = 60
+quench_loss_pm = 150
+error_scale = 50
 outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
 
 [resource]

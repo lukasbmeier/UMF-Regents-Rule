@@ -1,0 +1,210 @@
+[gd_scene format=3 uid="uid://cl5itw1veg25i"]
+
+[ext_resource type="Script" uid="uid://827h0a2mtkx4" path="res://game/regents/skilling/mining/mine_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" uid="uid://bkn7c8pjs54vr" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_big"]
+[ext_resource type="PackedScene" uid="uid://dw5giov86ho5q" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="3_med"]
+[ext_resource type="PackedScene" uid="uid://csqfq1o46nfow" path="res://game/regents/art/nature/Grass_Common_Short.gltf" id="4_grass"]
+[ext_resource type="AudioStream" uid="uid://ce4qtiy8f6pdu" path="res://game/regents/art/sound/mining/strike.wav" id="5_strike"]
+[ext_resource type="AudioStream" uid="uid://sgk1ua4mr8f3" path="res://game/regents/art/sound/mining/split.wav" id="6_split"]
+[ext_resource type="AudioStream" uid="uid://cp5ij2xkmjwpn" path="res://game/regents/art/sound/mining/miss.wav" id="7_miss"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/mining/pickaxe.tscn" id="9_pick"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.36, 0.5, 0.7, 1)
+sky_horizon_color = Color(0.76, 0.78, 0.78, 1)
+ground_bottom_color = Color(0.28, 0.26, 0.22, 1)
+ground_horizon_color = Color(0.64, 0.64, 0.6, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_energy = 0.75
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.72, 0.74, 0.76, 1)
+fog_density = 0.015
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_color = Color(0.42, 0.4, 0.3, 1)
+
+[sub_resource type="PlaneMesh" id="Ground"]
+material = SubResource("GroundMat")
+size = Vector2(60, 60)
+
+[sub_resource type="StandardMaterial3D" id="ChipMat"]
+albedo_color = Color(0.4, 0.38, 0.36, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="ChipMesh"]
+material = SubResource("ChipMat")
+size = Vector2(0.05, 0.04)
+
+[sub_resource type="Curve" id="Fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="DustMat"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.72, 0.68, 0.62, 0.3)
+
+[sub_resource type="SphereMesh" id="DustMesh"]
+material = SubResource("DustMat")
+radius = 0.05
+height = 0.1
+radial_segments = 8
+rings = 4
+
+[sub_resource type="Curve" id="Grow"]
+_data = [Vector2(0, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 1.4), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="DustFade"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="StandardMaterial3D" id="SparkMat"]
+albedo_color = Color(0, 0, 0, 1)
+emission_enabled = true
+emission = Color(1, 0.75, 0.35, 1)
+emission_energy_multiplier = 5.0
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="SparkMesh"]
+material = SubResource("SparkMat")
+size = Vector2(0.025, 0.025)
+
+[node name="MineStage" type="SubViewportContainer" unique_id=1067268133]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+script = ExtResource("1_stage")
+
+[node name="Viewport" type="SubViewport" parent="." unique_id=1013297957]
+own_world_3d = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="Stage" type="Node3D" parent="Viewport" unique_id=1700237429]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage" unique_id=1071862891]
+environment = SubResource("Env")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage" unique_id=1822809724]
+transform = Transform3D(1, 0, 0, 0, 0.979, 0.203, 0, -0.203, 0.979, 0.15, 2, 5.5)
+current = true
+fov = 40.0
+
+[node name="Sun" type="DirectionalLight3D" parent="Viewport/Stage" unique_id=104598074]
+transform = Transform3D(0.781, 0.476, -0.406, 0, 0.65, 0.761, 0.625, -0.594, 0.507, 0, 4, 0)
+light_color = Color(1, 0.95, 0.86, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="Viewport/Stage" unique_id=899337009]
+mesh = SubResource("Ground")
+
+[node name="Rock" type="Node3D" parent="Viewport/Stage" unique_id=265123891]
+
+[node name="PickRest" type="Marker3D" parent="Viewport/Stage" unique_id=1875784549]
+transform = Transform3D(0.9435, -0.2373, -0.2311, -0.04376, 0.6023, -0.797, 0.3283, 0.7622, 0.558, 0.5317, 1.156, 1.551)
+gizmo_extents = 0.15
+
+[node name="Preview" parent="Viewport/Stage/PickRest" instance=ExtResource("9_pick")]
+
+[node name="PickHit" type="Marker3D" parent="Viewport/Stage" unique_id=129908914]
+transform = Transform3D(-0.07346, -0.9701, -0.2311, 0.5861, 0.1455, -0.797, 0.8069, -0.194, 0.5579, 0.4817, 1.056, 1.451)
+gizmo_extents = 0.15
+
+[node name="Preview" parent="Viewport/Stage/PickHit" instance=ExtResource("9_pick")]
+
+[node name="BigRock" parent="Viewport/Stage" unique_id=1629748252 instance=ExtResource("2_big")]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -4.5, 0, -6)
+
+[node name="Rock2" parent="Viewport/Stage" unique_id=1971904308 instance=ExtResource("3_med")]
+transform = Transform3D(0, 0, -0.7, 0, 0.7, 0, 0.7, 0, 0, 3.6, 0, -3.5)
+
+[node name="Grass" parent="Viewport/Stage" unique_id=1179275150 instance=ExtResource("4_grass")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0, 1.4)
+visible = false
+
+[node name="Grass2" parent="Viewport/Stage" unique_id=1245872809 instance=ExtResource("4_grass")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 0.6)
+visible = false
+
+[node name="Chips" type="CPUParticles3D" parent="Viewport/Stage" unique_id=352954627]
+emitting = false
+amount = 10
+lifetime = 0.7
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("ChipMesh")
+direction = Vector3(0, 0.7, 1)
+spread = 55.0
+gravity = Vector3(0, -8, 0)
+initial_velocity_min = 1.2
+initial_velocity_max = 2.6
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="Dust" type="CPUParticles3D" parent="Viewport/Stage" unique_id=1590571567]
+emitting = false
+amount = 12
+lifetime = 1.1
+one_shot = true
+explosiveness = 0.9
+mesh = SubResource("DustMesh")
+direction = Vector3(0, 0.4, 1)
+spread = 70.0
+gravity = Vector3(0, 0.3, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.9
+scale_amount_curve = SubResource("Grow")
+color_ramp = SubResource("DustFade")
+
+[node name="Sparks" type="CPUParticles3D" parent="Viewport/Stage" unique_id=1965728473]
+emitting = false
+amount = 12
+lifetime = 0.35
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SparkMesh")
+direction = Vector3(0, 0.5, 1)
+spread = 60.0
+gravity = Vector3(0, -6, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 2.4
+scale_amount_curve = SubResource("Fade")
+
+[node name="Strike" type="AudioStreamPlayer" parent="." unique_id=386041029]
+stream = ExtResource("5_strike")
+volume_db = -6.0
+max_polyphony = 3
+bus = &"Effects"
+
+[node name="Split" type="AudioStreamPlayer" parent="." unique_id=649032991]
+stream = ExtResource("6_split")
+volume_db = -5.0
+bus = &"Effects"
+
+[node name="Miss" type="AudioStreamPlayer" parent="." unique_id=1092196026]
+stream = ExtResource("7_miss")
+volume_db = -6.0
+bus = &"Effects"

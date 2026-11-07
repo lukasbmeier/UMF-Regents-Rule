@@ -49,6 +49,8 @@ enum Depleted { STUMP, RUBBLE }
 @export var ore_color: Color = Color(0, 0, 0, 0)
 
 static var _by_id: Dictionary[int, NodeDef] = {}
+## Each model's footprint (`footprint_cm`), worked out once per model and scale.
+static var _footprints: Dictionary[String, int] = {}
 
 
 func content_type() -> StringName:
@@ -81,7 +83,68 @@ func to_bake() -> Dictionary:
 		"regrow_ms": int(regrow_s * 1000.0),
 		"rare_item": ContentDef.ref(rare_item),
 		"rare_permille": rare_permille,
+		"radii_cm": radii_cm(),
 	}
+
+
+## HOW BIG IT STANDS (Luke, 2026-11-06, PROGRESS 44: the work reach is "measured from its edge"): each model's
+## footprint in whole centimeters: where a body walking up is stopped (`NodeComponent`'s solid). A rock is solid as
+## drawn: the farthest of its drawn points under `FOOTPRINT_UNDER_M` from its middle, flat, at `model_scale`; a tree
+## only at its trunk (`NodeComponent.TRUNK_RADIUS` x `model_scale`: its crown and low boughs are walked under).
+## Worked out from the models themselves, so a new model needs nothing typed; baked for the server (`radii_cm`),
+## which picks a node's by its entity as the client picks its model.
+const FOOTPRINT_UNDER_M: float = 2.0
+func radii_cm() -> Array[int]:
+	var out: Array[int] = []
+	for scene: PackedScene in models:
+		out.append(_footprint_cm_of(scene))
+	return out
+
+
+## The footprint of the model a node of entity `entity_id` shows, in meters (the client's half of `radii_cm`).
+func radius_for(entity_id: int) -> float:
+	if models.is_empty():
+		return 0.0
+	return _footprint_cm_of(models[absi(entity_id) % models.size()]) / 100.0
+
+
+func _footprint_cm_of(scene: PackedScene) -> int:
+	if depleted != Depleted.RUBBLE:
+		return ceili(NodeComponent.TRUNK_RADIUS * model_scale * 100.0)   # a tree: its trunk
+	return footprint_cm(scene, model_scale)
+
+
+## `scene`'s drawn footprint at `scale`, in whole centimeters (rounded up): the farthest of its meshes' points under
+## `FOOTPRINT_UNDER_M` from its middle, flat.
+static func footprint_cm(scene: PackedScene, scale: float) -> int:
+	if scene == null:
+		return 0
+	var key: String = "%s@%.3f" % [scene.resource_path, scale]
+	if _footprints.has(key):
+		return _footprints[key]
+	var root: Node3D = scene.instantiate() as Node3D
+	var r: float = 0.0
+	if root != null:
+		for n: Node in root.find_children("*", "MeshInstance3D", true, false):
+			var mi: MeshInstance3D = n as MeshInstance3D
+			if mi.mesh == null:
+				continue
+			var xf: Transform3D = mi.transform
+			var p: Node = mi.get_parent()
+			while p != null and p != root:
+				if p is Node3D:
+					xf = (p as Node3D).transform * xf
+				p = p.get_parent()
+			for surface: int in mi.mesh.get_surface_count():
+				var verts: PackedVector3Array = mi.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+				for v: Vector3 in verts:
+					var w: Vector3 = (xf * v) * scale
+					if w.y <= FOOTPRINT_UNDER_M:
+						r = maxf(r, Vector2(w.x, w.z).length())
+		root.free()
+	var cm: int = ceili(r * 100.0)
+	_footprints[key] = cm
+	return cm
 
 
 func validate() -> Array[String]:

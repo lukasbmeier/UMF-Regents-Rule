@@ -5,7 +5,8 @@ extends Control
 ## seed (or the one on show); 1-9 pick a button. The end screen shows the score and whether the server's
 ## replay of your inputs agrees with what you saw. T shows the DIFFICULTY READOUT for the round on show: four
 ## simulated players of set skill play it on many seeds, and how their scores fall (`MinigameReadout`,
-## `MINIGAMES_PREP.md` §6): tune its numbers in the Inspector, T again.
+## `MINIGAMES_PREP.md` §6): tune its numbers in the Inspector, T again. B switches which buttons tap at the anvil
+## (the Controls setting, `ShapeMinigame.SETTING`), to try both.
 
 ## How many seeds each simulated player plays for T.
 const READOUT_ROUNDS: int = 100
@@ -96,8 +97,14 @@ func _show_info() -> void:
 	var playing: bool = game != null and game.state == SkillMinigame.State.PLAYING
 	for b: Button in buttons:
 		b.disabled = playing
-	_info.text = "%s   seed %d" % ["Playing: " + game.how_to() if playing else "Space / Enter: new round   buttons or 1-9: pick the round   T: the difficulty readout",
+	_info.text = "%s   seed %d" % ["Playing: " + game.how_to() if playing else "Space / Enter: new round   buttons or 1-9: pick the round   T: the difficulty readout" + _smith_hint(),
 		game.seed_value if game != null else 0]
+
+
+func _smith_hint() -> String:
+	if not game is ShapeMinigame:
+		return ""
+	return "   B: tap with %s" % ("Shift + click" if ShapeMinigame.buttons() == ShapeMinigame.Buttons.RIGHT_TAPS else "right click")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -112,10 +119,22 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif k.keycode == KEY_T:
 		show_readout()
 		get_viewport().set_input_as_handled()
+	elif k.keycode == KEY_B:
+		switch_smith_buttons()
+		get_viewport().set_input_as_handled()
 	elif k.keycode >= KEY_1 and k.keycode <= KEY_9:
 		pick(k.keycode - KEY_1)
 	elif k.keycode >= KEY_KP_1 and k.keycode <= KEY_KP_9:
 		pick(k.keycode - KEY_KP_1)
+
+
+## The anvil's other buttons for the tap (the Controls setting): B in the lab.
+func switch_smith_buttons() -> void:
+	var now: int = ShapeMinigame.buttons()
+	Settings.set_value(ShapeMinigame.SETTING, 1 - now)
+	if game != null:
+		game.queue_redraw()
+	_show_info()
 
 
 ## The difficulty readout of the round on show, as its params are now (`rounds` seeds a simulated player).

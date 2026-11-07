@@ -87,6 +87,13 @@ fn the_chain_is_compiled_in() {
     assert_eq!((iron.tool_tag, iron.tool_tier, iron.tool_speed_pct), ("axe", 2, 85), "the iron axe: tier 2, 85 % of the time");
     let yew = rules::node_named("yew").unwrap();
     assert_eq!((yew.min_tool_tier, yew.min_rank), (2, 4), "a yew needs the iron axe and woodcutting rank 4");
+    // THE REACH FROM A NODE'S EDGE (Luke, 2026-11-06): each model's footprint, baked from the model, picked by entity.
+    let iron_rock = rules::node_named("Iron rock").unwrap();
+    assert_eq!(iron_rock.radii_cm.len(), 2, "the iron rock has two looks, each with its footprint");
+    assert!(iron_rock.radius_m(0) > 2.0 && iron_rock.radius_m(1) > 1.0 && iron_rock.radius_m(2) == iron_rock.radius_m(0),
+        "the big rock stands over 2 m from its middle; a node's footprint is its look's (entity % looks): {:?}", iron_rock.radii_cm);
+    assert!(rules::NODES.iter().filter(|n| n.tool_tag == "axe").all(|n| n.radii_cm.iter().all(|r| *r <= 50)),
+        "a tree is solid at its trunk only: its footprint is the trunk's, never its crown");
     for id in rules::STARTER_KIT {
         assert_eq!(rules::item(*id).map(|i| i.tool_tier), Some(1), "the starter kit is tier 1 tools");
     }
@@ -284,6 +291,11 @@ fn the_smelt_twin_plays_every_golden_round_exactly() {
     }
 }
 
+/// A param added after a golden's first cases: absent in those, so 0 (off).
+fn opt(o: &serde_json::Value, k: &str) -> i64 {
+    o.get(k).and_then(|v| v.as_i64()).unwrap_or(0)
+}
+
 #[test]
 fn the_shape_twin_plays_every_golden_round_exactly() {
     for c in golden_of("shape") {
@@ -293,15 +305,31 @@ fn the_shape_twin_plays_every_golden_round_exactly() {
             duration_ms: int(pp, "duration_ms"), swing_ms: int(pp, "swing_ms"), heat_ms: int(pp, "heat_ms"),
             reheat_ms: int(pp, "reheat_ms"), start_height: int(pp, "start_height"), start_jitter: int(pp, "start_jitter"),
             hammer_drop: int(pp, "hammer_drop"), spread_pct: int(pp, "spread_pct"),
+            tap_drop: opt(pp, "tap_drop"),
+            tap_spread_pct: opt(pp, "tap_spread_pct"),
             outline: pp["outline"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect(),
             error_scale: int(pp, "error_scale"),
+            max_reheats: opt(pp, "max_reheats"),
+            reheat_cost_pm: opt(pp, "reheat_cost_pm"),
+            hide_outline: opt(pp, "hide_outline"),
+            lay_cost_pm: opt(pp, "lay_cost_pm"),
+            outline_vary: opt(pp, "outline_vary"),
+            red_ms: opt(pp, "red_ms"),
+            crack_cost_pm: opt(pp, "crack_cost_pm"),
+            quench_lo_pm: opt(pp, "quench_lo_pm"),
+            quench_hi_pm: opt(pp, "quench_hi_pm"),
+            quench_bonus_pm: opt(pp, "quench_bonus_pm"),
+            quench_loss_pm: opt(pp, "quench_loss_pm"),
         };
         let want_start: Vec<i64> = c["start"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
         assert_eq!(shape::start_heights(seed_of(&c), &p), want_start, "{name}: the bar out of the fire");
+        let want_outline: Vec<i64> = c["outline"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
+        assert_eq!(shape::round_outline(seed_of(&c), &p), want_outline, "{name}: the round's outline");
         let inputs: Vec<(i64, i64)> = rows(&c).iter().map(|r| (r[0], r[1])).collect();
         let e = &c["expected"];
         let want = shape::ShapeResult {
-            strikes: int(e, "strikes"), colds: int(e, "colds"), reheats: int(e, "reheats"), error: int(e, "error"), score_pm: int(e, "score_pm"),
+            strikes: int(e, "strikes"), colds: int(e, "colds"), reheats: int(e, "reheats"), lays: int(e, "lays"), cracks: int(e, "cracks"),
+            error: int(e, "error"), ceiling_pm: int(e, "ceiling_pm"), quench_pm: int(e, "quench_pm"), score_pm: int(e, "score_pm"),
         };
         assert_eq!(shape::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
     }

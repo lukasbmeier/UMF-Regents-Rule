@@ -277,7 +277,19 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     never mashing.
   - **The look** (M7): a 3D stage in the panel (`SubViewport`, the game's own Quaternius models, lit like the world),
     sound from the start; smithing first. **Gathering ALSO as a 3D stage, in the smaller side panel, as a TEST**
-    (Luke: "lets do gathering as 3d too with smaller side panel as a test").
+    (Luke: "lets do gathering as 3d too with smaller side panel as a test"). **After the test (2026-11-06): every
+    round in the MIDDLE panel** (the side panel sat over the minimap), and **NO CHARACTER ON A STAGE: the tool floats
+    and swings on its own**, as the anvil's hammer (Luke: "does it feel weird to have a character on a small panel
+    while you see your main character ... consistent with hammer floating, pick floating, axe floating, etc since we
+    know we as the character as doing the action").
+  - **THE WORK SPOT** (Luke, 2026-11-06, PROGRESS 44): the world's pick and axe went into big rocks and trees; of a
+    picture-only stand-off and moving the player, Luke chose **"Move the player"**: pressing E at a node first walks
+    the player back (or in) to where the swing meets the rock or the bark, facing it, then the work starts there.
+    "Visuals and server body should match in case they get attacked or shot at while harvesting ... smooth and not
+    jarring ... facing them": an eased turn to the node, then a walk (not a run).
+  - **THE WORK REACH IS FROM A NODE'S EDGE** (Luke, 2026-11-06: "Measure from its edge"): `regents.work_reach_m` (3 m)
+    is counted from where a body walking up is stopped, not from the node's middle: a rock's drawn footprint, a tree's
+    trunk (`NodeDef.radii_cm`, baked from the models). The big iron rock (2.57 m) fits its work spot now.
   - **Art** (M8): the game's own models plus CC0 (Kenney, freesound); Gemini for mockups only. (Paid packs and AI art
     not chosen.)
   - **Each band's new thing** (M9): smithing first: two strikes in band 1 (the buttons a UI setting, tried both ways),
@@ -291,6 +303,21 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     round paid as it ends. The numbers come from the readout and his play.
   - **An assembled item's quality** (M12): the CORE part alone sets it; a secondary part's grade starts its trait a
     rank higher (this settles the "a better-made part starts higher" half of trait ranks, `MATERIALS.md` §5).
+  - **The anvil, after playing step 2** (Luke, 2026-11-05: "the time between hitting reheat and then being able to use
+    the hammer again was too long, could only ever get two reheats"): **a set number of heats instead of a clock**,
+    and **each reheat lowers the part's quality ceiling**; the outline **varies every round** (still the part's
+    shape, different each time, so no one memorizes the hits); the outline can be **re-laid on the bar as a template,
+    but no strikes while it is up**.
+  - **The anvil's bands, A TEST** (Luke, 2026-11-05: "so I can test both, lets make copper band 1, iron band 2, steel
+    band 3 and we can redistribute the bands per metal as we introduce more"): **band 1 (copper)** the outline shows
+    only when laid on (a key or a button), no strikes while it is up, each reheat lowers the quality ceiling; **band 2
+    (iron)** the metal is harder (more hits), and each lay of the template AND each reheat lowers the ceiling; **band
+    3 (steel)** as band 2, plus heat colors and the quench. Revisit once played.
+  - **For every skill** (Luke, 2026-11-05, "yes"): **rank eases the numbers; a band adds one rule.** A band's rule
+    belongs to that band's items, never to the player's rank: an outranked tier never gains rules.
+  - **Outranked XP** (Luke, 2026-11-05, a direction, not settled): rather than XP falling off, shape the rank curve
+    so a lower tier is never worth doing for XP (as OSRS's: its XP per level grows so steeply that level 92 is half of
+    99). Today's smithing curve (60 ... 2400 over 10 ranks) grows gently; to retune with the ladder.
 - **American spelling** (Luke, 2026-11-04): "all spelling in the game is not English version, but American": armor,
   defense, color, gray, center, meter, canceled. Everything a player reads, and every new name, rule and doc from now
   on (`regents.defense_k`). The first sweep was done 2026-11-04 (PROGRESS step 38).
@@ -318,6 +345,15 @@ tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alo
 `game/regents/skilling/skilling_lab.tscn` (F6); **T** there shows the round's **difficulty readout** (four simulated
 players of set skill on many seeds: their mean, Fine and Masterwork shares, how often they beat AFK), and
 `tools\run.cmd game\regents\tests\minigame_readout.sh` prints it for every round (`MINIGAMES_PREP.md` §6).
+**The anvil** (PROGRESS 41-42) is a 3D stage of the game's own anvil and hammer: left click a column for a heavy
+strike (it spreads into its neighbors), right click for a light tap (finishing the line), R to put the bar back in the
+fire; or Shift + click taps and right click reheats (Controls, "Smithing: the light tap"; **B** in the lab switches
+it). No clock: **5 heats**, each costing the best the part can be; **the pattern** (the outline) is on the bar at the
+start and when laid on with **Space** (no strikes while it is on); the outline varies every round; **Enter** sets the
+part down. Iron charges for each look; steel goes **red** (a strike cracks it) and ends in a **quench** (Enter while
+the heat bar is in the gold mark). **Every minigame is a 3D stage** (PROGRESS 43), in the panel in the middle, with no
+character: the axe chops into the trunk's side, the pick hovers by the mouse and comes down on the seam, the bellows
+pump on their own.
 
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms

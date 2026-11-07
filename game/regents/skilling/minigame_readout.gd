@@ -185,70 +185,143 @@ static func _smelt(seed_value: int, p: SmeltParams, sim: SimPlayer, rng: RandomN
 
 
 ## SHAPE TO THE OUTLINE: once the last strike has landed, strike the column that brings the bar nearest the
-## outline (a planner) or the one that bulges most; back in the fire when it is nearly too cold; stop when no
-## strike would help.
+## outline (planning) or the one that bulges most (a light tap once it is closer than a heavy strike's drop, when
+## the round has taps); back in the fire when it is nearly too cold (before it goes red), while a heat is worth what
+## it costs; stop when no strike would help. A player who plans plays the round both ways and keeps the better (on
+## the pickaxe head the plain way scored a hair higher, 2026-11-05): the top lines are the round's ceiling, not one
+## way of playing it.
+## THE BANDS' RULES (2026-11-05): with a template they look, lift it, and work from MEMORY: exact for
+## `memory_strikes`, then each column a little off; one who `looks_again` lays it on to check once the picture has
+## blurred and only finishing is left (rough work needs no exact picture); with heats they set the
+## part down when done, and with a quench they set it down in its window (a heat spent on it when the bar has gone
+## too cold, if one is left).
 static func _shape(seed_value: int, p: ShapeParams, sim: SimPlayer, rng: RandomNumberGenerator) -> Dictionary:
+	if not sim.plans:
+		return _shape_by(seed_value, p, sim, rng, false)
+	var from: int = rng.state
+	var planned: Dictionary = _shape_by(seed_value, p, sim, rng, true)
+	rng.state = from
+	var plain: Dictionary = _shape_by(seed_value, p, sim, rng, false)
+	return planned if int(planned["live"]["score_pm"]) >= int(plain["live"]["score_pm"]) else plain
+
+
+static func _shape_by(seed_value: int, p: ShapeParams, sim: SimPlayer, rng: RandomNumberGenerator, plans: bool) -> Dictionary:
 	var m: ShapeModel = ShapeModel.start(seed_value, p)
 	var out: PackedInt32Array = PackedInt32Array()
 	var seen: int = 0
 	var last: int = 0
-	var margin: int = sim.react_ms + 2 * sim.jitter_ms   # how near cold they reheat
-	for _guard: int in 2000:
+	var margin: int = sim.react_ms + 2 * sim.jitter_ms   # how near cold (or red) they reheat
+	var since_look: int = 0
+	var blurred: bool = false
+	var mind: PackedInt32Array = m.outline.duplicate()   # the outline as they remember it
+	var heat_worth: int = p.reheat_cost_pm * p.error_scale / 1000   # error a heat costs, in the outline's units
+	for _guard: int in 3000:
 		var t: int = _at(seen + sim.react_ms, sim, rng, last)
-		if t > p.duration_ms:
+		if t > p.duration_ms or m.done_ms >= 0:
 			break
-		var c: int = _shape_column(m, p, sim.plans)
-		if c < 0:
-			break   # no strike would bring it closer: done
+		if m.laid:
+			# Studying the pattern: as long as it takes to take in, then lift it and work from memory.
+			t = maxi(t, last + sim.react_ms + 200)
+			_send(m, out, t, ShapeModel.LIFT)
+			since_look = 0
+			blurred = false
+			mind = m.outline.duplicate()
+			seen = t
+			last = t
+			continue
+		if p.hide_outline > 0 and since_look == sim.memory_strikes and not blurred:
+			blurred = true
+			for i: int in mind.size():
+				mind[i] = m.outline[i] + rng.randi_range(-1, 1)   # the picture blurs
+		var c: int = _shape_column(m, p, plans, mind)
+		if blurred and sim.looks_again and (c < 0 or c >= ShapeModel.TAP):
+			_send(m, out, t, ShapeModel.LAY)   # down to finishing, and unsure: check the pattern
+			seen = t
+			last = t
+			continue
 		var lands: int = maxi(t, m.next_ok_ms)   # a strike mid-swing lands when the swing ends
+		var left: int = m.reheats_left()
+		var going: bool = m.hot_until_ms - p.red_ms - lands < maxi(margin, 1)
+		var worth: bool = left != 0 and (left < 0 or m.error() > heat_worth)
+		if c < 0 or (going and not worth):
+			if p.max_reheats <= 0:
+				break   # no strike would bring it closer: done (a round on a clock)
+			t = _quench_time(m, p, sim, rng, t, out)
+			_send(m, out, t, ShapeModel.DONE)
+			break
 		var slip: bool = _slips(sim, rng)
-		if m.hot_until_ms - lands < maxi(margin, 1):
+		if going:
 			if not slip:
-				c = ShapeModel.REHEAT_COLUMN   # a slip here: struck anyway, maybe cold
+				c = ShapeModel.REHEAT_COLUMN   # a slip here: struck anyway, maybe red or cold
 		elif slip:
-			c = clampi(c + (1 if rng.randi_range(0, 1) == 1 else -1), 0, m.heights.size() - 1)
-		out.append_array(PackedInt32Array([t, c]))
-		var did: int = m.strike(t, c)
+			var tap: int = ShapeModel.TAP if c >= ShapeModel.TAP else 0
+			c = tap + clampi(c - tap + (1 if rng.randi_range(0, 1) == 1 else -1), 0, m.heights.size() - 1)
+		var did: int = _send(m, out, t, c)
 		if did == ShapeModel.HELD:
 			m.settle(m.held_at_ms)
+		if c != ShapeModel.REHEAT_COLUMN:
+			since_look += 1
 		last = maxi(t, m.last_act_ms)
 		seen = m.last_act_ms if did != ShapeModel.IGNORED else t
 	m.finish()
 	return {"inputs": out, "live": m.result()}
 
 
-## The column to strike next (-1: none would help).
-static func _shape_column(m: ShapeModel, p: ShapeParams, plans: bool) -> int:
+static func _send(m: ShapeModel, out: PackedInt32Array, t: int, c: int) -> int:
+	out.append_array(PackedInt32Array([t, c]))
+	return m.strike(t, c)
+
+
+## When a smith done shaping sets the part down: now, or (a round with a quench) as the bar's heat passes the middle
+## of the window, give or take their timing; a bar already too cold for it goes back in the fire first, if a heat
+## is left.
+static func _quench_time(m: ShapeModel, p: ShapeParams, sim: SimPlayer, rng: RandomNumberGenerator, t: int,
+		out: PackedInt32Array) -> int:
+	if p.quench_hi_pm <= 0:
+		return t
+	var lands: int = maxi(t, m.next_ok_ms)
+	if m.heat_pm(lands) < p.quench_lo_pm and m.reheats_left() != 0:
+		_send(m, out, t, ShapeModel.REHEAT_COLUMN)
+		m.settle(m.next_ok_ms)
+		t = m.next_ok_ms
+	var mid: int = (p.quench_lo_pm + p.quench_hi_pm) / 2
+	var at: int = m.hot_until_ms - mid * p.heat_ms / 1000   # when the heat is at the window's middle
+	return maxi(t, at + roundi(rng.randfn(0.0, float(sim.jitter_ms))))
+
+
+## The column to strike next, `ShapeModel.TAP` + it for a light tap (-1: none would help), by the outline as they
+## remember it: planning, the strike that brings the bar nearest (a spread counted); else the column that bulges most.
+static func _shape_column(m: ShapeModel, p: ShapeParams, plans: bool, mind: PackedInt32Array) -> int:
 	var best: int = -1
 	if plans:
-		var now: int = m.error()
-		var best_err: int = now
+		var best_delta: int = 0
 		for i: int in m.heights.size():
-			var e: int = _error_after(m, p, i)
-			if e < best_err:
-				best_err = e
-				best = i
+			for mv: int in ([i, ShapeModel.TAP + i] if p.tap_drop > 0 else [i]):
+				var d: int = _delta(m.heights, p, mv, mind)
+				if d < best_delta:
+					best_delta = d
+					best = mv
 		return best
 	var most: int = 0
 	for i: int in m.heights.size():
-		var over: int = m.heights[i] - p.outline[i]
+		var over: int = m.heights[i] - mind[i]
 		if over > most:
 			most = over
 			best = i
+	if best >= 0 and p.tap_drop > 0 and most < p.hammer_drop:
+		best += ShapeModel.TAP
 	return best
 
 
-## The bar's error if column `i` were struck now (hot).
-static func _error_after(m: ShapeModel, p: ShapeParams, i: int) -> int:
-	var h: PackedInt32Array = m.heights.duplicate()
-	var d: int = mini(h[i], p.hammer_drop)
-	h[i] -= d
-	var side: int = d * p.spread_pct / 100
+## How strike `mv` would change the bar's error against `line` (only its column and their neighbors move).
+static func _delta(h: PackedInt32Array, p: ShapeParams, mv: int, line: PackedInt32Array) -> int:
+	var tap: bool = mv >= ShapeModel.TAP
+	var i: int = mv - ShapeModel.TAP if tap else mv
+	var d: int = mini(h[i], p.tap_drop if tap else p.hammer_drop)
+	var side: int = d * (p.tap_spread_pct if tap else p.spread_pct) / 100
+	var out: int = absi(h[i] - d - line[i]) - absi(h[i] - line[i])
 	if i > 0:
-		h[i - 1] += side
+		out += absi(h[i - 1] + side - line[i - 1]) - absi(h[i - 1] - line[i - 1])
 	if i < h.size() - 1:
-		h[i + 1] += side
-	var e: int = 0
-	for j: int in h.size():
-		e += absi(h[j] - p.outline[j])
-	return e
+		out += absi(h[i + 1] + side - line[i + 1]) - absi(h[i + 1] - line[i + 1])
+	return out

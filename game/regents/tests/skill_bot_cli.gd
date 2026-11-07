@@ -88,21 +88,33 @@ func _smelt(seed_value: int, p: SmeltParams) -> PackedInt32Array:
 	return out
 
 
-## The column furthest over the outline, each swing; back in the fire when nearly cold.
+## The column furthest over the round's outline, each swing (a tap once it is closer than a heavy strike); back in
+## the fire when nearly cold (or red), while heats are left; the template lifted first; the part set down when done
+## (in the quench's window, if it has one). As `make_skill_goldens.py`'s `shape_bot`, less the re-lays.
 func _shape(seed_value: int, p: ShapeParams) -> PackedInt32Array:
 	var m: ShapeModel = ShapeModel.start(seed_value, p)
 	var out: PackedInt32Array = PackedInt32Array()
 	var t: int = 0
-	while t <= p.duration_ms:
-		if t >= m.next_ok_ms:
-			var c: int = ShapeModel.REHEAT_COLUMN
-			if m.hot_until_ms - t >= 400:
-				c = 0
-				for i: int in m.heights.size():
-					if m.heights[i] - p.outline[i] > m.heights[c] - p.outline[c]:
-						c = i
-				if m.heights[c] - p.outline[c] <= 0:
+	while t <= p.duration_ms and m.done_ms < 0:
+		var c: int = -2
+		if m.laid:
+			c = ShapeModel.LIFT if t >= 400 else -2
+		elif t >= m.next_ok_ms:
+			var left: bool = m.reheats_left() != 0
+			c = 0
+			for i: int in m.heights.size():
+				if m.heights[i] - m.outline[i] > m.heights[c] - m.outline[c]:
+					c = i
+			var over: int = m.heights[c] - m.outline[c]
+			if over <= 0 or (not left and t >= m.hot_until_ms - p.red_ms):
+				if p.max_reheats <= 0:
 					break
+				c = ShapeModel.DONE if p.quench_hi_pm <= 0 or m.heat_pm(t) <= (p.quench_lo_pm + p.quench_hi_pm) / 2 else -2
+			elif m.hot_until_ms - p.red_ms - t < 400 and left:
+				c = ShapeModel.REHEAT_COLUMN
+			elif p.tap_drop > 0 and over < p.hammer_drop:
+				c += ShapeModel.TAP
+		if c != -2:
 			out.append_array(PackedInt32Array([t, c]))
 			m.strike(t, c)
 		t += 10

@@ -120,8 +120,21 @@ pub struct ShapeSeed {
     pub start_jitter: i64,
     pub hammer_drop: i64,
     pub spread_pct: i64,
+    pub tap_drop: i64,
+    pub tap_spread_pct: i64,
     pub outline: &'static [i64],
     pub error_scale: i64,
+    pub max_reheats: i64,
+    pub reheat_cost_pm: i64,
+    pub hide_outline: i64,
+    pub lay_cost_pm: i64,
+    pub outline_vary: i64,
+    pub red_ms: i64,
+    pub crack_cost_pm: i64,
+    pub quench_lo_pm: i64,
+    pub quench_hi_pm: i64,
+    pub quench_bonus_pm: i64,
+    pub quench_loss_pm: i64,
 }
 
 impl ShapeSeed {
@@ -135,8 +148,21 @@ impl ShapeSeed {
             start_jitter: self.start_jitter,
             hammer_drop: self.hammer_drop,
             spread_pct: self.spread_pct,
+            tap_drop: self.tap_drop,
+            tap_spread_pct: self.tap_spread_pct,
             outline: self.outline.to_vec(),
             error_scale: self.error_scale,
+            max_reheats: self.max_reheats,
+            reheat_cost_pm: self.reheat_cost_pm,
+            hide_outline: self.hide_outline,
+            lay_cost_pm: self.lay_cost_pm,
+            outline_vary: self.outline_vary,
+            red_ms: self.red_ms,
+            crack_cost_pm: self.crack_cost_pm,
+            quench_lo_pm: self.quench_lo_pm,
+            quench_hi_pm: self.quench_hi_pm,
+            quench_bonus_pm: self.quench_bonus_pm,
+            quench_loss_pm: self.quench_loss_pm,
         }
     }
 }
@@ -225,6 +251,19 @@ pub struct NodeSeed {
     pub regrow_ms: u32,
     pub rare_item: u32,
     pub rare_permille: u32,
+    /// Each model's drawn footprint (cm), by the model a node of an entity shows (`entity_id % len`): the work reach
+    /// is measured from a node's edge (Luke, 2026-11-06). Empty: from its middle.
+    pub radii_cm: &'static [u32],
+}
+
+impl NodeSeed {
+    /// The footprint (m) of the node of entity `entity_id`: its model's, as the client picks it.
+    pub fn radius_m(&self, entity_id: u64) -> f32 {
+        if self.radii_cm.is_empty() {
+            return 0.0;
+        }
+        self.radii_cm[(entity_id % self.radii_cm.len() as u64) as usize] as f32 / 100.0
+    }
 }
 
 /// A station (`StationDef`).

@@ -1,0 +1,200 @@
+[gd_scene format=3 uid="uid://ii5p0fibt8yp"]
+
+[ext_resource type="Script" uid="uid://c4mct22tdtc7d" path="res://game/regents/skilling/woodcutting/wood_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" uid="uid://c58t23pun63sr" path="res://game/regents/art/nature/CommonTree_2.gltf" id="2_tree"]
+[ext_resource type="PackedScene" uid="uid://ijobr3cok6xw" path="res://game/regents/art/nature/CommonTree_3.gltf" id="3_tree"]
+[ext_resource type="PackedScene" uid="uid://cstm80s37i5au" path="res://game/regents/art/nature/Bush_Large.gltf" id="4_bush"]
+[ext_resource type="PackedScene" uid="uid://01brfbdsyvu1" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="5_grass"]
+[ext_resource type="PackedScene" uid="uid://blxuc8gk4d1u8" path="res://game/regents/art/nature/Fern_1.gltf" id="6_fern"]
+[ext_resource type="Texture2D" uid="uid://djl2i22afrg4x" path="res://game/regents/art/nature/Bark_NormalTree.png" id="7_bark"]
+[ext_resource type="AudioStream" uid="uid://du765krv4cyep" path="res://game/regents/art/sound/woodcutting/chop.wav" id="8_chop"]
+[ext_resource type="AudioStream" uid="uid://c6b4m6hnaqtnw" path="res://game/regents/art/sound/woodcutting/branch.wav" id="9_branch"]
+[ext_resource type="AudioStream" uid="uid://5ehwv0v35j4g" path="res://game/regents/art/sound/woodcutting/fall.wav" id="10_fall"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/woodcutting/axe.tscn" id="9_axe"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.32, 0.52, 0.78, 1)
+sky_horizon_color = Color(0.72, 0.8, 0.86, 1)
+ground_bottom_color = Color(0.25, 0.3, 0.2, 1)
+ground_horizon_color = Color(0.62, 0.68, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_energy = 0.8
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.7, 0.78, 0.84, 1)
+fog_density = 0.012
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_color = Color(0.36, 0.47, 0.25, 1)
+
+[sub_resource type="PlaneMesh" id="Ground"]
+material = SubResource("GroundMat")
+size = Vector2(60, 60)
+
+[sub_resource type="StandardMaterial3D" id="StumpMat"]
+albedo_texture = ExtResource("7_bark")
+roughness = 0.9
+uv1_scale = Vector3(2, 1, 1)
+
+[sub_resource type="CylinderMesh" id="Stump"]
+material = SubResource("StumpMat")
+top_radius = 0.24
+bottom_radius = 0.34
+height = 0.62
+
+[sub_resource type="StandardMaterial3D" id="ChipMat"]
+albedo_color = Color(0.78, 0.62, 0.4, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="ChipMesh"]
+material = SubResource("ChipMat")
+size = Vector2(0.035, 0.022)
+
+[sub_resource type="Curve" id="Fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="LeafMat"]
+albedo_color = Color(0.28, 0.55, 0.22, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="LeafMesh"]
+material = SubResource("LeafMat")
+size = Vector2(0.05, 0.04)
+
+[node name="WoodStage" type="SubViewportContainer" unique_id=926324739]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+script = ExtResource("1_stage")
+
+[node name="Viewport" type="SubViewport" parent="." unique_id=1306723878]
+own_world_3d = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="Stage" type="Node3D" parent="Viewport" unique_id=1926773452]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage" unique_id=1388325666]
+environment = SubResource("Env")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage" unique_id=1705553953]
+transform = Transform3D(1, 0, 0, 0, 0.995, 0.1, 0, -0.1, 0.995, 0, 1.45, 4.2)
+current = true
+fov = 42.0
+
+[node name="Sun" type="DirectionalLight3D" parent="Viewport/Stage" unique_id=2030803502]
+transform = Transform3D(0.781, 0.476, -0.406, 0, 0.65, 0.761, 0.625, -0.594, 0.507, 0, 4, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="Viewport/Stage" unique_id=1814873252]
+mesh = SubResource("Ground")
+
+[node name="Stump" type="MeshInstance3D" parent="Viewport/Stage" unique_id=535952861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.31, 0)
+mesh = SubResource("Stump")
+
+[node name="Trunk" type="Node3D" parent="Viewport/Stage" unique_id=771720168]
+
+[node name="AxeRest" type="Marker3D" parent="Viewport/Stage" unique_id=1125860849]
+transform = Transform3D(-0.7134, -0.7007, 0, -0.7007, 0.7134, 0, 0, 0, -1, -0.7846, 0.6204, 0.15)
+gizmo_extents = 0.15
+
+[node name="Preview" parent="Viewport/Stage/AxeRest" instance=ExtResource("9_axe")]
+
+[node name="AxeHit" type="Marker3D" parent="Viewport/Stage" unique_id=205554116]
+transform = Transform3D(-0.866, 0.5, 0, 0.5, 0.866, 0, 0, 0, -1, -0.6846, 0.4704, 0.1)
+gizmo_extents = 0.15
+
+[node name="Preview" parent="Viewport/Stage/AxeHit" instance=ExtResource("9_axe")]
+
+[node name="TreeBack" parent="Viewport/Stage" unique_id=1484201650 instance=ExtResource("2_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0, -11)
+
+[node name="TreeBack2" parent="Viewport/Stage" unique_id=1322119160 instance=ExtResource("3_tree")]
+transform = Transform3D(-0.8, 0, 0.6, 0, 1, 0, -0.6, 0, -0.8, 5.2, 0, -13)
+
+[node name="Bush" parent="Viewport/Stage" unique_id=1822882247 instance=ExtResource("4_bush")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -2.2, 0, -1.6)
+
+[node name="Bush2" parent="Viewport/Stage" unique_id=1951153113 instance=ExtResource("4_bush")]
+transform = Transform3D(0, 0, -0.6, 0, 0.6, 0, 0.6, 0, 0, 2.4, 0, -2.4)
+
+[node name="Grass" parent="Viewport/Stage" unique_id=1671154282 instance=ExtResource("5_grass")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0, -0.31869233)
+
+[node name="Grass2" parent="Viewport/Stage" unique_id=1260158132 instance=ExtResource("5_grass")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.1, 0, -1.2)
+
+[node name="Fern" parent="Viewport/Stage" unique_id=256191138 instance=ExtResource("6_fern")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0, -0.75)
+
+[node name="Chips" type="CPUParticles3D" parent="Viewport/Stage" unique_id=748857376]
+emitting = false
+amount = 14
+lifetime = 0.6
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("ChipMesh")
+direction = Vector3(-1, 0.6, 0.4)
+spread = 40.0
+gravity = Vector3(0, -7, 0)
+initial_velocity_min = 1.2
+initial_velocity_max = 2.4
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="Leaves" type="CPUParticles3D" parent="Viewport/Stage" unique_id=1160497745]
+emitting = false
+amount = 18
+lifetime = 0.9
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("LeafMesh")
+direction = Vector3(0, 1, 0)
+spread = 120.0
+gravity = Vector3(0, -2.5, 0)
+initial_velocity_min = 0.6
+initial_velocity_max = 1.4
+angular_velocity_min = -300.0
+angular_velocity_max = 300.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="Chop" type="AudioStreamPlayer" parent="." unique_id=1549615359]
+stream = ExtResource("8_chop")
+volume_db = -5.0
+max_polyphony = 3
+bus = &"Effects"
+
+[node name="Branch" type="AudioStreamPlayer" parent="." unique_id=1453281637]
+stream = ExtResource("9_branch")
+volume_db = -6.0
+bus = &"Effects"
+
+[node name="Fall" type="AudioStreamPlayer" parent="." unique_id=335175127]
+stream = ExtResource("10_fall")
+volume_db = -8.0
+max_polyphony = 2
+bus = &"Effects"

@@ -10,6 +10,17 @@
 [sub_resource type="Resource" id="Resource_v17o1"]
 script = ExtResource("1_g4jef")
 display_name = "Iron sword blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+outline_vary = 3
+error_scale = 50
 outline = PackedInt32Array(6, 10, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 10, 4)
 
 [sub_resource type="Resource" id="Resource_0unr2"]

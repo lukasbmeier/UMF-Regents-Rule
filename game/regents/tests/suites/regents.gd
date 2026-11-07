@@ -27,6 +27,9 @@ func run() -> void:
 	_run_registry()
 	await _run_minigame()
 	await _run_chain_minigames()
+	await _run_two_strikes()
+	await _run_stages()
+	await _run_work_spot()
 	await _run_lab()
 	await _run_recipe_bench()
 	await _run_foe_bench()
@@ -691,6 +694,42 @@ func _check_rock(def: NodeDef, id: int) -> void:
 	nc._set_depleted(false)
 	await get_tree().physics_frame
 	_check(nc.solid.collision_layer == 1, "back, it blocks again")
+	(rock[0] as Node).free()
+
+
+## THE WORK SPOT (Luke, 2026-11-06: "Move the player"; PROGRESS 44): pressed against a rock, the player steps back
+## until the pick's swing (the adventurer's own front) meets the rock's drawn surface, and from there needs no more;
+## facing away, or already clear, no step; never past the server's reach from the node's center.
+func _run_work_spot() -> void:
+	print("== regents: the work spot ==")
+	var rock: Array = _node_entity(NodeDef.by_id(40004), 1)
+	var nc: NodeComponent = rock[1]
+	nc.entity = rock[0]
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	# Walk in from +X until the capsule (0.4 m) meets the rock's collider.
+	var q: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(Vector3(6, 1.0, 0), Vector3(0, 1.0, 0))
+	var hit: Dictionary = (rock[0] as Node3D).get_world_3d().direct_space_state.intersect_ray(q)
+	var stop: float = (hit["position"] as Vector3).x + 0.4 if not hit.is_empty() else 1.5
+	var sk: SkillingComponent = SkillingComponent.new()
+	var front: PackedVector2Array = sk.swing_front[&"pose.mine"]
+	var gap: float = sk.work_spot_clearance_m
+	sk.free()
+	var west: Vector3 = Vector3(-1, 0, 0)
+	var step: float = WorkSpot.step_back(nc, Vector3(stop, 0, 0), west, front, gap, 2.7)
+	var again: float = WorkSpot.step_back(nc, Vector3(stop + step, 0, 0), west, front, gap, 2.7)
+	var away: float = WorkSpot.step_back(nc, Vector3(stop, 0, 0), -west, front, gap, 2.7)
+	var far: float = WorkSpot.step_back(nc, Vector3(stop + 1.6, 0, 0), west, front, gap, 2.7)
+	var too_far: float = WorkSpot.step_back(nc, Vector3(stop + 4.5, 0, 0), west, front, gap, 2.7)
+	var capped: float = WorkSpot.step_back(nc, Vector3(stop, 0, 0), west, front, gap, stop + 0.2)
+	_check(not hit.is_empty() and step > 0.5 and absf(again) < 0.03 and away == 0.0 and absf(far + 1.6 - step) < 0.03
+		and too_far == 0.0 and absf(capped - 0.2) < 0.01,
+		"the work spot: pressed against the copper rock (%.2f m from its middle) the miner steps back %.2f m, then needs %.2f more; from 1.6 m farther, in %.2f; facing away %.2f; out of reach %.2f; kept inside the server's reach (%.2f of 0.20)"
+		% [stop, step, again, -far, away, too_far, capped])
+	# A station's skill (no swing listed) never steps.
+	var sk2: SkillingComponent = SkillingComponent.new()
+	_check(not sk2.swing_front.has(&"pose.smith") and sk2.swing_front.has(&"pose.chop"), "the work spot: the anvil's smith does not step; the woodcutter does")
+	sk2.free()
 	(rock[0] as Node).free()
 
 
@@ -2488,8 +2527,9 @@ func _run_skill_goldens() -> void:
 		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
 		var p: ShapeParams = _params_from(ShapeParams.new(), c["params"]) as ShapeParams
 		var start: PackedInt32Array = ShapeModel.start(seed_value, p).heights
+		var round_outline: PackedInt32Array = ShapeModel.start(seed_value, p).outline
 		var got: Dictionary = ShapeModel.play(seed_value, p, _flat(c["inputs"]))
-		if start != _flat([c["start"]]) or got != _ints(c["expected"]):
+		if start != _flat([c["start"]]) or round_outline != _flat([c["outline"]]) or got != _ints(c["expected"]):
 			bad.append("shape %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
 	_check(crack.size() >= 6 and smelt.size() >= 6 and shape.size() >= 6 and bad.is_empty(),
 		"the GDScript models play every golden round exactly (%d crack, %d smelt, %d shape)%s" % [crack.size(), smelt.size(), shape.size(),
@@ -2629,6 +2669,270 @@ func _run_readout() -> void:
 	_check(gained.is_empty(), "nobody pressing: each round scores as untouched, no Fine part, no gain on AFK (gained: %s)" % str(gained))
 	var text: String = MinigameReadout.report(tree, 4)
 	_check(text.contains("Flawless") and text.contains("Careless") and text.contains("beats AFK"), "the readout reads: %s" % text.get_slice("\n", 1))
+
+
+## SMITHING'S TWO STRIKES AND ITS 3D STAGE (`MINIGAMES_PREP.md` §3.1, §5; Luke's M7 and M9, 2026-11-05): a heavy strike
+## that spreads, a light tap that does not, a tap switched off by a 0; which buttons tap is a setting, tried both
+## ways; the anvil's stage follows the model and decides nothing.
+func _run_two_strikes() -> void:
+	print("== regents: smithing's two strikes ==")
+	var p: ShapeParams = ShapeParams.new()
+	p.outline = PackedInt32Array([10, 10, 10, 10])
+	p.start_jitter = 0
+	p.hammer_drop = 6
+	p.spread_pct = 17
+	p.tap_drop = 1
+	var m: ShapeModel = ShapeModel.start(1, p)
+	_check(m.heights == PackedInt32Array([20, 20, 20, 20]), "a bar of four, 20 high")
+	_check(m.strike(0, 1) == ShapeModel.STRUCK and m.heights == PackedInt32Array([21, 14, 21, 20]), "a heavy strike: 6 down, 1 into each neighbor (%s)" % str(m.heights))
+	_check(m.strike(280, ShapeModel.TAP + 0) == ShapeModel.STRUCK and m.heights == PackedInt32Array([20, 14, 21, 20]), "a light tap: 1 down, nothing spread (%s)" % str(m.heights))
+	_check(m.strike(300, ShapeModel.TAP + 3) == ShapeModel.HELD and m.settle(560) == ShapeModel.STRUCK and m.heights[3] == 19, "a tap mid-swing is held and lands as the swing ends, as a strike is")
+	_check(m.strike(900, ShapeModel.TAP + 4) == ShapeModel.IGNORED and m.strike(900, ShapeModel.TAP - 1) == ShapeModel.IGNORED, "a tap off the bar's end is not a tap")
+	var off: ShapeParams = p.duplicate() as ShapeParams
+	off.tap_drop = 0
+	var mo: ShapeModel = ShapeModel.start(1, off)
+	_check(mo.strike(0, ShapeModel.TAP + 1) == ShapeModel.IGNORED and mo.heights == PackedInt32Array([20, 20, 20, 20]) and mo.next_ok_ms == 0 and mo.strike(0, 1) == ShapeModel.STRUCK,
+		"tap_drop 0: a tap is ignored and costs no swing (a round from before taps replays unchanged)")
+	# Every anvil round in the content has both strikes, and its heavy strike spreads (6 x 17 % = 1 a side; at 4 x 20 %
+	# it was 0, so the bar could never rise).
+	var no_taps: Array[String] = []
+	for r: RecipeDef in RecipeDef.all():
+		var sp: ShapeParams = r.minigame as ShapeParams
+		if sp != null and (sp.tap_drop <= 0 or sp.hammer_drop * sp.spread_pct / 100 < 1):
+			no_taps.append(r.display_name)
+	_check(no_taps.is_empty(), "every part at the anvil has a light tap and a heavy strike that spreads (not: %s)" % str(no_taps))
+	# The readout: the tap is what lifts the anvil's ceiling (the flawless smith, with it and with it switched off).
+	var head: ShapeParams = (RecipeDef.by_id(40004)).minigame as ShapeParams
+	var head_off: ShapeParams = head.duplicate() as ShapeParams
+	head_off.tap_drop = 0
+	var flawless: SimPlayer = SimPlayer.presets()[0]
+	var with_tap: Dictionary = MinigameReadout.measure(head, flawless, 8)
+	var without: Dictionary = MinigameReadout.measure(head_off, flawless, 8)
+	var tapped: bool = false
+	var played: PackedInt32Array = MinigameReadout.play_round(1, head, flawless)["inputs"]
+	for i: int in range(1, played.size(), 2):
+		tapped = tapped or played[i] >= ShapeModel.TAP
+	_check(tapped and int(with_tap["mean"]) > int(without["mean"]) + 30 and bool(with_tap["agree"]),
+		"the readout's smith taps, and taps lift the iron axe head's ceiling (%d with, %d without, per mille)" % [with_tap["mean"], without["mean"]])
+
+	# THE BANDS (Luke's test, 2026-11-05: copper 1, iron 2, steel 3): the same hands do worse each band up, on every
+	# part; and the bands' rules are where he put them.
+	var skilled: SimPlayer = SimPlayer.presets()[1]
+	var ladder: Array[String] = []
+	for part: String in ["axe head", "sword blade", "pickaxe head"]:
+		var means: Array[int] = []
+		var rules_ok: bool = true
+		for metal: String in ["Copper", "Iron", "Steel"]:
+			var rr: ShapeParams = null
+			for r: RecipeDef in RecipeDef.all():
+				if r.display_name == "%s %s" % [metal, part]:
+					rr = r.minigame as ShapeParams
+			means.append(int(MinigameReadout.measure(rr, skilled, 12)["mean"]))
+			var band: int = ["Copper", "Iron", "Steel"].find(metal) + 1
+			rules_ok = rules_ok and rr.max_reheats > 0 and rr.reheat_cost_pm > 0 and rr.hide_outline == 1 and rr.outline_vary > 0
+			rules_ok = rules_ok and (rr.lay_cost_pm > 0) == (band >= 2) and (rr.red_ms > 0 and rr.quench_hi_pm > 0) == (band == 3)
+		if not (means[0] > means[1] and means[1] > means[2]) or not rules_ok:
+			ladder.append("%s %s%s" % [part, str(means), "" if rules_ok else " (rules misplaced)"])
+	_check(ladder.is_empty(), "copper, iron, steel: each band's rules where Luke put them, and a skilled smith does worse each band up (not: %s)" % str(ladder))
+
+	# THE BUTTONS: a setting (Controls), both ways.
+	ShapeMinigame.define_setting()
+	var e: Dictionary = Settings.entry(ShapeMinigame.SETTING)
+	_check(not e.is_empty() and String(e["tab"]) == Settings.CONTROLS and (e["choices"] as PackedStringArray).size() == 2,
+		"which buttons tap at the anvil is a Controls setting with two choices")
+	var kept: int = ShapeMinigame.buttons()
+	var holder: Control = Control.new()
+	holder.size = Vector2(960, 620)
+	add_child(holder)
+	var shape: ShapeMinigame = ShapeMinigame.new()
+	holder.add_child(shape)
+	shape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shape.begin(3, head)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# THE PATTERN (band 2's iron axe head has one): on the bar as the round starts; a click lifts it and strikes nothing.
+	var first_look: bool = shape.model.laid and shape._shows_outline()
+	shape._gui_input(_mouse(shape.size * 0.5, MOUSE_BUTTON_LEFT, false))
+	_check(first_look and _columns_sent(shape.inputs) == PackedInt32Array([ShapeModel.LIFT]) and not shape.model.laid
+		and shape.model.strikes == 0 and not shape._shows_outline(),
+		"the pattern is on the bar as the round starts; a click lifts it (no strike), and the outline is gone")
+	shape.inputs = PackedInt32Array()
+	var r: Rect2 = shape.bar_rect()
+	var picked: Array[int] = []
+	var want: Array[int] = []
+	for c: int in head.outline.size():
+		picked.append(shape.column_at(r.position.x + (c + 0.5) * r.size.x / head.outline.size()))
+		want.append(c)
+	var stage: AnvilStage = shape.get_child(0) as AnvilStage
+	_check(stage != null and stage.show_behind_parent and Rect2(Vector2.ZERO, shape.size).encloses(r) and r.size.x > 300.0 and picked == want,
+		"the anvil is a 3D stage behind the panel; the bar is on screen (%s) and each column is clicked where it is drawn" % str(r))
+	Settings.set_value(ShapeMinigame.SETTING, ShapeMinigame.Buttons.RIGHT_TAPS)
+	var at: Vector2 = Vector2(r.position.x + 4.5 * r.size.x / head.outline.size(), r.get_center().y)
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_LEFT, false))
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_RIGHT, false))
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_LEFT, true))
+	var right_taps: PackedInt32Array = _columns_sent(shape.inputs)
+	Settings.set_value(ShapeMinigame.SETTING, ShapeMinigame.Buttons.SHIFT_TAPS)
+	shape.inputs = PackedInt32Array()
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_LEFT, false))
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_LEFT, true))
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_RIGHT, false))
+	var shift_taps: PackedInt32Array = _columns_sent(shape.inputs)
+	_check(right_taps == PackedInt32Array([4, ShapeModel.TAP + 4, 4]) and shift_taps == PackedInt32Array([4, ShapeModel.TAP + 4, ShapeModel.REHEAT_COLUMN]),
+		"left click strikes; right click taps (R reheats), or Shift + click taps and right click reheats (%s, %s)" % [str(right_taps), str(shift_taps)])
+	# The stage follows what the model landed: the struck column flashes, sparks fly there, and nothing in it decides.
+	var flashed: float = stage._flash[4]
+	_check(flashed > 0.0 and stage._sparks.emitting and is_equal_approx(stage._sparks.position.x, stage.column_x(4)),
+		"a strike lands on the stage where the model says: column 4 flashes (%.2f), sparks fly from it" % flashed)
+	shape.finish()   # (its inputs were cleared between the two ways: no replay to compare; the suites above do that)
+	var plain: ShapeParams = head.duplicate() as ShapeParams
+	plain.tap_drop = 0
+	plain.hide_outline = 0
+	shape.begin(3, plain)
+	Settings.set_value(ShapeMinigame.SETTING, ShapeMinigame.Buttons.RIGHT_TAPS)
+	shape._gui_input(_mouse(at, MOUSE_BUTTON_RIGHT, false))
+	_check(_columns_sent(shape.inputs) == PackedInt32Array([ShapeModel.REHEAT_COLUMN]), "a round with no tap: right click reheats, as before")
+	# SPACE lays the pattern on and lifts it; while it is on a click strikes nothing; ENTER sets the part down and the
+	# round ends there, its replay the same.
+	shape.begin(5, head)
+	await get_tree().process_frame
+	shape.toggle_template()
+	var lifted: bool = not shape.model.laid
+	shape.toggle_template()
+	var relaid: bool = shape.model.laid and shape.model.lays == 1 and shape.model.ceiling_pm() == 1000 - head.lay_cost_pm
+	shape.toggle_template()
+	shape.set_down()
+	await get_tree().process_frame
+	_check(lifted and relaid and shape.state == SkillMinigame.State.DONE and shape.live_result == shape.replayed_result
+		and int(shape.live_result["lays"]) == 1 and not shape.shows_clock(),
+		"Space lifts the pattern and lays it on again (iron: %d off the best it can be); Enter sets the part down, the round ends, the replay agrees" % head.lay_cost_pm)
+	Settings.set_value(ShapeMinigame.SETTING, kept)
+	holder.queue_free()
+	await get_tree().process_frame
+
+
+## THE OTHER THREE ON THEIR 3D STAGES (`MINIGAMES_PREP.md` §5; Luke's M7, 2026-11-05): woodcutting, mining and smelting
+## each show their round on a stage of the game's own models, the real tool swinging on its own (no character: Luke's
+## play, 2026-11-06); each stage follows what its model landed, and the round plays and replays exactly as before.
+func _run_stages() -> void:
+	print("== regents: the minigames' 3D stages ==")
+	var holder: Control = Control.new()
+	holder.size = Vector2(960, 620)
+	add_child(holder)
+	# WOODCUTTING: the axe is on the side the model says, swings into the trunk on a clean chop, is knocked back by a branch.
+	var chop: ChopMinigame = ChopMinigame.new()
+	holder.add_child(chop)
+	chop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var tree_p: ChopParams = NodeDef.all_by_tier()[0].minigame as ChopParams
+	chop.begin(5, tree_p)
+	await get_tree().process_frame
+	var wood: WoodStage = chop.get_child(0) as WoodStage
+	var has_axe: bool = wood != null and wood.tool != null and _no_character(wood)
+	var shown: int = wood._pieces.size() if wood != null else 0
+	var t: int = 0
+	var side_ok: bool = true
+	var thrown: bool = false
+	var swung: bool = true
+	var sides: Dictionary[int, bool] = {}
+	for _k: int in 12:
+		var hb: int = chop.model.head_branch()
+		var at: int = ChopModel.SIDE_RIGHT if hb == ChopModel.BRANCH_LEFT else ChopModel.SIDE_LEFT
+		var did: int = chop.press_at(t, at)
+		# The axe's blow lands on the trunk's side the model chops from, at the bottom piece.
+		var head: Vector3 = wood.tool.head_at_hit()
+		var on_side: bool = (head.x < 0.0) == (chop.model.side == ChopModel.SIDE_LEFT)
+		var at_trunk: bool = absf(absf(head.x) - wood.trunk_r) < 0.12 and absf(head.y - (wood.stump_h + wood.piece_h * 0.5)) < 0.15
+		side_ok = side_ok and wood._side == chop.model.side and on_side and at_trunk
+		if did == ChopModel.CLEAN:
+			swung = swung and wood.tool.is_swinging()
+			sides[chop.model.side] = true
+		thrown = thrown or (did == ChopModel.CLEAN and not wood._flying.is_empty())
+		t = chop.model.next_ok_ms
+	var hb2: int = chop.model.head_branch()
+	var flinched: bool = false
+	if hb2 != ChopModel.BRANCH_NONE:
+		flinched = chop.press_at(t, hb2) == ChopModel.HIT and wood.tool._jarred and wood.tool.is_swinging()
+	chop.finish()
+	_check(wood != null and wood.show_behind_parent and has_axe and shown == ChopModel.VIEW_SEGMENTS and side_ok and swung
+		and sides.size() == 2 and thrown and (flinched or hb2 == ChopModel.BRANCH_NONE) and chop.live_result == chop.replayed_result,
+		"woodcutting's stage: no character, the axe alone; its blow lands on the trunk's side the model chops from (both sides seen), a clean chop swings it and throws the piece, a branch knocks it back; the replay agrees")
+	chop.queue_free()
+	# MINING: the rock is the node's own (its ore), the seam's face sits on it, strikes and jars show where they land.
+	var crack: CrackMinigame = CrackMinigame.new()
+	holder.add_child(crack)
+	crack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var rock_node: NodeDef = null
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame is CrackParams and rock_node == null:
+			rock_node = n
+	crack.begin(9, rock_node.minigame)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var mine: MineStage = crack.get_child(0) as MineStage
+	var face: Rect2 = crack.face()
+	var rock_r: Rect2 = mine.rock_rect() if mine != null else Rect2()
+	var notch: Vector2i = crack.model.notch(0)
+	var hit: bool = crack.strike_at(0, notch.x, notch.y) == CrackModel.HIT and mine._chips.emitting and mine.tool.is_swinging()
+	# The pick's tip comes down where the strike landed, on the rock's front.
+	var tip_ok: bool = mine.tool.head_at_hit().distance_to(mine._world(crack.from_face(notch))) < 0.01
+	var off: Vector2i = crack.model.notch(crack.model.k) + Vector2i(400, 0)
+	crack.strike_at(crack.model.next_ok_ms, clampi(off.x, 0, 1000), off.y)
+	var jarred: bool = crack.model.jars == 1 and mine._sparks.emitting and mine.tool._jarred
+	crack.finish()
+	_check(mine != null and CrackMinigame.node_of(rock_node.minigame as CrackParams) == rock_node and mine.tool != null
+		and _no_character(mine) and rock_r.encloses(face) and Rect2(Vector2.ZERO, crack.size).encloses(face) and hit and tip_ok
+		and jarred and crack.live_result == crack.replayed_result,
+		"mining's stage: no character, the pick alone; the node's own rock, the seam's face on it (%s in %s), a strike brings the pick's tip down on it and throws chips, a jar bounces it and sparks; the replay agrees" % [str(face), str(rock_r)])
+	crack.queue_free()
+	# SMELTING: a pump squashes the bellows; pouring tilts the crucible and shows the stream.
+	holder.size = Vector2(960, 620)
+	var smelt: SmeltMinigame = SmeltMinigame.new()
+	holder.add_child(smelt)
+	smelt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var bar_p: SmeltParams = null
+	for r: RecipeDef in RecipeDef.all():
+		if r.minigame is SmeltParams and bar_p == null:
+			bar_p = r.minigame as SmeltParams
+	smelt.begin(3, bar_p)
+	await get_tree().process_frame
+	var furnace: SmeltStage = smelt.get_child(0) as SmeltStage
+	smelt.press_at(0, SmeltModel.PUMP)
+	var pumped: bool = furnace._squash > 0.5
+	var ready: int = bar_p.heat_ms + bar_p.pour_ready_ms
+	smelt.model.advance_to(ready)
+	smelt.press_at(ready, SmeltModel.POUR)
+	smelt.model.advance_to(ready + 400)
+	furnace.show_melt(smelt.model.heat, smelt.model.fill, smelt.model.pouring, smelt.model.in_heat())
+	var pouring: bool = furnace._stream.visible and furnace._metal.visible
+	smelt.press_at(ready + 400, SmeltModel.STOP)
+	furnace.show_melt(smelt.model.heat, smelt.model.fill, smelt.model.pouring, smelt.model.in_heat())
+	smelt.finish()
+	_check(furnace != null and _no_character(furnace) and pumped and pouring and not furnace._stream.visible and smelt.live_result == smelt.replayed_result,
+		"smelting's stage: a pump works the bellows; pouring shows the stream and the metal in the mold, stopping stops it; the replay agrees")
+	holder.queue_free()
+	await get_tree().process_frame
+
+
+## A stage shows no character (Luke's play, 2026-11-06): the player's own is the one working.
+func _no_character(stage: Node) -> bool:
+	return stage.find_children("*", "Skeleton3D", true, false).is_empty()
+
+
+func _mouse(at: Vector2, button: MouseButton, shift: bool) -> InputEventMouseButton:
+	var ev: InputEventMouseButton = InputEventMouseButton.new()
+	ev.position = at
+	ev.button_index = button
+	ev.pressed = true
+	ev.shift_pressed = shift
+	return ev
+
+
+## The columns of a shape round's inputs (time, column pairs).
+func _columns_sent(inputs: PackedInt32Array) -> PackedInt32Array:
+	var out: PackedInt32Array = PackedInt32Array()
+	for i: int in range(1, inputs.size(), 2):
+		out.append(inputs[i])
+	return out
 
 
 ## Working, shown: each skill's pose in the adventurer's set (UAL clips), each tool a held item fitted to its
@@ -2823,20 +3127,11 @@ func _run_chain_minigames() -> void:
 	add_child(shape)
 	var part: ShapeParams = (RecipeDef.by_id(40004)).minigame as ShapeParams
 	shape.begin(13, part)
-	t = 0
-	while t < part.duration_ms:
-		if t >= shape.model.next_ok_ms:
-			if shape.model.hot_until_ms - t < 400:
-				shape.strike_at(t, ShapeModel.REHEAT_COLUMN)
-			else:
-				var best: int = 0
-				for i: int in shape.model.heights.size():
-					if shape.model.heights[i] - part.outline[i] > shape.model.heights[best] - part.outline[best]:
-						best = i
-				if shape.model.heights[best] - part.outline[best] <= 0:
-					break
-				shape.strike_at(t, best)
-		t += 10
+	# A careful smith's round (the readout's skilled player: the pattern lifted, worked from memory, checked once,
+	# set down), played through the minigame's own strike_at.
+	var played: PackedInt32Array = MinigameReadout.play_round(13, part, SimPlayer.presets()[1])["inputs"]
+	for k: int in range(0, played.size(), 2):
+		shape.strike_at(played[k], played[k + 1])
 	shape.finish()
 	_check(int(shape.live_result["score_pm"]) > 600 and shape.live_result == shape.replayed_result,
 		"shape to the outline: a careful smith comes close (%d), the replay agrees" % shape.live_result["score_pm"])

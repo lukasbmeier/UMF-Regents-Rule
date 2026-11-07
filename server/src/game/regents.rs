@@ -975,7 +975,8 @@ pub fn saw_nodes(ctx: &ReducerContext, node_ids: Vec<u64>) -> Result<(), String>
 }
 
 /// GATHER AT NODE `node_id`: a round of its minigame (`active`: held E), or AFK (tapped E). Checks it is not
-/// worked out, the player is within `regents.work_reach_m` of it, has its skill's rank and a tool of its
+/// worked out, the player is within `regents.work_reach_m` of its EDGE (its model's footprint, `NodeSeed::radius_m`:
+/// Luke, 2026-11-06), has its skill's rank and a tool of its
 /// tag and tier in the bag; stops whatever they were working at before.
 #[reducer]
 pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), String> {
@@ -992,9 +993,9 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
         return Err("gather: that is in another world".into());
     }
     let at = pos_of(ctx, node_id).ok_or("gather: it has no place")?;
-    let d = flat_dist(mine.pos, at);
+    let d = flat_dist(mine.pos, at) - def.radius_m(node_id);
     if d > reach(ctx) {
-        return Err(format!("gather: too far ({d:.1} m, reach {:.1} m)", reach(ctx)));
+        return Err(format!("gather: too far ({d:.1} m from its edge, reach {:.1} m)", reach(ctx)));
     }
     need_rank(ctx, me, def.skill, def.min_rank, "gather")?;
     let article = if def.tool_tag.starts_with(['a', 'e', 'i', 'o', 'u']) { "an" } else { "a" };
@@ -1395,7 +1396,8 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
         return None;
     }
     let (Some(me), Some(at)) = (pos_of(ctx, ch.entity_id), pos_of(ctx, target)) else { return None };
-    if flat_dist(me, at) > reach(ctx) * RESOLVE_REACH_MULT {
+    let edge = node.map_or(0.0, |n| n.radius_m(target));   // a node's reach is from its edge; a station's from its middle
+    if flat_dist(me, at) - edge > reach(ctx) * RESOLVE_REACH_MULT {
         log::info!("regents: round {} from {}: walked away", ch.id, ch.entity_id);
         return None;
     }

@@ -41,45 +41,24 @@ script = ExtResource("1_qscmp")
 anim_name = &"extra/Sword_Heavy_C"
 speed_scale = 0.8
 
-[sub_resource type="Resource" id="Clip_sword_pommel_bash"]
+[sub_resource type="Resource" id="Clip_dodge_roll"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Melee_Hook"
-speed_scale = 0.735
+anim_name = &"Roll"
+speed_scale = 2.0
 
-[sub_resource type="Resource" id="Clip_sparring_cut"]
+[sub_resource type="Resource" id="Clip_bow_loose"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_A"
-speed_scale = 0.403
+anim_name = &"extra/Bow_Shoot"
+speed_scale = 1.2
 
-[sub_resource type="Resource" id="Clip_rec_40024"]
+[sub_resource type="Resource" id="Clip_spell_shoot"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_A_Rec"
-speed_scale = 0.403
+anim_name = &"Spell_Simple_Shoot"
 
-[sub_resource type="Resource" id="Clip_sparring_backswing"]
+[sub_resource type="Resource" id="Clip_spell_double"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_B"
-speed_scale = 0.458
-
-[sub_resource type="Resource" id="Clip_rec_40025"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_B_Rec"
-speed_scale = 0.458
-
-[sub_resource type="Resource" id="Clip_sparring_overhead"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Light_C"
-speed_scale = 0.375
-
-[sub_resource type="Resource" id="Clip_rec_40026"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/SwordLight_C_Rec"
-speed_scale = 0.375
-
-[sub_resource type="Resource" id="Clip_sword_rallying_cut"]
-script = ExtResource("1_qscmp")
-anim_name = &"cuts/Sword_Light_D_Cut"
-speed_scale = 0.75
+anim_name = &"Spell_Double_Shoot"
+speed_scale = 0.8
 
 [sub_resource type="Resource" id="Clip_foe_rusted_cut"]
 script = ExtResource("1_qscmp")
@@ -106,43 +85,110 @@ script = ExtResource("1_qscmp")
 anim_name = &"extra/Sword_Heavy_C"
 speed_scale = 0.55
 
-[sub_resource type="Resource" id="Clip_dodge_roll"]
+[sub_resource type="Resource" id="Clip_sword_pommel_bash"]
 script = ExtResource("1_qscmp")
-anim_name = &"Roll"
-speed_scale = 2.0
+anim_name = &"extra/Melee_Hook"
+speed_scale = 0.735
 
-[sub_resource type="Resource" id="Clip_bow_loose"]
+[sub_resource type="Resource" id="Clip_sword_rallying_cut"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Shoot"
-speed_scale = 1.2
+anim_name = &"cuts/Sword_Light_D_Cut"
+speed_scale = 0.75
 
-[sub_resource type="Resource" id="Clip_bow_draw"]
+[sub_resource type="Resource" id="Clip_sparring_cut"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Notch"
+anim_name = &"extra/Sword_Heavy_A"
+speed_scale = 0.403
 
-[sub_resource type="Resource" id="Clip_bow_aim"]
+[sub_resource type="Resource" id="Clip_sparring_backswing"]
 script = ExtResource("1_qscmp")
-anim_name = &"extra/Bow_Aim_Neutral"
-loop = true
+anim_name = &"extra/Sword_Heavy_B"
+speed_scale = 0.458
 
-[sub_resource type="Resource" id="Clip_spell_shoot"]
+[sub_resource type="Resource" id="Clip_sparring_overhead"]
 script = ExtResource("1_qscmp")
-anim_name = &"Spell_Simple_Shoot"
+anim_name = &"extra/Sword_Light_C"
+speed_scale = 0.375
 
-[sub_resource type="Resource" id="Clip_spell_double"]
+[sub_resource type="Resource" id="Clip_rec_40001"]
 script = ExtResource("1_qscmp")
-anim_name = &"Spell_Double_Shoot"
+anim_name = &"extra/Sword_Light_A_Rec"
+speed_scale = 0.83
+
+[sub_resource type="Resource" id="Clip_rec_40002"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Light_B_Rec"
+speed_scale = 1.04
+
+[sub_resource type="Resource" id="Clip_rec_40003"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/SwordLight_C_Rec"
+speed_scale = 1.18
+
+[sub_resource type="Resource" id="Clip_rec_40006"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Regular_A_Rec"
+speed_scale = 0.73
+
+[sub_resource type="Resource" id="Clip_rec_40008"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_A_Rec"
+speed_scale = 0.7
+
+[sub_resource type="Resource" id="Clip_rec_40009"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_C_Rec"
 speed_scale = 0.8
 
-[sub_resource type="Resource" id="Clip_spell_cast"]
+[sub_resource type="Resource" id="Clip_rec_40017"]
 script = ExtResource("1_qscmp")
-anim_name = &"Spell_Simple_Idle"
-loop = true
+anim_name = &"extra/Sword_Heavy_A_Rec"
+speed_scale = 0.7
 
-[sub_resource type="Resource" id="Clip_spell_channel"]
+[sub_resource type="Resource" id="Clip_rec_40018"]
 script = ExtResource("1_qscmp")
-anim_name = &"Spell_Double_Idle"
-loop = true
+anim_name = &"extra/Sword_Heavy_B_Rec"
+speed_scale = 0.75
+
+[sub_resource type="Resource" id="Clip_rec_40019"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/SwordLight_C_Rec"
+speed_scale = 0.53
+
+[sub_resource type="Resource" id="Clip_rec_40020"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_A_Rec"
+speed_scale = 0.65
+
+[sub_resource type="Resource" id="Clip_rec_40021"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_C_Rec"
+speed_scale = 0.55
+
+[sub_resource type="Resource" id="Clip_rec_40022"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Melee_Hook_Rec"
+speed_scale = 0.735
+
+[sub_resource type="Resource" id="Clip_rec_40023"]
+script = ExtResource("1_qscmp")
+anim_name = &"cuts/Sword_Light_D_Cut_Rec"
+speed_scale = 0.75
+
+[sub_resource type="Resource" id="Clip_rec_40024"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_A_Rec"
+speed_scale = 0.403
+
+[sub_resource type="Resource" id="Clip_rec_40025"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Sword_Heavy_B_Rec"
+speed_scale = 0.458
+
+[sub_resource type="Resource" id="Clip_rec_40026"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/SwordLight_C_Rec"
+speed_scale = 0.375
 
 [sub_resource type="Resource" id="Resource_lhmxf"]
 script = ExtResource("1_qscmp")
@@ -235,6 +281,15 @@ script = ExtResource("1_qscmp")
 anim_name = &"extra/Sword_Block"
 loop = true
 
+[sub_resource type="Resource" id="Clip_bow_aim"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Aim_Neutral"
+loop = true
+
+[sub_resource type="Resource" id="Clip_bow_draw"]
+script = ExtResource("1_qscmp")
+anim_name = &"extra/Bow_Notch"
+
 [sub_resource type="Resource" id="Clip_chop"]
 script = ExtResource("1_qscmp")
 anim_name = &"extra/TreeChopping"
@@ -253,6 +308,16 @@ loop = true
 [sub_resource type="Resource" id="Clip_smelt"]
 script = ExtResource("1_qscmp")
 anim_name = &"Push"
+loop = true
+
+[sub_resource type="Resource" id="Clip_spell_cast"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Simple_Idle"
+loop = true
+
+[sub_resource type="Resource" id="Clip_spell_channel"]
+script = ExtResource("1_qscmp")
+anim_name = &"Spell_Double_Idle"
 loop = true
 
 [sub_resource type="Resource" id="Resource_p0gq0"]
@@ -276,77 +341,12 @@ anim_name = &"extra/Idle_Shield_Break"
 script = ExtResource("1_qscmp")
 anim_name = &"extra/KipUp"
 
-[sub_resource type="Resource" id="Clip_rec_40001"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Light_A_Rec"
-speed_scale = 0.83
-
-[sub_resource type="Resource" id="Clip_rec_40002"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Light_B_Rec"
-speed_scale = 1.04
-
-[sub_resource type="Resource" id="Clip_rec_40003"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/SwordLight_C_Rec"
-speed_scale = 1.18
-
-[sub_resource type="Resource" id="Clip_rec_40006"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Regular_A_Rec"
-speed_scale = 0.73
-
-[sub_resource type="Resource" id="Clip_rec_40008"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_A_Rec"
-speed_scale = 0.7
-
-[sub_resource type="Resource" id="Clip_rec_40009"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_C_Rec"
-speed_scale = 0.8
-
-[sub_resource type="Resource" id="Clip_rec_40017"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_A_Rec"
-speed_scale = 0.7
-
-[sub_resource type="Resource" id="Clip_rec_40018"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_B_Rec"
-speed_scale = 0.75
-
-[sub_resource type="Resource" id="Clip_rec_40019"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/SwordLight_C_Rec"
-speed_scale = 0.53
-
-[sub_resource type="Resource" id="Clip_rec_40020"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_A_Rec"
-speed_scale = 0.65
-
-[sub_resource type="Resource" id="Clip_rec_40021"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Sword_Heavy_C_Rec"
-speed_scale = 0.55
-
-[sub_resource type="Resource" id="Clip_rec_40022"]
-script = ExtResource("1_qscmp")
-anim_name = &"extra/Melee_Hook_Rec"
-speed_scale = 0.735
-
-[sub_resource type="Resource" id="Clip_rec_40023"]
-script = ExtResource("1_qscmp")
-anim_name = &"cuts/Sword_Light_D_Cut_Rec"
-speed_scale = 0.75
-
 [resource]
 script = ExtResource("4_hpq5n")
 libraries = Dictionary[StringName, AnimationLibrary]({
 &"": ExtResource("2_e3hlo"),
-&"extra": ExtResource("3_kjpji"),
-&"cuts": ExtResource("5_cuts")
+&"cuts": ExtResource("5_cuts"),
+&"extra": ExtResource("3_kjpji")
 })
 strafe = true
 root_motion_bone = &"root"
@@ -375,22 +375,6 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"ability.40024": SubResource("Clip_sparring_cut"),
 &"ability.40025": SubResource("Clip_sparring_backswing"),
 &"ability.40026": SubResource("Clip_sparring_overhead"),
-&"recover.40001": SubResource("Clip_rec_40001"),
-&"recover.40002": SubResource("Clip_rec_40002"),
-&"recover.40003": SubResource("Clip_rec_40003"),
-&"recover.40006": SubResource("Clip_rec_40006"),
-&"recover.40008": SubResource("Clip_rec_40008"),
-&"recover.40009": SubResource("Clip_rec_40009"),
-&"recover.40017": SubResource("Clip_rec_40017"),
-&"recover.40018": SubResource("Clip_rec_40018"),
-&"recover.40019": SubResource("Clip_rec_40019"),
-&"recover.40020": SubResource("Clip_rec_40020"),
-&"recover.40021": SubResource("Clip_rec_40021"),
-&"recover.40022": SubResource("Clip_rec_40022"),
-&"recover.40023": SubResource("Clip_rec_40023"),
-&"recover.40024": SubResource("Clip_rec_40024"),
-&"recover.40025": SubResource("Clip_rec_40025"),
-&"recover.40026": SubResource("Clip_rec_40026"),
 &"interact": SubResource("Resource_lhmxf"),
 &"item.draw": SubResource("Resource_k8ku3"),
 &"item.stow": SubResource("Resource_5hufo"),
@@ -417,9 +401,25 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"pose.smith": SubResource("Clip_mine"),
 &"pose.spell_cast": SubResource("Clip_spell_cast"),
 &"pose.spell_channel": SubResource("Clip_spell_channel"),
+&"react.dazed": SubResource("Clip_react_dazed"),
 &"react.death": SubResource("Resource_p0gq0"),
 &"react.hit": SubResource("Resource_c3sdk"),
-&"react.dazed": SubResource("Clip_react_dazed"),
+&"react.revive": SubResource("Resource_82rw1"),
 &"react.stagger": SubResource("Clip_react_stagger"),
-&"react.revive": SubResource("Resource_82rw1")
+&"recover.40001": SubResource("Clip_rec_40001"),
+&"recover.40002": SubResource("Clip_rec_40002"),
+&"recover.40003": SubResource("Clip_rec_40003"),
+&"recover.40006": SubResource("Clip_rec_40006"),
+&"recover.40008": SubResource("Clip_rec_40008"),
+&"recover.40009": SubResource("Clip_rec_40009"),
+&"recover.40017": SubResource("Clip_rec_40017"),
+&"recover.40018": SubResource("Clip_rec_40018"),
+&"recover.40019": SubResource("Clip_rec_40019"),
+&"recover.40020": SubResource("Clip_rec_40020"),
+&"recover.40021": SubResource("Clip_rec_40021"),
+&"recover.40022": SubResource("Clip_rec_40022"),
+&"recover.40023": SubResource("Clip_rec_40023"),
+&"recover.40024": SubResource("Clip_rec_40024"),
+&"recover.40025": SubResource("Clip_rec_40025"),
+&"recover.40026": SubResource("Clip_rec_40026")
 })

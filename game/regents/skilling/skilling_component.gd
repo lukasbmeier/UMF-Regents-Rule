@@ -38,6 +38,17 @@ signal station_opened(target: int)
 
 ## How long E must be held to open a round rather than work AFK.
 @export_range(0.1, 1.5, 0.05, "suffix:s") var hold_s: float = 0.35
+## THE WORK SPOT (`WorkSpot`; Luke, 2026-11-06): each skill's swing (by the skill's pose) as how far its tool
+## reaches in front of the feet at each height ((height, reach) in meters, measured from the world's clip and tool by
+## `game/regents/tests/work_spot_shot.tscn`, which prints it), and the gap left between it and the rock or the bark.
+## A skill not listed (a station's) does not step.
+@export var swing_front: Dictionary[StringName, PackedVector2Array] = {
+	&"pose.mine": PackedVector2Array([Vector2(0.35, 1.11), Vector2(0.55, 1.20), Vector2(0.75, 1.23), Vector2(0.95, 1.25),
+		Vector2(1.15, 1.22), Vector2(1.35, 1.11), Vector2(1.55, 1.03), Vector2(1.75, 0.83)]),
+	&"pose.chop": PackedVector2Array([Vector2(1.25, 0.75), Vector2(1.35, 0.72), Vector2(1.45, 1.06), Vector2(1.55, 1.07),
+		Vector2(1.65, 0.99), Vector2(1.75, 0.89), Vector2(1.85, 0.78)]),
+}
+@export_range(0.0, 0.3, 0.01, "suffix:m") var work_spot_clearance_m: float = 0.04
 
 ## The node or station worked AFK (an entity id), or -1; and its row's values.
 var afk_target: int = -1
@@ -78,6 +89,27 @@ var recipe_log: Dictionary[int, Dictionary] = {}
 var orders_filled: Dictionary[int, bool] = {}
 var _press_target: int = -1
 var _press_ms: int = -1
+## The step to the work spot under way: the node, a round or AFK, the yaw that faces the node, which way the walk
+## goes (flat, world: away from the node or toward it), from where, how far, for how long so far, and the key it
+## holds down (`ACTION_BACK` or `ACTION_FORWARD`, or none). -1: none.
+var _step_target: int = -1
+var _step_active: bool = false
+var _step_yaw: float = 0.0
+var _step_dir: Vector3 = Vector3.ZERO
+var _step_from: Vector3 = Vector3.ZERO
+var _step_need: float = 0.0
+var _step_s: float = 0.0
+var _step_key: StringName = &""
+## Why the body is held facing the node while it steps (`LocalInputComponent.hold_facing`).
+const STEP_FACING: StringName = &"regents.work_spot"
+## A step shorter than this, or a turn smaller than this, is not taken; the step gives up after this long (a wall
+## behind, a fence ahead). Luke (2026-11-06): "smooth and not jarring ... facing them".
+const STEP_LEAST_M: float = 0.06
+const STEP_LEAST_TURN: float = 0.07
+const STEP_MOST_S: float = 3.0
+## How fast the turn to the node eases (per second), and how near it must be before the walk starts (radians).
+const STEP_TURN_EASE: float = 9.0
+const STEP_WALK_WITHIN: float = 0.35
 var _interaction: InteractionComponent = null
 
 
@@ -510,24 +542,150 @@ func claim_press(target: int) -> bool:
 	if node != null and node.depleted:
 		refused.emit("Worked out: it comes back soon")
 		return true
-	if round_id >= 0:
+	if round_id >= 0 or _step_target >= 0:
 		return true
 	_press_target = target
 	_press_ms = Time.get_ticks_msec()
 	return true
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if _step_target >= 0:
+		_step(delta)
+		return
 	if _press_target < 0:
 		return
 	var down: bool = InputMap.has_action(ACTION_INTERACT) and Input.is_action_pressed(ACTION_INTERACT)
 	var target: int = _press_target
 	if down and Time.get_ticks_msec() - _press_ms >= int(hold_s * 1000.0):
 		_press_target = -1
-		work(target, true)
+		begin(target, true)
 	elif not down:
 		_press_target = -1
 		tap(target)
+
+
+## START WORKING `target` from the press: at a node, first to its WORK SPOT (`WorkSpot`; Luke, 2026-11-06: "move the
+## player as visuals and server body should match ... smooth and not jarring ... facing them"): the player turns to
+## face it (eased), walks there at a walk (the walk key and slow held for them: frames as their own, which the server
+## bounds as any), then `work` starts there. Public so a test can press.
+func begin(target: int, active: bool) -> void:
+	var node: NodeComponent = node_of(target)
+	var input: LocalInputComponent = _local_input()
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var holder: Node3D = node.entity as Node3D if node != null else null
+	if node == null or input == null or ent == null or ent.body == null or holder == null:
+		work(target, active)
+		return
+	var to: Vector3 = holder.global_position - ent.body.global_position
+	to.y = 0.0
+	if to.length_squared() < 0.0001:
+		work(target, active)
+		return
+	var yaw: float = atan2(-to.x, -to.z)   # forward is -Z at yaw 0
+	var need: float = work_spot_need(node, to)
+	if absf(need) < STEP_LEAST_M and absf(angle_difference(input.get_body_yaw(), yaw)) < STEP_LEAST_TURN:
+		work(target, active)
+		return
+	_step_target = target
+	_step_active = active
+	_step_yaw = yaw
+	_step_dir = -to.normalized() * signf(need) if absf(need) >= STEP_LEAST_M else Vector3.ZERO   # away, or toward
+	_step_from = ent.body.global_position
+	_step_need = absf(need) if absf(need) >= STEP_LEAST_M else 0.0
+	_step_s = 0.0
+	_step_key = &""
+	input.hold_facing(STEP_FACING, true)
+
+
+## How far this player would step back to work `node` from where they stand, facing it (or along `toward`; negative:
+## in, toward it): 0 when the swing already meets it (or a station's skill, which does not step).
+func work_spot_need(node: NodeComponent, toward: Vector3 = Vector3.ZERO) -> float:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if node == null or node.def == null or ent == null or ent.body == null:
+		return 0.0
+	var pose: StringName = node.def.skill.pose if node.def.skill != null else &""
+	if not swing_front.has(pose):
+		return 0.0
+	var f: Vector3 = toward
+	if f.length_squared() < 0.0001:
+		var holder: Node3D = node.entity as Node3D
+		if holder == null:
+			return 0.0
+		f = holder.global_position - ent.body.global_position
+	# Never back past where the server lets it be worked from: its reach from the node's EDGE (its footprint).
+	return WorkSpot.step_back(node, ent.body.global_position, f, swing_front[pose], work_spot_clearance_m,
+		HotRules.number(&"regents.work_reach_m") + node.def.radius_for(node.entity_id) - WorkSpot.REACH_MARGIN_M)
+
+
+## Whether the step to a work spot is under way.
+func stepping() -> bool:
+	return _step_target >= 0
+
+
+## Each physics tick of the step: the view (and with it the body, held facing) eases round to the node; once nearly
+## round, the walk key (and slow) is held until the body would slide the rest of the way; at rest and facing it, the
+## work starts.
+func _step(delta: float) -> void:
+	_step_s += delta
+	var input: LocalInputComponent = _local_input()
+	var body: CharacterBody3D = (entity as SpaceTimeEntity).body if entity != null else null
+	if input == null or body == null:
+		_end_step(false)
+		return
+	var yaw: float = input.get_look_yaw()
+	var off: float = angle_difference(yaw, _step_yaw)
+	if absf(off) > 0.002:
+		input.set_look(yaw + off * (1.0 - exp(-STEP_TURN_EASE * delta)), input.get_look_pitch())
+	var moved: float = (body.global_position - _step_from).dot(_step_dir)
+	# Stop holding the key when the body would slide the rest of the way (its speed, braked at the friction).
+	var speed: float = Vector2(body.velocity.x, body.velocity.z).length()
+	var slide: float = speed * speed / (2.0 * maxf(1.0, MovementConfig.shared().friction))
+	var walk: bool = _step_need > 0.0 and moved + slide < _step_need and absf(off) < STEP_WALK_WITHIN and _step_s < STEP_MOST_S
+	_hold_step_key((ACTION_STEP_BACK if _step_dir.dot(-WorkSpot.forward_of(_step_yaw)) > 0.0 else ACTION_STEP_IN) if walk else &"")
+	if walk:
+		return
+	var settled: bool = speed < 0.15 and absf(off) < 0.03
+	if settled or _step_s >= STEP_MOST_S:
+		_end_step(true)
+
+
+## The walk key held for the player now (none: let go of the one held).
+const ACTION_STEP_BACK: StringName = LocalInputComponent.ACTION_BACK
+const ACTION_STEP_IN: StringName = LocalInputComponent.ACTION_FORWARD
+
+
+func _hold_step_key(key: StringName) -> void:
+	if key == _step_key:
+		return
+	if _step_key != &"":
+		Input.action_release(_step_key)
+		Input.action_release(LocalInputComponent.ACTION_SLOW)
+	_step_key = key
+	if key != &"" and InputMap.has_action(key):
+		Input.action_press(key)
+		if InputMap.has_action(LocalInputComponent.ACTION_SLOW):
+			Input.action_press(LocalInputComponent.ACTION_SLOW)
+
+
+func _end_step(then_work: bool) -> void:
+	var target: int = _step_target
+	_step_target = -1
+	_hold_step_key(&"")
+	var input: LocalInputComponent = _local_input()
+	if input != null:
+		input.hold_facing(STEP_FACING, false)
+	if then_work and target >= 0:
+		work(target, _step_active)
+
+
+func _exit_tree() -> void:
+	_hold_step_key(&"")   # never leave a walk key held
+
+
+func _local_input() -> LocalInputComponent:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	return ent.find_component(LocalInputComponent) as LocalInputComponent if ent != null else null
 
 
 ## What E would work now (the node or station in front of us), or -1.
@@ -550,7 +708,7 @@ func tap(target: int) -> void:
 	elif station_of(target) != null:
 		station_opened.emit(target)
 	else:
-		work(target, false)
+		begin(target, false)
 
 
 ## Ask the server to work `target`: a round (`active`) or AFK. A station makes its picked recipe.

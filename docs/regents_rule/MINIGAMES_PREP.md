@@ -299,14 +299,28 @@ Each with the proposed answer. The bold part is what needs his yes or no.
    **The readout and the fixes**: the simulated players and the share readout (§6), pinned in the unit suite and
    shown in the lab; the copied round titles (§1.6); assembly's quality from the core only (M12), before any other
    part has a quality.
-2. **The look, on smithing**: the 3D stage (or M7's choice), sparks, sound, a proper font and theme, and the two
+2. **BUILT 2026-11-05 (PROGRESS 41), for Luke to play**: the anvil as a 3D stage (the game's anvil, hammer and fire
+   pit; the bar glowing by its heat; sparks; ours, synthesized sounds; a book serif), and the two strikes (heavy 6 down
+   and 1 a side, tap 1 down; which buttons tap is a Controls setting, B in the lab). The ceiling rose from ~80 % to
+   ~89 % (the old spread rounded to 0, so the bar could never rise); Masterwork is now too easy for skilled hands:
+   step 3's to tune.
+   **The look, on smithing**: the 3D stage (or M7's choice), sparks, sound, a proper font and theme, and the two
    strikes (§3.1). Luke plays it.
-3. **Smithing's ladder**: heat colors with hard and soft spots (band 2), the quench (band 3), rank easing (M3), tuned
+3. **BUILT AS A TEST 2026-11-05 (PROGRESS 42), for Luke to play**: after playing step 2 he chose heats instead of a
+   clock (each reheat lowers the ceiling), a varying outline, the pattern laid on to see the outline (no strikes while
+   it is on); bands as a test: copper 1, iron 2 (harder metal, each look costs), steel 3 (red heat cracks, the quench).
+   Rank easing (M3) and the shares (M4) still to come once the feel is right.
+   **Smithing's ladder**: heat colors with hard and soft spots (band 2), the quench (band 3), rank easing (M3), tuned
    to M4's targets with the readout. Luke plays copper, iron and steel heads.
-4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the side panel as a 3D
-   stage (M7's test: one gathering skill first, Luke judges it before the rest), the new edge and the
-   catalysts' lean, tuned with the readout.
-5. **The other three**: mining, woodcutting and smelting (its rhythmic bellows) get the look and their band's new
+4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the new edge and the
+   catalysts' lean, tuned with the readout. (Its stage is built: step 5. Starting a round now first walks the player
+   to the node's work spot, PROGRESS 44: a back-to-back run starts from there.)
+5. **THE LOOK BUILT 2026-11-05 (PROGRESS 43), for Luke to play** (ahead of step 4, his call): woodcutting, mining and
+   smelting on 3D stages (the real tool floating on its own, as the anvil's hammer: no character, Luke 2026-11-06;
+   the node's own rock and ore; the game's bellows), synthesized sounds, the book serif; every round in the middle
+   panel (M7's side panel was tried and dropped: it sat over the minimap). Their band rules (knots, brittle notches,
+   slag) not yet.
+   **The other three**: mining, woodcutting and smelting (its rhythmic bellows) get the look and their band's new
    thing, one at a time, each played by Luke.
 6. **Woodworking's carve to the line** (M5): grips, hilts, bows and staves get a quality; a grip's grade starts its
    trait higher (M12).

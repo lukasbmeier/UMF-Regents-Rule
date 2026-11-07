@@ -10,6 +10,17 @@
 [sub_resource type="Resource" id="Resource_wspu7"]
 script = ExtResource("1_ndx7a")
 display_name = "Pickaxe head"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+outline_vary = 3
+error_scale = 50
 outline = PackedInt32Array(10, 12, 14, 16, 18, 20, 22, 24, 24, 22, 20, 18, 16, 14, 12, 10)
 
 [sub_resource type="Resource" id="Resource_fghyl"]

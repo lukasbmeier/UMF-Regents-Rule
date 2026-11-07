@@ -49,9 +49,14 @@ fn minigame(m: &serde_json::Value, what: &str) -> String {
             let outline: Vec<i64> = m["outline"].as_array().unwrap_or_else(|| panic!("regents content: {what}'s shape has no outline"))
                 .iter().map(|v| v.as_i64().unwrap()).collect();
             assert!(!outline.is_empty() && f("error_scale") > 0, "regents content: {what}'s shape cannot be played");
-            format!("Minigame::Shape(ShapeSeed {{ duration_ms: {}, swing_ms: {}, heat_ms: {}, reheat_ms: {}, start_height: {}, start_jitter: {}, hammer_drop: {}, spread_pct: {}, outline: &{:?}, error_scale: {} }})",
+            // The light tap (2026-11-05): absent in a bake from before it, so 0 (off).
+            let opt = |k: &str| m.get(k).and_then(|x| x.as_i64()).unwrap_or(0);
+            format!("Minigame::Shape(ShapeSeed {{ duration_ms: {}, swing_ms: {}, heat_ms: {}, reheat_ms: {}, start_height: {}, start_jitter: {}, hammer_drop: {}, spread_pct: {}, tap_drop: {}, tap_spread_pct: {}, outline: &{:?}, error_scale: {}{} }})",
                 f("duration_ms"), f("swing_ms"), f("heat_ms"), f("reheat_ms"), f("start_height"), f("start_jitter"), f("hammer_drop"), f("spread_pct"),
-                outline, f("error_scale"))
+                opt("tap_drop"), opt("tap_spread_pct"), outline, f("error_scale"),
+                // The bands' rules (2026-11-05): each absent in an older bake, so 0 (off).
+                ["max_reheats", "reheat_cost_pm", "hide_outline", "lay_cost_pm", "outline_vary", "red_ms", "crack_cost_pm",
+                 "quench_lo_pm", "quench_hi_pm", "quench_bonus_pm", "quench_loss_pm"].iter().map(|k| format!(", {k}: {}", opt(k))).collect::<String>())
         }
         other => panic!("regents content: {what} has a minigame of kind '{other}' this server does not know"),
     }
@@ -135,11 +140,14 @@ pub fn regents_data() {
         skill(sk, &name);
         let mg = minigame(&n["minigame"], &name);
         assert!(mg.starts_with("Minigame::Chop") || mg.starts_with("Minigame::Crack"), "regents content: {name}'s round is not a gathering round");
+        // Each model's footprint (cm), baked from the models (`NodeDef.radii_cm`); none: the reach is from the middle.
+        let radii: Vec<i64> = n["radii_cm"].as_array().map(|a| a.iter().map(|v| v.as_i64().unwrap_or(0)).collect()).unwrap_or_default();
+        assert!(radii.iter().all(|r| (0..=2000).contains(r)), "regents content: {name} has a model footprint out of 0-20 m: {radii:?}");
         out.push_str(&format!(
             "    NodeSeed {{ id: {}, name: {name:?}, skill: {sk}, tier: {}, minigame: {mg}, yield_item: {yld}, tool_tag: {:?}, min_tool_tier: {}, \
-             min_rank: {}, xp: {}, afk_ms: {}, deplete_permille: {}, regrow_ms: {}, rare_item: {rare}, rare_permille: {rare_pm} }},\n",
+             min_rank: {}, xp: {}, afk_ms: {}, deplete_permille: {}, regrow_ms: {}, rare_item: {rare}, rare_permille: {rare_pm}, radii_cm: &{:?} }},\n",
             int(n, "id", &name), int(n, "tier", &name), text(n, "tool_tag", &name), int(n, "min_tool_tier", &name), int(n, "min_rank", &name),
-            int(n, "xp", &name), int(n, "afk_ms_per_item", &name), int(n, "deplete_permille", &name), int(n, "regrow_ms", &name)));
+            int(n, "xp", &name), int(n, "afk_ms_per_item", &name), int(n, "deplete_permille", &name), int(n, "regrow_ms", &name), radii));
     }
 
     out.push_str("];\n\npub static STATIONS: &[StationSeed] = &[\n");

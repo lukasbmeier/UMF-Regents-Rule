@@ -105,8 +105,9 @@ func _chopper(tree_id: int) -> void:
 	_check(interaction.get_target() == tree_id, "facing it, the tree is the target (got %d)" % interaction.get_target())
 	_check(hud._prompt.text.contains("Hold E"), "the prompt says tap or hold: \"%s\"" % hud._prompt.text)
 	await _tap(&"interact", 0.08)
-	await _until(func() -> bool: return skilling.afk_target == tree_id, 3.0)
+	await _until(func() -> bool: return skilling.afk_target == tree_id, 6.0)
 	_check(skilling.afk_target == tree_id and hud._prompt.text.contains("(AFK)"), "a tap of E: working the tree AFK (\"%s\")" % hud._prompt.text)
+	_check_work_spot(tree_id, "the tree")
 	await _until(func() -> bool: return look.tool != null and driver.pose_weight() > 0.6, 2.0)
 	_check(look.tool != null and driver.pose_clip() == &"extra/TreeChopping", "chopping AFK, the character swings the copper axe (%s)" % driver.pose_clip())
 	var logs0: int = inv.count(LOGS)
@@ -151,6 +152,7 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return interaction.get_target() == rock_id, 3.0)
 	_check(interaction.get_target() == rock_id and hud._prompt.text.contains("mine"), "at the copper rock: \"%s\"" % hud._prompt.text)
 	if await _hold_for_round():
+		_check_work_spot(rock_id, "the copper rock")
 		var crack: CrackMinigame = hud.game as CrackMinigame
 		_check(crack != null, "holding E at a rock deals crack the rock")
 		await _until(func() -> bool: return look.tool != null, 2.0)
@@ -233,12 +235,20 @@ func _chopper(tree_id: int) -> void:
 		var shape: ShapeMinigame = hud.game as ShapeMinigame
 		await _until(func() -> bool: return look.tool != null, 2.0)
 		_check(look.tool != null and look.tool_scene == SkillDef.by_key(&"smithing").tool_scene, "smithing, the hammer is in the hand")
-		var outline: PackedInt32Array = (shape.params as ShapeParams).outline
+		var outline: PackedInt32Array = shape.model.outline   # this round's (it varies), seen while the pattern is on
+		var p: ShapeParams = shape.params as ShapeParams
 		while shape != null and shape.state == SkillMinigame.State.PLAYING:
 			var t: int = shape.elapsed_ms()
-			if t >= shape.model.next_ok_ms:
-				if shape.model.hot_until_ms - t < 500:
-					_click(shape, Vector2(10, 10), MOUSE_BUTTON_RIGHT)
+			if shape.model.laid:
+				_click(shape, Vector2(10, 10))   # a click lifts the pattern (no strike while it is on)
+			elif t >= shape.model.next_ok_ms:
+				var over_max: int = -1000
+				for i: int in shape.model.heights.size():
+					over_max = maxi(over_max, shape.model.heights[i] - outline[i])
+				if over_max <= 0:
+					await _key(KEY_ENTER)   # done: set it down
+				elif shape.model.hot_until_ms - p.red_ms - t < 500 and shape.model.reheats_left() != 0:
+					await _key(KEY_R)   # back in the fire (right click is the light tap: MINIGAMES_PREP.md §3.1)
 				else:
 					var c: int = 0
 					for i: int in shape.model.heights.size():
@@ -246,7 +256,10 @@ func _chopper(tree_id: int) -> void:
 							c = i
 					if shape.model.heights[c] - outline[c] > 0:
 						var r: Rect2 = shape.bar_rect()
-						_click(shape, Vector2(r.position.x + (c + 0.5) * r.size.x / outline.size(), r.position.y + r.size.y * 0.5))
+						# A heavy strike (left click) to rough it out, a light tap (right click) to finish the line.
+						var heavy: bool = shape.model.heights[c] - outline[c] >= (shape.params as ShapeParams).hammer_drop
+						_click(shape, Vector2(r.position.x + (c + 0.5) * r.size.x / outline.size(), r.position.y + r.size.y * 0.5),
+							MOUSE_BUTTON_LEFT if heavy else MOUSE_BUTTON_RIGHT)
 			await get_tree().process_frame
 		print("   the head as shaped: %s" % str(shape.live_result))
 		shaped_q = int(shape.live_result.get("score_pm", 0))
@@ -564,13 +577,33 @@ func _station_id(at: Vector3) -> int:
 	return st
 
 
-## Hold E on the target until the server deals its round and the HUD shows it. True when it did.
+## THE WORK SPOT (Luke, 2026-11-06, PROGRESS 44): working a node, the player has turned to face it and stepped to
+## where the swing meets its drawn surface (no more step wanted from here).
+func _check_work_spot(target: int, what: String) -> void:
+	var node: NodeComponent = SkillingComponent.node_of(target)
+	var input: LocalInputComponent = me.find_component(LocalInputComponent) as LocalInputComponent
+	var to: Vector3 = (EntityRegistry.get_entity(target) as Node3D).global_position - me.global_position
+	var off: float = absf(angle_difference(input.get_body_yaw(), atan2(-to.x, -to.z)))
+	var need: float = skilling.work_spot_need(node)
+	_check(node != null and not skilling.stepping() and absf(need) < 0.12 and off < 0.12,
+		"working %s, the player faces it (%.0f degrees off) at the work spot (%.2f m more wanted)" % [what, rad_to_deg(off), need])
+
+
+## Hold E on the target until the server deals its round and the HUD shows it (after the step to the work spot). True
+## when it did.
 func _hold_for_round() -> bool:
 	Input.action_press(&"interact")
-	await _until(func() -> bool: return hud._round_box.visible and hud.game != null and hud.game.state == SkillMinigame.State.PLAYING, 4.0)
+	await _until(func() -> bool: return hud._round_box.visible and hud.game != null and hud.game.state == SkillMinigame.State.PLAYING, 8.0)
 	Input.action_release(&"interact")
 	var ok: bool = hud._round_box.visible and hud.game != null
 	_check(ok, "holding E: the server deals a round, and it is on screen (%s)" % (hud.game.get_class() if hud.game != null else "none"))
+	if ok:
+		# Every round in the big panel in the middle (Luke's play, 2026-11-06), a 3D stage behind it.
+		var r: Rect2 = hud._round_box.get_global_rect()
+		var view: Vector2 = hud._round_box.get_viewport_rect().size
+		var placed: bool = r.size.is_equal_approx(hud.MIDDLE_PANEL) and absf(r.get_center().x - view.x * 0.5) < 1.0
+		_check(placed and hud.game.get_child(0) is SubViewportContainer,
+			"%s: in the middle panel (%s), its 3D stage behind it" % [hud.game.title(), str(r)])
 	return ok
 
 

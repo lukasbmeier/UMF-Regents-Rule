@@ -97,8 +97,18 @@ func _end_model() -> void:
 	pass
 
 
+## The round is over before its time is up (smithing's part set down, or cold with no heats left): it finishes now.
+func is_over() -> bool:
+	return false
+
+
+## Whether the round runs on a clock (the time bar at the top); smithing's heats replace it (2026-11-05).
+func shows_clock() -> bool:
+	return true
+
+
 func _process(delta: float) -> void:
-	if state == State.PLAYING and elapsed_ms() > duration_ms():
+	if state == State.PLAYING and (elapsed_ms() > duration_ms() or is_over()):
 		finish()
 	_animate(delta)
 	if state != State.READY:
@@ -123,8 +133,9 @@ func _draw_frame(counts: String) -> void:
 	if params != null:
 		var t: float = float(elapsed_ms() if state == State.PLAYING else (duration_ms() if state == State.DONE else 0))
 		var left: float = 1.0 - clampf(t / float(maxi(1, duration_ms())), 0.0, 1.0)
-		draw_rect(Rect2(16.0, 42.0, w - 32.0, 12.0), Color(0, 0, 0, 0.35))
-		draw_rect(Rect2(16.0, 42.0, (w - 32.0) * left, 12.0), Color(0.95, 0.85, 0.30))
+		if shows_clock():
+			draw_rect(Rect2(16.0, 42.0, w - 32.0, 12.0), Color(0, 0, 0, 0.35))
+			draw_rect(Rect2(16.0, 42.0, (w - 32.0) * left, 12.0), Color(0.95, 0.85, 0.30))
 		draw_string(font, Vector2(w - 380.0, 30.0), counts, HORIZONTAL_ALIGNMENT_RIGHT, 364.0, 20, Color.WHITE)
 		if state == State.PLAYING and not leave_hint.is_empty():
 			draw_string(font, Vector2(16.0, 74.0), leave_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 1, 1, 0.75))

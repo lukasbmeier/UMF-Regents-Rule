@@ -81,6 +81,8 @@ func _ready() -> void:
 	# What lies on the ground is called and graded as in the bag (DECISIONS #269).
 	GroundItems.name_of = ground_name
 	GroundItems.grade_of = ground_grade
+	# The anvil's buttons, in the settings panel before a first round (MINIGAMES_PREP.md §3.1).
+	ShapeMinigame.define_setting()
 	# Spells in the world: a Frost Ring's circle, what burns (owner, 2026-10-20: the Staff).
 	add_child(SpellLooks.new())
 	_layer = CanvasLayer.new()
@@ -462,6 +464,7 @@ func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: in
 	game = SkillMinigames.make_ui(params)
 	if game == null:
 		return
+	place_round_box()
 	game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_round_box.add_child(game)
 	station_window.close()
@@ -472,6 +475,20 @@ func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: in
 		_local_input.hold_still(HOLD_REASON, true)
 	MouseCapture.hold_free(HOLD_REASON, true)
 	game.begin(seed_value, params)
+
+
+## WHERE A ROUND IS PLAYED: every skill's in the big panel in the middle (Luke's play, 2026-11-06: the side panel
+## for gathering, his M7 test, sat over the minimap, and a second character on a small panel beside your own felt
+## odd; the stages show only the tool, as the anvil's hammer).
+const MIDDLE_PANEL: Vector2 = Vector2(960.0, 620.0)
+
+
+func place_round_box() -> void:
+	_round_box.set_anchors_preset(Control.PRESET_CENTER)
+	_round_box.offset_left = -MIDDLE_PANEL.x * 0.5
+	_round_box.offset_right = MIDDLE_PANEL.x * 0.5
+	_round_box.offset_top = -MIDDLE_PANEL.y * 0.5
+	_round_box.offset_bottom = MIDDLE_PANEL.y * 0.5
 
 
 ## ESCAPE LEAVES A ROUND (Luke's play, 2026-11-03, feedback #8193: "need to be able to cancel out of anvil minigame
