@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="3_slot"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_pattern"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/trowel_blade.tres" id="4_blade"]
+[ext_resource type="Resource" path="res://game/regents/content/material/plain_wood.tres" id="5_wood"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/handle.tres" id="6_handle"]
+
+[sub_resource type="Resource" id="Slot_blade"]
+script = ExtResource("3_slot")
+name = "blade"
+takes = 1
+pattern = ExtResource("4_blade")
+core = true
+
+[sub_resource type="Resource" id="Slot_handle"]
+script = ExtResource("3_slot")
+name = "handle"
+takes = 2
+pattern = ExtResource("6_handle")
+default_material = ExtResource("5_wood")
+
+[resource]
+script = ExtResource("4_pattern")
+key = &"trowel"
+name_format = "{m} trowel"
+max_stack = 1
+tool_tag = &"trowel"
+skill = ExtResource("5_skill")
+parts = Array[ExtResource("3_slot")]([SubResource("Slot_blade"), SubResource("Slot_handle")])
+quality = 2
+xp = 15
+afk_ms = 4000
+description = "A trowel: loosens the soil so a plant comes up whole; works plants up to its tier."
+id = 40013
+display_name = "Trowel"
+designer_notes = "HERBALISM'S TOOL (Luke, 2026-11-07, H2). A blade and a grip (no binding). No model in the hand yet (held_scene empty): a trowel model is to find or make."

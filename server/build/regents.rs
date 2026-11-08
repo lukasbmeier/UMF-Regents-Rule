@@ -29,14 +29,19 @@ fn minigame(m: &serde_json::Value, what: &str) -> String {
         "chop" => {
             assert!(f("swing_ms") > 0 && f("target_chops") > 0 && f("target_chops") <= f("duration_ms") / f("swing_ms") + 1,
                 "regents content: {what}'s branch dodge cannot be played");
-            format!("Minigame::Chop(chop::ChopParams {{ duration_ms: {}, swing_ms: {}, stagger_ms: {}, branch_permille: {}, safe_segments: {}, target_chops: {} }})",
-                f("duration_ms"), f("swing_ms"), f("stagger_ms"), f("branch_permille"), f("safe_segments"), f("target_chops"))
+            // Knots (2026-11-07): absent in a bake from before them, so 0 (none).
+            let opt = |k: &str| m.get(k).and_then(|x| x.as_i64()).unwrap_or(0);
+            format!("Minigame::Chop(chop::ChopParams {{ duration_ms: {}, swing_ms: {}, stagger_ms: {}, branch_permille: {}, safe_segments: {}, target_chops: {}, knot_permille: {}, knot_beat_ms: {} }})",
+                f("duration_ms"), f("swing_ms"), f("stagger_ms"), f("branch_permille"), f("safe_segments"), f("target_chops"), opt("knot_permille"), opt("knot_beat_ms"))
         }
         "crack" => {
             assert!(f("swing_ms") > 0 && f("notches") >= 2 && f("target_hits") > 0 && f("margin_pm") <= 500,
                 "regents content: {what}'s crack the rock cannot be played");
-            format!("Minigame::Crack(crack::CrackParams {{ duration_ms: {}, swing_ms: {}, stagger_ms: {}, split_ms: {}, notches: {}, bend_pm: {}, radius_pm: {}, margin_pm: {}, target_hits: {} }})",
-                f("duration_ms"), f("swing_ms"), f("stagger_ms"), f("split_ms"), f("notches"), f("bend_pm"), f("radius_pm"), f("margin_pm"), f("target_hits"))
+            // Brittle notches (2026-11-07): absent in a bake from before them, so 0 (none).
+            let opt = |k: &str| m.get(k).and_then(|x| x.as_i64()).unwrap_or(0);
+            format!("Minigame::Crack(crack::CrackParams {{ duration_ms: {}, swing_ms: {}, stagger_ms: {}, split_ms: {}, notches: {}, bend_pm: {}, radius_pm: {}, margin_pm: {}, target_hits: {}, brittle_permille: {}, ring_ms: {} }})",
+                f("duration_ms"), f("swing_ms"), f("stagger_ms"), f("split_ms"), f("notches"), f("bend_pm"), f("radius_pm"), f("margin_pm"), f("target_hits"),
+                opt("brittle_permille"), opt("ring_ms"))
         }
         "smelt" => {
             assert!(f("pour_tolerance") > 0 && f("band_period_ticks") > 0 && f("target_hi") >= f("target_lo"), "regents content: {what}'s smelt cannot be played");
@@ -44,6 +49,30 @@ fn minigame(m: &serde_json::Value, what: &str) -> String {
                 f("heat_ms"), f("pour_ms"), f("pour_ready_ms"), f("pump_ms"), f("pump_heat"), f("cool_per_tick"), f("start_heat"), f("band_center"), f("band_amp"),
                 f("band_period_ticks"), f("band_half_start"), f("band_half_end"), f("burn_line"), f("pour_rate"), f("target_lo"), f("target_hi"),
                 f("pour_tolerance"), f("heat_weight_pct"))
+        }
+        "beat" => {
+            // Smelting as a rhythm track (Luke, 2026-11-07): two notes' windows never meet (a note is at least half a
+            // beat from the next), the windows nest, and the mold's line can be reached.
+            assert!(f("beat_ms") > 0 && f("beat_ms") % 2 == 0 && f("good_ms") * 4 <= f("beat_ms") && f("perfect_ms") > 0 && f("perfect_ms") <= f("good_ms")
+                && f("beats") >= 1 && f("lead_beats") >= 0 && f("hold_beats") >= 0 && f("pour_tolerance") > 0 && f("target_hi") >= f("target_lo")
+                && f("pour_ms") >= 0 && f("pour_ms") % 50 == 0 && (0..=100).contains(&f("track_weight_pct")),
+                "regents content: {what}'s rhythm smelt cannot be played (a beat even and at least four times the outer window, the inner window inside it, the pour in 50 ms steps)");
+            format!("Minigame::Beat(beat::BeatParams {{ beat_ms: {}, lead_beats: {}, beats: {}, rest_pm: {}, offbeat_pm: {}, hold_pm: {}, hold_beats: {}, perfect_ms: {}, good_ms: {}, good_pm: {}, stray_pm: {}, pour_ms: {}, pour_ready_ms: {}, pour_rate: {}, target_lo: {}, target_hi: {}, pour_tolerance: {}, track_weight_pct: {}, slag_pm: {} }})",
+                f("beat_ms"), f("lead_beats"), f("beats"), f("rest_pm"), f("offbeat_pm"), f("hold_pm"), f("hold_beats"), f("perfect_ms"), f("good_ms"),
+                f("good_pm"), f("stray_pm"), f("pour_ms"), f("pour_ready_ms"), f("pour_rate"), f("target_lo"), f("target_hi"), f("pour_tolerance"),
+                f("track_weight_pct"), m.get("slag_pm").and_then(|x| x.as_i64()).unwrap_or(0))
+        }
+        "carve" => {
+            // Woodworking's carve (Luke, 2026-11-07): two profiles of the same length, a blank to cut them from.
+            let arr = |k: &str| -> Vec<i64> {
+                m[k].as_array().unwrap_or_else(|| panic!("regents content: {what}'s carve has no {k}")).iter().map(|v| v.as_i64().unwrap()).collect()
+            };
+            let (l, r) = (arr("left_outline"), arr("right_outline"));
+            assert!(!l.is_empty() && l.len() == r.len() && l.len() < 1000 && f("error_scale") > 0 && f("swing_ms") > 0 && f("deep_cut") > 0
+                && f("fine_cut") > 0, "regents content: {what}'s carve cannot be played (two profiles of one length under 1000 rows, cuts and a scale)");
+            format!("Minigame::Carve(carve::CarveParams {{ duration_ms: {}, swing_ms: {}, start_half: {}, start_jitter: {}, deep_cut: {}, fine_cut: {}, left_outline: &{:?}, right_outline: &{:?}, outline_vary: {}, error_scale: {}, hide_outline: {}, lay_cost_pm: {}, mirror: {} }})",
+                f("duration_ms"), f("swing_ms"), f("start_half"), f("start_jitter"), f("deep_cut"), f("fine_cut"), l, r, f("outline_vary"), f("error_scale"),
+                f("hide_outline"), f("lay_cost_pm"), f("mirror"))
         }
         "shape" => {
             let outline: Vec<i64> = m["outline"].as_array().unwrap_or_else(|| panic!("regents content: {what}'s shape has no outline"))
@@ -139,7 +168,9 @@ pub fn regents_data() {
         assert!(rare_pm == 0 || item_ids.contains(&rare), "regents content: {name} has a rare chance and no rare item");
         skill(sk, &name);
         let mg = minigame(&n["minigame"], &name);
-        assert!(mg.starts_with("Minigame::Chop") || mg.starts_with("Minigame::Crack"), "regents content: {name}'s round is not a gathering round");
+        // None: AFK only (a plant before its round is built, 2026-11-07): holding E works it AFK too.
+        assert!(mg == "Minigame::None" || mg.starts_with("Minigame::Chop") || mg.starts_with("Minigame::Crack"),
+            "regents content: {name}'s round is not a gathering round");
         // Each model's footprint (cm), baked from the models (`NodeDef.radii_cm`); none: the reach is from the middle.
         let radii: Vec<i64> = n["radii_cm"].as_array().map(|a| a.iter().map(|v| v.as_i64().unwrap_or(0)).collect()).unwrap_or_default();
         assert!(radii.iter().all(|r| (0..=2000).contains(r)), "regents content: {name} has a model footprint out of 0-20 m: {radii:?}");
@@ -175,7 +206,7 @@ pub fn regents_data() {
         let output = int(r, "output", &name);
         item(output, &name);
         let mg = minigame(&r["minigame"], &name);
-        assert!(mg == "Minigame::None" || mg.starts_with("Minigame::Smelt") || mg.starts_with("Minigame::Shape"), "regents content: {name}'s round is not a station round");
+        assert!(mg == "Minigame::None" || mg.starts_with("Minigame::Smelt") || mg.starts_with("Minigame::Shape") || mg.starts_with("Minigame::Beat") || mg.starts_with("Minigame::Carve"), "regents content: {name}'s round is not a station round");
         let quality = int(r, "quality", &name);
         assert!(quality != 1 || mg != "Minigame::None", "regents content: {name}'s quality comes from a round it does not have");
         let slot = int(r, "part_slot", &name);

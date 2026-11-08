@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_cvpox"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_trowel_blade.tres" id="2_qnses"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_sr45q"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_trowel.tres" id="4_2suxs"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_70y7c"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_q5xpo"]
+
+[resource]
+script = ExtResource("5_70y7c")
+station = &"workbench"
+skill = ExtResource("6_q5xpo")
+inputs = Array[ExtResource("1_cvpox")]([ExtResource("2_qnses"), ExtResource("3_sr45q")])
+input_qty = PackedInt32Array(1, 1)
+output = ExtResource("4_2suxs")
+xp = 15
+min_rank = 2
+afk_ms = 4000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1)
+from_table = true
+id = 40043
+display_name = "Iron trowel"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Iron in Trowel): its numbers are yours to tune."

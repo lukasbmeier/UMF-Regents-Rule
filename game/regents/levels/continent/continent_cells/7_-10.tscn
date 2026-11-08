@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_v5x5j"]
 
-[node name="Cell_7_-10" type="Node3D" unique_id=2126201738]
+[node name="Cell_7_-10" type="Node3D" unique_id=2050193636]
 
-[node name="w_copper_rock_52" type="Marker3D" parent="." unique_id=941609611]
+[node name="w_copper_rock_52" type="Marker3D" parent="." unique_id=981642763]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 488.04626, 16.07199, -628.89886)
 gizmo_extents = 0.6
 script = ExtResource("1_v5x5j")
@@ -13,7 +13,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Copper rock")
 
-[node name="w_coal_rock_12" type="Marker3D" parent="." unique_id=14264399]
+[node name="w_coal_rock_12" type="Marker3D" parent="." unique_id=1855038404]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 457.2858, 7.0913405, -633.635)
 gizmo_extents = 0.6
 script = ExtResource("1_v5x5j")
@@ -22,7 +22,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Coal rock")
 
-[node name="w_poi_zone_7" type="Marker3D" parent="." unique_id=1286444512]
+[node name="w_poi_zone_7" type="Marker3D" parent="." unique_id=429702042]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 507.06238, 57.029865, -585.68646)
 gizmo_extents = 10.0
 script = ExtResource("1_v5x5j")

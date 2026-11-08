@@ -158,8 +158,8 @@ func validate() -> Array[String]:
 	if output == null:
 		out.append("it makes nothing: set `output`")
 	var kind: StringName = SkillMinigames.kind_of(minigame)
-	if minigame != null and kind != SkillMinigames.SMELT and kind != SkillMinigames.SHAPE:
-		out.append("its `minigame` is not a station round (a SmeltParams or a ShapeParams)")
+	if minigame != null and kind != SkillMinigames.SMELT and kind != SkillMinigames.SHAPE and kind != SkillMinigames.BEAT and kind != SkillMinigames.CARVE:
+		out.append("its `minigame` is not a station round (a BeatParams, a CarveParams, a SmeltParams or a ShapeParams)")
 	if quality == Quality.FROM_ROUND and minigame == null:
 		out.append("its quality comes from a round it does not have")
 	if quality != Quality.NONE and output != null and output.max_stack != 1:

@@ -324,6 +324,42 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Coal rock")
 
+[node name="flax_1" type="Marker3D" parent="Nodes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0, 2.0)
+gizmo_extents = 1.0
+script = ExtResource("s_point")
+point_id = "flax_1"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="flax_2" type="Marker3D" parent="Nodes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.0, 0, 5.0)
+gizmo_extents = 1.0
+script = ExtResource("s_point")
+point_id = "flax_2"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="flax_3" type="Marker3D" parent="Nodes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0, 0, 6.0)
+gizmo_extents = 1.0
+script = ExtResource("s_point")
+point_id = "flax_3"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="flax_4" type="Marker3D" parent="Nodes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.0, 0, 0.0)
+gizmo_extents = 1.0
+script = ExtResource("s_point")
+point_id = "flax_4"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
 [node name="Stations" type="Node3D" parent="."]
 
 [node name="furnace" type="Marker3D" parent="Stations"]
@@ -352,6 +388,15 @@ point_id = "workbench"
 kind = "station"
 radius = 1.0
 tags = PackedStringArray("workbench")
+
+[node name="spinning_wheel" type="Marker3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 14.0)
+gizmo_extents = 1.0
+script = ExtResource("s_point")
+point_id = "spinning_wheel"
+kind = "station"
+radius = 1.0
+tags = PackedStringArray("spinning_wheel")
 
 [node name="orders" type="Marker3D" parent="Stations"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, 19.0)
@@ -889,6 +934,15 @@ point_id = "poi_workshop"
 kind = "poi"
 radius = 6.0
 tags = PackedStringArray("Workshop", "minor")
+
+[node name="poi_meadow" type="Marker3D" parent="Places"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.0, 0, 3.0)
+gizmo_extents = 1.5
+script = ExtResource("s_point")
+point_id = "poi_meadow"
+kind = "poi"
+radius = 5.0
+tags = PackedStringArray("Flax meadow", "minor")
 
 [node name="poi_training" type="Marker3D" parent="Places"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0, 20.5)

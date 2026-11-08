@@ -13,8 +13,9 @@ paths:
 
 - Scale is 100-300 CCU per database, one seamless world. Design every per-player cost for 300.
 - The skilling loop comes first, then fun combat. Every skill is dual-mode: tap E works AFK, hold E
-  plays its minigame for AFK x 1.25 x score and 1.3x rares. Those numbers are hot rules
-  (`game/regents/content/rules/regents.tres`, `regents.*`), never constants.
+  plays its minigame, paying from AFK x 0.75 (a score of 0) to AFK x 1.25 (a full score), rares up to 3x
+  with the score (Luke's M11, PROGRESS 46); gathering and smelting rounds run back to back. Those numbers
+  are hot rules (`game/regents/content/rules/regents.tres`, `regents.*`), never constants.
 - No tool slot: the best matching tool in the bag is used. Five equipment slots: weapon, head, chest,
   legs, trinket. The weapon you hold is your class (its kit).
 - Mana is on the Staff only (Luke reversed the one-pool decision on 2026-10-20); a resource never

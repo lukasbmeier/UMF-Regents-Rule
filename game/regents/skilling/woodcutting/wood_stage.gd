@@ -74,7 +74,7 @@ func set_tree(display_name: String) -> void:
 
 ## The trunk as the model has it now: its pieces from `cut` up (`segments`: each piece's branch side), and which side
 ## the axe chops from.
-func show_trunk(segments: PackedInt32Array, cut: int, side: int) -> void:
+func show_trunk(segments: PackedInt32Array, cut: int, side: int, knots: PackedByteArray = PackedByteArray()) -> void:
 	if side != _side:
 		_place_tool(side)
 	if cut == _shown_cut:
@@ -90,7 +90,7 @@ func show_trunk(segments: PackedInt32Array, cut: int, side: int) -> void:
 	for j: int in ChopModel.VIEW_SEGMENTS:
 		if cut + j >= segments.size():
 			break
-		_pieces.append(_piece(segments[cut + j], j == 0))
+		_pieces.append(_piece(segments[cut + j], j == 0, cut + j < knots.size() and knots[cut + j] == 1))
 	_lay_pieces()
 
 
@@ -101,6 +101,16 @@ func chop() -> void:
 	_chips.direction = Vector3(-1.0 if _side == ChopModel.SIDE_LEFT else 1.0, 0.6, 0.4)
 	_chips.restart()
 	_play(_chop, randf_range(0.92, 1.08))
+
+
+## The axe bit into a knot (`BITE`, band 2's knots, a test): it swings in and sticks with a deeper knock, a few chips;
+## the piece stays (the next chop from the same side, in a beat, cuts it).
+func bite() -> void:
+	tool.swing()
+	_chips.position = Vector3((-1.0 if _side == ChopModel.SIDE_LEFT else 1.0) * trunk_r, stump_h + piece_h * 0.5, 0.1)
+	_chips.direction = Vector3(-1.0 if _side == ChopModel.SIDE_LEFT else 1.0, 0.3, 0.4)
+	_chips.restart()
+	_play(_chop, randf_range(0.68, 0.74))
 
 
 ## A branch struck you (`HIT`): the axe is knocked back, leaves burst from the branch, the view shakes.
@@ -134,7 +144,7 @@ static func _mirror(t: Transform3D) -> Transform3D:
 	return Transform3D(b, Vector3(-t.origin.x, t.origin.y, t.origin.z))
 
 
-func _piece(branch: int, bottom: bool) -> Node3D:
+func _piece(branch: int, bottom: bool, knot: bool = false) -> Node3D:
 	var root: Node3D = Node3D.new()
 	var log_mesh: CylinderMesh = CylinderMesh.new()
 	log_mesh.top_radius = trunk_r
@@ -144,6 +154,21 @@ func _piece(branch: int, bottom: bool) -> Node3D:
 	var log_inst: MeshInstance3D = MeshInstance3D.new()
 	log_inst.mesh = log_mesh
 	root.add_child(log_inst)
+	if knot:
+		# A knot: a dark, swollen burl on the bark's front, where the player sees it.
+		var burl: SphereMesh = SphereMesh.new()
+		burl.radius = trunk_r * 0.42
+		burl.height = trunk_r * 0.6
+		var dark: StandardMaterial3D = StandardMaterial3D.new()
+		dark.albedo_color = Color(0.2, 0.13, 0.08)
+		dark.roughness = 0.95
+		burl.material = dark
+		var burl_inst: MeshInstance3D = MeshInstance3D.new()
+		burl_inst.mesh = burl
+		burl_inst.name = "Knot"
+		burl_inst.position = Vector3(0.0, 0.0, trunk_r * 0.88)
+		burl_inst.scale = Vector3(1.0, 1.0, 0.55)
+		root.add_child(burl_inst)
 	if branch != ChopModel.BRANCH_NONE:
 		var s: float = -1.0 if branch == ChopModel.BRANCH_LEFT else 1.0
 		var length: float = stub_len if bottom else branch_len

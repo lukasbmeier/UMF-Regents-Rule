@@ -4,29 +4,29 @@
 [ext_resource type="Resource" path="res://game/regents/content/skill/smelting.tres" id="2_skill"]
 [ext_resource type="Resource" path="res://game/regents/content/item/iron_bar.tres" id="3_out"]
 [ext_resource type="Resource" path="res://game/regents/content/item/iron_ore.tres" id="in0"]
-[ext_resource type="Script" path="res://game/regents/skilling/smelting/smelt_params.gd" id="4_params"]
+[ext_resource type="Script" path="res://game/regents/skilling/smelting/beat_params.gd" id="4_params"]
 
 [sub_resource type="Resource" id="Round"]
 script = ExtResource("4_params")
 display_name = "Iron bar"
-heat_ms = 7000
+beat_ms = 540
+lead_beats = 4
+beats = 16
+rest_pm = 120
+offbeat_pm = 220
+hold_pm = 120
+hold_beats = 2
+perfect_ms = 60
+good_ms = 130
+good_pm = 600
+stray_pm = 250
 pour_ms = 4000
 pour_ready_ms = 600
-pump_ms = 40
-pump_heat = 50
-cool_per_tick = 12
-start_heat = 350
-band_center = 680
-band_amp = 160
-band_period_ticks = 60
-band_half_start = 100
-band_half_end = 45
-burn_line = 930
 pour_rate = 32
 target_lo = 600
 target_hi = 840
 pour_tolerance = 200
-heat_weight_pct = 60
+track_weight_pct = 70
 
 [resource]
 script = ExtResource("1_recipe")

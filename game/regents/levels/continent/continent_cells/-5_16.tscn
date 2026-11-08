@@ -1,16 +1,26 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_4oqpo"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_pjies"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_qnyo8"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_pjies"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_qnyo8"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_pgfx7"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="4_4ep4k"]
 
-[node name="Cell_-5_16" type="Node3D" unique_id=1400101580]
+[node name="Cell_-5_16" type="Node3D" unique_id=603812126]
 
-[node name="rock_big_1_234" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_4oqpo")]
+[node name="w_flax_18" type="Marker3D" parent="." unique_id=1919242723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -294.93967, 2.5049746, 1044.7231)
+gizmo_extents = 0.5
+script = ExtResource("1_pjies")
+point_id = "w_flax_18"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="rock_big_1_234" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_qnyo8")]
 transform = Transform3D(0.09049336, 0, -0.80471605, 0, 0.8097882, 0, 0.80471605, 0, 0.09049336, -313.25586, 0.86121374, 1072.3173)
 
-[node name="bush_large_235" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_pjies")]
+[node name="bush_large_235" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_pgfx7")]
 transform = Transform3D(0.63869166, 0, 1.3050905, 0, 1.4529929, 0, -1.3050905, 0, 0.63869166, -276.56143, 2.3653286, 1060.295)
 
-[node name="fern_1_236" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_qnyo8")]
+[node name="fern_1_236" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("4_4ep4k")]
 transform = Transform3D(1.1923288, 0, 0.09292394, 0, 1.1959443, 0, -0.09292394, 0, 1.1923288, -286.06552, 3.3687506, 1026.4497)

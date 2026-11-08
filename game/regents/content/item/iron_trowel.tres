@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_lq1fd"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/trowel.tres" id="2_lqf5e"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_tb6lh"]
+
+[resource]
+script = ExtResource("3_tb6lh")
+max_stack = 1
+tool_tag = &"trowel"
+tool_tier = 2
+tool_speed_pct = 85
+color = Color(0.65, 0.66, 0.7, 1)
+description = "A trowel: loosens the soil so a plant comes up whole; works plants up to its tier."
+material = ExtResource("1_lq1fd")
+pattern = ExtResource("2_lqf5e")
+id = 40053
+display_name = "Iron trowel"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Trowel): made by Make the table."

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1000
+color = Color(0.62, 0.72, 0.84, 1)
+description = "Flax, pulled whole from a meadow patch: spun into string at the spinning wheel."
+id = 40046
+display_name = "Flax"
+designer_notes = "HERBALISM'S FIRST FIBER (Luke, 2026-11-07, HERBALISM_HUNTING_PREP.md H7: Flax, Hemp, Nettle). Raw: no quality, stacks."

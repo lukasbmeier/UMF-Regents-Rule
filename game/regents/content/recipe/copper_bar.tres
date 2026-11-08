@@ -4,29 +4,29 @@
 [ext_resource type="Resource" path="res://game/regents/content/skill/smelting.tres" id="2_skill"]
 [ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="3_out"]
 [ext_resource type="Resource" path="res://game/regents/content/item/copper_ore.tres" id="in0"]
-[ext_resource type="Script" path="res://game/regents/skilling/smelting/smelt_params.gd" id="4_params"]
+[ext_resource type="Script" path="res://game/regents/skilling/smelting/beat_params.gd" id="4_params"]
 
 [sub_resource type="Resource" id="Round"]
 script = ExtResource("4_params")
 display_name = "Copper bar"
-heat_ms = 7000
+beat_ms = 600
+lead_beats = 4
+beats = 16
+rest_pm = 150
+offbeat_pm = 120
+hold_pm = 100
+hold_beats = 2
+perfect_ms = 70
+good_ms = 150
+good_pm = 600
+stray_pm = 250
 pour_ms = 4000
 pour_ready_ms = 600
-pump_ms = 40
-pump_heat = 50
-cool_per_tick = 10
-start_heat = 350
-band_center = 600
-band_amp = 140
-band_period_ticks = 80
-band_half_start = 120
-band_half_end = 60
-burn_line = 900
 pour_rate = 28
 target_lo = 620
 target_hi = 820
 pour_tolerance = 220
-heat_weight_pct = 60
+track_weight_pct = 70
 
 [resource]
 script = ExtResource("1_recipe")

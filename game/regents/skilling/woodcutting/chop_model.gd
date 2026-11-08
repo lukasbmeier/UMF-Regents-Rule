@@ -25,6 +25,7 @@ const IGNORED: int = 0   # outside the round, out of order, mid-swing or stagger
 const CLEAN: int = 1     # the bottom piece is off; the trunk dropped one piece
 const HIT: int = 2       # a branch on that side: no chop, staggered
 const HELD: int = 3      # pressed mid-swing: held, and swung the moment the swing ends (the latest press wins)
+const BITE: int = 4      # a knotted piece: the axe bites; the next chop from the same side, in a beat, cuts it
 
 ## Pieces of trunk generated beyond the most a round can chop, for the view above the cut.
 const VIEW_SEGMENTS: int = 8
@@ -32,6 +33,13 @@ const VIEW_SEGMENTS: int = 8
 var params: ChopParams
 ## Every piece of trunk, bottom first: BRANCH_NONE, BRANCH_LEFT or BRANCH_RIGHT.
 var segments: PackedInt32Array
+## Which pieces are knotted (1), from their own stream (`KNOT_SALT`), so the branches never change.
+var knots: PackedByteArray
+## A bite into the knotted bottom piece: its side (0: none) and when.
+var bite_side: int = 0
+var bite_ms: int = 0
+## Bites into knots this round (not in the result: the server's result has no such count).
+var bites: int = 0
 ## The bottom piece still standing (pieces below it are chopped).
 var cut: int = 0
 ## Where the woodcutter stands: the side of the last swing (a round starts on the left).
@@ -61,7 +69,32 @@ static func start(seed_value: int, p: ChopParams) -> ChopModel:
 	var m: ChopModel = ChopModel.new()
 	m.params = p
 	m.segments = branches(seed_value, p, max_chops(p) + 2 + VIEW_SEGMENTS)
+	m.knots = knots_of(seed_value, p, m.segments.size())
 	return m
+
+
+## The knots' own stream: the seed folded with this ("knot").
+const KNOT_SALT: int = 0x6B6E6F74
+
+
+## Which of the trunk's first `n` pieces are knotted (none when `knot_permille` is 0).
+static func knots_of(seed_value: int, p: ChopParams, n: int) -> PackedByteArray:
+	var out: PackedByteArray = PackedByteArray()
+	out.resize(n)
+	if p.knot_permille <= 0:
+		return out
+	var st: int = _seed_state(seed_value ^ KNOT_SALT)
+	for i: int in n:
+		if i < p.safe_segments:
+			continue
+		st = _next_u32(st)
+		out[i] = 1 if ((st >> 8) * 1000) >> 24 < p.knot_permille else 0
+	return out
+
+
+## Whether the bottom piece (the one being cut) is knotted.
+func knotted() -> bool:
+	return cut < knots.size() and knots[cut] == 1
 
 
 ## The most clean chops a round of `p` could hold: one at 0 ms and one per swing after it.
@@ -136,10 +169,20 @@ func _swing(t_ms: int, at_side: int) -> int:
 	if head_branch() == at_side:
 		hits += 1
 		combo = 0
+		bite_side = 0
 		next_ok_ms = t_ms + params.stagger_ms
 		staggered = true
 		last_act = HIT
 		return HIT
+	if knotted() and not (bite_side == at_side and t_ms - bite_ms <= params.knot_beat_ms):
+		bite_side = at_side
+		bite_ms = t_ms
+		bites += 1
+		next_ok_ms = t_ms + params.swing_ms
+		staggered = false
+		last_act = BITE
+		return BITE
+	bite_side = 0
 	cut += 1
 	clean += 1
 	combo += 1

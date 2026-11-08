@@ -363,6 +363,71 @@
 			"station": "workbench",
 			"tool_tag": "",
 			"weapon_kit": ""
+		},
+		{
+			"carries_trait": false,
+			"family": 0,
+			"id": 40012,
+			"key": "trowel_blade",
+			"max_stack": 1,
+			"name": "Trowel blade",
+			"name_format": "{m} trowel blade",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "bar",
+					"pattern": 40001,
+					"qty": 1,
+					"takes": 1
+				}
+			],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"tool_tag": "",
+			"weapon_kit": ""
+		},
+		{
+			"carries_trait": false,
+			"family": 0,
+			"id": 40013,
+			"key": "trowel",
+			"max_stack": 1,
+			"name": "Trowel",
+			"name_format": "{m} trowel",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "blade",
+					"pattern": 40012,
+					"qty": 1,
+					"takes": 1
+				},
+				{
+					"core": false,
+					"default_material": 40003,
+					"item": -1,
+					"name": "handle",
+					"pattern": 40004,
+					"qty": 1,
+					"takes": 2
+				}
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "trowel",
+			"weapon_kit": ""
 		}
 	],
 	"owner": "regents",

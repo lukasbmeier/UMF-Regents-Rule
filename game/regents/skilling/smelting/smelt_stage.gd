@@ -3,7 +3,9 @@ class_name SmeltStage extends SubViewportContainer
 ## game's own bellows beside it (they pump on their own: no character on a stage, the player's own is the one working,
 ## Luke's play 2026-11-06), and the mold. The fire burns brighter with the heat; the crucible goes to the mold and tilts while
 ## it pours, a molten stream filling the mold. `SmeltMinigame` keeps the heat's band and the mold's line as 2D gauges
-## over it (readouts) and tells it what `SmeltModel` says: PRESENTATION ONLY.
+## over it (readouts) and tells it what `SmeltModel` says: PRESENTATION ONLY. Smelting's rhythm track (`BeatMinigame`,
+## Luke 2026-11-07) plays on the same stage: the beat knocked (`knock`), a note's pump, a long draw held (`draw_on`), a
+## wasted press sputtering (`sputter`).
 ##
 ## Designers: open `smelt_stage.tscn` to move the camera or the props; the sounds are
 ## `game/regents/art/sound/smelting/` (`make_skill_sounds.py`).
@@ -16,6 +18,10 @@ class_name SmeltStage extends SubViewportContainer
 @export var mold_depth: float = 0.12
 
 const MOLTEN: Color = Color(1.0, 0.55, 0.12)
+const BEAT_SOUND: AudioStream = preload("res://game/regents/art/sound/smelting/beat.wav")
+const ACCENT_SOUND: AudioStream = preload("res://game/regents/art/sound/smelting/accent.wav")
+const DRAW_SOUND: AudioStream = preload("res://game/regents/art/sound/smelting/draw.wav")
+const SPUTTER_SOUND: AudioStream = preload("res://game/regents/art/sound/smelting/sputter.wav")
 
 @onready var viewport: SubViewport = $Viewport
 @onready var camera: Camera3D = $Viewport/Stage/Camera
@@ -34,13 +40,54 @@ var _squash: float = 0.0
 var _bellows_scale: Vector3
 var _heat: float = 0.0
 var _pouring: bool = false
+## A long draw of the bellows: they close slowly while it is held.
+var drawing: bool = false
+var _knock: AudioStreamPlayer
+var _draw: AudioStreamPlayer
+var _sputter: AudioStreamPlayer
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE   # the minigame under it takes the presses
 	stretch = true
 	_bellows_scale = _bellows.scale
+	_knock = _player(BEAT_SOUND, -4.0)
+	_draw = _player(DRAW_SOUND, 0.0)
+	_sputter = _player(SPUTTER_SOUND, -2.0)
 	show_melt(0, 0, false, true)
+
+
+func _player(stream: AudioStream, db: float) -> AudioStreamPlayer:
+	var a: AudioStreamPlayer = AudioStreamPlayer.new()
+	a.stream = stream
+	a.volume_db = db
+	add_child(a)
+	return a
+
+
+## The beat, knocked on the furnace's side (brighter on a bar's first beat).
+func knock(accent: bool) -> void:
+	_knock.stream = ACCENT_SOUND if accent else BEAT_SOUND
+	_knock.play()
+
+
+## A long draw of the bellows begins (`on`) or ends.
+func draw_on(on: bool) -> void:
+	if on == drawing:
+		return
+	drawing = on
+	if on:
+		_draw.play()
+	else:
+		_draw.stop()
+		_squash = maxf(_squash, 0.6)
+
+
+## A press on no note: wasted breath, the fire gutters.
+func sputter() -> void:
+	_sputter.pitch_scale = randf_range(0.9, 1.1)
+	_sputter.play()
+	_squash = maxf(_squash, 0.3)
 
 
 ## A pump of the bellows: they squash and breathe, the fire flares.
@@ -74,7 +121,7 @@ func show_melt(heat: int, fill: int, pouring: bool, heating: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	_squash = maxf(0.0, _squash - delta * 5.0)
+	_squash = minf(1.0, _squash + delta * 1.2) if drawing else maxf(0.0, _squash - delta * 5.0)
 	_bellows.scale = Vector3(_bellows_scale.x, _bellows_scale.y * (1.0 - 0.18 * _squash), _bellows_scale.z)
 	_glow.light_energy = 0.8 + 3.2 * _heat + 1.5 * _squash
 	_fire.scale_amount_min = 0.6 + 0.8 * _heat

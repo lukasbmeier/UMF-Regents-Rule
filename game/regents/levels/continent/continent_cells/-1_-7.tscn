@@ -1,8 +1,18 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="1_us71g"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_8ou36"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_gsuwa"]
 
-[node name="Cell_-1_-7" type="Node3D" unique_id=1124467375]
+[node name="Cell_-1_-7" type="Node3D" unique_id=1173576031]
 
-[node name="bush_large_419" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("1_us71g")]
+[node name="w_flax_33" type="Marker3D" parent="." unique_id=851397610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.242027, 5.223285, -405.25153)
+gizmo_extents = 0.5
+script = ExtResource("1_8ou36")
+point_id = "w_flax_33"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="bush_large_419" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_gsuwa")]
 transform = Transform3D(0.28851095, 0, 1.1658562, 0, 1.2010243, 0, -1.1658562, 0, 0.28851095, -38.021652, 5.413522, -399.83182)

@@ -14,7 +14,7 @@ extends Node
 ##                     tutorial, not begun: the card says where the guide is
 ## Every step checks what the server paid, the skill's XP, and how it looks. Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 330.0
+const OVERALL_TIMEOUT_SEC: float = 460.0   # 2026-11-07: a run's second round at the tree (~12 s)
 ## The camp's guide (the glade's `guide` point).
 const GUIDE: Vector3 = Vector3(5.0, 0.0, 22.5)
 const BLADE: int = 40027
@@ -41,6 +41,15 @@ const SKILL_MINING: int = 40002
 const SKILL_SMELTING: int = 40003
 const SKILL_SMITHING: int = 40004
 const SKILL_CRAFTING: int = 40005
+# Herbalism, step 1 (2026-11-07, HERBALISM_HUNTING_PREP.md): the glade's flax patches and the spinning wheel.
+const FLAX_POINTS: Array[Vector3] = [Vector3(-12.0, 0.0, 2.0), Vector3(-15.0, 0.0, 5.0), Vector3(-10.0, 0.0, 6.0), Vector3(-16.0, 0.0, 0.0)]
+const WHEEL: Vector3 = Vector3(8.0, 0.0, 14.0)
+const FLAX: int = 40046
+const BOWSTRING: int = 40048
+const STAVE: int = 40049
+const YEW_BOW: int = 40020
+const COPPER_TROWEL: int = 40051
+const SKILL_HERBALISM: int = 40010
 
 var _passes: int = 0
 var _failures: int = 0
@@ -142,6 +151,12 @@ func _chopper(tree_id: int) -> void:
 	_check(working and skilling.afk_target == -1 and moved < 0.9, "a short step off the work spot (%.2f m) stops the AFK work" % moved)
 	await _until(func() -> bool: return interaction.get_target() == tree_id, 3.0)
 	var logs1: int = inv.count(LOGS)
+	# Heard from before the round is played (a tree worked out in it ends the run as the round closes).
+	var ended: Array[String] = ["-"]
+	var on_end: Callable = func(on: bool, why: String) -> void:
+		if not on:
+			ended[0] = why
+	skilling.run_changed.connect(on_end)
 	if await _hold_for_round():
 		var stood: Vector3 = me.global_position
 		var chop: ChopMinigame = hud.game as ChopMinigame
@@ -155,7 +170,24 @@ func _chopper(tree_id: int) -> void:
 		_check(me.global_position.distance_to(stood) < 0.2, "A and D chopped and did not walk")
 		await _until(func() -> bool: return inv.count(LOGS) > logs1, 5.0)
 		_check(inv.count(LOGS) > logs1, "the server replayed the chop and paid %d logs" % (inv.count(LOGS) - logs1))
-		await _round_closed()
+		# A RUN (Luke's M11, 2026-11-05): the next round comes by itself into the same panel, E not pressed; a round
+		# with nothing pressed ends it (a player called away). A tree worked out ends it too, and says so.
+		var first_ui: SkillMinigame = hud.game
+		await _until(func() -> bool: return ended[0] != "-" or (hud.game == first_ui and first_ui.state == SkillMinigame.State.PLAYING), 6.0)
+		if SkillingComponent.node_of(tree_id) != null and SkillingComponent.node_of(tree_id).depleted:
+			await _round_closed()
+			_check(ended[0].begins_with("Worked out"), "the tree was worked out in the first round: the run ended, and said so (\"%s\")" % ended[0])
+		else:
+			_check(ended[0] == "-" and hud.game == first_ui and first_ui.state == SkillMinigame.State.PLAYING and hud._round_box.visible
+				and skilling.run_target == tree_id, "a run: the next round came by itself, into the same panel (E not pressed)")
+			_check(first_ui.run_line.begins_with("This run: 1 round"), "the panel keeps the run's tally: \"%s\"" % first_ui.run_line)
+			await _until(func() -> bool: return first_ui.state != SkillMinigame.State.PLAYING, 14.0)
+			await _round_closed()
+			_check(skilling.run_target == -1 and ended[0].begins_with("Nothing pressed"), "a round with nothing pressed ended the run (\"%s\")" % ended[0])
+			await get_tree().create_timer(2.0).timeout
+			_check(not hud._round_box.visible and skilling.round_id < 0, "and no third round came")
+
+	skilling.run_changed.disconnect(on_end)
 
 	# --- MINING: hold E at a copper rock (crack the rock, clicks on the glow) ---
 	var rock_id: int = await _node_at(COPPER_1)
@@ -167,6 +199,10 @@ func _chopper(tree_id: int) -> void:
 		_check_work_spot(rock_id, "the copper rock")
 		var crack: CrackMinigame = hud.game as CrackMinigame
 		_check(crack != null, "holding E at a rock deals crack the rock")
+		await get_tree().create_timer(0.3).timeout
+		await _tap(&"interact", 0.08)
+		_check(skilling.run_target == rock_id and skilling.run_stop_after and crack.leave_hint.contains("E: stop after this one"),
+			"E during a run's round: it plays out, then the run stops (\"%s\")" % crack.leave_hint)
 		await _until(func() -> bool: return look.tool != null, 2.0)
 		_check(look.tool != null and driver.pose_clip() == &"extra/Mining", "mining a round, the character swings the pickaxe (%s)" % driver.pose_clip())
 		while crack != null and crack.state == SkillMinigame.State.PLAYING:
@@ -180,8 +216,10 @@ func _chopper(tree_id: int) -> void:
 		await _until(func() -> bool: return inv.count(COPPER_ORE) > 0 and int(skilling.xp.get(SKILL_MINING, 0)) >= 10, 5.0)
 		_check(inv.count(COPPER_ORE) > 0 and int(skilling.xp.get(SKILL_MINING, 0)) >= 10, "the server replayed the strikes: %d copper ore, and mining XP" % inv.count(COPPER_ORE))
 		await _round_closed()
+		await get_tree().create_timer(1.5).timeout
+		_check(skilling.run_target == -1 and skilling.round_id < 0 and not hud._round_box.visible, "after E, no next round at the rock")
 
-	# --- SMELTING: hold E at the furnace (bellows, then pour); two ores to a bar, so the shell tops it up ---
+	# --- SMELTING: hold E at the furnace (the rhythm track, then the pour); two ores to a bar, so the shell tops it up ---
 	print("GRANT_ORE %d" % me.entity_id)
 	await _until(func() -> bool: return inv.count(COPPER_ORE) >= 2, 20.0)
 	var furnace: int = await _station_at(FURNACE)
@@ -189,21 +227,38 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return interaction.get_target() == furnace, 3.0)
 	_check(hud._prompt.text.contains("Copper bar"), "at the furnace, copper bars picked: \"%s\"" % hud._prompt.text.replace("\n", " / "))
 	if inv.count(COPPER_ORE) > 0 and await _hold_for_round():
-		var smelt: SmeltMinigame = hud.game as SmeltMinigame
+		# Smelting's rhythm track (Luke, 2026-11-07): as a person plays it, by the frame: down as a note reaches the
+		# bellows, a tap let go a moment later, a long draw at its end; then hold to pour and let go at the line.
+		var smelt: BeatMinigame = hud.game as BeatMinigame
+		var down_at: int = -1
+		await _tap(&"interact", 0.08)   # one round only: E stops the run after it
+		_check(skilling.run_stop_after, "E at the furnace's round: the run stops after it")
 		while smelt != null and smelt.state == SkillMinigame.State.PLAYING:
 			var t: int = smelt.elapsed_ms()
 			smelt.model.advance_to(t)
-			# As a person plays it: a press per pump (down, then up), then hold to pour and let go at the line.
-			if smelt.model.in_heat():
-				smelt.button(not smelt._down and smelt.model.heat < smelt.model.band(smelt.model.tick).x)
+			var bp: BeatParams = smelt.params as BeatParams
+			if smelt.model.on_track(t):
+				var j: int = smelt.model.next_note(t)
+				if not smelt._down and j >= 0 and t >= smelt.model.note_t[j] - 15:
+					smelt.button(true)
+					down_at = t
+				elif smelt._down and smelt.model.holding < 0 and t >= down_at + 60:
+					smelt.button(false)
+				elif smelt._down and smelt.model.holding >= 0 and t >= smelt.model.note_end[smelt.model.holding] - 30:
+					smelt.button(false)
 			elif not smelt.model.pouring and not smelt.model.poured:
-				smelt.button(not smelt._down)
+				if smelt._down:
+					smelt.button(false)
+				elif smelt.model.pour_ready(t):
+					smelt.button(true)
 			elif smelt.model.pouring:
-				smelt.button(smelt.model.fill < smelt.model.target - (smelt.params as SmeltParams).pour_rate / 2)
+				smelt.button(smelt.model.fill < smelt.model.target - bp.pour_rate / 2)
 			await get_tree().process_frame
 		print("   the smelt as played: %s" % str(smelt.live_result))
+		_check(smelt != null and int(smelt.live_result.get("track_pm", 0)) >= 600 and int(smelt.live_result.get("strays", 99)) == 0,
+			"the furnace's round is the rhythm track, played on the beat by the frame (track %d, wasted %d)" % [int(smelt.live_result.get("track_pm", 0)), int(smelt.live_result.get("strays", -1))])
 		await _until(func() -> bool: return inv.count(COPPER_BAR) > 0 and int(skilling.xp.get(SKILL_SMELTING, 0)) >= 6, 5.0)
-		_check(inv.count(COPPER_BAR) > 0 and int(skilling.xp.get(SKILL_SMELTING, 0)) >= 6, "smelted %d copper bars (the bellows, the pour), and smelting XP" % inv.count(COPPER_BAR))
+		_check(inv.count(COPPER_BAR) > 0 and int(skilling.xp.get(SKILL_SMELTING, 0)) >= 6, "smelted %d copper bars (the rhythm track, the pour), and smelting XP" % inv.count(COPPER_BAR))
 		await _round_closed()
 
 	# --- THE SHELL'S GIFT: two logs and two iron bars (a fresh character's iron needs mining rank 2) ---
@@ -380,6 +435,58 @@ func _chopper(tree_id: int) -> void:
 	await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
 	_check(skilling.afk_target == -1, "a second tap stops the work")
 	await _tutorial_sword()
+	await _herbalism()
+
+
+## HERBALISM, STEP 1 (Luke, 2026-11-07): flax pulled AFK with the starter kit's copper trowel (no round yet: the prompt
+## offers none); three spun into a bowstring at the spinning wheel; a carved stave (given by the shell at quality 650:
+## carving is the integration suite's) strung at the workbench into the yew bow, which keeps the stave's quality.
+func _herbalism() -> void:
+	_check(inv.count(COPPER_TROWEL) == 1, "the starter kit's copper trowel is in the bag")
+	var prompt_ok: bool = false
+	for at: Vector3 in FLAX_POINTS:
+		if inv.count(FLAX) >= 3:
+			break
+		var patch: int = await _node_at(at)
+		var node: NodeComponent = SkillingComponent.node_of(patch)
+		if node == null or node.depleted:
+			continue
+		await _stand_by(at)
+		await _until(func() -> bool: return interaction.get_target() == patch, 3.0)
+		prompt_ok = prompt_ok or (hud._prompt.text.begins_with("E: pull the flax (AFK)") and not hud._prompt.text.contains("Hold E"))
+		await _tap(&"interact", 0.08)
+		await _until(func() -> bool: return skilling.afk_target == patch, 4.0)   # the work begun (the press, the server's row)
+		await _until(func() -> bool: return inv.count(FLAX) >= 3 or skilling.afk_target == -1, 20.0)
+		if skilling.afk_target >= 0:
+			await _tap(&"interact", 0.08)
+			await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
+	_check(prompt_ok, "at a flax patch the prompt says to pull it AFK and offers no round (\"%s\")" % hud._prompt.text)
+	_check(inv.count(FLAX) >= 3 and int(skilling.xp.get(SKILL_HERBALISM, 0)) > 0,
+		"flax pulled AFK with the trowel: %d flax, herbalism XP %d" % [inv.count(FLAX), int(skilling.xp.get(SKILL_HERBALISM, 0))])
+	var wheel: int = await _station_at(WHEEL)
+	await _stand_by(WHEEL)
+	await _until(func() -> bool: return interaction.get_target() == wheel, 3.0)
+	hud.station_window.make_x = 1
+	_check(await _make("Bowstring", "MakeXGo"), "at the spinning wheel, a bowstring picked, Make X at 1")
+	await _until(func() -> bool: return inv.count(BOWSTRING) >= 1 and skilling.afk_target == -1, 10.0)
+	_check(inv.count(BOWSTRING) == 1, "three flax spun into a bowstring, AFK (%d left)" % inv.count(FLAX))
+	hud.station_window.close()
+	print("GRANT_STAVE %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(STAVE) == 1, 20.0)
+	var bows0: int = inv.count(YEW_BOW)
+	var bench: int = await _station_at(BENCH)
+	await _stand_by(BENCH)
+	await _until(func() -> bool: return interaction.get_target() == bench, 3.0)
+	hud.station_window.make_x = 1
+	_check(await _make("Yew bow", "MakeXGo"), "at the workbench, stringing the yew bow picked")
+	await _until(func() -> bool: return inv.count(YEW_BOW) > bows0 and skilling.afk_target == -1, 10.0)
+	var q: int = -1
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		if st.item_def_id == YEW_BOW:
+			q = int((JSON.parse_string(st.instance_data) as Dictionary).get("q", -1)) if not st.instance_data.is_empty() else -1
+	_check(inv.count(YEW_BOW) == bows0 + 1 and inv.count(STAVE) == 0 and inv.count(BOWSTRING) == 0 and q == 650,
+		"the stave and the bowstring strung into a yew bow as good as its stave (quality %d)" % q)
+	hud.station_window.close()
 
 
 ## CHAT (DECISIONS #273), beside the buddy at tree_1: Enter, a line (typing W walks nowhere), Enter; it

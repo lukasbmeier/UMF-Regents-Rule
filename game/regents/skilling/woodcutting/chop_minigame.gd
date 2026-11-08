@@ -83,7 +83,7 @@ func _new_model() -> void:
 
 
 func _show_stage() -> void:
-	_stage.show_trunk(model.segments, model.cut, model.side)
+	_stage.show_trunk(model.segments, model.cut, model.side, model.knots)
 
 
 func _model_result() -> Dictionary:
@@ -113,6 +113,8 @@ func _follow() -> void:
 			_stage.chop()
 		elif last_event == ChopModel.HIT:
 			_stage.hit()
+		elif last_event == ChopModel.BITE:
+			_stage.bite()
 	elif last_event == ChopModel.CLEAN:
 		_throw_piece(model.side)
 	queue_redraw()
@@ -205,9 +207,14 @@ func _draw_words() -> void:
 			var left: bool = model.side == ChopModel.SIDE_LEFT
 			MinigameLook.text(self, font, Vector2(size.x * (0.12 if left else 0.62), size.y * 0.30 - since * 0.04), "Ouch!", 30,
 				Color(1.0, 0.45, 0.4))
+		if last_event == ChopModel.BITE and since >= 0 and since < tree().knot_beat_ms:
+			var on_left: bool = model.side == ChopModel.SIDE_LEFT
+			MinigameLook.text(self, font, Vector2(size.x * (0.12 if on_left else 0.62), size.y * 0.30), "Again!", 30, MinigameLook.GOLD)
 		if state == State.PLAYING:
-			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), "A / D or click a side: chop from the side with no branch above",
-				15, MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
+			var hint: String = "A / D or click a side: chop from the side with no branch above"
+			if tree().knot_permille > 0:
+				hint += "; a knot takes two quick chops from one side"
+			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), hint, 15, MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
 	_draw_frame("Logs %d   Combo %d   Hits %d" % [model.clean, model.combo, model.hits] if model != null else "")
 
 

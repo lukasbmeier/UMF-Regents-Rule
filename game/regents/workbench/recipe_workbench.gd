@@ -119,7 +119,7 @@ static func sheet(r: RecipeDef) -> String:
 static func per_hour(r: RecipeDef, played: bool) -> Dictionary:
 	var mult: float = 1.0
 	if played and r.minigame != null and r.quality != RecipeDef.Quality.FROM_ROUND:
-		mult = rule(&"active_yield_mult") * PLAYED_SCORE_PM / 1000.0
+		mult = SkillingRules.active_factor(rule(&"active_yield_mult"), rule(&"active_yield_floor"), PLAYED_SCORE_PM)
 	var batch_ms: float = float(r.afk_ms) / mult
 	if played and r.quality == RecipeDef.Quality.FROM_ROUND and r.minigame != null:
 		batch_ms = float(SkillMinigames.duration_of(r.minigame)) + 2000.0   # one a round, and the walk back in

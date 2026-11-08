@@ -305,6 +305,7 @@ func _find_player() -> void:
 	_local_input = me.find_component(LocalInputComponent) as LocalInputComponent
 	s.round_dealt.connect(_on_round_dealt)
 	s.round_closed.connect(_on_round_closed)
+	s.run_changed.connect(_on_run_changed)
 	s.worked.connect(_on_worked)
 	s.xp_changed.connect(func(_id: int, _xp: int) -> void: _show_skills())
 	s.refused.connect(refused)
@@ -375,7 +376,8 @@ func _update_prompt() -> void:
 		elif skilling.rank_in(d.skill) < d.min_rank:
 			_prompt.text = "%s: needs %s rank %d (yours %d)" % [d.display_name, d.skill.display_name, d.min_rank, skilling.rank_in(d.skill)]
 		else:
-			_prompt.text = "E: %s the %s (AFK)     Hold E: play" % ["chop" if d.tool_tag == &"axe" else "mine", d.display_name.to_lower()]
+			var verb: String = String({&"axe": "chop", &"pick": "mine", &"trowel": "pull"}.get(d.tool_tag, "work"))
+			_prompt.text = "E: %s the %s (AFK)%s" % [verb, d.display_name.to_lower(), "     Hold E: play" if d.minigame != null else ""]
 	elif station != null and station.def != null:
 		# At most four times a second: it lists every recipe there (owner, 2026-10-19: lag by a bench).
 		var now: int = Time.get_ticks_msec()
@@ -459,17 +461,27 @@ func _target_name(target: int) -> String:
 
 
 func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: int, _name: String) -> void:
-	if game != null:
-		game.queue_free()
-	game = SkillMinigames.make_ui(params)
-	if game == null:
-		return
-	place_round_box()
-	game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_round_box.add_child(game)
+	# A RUN's next round (Luke's M11: back to back, no close and reopen) plays in the panel already open.
+	var again: bool = game != null and _round_box.visible and game.state != SkillMinigame.State.PLAYING \
+		and SkillMinigames.kind_of(game.params) == SkillMinigames.kind_of(params)
+	if not again:
+		if game != null:
+			game.queue_free()
+		game = SkillMinigames.make_ui(params)
+		if game == null:
+			return
+		place_round_box()
+		game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_round_box.add_child(game)
+		game.round_finished.connect(_on_round_finished)
 	station_window.close()
-	game.round_finished.connect(_on_round_finished)
-	game.leave_hint = LEAVE_MAKING if skilling != null and skilling.round_def is RecipeDef else LEAVE_GATHERING
+	var making: bool = skilling != null and skilling.round_def is RecipeDef
+	var running: bool = skilling != null and skilling.run_target >= 0
+	if running:
+		game.leave_hint = LEAVE_RUN_MAKING if making else LEAVE_RUN_GATHERING
+	else:
+		game.leave_hint = LEAVE_MAKING if making else LEAVE_GATHERING
+	game.run_line = _run_line()
 	_round_box.visible = true
 	if _local_input != null:
 		_local_input.hold_still(HOLD_REASON, true)
@@ -497,10 +509,17 @@ func place_round_box() -> void:
 func _input(event: InputEvent) -> void:
 	if _round_box.visible and event.is_action_pressed(MouseCapture.RELEASE_ACTION) and not event.is_echo() and leave_round():
 		get_viewport().set_input_as_handled()
+	elif _round_box.visible and event.is_action_pressed(MouseCapture.RELEASE_ACTION) and not event.is_echo() and skilling != null \
+			and skilling.run_target >= 0:
+		skilling.end_run("")   # between a run's rounds: Escape ends it now
+		get_viewport().set_input_as_handled()
 
 
 const LEAVE_GATHERING: String = "Esc: stop here and keep what you got"
 const LEAVE_MAKING: String = "Esc: stop, nothing used"
+## A run (Luke's M11): rounds go on by themselves; E stops after this one, Escape now.
+const LEAVE_RUN_GATHERING: String = "Rounds go on by themselves.  E: stop after this one   Esc: stop now, keep what you got"
+const LEAVE_RUN_MAKING: String = "Rounds go on by themselves.  E: stop after this one   Esc: stop now, this one uses nothing"
 
 
 ## Leave the round being played: a gathering round ends now and sends what was played (its score counts only the
@@ -509,12 +528,14 @@ func leave_round() -> bool:
 	if skilling == null or game == null or game.state != SkillMinigame.State.PLAYING or skilling.round_id < 0:
 		return false
 	if skilling.round_def is RecipeDef:
+		skilling.end_run("")
 		skilling.cancel_round()
 		game.queue_free()
 		game = null
 		_close_round()
 		notice("Stopped: nothing used.", Color(0.85, 0.85, 0.85))
 	else:
+		skilling.stop_run_after_round()
 		game.finish()
 	return true
 
@@ -522,6 +543,8 @@ func leave_round() -> bool:
 func _on_round_finished(_live: Dictionary, _replayed: Dictionary) -> void:
 	if skilling != null and skilling.round_id >= 0:
 		skilling.submit_round(skilling.round_id, game.inputs)
+		if game.inputs.is_empty():
+			skilling.stop_run_after_round("Nothing pressed that round: the run stopped")   # a player called away
 	get_tree().create_timer(ROUND_END_S).timeout.connect(_close_round)
 
 
@@ -533,13 +556,39 @@ func _on_round_closed(_id: int) -> void:
 func _close_round() -> void:
 	if game != null and game.state == SkillMinigame.State.PLAYING:
 		return
+	if skilling != null and skilling.run_target >= 0:
+		return   # a run: the next round comes into this panel
+	if game != null:
+		game.run_line = ""
 	_round_box.visible = false
 	if _local_input != null:
 		_local_input.hold_still(HOLD_REASON, false)
 	MouseCapture.hold_free(HOLD_REASON, false)
 
 
+## The run's tally, for the panel ("" when no run).
+func _run_line() -> String:
+	if skilling == null or skilling.run_target < 0:
+		return ""
+	var words: String = skilling.run_words()
+	return "This run: %s" % words if not words.is_empty() else "This run: the first round"
+
+
+## A run began or ended: when it ended, the panel closes after its end screen, and the tally is said.
+func _on_run_changed(on: bool, why: String) -> void:
+	if on or skilling == null:
+		return
+	var words: String = skilling.run_words()
+	if skilling.run_rounds > 1 or not why.is_empty():
+		notice(("%s.  " % why if not why.is_empty() else "") + ("Run over: %s" % words if not words.is_empty() else "Run over"),
+			Color(0.95, 0.85, 0.55))
+	if game == null or game.state != SkillMinigame.State.PLAYING:
+		get_tree().create_timer(ROUND_END_S * 0.5).timeout.connect(_close_round)
+
+
 func _on_worked(r: Dictionary) -> void:
+	if game != null and skilling != null and skilling.run_target >= 0:
+		game.run_line = _run_line()
 	var item: ItemDef = ItemDef.by_id(int(r["item_id"]))
 	var color: Color = item.color if item != null else Color.WHITE
 	var board: StationComponent = SkillingComponent.station_of(int(r["target_id"]))

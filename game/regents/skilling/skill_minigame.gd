@@ -123,6 +123,8 @@ func _animate(_delta: float) -> void:
 ## What Escape does while it is played, under the time bar ("" for nothing): the HUD sets it (Luke's play,
 ## 2026-11-03: a round started by mistake had no way out).
 var leave_hint: String = ""
+## A RUN's tally (Luke's M11: rounds back to back), under the leave hint ("" for none): the HUD sets it.
+var run_line: String = ""
 
 
 ## The time bar, the title and the end or start panel: call last in `_draw`.
@@ -139,6 +141,8 @@ func _draw_frame(counts: String) -> void:
 		draw_string(font, Vector2(w - 380.0, 30.0), counts, HORIZONTAL_ALIGNMENT_RIGHT, 364.0, 20, Color.WHITE)
 		if state == State.PLAYING and not leave_hint.is_empty():
 			draw_string(font, Vector2(16.0, 74.0), leave_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 1, 1, 0.75))
+		if not run_line.is_empty():
+			draw_string(font, Vector2(16.0, 96.0), run_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.98, 0.85, 0.5, 0.9))
 	if state == State.DONE:
 		var same: bool = live_result == replayed_result
 		_draw_panel(PackedStringArray([

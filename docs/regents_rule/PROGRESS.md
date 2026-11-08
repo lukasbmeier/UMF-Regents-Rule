@@ -2203,3 +2203,247 @@ rock's middle works; 5.6 m is refused "from its edge"), the shot: the big iron r
   worked from where the player stands.
 - Stations (the anvil) do not step.
 
+
+## Step 45: smelting is a rhythm track (2026-11-07)
+**Why**: Luke, 2026-11-07: "smelting needs to be changed to a rhythm game". Of a full rhythm track or beat-timed bellows
+on the old band, he chose **"Full rhythm track"** (`GAME.md`). The old round was mash-to-heat (M6 already said "in
+rhythm, never mashing"), and the readout (step 40) had active smelting paying less than AFK for all but a flawless hand.
+
+**Built** (a NEW challenge kind, `beat` = 104, so the old `smelt` = 102 keeps scoring old rounds and an old client,
+which does not know 104, ignores the round instead of playing the wrong game; no table or reducer changed):
+- `BeatParams` / `BeatModel` (`game/regents/skilling/smelting/`), the Rust twin `server/src/genre/regents/beat.rs`, a
+  third copy in `make_skill_goldens.py` writing `shared/golden/regents/beat.json` (10 cases; its own random source, so
+  the other goldens are byte for byte unchanged). The rules are written out on `BeatModel`:
+  - THE TRACK from the seed: a count-in (`lead_beats`), then `beats` beats of `beat_ms`; a bar's first beat always has
+    a note; other beats rest by `rest_pm`; an off-beat note half a beat later by `offbeat_pm`; a beat's note is a LONG
+    DRAW (`hold_beats` long) by `hold_pm`, nothing else played inside it, ending by the last beat.
+  - A PRESS (DOWN 1 / UP 2, one button): the earliest unplayed note within `good_ms` is hit, full value within
+    `perfect_ms`, else `good_pm`; a draw is paid when let go (all of it from `good_ms` before its end, else the share
+    held); a press on no note is a STRAY, `stray_pm` off the track. Mashing scores 0.
+  - THE POUR as before (from `pour_ready_ms` after the track: hold to tilt, let go at the line), `track_weight_pct` 70.
+- The content: the copper, iron and steel bars and the bar pattern: copper 600 ms beats (100 bpm), 16 beats, windows
+  70/150 ms; iron 540 ms, more off-beats, 60/130; steel 480 ms, 20 beats, many off-beats and draws, 50/115. A round
+  is 14.8-16 s (the old one 11-12). `build/regents.rs` refuses a round whose windows could meet (a beat under four
+  times `good_ms`).
+- `BeatMinigame` on smelting's stage: the track low across the panel, embers coming from the right to the bellows'
+  mark, the long draws as glowing bars, the beat as lines (a bar's first brighter), a big count-in, a word at the
+  mark (Perfect, Good, Missed, Wasted breath); the fire's gauge shows how the track is going, the mold's gauge the
+  pour. `SmeltStage`: the beat knocked on the furnace (`knock`, a bar's first brighter), a note's pump, a long draw
+  closing the bellows slowly (`draw_on`), a wasted press sputtering. New sounds (`make_skill_sounds.py`): beat,
+  accent, draw, sputter.
+- The readout's players (`MinigameReadout._beat`: a note pressed on its time give or take the hand's spread; a slip
+  misses it or presses it off the beat), the integration hook's bot (`skill_bot_cli.gd --kind=beat`), the skilling
+  playtest's player (by the frame, as a person).
+- Kept: `SmeltParams`/`SmeltModel`/`SmeltMinigame`, its twin and goldens (old rounds); no content uses them.
+
+**The readout** (200 seeds; AFK pays the same at an 80 % score today): copper flawless 98 / skilled 91 / average 77 /
+careless 57 % (skilled beats AFK 94 % of rounds); iron 97 / 88 / 72 / 50 (92 %); steel 97 / 86 / 68 / 46 (91 %).
+
+**How to play it**: the lab (F6): a copper, iron or steel bar. In the game (after a publish): hold E at the furnace.
+Four knocks count in; press Space or click as each ember reaches the mark at the left; hold the long ones to their
+end; then hold to pour and let go at the line.
+
+**Tested**: Rust (`cargo test`): the twin plays every golden round exactly (10 cases); negative: a press 70 ms off
+judged perfect, or a draw paid only when held to its very end, fails it. Unit (lints + regents) 3183/0 at this step:
+the goldens, the track's shape over 40 seeds, judging, mashing (0), the draws, the pour, the metals ordered, the
+stage (a note pumps, a draw holds, a wasted press sputters, the pour); negative: a stray never counted fails 6 checks.
+Integration: the furnace round is kind 104, the bot's round scores 998 and pays bars and XP (its round lookup took
+100-103 only: widened). Skilling playtest (a real client at 150 ms, pressing by the frame): track 1000, 0 wasted,
+bars and XP paid, 91 + 8 / 0. Windowed shots of the count-in, the track with a draw held, and the pour.
+
+**Left**: Luke plays it (the tempo, the windows, the draws, whether the pour stays); a timing offset in Controls if
+his hands land late (audio or display lag); its band rule (slag on a second key, an alloy's two lanes: prototype
+first); the back-to-back runs and the pay curve (M11, §8 step 4).
+
+## Step 46: the minigame overhaul, step 4 (M11): rounds back to back, and what a played round pays (2026-11-07)
+**Why**: `MINIGAMES_PREP.md` §8 step 4, Luke's M11 (2026-11-05, "as proposed"): a good round beats AFK and a poor one
+still falls short, the break-even near half a score (not 80 %); the catalysts lean hard to active play; gathering and
+smelting rounds run back to back hands free once started (E or Escape ends a run, as does a round with no input), each
+round paid as it ends. Luke, 2026-11-07: "after smelting is done, continue with the next order as I will be away".
+
+**Built**:
+- THE PAY CURVE (`genre::regents::active_yield_milli`, a new `floor` argument): a round pays what AFK makes in its time
+  times a factor running straight from `regents.active_yield_floor` (a NEW hot rule, 0.75) at a score of 0 to
+  `regents.active_yield_mult` (1.25, unchanged) at a full score: half a score breaks even, a full one is the old 1.25,
+  nothing played 0.75 of AFK. A floor of 0 is the curve before. `SkillingRules` (client) has the same for the readout
+  (its break-even now 50 %) and the recipe bench.
+- THE RARE EDGE (`active_rare_mult`): `regents.active_rare_mult` 1.3 -> **3.0** at a full score (max 6), and it now
+  GROWS WITH THE SCORE (1 at 0): before, a round nobody played had the whole edge. Smelting has no catalysts yet.
+- RUNS (`SkillingComponent`, `RegentsHud`): a round dealt at a node, or at a station whose recipe pays in batches
+  (smelting; never the anvil: `SkillingComponent.runs`), starts a run. As each round closes the next is asked for
+  (`run_gap_s`, 0.9 s, an export) into the SAME panel (the HUD reuses the minigame; the player stays held, the cursor
+  free); the panel shows the run's tally under the leave hint ("This run: 2 rounds: 5 Logs, 1 rare find"). A run ends:
+  on E (the round on now plays out and pays, then it stops), on Escape (now: gathering keeps what it got, smelting
+  withdraws the round), after a round with nothing pressed, when a node is worked out or the furnace runs out (said),
+  or on any refusal of the next round. Its end is said with the tally.
+- No table, reducer or argument changed (the next round is the same `gather` / `craft` call): old clients play on.
+
+**How to play it**: publish, then hold E at a tree: play a round, and the next comes by itself; press E to stop after
+the round on now, Escape to stop at once; leave one untouched and the run stops. The same at a rock and the furnace.
+
+**Tested**: Rust: the curve with and without the floor, the rare edge by the score. Unit: the content's numbers, the
+break-even (50 %, 80 % with no floor), which rounds run (never the anvil), a run's tally (only its own played rounds),
+E mid-round, a node worked out; negative: the anvil allowed to run fails it. Skilling playtest: at the tree the next
+round came by itself into the same panel, the tally read "This run: 1 round", a round with nothing pressed ended the
+run and no third came (or, when the tree was worked out in the first round, the run ended saying so); E during the
+rock's and the furnace's rounds stopped the run after them.
+
+**Left**: the numbers are first guesses for Luke's play (the floor, 1.25, the rare edge 3x, the gap); smelting's
+catalysts (MATERIALS.md §6); whether E should end a run at once instead of after the round.
+
+## Step 47: the minigame overhaul, step 3's M3: rank eases the round (2026-11-07)
+**Why**: Luke's M3 (2026-11-05, "as proposed"): "a few percent wider windows a rank above the requirement, capped at
+three (hot rules)", and for every skill "rank eases the numbers; a band adds one rule". The next decided piece of §8
+in order (step 3's tuning to M4's shares waits for his play of the anvil).
+
+**Built**:
+- `regents.rank_ease_pct` (4) and `regents.rank_ease_ranks` (3), new hot rules: `rules::rank_ease_pct` is the ranks
+  above a node's or recipe's `min_rank`, at most 3, times 4 % (12 % at most).
+- The server works it out when it deals a round and writes it as the payload's FIFTH field
+  ("<target> <def> <speed> <part> <ease>"; with no ease the payload is as before, so an old client reads every round
+  the same; one would play an eased round un-eased, which only ever helps it). `Minigame::score_eased` replays it eased;
+  the client's `SkillMinigames.eased` plays it the same, number for number: a branch staggers 12 % less, the rock's
+  notch 12 % wider, the furnace's band (old kind) or the beat's windows wider (the outer window never past a quarter
+  beat: copper's is there already, so only its inner window widens), the anvil's bar hot 12 % longer and its error
+  scale 12 % larger (the error scale alone moved nothing for a skilled smith: what caps them is the reheats' cost).
+- The readout prints each anvil round again "3 ranks on (12 % easier)", beside M4's targets. The integration hook and
+  its bot read the payload's fields by place (the speed was taken as the LAST field) and play the round eased.
+
+**The readout** (100 seeds, skilled smith, Masterwork share): iron axe head 23 % -> 62 % three ranks on (M4 wants ~10
+-> ~33 %); copper axe head 99 % -> 100 % (far too easy already: step 3's tuning, after Luke's play).
+
+**Tested**: Rust: the ease by rank (0 at the requirement, 8 % two above, capped), the payload with and without it,
+and a strike 6 % past the rock's notch jars as authored and lands eased; negative: the server's notch not widened
+fails it. Unit: the eased numbers on the content (and the content untouched), a skilled smith better three ranks on
+(at first equal: the heat added). 3196/0.
+
+**Left**: the 4 % and the 3 ranks are first guesses; tuning the anvil to M4's shares (step 3, after Luke plays it);
+gathering already swings faster with rank (`speed_pct`, 3 % a rank), so M3 there is on top of it.
+
+## Step 48: band 2's new rules, a TEST for Luke's play: knots, brittle notches, slag (2026-11-07)
+**Why**: `MINIGAMES_PREP.md` §8 step 5, the part left after the look: "their band rules (knots, brittle notches, slag)
+not yet ... prototyped and played before deciding" (Luke's M9). Built as the anvil's bands were (2026-11-05): each a
+new param, 0 = off, so every round before replays unchanged; ON for band 2's content only (the yew, the coal rock,
+the steel bar), as a test to play and keep or back out (each `designer_notes` says how).
+
+**Built** (each in the GDScript model, its Rust twin and the Python goldens' copy; each drawn from its OWN seeded
+stream, the seed folded with a salt, so the branches, seams and tracks never change):
+- KNOTS (woodcutting; `ChopParams.knot_permille`, `knot_beat_ms`): a knotted piece takes two chops from the same side,
+  the second within the beat (600 ms) of the first; the first only BITES (the axe sticks with a deeper knock, a few
+  chips, "Again!"); the other side, a late chop or a branch's stagger start it over. The piece shows a dark burl. The
+  yew: 20 % knotted, its target 28 -> 24 (so a flawless round still scores full: 24 is the fewest cuts a flawless
+  woodcutter made over 200 seeds).
+- BRITTLE NOTCHES (mining; `CrackParams.brittle_permille`, `ring_ms`): after a hit the rock rings 450 ms; a brittle
+  notch struck in the ring CRACKS WRONG (a jar, "Cracked wrong!"); a strike pressed mid-swing is held to the swing's end
+  (250 ms), still in the ring, so the player must wait. A seam's first notch never is. Drawn pale and cracked, rings
+  spreading from it while the rock rings, not glowing ready until it stops. The coal rock: 30 %.
+- SLAG (smelting; `BeatParams.slag_pm`, a new input SKIM = 3): a press note may be slag (a gray square), skimmed with
+  the SECOND button (F or right click); the main button never plays it; a skim on no slag is wasted breath. A round
+  with no slag ignores a skim (so the copper and iron rounds replay exactly as before). Steel: 15 %.
+- The readout's players, the integration bot and the goldens know each rule (the players wait out a ring, skim slag,
+  chop a knot twice; a slip does not).
+
+**The readout** (100 seeds; AFK pays the same at 50 % now): yew 100 / 98 / 87 / 60 (flawless / skilled / average /
+careless); coal 100 / 100 / 68 / 28; steel bar 97 / 86 / 69 / 46. The simulated players know every rule perfectly, so
+how hard a knot or a ring is to SEE is only Luke's play to tell.
+
+**How to play it**: the lab (F6): the yew, the coal rock, the steel bar. In the game: those three need their ranks
+(woodcutting 4, mining 3, smelting 3).
+
+**Tested**: Rust: every golden round exactly (4 knot, 3 brittle, 4 slag cases added; the older cases byte for byte the
+same); negatives: a knot cut from either side, brittle notches that never ring, the main button playing slag: each
+fails its golden. Unit 3200/0: the goldens (knots, brittle, slag lists too), the yew's knots on its stage (a burl; a
+bite, the other side and a late chop bite again, the next same-side chop cuts; the replay agrees), brittle (a held
+strike lands in the ring and jars; struck as it fades it opens; never a seam's first), slag (skimmed full value, pumped
+wasted, copper ignores a skim). Two older checks updated for knots: "a harder tier" may add knots instead of a higher
+target; a perfect round's every swing is a cut or a bite.
+
+**Left**: Luke plays and keeps or backs out each (and their numbers); band 3's rules (deadwood, a fault, an alloy).
+
+## Step 49: woodworking's carve: a vertical stave, wood off either side, on the yew bow and staff (2026-11-07)
+**Why**: `MINIGAMES_PREP.md` §8 step 6 (M5). Luke played and found no "play a round" at the grips: woodworking had no
+round. Asked whether a grip with a grade stops stacking: "Yes, stop stacking"; then, told a grip's grade does nothing
+yet (an assembled item takes its quality from the head alone, M12; a grip's grade only starts its trait a rank higher
+once trait ranks are built, `MATERIALS.md` §10 step 5), he chose **"Bow and staff first"** (`GAME.md`): grips keep
+stacking, with no round, until trait ranks give their grade a job. A first version reused the anvil's model at a bench;
+Luke: "I think I want to have woodcarve/woodworking be vertical and have wood you can take of from either side (to allow
+asymmetry for bows/staffs) instead of just being a duplicate of smithing". So it is its own game; the bench version was
+taken out (the anvil is exactly as before).
+
+**Built** (a NEW kind, `carve` = challenge 105):
+- `CarveParams` / `CarveModel` (`game/regents/skilling/woodworking/`), Rust `server/src/genre/regents/carve.rs`, a
+  third copy in `make_skill_goldens.py` writing `shared/golden/regents/carve.json` (9 cases). The rules are on
+  `CarveModel`: a stave in ROWS, each with a LEFT and a RIGHT edge out from the middle line; a cut (row, side, deep or
+  fine) takes that edge in, never back; the two PROFILES may differ, each bent by a seeded bump each round; the pattern
+  is laid on at the start (no cuts while it is; each look after the first costs 3 % of the ceiling); a cut mid-swing is
+  held to the swing's end; Enter sets it down; the score from both sides' error, capped by the ceiling.
+- `CarveStage`: the stave standing on the game's own workbench (placed by the model's size), each row a block whose
+  edges move separately, a carving knife coming in from the side cut, chips, the knock (deeper for a deep cut).
+- `CarveMinigame`: click a row LEFT of its middle to cut its left edge, RIGHT of it for the right; left click deep (4),
+  right click a fine shave (1); the profiles drawn while the pattern is on (gold) and after the round.
+- SIGNED EDGES AND THE FLIP (Luke, on the shots: "it looks like you carve a strung bow ... make it a unstrung bow shape
+  and backwards (curve going right or left) with variation for difficulty"; stringing comes later, with herbalism's
+  string): an edge may cross the middle line (a curved stave), a cut stops at the other edge; with `mirror` on, one
+  seeded draw swaps the two profiles, so the piece bends left or right, the seeded bumps on top.
+- The yew bow (40011) and staff (40014): quality from the round (AFK makes Common, 350), 24 s, 12 rows, `mirror` on:
+  the bow an UNSTRUNG stave, a C bending up to 6 units off the line at the middle, thicker at the grip; the staff a
+  straight shaft, its head hooked to one side. Error scale 40, a deep cut 4.
+- Rank eases it (M3: the error scale wider); the readout's carvers (work from memory, look again when only shaves are
+  left, a slip cuts the row beside); the integration bot.
+
+**The readout** (100 seeds; fresh band): bow skilled 48 % mean, Fine 66 %, Masterwork 5 %; staff 44 %, 50 %, 6 % (M4
+wants Fine ~50 %, Masterwork ~10 %). The simulated carvers needed to be careful to read right (deep cuts with a unit to
+spare once the picture blurs, a look before the fine work), else skilled scored below careless.
+
+**Tested**: Rust: every golden round exactly (12 cases: the flip both ways, a cut stopped at the other edge);
+negative: a fine shave as deep as a deep cut fails it. Unit 3202/0: the bow at the bench (a click lifts the pattern;
+left of a row's middle, as the wood is NOW, cuts its left edge deep; right of it a fine shave; Enter sets it down; the
+replay agrees); cuts landing before the stage has drawn (no error; negative: without the fix the run fails on the
+errors). Integration: a round of kind 105 dealt at the workbench, the bot carves both sides to the line, the bow's
+quality is the score, its two yew logs taken. Windowed shots of the C both ways.
+
+**Left**: Luke plays it (the rows, the cuts, the profiles, whether the pattern stays); its numbers (M4); grips (with
+trait ranks); hilts; its band rules (grain, figured wood: §3).
+
+## Step 50: herbalism, step 1: flax pulled AFK with a trowel; the bowstring; stringing the bow (2026-11-07)
+**Why**: `HERBALISM_HUNTING_PREP.md` §7 step 1, after Luke answered H1-H11 ("Yes, start step 1"; `GAME.md`
+"Herbalism and hunting, ANSWERED").
+
+**Built** (content, and two small code changes):
+- HERBALISM (`content/skill/herbalism.tres`, 40010; its pose the reach `pose.craft` until a pulling clip is in the
+  animation set: `adventurer.tres` holds Luke's uncommitted editor changes, so it was not touched).
+- FLAX (`content/node/flax.tres`, 40007): tier 1, a TROWEL of tier 1 from the bag, 3.5 s an item AFK, 20 % to deplete
+  per item, regrows in 30 s; its rare the SEED POD (40047, 6 per mille); the nature pack's Flower_3_Group, bigger.
+  NO ROUND YET (pull the root is step 2): a node may now have none (`NodeDef.validate`, `build/regents.rs`), and holding
+  E at it works it AFK as a tap does (`gather`: a round only `if active && !matches!(minigame, None)`); its prompt says
+  "E: pull the flax (AFK)" and offers no round (the verb by the tool: chop, mine, pull).
+- THE TROWEL (H2): two patterns of the material table, `trowel_blade` (the anvil, one bar, a smithing round as the
+  other heads, quality from it) and `trowel` (the workbench: the blade the core, a grip; quality from the blade);
+  "Make the table" made copper, iron and steel cells (items 40050-40055, recipes 40040-40045). The COPPER TROWEL
+  (40051) joins the STARTER KIT (new characters only: one made before has to smith one). No model in the hand yet.
+- FLAX (40046), the SPINNING WHEEL (`content/station/spinning_wheel.tres`, 40005: an AFK station trained by Crafting,
+  H6; a PLACEHOLDER BLOCK until a model is found), the BOWSTRING (40048: three flax, recipe 40038).
+- STRINGING (H8): the carve round (recipe 40011) now makes the UNSTRUNG YEW BOW (40049, no weapon kit, its quality the
+  carve's); "Yew bow" (recipe 40039, the workbench) strings it with a bowstring into the Yew bow (40020), quality from
+  the inputs (the stave's: a bowstring has none). Yew bows already in bags stay bows.
+- PLACED: four flax patches and the wheel in the glade (`frontier.tscn`: the flax west of the spawn, a "Flax meadow"
+  label for the map; the wheel by the workbench); the continent copies the glade's camp, and its open meadows got 64
+  more patches from FLAX'S OWN RANDOM STREAM (`build_continent.gd`), so all 649 points before are exactly where they
+  were (checked against the last bake).
+
+**How to play it**: publish (done), restart. A NEW character has a copper trowel; an old one smiths a trowel blade (a
+copper bar at the anvil) and assembles a copper trowel (the blade and a grip, the workbench). Walk west of the spawn to
+the flax, tap E. Three flax at the spinning wheel (by the workbench) make a bowstring; a carved unstrung yew bow and a
+bowstring at the workbench make the yew bow.
+
+**Tested**: Rust: the chain lists (seven nodes, ten skills, five stations; flax the one node with no round). Unit:
+the content's counts grown by the trowels, flax and the wheel (fifteen anvil recipes, twenty-six at the workbench, one
+at the wheel; thirteen patterns, 39 cells, the copper trowel 40051; "Trowels" in the workbench's list; 23 rounds in the
+lab); flax valid with no round; the bow's two steps. Integration (2026-11-08): every herbalism and carve check
+passes (flax AFK with no round, no trowel no flax, three flax to a bowstring at the wheel only, no stave no bow); its 10
+failures are the referee-paced combat checks and the foundation's referee and hold checks (they fail on `54c1973b` too:
+the combat-check session's task). Skilling playtest (2026-11-08): 94/0 and 8/0, the herbalism leg included (flax pulled
+AFK, the prompt offering no round, spun, strung into a yew bow of the stave's quality 650).
+
+**Left**: pull the root (step 2); a trowel model and a pulling clip; a spinning wheel model; the station refusal says
+the station's key ("spinning_wheel"), not its name.

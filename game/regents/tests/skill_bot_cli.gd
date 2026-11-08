@@ -1,8 +1,8 @@
 extends SceneTree
 ## A SKILLING ROUND PLAYED FROM A SHELL (the integration hook's): what a client would submit for a round
-## the server dealt, played well by a bot through the client's own models. `--kind` is chop, crack, smelt or
-## shape; `--def` the NodeDef (chop, crack) or RecipeDef (smelt, shape) id; `--speed` the payload's tool
-## speed; the seed's halves `--seed_hi`/`--seed_lo`. Prints `RESULT [values...]` (the inputs, as the
+## the server dealt, played well by a bot through the client's own models. `--kind` is chop, crack, smelt,
+## shape or beat; `--def` the NodeDef (chop, crack) or RecipeDef (smelt, shape, beat) id; `--speed` the payload's tool
+## speed; `--ease` how much rank eases it (0: none); the seed's halves `--seed_hi`/`--seed_lo`. Prints `RESULT [values...]` (the inputs, as the
 ## challenge takes them) and `PLAYED <result>`.
 ##   godot --headless --path . --script res://game/regents/tests/skill_bot_cli.gd -- --kind=crack --def=40004 --speed=100 --seed_hi=0 --seed_lo=5
 
@@ -22,7 +22,8 @@ func _initialize() -> void:
 		printerr("skill_bot_cli: no %s round for %d" % [kind, def_id])
 		quit(1)
 		return
-	var p: Resource = SkillMinigames.with_speed(minigame, int(args.get("speed", "100")))
+	# The round as dealt: the tool's speed, and how much rank eases it (the payload's fifth field, Luke's M3).
+	var p: Resource = SkillMinigames.eased(SkillMinigames.with_speed(minigame, int(args.get("speed", "100"))), int(args.get("ease", "0")))
 	var inputs: PackedInt32Array = PackedInt32Array()
 	match kind:
 		SkillMinigames.CHOP:
@@ -33,6 +34,10 @@ func _initialize() -> void:
 			inputs = _smelt(seed_value, p as SmeltParams)
 		SkillMinigames.SHAPE:
 			inputs = _shape(seed_value, p as ShapeParams)
+		SkillMinigames.BEAT:
+			inputs = _beat(seed_value, p as BeatParams)
+		SkillMinigames.CARVE:
+			inputs = _carve(seed_value, p as CarveParams)
 	var parts: PackedStringArray = PackedStringArray()
 	for v: int in inputs:
 		parts.append(str(v))
@@ -60,7 +65,7 @@ func _crack(seed_value: int, p: CrackParams) -> PackedInt32Array:
 	var out: PackedInt32Array = PackedInt32Array()
 	var t: int = 200
 	while t <= p.duration_ms:
-		if t >= m.next_ok_ms + 200:
+		if t >= m.next_ok_ms + 200 and not (m.is_brittle(m.k) and m.ringing(t)):   # a brittle notch: once the ring fades
 			var g: Vector2i = m.notch(m.k)
 			out.append_array(PackedInt32Array([t, g.x, g.y]))
 			m.strike(t, g.x, g.y)
@@ -85,6 +90,42 @@ func _smelt(seed_value: int, p: SmeltParams) -> PackedInt32Array:
 		t += 10
 		m.advance_to(t)
 	out.append_array(PackedInt32Array([t, SmeltModel.STOP]))
+	return out
+
+
+## The pattern lifted, then the edge furthest past its profile cut each swing (deep while it fits); set down when done.
+func _carve(seed_value: int, p: CarveParams) -> PackedInt32Array:
+	var m: CarveModel = CarveModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var t: int = 200
+	out.append_array(PackedInt32Array([t, CarveModel.LIFT]))
+	m.press(t, CarveModel.LIFT)
+	while t <= p.duration_ms:
+		t = maxi(t + 1, m.next_ok_ms)
+		var code: int = m.furthest(m.target_left, m.target_right)
+		if code < 0:
+			break
+		out.append_array(PackedInt32Array([t, code]))
+		m.press(t, code)
+	out.append_array(PackedInt32Array([mini(p.duration_ms, t + 10), CarveModel.DONE]))
+	return out
+
+
+## Every note pressed on its time (a tap let go 60 ms later, a long draw at its end); then pours, and stops at the line.
+func _beat(seed_value: int, p: BeatParams) -> PackedInt32Array:
+	var m: BeatModel = BeatModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	for j: int in m.note_t.size():
+		if m.is_slag(j):
+			out.append_array(PackedInt32Array([m.note_t[j], BeatModel.SKIM]))
+			continue
+		var up: int = m.note_end[j] if m.note_end[j] > m.note_t[j] else m.note_t[j] + 60
+		out.append_array(PackedInt32Array([m.note_t[j], BeatModel.DOWN, up, BeatModel.UP]))
+	var end: int = BeatModel.track_end_ms(p)
+	var t: int = end + p.pour_ready_ms + 100
+	out.append_array(PackedInt32Array([t, BeatModel.DOWN]))
+	var ticks: int = ceili(float(m.target) / float(p.pour_rate))
+	out.append_array(PackedInt32Array([end + ((t - end) / BeatModel.TICK_MS + ticks) * BeatModel.TICK_MS, BeatModel.UP]))
 	return out
 
 

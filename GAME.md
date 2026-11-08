@@ -263,6 +263,29 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   decisions M1-M12 (the ladder's shape, the bands, rank easing a round, what a score is worth, woodworking's minigame,
   smelting's reward and bellows, the look, art sources, each band's new thing, the new skills' minigames, what active
   gathering pays and how often its panel opens, an assembled item's quality).
+- **Herbalism and hunting prep** (2026-11-07): `docs/regents_rule/HERBALISM_HUNTING_PREP.md`, decisions H1-H11.
+- **Herbalism and hunting, ANSWERED** (Luke, 2026-11-07, going through them one by one; the sheet's §7 is the order):
+  - **A SKINNING skill** (H1; revises 2026-10-23's "No Hunting skill", which stays true of the chase: the hunt is the
+    fight): a kill leaves a CARCASS you skin, tap E AFK or hold E for its round; Skinning rank gates the better hides.
+  - **Herbalism's tool is a TROWEL** (H2): asked about a sickle, Luke: "Im not sure I like a sickle since we are pulling
+    the plants, either the minigame should change to use the tool or we come up with a different requirment like
+    gloves or gardening trowel/weeder/cultivator/Extractigator/Uprooter"; of a trowel, a forked root-puller or leather
+    gloves he chose the trowel: smithed (copper, iron, steel: the material table), its tier gating the plants; the
+    round shows it loosening the soil before the pull.
+  - **Pull the root as proposed** (H3): hold to pull, strain rises and eases when let go, the plant trembles before a
+    jump, past the top it snaps; band 2 roots that branch, band 3 a wilting clock.
+  - **Skinning's round: DRAG the knife along the cut line** (H4): a new continuous model (off the line tears the hide).
+  - **The first creatures: deer (tier 1, flees), wolf (tier 2, packs; a lunge that knocks back, a bite that slows),
+    stag (tier 3, flees, charges when cornered)** (H5), from Quaternius's animal pack. Poison waits for an asset.
+  - **Tanning and spinning are AFK crafting stations** (H6): a tanning rack and a spinning wheel, trained by Crafting;
+    their own skills and rounds later if they earn them.
+  - **Names** (H7): fibers Flax, Hemp, Nettle; hides Deer hide, Wolf pelt, Stag hide; leathers Soft, Supple, Hardened.
+  - **First products** (H8): the bowstring and STRINGING the carved unstrung yew bow; a fiber wrap and a leather wrap
+    as bindings with traits (designed with Luke; each trades).
+  - **A FIRST TRINKET NOW** (H9, not the proposal): a creature-trophy charm (a fang, an antler) with a trait, designed
+    with Luke when its creature is built.
+  - **Rares** (H10): a seed pod from plants, a fang from wolves, an antler from stags.
+  - **No meat yet** (H11): it comes with cooking.
 - **The minigame overhaul, ANSWERED** (Luke, 2026-11-05: "all as proposed except for below"; the sheet's §7 says each
   in full, §8 is the order of work):
   - **One game per skill for life** (M1): numbers tighten within a band; each new band adds ONE new thing on top.
@@ -304,6 +327,26 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     (break-even near half a score, not 80 %: a floor); the catalysts lean hard to active play; gathering and smelting
     rounds run back to back hands free once started (E or Escape ends a run, as does a round with no input), each
     round paid as it ends. The numbers come from the readout and his play.
+  - **SMELTING IS A RHYTHM GAME** (Luke, 2026-11-07: "smelting needs to be changed to a rhythm game"; of a full
+    rhythm track or beat-timed bellows on today's band he chose **"Full rhythm track"**; PROGRESS 45): the bellows
+    breathe on a beat you hear (a count-in, then the track); notes come along a track to the bellows and you press on
+    each, holding the long draws to their end; nearer the beat pays more, a press on no note is wasted breath and
+    costs (mashing scores nothing). The track is drawn from the round's seed (no two alike). **The pour stays** (hold,
+    let go at the mold's line). Each metal a quicker beat, more off-beats, a tighter window. Taken as defaults, his to
+    change: our own synthesized beat sounds (no music track), the pour kept, the back-to-back runs still M11's step.
+    Bars still have no quality (M6).
+  - **WOODWORKING STARTS WITH THE BOW AND THE STAFF** (Luke, 2026-11-07): asked whether a graded grip stops stacking, he
+    said "Yes, stop stacking"; then, told that a grip's grade does nothing yet (an assembled item takes its quality from
+    the head alone, M12, and a grip's grade only starts its trait higher once trait ranks are built, `MATERIALS.md` §10
+    step 5), he chose **"Bow and staff first"**: the carve round goes on the yew bow and the yew staff (their grade sets
+    their Power now); GRIPS KEEP STACKING, with no round, until trait ranks give their grade a job (then they stop
+    stacking, as he said). Then: "I think I want to have woodcarve/woodworking be vertical and have wood you can take of
+    from either side (to allow asymmetry for bows/staffs) instead of just being a duplicate of smithing": **the carve is
+    its own game**, a vertical stave with a left and a right profile (PROGRESS 49). On the shots: "make it a unstrung bow
+    shape and backwards (curve going right or left) with variation for difficulty" (stringing it later, with
+    herbalism): the bow is carved as an UNSTRUNG C, bending left or right by the round's seed.
+  - **Woodcutting's difficulty stays** (Luke, 2026-11-07, after playing it: "the woodcutting minigame is pretty hard but
+    im not saying thats a bad thing. . takes skill and precision"): not to be eased without his say.
   - **An assembled item's quality** (M12): the CORE part alone sets it; a secondary part's grade starts its trait a
     rank higher (this settles the "a better-made part starts higher" half of trait ranks, `MATERIALS.md` §5).
   - **The anvil, after playing step 2** (Luke, 2026-11-05: "the time between hitting reheat and then being able to use
@@ -331,8 +374,8 @@ A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the f
 trees (Tree, Oak, Yew), copper, iron and coal rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**, then an iron
 pickaxe for coal and **steel** (the ladder: copper, iron, steel; `MATERIALS.md`, the material table): at a node or a
-station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, bellows then
-pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). **Escape** during a minigame leaves it (gathering keeps what you got; making uses nothing). The
+station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, the furnace's
+rhythm track then the pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). **Escape** during a minigame leaves it (gathering keeps what you got; making uses nothing). The
 camp's **order board** wants rotating batches for bonus XP; crafting pays for the work in its inputs, a
 first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**.
 **Combat, the first slice**: wield a weapon from the bag (I), Tab onto one of camp's training dummies (a
@@ -356,7 +399,18 @@ start and when laid on with **Space** (no strikes while it is on); the outline v
 part down. Iron charges for each look; steel goes **red** (a strike cracks it) and ends in a **quench** (Enter while
 the heat bar is in the gold mark). **Every minigame is a 3D stage** (PROGRESS 43), in the panel in the middle, with no
 character: the axe chops into the trunk's side, the pick hovers by the mouse and comes down on the seam, the bellows
-pump on their own.
+pump on their own. **The furnace is a rhythm track** (PROGRESS 45): after a count-in, press Space or click as each
+ember reaches the bellows' mark at the left, hold the long ones to their end (a press on no note wastes breath and
+costs); then hold to pour and let go at the mold's line. **Rounds run back to back** (PROGRESS 46, M11): once a round
+at a tree, a rock or the furnace starts, the next comes by itself into the same panel; **E** stops after the round on
+now, **Escape** at once, and a round left untouched ends the run. A played round pays from 0.75 of AFK (nothing played)
+to 1.25 (a full score), so half a score is AFK's; rare finds up to 3x at a full score. **Rank eases a round**
+(PROGRESS 47, M3): each mastery rank above what a node or recipe needs makes its windows 4 % wider, three ranks at most.
+**Band 2's rules, a test** (PROGRESS 48): the yew has KNOTS (a dark burl: two quick chops from one side), the coal rock
+BRITTLE NOTCHES (pale: wait for the rock to stop ringing), the steel bar SLAG (gray squares: skim with F or right click).
+**Carving** (PROGRESS 49): the yew bow and the yew staff are carved at the workbench (hold E): a stave stands upright;
+look at the pattern (both sides' lines), lift it, then click a row left or right of its middle to cut that side, left
+click deep and right click a fine shave; Enter when done. The bow's or staff's grade comes from it.
 
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms

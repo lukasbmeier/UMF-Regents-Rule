@@ -27,6 +27,10 @@ static func play_round(seed_value: int, p: Resource, sim: SimPlayer) -> Dictiona
 			return _smelt(seed_value, p as SmeltParams, sim, rng)
 		SkillMinigames.SHAPE:
 			return _shape(seed_value, p as ShapeParams, sim, rng)
+		SkillMinigames.BEAT:
+			return _beat(seed_value, p as BeatParams, sim, rng)
+		SkillMinigames.CARVE:
+			return _carve(seed_value, p as CarveParams, sim, rng)
 	return {"inputs": PackedInt32Array(), "live": {}}
 
 
@@ -59,7 +63,7 @@ static func measure(p: Resource, sim: SimPlayer, rounds: int = ROUNDS, first_see
 
 ## Every preset on `p`: one line each.
 static func report(p: Resource, rounds: int = ROUNDS) -> String:
-	var making: bool = SkillMinigames.kind_of(p) == SkillMinigames.SHAPE
+	var making: bool = SkillMinigames.kind_of(p) == SkillMinigames.SHAPE or SkillMinigames.kind_of(p) == SkillMinigames.CARVE
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("%s: %d rounds each%s" % [String(p.get(&"display_name")), rounds,
 		"  (Fine at %d%%, Masterwork at %d%%)" % [grade_cuts().x / 10, grade_cuts().y / 10] if making
@@ -72,7 +76,22 @@ static func report(p: Resource, rounds: int = ROUNDS) -> String:
 		else:
 			lines.append("%-9s  mean %3d%%   beats AFK %3d%%%s" % [sim.display_name, int(m["mean"]) / 10, m["beats_afk_pct"],
 				"" if m["agree"] else "   REPLAY DISAGREES"])
+	# Luke's M3 and M4 (2026-11-05): rank eases the round; the targets are a fresh band Fine ~50 %, Masterwork ~10 %,
+	# and three ranks on Masterwork ~33 %. The same players on the round as eased at the most ranks count for.
+	var most: int = most_ease_pct()
+	if making and most > 0:
+		var eased: Resource = SkillMinigames.eased(p, most)
+		lines.append("  %d ranks on (%d %% easier):" % [int(HotRules.number(&"regents.rank_ease_ranks")), most])
+		for sim: SimPlayer in SimPlayer.presets():
+			var m2: Dictionary = measure(eased, sim, rounds)
+			lines.append("%-9s  mean %3d%%   Common %3d%%   Fine %3d%%   Masterwork %3d%%%s" % [sim.display_name, int(m2["mean"]) / 10,
+				100 - int(m2["fine_pct"]), int(m2["fine_pct"]) - int(m2["masterwork_pct"]), m2["masterwork_pct"], "" if m2["agree"] else "   REPLAY DISAGREES"])
 	return "\n".join(lines)
+
+
+## The most rank eases a round (`regents.rank_ease_pct` x `regents.rank_ease_ranks`, as the server works it out).
+static func most_ease_pct() -> int:
+	return mini(50, roundi(maxf(0.0, HotRules.number(&"regents.rank_ease_pct")) * maxf(0.0, HotRules.number(&"regents.rank_ease_ranks"))))
 
 
 ## The grade cut points now (`regents.grade_fine_q`, `regents.grade_masterwork_q`), as qualities (‰).
@@ -81,12 +100,10 @@ static func grade_cuts() -> Vector2i:
 	return Vector2i(fine, maxi(fine, int(HotRules.number(&"regents.grade_masterwork_q"))))
 
 
-## The score at which a played gathering or smelting round pays what AFK would in its time: yield is AFK x
-## `regents.active_yield_mult` x the score (owner #23), so 1 / the multiplier. (Luke's M11, 2026-11-05, moves it
-## down to about half; change it here with the formula.)
+## The score at which a played gathering or smelting round pays what AFK would in its time (`SkillingRules`: pay runs
+## from `regents.active_yield_floor` at 0 to `regents.active_yield_mult` at a full score; Luke's M11 put it near half).
 static func afk_break_even_pm() -> int:
-	var mult: float = maxf(1.0, HotRules.number(&"regents.active_yield_mult"))
-	return ceili(1000.0 / mult)
+	return SkillingRules.break_even_pm(HotRules.number(&"regents.active_yield_mult"), HotRules.number(&"regents.active_yield_floor"))
 
 
 ## A time `mean` ms from now give or take the player's spread, never before `floor_ms`.
@@ -134,10 +151,14 @@ static func _crack(seed_value: int, p: CrackParams, sim: SimPlayer, rng: RandomN
 	var last: int = 0
 	for _guard: int in 2000:
 		var aim: int = (m.next_ok_ms + sim.react_ms / 2) if m.staggered else (seen + sim.react_ms)
+		var slip: bool = _slips(sim, rng)
+		# A brittle notch (band 2): they wait for the ring to fade, a little after it (a slip: they do not).
+		if m.is_brittle(m.k) and m.last_hit_ms >= 0 and not slip:
+			aim = maxi(aim, m.last_hit_ms + p.ring_ms + 2 * sim.jitter_ms)
 		var t: int = _at(aim, sim, rng, last)
 		if t > p.duration_ms:
 			break
-		var at: Vector2i = m.notch(m.k + (1 if _slips(sim, rng) else 0))
+		var at: Vector2i = m.notch(m.k + (1 if slip and not m.is_brittle(m.k) else 0))
 		var x: int = clampi(at.x + roundi(rng.randfn(0.0, float(sim.aim_pm))), 0, 1000)
 		var y: int = clampi(at.y + roundi(rng.randfn(0.0, float(sim.aim_pm))), 0, 1000)
 		out.append_array(PackedInt32Array([t, x, y]))
@@ -182,6 +203,108 @@ static func _smelt(seed_value: int, p: SmeltParams, sim: SimPlayer, rng: RandomN
 	m.press(stop, SmeltModel.STOP)
 	m.finish()
 	return {"inputs": out, "live": m.result()}
+
+
+## SMELTING'S RHYTHM TRACK (Luke, 2026-11-07): a note is pressed on its time give or take the player's timing spread
+## (a beat is felt ahead, not reacted to, so no reaction time); a tap let go a moment later, a long draw at its end
+## (give or take). A slip loses the note: half the time it is not pressed at all, half the time pressed a beat
+## wrong (a wasted press). Then the pour as in `_smelt`: tilt once it is ready and seen, stop at the line.
+static func _beat(seed_value: int, p: BeatParams, sim: SimPlayer, rng: RandomNumberGenerator) -> Dictionary:
+	var m: BeatModel = BeatModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var last: int = 0
+	for j: int in m.note_t.size():
+		var t: int = m.note_t[j]
+		if t < sim.react_ms:
+			continue   # not yet with the beat (a real hand is, by the count-in's end; an absent one never)
+		if _slips(sim, rng):
+			if rng.randi_range(0, 1) == 0:
+				continue   # missed it
+			t += p.beat_ms / 4 * (1 if rng.randi_range(0, 1) == 0 else -1) + p.good_ms   # pressed off the beat
+		var down: int = maxi(last + 1, t + roundi(rng.randfn(0.0, float(sim.jitter_ms))))
+		if m.is_slag(j):   # slag (band 2's test): skimmed with the second button
+			out.append_array(PackedInt32Array([down, BeatModel.SKIM]))
+			m.press(down, BeatModel.SKIM)
+			last = down
+			continue
+		var up: int = down + 60
+		if m.note_end[j] > m.note_t[j]:
+			up = maxi(down + 1, m.note_end[j] + roundi(rng.randfn(0.0, float(sim.jitter_ms))))
+		out.append_array(PackedInt32Array([down, BeatModel.DOWN, up, BeatModel.UP]))
+		m.press(down, BeatModel.DOWN)
+		m.press(up, BeatModel.UP)
+		last = up
+	var end: int = BeatModel.track_end_ms(p)
+	var tilt: int = _at(end + p.pour_ready_ms + sim.react_ms, sim, rng, maxi(last + 1, end + p.pour_ready_ms))
+	out.append_array(PackedInt32Array([tilt, BeatModel.DOWN]))
+	m.press(tilt, BeatModel.DOWN)
+	var ideal: int = tilt + m.target * BeatModel.TICK_MS / maxi(1, p.pour_rate)
+	var stop: int = _at(ideal + (300 if _slips(sim, rng) else 0), sim, rng, tilt + 10)
+	out.append_array(PackedInt32Array([stop, BeatModel.UP]))
+	m.press(stop, BeatModel.UP)
+	m.finish()
+	return {"inputs": out, "live": m.result()}
+
+
+## WOODWORKING'S CARVE (Luke, 2026-11-07): they study the pattern and lift it, then cut the edge furthest past its
+## profile as they remember it, a swing after the last: deep while a deep cut fits (with a unit to spare once the
+## picture has blurred), then fine. Exact for `memory_strikes` cuts, then each profile a little off; one who
+## `looks_again` lays the pattern on once more when every edge is within two of the line as remembered; a slip cuts the
+## row beside the one meant. They set the piece down when nothing is past.
+static func _carve(seed_value: int, p: CarveParams, sim: SimPlayer, rng: RandomNumberGenerator) -> Dictionary:
+	var m: CarveModel = CarveModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var mind_l: PackedInt32Array = m.target_left.duplicate()
+	var mind_r: PackedInt32Array = m.target_right.duplicate()
+	var since_look: int = 0
+	var blurred: bool = false
+	var looked_again: bool = false
+	var t: int = sim.react_ms + 400
+	if m.laid:
+		_carve_send(m, out, t, CarveModel.LIFT)
+	for _guard: int in 600:
+		t = _at(maxi(t, m.next_ok_ms) + sim.react_ms / 3, sim, rng, t + 1)
+		if t > p.duration_ms:
+			break
+		if p.hide_outline > 0 and since_look == sim.memory_strikes and not blurred:
+			blurred = true
+			for i: int in m.rows():
+				mind_l[i] = m.target_left[i] + rng.randi_range(-1, 1)
+				mind_r[i] = m.target_right[i] + rng.randi_range(-1, 1)
+		var best: int = 0
+		var code: int = -1
+		for i: int in m.rows():
+			for side: int in 2:
+				var over: int = (m.left[i] - mind_l[i]) if side == 0 else (m.right[i] - mind_r[i])
+				if over > best:
+					best = over
+					var deep: bool = over >= p.deep_cut + (1 if blurred else 0)
+					code = (CarveModel.LEFT_DEEP if side == 0 else CarveModel.RIGHT_DEEP) + (0 if deep else 1000) + i
+		if blurred and sim.looks_again and not looked_again and best <= 2:
+			looked_again = true   # close to the line everywhere, and unsure: check the pattern
+			_carve_send(m, out, t, CarveModel.LAY)
+			t += sim.react_ms + 300
+			_carve_send(m, out, t, CarveModel.LIFT)
+			mind_l = m.target_left.duplicate()
+			mind_r = m.target_right.duplicate()
+			blurred = false
+			since_look = -100000   # fresh from the pattern: it stays clear to the end
+			continue
+		if code < 0:
+			break
+		if _slips(sim, rng):
+			var row: int = clampi(code % 1000 + (1 if rng.randi_range(0, 1) == 0 else -1), 0, m.rows() - 1)
+			code = code / 1000 * 1000 + row
+		_carve_send(m, out, t, code)
+		since_look += 1
+	_carve_send(m, out, mini(p.duration_ms, t + 50), CarveModel.DONE)
+	m.finish()
+	return {"inputs": out, "live": m.result()}
+
+
+static func _carve_send(m: CarveModel, out: PackedInt32Array, t: int, code: int) -> void:
+	out.append_array(PackedInt32Array([t, code]))
+	m.press(t, code)
 
 
 ## SHAPE TO THE OUTLINE: once the last strike has landed, strike the column that brings the bar nearest the

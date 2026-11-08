@@ -23,8 +23,11 @@ func run() -> void:
 	_run_chops()
 	_run_perfect_and_replay()
 	_run_readout()
+	_run_active_pay()
 	_run_looks()
 	_run_registry()
+	_run_beat()
+	_run_brittle()
 	await _run_minigame()
 	await _run_chain_minigames()
 	await _run_two_strikes()
@@ -889,8 +892,12 @@ func _run_bow() -> void:
 	var drawing: StatusDef = load("res://game/regents/content/status/drawing.tres") as StatusDef
 	_check(drawing.status == 107 and drawing.speed <= 0.3 and not drawing.can_sprint and not drawing.can_jump and drawing.can_dash,
 		"drawn, you walk: no sprint or jump; the roll is whole")
-	_check(RecipeDef.by_id(40012).output_qty == 15 and RecipeDef.by_id(40013).input_qty[0] == 15 and RecipeDef.by_id(40011).output == yew,
-		"the workbench: a log to 15 shafts, 15 shafts and a bar to 15 arrows, yew logs to a bow")
+	var stave: ItemDef = RecipeDef.by_id(40011).output
+	var strung: RecipeDef = RecipeDef.by_id(40039)
+	_check(RecipeDef.by_id(40012).output_qty == 15 and RecipeDef.by_id(40013).input_qty[0] == 15 and stave.display_name == "Unstrung yew bow"
+		and stave.weapon_kit == &"" and strung.output == yew and strung.inputs == [stave, ItemDef.by_id(40048)] and strung.quality == RecipeDef.Quality.FROM_INPUTS
+		and RecipeDef.by_id(40038).station == &"spinning_wheel",
+		"the workbench: a log to 15 shafts, 15 shafts and a bar to 15 arrows, yew logs carved to an unstrung bow (no weapon yet), strung with a bowstring (spun from flax) into the yew bow, as good as its stave")
 	var body: BodyDef = load("res://game/regents/content/body/arrow.tres") as BodyDef
 	_check(body.forces is ArrowFlight and body.launched_by.is_empty() and body.lifetime_s > 0.0, "the arrow: flown nose-first, never thrown by hand, gone in time")
 
@@ -1298,7 +1305,7 @@ func _run_crafting_choice() -> void:
 	for n: Node in w._list.get_children():
 		if n is Label:
 			heads.append((n as Label).text)
-	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Other, each once %s" % str(heads))
+	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Trowels", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Trowels, Other, each once %s" % str(heads))
 	# The window looks again every 500 ms while it is open; with nothing changed that look must cost next to nothing
 	# (Luke's play, 2026-11-03, feedback #8194/#8195: by the workbench a 140-210 ms frame every half second, the
 	# game at 50-70 fps: each look listed the patterns folder from disk once per comparison of its sort).
@@ -2003,15 +2010,18 @@ func _run_content() -> void:
 	var keys: Array[StringName] = []
 	for sk: SkillDef in SkillDef.all():
 		keys.append(sk.key)
-	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery"],
-		"five working skills and four weapon masteries: %s" % str(keys))
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery", &"herbalism"],
+		"six working skills (herbalism, 2026-11-07) and four weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
 	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
 		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
 	var names: Array[String] = []
 	for n: NodeDef in NodeDef.all_by_tier():
 		names.append(n.display_name)
-	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock"], "six nodes, by skill then tier: %s" % str(names))
+	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax"], "seven nodes, by skill then tier: %s" % str(names))
+	var flax: NodeDef = NodeDef.all_by_tier()[6]
+	_check(flax.minigame == null and flax.tool_tag == &"trowel" and flax.skill == SkillDef.by_key(&"herbalism") and flax.validate().is_empty(),
+		"flax: herbalism's, pulled with a trowel; no round yet (AFK only: pull the root is step 2) and valid without one")
 	var prev: ChopParams = null
 	for n: NodeDef in NodeDef.all_by_tier():
 		if not (n.minigame is ChopParams):
@@ -2019,7 +2029,9 @@ func _run_content() -> void:
 		var t: ChopParams = n.minigame as ChopParams
 		_check(t.target_chops <= ChopModel.max_chops(t), "%s: a full score is reachable (%d of at most %d)" % [n.display_name, t.target_chops, ChopModel.max_chops(t)])
 		if prev != null:
-			_check(t.branch_permille > prev.branch_permille and t.target_chops > prev.target_chops, "%s is a harder round than the tier below" % n.display_name)
+			# Harder: more branches, and a higher target or (band 2's knots, 2026-11-07) more knots to chop through.
+			_check(t.branch_permille > prev.branch_permille and (t.target_chops > prev.target_chops or t.knot_permille > prev.knot_permille),
+				"%s is a harder round than the tier below" % n.display_name)
 		prev = t
 	var yew: NodeDef = NodeDef.by_id(40003)
 	_check(yew.min_tool_tier == 2 and yew.min_rank == 4, "a yew needs a tier 2 axe and woodcutting rank 4")
@@ -2039,8 +2051,9 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 12 and RecipeDef.at(&"workbench").size() == 22 and RecipeDef.at(&"orders").is_empty(),
-		"three recipes at the furnace (copper, iron, steel bars), twelve at the anvil (rivets, an axe head, a sword blade and a pickaxe head of each metal), twenty-two at the workbench (three handles and six sword hilts; an axe, a sword and a pickaxe of each metal; the yew bow, arrow shafts, copper arrows, the yew staff), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 15 and RecipeDef.at(&"workbench").size() == 26
+		and RecipeDef.at(&"spinning_wheel").size() == 1 and RecipeDef.at(&"orders").is_empty(),
+		"three recipes at the furnace (copper, iron, steel bars), fifteen at the anvil (rivets, an axe head, a sword blade, a pickaxe head and a trowel blade of each metal), twenty-six at the workbench (three handles and six sword hilts; an axe, a sword, a pickaxe and a trowel of each metal; the yew bow's stave and its stringing, arrow shafts, copper arrows, the yew staff), one at the spinning wheel (the bowstring), none at the order board")
 	_check(made.get("Oak grip", []) == ["workbench", ["Oak logs"]] and made.get("Yew grip", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -2080,8 +2093,9 @@ func _run_material_table() -> void:
 	for p: PatternDef in MaterialTable.patterns():
 		pkeys.append(p.key)
 	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel"]
-		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets", &"crossguard_hilt", &"banner_hilt"],
-		"six materials and eleven patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5): %s x %s" % [str(keys), str(pkeys)])
+		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets", &"crossguard_hilt", &"banner_hilt",
+			&"trowel_blade", &"trowel"],
+		"six materials and thirteen patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5; herbalism's trowel, 2026-11-07): %s x %s" % [str(keys), str(pkeys)])
 	var bad: Array[String] = []
 	for type: StringName in [&"material", &"pattern"]:
 		for d: ContentDef in ContentLibrary.items(type):
@@ -2103,8 +2117,8 @@ func _run_material_table() -> void:
 	var kept: bool = true
 	for k: String in pinned:
 		kept = kept and got.get(k, -1) == pinned[k]
-	_check(got.size() == 33 and kept and not got.values().has(-1),
-		"33 cells (three metals in eight patterns, three woods in three), every one made; the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
+	_check(got.size() == 39 and kept and not got.values().has(-1) and got.get("copper:trowel", -1) == 40051,
+		"39 cells (three metals in ten patterns, three woods in three), every one made (the copper trowel 40051, the starter's); the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
 	var problems: Array[String] = MaterialTable.problems()
 	_check(problems.is_empty(), "the table is current: every cell and recipe as the table makes it%s" % ("" if problems.is_empty() else ": " + "; ".join(problems)))
 	var dry: Dictionary = MaterialTable.generate(false)
@@ -2136,9 +2150,10 @@ func _run_material_table() -> void:
 	axe.weapon_damage_pct = 100
 	iron.tier = 3
 	var tier_says: Array[String] = MaterialTable.problems()
-	_check(tier_says.size() == 2 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
-		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_axe.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_pickaxe.tres")),
-		"iron moved to tier 3: its axe's and pickaxe's tool tiers are out of date (a sword's and a head's have none): %s" % str(tier_says))
+	_check(tier_says.size() == 3 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
+		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_axe.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_pickaxe.tres"))
+		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_trowel.tres")),
+		"iron moved to tier 3: its axe's, pickaxe's and trowel's tool tiers are out of date (a sword's and a head's have none): %s" % str(tier_says))
 	iron.tier = 2
 	var recipe: RecipeDef = RecipeDef.by_id(40006)
 	var was: Array[ItemDef] = recipe.inputs.duplicate()
@@ -2432,6 +2447,7 @@ func _run_golden() -> void:
 	var cases: Array = doc.get("cases", []) as Array
 	_check(cases.size() >= 10, "it has its cases (%d)" % cases.size())
 	var bad: Array[String] = []
+	var knotted: int = 0
 	for c: Dictionary in cases:
 		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
 		var pp: Dictionary = c["params"]
@@ -2442,9 +2458,18 @@ func _run_golden() -> void:
 		p.branch_permille = int(pp["branch_permille"])
 		p.safe_segments = int(pp["safe_segments"])
 		p.target_chops = int(pp["target_chops"])
+		p.knot_permille = int(pp.get("knot_permille", 0))   # knots (2026-11-07): absent before them
+		p.knot_beat_ms = int(pp.get("knot_beat_ms", 0))
 		var want_seg: PackedInt32Array = PackedInt32Array()
 		for v: Variant in c["segments"]:
 			want_seg.append(int(v))
+		if c.has("knots"):
+			var want_knots: PackedByteArray = PackedByteArray()
+			for v: Variant in c["knots"]:
+				want_knots.append(int(v))
+			knotted += 1
+			if ChopModel.knots_of(seed_value, p, want_knots.size()) != want_knots:
+				bad.append("%s: the knots" % c["name"])
 		var inputs: PackedInt32Array = PackedInt32Array()
 		for pair: Array in c["inputs"]:
 			inputs.append(int(pair[0]))
@@ -2454,7 +2479,7 @@ func _run_golden() -> void:
 		var got: Dictionary = ChopModel.play(seed_value, p, inputs)
 		if ChopModel.branches(seed_value, p, want_seg.size()) != want_seg or got != want:
 			bad.append("%s: %s, wanted %s" % [c["name"], str(got), str(want)])
-	_check(bad.is_empty(), "the GDScript twin plays every golden round exactly%s" % ("" if bad.is_empty() else ": " + "; ".join(bad)))
+	_check(bad.is_empty() and knotted >= 3, "the GDScript twin plays every golden round exactly (%d with knots)%s" % [knotted, "" if bad.is_empty() else ": " + "; ".join(bad)])
 
 
 ## A params resource from a golden case's numbers (an outline becomes a PackedInt32Array).
@@ -2502,11 +2527,19 @@ func _run_skill_goldens() -> void:
 	print("== regents: the chain's golden rounds ==")
 	var bad: Array[String] = []
 	var crack: Array = _golden_cases("crack")
+	var brittle_cases: int = 0
 	for c: Dictionary in crack:
 		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
 		var p: CrackParams = _params_from(CrackParams.new(), c["params"]) as CrackParams
 		var pts: PackedInt32Array = CrackModel.seams(seed_value, p, 3)
 		var got: Dictionary = CrackModel.play(seed_value, p, _flat(c["inputs"]))
+		if c.has("brittle"):   # brittle notches (band 2, a test, 2026-11-07)
+			var want_b: PackedByteArray = PackedByteArray()
+			for v: Variant in c["brittle"]:
+				want_b.append(int(v))
+			brittle_cases += 1
+			if CrackModel.brittle_of(seed_value, p, want_b.size()) != want_b:
+				bad.append("crack %s: the brittle notches" % c["name"])
 		if pts != _flat([c["points"]]) or got != _ints(c["expected"]):
 			bad.append("crack %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
 	var smelt: Array = _golden_cases("smelt")
@@ -2531,8 +2564,38 @@ func _run_skill_goldens() -> void:
 		var got: Dictionary = ShapeModel.play(seed_value, p, _flat(c["inputs"]))
 		if start != _flat([c["start"]]) or round_outline != _flat([c["outline"]]) or got != _ints(c["expected"]):
 			bad.append("shape %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
-	_check(crack.size() >= 6 and smelt.size() >= 6 and shape.size() >= 6 and bad.is_empty(),
-		"the GDScript models play every golden round exactly (%d crack, %d smelt, %d shape)%s" % [crack.size(), smelt.size(), shape.size(),
+	var beat: Array = _golden_cases("beat")
+	var slag_cases: int = 0
+	for c: Dictionary in beat:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: BeatParams = _params_from(BeatParams.new(), c["params"]) as BeatParams
+		var bm: BeatModel = BeatModel.start(seed_value, p)
+		var notes: PackedInt32Array = PackedInt32Array()
+		for j: int in bm.note_t.size():
+			notes.append_array(PackedInt32Array([bm.note_t[j], bm.note_end[j]]))
+		var got: Dictionary = BeatModel.play(seed_value, p, _flat(c["inputs"]))
+		if c.has("slag"):   # slag (band 2, a test, 2026-11-07)
+			var want_slag: PackedByteArray = PackedByteArray()
+			for v: Variant in c["slag"]:
+				want_slag.append(int(v))
+			slag_cases += 1
+			if bm.slag != want_slag:
+				bad.append("beat %s: the slag" % c["name"])
+		if notes != _flat([c["notes"]]) or got != _ints(c["expected"]):
+			bad.append("beat %s: %s, wanted %s" % [c["name"], str(got), str(c["expected"])])
+	var carve: Array = _golden_cases("carve")
+	for c: Dictionary in carve:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: CarveParams = _params_from(CarveParams.new(), c["params"]) as CarveParams
+		var cm: CarveModel = CarveModel.start(seed_value, p)
+		var start_ok: bool = cm.left == _flat([c["start_left"]]) and cm.right == _flat([c["start_right"]]) \
+			and cm.target_left == _flat([c["target_left"]]) and cm.target_right == _flat([c["target_right"]])
+		var got: Dictionary = CarveModel.play(seed_value, p, _flat(c["inputs"]))
+		if not start_ok or got != _ints(c["expected"]):
+			bad.append("carve %s: %s, wanted %s (start %s)" % [c["name"], str(got), str(c["expected"]), start_ok])
+	_check(carve.size() >= 6, "the carve's golden rounds are there (%d)" % carve.size())
+	_check(crack.size() >= 6 and brittle_cases >= 3 and smelt.size() >= 6 and shape.size() >= 6 and beat.size() >= 6 and slag_cases >= 3 and bad.is_empty(),
+		"the GDScript models play every golden round exactly (%d crack, %d smelt, %d shape, %d beat)%s" % [crack.size(), smelt.size(), shape.size(), beat.size(),
 			"" if bad.is_empty() else ": " + "; ".join(bad)])
 
 
@@ -2588,9 +2651,15 @@ func _run_perfect_and_replay() -> void:
 		if not (n.minigame is ChopParams):
 			continue
 		var t: ChopParams = n.minigame as ChopParams
-		var r: Dictionary = ChopModel.play(99, t, _perfect_inputs(99, t))
-		_check(r["hits"] == 0 and r["clean"] == ChopModel.max_chops(t) and r["score_pm"] == 1000,
-			"%s: never under a branch, every swing on time: %d logs, no hits, a full score" % [n.display_name, r["clean"]])
+		var played: ChopModel = ChopModel.start(99, t)
+		var ins: PackedInt32Array = _perfect_inputs(99, t)
+		for k: int in range(0, ins.size(), 2):
+			played.chop(ins[k], ins[k + 1])
+		played.finish()
+		var r: Dictionary = played.result()
+		# Every swing lands: a cut, or (a knotted piece, band 2) a bite the next swing from the same side cuts.
+		_check(r["hits"] == 0 and r["clean"] + played.bites == ChopModel.max_chops(t) and r["score_pm"] == 1000 and r == ChopModel.play(99, t, ins),
+			"%s: never under a branch, every swing on time: %d logs (%d bites into knots), no hits, a full score" % [n.display_name, r["clean"], played.bites])
 	# Pressing blind (always left) on a branchy tree: hit, staggered, far short.
 	var p: ChopParams = _params(600)
 	var blind: PackedInt32Array = PackedInt32Array()
@@ -2857,6 +2926,43 @@ func _run_stages() -> void:
 		and sides.size() == 2 and thrown and (flinched or hb2 == ChopModel.BRANCH_NONE) and chop.live_result == chop.replayed_result,
 		"woodcutting's stage: no character, the axe alone; its blow lands on the trunk's side the model chops from (both sides seen), a clean chop swings it and throws the piece, a branch knocks it back; the replay agrees")
 	chop.queue_free()
+	# KNOTS (band 2, a test, 2026-11-07): the yew's knotted piece shows a burl; the first chop bites (the axe swings, the
+	# piece stays, "Again!"); the next from the same side in a beat cuts it; one from the other side, or late, bites again.
+	var yew_p: ChopParams = null
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame is ChopParams and (n.minigame as ChopParams).knot_permille > 0:
+			yew_p = n.minigame as ChopParams
+	var knot_seed: int = -1
+	for i: int in 400:   # seeds spread as the readout's (nearby small seeds draw nearly alike; a round's is random)
+		var ks: int = 1 + i * 7919
+		var km: ChopModel = ChopModel.start(ks, yew_p)
+		if km.knots[yew_p.safe_segments] == 1 and km.segments[yew_p.safe_segments + 1] == ChopModel.BRANCH_NONE:
+			knot_seed = ks   # a knot on the first piece past the safe ones, nothing at the head above it
+			break
+	var kchop: ChopMinigame = ChopMinigame.new()
+	holder.add_child(kchop)
+	kchop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	kchop.begin(knot_seed, yew_p)
+	await get_tree().process_frame
+	var kwood: WoodStage = kchop.get_child(0) as WoodStage
+	var kt: int = 0
+	for _i: int in yew_p.safe_segments:
+		kchop.press_at(kt, ChopModel.SIDE_RIGHT if kchop.model.head_branch() == ChopModel.BRANCH_LEFT else ChopModel.SIDE_LEFT)
+		kt = kchop.model.next_ok_ms
+	var burl: bool = kwood._pieces[0].find_child("Knot", false, false) != null
+	var bit: bool = kchop.press_at(kt, ChopModel.SIDE_LEFT) == ChopModel.BITE and kchop.model.knotted() and kwood.tool.is_swinging()
+	kt = kchop.model.next_ok_ms
+	var other: bool = kchop.press_at(kt, ChopModel.SIDE_RIGHT) == ChopModel.BITE   # the other side: a fresh bite
+	kt = kchop.model.next_ok_ms + yew_p.knot_beat_ms + 1
+	var late: bool = kchop.press_at(kt, ChopModel.SIDE_RIGHT) == ChopModel.BITE   # too late: a fresh bite
+	kt = kchop.model.next_ok_ms
+	var cut_through: bool = kchop.press_at(kt, ChopModel.SIDE_RIGHT) == ChopModel.CLEAN and kchop.model.cut == yew_p.safe_segments + 1
+	kchop.finish()
+	_check(yew_p != null and knot_seed > 0 and burl and bit and other and late and cut_through and kchop.model.bites == 3
+		and kchop.live_result == kchop.replayed_result,
+		"the yew's knots: a burl on the piece (%s); the first chop bites (%s), the other side (%s) or a late one (%s) bites again, the next from the same side in a beat cuts it (%s); bites %d, seed %d; the replay agrees"
+			% [burl, bit, other, late, cut_through, kchop.model.bites, knot_seed])
+	kchop.queue_free()
 	# MINING: the rock is the node's own (its ore), the seam's face sits on it, strikes and jars show where they land.
 	var crack: CrackMinigame = CrackMinigame.new()
 	holder.add_child(crack)
@@ -2884,31 +2990,103 @@ func _run_stages() -> void:
 		and jarred and crack.live_result == crack.replayed_result,
 		"mining's stage: no character, the pick alone; the node's own rock, the seam's face on it (%s in %s), a strike brings the pick's tip down on it and throws chips, a jar bounces it and sparks; the replay agrees" % [str(face), str(rock_r)])
 	crack.queue_free()
-	# SMELTING: a pump squashes the bellows; pouring tilts the crucible and shows the stream.
+	# SMELTING (its rhythm track, 2026-11-07): a note pressed pumps the bellows, a long draw closes them slowly until let
+	# go, a press on no note sputters; pouring tilts the crucible and shows the stream.
 	holder.size = Vector2(960, 620)
-	var smelt: SmeltMinigame = SmeltMinigame.new()
+	var smelt: BeatMinigame = BeatMinigame.new()
 	holder.add_child(smelt)
 	smelt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var bar_p: SmeltParams = null
-	for r: RecipeDef in RecipeDef.all():
-		if r.minigame is SmeltParams and bar_p == null:
-			bar_p = r.minigame as SmeltParams
-	smelt.begin(3, bar_p)
+	var bar_p: BeatParams = (RecipeDef.by_id(40001)).minigame as BeatParams
+	var draw_seed: int = 1
+	while draw_seed < 200 and _first_draw(BeatModel.start(draw_seed, bar_p)) < 1:
+		draw_seed += 1
+	smelt.begin(draw_seed, bar_p)
 	await get_tree().process_frame
 	var furnace: SmeltStage = smelt.get_child(0) as SmeltStage
-	smelt.press_at(0, SmeltModel.PUMP)
-	var pumped: bool = furnace._squash > 0.5
-	var ready: int = bar_p.heat_ms + bar_p.pour_ready_ms
+	var m0: BeatModel = smelt.model
+	smelt.press_at(100, BeatModel.DOWN)   # in the count-in: on no note
+	var sputtered: bool = m0.strays == 1 and furnace._squash > 0.2
+	smelt.press_at(102, BeatModel.UP)
+	smelt.press_at(m0.note_t[0], BeatModel.DOWN)
+	var pumped: bool = furnace._squash > 0.5 and not furnace.drawing
+	smelt.press_at(m0.note_t[0] + 60, BeatModel.UP)
+	var d: int = _first_draw(m0)
+	var mid: int = (m0.note_t[d] + m0.note_end[d]) / 2
+	smelt.press_at(m0.note_t[d], BeatModel.DOWN)
+	var drawing: bool = furnace.drawing
+	smelt.press_at(mid, BeatModel.UP)
+	var let_go: bool = not furnace.drawing and m0.got[d] > 0 and m0.got[d] < 1000
+	var ready: int = BeatModel.track_end_ms(bar_p) + bar_p.pour_ready_ms
 	smelt.model.advance_to(ready)
-	smelt.press_at(ready, SmeltModel.POUR)
+	smelt.press_at(ready, BeatModel.DOWN)
 	smelt.model.advance_to(ready + 400)
-	furnace.show_melt(smelt.model.heat, smelt.model.fill, smelt.model.pouring, smelt.model.in_heat())
+	furnace.show_melt(smelt.model.heat_now(ready + 400), smelt.model.fill, smelt.model.pouring, smelt.model.on_track(ready + 400))
 	var pouring: bool = furnace._stream.visible and furnace._metal.visible
-	smelt.press_at(ready + 400, SmeltModel.STOP)
-	furnace.show_melt(smelt.model.heat, smelt.model.fill, smelt.model.pouring, smelt.model.in_heat())
+	smelt.press_at(ready + 400, BeatModel.UP)
+	furnace.show_melt(smelt.model.heat_now(ready + 400), smelt.model.fill, smelt.model.pouring, smelt.model.on_track(ready + 400))
 	smelt.finish()
-	_check(furnace != null and _no_character(furnace) and pumped and pouring and not furnace._stream.visible and smelt.live_result == smelt.replayed_result,
-		"smelting's stage: a pump works the bellows; pouring shows the stream and the metal in the mold, stopping stops it; the replay agrees")
+	_check(furnace != null and _no_character(furnace) and pumped and sputtered and drawing and let_go and pouring and not furnace._stream.visible
+		and smelt.live_result == smelt.replayed_result,
+		"smelting's stage, the rhythm track: a note pumps the bellows (%s), a long draw holds them until let go (%s, %s: half held, part paid: %d), a press on no note sputters (%s); pouring shows the stream and the metal (%s), stopping stops it; the replay agrees" % [pumped, drawing, let_go, m0.got[d], sputtered, pouring])
+	# CARVING (woodworking; Luke 2026-11-07: "vertical and have wood you can take off from either side"): the yew bow's
+	# round is the carve: a stave standing on the bench (no character, the knife alone); the pattern on at the start (no
+	# cuts), a click lifts it; a click left of a row's middle cuts its left edge, right of it its right edge; a deep cut
+	# and a fine shave; the two profiles differ (the bow's back and belly); Enter sets it down; the replay agrees.
+	var bow_r: RecipeDef = RecipeDef.by_id(40011)
+	var bow_p: CarveParams = bow_r.minigame as CarveParams
+	# Cuts before the stage has drawn a frame (a round begun and cut at once): no error (the suite fails on any).
+	var quick: CarveMinigame = SkillMinigames.make_ui(bow_p) as CarveMinigame
+	holder.add_child(quick)
+	quick.begin(99, bow_p)
+	quick.press_at(100, CarveModel.LIFT)
+	quick.press_at(200, CarveModel.LEFT_DEEP + 3)
+	quick.press_at(500, CarveModel.RIGHT_FINE + 4)
+	quick.finish()
+	quick.queue_free()
+	var carve: CarveMinigame = SkillMinigames.make_ui(bow_p) as CarveMinigame
+	holder.add_child(carve)
+	carve.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	carve.begin(5, bow_p)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var cstage: CarveStage = carve.get_child(0) as CarveStage
+	var cm: CarveModel = carve.model
+	var row: int = 4
+	var mid_y: float = (cstage.screen_point(float(row), 0.0).y + cstage.screen_point(float(row + 1), 0.0).y) * 0.5
+	var left_x: float = cstage.screen_point(float(row) + 0.5, -2.0).x
+	var right_x: float = cstage.screen_point(float(row) + 0.5, 2.0).x
+	var l0: int = cm.left[row]
+	var r0: int = cm.right[row]
+	var click: Callable = func(at: Vector2, button: MouseButton) -> void:
+		var e: InputEventMouseButton = InputEventMouseButton.new()
+		e.button_index = button
+		e.position = at
+		e.pressed = true
+		carve._gui_input(e)
+	click.call(Vector2(left_x, mid_y), MOUSE_BUTTON_LEFT)   # the pattern is on: this lifts it, cuts nothing
+	var lifted: bool = not cm.laid and cm.cuts == 0 and cm.left[row] == l0
+	var placed: bool = carve.row_at(mid_y) == row and carve.side_at(left_x, row) == 0 and carve.side_at(right_x, row) == 1
+	carve._started_usec = Time.get_ticks_usec() - 1000 * 1000
+	click.call(Vector2(left_x, mid_y), MOUSE_BUTTON_LEFT)
+	var deep_left: bool = cm.left[row] == l0 - bow_p.deep_cut and cm.right[row] == r0 and cstage._chips.emitting
+	carve._started_usec = Time.get_ticks_usec() - 2000 * 1000
+	# Right of the row's middle as it is NOW (the deep cut moved it): left and right are of the wood you see.
+	right_x = cstage.screen_point(float(row) + 0.5, float(cm.right[row] - cm.left[row]) * 0.5 + 2.0).x
+	click.call(Vector2(right_x, mid_y), MOUSE_BUTTON_RIGHT)
+	var fine_right: bool = cm.right[row] == r0 - bow_p.fine_cut and cm.left[row] == l0 - bow_p.deep_cut
+	var asym: bool = bow_p.left_outline != bow_p.right_outline
+	var enter: InputEventKey = InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	carve._started_usec = Time.get_ticks_usec() - 3000 * 1000
+	carve._unhandled_key_input(enter)
+	var set_down: bool = cm.done_ms >= 0 and carve.is_over()
+	carve.finish()
+	_check(bow_r.quality == RecipeDef.Quality.FROM_ROUND and cstage != null and _no_character(cstage) and carve.title().begins_with("Carving")
+		and lifted and placed and deep_left and fine_right and asym and set_down and carve.live_result == carve.replayed_result,
+		"carving the yew bow: a stave on the bench (%s); a click lifts the pattern (%s); left of a row's middle cuts its left edge deep (%s), right of it a fine shave off the right (%s); its back and belly differ (%s); Enter sets it down (%s); the replay agrees"
+			% [cstage != null, lifted, deep_left, fine_right, asym, set_down])
+	carve.queue_free()
 	holder.queue_free()
 	await get_tree().process_frame
 
@@ -3000,7 +3178,10 @@ func _run_looks() -> void:
 ## The minigames in one place: their kinds, the server's challenge kinds, a faster tool's swing.
 func _run_registry() -> void:
 	print("== regents: the minigames' registry ==")
-	_check(SkillMinigames.CHALLENGE == {&"chop": 100, &"crack": 101, &"smelt": 102, &"shape": 103}, "the challenge kinds the server deals them as")
+	_check(SkillMinigames.CHALLENGE == {&"chop": 100, &"crack": 101, &"smelt": 102, &"shape": 103, &"beat": 104, &"carve": 105}, "the challenge kinds the server deals them as")
+	_check(SkillMinigames.kind_of(BeatParams.new()) == SkillMinigames.BEAT and SkillMinigames.with_speed(BeatParams.new(), 50) is BeatParams
+		and SkillMinigames.duration_of(BeatParams.new()) == 20 * 600 + 4000,
+		"smelting's rhythm track: its own kind, no swing to speed, as long as its count-in, its beats and its pour")
 	var chop: ChopParams = _params()
 	var fast: ChopParams = SkillMinigames.with_speed(chop, 85) as ChopParams
 	_check(fast != chop and fast.swing_ms == 255 and chop.swing_ms == 300, "a tool at 85 %% swings in 255 ms, and the content is left as it was")
@@ -3010,6 +3191,221 @@ func _run_registry() -> void:
 	var baked: Dictionary = SkillMinigames.bake((RecipeDef.by_id(40004)).minigame)
 	_check(baked.get("kind", "") == "shape" and (baked.get("outline", []) as Array).size() == 16 and not baked.has("display_name"),
 		"a round bakes as its kind and its numbers")
+
+
+## WHAT A PLAYED ROUND PAYS, AND RUNS (Luke's M11, 2026-11-05; built 2026-11-07): pay runs from a floor at a score of 0 to
+## the multiplier at a full one (break-even near half); the rare edge grows with the score; gathering and smelting
+## rounds run back to back, making a part never does; a run's tally, and what ends it.
+func _run_active_pay() -> void:
+	print("== regents: what a played round pays, and runs ==")
+	var mult: float = HotRules.number(&"regents.active_yield_mult")
+	var floor_share: float = HotRules.number(&"regents.active_yield_floor")
+	_check(is_equal_approx(mult, 1.25) and is_equal_approx(floor_share, 0.75) and is_equal_approx(HotRules.number(&"regents.active_rare_mult"), 3.0),
+		"the content's numbers: x%.2f at a full score, x%.2f at none, rares x%.1f at a full score" % [mult, floor_share, HotRules.number(&"regents.active_rare_mult")])
+	_check(SkillingRules.break_even_pm(1.25, 0.75) == 500 and SkillingRules.break_even_pm(1.25, 0.0) == 800 and MinigameReadout.afk_break_even_pm() == 500,
+		"break-even: half a score with the floor (80 %% without it, the curve before)")
+	_check(is_equal_approx(SkillingRules.active_factor(1.25, 0.75, 1000), 1.25) and is_equal_approx(SkillingRules.active_factor(1.25, 0.75, 300), 0.9)
+		and is_equal_approx(SkillingRules.active_factor(1.25, 0.75, 0), 0.75), "a full round x1.25, a poor one (30 %%) x0.9, none x0.75 of AFK")
+	_check(is_equal_approx(SkillingRules.rare_factor(3.0, 0), 1.0) and is_equal_approx(SkillingRules.rare_factor(3.0, 500), 2.0),
+		"a round nobody played finds rares as AFK does; half a round, twice as often")
+	# Which rounds run.
+	var tree: NodeDef = NodeDef.all_by_tier()[0]
+	_check(SkillingComponent.runs(tree) and SkillingComponent.runs(RecipeDef.by_id(40001)) and not SkillingComponent.runs(RecipeDef.by_id(40004)),
+		"rounds run back to back at a tree and a furnace, never at the anvil (one part, one round)")
+	# A run's bookkeeping.
+	var s: SkillingComponent = SkillingComponent.new()
+	var said: Array[String] = []
+	s.run_changed.connect(func(on: bool, why: String) -> void: said.append("%s:%s" % [on, why]))
+	s._start_run(77)
+	s.round_id = 5
+	var logs: int = tree.yield_item.id
+	s._count_run({"active": true, "target_id": 77, "qty": 3, "item_id": logs, "rare_item": 0, "depleted": false, "ran_out": false})
+	s._count_run({"active": false, "target_id": 77, "qty": 9, "item_id": logs, "rare_item": 0, "depleted": false, "ran_out": false})
+	s._count_run({"active": true, "target_id": 78, "qty": 9, "item_id": logs, "rare_item": 0, "depleted": false, "ran_out": false})
+	s._count_run({"active": true, "target_id": 77, "qty": 2, "item_id": logs, "rare_item": 1, "depleted": false, "ran_out": false})
+	_check(s.run_rounds == 2 and int(s.run_got[logs]) == 5 and s.run_rares == 1 and s.run_words().begins_with("2 rounds: 5 ")
+		and s.run_words().ends_with("1 rare find"), "the run's tally counts its own played rounds only: \"%s\"" % s.run_words())
+	s.stop_run_after_round()
+	_check(s.run_target == 77 and s.run_stop_after, "E mid-round: the run goes on until the round closes")
+	s.round_id = -1
+	s.end_run(s._run_end_why)
+	_check(s.run_target == -1 and said == ["true:", "false:"], "then it ends, said as the player's own stop (%s)" % str(said))
+	s._start_run(77)
+	s.round_id = 6
+	s._count_run({"active": true, "target_id": 77, "qty": 1, "item_id": logs, "rare_item": 0, "depleted": true, "ran_out": false})
+	_check(s.run_target == 77 and s.run_stop_after and s._run_end_why.begins_with("Worked out"), "a node worked out: the run ends as its round closes")
+	s.round_id = -1
+	s.stop_run_after_round("gone")
+	_check(s.run_target == -1 and said.back() == "false:gone", "between rounds, a stop is now")
+	s.free()
+	# RANK EASES THE ROUND (Luke's M3): a copy of the round, a window wider (or a branch's stagger shorter) by the ease,
+	# number for number with the server's `Minigame::score_eased`; the content itself untouched.
+	var rock: CrackParams = (NodeDef.all_by_tier().filter(func(n: NodeDef) -> bool: return n.minigame is CrackParams)[0] as NodeDef).minigame as CrackParams
+	var chop_p: ChopParams = tree.minigame as ChopParams
+	var head: ShapeParams = (RecipeDef.by_id(40004)).minigame as ShapeParams
+	var bar: BeatParams = (RecipeDef.by_id(40001)).minigame as BeatParams
+	var steel_bar: BeatParams = (RecipeDef.by_id(40015)).minigame as BeatParams
+	var rock_e: CrackParams = SkillMinigames.eased(rock, 12) as CrackParams
+	var chop_e: ChopParams = SkillMinigames.eased(chop_p, 12) as ChopParams
+	var head_e: ShapeParams = SkillMinigames.eased(head, 12) as ShapeParams
+	var bar_e: BeatParams = SkillMinigames.eased(bar, 12) as BeatParams
+	var steel_e: BeatParams = SkillMinigames.eased(steel_bar, 12) as BeatParams
+	_check(rock_e != rock and rock_e.radius_pm == rock.radius_pm * 112 / 100 and chop_e.stagger_ms == chop_p.stagger_ms * 88 / 100
+		and head_e.error_scale == head.error_scale * 112 / 100 and head_e.heat_ms == head.heat_ms * 112 / 100 and SkillMinigames.eased(rock, 0) == rock,
+		"eased 12 %%: the rock's notch %d -> %d, a branch's stagger %d -> %d ms, the anvil's error scale %d -> %d; 0: as authored"
+			% [rock.radius_pm, rock_e.radius_pm, chop_p.stagger_ms, chop_e.stagger_ms, head.error_scale, head_e.error_scale])
+	_check(bar_e.perfect_ms == bar.perfect_ms * 112 / 100 and bar_e.good_ms == bar.beat_ms / 4 and steel_e.good_ms == mini(steel_bar.good_ms * 112 / 100, steel_bar.beat_ms / 4)
+		and steel_e.perfect_ms == steel_bar.perfect_ms * 112 / 100 and bar.perfect_ms == 70,
+		"the beat's windows wider, the outer never past a quarter beat (copper %d -> %d/%d ms, steel %d/%d -> %d/%d); the content untouched"
+			% [bar.perfect_ms, bar_e.perfect_ms, bar_e.good_ms, steel_bar.perfect_ms, steel_bar.good_ms, steel_e.perfect_ms, steel_e.good_ms])
+	var skilled: SimPlayer = SimPlayer.presets()[1]
+	var at_req: int = int(MinigameReadout.measure(head, skilled, 12)["mean"])
+	var three_on: int = int(MinigameReadout.measure(head_e, skilled, 12)["mean"])
+	_check(three_on > at_req, "three ranks on, a skilled smith shapes the iron axe head better (%d -> %d)" % [at_req, three_on])
+
+
+## BRITTLE NOTCHES (band 2's new thing for mining, a TEST, 2026-11-07): the coal rock's brittle notch struck while the
+## rock still rings cracks wrong (a jar); struck once the ring fades, it opens; a seam's first notch is never brittle.
+func _run_brittle() -> void:
+	print("== regents: brittle notches ==")
+	var coal: CrackParams = null
+	for n: NodeDef in NodeDef.all_by_tier():
+		if n.minigame is CrackParams and (n.minigame as CrackParams).brittle_permille > 0:
+			coal = n.minigame as CrackParams
+	_check(coal != null and coal.ring_ms > coal.swing_ms, "a rock with brittle notches, ringing longer than a swing (so a held strike lands too soon)")
+	if coal == null:
+		return
+	var sd: int = -1
+	for i: int in 400:
+		if CrackModel.start(1 + i * 7919, coal).is_brittle(1):
+			sd = 1 + i * 7919
+			break
+	var firsts_ok: bool = true
+	for i: int in 30:
+		var bm: CrackModel = CrackModel.start(1 + i * 7919, coal)
+		for seam: int in 3:
+			firsts_ok = firsts_ok and not bm.is_brittle(seam * coal.notches)
+	var soon: CrackModel = CrackModel.start(sd, coal)
+	var n0: Vector2i = soon.notch(0)
+	var n1: Vector2i = soon.notch(1)
+	soon.strike(0, n0.x, n0.y)
+	var held: bool = soon.strike(100, n1.x, n1.y) == CrackModel.HELD   # mid-swing: held to the swing's end, still in the ring
+	soon.settle(coal.swing_ms)
+	var wait: CrackModel = CrackModel.start(sd, coal)
+	wait.strike(0, n0.x, n0.y)
+	_check(sd > 0 and firsts_ok and held and soon.jars == 1 and soon.cracked_wrong and soon.k == 1
+		and wait.strike(coal.ring_ms, n1.x, n1.y) == CrackModel.HIT and wait.k == 2,
+		"a brittle notch: struck mid-swing it lands in the ring and cracks wrong; struck as the ring fades, it opens; never a seam's first")
+
+
+## SMELTING AS A RHYTHM TRACK (Luke, 2026-11-07: "Full rhythm track"; `BeatModel`): the track drawn from the seed, how a
+## press is judged, the long draws, mashing never paying, the pour after it; the copper, iron and steel bars' rounds.
+func _run_beat() -> void:
+	print("== regents: smelting's rhythm track ==")
+	var copper: BeatParams = (RecipeDef.by_id(40001)).minigame as BeatParams
+	_check(copper != null and SkillMinigames.duration_of(copper) == BeatModel.duration_ms(copper), "the copper bar is smelted on the rhythm track")
+	if copper == null:
+		return
+	# The track: a bar's first beat always has a note (or is inside a draw); notes in order, half a beat apart at the
+	# least; a draw ends by the last beat and nothing is played inside it; rounds' tracks differ.
+	var bad: Array[String] = []
+	var tracks: Dictionary = {}
+	var draws: int = 0
+	var offbeats: int = 0
+	for sd: int in range(1, 41):
+		var m: BeatModel = BeatModel.start(sd, copper)
+		tracks[str(m.note_t)] = true
+		for i: int in range(0, copper.beats, 4):
+			var at: int = (copper.lead_beats + i) * copper.beat_ms
+			if not m.note_t.has(at):
+				var in_draw: bool = false
+				for j: int in m.note_t.size():
+					in_draw = in_draw or (m.note_end[j] > m.note_t[j] and m.note_t[j] < at and m.note_end[j] >= at)
+				if not in_draw:
+					bad.append("seed %d: no note on bar beat %d" % [sd, i])
+		for j: int in m.note_t.size():
+			offbeats += int(posmod(m.note_t[j], copper.beat_ms) != 0)
+			if j > 0 and m.note_t[j] - m.note_end[j - 1] < copper.beat_ms / 2:
+				bad.append("seed %d: note %d too near the last" % [sd, j])
+			if m.note_end[j] > m.note_t[j]:
+				draws += 1
+				if m.note_end[j] > (copper.lead_beats + copper.beats - 1) * copper.beat_ms:
+					bad.append("seed %d: a draw past the last beat" % sd)
+	_check(bad.is_empty() and tracks.size() >= 38 and draws > 0 and offbeats > 0,
+		"the track: every bar starts on a note (or inside a draw), notes half a beat apart at least, draws end inside it; %d tracks of 40 differ, %d draws, %d off-beats %s" % [tracks.size(), draws, offbeats, str(bad)])
+	# Judging a press.
+	var m1: BeatModel = BeatModel.start(3, copper)
+	var t0: int = m1.note_t[0]
+	_check(m1.press(t0 - 40, BeatModel.DOWN) == BeatModel.PERFECT and m1.press(t0 + 20, BeatModel.DOWN) == BeatModel.IGNORED,
+		"pressed 40 ms early: on the beat; pressed again while down: nothing")
+	m1.press(t0 + 60, BeatModel.UP)
+	var t1: int = m1.note_t[1]
+	_check(m1.press(t1 + copper.perfect_ms + 1, BeatModel.DOWN) == BeatModel.GOOD, "%d ms late: close, worth %d" % [copper.perfect_ms + 1, copper.good_pm])
+	var m2: BeatModel = BeatModel.start(3, copper)
+	var gap: int = (copper.lead_beats * copper.beat_ms) / 2   # in the count-in: nothing to press
+	_check(m2.press(gap, BeatModel.DOWN) == BeatModel.STRAY and m2.strays == 1 and m2.press(gap + 10, BeatModel.UP) == BeatModel.IGNORED,
+		"a press in the count-in meets no note: wasted, and costs")
+	_check(m2.press(m2.note_t[0] + copper.good_ms + 1, BeatModel.DOWN) == BeatModel.STRAY, "%d ms after a note: too late, wasted" % (copper.good_ms + 1))
+	# Mashing never pays; holding the button down the whole track plays one note.
+	var mash: PackedInt32Array = PackedInt32Array()
+	for t: int in range(0, BeatModel.track_end_ms(copper), 40):
+		mash.append_array(PackedInt32Array([t, BeatModel.DOWN if (t / 40) % 2 == 0 else BeatModel.UP]))
+	var mashed: Dictionary = BeatModel.play(7, copper, mash)
+	var held: Dictionary = BeatModel.play(7, copper, PackedInt32Array([BeatModel.start(7, copper).note_t[0], BeatModel.DOWN]))
+	_check(int(mashed["track_pm"]) == 0 and int(held["perfect"]) == 1 and int(held["track_pm"]) < 150,
+		"mashing the bellows scores nothing on the track (%d wasted); held down from the first note, one note (%d)" % [mashed["strays"], held["track_pm"]])
+	# A long draw: held through its end it is paid in full, let go halfway about half.
+	var sd2: int = 1
+	while sd2 < 200 and _first_draw(BeatModel.start(sd2, copper)) < 0:
+		sd2 += 1
+	var full: BeatModel = BeatModel.start(sd2, copper)
+	var d: int = _first_draw(full)
+	full.press(full.note_t[d], BeatModel.DOWN)
+	full.advance_to(full.note_end[d])
+	var half: BeatModel = BeatModel.start(sd2, copper)
+	half.press(half.note_t[d], BeatModel.DOWN)
+	half.press((half.note_t[d] + half.note_end[d]) / 2, BeatModel.UP)
+	var near: BeatModel = BeatModel.start(sd2, copper)
+	near.press(near.note_t[d], BeatModel.DOWN)
+	near.press(near.note_end[d] - copper.good_ms, BeatModel.UP)
+	_check(d >= 0 and full.got[d] == 1000 and full.holding < 0 and half.got[d] == 500 and near.got[d] == 1000,
+		"a long draw: held to its end, all of it (%d); let go halfway, half (%d); let go just before its end, all (%d)" % [full.got[d], half.got[d], near.got[d]])
+	# The pour: not until it is ready.
+	var end: int = BeatModel.track_end_ms(copper)
+	var m3: BeatModel = BeatModel.start(3, copper)
+	_check(m3.press(end + 10, BeatModel.DOWN) == BeatModel.IGNORED and m3.press(end + 20, BeatModel.UP) == BeatModel.IGNORED
+		and m3.press(end + copper.pour_ready_ms, BeatModel.DOWN) == BeatModel.POUR and m3.press(end + copper.pour_ready_ms + 500, BeatModel.UP) == BeatModel.STOP
+		and m3.fill == 10 * copper.pour_rate, "the pour: a press as the track ends does nothing; ready, holding tilts it and letting go stops it")
+	# Each metal quicker and busier than the last.
+	var iron: BeatParams = (RecipeDef.by_id(40002)).minigame as BeatParams
+	var steel: BeatParams = (RecipeDef.by_id(40015)).minigame as BeatParams
+	_check(iron != null and steel != null and copper.beat_ms > iron.beat_ms and iron.beat_ms > steel.beat_ms
+		and copper.offbeat_pm < iron.offbeat_pm and iron.offbeat_pm < steel.offbeat_pm and copper.perfect_ms > iron.perfect_ms and iron.perfect_ms > steel.perfect_ms,
+		"copper, iron, steel: each a quicker beat, more off-beats, a tighter window")
+	# SLAG (band 2's test, 2026-11-07): steel's gray notes are skimmed with the second button, never pumped; copper
+	# has none and ignores a skim.
+	var sd3: int = -1
+	for i: int in 200:
+		var sm: BeatModel = BeatModel.start(1 + i * 7919, steel)
+		if sm.slag.count(1) > 0:
+			sd3 = 1 + i * 7919
+			break
+	var skimmed: BeatModel = BeatModel.start(sd3, steel)
+	var sj: int = skimmed.slag.find(1)
+	var pumped: BeatModel = BeatModel.start(sd3, steel)
+	var none_on_copper: bool = BeatModel.start(sd3, copper).slag.count(1) == 0 and BeatModel.start(3, copper).press(2400, BeatModel.SKIM) == BeatModel.IGNORED
+	_check(steel.slag_pm > 0 and copper.slag_pm == 0 and sj >= 0 and skimmed.press(skimmed.note_t[sj], BeatModel.SKIM) == BeatModel.PERFECT
+		and pumped.press(pumped.note_t[sj], BeatModel.DOWN) == BeatModel.STRAY and pumped.got[sj] < 0
+		and skimmed.press(skimmed.note_t[sj] + 1, BeatModel.SKIM) == BeatModel.STRAY and none_on_copper,
+		"slag on steel: skimmed on its time, full value; pumped with the main button, wasted and still there; a second skim on none, wasted; copper has none and ignores a skim")
+
+
+## The first long draw of a track (-1: none).
+func _first_draw(m: BeatModel) -> int:
+	for j: int in m.note_t.size():
+		if m.note_end[j] > m.note_t[j]:
+			return j
+	return -1
 
 
 func _run_minigame() -> void:
@@ -3093,7 +3489,7 @@ func _run_chain_minigames() -> void:
 	_check(full.splits == 1 and full.next_ok_ms == tt - rock.swing_ms + rock.split_ms, "the whole seam opened: the rock splits, and the next seam waits %d ms" % rock.split_ms)
 	var smelt: SmeltMinigame = SmeltMinigame.new()
 	add_child(smelt)
-	var bar: SmeltParams = (RecipeDef.by_id(40001)).minigame as SmeltParams
+	var bar: SmeltParams = SmeltParams.new()   # no content plays it since 2026-11-07 (the rhythm track): kept for old rounds
 	smelt.begin(12, bar)
 	t = 0
 	while t < bar.heat_ms:
@@ -3148,8 +3544,8 @@ func _run_lab() -> void:
 	var buttons: Array[Button] = []
 	buttons.assign(lab.get("buttons"))
 	var game: SkillMinigame = lab.get("game") as SkillMinigame
-	_check(buttons.size() == 18 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
-		"eighteen rounds to play (six nodes; three bars and nine smithed parts), the first, a tree's, on show (%d)" % buttons.size())
+	_check(buttons.size() == 23 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"twenty-three rounds to play (six nodes, flax having none yet; three bars, twelve smithed parts with the trowel blades, the carved bow and staff), the first, a tree's, on show (%d)" % buttons.size())
 	if buttons.size() == 9:
 		buttons[3].pressed.emit()
 		game = lab.get("game") as SkillMinigame

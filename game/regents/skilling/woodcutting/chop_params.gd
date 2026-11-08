@@ -23,3 +23,8 @@ class_name ChopParams extends Resource
 @export_range(0, 20) var safe_segments: int = 2
 ## Clean chops for a full score. Fewer score in proportion; more score no higher.
 @export_range(1, 500) var target_chops: int = 22
+## KNOTS (`MINIGAMES_PREP.md` §3, band 2's new thing; a TEST for Luke's play, 2026-11-07): how likely a piece is
+## knotted (0: never, as every tree before). A knotted piece takes two chops from the SAME side, the second within
+## `knot_beat_ms` of the first (which only bites); from the other side, or late, it bites again.
+@export_range(0, 1000, 5, "suffix:‰") var knot_permille: int = 0
+@export_range(0, 3000, 10, "suffix:ms") var knot_beat_ms: int = 600

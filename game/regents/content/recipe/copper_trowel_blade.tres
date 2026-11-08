@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_tocic"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="2_oyb1g"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_ggdnp"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_trowel_blade.tres" id="4_y47j8"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_g7dlv"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_n8jwg"]
+
+[sub_resource type="Resource" id="Resource_6wf3y"]
+script = ExtResource("3_ggdnp")
+display_name = "Copper trowel blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+outline_vary = 3
+outline = PackedInt32Array(8, 12, 15, 17, 19, 20, 21, 21, 21, 20, 19, 17, 15, 12, 9, 5)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_g7dlv")
+station = &"anvil"
+skill = ExtResource("6_n8jwg")
+inputs = Array[ExtResource("1_tocic")]([ExtResource("2_oyb1g")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("4_y47j8")
+xp = 9
+minigame = SubResource("Resource_6wf3y")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40040
+display_name = "Copper trowel blade"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Copper in Trowel blade): its numbers are yours to tune."

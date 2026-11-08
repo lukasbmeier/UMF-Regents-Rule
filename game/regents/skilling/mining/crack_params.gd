@@ -28,3 +28,8 @@ class_name CrackParams extends Resource
 @export_range(0, 30) var reveal_ahead: int = 6
 ## Notches opened for a full score.
 @export_range(1, 500) var target_hits: int = 16
+## BRITTLE NOTCHES (`MINIGAMES_PREP.md` §3, band 2's new thing for mining; a TEST for Luke's play, 2026-11-07): how
+## likely a notch is brittle (0: never, as every rock before), and how long the rock rings after a hit. A brittle notch
+## struck while it still rings cracks wrong (a jar): wait for the ring to fade. A seam's first notch never is.
+@export_range(0, 1000, 5, "suffix:‰") var brittle_permille: int = 0
+@export_range(0, 3000, 10, "suffix:ms") var ring_ms: int = 450

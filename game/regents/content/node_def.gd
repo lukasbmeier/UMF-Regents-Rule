@@ -152,8 +152,9 @@ func validate() -> Array[String]:
 	if skill == null:
 		out.append("it trains no skill: set `skill`")
 	var kind: StringName = SkillMinigames.kind_of(minigame)
-	if kind != SkillMinigames.CHOP and kind != SkillMinigames.CRACK:
-		out.append("its `minigame` is not a gathering round (a ChopParams or a CrackParams)")
+	# None: AFK only (holding E works it AFK too), as a plant before its round is built (2026-11-07).
+	if minigame != null and kind != SkillMinigames.CHOP and kind != SkillMinigames.CRACK:
+		out.append("its `minigame` is not a gathering round (a ChopParams or a CrackParams; or none: AFK only)")
 	if yield_item == null:
 		out.append("it gives nothing: set `yield_item`")
 	if rare_permille > 0 and rare_item == null:

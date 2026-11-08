@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/herbalism.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/flax.tres" id="4_yield"]
+[ext_resource type="Resource" path="res://game/regents/content/item/seed_pod.tres" id="5_rare"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Flower_3_Group.gltf" id="m0"]
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("3_skill")
+tier = 1
+yield_item = ExtResource("4_yield")
+tool_tag = &"trowel"
+min_tool_tier = 1
+min_rank = 1
+xp = 8
+afk_ms_per_item = 3500
+deplete_permille = 200
+regrow_s = 30.0
+rare_item = ExtResource("5_rare")
+rare_permille = 6
+models = Array[PackedScene]([ExtResource("m0")])
+model_scale = 1.3
+depleted = 0
+depleted_color = Color(0.42, 0.36, 0.22, 1)
+id = 40007
+display_name = "Flax"
+designer_notes = "HERBALISM TIER 1 (Luke, 2026-11-07, HERBALISM_HUNTING_PREP.md §7 step 1): AFK only for now (no round: hold E works it AFK too); its round, PULL THE ROOT (H3), is step 2. Needs a trowel of tier 1."

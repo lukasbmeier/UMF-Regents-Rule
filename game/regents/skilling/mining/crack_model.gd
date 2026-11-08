@@ -17,6 +17,10 @@ const JAR: int = 2       # off the seam: staggered
 const HELD: int = 3      # mid-swing or mid-split: held, and struck the moment it ends
 
 var params: CrackParams
+## Which notches (over all seams) are brittle (1), from their own stream (`RING_SALT`), so the seams never change.
+var brittle: PackedByteArray
+## When the last hit landed (the rock rings from then for `ring_ms`); -1: none yet.
+var last_hit_ms: int = -1
 ## Every notch of every seam, flat (x, y) in thousandths, seam after seam.
 var points: PackedInt32Array
 ## The next notch to strike (counting every seam's).
@@ -39,13 +43,45 @@ var acts: int = 0
 var last_act: int = IGNORED
 var last_act_ms: int = 0
 var last_act_at: Vector2i = Vector2i.ZERO
+## Whether the last jar was a brittle notch struck in the ring (on the notch, too soon): presentation only.
+var cracked_wrong: bool = false
 
 
 static func start(seed_value: int, p: CrackParams) -> CrackModel:
 	var m: CrackModel = CrackModel.new()
 	m.params = p
 	m.points = seams(seed_value, p, seam_count(p))
+	m.brittle = brittle_of(seed_value, p, m.points.size() / 2)
 	return m
+
+
+## The brittle notches' own stream: the seed folded with this ("ring").
+const RING_SALT: int = 0x72696E67
+
+
+## Which of the first `n` notches are brittle; a seam's first never is (none when `brittle_permille` is 0).
+static func brittle_of(seed_value: int, p: CrackParams, n: int) -> PackedByteArray:
+	var out: PackedByteArray = PackedByteArray()
+	out.resize(n)
+	if p.brittle_permille <= 0:
+		return out
+	var st: int = SkillRandom.seed_state(seed_value ^ RING_SALT)
+	for i: int in n:
+		if i % p.notches == 0:
+			continue
+		st = SkillRandom.next_u32(st)
+		out[i] = 1 if ((st >> 8) * 1000) >> 24 < p.brittle_permille else 0
+	return out
+
+
+## Whether notch `i` is brittle.
+func is_brittle(i: int) -> bool:
+	return brittle.size() > 0 and brittle[i % brittle.size()] == 1
+
+
+## Whether the rock still rings at `t_ms` (a brittle notch struck now cracks wrong).
+func ringing(t_ms: int) -> bool:
+	return last_hit_ms >= 0 and t_ms < last_hit_ms + params.ring_ms
 
 
 ## Enough seams for any round: one notch a swing.
@@ -131,7 +167,8 @@ func _strike(t_ms: int, x: int, y: int) -> int:
 	var at: Vector2i = notch(k)
 	var dx: int = x - at.x
 	var dy: int = y - at.y
-	if dx * dx + dy * dy <= params.radius_pm * params.radius_pm:
+	if dx * dx + dy * dy <= params.radius_pm * params.radius_pm and not (is_brittle(k) and ringing(t_ms)):
+		last_hit_ms = t_ms
 		hits += 1
 		combo += 1
 		best_combo = maxi(best_combo, combo)
@@ -144,6 +181,7 @@ func _strike(t_ms: int, x: int, y: int) -> int:
 			next_ok_ms = t_ms + params.swing_ms
 		last_act = HIT
 		return HIT
+	cracked_wrong = dx * dx + dy * dy <= params.radius_pm * params.radius_pm
 	jars += 1
 	combo = 0
 	next_ok_ms = t_ms + params.stagger_ms

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 100
+color = Color(0.88, 0.84, 0.72, 1)
+description = "A bowstring spun from flax: strings a carved bow at the workbench."
+id = 40048
+display_name = "Bowstring"
+designer_notes = "H8 (Luke, 2026-11-07): the first thing fiber makes. Sinew strings come with the wolf."

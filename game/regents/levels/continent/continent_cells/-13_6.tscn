@@ -1,12 +1,22 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_ueqcq"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_ltlbg"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ltlbg"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_r2tor"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_lb3gi"]
 
-[node name="Cell_-13_6" type="Node3D" unique_id=773474990]
+[node name="Cell_-13_6" type="Node3D" unique_id=915929820]
 
-[node name="fern_1_31" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_ueqcq")]
+[node name="w_flax_3" type="Marker3D" parent="." unique_id=496031459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -817.2092, -4.2348833, 426.76767)
+gizmo_extents = 0.5
+script = ExtResource("1_ltlbg")
+point_id = "w_flax_3"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="fern_1_31" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_r2tor")]
 transform = Transform3D(1.1225063, 0, 0.5599446, 0, 1.2544155, 0, -0.5599446, 0, 1.1225063, -810.1291, -4.0020456, 421.65277)
 
-[node name="rock_big_1_32" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_ltlbg")]
+[node name="rock_big_1_32" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("3_lb3gi")]
 transform = Transform3D(0.07937823, 0, -1.2296585, 0, 1.2322179, 0, 1.2296585, 0, 0.07937823, -806.25397, -1.4074075, 387.80405)

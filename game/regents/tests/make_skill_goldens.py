@@ -5,7 +5,7 @@ reproduce every case exactly (integers only).
 
     python game/regents/tests/make_skill_goldens.py      (from the repo root)
 
-writes shared/golden/regents/{crack,smelt,shape}.json. Change a rule here AND in both twins, run this,
+writes shared/golden/regents/{crack,smelt,shape,beat}.json (beat: smelting as a rhythm track). Change a rule here AND in both twins, run this,
 and commit the new files with the change. Division and remainder TRUNCATE toward zero here, as they do
 in GDScript and Rust (Python's own floor them): `tdiv`.
 """
@@ -60,6 +60,27 @@ def seam_count(p):
     return (p["duration_ms"] // p["swing_ms"] + 1) // p["notches"] + 2
 
 
+# BRITTLE NOTCHES (MINIGAMES_PREP.md §3, band 2's new thing for mining, a TEST for Luke's play, 2026-11-07): after a hit
+# the rock rings for `ring_ms`; a brittle notch struck before the ring has faded cracks wrong (a jar). Drawn from their
+# own stream (the seed folded with RING_SALT), so the seams never change; a seam's first notch is never brittle;
+# `brittle_permille` 0 (or absent): none.
+RING_SALT = 0x72696E67
+
+
+def brittle_of(seed, p, n):
+    if p.get("brittle_permille", 0) <= 0:
+        return [0] * n
+    out = []
+    st = seed_state(seed ^ RING_SALT)
+    for i in range(n):
+        if i % p["notches"] == 0:
+            out.append(0)
+            continue
+        st = next_u32(st)
+        out.append(1 if ((st >> 8) * 1000) >> 24 < p["brittle_permille"] else 0)
+    return out
+
+
 class Crack:
     """Strike the seam's next notch (within `radius_pm`): the crack opens to it. A seam opened end to end
     splits the rock (`split_ms` before the next strike) and the next seam begins. Anywhere else jars the
@@ -69,6 +90,8 @@ class Crack:
     def __init__(self, seed, p):
         self.p = p
         self.points = seams(seed, p, seam_count(p))
+        self.brittle = brittle_of(seed, p, len(self.points))
+        self.last_hit = None
         self.k = 0
         self.hits = self.jars = self.combo = self.best = self.splits = 0
         self.next_ok, self.last_t, self.staggered, self.held = 0, -1, False, None
@@ -76,7 +99,10 @@ class Crack:
     def act(self, t, x, y):
         p = self.p
         at = self.points[self.k % len(self.points)]
-        if (x - at[0]) ** 2 + (y - at[1]) ** 2 <= p["radius_pm"] ** 2:
+        on = (x - at[0]) ** 2 + (y - at[1]) ** 2 <= p["radius_pm"] ** 2
+        ringing = self.brittle[self.k % len(self.points)] == 1 and self.last_hit is not None and t < self.last_hit + p.get("ring_ms", 0)
+        if on and not ringing:
+            self.last_hit = t
             self.hits += 1
             self.combo += 1
             self.best = max(self.best, self.combo)
@@ -126,6 +152,22 @@ def crack_play(seed, p, inputs):
     for t, x, y in inputs:
         m.strike(t, x, y)
     return m.result()
+
+
+def crack_patient(seed, p, eager=False):
+    """Dead on every notch; on a brittle one, waits for the ring to fade (or, `eager`, strikes the moment the pick is free)."""
+    m = Crack(seed, p)
+    out = []
+    t = 0
+    while t <= p["duration_ms"]:
+        k = m.k % len(m.points)
+        if not eager and m.brittle[k] == 1 and m.last_hit is not None:
+            t = max(t, m.last_hit + p["ring_ms"])
+        at = m.points[k]
+        out.append([t, at[0], at[1]])
+        m.strike(t, at[0], at[1])
+        t = max(t + 1, m.next_ok)
+    return out
 
 
 def crack_bot(seed, p, aim_ms, aim_err, rng):
@@ -470,6 +512,305 @@ def shape_bot(seed, p, reheat_margin_ms):
     return out
 
 
+# --- smelting as a rhythm track (Luke, 2026-11-07), then the pour -------------------------------------
+# SLAG (MINIGAMES_PREP.md §3, band 2's new thing for smelting, a TEST, 2026-11-07): a tap note may be slag (`slag_pm`),
+# drawn from its own stream (the seed folded with SLAG_SALT, one draw a note), skimmed with the second button (SKIM, 3):
+# a SKIM meets only slag, a DOWN never does; a SKIM on no slag is wasted breath. A round with no slag ignores a SKIM.
+SLAG_SALT = 0x736C6167
+
+
+class Beat:
+    def __init__(self, seed, p):
+        self.p = p
+        st = next_u32(seed_state(seed))
+        self.target = p["target_lo"] + (st >> 8) % max(1, p["target_hi"] - p["target_lo"] + 1)
+        self.notes = []   # [time, end]
+        covered = -1
+        for i in range(p["beats"]):
+            rolls = []
+            for _ in range(3):
+                st = next_u32(st)
+                rolls.append((st >> 8) % 1000)
+            r_rest, r_off, r_hold = rolls
+            on_t = (p["lead_beats"] + i) * p["beat_ms"]
+            rest = i % 4 != 0 and r_rest < p["rest_pm"]
+            if i > covered and not rest:
+                if p["hold_beats"] > 0 and r_hold < p["hold_pm"] and i + p["hold_beats"] <= p["beats"] - 1:
+                    self.notes.append([on_t, on_t + p["hold_beats"] * p["beat_ms"]])
+                    covered = i + p["hold_beats"]
+                else:
+                    self.notes.append([on_t, on_t])
+            if i >= covered and r_off < p["offbeat_pm"]:
+                half = p["beat_ms"] // 2
+                self.notes.append([on_t + half, on_t + half])
+        self.slag = [0] * len(self.notes)
+        if p.get("slag_pm", 0) > 0:
+            st2 = seed_state(seed ^ SLAG_SALT)
+            for j, (nt, end) in enumerate(self.notes):
+                st2 = next_u32(st2)
+                self.slag[j] = 1 if end == nt and (st2 >> 8) % 1000 < p["slag_pm"] else 0
+        self.got = [-1] * len(self.notes)
+        self.perfect = self.good = self.strays = 0
+        self.down = False
+        self.holding = None
+        self.hold_pts = 0
+        self.pour_tick = self.fill = 0
+        self.pouring = False
+        self.last_t = -1
+        self.track_end = (p["lead_beats"] + p["beats"]) * p["beat_ms"]
+        self.total = self.track_end + p["pour_ms"]
+
+    def advance_to(self, t):
+        if self.holding is not None and t >= self.notes[self.holding][1]:
+            self.got[self.holding] = self.hold_pts
+            self.holding = None
+        while self.pour_tick < self.p["pour_ms"] // TICK and self.track_end + (self.pour_tick + 1) * TICK <= t:
+            if self.pouring:
+                self.fill += self.p["pour_rate"]
+            self.pour_tick += 1
+
+    def press(self, t, code):
+        p = self.p
+        if t < self.last_t:
+            return
+        self.last_t = t
+        if t < 0 or t > self.total:
+            return
+        self.advance_to(t)
+        if code == 1:
+            if self.down:
+                return
+            self.down = True
+            if t >= self.track_end:
+                if not self.pouring and t >= self.track_end + p["pour_ready_ms"]:
+                    self.pouring = True
+                return
+            for j, (nt, end) in enumerate(self.notes):
+                if self.got[j] < 0 and j != self.holding and self.slag[j] == 0 and abs(t - nt) <= p["good_ms"]:
+                    if abs(t - nt) <= p["perfect_ms"]:
+                        pts = 1000
+                        self.perfect += 1
+                    else:
+                        pts = p["good_pm"]
+                        self.good += 1
+                    if end > nt:
+                        self.holding, self.hold_pts = j, pts
+                    else:
+                        self.got[j] = pts
+                    return
+            self.strays += 1
+        elif code == 3:
+            if t >= self.track_end or p.get("slag_pm", 0) <= 0:
+                return   # a round with no slag ignores a skim (so every round before slag replays as it did)
+            for j, (nt, end) in enumerate(self.notes):
+                if self.got[j] < 0 and self.slag[j] == 1 and abs(t - nt) <= p["good_ms"]:
+                    if abs(t - nt) <= p["perfect_ms"]:
+                        self.got[j] = 1000
+                        self.perfect += 1
+                    else:
+                        self.got[j] = p["good_pm"]
+                        self.good += 1
+                    return
+            self.strays += 1
+        elif code == 2:
+            if not self.down:
+                return
+            self.down = False
+            if self.pouring:
+                self.pouring = False
+            elif self.holding is not None:
+                j = self.holding
+                self.holding = None
+                nt, end = self.notes[j]
+                if t >= end - p["good_ms"]:
+                    self.got[j] = self.hold_pts
+                else:
+                    self.got[j] = self.hold_pts * max(0, t - nt) // max(1, end - nt)
+
+    def result(self):
+        p = self.p
+        self.advance_to(self.total)
+        n = len(self.notes)
+        track = max(0, min(1000, tdiv(sum(max(0, g) for g in self.got) - self.strays * p["stray_pm"], max(1, n))))
+        pour = 0 if self.fill > 1000 else max(0, 1000 - abs(self.fill - self.target) * 1000 // p["pour_tolerance"])
+        w = p["track_weight_pct"] if p["pour_ms"] > 0 else 100
+        return {"notes": n, "perfect": self.perfect, "good": self.good, "strays": self.strays, "fill": self.fill,
+                "target": self.target, "track_pm": track, "pour_pm": pour, "score_pm": (track * w + pour * (100 - w)) // 100}
+
+
+def beat_play(seed, p, inputs):
+    m = Beat(seed, p)
+    for t, c in inputs:
+        m.press(t, c)
+    return m.result()
+
+
+def beat_bot_slag(seed, p, wrong_key=False):
+    """On every note's time: a slag note skimmed (or, `wrong_key`, pressed with the main button), the rest pressed."""
+    m = Beat(seed, p)
+    out = []
+    for j, (nt, end) in enumerate(m.notes):
+        if m.slag[j] == 1 and not wrong_key:
+            out.append([nt, 3])
+        else:
+            out.append([nt, 1])
+            out.append([end if end > nt else nt + 60, 2])
+    out.append([m.track_end + 50, 3])   # a skim after the track: nothing
+    return out
+
+
+def beat_bot(seed, p, spread_ms, rng, skip_pct=0, early_release_ms=0, pour_late_ms=0):
+    """Presses each note at its time give or take `spread_ms`, lets a tap go 60 ms later and a draw at its end (less
+    `early_release_ms`); skips `skip_pct` of the notes; then tilts and stops at the line (late by `pour_late_ms`)."""
+    m = Beat(seed, p)
+    out = []
+    last = 0
+    for nt, end in m.notes:
+        if rng.randint(1, 100) <= skip_pct:
+            continue
+        t = max(last + 1, nt + rng.randint(-spread_ms, spread_ms))
+        out.append([t, 1])
+        up = max(t + 1, (end - early_release_ms) if end > nt else t + 60)
+        out.append([up, 2])
+        last = up
+    t = m.track_end + p["pour_ready_ms"] + 100
+    out.append([t, 1])
+    fill_ticks = -(-m.target // p["pour_rate"])   # ticks to reach the line
+    stop = m.track_end + (tdiv(t - m.track_end, TICK) + fill_ticks) * TICK + pour_late_ms
+    out.append([stop, 2])
+    return out
+
+
+# --- carving (woodworking; Luke, 2026-11-07: a vertical stave, wood off either side) ---------------------
+CARVE_DONE, CARVE_LAY, CARVE_LIFT = 5000, 5001, 5002   # a cut is kind * 1000 + row: 1 left deep, 2 left fine, 3 right deep, 4 right fine
+
+
+class Carve:
+    def __init__(self, seed, p):
+        self.p = p
+        n = len(p["left_outline"])
+        self.n = n
+        st = seed_state(seed)
+        j = p["start_jitter"]
+        self.left, self.right = [], []
+        for _ in range(n):
+            st = next_u32(st)
+            self.left.append(p["start_half"] + (st >> 8) % (2 * j + 1) - j)
+            st = next_u32(st)
+            self.right.append(p["start_half"] + (st >> 8) % (2 * j + 1) - j)
+        # The flip (Luke, 2026-11-07: an unstrung bow "backwards (curve going right or left)"): one draw; with `mirror`
+        # on, an odd draw swaps the profiles (the C bends the other way).
+        st = next_u32(st)
+        flip = p.get("mirror", 0) > 0 and (st >> 8) % 2 == 1
+        bases = (p["right_outline"], p["left_outline"]) if flip else (p["left_outline"], p["right_outline"])
+        v = p["outline_vary"]
+        outs = []
+        for base in bases:
+            st = next_u32(st)
+            r0 = (st >> 8) % n
+            st = next_u32(st)
+            a = (st >> 8) % (2 * v + 1) - v
+            outs.append([base[i] + tdiv(a * max(0, 3 - abs(i - r0)), 3) for i in range(n)])
+        self.tl, self.tr = outs
+        self.laid = p["hide_outline"] > 0
+        self.lays = self.cuts = 0
+        self.next_ok, self.held, self.done, self.last_t = 0, None, -1, -1
+
+    def apply(self, t, code):
+        kind, row = code // 1000, code % 1000
+        depth = self.p["deep_cut"] if kind in (1, 3) else self.p["fine_cut"]
+        # Edges are signed (an edge may cross the middle line, for a curved stave); a cut stops at the other edge.
+        if kind <= 2:
+            self.left[row] = max(-self.right[row], self.left[row] - depth)
+        else:
+            self.right[row] = max(-self.left[row], self.right[row] - depth)
+        self.cuts += 1
+        self.next_ok = t + self.p["swing_ms"]
+
+    def settle(self, t):
+        if self.held is not None and self.held[0] <= t:
+            at, code = self.held
+            self.held = None
+            if at <= self.p["duration_ms"] and self.done < 0 and not self.laid:
+                self.apply(at, code)
+
+    def press(self, t, code):
+        if t < self.last_t:
+            return
+        self.last_t = t
+        if t < 0 or t > self.p["duration_ms"] or self.done >= 0:
+            return
+        self.settle(t)
+        if code == CARVE_DONE:
+            self.done = t
+            self.held = None
+        elif code == CARVE_LAY:
+            if self.p["hide_outline"] > 0 and not self.laid:
+                self.laid = True
+                self.lays += 1
+        elif code == CARVE_LIFT:
+            self.laid = False
+        elif 1000 <= code < 5000 and code % 1000 < self.n:
+            if self.laid:
+                return
+            if t < self.next_ok:
+                self.held = (self.next_ok, code)
+                return
+            self.apply(t, code)
+
+    def result(self):
+        if self.done < 0:
+            self.settle(self.p["duration_ms"])
+        error = sum(abs(self.left[i] - self.tl[i]) + abs(self.right[i] - self.tr[i]) for i in range(self.n))
+        raw = max(0, 1000 - error * 1000 // self.p["error_scale"])
+        ceiling = max(0, 1000 - self.lays * self.p["lay_cost_pm"])
+        return {"error": error, "cuts": self.cuts, "lays": self.lays, "ceiling_pm": ceiling, "score_pm": min(raw, ceiling)}
+
+
+def carve_play(seed, p, inputs):
+    m = Carve(seed, p)
+    for t, c in inputs:
+        m.press(t, c)
+    return m.result()
+
+
+def carve_bot(seed, p, look_again=False, done=True):
+    """Lifts the pattern, then cuts the edge furthest past its profile (deep while a deep cut fits, then fine) every
+    swing; `look_again` lays the pattern on once more halfway; sets the piece down when nothing is past."""
+    m = Carve(seed, p)
+    out = []
+    t = 200
+    if m.laid:
+        out.append([t, CARVE_LIFT])
+        m.press(t, CARVE_LIFT)
+    looked = not look_again
+    while t <= p["duration_ms"]:
+        t += p["swing_ms"]
+        if not looked and m.cuts >= 10:
+            out.append([t, CARVE_LAY])
+            m.press(t, CARVE_LAY)
+            out.append([t + 50, CARVE_LIFT])
+            m.press(t + 50, CARVE_LIFT)
+            t += 50
+            looked = True
+            continue
+        best, code = 0, -1
+        for i in range(m.n):
+            for side, cur, tgt in ((0, m.left[i], m.tl[i]), (1, m.right[i], m.tr[i])):
+                over = cur - tgt
+                if over > best:
+                    best = over
+                    deep = over >= p["deep_cut"]
+                    code = (1 if side == 0 else 3) * 1000 + (0 if deep else 1000) + i
+        if code < 0:
+            break
+        out.append([t, code])
+        m.press(t, code)
+    if done:
+        out.append([t + 10, CARVE_DONE])
+    return out
+
+
 def main():
     rng = random.Random(20261019)
     crack_p = {"duration_ms": 10000, "swing_ms": 260, "stagger_ms": 700, "split_ms": 600, "notches": 7,
@@ -488,8 +829,11 @@ def main():
     crack = []
 
     def add_crack(name, seed, p, inputs):
-        crack.append(dict(name=name, **seed_fields(seed), params=p, inputs=inputs,
-                          points=[c for xy in seams(seed, p, 3) for c in xy], expected=crack_play(seed, p, inputs)))
+        case = dict(name=name, **seed_fields(seed), params=p, inputs=inputs,
+                    points=[c for xy in seams(seed, p, 3) for c in xy], expected=crack_play(seed, p, inputs))
+        if p.get("brittle_permille", 0) > 0:
+            case["brittle"] = brittle_of(seed, p, 3 * p["notches"])
+        crack.append(case)
 
     add_crack("a quick, sure hand", 77, crack_p, crack_bot(77, crack_p, 150, 30, rng))
     add_crack("a high-bit seed, a shaky hand", 0xFEDCBA9876543210, crack_p, crack_bot(0xFEDCBA9876543210, crack_p, 300, 90, rng))
@@ -516,6 +860,12 @@ def main():
     through.append([t_end + 900, tm.points[n][0], tm.points[n][1]])
     add_crack("clicking through the split: held to its end, the latest click wins", 9, crack_p, through)
     add_crack("nothing struck", 42, crack_p, [])
+
+    # Brittle notches (band 2, a test, 2026-11-07): their own stream, so the cases above never change.
+    coal = dict(crack_p, notches=9, bend_pm=200, radius_pm=60, target_hits=28, brittle_permille=350, ring_ms=450)
+    add_crack("brittle: a patient miner waits out the ring", 4242, coal, crack_patient(4242, coal))
+    add_crack("brittle: an eager miner strikes in the ring and cracks it wrong", 4242, coal, crack_patient(4242, coal, eager=True))
+    add_crack("brittle everywhere, a seam's first notch never", 7, dict(coal, brittle_permille=1000), crack_patient(7, dict(coal, brittle_permille=1000), eager=True))
 
     smelt = []
 
@@ -584,10 +934,86 @@ def main():
     add_shape("quenched in the window", 11, band3, [[300, LIFT], [400, 1], [700, 2], [3600, DONE]])
     add_shape("quenched too hot", 11, band3, [[300, LIFT], [400, 1], [700, 2], [1000, DONE]])
 
+    # Smelting as a rhythm track (Luke, 2026-11-07): its own random source, so the cases above never change.
+    brng = random.Random(20261107)
+    beat_p = {"beat_ms": 600, "lead_beats": 4, "beats": 16, "rest_pm": 150, "offbeat_pm": 120, "hold_pm": 100,
+              "hold_beats": 2, "perfect_ms": 70, "good_ms": 150, "good_pm": 600, "stray_pm": 250, "pour_ms": 4000,
+              "pour_ready_ms": 600, "pour_rate": 28, "target_lo": 620, "target_hi": 820, "pour_tolerance": 220,
+              "track_weight_pct": 70}
+    beat = []
+
+    def add_beat(name, seed, p, inputs):
+        m = Beat(seed, p)
+        case = dict(name=name, **seed_fields(seed), params=p, inputs=inputs, notes=[c for n in m.notes for c in n],
+                    expected=beat_play(seed, p, inputs))
+        if p.get("slag_pm", 0) > 0:
+            case["slag"] = m.slag
+        beat.append(case)
+
+    add_beat("on the beat", 99, beat_p, beat_bot(99, beat_p, 0, brng))
+    add_beat("a high-bit seed, a loose hand", 0xFEDCBA9876543210, beat_p, beat_bot(0xFEDCBA9876543210, beat_p, 140, brng))
+    add_beat("seed 0, notes skipped, draws let go early, pours late (spills)", 0, beat_p,
+             beat_bot(0, beat_p, 40, brng, skip_pct=25, early_release_ms=500, pour_late_ms=3000))
+    busy = dict(beat_p, beat_ms=480, beats=20, rest_pm=100, offbeat_pm=320, hold_pm=150, perfect_ms=50, good_ms=115)
+    add_beat("steel: quick, off-beats, more draws", 31337, busy, beat_bot(31337, busy, 60, brng))
+    mash = [[t, 1 + (i % 2)] for i, t in enumerate(range(0, 16000, 40))]
+    add_beat("mashing: every note hit, every stray paid for", 8, beat_p, mash)
+    wild = [[t, brng.choice([1, 1, 2, 2, 0, 3, 9])] for t in sorted(brng.randint(-200, 16300) for _ in range(160))]
+    wild.insert(40, [50, 1])
+    add_beat("every key, out of order", 0x1234567890ABCDEF, beat_p, wild)
+    held = Beat(5, beat_p)
+    add_beat("held down from the first note: one hit, the rest missed", 5, beat_p, [[held.notes[0][0], 1]])
+    add_beat("no pour: the track is the score", 7, dict(beat_p, pour_ms=0), beat_bot(7, dict(beat_p, pour_ms=0), 30, brng))
+    add_beat("in the pour: a press too soon does nothing, then tilts and tops up", 12, beat_p,
+             [[12000, 1], [12500, 2], [12650, 1], [13000, 2], [13100, 1], [14500, 2]])
+    add_beat("nothing pressed", 42, beat_p, [])
+    # Slag (band 2, a test): only the steel round has it; the cases above never change.
+    slag_p = dict(busy, slag_pm=200)
+    add_beat("slag: skimmed with the second button", 31337, slag_p, beat_bot_slag(31337, slag_p))
+    add_beat("slag: pressed with the main button, wasted and missed", 31337, slag_p, beat_bot_slag(31337, slag_p, wrong_key=True))
+    add_beat("a round with no slag ignores a skim", 99, beat_p, [[2400, 3], [2700, 3], [3000, 1], [3060, 2]])
+    add_beat("slag: a skim on no slag is wasted", 31337, slag_p, [[100, 3], [1000, 3]] + beat_bot_slag(31337, slag_p))
+
+    # Carving (Luke, 2026-11-07): its own random source.
+    crng = random.Random(20261108)
+    carve_p = {"duration_ms": 16000, "swing_ms": 240, "start_half": 10, "start_jitter": 1, "deep_cut": 3, "fine_cut": 1,
+               "left_outline": [3, 4, 5, 6, 7, 8, 9, 9, 9, 8, 7, 6, 5, 4, 3, 2],
+               "right_outline": [3, 3, 4, 4, 5, 6, 8, 9, 9, 8, 6, 5, 4, 4, 3, 3],
+               "outline_vary": 2, "error_scale": 30, "hide_outline": 1, "lay_cost_pm": 30, "mirror": 0}
+    carve = []
+
+    def add_carve(name, seed, p, inputs):
+        m = Carve(seed, p)
+        carve.append(dict(name=name, **seed_fields(seed), params=p, inputs=inputs, start_left=m.left, start_right=m.right,
+                          target_left=m.tl, target_right=m.tr, expected=carve_play(seed, p, inputs)))
+
+    add_carve("a careful carver, set down when done", 7, carve_p, carve_bot(7, carve_p))
+    add_carve("a high-bit seed, looks again", 0xFEDCBA9876543210, carve_p, carve_bot(0xFEDCBA9876543210, carve_p, look_again=True))
+    add_carve("seed 0, never sets it down", 0, carve_p, carve_bot(0, carve_p, done=False))
+    add_carve("cuts under the pattern: nothing", 3, carve_p, [[100, 1000], [200, 3005], [300, CARVE_LIFT], [600, 1000], [700, 1001]])
+    add_carve("mid-swing: held to the swing's end, the latest wins", 5, carve_p,
+              [[300, CARVE_LIFT], [400, 1000], [450, 1001], [500, 4002], [800, 3003], [2000, CARVE_DONE], [2100, 1000]])
+    over = [[300, CARVE_LIFT]] + [[400 + k * 240, 1000] for k in range(8)]
+    add_carve("over-cut: wood never goes back", 9, carve_p, over)
+    wild = [[t, crng.choice([1000 + crng.randint(0, 17), 2000 + crng.randint(0, 17), 3000 + crng.randint(-1, 16),
+                              4000 + crng.randint(0, 16), CARVE_LAY, CARVE_LIFT, 999, 6000])]
+            for t in sorted(crng.randint(-100, 16300) for _ in range(140))]
+    wild.insert(30, [50, CARVE_LIFT])
+    add_carve("every code, out of order", 0x1234567890ABCDEF, carve_p, wild)
+    add_carve("no pattern: always shown", 11, dict(carve_p, hide_outline=0), carve_bot(11, dict(carve_p, hide_outline=0)))
+    add_carve("nothing pressed", 42, carve_p, [])
+    # The unstrung bow: a C, both edges curving across the middle line, flipped by the seed.
+    bow_c = dict(carve_p, start_half=10, deep_cut=4, mirror=1,
+                 left_outline=[1, 0, -2, -2, -3, -3, -3, -3, -2, -2, 0, 1], right_outline=[3, 4, 6, 8, 9, 9, 9, 9, 8, 6, 4, 3])
+    add_carve("an unstrung bow, flipped by its seed", 7, bow_c, carve_bot(7, bow_c))
+    add_carve("an unstrung bow, as written", 99, bow_c, carve_bot(99, bow_c))
+    add_carve("a cut never goes through the other edge", 3, dict(bow_c, hide_outline=0),
+              [[200 + k * 240, 1000 + 4] for k in range(12)])
+
     here = os.path.dirname(os.path.abspath(__file__))
     outdir = os.path.join(here, "..", "..", "..", "shared", "golden", "regents")
     os.makedirs(outdir, exist_ok=True)
-    for name, cases in (("crack", crack), ("smelt", smelt), ("shape", shape)):
+    for name, cases in (("crack", crack), ("smelt", smelt), ("shape", shape), ("beat", beat), ("carve", carve)):
         doc = {"_comment": "GENERATED by game/regents/tests/make_skill_goldens.py (%s): for the GDScript model and its "
                            "Rust twin. Do not edit." % name, "cases": cases}
         with open(os.path.join(outdir, name + ".json"), "wb") as f:

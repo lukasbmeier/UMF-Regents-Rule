@@ -31,9 +31,15 @@ fn the_rust_twin_plays_every_golden_round_exactly() {
             branch_permille: int(pp, "branch_permille"),
             safe_segments: int(pp, "safe_segments"),
             target_chops: int(pp, "target_chops"),
+            knot_permille: pp.get("knot_permille").and_then(|v| v.as_i64()).unwrap_or(0),
+            knot_beat_ms: pp.get("knot_beat_ms").and_then(|v| v.as_i64()).unwrap_or(0),
         };
         let want_seg: Vec<i32> = c["segments"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap() as i32).collect();
         assert_eq!(chop::branches(seed, &p, want_seg.len()), want_seg, "{name}: the trunk");
+        if let Some(k) = c.get("knots").and_then(|v| v.as_array()) {
+            let want: Vec<bool> = k.iter().map(|v| v.as_i64() == Some(1)).collect();
+            assert_eq!(chop::knots(seed, &p, want.len()), want, "{name}: the knots");
+        }
         let inputs: Vec<(i64, i32)> = c["inputs"].as_array().unwrap().iter()
             .map(|pair| (pair[0].as_i64().unwrap(), pair[1].as_i64().unwrap() as i32)).collect();
         let e = &c["expected"];
@@ -58,15 +64,17 @@ use umf_module::genre::regents as rules;
 #[test]
 fn the_chain_is_compiled_in() {
     let nodes: Vec<&str> = rules::NODES.iter().map(|n| n.name).collect();
-    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock"], "the six nodes, from game/regents/content/node/");
+    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax"], "the seven nodes, from game/regents/content/node/");
     for n in rules::NODES {
         assert!(rules::item(n.yield_item).is_some() && rules::skill(n.skill).is_some(), "{} gives an item and trains a skill", n.name);
-        assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)), "{}'s round is a gathering round", n.name);
+        // Flax has no round yet (herbalism step 1, 2026-11-07: AFK only; pull the root is step 2).
+        assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)) || (n.name == "Flax" && matches!(n.minigame, rules::Minigame::None)),
+            "{}'s round is a gathering round", n.name);
     }
     let skills: Vec<&str> = rules::SKILLS.iter().map(|s| s.key).collect();
-    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery"]);
+    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery", "herbalism"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
-    assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD]);
+    assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD, "spinning_wheel"]);
     for bar in ["Copper bar", "Iron bar", "Steel bar"] {
         let r = rules::RECIPES.iter().find(|r| r.name == bar).unwrap();
         assert_eq!(r.inputs[0].1, 2, "{bar}: two ores to a bar (owner, 2026-10-19: never one to one)");
@@ -177,11 +185,32 @@ fn ranks_come_from_the_curve_and_speed_from_tool_quality_and_rank() {
 #[test]
 fn a_round_yields_what_afk_makes_in_its_time_times_the_bonus_times_the_score() {
     // A 10 s round at a node giving one every 4 s AFK: 2.5 items' worth, x1.25 at a full score.
-    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 1000), 3125);
-    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 800), 2500, "80 %: exactly what AFK makes");
-    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 400), 1250, "a poor round falls short of AFK (design #23)");
-    assert_eq!(rules::active_yield_milli(3400, 10_000, 1.25, 1000), 3676, "a faster tool makes more in the same round");
-    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 5000), 3125, "a score past 1000 counts as 1000");
+    // With no floor, the curve before M11 (owner #23): the multiplier times the score.
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.0, 1000), 3125);
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.0, 800), 2500, "no floor: 80 % is exactly what AFK makes");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.0, 400), 1250, "a poor round falls short of AFK (design #23)");
+    assert_eq!(rules::active_yield_milli(3400, 10_000, 1.25, 0.0, 1000), 3676, "a faster tool makes more in the same round");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.0, 5000), 3125, "a score past 1000 counts as 1000");
+    // Luke's M11 (2026-11-05): a floor of 0.75 moves the break-even to half a score; a full one still pays the multiplier.
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.75, 500), 2500, "the floor: half a score pays what AFK makes");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.75, 1000), 3125, "a full score, the whole multiplier");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.75, 300), 2250, "a poor round still falls short (design #23)");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 0.75, 0), 1875, "nothing played: three quarters of AFK");
+    assert_eq!(rules::active_yield_milli(4000, 10_000, 1.25, 9.0, 0), 3125, "a floor over the multiplier is the multiplier");
+    assert_eq!(rules::active_rare_mult(3.0, 1000), 3.0, "a full round: the whole rare edge");
+    assert_eq!(rules::active_rare_mult(3.0, 500), 2.0, "half a round: half of it");
+    assert_eq!(rules::active_rare_mult(3.0, 0), 1.0, "a round nobody played: AFK's chance");
+    assert_eq!(rules::active_rare_mult(0.5, 1000), 1.0, "never below AFK's");
+    // Rank eases the round (Luke's M3): 4 % a rank above the requirement, three ranks at most.
+    assert_eq!(rules::rank_ease_pct(1, 1, 4.0, 3.0), 0, "at the requirement: as authored");
+    assert_eq!(rules::rank_ease_pct(3, 1, 4.0, 3.0), 8, "two ranks above: 8 %");
+    assert_eq!(rules::rank_ease_pct(9, 3, 4.0, 3.0), 12, "six above: capped at three ranks");
+    assert_eq!(rules::rank_ease_pct(2, 3, 4.0, 3.0), 0, "below it (never dealt, but): nothing");
+    assert_eq!(rules::payload_eased(7, 40001, 90, 0, 0), "7 40001 90", "no ease: the payload as before");
+    assert_eq!(rules::payload_eased(7, 40001, 90, 0, 8), "7 40001 90 0 8");
+    assert_eq!((rules::parse_payload("7 40001 90 0 8"), rules::parse_part("7 40001 90 0 8"), rules::parse_ease("7 40001 90 0 8")),
+        (Some((7, 40001, 90)), 0, 8), "an eased payload still reads as before, its fifth field the ease");
+    assert_eq!(rules::parse_ease("7 40001 90 40011"), 0, "a part and no ease");
     assert_eq!(rules::whole_items(3125, 124), 4, "3.125 items: the fourth when the roll is under 125");
     assert_eq!(rules::whole_items(3125, 125), 3);
     assert_eq!(rules::whole_items(3000, 0), 3, "a whole number has no extra item");
@@ -213,16 +242,37 @@ fn every_minigame_scores_a_real_round_and_refuses_what_is_not_one() {
     let copper = rules::node_named("Copper rock").unwrap();
     assert_eq!(copper.minigame.duration_ms(), 10_000);
     assert_eq!(copper.minigame.score(5, 100, &[]), Some(0), "nothing struck: a round, scoring nothing");
+    // Rank eases the round (Luke's M3): a strike just past the first notch's radius jars as authored, and lands once
+    // three ranks above the requirement widen it by 12 %.
+    if let rules::Minigame::Crack(p) = &copper.minigame {
+        let (x, y) = umf_module::genre::regents::crack::seams(5, p, 1)[0];
+        let strike = [0.0, (x + p.radius_pm * 106 / 100) as f32, y as f32];
+        assert_eq!(copper.minigame.score_eased(5, 100, 0, &strike), copper.minigame.score(5, 100, &strike), "no ease: the round as authored");
+        let plain = copper.minigame.score(5, 100, &strike).unwrap();
+        let eased = copper.minigame.score_eased(5, 100, 12, &strike).unwrap();
+        assert!(eased > plain, "6 % past the notch: a jar as authored ({plain}), a hit eased 12 % ({eased})");
+    } else {
+        panic!("the copper rock is crack the rock");
+    }
     assert_eq!(copper.minigame.score(5, 100, &[0.0, 500.0]), None, "a rock's strikes are triples");
     let head = rules::RECIPES.iter().find(|r| r.name == "Iron axe head").unwrap();
     assert_eq!(head.minigame.score(5, 100, &[0.0, 3.0, 300.0, 4.0]).map(|s| (0..=1000).contains(&s)), Some(true));
     assert_eq!(head.minigame.score(5, 100, &[0.0, 3.5]), None, "a column is a whole number");
     let bar = rules::RECIPES.iter().find(|r| r.name == "Copper bar").unwrap();
-    assert_eq!(bar.minigame.duration_ms(), 11_000, "the smelt: the heat and the pour");
+    // Smelting's rhythm track (Luke, 2026-11-07): a count-in of 4 and 16 beats of 600 ms, then the 4 s pour.
+    assert_eq!(bar.minigame.duration_ms(), 16_000, "the smelt: the count-in, the track and the pour");
+    assert_eq!(bar.minigame.challenge_kind(), rules::CHALLENGE_BEAT, "dealt as the rhythm track, a kind an old client ignores");
+    assert_eq!(bar.minigame.score(5, 100, &[]), Some(0), "nothing pressed: a round, scoring nothing");
+    assert_eq!(bar.minigame.score(5, 100, &[2400.0, 1.0, 2460.5, 2.0]), None, "a press's time is a whole number");
+    assert_eq!(bar.minigame.score(5, 100, &[2400.0, 1.0, 2460.0]), None, "presses are pairs");
+    assert!(bar.minigame.score(5, 100, &[-5.0, 1.0]).is_none(), "nothing before the round");
+    for r in rules::RECIPES.iter().filter(|r| r.name.ends_with(" bar")) {
+        assert!(matches!(r.minigame, rules::Minigame::Beat(_)), "{}: smelted on the rhythm track", r.name);
+    }
     assert!(matches!(rules::RECIPES.iter().find(|r| r.name == "Grip").unwrap().minigame, rules::Minigame::None), "a handle has no round");
 }
 
-use umf_module::genre::regents::{crack, shape, smelt};
+use umf_module::genre::regents::{beat, carve, crack, shape, smelt};
 
 fn golden_of(name: &str) -> Vec<serde_json::Value> {
     let path = format!("../shared/golden/regents/{name}.json");
@@ -249,7 +299,12 @@ fn the_crack_twin_plays_every_golden_round_exactly() {
             duration_ms: int(pp, "duration_ms"), swing_ms: int(pp, "swing_ms"), stagger_ms: int(pp, "stagger_ms"),
             split_ms: int(pp, "split_ms"), notches: int(pp, "notches"), bend_pm: int(pp, "bend_pm"),
             radius_pm: int(pp, "radius_pm"), margin_pm: int(pp, "margin_pm"), target_hits: int(pp, "target_hits"),
+            brittle_permille: opt(pp, "brittle_permille"), ring_ms: opt(pp, "ring_ms"),
         };
+        if let Some(b) = c.get("brittle").and_then(|v| v.as_array()) {
+            let want: Vec<bool> = b.iter().map(|v| v.as_i64() == Some(1)).collect();
+            assert_eq!(crack::brittle(seed_of(&c), &p, want.len()), want, "{name}: the brittle notches");
+        }
         let want_pts: Vec<i64> = c["points"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
         let pts: Vec<i64> = crack::seams(seed_of(&c), &p, 3).iter().flat_map(|(x, y)| [*x, *y]).collect();
         assert_eq!(pts, want_pts, "{name}: the first three seams");
@@ -288,6 +343,61 @@ fn the_smelt_twin_plays_every_golden_round_exactly() {
             heat_pm: int(e, "heat_pm"), pour_pm: int(e, "pour_pm"), score_pm: int(e, "score_pm"),
         };
         assert_eq!(smelt::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
+    }
+}
+
+#[test]
+fn the_beat_twin_plays_every_golden_round_exactly() {
+    for c in golden_of("beat") {
+        let name = c["name"].as_str().unwrap_or("?");
+        let pp = &c["params"];
+        let p = beat::BeatParams {
+            beat_ms: int(pp, "beat_ms"), lead_beats: int(pp, "lead_beats"), beats: int(pp, "beats"), rest_pm: int(pp, "rest_pm"),
+            offbeat_pm: int(pp, "offbeat_pm"), hold_pm: int(pp, "hold_pm"), hold_beats: int(pp, "hold_beats"),
+            perfect_ms: int(pp, "perfect_ms"), good_ms: int(pp, "good_ms"), good_pm: int(pp, "good_pm"), stray_pm: int(pp, "stray_pm"),
+            pour_ms: int(pp, "pour_ms"), pour_ready_ms: int(pp, "pour_ready_ms"), pour_rate: int(pp, "pour_rate"),
+            target_lo: int(pp, "target_lo"), target_hi: int(pp, "target_hi"), pour_tolerance: int(pp, "pour_tolerance"),
+            track_weight_pct: int(pp, "track_weight_pct"), slag_pm: opt(pp, "slag_pm"),
+        };
+        let want_notes: Vec<i64> = c["notes"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
+        let notes: Vec<i64> = beat::track(seed_of(&c), &p).1.iter().flat_map(|(t, e)| [*t, *e]).collect();
+        assert_eq!(notes, want_notes, "{name}: the track");
+        if let Some(sl) = c.get("slag").and_then(|v| v.as_array()) {
+            let want: Vec<bool> = sl.iter().map(|v| v.as_i64() == Some(1)).collect();
+            assert_eq!(beat::slag(seed_of(&c), &p, &beat::track(seed_of(&c), &p).1), want, "{name}: the slag");
+        }
+        let inputs: Vec<(i64, i64)> = rows(&c).iter().map(|r| (r[0], r[1])).collect();
+        let e = &c["expected"];
+        let want = beat::BeatResult {
+            notes: int(e, "notes"), perfect: int(e, "perfect"), good: int(e, "good"), strays: int(e, "strays"), fill: int(e, "fill"),
+            target: int(e, "target"), track_pm: int(e, "track_pm"), pour_pm: int(e, "pour_pm"), score_pm: int(e, "score_pm"),
+        };
+        assert_eq!(beat::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
+    }
+}
+
+#[test]
+fn the_carve_twin_plays_every_golden_round_exactly() {
+    let ints = |v: &serde_json::Value| -> Vec<i64> { v.as_array().unwrap().iter().map(|x| x.as_i64().unwrap()).collect() };
+    for c in golden_of("carve") {
+        let name = c["name"].as_str().unwrap_or("?");
+        let pp = &c["params"];
+        let (lo, ro) = (ints(&pp["left_outline"]), ints(&pp["right_outline"]));
+        let p = carve::CarveParams {
+            duration_ms: int(pp, "duration_ms"), swing_ms: int(pp, "swing_ms"), start_half: int(pp, "start_half"),
+            start_jitter: int(pp, "start_jitter"), deep_cut: int(pp, "deep_cut"), fine_cut: int(pp, "fine_cut"),
+            left_outline: &lo, right_outline: &ro, outline_vary: int(pp, "outline_vary"), error_scale: int(pp, "error_scale"),
+            hide_outline: int(pp, "hide_outline"), lay_cost_pm: int(pp, "lay_cost_pm"), mirror: int(pp, "mirror"),
+        };
+        let (l, r, tl, tr) = carve::start(seed_of(&c), &p);
+        assert_eq!((l, r, tl, tr), (ints(&c["start_left"]), ints(&c["start_right"]), ints(&c["target_left"]), ints(&c["target_right"])),
+            "{name}: the blank and the profiles");
+        let inputs: Vec<(i64, i64)> = rows(&c).iter().map(|r| (r[0], r[1])).collect();
+        let e = &c["expected"];
+        let want = carve::CarveResult {
+            error: int(e, "error"), cuts: int(e, "cuts"), lays: int(e, "lays"), ceiling_pm: int(e, "ceiling_pm"), score_pm: int(e, "score_pm"),
+        };
+        assert_eq!(carve::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
     }
 }
 

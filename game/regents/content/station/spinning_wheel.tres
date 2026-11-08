@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StationDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/station_def.gd" id="1_station"]
+
+[resource]
+script = ExtResource("1_station")
+key = &"spinning_wheel"
+glow_color = Color(0, 0, 0, 0)
+body_size = Vector3(0.9, 1.1, 0.6)
+body_color = Color(0.55, 0.40, 0.26, 1)
+id = 40005
+display_name = "Spinning wheel"
+designer_notes = "SPINNING (Luke, 2026-11-07, H6): an AFK station trained by Crafting; its own skill and round later if it earns them. A PLACEHOLDER BLOCK (body_size) until a spinning wheel model is found (none in the game's packs)."

@@ -17,7 +17,9 @@ swing_ms = 300
 stagger_ms = 1000
 branch_permille = 620
 safe_segments = 2
-target_chops = 28
+target_chops = 24
+knot_permille = 200
+knot_beat_ms = 600
 
 [resource]
 script = ExtResource("1_node")
@@ -40,4 +42,4 @@ depleted = 0
 depleted_color = Color(0.36, 0.20, 0.16, 1)
 id = 40003
 display_name = "Yew"
-designer_notes = "Woodcutting tier 3: needs woodcutting rank 4 and a axe of tier 2. Its round is played in the skilling lab."
+designer_notes = "Woodcutting tier 3: needs woodcutting rank 4 and a axe of tier 2. Its round is played in the skilling lab. KNOTS (band 2, a TEST for Luke, 2026-11-07, PROGRESS 48): 20 % of pieces take two chops from one side; the target went 28 -> 24 so a flawless round still scores full. Back out: knot_permille 0 and target_chops 28."

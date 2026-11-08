@@ -35,6 +35,8 @@ signal xp_changed(skill_id: int, xp: int)
 signal refused(why: String)
 ## E was tapped at station `target` (and nothing is being made there): its window opens (the HUD's).
 signal station_opened(target: int)
+## A RUN began (`on`) or ended, and why it ended ("" while on): see `run_target`.
+signal run_changed(on: bool, why: String)
 
 ## How long E must be held to open a round rather than work AFK.
 @export_range(0.1, 1.5, 0.05, "suffix:s") var hold_s: float = 0.35
@@ -53,6 +55,20 @@ signal station_opened(target: int)
 ## a few moments and it keeps harvesting"): this player's client stops its AFK work once the body is this far from
 ## where the work began (the work spot). The server's own stop (`regents.afk_stop_moving_m`, 1 m) is the backstop.
 @export_range(0.05, 1.0, 0.01, "suffix:m") var afk_leave_m: float = 0.15
+## RUNS (Luke's M11, 2026-11-05: "gathering and smelting rounds run back to back hands free once started (E or Escape
+## ends a run, as does a round with no input), each round paid as it ends"; `MINIGAMES_PREP.md` §5.3): how long after a
+## round closes the next is asked for (its end screen shows meanwhile, the panel stays open).
+@export_range(0.0, 3.0, 0.05, "suffix:s") var run_gap_s: float = 0.9
+
+## THE RUN: the node or station whose rounds run back to back (-1: none), how many of its rounds have paid, what they
+## paid (item id: count) and how many rare finds; whether E asked it to stop after the round on now.
+var run_target: int = -1
+var run_rounds: int = 0
+var run_got: Dictionary[int, int] = {}
+var run_rares: int = 0
+var run_stop_after: bool = false
+var _run_end_why: String = ""
+var _run_next_ms: int = -1
 
 ## The node or station worked AFK (an entity id), or -1; and its row's values.
 var afk_target: int = -1
@@ -556,6 +572,9 @@ func claim_press(target: int) -> bool:
 	if node != null and node.depleted:
 		refused.emit("Worked out: it comes back soon")
 		return true
+	if run_target >= 0:
+		stop_run_after_round()
+		return true
 	if round_id >= 0 or _step_target >= 0:
 		return true
 	_press_target = target
@@ -565,6 +584,13 @@ func claim_press(target: int) -> bool:
 
 func _physics_process(delta: float) -> void:
 	_stop_afk_if_moved()
+	if run_target >= 0:
+		if InputMap.has_action(ACTION_INTERACT) and Input.is_action_just_pressed(ACTION_INTERACT):
+			stop_run_after_round()   # E ends a run (the round on now still plays out and pays)
+		if _run_next_ms >= 0 and Time.get_ticks_msec() >= _run_next_ms and round_id < 0:
+			_run_next_ms = -1
+			work(run_target, true)
+		return
 	if _step_target >= 0:
 		_step(delta)
 		return
@@ -849,6 +875,8 @@ func _on_settled(req: ReducerRequest) -> void:
 		why = ReducerRequest.Outcome.keys()[req.outcome]
 	for prefix: String in ["gather: ", "craft: ", "work_stop: ", "fill_order: "]:
 		why = why.trim_prefix(prefix)
+	if run_target >= 0:
+		end_run(why)
 	refused.emit(why)
 
 
@@ -923,6 +951,7 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 					r[key] = int(new.get(StringName(key)))
 				for key: String in ["depleted", "ran_out", "active"]:
 					r[key] = bool(new.get(StringName(key)))
+				_count_run(r)   # first: the HUD reads the run's tally when it hears
 				worked.emit(r)
 				_count_made(r)
 		TABLE_XP:
@@ -938,6 +967,77 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				orders_filled[int(new.get(&"order_id"))] = true
 			elif old != null:
 				orders_filled.erase(int(old.get(&"order_id")))
+
+
+## Whether rounds of `def` run back to back (Luke's M11): gathering (a node) and refining (a recipe whose round pays in
+## batches: smelting), never making a part (its round sets the part's quality: one part, one round).
+static func runs(def: ContentDef) -> bool:
+	if def is NodeDef:
+		return true
+	var r: RecipeDef = def as RecipeDef
+	return r != null and r.minigame != null and r.quality != RecipeDef.Quality.FROM_ROUND
+
+
+func _start_run(target: int) -> void:
+	run_target = target
+	run_rounds = 0
+	run_got = {}
+	run_rares = 0
+	run_stop_after = false
+	_run_end_why = ""
+	_run_next_ms = -1
+	run_changed.emit(true, "")
+
+
+## E during a run: the round on now plays out and pays, then the run ends (between rounds: now); `why` is said then
+## ("" when the player asked).
+func stop_run_after_round(why: String = "") -> void:
+	if run_target < 0:
+		return
+	if round_id < 0:
+		end_run(why)
+	else:
+		run_stop_after = true
+		if _run_end_why.is_empty():
+			_run_end_why = why
+
+
+## The run ends (`why`: what ended it, or "" when the player did). No next round is asked for.
+func end_run(why: String) -> void:
+	if run_target < 0:
+		return
+	run_target = -1
+	run_stop_after = false
+	_run_end_why = ""
+	_run_next_ms = -1
+	run_changed.emit(false, why)
+
+
+## A played round paid: the run's tally; a node worked out, or a furnace out of ore, ends the run.
+func _count_run(r: Dictionary) -> void:
+	if run_target < 0 or not bool(r["active"]) or int(r["target_id"]) != run_target:
+		return
+	run_rounds += 1
+	if int(r["qty"]) > 0:
+		run_got[int(r["item_id"])] = int(run_got.get(int(r["item_id"]), 0)) + int(r["qty"])
+	run_rares += int(int(r["rare_item"]) != 0)
+	if bool(r["depleted"]):
+		stop_run_after_round("Worked out: it comes back soon")   # its round is over: the run ends as it closes
+	elif bool(r["ran_out"]):
+		stop_run_after_round("Out of what it takes")
+
+
+## The run's tally in words ("3 rounds: 7 Copper ore, 1 rare find"), "" before its first round has paid.
+func run_words() -> String:
+	if run_rounds == 0:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for id: int in run_got:
+		var it: ItemDef = ItemDef.by_id(id)
+		parts.append("%d %s" % [run_got[id], it.display_name if it != null else "?"])
+	if run_rares > 0:
+		parts.append("%d rare find%s" % [run_rares, "" if run_rares == 1 else "s"])
+	return "%d round%s: %s" % [run_rounds, "" if run_rounds == 1 else "s", ", ".join(parts) if not parts.is_empty() else "nothing yet"]
 
 
 ## A batch made AFK at a station counts toward Make X; the last one asked for stops the run.
@@ -957,6 +1057,11 @@ func _on_challenge(old: RefCounted, new: RefCounted) -> void:
 		if old != null and int(old.get(&"id")) == round_id:
 			round_id = -1
 			round_def = null
+			if run_target >= 0:
+				if run_stop_after:
+					end_run(_run_end_why)
+				else:
+					_run_next_ms = Time.get_ticks_msec() + int(run_gap_s * 1000.0)
 			round_closed.emit(int(old.get(&"id")))
 		return
 	var kind: StringName = SkillMinigames.kind_of_challenge(int(new.get(&"kind")))
@@ -973,4 +1078,9 @@ func _on_challenge(old: RefCounted, new: RefCounted) -> void:
 		return
 	round_id = int(new.get(&"id"))
 	round_def = def
-	round_dealt.emit(round_id, int(new.get(&"seed")), SkillMinigames.with_speed(minigame, int(parts[2])), int(parts[0]), def.display_name)
+	if runs(def) and run_target != int(parts[0]):
+		_start_run(int(parts[0]))
+	# The fifth field: how much this player's rank eases the round (Luke's M3; absent: none).
+	var ease_pct: int = int(parts[4]) if parts.size() >= 5 else 0
+	round_dealt.emit(round_id, int(new.get(&"seed")), SkillMinigames.eased(SkillMinigames.with_speed(minigame, int(parts[2])), ease_pct), int(parts[0]),
+		def.display_name)

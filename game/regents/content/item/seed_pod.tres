@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 100
+color = Color(0.78, 0.66, 0.36, 1)
+description = "A ripe seed pod, found while pulling a plant. Rare."
+id = 40047
+display_name = "Seed pod"
+designer_notes = "THE PLANTS' RARE FIND (a catalyst, as the gem and the nest; Luke, 2026-11-07, H10)."

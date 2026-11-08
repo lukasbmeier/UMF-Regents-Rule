@@ -13,12 +13,12 @@ qty_of() { local v; v="$(sql_rows "SELECT qty FROM inventory_item WHERE owner_en
 xp_of() { local v; v="$(sql_first "SELECT xp FROM skill_xp WHERE entity_id = $MYENT AND skill_id = $1" 1)"; echo "${v:-0}"; }
 node_at() { sql_first "SELECT entity_id FROM gather_node WHERE point_id = '$1'" 1; }
 station_at() { sql_first "SELECT entity_id FROM station WHERE point_id = '$1'" 1; }
-# bot KIND DEF SEED SPEED -> BOT_RESULT (the inputs, a JSON array) and BOT_PLAYED
+# bot KIND DEF SEED SPEED [EASE] -> BOT_RESULT (the inputs, a JSON array) and BOT_PLAYED
 bot() {
   local halves out
   halves="$(python -c "s=int('$3'); print(s >> 32, s & 0xFFFFFFFF)")"
   out="$("$GODOT" --headless --path . --script res://game/regents/tests/skill_bot_cli.gd -- \
-    --kind="$1" --def="$2" --speed="$4" --seed_hi="${halves% *}" --seed_lo="${halves#* }" 2>&1)"
+    --kind="$1" --def="$2" --speed="$4" --ease="${5:-0}" --seed_hi="${halves% *}" --seed_lo="${halves#* }" 2>&1)"
   BOT_RESULT="$(printf '%s\n' "$out" | grep '^RESULT ' | sed 's/^RESULT //' | tr -d '\r')"
   BOT_PLAYED="$(printf '%s\n' "$out" | grep '^PLAYED ' | sed 's/^PLAYED //' | tr -d '\r')"
   [ -n "$BOT_RESULT" ] || echo "  bot: no result: $(printf '%s' "$out" | tail -3)" >&2
@@ -90,17 +90,19 @@ hits() {
 }
 # num_is VALUE EXPECTED LABEL: the same number (the server's JSON says 50.0 where the CLI says 50)
 num_is() { check "$(python -c "import sys; print('true' if abs(float(sys.argv[1]) - float(sys.argv[2])) < 1e-3 else 'false')" "$1" "$2" 2>/dev/null || echo false)" "$3 ($1)"; }
-round_cid() { sql_first "SELECT id FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT" 1; }
+round_cid() { sql_first "SELECT id FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT" 1; }
 round_field() { sql_first "SELECT $2 FROM challenge WHERE id = $1" 1; }
 # play_round KIND DEF WAIT_S -> plays the round the server just dealt, after its time, and submits it
 play_round() {
-  local cid seed payload speed
+  local cid seed payload speed ease
   cid="$(round_cid)"
   seed="$(round_field "$cid" seed)"
   payload="$(round_field "$cid" payload | tr -d '"')"
-  speed="${payload##* }"
+  # "<target> <def> <speed %> [<part> [<ease %>]]" (the ease: Luke's M3, rank above the requirement)
+  speed="$(echo "$payload" | awk '{print $3}')"
+  ease="$(echo "$payload" | awk '{print ($5 == "" ? 0 : $5)}')"
   ROUND_PAYLOAD="$payload"
-  bot "$1" "$2" "$seed" "$speed"
+  bot "$1" "$2" "$seed" "$speed" "$ease"
   # At least as long as the round the bot played: the server refuses an input stamped later than the time since the
   # round was dealt (an anvil round has no clock since 2026-11-05: the part is set down when done, ~25 s for a blade).
   local played
@@ -114,9 +116,9 @@ assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id >= 40001 AND it
   "the chain's fifteen items are item_def rows, from the genre's content"
 assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id = 40016 OR item_def_id = 40017')" "2" "and the oak and yew handles"
 assert_ok "set_world_level 0 20" "world 0 to the frontier glade (level 20)"
-assert_eq "$(row_count 'SELECT * FROM gather_node WHERE world_id = 0')" "29" "its 29 nodes are placed (17 trees, 5 copper, 4 iron and 3 coal rocks)"
-assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100')" "29" "each an entity of the node kind (100)"
-assert_eq "$(row_count 'SELECT * FROM station WHERE world_id = 0')" "4" "and its four stations: a furnace, an anvil, a workbench, the order board"
+assert_eq "$(row_count 'SELECT * FROM gather_node WHERE world_id = 0')" "33" "its 33 nodes are placed (17 trees, 5 copper, 4 iron and 3 coal rocks, 4 flax)"
+assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100')" "33" "each an entity of the node kind (100)"
+assert_eq "$(row_count 'SELECT * FROM station WHERE world_id = 0')" "5" "and its five stations: a furnace, an anvil, a workbench, the order board, the spinning wheel"
 assert_eq "$(row_count 'SELECT * FROM gather_node WHERE def_id = 40005')" "4" "four of the nodes iron rocks, by the points' tags"
 TREE="$(node_at tree_1)"; TREE2="$(node_at tree_2)"; TREE3="$(node_at tree_3)"    # at (-9,0,-6), (-3,0,-11), (5,0,-8)
 COPPER="$(node_at copper_1)"; IRON="$(node_at iron_1)"                            # at (14,0,16), (-18,0,18)
@@ -125,7 +127,7 @@ BOARD="$(station_at orders)"                                                    
 # the newest work_result's XP at a target (the SQL has no ORDER BY: the highest id)
 wr_xp() { sql_rows "SELECT id, xp FROM work_result WHERE entity_id = $MYENT AND target_id = $1" | tr -d ' ' | sort -t'|' -k1,1n | tail -1 | cut -d'|' -f2; }
 log_of() { sql_first "SELECT $2 FROM recipe_log WHERE entity_id = $MYENT AND recipe_id = $1" 1; }
-assert_eq "$(qty_of 40001) $(qty_of 40006)" "1 1" "the player was given a Copper axe and a Copper pickaxe"
+assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051)" "1 1 1" "the player was given a Copper axe, a Copper pickaxe and (herbalism, 2026-11-07) a Copper trowel"
 
 # --- THE TUTORIAL (Luke, 2026-11-01: make your own sword, then the fight; progress on the server) ---
 # Begun here, so the whole suite's real work (rounds, crafts, a parry, a string at the dummy) ticks its lessons;
@@ -215,9 +217,9 @@ assert_rejected "craft $FURNACE 40004 true" "not made at the furnace" "an axe he
 assert_rejected "craft $ANVIL 40003 true" "too far" "rivets at the anvil, asked from the furnace: too far"
 assert_ok "grant_item $MYENT 40007 5" "an admin gives 5 copper ore"
 ORE_HAVE="$(qty_of 40007)"; BARS0="$(qty_of 40010)"
-assert_ok "craft $FURNACE 40001 true" "hold E at the furnace: a round of bellows then pour, for copper bars"
-assert_eq "$(round_field "$(round_cid)" kind)" "102" "challenge kind 102"
-play_round smelt 40001 11
+assert_ok "craft $FURNACE 40001 true" "hold E at the furnace: a round of the rhythm track then the pour, for copper bars"
+assert_eq "$(round_field "$(round_cid)" kind)" "104" "challenge kind 104 (smelting's rhythm track, Luke 2026-11-07)"
+play_round beat 40001 11
 BARS=$(( $(qty_of 40010) - BARS0 ))
 check "$([ "$BARS" -ge 1 ] && [ "$BARS" -le $((ORE_HAVE / 2)) ] && echo true || echo false)" "smelted: $BARS copper bars from $ORE_HAVE ore ($BOT_PLAYED)"
 assert_eq "$(( ORE_HAVE - $(qty_of 40007) ))" "$((BARS * 2))" "each bar took two ores"
@@ -278,6 +280,17 @@ assert_eq "$(sql_rows "SELECT parts, traits FROM craft_choice WHERE entity_id = 
 assert_ok "craft_choosing $BENCH 40006 false [40016] []" "craft_choosing again, no trait wanted (none is a choice too)"
 assert_eq "$(sql_rows "SELECT parts, traits FROM craft_choice WHERE entity_id = $MYENT" | sed -e 's/ *| */|/' -e 's/^ *//' -e 's/ *$//' )" "4001640012|" "kept: the parts, no trait"
 assert_ok "work_stop" "stop (the playtest makes the axe for real)"
+# CARVING (woodworking; Luke 2026-11-07: a vertical stave, wood off either side): the yew bow carved in a round, its
+# quality the round's score, the two yew logs taken.
+assert_ok "grant_item $MYENT 40004 2" "(two yew logs)"
+YEW0="$(qty_of 40004)"
+assert_ok "craft $BENCH 40011 true" "hold E at the workbench, the yew bow picked: a round of carving"
+assert_eq "$(round_field "$(round_cid)" kind)" "105" "challenge kind 105 (the carve)"
+play_round carve 40011 2
+CARVED="$(echo "$BOT_PLAYED" | grep -oE '"score_pm": [0-9]+' | grep -oE '[0-9]+$')"
+check "$([ -n "$CARVED" ] && [ "$CARVED" -ge 900 ] && echo true || echo false)" "the bot carved both sides to the line ($BOT_PLAYED)"
+assert_eq "$(sql_first "SELECT instance_data FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40049" 1)" "\"{\"q\":$CARVED}\""   "the unstrung bow's quality is the round's score (it is strung with a bowstring: herbalism)"
+assert_eq "$(( YEW0 - $(qty_of 40004) ))" "2" "the bow took its two yew logs"
 # AFTER LUKE'S PLAYTEST (2026-10-23): rivets offer traits (copper: Gentle 40009 on a tool, Thirsting 40006 on a weapon);
 # a part's trait counts only where it fits; the head picked BY GRADE; a made item REFITTED at a cost.
 assert_ok "craft_choosing $BENCH 40006 false [40016,40012] [40001,40009]" "an iron axe with oak and copper rivets: Steady and Gentle"
@@ -363,6 +376,28 @@ assert_ok 'teleport {"x":5.0,"y":0.0,"z":-6.5}' "stand by tree_3"
 assert_rejected "gather $TREE3 false" "need an axe" "with no axe, nothing is chopped"
 assert_eq "$(qty_of 40001)" "0" "and the starter kit is not handed out again (once per character)"
 assert_ok "grant_item $MYENT 40001 1" "an admin gives the axe back"
+
+# --- herbalism (2026-11-07, HERBALISM_HUNTING_PREP.md step 1): flax with the starter trowel; no round yet ---
+FLAX="$(node_at flax_1)"; WHEEL="$(station_at spinning_wheel)"   # at (-12,0,2), (8,0,14)
+assert_ok 'teleport {"x":-12.0,"y":0.0,"z":3.6}' "stand by flax_1"
+assert_ok "gather $FLAX true" "hold E at the flax: it has no round yet, so it is worked AFK"
+# (The hook's `logged` is defined further on: the server's log read here, a moment given for the line to land.)
+FLAX_AFK=false
+for _ in $(seq 1 10); do spacetime logs "$DB" 2>/dev/null | tail -80 | grep -qE "works Flax $FLAX AFK" && { FLAX_AFK=true; break; }; sleep 0.5; done
+check "$FLAX_AFK" "the server worked it AFK (no round dealt for a plant with none)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE entity_id = $MYENT AND kind >= 100 AND kind <= 105")" "0" "and no round is open"
+TROWEL_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40051" 1)"
+assert_ok "consume_item $TROWEL_ROW 1" "the trowel leaves the bag"
+assert_rejected "gather $FLAX false" "need a trowel" "with no trowel, no flax is pulled"
+assert_ok "grant_item $MYENT 40051 1" "an admin gives the trowel back"
+assert_ok 'teleport {"x":8.0,"y":0.0,"z":12.6}' "stand at the spinning wheel"
+assert_rejected "craft $WHEEL 40038 false" "needs 3 Flax" "no flax, no bowstring (three to one)"
+assert_ok "grant_item $MYENT 40046 3" "an admin gives three flax"
+assert_ok "craft $WHEEL 40038 true" "a bowstring begun (no round: worked AFK, held E or not)"
+assert_rejected "craft $WHEEL 40039 false" "is not made at the" "a bow is not strung at the wheel"
+assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "back at the workbench"
+assert_rejected "craft $BENCH 40039 false" "needs 1 Bowstring" "the stave carved above, but no bowstring: no bow to string"
+assert_ok "work_stop" "(nothing left working)"
 
 # --- combat: the weapon is the kit; the training dummy ---
 C_AIM='{"x":0.0,"y":0.0,"z":-1.0}'
@@ -799,7 +834,7 @@ assert_ok "set_status $TREE 0 0 \"\"" "tree_1 grows back (an admin: it was worke
 assert_ok "wield $SW" "a sword taken in hand while it is set aside"
 assert_eq "$(tut_done)" "$TUT_BEFORE" "NEGATIVE: set aside, nothing ticks (the sword taken in hand)"
 assert_ok "gather $TREE true" "a round of branch dodge, then..."
-assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "1" "(the round is open)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT")" "1" "(the round is open)"
 PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 assert_ok "apply_damage $MYENT $(python -c "print($PHP2 - 1)") 0" "(test) you are worn down to 1"
 standin_up "$C_CODE3" "a referee again"
@@ -809,7 +844,7 @@ assert_ok "resolve_action $RS2 $MYENT" "and hits you"
 check "$(logged "player $MYENT was slain by $SKEL2")" "you are slain"
 check "$(logged "$MYENT fell: the tutorial is offered again")" "and, set aside, the tutorial is offered again"
 assert_eq "$(tut_state)|$(sql_first "SELECT reminded FROM tutorial WHERE entity_id = $MYENT" 1 | tr -d ' ')" "0|true" "offered (state 0), reminded once"
-assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 103 AND entity_id = $MYENT")" "0" "slain mid-round: the round is withdrawn (no chop pose over the death)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT")" "0" "slain mid-round: the round is withdrawn (no chop pose over the death)"
 sleep 2
 assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $MYENT" 1)" "false" "a second on you are up"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT max FROM health_state WHERE entity_id = $MYENT" 1)" "whole"
@@ -1109,8 +1144,8 @@ assert_eq "$(row_count "SELECT * FROM order_filled WHERE entity_id = $MYENT")" "
 AXE_NOW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40034" 1)"
 assert_ok "wield $AXE_NOW" "wield a steel axe"
 assert_ok "admin_reset_bag $MYENT" "the admin resets the bag"
-assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")" "2" "two rows left: the starter kit"
-assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40024) $(qty_of 40034)" "1 1 0 0" "a Copper axe and a Copper pickaxe; no coal, no steel axe"
+assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")" "3" "three rows left: the starter kit"
+assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051) $(qty_of 40024) $(qty_of 40034)" "1 1 1 0 0" "a Copper axe, a Copper pickaxe and a Copper trowel; no coal, no steel axe"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "the steel axe it held is put away"
 
 # --- THE WORLD MAP'S DISCOVERY (Luke, 2026-10-26): a node is named once you have been near it ---

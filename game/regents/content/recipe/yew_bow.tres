@@ -1,9 +1,27 @@
-[gd_resource type="Resource" script_class="RecipeDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="1_recipe"]
+[ext_resource type="Script" path="res://game/regents/skilling/woodworking/carve_params.gd" id="9_carve"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="2_skill"]
-[ext_resource type="Resource" path="res://game/regents/content/item/yew_bow.tres" id="3_out"]
+[ext_resource type="Resource" path="res://game/regents/content/item/unstrung_yew_bow.tres" id="3_out"]
 [ext_resource type="Resource" path="res://game/regents/content/item/yew_logs.tres" id="in0"]
+
+[sub_resource type="Resource" id="Carve"]
+script = ExtResource("9_carve")
+display_name = "Unstrung yew bow"
+left_outline = PackedInt32Array(1, 0, -2, -2, -3, -3, -3, -3, -2, -2, 0, 1)
+right_outline = PackedInt32Array(3, 4, 6, 8, 9, 9, 9, 9, 8, 6, 4, 3)
+duration_ms = 24000
+swing_ms = 220
+start_half = 10
+start_jitter = 1
+deep_cut = 4
+fine_cut = 1
+outline_vary = 2
+error_scale = 40
+hide_outline = 1
+lay_cost_pm = 30
+mirror = 1
 
 [resource]
 script = ExtResource("1_recipe")
@@ -16,5 +34,9 @@ output_qty = 1
 xp = 30
 min_rank = 1
 afk_ms = 5000
+minigame = SubResource("Carve")
+quality = 1
+afk_quality = 350
 id = 40011
-display_name = "Yew bow"
+display_name = "Unstrung yew bow"
+designer_notes = "CARVED (Luke 2026-11-07: \"Bow and staff first\", then a vertical stave with wood off either side, PROGRESS 49): its round is woodworking's carve (CarveParams: the left and right profiles may differ: the bow is an UNSTRUNG stave, a C bending left or right by the round's seed (Luke 2026-11-07; stringing it is for later, with herbalism's string), thicker at the grip; the staff's head hooks to one side); its quality, so its Power, comes from the round; AFK makes Common (350)."

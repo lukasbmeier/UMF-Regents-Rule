@@ -1,8 +1,18 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_pib4d"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_5dhmi"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_qbqhw"]
 
-[node name="Cell_7_-6" type="Node3D" unique_id=582019360]
+[node name="Cell_7_-6" type="Node3D" unique_id=1731345456]
 
-[node name="rock_big_1_700" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_pib4d")]
+[node name="w_flax_52" type="Marker3D" parent="." unique_id=1608369972]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 486.31268, 4.9193153, -324.78088)
+gizmo_extents = 0.5
+script = ExtResource("1_5dhmi")
+point_id = "w_flax_52"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="rock_big_1_700" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_qbqhw")]
 transform = Transform3D(0.13482505, 0, -1.441247, 0, 1.4475396, 0, 1.441247, 0, 0.13482505, 454.17346, 5.448764, -329.98773)

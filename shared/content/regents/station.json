@@ -21,6 +21,11 @@
 			"id": 40004,
 			"key": "orders",
 			"name": "Order board"
+		},
+		{
+			"id": 40005,
+			"key": "spinning_wheel",
+			"name": "Spinning wheel"
 		}
 	],
 	"owner": "regents",

@@ -342,6 +342,50 @@
       ]
     },
     {
+      "id": "flax_1",
+      "kind": "node",
+      "x": -12.0,
+      "y": 0.0,
+      "z": 2.0,
+      "radius": 0.5,
+      "tags": [
+        "Flax"
+      ]
+    },
+    {
+      "id": "flax_2",
+      "kind": "node",
+      "x": -15.0,
+      "y": 0.0,
+      "z": 5.0,
+      "radius": 0.5,
+      "tags": [
+        "Flax"
+      ]
+    },
+    {
+      "id": "flax_3",
+      "kind": "node",
+      "x": -10.0,
+      "y": 0.0,
+      "z": 6.0,
+      "radius": 0.5,
+      "tags": [
+        "Flax"
+      ]
+    },
+    {
+      "id": "flax_4",
+      "kind": "node",
+      "x": -16.0,
+      "y": 0.0,
+      "z": 0.0,
+      "radius": 0.5,
+      "tags": [
+        "Flax"
+      ]
+    },
+    {
       "id": "furnace",
       "kind": "station",
       "x": -6.0,
@@ -372,6 +416,17 @@
       "radius": 1.0,
       "tags": [
         "workbench"
+      ]
+    },
+    {
+      "id": "spinning_wheel",
+      "kind": "station",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 14.0,
+      "radius": 1.0,
+      "tags": [
+        "spinning_wheel"
       ]
     },
     {
@@ -468,6 +523,18 @@
       "radius": 6.0,
       "tags": [
         "Workshop",
+        "minor"
+      ]
+    },
+    {
+      "id": "poi_meadow",
+      "kind": "poi",
+      "x": -13.0,
+      "y": 0.0,
+      "z": 3.0,
+      "radius": 5.0,
+      "tags": [
+        "Flax meadow",
         "minor"
       ]
     },

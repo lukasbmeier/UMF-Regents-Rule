@@ -85,12 +85,17 @@ var _heights: PackedFloat32Array = PackedFloat32Array()
 var _counts: Dictionary[String, int] = {}
 ## The glade's node points' radii, by tag (a tree's, a rock's), so the scattered ones match.
 var _radius_by_tag: Dictionary[String, float] = {}
+## HERBALISM'S FLAX (2026-11-07, HERBALISM_HUNTING_PREP.md): scattered over open meadow from ITS OWN random stream, so
+## adding it moved nothing already placed. How often an open cell gets a patch.
+var _flax_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+const FLAX_SHARE: float = 0.2
 
 
 func _ready() -> void:
 	await get_tree().process_frame
 	var t0: int = Time.get_ticks_msec()
 	_rng.seed = 0xC0417E17
+	_flax_rng.seed = 0xF1A7   # flax's own stream (2026-11-07): the trees, rocks, camps and decor before it never move
 	if not _configure():
 		AppExit.quit(get_tree(), 1)
 		return
@@ -457,6 +462,8 @@ func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
 			_node_point(r, "Tree")
 		elif roll < 0.42:
 			_node_point(r, "Copper rock")
+		if _flax_rng.randf() < FLAX_SHARE:
+			_node_point(r, "Flax", _flax_rng)
 	# Decor: a little of what the glade has, so a cell is not bare.
 	if mtn < 0.3:
 		var models: Array[String] = ["Bush_Large", "Bush_Long_1", "Rock_Medium_1", "Rock_Big_1", "Grass_Common_Tall", "Fern_1"]
@@ -475,9 +482,10 @@ func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
 			_own(inst)
 
 
-## A gathering node of `tag` somewhere in `r` that is dry, inland and not steep.
-func _node_point(r: Rect2, tag: String) -> void:
-	var p: Vector2 = _free_spot(r, 4.0)
+## A gathering node of `tag` somewhere in `r` that is dry, inland and not steep (`rng`: whose draws; the main stream's
+## by default).
+func _node_point(r: Rect2, tag: String, rng: RandomNumberGenerator = null) -> void:
+	var p: Vector2 = _free_spot(r, 4.0, rng)
 	if p.x == INF:
 		return
 	var kind_key: String = tag.to_lower().replace(" ", "_")
@@ -493,9 +501,10 @@ func _node_point(r: Rect2, tag: String) -> void:
 
 
 ## A random spot in `r` with room (`margin` from its edges) on dry, gentle ground; (INF, INF) if none.
-func _free_spot(r: Rect2, margin: float) -> Vector2:
+func _free_spot(r: Rect2, margin: float, rng: RandomNumberGenerator = null) -> Vector2:
+	var g: RandomNumberGenerator = rng if rng != null else _rng
 	for attempt: int in range(8):
-		var p := Vector2(_rng.randf_range(r.position.x + margin, r.end.x - margin), _rng.randf_range(r.position.y + margin, r.end.y - margin))
+		var p := Vector2(g.randf_range(r.position.x + margin, r.end.x - margin), g.randf_range(r.position.y + margin, r.end.y - margin))
 		if _shape.coast_distance(p.x, p.y) > 15.0 and _slope(p.x, p.y) < 0.6 and p.length() > CAMP_CLEAR_M:
 			return p
 	return Vector2(INF, INF)

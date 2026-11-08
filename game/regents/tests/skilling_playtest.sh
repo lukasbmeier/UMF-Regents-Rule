@@ -41,7 +41,7 @@ buddy_pid=$!
 CHOP_HEADLESS="--headless"; [ -n "${SHOTS:-}" ] && CHOP_HEADLESS="--resolution 1280x720"
 "$GODOT" $CHOP_HEADLESS --path . "$SCENE" -- --token=chopper --role=chopper --latency="$LATENCY" --jitter="$JITTER" --autoconnect --shots="${SHOTS:-}" >"$chop_log" 2>&1 &
 chop_pid=$!
-granted=""; ore_given=""; sword_given=""
+granted=""; ore_given=""; sword_given=""; stave_given=""
 while kill -0 "$chop_pid" 2>/dev/null; do
   if [ -z "$ore_given" ]; then
     ent="$(grep -oE '^GRANT_ORE [0-9]+' "$chop_log" | head -1 | awk '{print $2}')"
@@ -59,6 +59,14 @@ while kill -0 "$chop_pid" 2>/dev/null; do
       spacetime call "$DB" grant_item "$ent" 40003 2 >/dev/null 2>&1
       granted="yes"
       echo "   gave entity $ent two iron bars, two logs and two oak logs"
+    fi
+  fi
+  if [ -z "$stave_given" ]; then
+    ent="$(grep -oE '^GRANT_STAVE [0-9]+' "$chop_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      spacetime call "$DB" admin_give_item "$ent" 40049 1 650 >/dev/null 2>&1
+      stave_given="yes"
+      echo "   gave entity $ent an unstrung yew bow of quality 650 (herbalism's stringing)"
     fi
   fi
   if [ -z "$sword_given" ]; then

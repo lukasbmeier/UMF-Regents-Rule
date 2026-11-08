@@ -50,6 +50,26 @@ def branches(seed, p, n):
     return out
 
 
+# KNOTS (MINIGAMES_PREP.md §3, band 2's new thing, a test for Luke's play, 2026-11-07): a knotted piece takes two chops
+# from the same side, the second within `knot_beat_ms` of the first; the first only bites. Knots are drawn from their
+# own stream (the seed folded with KNOT_SALT), so the branches never change; `knot_permille` 0 (or absent): none.
+KNOT_SALT = 0x6B6E6F74
+
+
+def knots(seed, p, n):
+    if p.get("knot_permille", 0) <= 0:
+        return [0] * n
+    out = []
+    st = seed_state(seed ^ KNOT_SALT)
+    for i in range(n):
+        if i < p["safe_segments"]:
+            out.append(0)
+            continue
+        st = next_u32(st)
+        out.append(1 if ((st >> 8) * 1000) >> 24 < p["knot_permille"] else 0)
+    return out
+
+
 class Chop:
     """A press during a swing is HELD (the latest one) and lands the moment the swing ends; a press while
     staggered is lost."""
@@ -57,6 +77,8 @@ class Chop:
     def __init__(self, seed, p):
         self.p = p
         self.seg = branches(seed, p, max_chops(p) + 2 + VIEW_SEGMENTS)
+        self.knots = knots(seed, p, len(self.seg))
+        self.bite = None   # (side, time) of a bite into the knotted piece
         self.cut = self.clean = self.hits = self.combo = self.best = 0
         self.next_ok, self.last_t, self.staggered, self.held = 0, -1, False, None
 
@@ -65,8 +87,15 @@ class Chop:
         if head == s:
             self.hits += 1
             self.combo = 0
+            self.bite = None
             self.next_ok, self.staggered = t + self.p["stagger_ms"], True
             return 2
+        knotted = self.cut < len(self.knots) and self.knots[self.cut] == 1
+        if knotted and not (self.bite is not None and self.bite[0] == s and t - self.bite[1] <= self.p.get("knot_beat_ms", 0)):
+            self.bite = (s, t)
+            self.next_ok, self.staggered = t + self.p["swing_ms"], False
+            return 4
+        self.bite = None
         self.cut += 1
         self.clean += 1
         self.combo += 1
@@ -106,7 +135,25 @@ def play(seed, p, inputs):
     m = Chop(seed, p)
     for t, s in inputs:
         m.chop(t, s)
-    return m.result(), m.seg
+    return m.result(), m.seg, m.knots
+
+
+def perfect_knotted(seed, p, late_ms=0, switch=False):
+    """Never under a branch; a knot chopped twice from the same side (the second `late_ms` after the swing allows, or
+    from the other side when `switch`)."""
+    m = Chop(seed, p)
+    out, t = [], 0
+    side = LEFT
+    while t <= p["duration_ms"]:
+        head = m.seg[m.cut + 1]
+        side = RIGHT if head == LEFT else (LEFT if head == RIGHT else side)
+        s = side
+        if switch and m.bite is not None and head == NONE:
+            s = RIGHT if m.bite[0] == LEFT else LEFT
+        out.append([t, s])
+        did = m.chop(t, s)
+        t = m.next_ok + (late_ms if did == 4 else 0)
+    return out
 
 
 def perfect(seed, p):
@@ -133,9 +180,12 @@ def main():
     cases = []
 
     def add(name, seed, p, inputs):
-        r, seg = play(seed, p, inputs)
-        cases.append({"name": name, "seed_hi": (seed >> 32) & M32, "seed_lo": seed & M32, "params": p,
-                      "inputs": inputs, "segments": seg[:40], "expected": r})
+        r, seg, kn = play(seed, p, inputs)
+        case = {"name": name, "seed_hi": (seed >> 32) & M32, "seed_lo": seed & M32, "params": p,
+                "inputs": inputs, "segments": seg[:40], "expected": r}
+        if p.get("knot_permille", 0) > 0:
+            case["knots"] = kn[:40]
+        cases.append(case)
 
     p = params()
     add("perfect player, the tree", 99, p, perfect(99, p))
@@ -162,6 +212,13 @@ def main():
     add("a press held past the round's end never lands", 12, params(branch_permille=0, duration_ms=1000, swing_ms=300),
         [[0, LEFT], [300, LEFT], [600, LEFT], [900, RIGHT], [950, LEFT]])
     add("nothing pressed", 42, p, [])
+    # Knots (band 2, a test): their own random stream, so the cases above never change.
+    kp = params(branch_permille=620, target_chops=22, swing_ms=220, stagger_ms=1000, knot_permille=300, knot_beat_ms=600)
+    add("knots: each chopped twice from the same side in a beat", 31337, kp, perfect_knotted(31337, kp))
+    add("knots: the second chop too late, a fresh bite", 31337, kp, perfect_knotted(31337, kp, late_ms=500))
+    add("knots: the second chop from the other side, a fresh bite", 99, kp, perfect_knotted(99, kp, switch=True))
+    add("knots everywhere, chopped as if none", 5, params(knot_permille=1000, knot_beat_ms=600, branch_permille=0),
+        [[k * 300, LEFT] for k in range(34)])
 
     here = os.path.dirname(os.path.abspath(__file__))
     out = os.path.join(here, "..", "..", "..", "shared", "golden", "regents", "chop.json")

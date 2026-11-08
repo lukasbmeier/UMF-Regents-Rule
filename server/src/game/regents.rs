@@ -904,11 +904,17 @@ fn report(ctx: &ReducerContext, entity_id: u64, world_id: u32, target_id: u64, s
     });
 }
 
+/// How much `me`'s rank in `skill` eases a round that needs `min_rank` (Luke's M3; `rules::rank_ease_pct`).
+fn rank_ease(ctx: &ReducerContext, me: u64, skill: u32, min_rank: u32) -> u32 {
+    rules::rank_ease_pct(rank_in(ctx, me, skill), min_rank, hot_number(ctx, hot::RANK_EASE_PCT), hot_number(ctx, hot::RANK_EASE_RANKS))
+}
+
 /// `entity_id` gathers `n` items at node `node_id` (a round when `active`): each may bring its rare find
 /// and may work it out (then no more come). Pays, reports. The items gathered.
 #[allow(clippy::too_many_arguments)]
 fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u64, def: &NodeSeed, n: u32, active: bool, score_pm: i32, salt: u64) -> u32 {
-    let rare_mult = if active { hot_number(ctx, hot::ACTIVE_RARE_MULT) } else { 1.0 };
+    // A played round's edge on a rare find grows with its score (Luke's M11, 2026-11-07): none for a round nobody played.
+    let rare_mult = if active { rules::active_rare_mult(hot_number(ctx, hot::ACTIVE_RARE_MULT), score_pm as i64) } else { 1.0 };
     let already = is_depleted(ctx, node_id);
     // The tool's TRAITS: depletion (Steady, Gentle; Lucky, Springy), a rare find (Prospector's), one more (Lucky).
     let traits = best_tool(ctx, entity_id, def.tool_tag).map_or_else(Vec::new, |t| t.3);
@@ -1005,9 +1011,11 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
     }
     let speed = rules::speed_pct(tool_speed, quality, rank_in(ctx, me, def.skill));
     stop_work(ctx, me);
-    if active {
+    // A node with no round (a plant before its round is built, 2026-11-07) is worked AFK, held E or not.
+    if active && !matches!(def.minigame, Minigame::None) {
         let ttl = def.minigame.duration_ms() * 1000 + ROUND_GRACE_MICROS;
-        crate::module::issue_genre_challenge(ctx, me, def.minigame.challenge_kind(), rules::payload(node_id, def.id, speed), ttl)?;
+        let ease = rank_ease(ctx, me, def.skill, def.min_rank);
+        crate::module::issue_genre_challenge(ctx, me, def.minigame.challenge_kind(), rules::payload_eased(node_id, def.id, speed, 0, ease), ttl)?;
         log::info!("regents: {me} plays a round at {} {node_id} (speed {speed} %)", def.name);
     } else {
         ctx.db.afk_work().insert(AfkWork {
@@ -1172,7 +1180,8 @@ fn craft_impl(ctx: &ReducerContext, station_id: u64, recipe_id: u32, active: boo
     let part = parts.first().copied().unwrap_or(0);
     if active && !matches!(r.minigame, Minigame::None) {
         let ttl = r.minigame.duration_ms() * 1000 + ROUND_GRACE_MICROS;
-        crate::module::issue_genre_challenge(ctx, me, r.minigame.challenge_kind(), rules::payload_with_part(station_id, r.id, 100, part), ttl)?;
+        let ease = rank_ease(ctx, me, r.skill, r.min_rank);
+        crate::module::issue_genre_challenge(ctx, me, r.minigame.challenge_kind(), rules::payload_eased(station_id, r.id, 100, part, ease), ttl)?;
         log::info!("regents: {me} plays a round of {} at the {}", r.name, st.key);
     } else {
         // A craft's `tool_item` is the part it is made with (0: none).
@@ -1401,15 +1410,16 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
         log::info!("regents: round {} from {}: walked away", ch.id, ch.entity_id);
         return None;
     }
-    let Some(score) = minigame.score(ch.seed, speed as i64, result) else {
+    let Some(score) = minigame.score_eased(ch.seed, speed as i64, rules::parse_ease(&ch.payload) as i64, result) else {
         log::warn!("regents: round {} from {} is not a round (len {})", ch.id, ch.entity_id, result.len());
         return None;
     };
     let world_id = ctx.db.entity().entity_id().find(ch.entity_id).map_or(DEFAULT_WORLD, |e| e.world_id);
     let salt = ch.seed ^ (micros(ctx.timestamp) as u64);
     let mult = hot_number(ctx, hot::ACTIVE_YIELD_MULT);
+    let floor = hot_number(ctx, hot::ACTIVE_YIELD_FLOOR);
     if let Some(n) = node {
-        let count = rules::whole_items(rules::active_yield_milli(rules::afk_interval_ms(n.afk_ms, speed), n.minigame.duration_ms(), mult, score),
+        let count = rules::whole_items(rules::active_yield_milli(rules::afk_interval_ms(n.afk_ms, speed), n.minigame.duration_ms(), mult, floor, score),
             rules::roll_permille(salt));
         let got = gather_items(ctx, ch.entity_id, world_id, target, n, count, true, score as i32, salt);
         log::info!("regents: round {} at {} {target}: score {score} -> {got} {}", ch.id, n.name, rules::item(n.yield_item).map_or("?", |i| i.name));
@@ -1417,7 +1427,7 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
         let batches = if r.quality == rules::QUALITY_FROM_ROUND {
             1
         } else {
-            rules::whole_items(rules::active_yield_milli(r.afk_ms, r.minigame.duration_ms(), mult, score), rules::roll_permille(salt))
+            rules::whole_items(rules::active_yield_milli(r.afk_ms, r.minigame.duration_ms(), mult, floor, score), rules::roll_permille(salt))
         };
         let (parts, traits) = choice_for(ctx, ch.entity_id, r, rules::parse_part(&ch.payload));
         let (mut made, mut quality) = (0u32, -1i32);

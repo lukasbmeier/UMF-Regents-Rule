@@ -1,16 +1,26 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_vu31k"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_brout"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_n0c6t"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_brout"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_n0c6t"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_485j7"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="4_rtbo2"]
 
-[node name="Cell_-15_3" type="Node3D" unique_id=1143094778]
+[node name="Cell_-15_3" type="Node3D" unique_id=62840207]
 
-[node name="grass_common_tall_9" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_vu31k")]
+[node name="w_flax_1" type="Marker3D" parent="." unique_id=1416195323]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -910.23517, 1.7644652, 207.15585)
+gizmo_extents = 0.5
+script = ExtResource("1_brout")
+point_id = "w_flax_1"
+kind = "node"
+radius = 0.5
+tags = PackedStringArray("Flax")
+
+[node name="grass_common_tall_9" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_n0c6t")]
 transform = Transform3D(1.4449737, 0, -0.07891955, 0, 1.4471272, 0, 0.07891955, 0, 1.4449737, -956.3399, -1.1069502, 236.8758)
 
-[node name="rock_big_1_10" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_brout")]
+[node name="rock_big_1_10" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("3_485j7")]
 transform = Transform3D(-0.7164644, 0, -0.14811252, 0, 0.7316137, 0, 0.14811252, 0, -0.7164644, -948.159, -0.32034644, 241.7793)
 
-[node name="fern_1_11" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_n0c6t")]
+[node name="fern_1_11" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("4_rtbo2")]
 transform = Transform3D(0.09664447, 0, -1.1091834, 0, 1.1133859, 0, 1.1091834, 0, 0.09664447, -914.27094, 1.3810024, 211.76826)

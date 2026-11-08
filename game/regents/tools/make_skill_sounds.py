@@ -7,7 +7,7 @@ sound; a recorded CC0 sound may replace one under the same name (its source note
 
 Smithing: the heavy strike's clang (the minigame pitches it down as the bar cools), the tap, a cold strike's thud,
 the reheat's whoosh. Woodcutting: the axe biting, a branch striking the woodcutter, the cut piece landing. Mining:
-the pick on stone, the rock splitting, a strike off the seam. Smelting: the bellows' breath, the pour's hiss."""
+the pick on stone, the rock splitting, a strike off the seam. Smelting: the bellows' breath, the pour's hiss; the rhythm track's beat and accent, a long draw, a sputter."""
 
 import math
 import os
@@ -133,6 +133,13 @@ def main():
     # Smelting: a pump of the bellows, the pour.
     write("smelting", "bellows", whoosh(0.45, 31, k_lo=0.03, k_hi=0.12, crackle_rate=0.0))
     write("smelting", "pour", hiss(1.0, 32))
+    # Smelting's rhythm track (Luke, 2026-11-07): the beat (a low knock on the furnace's side, brighter on a bar's
+    # first beat), a long draw of the bellows, and a puff of wasted breath (a press on no note).
+    write("smelting", "beat", thud(0.16, 33, tone=82.0, decay=34.0, grit=1.2, smooth=0.12))
+    write("smelting", "accent", mix(thud(0.2, 34, tone=110.0, decay=26.0, grit=1.6, smooth=0.12),
+                                    ring(0.15, [(440, 0.25, 30.0, 0.0), (1060, 0.12, 42.0, 0.8)], 3, 0.2, 35)))
+    write("smelting", "draw", whoosh(1.2, 36, k_lo=0.02, k_hi=0.09, crackle_rate=0.0006))
+    write("smelting", "sputter", thud(0.18, 37, tone=260.0, decay=24.0, grit=4.0, smooth=0.5))
 
 
 main()

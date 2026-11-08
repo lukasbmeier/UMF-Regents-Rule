@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleSetDef" load_steps=32 format=3]
+[gd_resource type="Resource" script_class="RuleSetDef" load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/rule_set_def.gd" id="1_set"]
 [ext_resource type="Script" path="res://foundation/content/rule_entry.gd" id="2_rule"]
@@ -11,16 +11,43 @@ number = 1.25
 minimum = 1.0
 maximum = 3.0
 unit = "x"
-description = "DUAL-MODE SKILLING (owner, 2026-10-18): a skill played actively (its minigame, played well) yields this many times what AFK yields in the same time. AFK stays a real option: keep this small."
+description = "DUAL-MODE SKILLING (owner, 2026-10-18): a skill played actively (its minigame, played to a full score) yields this many times what AFK yields in the same time. AFK stays a real option: keep this small. A round's pay runs from `active_yield_floor` (a score of 0) to this (a full score)."
+
+[sub_resource type="Resource" id="Rule_active_yield_floor"]
+script = ExtResource("2_rule")
+name = &"active_yield_floor"
+number = 0.75
+minimum = 0.0
+maximum = 1.0
+unit = "x"
+description = "WHAT A PLAYED ROUND PAYS AT A SCORE OF 0, as a share of AFK (Luke's M11, 2026-11-05: a good round beats AFK and a poor one still falls short, the break-even near half a score, not 80 %). Pay runs straight from this to `active_yield_mult` at a full score: 0.75 with 1.25 breaks even at 50 %. 0 is the curve before M11 (the multiplier times the score). Keep it under 1, so an unplayed round never beats AFK."
+
+[sub_resource type="Resource" id="Rule_rank_ease_pct"]
+script = ExtResource("2_rule")
+name = &"rank_ease_pct"
+number = 4.0
+minimum = 0.0
+maximum = 15.0
+unit = "%"
+description = "RANK EASES THE ROUND (Luke's M3, 2026-11-05): for each mastery rank above what a node or recipe needs, its round's windows are this much wider (the rock's notch, the beat's windows, the furnace's band, the anvil's heat and its error scale; a branch staggers for this much less). Capped by `rank_ease_ranks`. Copper is hard at rank 1 and easier at rank 4; iron is hard again when it opens."
+
+[sub_resource type="Resource" id="Rule_rank_ease_ranks"]
+script = ExtResource("2_rule")
+name = &"rank_ease_ranks"
+number = 3.0
+minimum = 0.0
+maximum = 9.0
+unit = "ranks"
+description = "RANK EASES THE ROUND (Luke's M3): how many ranks above the requirement count toward `rank_ease_pct` (three: at most 12 % wider at 4 % a rank). 0 turns the ease off."
 
 [sub_resource type="Resource" id="Rule_active_rare"]
 script = ExtResource("2_rule")
 name = &"active_rare_mult"
-number = 1.3
+number = 3.0
 minimum = 1.0
-maximum = 3.0
+maximum = 6.0
 unit = "x"
-description = "DUAL-MODE SKILLING: active play is this many times as likely to find a rare material as AFK. AFK can find rares too."
+description = "DUAL-MODE SKILLING: a round played to a full score is this many times as likely to find a rare material (the catalysts) as AFK; the edge grows with the score, none at 0 (Luke's M11, 2026-11-05: the catalysts lean hard to active play; 1.3 before). AFK can find rares too."
 
 [sub_resource type="Resource" id="Rule_reach"]
 script = ExtResource("2_rule")
@@ -729,7 +756,7 @@ description = "A DROPPED WEAPON's handle shape: the banner handle's weight (a sw
 
 [resource]
 script = ExtResource("1_set")
-rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_rare"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days"), SubResource("Rule_crafted_traits_common"), SubResource("Rule_crafted_traits_fine"), SubResource("Rule_crafted_traits_masterwork"), SubResource("Rule_refit_bars"), SubResource("Rule_seen_reach"), SubResource("Rule_attack_tokens"), SubResource("Rule_token_gap"), SubResource("Rule_foe_aim_lock"), SubResource("Rule_combo_window"), SubResource("Rule_parry_late"), SubResource("Rule_parry_whiff"), SubResource("Rule_riposte"), SubResource("Rule_riposte_damage"), SubResource("Rule_riposte_draw"), SubResource("Rule_weak_block"), SubResource("Rule_guard_arc"), SubResource("Rule_hitstop"), SubResource("Rule_hitstop_big"), SubResource("Rule_guard_threat"), SubResource("Rule_guard_threat_scope"), SubResource("Rule_rally_self"), SubResource("Rule_drop_damage"), SubResource("Rule_drop_tank"), SubResource("Rule_drop_support"), SubResource("Rule_poise_light"), SubResource("Rule_poise_finisher"), SubResource("Rule_poise_regen"), SubResource("Rule_steadied"), SubResource("Rule_dummy_poise")])
+rules = Array[ExtResource("2_rule")]([SubResource("Rule_active_yield"), SubResource("Rule_active_yield_floor"), SubResource("Rule_active_rare"), SubResource("Rule_rank_ease_pct"), SubResource("Rule_rank_ease_ranks"), SubResource("Rule_reach"), SubResource("Rule_afk_move"), SubResource("Rule_craft_share"), SubResource("Rule_variety_drain"), SubResource("Rule_variety_recover"), SubResource("Rule_variety_floor"), SubResource("Rule_first_make"), SubResource("Rule_order_minutes"), SubResource("Rule_order_rotate"), SubResource("Rule_order_bonus"), SubResource("Rule_roll"), SubResource("Rule_parry"), SubResource("Rule_stagger"), SubResource("Rule_block_pct"), SubResource("Rule_xp_dmg"), SubResource("Rule_dummy_xp"), SubResource("Rule_dummy_hp"), SubResource("Rule_dummy_reset"), SubResource("Rule_flinch"), SubResource("Rule_swing_hold"), SubResource("Rule_swing_slack"), SubResource("Rule_foe_corpse"), SubResource("Rule_foe_respawn"), SubResource("Rule_player_respawn"), SubResource("Rule_regen_delay"), SubResource("Rule_regen_pct"), SubResource("Rule_draw_min_power_pct"), SubResource("Rule_arrow_speed_min"), SubResource("Rule_arrow_speed_max"), SubResource("Rule_bow_range_m"), SubResource("Rule_hit_near_m"), SubResource("Rule_hit_far_m"), SubResource("Rule_hit_near_pct"), SubResource("Rule_hit_far_pct"), SubResource("Rule_hit_moving_pct"), SubResource("Rule_point_blank_m"), SubResource("Rule_point_blank_pct"), SubResource("Rule_arrow_recover_pct"), SubResource("Rule_grade_fine_q"), SubResource("Rule_grade_masterwork_q"), SubResource("Rule_mana_cost_pct"), SubResource("Rule_cast_time_pct"), SubResource("Rule_meta_period_s"), SubResource("Rule_meta_alarm_pct"), SubResource("Rule_meta_alarm_min_hits"), SubResource("Rule_meta_keep_days"), SubResource("Rule_crafted_traits_common"), SubResource("Rule_crafted_traits_fine"), SubResource("Rule_crafted_traits_masterwork"), SubResource("Rule_refit_bars"), SubResource("Rule_seen_reach"), SubResource("Rule_attack_tokens"), SubResource("Rule_token_gap"), SubResource("Rule_foe_aim_lock"), SubResource("Rule_combo_window"), SubResource("Rule_parry_late"), SubResource("Rule_parry_whiff"), SubResource("Rule_riposte"), SubResource("Rule_riposte_damage"), SubResource("Rule_riposte_draw"), SubResource("Rule_weak_block"), SubResource("Rule_guard_arc"), SubResource("Rule_hitstop"), SubResource("Rule_hitstop_big"), SubResource("Rule_guard_threat"), SubResource("Rule_guard_threat_scope"), SubResource("Rule_rally_self"), SubResource("Rule_drop_damage"), SubResource("Rule_drop_tank"), SubResource("Rule_drop_support"), SubResource("Rule_poise_light"), SubResource("Rule_poise_finisher"), SubResource("Rule_poise_regen"), SubResource("Rule_steadied"), SubResource("Rule_dummy_poise")])
 overrides = Array[ExtResource("3_over")]([SubResource("Over_characters"), SubResource("Over_park"), SubResource("Over_two_sides"), SubResource("Over_npc_tiers")])
 id = 40000
 display_name = "Regent's Rule rules"

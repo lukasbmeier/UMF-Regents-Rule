@@ -1,6 +1,6 @@
 class_name SkillMinigames extends RefCounted
 ## THE SKILLING MINIGAMES, IN ONE PLACE: what kind each params resource is (branch dodge, crack the rock,
-## bellows then pour, shape to the outline), the challenge kind the server deals it as, its model's replay,
+## bellows then pour, shape to the outline, smelting's rhythm track), the challenge kind the server deals it as, its model's replay,
 ## its UI, and what a faster tool does to it. A node's or a recipe's `minigame` is one of these params
 ## resources; everything that plays one asks here. A new minigame is a params class, a model (with its
 ## Rust twin and goldens), a UI, and a line in each function below.
@@ -9,9 +9,13 @@ const CHOP: StringName = &"chop"
 const CRACK: StringName = &"crack"
 const SMELT: StringName = &"smelt"
 const SHAPE: StringName = &"shape"
+## Smelting as a rhythm track (Luke, 2026-11-07); `SMELT` (bellows by the band) stays for old rounds.
+const BEAT: StringName = &"beat"
+## Woodworking's carve (Luke, 2026-11-07): a vertical stave, wood off either side.
+const CARVE: StringName = &"carve"
 
 ## The challenge kinds the server deals them as (`genre::regents`).
-const CHALLENGE: Dictionary[StringName, int] = {CHOP: 100, CRACK: 101, SMELT: 102, SHAPE: 103}
+const CHALLENGE: Dictionary[StringName, int] = {CHOP: 100, CRACK: 101, SMELT: 102, SHAPE: 103, BEAT: 104, CARVE: 105}
 
 
 static func kind_of(params: Resource) -> StringName:
@@ -23,6 +27,10 @@ static func kind_of(params: Resource) -> StringName:
 		return SMELT
 	if params is ShapeParams:
 		return SHAPE
+	if params is BeatParams:
+		return BEAT
+	if params is CarveParams:
+		return CARVE
 	return &""
 
 
@@ -42,6 +50,8 @@ static func arity(kind: StringName) -> int:
 static func duration_of(params: Resource) -> int:
 	if params is SmeltParams:
 		return (params as SmeltParams).heat_ms + (params as SmeltParams).pour_ms
+	if params is BeatParams:
+		return BeatModel.duration_ms(params as BeatParams)
 	return int(params.get(&"duration_ms")) if params != null and kind_of(params) != &"" else 0
 
 
@@ -52,6 +62,36 @@ static func with_speed(params: Resource, speed_pct: int) -> Resource:
 		return params
 	var p: Resource = params.duplicate()
 	p.set(&"swing_ms", maxi(50, int(p.get(&"swing_ms")) * speed_pct / 100))
+	return p
+
+
+## `params` EASED by `ease_pct` (Luke's M3, 2026-11-05: each mastery rank above the requirement widens a round's
+## windows a few percent, capped; the server says how much in the round's payload, its fifth field). The server's
+## `Minigame::score_eased` does the same, number for number: a branch staggers for less, the rock's notch is wider,
+## the furnace's band or the beat's windows wider (the outer window never past a quarter beat), the anvil's bar hot
+## longer and its error scale larger. 0: as authored (the content is never changed: a copy).
+static func eased(params: Resource, ease_pct: int) -> Resource:
+	var e: int = clampi(ease_pct, 0, 50)
+	if e == 0 or kind_of(params) == &"":
+		return params
+	var p: Resource = params.duplicate()
+	if p is ChopParams:
+		(p as ChopParams).stagger_ms = (p as ChopParams).stagger_ms * (100 - e) / 100
+	elif p is CrackParams:
+		(p as CrackParams).radius_pm = (p as CrackParams).radius_pm * (100 + e) / 100
+	elif p is SmeltParams:
+		(p as SmeltParams).band_half_start = (p as SmeltParams).band_half_start * (100 + e) / 100
+		(p as SmeltParams).band_half_end = (p as SmeltParams).band_half_end * (100 + e) / 100
+	elif p is ShapeParams:
+		(p as ShapeParams).error_scale = (p as ShapeParams).error_scale * (100 + e) / 100
+		(p as ShapeParams).heat_ms = (p as ShapeParams).heat_ms * (100 + e) / 100   # hot longer: fewer reheats
+	elif p is CarveParams:
+		(p as CarveParams).error_scale = (p as CarveParams).error_scale * (100 + e) / 100
+	elif p is BeatParams:
+		var b: BeatParams = p as BeatParams
+		var good: int = maxi(b.good_ms, mini(b.good_ms * (100 + e) / 100, b.beat_ms / 4))
+		b.perfect_ms = mini(b.perfect_ms * (100 + e) / 100, good)
+		b.good_ms = good
 	return p
 
 
@@ -66,6 +106,10 @@ static func play(seed_value: int, params: Resource, inputs: PackedInt32Array) ->
 			return SmeltModel.play(seed_value, params as SmeltParams, inputs)
 		SHAPE:
 			return ShapeModel.play(seed_value, params as ShapeParams, inputs)
+		BEAT:
+			return BeatModel.play(seed_value, params as BeatParams, inputs)
+		CARVE:
+			return CarveModel.play(seed_value, params as CarveParams, inputs)
 	return {}
 
 
@@ -80,6 +124,10 @@ static func make_ui(params: Resource) -> SkillMinigame:
 			return SmeltMinigame.new()
 		SHAPE:
 			return ShapeMinigame.new()
+		BEAT:
+			return BeatMinigame.new()
+		CARVE:
+			return CarveMinigame.new()
 	return null
 
 

@@ -3,6 +3,8 @@
 //! chain's content (compiled in from game/regents/content/ by `server/build/regents.rs`), its four
 //! minigames' replays, mastery ranks, a tool's speed, what a round or an AFK item yields, and the rolls.
 
+pub mod beat;
+pub mod carve;
 pub mod chop;
 pub mod crack;
 pub mod rng;
@@ -18,6 +20,10 @@ pub const CHALLENGE_CHOP: u8 = 100;
 pub const CHALLENGE_CRACK: u8 = 101;
 pub const CHALLENGE_SMELT: u8 = 102;
 pub const CHALLENGE_SHAPE: u8 = 103;
+/// Smelting as a rhythm track (Luke, 2026-11-07): a new kind, so a client that only knows `CHALLENGE_SMELT` ignores it.
+pub const CHALLENGE_BEAT: u8 = 104;
+/// Woodworking's carve (Luke, 2026-11-07): a vertical stave, wood off either side.
+pub const CHALLENGE_CARVE: u8 = 105;
 /// A node worked out: a stump, rubble, until it comes back (`content/status/depleted.tres`).
 pub const STATUS_DEPLETED: u8 = 100;
 /// The frontier glade (`game/regents/levels/frontier.tscn`, its `LevelInfo`).
@@ -28,12 +34,13 @@ pub const STATION_POINT: &str = "station";
 /// The order board's station key (`content/station/`), and how many orders it shows.
 pub const ORDER_BOARD: &str = "orders";
 pub const ORDER_SLOTS: u32 = 3;
-/// What a new character is given, once (`content/item/`): a Copper axe and a Copper pickaxe.
-pub const STARTER_KIT: &[u32] = &[40001, 40006];
+/// What a new character is given, once (`content/item/`): a Copper axe, a Copper pickaxe and (2026-11-07, herbalism) a
+/// Copper trowel.
+pub const STARTER_KIT: &[u32] = &[40001, 40006, 40051];
 
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     name: "regents",
-    challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE],
+    challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE, CHALLENGE_BEAT, CHALLENGE_CARVE],
     // The foes' kinds are content (`FoeDef`, `content/foe/`): the genre keeps 103-119 for them (FOE_KINDS).
     entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
         117, 118, 119, ENTITY_GUIDE],
@@ -175,6 +182,8 @@ pub enum Minigame {
     Crack(crack::CrackParams),
     Smelt(smelt::SmeltParams),
     Shape(ShapeSeed),
+    Beat(beat::BeatParams),
+    Carve(carve::CarveParams<'static>),
 }
 
 impl Minigame {
@@ -186,6 +195,8 @@ impl Minigame {
             Minigame::Crack(_) => CHALLENGE_CRACK,
             Minigame::Smelt(_) => CHALLENGE_SMELT,
             Minigame::Shape(_) => CHALLENGE_SHAPE,
+            Minigame::Beat(_) => CHALLENGE_BEAT,
+            Minigame::Carve(_) => CHALLENGE_CARVE,
         }
     }
 
@@ -197,37 +208,67 @@ impl Minigame {
             Minigame::Crack(p) => p.duration_ms,
             Minigame::Smelt(p) => p.heat_ms + p.pour_ms,
             Minigame::Shape(p) => p.duration_ms,
+            Minigame::Beat(p) => p.duration_ms(),
+            Minigame::Carve(p) => p.duration_ms,
         }
     }
 
     /// A round REPLAYED from what the client sent, at tool speed `speed_pct` (a gathering round's swing:
     /// `SkillMinigames.with_speed`): its score in thousandths, or None when the submission is not a round.
     pub fn score(&self, seed: u64, speed_pct: i64, result: &[f32]) -> Option<i64> {
+        self.score_eased(seed, speed_pct, 0, result)
+    }
+
+    /// `score`, the round EASED by `ease_pct` (Luke's M3, 2026-11-05: rank above the requirement widens a round's
+    /// windows a few percent, capped; `rank_ease_pct`; the client's `SkillMinigames.eased`, which must agree): a branch
+    /// staggers for less, the rock's notch is wider, the furnace's band or the beat's windows wider (the outer window
+    /// never past a quarter beat), the anvil's bar hot longer and its error scale larger (the same error costs less).
+    pub fn score_eased(&self, seed: u64, speed_pct: i64, ease_pct: i64, result: &[f32]) -> Option<i64> {
         let groups = (self.duration_ms() / 50 + 64) as usize;
         let swing = |s: i64| (s * speed_pct / 100).max(50);
+        let e = ease_pct.clamp(0, 50);
+        let wider = |v: i64| v * (100 + e) / 100;
+        let narrower = |v: i64| v * (100 - e) / 100;
         match self {
             Minigame::None => None,
             Minigame::Chop(p) => {
-                let p = chop::ChopParams { swing_ms: swing(p.swing_ms), ..*p };
+                let p = chop::ChopParams { swing_ms: swing(p.swing_ms), stagger_ms: narrower(p.stagger_ms), ..*p };
                 let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
                 let ins: Vec<(i64, i32)> = ins.iter().map(|g| (g[0], g[1] as i32)).collect();
                 Some(chop::play(seed, &p, &ins).score_pm)
             }
             Minigame::Crack(p) => {
-                let p = crack::CrackParams { swing_ms: swing(p.swing_ms), ..*p };
+                let p = crack::CrackParams { swing_ms: swing(p.swing_ms), radius_pm: wider(p.radius_pm), ..*p };
                 let ins = rng::decode_groups(result, 3, groups, -1.0, 600_000.0)?;
                 let ins: Vec<(i64, i64, i64)> = ins.iter().map(|g| (g[0], g[1], g[2])).collect();
                 Some(crack::play(seed, &p, &ins).score_pm)
             }
             Minigame::Smelt(p) => {
+                let p = smelt::SmeltParams { band_half_start: wider(p.band_half_start), band_half_end: wider(p.band_half_end), ..*p };
                 let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
                 let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
-                Some(smelt::play(seed, p, &ins).score_pm)
+                Some(smelt::play(seed, &p, &ins).score_pm)
             }
             Minigame::Shape(s) => {
+                let mut sp = s.params();
+                sp.error_scale = wider(sp.error_scale);
+                sp.heat_ms = wider(sp.heat_ms);   // the bar stays workable longer: fewer reheats, a higher ceiling
                 let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
                 let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
-                Some(shape::play(seed, &s.params(), &ins).score_pm)
+                Some(shape::play(seed, &sp, &ins).score_pm)
+            }
+            Minigame::Beat(p) => {
+                let good = wider(p.good_ms).min(p.beat_ms / 4).max(p.good_ms);
+                let p = beat::BeatParams { perfect_ms: wider(p.perfect_ms).min(good), good_ms: good, ..*p };
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
+                Some(beat::play(seed, &p, &ins).score_pm)
+            }
+            Minigame::Carve(p) => {
+                let p = carve::CarveParams { error_scale: wider(p.error_scale), ..*p };
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
+                Some(carve::play(seed, &p, &ins).score_pm)
             }
         }
     }
@@ -945,11 +986,21 @@ pub fn afk_interval_ms(afk_ms: u32, speed_pct: u32) -> u32 {
     (afk_ms as u64 * speed_pct as u64 / 100).max(100) as u32
 }
 
-/// How much a round yields, in thousandths: what AFK makes in the round's time (at its interval),
-/// times `active_mult`, times the round's score (owner, 2026-10-18, design #23: a poor round falls short).
-pub fn active_yield_milli(afk_interval_ms: u32, round_ms: i64, active_mult: f64, score_pm: i64) -> u64 {
+/// How much a round yields, in thousandths: what AFK makes in the round's time (at its interval), times a factor
+/// that runs from `floor` (a score of 0) to `active_mult` (a full score) (Luke's M11, 2026-11-05: a good round beats
+/// AFK and a poor one still falls short, the break-even near half a score rather than 80 %; owner #23 before it was
+/// `active_mult` x the score, which is `floor` 0). The floor is kept between 0 and `active_mult`.
+pub fn active_yield_milli(afk_interval_ms: u32, round_ms: i64, active_mult: f64, floor: f64, score_pm: i64) -> u64 {
     let afk_milli = round_ms as f64 * 1000.0 / afk_interval_ms.max(1) as f64;
-    (afk_milli * active_mult * score_pm.clamp(0, 1000) as f64 / 1000.0).floor().max(0.0) as u64
+    let floor = floor.clamp(0.0, active_mult.max(0.0));
+    let factor = floor + (active_mult - floor) * score_pm.clamp(0, 1000) as f64 / 1000.0;
+    (afk_milli * factor).floor().max(0.0) as u64
+}
+
+/// How much likelier a played round is to bring a rare find than AFK work (Luke's M11: the catalysts lean hard to
+/// active play): from 1 (a score of 0: no edge for a round nobody played) up to `active_rare_mult` at a full score.
+pub fn active_rare_mult(active_rare_mult: f64, score_pm: i64) -> f64 {
+    1.0 + (active_rare_mult.max(1.0) - 1.0) * score_pm.clamp(0, 1000) as f64 / 1000.0
 }
 
 /// Thousandths of an item into whole items: the whole part, and one more when `roll` (0..1000) falls
@@ -1193,6 +1244,25 @@ pub fn payload(target: u64, def_id: u32, speed_pct: u32) -> String {
 /// A station round's payload with the part it is made with: "<target> <recipe> <speed %> <part item>".
 pub fn payload_with_part(target: u64, def_id: u32, speed_pct: u32, part: u32) -> String {
     if part == 0 { payload(target, def_id, speed_pct) } else { format!("{target} {def_id} {speed_pct} {part}") }
+}
+
+/// A round's payload with how much the player's rank eases it (Luke's M3): "<target> <def> <speed %> <part> <ease %>";
+/// with no ease, the payload as before (so an old client reads every round it can play the same).
+pub fn payload_eased(target: u64, def_id: u32, speed_pct: u32, part: u32, ease_pct: u32) -> String {
+    if ease_pct == 0 { payload_with_part(target, def_id, speed_pct, part) } else { format!("{target} {def_id} {speed_pct} {part} {ease_pct}") }
+}
+
+/// How much a payload eases its round (its fifth field), or 0.
+pub fn parse_ease(payload: &str) -> u32 {
+    payload.split(' ').nth(4).and_then(|p| p.parse().ok()).unwrap_or(0)
+}
+
+/// RANK EASES THE ROUND (Luke's M3, 2026-11-05: "a few percent wider windows a rank above the requirement, capped at
+/// three"; for every skill, "rank eases the numbers; a band adds one rule"): `per_rank_pct` for each rank above
+/// `min_rank`, at most `most_ranks` of them (`regents.rank_ease_pct`, `regents.rank_ease_ranks`).
+pub fn rank_ease_pct(rank: u32, min_rank: u32, per_rank_pct: f64, most_ranks: f64) -> u32 {
+    let above = rank.saturating_sub(min_rank.max(1)) as f64;
+    (above.min(most_ranks.max(0.0)) * per_rank_pct.max(0.0)).round().min(50.0) as u32
 }
 
 /// The part a payload names (its fourth field), or 0.

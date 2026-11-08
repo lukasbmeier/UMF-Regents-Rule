@@ -18,6 +18,31 @@ pub struct CrackParams {
     pub radius_pm: i64,
     pub margin_pm: i64,
     pub target_hits: i64,
+    /// BRITTLE NOTCHES (band 2's new thing for mining, a test, 2026-11-07): how likely a notch is brittle (thousandths;
+    /// 0: none), and how long the rock rings after a hit, during which a brittle notch struck cracks wrong (a jar).
+    pub brittle_permille: i64,
+    pub ring_ms: i64,
+}
+
+/// The brittle notches' own stream: the seed folded with this, so the seams never change.
+pub const RING_SALT: u64 = 0x7269_6E67;
+
+/// Which of the first `n` notches (over all seams) are brittle; a seam's first never is (none when `brittle_permille`
+/// is 0).
+pub fn brittle(seed: u64, p: &CrackParams, n: usize) -> Vec<bool> {
+    if p.brittle_permille <= 0 {
+        return vec![false; n];
+    }
+    let mut st = seed_state(seed ^ RING_SALT);
+    (0..n)
+        .map(|i| {
+            if (i as i64) % p.notches == 0 {
+                return false;
+            }
+            let r = next_u32(&mut st) as u64;
+            (((r >> 8) * 1000) >> 24) < p.brittle_permille as u64
+        })
+        .collect()
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -58,6 +83,8 @@ pub fn seams(seed: u64, p: &CrackParams, count: usize) -> Vec<(i64, i64)> {
 struct Run<'a> {
     p: &'a CrackParams,
     pts: Vec<(i64, i64)>,
+    brittle: Vec<bool>,
+    last_hit: Option<i64>,
     k: usize,
     r: CrackResult,
     combo: i64,
@@ -70,7 +97,9 @@ impl Run<'_> {
         let p = self.p;
         let at = self.pts[self.k % self.pts.len()];
         let (dx, dy) = (x - at.0, y - at.1);
-        if dx * dx + dy * dy <= p.radius_pm * p.radius_pm {
+        let ringing = self.brittle[self.k % self.pts.len()] && self.last_hit.is_some_and(|h| t < h + p.ring_ms);
+        if dx * dx + dy * dy <= p.radius_pm * p.radius_pm && !ringing {
+            self.last_hit = Some(t);
             self.r.hits += 1;
             self.combo += 1;
             self.r.best_combo = self.r.best_combo.max(self.combo);
@@ -93,7 +122,9 @@ impl Run<'_> {
 
 /// A whole round replayed from its strikes, (time, x, y) in the order sent.
 pub fn play(seed: u64, p: &CrackParams, inputs: &[(i64, i64, i64)]) -> CrackResult {
-    let mut run = Run { p, pts: seams(seed, p, seam_count(p)), k: 0, r: CrackResult::default(), combo: 0, next_ok: 0, staggered: false };
+    let pts = seams(seed, p, seam_count(p));
+    let brittle = brittle(seed, p, pts.len());
+    let mut run = Run { p, pts, brittle, last_hit: None, k: 0, r: CrackResult::default(), combo: 0, next_ok: 0, staggered: false };
     let mut held: Option<(i64, i64, i64)> = None;
     let mut last_t = -1i64;
     let settle = |run: &mut Run, held: &mut Option<(i64, i64, i64)>, t: i64| {

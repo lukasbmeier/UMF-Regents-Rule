@@ -309,10 +309,16 @@ Each with the proposed answer. The bold part is what needs his yes or no.
 3. **BUILT AS A TEST 2026-11-05 (PROGRESS 42), for Luke to play**: after playing step 2 he chose heats instead of a
    clock (each reheat lowers the ceiling), a varying outline, the pattern laid on to see the outline (no strikes while
    it is on); bands as a test: copper 1, iron 2 (harder metal, each look costs), steel 3 (red heat cracks, the quench).
-   Rank easing (M3) and the shares (M4) still to come once the feel is right.
+   Rank easing (M3) and the shares (M4) still to come once the feel is right. **M3 BUILT 2026-11-07 (PROGRESS 47)**:
+   4 % wider a rank above the requirement, three ranks at most (hot rules), every skill's round; the readout shows each
+   anvil round three ranks on. The shares (M4) still wait for Luke's play.
    **Smithing's ladder**: heat colors with hard and soft spots (band 2), the quench (band 3), rank easing (M3), tuned
    to M4's targets with the readout. Luke plays copper, iron and steel heads.
-4. **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the new edge and the
+4. **BUILT 2026-11-07 (PROGRESS 46), for Luke to play**: rounds back to back in one panel (E stops after the round,
+   Escape now, an untouched round ends the run, a node worked out or the ore run out too); pay from 0.75 of AFK at a
+   score of 0 to 1.25 at a full one (a new hot rule, `regents.active_yield_floor`: break-even at half); rares 3x at a
+   full score, growing with the score. The numbers are first guesses for his play.
+   **Gathering's cadence and pay** (M11): back-to-back rounds once started (hands free), the new edge and the
    catalysts' lean, tuned with the readout. (Its stage is built: step 5. Starting a round now first walks the player
    to the node's work spot, PROGRESS 44: a back-to-back run starts from there.)
 5. **THE LOOK BUILT 2026-11-05 (PROGRESS 43), for Luke to play** (ahead of step 4, his call): woodcutting, mining and
@@ -322,7 +328,17 @@ Each with the proposed answer. The bold part is what needs his yes or no.
    slag) not yet.
    **The other three**: mining, woodcutting and smelting (its rhythmic bellows) get the look and their band's new
    thing, one at a time, each played by Luke.
-6. **Woodworking's carve to the line** (M5): grips, hilts, bows and staves get a quality; a grip's grade starts its
+   **SMELTING REBUILT AS A RHYTHM TRACK 2026-11-07 (PROGRESS 45), for Luke to play** (Luke: "smelting needs to be
+   changed to a rhythm game", then "Full rhythm track"): notes on a seeded beat pressed at the bellows, long draws
+   held, a press on no note costs; the pour kept. A new kind (`beat`, challenge 104); the old bellows-by-the-band
+   (`smelt`, 102) stays for old rounds and no content uses it. Readout: a skilled smelter now beats AFK in ~91-94 % of
+   rounds (before, only a flawless one). Its band rule (slag, an alloy's second lane) is still to prototype.
+   **BAND 2'S RULES BUILT AS A TEST 2026-11-07 (PROGRESS 48), for Luke to play**: knots on the yew, brittle notches on
+   the coal rock, slag on the steel bar (a second button); each off by a 0, so every earlier round replays the same.
+6. **STARTED 2026-11-07 (PROGRESS 49)**: the carve on the yew bow and staff (Luke: "Bow and staff first"), its own
+   game (Luke: "vertical ... wood you can take off from either side"): a stave with two profiles; grips wait for trait
+   ranks (they keep stacking until then).
+   **Woodworking's carve to the line** (M5): grips, hilts, bows and staves get a quality; a grip's grade starts its
    trait higher (M12).
 7. Then herbalism and hunting (`GAME.md`'s item 3), whose minigames (pull the root, skinning) are built to this bar
    from the start.

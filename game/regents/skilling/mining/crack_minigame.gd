@@ -16,6 +16,8 @@ const CRACK: Color = Color(0.07, 0.06, 0.06)
 const SEAM: Color = Color(0.16, 0.14, 0.13, 0.55)
 const GLOW: Color = Color(1.0, 0.82, 0.30)
 const JAR: Color = Color(1.0, 0.45, 0.35)
+## A brittle notch (band 2's test): pale, icy.
+const BRITTLE: Color = Color(0.75, 0.88, 1.0)
 
 var model: CrackModel
 var last_event: int = CrackModel.IGNORED
@@ -233,21 +235,37 @@ func _draw() -> void:
 		for i: int in range(model.k + 1, last_shown + 1):
 			draw_circle(from_face(model.notch(i)) + shake, 4.0, SEAM)
 		if state == State.PLAYING:
-			var ready: bool = t >= model.next_ok_ms
+			# BRITTLE (band 2, a test, 2026-11-07): a brittle notch is pale and cracked; while the rock still rings, rings
+			# spread from it and it does not glow ready (struck now, it cracks wrong).
+			var brittle: bool = model.is_brittle(model.k)
+			var ringing: bool = brittle and model.ringing(t)
+			var ready: bool = t >= model.next_ok_ms and not ringing
 			var at: Vector2 = from_face(model.notch(model.k)) + shake
 			var r: float = float(rock().radius_pm) / 1000.0 * f.size.x
 			var pulse: float = 0.5 + 0.5 * sin(float(t) * 0.012)
-			draw_circle(at, r, Color(GLOW, (0.18 + 0.2 * pulse) if ready else 0.1))
-			draw_arc(at, r, 0.0, TAU, 40, Color(GLOW, 0.9 if ready else 0.35), 3.0)
+			var tint: Color = BRITTLE if brittle else GLOW
+			draw_circle(at, r, Color(tint, (0.18 + 0.2 * pulse) if ready else 0.1))
+			draw_arc(at, r, 0.0, TAU, 40, Color(tint, 0.9 if ready else 0.35), 3.0)
+			if brittle:
+				for c: int in 3:   # its cracks
+					var ang: float = 0.7 + c * 2.1
+					draw_line(at, at + Vector2(cos(ang), sin(ang)) * r * 0.8, Color(BRITTLE, 0.8), 2.0)
+			if ringing:
+				var ring_f: float = clampf(float(t - model.last_hit_ms) / float(maxi(1, rock().ring_ms)), 0.0, 1.0)
+				for w: int in 2:
+					var rr: float = r * (1.2 + 1.6 * fmod(ring_f + w * 0.5, 1.0))
+					draw_arc(at, rr, 0.0, TAU, 40, Color(BRITTLE, 0.7 * (1.0 - ring_f)), 2.0)
 			if model.held:
 				draw_circle(from_face(Vector2i(model.held_x, model.held_y)) + shake, 6.0, Color(1, 1, 1, 0.5))
 		if jarred:
-			MinigameLook.text(self, font, last_at + Vector2(-30, -20), "Clang!", 24, JAR)
+			MinigameLook.text(self, font, last_at + Vector2(-30, -20), "Cracked wrong!" if model.cracked_wrong else "Clang!", 24, JAR)
 		elif last_event == CrackModel.HIT and since < 700 and model.k % n == 0 and model.k > 0:
 			MinigameLook.text(self, font, f.get_center() + Vector2(-50, 0), "Crack!", 40, GLOW)
 		if state == State.PLAYING and _stage != null:
-			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), "Click the glowing notch, then the next", 15,
-				MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
+			var hint: String = "Click the glowing notch, then the next"
+			if rock().brittle_permille > 0:
+				hint += "; a pale one only once the rock stops ringing"
+			MinigameLook.text(self, font, Vector2(0.0, size.y - 20.0), hint, 15, MinigameLook.HINT, HORIZONTAL_ALIGNMENT_CENTER, size.x)
 	for c: Chip in _chips:
 		draw_rect(Rect2(c.pos, Vector2(c.size, c.size)), ROCK_DARK)
 	_draw_frame("Notches %d / %d   Jars %d" % [model.hits, rock().target_hits, model.jars] if model != null else "")

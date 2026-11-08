@@ -21,7 +21,14 @@ pub struct ChopParams {
     pub branch_permille: i64,
     pub safe_segments: i64,
     pub target_chops: i64,
+    /// KNOTS (band 2's new thing, a test, 2026-11-07): how likely a piece is knotted (thousandths; 0: none), and how
+    /// soon after the first chop (a bite) the second from the same side must land to cut it.
+    pub knot_permille: i64,
+    pub knot_beat_ms: i64,
 }
+
+/// The knots' own stream: the seed folded with this, so the branches never change.
+pub const KNOT_SALT: u64 = 0x6B6E_6F74;
 
 /// What a round came to.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -72,9 +79,28 @@ pub fn branches(seed: u64, p: &ChopParams, n: usize) -> Vec<i32> {
     out
 }
 
+/// Which of the trunk's first `n` pieces are knotted (none when `knot_permille` is 0).
+pub fn knots(seed: u64, p: &ChopParams, n: usize) -> Vec<bool> {
+    if p.knot_permille <= 0 {
+        return vec![false; n];
+    }
+    let mut st = seed_state(seed ^ KNOT_SALT);
+    (0..n)
+        .map(|i| {
+            if (i as i64) < p.safe_segments {
+                return false;
+            }
+            let r = next_u32(&mut st) as u64;
+            (((r >> 8) * 1000) >> 24) < p.knot_permille as u64
+        })
+        .collect()
+}
+
 struct Run<'a> {
     p: &'a ChopParams,
     seg: Vec<i32>,
+    knots: Vec<bool>,
+    bite: Option<(i32, i64)>,
     cut: usize,
     r: ChopResult,
     combo: i64,
@@ -88,10 +114,20 @@ impl Run<'_> {
         if head == side {
             self.r.hits += 1;
             self.combo = 0;
+            self.bite = None;
             self.next_ok = t + self.p.stagger_ms;
             self.staggered = true;
             return;
         }
+        let knotted = self.knots.get(self.cut).copied().unwrap_or(false);
+        let second = matches!(self.bite, Some((s, at)) if s == side && t - at <= self.p.knot_beat_ms);
+        if knotted && !second {
+            self.bite = Some((side, t));
+            self.next_ok = t + self.p.swing_ms;
+            self.staggered = false;
+            return;
+        }
+        self.bite = None;
         self.cut += 1;
         self.r.clean += 1;
         self.combo += 1;
@@ -117,7 +153,8 @@ impl Run<'_> {
 /// mid-swing is held (the latest) and swung when the swing ends; one while staggered is lost.
 pub fn play(seed: u64, p: &ChopParams, inputs: &[(i64, i32)]) -> ChopResult {
     let seg = branches(seed, p, (max_chops(p) as usize) + 2 + VIEW_SEGMENTS);
-    let mut run = Run { p, seg, cut: 0, r: ChopResult::default(), combo: 0, next_ok: 0, staggered: false };
+    let knots = knots(seed, p, seg.len());
+    let mut run = Run { p, seg, knots, bite: None, cut: 0, r: ChopResult::default(), combo: 0, next_ok: 0, staggered: false };
     let (mut held, mut last_t): (Option<(i64, i32)>, i64) = (None, -1);
     for &(t, side) in inputs {
         if t < last_t {
