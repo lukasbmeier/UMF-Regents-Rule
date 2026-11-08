@@ -77,6 +77,29 @@ func run() -> void:
 	_check(chat.shown()[-1] == "Fin: line 9", "pruned on the server: still in the log")
 	say.call(30, world, 7902, "", "no name yet", now + 20)
 	_check(chat.shown()[-1] == "Player 7902: no name yet", "a player with no name: as their nameplate calls them")
+	# THE PLAYTEST CRASH (DECISIONS #308): the next line from a speaker whose bubble has gone. Before the fix
+	# it cast the freed label (`as Label3D`): here that is "Trying to cast a freed object" (the runner fails
+	# on it); in a release build, every client that got the line crashed.
+	for c: Node in friend.get_children():
+		if c is Label3D and not c.is_queued_for_deletion():
+			c.free()   # its fade ended
+	_check(chat.bubble_of(7902) == "", "a bubble that has faded is gone")
+	say.call(31, world, 7902, "Fin", "still here", now + 21)
+	_check(chat.bubble_of(7902) == "still here", "the speaker's next line after it: over their head again")
+	var rebuilt := SpaceTimeEntity.new()   # their character built again (a despawn, a new look): the bubble went with it
+	rebuilt.definition = d
+	reg.unregister(7902)
+	friend.free()
+	get_tree().root.add_child(rebuilt)
+	reg.register(7902, rebuilt)
+	friend = rebuilt
+	say.call(32, world, 7902, "Fin", "new look", now + 22)
+	_check(chat.bubble_of(7902) == "new look" and _bubble_count(rebuilt) == 1, "and after their character was rebuilt: over the new one")
+	var stale := Label3D.new()   # a freed label still held, however it got there
+	(chat.get(&"_bubbles") as Dictionary)[7902] = stale
+	stale.free()
+	say.call(33, world, 7902, "Fin", "again", now + 23)
+	_check(chat.bubble_of(7902) == "again", "a freed label still held is never cast: the line shows")
 	# Writing.
 	chat.open()
 	_check(chat.is_typing() and chat.input_line().has_focus(), "Enter: a line to write in, focused")
@@ -104,3 +127,12 @@ func run() -> void:
 	me.queue_free()
 	friend.queue_free()
 	await get_tree().process_frame
+
+
+## The bubbles over `n` not on their way out.
+func _bubble_count(n: Node) -> int:
+	var k: int = 0
+	for c: Node in n.get_children():
+		if c is Label3D and not c.is_queued_for_deletion():
+			k += 1
+	return k
