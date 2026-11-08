@@ -22,8 +22,9 @@
   `referee.prev.log`); it used to write the game's own `user://logs/godot.log` too, over the host's crash lines.
 
 ## Next, in order
-1. Ship 1.7.5-1.7.7 to Fishing, Fowl Play and DiscGolf (`ship_template.sh`); each game's friends need a new build
-   for 1.7.7 (chat is in every game).
+1. Ship 1.7.5-1.7.8 to Fishing, Fowl Play and DiscGolf (`ship_template.sh`); each game's friends need a new build
+   for 1.7.7 (chat is in every game). 1.7.8 (2026-11-08, tests only): `export_test.sh` publishes its own server
+   fresh before running the exported client (a release stopped on another session's leftover entities).
 2. The `content` project-task check: wait on the process, not a frame count (it fails on this machine now).
 3. From before: effects' own presentation; the SDK btree patch upstream (ask Luke); a region referee's ~375 MB load.
 
