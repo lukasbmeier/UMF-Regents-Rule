@@ -1143,3 +1143,14 @@ Tools only: nothing to republish, no codegen.
   GDScript backtrace; the start check stopped a build exported from a checkout with another session's half-written
   script in it. On a probe project the debug template reported "Trying to assign invalid previously freed instance"
   at the line, where the release template ran on.
+
+## 1.7.7 — chat no longer crashes the game (DECISIONS #308)
+Client only: nothing to republish, no codegen. Friends need the new build.
+- THE PLAYTEST CRASH: the next chat line from someone whose bubble had gone (its fade ended, or their character was
+  despawned or rebuilt) cast the freed label (`as Label3D`). The editor only reports that; an exported release build
+  reads the freed memory and closes with nothing in its log, on every client that got the line.
+- `ChatBox._bubble_label`: checks the held bubble is still there before casting it; each bubble is forgotten as it
+  leaves the tree.
+- `tests/suites/chat.gd`: a faded bubble, a rebuilt character, a freed label still held. With the old code all three
+  fail on "Trying to cast a freed object" at `chat_box.gd:260`.
+- `.claude/rules/umf-gdscript.md`: never cast a stored node before `is_instance_valid`.

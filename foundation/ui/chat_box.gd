@@ -257,8 +257,8 @@ func _bubble(entity_id: int, text: String) -> void:
 	var who: Node3D = EntityRegistry.get_entity(entity_id) as Node3D
 	if who == null:
 		return
-	var old: Label3D = _bubbles.get(entity_id) as Label3D
-	if old != null and is_instance_valid(old):
+	var old: Label3D = _bubble_label(entity_id)
+	if old != null:
 		old.queue_free()
 	var l := Label3D.new()
 	l.name = "ChatBubble"
@@ -280,10 +280,30 @@ func _bubble(entity_id: int, text: String) -> void:
 	l.position = Vector3(0.0, BUBBLE_HEIGHT, 0.0)
 	who.add_child(l)
 	_bubbles[entity_id] = l
+	# Forgotten as it goes, by its own fade or with the character it is over (a despawn, a rebuild).
+	l.tree_exiting.connect(_forget_bubble.bind(entity_id, l), CONNECT_ONE_SHOT)
 	var t: Tween = l.create_tween()
 	t.tween_interval(BUBBLE_S)
 	t.tween_property(l, ^"modulate:a", 0.0, 0.5)
 	t.tween_callback(l.queue_free)
+
+
+## The bubble over `entity_id` now, null when there is none or it has gone. THE PLAYTEST CRASH (DECISIONS #308):
+## a bubble frees itself when it fades, or with its character; the next line from the same speaker cast the
+## freed label (`as Label3D`), and a RELEASE build reads a freed object's memory to cast it: every client that
+## got the line crashed at once. Never cast a stored node before `is_instance_valid`.
+func _bubble_label(entity_id: int) -> Label3D:
+	var held: Variant = _bubbles.get(entity_id)
+	if not is_instance_valid(held):
+		_bubbles.erase(entity_id)
+		return null
+	var l: Label3D = held as Label3D
+	return l if l != null and not l.is_queued_for_deletion() else null
+
+
+func _forget_bubble(entity_id: int, l: Label3D) -> void:
+	if is_same(_bubbles.get(entity_id), l):
+		_bubbles.erase(entity_id)
 
 
 # ---- for tests ----
@@ -298,8 +318,8 @@ func shown() -> PackedStringArray:
 
 ## What is over `entity_id`'s head now ("" for nothing).
 func bubble_of(entity_id: int) -> String:
-	var l: Label3D = _bubbles.get(entity_id) as Label3D
-	return l.text if l != null and is_instance_valid(l) and not l.is_queued_for_deletion() else ""
+	var l: Label3D = _bubble_label(entity_id)
+	return l.text if l != null else ""
 
 
 func input_line() -> LineEdit:
