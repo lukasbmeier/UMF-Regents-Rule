@@ -161,6 +161,12 @@ check "$(grep -q ' - Forward+ - Using Device' "$udir/logs/godot.log" && echo tru
 rmdir "$aside_r" 2>/dev/null
 
 echo "== run the exported CLIENT =="
+# On THIS source's server with fresh data: the test database holds whatever the last suite left (another
+# session's integration run leaves entities of kinds this build need not know, and the client reports each
+# one it cannot draw), and may run an older module.
+if ! (cd server && spacetime publish "$DB" --server local --delete-data --yes) >/dev/null 2>&1; then
+  fail "this source's server publishes to $DB"
+fi
 # Headless: no connect screen (nobody to ask), so it connects to the shipped default server —
 # the local one. A token of its own keeps it from sharing an identity with anyone.
 build/client/umf.exe --headless -- --token=exporttest --name=Exported >"$client_log" 2>&1 &

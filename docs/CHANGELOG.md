@@ -1154,3 +1154,11 @@ Client only: nothing to republish, no codegen. Friends need the new build.
 - `tests/suites/chat.gd`: a faded bubble, a rebuilt character, a freed label still held. With the old code all three
   fail on "Trying to cast a freed object" at `chat_box.gd:260`.
 - `.claude/rules/umf-gdscript.md`: never cast a stored node before `is_instance_valid`.
+
+## 1.7.8 — the export test plays its build on its own server
+Tests only: nothing to republish, no codegen, no new build.
+- `tests/export_test.sh` (so `tools/release.sh`): the exported client's run used whatever the test database held. After
+  another session's integration run that is entities of kinds the build need not know, each one an error in the
+  client's log, and a good release stopped (Regent's Rule's 1.7.7 build, 2026-11-08). It now publishes this source's
+  server with fresh data first. Shown with another game's server on the test database: the old test fails, this
+  one passes.
