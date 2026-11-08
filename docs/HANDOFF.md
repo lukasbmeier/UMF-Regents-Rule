@@ -1,63 +1,42 @@
-# Handoff — Regent's Rule, 2026-11-07 (playtest crashes: the referee's own log, a debug build to name the line)
+# Handoff — Regent's Rule, 2026-11-08 (a side session: the integration suite's combat checks, on its own branch)
 
 ## Where it stands
-- Steps 41-44 committed and pushed. On top: the template's 1.7.5 (`84d15000`) and 1.7.6 (`7c157b36`) merged, tools
-  and docs only (nothing to publish, no codegen), pushed with this HANDOFF.
-- THE DEBUG BUILD for the crash hunt: `build/releases/Regent's_Rule-331b21db0518-debug.zip` (Luke sends it to Fin;
-  both play it). Same fingerprint and code as the 2026-11-06 release; made from a clean worktree of `7c157b36`.
-- Left uncommitted ON PURPOSE: Luke's editor (13 `.png.import`, `game/regents/anim/adventurer.tres`); `shared/compat/`
-  untracked (the 2026-11-06 release snapshot: Luke commits it); and ANOTHER SESSION'S smelting "beat" minigame,
-  mid-work on 2026-11-07 (`game/regents/skilling/smelting/beat_*`, `skill_minigames.gd`, `recipe_def.gd`, the bar
-  recipes, `server/src/genre/regents/beat.rs`, `mod.rs`, goldens, sounds). Not this session's: never touch or commit it.
-- Play database `regents-rule`: published with step 44, unchanged. Luke's `tools\host.cmd` must be restarted once to
-  get the split referee log (1.7.5).
-- The plan for the minigames: `docs/regents_rule/MINIGAMES_PREP.md` (§7 Luke's M1-M12, §8 the order of work).
+- Branch `claude/compassionate-panini-246b25` (a worktree), on top of `54c1973b`: tests and docs only, committed, not
+  pushed; Luke merges. Nothing published (no game code changed); the play database `regents-rule` untouched.
+- Integration on `regents-rule-test`, the final hook, three runs in a row: 1303/0, 1290/1, 1286/2; no combat check among the failures
+  (the three are foundation timing races, below).
+- THE MAIN CHECKOUT has another session's uncommitted minigame work (PROGRESS steps 45-49, its own HANDOFF): this
+  branch's step is numbered 50 for that. Merging: PROGRESS and this file will conflict at their ends; keep both
+  sides (this HANDOFF's "This session" is a section to fold into that session's).
+- The crash hunt (2026-11-07) stands as it was: the debug build `build/releases/Regent's_Rule-331b21db0518-debug.zip`
+  for Luke and Fin; the "Multiplayer crash investigation" session has it in hand.
 
 ## This session
-- THE CRASH (Luke and Fin, exported client, 2026-11-06 23:18:38 and 23:20:36; Fin crashed more often, alone too):
-  Windows "Application Error", `umf.exe` 0xc0000005 at the same offset 0x4dc82bb both times; dumps in Luke's
-  `%LOCALAPPDATA%\CrashDumps\umf.exe.{108904,100076}.dmp`. Unwound by hand: `SpacetimeDBClient._physics_process` →
-  the SDK's `row_inserted` → `SpaceTimeSync` `_emit_row` → `_deliver_row` → `EntityRegistry._on_row_event` → two more
-  script calls on one Node (most likely Fin's `SpaceTimeEntity.receive_row_event` and one of its own) → a TYPED ASSIGN
-  of a FREED object (the release build reads the dangling pointer). An INSERT for entity 12289 (Fin), while Fin was
-  mining Copper rock 57. The exact line is NOT known yet.
-- Template 1.7.5 (DECISIONS #306): `tools/host.sh` gives the referee `--log-file build/host/referee.log` (the run
-  before: `referee.prev.log`); it used to write the game's own `user://logs/godot.log` too, over Luke's crash lines.
-- Template 1.7.6 (DECISIONS #307): `tools\release.cmd --debug`. Luke asked for script call stacks as a Settings
-  toggle; measured, Godot's RELEASE template has no crash handler, so no setting can make it name a native crash's
-  line. The DEBUG template turns this crash's cause into `SCRIPT ERROR: Trying to assign invalid previously freed
-  instance` at the script line, with a backtrace, and the game plays on. Luke chose a debug build for now. Proved:
-  the debug build connects to `regents-rule-test` and plays with no errors; its start check stopped a build exported
-  from this checkout while the other session's scripts were half-written.
+- WHY 5-8 COMBAT CHECKS FAILED EVERY RUN: CLI calls (1-3 s each) between a thing that runs out and the step that needs
+  it: a judged request (3 s after due), a dummy's health (whole 4 s after its last hit), a kill's `foe_kill` row
+  (10 s), an arrow (8 s; a report of a gone body is passed over silently). PROGRESS step 50 has each.
+- THE FIX (`game/regents/tests/hooks/integration_genre.sh`): the roles' string ends (943/953/963), the skeleton's
+  swings, the rallying cut on a foe, the slaying chop's loot and the bow's three shots (`shot`) each in one `timed`
+  run with the reads they need taken in it; "the camp waits" read before the loot; `timed_val` reads an empty value.
+- Found on the way: a foe's hit on a player is HELD ~540 ms for a late parry (`held_hit`): read health 1 s after.
 
 ## Next, in order
-1. Fin's logs (Luke is getting them): `%APPDATA%\Godot\app_userdata\Regent's Rule\logs\` and, if his PC keeps them,
-   `%LOCALAPPDATA%\CrashDumps\umf.exe.*.dmp` (offset 0x4dc82bb means the same crash).
-2. Name the line: Luke and Fin play the debug build; where the release one crashed, its `godot.log` has
-   `SCRIPT ERROR: Trying to assign invalid previously freed instance` with the file, line and backtrace.
-3. Then the fix: the typed assign that takes a freed object (check `is_instance_valid` first, or drop the reference
-   when it is freed). Suspects: `SpaceTimeEntity`'s untyped `_routes` arrays of components (looped as
-   `for c: SpaceTimeComponent in targets`); a component's node lookups. A test: the row arriving after the node it
-   names was freed, run against an EXPORTED build (the editor and debug builds report it, they do not crash).
-4. Then the minigame plan as before: Luke plays steps 41-44; smithing numbers, M3/M4; §8 step 4 (M11); step 5's
-   band rules; woodworking; the XP curve (GAME.md "Outranked XP").
+1. Luke merges this branch with the main checkout's minigame work (PROGRESS and HANDOFF by hand: keep both).
+2. The template (`../UMF Template`, `tests/integration_test.sh`): three of its checks race the CLI the same way, one a
+   run here: "the push stays where it happened" (a push lives 5 s), the body contact "once" (5 s), Help up's "again"
+   (the first two finish the hold before the third joins). Timed calls there too, as here.
+3. Then as the minigame session's HANDOFF says (Fin's logs, the debug build's crash line, the minigame plan).
 
 ## Waiting on Luke
-- Fin's logs; a session on the debug build that hits the crash.
-- His play of steps 41-44; synthesized sounds or CC0; the tap buttons; metals after steel; the readout presets.
-- The work spot only steps for the node ahead, not one at the side of the 120 degree arc.
-- From before: "Cancelled." on the connect screen; combat steps 5-7; the tutorial's words; PROGRESS 30's list;
-  a loot table with swords; which foes are bosses.
+- The merge. Everything else as the main checkout's HANDOFF lists it.
 
 ## Watch out
-- Any export (`release.cmd`, `--debug`) packs what is ON DISK: with another session's half-written scripts in this
-  checkout it ships broken code. Export from a clean worktree (`git worktree add` outside the repo, copy `.godot/`
-  and `tools/local.env` in, `--import`, then the release; ~5 min).
-- Two editor instances (or an export beside an editor run) still share `user://logs/godot.log`.
-- Telemetry and the server log give WHEN and WHO of a crash, never the line: that is only inside the crashed process.
-- INTEGRATION FLAKES (seen across 4 runs): `foe_kill` loot reads after the row expired; the pommel bash; once a
-  crossguard craft. The skilling playtest's pass count moves by one between runs.
-- A `.tscn` writes a Transform3D's basis by ROWS. A scratch script under `game/` or `tools/` trips the lints (a bare
-  `quit()`): use `AppExit.quit`. Never run imports or windowed shots during a server suite; never two server suites.
-- Heredocs with Python patch strings break in this shell (backslashes): write patch scripts with the Write tool.
-- New minigame input codes must be positive; a new round param defaults to 0 = off; recipes copy a pattern's round once.
+- STOPPING A SUITE: a background task's stop can leave `tests/integration_test.sh` running (re-parented). Kill its
+  whole process tree, or two suites end up on the test database at once (this session did, 2026-11-07: its own
+  baseline and fix runs, the failures all over the foundation's sections were that).
+- Sessions share ONE CLI identity: every session's suite is player 41 on `regents-rule-test`. One suite at a time,
+  across sessions; say so in the shared notes folder before taking it.
+- A worktree with `.godot/` copied in needs `--import` first. The skilling bot prints compile errors for autoloads
+  (`HotRules`, `Settings`) on every run, in the main checkout too, and still plays: harmless.
+- `play_round` has a margin, not a failure: the bot (6-7 s) + three CLI reads + a sleep from the bot's end run
+  close to a round's 30 s when the CLI is slow.
