@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="1_shape"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="3_slot"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_pattern"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="4_bar"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="5_skill"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("1_shape")
+display_name = "Knife blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
+outline_vary = 3
+error_scale = 50
+outline = PackedInt32Array(14, 15, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 7, 5, 3)
+
+[sub_resource type="Resource" id="Slot_bar"]
+script = ExtResource("3_slot")
+name = "bar"
+takes = 1
+pattern = ExtResource("4_bar")
+qty = 1
+core = true
+
+[resource]
+script = ExtResource("4_pattern")
+key = &"knife_blade"
+name_format = "{m} knife blade"
+max_stack = 1
+station = &"anvil"
+skill = ExtResource("5_skill")
+parts = Array[ExtResource("3_slot")]([SubResource("Slot_bar")])
+output_qty = 1
+quality = 1
+xp = 18
+afk_ms = 6000
+minigame = SubResource("Round")
+description = "A skinning knife's blade, shaped at the anvil: as good as its smith."
+id = 40014
+display_name = "Knife blade"
+designer_notes = "SKINNING'S TOOL (Luke, 2026-11-09: a smithed knife, as the trowel): the blade, one bar, a smithed part as the other heads; a long back, a curved edge to the point."

@@ -107,7 +107,62 @@ func shows_clock() -> bool:
 	return true
 
 
+## FINISHING IS A HOLD (Luke's play, 2026-11-09: one Enter set a part down at once, and parts were lost far off the
+## outline): Enter, or the round's finish button, held `FINISH_HOLD_MS` ends it; a tap only says to hold. A round
+## that finishes early (the anvil, the carve) calls `finish_key` with its keys and says what to do in `_finish_held`.
+const FINISH_HOLD_MS: int = 600
+const FINISH_TAP_SAID_MS: int = 1800
+var _finish_down_ms: int = -1
+var _finish_tapped_ms: int = -100000
+
+
+## Enter down or up: true when `k` was Enter (the caller marks it handled).
+func finish_key(k: InputEventKey) -> bool:
+	if k == null or k.echo or (k.keycode != KEY_ENTER and k.keycode != KEY_KP_ENTER):
+		return false
+	if k.pressed:
+		finish_hold_begin()
+	else:
+		finish_hold_end()
+	return true
+
+
+## The finish button (or Enter) went down.
+func finish_hold_begin() -> void:
+	if state == State.PLAYING and _finish_down_ms < 0:
+		_finish_down_ms = Time.get_ticks_msec()
+
+
+## Let go before the hold was done: nothing happens, and the round says to hold it.
+func finish_hold_end() -> void:
+	if _finish_down_ms >= 0:
+		_finish_down_ms = -1
+		_finish_tapped_ms = Time.get_ticks_msec()
+
+
+## How far the hold has come, 0 to 1 (0: not held).
+func finish_hold() -> float:
+	if _finish_down_ms < 0:
+		return 0.0
+	return clampf(float(Time.get_ticks_msec() - _finish_down_ms) / float(FINISH_HOLD_MS), 0.0, 1.0)
+
+
+## What the round does when the finish has been held long enough (the anvil sets the part down).
+func _finish_held() -> void:
+	pass
+
+
+## What finishing the round is called on screen ("set it down").
+func finish_words() -> String:
+	return "finish"
+
+
 func _process(delta: float) -> void:
+	if _finish_down_ms >= 0 and (state != State.PLAYING or not is_visible_in_tree()):
+		_finish_down_ms = -1
+	elif _finish_down_ms >= 0 and finish_hold() >= 1.0:
+		_finish_down_ms = -1
+		_finish_held()
 	if state == State.PLAYING and (elapsed_ms() > duration_ms() or is_over()):
 		finish()
 	_animate(delta)
@@ -125,6 +180,14 @@ func _animate(_delta: float) -> void:
 var leave_hint: String = ""
 ## A RUN's tally (Luke's M11: rounds back to back), under the leave hint ("" for none): the HUD sets it.
 var run_line: String = ""
+## WHAT THIS ROUND PAYS SO FAR (Luke, 2026-11-09: "all minigames should have woodcutting like overview where it shows
+## how many rounds and the current pay off"): the HUD sets what AFK work makes in a round this long (`pay_afk`, in
+## items), the item's name and the pay's two hot rules; the frame then says what the score so far is worth, as the
+## server pays it (`SkillingRules.active_factor`). Rounds that make one graded thing (the anvil, the carve) set none.
+var pay_afk: float = 0.0
+var pay_item: String = ""
+var pay_mult: float = 1.25
+var pay_floor: float = 0.75
 
 
 ## The time bar, the title and the end or start panel: call last in `_draw`.
@@ -139,10 +202,14 @@ func _draw_frame(counts: String) -> void:
 			draw_rect(Rect2(16.0, 42.0, w - 32.0, 12.0), Color(0, 0, 0, 0.35))
 			draw_rect(Rect2(16.0, 42.0, (w - 32.0) * left, 12.0), Color(0.95, 0.85, 0.30))
 		draw_string(font, Vector2(w - 380.0, 30.0), counts, HORIZONTAL_ALIGNMENT_RIGHT, 364.0, 20, Color.WHITE)
+		var pay: String = pay_words()
+		if not pay.is_empty():
+			MinigameLook.text(self, font, Vector2(w - 480.0, 80.0), pay, 20, MinigameLook.GOLD, HORIZONTAL_ALIGNMENT_RIGHT, 464.0)
+		if not run_line.is_empty():
+			MinigameLook.text(self, font, Vector2(w - 480.0, 102.0), run_line, 16, MinigameLook.INK, HORIZONTAL_ALIGNMENT_RIGHT, 464.0)
 		if state == State.PLAYING and not leave_hint.is_empty():
 			draw_string(font, Vector2(16.0, 74.0), leave_hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 1, 1, 0.75))
-		if not run_line.is_empty():
-			draw_string(font, Vector2(16.0, 96.0), run_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.98, 0.85, 0.5, 0.9))
+		_draw_finish_hold(font)
 	if state == State.DONE:
 		var same: bool = live_result == replayed_result
 		_draw_panel(PackedStringArray([
@@ -153,6 +220,36 @@ func _draw_frame(counts: String) -> void:
 		]))
 	elif state == State.READY:
 		_draw_panel(PackedStringArray([title(), how_to()]))
+
+
+## "This round: about 1.6 Copper ore" from the score so far ("" when the HUD set no pay, or before a round).
+func pay_words() -> String:
+	if pay_afk <= 0.0 or pay_item.is_empty() or state == State.READY:
+		return ""
+	var r: Dictionary = live_result if state == State.DONE else _model_result()
+	var got: float = pay_afk * SkillingRules.active_factor(pay_mult, pay_floor, int(r.get("score_pm", 0)))
+	return "This round: about %.1f %s" % [got, pay_item]
+
+
+## Where the finish's hold bar is drawn (its words above it): at the foot of the panel; a round may move it.
+func finish_hold_rect() -> Rect2:
+	return Rect2(size.x * 0.5 - 140.0, size.y - 86.0, 280.0, 10.0)
+
+
+## The finish being held: a bar filling at the foot of the panel; a tap: say to hold it.
+func _draw_finish_hold(font: Font) -> void:
+	if state != State.PLAYING:
+		return
+	var held: float = finish_hold()
+	var r: Rect2 = finish_hold_rect()
+	if held > 0.0:
+		MinigameLook.text(self, font, Vector2(r.position.x - 60.0, r.position.y - 8.0), "Hold to %s..." % finish_words(), 18,
+			MinigameLook.GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x + 120.0)
+		draw_rect(r.grow(2.0), Color(0, 0, 0, 0.6))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * held, r.size.y)), MinigameLook.GOLD)
+	elif Time.get_ticks_msec() - _finish_tapped_ms < FINISH_TAP_SAID_MS:
+		MinigameLook.text(self, font, Vector2(r.position.x - 60.0, r.position.y - 8.0), "Hold Enter to %s" % finish_words(), 18,
+			MinigameLook.GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x + 120.0)
 
 
 func _draw_panel(lines: PackedStringArray) -> void:

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/foe.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/Deer.gltf" id="3_look"]
+[ext_resource type="Resource" path="res://game/regents/anim/deer_animation.tres" id="4_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/deer.tres" id="5_move"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40009
+kind = 106
+scene = ExtResource("2_scene")
+brain = &"regents/deer"
+visual_scene = ExtResource("3_look")
+visual_yaw_deg = 180.0
+visual_scale = 0.38
+animation_set = ExtResource("4_anim")
+collision_radius = 0.45
+collision_height = 1.5
+movement_profile = ExtResource("5_move")
+display_name = "Deer"
+designer_notes = "THE FIRST CREATURE (hunting, 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): Quaternius's CC0 deer (Ultimate Animated Animals, game/regents/art/animals/Deer.gltf, 4.4 m long as made, scaled 0.38 here to about 1.7 m), animated by its own clips (game/regents/anim/deer_animation.tres, written by build_animal_sets.gd: it grazes standing, walks, gallops). Its brain (regents/deer, the sidecar's) grazes round home and flees; what it is in play is its FoeDef's (content/foe/deer.tres)."

@@ -26,7 +26,7 @@ use spacetimedb::{client_visibility_filter, reducer, table, Filter, ReducerConte
 use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTITY_NODE, ENTITY_STATION, LEVEL_FRONTIER, STATUS_DEPLETED};
 use crate::hot::regents as hot;
 use crate::module::{
-    ability_def, challenge, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
+    ability_def, challenge, damage_share, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
     world_config, world_level, client_rtt, Challenge, InventoryItem, ItemDef, StatusStateRow, DEFAULT_WORLD,
 };
 use crate::sim::Vector3;
@@ -705,6 +705,26 @@ pub fn admin_reset_skills(ctx: &ReducerContext, entity_id: u64) -> Result<(), St
     Ok(())
 }
 
+/// Admin: FOE `entity_id` slain as if `killer` (any entity, or 0 for nobody) had dealt it the last hit (skinning,
+/// 2026-11-09: a carcass without a fight, for the suites and an admin): its health to nothing, then the genre's own
+/// fall (its loot, its carcass, the killer's the first claim on it). An admin's `apply_damage` never reaches the fall.
+#[reducer]
+pub fn admin_slay(ctx: &ReducerContext, entity_id: u64, killer: u64) -> Result<(), String> {
+    crate::module::require_admin(ctx)?;
+    let f = ctx.db.foe().entity_id().find(entity_id).ok_or("admin_slay: no such foe")?;
+    if f.fell_at.is_some() {
+        return Err("admin_slay: it has fallen already".into());
+    }
+    if killer != 0 && ctx.db.entity().entity_id().find(killer).is_none() {
+        return Err("admin_slay: no such killer".into());
+    }
+    let left = ctx.db.health_state().entity_id().find(entity_id).map_or(0.0, |h| h.current);
+    crate::module::damage_entity(ctx, entity_id, left.max(1.0), killer)?;
+    fell(ctx, entity_id, killer);
+    log::info!("regents: an admin slew {entity_id} (as {killer})");
+    Ok(())
+}
+
 /// Admin: `qty` of item `item_id` into `entity_id`'s bag. One that does not stack (a tool, a weapon, a
 /// part) comes at quality `quality` (thousandths, at most 1000: its grade); a stacking item has none, and
 /// `quality` is ignored. At most `ADMIN_GIVE_ONE_BY_ONE` of one that does not stack, `ADMIN_GIVE_MAX` of any.
@@ -849,6 +869,7 @@ fn clear_world(ctx: &ReducerContext, world_id: u32) {
         ctx.db.work_order().id().delete(id);
     }
     for id in ids {
+        ctx.db.carcass().entity_id().delete(id);
         ctx.db.dummy().entity_id().delete(id);
         ctx.db.gather_node().entity_id().delete(id);
         ctx.db.station().entity_id().delete(id);
@@ -885,12 +906,65 @@ fn stop_work(ctx: &ReducerContext, entity_id: u64) {
 
 /// Node `node_id` is worked out: Depleted for its regrow time; everyone working it AFK stops.
 fn deplete(ctx: &ReducerContext, node_id: u64, n: &NodeSeed, by: u64) {
+    ctx.db.node_taken().entity_id().delete(node_id);   // whole again when it comes back
     if let Err(e) = crate::module::set_status_internal(ctx, node_id, STATUS_DEPLETED, n.regrow_ms, by, String::new()) {
         log::error!("regents: node {node_id} could not be worked out: {e}");
     }
     let afk: Vec<u64> = ctx.db.afk_work().iter().filter(|a| a.target_id == node_id).map(|a| a.entity_id).collect();
     for id in afk {
         ctx.db.afk_work().entity_id().delete(id);
+    }
+    // A carcass skinned is not grown back: it is taken away a moment after (`tick_carcasses`).
+    if let Some(mut c) = ctx.db.carcass().entity_id().find(node_id) {
+        c.skinned_at = Some(ctx.timestamp);
+        ctx.db.carcass().entity_id().update(c);
+    }
+}
+
+/// How long a skinned carcass lies (its crumble seen) before it is taken away.
+const CARCASS_GONE_MICROS: i64 = 2_000_000;
+
+/// THE KILL'S CARCASS (skinning, 2026-11-09): node `seed.carcass` where foe `foe_entity` fell, facing as it lay, its
+/// owner the player who did the most damage (`damage_share`, before the loot forgets it), else its killer.
+fn leave_carcass(ctx: &ReducerContext, foe_entity: u64, world_id: u32, seed: &rules::FoeSeed, killer: u64) {
+    let Some(def) = rules::node(seed.carcass) else {
+        log::error!("regents: {} leaves carcass {}, which is no node", seed.name, seed.carcass);
+        return;
+    };
+    let Some(m) = ctx.db.movement_state().entity_id().find(foe_entity) else { return };
+    let top = ctx.db.damage_share().target_id().filter(foe_entity)
+        .filter(|d| ctx.db.player().entity_id().find(d.source_id).is_some())
+        .max_by(|a, b| a.amount.total_cmp(&b.amount)).map(|d| d.source_id);
+    let owner = top.unwrap_or(killer);
+    let id = crate::module::spawn_npc_internal(ctx, world_id, ENTITY_NODE, m.pos, m.yaw);
+    ctx.db.gather_node().insert(GatherNode { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), def_id: def.id,
+        point_id: format!("carcass_{foe_entity}") });
+    ctx.db.carcass().insert(Carcass { entity_id: id, world_id, owner_id: owner, foe_id: seed.id, fell_at: ctx.timestamp, skinned_at: None });
+    log::info!("regents: {} {foe_entity} left its carcass {id} ({}), {owner}'s to skin first", seed.name, def.name);
+}
+
+/// Carcasses skinned a moment ago, or rotted (`regents.carcass_rot_s` after they fell), taken away.
+fn tick_carcasses(ctx: &ReducerContext) {
+    let now = micros(ctx.timestamp);
+    let rot = (hot_number(ctx, hot::CARCASS_ROT_S).max(0.0) * 1_000_000.0) as i64;
+    let done: Vec<u64> = ctx.db.carcass().iter()
+        .filter(|c| c.skinned_at.is_some_and(|s| now - micros(s) >= CARCASS_GONE_MICROS) || now - micros(c.fell_at) >= rot)
+        .map(|c| c.entity_id).collect();
+    for id in done {
+        remove_carcass(ctx, id);
+    }
+}
+
+/// Carcass `id` gone: its node, its row, anyone at it AFK, its entity.
+fn remove_carcass(ctx: &ReducerContext, id: u64) {
+    for w in ctx.db.afk_work().iter().filter(|a| a.target_id == id).map(|a| a.entity_id).collect::<Vec<_>>() {
+        ctx.db.afk_work().entity_id().delete(w);
+    }
+    ctx.db.carcass().entity_id().delete(id);
+    ctx.db.node_taken().entity_id().delete(id);
+    ctx.db.gather_node().entity_id().delete(id);
+    if ctx.db.entity().entity_id().find(id).is_some() {
+        crate::module::despawn_entity_internal(ctx, id);
     }
 }
 
@@ -910,9 +984,12 @@ fn rank_ease(ctx: &ReducerContext, me: u64, skill: u32, min_rank: u32) -> u32 {
 }
 
 /// `entity_id` gathers `n` items at node `node_id` (a round when `active`): each may bring its rare find
-/// and may work it out (then no more come). Pays, reports. The items gathered.
+/// and may work it out (then no more come), and never past its cap (`max_items`, counted in `node_taken`). `whole`: a
+/// round that worked the whole node (a carcass skinned in one round): no item works it out, it is worked out after.
+/// Pays, reports. The items gathered.
 #[allow(clippy::too_many_arguments)]
-fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u64, def: &NodeSeed, n: u32, active: bool, score_pm: i32, salt: u64) -> u32 {
+fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u64, def: &NodeSeed, n: u32, active: bool, score_pm: i32, salt: u64,
+    whole: bool) -> u32 {
     // A played round's edge on a rare find grows with its score (Luke's M11, 2026-11-07): none for a round nobody played.
     let rare_mult = if active { rules::active_rare_mult(hot_number(ctx, hot::ACTIVE_RARE_MULT), score_pm as i64) } else { 1.0 };
     let already = is_depleted(ctx, node_id);
@@ -922,6 +999,7 @@ fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u6
     let deplete_mult = crate::traits::mult(&traits, "depletion", &[], &none, k);
     let rare_add_pm = (crate::traits::value(&traits, "rare_chance", &[], &none, k) * 10.0).round().max(0.0) as u32;
     let extra_pm = (crate::traits::value(&traits, "extra_yield", &[], &none, k) * 10.0).round().max(0.0) as u32;
+    let taken = if def.max_items > 0 { ctx.db.node_taken().entity_id().find(node_id).map_or(0, |t| t.taken) } else { 0 };
     let (mut got, mut rare, mut out) = (0u32, 0u32, false);
     for i in 0..n as u64 {
         got += 1;
@@ -931,9 +1009,26 @@ fn gather_items(ctx: &ReducerContext, entity_id: u64, world_id: u32, node_id: u6
         let (r, d) = rules::item_outcome_with(def, rare_mult, rare_add_pm, deplete_mult,
             rules::roll_permille(salt ^ (i * 2 + 3)), rules::roll_permille(salt ^ (i * 2 + 4)));
         rare += u32::from(r);
-        if d && !already {
+        if def.max_items > 0 && taken + got >= def.max_items {
+            got = def.max_items.saturating_sub(taken);
+            out = !already;
+            break;
+        }
+        if d && !already && !whole {
             out = true;
             break;
+        }
+    }
+    out = out || (whole && !already);
+    if def.max_items > 0 && !out {
+        match ctx.db.node_taken().entity_id().find(node_id) {
+            Some(mut t) => {
+                t.taken = taken + got;
+                ctx.db.node_taken().entity_id().update(t);
+            }
+            None => {
+                ctx.db.node_taken().insert(NodeTaken { entity_id: node_id, world_id, taken: taken + got });
+            }
         }
     }
     give_items(ctx, entity_id, def.yield_item, got, None);
@@ -991,6 +1086,12 @@ pub fn gather(ctx: &ReducerContext, node_id: u64, active: bool) -> Result<(), St
     crate::module::require_can_act(ctx, me, "gather")?;
     let node = ctx.db.gather_node().entity_id().find(node_id).ok_or("gather: that is nothing to gather")?;
     let def = rules::node(node.def_id).ok_or_else(|| format!("gather: node {node_id} has no NodeDef {}", node.def_id))?;
+    if let Some(c) = ctx.db.carcass().entity_id().find(node_id) {
+        let left = rules::carcass_owned_ms(c.owner_id, me, micros(c.fell_at), micros(ctx.timestamp), hot_number(ctx, hot::CARCASS_OWN_S));
+        if left > 0 {
+            return Err(format!("gather: that kill is another's to skin for {} s more", (left + 999) / 1000));
+        }
+    }
     if is_depleted(ctx, node_id) {
         return Err(format!("gather: the {} is worked out; it comes back soon", def.name.to_lowercase()));
     }
@@ -1361,7 +1462,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
                 ctx.db.afk_work().entity_id().delete(row.entity_id);
                 continue;
             }
-            gather_items(ctx, row.entity_id, row.world_id, row.target_id, def, 1, false, -1, salt);
+            gather_items(ctx, row.entity_id, row.world_id, row.target_id, def, 1, false, -1, salt, false);
             if is_depleted(ctx, row.target_id) {
                 continue;   // `deplete` stopped everyone at it
             }
@@ -1373,6 +1474,7 @@ pub fn work_tick(ctx: &ReducerContext, _sched: WorkSchedule) -> Result<(), Strin
     }
     reset_dummies(ctx);
     tick_foes(ctx);
+    tick_carcasses(ctx);
     tick_regen(ctx, WORK_TICK_MICROS as f32 / 1_000_000.0);
     tick_spells(ctx, WORK_TICK_MICROS as f32 / 1_000_000.0);
     let mut boards: Vec<u32> = ctx.db.station().iter().filter(|s| s.key == rules::ORDER_BOARD).map(|s| s.world_id).collect();
@@ -1399,7 +1501,7 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
     let recipe = rules::recipe(def_id).filter(|r| r.minigame.challenge_kind() == ch.kind && ctx.db.station().entity_id().find(target).is_some());
     let minigame = node.map(|n| &n.minigame).or(recipe.map(|r| &r.minigame))?;
     let elapsed_ms = (micros(ctx.timestamp) - micros(ch.issued_at)) / 1000;
-    let arity = if ch.kind == rules::CHALLENGE_CRACK { 3 } else { 2 };
+    let arity = if ch.kind == rules::CHALLENGE_CRACK || ch.kind == rules::CHALLENGE_SKIN { 3 } else { 2 };
     if let Some(t) = result.chunks(arity).map(|g| g[0] as i64).find(|t| *t > elapsed_ms + CLOCK_SLACK_MS) {
         log::warn!("regents: round {} from {} claims a press at {t} ms, {elapsed_ms} ms after it was dealt", ch.id, ch.entity_id);
         return None;
@@ -1419,9 +1521,17 @@ fn resolve_round(ctx: &ReducerContext, ch: &Challenge, result: &[f32]) -> Option
     let mult = hot_number(ctx, hot::ACTIVE_YIELD_MULT);
     let floor = hot_number(ctx, hot::ACTIVE_YIELD_FLOOR);
     if let Some(n) = node {
-        let count = rules::whole_items(rules::active_yield_milli(rules::afk_interval_ms(n.afk_ms, speed), n.minigame.duration_ms(), mult, floor, score),
-            rules::roll_permille(salt));
-        let got = gather_items(ctx, ch.entity_id, world_id, target, n, count, true, score as i32, salt);
+        let count = if n.whole_round {
+            // A carcass skinned in one round (Luke, 2026-11-10): AFK's average for the whole of it x the round's factor.
+            let traits = best_tool(ctx, ch.entity_id, n.tool_tag).map_or_else(Vec::new, |t| t.3);
+            let deplete_mult = crate::traits::mult(&traits, "depletion", &[], &crate::traits::Against::default(), trait_strength(ctx));
+            let taken = ctx.db.node_taken().entity_id().find(target).map_or(0, |t| t.taken);
+            rules::whole_round_items(n.deplete_permille, deplete_mult, n.max_items, taken, mult, floor, score, rules::roll_permille(salt))
+        } else {
+            rules::whole_items(rules::active_yield_milli(rules::afk_interval_ms(n.afk_ms, speed), n.minigame.duration_ms(), mult, floor, score),
+                rules::roll_permille(salt))
+        };
+        let got = gather_items(ctx, ch.entity_id, world_id, target, n, count, true, score as i32, salt, n.whole_round);
         log::info!("regents: round {} at {} {target}: score {score} -> {got} {}", ch.id, n.name, rules::item(n.yield_item).map_or("?", |i| i.name));
     } else if let Some(r) = recipe {
         let batches = if r.quality == rules::QUALITY_FROM_ROUND {
@@ -1567,6 +1677,35 @@ pub struct Foe {
     pub foe_id: u32,
     pub fell_at: Option<Timestamp>,
     pub gone: bool,
+}
+
+/// A CARCASS (skinning, Luke 2026-11-09): a gathering node a kill left where it fell (`FoeDef.carcass`), skinned with a
+/// knife as any node is worked. Whose it is (`owner_id`: the player who did the most damage) and when it fell: the owner
+/// has it alone `regents.carcass_own_s`, then anyone may; unskinned it rots away `regents.carcass_rot_s` after it fell.
+/// Worked out (`skinned_at`), it is taken away a moment after. Private: a client draws it by its `gather_node` row.
+#[table(accessor = carcass)]
+#[derive(Clone)]
+pub struct Carcass {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub owner_id: u64,
+    pub foe_id: u32,
+    pub fell_at: Timestamp,
+    pub skinned_at: Option<Timestamp>,
+}
+
+/// HOW MUCH A CAPPED NODE HAS GIVEN (a carcass's hides, Luke 2026-11-10: a deer holds several, "like a node depletion",
+/// a better round more "up to a cap"): a node with `NodeSeed::max_items` counts here what it has given since it was last
+/// whole; worked out (or gone), its row goes. Private: only the server counts.
+#[table(accessor = node_taken)]
+pub struct NodeTaken {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    pub taken: u32,
 }
 
 /// AN ARROW IN FLIGHT (owner, 2026-10-20): who loosed it, what it does when it hits (worked out as it was
@@ -2818,6 +2957,22 @@ fn deal(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, kit: &
             }
         }
         on_hit_traits(ctx, actor, &ons, dmg, dummy.is_some());
+        if !blocked && alive && dummy.is_none() {
+            if let Some(kh) = kit.hit_of(ability_id) {
+                if kh.status > 0 && kh.status_ms > 0 {
+                    if let Err(e) = crate::module::add_effect_internal(ctx, target.entity_id, kh.status, kh.status_ms, actor) {
+                        log::warn!("regents: {actor}'s {ability_id} effect on {}: {e}", target.entity_id);
+                    }
+                }
+                if kh.push_mps > 0.0 {
+                    if let (Some(from), Some(to)) = (pos_of(ctx, actor), pos_of(ctx, target.entity_id)) {
+                        let (dx, dz) = (to.x - from.x, to.z - from.z);
+                        let d = (dx * dx + dz * dz).sqrt().max(0.01);
+                        let _ = crate::module::push_entity(ctx, target.entity_id, Vector3::new(dx / d * kh.push_mps, 2.0, dz / d * kh.push_mps), actor);
+                    }
+                }
+            }
+        }
         if let Some(rf) = kit.role_finisher(ability_id).filter(|r| r.heal > 0.0) {
             if dummy.is_none() {
                 rally(ctx, actor, rf);
@@ -2997,14 +3152,15 @@ fn spawn_foe(ctx: &ReducerContext, world_id: u32, seed: &rules::FoeSeed, p: &cra
         h.is_dead = false;
         ctx.db.health_state().entity_id().update(h);
     }
+    let brain = if seed.brain.is_empty() { FOE_BRAIN } else { seed.brain };
     ctx.db.npc_brain().insert(crate::module::NpcBrainRow {
-        entity_id: id, world_id, brain: FOE_BRAIN.into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
+        entity_id: id, world_id, brain: brain.into(), state: String::new(), target_id: 0, data: "{}".into(), updated_at: ctx.timestamp,
     });
     ctx.db.foe().insert(Foe { entity_id: id, world_id, chunk: crate::module::chunk_of_entity(ctx, id), point_id: p.id.to_string(), foe_id: seed.id, fell_at: None, gone: false });
     id
 }
 
-/// The brain every foe has: its FoeDef says how it behaves.
+/// The brain a foe has unless its character names another (a deer's flees): its FoeDef says how it behaves.
 const FOE_BRAIN: &str = "regents/foe";
 
 /// HEALTH RAN OUT. A foe falls (Slain, until it is gone) and its killer, a player, gets its loot; a player
@@ -3031,6 +3187,15 @@ fn fell(ctx: &ReducerContext, entity_id: u64, killer: u64) {
             ctx.db.stuck_arrow().id().delete(s.id);
         }
         let Some(seed) = rules::FOES.iter().find(|s| s.id == f.foe_id) else { return };
+        // A CARCASS (skinning, 2026-11-09): where it fell, its body taken away at once (the carcass lies in its stead).
+        if seed.carcass != 0 {
+            leave_carcass(ctx, entity_id, f.world_id, seed, killer);
+            forget_body(ctx, entity_id);
+            if let Some(mut gone) = ctx.db.foe().entity_id().find(entity_id) {
+                gone.gone = true;
+                ctx.db.foe().entity_id().update(gone);
+            }
+        }
         // A personal roll of its table for each player who did enough of the damage (DECISIONS #268).
         let got = crate::module::drop_loot(ctx, entity_id, seed.loot_table);
         for (who, drops) in &got {
@@ -3098,6 +3263,16 @@ fn tick_foes(ctx: &ReducerContext) {
 
 /// Entity `entity_id` was hurt now: its health waits `regents.regen_delay_s` before it comes back.
 fn hurt_now(ctx: &ReducerContext, entity_id: u64, world_id: u32) {
+    // A CREATURE THAT NEVER FIGHTS (hunting, 2026-11-09: a deer) is STARTLED by any hit, so its brain bolts even from a
+    // shot it never saw coming; an idle fighting foe too, so a wolf shot from beyond `notice_m` turns on the archer and
+    // calls its pack (never while it is already swinging, staggered or flinched).
+    let idle = ctx.db.status_state().entity_id().find(entity_id).is_none_or(|s| s.status == crate::status::NORMAL);
+    if foe_seed_of(ctx, entity_id).is_some_and(|f| !f.fights || idle) && !is_dead(ctx, entity_id) {
+        let ms = hot_number(ctx, hot::STARTLE_MS).max(0.0) as u32;
+        if let Err(e) = crate::module::set_status_internal(ctx, entity_id, rules::STATUS_STARTLED, ms.max(1), 0, String::new()) {
+            log::warn!("regents: {entity_id} was hit, but not startled: {e}");
+        }
+    }
     let row = Hurt { entity_id, world_id, at: ctx.timestamp };
     if ctx.db.hurt().entity_id().find(entity_id).is_some() {
         ctx.db.hurt().entity_id().update(row);

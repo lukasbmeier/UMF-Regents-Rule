@@ -117,11 +117,27 @@ Each with the proposed answer. The bold part is what needs his yes or no.
 ## 7. The order of work (once answered)
 1. **Herbalism, AFK first**: the skill, flax patches (nodes) in the glade and the continent, the TROWEL (a pattern of
    the material table: copper, iron, steel), fiber into the bag; the bowstring and STRINGING the yew bow (the carved stave becomes "Unstrung yew bow"). Playable.
-2. **Pull the root** (H3): the Tension model, its twin and goldens, its stage; the readout's players; tuned to M11.
-3. **The deer**: the animal imported (its rig, an `AnimationSet`, the tree builder checked on it: foundation work goes
+2. **Pull the root** (H3): the Tension model, its twin and goldens, its stage; the readout's players; tuned to M11. **BUILT 2026-11-08 (PROGRESS 51)**:
+   kind 106 on flax, a CLUMP a round (Luke, 2026-11-08: stems until the time runs out); after his first play the trowel
+   digs round each stem and cuts the side roots where the soil cracks, the stage redrawn (Claude's, for him to change).
+3. **BUILT 2026-11-09 (PROGRESS 53)**: the deer (its own clips by `build_animal_sets.gd`, a foe that never fights, the flee
+   brain, Startled on a hit, one in the glade and pairs over the continent's meadows; no loot until skinning).
+   **The deer**: the animal imported (its rig, an `AnimationSet`, the tree builder checked on it: foundation work goes
    to the template first if it needs widening), the FLEE brain, a spawner; its kill gives a carcass (H1) or hides.
-4. **Skinning** (H1, H4): AFK first, then its round; deer hide; tanning (H6) into leather; the leather wrap.
-5. **The wolf**: the pack brain, the lunge's push and the hamstring's slow (statuses exist: `status_state`), wolf
+4. **FIRST HALF BUILT 2026-11-09 (PROGRESS 54)**: skinning AFK with a smithed knife (Luke's), the carcass (the killer's
+   first, then anyone's; it rots), deer hide, the tanning rack into Soft leather. **SECOND HALF BUILT 2026-11-10 (PROGRESS
+   55)**: the drag-the-knife round (THE CUT LINE, kind 107) and, Luke's call, a deer holding several hides like a node
+   (up to a cap; a round skins the whole carcass, more for a better cut). Left: the leather wrap (its traits are Luke's).
+   **Skinning** (H1, H4): AFK first, then its round; deer hide; tanning (H6) into leather; the leather wrap.
+5. **BUILT 2026-11-10 (PROGRESS 56)**: the wolf (`Wolf.gltf` smooth shaded, `wolf_animation.tres` by `build_animal_sets.gd`,
+   `character/wolf.tres` kind 107 with `movement/wolf.tres`), pack coordination on `foe.gd` (`FoeDef.pack_m = 15.0`,
+   alerting or hitting one calls nearby packmates while sharing the referee's attack tokens), 3-step kit (`wolf`: bite,
+   hamstring bite slowing 3 s via `KitHit`, unblockable lunge leaping forward via `lunges = true` and knocking back at
+   10 m/s), wolf carcass (`node/wolf_carcass.tres`, Skinning 2, `wolf_carcass.tscn` on the skinning stage, cap 4, whole
+   round, 0.8 % rare `Wolf fang`), `Wolf pelt` tanned at the rack into `Supple leather` (Crafting 2); a pack of 2 in the
+   glade and packs of 2-3 along the continent's forest edges. Parked (Luke, 2026-11-10): sinew, the wolf-fang charm
+   (first trinket), and the stag (the antler).
+   **The wolf**: the pack brain, the lunge's push and the hamstring's slow (statuses exist: `status_state`), wolf
    pelt and sinew, the fang (a rare); THE FIRST TRINKET, a fang charm, its trait designed with Luke; the stag after it
    (the antler).
 6. **Hemp and nettle, the higher tiers**, band 2 rules for pull the root and skinning; the readout and Luke's play.

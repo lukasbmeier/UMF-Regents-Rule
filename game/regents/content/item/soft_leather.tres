@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1000
+color = Color(0.78, 0.6, 0.42, 1)
+description = "Soft leather, tanned from a deer's hide: for wraps now, and leather armor to come."
+id = 40057
+display_name = "Soft leather"
+designer_notes = "THE FIRST LEATHER (Luke's H7: Soft, Supple, Hardened leather; H6: tanned at a rack, AFK, trained by Crafting). Its first use, the leather wrap, waits on its traits (Luke's to design, H8)."

@@ -19,14 +19,11 @@ tap_drop = 1
 max_reheats = 5
 reheat_cost_pm = 40
 hide_outline = 1
+pattern_fade_ms = 3000
 lay_cost_pm = 30
 outline_vary = 3
 red_ms = 1200
 crack_cost_pm = 60
-quench_lo_pm = 250
-quench_hi_pm = 450
-quench_bonus_pm = 60
-quench_loss_pm = 150
 error_scale = 50
 outline = PackedInt32Array(22, 20, 16, 12, 10, 10, 10, 10, 10, 10, 12, 14, 18, 22, 24, 24)
 

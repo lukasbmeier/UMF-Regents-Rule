@@ -1,8 +1,27 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="1_v5f3p"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_b65as"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_u34ld"]
 
-[node name="Cell_-3_7" type="Node3D" unique_id=517976597]
+[node name="Cell_-3_7" type="Node3D" unique_id=1528953385]
 
-[node name="rock_big_1_331" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("1_v5f3p")]
+[node name="w_deer_19" type="Marker3D" parent="." unique_id=1911350043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -162.92776, 7.499181, 495.99753)
+gizmo_extents = 0.5
+script = ExtResource("1_b65as")
+point_id = "w_deer_19"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_20" type="Marker3D" parent="." unique_id=775141134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -162.56122, 7.234286, 492.01434)
+gizmo_extents = 0.5
+script = ExtResource("1_b65as")
+point_id = "w_deer_20"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="rock_big_1_331" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_u34ld")]
 transform = Transform3D(0.79072565, 0, -0.0034883267, 0, 0.79073334, 0, 0.0034883267, 0, 0.79072565, -144.33638, 7.6783714, 490.61664)

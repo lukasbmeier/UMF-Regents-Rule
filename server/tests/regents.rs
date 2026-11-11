@@ -64,17 +64,59 @@ use umf_module::genre::regents as rules;
 #[test]
 fn the_chain_is_compiled_in() {
     let nodes: Vec<&str> = rules::NODES.iter().map(|n| n.name).collect();
-    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax"], "the seven nodes, from game/regents/content/node/");
+    assert_eq!(nodes, vec!["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax", "Deer carcass", "Wolf carcass"],
+        "the nine nodes, from game/regents/content/node/ (the deer's and the wolf's carcasses, skinning 2026-11-09..10)");
     for n in rules::NODES {
         assert!(rules::item(n.yield_item).is_some() && rules::skill(n.skill).is_some(), "{} gives an item and trains a skill", n.name);
-        // Flax has no round yet (herbalism step 1, 2026-11-07: AFK only; pull the root is step 2).
-        assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)) || (n.name == "Flax" && matches!(n.minigame, rules::Minigame::None)),
+        // Flax's round is pull the root (herbalism step 2, 2026-11-08), the carcasses' the cut line (2026-11-10), each its own kind.
+        assert!(matches!(n.minigame, rules::Minigame::Chop(_) | rules::Minigame::Crack(_)) || (n.name == "Flax" && matches!(n.minigame, rules::Minigame::Pull(_)))
+            || ((n.name == "Deer carcass" || n.name == "Wolf carcass") && matches!(n.minigame, rules::Minigame::Skin(_))),
             "{}'s round is a gathering round", n.name);
     }
+    // SKINNING (Luke, 2026-11-09): the deer leaves its carcass, a knife's node; the copper knife is in the starter kit;
+    // the killer has it first for the hot rule's seconds, then anyone. SEVERAL HIDES (Luke, 2026-11-10): each the last
+    // with 35 %, at most 4, and a played round skins the whole of it (the cut line, kind 107).
+    let carcass = rules::node_named("deer carcass").expect("the deer's carcass");
+    let deer = rules::FOES.iter().find(|f| f.key == "deer").unwrap();
+    assert_eq!(deer.carcass, carcass.id, "a slain deer leaves its carcass");
+    let wolf_carcass = rules::node_named("wolf carcass").expect("the wolf's carcass");
+    let wolf = rules::FOES.iter().find(|f| f.key == "wolf").expect("the wolf");
+    assert_eq!(wolf.carcass, wolf_carcass.id, "a slain wolf leaves its carcass");
+    assert!(rules::FOES.iter().filter(|f| f.key != "deer" && f.key != "wolf").all(|f| f.carcass == 0), "a skeleton leaves its body only");
+    assert_eq!((carcass.tool_tag, carcass.min_tool_tier, carcass.deplete_permille, carcass.rare_item), ("knife", 1, 350, 0));
+    assert!(carcass.max_items == 4 && carcass.whole_round && carcass.minigame.challenge_kind() == rules::CHALLENGE_SKIN,
+        "the carcass: four hides at most, skinned whole in one round of the cut line");
+    assert!(wolf_carcass.max_items == 4 && wolf_carcass.whole_round && wolf_carcass.min_rank == 2 && wolf_carcass.rare_permille == 8
+        && wolf_carcass.minigame.challenge_kind() == rules::CHALLENGE_SKIN,
+        "the wolf's carcass: Skinning 2, four pelts at most, a rare wolf fang (0.8 %), skinned whole in one round of the cut line");
+    assert_eq!((rules::item(wolf_carcass.yield_item).map(|i| i.name), rules::item(wolf_carcass.rare_item).map(|i| i.name)),
+        (Some("Wolf pelt"), Some("Wolf fang")));
+    assert!(rules::NODES.iter().filter(|n| n.name != "Deer carcass" && n.name != "Wolf carcass").all(|n| n.max_items == 0 && !n.whole_round),
+        "every other node: no cap, a round pays for its time");
+    assert_eq!(rules::item(carcass.yield_item).map(|i| i.name), Some("Deer hide"));
+    let knife = rules::item(40059).expect("the copper knife");
+    assert!(knife.name == "Copper knife" && knife.tool_tag == "knife" && knife.tool_tier == 1 && rules::STARTER_KIT.contains(&40059));
+    assert_eq!(rules::carcass_owned_ms(7, 7, 0, 1_000_000, 60.0), 0, "its owner may skin it at once");
+    assert_eq!(rules::carcass_owned_ms(7, 8, 0, 1_000_000, 60.0), 59_000, "another waits out the rest of the minute");
+    assert_eq!(rules::carcass_owned_ms(7, 8, 0, 60_000_000, 60.0), 0, "and then may");
+    assert_eq!(rules::carcass_owned_ms(0, 8, 0, 0, 60.0), 0, "a carcass nobody owns is anyone's");
+    let tan = rules::RECIPES.iter().find(|r| r.name == "Soft leather").expect("tanning");
+    assert_eq!((tan.station, rules::item(tan.inputs[0].0).map(|i| i.name)), ("tanning_rack", Some("Deer hide")), "a deer hide to soft leather at the rack");
+    let supple = rules::RECIPES.iter().find(|r| r.name == "Supple leather").expect("tanning a wolf pelt");
+    assert_eq!((supple.station, supple.min_rank, rules::item(supple.inputs[0].0).map(|i| i.name)), ("tanning_rack", 2, Some("Wolf pelt")),
+        "a wolf pelt to supple leather at the rack (Crafting 2)");
+    let wolf_kit = rules::kit_keyed(wolf.kit).expect("the wolf's kit");
+    assert_eq!(wolf_kit.light, &[40027, 40028, 40029], "bite, hamstring bite, lunge");
+    assert_eq!(wolf_kit.hit_of(40028).map(|h| (h.status, h.status_ms, h.push_mps)), Some((108, 3000, 0.0)), "hamstring bite slows for 3 s");
+    assert_eq!(wolf_kit.hit_of(40029).map(|h| (h.status, h.status_ms, h.push_mps)), Some((0, 0, 10.0)), "the lunge knocks back at 10 m/s");
+    assert!(wolf_kit.hit_of(40027).is_none() && wolf_kit.unblockable(40029), "the lunge glints red; the first bite is plain");
+    let flax = rules::NODES.iter().find(|n| n.name == "Flax").unwrap();
+    assert_eq!(flax.minigame.challenge_kind(), rules::CHALLENGE_PULL, "flax is dealt as pull the root (106)");
+    assert!(rules::CLAIMS.challenge_kinds.contains(&rules::CHALLENGE_PULL), "the genre claims kind 106");
     let skills: Vec<&str> = rules::SKILLS.iter().map(|s| s.key).collect();
-    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery", "herbalism"]);
+    assert_eq!(skills, vec!["woodcutting", "mining", "smelting", "smithing", "crafting", "swordsmanship", "axemanship", "archery", "sorcery", "herbalism", "skinning"]);
     let stations: Vec<&str> = rules::STATIONS.iter().map(|s| s.key).collect();
-    assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD, "spinning_wheel"]);
+    assert_eq!(stations, vec!["furnace", "anvil", "workbench", rules::ORDER_BOARD, "spinning_wheel", "tanning_rack"]);
     for bar in ["Copper bar", "Iron bar", "Steel bar"] {
         let r = rules::RECIPES.iter().find(|r| r.name == bar).unwrap();
         assert_eq!(r.inputs[0].1, 2, "{bar}: two ores to a bar (owner, 2026-10-19: never one to one)");
@@ -259,8 +301,9 @@ fn every_minigame_scores_a_real_round_and_refuses_what_is_not_one() {
     assert_eq!(head.minigame.score(5, 100, &[0.0, 3.0, 300.0, 4.0]).map(|s| (0..=1000).contains(&s)), Some(true));
     assert_eq!(head.minigame.score(5, 100, &[0.0, 3.5]), None, "a column is a whole number");
     let bar = rules::RECIPES.iter().find(|r| r.name == "Copper bar").unwrap();
-    // Smelting's rhythm track (Luke, 2026-11-07): a count-in of 4 and 16 beats of 600 ms, then the 4 s pour.
-    assert_eq!(bar.minigame.duration_ms(), 16_000, "the smelt: the count-in, the track and the pour");
+    // Smelting's rhythm track (Luke, 2026-11-07): a count-in of 8 (4 until his play of 2026-11-09: "a slower start to
+    // read the directions") and 16 beats of 600 ms, then the 4 s pour.
+    assert_eq!(bar.minigame.duration_ms(), 18_400, "the smelt: the count-in, the track and the pour");
     assert_eq!(bar.minigame.challenge_kind(), rules::CHALLENGE_BEAT, "dealt as the rhythm track, a kind an old client ignores");
     assert_eq!(bar.minigame.score(5, 100, &[]), Some(0), "nothing pressed: a round, scoring nothing");
     assert_eq!(bar.minigame.score(5, 100, &[2400.0, 1.0, 2460.5, 2.0]), None, "a press's time is a whole number");
@@ -272,7 +315,7 @@ fn every_minigame_scores_a_real_round_and_refuses_what_is_not_one() {
     assert!(matches!(rules::RECIPES.iter().find(|r| r.name == "Grip").unwrap().minigame, rules::Minigame::None), "a handle has no round");
 }
 
-use umf_module::genre::regents::{beat, carve, crack, shape, smelt};
+use umf_module::genre::regents::{beat, carve, crack, pull, shape, skin, smelt};
 
 fn golden_of(name: &str) -> Vec<serde_json::Value> {
     let path = format!("../shared/golden/regents/{name}.json");
@@ -399,6 +442,132 @@ fn the_carve_twin_plays_every_golden_round_exactly() {
         };
         assert_eq!(carve::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
     }
+}
+
+#[test]
+fn the_pull_twin_plays_every_golden_round_exactly() {
+    let ints = |v: &serde_json::Value| -> Vec<i64> { v.as_array().unwrap().iter().map(|x| x.as_i64().unwrap()).collect() };
+    for c in golden_of("pull") {
+        let name = c["name"].as_str().unwrap_or("?");
+        let pp = &c["params"];
+        let p = pull::PullParams {
+            duration_ms: int(pp, "duration_ms"), stroke_ms: int(pp, "stroke_ms"), target_plants: int(pp, "target_plants"),
+            dig_pm: int(pp, "dig_pm"), hold_pm: int(pp, "hold_pm"), strain_rise: int(pp, "strain_rise"),
+            strain_ease: int(pp, "strain_ease"), pull_rate: int(pp, "pull_rate"), pull_gain: int(pp, "pull_gain"),
+            snags: int(pp, "snags"), jump_lo: int(pp, "jump_lo"), jump_hi: int(pp, "jump_hi"), show_depth: int(pp, "show_depth"),
+            snap_keep_pm: int(pp, "snap_keep_pm"), loose_pm: pp["loose_pm"].as_i64().unwrap_or(0),
+        };
+        assert_eq!(pull::start(seed_of(&c), &p), (ints(&c["snag_depth"]), ints(&c["snag_jump"]), ints(&c["snag_side"])),
+            "{name}: the side roots");
+        let inputs: Vec<(i64, i64)> = rows(&c).iter().map(|r| (r[0], r[1])).collect();
+        let e = &c["expected"];
+        let want = pull::PullResult {
+            whole: int(e, "whole"), snapped: int(e, "snapped"), caught: int(e, "caught"), cut: int(e, "cut"), dug: int(e, "dug"),
+            worth: int(e, "worth"), score_pm: int(e, "score_pm"),
+        };
+        assert_eq!(pull::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
+    }
+}
+
+/// A WHOLE-NODE ROUND (a carcass, Luke 2026-11-10: "good rounds reward more up to a cap"): AFK's average for the whole
+/// carcass (each hide the last with 35 %, at most 4: 2.35) x the round's factor (0.75 at 0 to 1.25 at full), never past
+/// the cap less what is taken.
+#[test]
+fn a_whole_carcass_round_pays_by_its_score_up_to_the_cap() {
+    assert_eq!(rules::expected_items_milli(350, 1.0, 4), 2347, "1 + .65 + .4225 + .2746");
+    assert_eq!(rules::expected_items_milli(1000, 1.0, 4), 1000, "each the last: one");
+    assert_eq!(rules::expected_items_milli(250, 1.0, 0), 4000, "no cap: one in four is the last, four on average");
+    assert_eq!(rules::expected_items_milli(0, 1.0, 0), 0, "never runs out, no cap: nothing to count");
+    assert_eq!(rules::expected_items_milli(350, 0.0, 4), 4000, "a tool that never works it out: the cap");
+    let pay = |score: i64, taken: u32, roll: u32| rules::whole_round_items(350, 1.0, 4, taken, 1.25, 0.75, score, roll);
+    assert_eq!((pay(0, 0, 999), pay(0, 0, 0)), (1, 2), "a score of 0: 1.76 hides (1, or 2 three times in four)");
+    assert_eq!((pay(500, 0, 999), pay(500, 0, 0)), (2, 3), "half: what AFK gets out of it, 2.35");
+    assert_eq!((pay(1000, 0, 999), pay(1000, 0, 0)), (2, 3), "full: 2.93");
+    assert!((0..1000).map(|r| pay(1000, 0, r)).sum::<u32>() > (0..1000).map(|r| pay(0, 0, r)).sum::<u32>() + 1000,
+        "a better round, more hides");
+    assert_eq!(pay(1000, 3, 0), 1, "three taken AFK first: only one left under the cap");
+    assert_eq!(pay(1000, 4, 0), 0, "all four taken: none");
+    let high = |score: i64, roll: u32| rules::whole_round_items(0, 1.0, 4, 0, 2.0, 0.75, score, roll);
+    assert_eq!(high(1000, 0), 4, "a hot rule paying 2x: never past the cap");
+}
+
+#[test]
+fn the_skin_twin_plays_every_golden_round_exactly() {
+    let ints = |v: &serde_json::Value| -> Vec<i64> { v.as_array().unwrap().iter().map(|x| x.as_i64().unwrap()).collect() };
+    let cases = golden_of("skin");
+    assert!(cases.len() >= 10, "skinning's golden rounds are there");
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or("?");
+        let pp = &c["params"];
+        let p = skin::SkinParams {
+            duration_ms: int(pp, "duration_ms"), target_lines: int(pp, "target_lines"), points: int(pp, "points"),
+            wobble: int(pp, "wobble"), near: int(pp, "near"), reach: int(pp, "reach"), cut_speed: int(pp, "cut_speed"),
+            tear_pm: int(pp, "tear_pm"), part_keep_pm: int(pp, "part_keep_pm"),
+        };
+        assert_eq!(skin::start(seed_of(&c), &p), (ints(&c["line_x"]), ints(&c["line_y"])), "{name}: the first line");
+        let inputs: Vec<(i64, i64, i64)> = rows(&c).iter().map(|r| (r[0], r[1], r[2])).collect();
+        let e = &c["expected"];
+        let want = skin::SkinResult {
+            lines: int(e, "lines"), clean: int(e, "clean"), torn: int(e, "torn"), worth: int(e, "worth"), score_pm: int(e, "score_pm"),
+        };
+        assert_eq!(skin::play(seed_of(&c), &p, &inputs), want, "{name}: the round");
+    }
+}
+
+/// The cut line as the server deals and scores it (kind 107): a better knife cuts faster and rank widens how far off
+/// the line it still cuts; a submission of pairs (not triples) is not a round.
+#[test]
+fn the_cut_line_is_dealt_as_107_eased_and_sped() {
+    let p = skin::SkinParams { duration_ms: 3000, target_lines: 1, points: 2, wobble: 0, near: 20, reach: 200, cut_speed: 30,
+        tear_pm: 100, part_keep_pm: 1000 };
+    let mg = rules::Minigame::Skin(p);
+    assert_eq!(mg.challenge_kind(), rules::CHALLENGE_SKIN);
+    assert!(rules::CLAIMS.challenge_kinds.contains(&rules::CHALLENGE_SKIN), "the genre claims kind 107");
+    // A straight line at y 500 from x 100 to 900: the knife pressed at the start, then dragged 25 off the line.
+    let mut ins: Vec<f32> = vec![0.0, 100.0, 500.0];
+    for k in 1..50 {
+        ins.extend_from_slice(&[(k * 50) as f32, (100 + k * 30).min(1000) as f32, 525.0]);
+    }
+    let authored = mg.score(1, 100, &ins).unwrap();
+    let eased = mg.score_eased(1, 100, 30, &ins).unwrap();
+    assert!(authored < eased, "25 off the line tears at 20 wide, cuts at 26 (eased 30 %): {authored} < {eased}");
+    let slow_hand: Vec<f32> = (0..60).flat_map(|k| [(k * 50) as f32, (100 + k * 15) as f32, 500.0]).collect();
+    let (plain, quick) = (mg.score(1, 100, &slow_hand).unwrap(), mg.score(1, 50, &slow_hand).unwrap());
+    assert!(plain > 0 && plain == quick, "a hand slower than the knife is not helped by a faster knife: {plain} {quick}");
+    let fast_hand: Vec<f32> = (0..60).flat_map(|k| [(k * 50) as f32, (100 + k * 50).min(1000) as f32, 500.0]).collect();
+    assert!(mg.score(1, 50, &fast_hand).unwrap() > mg.score(1, 100, &fast_hand).unwrap(), "a hand faster than the knife: a quicker knife keeps up");
+    assert!(mg.score(1, 100, &[0.0, 100.0]).is_none(), "pairs are not a cut line's round");
+}
+
+/// Pull the root eased by rank (M3): the side roots jump less (the server plays the model with 12 % smaller jumps); a
+/// faster trowel strokes sooner done.
+#[test]
+fn a_pull_round_eases_its_side_roots_and_speeds_its_trowel() {
+    let p = pull::PullParams { duration_ms: 6000, stroke_ms: 400, target_plants: 1, dig_pm: 1000, hold_pm: 0, strain_rise: 40,
+        strain_ease: 60, pull_rate: 10, pull_gain: 40, snags: 1, jump_lo: 500, jump_hi: 500, show_depth: 0, snap_keep_pm: 500, loose_pm: 0 };
+    let p = pull::PullParams { target_plants: 3, ..p };
+    let mg = rules::Minigame::Pull(p);
+    assert_eq!(mg.challenge_kind(), rules::CHALLENGE_PULL);
+    assert_eq!(mg.duration_ms(), 6000);
+    // Pulled in short holds so the strain stays near 520 when the side root (never cut: no stroke) catches: 500 more
+    // snaps it, 440 does not.
+    let mut ins: Vec<(i64, i64)> = Vec::new();
+    let mut t = 0;
+    while t < 5800 {
+        ins.push((t, 1));
+        ins.push((t + 650, 2));
+        t += 1100;
+    }
+    let flat: Vec<f32> = ins.iter().flat_map(|&(t, c)| [t as f32, c as f32]).collect();
+    let (authored, eased) = (pull::play(1, &p, &ins), pull::play(1, &pull::PullParams { jump_lo: 440, jump_hi: 440, ..p }, &ins));
+    assert!(authored.snapped >= 1 && eased.snapped == 0 && eased.whole > authored.whole && eased.score_pm > authored.score_pm,
+        "a side root that snaps stems as authored never does eased: {authored:?} {eased:?}");
+    assert_eq!(mg.score_eased(1, 100, 12, &flat), Some(eased.score_pm), "the server eases the jumps 12 %");
+    assert_eq!(mg.score(1, 100, &flat), Some(authored.score_pm), "as authored it snaps");
+    // A stroke at 0 (it digs), held from 100: a trowel twice as fast (200 ms) is done sooner, so the pull starts sooner.
+    let early: Vec<f32> = vec![0.0, 3.0, 100.0, 1.0, 900.0, 2.0];
+    let plain = rules::Minigame::Pull(pull::PullParams { snags: 0, ..p });
+    assert!(plain.score(1, 50, &early).unwrap() > plain.score(1, 100, &early).unwrap(), "a faster trowel: the pull starts sooner");
 }
 
 /// A param added after a golden's first cases: absent in those, so 0 (off).
@@ -547,10 +716,24 @@ fn the_skeleton_camp_is_content() {
 }
 
 #[test]
+fn the_deer_never_fights_and_has_its_own_brain() {
+    // HUNTING (HERBALISM_HUNTING_PREP.md §7 step 3, 2026-11-09): the deer is a foe that never fights: no kit, its
+    // character's brain (it flees), a kind of the foes' own; every other foe fights with a kit and the foe brain.
+    let deer = rules::FOES.iter().find(|f| f.key == "deer").expect("the deer is a foe");
+    assert!(!deer.fights && deer.kit.is_empty() && deer.brain == "regents/deer" && rules::FOE_KINDS.contains(&deer.kind));
+    assert_eq!(rules::foe_of_kind(deer.kind).map(|f| f.id), Some(deer.id));
+    for f in rules::FOES.iter().filter(|f| f.key != "deer") {
+        assert!(f.fights && !f.kit.is_empty() && f.brain == "regents/foe", "{}: fights with its kit, the foe brain", f.name);
+    }
+    assert_ne!(rules::STATUS_STARTLED, rules::STATUS_SLAIN);
+}
+
+#[test]
 fn a_foe_finisher_is_unblockable_and_a_player_has_nothing_unblockable() {
     // COMBAT_OVERHAUL.md §2 (2026-10-31): a foe's string ends in an unblockable finisher, glinting red; `hit`
-    // lets no block or parry stop it. No weapon fights with a foe kit, and no player kit has one.
-    for f in rules::FOES.iter() {
+    // lets no block or parry stop it. No weapon fights with a foe kit, and no player kit has one. (A creature that never
+    // fights, a deer, has no kit: hunting, 2026-11-09.)
+    for f in rules::FOES.iter().filter(|f| f.fights) {
         let kit = rules::kit_keyed(f.kit).unwrap();
         let last = *kit.light.last().unwrap();
         assert!(kit.unblockable(last), "{}: its finisher {last} is unblockable", f.name);

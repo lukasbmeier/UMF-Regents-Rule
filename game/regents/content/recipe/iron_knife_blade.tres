@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_qt07k"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_bar.tres" id="2_hu48h"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_owl2p"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_knife_blade.tres" id="4_ygp2b"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_0n8s5"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_njts4"]
+
+[sub_resource type="Resource" id="Resource_i0cra"]
+script = ExtResource("3_owl2p")
+display_name = "Iron knife blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 25
+hammer_drop = 5
+spread_pct = 20
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+lay_cost_pm = 30
+pattern_fade_ms = 1500
+pattern_ghost_pm = 120
+outline_vary = 3
+outline = PackedInt32Array(14, 15, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 7, 5, 3)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_0n8s5")
+station = &"anvil"
+skill = ExtResource("6_njts4")
+inputs = Array[ExtResource("1_qt07k")]([ExtResource("2_hu48h")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("4_ygp2b")
+xp = 18
+min_rank = 2
+afk_ms = 6000
+minigame = SubResource("Resource_i0cra")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40049
+display_name = "Iron knife blade"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Iron in Knife blade): its numbers are yours to tune."

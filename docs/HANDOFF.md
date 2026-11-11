@@ -1,53 +1,55 @@
-# Handoff — Regent's Rule, 2026-11-07 late (the minigame overhaul's steps 45-49; herbalism step 1; the crash fixed)
+# Handoff — Regent's Rule, 2026-11-11 (step 57: Luke's play of the wolf; step 56 reviewed)
 
 ## Where it stands
-- Committed and pushed (the crash-hunt session): template 1.7.5 and 1.7.6 merged (`7c157b36`, tools and docs only),
-  then 1.7.7, THE CRASH FIX (`b5734b98`, client only: no publish, no codegen; DECISIONS #308: the next chat line from
-  someone whose bubble had gone cast its freed label, a silent crash in a release export). THE FIXED RELEASE IS MADE
-  (2026-11-08, from a clean worktree of `b5734b98`, export 34/0): `build/releases/Regent's_Rule-331b21db0518-1.7.7.zip`
-  and `-1.7.7-mac.zip` (the same fingerprint as the 2026-11-06 zips, which still crash: send the 1.7.7 ones). The
-  checked-in compat snapshot already covers it (only its "saved" time differed). The fixed DEBUG build is beside them.
-- NOT committed (Luke commits): this session's steps 45-50 (the minigames, then herbalism step 1). Published to the play
-  database `regents-rule` (no wipe, no codegen), last after step 50.
-- Left uncommitted ON PURPOSE: Luke's editor (13 `.png.import`, `game/regents/anim/adventurer.tres`); `shared/compat/`
-  untracked (the 2026-11-06 release snapshot: Luke commits it).
-- The test database is free (2026-11-08): the combat-check session (`local_f713a566`, branch
-  `claude/compassionate-panini-246b25`) and the crash session's release are done, then this work's reruns.
-- Suites on this tree: cargo green; unit 3237/1 (the 1: the content dock's "project task" check, Git Bash taking 8 s
-  to start a script while the machine was loaded; it passes on a quiet machine). Integration 1315/10 (2026-11-08):
-  every step 45-50 check passes; the 10 are the referee-paced combat checks and the foundation's referee and hold
-  checks (they fail on `54c1973b` too: the combat-check session's task). Skilling playtest 94/0 + 8/0.
+- HEAD `2ecd04f3`. STEPS 51-57 ARE NOT COMMITTED (Luke commits). Current section in `docs/regents_rule/PROGRESS.md`: **Step 57**.
+- PUBLISHED to the play database `regents-rule` after step 57 (no wipe, no codegen: a rebake for two descriptions).
+  Restart the game.
+- Suites on this tree: regents unit **3392/0** (on the last bake); skilling playtest (a real client) **117/0 + 8/0**;
+  `cargo test` **146/0** and the wasm check (before step 57, which touches no Rust; the publish built it).
+- NOT RUN since the wolf (step 56): integration, any real-referee fight.
+
+## To playtest (Luke)
+- Skin a wolf (hold E): its carcass lies under the cut line now.
+- Drag a line to its end and keep holding: no tear; let go, press the next gold ring.
+- Fight a wolf or a skeleton and step back after its first hit: it runs you down and lands the second; stay out
+  1.5 s and it starts its string over when it catches you (`FoeDef.string_chase_ms`, each foe's own).
+- The wolf itself (step 56): 110 health, notices at 10 m, a pack of 2 northwest of the glade's camp
+  (`(-32, -14)`), packs of 2-3 in the continent's woods; bite 14, hamstring 16 (Slowed 3 s), lunge 28 (unblockable,
+  thrown back), each at 55 %. `admin_slay <wolf> <you>` for a carcass without a fight.
 
 ## This session
-- 45: smelting is a rhythm track (kind `beat`, 104). 46: rounds back to back; pay 0.75-1.25 of AFK; rares by score.
-- 47: rank eases a round (4 % x 3 ranks). 48: band 2's tests (knots, brittle notches, slag).
-- 49: WOODWORKING'S CARVE, its own game (kind `carve`, 105): a vertical stave, wood off either side; the yew bow an
-  UNSTRUNG C bending left or right by the seed; the staff.
-- 50: HERBALISM STEP 1 (Luke answered H1-H11 of `HERBALISM_HUNTING_PREP.md`, `GAME.md`): flax pulled AFK with a
-  TROWEL (no round yet), the trowel in the material table (a copper one in the starter kit), the spinning wheel (a
-  placeholder block), the bowstring, STRINGING the carved stave into the yew bow; flax in the glade and 64 patches on
-  the continent from their own random stream (every point before unmoved).
-- Woodcutting's difficulty stays (Luke: "takes skill and precision").
+- Reviewed step 56 (the wolf, built by Gemini in Antigravity) against our patterns: it follows them; its doc numbers
+  were wrong and are corrected (`PROGRESS.md` step 56, `GAME.md`); open items below.
+- Step 57, from Luke's play (`PROGRESS.md` step 57):
+  - the wolf on the skinning stage: `art/animals/wolf_carcass.tscn` turned as the deer's; every carcass placed by
+    hand under `Carcasses` in `skilling/skinning/skin_stage.tscn`, `SkinStage.set_carcass` shows the round's;
+  - a line's end never tears: `SkinMinigame._look` runs the model before it sends the knife's place (no rule changed,
+    goldens untouched);
+  - a foe's string follows its target: `sidecar/npc/brains/regents/foe.gd` (`_drop_string`), `FoeDef.string_chase_ms`;
+    Luke's call in `GAME.md`; `COMBAT_CURRENT.md` §11.
+  - Luke's call, "Every foe": any fighting foe hit from beyond its sight turns on who hit it (`GAME.md`; step 56's
+    code kept; `startled.tres` and `regents.startle_ms` say so; a skeleton check added);
+  - tests in `game/regents/tests/suites/regents.gd` (`_run_skin_line_end`, `_run_skin_stage_carcasses`,
+    `_run_foe_string_chase`), each with its negative run.
 
 ## Next, in order
-1. Herbalism step 2: PULL THE ROOT (`HERBALISM_HUNTING_PREP.md` §3, H3): a Tension model, its twin, goldens, a stage.
-2. Then the deer (§7 step 3: the animal pack's rig, a flee brain), skinning, the wolf and the fang charm (H9).
-3. Luke plays steps 45-50; tuning to M4's shares after his play. Send friends the 1.7.7 zips.
+1. Luke plays step 57 and the wolf.
+2. The wolf's missing server tests, then ONE integration run for steps 56-57: checks in
+   `game/regents/tests/hooks/integration_genre.sh` (a hamstring slows a player, a lunge pushes one, a blocked bite does
+   neither, Startled on an idle wolf, its carcass and pelts, tanning) and a wolf leg in `skilling_playtest.sh`.
+3. `HERBALISM_HUNTING_PREP.md` §7 step 5's rest (parked by Luke): sinew, the wolf-fang charm, the stag (place its
+   carcass on the skinning stage). Then step 6.
 
 ## Waiting on Luke
-- His play of 45-50 (the carve, the rhythm smelt, runs and pay, band 2's tests, flax and stringing).
-- A trowel model and a spinning wheel model (none in the packs); a pulling clip (needs `adventurer.tres`, his editor's).
-- Whether his existing character gets a copper trowel by an admin grant (new characters get one; old ones smith it).
+- The glade's pack stands about 19 m from the deer, near a new character's start: there, or further out?
+- `string_chase_ms` 1500 and the wolf's size on the stage are Claude's numbers.
 
 ## Watch out
-- CHECK THE TEST DATABASE IS FREE BEFORE A SERVER SUITE: the session list showed the combat session "idle" while its
-  integration runs were on the database (its stopped task's children kept running). Ask the other session first.
-- Publish the play database as soon as a playable change lands (Luke tries things mid-session).
-- `export_test.sh` (so `release.sh`) used to run its client on whatever `regents-rule-test` held and fail on another
-  session's leftover entities: template 1.7.8 (merged) publishes its own server fresh first.
-- `integration_test.sh` / `skilling_playtest.sh` republish the test database from the source at their start, and the
-  hook's bot loads scripts live: never edit code while one runs.
-- The hook's `logged` helper is defined part-way down `integration_genre.sh`: a check above it cannot use it.
-- A negative test on a NEW file: back it up first. Nearby small seeds draw alike: step seeds `1 + i * 7919`.
-- `-s` script mode loads no autoloads: a windowed shot that needs them is a scene in `build/` (ignored).
-- `ease`, `sign` are GDScript globals. Heredocs with Python patch strings break: write them with the Write tool.
+- Never pipe `tools\publish.cmd` to `| Out-Default` (its background `spacetime start` holds the pipe). One shell call
+  that ran `tests/content_test.sh` and then other commands hung past its timeout this session (cause not found): run
+  it on its own.
+- The cut line's bots and the readout LOOK before they press, so they never met the line's-end bug: a check of the
+  minigame's own frame order needs `SkinMinigame._look` (or a real client), not the model alone.
+- A `.tres`'s `designer_notes` is not baked, but the bake's manifest hashes the file: any edit to a content file
+  needs `tools/bake_content.gd` (the unit suite's "the bake on disk is current" fails until then), then a publish.
+- Another model's doc numbers: check them against the `.tres` files before trusting them (step 56's were wrong).

@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/skinning.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/wolf_pelt.tres" id="3_yield"]
+[ext_resource type="Resource" path="res://game/regents/content/item/wolf_fang.tres" id="4_rare"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/wolf_carcass.tscn" id="m0"]
+[ext_resource type="Script" path="res://game/regents/skilling/skinning/skin_params.gd" id="5_params"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("5_params")
+display_name = "Wolf"
+duration_ms = 12000
+target_lines = 4
+points = 6
+wobble = 140
+near = 40
+reach = 120
+cut_speed = 30
+tear_pm = 40
+part_keep_pm = 500
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("2_skill")
+tier = 2
+minigame = SubResource("Round")
+yield_item = ExtResource("3_yield")
+tool_tag = &"knife"
+min_tool_tier = 1
+min_rank = 2
+xp = 25
+afk_ms_per_item = 6000
+deplete_permille = 350
+regrow_s = 5.0
+max_items = 4
+whole_round = true
+rare_item = ExtResource("4_rare")
+rare_permille = 8
+models = Array[PackedScene]([ExtResource("m0")])
+model_scale = 0.35
+depleted = 1
+depleted_color = Color(0.32, 0.12, 0.1, 1)
+depleted_notice = "The carcass is skinned"
+depleted_prompt = "skinned"
+id = 40009
+display_name = "Wolf carcass"
+designer_notes = "A WOLF'S CARCASS (skinning, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): left where a wolf fell (content/foe/wolf.tres), skinned with a knife at Skinning rank 2 for Wolf pelt (up to 4, whole_round) and a rare Wolf fang (0.8 %)."

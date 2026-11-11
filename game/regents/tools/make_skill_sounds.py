@@ -7,7 +7,9 @@ sound; a recorded CC0 sound may replace one under the same name (its source note
 
 Smithing: the heavy strike's clang (the minigame pitches it down as the bar cools), the tap, a cold strike's thud,
 the reheat's whoosh. Woodcutting: the axe biting, a branch striking the woodcutter, the cut piece landing. Mining:
-the pick on stone, the rock splitting, a strike off the seam. Smelting: the bellows' breath, the pour's hiss; the rhythm track's beat and accent, a long draw, a sputter."""
+the pick on stone, the rock splitting, a strike off the seam. Smelting: the bellows' breath, the pour's hiss; the rhythm track's beat and accent, a long draw, a sputter. Herbalism: the trowel digging, the stem
+straining, a catch giving, the root snapping, the plant up whole. Skinning: the knife slicing, the hide tearing, a
+line cut through."""
 
 import math
 import os
@@ -108,6 +110,23 @@ def hiss(seconds, seed):
     return out
 
 
+def creak(seconds, seed):
+    """A fiber stem under strain: a low, rough tone wavering in pitch, quick grains of noise in it."""
+    rnd = random.Random(seed)
+    out = []
+    ph = 0.0
+    lp = 0.0
+    for i in range(int(seconds * RATE)):
+        t = i / RATE
+        f = 95.0 + 30.0 * math.sin(2 * math.pi * 3.0 * t) + 12.0 * math.sin(2 * math.pi * 11.0 * t)
+        ph += 2 * math.pi * f / RATE
+        lp += 0.2 * (rnd.uniform(-1, 1) - lp)
+        grain = 0.5 + 0.5 * math.sin(2 * math.pi * 31 * t)
+        env = math.sin(math.pi * min(1.0, t / seconds))
+        out.append((0.6 * math.sin(ph) + 0.4 * math.sin(2 * ph) + 2.0 * lp * grain) * env)
+    return out
+
+
 def mix(*parts):
     n = max(len(p) for p in parts)
     return [sum(p[i] for p in parts if i < len(p)) for i in range(n)]
@@ -140,6 +159,17 @@ def main():
                                     ring(0.15, [(440, 0.25, 30.0, 0.0), (1060, 0.12, 42.0, 0.8)], 3, 0.2, 35)))
     write("smelting", "draw", whoosh(1.2, 36, k_lo=0.02, k_hi=0.09, crackle_rate=0.0006))
     write("smelting", "sputter", thud(0.18, 37, tone=260.0, decay=24.0, grit=4.0, smooth=0.5))
+    # Herbalism (pull the root, 2026-11-08): the trowel in the soil, the stem straining (the tremble before a catch),
+    # a catch giving, the root snapping, the plant coming up whole.
+    write("herbalism", "dig", mix(thud(0.22, 41, tone=120.0, decay=20.0, grit=4.5, smooth=0.18), rustle(0.25, 42)))
+    write("herbalism", "strain", creak(0.5, 43))
+    write("herbalism", "catch", thud(0.16, 44, tone=150.0, decay=30.0, grit=3.0, smooth=0.3))
+    write("herbalism", "snap", mix(thud(0.12, 45, tone=520.0, decay=55.0, grit=6.0, smooth=0.7), rustle(0.18, 46)))
+    write("herbalism", "up", mix(rustle(0.5, 47), thud(0.3, 48, tone=95.0, decay=14.0, grit=3.0, smooth=0.1)))
+    # Skinning (the cut line, 2026-11-10): the knife slicing along, the hide tearing, a line cut through.
+    write("skinning", "slice", hiss(0.16, 51))
+    write("skinning", "tear", mix(rustle(0.3, 52), thud(0.14, 53, tone=300.0, decay=40.0, grit=6.0, smooth=0.6)))
+    write("skinning", "done", mix(thud(0.25, 54, tone=110.0, decay=18.0, grit=2.0, smooth=0.15), rustle(0.3, 55)))
 
 
 main()

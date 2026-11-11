@@ -1,15 +1,34 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_j7f32"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_w47pa"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_w47pa"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_ta1sr"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_7xowi"]
 
-[node name="Cell_3_4" type="Node3D" unique_id=101577858]
+[node name="Cell_3_4" type="Node3D" unique_id=721476369]
 
-[node name="rock_medium_1_583" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_j7f32")]
+[node name="w_deer_37" type="Marker3D" parent="." unique_id=1136163551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 241.13368, 3.914771, 276.8093)
+gizmo_extents = 0.5
+script = ExtResource("1_w47pa")
+point_id = "w_deer_37"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_38" type="Marker3D" parent="." unique_id=1969567089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 242.13628, 3.692973, 280.6816)
+gizmo_extents = 0.5
+script = ExtResource("1_w47pa")
+point_id = "w_deer_38"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="rock_medium_1_583" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_ta1sr")]
 transform = Transform3D(0.3347766, 0, -1.3872908, 0, 1.4271128, 0, 1.3872908, 0, 0.3347766, 204.41183, 3.734093, 264.5802)
 
-[node name="bush_large_584" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("2_w47pa")]
+[node name="bush_large_584" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_7xowi")]
 transform = Transform3D(0.7174101, 0, -0.91432106, 0, 1.1621791, 0, 0.91432106, 0, 0.7174101, 200.72258, 2.343609, 296.18237)
 
-[node name="rock_medium_1_585" type="Node3D" parent="." unique_id=310272748 instance=ExtResource("1_j7f32")]
+[node name="rock_medium_1_585" type="Node3D" parent="." unique_id=248327640 instance=ExtResource("2_ta1sr")]
 transform = Transform3D(-0.04939693, 0, 1.1871456, 0, 1.1881728, 0, -1.1871456, 0, -0.04939693, 228.18805, 4.4739594, 262.12604)

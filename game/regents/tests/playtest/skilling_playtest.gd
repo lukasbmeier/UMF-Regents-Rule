@@ -50,6 +50,13 @@ const STAVE: int = 40049
 const YEW_BOW: int = 40020
 const COPPER_TROWEL: int = 40051
 const SKILL_HERBALISM: int = 40010
+# Skinning, step 4's first half (2026-11-09, HERBALISM_HUNTING_PREP.md): the glade's deer, its carcass, the tanning rack.
+const COPPER_KNIFE: int = 40059
+const DEER_HIDE: int = 40056
+const SOFT_LEATHER: int = 40057
+const SKILL_SKINNING: int = 40011
+const DEER_CARCASS: int = 40008
+const RACK: Vector3 = Vector3(11.0, 0.0, 14.0)
 
 var _passes: int = 0
 var _failures: int = 0
@@ -313,7 +320,7 @@ func _chopper(tree_id: int) -> void:
 				for i: int in shape.model.heights.size():
 					over_max = maxi(over_max, shape.model.heights[i] - outline[i])
 				if over_max <= 0:
-					await _key(KEY_ENTER)   # done: set it down
+					await _hold_key(KEY_ENTER, 0.75)   # done: set it down (a hold since Luke's play, 2026-11-09)
 				elif shape.model.hot_until_ms - p.red_ms - t < 500 and shape.model.reheats_left() != 0:
 					await _key(KEY_R)   # back in the fire (right click is the light tap: MINIGAMES_PREP.md §3.1)
 				else:
@@ -436,6 +443,117 @@ func _chopper(tree_id: int) -> void:
 	_check(skilling.afk_target == -1, "a second tap stops the work")
 	await _tutorial_sword()
 	await _herbalism()
+	await _skinning()
+
+
+## SKINNING (Luke's H1; his knife and "the killer first, then anyone", 2026-11-09; SEVERAL HIDES and THE CUT LINE,
+## 2026-11-10): the glade's deer slain as this player's kill (the shell's admin, `admin_slay`: the fight is the combat
+## suites'); its carcass lies where it fell. HOLD E: the cut line (kind 107), played with the mouse as a person drags it
+## (pressed on each line's ring, dragged at the cut's pace, let go when a line is through); the round skins the WHOLE
+## carcass, paid in hides by its score (2 or 3 at a full score), and it is taken away. A second deer, TAP E: skinned
+## AFK, a hide every 5 s until it is worked out (1 to 4). A hide tanned at the rack into soft leather, AFK.
+func _skinning() -> void:
+	_check(inv.count(COPPER_KNIFE) == 1, "the starter kit's copper knife is in the bag")
+	var carcass: int = await _slain_deer(1)
+	if carcass < 0:
+		return
+	_check(hud._prompt.text.begins_with("E: skin the deer carcass (AFK)") and hud._prompt.text.contains("Hold E: play"),
+		"at the carcass the prompt offers AFK skinning and a round (\"%s\")" % hud._prompt.text)
+	var hides0: int = inv.count(DEER_HIDE)
+	var xp0: int = int(skilling.xp.get(SKILL_SKINNING, 0))
+	if await _hold_for_round():
+		var skin: SkinMinigame = hud.game as SkinMinigame
+		_check(skin != null and skin.get_child(0) is SkinStage, "the carcass's round is the cut line, on its stage")
+		while skin != null and skin.state == SkillMinigame.State.PLAYING:
+			var m: SkinModel = skin.model
+			if skin._wait_release:
+				_mouse_button(skin, skin._mouse, false)
+			elif not m.down:
+				var tip: Vector2i = m.tip()
+				var at: Vector2 = skin.hide_to_panel(tip.x, tip.y)
+				_mouse_move(skin, at)
+				await get_tree().process_frame
+				_mouse_button(skin, at, true)
+			else:
+				_mouse_move(skin, skin.hide_to_panel(m.ahead(float((skin.params as SkinParams).cut_speed)).x,
+					m.ahead(float((skin.params as SkinParams).cut_speed)).y))
+			await get_tree().process_frame
+		if skin != null and skin._held:
+			_mouse_button(skin, skin._mouse, false)
+		print("   the cut line as played: %s" % str(skin.live_result if skin != null else {}))
+		_check(skin != null and int(skin.live_result.get("lines", 0)) >= 3 and int(skin.live_result.get("score_pm", 0)) >= 750
+			and skin.live_result == skin.replayed_result,
+			"the knife dragged along line after line with the mouse, by the frame, as a person plays it (%s)" % str(skin.live_result if skin != null else {}))
+		await _until(func() -> bool: return inv.count(DEER_HIDE) > hides0 and int(skilling.xp.get(SKILL_SKINNING, 0)) > xp0, 5.0)
+		var got: int = inv.count(DEER_HIDE) - hides0
+		_check(got >= 2 and got <= 4 and int(skilling.xp.get(SKILL_SKINNING, 0)) == xp0 + got * 15,
+			"the server replayed it and paid the whole carcass: %d hides (2.9 at a full score), %d skinning XP" % [got, int(skilling.xp.get(SKILL_SKINNING, 0)) - xp0])
+		await _round_closed()
+	await _until(func() -> bool: return SkillingComponent.node_of(carcass) == null, 10.0)
+	_check(SkillingComponent.node_of(carcass) == null, "skinned whole in one round, the carcass is taken away")
+	# A second deer, skinned AFK: a hide every 5 s, each the last with 35 %, never past 4.
+	var second: int = await _slain_deer(2)
+	if second < 0:
+		return
+	hides0 = inv.count(DEER_HIDE)
+	xp0 = int(skilling.xp.get(SKILL_SKINNING, 0))
+	await _tap(&"interact", 0.08)
+	await _until(func() -> bool: return skilling.afk_target == second, 4.0)
+	_check(skilling.afk_target == second, "tap E at the second: skinning it, AFK")
+	await _until(func() -> bool: return SkillingComponent.node_of(second) == null or skilling.afk_target == -1, 30.0)
+	var afk_got: int = inv.count(DEER_HIDE) - hides0
+	_check(afk_got >= 1 and afk_got <= 4 and int(skilling.xp.get(SKILL_SKINNING, 0)) == xp0 + afk_got * 15,
+		"skinned AFK until it was worked out: %d hides (1 to 4), Skinning XP %d" % [afk_got, int(skilling.xp.get(SKILL_SKINNING, 0)) - xp0])
+	await _until(func() -> bool: return SkillingComponent.node_of(second) == null, 10.0)
+	_check(SkillingComponent.node_of(second) == null and skilling.afk_target == -1, "worked out, the carcass is taken away, the work over")
+	var before_tan: int = inv.count(DEER_HIDE)
+	var rack: int = await _station_at(RACK)
+	await _stand_by(RACK)
+	await _until(func() -> bool: return interaction.get_target() == rack, 3.0)
+	hud.station_window.make_x = 1
+	_check(await _make("Soft leather", "MakeXGo"), "at the tanning rack, soft leather picked, Make X at 1")
+	await _until(func() -> bool: return inv.count(SOFT_LEATHER) >= 1 and skilling.afk_target == -1, 12.0)
+	_check(inv.count(SOFT_LEATHER) == 1 and inv.count(DEER_HIDE) == before_tan - 1, "a deer hide tanned into soft leather, AFK")
+	hud.station_window.close()
+
+
+## The shell slays the glade's deer as this player's kill (its `n`th: the shell waits for the deer to be back); its
+## carcass found, and this player standing at it facing it. The carcass's entity, or -1.
+func _slain_deer(n: int) -> int:
+	print("SLAY_DEER %d %d" % [me.entity_id, n])
+	var carcass: int = -1
+	var deadline: int = Time.get_ticks_msec() + 40000
+	while carcass < 0 and Time.get_ticks_msec() < deadline:
+		for id: int in EntityRegistry.all_entity_ids():
+			var node: NodeComponent = SkillingComponent.node_of(id)
+			if node != null and node.def != null and node.def.id == DEER_CARCASS and not node.depleted:
+				carcass = id
+		await get_tree().process_frame
+	_check(carcass >= 0, "slain deer %d's carcass lies here, a node to skin (%d)" % [n, carcass])
+	if carcass < 0:
+		return -1
+	var at: Vector3 = (EntityRegistry.get_entity(carcass) as Node3D).global_position
+	await _stand_at(at + Vector3(0, 0.05, 2.2), at)
+	await _until(func() -> bool: return interaction.get_target() == carcass, 3.0)
+	return carcass
+
+
+## The mouse moved over `game` to `at` (its own coordinates), as the window sends it.
+func _mouse_move(game: Control, at: Vector2) -> void:
+	var e: InputEventMouseMotion = InputEventMouseMotion.new()
+	e.position = game.get_global_transform_with_canvas() * at
+	e.global_position = e.position
+	Input.parse_input_event(e)
+
+
+## The left mouse button pressed or let go over `game` at `at`, as the window sends it.
+func _mouse_button(game: Control, at: Vector2, down: bool) -> void:
+	var e: InputEventMouseButton = InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = down
+	e.position = game.get_global_transform_with_canvas() * at
+	e.global_position = e.position
+	Input.parse_input_event(e)
 
 
 ## HERBALISM, STEP 1 (Luke, 2026-11-07): flax pulled AFK with the starter kit's copper trowel (no round yet: the prompt
@@ -443,7 +561,60 @@ func _chopper(tree_id: int) -> void:
 ## carving is the integration suite's) strung at the workbench into the yew bow, which keeps the stave's quality.
 func _herbalism() -> void:
 	_check(inv.count(COPPER_TROWEL) == 1, "the starter kit's copper trowel is in the bag")
+	# PULL THE ROOT (PROGRESS 51; the trowel's work after Luke's play, 2026-11-08): hold E at a patch, and the round as a
+	# person plays it, by the frame: A and D dig each stem round, then Space pulls, let go as the stem strains near the
+	# top, pull again once it has eased; where the soil cracks, that side's key cuts the side root. One round only: E
+	# stops the run after it.
 	var prompt_ok: bool = false
+	var pulled: bool = false
+	for at: Vector3 in FLAX_POINTS:
+		var patch: int = await _node_at(at)
+		var node: NodeComponent = SkillingComponent.node_of(patch)
+		if node == null or node.depleted:
+			continue
+		await _stand_by(at)
+		await _until(func() -> bool: return interaction.get_target() == patch, 3.0)
+		prompt_ok = hud._prompt.text.begins_with("E: pull the flax (AFK)") and hud._prompt.text.contains("Hold E: play")
+		var flax0: int = inv.count(FLAX)
+		var xp0: int = int(skilling.xp.get(SKILL_HERBALISM, 0))
+		if not await _hold_for_round():
+			break
+		var pull: PullMinigame = hud.game as PullMinigame
+		_check(pull != null and pull.get_child(0) is PullStage, "the flax's round is pull the root, on its stage")
+		await _tap(&"interact", 0.08)
+		_check(skilling.run_stop_after, "E at the flax's round: the run stops after it")
+		while pull != null and pull.state == SkillMinigame.State.PLAYING:
+			var t: int = pull.elapsed_ms()
+			pull.model.advance_to(t)
+			var m: PullModel = pull.model
+			var side: int = 0
+			if not m.stroking(t):
+				if m.showing() != 0:
+					side = m.showing()
+				elif m.up_by == 0 and m.pack_left > 0:
+					side = PullModel.LEFT
+				elif m.up_by == 0 and m.pack_right > 0:
+					side = PullModel.RIGHT
+			if side != 0:
+				var key: InputEventKey = InputEventKey.new()
+				key.physical_keycode = KEY_A if side == PullModel.LEFT else KEY_D
+				key.pressed = true
+				pull._unhandled_key_input(key)
+			elif m.up_by > 0 or m.pack_left + m.pack_right == 0:
+				pull.button(m.strain < 850 if pull._down else m.strain <= 450)
+			await get_tree().process_frame
+		print("   the pull as played: %s" % str(pull.live_result if pull != null else {}))
+		_check(pull != null and int(pull.live_result.get("whole", 0)) >= 2 and int(pull.live_result.get("cut", 0)) >= 2
+			and int(pull.live_result.get("dug", 0)) >= 1 and pull.live_result == pull.replayed_result,
+			"a clump's packed sides dug (loose ones left: Luke, 2026-11-09), cut and pulled stem after stem by the frame, as a person plays it: two up whole or more (%s)" % str(pull.live_result if pull != null else {}))
+		await _until(func() -> bool: return inv.count(FLAX) > flax0 and int(skilling.xp.get(SKILL_HERBALISM, 0)) > xp0, 5.0)
+		_check(inv.count(FLAX) > flax0 and int(skilling.xp.get(SKILL_HERBALISM, 0)) > xp0,
+			"the server replayed it and paid %d flax and %d herbalism XP" % [inv.count(FLAX) - flax0, int(skilling.xp.get(SKILL_HERBALISM, 0)) - xp0])
+		await _round_closed()
+		pulled = true
+		break
+	_check(prompt_ok and pulled, "at a flax patch the prompt offers AFK work and a round (\"%s\")" % hud._prompt.text)
+	# Then AFK (tap E) until there are three for a bowstring.
 	for at: Vector3 in FLAX_POINTS:
 		if inv.count(FLAX) >= 3:
 			break
@@ -453,16 +624,14 @@ func _herbalism() -> void:
 			continue
 		await _stand_by(at)
 		await _until(func() -> bool: return interaction.get_target() == patch, 3.0)
-		prompt_ok = prompt_ok or (hud._prompt.text.begins_with("E: pull the flax (AFK)") and not hud._prompt.text.contains("Hold E"))
 		await _tap(&"interact", 0.08)
 		await _until(func() -> bool: return skilling.afk_target == patch, 4.0)   # the work begun (the press, the server's row)
 		await _until(func() -> bool: return inv.count(FLAX) >= 3 or skilling.afk_target == -1, 20.0)
 		if skilling.afk_target >= 0:
 			await _tap(&"interact", 0.08)
 			await _until(func() -> bool: return skilling.afk_target == -1, 3.0)
-	_check(prompt_ok, "at a flax patch the prompt says to pull it AFK and offers no round (\"%s\")" % hud._prompt.text)
 	_check(inv.count(FLAX) >= 3 and int(skilling.xp.get(SKILL_HERBALISM, 0)) > 0,
-		"flax pulled AFK with the trowel: %d flax, herbalism XP %d" % [inv.count(FLAX), int(skilling.xp.get(SKILL_HERBALISM, 0))])
+		"flax pulled with the trowel: %d flax, herbalism XP %d" % [inv.count(FLAX), int(skilling.xp.get(SKILL_HERBALISM, 0))])
 	var wheel: int = await _station_at(WHEEL)
 	await _stand_by(WHEEL)
 	await _until(func() -> bool: return interaction.get_target() == wheel, 3.0)
@@ -802,6 +971,20 @@ func _tap(action: StringName, hold_s: float) -> void:
 	await get_tree().create_timer(hold_s).timeout
 	Input.action_release(action)
 	await get_tree().physics_frame
+
+
+## A key held `seconds`, then let go (the anvil's set down is a hold: a tap only says to hold it).
+func _hold_key(code: Key, seconds: float) -> void:
+	for down: bool in [true, false]:
+		var e: InputEventKey = InputEventKey.new()
+		e.keycode = code
+		e.physical_keycode = code
+		e.pressed = down
+		Input.parse_input_event(e)
+		if down:
+			await get_tree().create_timer(seconds).timeout
+		else:
+			await get_tree().physics_frame
 
 
 func _key(code: Key) -> void:

@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_njyvh"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_5qyif"]
 
-[node name="Cell_-10_2" type="Node3D" unique_id=2022316509]
+[node name="Cell_-10_2" type="Node3D" unique_id=1875815507]
 
-[node name="w_copper_rock_5" type="Marker3D" parent="." unique_id=596845178]
+[node name="w_copper_rock_5" type="Marker3D" parent="." unique_id=1492844418]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -593.649, 4.148738, 180.228)
 gizmo_extents = 0.6
 script = ExtResource("1_5468s")
@@ -14,6 +14,24 @@ point_id = "w_copper_rock_5"
 kind = "node"
 radius = 0.6
 tags = PackedStringArray("Copper rock")
+
+[node name="w_deer_9" type="Marker3D" parent="." unique_id=1110947246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.50714, 3.0543368, 168.71286)
+gizmo_extents = 0.5
+script = ExtResource("1_5468s")
+point_id = "w_deer_9"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_10" type="Marker3D" parent="." unique_id=874897991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.4799, 3.1594036, 172.71277)
+gizmo_extents = 0.5
+script = ExtResource("1_5468s")
+point_id = "w_deer_10"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
 
 [node name="bush_long_1_73" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_njyvh")]
 transform = Transform3D(-0.5323276, 0, 0.6956815, 0, 0.8759826, 0, -0.6956815, 0, -0.5323276, -630.3496, 2.5579898, 157.9954)

@@ -10,7 +10,7 @@
 script = ExtResource("4_params")
 display_name = "Iron bar"
 beat_ms = 540
-lead_beats = 4
+lead_beats = 8
 beats = 16
 rest_pm = 120
 offbeat_pm = 220

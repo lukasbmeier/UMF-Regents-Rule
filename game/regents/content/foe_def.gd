@@ -12,6 +12,10 @@ class_name FoeDef extends ContentDef
 @export var key: StringName = &""
 ## What it is in the world: its model, animations, movement and kind (a genre kind, 100 or more).
 @export var character: EntityDefinition
+## Whether it fights at all (hunting, 2026-11-09: a deer never does). One that does not needs no kit: its character's
+## brain runs it (the deer's: `sidecar/npc/brains/regents/deer.gd`, it flees), and a hit STARTLES it
+## (`regents.startle_ms`), so it bolts even from an arrow it never saw coming.
+@export var fights: bool = true
 ## What it fights with: a FOE KIT of its own (COMBAT_OVERHAUL.md §2, 2026-10-31: slow, readable swings;
 ## never a player's), its light combo swung as one string, the last its finisher (often `unblockable`).
 @export var kit: KitDef
@@ -41,6 +45,24 @@ class_name FoeDef extends ContentDef
 ## A target lost from sight (behind a rock, round a hut) is chased to where it was last seen for this long
 ## before the foe gives up on it (Luke's continent playtest, 2026-10-24, #4: one turned back at a bush).
 @export_range(0, 10000, 100, "suffix:ms") var lose_sight_ms: int = 2500
+## ITS STRING FOLLOWS ITS TARGET (Luke, 2026-11-11: a wolf's second and third bites "just hit air instead of gap
+## closing"): between two swings of its string, a target that stepped out of reach is run down and the string goes on
+## where it stopped, for this long after the last swing's lock ended; longer, the string is dropped (the next is its
+## first swing again, after its rest, which the chase counts toward). 0: it gives the string up at once.
+@export_range(0, 10000, 100, "suffix:ms") var string_chase_ms: int = 1500
+## PACKS (Luke, 2026-11-10: wolves hunt in packs of 2-3): alerting or hitting one calls other foes of its kind within
+## this far to join the fight (0: each for itself).
+@export_range(0.0, 50.0, 0.5, "suffix:m") var pack_m: float = 0.0
+
+@export_group("A creature that flees (one that does not fight)")
+## It sees a player within `notice_m` (in sight) and bolts; this near it hears them, seen or not.
+@export_range(0.0, 50.0, 0.5, "suffix:m") var startle_m: float = 5.0
+## It runs this far from what scared it each time (round what is in the way), never past `leash_m` from home.
+@export_range(1.0, 100.0, 0.5, "suffix:m") var flee_m: float = 25.0
+## With nobody near (within `notice_m`) this long, it calms and walks back to graze.
+@export_range(0, 60000, 500, "suffix:ms") var calm_ms: int = 6000
+## Grazing, it wanders this far from home, a few steps at a time.
+@export_range(0.0, 50.0, 0.5, "suffix:m") var graze_m: float = 6.0
 
 ## Its FAMILY ("undead", "beast", "humanoid"): what a trait made against one reads (Hunter's: more against
 ## beasts, less against humanoids).
@@ -54,6 +76,10 @@ class_name FoeDef extends ContentDef
 @export_group("Loot")
 ## What a kill drops (a loot table: each line its chance, shared tables, pity). Empty: nothing.
 @export var loot_table: LootTableDef
+## What a kill LEAVES (skinning, Luke 2026-11-09): a CARCASS, this node, where it fell (its body taken away at once),
+## skinned with a knife; its top damager's alone `regents.carcass_own_s`, then anyone's; it rots away after
+## `regents.carcass_rot_s`. Empty: its body only, as a skeleton's.
+@export var carcass: NodeDef
 
 static var _all: Array[FoeDef] = []
 
@@ -63,7 +89,8 @@ func content_type() -> StringName:
 
 
 func summary() -> String:
-	return "%s: %d hp, %s at %d%%, drops %s" % [key, hp, kit.key if kit != null else "?", damage_pct, loot_table.display_name if loot_table != null else "nothing"]
+	var how: String = ("%s at %d%%" % [kit.key if kit != null else "?", damage_pct]) if fights else "flees"
+	return "%s: %d hp, %s, drops %s" % [key, hp, how, loot_table.display_name if loot_table != null else "nothing"]
 
 
 func to_bake() -> Dictionary:
@@ -73,6 +100,8 @@ func to_bake() -> Dictionary:
 		"key": String(key),
 		"kind": character.kind if character != null else 0,
 		"kit": String(kit.key) if kit != null else "",
+		"fights": fights,
+		"brain": String(character.brain) if character != null else "",
 		"hp": hp,
 		"damage_pct": damage_pct,
 		"xp_pct": xp_pct,
@@ -80,6 +109,7 @@ func to_bake() -> Dictionary:
 		"family": String(family),
 		"boss": boss,
 		"poise": poise,
+		"carcass": ContentDef.ref(carcass),
 	}
 
 
@@ -89,8 +119,10 @@ func validate() -> Array[String]:
 		out.append("it has no key: the level points it stands on are named by it")
 	if character == null or character.kind < 100:
 		out.append("its character must be a genre kind (100 or more)")
-	if kit == null:
-		out.append("it fights with no kit: set `kit`")
+	if fights and kit == null:
+		out.append("it fights with no kit: set `kit` (or untick `fights`, for a creature that only flees)")
+	if not fights and (character == null or character.brain == &""):
+		out.append("it never fights, so its character's brain runs it: set the character's `brain`")
 	return out
 
 

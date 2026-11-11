@@ -1,15 +1,36 @@
-[gd_resource type="Resource" script_class="NodeDef" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="NodeDef" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Script" path="res://game/regents/skilling/herbalism/pull_params.gd" id="2_params"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/herbalism.tres" id="3_skill"]
 [ext_resource type="Resource" path="res://game/regents/content/item/flax.tres" id="4_yield"]
 [ext_resource type="Resource" path="res://game/regents/content/item/seed_pod.tres" id="5_rare"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Flower_3_Group.gltf" id="m0"]
 
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("2_params")
+display_name = "Flax"
+duration_ms = 15000
+stroke_ms = 250
+target_plants = 4
+dig_pm = 1000
+loose_pm = 500
+hold_pm = 600
+strain_rise = 40
+strain_ease = 60
+pull_rate = 10
+pull_gain = 40
+snags = 2
+jump_lo = 200
+jump_hi = 400
+show_depth = 350
+snap_keep_pm = 250
+
 [resource]
 script = ExtResource("1_node")
 skill = ExtResource("3_skill")
 tier = 1
+minigame = SubResource("Round")
 yield_item = ExtResource("4_yield")
 tool_tag = &"trowel"
 min_tool_tier = 1
@@ -24,6 +45,8 @@ models = Array[PackedScene]([ExtResource("m0")])
 model_scale = 1.3
 depleted = 0
 depleted_color = Color(0.42, 0.36, 0.22, 1)
+depleted_notice = "The flax is picked bare"
+depleted_prompt = "picked bare, growing back"
 id = 40007
 display_name = "Flax"
-designer_notes = "HERBALISM TIER 1 (Luke, 2026-11-07, HERBALISM_HUNTING_PREP.md §7 step 1): AFK only for now (no round: hold E works it AFK too); its round, PULL THE ROOT (H3), is step 2. Needs a trowel of tier 1."
+designer_notes = "HERBALISM TIER 1 (Luke, 2026-11-07, HERBALISM_HUNTING_PREP.md §7 step 1). Its round, PULL THE ROOT (H3, PROGRESS 51): A CLUMP (Luke, 2026-11-08): stem after stem for 15 s, FOUR whole for a full score (three until 2026-11-09). The trowel does the work too (Luke after his play, 2026-11-08: dig round, cut the snagging roots). LOOSE OR PACKED (Luke, 2026-11-09, \"cutaway, no chore\"): each side of a stem starts loose half the time (loose_pm 500), and ONE stroke digs a packed side (dig_pm 1000; packed soil holds the root to 40 %); the cutaway beside the stage shows which. Two side roots a stem, cut in the gold band or pulled through; a snapped stem worth a quarter of what came up. Tuning, mine (readout 100 / 94 / 88 / 69 %); the numbers are Luke's after his play. Back to the chore: loose_pm 0, dig_pm 500, target_plants 3. Needs a trowel of tier 1."

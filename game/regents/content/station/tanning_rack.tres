@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StationDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/station_def.gd" id="1_station"]
+
+[resource]
+script = ExtResource("1_station")
+key = &"tanning_rack"
+glow_color = Color(0, 0, 0, 0)
+body_size = Vector3(1.4, 1.4, 0.4)
+body_color = Color(0.46, 0.33, 0.22, 1)
+id = 40006
+display_name = "Tanning rack"
+designer_notes = "TANNING (Luke's H6, 2026-11-07): an AFK station trained by Crafting; its own skill and round later if it earns them. A PLACEHOLDER BLOCK (body_size) until a tanning rack model is found."

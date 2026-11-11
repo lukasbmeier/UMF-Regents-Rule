@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_o5iyr"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="3_5f8ci"]
 
-[node name="Cell_-11_3" type="Node3D" unique_id=1854064861]
+[node name="Cell_-11_3" type="Node3D" unique_id=473807285]
 
-[node name="w_flax_6" type="Marker3D" parent="." unique_id=66526165]
+[node name="w_flax_6" type="Marker3D" parent="." unique_id=1296298581]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -647.3151, 4.589284, 239.05872)
 gizmo_extents = 0.5
 script = ExtResource("1_o64a2")
@@ -21,5 +21,5 @@ transform = Transform3D(0.3730833, 0, 0.9565774, 0, 1.0267577, 0, -0.9565774, 0,
 [node name="bush_long_1_59" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("3_5f8ci")]
 transform = Transform3D(0.08335297, 0, -0.956817, 0, 0.96044075, 0, 0.956817, 0, 0.08335297, -696.94836, 2.7381687, 227.14157)
 
-[node name="fern_1_60" type="Node3D" parent="." unique_id=1907130630 instance=ExtResource("2_o5iyr")]
+[node name="fern_1_60" type="Node3D" parent="." unique_id=1617452036 instance=ExtResource("2_o5iyr")]
 transform = Transform3D(-0.57346207, 0, 0.55553806, 0, 0.79842424, 0, -0.55553806, 0, -0.57346207, -693.2275, 3.020173, 231.95993)

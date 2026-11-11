@@ -73,6 +73,24 @@
 			"movement": 40001,
 			"name": "Drillmaster",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/deer",
+			"id": 40009,
+			"kind": 106,
+			"movement": 40003,
+			"name": "Deer",
+			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40010,
+			"kind": 107,
+			"movement": 40004,
+			"name": "Wolf",
+			"playable": false
 		}
 	],
 	"owner": "regents",

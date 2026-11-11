@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MovementProfileDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/movement_profile_def.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+walk_speed = 1.6
+run_speed = 5.6
+sprint_speed = 5.6
+acceleration = 35.0
+friction = 35.0
+dash_impulse = 14.0
+dash_cooldown_ticks = 30
+dash_ticks = 12
+id = 40004
+display_name = "Wolf"
+designer_notes = "THE WOLF'S GAIT (hunting, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): faster than a skeleton (5.6 m/s run, 1.6 m/s circling walk) with a 14 m/s dash impulse for its finisher's lunge."

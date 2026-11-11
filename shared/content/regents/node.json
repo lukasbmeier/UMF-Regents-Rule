@@ -6,6 +6,7 @@
 			"afk_ms_per_item": 4000,
 			"deplete_permille": 250,
 			"id": 40001,
+			"max_items": 0,
 			"min_rank": 1,
 			"min_tool_tier": 1,
 			"minigame": {
@@ -31,6 +32,7 @@
 			"skill": 40001,
 			"tier": 1,
 			"tool_tag": "axe",
+			"whole_round": false,
 			"xp": 10,
 			"yield_item": 40002
 		},
@@ -38,6 +40,7 @@
 			"afk_ms_per_item": 6000,
 			"deplete_permille": 125,
 			"id": 40002,
+			"max_items": 0,
 			"min_rank": 2,
 			"min_tool_tier": 1,
 			"minigame": {
@@ -63,6 +66,7 @@
 			"skill": 40001,
 			"tier": 2,
 			"tool_tag": "axe",
+			"whole_round": false,
 			"xp": 18,
 			"yield_item": 40003
 		},
@@ -70,6 +74,7 @@
 			"afk_ms_per_item": 9000,
 			"deplete_permille": 100,
 			"id": 40003,
+			"max_items": 0,
 			"min_rank": 4,
 			"min_tool_tier": 2,
 			"minigame": {
@@ -95,6 +100,7 @@
 			"skill": 40001,
 			"tier": 3,
 			"tool_tag": "axe",
+			"whole_round": false,
 			"xp": 35,
 			"yield_item": 40004
 		},
@@ -102,6 +108,7 @@
 			"afk_ms_per_item": 4500,
 			"deplete_permille": 300,
 			"id": 40004,
+			"max_items": 0,
 			"min_rank": 1,
 			"min_tool_tier": 1,
 			"minigame": {
@@ -130,6 +137,7 @@
 			"skill": 40002,
 			"tier": 1,
 			"tool_tag": "pick",
+			"whole_round": false,
 			"xp": 10,
 			"yield_item": 40007
 		},
@@ -137,6 +145,7 @@
 			"afk_ms_per_item": 6500,
 			"deplete_permille": 200,
 			"id": 40005,
+			"max_items": 0,
 			"min_rank": 2,
 			"min_tool_tier": 1,
 			"minigame": {
@@ -165,6 +174,7 @@
 			"skill": 40002,
 			"tier": 2,
 			"tool_tag": "pick",
+			"whole_round": false,
 			"xp": 20,
 			"yield_item": 40008
 		},
@@ -172,6 +182,7 @@
 			"afk_ms_per_item": 7000,
 			"deplete_permille": 200,
 			"id": 40006,
+			"max_items": 0,
 			"min_rank": 3,
 			"min_tool_tier": 2,
 			"minigame": {
@@ -200,6 +211,7 @@
 			"skill": 40002,
 			"tier": 3,
 			"tool_tag": "pick",
+			"whole_round": false,
 			"xp": 26,
 			"yield_item": 40024
 		},
@@ -207,9 +219,27 @@
 			"afk_ms_per_item": 3500,
 			"deplete_permille": 200,
 			"id": 40007,
+			"max_items": 0,
 			"min_rank": 1,
 			"min_tool_tier": 1,
-			"minigame": {},
+			"minigame": {
+				"dig_pm": 1000,
+				"duration_ms": 15000,
+				"hold_pm": 600,
+				"jump_hi": 400,
+				"jump_lo": 200,
+				"kind": "pull",
+				"loose_pm": 500,
+				"pull_gain": 40,
+				"pull_rate": 10,
+				"show_depth": 350,
+				"snags": 2,
+				"snap_keep_pm": 250,
+				"strain_ease": 60,
+				"strain_rise": 40,
+				"stroke_ms": 250,
+				"target_plants": 4
+			},
 			"name": "Flax",
 			"radii_cm": [
 				59
@@ -220,8 +250,75 @@
 			"skill": 40010,
 			"tier": 1,
 			"tool_tag": "trowel",
+			"whole_round": false,
 			"xp": 8,
 			"yield_item": 40046
+		},
+		{
+			"afk_ms_per_item": 5000,
+			"deplete_permille": 350,
+			"id": 40008,
+			"max_items": 4,
+			"min_rank": 1,
+			"min_tool_tier": 1,
+			"minigame": {
+				"cut_speed": 30,
+				"duration_ms": 12000,
+				"kind": "skin",
+				"near": 45,
+				"part_keep_pm": 500,
+				"points": 5,
+				"reach": 120,
+				"target_lines": 4,
+				"tear_pm": 35,
+				"wobble": 120
+			},
+			"name": "Deer carcass",
+			"radii_cm": [
+				105
+			],
+			"rare_item": -1,
+			"rare_permille": 0,
+			"regrow_ms": 5000,
+			"skill": 40011,
+			"tier": 1,
+			"tool_tag": "knife",
+			"whole_round": true,
+			"xp": 15,
+			"yield_item": 40056
+		},
+		{
+			"afk_ms_per_item": 6000,
+			"deplete_permille": 350,
+			"id": 40009,
+			"max_items": 4,
+			"min_rank": 2,
+			"min_tool_tier": 1,
+			"minigame": {
+				"cut_speed": 30,
+				"duration_ms": 12000,
+				"kind": "skin",
+				"near": 40,
+				"part_keep_pm": 500,
+				"points": 6,
+				"reach": 120,
+				"target_lines": 4,
+				"tear_pm": 40,
+				"wobble": 140
+			},
+			"name": "Wolf carcass",
+			"radii_cm": [
+				105
+			],
+			"rare_item": 40065,
+			"rare_permille": 8,
+			"regrow_ms": 5000,
+			"skill": 40011,
+			"tier": 2,
+			"tool_tag": "knife",
+			"whole_round": true,
+			"xp": 25,
+			"yield_item": 40064
 		}
 	],
 	"owner": "regents",

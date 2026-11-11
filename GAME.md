@@ -221,6 +221,15 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   Steadied; Heavy breaks it sooner instead of staggering longer. **Shown on the target marker**, not a bar under the
   health ("the top status is getting clutter"): an arc round the ring under your target. Players keep the old rule
   (a foe's last hit staggers you). The banner cut's clip changed (it looked jumpy).
+  **A FOE'S STRING FOLLOWS ITS TARGET** (Luke, 2026-11-11, playing the wolf: "the wolves start their attack and dont
+  stop even if I move far away from the first one (so second and 3rd attack just hit air instead of gap closing and
+  then performing the 2nd and 3rd hits) and I suspect skeletons do that too"): every foe runs down a target that
+  steps out of reach between two swings and goes on with its string; out of reach too long (`FoeDef.string_chase_ms`,
+  1500, Claude's number) it drops the string and starts over. Built as PROGRESS 57.
+  **EVERY FOE TURNS ON WHO HIT IT FROM BEYOND ITS SIGHT** (Luke, 2026-11-11, asked every foe or pack foes only: "Every
+  foe"): a fighting foe hit while it does nothing else is Startled (as the deer is, which bolts) and goes for the
+  nearest player, if they are within its leash of its home; a pack foe's packmates come too. Built with the wolf
+  (PROGRESS 56), kept for skeletons and all to come.
 - **Handles: one family of three SHAPES for every tool and weapon** (Luke, 2026-11-01, option (b) of three; built,
   PROGRESS 32): the grip (the plain handle, renamed), the crossguard grip and the banner grip, each in every wood; any
   tool or weapon takes any shape; a shape matters only when swung, and only on a weapon whose kit has roles (the
@@ -274,7 +283,26 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     round shows it loosening the soil before the pull.
   - **Pull the root as proposed** (H3): hold to pull, strain rises and eases when let go, the plant trembles before a
     jump, past the top it snaps; band 2 roots that branch, band 3 a wilting clock.
+  - **A ROUND IS A CLUMP** (Luke, 2026-11-08, asked one plant a round or a clump: "A: a clump"): stems pulled one after
+    another until the time runs out; a snap loses the rest of that stem, not the round (as chop and crack count
+    pieces). Everything else in the round is Claude's, built after his first play the same night and left for him to
+    change (PROGRESS 51: the trowel digging round each stem and cutting the side roots where the soil cracks, the
+    stage redrawn, the numbers).
+  - **SKINNING'S TOOL IS A SMITHED KNIFE** (Luke, 2026-11-09, as proposed): a skinning knife of the material table, as
+    the trowel (a blade at the anvil, copper, iron, steel, and a grip at the workbench); its tier gates the better
+    hides; new characters start with a copper one. **WHO SKINS: the killer first, then anyone** (as proposed): the
+    player who did the most damage has the carcass to themselves a while (60 s), then anyone may; it rots away after
+    3 minutes unskinned.
   - **Skinning's round: DRAG the knife along the cut line** (H4): a new continuous model (off the line tears the hide).
+  - **A DEER HOLDS SEVERAL HIDES** (Luke, 2026-11-10, asked what a better cut should get when a carcass held one hide:
+    "Skinning a whole deer would get you multiple hides so we can have it be like a node depletion and good rounds
+    reward more up to a cap of course"): a carcass gives hides as a node gives logs (each the last with a chance) up
+    to a CAP; a played round skins the whole carcass and pays more the better it is cut, never past the cap. (Not hide
+    grades.) Built as PROGRESS 55; the numbers are Claude's.
+  - **The deer is SMOOTH SHADED** (Luke, 2026-11-10: "id prefer it to be smooth shading instead of low poly").
+  - **Tanning and spinning keep no round for now; the WOLF is next** (Luke, 2026-11-10, after skinning's round: of
+    spinning's round, both, or neither, "Neither yet, wolf next"). The leather wrap and a cloth plant wait on his
+    traits ("I havent decided on cloth (new plant for herbalism) or leather traits").
   - **The first creatures: deer (tier 1, flees), wolf (tier 2, packs; a lunge that knocks back, a bite that slows),
     stag (tier 3, flees, charges when cornered)** (H5), from Quaternius's animal pack. Poison waits for an asset.
   - **Tanning and spinning are AFK crafting stations** (H6): a tanning rack and a spinning wheel, trained by Crafting;
@@ -361,6 +389,21 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     3 (steel)** as band 2, plus heat colors and the quench. Revisit once played.
   - **For every skill** (Luke, 2026-11-05, "yes"): **rank eases the numbers; a band adds one rule.** A band's rule
     belongs to that band's items, never to the player's rank: an outranked tier never gains rules.
+  - **LUKE'S PLAY OF EVERY MINIGAME** (2026-11-09, PROGRESS 52): mining and woodcutting good through tier 3; smelting
+    good, with a slower start to read the directions (the count-in 8 beats, the directions shown through it); **every
+    round shows how many rounds and the pay so far**, as woodcutting's logs did. **THE PATTERN FADES BY BAND** (his
+    words: "ghost for copper 3 second but stays faint, iron 1.5 even fainter, steel 3 seconds and disappears ... same
+    with woodcarving"): copper 3 s to a faint ghost that stays, iron 1.5 s to a fainter one, steel 3 s to nothing; the
+    yew carve as copper. **THE QUENCH IS OUT FOR NOW** ("maybe we get rid of quenching for now or redesign it so it
+    makes more sense as a skill thing and described better in instructions"): to come back redesigned, his call.
+    **PULL THE ROOT: "Cutaway, no chore"**: some sides of a stem start loose (dig only the packed ones), a cut-away of
+    the soil shows the root and its side roots coming. Not his pick, taken as a default to change: setting a part down
+    is a HOLD of Enter (one Enter had ended rounds at once), flax four stems a round, the strain shown as a bar.
+  - **AFTER PLAYING STEP 52** (Luke, 2026-11-09): pull the root is "still the one that feels the worst fun wise. I cant
+    put my finger on it so lets leave it for now and move on" (parked, his to reopen). Steel's red heat "cracks with no
+    indicator, not sure on that change"; "we might need to rethink quenching and bands for [smithing] / carving but can
+    do those later"; smithing and woodcarving "need some rules tweaks like timing and such but those can be adjusted
+    later". Then: on to hunting.
   - **Outranked XP** (Luke, 2026-11-05, a direction, not settled): rather than XP falling off, shape the rank curve
     so a lower tier is never worth doing for XP (as OSRS's: its XP per level grows so steeply that level 92 is half of
     99). Today's smithing curve (60 ... 2400 over 10 ranks) grows gently; to retune with the ladder.
@@ -374,8 +417,8 @@ A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the f
 trees (Tree, Oak, Yew), copper, iron and coal rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**, then an iron
 pickaxe for coal and **steel** (the ladder: copper, iron, steel; `MATERIALS.md`, the material table): at a node or a
-station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, the furnace's
-rhythm track then the pour, shape to the outline), **Q** at a station picks the recipe (and the handle: plain, oak or yew). **Escape** during a minigame leaves it (gathering keeps what you got; making uses nothing). The
+station **tap E** to work AFK, **hold E** to play its minigame (branch dodge, crack the rock, pull the root at the flax, the furnace's
+rhythm track then the pour, shape to the outline, the carve), **Q** at a station picks the recipe (and the handle: plain, oak or yew). **Escape** during a minigame leaves it (gathering keeps what you got; making uses nothing). The
 camp's **order board** wants rotating batches for bonus XP; crafting pays for the work in its inputs, a
 first make pays extra, and a recipe repeated too long wears stale. Tune a recipe on the **recipe bench**.
 **Combat, the first slice**: wield a weapon from the bag (I), Tab onto one of camp's training dummies (a
@@ -411,6 +454,16 @@ BRITTLE NOTCHES (pale: wait for the rock to stop ringing), the steel bar SLAG (g
 **Carving** (PROGRESS 49): the yew bow and the yew staff are carved at the workbench (hold E): a stave stands upright;
 look at the pattern (both sides' lines), lift it, then click a row left or right of its middle to cut that side, left
 click deep and right click a fine shave; Enter when done. The bow's or staff's grade comes from it.
+**Hunting and skinning** (PROGRESS 53-56): deer graze west of the flax and over the continent's meadows; they bolt
+(a bow, or corner one). **Wolves** prowl in packs of 2 in the glade (northwest of camp) and 2-3 along the continent's
+forest edges; alerting or hitting one calls its packmates within 15 m (sharing the referee's attack tokens while the
+others circle), and their 3-step string ends in a hamstring bite (3 s slow) and an unblockable lunge (leaps forward and
+knocks back). A slain deer or wolf leaves its CARCASS (yours first for a minute). Tap E with a knife (new characters
+have a copper one) to skin it AFK, a hide every 5 s or a pelt every 6 s until it gives out (up to 4; the wolf needs Skinning 2
+and has a 0.8 % rare **Wolf fang**); hold E for **the cut line**: press the
+mouse on the gold ring and drag the knife along the marked line (off it, or too fast, tears the hide); the round skins
+the whole carcass, 2 to 3 hides or pelts for a clean one. The tanning rack (by the spinning wheel) turns a deer hide
+into soft leather and a wolf pelt into supple leather (Crafting 2).
 
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms

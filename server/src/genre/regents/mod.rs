@@ -7,8 +7,10 @@ pub mod beat;
 pub mod carve;
 pub mod chop;
 pub mod crack;
+pub mod pull;
 pub mod rng;
 pub mod shape;
+pub mod skin;
 pub mod smelt;
 
 /// A gathering node (a tree, a rock: `NodeSeed`), an entity of this kind (`content/character/node.tres`).
@@ -24,6 +26,11 @@ pub const CHALLENGE_SHAPE: u8 = 103;
 pub const CHALLENGE_BEAT: u8 = 104;
 /// Woodworking's carve (Luke, 2026-11-07): a vertical stave, wood off either side.
 pub const CHALLENGE_CARVE: u8 = 105;
+/// Herbalism's pull the root (HERBALISM_HUNTING_PREP.md §3, Luke's H3, 2026-11-07): hold to pull, mind the strain; the
+/// trowel digs round each stem and cuts its side roots (2026-11-08).
+pub const CHALLENGE_PULL: u8 = 106;
+/// Skinning's cut line (HERBALISM_HUNTING_PREP.md H4, Luke 2026-11-07): drag the knife along the line; off it tears the hide.
+pub const CHALLENGE_SKIN: u8 = 107;
 /// A node worked out: a stump, rubble, until it comes back (`content/status/depleted.tres`).
 pub const STATUS_DEPLETED: u8 = 100;
 /// The frontier glade (`game/regents/levels/frontier.tscn`, its `LevelInfo`).
@@ -34,13 +41,13 @@ pub const STATION_POINT: &str = "station";
 /// The order board's station key (`content/station/`), and how many orders it shows.
 pub const ORDER_BOARD: &str = "orders";
 pub const ORDER_SLOTS: u32 = 3;
-/// What a new character is given, once (`content/item/`): a Copper axe, a Copper pickaxe and (2026-11-07, herbalism) a
-/// Copper trowel.
-pub const STARTER_KIT: &[u32] = &[40001, 40006, 40051];
+/// What a new character is given, once (`content/item/`): a Copper axe, a Copper pickaxe, (2026-11-07, herbalism) a
+/// Copper trowel and (2026-11-09, skinning) a Copper knife.
+pub const STARTER_KIT: &[u32] = &[40001, 40006, 40051, 40059];
 
 pub static CLAIMS: crate::genre::Claims = crate::genre::Claims {
     name: "regents",
-    challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE, CHALLENGE_BEAT, CHALLENGE_CARVE],
+    challenge_kinds: &[CHALLENGE_CHOP, CHALLENGE_CRACK, CHALLENGE_SMELT, CHALLENGE_SHAPE, CHALLENGE_BEAT, CHALLENGE_CARVE, CHALLENGE_PULL, CHALLENGE_SKIN],
     // The foes' kinds are content (`FoeDef`, `content/foe/`): the genre keeps 103-119 for them (FOE_KINDS).
     entity_kinds: &[ENTITY_NODE, ENTITY_STATION, ENTITY_DUMMY, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
         117, 118, 119, ENTITY_GUIDE],
@@ -105,6 +112,16 @@ pub struct RoleFinisher {
     /// Landing, it heals players within `heal_radius_m` of its user this much (0: none), once a swing.
     pub heal: f32,
     pub heal_radius_m: f32,
+}
+
+/// What a kit's ability does when it lands unblocked (`KitHit`, Luke 2026-11-10: the wolf's hamstring bite slows;
+/// its lunge throws back).
+#[derive(Debug)]
+pub struct KitHitSeed {
+    pub ability: u32,
+    pub push_mps: f32,
+    pub status: u8,
+    pub status_ms: u32,
 }
 
 /// A skill (`SkillDef`): XP to reach each rank from 2 up.
@@ -184,6 +201,8 @@ pub enum Minigame {
     Shape(ShapeSeed),
     Beat(beat::BeatParams),
     Carve(carve::CarveParams<'static>),
+    Pull(pull::PullParams),
+    Skin(skin::SkinParams),
 }
 
 impl Minigame {
@@ -197,6 +216,8 @@ impl Minigame {
             Minigame::Shape(_) => CHALLENGE_SHAPE,
             Minigame::Beat(_) => CHALLENGE_BEAT,
             Minigame::Carve(_) => CHALLENGE_CARVE,
+            Minigame::Pull(_) => CHALLENGE_PULL,
+            Minigame::Skin(_) => CHALLENGE_SKIN,
         }
     }
 
@@ -210,6 +231,8 @@ impl Minigame {
             Minigame::Shape(p) => p.duration_ms,
             Minigame::Beat(p) => p.duration_ms(),
             Minigame::Carve(p) => p.duration_ms,
+            Minigame::Pull(p) => p.duration_ms,
+            Minigame::Skin(p) => p.duration_ms,
         }
     }
 
@@ -222,7 +245,8 @@ impl Minigame {
     /// `score`, the round EASED by `ease_pct` (Luke's M3, 2026-11-05: rank above the requirement widens a round's
     /// windows a few percent, capped; `rank_ease_pct`; the client's `SkillMinigames.eased`, which must agree): a branch
     /// staggers for less, the rock's notch is wider, the furnace's band or the beat's windows wider (the outer window
-    /// never past a quarter beat), the anvil's bar hot longer and its error scale larger (the same error costs less).
+    /// never past a quarter beat), the anvil's bar hot longer and its error scale larger (the same error costs less), a
+    /// root's catches jump the strain less.
     pub fn score_eased(&self, seed: u64, speed_pct: i64, ease_pct: i64, result: &[f32]) -> Option<i64> {
         let groups = (self.duration_ms() / 50 + 64) as usize;
         let swing = |s: i64| (s * speed_pct / 100).max(50);
@@ -270,6 +294,21 @@ impl Minigame {
                 let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
                 Some(carve::play(seed, &p, &ins).score_pm)
             }
+            Minigame::Pull(p) => {
+                // A faster trowel strokes faster (dig, cut); rank eases the side roots' jumps and the packed soil's hold.
+                let p = pull::PullParams { stroke_ms: swing(p.stroke_ms), jump_lo: narrower(p.jump_lo),
+                    jump_hi: narrower(p.jump_hi), hold_pm: narrower(p.hold_pm), ..*p };
+                let ins = rng::decode_groups(result, 2, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64)> = ins.iter().map(|g| (g[0], g[1])).collect();
+                Some(pull::play(seed, &p, &ins).score_pm)
+            }
+            Minigame::Skin(p) => {
+                // A better knife cuts faster; rank widens how far off the line it still cuts.
+                let p = skin::SkinParams { cut_speed: (p.cut_speed * 100 / speed_pct.max(1)).max(1), near: wider(p.near), ..*p };
+                let ins = rng::decode_groups(result, 3, groups, -1.0, 600_000.0)?;
+                let ins: Vec<(i64, i64, i64)> = ins.iter().map(|g| (g[0], g[1], g[2])).collect();
+                Some(skin::play(seed, &p, &ins).score_pm)
+            }
         }
     }
 }
@@ -295,6 +334,10 @@ pub struct NodeSeed {
     /// Each model's drawn footprint (cm), by the model a node of an entity shows (`entity_id % len`): the work reach
     /// is measured from a node's edge (Luke, 2026-11-06). Empty: from its middle.
     pub radii_cm: &'static [u32],
+    /// The most it gives before it is worked out (0: no cap): a carcass's hides.
+    pub max_items: u32,
+    /// A played round works the WHOLE node (a carcass skinned in one round): paid by `whole_round_items`, then worked out.
+    pub whole_round: bool,
 }
 
 impl NodeSeed {
@@ -373,6 +416,8 @@ pub struct KitSeed {
     pub unblockable: &'static [u32],
     /// THE ROLE MAP (COMBAT_OVERHAUL.md §5): per role, the string's last hit. Empty: no roles yet.
     pub roles: &'static [RoleFinisher],
+    /// What its abilities do when they land unblocked (`KitHit`). Empty: damage only.
+    pub hits: &'static [KitHitSeed],
 }
 
 /// A SPELL (`SpellDef`, owner 2026-10-20): how a casting kit's ability lands.
@@ -484,6 +529,11 @@ impl KitSeed {
     pub fn unblockable(&self, ability_id: u32) -> bool {
         self.unblockable.contains(&ability_id)
     }
+
+    /// What `ability_id` does when it lands unblocked (`KitHit`), if any.
+    pub fn hit_of(&self, ability_id: u32) -> Option<&'static KitHitSeed> {
+        self.hits.iter().find(|h| h.ability == ability_id)
+    }
 }
 
 /// A FOE (`FoeDef`, owner 2026-10-19): a monster on a level's points of kind `key`, fighting with a kit.
@@ -495,8 +545,12 @@ pub struct FoeSeed {
     pub key: &'static str,
     /// Its entity kind (in FOE_KINDS).
     pub kind: u8,
-    /// The kit it fights with (a `KitSeed` key).
+    /// The kit it fights with (a `KitSeed` key; "" for one that never fights).
     pub kit: &'static str,
+    /// Whether it fights (hunting, 2026-11-09: a deer never does: a hit STARTLES it, `STATUS_STARTLED`).
+    pub fights: bool,
+    /// Its brain (its character's: "regents/foe", "regents/deer"), the sidecar's.
+    pub brain: &'static str,
     pub hp: u32,
     /// Its hits, as a weapon of this damage %.
     pub damage_pct: u32,
@@ -510,6 +564,18 @@ pub struct FoeSeed {
     pub boss: bool,
     /// Its poise (`FoeDef.poise`; 0: none, every last hit staggers it).
     pub poise: u32,
+    /// What its kill leaves (skinning, 2026-11-09): a CARCASS, a node of this id where it fell (0: its body only).
+    pub carcass: u32,
+}
+
+/// How long more a carcass is `owner`'s alone, in ms, as `who` asks at `now_us` (0: anyone may skin it now; always 0
+/// for its owner). Skinning, Luke 2026-11-09: "the killer first, then anyone", for `own_s` seconds after it fell.
+pub fn carcass_owned_ms(owner: u64, who: u64, fell_us: i64, now_us: i64, own_s: f64) -> i64 {
+    if owner == who || owner == 0 {
+        return 0;
+    }
+    let until = fell_us + (own_s.max(0.0) * 1_000_000.0) as i64;
+    ((until - now_us) / 1000).max(0)
 }
 
 /// The entity kinds a foe may be (CLAIMS keeps them for this genre).
@@ -542,6 +608,8 @@ pub const STATUS_FLINCHED: u8 = 105;
 pub const STATUS_SLAIN: u8 = 106;
 /// A bow drawn (`content/status/drawing.tres`): the walk slowed; how long it lasted is the draw.
 pub const STATUS_DRAWING: u8 = 107;
+/// A creature that never fights was hit (`content/status/startled.tres`, hunting 2026-11-09): its brain bolts.
+pub const STATUS_STARTLED: u8 = 109;
 /// The arrow (`content/body/arrow.tres`): what a bow looses.
 pub const BODY_ARROW: u32 = 40001;
 /// Gravity on an arrow (Godot's, which the referee flies it by), m/s².
@@ -992,9 +1060,42 @@ pub fn afk_interval_ms(afk_ms: u32, speed_pct: u32) -> u32 {
 /// `active_mult` x the score, which is `floor` 0). The floor is kept between 0 and `active_mult`.
 pub fn active_yield_milli(afk_interval_ms: u32, round_ms: i64, active_mult: f64, floor: f64, score_pm: i64) -> u64 {
     let afk_milli = round_ms as f64 * 1000.0 / afk_interval_ms.max(1) as f64;
+    (afk_milli * active_factor(active_mult, floor, score_pm)).floor().max(0.0) as u64
+}
+
+/// What a played round pays against AFK (Luke's M11): `floor` at a score of 0 up to `active_mult` at a full score
+/// (the floor never over the multiplier). The client's `SkillingRules.active_factor`.
+pub fn active_factor(active_mult: f64, floor: f64, score_pm: i64) -> f64 {
     let floor = floor.clamp(0.0, active_mult.max(0.0));
-    let factor = floor + (active_mult - floor) * score_pm.clamp(0, 1000) as f64 / 1000.0;
-    (afk_milli * factor).floor().max(0.0) as u64
+    floor + (active_mult - floor) * score_pm.clamp(0, 1000) as f64 / 1000.0
+}
+
+/// What AFK work gets out of a WHOLE node before it is worked out, on average, in thousandths of an item: each item is
+/// the last with `deplete_permille` (times the tool's `deplete_mult`), and never more than `max_items` (0: no cap; a
+/// node with neither never runs out: 0 here). A carcass's hides (Luke, 2026-11-10: "like a node depletion").
+pub fn expected_items_milli(deplete_permille: u32, deplete_mult: f32, max_items: u32) -> u64 {
+    let d = (deplete_permille as f64 * deplete_mult.max(0.0) as f64 / 1000.0).clamp(0.0, 1.0);
+    if max_items == 0 {
+        return if d > 0.0 { (1000.0 / d).floor() as u64 } else { 0 };
+    }
+    let mut sum = 0.0;
+    let mut stay = 1.0;
+    for _ in 0..max_items {
+        sum += stay;
+        stay *= 1.0 - d;
+    }
+    (sum * 1000.0).round() as u64
+}
+
+/// A WHOLE-NODE ROUND (a carcass skinned in one round, `NodeSeed::whole_round`; Luke, 2026-11-10: "good rounds reward
+/// more up to a cap"): AFK's average for the whole node times the round's factor (M11), a part item by `roll`, never
+/// past what is left under `max_items` (`taken` already).
+#[allow(clippy::too_many_arguments)]
+pub fn whole_round_items(deplete_permille: u32, deplete_mult: f32, max_items: u32, taken: u32, active_mult: f64, floor: f64, score_pm: i64,
+    roll: u32) -> u32 {
+    let milli = (expected_items_milli(deplete_permille, deplete_mult, max_items) as f64 * active_factor(active_mult, floor, score_pm)).floor() as u64;
+    let n = whole_items(milli, roll);
+    if max_items > 0 { n.min(max_items.saturating_sub(taken)) } else { n }
 }
 
 /// How much likelier a played round is to bring a rare find than AFK work (Luke's M11: the catalysts lean hard to

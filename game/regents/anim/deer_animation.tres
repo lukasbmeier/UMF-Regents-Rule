@@ -1,0 +1,72 @@
+[gd_resource type="Resource" script_class="AnimationSet" format=3]
+
+[ext_resource type="Script" path="res://foundation/anim/animation_clip_ref.gd" id="1_g1kxu"]
+[ext_resource type="AnimationLibrary" path="res://game/regents/anim/deer_clips.res" id="2_joolu"]
+[ext_resource type="Script" path="res://foundation/anim/animation_set.gd" id="3_15jbc"]
+
+[sub_resource type="Resource" id="Resource_11vrd"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Eating"
+loop = true
+
+[sub_resource type="Resource" id="Resource_ia17k"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Walk"
+loop = true
+
+[sub_resource type="Resource" id="Resource_s38sw"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Gallop"
+loop = true
+
+[sub_resource type="Resource" id="Resource_cr1wy"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Gallop"
+loop = true
+speed_scale = 1.1
+
+[sub_resource type="Resource" id="Resource_m5ttb"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Gallop_Jump"
+
+[sub_resource type="Resource" id="Resource_p8yc1"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Gallop_Jump"
+
+[sub_resource type="Resource" id="Resource_jj365"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Jump_toIdle"
+speed_scale = 1.6
+
+[sub_resource type="Resource" id="Resource_tbm05"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Idle_HitReact1"
+
+[sub_resource type="Resource" id="Resource_ccfgj"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Death"
+
+[sub_resource type="Resource" id="Resource_2eute"]
+script = ExtResource("1_g1kxu")
+anim_name = &"Eating"
+loop = true
+
+[resource]
+script = ExtResource("3_15jbc")
+libraries = Dictionary[StringName, AnimationLibrary]({
+&"": ExtResource("2_joolu")
+})
+skeleton_family = &"deer"
+clips = Dictionary[StringName, ExtResource("1_g1kxu")]({
+&"interact": SubResource("Resource_2eute"),
+&"jump.land": SubResource("Resource_jj365"),
+&"jump.loop": SubResource("Resource_p8yc1"),
+&"jump.start": SubResource("Resource_m5ttb"),
+&"locomotion.idle": SubResource("Resource_11vrd"),
+&"locomotion.run": SubResource("Resource_s38sw"),
+&"locomotion.sprint": SubResource("Resource_cr1wy"),
+&"locomotion.walk": SubResource("Resource_ia17k"),
+&"react.death": SubResource("Resource_ccfgj"),
+&"react.hit": SubResource("Resource_tbm05")
+})
+upper_body_filter = Array[StringName]([&"Neck1", &"Neck2", &"Neck3", &"Head"])

@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_i52s7"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="2_7i8ku"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_5xhd1"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_knife_blade.tres" id="4_vpuxe"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_kuqdl"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_6lhuu"]
+
+[sub_resource type="Resource" id="Resource_nhp7f"]
+script = ExtResource("3_5xhd1")
+display_name = "Copper knife blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
+outline_vary = 3
+outline = PackedInt32Array(14, 15, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 7, 5, 3)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_kuqdl")
+station = &"anvil"
+skill = ExtResource("6_6lhuu")
+inputs = Array[ExtResource("1_i52s7")]([ExtResource("2_7i8ku")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("4_vpuxe")
+xp = 9
+minigame = SubResource("Resource_nhp7f")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40047
+display_name = "Copper knife blade"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Copper in Knife blade): its numbers are yours to tune."

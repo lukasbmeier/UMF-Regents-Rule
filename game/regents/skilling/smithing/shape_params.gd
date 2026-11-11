@@ -30,6 +30,11 @@ class_name ShapeParams extends Resource
 ## THE TEMPLATE: the outline shows only while it is laid on the bar (no strikes then); what each lay costs.
 @export_range(0, 1) var hide_outline: int = 0
 @export_range(0, 300, 1, "suffix:‰") var lay_cost_pm: int = 0
+## THE PATTERN FADES (Luke, 2026-11-09, after playing: remembering a hidden outline made the bands too hard): lifted, the
+## outline fades over `pattern_fade_ms` to `pattern_ghost_pm` of full (thousandths) and stays that faint; 0 / 0 is gone at
+## once, as before. Only what is drawn: the round, its score and the server's replay are the same either way.
+@export_range(0, 10000, 50, "suffix:ms") var pattern_fade_ms: int = 0
+@export_range(0, 1000, 1, "suffix:‰") var pattern_ghost_pm: int = 0
 ## THE OUTLINE VARIES each round by up to this much (the same metal to beat off).
 @export_range(0, 8) var outline_vary: int = 0
 ## HEAT COLORS: the last `red_ms` of a heat the bar is red; a strike then cracks it, costing `crack_cost_pm`.

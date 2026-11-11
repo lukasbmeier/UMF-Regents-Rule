@@ -13,9 +13,17 @@ const SHAPE: StringName = &"shape"
 const BEAT: StringName = &"beat"
 ## Woodworking's carve (Luke, 2026-11-07): a vertical stave, wood off either side.
 const CARVE: StringName = &"carve"
+## Herbalism's pull the root (Luke's H3, 2026-11-07): hold to pull, mind the strain.
+const PULL: StringName = &"pull"
+## Skinning's cut line (Luke's H4, 2026-11-07): drag the knife along the line, off it tears the hide.
+const SKIN: StringName = &"skin"
+
+## The rounds played at a gathering node (a `NodeDef`): the others are a station's (a `RecipeDef`). A new gathering
+## kind goes here, and in the server's bake (`server/build/regents.rs`, the node check).
+const GATHERING: Array[StringName] = [CHOP, CRACK, PULL, SKIN]
 
 ## The challenge kinds the server deals them as (`genre::regents`).
-const CHALLENGE: Dictionary[StringName, int] = {CHOP: 100, CRACK: 101, SMELT: 102, SHAPE: 103, BEAT: 104, CARVE: 105}
+const CHALLENGE: Dictionary[StringName, int] = {CHOP: 100, CRACK: 101, SMELT: 102, SHAPE: 103, BEAT: 104, CARVE: 105, PULL: 106, SKIN: 107}
 
 
 static func kind_of(params: Resource) -> StringName:
@@ -31,7 +39,16 @@ static func kind_of(params: Resource) -> StringName:
 		return BEAT
 	if params is CarveParams:
 		return CARVE
+	if params is PullParams:
+		return PULL
+	if params is SkinParams:
+		return SKIN
 	return &""
+
+
+## Whether `kind` is played at a gathering node (its content a `NodeDef`), not at a station.
+static func gathers(kind: StringName) -> bool:
+	return kind in GATHERING
 
 
 static func kind_of_challenge(challenge_kind: int) -> StringName:
@@ -43,7 +60,7 @@ static func kind_of_challenge(challenge_kind: int) -> StringName:
 
 ## How many numbers one input is (time and side; time and x, y; time and code; time and column).
 static func arity(kind: StringName) -> int:
-	return 3 if kind == CRACK else 2
+	return 3 if kind == CRACK or kind == SKIN else 2
 
 
 ## How long a round of `params` lasts (the server's `Minigame::duration_ms`).
@@ -55,13 +72,17 @@ static func duration_of(params: Resource) -> int:
 	return int(params.get(&"duration_ms")) if params != null and kind_of(params) != &"" else 0
 
 
-## `params` as a tool `speed_pct` (100: as authored) makes it: a faster swing for the gathering rounds.
-## The server applies the same (`genre::regents`), from the round's payload.
+## `params` as a tool `speed_pct` (100: as authored) makes it: a faster swing for the gathering rounds, a quicker
+## quicker stroke for the trowel (dig, cut), a faster cut for the knife. The server applies the same (`genre::regents`), from the round's payload.
 static func with_speed(params: Resource, speed_pct: int) -> Resource:
-	if speed_pct == 100 or not (params is ChopParams or params is CrackParams):
+	if speed_pct == 100 or not gathers(kind_of(params)):
 		return params
 	var p: Resource = params.duplicate()
-	p.set(&"swing_ms", maxi(50, int(p.get(&"swing_ms")) * speed_pct / 100))
+	if p is SkinParams:   # a better knife cuts faster
+		(p as SkinParams).cut_speed = maxi(1, (p as SkinParams).cut_speed * 100 / maxi(1, speed_pct))
+		return p
+	var key: StringName = &"stroke_ms" if p is PullParams else &"swing_ms"
+	p.set(key, maxi(50, int(p.get(key)) * speed_pct / 100))
 	return p
 
 
@@ -69,7 +90,7 @@ static func with_speed(params: Resource, speed_pct: int) -> Resource:
 ## windows a few percent, capped; the server says how much in the round's payload, its fifth field). The server's
 ## `Minigame::score_eased` does the same, number for number: a branch staggers for less, the rock's notch is wider,
 ## the furnace's band or the beat's windows wider (the outer window never past a quarter beat), the anvil's bar hot
-## longer and its error scale larger. 0: as authored (the content is never changed: a copy).
+## longer and its error scale larger, a root's catches jump less, the knife cuts further off the line. 0: as authored (the content is never changed: a copy).
 static func eased(params: Resource, ease_pct: int) -> Resource:
 	var e: int = clampi(ease_pct, 0, 50)
 	if e == 0 or kind_of(params) == &"":
@@ -87,6 +108,12 @@ static func eased(params: Resource, ease_pct: int) -> Resource:
 		(p as ShapeParams).heat_ms = (p as ShapeParams).heat_ms * (100 + e) / 100   # hot longer: fewer reheats
 	elif p is CarveParams:
 		(p as CarveParams).error_scale = (p as CarveParams).error_scale * (100 + e) / 100
+	elif p is PullParams:
+		(p as PullParams).jump_lo = (p as PullParams).jump_lo * (100 - e) / 100
+		(p as PullParams).jump_hi = (p as PullParams).jump_hi * (100 - e) / 100
+		(p as PullParams).hold_pm = (p as PullParams).hold_pm * (100 - e) / 100
+	elif p is SkinParams:
+		(p as SkinParams).near = (p as SkinParams).near * (100 + e) / 100
 	elif p is BeatParams:
 		var b: BeatParams = p as BeatParams
 		var good: int = maxi(b.good_ms, mini(b.good_ms * (100 + e) / 100, b.beat_ms / 4))
@@ -110,6 +137,10 @@ static func play(seed_value: int, params: Resource, inputs: PackedInt32Array) ->
 			return BeatModel.play(seed_value, params as BeatParams, inputs)
 		CARVE:
 			return CarveModel.play(seed_value, params as CarveParams, inputs)
+		PULL:
+			return PullModel.play(seed_value, params as PullParams, inputs)
+		SKIN:
+			return SkinModel.play(seed_value, params as SkinParams, inputs)
 	return {}
 
 
@@ -128,6 +159,10 @@ static func make_ui(params: Resource) -> SkillMinigame:
 			return BeatMinigame.new()
 		CARVE:
 			return CarveMinigame.new()
+		PULL:
+			return PullMinigame.new()
+		SKIN:
+			return SkinMinigame.new()
 	return null
 
 

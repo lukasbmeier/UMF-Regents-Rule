@@ -2447,3 +2447,613 @@ AFK, the prompt offering no round, spun, strung into a yew bow of the stave's qu
 
 **Left**: pull the root (step 2); a trowel model and a pulling clip; a spinning wheel model; the station refusal says
 the station's key ("spinning_wheel"), not its name.
+
+## Step 51: herbalism, step 2: PULL THE ROOT, flax's round (2026-11-08)
+**Why**: `HERBALISM_HUNTING_PREP.md` §7 step 2, Luke's H3 (2026-11-07, `GAME.md`): "hold to pull, strain rises and eases
+when let go, the plant trembles before a jump, past the top it snaps; band 2 roots that branch, band 3 a wilting
+clock"; H2: the round shows the trowel loosening the soil before the pull. Flax (step 50) was AFK only.
+
+**Built** (a NEW kind, `pull` = challenge 106; no table, reducer or argument changed: an old client, which does not know
+106, ignores the round, as with 104 and 105):
+- `PullParams` / `PullModel` (`game/regents/skilling/herbalism/`), the Rust twin `server/src/genre/regents/pull.rs`
+  (`Minigame::Pull`, `CHALLENGE_PULL`, claimed in `CLAIMS`; the bake `server/build/regents.rs` takes kind "pull" on a
+  node and refuses one that cannot be played), a third copy in `make_skill_goldens.py` writing
+  `shared/golden/regents/pull.json` (16 cases; the older golden files byte for byte the same). The rules are written
+  out on `PullModel`, in ticks of 50 ms:
+  - the trowel LOOSENS the soil for `loosen_ms` (600; a faster trowel shorter, as an axe's swing: `with_speed`);
+  - HELD: the strain rises 40 a tick, the root comes up `pull_rate` + strain x `pull_gain` / 1000 (3 + up to 12: a
+    harder pull brings it up faster); LET GO: the strain eases 60 a tick;
+  - CATCHES: three a root, each in its own stretch of it, from the seed; pulling through one jumps the strain
+    200-400; the plant TREMBLES from `tremble_depth` (250 of the root's 1000) below it. Nobody sees where or how big;
+  - past 1000 it SNAPS: worth `snap_keep_pm` of what came up; up whole is worth 1000; (as first built, the round ended
+    there: since Luke's answer below it is a CLUMP, the next stem starting);
+  - `target_plants`: whole roots for a full score. Rank eases it (M3): the catches jump less.
+- `PullStage` (`pull_stage.tscn`, a scene a designer can open: the camera, the mound, the meadow, the trowel's two
+  poses `TrowelRest` / `TrowelDig`): the nature pack's flax plant in a mound of soil, a placeholder copper TROWEL
+  (`trowel.tscn`, no model in the packs) floating beside it and digging while the soil loosens. Pulled, the plant rises
+  out of the mound with its root; the stem STRETCHES and LEANS as the strain rises and creaks louder and higher (no
+  strain meter: the player reads the plant, H3); it SHIVERS while it trembles; a catch jolts it; a snap throws the top
+  off with a stub of root and fibers; whole, it comes out with all its root. Sounds (`make_skill_sounds.py`, ours):
+  dig, strain, catch, snap, up.
+- `PullMinigame`: hold Space or the left mouse button to pull, let go to ease; "Loosening the soil...", "Snapped!",
+  "Up whole!". Registered in `SkillMinigames` (kind, challenge 106, UI, replay, speed, ease); `NodeDef.validate`
+  takes a `PullParams`. The HUD's prompt at flax now offers "Hold E: play" (it gates on the node having a round).
+- FLAX (`content/node/flax.tres`): the round (first built 12 s, ONE plant; now a clump: below). The readout's players
+  (`MinigameReadout._pull`: read the strain off the plant give or take their aim, a press a moment late, let go at a
+  margin under the top; a tremble seen `react_ms` late, eased under the worst catch and pulled through; a slip misses
+  it), the integration hook's bot (`skill_bot_cli.gd --kind=pull`).
+
+**Tuning, first pass (mine; the numbers are Luke's after his play)**: a gathering round is paid for its whole length,
+so with ONE plant a round a quick clean pull would pay more per minute than M11's 1.25x. A first pass (the pull 10 +
+40 a tick) came up in about 3 s of 12: five times AFK. The pull was slowed (3 + 12) so a clean pull takes most of the
+round (the flawless player's ends at 10.7 s on average, so at most ~12 % over M11). The tremble was lengthened (120 ->
+250 of the root) after the first readout: at 120 a skilled player (200 ms to react) had pulled into the catch before
+seeing it. A CLUMP (8 plants, 4 for a full score, 15 s) was measured too and came out too easy at the bottom (careless
+69 %, beats AFK 98 %); it stays in the model as a number (`plants`) for Luke's choice. Asked of Luke through the session
+that started this one: one plant a round or a clump (no answer by the end of this step; flax follows the sheet).
+
+**The readout** (200 seeds; AFK pays the same at 50 %): flax flawless 100 / skilled 89 / average 68 / careless 44 %
+mean; beats AFK 100 / 86 / 50 / 14 %. Three ranks on (12 % easier catches): 100 / 93 / 79 / 49, beats AFK 100 / 91 /
+71 / 21. For comparison the tree is 100 / 100 / 99 / 95 and the copper rock 100 / 100 / 98 / 56 (the smelt 98 / 91 /
+77 / 57): flax is the hardest tier-1 gathering round, and the only one where a poor round falls short of AFK as M11
+asks. Luke's play decides (the windows, the tremble's length, the snap's share, one plant or a clump).
+
+**How to play it**: publish (done), restart. Walk west of the spawn to the flax with a trowel; hold E: the trowel
+loosens the soil, then hold Space (or the mouse) to pull and let go before the stem strains too far; when the plant
+shivers, ease right off, then pull through gently. The lab (F6): Flax. In the readout: Flax.
+
+**Tested**: Rust (`cargo test`, every suite green): the twin plays the 16 golden rounds exactly; rank eases
+the catches and a faster trowel loosens sooner (a catch that snaps a root as authored lets it up whole eased); flax is
+dealt as 106 and the genre claims it. Negatives: the top read as `>= 1000` fails the goldens on both sides ("held to
+exactly the top: 1000 holds", added when the first negative passed: no case landed on exactly 1000); the root's rise
+taken before the strain's fails the Rust golden. Unit (lints + regents) 3252/0: the goldens; the rules (the
+loosening, the rise and ease, a snap past 1000 and not at it, a catch trembling first then jumping, whole, a clump, a
+root still in the ground); the registry (106, the speed, the ease); 24 rounds in the lab; flax valid with its round, a
+node with none still valid, a station's round on a node refused; the stage driven by Space (it digs, rises and
+stretches, eases, snaps; the replay agrees); A PULL ROUND DEALT BY THE SERVER FINDS THE NODE (the skilling playtest
+found the client looked a node's round up only for chop and crack, so it looked for a recipe and dropped the round;
+now `SkillMinigames.GATHERING` / `gathers()` is the one list, used by the component, `NodeDef.validate`, `with_speed`
+and the bot; negative: the old lookup fails the check). The readout: every simulated round replays exactly.
+Integration 1315/13: kind 106 dealt at flax at the trowel's speed, the bot pulls it up whole and is paid flax and XP
+(the `work_result` row), a snapped round scores under half, tap E still works it AFK, no trowel no flax nor round,
+no flax no bowstring (the bag emptied first now: the rounds pay flax). The 13 are the referee-paced combat checks and
+the foundation's referee, hold and push races, none of them skilling. The first run lost the pull round (and the
+copper rock's) to "no such challenge": the hook's `play_round` waited its full time AFTER the bot's Godot started,
+which took up to 20 s on the loaded machine, past the server's grace; it now counts from the deal. Skilling playtest
+105/0 + 8/0: a real client at 150 ms, the prompt offering a round, the round in the middle panel on its stage, played
+by the frame (pulled up whole through its three catches), flax and herbalism XP paid, E stopping the run after it.
+Windowed shots (`build/pull_*.png`, ignored): the first had the nature pack's plant at 1.3x filling the panel (the
+model is 2 m tall); it is 0.3x now, the camera further back.
+
+**Left**: Luke plays it (the feel, the numbers); a trowel model and a pulling clip (needs
+`adventurer.tres`, his editor's); band 2's branching roots (hemp, nettle: §7 step 6) and band 3's wilting clock.
+
+### Then: A ROUND IS A CLUMP (Luke, 2026-11-08, the same day; `GAME.md`)
+Asked one plant a round or a clump, Luke: "A: a clump". Stems are pulled one after another until the time runs out; a
+snap loses the rest of that stem, never the round (as chop and crack count pieces). Everything above that describes
+one plant a round (the slowed pull, "the round ends there") was the first build, superseded here.
+- THE MODEL (all three copies): `PullParams.plants` is gone (no count: the round runs to its time). Each stem DRAWS
+  ITS OWN CATCHES from the seed's stream as it starts (the first at the start; `start` returns the first stem's, which
+  is what the goldens hold). A stem done, whole or snapped, the next starts on the next tick with its own loosening; the
+  button stays as it was (held on, it pulls again once the soil is loose). At the end a stem still in the ground is
+  worth `snap_keep_pm` of what came up. `over` is now only the round's end. The minigame counts "Whole n   Snapped n".
+- FLAX, FIRST TUNING AS A CLUMP (mine; his after his play): 12.5 s, three whole for a full score (`target_plants` 3),
+  the pull back to 10 + 40 a tick (a clean stem ~3 s with its loosening: the round no longer needs to be slow, since it
+  runs its full time whatever the pace), a snapped stem worth a QUARTER of what came up (`snap_keep_pm` 250: at half,
+  a careless player snapping stem after stem still scored 66 % and beat AFK 90 % of rounds). Catches, jumps (200-400)
+  and the tremble (250) unchanged. `PullParams`' defaults are flax's numbers.
+- Measured on the way (`build/pull_tune.gd`, ignored; flawless / skilled / average / careless, mean %): 10 + 40, keep
+  500, 12 s: 100 / 82 / 76 / 67; keep 250: 97 / 83 / 68 / 55 (the flawless player one stem short in some rounds);
+  keep 0: 96 / 78 / 58 / 42; 12.5 s, keep 250: 100 / 89 / 72 / 58 (chosen); 13 s: 100 / 90 / 76 / 61.
+- **The readout** (200 seeds): flax 100 / 89 / 72 / 58 % mean, beats AFK 100 / 99 / 92 / 62 %. Three ranks on (12 %
+  easier catches): 99 / 88 / 77 / 63, beats AFK 100 / 100 / 96 / 78. Easier at the bottom than the one-plant round
+  (careless 44 %), close to the copper rock (careless 56 %) and the smelt (57 %). His to change after he plays.
+- Tests: the goldens (17 cases; the one-plant ones are clumps now, plus "held through the clump: stem after stem
+  snaps, each after its loosening" and "a clump runs to the end"), the unit rules (a snap loses that stem, the next
+  loosens with nothing up; held on, stem after stem snaps; whole stems every 700 ms to the end, 17 in 12.5 s and the
+  18th worth a quarter of its 800), the stage (a snap, then the next stem loosens; the round ends at its time), the hook
+  (the bot pulls three whole: its puller scored 1000 on all 200 seeds offline; held from the start, every stem snaps,
+  under half), the skilling playtest (two whole or more by the frame). Negatives: a stem that does not draw its own
+  catches fails the goldens on both sides.
+
+### Then: THE TROWEL DOES THE WORK, and the stage redrawn (Luke's play, 2026-11-08, the same night)
+Luke played the one-plant round: "it was not very fun, I think in addition to changing it to clumps, we use the trowel
+more to outline and dig in the earth, cut roots that are snagging etc", and "the shaking was too much it looked like
+jittering and the root was strange looking and abnormally long. definite polish and redesign of the visual storytelling
+of the minigame is needed". Going to bed, he left the choice to me: "it can choose the best path forward, right now the
+other minigames are in a decent place so matching those in terms of difficulty and skill plus reward". EVERY CHOICE
+BELOW IS MINE, for him to change after he plays; only the clump is his (`GAME.md`). The clump work above (no plant
+count, each stem its own draws) carried over; its tuning (12.5 s, the automatic loosening) did not.
+- THE ROUND, TWO HANDS (`PullParams` / `PullModel`, the Rust twin, the Python copy; challenge 106 and its payload
+  unchanged, new input codes LEFT 3 / RIGHT 4):
+  - A / D (or the arrows) STROKE THE TROWEL on that side, a stroke taking `stroke_ms` (250; a better trowel faster, as
+    an axe's swing: `with_speed` now scales the stroke), no other stroke and NO PULLING while it runs (the strain
+    eases). Chop's keys, so the left hand already knows them.
+  - DIG: each stem starts PACKED on both sides (1000); a stroke digs its side `dig_pm` (500: two strokes a side).
+    Packed soil HOLDS THE ROOT: it comes up at (1000 - mean pack x `hold_pm` / 1000) of its pace (`hold_pm` 600:
+    packed all round, 40 %). The automatic loosening (`loosen_ms`) is gone: the player outlines the stem.
+  - CUT: each stem has `snags` side roots (2), each at a seeded depth, jump and SIDE. Once the root is coming up, the
+    next side root within `show_depth` (350 of the root) below what is up makes the soil CRACK on its side; a stroke on
+    that side cuts it (it never catches); a stroke on the other side only digs. Uncut, pulling through it jumps the
+    strain (200-400) as before. (First built, a side root shallower than `show_depth` showed before any pulling, so the
+    opening dig on that side cut it instead: it shows only once some of the root is up.)
+  - PULL as before: hold to pull, the strain rises 40 a tick and the root comes up faster at a higher strain (10 + 40
+    at full), let go it eases 60; past 1000 it snaps, worth `snap_keep_pm` (250) of what came up; whole is 1000. Stem
+    after stem until the time runs out (15 s), three whole for a full score.
+  - Rank (M3) eases the side roots' jumps AND the packed soil's hold (both 12 % at three ranks on): the jumps alone did
+    nothing to a player who cuts every side root.
+- THE STAGE, REDRAWN (`pull_stage.tscn` / `.gd`): the camera low and close on the mound; a CLUMP of three stems behind
+  the front one (it thins as stems are taken and grows back); the mound in two halves that SINK as each side is dug, a
+  dark furrow opening; the trowel (scaled to the plants by its markers) rests at the left and stabs into the side
+  pressed (`DigLeft` / `DigRight`, a designer drags them), throwing clods. NO SHAKING: a side root about to catch
+  CRACKS the soil on its side, heaves a few clods and pushes its pale tip out, and the stem leans a hair away; cut, the
+  tip flies off; pulled through, the soil bursts on that side and the stem dips. THE ROOT: short (0.08 m, about a
+  quarter of the stem) and tapering, with three rootlets (it was a 0.3 m cylinder, half the plant's height). Whole, the
+  stem is lifted clear and laid on a PILE beside the mound, root to the mound; snapped, the top falls away. The stem
+  still stretches a little (8 %) and leans with the strain, and creaks. Shots: `build/pull_1_digging.png`,
+  `pull_2_crack.png`, `pull_3_pile.png` (ignored; `build/pull_shot.tscn` retakes them).
+- THE MINIGAME (`PullMinigame`): A / D and the arrows stroke, Space or the left mouse button pulls; "Cut!", "Snapped!",
+  "Up whole!"; counts whole and snapped; the summary adds the cuts.
+- THE PLAYERS: the readout's (`MinigameReadout._pull`: dig both sides round first, a stroke a moment after the last, a
+  slip forgetting the rest of the digging; pull with the strain read give or take their aim; stroke a crack's side
+  `react_ms` after it starts, a slip the wrong side), the hook's bot (`skill_bot_cli.gd`: dig, cut every crack, pull
+  880/450; a full score on all 200 seeds offline), the skilling playtest's frame player (real A / D key events).
+- TUNING, FIRST PASS (mine; `build/pull_tune.gd`, 120 seeds; flawless / skilled / average / careless mean %):
+  - the round is a race against the clock (more stems), so a skilled player pulls ~70 % of a flawless one's stems
+    whatever the numbers; the tree and rock rounds answer this with a target under a flawless pace, and so does flax:
+    `target_plants` 3 where a flawless player pulls ~4;
+  - 3 side roots, one stroke digs a side, 15 s, target 3: 100 / 85 / 75 / 62; 2 side roots: 100 / 92 / 83 / 67; two
+    strokes a side, a 250 ms stroke, 15 s: 100 / 86 / 71 / 62 (CHOSEN: more trowel work, as Luke asked, at a pace
+    near the copper bar's 98 / 91 / 77 / 57); 16 s: 100 / 91 / 76 / 67; a stronger hold (700): skilled 74;
+  - the snap's quarter, the strain's rise and ease, the pull's rate and the jumps unchanged from the clump's tuning.
+- **The readout** (200 seeds): flax 100 / 86 / 74 / 63 % mean, beats AFK 100 / 100 / 96 / 78 % (pay inside M11's
+  0.75-1.25: the hot rules, untouched). Three ranks on: 100 / 94 / 81 / 68, beats AFK 100 / 100 / 99 / 92. For
+  comparison: the yew 100 / 98 / 88 / 61, the copper rock 100 / 100 / 98 / 56, the copper bar 98 / 91 / 77 / 57.
+- **How to play it**: publish (done), restart. At the flax with a trowel, hold E. Dig round the front stem: A twice,
+  D twice (the mound sinks on each side). Hold Space to pull; let go before the stem strains too far. When the soil
+  cracks on a side, press that side to cut the root there. Up whole, it goes on the pile and the next stem comes
+  forward. The lab (F6): Flax.
+- **Tested**: Rust (every suite green): the twin plays the 19 golden rounds exactly (dug round and cut; cut late;
+  never digs; never cuts; greedy; held from the start; only strokes; a stroke stopping the pull; the wrong side digs;
+  every code out of order; still in the ground; no side roots; exactly the top and one past; a quick trowel, eased;
+  flax as tuned, two ways); rank eases the jumps (a side root that snaps stems as authored never does eased) and a
+  faster trowel starts the pull sooner. Negatives: a stroke on either side cutting fails the goldens on both sides; a
+  stem not drawing its own side roots failed them too (the clump's step). Unit (lints + regents) 3252/0: the goldens
+  with each stem's sides; the rules (packed 4 a tick, dug 11; strokes dig 500, none while one runs, none past loose; a
+  stroke stops the pull; exactly 1000 holds, one past snaps worth a quarter, the next stem packed; a side root shows
+  near it on its side once the root comes up, the other side digs, its side cuts; uncut it jumps the strain; stems dug
+  anew, whole after whole); the registry (a stroke at half the time at 50 %, the jumps and the hold eased); the dealt
+  round (a 125 ms stroke at 50 %); the stage (A digs the left: the half sinks, the furrow opens; held, the stem rises
+  with its root; the crack and its tip on the right side only; a stroke there cuts, "Cut!", the tip flies; held on it
+  snaps and the next stem comes forward packed; the round ends at its time; the replay agrees). The readout first
+  caught a simulated stroke landing before the moment the model had run to (live and replay disagreed for the jittery
+  players): fixed in the sim.
+  Integration 1319/9: kind 106 dealt at flax at the trowel's speed; the bot digs round, cuts and pulls three whole
+  (a full score) and is paid flax and XP (the `work_result` row); held from the start every stem snaps (under half);
+  tap E still works it AFK; no trowel no flax nor round; no flax no bowstring. The 9 are the referee-paced combat checks
+  (pommel, thrust, the foe's loot, the camp, archery) and the foundation's hold, none of them skilling. Skilling
+  playtest 105/0 + 8/0 (the first run failed one smithing check, the Iron axe's assembly, and passed on the rerun):
+  a real client at 150 ms played the round by the frame with real A / D keys: 4 whole, 8 cut, 17 dug, a full score,
+  the replay agreeing; flax and herbalism XP paid. Published `regents-rule` (no wipe, no codegen). The trowel's
+  markers were first written transposed (a scene's `Transform3D` is by rows), so its blade pointed outward; the shots
+  caught it.
+
+## Step 52: Luke's play of every minigame: the pattern fades, a hold sets it down, no quench, the pay shown, pull the root's cutaway (2026-11-09)
+**Why**: Luke played every minigame (2026-11-09). His words: mining and woodcutting "feel good from tiers 1-3"; smelting
+"decent", but "the slag being the f key threw me off ... a slower start to read the directions would be nice"; "all
+minigames should have woodcutting like overview where it shows how many rounds and the current pay off"; smithing and
+the carve "much harder than the others"; "the smithing bands were much too hard as enter turns in the tool and stops the
+minigame"; "the herbalism game is not as fun". HIS SCORES (the play database's log, all 52 rounds that day): yew 63-100 %,
+coal 47-84 %, copper and iron rock 100 %, smelting 84-91 % (copper, iron), 58-76 % (steel, with slag), flax 7-100 %;
+the anvil 57 % (copper sword), 0 then 57 % (iron trowel), 61 % (steel trowel), 6 % and 0 (steel pickaxe), 6 % (steel
+axe); the yew bow 0 twice. Every 0 and 6 % was a part set down far off the outline by ONE Enter (6 % = the quench's
+bonus on nothing). The readout had the anvil easy because its simulated smiths see the outline the whole round.
+Asked, he chose (`GAME.md`, "Luke's play of every minigame"): the pattern fades by band (copper 3 s to a faint ghost
+that stays, iron 1.5 s to a fainter one, steel 3 s to nothing; the carve too); the quench out for now ("im confused on
+what the quench does ... maybe we get rid of quenching for now or redesign it"); pull the root "Cutaway, no chore".
+He did not pick how a round is finished: a HOLD is mine (his question showed one Enter ending the round was the trap).
+
+**Built**:
+- **The pattern fades** (`ShapeParams` / `CarveParams` `pattern_fade_ms`, `pattern_ghost_pm`; `MinigameLook.pattern_alpha`):
+  full while laid on; lifted, the outline fades to the ghost and stays. Presentation only: the round, its score and the
+  server's replay are unchanged (no Rust, no goldens). Set on every anvil recipe and pattern by metal, and the yew bow
+  and staff as copper (the carve's only wood, so its gentlest).
+- **Finishing is a HOLD** (`SkillMinigame.finish_key`, `finish_hold_begin/end`, `_finish_held`, `FINISH_HOLD_MS` 600):
+  Enter or the anvil's button held 0.6 s sets the part down (the carve's piece too); a bar fills (under the anvil's
+  buttons; the carve's at the foot); a tap says "Hold Enter to set it down" and does nothing else.
+- **No quench**: the quench's four numbers off the three steel heads (the model keeps it, 0 = off; red heat stays).
+- **The trowel blades' bands**: the material table had made the iron and steel trowel blades from the copper pattern,
+  so they had copper's rules; now iron's (more metal, a lighter strike, each look costs) and steel's (+ red heat).
+- **The pay shown on every round** (`SkillMinigame.pay_afk` / `pay_item` / `pay_words`, set by the HUD from
+  `SkillingComponent.afk_items_in` and the two hot rules): "This round: about 2.1 Copper ore" under the time bar, top
+  right, from the score so far as the server pays it; the run's tally under it ("This run: 2 rounds: 5 Copper ore",
+  moved from the left). Gathering and smelting; the anvil and the carve make one graded thing and show none.
+- **Smelting's slower start**: the count-in 4 -> 8 beats on all three bars; through it the directions big over the
+  stage, each note drawn as it looks with its key (the slag's square: "F or right click skims it").
+- **PULL THE ROOT, CUTAWAY, NO CHORE** (a rule in all three copies: `PullModel`, `genre::regents::pull`, the goldens'
+  Python; `PullParams.loose_pm`, 0 = as before): each side of each stem starts LOOSE with a chance, from the soil's OWN
+  stream (`seed ^ LOOSE_SALT`, so the side roots never change); flax: loose half the time, ONE stroke digs a packed
+  side (`dig_pm` 1000), FOUR whole stems for a full score (three made it too easy: the readout's careless player 89 %).
+  THE CUTAWAY (`PullMinigame._draw_cutaway`): a slice of the soil left of the mound: each side packed (dark, "A: dig")
+  or loose; the root rising as pulled; every side root still on it climbing to the surface (where an uncut one catches);
+  the gold band where the trowel reaches one ("A: cut"); and a STRAIN BAR beside it with the next catch's jump marked
+  (the stem still stretches, leans and creaks). The 3D stage draws a loose side already dug.
+- Readout: flax 100 / 94 / 88 / 69 % (the yew 100 / 98 / 88 / 61, the copper rock 100 / 100 / 98 / 56).
+
+**How to play it**: publish (done), restart. The anvil: lay the pattern (Space), lift it, watch it fade; HOLD Enter (or
+the button) to set the part down. Smelting: the count-in shows each note and its key. Gathering: the pay so far and the
+run, top right. Flax: the slice on the left says which side is packed (A or D digs it), where a side root can be cut
+(gold), and the strain.
+
+**Tested**: Rust (every suite, the wasm check) green: the pull twin plays the 23 goldens exactly, the 19 old ones
+unchanged (the Python's loose stream draws nothing at `loose_pm` 0) and 4 new (only the packed sides dug; never digs;
+every side loose; a stroke into loose soil scrapes); the smelt's length pinned at 18.4 s. Unit (lints + regents)
+3253/0: every anvil band's rules by metal, the trowel blades included (steel: red heat, no quench), and each band's fade
+(3000 / 250, 1500 / 120, 3000 / 0); the iron anvil's outline fading 1.00 -> mid -> 0.12 once lifted; the carve's
+Enter: a tap kept, a part-way hold not yet, a full hold sets it down (negative: the old one-press test failed against
+the hold, as it should); flax's 80 sides of 40 seeds loose and packed, the side roots the same as with none, a loose
+left side drawn dug and the packed right not. Readout: flax 100 / 94 / 88 / 69. Integration 1337/20: none skilling (the
+bot dug only the packed sides, cut, pulled four whole, a full score, paid); the 20: the 13 referee-timed combat checks
+known red (pommel, thrust, loot, camp, rallying cut, archery: their fix `4ede0bfa` is unmerged) and 7 foundation
+checks (chat, the hold, interact, push) this change does not touch, run while shot scenes loaded the machine. Skilling
+playtest 102/0 + 8/0: a real client held Enter to set the anvil's part down, pulled four whole at a full score (8 dug,
+10 cut), the replay agreeing. Shots: `build/cut_*.png`, `build/look_*.png`. Published `regents-rule` (no wipe, no
+codegen).
+
+**Left**: Luke plays it all again (the fades, the hold, the pay line, the cutaway, four stems); the quench redesigned or
+dropped (his call: "redesign it so it makes more sense as a skill thing and described better in instructions"); the
+readout's smiths still see the outline all round (the anvil's M4 tuning needs a sim that forgets it); a new cell of the
+material table copies its pattern's round, not its metal's band (the trowels were fixed by hand).
+
+## Step 53: hunting, step 3: THE DEER (2026-11-09)
+**Why**: Luke, 2026-11-09, after playing step 52: "lets move on to next steps (hunting I believe)".
+`HERBALISM_HUNTING_PREP.md` §7 step 3, his H5 (2026-11-07): the deer, tier 1, flees, never fights. (Pull the root
+is parked, his: "I cant put my finger on it so lets leave it for now".)
+
+**Built** (no table, reducer or argument changed: an old client draws nothing new and plays on):
+- THE MODEL: Quaternius's CC0 deer (Ultimate Animated Animals, `game/regents/art/animals/Deer.gltf`, its license
+  beside it), 4.4 m long as made, drawn at 0.38. ITS OWN CLIPS: `game/regents/anim/build_animal_sets.gd` (Fowl Play's
+  wolf generator's way, the same pack) writes `deer_clips.res` and `deer_animation.tres`: standing it GRAZES (Eating),
+  walks, gallops (run and sprint), Gallop_Jump, the hit react, Death; skeleton family `deer`, its neck and head the
+  upper-body bones. No foundation change: the tree builder drives a non-humanoid as Fowl Play's birds.
+- CONTENT: `content/foe/deer.tres` (40004: 60 health, a beast, poise that never breaks so a hit never staggers it, no
+  loot yet), `content/character/deer.tres` (40009, kind 106, brain `regents/deer`, in `genre.tres`),
+  `content/movement/deer.tres` (40003: walks 1.4, gallops 8.6 m/s, a little faster than a player's 8 sprint),
+  `content/status/startled.tres` (40010, status 109), the hot rule `regents.startle_ms` (2500).
+- A FOE THAT NEVER FIGHTS (`FoeDef.fights`, off: no kit needed, its character's brain runs it; new flee numbers
+  `startle_m` 5, `flee_m` 25, `calm_ms` 6000, `graze_m` 6; it sees within `notice_m` 16, never past `leash_m` 45).
+  Baked with its brain; the server's `FoeSeed` has `fights` and `brain`; `spawn_foe` writes the seed's brain;
+  `hurt_now` STARTLES a creature that never fights on any hit (not once it has fallen).
+- THE BRAIN (`sidecar/npc/brains/regents/deer.gd`): graze (a few steps at a walk to a spot near home, then stands
+  4-10 s), flee (a player seen within 16 m, heard within 5 m, or the nearest within 60 m once Startled: 25 m straight
+  away at a gallop, inside its leash; on while anyone is near), home (calm 6 s with nobody near: back at a walk),
+  slain. A route is planned once per threat, not each think.
+- PLACED: one in the glade (`frontier.tscn` deer_1 at (-30, 5), west past the flax; the continent copies the glade's
+  camp, so one is near the continent's start too) and 61 more in PAIRS over the continent's open meadows from THEIR
+  OWN random stream (`build_continent.gd` `_deer_pair`, `DEER_SHARE` 0.1): all 719 points before are where they were
+  (checked against the last bake); 782 now. The cell files' churn is only Godot's fresh node ids, as every rebuild.
+- Slain, it pays weapon mastery XP and drops NOTHING: its carcass is skinning's (step 4, H1).
+
+**How to play it**: publish (done), restart. Walk west past the flax (glade or the continent's start), or roam the
+continent's meadows: deer graze in pairs. Close in and it bolts; a bow is the way (or corner it). Hit it from out of
+its sight and it bolts too.
+
+**Claude's defaults, Luke's to change**: every number above; standing it always grazes (head down) even just after
+fleeing; 2 a herd; no loot until skinning.
+
+**Tested**: Rust (every suite, the wasm check) green, with `the_deer_never_fights_and_has_its_own_brain` (no kit, its
+brain, a foe kind; every other foe fights with a kit and the foe brain); the finisher test now covers only fighters.
+Unit (lints + regents) 3261/0: the deer's content (never fights, no kit, its brain, the genre's, a beast, its own
+clips: it gallops, faster than a sprint, never staggered; a fighter with no kit still refused) and ITS BRAIN on a
+made-up world: nobody near it grazes at a walk within 6 m; a player seen 12 m off sends it 25 m straight away at a
+gallop, the route planned ONCE over six thinks; calm 6 s it walks home; heard 4 m off unseen it bolts; an archer 40 m
+off unseen leaves it grazing until it is Startled, then it runs from them; chased at its leash's edge it runs no
+further; slain it lies still. The calm-and-go-home test caught a real bug first (its flight's goal was never let go,
+so it never walked home). Integration (re-run) 1324/23: the deer's every check passes (kind 106, 60 health, its brain;
+not startled unhurt; a chop Startles it, from the server's log as the 2.5 s status outlasts the CLI's calls; worn
+down, the killing chop leaves it Slain, never Startled after; it fell; its loot empty, no kill row; XP paid); the 23
+are the referee-timed combat checks known red (their fix `4ede0bfa` is unmerged) and foundation checks (chat, holds,
+pushes) this does not touch, on a run that took ~70 min. DEER PLAYTEST (new, `game/regents/tests/deer_playtest.sh`, a
+REAL REFEREE) 13/0: the deer driven by its brain; nobody near, it stays within 4.4 m of home (the negative); a
+standing bot (the player's kind) 9 m off: it is off at a gallop (at the least 3 m/s from the bot's coming to the next
+look; the CLI's looks are seconds apart), 21-26 m from home, 30 m from the bot; the bot gone, it walks back near
+home and never gallops there. NEGATIVE: a brain that walks while fleeing fails it (1.36 m/s). A shot
+(`build/deer_look.png`): shoulder high to a person, grazing head down, galloping. Published `regents-rule` (no wipe,
+no codegen): deer_1 and the continent's pairs are standing there.
+
+## Step 54: hunting, step 4 (first half): SKINNING, AFK; the knife; tanning (2026-11-09)
+**Why**: Luke, 2026-11-09: "Start skinning". `HERBALISM_HUNTING_PREP.md` §7 step 4, his H1 (a Skinning skill, a
+carcass you skin), H6 (tanning at an AFK rack), H7 (Deer hide, Soft leather). Asked first (`GAME.md`): the tool, "A
+smithed knife"; who skins, "Killer first, then anyone". Like herbalism, AFK first: the drag-the-knife round (H4) is the
+next step.
+
+**Built** (one table added, private: `carcass`; published with `--codegen`):
+- SKINNING (`content/skill/skinning.tres`, 40011; its pose the reach until a skinning clip is in).
+- THE KNIFE: two patterns of the material table, `knife_blade` (40014: the anvil, one bar, a smithing round, a long back
+  and a curved edge) and `knife` (40015: the workbench, the blade the core and a grip; tool tag `knife`); "Make the
+  table" made copper, iron and steel cells (items 40058-40063, recipes 40047-40052); the iron and steel blades given
+  their metal's anvil band by hand (the table copies the pattern's copper round). The COPPER KNIFE (40059) joins the
+  STARTER KIT (new characters only).
+- THE CARCASS: `FoeDef.carcass` (a NodeDef: what a kill LEAVES); the deer's is `content/node/deer_carcass.tres` (40008:
+  Skinning rank 1, a knife of tier 1, ONE Deer hide (40056) and it is worked out, 5 s AFK, 15 XP, no round yet). Its
+  look is the deer held at its Death clip's end (`art/animals/deer_carcass.tscn`, `posed_clip.gd`); skinned, it sinks
+  away (the rubble look, dark red). Server (`game/regents.rs`): `fell` leaves it where the deer fell (`leave_carcass`:
+  a gather node, point id `carcass_<foe>`) and takes the body away at once; the `carcass` row says whose it is (the top
+  damager among players, from `damage_share`, else the killer; nobody's for an admin's felling) and when it fell;
+  `gather` refuses another player for `regents.carcass_own_s` (60 s; `genre::regents::carcass_owned_ms`); `deplete`
+  marks it skinned and `tick_carcasses` takes it away 2 s later, or once it has lain `regents.carcass_rot_s` (180 s).
+  The prompt says "E: skin the deer carcass (AFK)" (the knife's verb).
+- TANNING: the TANNING RACK (`content/station/tanning_rack.tres`, 40006; an AFK station trained by Crafting, a
+  PLACEHOLDER BLOCK until a model is found), placed by the spinning wheel in the glade (and so in the continent's camp:
+  rebuilt, no other point moved); SOFT LEATHER (40057) from one deer hide (recipe 40046).
+- The workbench's list heads the knives "Knives" (`SkillingComponent.plural`), not "Knifes".
+- `admin_slay(foe, killer)` (a new ADMIN reducer): a foe slain as `killer`'s kill (any entity, 0 nobody) through the
+  genre's own fall (loot, carcass); an admin's `apply_damage` never reached it. For the suites, and for an admin.
+
+**How to play it**: publish (done), restart. A NEW character has a copper knife; an old one smiths a knife blade (a
+copper bar at the anvil) and assembles a copper knife (the blade and a grip at the workbench). Kill a deer (west past
+the flax): it lies where it fell; tap or hold E at it to skin it (5 s); the hide to the tanning rack (by the spinning
+wheel) for soft leather.
+
+**Tested**: Rust (every suite, wasm) green: the chain lists (eight nodes with the carcass, eleven skills, six stations),
+the carcass (a knife, one hide, no rare, the deer's), the copper knife in the starter kit, `carcass_owned_ms` (the
+owner at once, another the rest of the minute, then anyone; nobody's is anyone's), tanning. Unit (lints + regents)
+3287/0 then 3286/1 (a tools check timing a script while an integration suite ran: TO RECHECK): the counts (eighteen at
+the anvil, twenty-nine at the workbench, one at the rack; fifteen patterns, 45 cells, the copper knife 40059; four
+tiers out of date with iron moved; 27 rounds in the lab), the carcass node (knife, no round, one hide, the deer's,
+its footprint), the workbench's "Knives". SKILLING PLAYTEST (a real client) 113/0 + 8/0 with a new skinning leg: the
+glade's deer slain as the client's kill (`admin_slay`), its carcass in the client's world, the prompt "E: skin the
+deer carcass (AFK)" with no round, tap E, one deer hide and Skinning XP, the carcass taken away, the hide tanned at
+the rack into soft leather. INTEGRATION: the carcass where the deer fell, its body gone at once, yours first (the
+log); skinning begun; ANOTHER'S KILL (a bot's, by `admin_slay`) refused you, then (its time made 0) anyone's; an
+admin's slaying needs a killer that is, and not twice; unskinned it rots (its node, entity and row); the rack refuses
+with no hide, tans with one. (The CLI's player is offline between calls, so AFK work pays nothing there: the payouts
+are the playtest's.) RESULT (a clean run, 2026-11-09): 1363/31, NONE of the deer, skinning or tanning checks; the 31 are
+the referee-timed combat checks (fix `4ede0bfa` unmerged) and the steps that follow them (the player slain, the
+string at the skeleton, archery's kill and arrows) and foundation timing checks (chat, holds, the ball, a push). A shot (`build/carcass_look.png`): it lies on its side. Published `regents-rule`
+with `--codegen` (the `carcass` table and `admin_slay`).
+
+**Not yet**: the drag-the-knife round (H4, next); the leather wrap (its traits are Luke's to design with him, H8); a
+knife model in the hand; a tanning rack model; a skinning clip.
+
+
+## Step 55: the deer smooth shaded; each node says its own "worked out"; SKINNING'S ROUND, THE CUT LINE; a deer holds several hides (2026-11-10)
+**Why**: Luke, 2026-11-10, after playing the deer and skinning: "The deer seems fine and is working. I think id prefer it
+to be smooth shading instead of low poly"; "the skinning has mining text in it" (a skinned carcass said "The rock is
+worked out"), "i think herb has tree text" (picked flax said "Timber!"); then "we can get started on skinning minigame".
+Asked what a better cut should get when a carcass held one hide (today's pay could not show skill on it): "Skinning a
+whole deer would get you multiple hides so we can have it be like a node depletion and good rounds reward more up to a
+cap of course" (`GAME.md`). Asked about tanning's and spinning's rounds after it: "Neither yet, wolf next".
+
+**Built**:
+- **THE DEER, SMOOTH SHADED**: an import script on `Deer.gltf` (`art/animals/smooth_shading_import.gd`, its `.import`'s
+  `import_script/path`) gives every corner at a point the average normal of the faces round it (SurfaceTool's normals
+  by point), tangents remade; the shape, colors, skin and clips untouched; edges between surfaces stay crisp. The
+  carcass is the same model, so it is smooth too. Another of the pack's animals takes the same script in its `.import`.
+- **EACH NODE SAYS ITS OWN** (`NodeDef.depleted_notice`, `depleted_prompt`, presentation only, no bake): trees "Timber!"
+  / "felled, growing back"; rocks "The rock is worked out" / "worked out, coming back"; flax "The flax is picked bare" /
+  "picked bare, growing back"; the carcass "The carcass is skinned" / "skinned". The HUD guessed tree or rock before.
+- **THE CUT LINE** (a NEW kind, `skin` = challenge 107; inputs are (time, x, y) triples like the rock's; an old client,
+  which does not know 107, ignores the round): `SkinParams` / `SkinModel` (`game/regents/skilling/skinning/`), the Rust
+  twin `server/src/genre/regents/skin.rs` (`Minigame::Skin`, claimed; the bake takes kind "skin" on a node), a third
+  copy in `make_skill_goldens.py` writing `shared/golden/regents/skin.json` (15 cases; the older golden files byte for
+  byte the same). The rules, written out on `SkinModel`, in ticks of 50 ms, whole numbers:
+  - the hide is 1000 x 1000; each LINE is drawn from the seed as it starts: left to right or back, `points` points
+    (5) from 100 to 900 across, each up or down by up to `wobble` (120);
+  - the knife HELD in the hide at K: on the line (within `near`, 45, of the tip's stretch or the next) and within
+    `reach` (120) of the cut's end, it CUTS: the cut runs to K's place along the line, no faster than `cut_speed` (30 a
+    tick; a better knife faster, as an axe's swing); anywhere else it TEARS (each tear costs that line `tear_pm`, 35 of
+    its 1000). Lifted, nothing happens: let go to stop safely, press again at the cut's end;
+  - A BEND: a knife already on the next stretch, past the bend, runs the cut to the bend (the readout's flawless hand
+    stuck at sharp bends without it: its projection on the old stretch was behind the tip);
+  - a line cut through: worth 1000 less its tears, the knife lifts, the next line is drawn; at the round's end a line
+    part cut is worth half (`part_keep_pm`) of what was cut; the score is the lines' worth over `target_lines` (4).
+  - Rank (M3) widens `near`.
+- **THE STAGE** (`skin_stage.tscn`, a scene a designer can open): the deer's carcass seen from above on the grass; the
+  cuts run between two markers on its flank (`HideLeft`, `HideRight`: drag them to move where the lines lie); the KNIFE
+  (`knife.tscn`, a placeholder: no knife model in the packs) floats with its point at the mouse, dipping in while held.
+  Sounds (`make_skill_sounds.py`, ours): slice, tear, done. `SkinMinigame` draws the line over it: what is left as pale
+  dashes over a faint band as wide as the knife may stray, the cut as an open dark seam, a gold "Start here" ring while
+  the knife is out, a red rip for each tear, the lines done before as seams. "Clean cut!", "Cut through", "Torn!". It
+  sends the knife's place at most once a tick, only when it moved (a round stays inside the server's input limit).
+- **A DEER HOLDS SEVERAL HIDES** (Luke's call; the numbers are mine): `NodeDef.max_items` (a CAP: the most a node gives
+  before it is worked out) and `NodeDef.whole_round` (a played round works the WHOLE node). The deer's carcass: a hide
+  every 5 s AFK, each the last with 35 %, never more than 4: about 2.35 a deer. A round skins the whole carcass: AFK's
+  average for it (`expected_items`, the server's `expected_items_milli`) x the round's factor (M11: 0.75 at a score of 0
+  to 1.25 at full), a part hide by a roll, never past the cap less what was taken AFK first: about 1.8 hides torn, 2.35
+  at half, 2.9 clean; then it is worked out. The server counts a capped node's take in a new PRIVATE table
+  `node_taken` (published with `--codegen`; no wipe); worked out or gone, its row goes. The HUD's "This round: about N
+  Deer hide" says the whole carcass's. A whole-round node without a cap or a round is refused (the bake, `validate`).
+- The readout's players (`MinigameReadout._skin`: a hand pressing each line's ring `react_ms` after it shows, aiming
+  at the cut's pace past the tip, its hand drifting across the line by `aim_pm`, pulling back after tearing a moment;
+  a slip jerks it off), the integration bot (`skill_bot_cli.gd --kind=skin`, `--wander=1` tears every look),
+  `SkinModel.ahead` (where a hand keeping the pace aims) for all of them.
+
+**Tuning, first pass (mine; the readout, 200 seeds; flawless / skilled / average / careless, mean)**: near 40, tears 60,
+3 lines: 100 / 100 / 81 / 15 (careless crushed); near 45, tears 35, 4 lines (CHOSEN): 100 / 100 / 88 / 40, beats AFK
+100 / 100 / 99 / 24. The readout's hands trace at the knife's full pace (~7 lines a round); a person will be slower, so
+four lines for a full score leaves room. For comparison flax 100 / 94 / 88 / 69, the copper rock 100 / 100 / 98 / 56.
+Luke's play decides.
+
+**How to play it**: publish (done), restart (and the editor, for the regenerated bindings). Kill a deer (west past the
+flax, or the continent's meadows); at its carcass, HOLD E: press the left mouse button on the gold ring, drag the knife
+along the dashed line at its pace; let go when it lifts at the line's end and press on the next ring. TAP E instead to
+skin it AFK. The lab (F6): Deer. In the readout: Deer.
+
+
+**Tested**: Rust (every suite green; the wasm build by the publish): the twin plays the 15 golden rounds exactly
+(traced at pace; a little behind; a wandering hand; one that lifts when it tears; run ahead of the cut; just within
+reach; resting on the start; pressed mid-hide and held; nothing; every input out of order and range; still cutting at
+the end; a quick knife eased; a straight line; a bendy high-bit seed; tears past a line's worth); kind 107 claimed and
+dealt, a quicker knife helping only a hand faster than the knife, rank's wider line, pairs refused; the whole-carcass
+pay (2.347 AFK, 1-2 hides at 0, 2-3 at full, the cap less what was taken, a 2x hot rule never past the cap); the chain
+(the carcass's round, 350, cap 4, every other node uncapped). NEGATIVES: the twin without the bend rule fails the
+goldens (Rust), and so does the GDScript model (4 of 15). Unit (lints + regents) 3294/0: the goldens; the rules on a
+straight line (held still nothing; 37 a tick at pace; 44 off cuts, 60 off tears; 200 ahead tears; lifted nothing; cut
+through worth 1000 less 35 a tear, the knife lifted; part cut half); the registry (107, triples, a quicker knife, the
+wider line); the carcass node (a whole-round node with no cap or no round refused); the stage driven by the mouse
+(hide and panel agree both ways, pressed on the start, it cuts, a rip off the line, a line through lifts the knife
+until let go, the replay agrees); the readout (skilled >= 90 %, careless under it, every round replayed exactly); the
+deer smooth shaded (every corner at a point facing one way). SKILLING PLAYTEST 117/0 + 8/0: a real client at 150 ms
+held E at a deer's carcass and DRAGGED THE CUT LINE WITH MOUSE EVENTS by the frame (7 lines clean, a full score, the
+replay agreeing), paid the whole carcass in hides and XP, the carcass taken away; a second deer tapped AFK until worked
+out (1-4 hides); a hide tanned. INTEGRATION: three runs on a heavily loaded machine (1330/79, 1393/47, 1398/43). In the THIRD the server dealt and paid both skinning rounds: a clean cut (the bot's full score) 3 hides, a torn one (score 0) 2 hides, each carcass worked out and taken away, the tanning negative green. Two checks were red, both the round's `work_result` row read after slower checks, by which time the row had been pruned (an event row); in both legs that check now runs first after the round, NOT re-run. Fixed on the way: the hook's skinning bot is the goldens' Python copy (`game/regents/tests/skin_bot.py`, 2 s) because a Godot bot took over two minutes to start under load and the server had let the 12 s round (+20 s grace) go; no slow call between deal and submit; the hides emptied before the tanning negative. The rest red are the known referee-timed combat checks (their fix `4ede0bfa` unmerged) and foundation timing checks (chat, presses, pushes).
+Shots: `build/skin_1_start.png`, `build/skin_2_cutting.png`, `build/deer_smooth.png` (ignored; `build/skin_shot.tscn`
+and `build/deer_shot.tscn` retake them). Published `regents-rule` with `--codegen` (the `node_taken` table).
+
+**Left**: Luke plays it (the feel, the numbers, the stage's framing); a knife model; the minimap draws flax and
+carcasses as trees; the wolf next (Luke).
+
+## Step 56: THE WOLF — pack coordination, bite / hamstring slow / lunge knockback, wolf carcass, wolf pelt, wolf fang, supple leather (2026-11-11, Gemini 4 Argon (High))
+**Why**: Luke, 2026-11-10 (`HERBALISM_HUNTING_PREP.md` §7 step 5): "Start on the wolf and match the deer with some combat
+features." Asked on scope, combat moves, and pack behavior, he chose:
+1. **Scope**: the wolf creature + combat + wolf carcass + `Wolf pelt` + rare `Wolf fang` + tanning into `Supple leather`
+   (sinew and the wolf-fang charm parked for later).
+2. **Combat moves**: 3-step foe string — `Wolf bite` (`40027`, basic melee), `Hamstring bite` (`40028`, applies `Slowed`
+   for 3 s on an unblocked hit), and `Wolf lunge` (`40029`, unblockable finisher that glints red, lunges forward at the
+   end of wind-up, and knocks the target back at 10 m/s on an unblocked hit).
+3. **Packs**: wolves spawn in packs of 2–3 (a pack of 2 in the frontier glade, packs of 2–3 along the continent's forest
+   edges) and call nearby packmates within `pack_m` (`15.0` m) when alerted or hit, sharing the referee's attack tokens
+   while others circle.
+
+**Built**:
+- **THE WOLF RIG AND LOOK** (`art/animals/Wolf.gltf` reimported with `smooth_shading_import.gd`; `anim/build_animal_sets.gd`
+  builds `anim/wolf_clips.res` and `anim/wolf_animation.tres`, with `WOLF_UPPER` for upper-body bite/lunge blending;
+  `content/character/wolf.tres` id `40010`, kind `107`, registered in `genre.tres`; `content/movement/wolf.tres` id
+  `40004` with `walk_speed = 1.6`, `run_speed = 5.6`, `sprint_speed = 5.6` (a player runs 5 and sprints 8),
+  `dash_impulse = 14.0`, `dash_ticks = 12`, `dash_cooldown_ticks = 30`).
+- **KIT HIT EFFECTS AND THE WOLF'S 3-STEP STRING**:
+  - `KitHit` (`game/regents/content/kit_hit.gd`, `hits: Array[KitHit]` on `KitDef`, `KitHitSeed` / `KitSeed::hit_of` in
+    `server/src/genre/regents/mod.rs` and `server/build/regents.rs`): lets any kit ability attach an on-hit status effect
+    (`status`, `status_ms`) and/or knockback (`push_mps`). In `server/src/game/regents.rs` `deal`, an unblocked hit with
+    a `KitHit` applies `add_effect_internal` and `push_entity` along the attacker-to-target horizontal direction.
+  - `foe_wolf_bite.tres` (`40027`, damage 14, wind-up 550 ms, reach 2.0 m), `foe_wolf_hamstring.tres` (`40028`, damage 16,
+    wind-up 620 ms, reach 2.0 m, slows for 3000 ms via status 108 `Slowed`), `foe_wolf_lunge.tres` (`40029`, damage 28,
+    wind-up 820 ms, reach 3.0 m, `lunges = true` so `NpcBrainComponent` fires a forward dash burst as wind-up ends, in
+    `unblockable` so it glints red, and `push_mps = 10.0`). Each lands at the wolf's `damage_pct` (55 %).
+  - `content/kit/wolf.tres` (`40008`), `content/foe/wolf.tres` (`40005`, `"beast"` family, health 110, `damage_pct` 55,
+    poise 70, notice 10 m, leash 25 m, reach 2.0 m, rest 1400 ms +/- 400, `lose_sight_ms` 3500, `pack_m = 15.0`, leaves
+    `wolf_carcass`).
+- **PACK COORDINATION** (`FoeDef.pack_m`, `sidecar/npc/brains/regents/foe.gd` `packs` / `_hear_pack`, and `hurt_now` in
+  `server/src/game/regents.rs`):
+  - When a wolf notices a target or is hit from afar (`hurt_now` sets `STATUS_STARTLED` on an idle fighting foe too;
+    `regents_hud.gd` checks `show_on_nameplate` so `Startled` never draws as a status bar), it alerts packmates within
+    `pack_m` (`15.0` m) by setting `_heard_target` on their brain memory; packmates engage and share the referee's
+    attack tokens (`regents.attack_tokens` / `regents.token_gap_ms`) while the others circle at `circle_m`.
+- **WOLF CARCASS, SKINNING STAGE, PELT, FANG, AND SUPPLE LEATHER**:
+  - `art/animals/wolf_carcass.tscn` (resting on its side with smooth-shaded `Wolf.gltf`), `skin_stage.gd` `set_carcass`
+    and `skin_minigame.gd` `node_of`: the 3D skinning stage swaps its carcass model to match the carcass being skinned
+    (and in the F6 skilling lab, where both `"Deer"` and `"Wolf"` are selectable).
+  - `content/node/wolf_carcass.tres` (`40009`, Skinning rank 2, knife tier 1, `afk_ms_per_item = 6000`, `deplete_permille = 350`,
+    `max_items = 4`, `whole_round = true`, `xp = 25`, yields `Wolf pelt` `40064` and 0.8 % rare `Wolf fang` `40065`, cut-line
+    minigame with `points = 6, near = 40, wobble = 140, tear_pm = 40, target_lines = 4`; the deer's is 5, 45, 120, 35, 4).
+  - `content/recipe/supple_leather.tres` (`40053`): tans 1 `Wolf pelt` into 1 `Supple leather` (`40066`) at the
+    `tanning_rack` (Crafting rank 2, 5000 ms AFK, 20 XP).
+- **WORLD PLACEMENT**:
+  - Frontier glade (`levels/frontier.tscn` + `shared/world/frontier.json`, 54 points): a pack of 2 wolves (`wolf_1` at
+    `(-32, 0, -14)`, `wolf_2` at `(-35, 0, -11)`) northwest of the camp.
+  - Continent (`levels/continent/build_continent.gd` + `continent.tscn` + `continent_cells/` + `shared/world/continent.json`,
+    813 points across 487 cells): `_wolf_rng` (`seed = 0x701F`), `WOLF_SHARE = 0.12`, `WOLF_PACK_M = 4.0` places 28
+    wolves in packs of 2–3 along the forest edge plus the 2 camp glade wolves.
+
+**How to play it**: baked and published to `regents-rule` (no table changes). Walk northwest of the camp in the frontier
+glade (around `(-32, 0, -14)`) or along the forest edges on the continent: pull or shoot one wolf and its packmate joins
+in; watch for the second bite's slow and the red-glinting third-step lunge. Slay one to leave a **Wolf carcass** (needs
+Skinning 2 and a knife): tap E for AFK or hold E for the cut line on the wolf carcass stage (`Wolf pelt`, 0.8 % `Wolf fang`),
+then tan the pelt at the rack into **Supple leather** (Crafting 2). In `skilling_lab.tscn` (F6), pick **Wolf**.
+
+**Tested** (model: `Gemini 4 Argon (High)`):
+- `cargo test --manifest-path server/Cargo.toml`: **146 passed, 0 failed** across all 25 test binaries (`regents`:
+  **53 passed, 0 failed**, including `the_chain_is_compiled_in`, `the_deer_never_fights_and_has_its_own_brain`,
+  `a_foe_finisher_is_unblockable_and_a_player_has_nothing_unblockable`, `poise_breaks_only_on_the_last_hit_and_steadies`).
+- `tools\run.cmd tests/content_test.sh`: **18 passed, 0 failed** (bake matches committed content, movement bounds, kind
+  abilities, statuses, holds).
+- `tools\run.cmd tests/run_tests.sh -- --only=regents`: **3387 passed, 0 failed** (all architecture lints `ok`, golden
+  vectors `max_err=0.000e+00`, `regents: wolves hunt as a pack` testing pack alert within 15 m, negative at 25 m, and
+  startled-from-afar pack call, wolf carcass on the 3D skinning stage and lab, smooth-shaded wolf normals, content and
+  continent checks, zero unexpected engine/script errors).
+
+**Left**: Luke's playtest of the wolf's pace, pack range, and carcass round; sinew, the wolf-fang charm (first trinket,
+trait to design with Luke), and the stag (`HERBALISM_HUNTING_PREP.md` §7 step 5).
+
+**Reviewed 2026-11-11 (Claude, at Luke's asking: was it added by the existing patterns?)**: yes in its content, bake,
+brain, lunge, animation set and continent stream (all 719 points of the last commit unmoved; 813 now); Rust 146/0, the
+bake check 18/0 and regents unit 3387/0 re-run and green. This entry's numbers were wrong against the files and are
+corrected above (damage, health, poise, notice, leash, speeds, reach, the carcass's AFK time, XP and round, the
+recipe). STILL OPEN from the review:
+- NOT TESTED ON A SERVER: the deer had integration checks, a real-referee playtest, a skilling playtest leg and a shot;
+  the wolf has unit and Rust checks only. `deal`'s slow and knockback (`KitSeed::hit_of`; the first push of a PLAYER in
+  this game) and `hurt_now`'s change are wasm-gated: only the baked seed is asserted.
+- `hurt_now` STARTLES EVERY FIGHTING FOE hit while its status is normal (between swings too), not wolves only: a
+  skeleton or the sparring partner shot from beyond its sight now turns on the archer. Integration not re-run since.
+- (FIXED the same day, step 57.) THE SKINNING STAGE puts the wolf at the deer's hand-placed transform and 0.38 scale (`SkinStage.set_carcass`; the
+  node's `model_scale` 0.35 unused there), `wolf_carcass.tscn` has no 180 degree turn as the deer's has, and no shot was
+  taken: whether the cut lines lie on its flank is unchecked. `SkinMinigame.node_of` finds the carcass by the round's
+  display name.
+
+## Step 57: Luke's play of the wolf: the wolf on the skinning stage, a line's end never tears, a foe's string follows its target (2026-11-11)
+**Why**: Luke, 2026-11-11, after playing step 56: "the wolf skinning doesnt show a carcass in the minigame window, just
+a blank color background"; "At the end of a line for skinning, you almost always result in a tear because the line
+finishes while you are holding left click. There should be a buffer to allow you to release without punishing as you
+prepare to move to the beginning of the next line"; "the wolves start their attack and dont stop even if I move far
+away from the first one (so second and 3rd attack just hit air instead of gap closing and then performing the 2nd and
+3rd hits) and I suspect skeletons do that too ... if better to do now we can".
+
+**Built** (client and referee scripts and two scenes; no table, reducer or rule of play changed; restart the game):
+- **THE WOLF ON THE SKINNING STAGE.** FOUND (a shot, `build/wolf_stage_before.png`): `SkinStage.set_carcass` put the
+  wolf's model at the deer's hand-placed transform, and the wolf falls on its other side, so it lay off the top of the
+  view (two paws showed). Two causes, both fixed:
+  - `art/animals/wolf_carcass.tscn` had no 180 degree turn on its model as `deer_carcass.tscn` has (both characters are
+    `visual_yaw_deg` 180): in the WORLD too, the carcass lay turned about from how the wolf fell. Turned.
+  - EVERY CARCASS IS NOW PLACED ON THE STAGE BY HAND (`skin_stage.tscn`, `Viewport/Stage/Carcasses`: one child a
+    carcass scene, `Deer` where it was, `Wolf` new, hidden until its round): `set_carcass` shows the round's and hides
+    the rest. A new creature (the stag): instance its carcass scene there and place it under the two hide markers; one
+    not placed warns and lies where the first does. The stage's size is its own (the wolf 0.46 there, 0.35 in the
+    world, so the cut fits its flank). `SkinStage.has_carcass`, `shown_carcass`.
+- **A LINE'S END NEVER TEARS.** FOUND: not the model's rule but the minigame's order each frame. It sent the held
+  knife's place BEFORE running the model to now, so that input was the one that ran the line's last tick, and then,
+  the knife just lifted by the line's end, pressed it down again ON THE NEXT LINE, where it tore every tick (20 a
+  second) until the next press; letting go sent nothing. The readout's hands and the bots look before they press, so
+  no test saw it. Now `SkinMinigame._look`: the model run and shown first, then the place sent; a line's end is seen
+  before anything is sent, the knife is out, and stays out however long the button is held, until it is let go and
+  pressed again (no time limit: the buffer is as long as you need). Letting go lifts whenever the model's knife is
+  down. No rule changed: the Rust twin, the Python copy and the goldens are untouched.
+- **A FOE'S STRING FOLLOWS ITS TARGET** (every foe: `sidecar/npc/brains/regents/foe.gd`). FOUND: mid-string a foe stood
+  and swung each next step when its lock ended, whatever the distance. Now, between two swings (the last one's lock
+  over, it cannot move before), a target out of `reach_m` is run down (chase, its turn kept) and the string goes on
+  where it stopped; out of reach or sight longer than `FoeDef.string_chase_ms` (new, Behavior group, 1500 by default,
+  read by the brain only: not baked) the string is dropped (`_drop_string`): the next is its first swing again, after
+  its rest counted from the last swing's lock (the chase is rest it has had). A foe with no target drops it too.
+
+**How to play it**: restart the game (the editor's run starts a fresh referee). Skin a wolf: its carcass is under the
+cut. Drag a line to its end and keep holding: "Let go, then press on the gold ring", no tear. Fight a wolf or a
+skeleton and step back after its first hit: it comes after you and lands the second, or, if you stay away 1.5 s,
+starts its string over when it catches you.
+
+**Claude's numbers, Luke's to change**: `string_chase_ms` 1500 (each foe's own, in the Inspector); the wolf's size and
+place on the stage.
+
+**Tested**: unit (lints + regents) **3391/0**, four checks new:
+- a line's end with the button held and the hand moving (the knife lifts itself, a second held on sends and tears
+  nothing, letting go sends nothing, the next press cuts, the replay agrees). NEGATIVE, run: with the old order the
+  check fails, 22 tears in the second held on; and in the check itself, the model pressed without a look first is down
+  again on the next line (10 tears in half a second).
+- the stage: every carcass with a round has its own round name, is placed under `Carcasses`, is shown alone for its
+  round, its torso within 0.25 m of the cut's middle; a model not placed is not there.
+- a foe's string follows its target, the wolf and the skeleton warrior: no swing at the air after they step 6 m out, it
+  runs after them, caught inside 1500 ms its SECOND swing, out again past that none at the air and still chased, caught
+  its string starts over. NEGATIVE, run: on the brain as it was both fail (the wolf swung 40028 then 40029 at the air,
+  the skeleton 40018 then 40019).
+SKILLING PLAYTEST (a real client at 150 ms, the real frame loop) **117/0 + 8/0**: the cut line dragged with mouse events,
+7 lines clean, a full score. The bake check 18/0 (nothing baked changed). Shots: `build/wolf_stage_before.png`,
+`build/wolf_stage_after.png` (`build/wolf_stage_shot.tscn -- <node .tres> <png>` retakes one). NOT RUN: integration, a
+real-referee fight (the string's chase is checked on the brain's test world only: Luke's play is its playtest).
+
+**EVERY FOE TURNS ON WHO HIT IT FROM BEYOND ITS SIGHT** (Luke, the same day, asked every foe or pack foes only: "Every
+foe"; `GAME.md`). Step 56's `hurt_now` already startles any fighting foe hit while it does nothing else, and the foe
+brain goes for the nearest player within its leash of home: kept, no code changed. Said where a designer reads it
+(`content/status/startled.tres`'s notes, the hot rule `regents.startle_ms`'s description, the brain's comment), so
+REBAKED AND PUBLISHED `regents-rule` (no wipe, no codegen). Pinned on a foe with no pack: a skeleton warrior leaves an
+archer 16 m off alone, Startled it goes for them, and one past its leash it does not. Unit **3392/0** on the fresh bake.
+
+**Left**: step 56's open review item (the wolf's server tests and one integration run); Luke's play of this.

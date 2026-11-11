@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_a6fei"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_bar.tres" id="2_o4as4"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_uw885"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_knife_blade.tres" id="4_r3ch1"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_w8xry"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_sn1h8"]
+
+[sub_resource type="Resource" id="Resource_ngk8e"]
+script = ExtResource("3_uw885")
+display_name = "Steel knife blade"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 25
+hammer_drop = 5
+spread_pct = 20
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+lay_cost_pm = 30
+red_ms = 1200
+crack_cost_pm = 60
+pattern_fade_ms = 3000
+outline_vary = 3
+outline = PackedInt32Array(14, 15, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 7, 5, 3)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_w8xry")
+station = &"anvil"
+skill = ExtResource("6_sn1h8")
+inputs = Array[ExtResource("1_a6fei")]([ExtResource("2_o4as4")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("4_r3ch1")
+xp = 27
+min_rank = 3
+afk_ms = 9000
+minigame = SubResource("Resource_ngk8e")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40051
+display_name = "Steel knife blade"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Knife blade): its numbers are yours to tune."

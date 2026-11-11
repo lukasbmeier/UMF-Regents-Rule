@@ -74,6 +74,27 @@ fn minigame(m: &serde_json::Value, what: &str) -> String {
                 f("duration_ms"), f("swing_ms"), f("start_half"), f("start_jitter"), f("deep_cut"), f("fine_cut"), l, r, f("outline_vary"), f("error_scale"),
                 f("hide_outline"), f("lay_cost_pm"), f("mirror"))
         }
+        "pull" => {
+            // Herbalism's pull the root (Luke's H3, 2026-11-07; the trowel digging and cutting, 2026-11-08; loose or
+            // packed stems, 2026-11-09: absent in a bake from before, so 0, both sides packed).
+            let opt = |k: &str| m.get(k).and_then(|x| x.as_i64()).unwrap_or(0);
+            assert!(f("duration_ms") >= 50 && f("stroke_ms") >= 50 && f("target_plants") >= 1 && f("dig_pm") >= 1
+                && (0..=1000).contains(&f("hold_pm")) && f("strain_rise") > 0 && f("strain_ease") > 0 && f("pull_rate") + f("pull_gain") > 0
+                && (0..=900).contains(&f("snags")) && f("jump_lo") >= 0 && f("jump_hi") >= f("jump_lo") && (0..=1000).contains(&f("snap_keep_pm")),
+                "regents content: {what}'s pull the root cannot be played (a stroke, a target of at least one stem, soil that digs, a strain that rises and eases, a root that comes up, jumps in order)");
+            format!("Minigame::Pull(pull::PullParams {{ duration_ms: {}, stroke_ms: {}, target_plants: {}, dig_pm: {}, hold_pm: {}, strain_rise: {}, strain_ease: {}, pull_rate: {}, pull_gain: {}, snags: {}, jump_lo: {}, jump_hi: {}, show_depth: {}, snap_keep_pm: {}, loose_pm: {} }})",
+                f("duration_ms"), f("stroke_ms"), f("target_plants"), f("dig_pm"), f("hold_pm"), f("strain_rise"), f("strain_ease"), f("pull_rate"),
+                f("pull_gain"), f("snags"), f("jump_lo"), f("jump_hi"), f("show_depth"), f("snap_keep_pm"), opt("loose_pm").clamp(0, 1000))
+        }
+        "skin" => {
+            // Skinning's cut line (Luke's H4, 2026-11-07; built 2026-11-10): drag the knife along it, off it tears.
+            assert!(f("duration_ms") >= 50 && f("target_lines") >= 1 && (2..=20).contains(&f("points")) && (0..=300).contains(&f("wobble"))
+                && f("near") >= 1 && f("reach") >= 1 && f("cut_speed") >= 1 && (0..=1000).contains(&f("tear_pm"))
+                && (0..=1000).contains(&f("part_keep_pm")),
+                "regents content: {what}'s cut line cannot be played (a target of at least one line, 2-20 points, a wobble under 300, a knife that cuts)");
+            format!("Minigame::Skin(skin::SkinParams {{ duration_ms: {}, target_lines: {}, points: {}, wobble: {}, near: {}, reach: {}, cut_speed: {}, tear_pm: {}, part_keep_pm: {} }})",
+                f("duration_ms"), f("target_lines"), f("points"), f("wobble"), f("near"), f("reach"), f("cut_speed"), f("tear_pm"), f("part_keep_pm"))
+        }
         "shape" => {
             let outline: Vec<i64> = m["outline"].as_array().unwrap_or_else(|| panic!("regents content: {what}'s shape has no outline"))
                 .iter().map(|v| v.as_i64().unwrap()).collect();
@@ -163,20 +184,26 @@ pub fn regents_data() {
     out.push_str("];\n\npub static NODES: &[NodeSeed] = &[\n");
     for n in &nodes {
         let name = text(n, "name", "a node");
-        let (yld, rare, rare_pm, sk) = (int(n, "yield_item", &name), int(n, "rare_item", &name), int(n, "rare_permille", &name), int(n, "skill", &name));
+        let (yld, rare, rare_pm, sk) = (int(n, "yield_item", &name), int(n, "rare_item", &name).max(0), int(n, "rare_permille", &name), int(n, "skill", &name));
         item(yld, &name);
         assert!(rare_pm == 0 || item_ids.contains(&rare), "regents content: {name} has a rare chance and no rare item");
         skill(sk, &name);
         let mg = minigame(&n["minigame"], &name);
-        // None: AFK only (a plant before its round is built, 2026-11-07): holding E works it AFK too.
-        assert!(mg == "Minigame::None" || mg.starts_with("Minigame::Chop") || mg.starts_with("Minigame::Crack"),
+        // None: AFK only: holding E works it AFK too. Pull: herbalism's round (2026-11-08). Skin: a carcass's (2026-11-10).
+        assert!(mg == "Minigame::None" || mg.starts_with("Minigame::Chop") || mg.starts_with("Minigame::Crack") || mg.starts_with("Minigame::Pull") || mg.starts_with("Minigame::Skin"),
             "regents content: {name}'s round is not a gathering round");
         // Each model's footprint (cm), baked from the models (`NodeDef.radii_cm`); none: the reach is from the middle.
         let radii: Vec<i64> = n["radii_cm"].as_array().map(|a| a.iter().map(|v| v.as_i64().unwrap_or(0)).collect()).unwrap_or_default();
         assert!(radii.iter().all(|r| (0..=2000).contains(r)), "regents content: {name} has a model footprint out of 0-20 m: {radii:?}");
+        // A cap and a whole-node round (a carcass's hides, 2026-11-10): absent in a bake from before, so none.
+        let max_items = n.get("max_items").and_then(|x| x.as_i64()).unwrap_or(0);
+        let whole_round = n.get("whole_round").and_then(|x| x.as_bool()).unwrap_or(false);
+        assert!((0..=1000).contains(&max_items) && (!whole_round || (max_items >= 1 && mg != "Minigame::None")),
+            "regents content: {name}'s cap is out of 0-1000, or it is worked whole in a round with no cap or no round");
         out.push_str(&format!(
             "    NodeSeed {{ id: {}, name: {name:?}, skill: {sk}, tier: {}, minigame: {mg}, yield_item: {yld}, tool_tag: {:?}, min_tool_tier: {}, \
-             min_rank: {}, xp: {}, afk_ms: {}, deplete_permille: {}, regrow_ms: {}, rare_item: {rare}, rare_permille: {rare_pm}, radii_cm: &{:?} }},\n",
+             min_rank: {}, xp: {}, afk_ms: {}, deplete_permille: {}, regrow_ms: {}, rare_item: {rare}, rare_permille: {rare_pm}, radii_cm: &{:?}, \
+             max_items: {max_items}, whole_round: {whole_round} }},\n",
             int(n, "id", &name), int(n, "tier", &name), text(n, "tool_tag", &name), int(n, "min_tool_tier", &name), int(n, "min_rank", &name),
             int(n, "xp", &name), int(n, "afk_ms_per_item", &name), int(n, "deplete_permille", &name), int(n, "regrow_ms", &name), radii));
     }
@@ -275,9 +302,21 @@ pub fn regents_data() {
             role_map.push_str(&format!("RoleFinisher {{ role: {role}, ability: {fin}, stagger_pct: {}, heal: {:?}f32, heal_radius_m: {:?}f32 }}, ",
                 kr["stagger_pct"].as_i64().unwrap_or(100).max(0), f("heal"), f("heal_radius_m")));
         }
+        // What its abilities do when they land unblocked (`KitHit`, Luke 2026-11-10); absent in an older bake.
+        let mut hit_map = String::new();
+        for kh in k["hits"].as_array().cloned().unwrap_or_default() {
+            let ab = kh["ability"].as_i64().unwrap_or(0) as u32;
+            assert!(light.contains(&ab) || skills.iter().any(|(s, _)| *s == ab) || k["roles"].as_array().is_some_and(|rs| rs.iter().any(|r| r["finisher"].as_i64() == Some(ab as i64))),
+                "regents content: the {name} kit's hit entry is for {ab}, which is not its ability");
+            let push = kh.get("push_mps").and_then(|x| x.as_f64()).unwrap_or(0.0).max(0.0) as f32;
+            let status = kh["status"].as_i64().unwrap_or(0).clamp(0, 255) as u8;
+            let status_ms = kh["status_ms"].as_i64().unwrap_or(0).max(0) as u32;
+            assert!(push > 0.0 || (status > 0 && status_ms > 0), "regents content: the {name} kit's hit entry for {ab} does nothing");
+            hit_map.push_str(&format!("KitHitSeed {{ ability: {ab}, push_mps: {push:?}f32, status: {status}, status_ms: {status_ms} }}, "));
+        }
         kit_keys.push(key.clone());
         out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, follow_ms: &{follow:?}, skills: &{skills:?}, \
-             locks: &{locks:?}, draw_full_ms: {}, resource: {}, unblockable: &{unblockable:?}, roles: &[{role_map}] }},\n",
+             locks: &{locks:?}, draw_full_ms: {}, resource: {}, unblockable: &{unblockable:?}, roles: &[{role_map}], hits: &[{hit_map}] }},\n",
             int(k, "id", &name), k["draw_full_ms"].as_i64().unwrap_or(0), k["resource"].as_i64().unwrap_or(0).max(0)));
         if k["resource"].as_i64().unwrap_or(0) > 0 {
             casting_kits.push((name.clone(), light.iter().copied().chain(skills.iter().map(|(a, _)| *a)).collect()));
@@ -296,14 +335,19 @@ pub fn regents_data() {
         assert!((103..=119).contains(&kind), "regents content: the foe {name} is kind {kind}; a foe's kind is 103-119 (genre::regents::FOE_KINDS)");
         assert!(!foe_kinds.contains(&kind), "regents content: two foes are kind {kind}");
         foe_kinds.push(kind);
-        let kit = text(f, "kit", &name);
-        assert!(kit_keys.contains(&kit), "regents content: the foe {name} fights with kit '{kit}', which is no kit");
+        // A creature that never fights (hunting, 2026-11-09: a deer) has no kit; its brain is its character's.
+        let fights = f["fights"].as_bool().unwrap_or(true);
+        let kit = f["kit"].as_str().unwrap_or("").to_string();
+        assert!(!fights || kit_keys.contains(&kit), "regents content: the foe {name} fights with kit '{kit}', which is no kit");
+        let brain = f["brain"].as_str().filter(|b| !b.is_empty()).unwrap_or("regents/foe").to_string();
         let hp = int(f, "hp", &name);
         assert!(hp > 0, "regents content: the foe {name} has no health");
         // Its loot table (DECISIONS #268): the foundation's build checks the table itself.
         let loot_table = f["loot_table"].as_i64().unwrap_or(-1).max(0);
-        out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
-             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
+        // What its kill leaves (skinning, 2026-11-09): a carcass node's id, or 0.
+        let carcass = f["carcass"].as_i64().unwrap_or(-1).max(0);
+        out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, fights: {fights}, brain: {brain:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
+             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {}, carcass: {carcass} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
             f["family"].as_str().unwrap_or(""), f["boss"].as_bool().unwrap_or(false), f["poise"].as_i64().unwrap_or(0).max(0)));
     }
     out.push_str("];\n\npub static SPELLS: &[SpellSeed] = &[\n");

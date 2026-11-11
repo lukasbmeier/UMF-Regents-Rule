@@ -84,6 +84,8 @@ var made: int = 0
 ## The round being played (a challenge id), or -1; and what it is of (a NodeDef or a RecipeDef).
 var round_id: int = -1
 var round_def: ContentDef = null
+## The round's tool speed (percent of the node's AFK time, from the dealt round; 100 at a station).
+var round_speed: int = 100
 ## XP per skill id.
 var xp: Dictionary[int, int] = {}
 ## The choice picked at each kind of station (its key: `_choice_key`).
@@ -220,7 +222,16 @@ static func group_of(r: RecipeDef) -> String:
 	var it: ItemDef = r.output if r != null else null
 	if it == null or it.pattern == null:
 		return "Other"
-	return group_pattern(it.pattern).display_name + "s"
+	return plural(group_pattern(it.pattern).display_name)
+
+
+## A heading's English plural: "Axes", "Knives" (2026-11-09: not "Knifes"), "Pickaxes".
+static func plural(word: String) -> String:
+	if word.ends_with("fe"):
+		return word.left(word.length() - 2) + "ves"
+	if word.ends_with("s") or word.ends_with("x") or word.ends_with("sh") or word.ends_with("ch"):
+		return word + "es"
+	return word + "s"
 
 
 ## The pattern `p` is listed with: itself, or for a handle's SHAPE (a sword's hilts) the plain pattern of its kind,
@@ -1027,6 +1038,33 @@ func _count_run(r: Dictionary) -> void:
 		stop_run_after_round("Out of what it takes")
 
 
+## WHAT AFK WORK MAKES in a round of `round_ms` of the round being played (items; 0: a round that makes one graded
+## thing, or none on): what a played round's pay is a share of, as the server reckons it (`afk_interval_ms`,
+## `active_yield_milli`), for the panel's "This round: about ..." (Luke, 2026-11-09).
+func afk_items_in(round_ms: int) -> float:
+	if round_def is NodeDef:
+		var n: NodeDef = round_def as NodeDef
+		if n.whole_round:   # a carcass skinned in one round: AFK's average for all of it (2026-11-10)
+			return n.expected_items()
+		return float(round_ms) / float(maxi(100, n.afk_ms_per_item * round_speed / 100))
+	if round_def is RecipeDef:
+		var r: RecipeDef = round_def as RecipeDef
+		if r.quality == RecipeDef.Quality.FROM_ROUND:
+			return 0.0
+		return float(round_ms) / float(maxi(1, r.afk_ms)) * float(r.output_qty)
+	return 0.0
+
+
+## The name of what the round being played pays in ("" for none).
+func round_item_name() -> String:
+	var it: ItemDef = null
+	if round_def is NodeDef:
+		it = (round_def as NodeDef).yield_item
+	elif round_def is RecipeDef:
+		it = (round_def as RecipeDef).output
+	return it.display_name if it != null else ""
+
+
 ## The run's tally in words ("3 rounds: 7 Copper ore, 1 rare find"), "" before its first round has paid.
 func run_words() -> String:
 	if run_rounds == 0:
@@ -1071,13 +1109,14 @@ func _on_challenge(old: RefCounted, new: RefCounted) -> void:
 	if parts.size() < 3:
 		push_warning("skilling: a round with a payload of no known shape (%s)" % new.get(&"payload"))
 		return
-	var def: ContentDef = NodeDef.by_id(int(parts[1])) if kind == SkillMinigames.CHOP or kind == SkillMinigames.CRACK else RecipeDef.by_id(int(parts[1]))
+	var def: ContentDef = NodeDef.by_id(int(parts[1])) if SkillMinigames.gathers(kind) else RecipeDef.by_id(int(parts[1]))
 	var minigame: Resource = (def as NodeDef).minigame if def is NodeDef else ((def as RecipeDef).minigame if def is RecipeDef else null)
 	if minigame == null or SkillMinigames.kind_of(minigame) != kind:
 		push_warning("skilling: a round of no known content (%s)" % new.get(&"payload"))
 		return
 	round_id = int(new.get(&"id"))
 	round_def = def
+	round_speed = int(parts[2])
 	if runs(def) and run_target != int(parts[0]):
 		_start_run(int(parts[0]))
 	# The fifth field: how much this player's rank eases the round (Luke's M3; absent: none).

@@ -31,6 +31,10 @@ static func play_round(seed_value: int, p: Resource, sim: SimPlayer) -> Dictiona
 			return _beat(seed_value, p as BeatParams, sim, rng)
 		SkillMinigames.CARVE:
 			return _carve(seed_value, p as CarveParams, sim, rng)
+		SkillMinigames.PULL:
+			return _pull(seed_value, p as PullParams, sim, rng)
+		SkillMinigames.SKIN:
+			return _skin(seed_value, p as SkinParams, sim, rng)
 	return {"inputs": PackedInt32Array(), "live": {}}
 
 
@@ -386,6 +390,120 @@ static func _shape_by(seed_value: int, p: ShapeParams, sim: SimPlayer, rng: Rand
 			since_look += 1
 		last = maxi(t, m.last_act_ms)
 		seen = m.last_act_ms if did != ShapeModel.IGNORED else t
+	m.finish()
+	return {"inputs": out, "live": m.result()}
+
+
+## PULL THE ROOT (herbalism, 2026-11-08; the trowel's work after Luke's play): the puller looks every 50 ms. Each stem
+## they DIG ROUND first, left then right until both sides are loose (a slip forgets the rest and starts pulling); a
+## stroke a moment after the last is done (a third of their reaction, give or take their timing). Then they pull while
+## the strain reads under PULL_HI (less their misreading, `aim_pm` x 5) and let go there, pulling again once it reads
+## PULL_LO (they read it off the stem's stretch and creak, give or take their aim). When the soil CRACKS they stroke
+## that side `react_ms` after it starts (a slip strokes the other side, which only digs); the stroke pauses the pull.
+## Nobody sees where a side root is before its crack, nor how big its jump.
+const PULL_HI: int = 880
+const PULL_LO: int = 450
+
+
+static func _pull(seed_value: int, p: PullParams, sim: SimPlayer, rng: RandomNumberGenerator) -> Dictionary:
+	var m: PullModel = PullModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var last: int = 0
+	var crack_from: int = -1
+	var crack_side: int = 0
+	var plant: int = -1
+	var dig_done: bool = false
+	var t: int = 0
+	while t <= p.duration_ms:
+		m.advance_to(t)
+		if m.plant != plant:
+			plant = m.plant
+			dig_done = false
+		var show: int = m.showing()
+		if show != crack_side:
+			crack_side = show
+			crack_from = t if show != 0 else -1
+		var code: int = 0
+		if not m.stroking(t):
+			if show != 0 and t - crack_from >= sim.react_ms:
+				code = show if not _slips(sim, rng) else (PullModel.RIGHT if show == PullModel.LEFT else PullModel.LEFT)
+				crack_from = t + p.stroke_ms   # a missed one, seen again once the stroke is done
+			elif not dig_done and m.up_by == 0 and m.pack_left + m.pack_right > 0:
+				if _slips(sim, rng):
+					dig_done = true
+				else:
+					code = PullModel.LEFT if m.pack_left >= m.pack_right and m.pack_left > 0 else PullModel.RIGHT
+			else:
+				dig_done = true
+		if code != 0:
+			var at: int = _at(maxi(t, m.stroke_until_ms) + sim.react_ms / 3, sim, rng, maxi(maxi(last, t), m.stroke_until_ms))
+			if at > p.duration_ms:
+				break
+			out.append_array(PackedInt32Array([at, code]))
+			m.press(at, code)
+			last = at
+		elif dig_done:
+			var seen: int = m.strain + roundi(rng.randfn(0.0, float(sim.aim_pm * 5)))
+			var want: bool = seen < PULL_HI - sim.aim_pm * 5 if m.down else seen <= PULL_LO
+			if want != m.down:
+				var at2: int = _at(t + sim.react_ms / 3, sim, rng, maxi(last, t))
+				if at2 > p.duration_ms:
+					break
+				out.append_array(PackedInt32Array([at2, PullModel.DOWN if want else PullModel.UP]))
+				m.press(at2, PullModel.DOWN if want else PullModel.UP)
+				last = at2
+		t = maxi(t + 50, last)
+	m.finish()
+	return {"inputs": out, "live": m.result()}
+
+
+## THE CUT LINE (skinning): a hand on the knife, looking every 50 ms. A new line is pressed at its start `react_ms`
+## after it shows (give or take their timing). Held, they aim at the cut's own pace along the line past the tip, and
+## their hand DRIFTS across it (a smooth random walk: its spread `aim_pm` of the hide's 1000 a look, steadier for a
+## better hand); torn for `react_ms` running they see it and pull back onto the line. A slip (`slip_pct` a line) jerks
+## the knife well off the line for a look.
+static func _skin(seed_value: int, p: SkinParams, sim: SimPlayer, rng: RandomNumberGenerator) -> Dictionary:
+	var m: SkinModel = SkinModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var line: int = -1
+	var press_at: int = 0
+	var drift: float = 0.0
+	var torn_run: int = 0
+	var seen_torn: int = 0
+	var slip_at: int = -1
+	var t: int = 0
+	while t <= p.duration_ms:
+		m.advance_to(t)
+		torn_run = torn_run + 1 if m.down and m.torn > seen_torn else 0
+		seen_torn = m.torn
+		if m.line != line:
+			line = m.line
+			press_at = _at(t + sim.react_ms, sim, rng, t)
+			drift = 0.0
+			slip_at = rng.randi_range(5, 30) if _slips(sim, rng) else -1
+		var x: int = -1
+		var y: int = -1
+		if not m.down:
+			if t >= press_at:
+				var tp: Vector2i = m.tip()
+				x = tp.x
+				y = tp.y
+		else:
+			drift = drift * 0.8 + rng.randfn(0.0, float(sim.aim_pm) * 0.6)
+			if torn_run * 50 >= maxi(50, sim.react_ms):
+				drift *= 0.2
+				torn_run = 0
+			var aim: Vector2 = m.ahead(float(p.cut_speed))
+			var across: Vector2 = Vector2(0.0, drift)
+			slip_at -= 1
+			if slip_at == 0:
+				across.y += 120.0 if rng.randf() < 0.5 else -120.0
+			x = clampi(roundi(aim.x + across.x), 0, 1000)
+			y = clampi(roundi(aim.y + across.y), 0, 1000)
+		if x >= 0:
+			out.append_array(PackedInt32Array([t, x, y]))
+			m.press(t, x, y)
+		t += 50
 	m.finish()
 	return {"inputs": out, "live": m.result()}
 

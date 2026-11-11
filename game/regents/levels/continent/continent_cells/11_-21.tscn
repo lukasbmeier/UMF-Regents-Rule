@@ -1,16 +1,35 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_guhbi"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_j7nff"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="3_j2dle"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_j7nff"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_j2dle"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_juxja"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="4_3yr3y"]
 
-[node name="Cell_11_-21" type="Node3D" unique_id=1173091407]
+[node name="Cell_11_-21" type="Node3D" unique_id=205381369]
 
-[node name="grass_common_tall_821" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_guhbi")]
+[node name="w_deer_55" type="Marker3D" parent="." unique_id=1000500501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 722.69324, 2.184805, -1315.7817)
+gizmo_extents = 0.5
+script = ExtResource("1_j7nff")
+point_id = "w_deer_55"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_56" type="Marker3D" parent="." unique_id=1521211708]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 725.509, 2.044335, -1318.6228)
+gizmo_extents = 0.5
+script = ExtResource("1_j7nff")
+point_id = "w_deer_56"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="grass_common_tall_821" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_j2dle")]
 transform = Transform3D(0.31751022, 0, 0.7285003, 0, 0.7946857, 0, -0.7285003, 0, 0.31751022, 731.7283, 1.4374828, -1310.877)
 
-[node name="fern_1_822" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_j7nff")]
+[node name="fern_1_822" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_juxja")]
 transform = Transform3D(1.0399784, 0, -0.4998434, 0, 1.1538624, 0, 0.4998434, 0, 1.0399784, 746.3272, -0.5534452, -1285.116)
 
-[node name="bush_large_823" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("3_j2dle")]
+[node name="bush_large_823" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("4_3yr3y")]
 transform = Transform3D(0.37643555, 0, 0.9609618, 0, 1.0320617, 0, -0.9609618, 0, 0.37643555, 719.9612, 2.1310685, -1308.7644)

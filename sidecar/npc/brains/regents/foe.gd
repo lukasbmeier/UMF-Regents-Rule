@@ -8,7 +8,9 @@ extends NpcBrain
 ##   chase    a player came within `notice_m` and in sight: runs at them, round what is in the way (the
 ##            level's walk map, `go_to`); out of sight, to where it last saw them, for `lose_sight_ms`
 ##   fight    within `reach_m` and holding a TURN: faces them, swings its kit's string (the last its
-##            finisher); each swing waits out the last one's lock, and the string ends with a rest
+##            finisher); each swing waits out the last one's lock, and the string ends with a rest.
+##            A target that steps out of reach between swings is run down (chase) and the string goes on
+##            where it stopped; out of reach past `string_chase_ms`, the string is dropped (2026-11-11)
 ##   circle   in reach but no turn: walks round them at `reach_m` + `CIRCLE_M`, facing them, waiting
 ##   return   past `leash_m` from home: walks back, deaf to players until it is home
 ##   slain    lies still (the server's Slain status)
@@ -26,6 +28,9 @@ extends NpcBrain
 ## landing (its movement history), so a step aside late in the wind-up slips the swing; one early does not.
 
 const SLAIN: int = 106
+## The server's Startled (`content/status/startled.tres`): set on ANY fighting foe hit while it does nothing else
+## (Luke, 2026-11-11: "Every foe", not pack foes only), so one hit from beyond its sight turns on who hit it.
+const STATUS_STARTLED: int = 109
 ## Home is reached this near.
 const HOME_M: float = 1.5
 ## Waiting for a turn, it circles this far beyond its reach.
@@ -44,6 +49,10 @@ const AIM_LOCK: StringName = &"regents.foe_aim_lock_ms"
 ## Per player, the turns of every foe this referee runs: target id -> {"holders": {foe id: ms last kept},
 ## "land_ms": when the last foe swing on them lands}.
 static var turns: Dictionary[int, Dictionary] = {}
+## PACKS (Luke, 2026-11-10: wolves hunt in packs of 2-3): each fighting pack foe reports its target here
+## (`self_id` -> {"kind": kind, "pos": Vector3, "target": target_id, "last_seen": Vector3, "at": _seen_at_ms}),
+## so packmates of its kind within `foe.pack_m` join in.
+static var packs: Dictionary[int, Dictionary] = {}
 
 var foe: FoeDef = null
 var home: Vector3 = Vector3.ZERO
@@ -89,6 +98,7 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 	if world.status_of(self_id) == SLAIN:
 		state = &"slain"
 		_let_turn_go()
+		packs.erase(self_id)
 		target_id = 0
 		clear_goal()
 		return
@@ -98,6 +108,7 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 		returning = from_home > HOME_M
 		if returning:
 			_let_turn_go()
+			packs.erase(self_id)
 			target_id = 0
 			state = &"return"
 			go_to(home, me, world)
@@ -106,8 +117,19 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 	_pick_target(me, world)
 	if had != 0 and had != target_id:
 		_let_turn_go(had)
+	if foe.pack_m > 0.0 and target_id != 0:
+		packs[self_id] = {
+			"kind": int(world.kinds.get(self_id, -1)),
+			"pos": me.pos,
+			"target": target_id,
+			"last_seen": _last_seen,
+			"at": _seen_at_ms,
+		}
+	else:
+		packs.erase(self_id)
 	if target_id == 0:
 		state = &"idle"
+		_drop_string()   # nobody to finish it on: the next fight starts with its first swing
 		if from_home > HOME_M:
 			go_to(home, me, world)
 		else:
@@ -118,6 +140,10 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 	to.y = 0.0
 	var dist: float = to.length()
 	var now: int = now_ms()
+	# ITS STRING FOLLOWS ITS TARGET (Luke, 2026-11-11): between two swings (the last one's lock over), a target out of
+	# reach, or of sight, for longer than `string_chase_ms` loses it the string: the next is its first swing again.
+	if _step > 0 and now - _lock_end_ms > foe.string_chase_ms and (dist > foe.reach_m or not _in_sight):
+		_drop_string()
 	var mid_string: bool = _step > 0 or now < _lock_end_ms
 	# Near enough to fight or circle: inside its reach, or the circle's and a little.
 	var near: bool = dist <= foe.reach_m + CIRCLE_M + 1.0
@@ -135,8 +161,10 @@ func think(me: MovementState, world: NpcWorldView) -> void:
 		_facing = true
 		_circle(me, t, world)
 		return
-	if dist > foe.reach_m and not mid_string:
-		state = &"chase"   # its turn: in to its reach
+	# Its turn, and they are out of its reach: in to its reach. Mid-string too, once the last swing's lock is over (it
+	# cannot move before): it closes the gap and the string goes on where it stopped, never a swing at the air.
+	if dist > foe.reach_m and (not mid_string or now >= _lock_end_ms):
+		state = &"chase"
 		go_to(t.pos, me, world)
 		return
 	state = &"fight"
@@ -158,18 +186,74 @@ func _pick_target(me: MovementState, world: NpcWorldView) -> void:
 			if _in_sight:
 				_last_seen = held.pos
 				_seen_at_ms = now_ms()
+			elif foe.pack_m > 0.0:
+				_hear_pack(me, world)
 			if _in_sight or now_ms() - _seen_at_ms <= foe.lose_sight_ms:
 				return
 		target_id = 0
 	var found: int = world.nearest_of_kind(me.pos, 0, foe.notice_m, self_id)
-	if found == 0 or world.status_of(found) == SLAIN:
+	if found != 0 and world.status_of(found) != SLAIN:
+		var cand: MovementState = world.state_of(found)
+		if cand != null and world.can_see(me.pos, cand.pos):
+			target_id = found
+			_in_sight = true
+			_last_seen = cand.pos
+			_seen_at_ms = now_ms()
+			return
+	# Hit from beyond its sight (the server's Startled): it turns on the nearest player within twice its leash.
+	if world.status_of(self_id) == STATUS_STARTLED:
+		var shooter: int = world.nearest_of_kind(me.pos, 0, foe.leash_m * 2.0, self_id)
+		var at: MovementState = world.state_of(shooter) if shooter != 0 and world.status_of(shooter) != SLAIN else null
+		if at != null and Vector2(at.pos.x - home.x, at.pos.z - home.z).length() <= foe.leash_m:
+			target_id = shooter
+			_in_sight = world.can_see(me.pos, at.pos)
+			_last_seen = at.pos
+			_seen_at_ms = now_ms()
+			return
+	if foe.pack_m > 0.0:
+		_hear_pack(me, world)
+
+
+## A packmate of the same kind within `foe.pack_m` has a fresh sighting of a target inside this foe's leash:
+## take up the chase (or refresh where they were last seen).
+func _hear_pack(me: MovementState, world: NpcWorldView) -> void:
+	var kind: int = int(world.kinds.get(self_id, -1))
+	var now: int = now_ms()
+	var best_d: float = foe.pack_m + 0.01
+	var best: Dictionary = {}
+	for other_id: int in packs.keys():
+		if other_id == self_id or world.state_of(other_id) == null or world.status_of(other_id) == SLAIN:
+			continue
+		var entry: Dictionary = packs[other_id]
+		if int(entry.get("kind", -2)) != kind:
+			continue
+		var at_ms: int = int(entry.get("at", -100000))
+		if now < at_ms or now - at_ms > foe.lose_sight_ms:
+			continue
+		var ppos: Vector3 = entry.get("pos", Vector3.ZERO) as Vector3
+		var d: float = Vector2(me.pos.x - ppos.x, me.pos.z - ppos.z).length()
+		if d > best_d:
+			continue
+		var who: int = int(entry.get("target", 0))
+		if target_id != 0 and who != target_id:
+			continue
+		var tstate: MovementState = world.state_of(who) if who != 0 and world.status_of(who) != SLAIN else null
+		if tstate == null or Vector2(tstate.pos.x - home.x, tstate.pos.z - home.z).length() > foe.leash_m:
+			continue
+		best_d = d
+		best = entry
+	if best.is_empty():
 		return
-	var cand: MovementState = world.state_of(found)
-	if cand != null and world.can_see(me.pos, cand.pos):
-		target_id = found
-		_in_sight = true
-		_last_seen = cand.pos
-		_seen_at_ms = now_ms()
+	var picked: int = int(best["target"])
+	var held: MovementState = world.state_of(picked)
+	target_id = picked
+	_in_sight = world.can_see(me.pos, held.pos)
+	if _in_sight:
+		_last_seen = held.pos
+		_seen_at_ms = now
+	elif int(best["at"]) >= _seen_at_ms:
+		_last_seen = best["last_seen"] as Vector3
+		_seen_at_ms = int(best["at"])
 
 
 # --- turns ------------------------------------------------------------------------------------
@@ -256,6 +340,15 @@ func _swing(a: AbilityDef, now: int) -> void:
 		_step = 0
 		wait += maxi(0, foe.rest_ms + _rng.randi_range(-foe.rest_jitter_ms, foe.rest_jitter_ms))
 	_next_swing_ms = now + wait
+
+
+## Its string given up part way (its target stayed out of reach too long, or it has none): the next swing is its
+## first again, after its rest, counted from the last swing's lock (the time it chased is rest it has had).
+func _drop_string() -> void:
+	if _step == 0:
+		return
+	_step = 0
+	_next_swing_ms = _lock_end_ms + maxi(0, foe.rest_ms + _rng.randi_range(-foe.rest_jitter_ms, foe.rest_jitter_ms))
 
 
 func tokens() -> int:

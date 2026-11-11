@@ -1,0 +1,109 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/skinning/skin_stage.gd" id="1_6ajdp"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/deer_carcass.tscn" id="2_0c5ut"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/wolf_carcass.tscn" id="3_wolf"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/skinning/slice.wav" id="4_myxow"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/skinning/tear.wav" id="5_tgvhe"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/skinning/done.wav" id="6_5y57w"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_klivp"]
+sky_top_color = Color(0.32, 0.52, 0.78, 1)
+sky_horizon_color = Color(0.72, 0.8, 0.86, 1)
+ground_bottom_color = Color(0.25, 0.3, 0.2, 1)
+ground_horizon_color = Color(0.62, 0.68, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky_4eogf"]
+sky_material = SubResource("ProceduralSkyMaterial_klivp")
+
+[sub_resource type="Environment" id="Environment_5mcok"]
+background_mode = 2
+sky = SubResource("Sky_4eogf")
+ambient_light_source = 3
+ambient_light_energy = 0.8
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7rg13"]
+albedo_color = Color(0.36, 0.47, 0.25, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_3h7ng"]
+material = SubResource("StandardMaterial3D_7rg13")
+size = Vector2(12, 12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tsx2e"]
+albedo_color = Color(0.45, 0.05, 0.04, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_3e0pm"]
+material = SubResource("StandardMaterial3D_tsx2e")
+radius = 0.004
+height = 0.008
+
+[node name="SkinStage" type="SubViewportContainer" unique_id=1130973738]
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch = true
+script = ExtResource("1_6ajdp")
+
+[node name="Viewport" type="SubViewport" parent="." unique_id=519332206]
+own_world_3d = true
+msaa_3d = 2
+size = Vector2i(1152, 648)
+
+[node name="Stage" type="Node3D" parent="Viewport" unique_id=1553893409]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage" unique_id=887400520]
+environment = SubResource("Environment_5mcok")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage" unique_id=2016659472]
+transform = Transform3D(1, 0, 0, 0, 0.36268935, 0.9319101, 0, -0.9319101, 0.36268935, 0, 1.85, 0.62)
+fov = 40.0
+
+[node name="Sun" type="DirectionalLight3D" parent="Viewport/Stage" unique_id=1184626552]
+transform = Transform3D(0.81915206, -0.46984634, 0.32898995, 0, 0.57357645, 0.81915206, -0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="Viewport/Stage" unique_id=1160282041]
+mesh = SubResource("PlaneMesh_3h7ng")
+
+[node name="Carcasses" type="Node3D" parent="Viewport/Stage"]
+
+[node name="Deer" parent="Viewport/Stage/Carcasses" unique_id=601724051 instance=ExtResource("2_0c5ut")]
+transform = Transform3D(-1.6610327e-08, 0, 0.38, 0, 0.38, 0, -0.38, 0, -1.6610327e-08, 0.04, 0, -0.745)
+
+[node name="Wolf" parent="Viewport/Stage/Carcasses" instance=ExtResource("3_wolf")]
+transform = Transform3D(-2.0107238e-08, 0, 0.46, 0, 0.46, 0, -0.46, 0, -2.0107238e-08, 0.064, 0, -0.79)
+visible = false
+
+[node name="HideLeft" type="Marker3D" parent="Viewport/Stage" unique_id=240556552]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.33, -0.1)
+gizmo_extents = 0.05
+
+[node name="HideRight" type="Marker3D" parent="Viewport/Stage" unique_id=1588087846]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.33, -0.1)
+gizmo_extents = 0.05
+
+[node name="Flecks" type="CPUParticles3D" parent="Viewport/Stage" unique_id=703912397]
+emitting = false
+amount = 10
+lifetime = 0.5
+one_shot = true
+explosiveness = 0.9
+mesh = SubResource("SphereMesh_3e0pm")
+direction = Vector3(0, 1, 0)
+spread = 60.0
+gravity = Vector3(0, -3, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.7
+scale_amount_min = 0.5
+
+[node name="Slice" type="AudioStreamPlayer" parent="." unique_id=1834193871]
+stream = ExtResource("4_myxow")
+volume_db = -8.0
+
+[node name="Tear" type="AudioStreamPlayer" parent="." unique_id=1187062220]
+stream = ExtResource("5_tgvhe")
+volume_db = -4.0
+
+[node name="Done" type="AudioStreamPlayer" parent="." unique_id=891605235]
+stream = ExtResource("6_5y57w")
+volume_db = -6.0

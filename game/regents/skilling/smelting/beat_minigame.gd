@@ -239,6 +239,7 @@ func _draw() -> void:
 	if on_track and t < p.lead_beats * p.beat_ms and state == State.PLAYING:
 		var left: int = p.lead_beats - t / p.beat_ms
 		MinigameLook.text(self, font, Vector2(0.0, lane.position.y - 40.0), str(left), 56, MinigameLook.GOLD, HORIZONTAL_ALIGNMENT_CENTER, size.x)
+		_draw_directions(font, p)
 	if t - _word_at < WORD_MS and not _word.is_empty():
 		MinigameLook.text(self, font, Vector2(mark_x - 80.0, lane.position.y - 18.0), _word, 26, _word_color, HORIZONTAL_ALIGNMENT_CENTER, 160.0)
 	# The fire (how the track is going), left; the mold, right.
@@ -269,3 +270,22 @@ func _draw() -> void:
 			hint = "Hold Space or the mouse to pour"
 	MinigameLook.text(self, font, Vector2(0, size.y - 24), hint, 20, MinigameLook.INK, HORIZONTAL_ALIGNMENT_CENTER, size.x)
 	_draw_frame("Track %d%%   Pour %d%%" % [model.track_score() / 10, model.pour_score() / 10])
+
+
+## THE DIRECTIONS, big, through the count-in (Luke's play, 2026-11-09: "the slag being the f key threw me off ... a
+## slower start to read the directions"; the count-in is 8 beats now, `lead_beats`): each note as it looks, and its key.
+func _draw_directions(font: Font, p: BeatParams) -> void:
+	var box: Rect2 = Rect2(size.x * 0.5 - 300.0, 130.0, 600.0, 150.0 if p.slag_pm > 0 else 110.0)
+	draw_rect(box, Color(0, 0, 0, 0.55))
+	var x: float = box.position.x + 40.0
+	var y: float = box.position.y + 36.0
+	draw_circle(Vector2(x, y - 7.0), 14.0, NOTE)
+	draw_circle(Vector2(x, y - 7.0), 7.0, Color(1, 0.9, 0.6, 0.9))
+	MinigameLook.text(self, font, Vector2(x + 34.0, y), "Space or click as it reaches the bellows", 22, MinigameLook.INK)
+	y += 40.0
+	draw_rect(Rect2(x - 16.0, y - 16.0, 32.0, 18.0), Color(NOTE, 0.75))
+	MinigameLook.text(self, font, Vector2(x + 34.0, y), "A long one: hold to its end", 22, MinigameLook.INK)
+	if p.slag_pm > 0:
+		y += 40.0
+		draw_rect(Rect2(x - 13.0, y - 20.0, 26.0, 26.0), SLAG)
+		MinigameLook.text(self, font, Vector2(x + 34.0, y), "Gray slag: F or right click skims it", 22, MinigameLook.GOLD)

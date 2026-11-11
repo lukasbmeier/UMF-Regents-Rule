@@ -89,6 +89,16 @@ var _radius_by_tag: Dictionary[String, float] = {}
 ## adding it moved nothing already placed. How often an open cell gets a patch.
 var _flax_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 const FLAX_SHARE: float = 0.2
+## HUNTING'S DEER (2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): a pair grazing in an open meadow, from ITS OWN random
+## stream (as the flax's), so nothing placed before moves. How often an open cell gets a pair, how far apart the two.
+var _deer_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+const DEER_SHARE: float = 0.1
+const DEER_PAIR_M: float = 4.0
+## HUNTING'S WOLVES (2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): a pack of two or three in a wooded cell, from ITS OWN
+## random stream (as the flax's and the deer's), so nothing placed before moves.
+var _wolf_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+const WOLF_SHARE: float = 0.12
+const WOLF_PACK_M: float = 4.0
 
 
 func _ready() -> void:
@@ -96,6 +106,8 @@ func _ready() -> void:
 	var t0: int = Time.get_ticks_msec()
 	_rng.seed = 0xC0417E17
 	_flax_rng.seed = 0xF1A7   # flax's own stream (2026-11-07): the trees, rocks, camps and decor before it never move
+	_deer_rng.seed = 0xDEE5   # the deer's (2026-11-09): likewise
+	_wolf_rng.seed = 0x701F   # the wolves' (2026-11-10): likewise
 	if not _configure():
 		AppExit.quit(get_tree(), 1)
 		return
@@ -447,6 +459,8 @@ func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
 			elif roll < 0.4 and far > 300.0:
 				tag = "Oak"
 			_node_point(r, tag)
+		if far > 280.0 and _wolf_rng.randf() < WOLF_SHARE:
+			_wolf_pack(r)
 	elif rocky:
 		for _k: int in range(_rng.randi_range(1, 2)):
 			var roll: float = _rng.randf()
@@ -464,6 +478,8 @@ func _scatter_cell(r: Rect2, forest: FastNoiseLite) -> void:
 			_node_point(r, "Copper rock")
 		if _flax_rng.randf() < FLAX_SHARE:
 			_node_point(r, "Flax", _flax_rng)
+		if _deer_rng.randf() < DEER_SHARE:
+			_deer_pair(r)
 	# Decor: a little of what the glade has, so a cell is not bare.
 	if mtn < 0.3:
 		var models: Array[String] = ["Bush_Large", "Bush_Long_1", "Rock_Medium_1", "Rock_Big_1", "Grass_Common_Tall", "Fern_1"]
@@ -498,6 +514,42 @@ func _node_point(r: Rect2, tag: String, rng: RandomNumberGenerator = null) -> vo
 	lp.position = Vector3(p.x, _ground(p.x, p.y), p.y)
 	_cells.add_child(lp)
 	_own(lp)
+
+
+## Two deer grazing near each other somewhere in `r` (each its own level point of kind "deer"), from the deer's stream.
+func _deer_pair(r: Rect2) -> void:
+	var p: Vector2 = _free_spot(r, 8.0, _deer_rng)
+	if p.x == INF:
+		return
+	var ang: float = _deer_rng.randf() * TAU
+	for q: Vector2 in [p, p + Vector2(cos(ang), sin(ang)) * DEER_PAIR_M]:
+		var lp := LevelPoint.new()
+		lp.point_id = "w_deer_%d" % _count("deer")
+		lp.name = lp.point_id
+		lp.kind = "deer"
+		lp.radius = 0.5
+		lp.position = Vector3(q.x, _ground(q.x, q.y), q.y)
+		_cells.add_child(lp)
+		_own(lp)
+
+
+## A pack of two or three wolves in a wooded cell `r` (each its own level point of kind "wolf"), from the wolves' stream.
+func _wolf_pack(r: Rect2) -> void:
+	var p: Vector2 = _free_spot(r, 8.0, _wolf_rng)
+	if p.x == INF:
+		return
+	var count: int = _wolf_rng.randi_range(2, 3)
+	var ang: float = _wolf_rng.randf() * TAU
+	for k: int in range(count):
+		var q: Vector2 = p if k == 0 else p + Vector2(cos(ang + TAU * float(k) / float(count)), sin(ang + TAU * float(k) / float(count))) * WOLF_PACK_M
+		var lp := LevelPoint.new()
+		lp.point_id = "w_wolf_%d" % _count("wolf")
+		lp.name = lp.point_id
+		lp.kind = "wolf"
+		lp.radius = 0.5
+		lp.position = Vector3(q.x, _ground(q.x, q.y), q.y)
+		_cells.add_child(lp)
+		_own(lp)
 
 
 ## A random spot in `r` with room (`margin` from its edges) on dry, gentle ground; (INF, INF) if none.

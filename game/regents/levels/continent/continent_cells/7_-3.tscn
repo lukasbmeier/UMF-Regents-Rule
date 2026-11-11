@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_k8ura"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_xbgcd"]
 
-[node name="Cell_7_-3" type="Node3D" unique_id=2098442908]
+[node name="Cell_7_-3" type="Node3D" unique_id=755703242]
 
-[node name="w_flax_54" type="Marker3D" parent="." unique_id=992242784]
+[node name="w_flax_54" type="Marker3D" parent="." unique_id=834817064]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 507.527, 2.2935433, -184.54407)
 gizmo_extents = 0.5
 script = ExtResource("1_yot5b")
@@ -21,5 +21,5 @@ transform = Transform3D(-0.72488356, 0, 1.0410736, 0, 1.268578, 0, -1.0410736, 0
 [node name="rock_medium_1_707" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_xbgcd")]
 transform = Transform3D(1.0406955, 0, 0.6187073, 0, 1.2107213, 0, -0.6187073, 0, 1.0406955, 451.96127, 3.1658049, -145.15485)
 
-[node name="rock_medium_1_708" type="Node3D" parent="." unique_id=153991662 instance=ExtResource("3_xbgcd")]
+[node name="rock_medium_1_708" type="Node3D" parent="." unique_id=303504619 instance=ExtResource("3_xbgcd")]
 transform = Transform3D(0.40808666, 0, -0.65122575, 0, 0.76852435, 0, 0.65122575, 0, 0.40808666, 452.29117, 3.6543438, -180.77425)

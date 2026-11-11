@@ -12,7 +12,7 @@
 script = ExtResource("2_o70rx")
 display_name = "Steel bar"
 beat_ms = 480
-lead_beats = 4
+lead_beats = 8
 beats = 20
 rest_pm = 100
 offbeat_pm = 320

@@ -17,8 +17,14 @@ station_at() { sql_first "SELECT entity_id FROM station WHERE point_id = '$1'" 1
 bot() {
   local halves out
   halves="$(python -c "s=int('$3'); print(s >> 32, s & 0xFFFFFFFF)")"
-  out="$("$GODOT" --headless --path . --script res://game/regents/tests/skill_bot_cli.gd -- \
-    --kind="$1" --def="$2" --speed="$4" --ease="${5:-0}" --seed_hi="${halves% *}" --seed_lo="${halves#* }" 2>&1)"
+  if [ "$1" = "skin" ]; then
+    # The cut line by the goldens' Python copy (skin_bot.py): a Godot bot took over two minutes to start on a loaded
+    # machine (2026-11-10), and the server had let the round go. BOT_WANDER=1: it drags 70 off the line (every look tears).
+    out="$(python game/regents/tests/skin_bot.py "$2" "$3" "$4" "${5:-0}" "$([ "${BOT_WANDER:-0}" = "1" ] && echo 70 || echo 0)" 2>&1)"
+  else
+    out="$("$GODOT" --headless --path . --script res://game/regents/tests/skill_bot_cli.gd -- \
+      --kind="$1" --def="$2" --speed="$4" --ease="${5:-0}" --seed_hi="${halves% *}" --seed_lo="${halves#* }" 2>&1)"
+  fi
   BOT_RESULT="$(printf '%s\n' "$out" | grep '^RESULT ' | sed 's/^RESULT //' | tr -d '\r')"
   BOT_PLAYED="$(printf '%s\n' "$out" | grep '^PLAYED ' | sed 's/^PLAYED //' | tr -d '\r')"
   [ -n "$BOT_RESULT" ] || echo "  bot: no result: $(printf '%s' "$out" | tail -3)" >&2
@@ -90,11 +96,12 @@ hits() {
 }
 # num_is VALUE EXPECTED LABEL: the same number (the server's JSON says 50.0 where the CLI says 50)
 num_is() { check "$(python -c "import sys; print('true' if abs(float(sys.argv[1]) - float(sys.argv[2])) < 1e-3 else 'false')" "$1" "$2" 2>/dev/null || echo false)" "$3 ($1)"; }
-round_cid() { sql_first "SELECT id FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT" 1; }
+round_cid() { sql_first "SELECT id FROM challenge WHERE kind >= 100 AND kind <= 107 AND entity_id = $MYENT" 1; }
 round_field() { sql_first "SELECT $2 FROM challenge WHERE id = $1" 1; }
 # play_round KIND DEF WAIT_S -> plays the round the server just dealt, after its time, and submits it
 play_round() {
-  local cid seed payload speed ease
+  local cid seed payload speed ease dealt
+  dealt="$(date +%s)"
   cid="$(round_cid)"
   seed="$(round_field "$cid" seed)"
   payload="$(round_field "$cid" payload | tr -d '"')"
@@ -105,8 +112,10 @@ play_round() {
   bot "$1" "$2" "$seed" "$speed" "$ease"
   # At least as long as the round the bot played: the server refuses an input stamped later than the time since the
   # round was dealt (an anvil round has no clock since 2026-11-05: the part is set down when done, ~25 s for a blade).
+  # Counted from when it was dealt (2026-11-08): the bot's own Godot takes 2 to 20 s to start on a loaded machine, and
+  # a wait counted after it ran the round past the server's grace (`ROUND_GRACE_MICROS`, 20 s): "no such challenge".
   local played
-  played="$(python -c "import json,math; v=json.loads('${BOT_RESULT:-[]}'); a=3 if '$1'=='crack' else 2; print(max($3, math.ceil(max(v[0::a] or [0]) / 1000) + 2))")"
+  played="$(python -c "import json,math; v=json.loads('${BOT_RESULT:-[]}'); a=3 if '$1' in ('crack', 'skin') else 2; print(max(0, max($3, math.ceil(max(v[0::a] or [0]) / 1000) + 2) - ($(date +%s) - $dealt)))")"
   sleep "$played"
   assert_ok "submit_challenge_result $cid $BOT_RESULT" "a round of $1 submitted once its time has passed"
   ROUND_CID="$cid"
@@ -118,7 +127,7 @@ assert_eq "$(row_count 'SELECT * FROM item_def WHERE item_def_id = 40016 OR item
 assert_ok "set_world_level 0 20" "world 0 to the frontier glade (level 20)"
 assert_eq "$(row_count 'SELECT * FROM gather_node WHERE world_id = 0')" "33" "its 33 nodes are placed (17 trees, 5 copper, 4 iron and 3 coal rocks, 4 flax)"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100')" "33" "each an entity of the node kind (100)"
-assert_eq "$(row_count 'SELECT * FROM station WHERE world_id = 0')" "5" "and its five stations: a furnace, an anvil, a workbench, the order board, the spinning wheel"
+assert_eq "$(row_count 'SELECT * FROM station WHERE world_id = 0')" "6" "and its six stations: a furnace, an anvil, a workbench, the order board, the spinning wheel, the tanning rack"
 assert_eq "$(row_count 'SELECT * FROM gather_node WHERE def_id = 40005')" "4" "four of the nodes iron rocks, by the points' tags"
 TREE="$(node_at tree_1)"; TREE2="$(node_at tree_2)"; TREE3="$(node_at tree_3)"    # at (-9,0,-6), (-3,0,-11), (5,0,-8)
 COPPER="$(node_at copper_1)"; IRON="$(node_at iron_1)"                            # at (14,0,16), (-18,0,18)
@@ -377,19 +386,47 @@ assert_rejected "gather $TREE3 false" "need an axe" "with no axe, nothing is cho
 assert_eq "$(qty_of 40001)" "0" "and the starter kit is not handed out again (once per character)"
 assert_ok "grant_item $MYENT 40001 1" "an admin gives the axe back"
 
-# --- herbalism (2026-11-07, HERBALISM_HUNTING_PREP.md step 1): flax with the starter trowel; no round yet ---
-FLAX="$(node_at flax_1)"; WHEEL="$(station_at spinning_wheel)"   # at (-12,0,2), (8,0,14)
+# --- herbalism (2026-11-07, HERBALISM_HUNTING_PREP.md step 1; 2026-11-08 step 2: PULL THE ROOT, kind 106) ---
+FLAX="$(node_at flax_1)"; FLAX2="$(node_at flax_2)"; FLAX3="$(node_at flax_3)"; WHEEL="$(station_at spinning_wheel)"   # (-12,0,2), (-15,0,5), (-10,0,6), (8,0,14)
 assert_ok 'teleport {"x":-12.0,"y":0.0,"z":3.6}' "stand by flax_1"
-assert_ok "gather $FLAX true" "hold E at the flax: it has no round yet, so it is worked AFK"
-# (The hook's `logged` is defined further on: the server's log read here, a moment given for the line to land.)
+FLAX0="$(qty_of 40046)"; HERB0="$(xp_of 40010)"
+assert_ok "gather $FLAX true" "hold E at the flax: a round of pull the root"
+assert_eq "$(round_field "$(round_cid)" kind)" "106" "challenge kind 106 (pull the root, Luke's H3)"
+assert_eq "$(round_field "$(round_cid)" payload)" "\"$FLAX 40007 100\"" "at the copper trowel's speed (100 %), no ease at rank 1"
+play_round pull 40007 16
+GOT=$(( $(qty_of 40046) - FLAX0 ))
+check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 1000' && echo true || echo false)" "the bot digs the packed sides, cuts and pulls the clump, stem after stem: four up whole ($BOT_PLAYED)"
+check "$([ "$GOT" -ge 1 ] && [ "$GOT" -le 6 ] && echo true || echo false)" \
+  "the server replayed it and paid: $GOT flax (5.36 at a full score, fewer if the patch was worked out first)"
+check "$(sql_rows "SELECT qty, active, score_pm, xp FROM work_result WHERE entity_id = $MYENT AND active = true" | tail -1 | tr -d ' ' | grep -q "^$GOT|true|1000|$((GOT * 8))\$" && echo true || echo false)" \
+  "a work_result row says so: $GOT flax, a round, a full score, $((GOT * 8)) XP"
+assert_eq "$(xp_of 40010)" "$((HERB0 + GOT * 8))" "and herbalism has the XP (8 a flax)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE entity_id = $MYENT AND kind >= 100 AND kind <= 107")" "0" "and no round is left open"
+# A round that snaps: held from the start and never let go, every stem's strain goes past the top (a clump, Luke
+# 2026-11-08: a snap loses that stem, the next one starts); the round pays the snapped roots' share, below AFK.
+assert_ok 'teleport {"x":-10.0,"y":0.0,"z":7.6}' "stand by flax_3"
+assert_ok "gather $FLAX3 true" "a round on flax_3"
+CID="$(round_cid)"
+FLAX1="$(qty_of 40046)"
+sleep 3
+assert_ok "submit_challenge_result $CID [700.0,1.0]" "held from the loosening's end and never let go: stem after stem snaps"
+SNAP_SCORE="$(sql_rows "SELECT score_pm FROM work_result WHERE entity_id = $MYENT AND active = true AND score_pm < 1000" | tail -1 | tr -d ' ')"
+check "$([ "${SNAP_SCORE:-0}" -gt 0 ] && [ "${SNAP_SCORE:-0}" -lt 500 ] && echo true || echo false)"   "snapped roots score under half: part of what came up (${SNAP_SCORE:-none}), and $(( $(qty_of 40046) - FLAX1 )) flax"
+assert_ok 'teleport {"x":-15.0,"y":0.0,"z":6.6}' "stand by flax_2 (flax_3 may be worked out)"
+assert_ok "gather $FLAX2 false" "tap E at the flax: worked AFK, as ever"
 FLAX_AFK=false
-for _ in $(seq 1 10); do spacetime logs "$DB" 2>/dev/null | tail -80 | grep -qE "works Flax $FLAX AFK" && { FLAX_AFK=true; break; }; sleep 0.5; done
-check "$FLAX_AFK" "the server worked it AFK (no round dealt for a plant with none)"
-assert_eq "$(row_count "SELECT * FROM challenge WHERE entity_id = $MYENT AND kind >= 100 AND kind <= 105")" "0" "and no round is open"
+for _ in $(seq 1 10); do spacetime logs "$DB" 2>/dev/null | tail -80 | grep -qE "works Flax $FLAX2 AFK" && { FLAX_AFK=true; break; }; sleep 0.5; done
+check "$FLAX_AFK" "the server works it AFK"
+assert_ok "work_stop" "(stop pulling)"
 TROWEL_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40051" 1)"
 assert_ok "consume_item $TROWEL_ROW 1" "the trowel leaves the bag"
-assert_rejected "gather $FLAX false" "need a trowel" "with no trowel, no flax is pulled"
+assert_rejected "gather $FLAX2 false" "need a trowel" "with no trowel, no flax is pulled"
+assert_rejected "gather $FLAX2 true" "need a trowel" "nor a round played"
 assert_ok "grant_item $MYENT 40051 1" "an admin gives the trowel back"
+for ROW in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40046" | tr -d ' '); do
+  assert_ok "consume_item $ROW $(sql_first "SELECT qty FROM inventory_item WHERE id = $ROW" 1)" "(the flax pulled above leaves the bag)"
+done
+assert_eq "$(qty_of 40046)" "0" "(no flax in the bag)"
 assert_ok 'teleport {"x":8.0,"y":0.0,"z":12.6}' "stand at the spinning wheel"
 assert_rejected "craft $WHEEL 40038 false" "needs 3 Flax" "no flax, no bowstring (three to one)"
 assert_ok "grant_item $MYENT 40046 3" "an admin gives three flax"
@@ -701,7 +738,7 @@ assert_ok "wield $AXE_ROW" "the axe again (what follows counts on it)"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
 sleep 5
 # --- FOES (owner, 2026-10-19: the first enemies, a skeleton camp east of the spawn) ---
-assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "4" "three skeletons at the camp and the yard's sparring skeleton (the level's foe points)"
+assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "5" "three skeletons at the camp, the yard's sparring skeleton and a deer (the level's foe points)"
 SKEL="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $SKEL" 1)" "103" "skeleton_1 is a skeleton warrior (kind 103)"
 assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $SKEL" 1)" "120" "with its FoeDef's health"
@@ -825,6 +862,118 @@ assert_eq "$MS" "\"axe\"|1|100|true|3600" "into one share: the axe, 1 hit, 100 %
 assert_ok 'reset_rule "regents.meta_period_s"' "(test) the meta by the hour again"
 assert_ok 'reset_rule "regents.meta_alarm_min_hits"' "(test) and an alarm needs a busy hour"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
+# THE DEER (hunting, 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): a foe that never fights, with its own brain; any
+# hit STARTLES it (status 109, so its brain bolts); slain it lies Slain (the killing hit never startles it) and drops
+# nothing yet (its carcass is skinning's, the next step).
+DEER="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'deer_1'" 1)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $DEER" 1)" "106" "deer_1 is a deer (kind 106)"
+assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $DEER" 1)" "60" "with its FoeDef's health"
+assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = $DEER" 1)" "\"regents/deer\"" "and its own brain, the deer's (it grazes and flees)"
+check "$([ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $DEER" 1)" != "109" ] && echo true || echo false)" "NEGATIVE: unhurt, it is not startled"
+assert_ok 'teleport {"x":-30.0,"y":0.0,"z":6.4}' "stand by deer_1"
+standin_down
+standin_up '"regentscombatrefereecodefour"' "a fresh stand-in referee"
+hits "a chop at the deer" "$DEER" 40006:971
+# From the server's log, not its row: Startled lasts regents.startle_ms (2.5 s), and the CLI's calls since can outlast it.
+check "$(logged "entity $DEER: status [0-9]+ -> 109 \(Startled\)")" "the hit startles it (Startled, its brain bolts)"
+check "$(python -c "print('true' if float('$(sql_first "SELECT current FROM health_state WHERE entity_id = $DEER" 1)' or 60) < 60.0 else 'false')")" "and it is hurt"
+DXP0="$(xp_of 40007)"
+assert_ok "apply_damage $DEER $(python -c "print(float('$(sql_first "SELECT current FROM health_state WHERE entity_id = $DEER" 1)' or 60) - 1.0)") 0" "(test) worn down to 1"
+hits "a chop to finish it" "$DEER" 40006:972
+check "$(logged "entity $DEER: status [0-9]+ -> 106 \(Slain\)")" "the deer is Slain"
+check "$([ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $DEER" 1)" != "109" ] && [ "$(logged "entity $DEER: status 106 \(Slain\) -> 109")" = "false" ] && echo true || echo false)" "NEGATIVE: the killing hit never startles it after (Slain stays)"
+check "$(sql_first "SELECT fell_at FROM foe WHERE entity_id = $DEER" 1 | grep -qv none && echo true || echo false)" "it is known to have fallen"
+check "$(logged "slew Deer \($DEER\); its loot: \[\]")" "it drops nothing (its hide is skinned from its carcass): the log's loot is empty"
+assert_eq "$(row_count "SELECT * FROM foe_kill WHERE foe_id = 40004")" "0" "and no kill row of loot"
+check "$(python -c "print('true' if $(xp_of 40007) > $DXP0 else 'false')")" "and the killing chop paid axemanship XP"
+# SKINNING (Luke's H1, 2026-11-07; his knife and "the killer first, then anyone", 2026-11-09; HERBALISM_HUNTING_PREP.md
+# §7 step 4): the slain deer's body is taken away at once and its CARCASS lies where it fell, a node yours to skin first;
+# a knife (the starter's copper one) skins it; unskinned, it rots. SEVERAL HIDES (Luke, 2026-11-10): held E deals THE CUT
+# LINE (kind 107), a round that skins the WHOLE carcass: AFK's average for it (2.35 hides) x the round's factor, so a
+# full score pays 2 or 3 hides and a torn round 1 or 2; the carcass is worked out as the round ends and taken away.
+CARCASS="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carcass_$DEER'" 1)"
+check "$([ -n "$CARCASS" ] && echo true || echo false)" "the slain deer left its carcass ($CARCASS)"
+assert_eq "$(sql_first "SELECT def_id FROM gather_node WHERE entity_id = $CARCASS" 1)" "40008" "a Deer carcass (node 40008)"
+assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $DEER")" "0" "its body taken away at once: the carcass lies in its stead"
+assert_eq "$(sql_first "SELECT gone FROM foe WHERE entity_id = $DEER" 1)" "true" "and its point waits for the next deer"
+assert_eq "$(sql_first "SELECT owner_id FROM carcass WHERE entity_id = $CARCASS" 1)" "$MYENT" "yours to skin first: you did the damage"
+check "$(logged "left its carcass $CARCASS \(Deer carcass\), $MYENT's to skin first")" "(the server's log says so)"
+check "$([ "$(qty_of 40059)" -ge 1 ] && echo true || echo false)" "a new character has the copper knife (the starter kit)"
+HIDE0="$(qty_of 40056)"; SKIN0="$(xp_of 40011)"
+assert_ok "gather $CARCASS true" "hold E at the carcass: a round of the cut line"
+# Played at once: the round lasts 12 s and the server lets it go 20 s after, and on a busy machine each CLI call takes
+# seconds (a run with two checks here first submitted at 42 s: "no such challenge"). Its kind and payload are checked
+# after: the payload as play_round read it, the kind by the server taking (time, x, y) triples as a round.
+play_round skin 40008 13
+GOT=$(( $(qty_of 40056) - HIDE0 ))
+check "$(sql_rows "SELECT qty, active, score_pm, xp, depleted FROM work_result WHERE entity_id = $MYENT AND target_id = $CARCASS" | tail -1 | tr -d ' ' | grep -q "^$GOT|true|1000|$((GOT * 15))|true\$" && echo true || echo false)" \
+  "a work_result row says so: $GOT hides, a round, a full score, $((GOT * 15)) XP, the carcass skinned"
+check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 1000' && echo true || echo false)" "the bot drags the knife along every line, never off it: a full score ($BOT_PLAYED)"
+check "$([ "$GOT" -ge 2 ] && [ "$GOT" -le 3 ] && echo true || echo false)" "the server replayed it and paid the whole carcass: $GOT hides (2.93 at a full score)"
+assert_eq "$(xp_of 40011)" "$((SKIN0 + GOT * 15))" "and skinning has the XP (15 a hide)"
+assert_eq "$ROUND_PAYLOAD" "$CARCASS 40008 100" "dealt at the copper knife's speed (100 %), no ease at rank 1"
+check "$(logged "round $ROUND_CID at Deer carcass $CARCASS: score 1000")" "dealt as the cut line (kind 107): the server scored the bot's (time, x, y) triples"
+for _ in $(seq 1 10); do [ "$(row_count "SELECT * FROM gather_node WHERE entity_id = $CARCASS")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM gather_node WHERE entity_id = $CARCASS")" "0" "skinned whole in one round, it is taken away"
+assert_eq "$(row_count "SELECT * FROM node_taken WHERE entity_id = $CARCASS")" "0" "(and nothing is left counting its hides)"
+# ANOTHER'S KILL (Luke: "the killer first, then anyone"): the deer back on its point (its respawn made 3 s), slain by
+# an admin as a bot's kill, its carcass the bot's: you are refused until the bot's time is up, then you may skin it.
+assert_ok 'set_rule "regents.foe_respawn_s" 3.0 ""' "(test) a deer comes back in 3 s"
+DEER2=""
+for _ in $(seq 1 20); do DEER2="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'deer_1'" 1)"; [ -n "$DEER2" ] && [ "$DEER2" != "$DEER" ] && break; sleep 1; done
+check "$([ -n "$DEER2" ] && [ "$DEER2" != "$DEER" ] && echo true || echo false)" "the deer is back on its point ($DEER2)"
+assert_ok 'reset_rule "regents.foe_respawn_s"' "(test) foes come back as ever"
+SESS_D="$(sql_first "SELECT id FROM session WHERE world_id = 0" 1)"
+assert_ok "add_bot $SESS_D 0 \"stand\" {\"x\":-60.0,\"y\":0.0,\"z\":-30.0}" "(test) a bot, the other hunter"
+HUNTER="$(sql_rows "SELECT entity_id FROM npc_brain WHERE brain = 'stand'" | awk '{print $1}' | sort -n | tail -1)"
+assert_rejected "admin_slay $DEER2 999999" "no such killer" "NEGATIVE: an admin's slaying needs a killer that is (or nobody)"
+assert_ok "admin_slay $DEER2 $HUNTER" "an admin slays the deer as the bot's kill"
+assert_rejected "admin_slay $DEER2 $HUNTER" "fallen already" "NEGATIVE: not twice"
+CARCASS2="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carcass_$DEER2'" 1)"
+assert_eq "$(sql_first "SELECT owner_id FROM carcass WHERE entity_id = ${CARCASS2:-0}" 1)" "$HUNTER" "its carcass ($CARCASS2) is the bot's to skin first"
+assert_rejected "gather $CARCASS2 false" "another's to skin" "NEGATIVE: another's kill is refused you while it is theirs"
+assert_ok 'set_rule "regents.carcass_own_s" 0.0 ""' "(test) a kill is its killer's no time at all"
+assert_ok "gather $CARCASS2 false" "then anyone may skin it (tap E: AFK)"
+check "$(logged "$MYENT works Deer carcass $CARCASS2 AFK")" "(begun AFK: the server's log; the CLI's player is offline between calls, so AFK hides are the skilling playtest's)"
+assert_ok 'reset_rule "regents.carcass_own_s"' "(test) a kill is its killer's a minute again"
+# Unskinned, it rots: the rot made 5 s.
+assert_ok 'set_rule "regents.carcass_rot_s" 5.0 ""' "(test) a carcass rots in 5 s"
+for _ in $(seq 1 20); do [ "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${CARCASS2:-0}")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${CARCASS2:-0}")" "0" "unskinned, it rots away"
+assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = ${CARCASS2:-0}")" "0" "(its entity too)"
+assert_eq "$(row_count "SELECT * FROM carcass WHERE entity_id = ${CARCASS2:-0}")" "0" "(and its row)"
+assert_ok 'reset_rule "regents.carcass_rot_s"' "(test) carcasses rot as ever"
+# A TORN ROUND: a third deer, your kill; the bot drags 70 off every line (each look tears): a score of 0, which still pays
+# three quarters of AFK's average (1.76: one hide or two), and the carcass is skinned all the same.
+assert_ok 'set_rule "regents.foe_respawn_s" 3.0 ""' "(test) a deer comes back in 3 s"
+DEER3=""
+for _ in $(seq 1 20); do DEER3="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'deer_1'" 1)"; [ -n "$DEER3" ] && [ "$DEER3" != "$DEER2" ] && break; sleep 1; done
+assert_ok 'reset_rule "regents.foe_respawn_s"' "(test) foes come back as ever"
+assert_ok "admin_slay $DEER3 $MYENT" "an admin slays a third deer as your kill"
+CARCASS3="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carcass_$DEER3'" 1)"
+HIDE0="$(qty_of 40056)"
+# It may have grazed a few meters off its point before it fell: stand by its carcass.
+read -r CX CZ <<< "$(python -c "import re, sys; v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]; print('%.3f %.3f' % (v[0], v[2] + 1.2))" "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = ${CARCASS3:-0}" 1)")"
+assert_ok "teleport {\"x\":${CX:-0},\"y\":0.0,\"z\":${CZ:-0}}" "stand by the third carcass"
+assert_ok "gather ${CARCASS3:-0} true" "hold E at its carcass: the cut line"
+BOT_WANDER=1 play_round skin 40008 13
+GOT=$(( $(qty_of 40056) - HIDE0 ))
+check "$(sql_rows "SELECT score_pm, depleted FROM work_result WHERE entity_id = $MYENT AND target_id = ${CARCASS3:-0}" | tail -1 | tr -d ' ' | grep -q "^0|true\$" && echo true || echo false)" \
+  "and the carcass is skinned all the same (worked out as the round ends)"
+check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 0' && echo true || echo false)" "the bot tears every look: a score of 0 ($BOT_PLAYED)"
+check "$([ "$GOT" -ge 1 ] && [ "$GOT" -le 2 ] && echo true || echo false)" "NEGATIVE: a torn round pays fewer: $GOT hides (1.76 on average, against 2.93 clean)"
+assert_ok "remove_bots $SESS_D" "(test) the bot goes"
+# TANNING (Luke's H6): a deer hide into soft leather at the tanning rack, AFK, by Crafting (the leather it pays is the
+# skilling playtest's, as above).
+RACK="$(station_at tanning_rack)"
+assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "stand at the tanning rack"
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40056" | awk '{print $1}'); do
+  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the skinned hides put away)"
+done
+assert_rejected "craft $RACK 40046 false" "needs 1 Deer hide" "NEGATIVE: no hide, no leather"
+assert_ok "grant_item $MYENT 40056 1" "an admin gives a deer hide"
+assert_ok "craft $RACK 40046 false" "a deer hide set to tan (AFK)"
+assert_rejected "craft $RACK 40038 false" "is not made at the" "a bowstring is not made at the tanning rack"
 # A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
 # THE TUTORIAL SET ASIDE: nothing ticks; a death offers it again, once (T2).
 assert_ok "tutorial_set_aside" "the tutorial set aside before the death"
@@ -834,7 +983,7 @@ assert_ok "set_status $TREE 0 0 \"\"" "tree_1 grows back (an admin: it was worke
 assert_ok "wield $SW" "a sword taken in hand while it is set aside"
 assert_eq "$(tut_done)" "$TUT_BEFORE" "NEGATIVE: set aside, nothing ticks (the sword taken in hand)"
 assert_ok "gather $TREE true" "a round of branch dodge, then..."
-assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT")" "1" "(the round is open)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 107 AND entity_id = $MYENT")" "1" "(the round is open)"
 PHP2="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 assert_ok "apply_damage $MYENT $(python -c "print($PHP2 - 1)") 0" "(test) you are worn down to 1"
 standin_up "$C_CODE3" "a referee again"
@@ -844,7 +993,7 @@ assert_ok "resolve_action $RS2 $MYENT" "and hits you"
 check "$(logged "player $MYENT was slain by $SKEL2")" "you are slain"
 check "$(logged "$MYENT fell: the tutorial is offered again")" "and, set aside, the tutorial is offered again"
 assert_eq "$(tut_state)|$(sql_first "SELECT reminded FROM tutorial WHERE entity_id = $MYENT" 1 | tr -d ' ')" "0|true" "offered (state 0), reminded once"
-assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 105 AND entity_id = $MYENT")" "0" "slain mid-round: the round is withdrawn (no chop pose over the death)"
+assert_eq "$(row_count "SELECT * FROM challenge WHERE kind >= 100 AND kind <= 107 AND entity_id = $MYENT")" "0" "slain mid-round: the round is withdrawn (no chop pose over the death)"
 sleep 2
 assert_eq "$(sql_first "SELECT is_dead FROM health_state WHERE entity_id = $MYENT" 1)" "false" "a second on you are up"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT max FROM health_state WHERE entity_id = $MYENT" 1)" "whole"
@@ -1144,8 +1293,8 @@ assert_eq "$(row_count "SELECT * FROM order_filled WHERE entity_id = $MYENT")" "
 AXE_NOW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40034" 1)"
 assert_ok "wield $AXE_NOW" "wield a steel axe"
 assert_ok "admin_reset_bag $MYENT" "the admin resets the bag"
-assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")" "3" "three rows left: the starter kit"
-assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051) $(qty_of 40024) $(qty_of 40034)" "1 1 1 0 0" "a Copper axe, a Copper pickaxe and a Copper trowel; no coal, no steel axe"
+assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")" "4" "four rows left: the starter kit"
+assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051) $(qty_of 40059) $(qty_of 40024) $(qty_of 40034)" "1 1 1 1 0 0" "a Copper axe, a Copper pickaxe, a Copper trowel and (skinning, 2026-11-09) a Copper knife; no coal, no steel axe"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "the steel axe it held is put away"
 
 # --- THE WORLD MAP'S DISCOVERY (Luke, 2026-10-26): a node is named once you have been near it ---

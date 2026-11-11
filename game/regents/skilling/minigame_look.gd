@@ -28,6 +28,19 @@ static func theme() -> Theme:
 	return _theme
 
 
+## How strongly a pattern's outline is drawn (1: full). Full while it is laid on (or with no pattern, or the round over);
+## lifted at `lifted_ms` (-1: never laid and lifted), it fades over `fade_ms` to `ghost_pm` thousandths of full and stays
+## (Luke, 2026-11-09: copper 3 s to a faint ghost, iron 1.5 s to a fainter one, steel 3 s to nothing).
+static func pattern_alpha(shown: bool, now_ms: int, lifted_ms: int, fade_ms: int, ghost_pm: int) -> float:
+	if shown:
+		return 1.0
+	var ghost: float = clampf(float(ghost_pm) / 1000.0, 0.0, 1.0)
+	if lifted_ms < 0 or fade_ms <= 0:
+		return ghost
+	var f: float = clampf(float(now_ms - lifted_ms) / float(fade_ms), 0.0, 1.0)
+	return lerpf(1.0, ghost, f)
+
+
 ## Words with a soft shadow under them, so they read over a lit 3D stage.
 static func text(ci: CanvasItem, font: Font, at: Vector2, s: String, size: int, color: Color = INK,
 		align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:

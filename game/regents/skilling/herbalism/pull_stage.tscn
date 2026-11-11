@@ -1,0 +1,264 @@
+[gd_scene load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/herbalism/pull_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" uid="uid://b1yxll2kocuhd" path="res://game/regents/art/nature/Flower_3_Group.gltf" id="2_flax"]
+[ext_resource type="PackedScene" uid="uid://csqfq1o46nfow" path="res://game/regents/art/nature/Grass_Common_Short.gltf" id="3_grass"]
+[ext_resource type="PackedScene" uid="uid://cs5x0s6monbwm" path="res://game/regents/art/nature/Pebble_Round_1.gltf" id="4_pebble"]
+[ext_resource type="PackedScene" uid="uid://blxuc8gk4d1u8" path="res://game/regents/art/nature/Fern_1.gltf" id="5_fern"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/herbalism/trowel.tscn" id="6_trowel"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/herbalism/dig.wav" id="7_dig"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/herbalism/strain.wav" id="8_strain"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/herbalism/catch.wav" id="9_catch"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/herbalism/snap.wav" id="10_snap"]
+[ext_resource type="AudioStream" path="res://game/regents/art/sound/herbalism/up.wav" id="11_up"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.32, 0.52, 0.78, 1)
+sky_horizon_color = Color(0.72, 0.8, 0.86, 1)
+ground_bottom_color = Color(0.25, 0.3, 0.2, 1)
+ground_horizon_color = Color(0.62, 0.68, 0.62, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_energy = 0.8
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.7, 0.78, 0.84, 1)
+fog_density = 0.02
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_color = Color(0.36, 0.47, 0.25, 1)
+
+[sub_resource type="PlaneMesh" id="Ground"]
+material = SubResource("GroundMat")
+size = Vector2(40, 40)
+
+[sub_resource type="StandardMaterial3D" id="SoilMat"]
+albedo_color = Color(0.33, 0.23, 0.14, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="DugMat"]
+albedo_color = Color(0.2, 0.13, 0.08, 1)
+roughness = 1.0
+
+[sub_resource type="SphereMesh" id="MoundHalf"]
+material = SubResource("SoilMat")
+radius = 0.15
+height = 0.3
+
+[sub_resource type="CylinderMesh" id="Furrow"]
+material = SubResource("DugMat")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.004
+radial_segments = 20
+
+[sub_resource type="QuadMesh" id="ClodMesh"]
+material = SubResource("SoilMat")
+size = Vector2(0.022, 0.018)
+
+[sub_resource type="Curve" id="Fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="FiberMat"]
+albedo_color = Color(0.86, 0.80, 0.55, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="FiberMesh"]
+material = SubResource("FiberMat")
+size = Vector2(0.03, 0.008)
+
+[node name="PullStage" type="SubViewportContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+script = ExtResource("1_stage")
+
+[node name="Viewport" type="SubViewport" parent="."]
+own_world_3d = true
+handle_input_locally = false
+msaa_3d = 1
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="Stage" type="Node3D" parent="Viewport"]
+
+[node name="Environment" type="WorldEnvironment" parent="Viewport/Stage"]
+environment = SubResource("Env")
+
+[node name="Camera" type="Camera3D" parent="Viewport/Stage"]
+position = Vector3(0, 0.3, 0.68)
+rotation = Vector3(-0.26, 0, 0)
+current = true
+fov = 40.0
+
+[node name="Sun" type="DirectionalLight3D" parent="Viewport/Stage"]
+rotation = Vector3(-0.85, 0.55, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="Viewport/Stage"]
+mesh = SubResource("Ground")
+
+[node name="MoundLeft" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, -0.07, 0, 0)
+mesh = SubResource("MoundHalf")
+
+[node name="MoundRight" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0.07, 0, 0)
+mesh = SubResource("MoundHalf")
+
+[node name="FurrowLeft" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.03, 0.04)
+visible = false
+mesh = SubResource("Furrow")
+
+[node name="FurrowRight" type="MeshInstance3D" parent="Viewport/Stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.03, 0.04)
+visible = false
+mesh = SubResource("Furrow")
+
+[node name="Clump" type="Node3D" parent="Viewport/Stage"]
+position = Vector3(0, 0.03, -0.02)
+
+[node name="Stem1" parent="Viewport/Stage/Clump" instance=ExtResource("2_flax")]
+transform = Transform3D(0.14, 0, 0, 0, 0.16, 0, 0, 0, 0.14, -0.05, 0, -0.04)
+
+[node name="Stem2" parent="Viewport/Stage/Clump" instance=ExtResource("2_flax")]
+transform = Transform3D(-0.07, 0, 0.121, 0, 0.15, 0, -0.121, 0, -0.07, 0.05, 0, -0.05)
+
+[node name="Stem3" parent="Viewport/Stage/Clump" instance=ExtResource("2_flax")]
+transform = Transform3D(0.07, 0, -0.121, 0, 0.17, 0, 0.121, 0, 0.07, 0.005, 0, -0.08)
+
+[node name="Plant" type="Node3D" parent="Viewport/Stage"]
+position = Vector3(0, 0.035, 0.04)
+
+[node name="Flax" parent="Viewport/Stage/Plant" instance=ExtResource("2_flax")]
+transform = Transform3D(0.16, 0, 0, 0, 0.16, 0, 0, 0, 0.16, 0, 0, 0)
+
+[node name="Pile" type="Node3D" parent="Viewport/Stage"]
+position = Vector3(0.19, 0.01, 0.12)
+rotation = Vector3(0, 1.15, 0)
+
+[node name="Grass" parent="Viewport/Stage" instance=ExtResource("3_grass")]
+position = Vector3(-0.75, 0, -0.4)
+
+[node name="Grass2" parent="Viewport/Stage" instance=ExtResource("3_grass")]
+position = Vector3(0.8, 0, -0.25)
+rotation = Vector3(0, 1.4, 0)
+
+[node name="Fern" parent="Viewport/Stage" instance=ExtResource("5_fern")]
+position = Vector3(0.6, 0, -1.2)
+
+[node name="Pebble" parent="Viewport/Stage" instance=ExtResource("4_pebble")]
+transform = Transform3D(0.18, 0, 0, 0, 0.18, 0, 0, 0, 0.18, -0.34, 0, 0.02)
+
+[node name="TrowelRest" type="Marker3D" parent="Viewport/Stage"]
+transform = Transform3D(-0.637, 0.382, 0, -0.382, -0.637, 0, 0, 0, 0.743, -0.225, 0.28, 0.1)
+gizmo_extents = 0.1
+
+[node name="Preview" parent="Viewport/Stage/TrowelRest" instance=ExtResource("6_trowel")]
+
+[node name="DigLeft" type="Marker3D" parent="Viewport/Stage"]
+transform = Transform3D(-0.637, 0.382, 0, -0.382, -0.637, 0, 0, 0, 0.743, -0.205, 0.22, 0.07)
+gizmo_extents = 0.1
+
+[node name="Preview" parent="Viewport/Stage/DigLeft" instance=ExtResource("6_trowel")]
+
+[node name="DigRight" type="Marker3D" parent="Viewport/Stage"]
+transform = Transform3D(-0.637, -0.382, 0, 0.382, -0.637, 0, 0, 0, 0.743, 0.205, 0.22, 0.07)
+gizmo_extents = 0.1
+
+[node name="Preview" parent="Viewport/Stage/DigRight" instance=ExtResource("6_trowel")]
+
+[node name="SoilLeft" type="CPUParticles3D" parent="Viewport/Stage"]
+position = Vector3(-0.09, 0.03, 0.05)
+emitting = false
+amount = 12
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("ClodMesh")
+direction = Vector3(-0.6, 1, 0.3)
+spread = 30.0
+gravity = Vector3(0, -6, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+angular_velocity_min = -300.0
+angular_velocity_max = 300.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="SoilRight" type="CPUParticles3D" parent="Viewport/Stage"]
+position = Vector3(0.09, 0.03, 0.05)
+emitting = false
+amount = 12
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("ClodMesh")
+direction = Vector3(0.6, 1, 0.3)
+spread = 30.0
+gravity = Vector3(0, -6, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+angular_velocity_min = -300.0
+angular_velocity_max = 300.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="Fibers" type="CPUParticles3D" parent="Viewport/Stage"]
+position = Vector3(0, 0.08, 0.04)
+emitting = false
+amount = 14
+lifetime = 0.7
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("FiberMesh")
+direction = Vector3(0, 1, 0)
+spread = 70.0
+gravity = Vector3(0, -3, 0)
+initial_velocity_min = 0.4
+initial_velocity_max = 1.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+scale_amount_curve = SubResource("Fade")
+
+[node name="Dig" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_dig")
+volume_db = -6.0
+max_polyphony = 2
+bus = &"Effects"
+
+[node name="Strain" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_strain")
+volume_db = -14.0
+bus = &"Effects"
+
+[node name="Catch" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_catch")
+volume_db = -5.0
+bus = &"Effects"
+
+[node name="Snap" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_snap")
+volume_db = -3.0
+max_polyphony = 2
+bus = &"Effects"
+
+[node name="Up" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_up")
+volume_db = -5.0
+bus = &"Effects"

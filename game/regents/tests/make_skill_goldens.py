@@ -5,7 +5,7 @@ reproduce every case exactly (integers only).
 
     python game/regents/tests/make_skill_goldens.py      (from the repo root)
 
-writes shared/golden/regents/{crack,smelt,shape,beat}.json (beat: smelting as a rhythm track). Change a rule here AND in both twins, run this,
+writes shared/golden/regents/{crack,smelt,shape,beat,carve,pull,skin}.json (beat: smelting as a rhythm track; pull: herbalism; skin: skinning). Change a rule here AND in both twins, run this,
 and commit the new files with the change. Division and remainder TRUNCATE toward zero here, as they do
 in GDScript and Rust (Python's own floor them): `tdiv`.
 """
@@ -811,6 +811,365 @@ def carve_bot(seed, p, look_again=False, done=True):
     return out
 
 
+# --- pull the root (herbalism; HERBALISM_HUNTING_PREP.md §3, Luke's H3, 2026-11-07; the trowel's work 2026-11-08) ---
+PULL_DOWN, PULL_UP, PULL_LEFT, PULL_RIGHT = 1, 2, 3, 4
+# Which sides of a stem start LOOSE (Luke, 2026-11-09: "cutaway, no chore"): their own stream, so the side roots never change.
+PULL_LOOSE_SALT = 0x6C6F6F73
+
+
+class Pull:
+    """In ticks of 50 ms, a clump (Luke, 2026-11-08): stem after stem, each drawing its own side roots (depth, jump,
+    side), until the time runs out. A trowel stroke cuts the side root showing on its side, else digs that side's packed
+    soil; while it runs the stem is not pulled. Held, the strain rises and the root comes up (faster at a higher strain,
+    slower in packed soil); let go it eases; a side root pulled through uncut jumps the strain; past 1000 it snaps
+    (worth snap_keep_pm of what came up), at 1000 up it is whole. The rules in full are on PullModel."""
+
+    def __init__(self, seed, p):
+        self.p = p
+        self.st = seed_state(seed)
+        self.draw()
+        self.first = (list(self.depth), list(self.jump), list(self.side))
+        self.tick = 0
+        self.down = False
+        self.plant = 0
+        self.strain = self.up_by = self.next_snag = 0
+        self.soil = seed_state(seed ^ PULL_LOOSE_SALT)
+        self.draw_soil()
+        self.stroke_until = self.stroke_to_tick = 0
+        self.whole = self.snapped = self.caught = self.cut = self.dug = self.worth = 0
+        self.over = False
+        self.finished = False
+        self.last_t = -1
+
+    def draw(self):
+        p = self.p
+        seg = 900 // max(1, p["snags"])
+        self.depth, self.jump, self.side = [], [], []
+        for k in range(p["snags"]):
+            self.st = next_u32(self.st)
+            self.depth.append(50 + k * seg + (self.st >> 8) % max(1, seg))
+            self.st = next_u32(self.st)
+            self.jump.append(p["jump_lo"] + (self.st >> 8) % max(1, p["jump_hi"] - p["jump_lo"] + 1))
+            self.st = next_u32(self.st)
+            self.side.append(PULL_LEFT + (self.st >> 8) % 2)
+
+    def draw_soil(self):
+        # Each side packed (1000), or LOOSE (0) with a chance of loose_pm, left then right; 0: both packed, no draw.
+        self.pack_left = self.pack_right = 1000
+        loose = self.p.get("loose_pm", 0)
+        if loose > 0:
+            self.soil = next_u32(self.soil)
+            if (self.soil >> 8) % 1000 < loose:
+                self.pack_left = 0
+            self.soil = next_u32(self.soil)
+            if (self.soil >> 8) % 1000 < loose:
+                self.pack_right = 0
+
+    def showing(self):
+        p = self.p
+        if self.over or self.up_by <= 0 or self.next_snag >= p["snags"] or self.depth[self.next_snag] - self.up_by > p["show_depth"]:
+            return 0
+        return self.side[self.next_snag]
+
+    def stroking(self, t):
+        return t < self.stroke_until
+
+    def advance_to(self, t):
+        total = self.p["duration_ms"] // TICK
+        while not self.over and (self.tick + 1) * TICK <= t and self.tick < total:
+            self.step()
+            self.tick += 1
+
+    def step(self):
+        p = self.p
+        if not self.down or self.tick < self.stroke_to_tick:
+            self.strain = max(0, self.strain - p["strain_ease"])
+            return
+        self.strain += p["strain_rise"]
+        pack = (self.pack_left + self.pack_right) // 2
+        self.up_by += tdiv((p["pull_rate"] + tdiv(self.strain * p["pull_gain"], 1000)) * (1000 - tdiv(pack * p["hold_pm"], 1000)), 1000)
+        while self.next_snag < p["snags"] and self.up_by >= self.depth[self.next_snag]:
+            self.strain += self.jump[self.next_snag]
+            self.next_snag += 1
+            self.caught += 1
+        if self.strain > 1000:
+            self.worth += tdiv(min(self.up_by, 1000) * p["snap_keep_pm"], 1000)
+            self.snapped += 1
+            self.next_plant()
+        elif self.up_by >= 1000:
+            self.worth += 1000
+            self.whole += 1
+            self.next_plant()
+
+    def next_plant(self):
+        self.plant += 1
+        self.draw()
+        self.strain = self.up_by = self.next_snag = 0
+        self.draw_soil()
+
+    def press(self, t, code):
+        if t < self.last_t:
+            return
+        self.last_t = t
+        if t < 0 or t > self.p["duration_ms"]:
+            return
+        self.advance_to(t)
+        if self.over:
+            return
+        if code == PULL_DOWN:
+            self.down = True
+        elif code == PULL_UP:
+            self.down = False
+        elif code in (PULL_LEFT, PULL_RIGHT) and not self.stroking(t):
+            self.stroke_until = t + self.p["stroke_ms"]
+            self.stroke_to_tick = self.stroke_until // TICK
+            if self.showing() == code:
+                self.next_snag += 1
+                self.cut += 1
+            elif code == PULL_LEFT and self.pack_left > 0:
+                self.pack_left = max(0, self.pack_left - self.p["dig_pm"])
+                self.dug += 1
+            elif code == PULL_RIGHT and self.pack_right > 0:
+                self.pack_right = max(0, self.pack_right - self.p["dig_pm"])
+                self.dug += 1
+
+    def result(self):
+        if not self.finished:
+            self.finished = True
+            self.advance_to(self.p["duration_ms"] // TICK * TICK)
+            self.over = True
+            self.worth += tdiv(min(self.up_by, 1000) * self.p["snap_keep_pm"], 1000)
+        return {"whole": self.whole, "snapped": self.snapped, "caught": self.caught, "cut": self.cut, "dug": self.dug,
+                "worth": self.worth, "score_pm": min(1000, self.worth // max(1, self.p["target_plants"]))}
+
+
+def pull_play(seed, p, inputs):
+    m = Pull(seed, p)
+    for t, c in inputs:
+        m.press(t, c)
+    return m.result()
+
+
+def pull_bot(seed, p, hi=850, lo=500, digs=2, cuts=True, react_ms=0):
+    """Digs each stem round first (`digs` strokes on each packed side, left then right; a loose side not at all), then holds while the strain is under `hi`,
+    lets go at it and pulls again once it has eased to `lo`; with `cuts`, strokes the side whose soil cracks (seen
+    `react_ms` late). Looks every 50 ms; a stroke only once the last is done."""
+    m = Pull(seed, p)
+    out = []
+    t = 0
+    seen_since = None
+    plant = -1
+    left = right = 0
+    while t <= p["duration_ms"]:
+        m.advance_to(t)
+        if m.plant != plant:
+            plant, left, right = m.plant, 0, 0
+        show = m.showing()
+        if show and seen_since is None:
+            seen_since = t
+        elif not show:
+            seen_since = None
+        code = None
+        if not m.stroking(t):
+            if cuts and show and t - seen_since >= react_ms:
+                code = show
+            elif m.up_by == 0 and left < digs and m.pack_left > 0:
+                code, left = PULL_LEFT, left + 1
+            elif m.up_by == 0 and right < digs and m.pack_right > 0:
+                code, right = PULL_RIGHT, right + 1
+        if code is not None:
+            out.append([t, code])
+            m.press(t, code)
+        elif ((left >= digs or m.pack_left == 0) and (right >= digs or m.pack_right == 0)) or m.up_by > 0:
+            want = m.strain < hi if m.down else m.strain <= lo
+            if want != m.down:
+                c = PULL_DOWN if want else PULL_UP
+                out.append([t, c])
+                m.press(t, c)
+        t += 50
+    return out
+
+
+# --- skinning's cut line (HERBALISM_HUNTING_PREP.md H4, Luke 2026-11-07: drag the knife along it; built 2026-11-10) ---
+SKIN_LIFT = -1
+
+
+def skin_isqrt(n):
+    """The floor of the square root (any exact method agrees; this one is not Newton's, so the twins' are checked)."""
+    if n <= 0:
+        return 0
+    lo, hi = 0, n
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if mid * mid <= n:
+            lo = mid
+        else:
+            hi = mid - 1
+    return lo
+
+
+class Skin:
+    """The hide 1000 x 1000; a line of `points` points across it (left to right or back), each up or down by up to
+    `wobble`, drawn from the seed as it starts. The knife held in the hide cuts along the line while it is on it (within
+    `near` of the tip's stretch or the next) and within `reach` of the tip, no faster than cut_speed a tick; anywhere
+    else it tears. A line done is worth 1000 less tear_pm a tear; the knife lifts; the next is drawn. The rules in full
+    are on SkinModel."""
+
+    def __init__(self, seed, p):
+        self.p = p
+        self.st = seed_state(seed)
+        self.draw()
+        self.first = (list(self.xs), list(self.ys))
+        self.tick = 0
+        self.down = False
+        self.kx = self.ky = 0
+        self.lines = self.clean = self.torn = self.worth = 0
+        self.last_t = -1
+        self.over = False
+
+    def draw(self):
+        p = self.p
+        n = max(2, p["points"])
+        self.st = next_u32(self.st)
+        back = (self.st >> 8) % 2 == 1
+        self.xs, self.ys = [], []
+        for k in range(n):
+            u = 100 + tdiv(k * 800, n - 1)
+            self.st = next_u32(self.st)
+            self.xs.append(1000 - u if back else u)
+            self.ys.append(500 + (self.st >> 8) % (2 * p["wobble"] + 1) - p["wobble"])
+        self.lens = [max(1, skin_isqrt((self.xs[k + 1] - self.xs[k]) ** 2 + (self.ys[k + 1] - self.ys[k]) ** 2)) for k in range(n - 1)]
+        self.seg = self.f = self.tears = 0
+
+    def tip(self):
+        s = self.seg
+        return (self.xs[s] + tdiv((self.xs[s + 1] - self.xs[s]) * self.f, 1000), self.ys[s] + tdiv((self.ys[s + 1] - self.ys[s]) * self.f, 1000))
+
+    def on_stretch(self, k, x, y):
+        dx, dy = self.xs[k + 1] - self.xs[k], self.ys[k + 1] - self.ys[k]
+        cross = dx * (y - self.ys[k]) - dy * (x - self.xs[k])
+        return cross * cross <= self.p["near"] ** 2 * (dx * dx + dy * dy)
+
+    def cuts_at(self, x, y):
+        tx, ty = self.tip()
+        if (x - tx) ** 2 + (y - ty) ** 2 > self.p["reach"] ** 2:
+            return False
+        return self.on_stretch(self.seg, x, y) or (self.seg + 2 < len(self.xs) and self.on_stretch(self.seg + 1, x, y))
+
+    def advance_to(self, t):
+        total = self.p["duration_ms"] // TICK
+        while not self.over and (self.tick + 1) * TICK <= t and self.tick < total:
+            self.step()
+            self.tick += 1
+
+    def step(self):
+        p = self.p
+        if not self.down:
+            return
+        if not self.cuts_at(self.kx, self.ky):
+            self.tears += 1
+            self.torn += 1
+            return
+        s = self.seg
+        dx, dy = self.xs[s + 1] - self.xs[s], self.ys[s + 1] - self.ys[s]
+        dot = dx * (self.kx - self.xs[s]) + dy * (self.ky - self.ys[s])
+        along = tdiv(dot * 1000, dx * dx + dy * dy) if dot > 0 else 0
+        if s + 2 < len(self.xs) and self.on_stretch(s + 1, self.kx, self.ky) and                 (self.xs[s + 2] - self.xs[s + 1]) * (self.kx - self.xs[s + 1]) + (self.ys[s + 2] - self.ys[s + 1]) * (self.ky - self.ys[s + 1]) > 0:
+            along = 1000   # past the bend, on the next stretch: the cut runs to the bend
+        if along <= self.f:
+            return
+        self.f = min(along, self.f + max(1, tdiv(p["cut_speed"] * 1000, self.lens[s])))
+        if self.f < 1000:
+            return
+        if s + 2 < len(self.xs):
+            self.seg, self.f = s + 1, 0
+            return
+        self.worth += max(0, 1000 - self.tears * p["tear_pm"])
+        self.lines += 1
+        self.clean += self.tears == 0
+        self.down = False
+        self.draw()
+
+    def press(self, t, x, y):
+        if t < self.last_t:
+            return
+        self.last_t = t
+        if t < 0 or t > self.p["duration_ms"]:
+            return
+        self.advance_to(t)
+        if self.over:
+            return
+        if x == SKIN_LIFT:
+            self.down = False
+        elif 0 <= x <= 1000 and 0 <= y <= 1000:
+            self.kx, self.ky, self.down = x, y, True
+
+    def result(self):
+        if not self.over:
+            p = self.p
+            self.advance_to(p["duration_ms"] // TICK * TICK)
+            self.over = True
+            done = tdiv(self.seg * 1000 + self.f, max(1, len(self.xs) - 1))
+            self.worth += tdiv(tdiv(max(0, 1000 - self.tears * p["tear_pm"]) * done, 1000) * p["part_keep_pm"], 1000)
+        return {"lines": self.lines, "clean": self.clean, "torn": self.torn, "worth": self.worth,
+                "score_pm": min(1000, self.worth // max(1, self.p["target_lines"]))}
+
+
+def skin_play(seed, p, inputs):
+    m = Skin(seed, p)
+    for t, x, y in inputs:
+        m.press(t, x, y)
+    return m.result()
+
+
+def skin_bot(seed, p, lead=None, wander=0, react_ms=0, lift_after=0, rng=None, until=None, off=0):
+    """A hand on the knife, looking every 50 ms: presses at a new line's start `react_ms` after it shows; held, aims
+    `lead` along the line past the tip (the cut's pace by default) and `wander` across it (a random walk with `rng`);
+    torn `lift_after` looks running (0: never), it lifts and presses again at the tip. `off`: held, it aims this far
+    across the line (70: every look tears)."""
+    m = Skin(seed, p)
+    lead = p["cut_speed"] if lead is None else lead
+    out, t, line_at, line, drift, torn_run, seen_torn = [], 0, 0, 0, 0.0, 0, 0
+    end = p["duration_ms"] if until is None else until
+    while t <= end:
+        m.advance_to(t)
+        torn_run = torn_run + 1 if m.down and m.torn > seen_torn else 0
+        seen_torn = m.torn
+        if m.lines != line:
+            line, line_at = m.lines, t
+        if not m.down:
+            if t - line_at >= react_ms:
+                tx, ty = m.tip()
+                out.append([t, tx, ty])
+                m.press(t, tx, ty)
+                torn_run = 0
+        else:
+            tx, ty = m.tip()
+            # `lead` along the line from the tip (over the stretch's end into the next), then off it by the drift.
+            s, left, x, y = m.seg, float(lead), float(tx), float(ty)
+            while left > 0 and s < len(m.xs) - 1:
+                ex, ey = m.xs[s + 1] - x, m.ys[s + 1] - y
+                d = (ex * ex + ey * ey) ** 0.5
+                if d >= left or s == len(m.xs) - 2:
+                    k = min(1.0, left / d) if d > 0 else 0.0
+                    x, y, left = x + ex * k, y + ey * k, 0
+                else:
+                    x, y, left, s = float(m.xs[s + 1]), float(m.ys[s + 1]), left - d, s + 1
+            if rng is not None and wander > 0:
+                drift = drift * 0.8 + rng.gauss(0.0, wander * 0.6)
+            ax, ay = max(0, min(1000, round(x))), max(0, min(1000, round(y + drift + off)))
+            if lift_after > 0 and torn_run >= lift_after:
+                out.append([t, SKIN_LIFT, SKIN_LIFT])
+                m.press(t, SKIN_LIFT, SKIN_LIFT)
+                drift, torn_run = 0.0, 0
+                line_at = t + 50 - react_ms   # presses again at the next look
+            else:
+                out.append([t, ax, ay])
+                m.press(t, ax, ay)
+        t += 50
+    return out
+
+
 def main():
     rng = random.Random(20261019)
     crack_p = {"duration_ms": 10000, "swing_ms": 260, "stagger_ms": 700, "split_ms": 600, "notches": 7,
@@ -1010,10 +1369,94 @@ def main():
     add_carve("a cut never goes through the other edge", 3, dict(bow_c, hide_outline=0),
               [[200 + k * 240, 1000 + 4] for k in range(12)])
 
+    pull_p = {"duration_ms": 15000, "stroke_ms": 350, "target_plants": 3, "dig_pm": 500, "hold_pm": 600, "strain_rise": 40,
+              "strain_ease": 60, "pull_rate": 10, "pull_gain": 40, "snags": 3, "jump_lo": 200, "jump_hi": 400, "show_depth": 350,
+              "snap_keep_pm": 250}
+    pull = []
+
+    def add_pull(name, seed, p, inputs):
+        m = Pull(seed, p)
+        pull.append(dict(name=name, **seed_fields(seed), params=p, inputs=inputs, snag_depth=m.first[0], snag_jump=m.first[1],
+                         snag_side=m.first[2], expected=pull_play(seed, p, inputs)))
+
+    add_pull("dug round, every side root cut", 7, pull_p, pull_bot(7, pull_p))
+    add_pull("dug round, cut late", 1 + 7919, pull_p, pull_bot(1 + 7919, pull_p, react_ms=300))
+    add_pull("never digs: packed soil holds the root", 1 + 2 * 7919, pull_p, pull_bot(1 + 2 * 7919, pull_p, digs=0))
+    add_pull("never cuts: pulled through every side root", 1 + 3 * 7919, pull_p, pull_bot(1 + 3 * 7919, pull_p, cuts=False))
+    add_pull("greedy, never cuts: they snap", 1 + 4 * 7919, pull_p, pull_bot(1 + 4 * 7919, pull_p, hi=980, lo=800, cuts=False))
+    add_pull("held from the start: stem after stem snaps", 0, pull_p, [[0, PULL_DOWN]])
+    add_pull("a high-bit seed, dug once a side", 0xFEDCBA9876543210, pull_p, pull_bot(0xFEDCBA9876543210, pull_p, digs=1, react_ms=200))
+    add_pull("nothing pressed", 42, pull_p, [])
+    add_pull("only strokes: dug, then scraped, nothing pulled", 3, pull_p,
+             [[0, PULL_LEFT], [100, PULL_LEFT], [350, PULL_LEFT], [700, PULL_LEFT], [1050, PULL_RIGHT], [1400, PULL_LEFT]])
+    add_pull("a stroke stops the pull while it runs", 5, dict(pull_p, snags=0, hold_pm=0),
+             [[0, PULL_DOWN], [400, PULL_LEFT], [600, PULL_RIGHT], [800, PULL_RIGHT], [3000, PULL_UP]])
+    add_pull("the wrong side digs, it does not cut", 9, pull_p,
+             [[0, PULL_LEFT], [400, PULL_LEFT], [800, PULL_RIGHT], [1200, PULL_RIGHT], [1500, PULL_DOWN]] +
+             [[1550 + 100 * k, PULL_LEFT + (k % 2)] for k in range(40)])
+    wild = [[0, PULL_UP], [100, PULL_DOWN], [100, PULL_DOWN], [90, PULL_UP], [700, 9], [800, PULL_UP], [800, PULL_RIGHT], [-5, PULL_DOWN],
+            [1200, PULL_DOWN], [1210, PULL_LEFT], [1220, PULL_LEFT], [20000, PULL_UP]]
+    add_pull("every code, out of order, past the end", 0x1234567890ABCDEF, pull_p, wild)
+    add_pull("still in the ground at the end: part of what came up", 1 + 5 * 7919, dict(pull_p, duration_ms=2500),
+             pull_bot(1 + 5 * 7919, dict(pull_p, duration_ms=2500)))
+    add_pull("no side roots", 11, dict(pull_p, snags=0), pull_bot(11, dict(pull_p, snags=0), hi=950, lo=800))
+    top_p = dict(pull_p, snags=0, hold_pm=0)
+    add_pull("held to exactly the top: 1000 holds", 13, top_p, [[0, PULL_DOWN], [1250, PULL_UP], [2000, PULL_DOWN], [3000, PULL_UP]])
+    add_pull("one tick past the top: it snaps", 13, top_p, [[0, PULL_DOWN], [1300, PULL_UP]])
+    quick = dict(pull_p, stroke_ms=175, jump_lo=176, jump_hi=352, hold_pm=528)
+    add_pull("a quick trowel, eased side roots and soil", 1 + 6 * 7919, quick, pull_bot(1 + 6 * 7919, quick, react_ms=250))
+    flax_p = dict(pull_p, stroke_ms=250, snags=2)
+    add_pull("flax as first tuned: dug round, cut", 1 + 7 * 7919, flax_p, pull_bot(1 + 7 * 7919, flax_p, react_ms=200))
+    add_pull("flax as first tuned: dug once a side, never cuts", 1 + 8 * 7919, flax_p,
+             pull_bot(1 + 8 * 7919, flax_p, digs=1, cuts=False, hi=900, lo=600))
+    # LOOSE OR PACKED (Luke, 2026-11-09: no chore): each side of each stem loose with a chance, from its own stream.
+    soil_p = dict(flax_p, loose_pm=500, dig_pm=1000)
+    add_pull("loose or packed: only the packed sides dug, cut", 1 + 9 * 7919, soil_p, pull_bot(1 + 9 * 7919, soil_p, digs=1, react_ms=200))
+    add_pull("loose or packed: never digs", 1 + 10 * 7919, soil_p, pull_bot(1 + 10 * 7919, soil_p, digs=0, react_ms=200))
+    add_pull("every side loose: nothing to dig", 1 + 11 * 7919, dict(soil_p, loose_pm=1000), pull_bot(1 + 11 * 7919, dict(soil_p, loose_pm=1000), digs=1))
+    add_pull("loose or packed, a high-bit seed: a stroke into loose soil scrapes", 0xFEDCBA9876543210, soil_p,
+             [[0, PULL_LEFT], [300, PULL_RIGHT], [600, PULL_DOWN], [4000, PULL_UP], [4100, PULL_LEFT], [4400, PULL_DOWN]])
+    # SKINNING'S CUT LINE (Luke's H4; built 2026-11-10): drag the knife along it, off it tears the hide.
+    skin_p = {"duration_ms": 12000, "target_lines": 3, "points": 5, "wobble": 120, "near": 40, "reach": 120, "cut_speed": 30,
+              "tear_pm": 60, "part_keep_pm": 500}
+    skin = []
+
+    def add_skin(name, seed, p, inputs):
+        m = Skin(seed, p)
+        skin.append(dict(name=name, **seed_fields(seed), params=p, inputs=inputs, line_x=m.first[0], line_y=m.first[1],
+                         expected=skin_play(seed, p, inputs)))
+
+    add_skin("traced at the cut's pace", 7, skin_p, skin_bot(7, skin_p))
+    add_skin("traced a little behind, seen late", 1 + 7919, skin_p, skin_bot(1 + 7919, skin_p, lead=20, react_ms=300))
+    add_skin("a wandering hand", 1 + 2 * 7919, skin_p, skin_bot(1 + 2 * 7919, skin_p, wander=30, rng=random.Random(11)))
+    add_skin("a wandering hand that lifts when it tears", 1 + 3 * 7919, skin_p,
+             skin_bot(1 + 3 * 7919, skin_p, wander=45, rng=random.Random(12), lift_after=2, react_ms=150))
+    add_skin("run ahead of the cut: it tears", 1 + 4 * 7919, skin_p, skin_bot(1 + 4 * 7919, skin_p, lead=160))
+    add_skin("pushed just within reach", 1 + 5 * 7919, skin_p, skin_bot(1 + 5 * 7919, skin_p, lead=110))
+    m0 = Skin(9, skin_p)
+    add_skin("rests on the line's start: no cut, no tear", 9, skin_p, [[0, m0.first[0][0], m0.first[1][0]]])
+    add_skin("pressed in the middle of the hide and held", 0, skin_p, [[0, 500, 100]])
+    add_skin("nothing pressed", 42, skin_p, [])
+    m1 = Skin(13, skin_p)
+    x0, y0 = m1.first[0][0], m1.first[1][0]
+    wild = [[0, SKIN_LIFT, SKIN_LIFT], [50, x0, y0], [40, 900, 900], [100, 1001, 5], [150, -2, 7], [200, x0, y0 + 5], [200, 700, 700],
+            [-5, x0, y0], [400, SKIN_LIFT, 3], [450, SKIN_LIFT, SKIN_LIFT], [500, 300, -1], [20000, 10, 10], [600, x0, y0]]
+    add_skin("every kind of input, out of order and out of range", 0x1234567890ABCDEF, skin_p, wild)
+    add_skin("still cutting at the end: part of what was cut", 1 + 6 * 7919, dict(skin_p, duration_ms=1500),
+             skin_bot(1 + 6 * 7919, dict(skin_p, duration_ms=1500)))
+    quick = dict(skin_p, cut_speed=60, near=46)
+    add_skin("a quick knife, eased", 1 + 7 * 7919, quick, skin_bot(1 + 7 * 7919, quick, wander=30, rng=random.Random(13)))
+    straight = dict(skin_p, points=2, wobble=0)
+    add_skin("a straight line", 1 + 8 * 7919, straight, skin_bot(1 + 8 * 7919, straight))
+    add_skin("a high-bit seed, a bendy line", 0xFEDCBA9876543210, dict(skin_p, points=9, wobble=250),
+             skin_bot(0xFEDCBA9876543210, dict(skin_p, points=9, wobble=250), wander=20, rng=random.Random(14), lift_after=3))
+    add_skin("tears cost more than a line is worth", 1 + 9 * 7919, dict(skin_p, tear_pm=400),
+             skin_bot(1 + 9 * 7919, dict(skin_p, tear_pm=400), wander=40, rng=random.Random(15)))
+
     here = os.path.dirname(os.path.abspath(__file__))
     outdir = os.path.join(here, "..", "..", "..", "shared", "golden", "regents")
     os.makedirs(outdir, exist_ok=True)
-    for name, cases in (("crack", crack), ("smelt", smelt), ("shape", shape), ("beat", beat), ("carve", carve)):
+    for name, cases in (("crack", crack), ("smelt", smelt), ("shape", shape), ("beat", beat), ("carve", carve), ("pull", pull), ("skin", skin)):
         doc = {"_comment": "GENERATED by game/regents/tests/make_skill_goldens.py (%s): for the GDScript model and its "
                            "Rust twin. Do not edit." % name, "cases": cases}
         with open(os.path.join(outdir, name + ".json"), "wb") as f:
@@ -1022,4 +1465,5 @@ def main():
             print(name, "|", c["name"], c["expected"])
 
 
-main()
+if __name__ == "__main__":   # importable: the integration hook's cut-line bot uses its Skin (skin_bot.py)
+    main()

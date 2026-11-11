@@ -26,6 +26,11 @@
 			"id": 40005,
 			"key": "spinning_wheel",
 			"name": "Spinning wheel"
+		},
+		{
+			"id": 40006,
+			"key": "tanning_rack",
+			"name": "Tanning rack"
 		}
 	],
 	"owner": "regents",

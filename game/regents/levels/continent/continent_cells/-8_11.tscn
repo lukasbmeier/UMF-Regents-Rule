@@ -1,8 +1,27 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="1_fiesv"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_gxo3y"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_wf0tx"]
 
-[node name="Cell_-8_11" type="Node3D" unique_id=1618388474]
+[node name="Cell_-8_11" type="Node3D" unique_id=1624316879]
 
-[node name="grass_common_tall_124" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("1_fiesv")]
+[node name="w_deer_13" type="Marker3D" parent="." unique_id=1572291544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -502.79456, -1.5201733, 753.7988)
+gizmo_extents = 0.5
+script = ExtResource("1_gxo3y")
+point_id = "w_deer_13"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_14" type="Marker3D" parent="." unique_id=280388504]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -500.62302, -1.1776983, 757.1581)
+gizmo_extents = 0.5
+script = ExtResource("1_gxo3y")
+point_id = "w_deer_14"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="grass_common_tall_124" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_wf0tx")]
 transform = Transform3D(-1.277125, 0, -0.13407359, 0, 1.2841432, 0, 0.13407359, 0, -1.277125, -459.85696, -2.9331803, 723.91)

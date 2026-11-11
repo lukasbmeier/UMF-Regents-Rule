@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FoeDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
+[ext_resource type="Resource" path="res://game/regents/content/character/wolf.tres" id="2_char"]
+[ext_resource type="Resource" path="res://game/regents/content/kit/wolf.tres" id="3_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/node/wolf_carcass.tres" id="4_carcass"]
+
+[resource]
+script = ExtResource("1_foe")
+key = &"wolf"
+character = ExtResource("2_char")
+fights = true
+kit = ExtResource("3_kit")
+hp = 110
+damage_pct = 55
+poise = 70
+family = &"beast"
+notice_m = 10.0
+leash_m = 25.0
+reach_m = 2.0
+rest_ms = 1400
+rest_jitter_ms = 400
+lose_sight_ms = 3500
+pack_m = 15.0
+carcass = ExtResource("4_carcass")
+id = 40005
+display_name = "Wolf"
+designer_notes = "THE WOLF (Luke's H5, 2026-11-07; built 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): hunts in packs of 2-3 (pack_m 15 m: alerting or hitting one calls nearby wolves to join the fight, sharing the referee's attack tokens while the others circle). Its three-step string (content/kit/wolf.tres) snaps with a bite, slows with a hamstring bite, and ends with an unblockable red-glint lunge that leaps forward and pushes its target back. Slain, it leaves its carcass (content/node/wolf_carcass.tres) for wolf pelt and a rare wolf fang."

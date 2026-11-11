@@ -430,6 +430,17 @@
       ]
     },
     {
+      "id": "tanning_rack",
+      "kind": "station",
+      "x": 11.0,
+      "y": 0.0,
+      "z": 14.0,
+      "radius": 1.0,
+      "tags": [
+        "tanning_rack"
+      ]
+    },
+    {
       "id": "orders",
       "kind": "station",
       "x": 1.0,
@@ -500,6 +511,33 @@
       "x": 37.0,
       "y": 0.0,
       "z": -4.5,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "deer_1",
+      "kind": "deer",
+      "x": -30.0,
+      "y": 0.0,
+      "z": 5.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "wolf_1",
+      "kind": "wolf",
+      "x": -32.0,
+      "y": 0.0,
+      "z": -14.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "wolf_2",
+      "kind": "wolf",
+      "x": -35.0,
+      "y": 0.0,
+      "z": -11.0,
       "radius": 0.5,
       "tags": []
     },

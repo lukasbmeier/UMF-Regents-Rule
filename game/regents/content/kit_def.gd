@@ -48,6 +48,11 @@ class_name KitDef extends ContentDef
 ## string's last hit and what it does. The plain role's last hit is `light`'s last. Empty: a kit with no
 ## roles yet (every weapon of it the plain role).
 @export var roles: Array[KitRole] = []
+@export_group("Hits")
+## WHAT AN ABILITY OF THIS KIT DOES ON HIT (`HERBALISM_HUNTING_PREP.md` §7 step 5: the wolf's hamstring bite slows, its
+## lunge knocks back): per ability that has one, its knockback push (`push_mps`, m/s) and/or status effect (`status`,
+## `status_ms`) when an unblocked hit lands on a living target.
+@export var hits: Array[KitHit] = []
 
 ## The shortest recovery a swing has after it lands, whatever its clip.
 const MIN_RECOVERY_MS: int = 100
@@ -105,6 +110,14 @@ func role_entry(role: RoleDef) -> KitRole:
 	for kr: KitRole in roles:
 		if kr != null and role != null and kr.role == role:
 			return kr
+	return null
+
+
+## What ability `a` does on hit (null when it has no `KitHit` entry).
+func hit_entry(a: AbilityDef) -> KitHit:
+	for kh: KitHit in hits:
+		if kh != null and a != null and kh.ability == a:
+			return kh
 	return null
 
 
@@ -182,6 +195,7 @@ func to_bake() -> Dictionary:
 		"locks": locks,
 		"unblockable": unblockable.map(func(a: AbilityDef) -> int: return ContentDef.ref(a)),
 		"roles": roles.map(func(kr: KitRole) -> Dictionary: return kr.to_bake() if kr != null else {}),
+		"hits": hits.map(func(kh: KitHit) -> Dictionary: return kh.to_bake() if kh != null else {}),
 	}
 
 
@@ -215,6 +229,25 @@ func validate() -> Array[String]:
 		if a == null or not abilities().has(a):
 			out.append("`unblockable` lists %s, which is not this kit's" % (a.display_name if a != null else "an empty slot"))
 	out.append_array(_validate_roles())
+	out.append_array(_validate_hits())
+	return out
+
+
+## On-hit entries: each names an ability of this kit once, and does something (a push or a status with a duration).
+func _validate_hits() -> Array[String]:
+	var out: Array[String] = []
+	var seen: Array[AbilityDef] = []
+	for kh: KitHit in hits:
+		if kh == null or kh.ability == null or not abilities().has(kh.ability):
+			out.append("a hit entry must name one of this kit's abilities")
+			continue
+		if seen.has(kh.ability):
+			out.append("`hits` lists %s twice" % kh.ability.display_name)
+		seen.append(kh.ability)
+		if kh.push_mps <= 0.0 and kh.status == null:
+			out.append("%s's hit entry does nothing: set `push_mps` or `status`" % kh.ability.display_name)
+		if kh.status != null and kh.status_ms <= 0:
+			out.append("%s's hit entry applies %s for 0 ms: set `status_ms`" % [kh.ability.display_name, kh.status.display_name])
 	return out
 
 

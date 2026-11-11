@@ -28,6 +28,8 @@ func run() -> void:
 	_run_registry()
 	_run_beat()
 	_run_brittle()
+	_run_pull()
+	_run_skin()
 	await _run_minigame()
 	await _run_chain_minigames()
 	await _run_two_strikes()
@@ -95,7 +97,7 @@ func _run_continent() -> void:
 			var tags: Array = p["tags"]
 			if tags.is_empty() or NodeDef.all_by_tier().filter(func(d: NodeDef) -> bool: return d.display_name == str(tags[0])).is_empty():
 				bad.append("%s is no node (%s)" % [p["id"], str(tags)])
-		elif kind.begins_with("skeleton"):
+		elif kind.begins_with("skeleton") or kind == "deer" or kind == "wolf":
 			foes += 1
 			if FoeDef.all().filter(func(f: FoeDef) -> bool: return String(f.key) == kind).is_empty():
 				bad.append("%s is no foe (%s)" % [p["id"], kind])
@@ -775,6 +777,15 @@ static func _points_box(shapes: Array) -> AABB:
 	return out
 
 
+## A challenge row as the SDK hands it (the fields `SkillingComponent` reads).
+## Its fields by `get` (one of them is `seed`, a GDScript global, so not a member).
+class ChallengeRow extends RefCounted:
+	var fields: Dictionary = {}
+
+	func _get(property: StringName) -> Variant:
+		return fields.get(String(property))
+
+
 class AfkRow extends RefCounted:
 	var target_id: int
 	var def_id: int = 40005
@@ -905,9 +916,70 @@ func _run_bow() -> void:
 ## THE FIRST ENEMIES (owner, 2026-10-19): the skeleton camp's content holds together.
 func _run_foes() -> void:
 	print("== regents: foes ==")
-	var foes: Array[FoeDef] = FoeDef.all()
-	# The camp's two, and the tutorial's sparring partner (Luke, 2026-11-01).
-	_check(foes.size() == 3 and foes.any(func(f: FoeDef) -> bool: return f.key == &"sparring_skeleton"), "three foes: %s" % ", ".join(foes.map(func(f: FoeDef) -> String: return String(f.key))))
+	var all_foes: Array[FoeDef] = FoeDef.all()
+	# The camp's two, the tutorial's sparring partner (Luke, 2026-11-01), the deer (hunting, 2026-11-09: never fights),
+	# and the wolf (2026-11-10: hunts in packs, fights with its own kit).
+	_check(all_foes.size() == 5 and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"sparring_skeleton")
+		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"deer")
+		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"wolf"), "five foes: %s" % ", ".join(all_foes.map(func(f: FoeDef) -> String: return String(f.key))))
+	var foes: Array[FoeDef] = all_foes.filter(func(f: FoeDef) -> bool: return f.fights)
+	var deer: FoeDef = FoeDef.by_kind(106)
+	var wolf: FoeDef = FoeDef.by_kind(107)
+	var genre_defs: Array = (load("res://game/regents/genre.tres") as Resource).get(&"entity_definitions") as Array
+	_check(deer != null and deer.key == &"deer" and not deer.fights and deer.kit == null and deer.validate().is_empty()
+		and deer.character.brain == &"regents/deer" and genre_defs.has(deer.character) and deer.family == &"beast"
+		and deer.character.animation_set.skeleton_family == &"deer" and deer.character.animation_set.missing_required().is_empty()
+		and deer.character.animation_set.dangling_clips().is_empty() and deer.character.animation_set.anim_name(AnimationSet.RUN) == &"Gallop"
+		and deer.character.movement_profile.run_speed > 8.0 and deer.poise >= 10000 and deer.to_bake()["brain"] == "regents/deer"
+		and deer.to_bake()["fights"] == false,
+		"the deer: never fights, no kit, its own brain, the genre's; a beast; its own clips (it gallops), faster than a sprint, never staggered")
+	var wkit: KitDef = wolf.kit if wolf != null else null
+	_check(wolf != null and wolf.key == &"wolf" and wolf.fights and wkit != null and wkit.key == &"wolf" and wolf.family == &"beast"
+		and is_equal_approx(wolf.pack_m, 15.0) and wolf.character.animation_set.skeleton_family == &"wolf"
+		and wolf.character.animation_set.missing_required().is_empty() and wolf.character.animation_set.dangling_clips().is_empty()
+		and wkit.light.size() == 3 and wkit.hit_entry(wkit.light[1]) != null and wkit.hit_entry(wkit.light[1]).status.status == 108
+		and wkit.hit_entry(wkit.light[1]).status_ms == 3000 and wkit.hit_entry(wkit.light[2]) != null
+		and is_equal_approx(wkit.hit_entry(wkit.light[2]).push_mps, 10.0) and wkit.light[2].lunges
+		and wolf.character.movement_profile.dash_impulse > 0.0,
+		"the wolf: a pack beast (15 m), its three-step string (bite, hamstring bite that slows 3 s, unblockable lunge that leaps and pushes 10 m/s)")
+	var bad_hit := KitHit.new()
+	var bad_kit := KitDef.new()
+	bad_kit.id = 40098
+	bad_kit.display_name = "Bad"
+	bad_kit.key = &"bad"
+	bad_kit.skill = wkit.skill
+	bad_kit.light = wkit.light.duplicate()
+	bad_kit.hits = [bad_hit]
+	_check(not bad_kit._validate_hits().is_empty(), "a KitHit with no ability or effect is refused: %s" % str(bad_kit._validate_hits()))
+	var kitless := FoeDef.new()
+	kitless.key = &"x"
+	kitless.character = deer.character
+	_check(kitless.validate().any(func(m: String) -> bool: return m.contains("kit")), "a foe that fights with no kit is still refused")
+	# SMOOTH SHADED (Luke, 2026-11-10): the model is made flat (every triangle its own three corners); its import script
+	# (`art/animals/smooth_shading_import.gd`) gives every corner at a point the same normal (a UV seam may keep corners
+	# apart, never their normals). Flat, the corners at a point face each its own way.
+	var look: Node = deer.character.visual_scene.instantiate()
+	var shared_points: int = 0
+	var bent: int = 0
+	for mi: Node in look.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (mi as MeshInstance3D).mesh
+		for s: int in mesh.get_surface_count():
+			var arrays: Array = mesh.surface_get_arrays(s)
+			var at: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var first: Dictionary[Vector3, Vector3] = {}
+			var counted: Dictionary[Vector3, bool] = {}
+			for v: int in at.size():
+				if not first.has(at[v]):
+					first[at[v]] = normals[v]
+					continue
+				if not counted.has(at[v]):
+					counted[at[v]] = true
+					shared_points += 1
+				if first[at[v]].dot(normals[v]) < 0.999:
+					bent += 1
+	look.free()
+	_check(shared_points > 0 and bent == 0, "the deer is smooth shaded: %d points shared by corners, %d corners facing their own way" % [shared_points, bent])
 	var genre: Resource = load("res://game/regents/genre.tres")
 	var defs: Array = genre.get(&"entity_definitions") as Array
 	for f: FoeDef in foes:
@@ -948,7 +1020,9 @@ func _run_foes() -> void:
 class _FoeWorld extends NpcWorldView:
 	var way: PackedVector3Array = PackedVector3Array()
 	var sight: bool = true
+	var paths: int = 0
 	func path(_from: Vector3, _to: Vector3, _radius: float, _height: float) -> PackedVector3Array:
+		paths += 1
 		return way
 	func can_see(_a: Vector3, _b: Vector3) -> bool:
 		return sight
@@ -985,6 +1059,259 @@ func _run_foe_brain() -> void:
 	_check(brain.target() == 0, "out of sight past %d ms: given up (%s)" % [lost.lose_sight_ms, brain.describe()])
 	_run_foe_turns()
 	_run_foe_aim()
+	_run_deer_brain()
+	_run_wolf_pack()
+	_run_foe_string_chase(107)
+	_run_foe_string_chase(103)
+
+
+## A FOE'S STRING FOLLOWS ITS TARGET (Luke, 2026-11-11: "the wolves start their attack and dont stop even if I move far
+## away from the first one (so second and 3rd attack just hit air instead of gap closing and then performing the 2nd and
+## 3rd hits) and I suspect skeletons do that too"). After a swing of its string, a target out of reach is never swung
+## at: the foe runs it down and the string goes on where it stopped; out of reach past `string_chase_ms`, the string is
+## dropped, and the next is its first swing again. NEGATIVE: the brain before swung its second step at the air.
+func _run_foe_string_chase(kind: int) -> void:
+	var foe: FoeDef = FoeDef.by_kind(kind)
+	print("== regents: a foe's string follows its target (%s) ==" % foe.key)
+	var kit: KitDef = foe.kit
+	var t: Array[int] = [700000]
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	var pid: int = 9300 + kind
+	var fid: int = 9500 + kind
+	them.pos = Vector3(foe.reach_m - 0.4, 0, 0)
+	w.states = {fid: me, pid: them}
+	w.kinds = {fid: kind, pid: 0}
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 40 + kind)
+	b.clock = func() -> int: return t[0]
+	b.self_id = fid
+	b.think(me, w)
+	var first: Array[int] = _abilities_used(b)
+	var began: bool = b.state == &"fight" and first == [kit.light[0].id]
+	# They step 6 m out: through the swing's lock it stands (it cannot move), then it runs after them; never a swing.
+	them.pos = Vector3(foe.reach_m + 6.0, 0, 0)
+	var lock: int = kit.lock_ms(kit.light[0])
+	var at_air: Array[int] = []
+	var ran: bool = false
+	var until: int = t[0] + lock + 400
+	while t[0] < until:
+		t[0] += 100
+		b.think(me, w)
+		at_air.append_array(_abilities_used(b))
+		ran = ran or (b.state == &"chase" and b.has_goal() and b.goal().is_equal_approx(them.pos))
+	# It reaches them inside the string's time: the SECOND swing, at once.
+	me.pos = them.pos - Vector3(foe.reach_m - 0.4, 0, 0)
+	t[0] += 100
+	b.think(me, w)
+	var second: Array[int] = _abilities_used(b)
+	var went_on: bool = b.state == &"fight" and second == [kit.light[1].id]
+	# They step out again and stay out past `string_chase_ms`: the string is dropped, it still runs after them.
+	them.pos = me.pos + Vector3(foe.reach_m + 6.0, 0, 0)
+	var lock2: int = kit.lock_ms(kit.light[1])
+	var at_air2: Array[int] = []
+	until = t[0] + lock2 + foe.string_chase_ms + 300
+	while t[0] < until:
+		t[0] += 100
+		b.think(me, w)
+		at_air2.append_array(_abilities_used(b))
+	var still_after: bool = b.state == &"chase" and b.target() == pid
+	# Caught again: the string starts over (its first swing), once its rest is over.
+	me.pos = them.pos - Vector3(foe.reach_m - 0.4, 0, 0)
+	var next: Array[int] = []
+	until = t[0] + foe.rest_ms + foe.rest_jitter_ms + 500
+	while t[0] < until and next.is_empty():
+		t[0] += 100
+		b.think(me, w)
+		next = _abilities_used(b)
+	_check(began and at_air.is_empty() and ran and went_on and at_air2.is_empty() and still_after and next == [kit.light[0].id],
+		"%s: its first swing in reach (%s); they step 6 m out: no swing at the air (%s), it runs after them (%s); caught inside %d ms, its SECOND swing (%s); out again past that, none at the air (%s), still chased (%s), and caught, its string starts over (%s, the first is %d)"
+			% [foe.display_name, began, str(at_air), ran, foe.string_chase_ms, str(second), str(at_air2), still_after, str(next), kit.light[0].id])
+
+
+## The abilities `b` asked to use since the last look, in order.
+func _abilities_used(b: NpcBrain) -> Array[int]:
+	var out: Array[int] = []
+	for act: Dictionary in b.take_acts():
+		if String(act.get("do", "")) == "ability":
+			out.append(int(act["ability"]))
+	return out
+
+
+## A DEER GRAZES AND FLEES (hunting, 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): it wanders near home at a walk;
+## a player seen within its sight, or heard close, or a hit from nowhere (the server's Startled) sends it galloping
+## straight away from them, inside its leash; calm a while with nobody near, it walks home; slain, it lies still. Its
+## flight is planned once per threat, not each think.
+func _run_deer_brain() -> void:
+	print("== regents: a deer grazes and flees ==")
+	var deer: FoeDef = FoeDef.by_kind(106)
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/deer", 3)
+	var t: Array[int] = [500000]
+	b.clock = func() -> int: return t[0]
+	b.self_id = 8001
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = Vector3(200, 0, 0)
+	w.states = {8001: me, 1: them}
+	w.kinds = {8001: 106, 1: 0}
+	w.way = PackedVector3Array()
+	b.think(me, w)
+	var calm_first: bool = b.state == &"graze" and b.target() == 0 and b.walks()
+	var wandered: bool = false
+	for i: int in 40:
+		t[0] += 1000
+		b.think(me, w)
+		if b.has_goal():
+			wandered = Vector2(b.goal().x, b.goal().z).length() <= deer.graze_m + 0.01
+			break
+	_check(calm_first and wandered and b.walks(), "nobody near: it grazes, a few steps at a walk to a spot within %.0f m of home (%s)" % [deer.graze_m, str(b.goal())])
+	# Seen 12 m off: it gallops straight away from them.
+	them.pos = Vector3(12, 0, 0)
+	var paths0: int = w.paths
+	b.think(me, w)
+	var away: bool = b.state == &"flee" and b.target() == 1 and b.goal().x < -deer.flee_m + 0.5 and absf(b.goal().z) < 0.5 and not b.walks()
+	for i: int in 5:
+		t[0] += 100
+		b.think(me, w)
+	_check(away and w.paths - paths0 == 1, "a player seen %.0f m off: it gallops %.0f m straight away (goal %s), planned once, not each think (%d)" % [
+		12.0, deer.flee_m, str(b.goal()), w.paths - paths0])
+	# Unseen, out of earshot: it calms after its while, walks home; unseen in earshot: it bolts.
+	w.sight = false
+	them.pos = Vector3(12, 0, 0)
+	t[0] += deer.calm_ms + 100
+	me.pos = Vector3(-20, 0, 0)
+	b.think(me, w)
+	var homing: bool = b.state == &"home" and b.goal().is_equal_approx(Vector3.ZERO) and b.walks()
+	them.pos = Vector3(-20, 0, deer.startle_m - 1.0)
+	b.think(me, w)
+	var heard: bool = b.state == &"flee" and b.goal().z < -20.0
+	_check(homing and heard, "calm %d ms with nobody seen: home at a walk (%s); then heard %.0f m off, unseen: it bolts away (%s)" % [
+		deer.calm_ms, str(homing), deer.startle_m - 1.0, str(b.goal())])
+	# Hit from nowhere (the server's Startled): it runs from the nearest player, 40 m off and unseen.
+	var b2: NpcBrain = NpcBrainComponent.make_brain(&"regents/deer", 4)
+	b2.clock = func() -> int: return t[0]
+	b2.self_id = 8002
+	var me2 := MovementState.new()
+	me2.pos = Vector3(500, 0, 0)
+	var archer := MovementState.new()
+	archer.pos = Vector3(500, 0, 40)
+	var w2 := _FoeWorld.new()
+	w2.sight = false
+	w2.states = {8002: me2, 2: archer}
+	w2.kinds = {8002: 106, 2: 0}
+	b2.think(me2, w2)
+	var unbothered: bool = b2.state == &"graze"
+	w2.statuses = {8002: 109}
+	b2.think(me2, w2)
+	_check(unbothered and b2.state == &"flee" and b2.target() == 2 and b2.goal().z < -10.0,
+		"an archer 40 m off and unseen: it grazes on; shot (Startled), it runs from them (%s)" % str(b2.goal()))
+	# Never past its leash: chased toward its range's edge, it runs along it.
+	var b3: NpcBrain = NpcBrainComponent.make_brain(&"regents/deer", 5)
+	b3.clock = func() -> int: return t[0]
+	b3.self_id = 8003
+	var me3 := MovementState.new()
+	var w3 := _FoeWorld.new()
+	var chaser := MovementState.new()
+	w3.states = {8003: me3, 3: chaser}
+	w3.kinds = {8003: 106, 3: 0}
+	b3.think(me3, w3)   # home is where it stands
+	me3.pos = Vector3(-(deer.leash_m - 5.0), 0, 0)
+	chaser.pos = me3.pos + Vector3(8, 0, 0)
+	b3.think(me3, w3)
+	_check(b3.state == &"flee" and Vector2(b3.goal().x, b3.goal().z).length() <= deer.leash_m + 0.01,
+		"near the edge of its %.0f m leash, chased outward: it runs no further than the edge (%s)" % [deer.leash_m, str(b3.goal())])
+	# Slain: it lies still, scared of nobody.
+	w3.statuses = {8003: 106}
+	b3.think(me3, w3)
+	_check(b3.state == &"slain" and not b3.has_goal() and b3.target() == 0, "slain: it lies still (%s)" % b3.describe())
+
+
+## WOLVES HUNT AS A PACK (Luke, 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): alerting or hitting one calls other
+## wolves within `pack_m` to join the chase, even when the player is past their own `notice_m`; one past `pack_m` stays
+## at peace.
+func _run_wolf_pack() -> void:
+	print("== regents: wolves hunt as a pack ==")
+	var wolf: FoeDef = FoeDef.by_kind(107)
+	var t: Array[int] = [600000]
+	var w := _FoeWorld.new()
+	var p := MovementState.new()
+	p.pos = Vector3(8.0, 0.0, 0.0)   # 8 m from wolf 1 (inside its 10 m notice), 12 m from wolf 2 (past its 10 m notice)
+	var w1 := MovementState.new()
+	w1.pos = Vector3.ZERO
+	var w2 := MovementState.new()
+	w2.pos = Vector3(-4.0, 0.0, 0.0)
+	var w3 := MovementState.new()
+	w3.pos = Vector3(-20.0, 0.0, 0.0)   # 20 m from wolf 1: past its 15 m pack call
+	w.states = {1: p, 8101: w1, 8102: w2, 8103: w3}
+	w.kinds = {1: 0, 8101: 107, 8102: 107, 8103: 107}
+	var b1: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 21)
+	var b2: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 22)
+	var b3: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 23)
+	for pair: Array in [[b1, 8101], [b2, 8102], [b3, 8103]]:
+		var b: NpcBrain = pair[0] as NpcBrain
+		b.clock = func() -> int: return t[0]
+		b.self_id = int(pair[1])
+	b2.think(w2, w)
+	var alone_idle: bool = b2.state == &"idle" and b2.target() == 0
+	b1.think(w1, w)
+	b2.think(w2, w)
+	b3.think(w3, w)
+	_check(alone_idle and b1.state == &"chase" and b1.target() == 1 and b2.state == &"chase" and b2.target() == 1
+		and b3.state == &"idle" and b3.target() == 0,
+		"a player 8 m from wolf 1 and 12 m from wolf 2 (past its %.0f m sight): wolf 1 calls wolf 2 (4 m off, within %.0f m); wolf 3 (20 m off) stays idle"
+			% [wolf.notice_m, wolf.pack_m])
+	# Shot from 16 m away (past notice_m): Startled turns the hit wolf on the archer, and its packmate joins in.
+	var ws := _FoeWorld.new()
+	var archer := MovementState.new()
+	archer.pos = Vector3(16.0, 0.0, 0.0)
+	var s1 := MovementState.new()
+	var s2 := MovementState.new()
+	s2.pos = Vector3(0.0, 0.0, 4.0)
+	ws.states = {2: archer, 8201: s1, 8202: s2}
+	ws.kinds = {2: 0, 8201: 107, 8202: 107}
+	ws.statuses = {8201: 109}
+	var sb1: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 24)
+	var sb2: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 25)
+	sb1.clock = func() -> int: return t[0]
+	sb2.clock = func() -> int: return t[0]
+	sb1.self_id = 8201
+	sb2.self_id = 8202
+	sb1.think(s1, ws)
+	sb2.think(s2, ws)
+	_check(sb1.target() == 2 and sb2.target() == 2 and sb1.state == &"chase" and sb2.state == &"chase",
+		"shot from 16 m off (Startled): the wolf turns on the archer and calls its packmate 4 m away")
+	# EVERY FOE (Luke, 2026-11-11: "Every foe", not pack foes only): a skeleton warrior, which has no pack. An archer
+	# 16 m off, past its sight: it stands; Startled, it goes for them. One 30 m off (past its leash of home): it stays.
+	var skel: FoeDef = FoeDef.by_kind(103)
+	var wk := _FoeWorld.new()
+	var bowman := MovementState.new()
+	bowman.pos = Vector3(16.0, 0.0, 0.0)
+	var k1 := MovementState.new()
+	wk.states = {3: bowman, 8301: k1}
+	wk.kinds = {3: 0, 8301: 103}
+	var kb: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 26)
+	kb.clock = func() -> int: return t[0]
+	kb.self_id = 8301
+	kb.think(k1, wk)
+	var unbothered: bool = kb.state == &"idle" and kb.target() == 0
+	wk.statuses = {8301: 109}
+	kb.think(k1, wk)
+	var turned: bool = kb.state == &"chase" and kb.target() == 3
+	var wf := _FoeWorld.new()
+	var far_bowman := MovementState.new()
+	far_bowman.pos = Vector3(skel.leash_m + 5.0, 0.0, 0.0)
+	var k2 := MovementState.new()
+	wf.states = {4: far_bowman, 8302: k2}
+	wf.kinds = {4: 0, 8302: 103}
+	wf.statuses = {8302: 109}
+	var kf: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 27)
+	kf.clock = func() -> int: return t[0]
+	kf.self_id = 8302
+	kf.think(k2, wf)
+	_check(skel.pack_m == 0.0 and skel.notice_m < 16.0 and unbothered and turned and kf.target() == 0,
+		"every foe, a skeleton warrior (no pack, sight %.0f m): an archer 16 m off leaves it standing (%s); Startled, it goes for them (%s); one %.0f m off, past its leash, it does not (%s)"
+			% [skel.notice_m, unbothered, turned, skel.leash_m + 5.0, kf.target() == 0])
 
 
 ## FOES TAKE TURNS (COMBAT_OVERHAUL.md §2, 2026-10-31; the playtest: "attacks came at the same time"): three
@@ -1305,7 +1632,7 @@ func _run_crafting_choice() -> void:
 	for n: Node in w._list.get_children():
 		if n is Label:
 			heads.append((n as Label).text)
-	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Trowels", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Trowels, Other, each once %s" % str(heads))
+	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Trowels", "Knives", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Trowels, Knives, Other, each once %s" % str(heads))
 	# The window looks again every 500 ms while it is open; with nothing changed that look must cost next to nothing
 	# (Luke's play, 2026-11-03, feedback #8194/#8195: by the workbench a 140-210 ms frame every half second, the
 	# game at 50-70 fps: each look listed the patterns folder from disk once per comparison of its sort).
@@ -2010,18 +2337,46 @@ func _run_content() -> void:
 	var keys: Array[StringName] = []
 	for sk: SkillDef in SkillDef.all():
 		keys.append(sk.key)
-	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery", &"herbalism"],
-		"six working skills (herbalism, 2026-11-07) and four weapon masteries: %s" % str(keys))
+	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery", &"herbalism", &"skinning"],
+		"seven working skills (herbalism, 2026-11-07; skinning, 2026-11-09) and four weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
 	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
 		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
 	var names: Array[String] = []
 	for n: NodeDef in NodeDef.all_by_tier():
 		names.append(n.display_name)
-	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax"], "seven nodes, by skill then tier: %s" % str(names))
+	_check(names == ["Tree", "Oak", "Yew", "Copper rock", "Iron rock", "Coal rock", "Flax", "Deer carcass", "Wolf carcass"],
+		"nine nodes, by skill then tier (the deer's and the wolf's carcasses, skinning 2026-11-09/10): %s" % str(names))
+	var carcass: NodeDef = NodeDef.all_by_tier()[7]
+	_check(carcass.tool_tag == &"knife" and carcass.minigame is SkinParams and carcass.deplete_permille == 350 and carcass.yield_item.display_name == "Deer hide"
+		and carcass.max_items == 4 and carcass.whole_round and absf(carcass.expected_items() - 2.347) < 0.001
+		and carcass.skill == SkillDef.by_key(&"skinning") and carcass.validate().is_empty() and FoeDef.by_kind(106).carcass == carcass
+		and carcass.models.size() == 1 and carcass.radii_cm()[0] > 30,
+		"the deer's carcass: skinned with a knife (Skinning), the cut line its round, up to four hides (about %.2f AFK), skinned whole in a round, the deer's kill leaves it, a footprint of %d cm"
+			% [carcass.expected_items(), carcass.radii_cm()[0]])
+	var wolf_carcass: NodeDef = NodeDef.all_by_tier()[8]
+	_check(wolf_carcass.tool_tag == &"knife" and wolf_carcass.tier == 2 and wolf_carcass.min_rank == 2 and wolf_carcass.minigame is SkinParams
+		and wolf_carcass.yield_item.display_name == "Wolf pelt" and wolf_carcass.rare_item != null and wolf_carcass.rare_item.display_name == "Wolf fang"
+		and wolf_carcass.rare_permille == 8 and wolf_carcass.max_items == 4 and wolf_carcass.whole_round
+		and FoeDef.by_kind(107).carcass == wolf_carcass and wolf_carcass.models.size() == 1 and wolf_carcass.radii_cm()[0] > 30
+		and SkinMinigame.node_of(wolf_carcass.minigame as SkinParams) == wolf_carcass,
+		"the wolf's carcass: tier 2 at rank 2, gives Wolf pelt (up to 4, whole_round) and a rare Wolf fang (0.8 %%), its own stage model")
+	var no_cap: NodeDef = carcass.duplicate() as NodeDef
+	no_cap.max_items = 0
+	var no_round: NodeDef = carcass.duplicate() as NodeDef
+	no_round.minigame = null
+	_check(no_cap.validate().any(func(m: String) -> bool: return m.contains("cap")) and not no_round.validate().is_empty(),
+		"worked whole in a round with no cap, or no round, is refused")
 	var flax: NodeDef = NodeDef.all_by_tier()[6]
-	_check(flax.minigame == null and flax.tool_tag == &"trowel" and flax.skill == SkillDef.by_key(&"herbalism") and flax.validate().is_empty(),
-		"flax: herbalism's, pulled with a trowel; no round yet (AFK only: pull the root is step 2) and valid without one")
+	_check(flax.minigame is PullParams and (flax.minigame as PullParams).target_plants > 1 and flax.tool_tag == &"trowel"
+		and flax.skill == SkillDef.by_key(&"herbalism") and flax.validate().is_empty(),
+		"flax: herbalism's, pulled with a trowel; its round is pull the root, a clump (Luke, 2026-11-08: more than one stem for a full score), and valid")
+	var afk_only: NodeDef = flax.duplicate() as NodeDef
+	afk_only.minigame = null
+	var wrong: NodeDef = flax.duplicate() as NodeDef
+	wrong.minigame = BeatParams.new()
+	_check(afk_only.validate().is_empty() and not wrong.validate().is_empty(),
+		"a node may still have no round (AFK only); a station's round on a node is refused")
 	var prev: ChopParams = null
 	for n: NodeDef in NodeDef.all_by_tier():
 		if not (n.minigame is ChopParams):
@@ -2051,9 +2406,9 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 15 and RecipeDef.at(&"workbench").size() == 26
-		and RecipeDef.at(&"spinning_wheel").size() == 1 and RecipeDef.at(&"orders").is_empty(),
-		"three recipes at the furnace (copper, iron, steel bars), fifteen at the anvil (rivets, an axe head, a sword blade, a pickaxe head and a trowel blade of each metal), twenty-six at the workbench (three handles and six sword hilts; an axe, a sword, a pickaxe and a trowel of each metal; the yew bow's stave and its stringing, arrow shafts, copper arrows, the yew staff), one at the spinning wheel (the bowstring), none at the order board")
+	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 18 and RecipeDef.at(&"workbench").size() == 29
+		and RecipeDef.at(&"spinning_wheel").size() == 1 and RecipeDef.at(&"tanning_rack").size() == 2 and RecipeDef.at(&"orders").is_empty(),
+		"three recipes at the furnace (copper, iron, steel bars), eighteen at the anvil (rivets, an axe head, a sword blade, a pickaxe head, a trowel blade and a knife blade of each metal), twenty-nine at the workbench (three handles and six sword hilts; an axe, a sword, a pickaxe, a trowel and a knife of each metal; the yew bow's stave and its stringing, arrow shafts, copper arrows, the yew staff), one at the spinning wheel (the bowstring), two at the tanning rack (soft and supple leather), none at the order board")
 	_check(made.get("Oak grip", []) == ["workbench", ["Oak logs"]] and made.get("Yew grip", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -2094,8 +2449,8 @@ func _run_material_table() -> void:
 		pkeys.append(p.key)
 	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel"]
 		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets", &"crossguard_hilt", &"banner_hilt",
-			&"trowel_blade", &"trowel"],
-		"six materials and thirteen patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5; herbalism's trowel, 2026-11-07): %s x %s" % [str(keys), str(pkeys)])
+			&"trowel_blade", &"trowel", &"knife_blade", &"knife"],
+		"six materials and fifteen patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5; herbalism's trowel, 2026-11-07; skinning's knife, 2026-11-09): %s x %s" % [str(keys), str(pkeys)])
 	var bad: Array[String] = []
 	for type: StringName in [&"material", &"pattern"]:
 		for d: ContentDef in ContentLibrary.items(type):
@@ -2117,8 +2472,8 @@ func _run_material_table() -> void:
 	var kept: bool = true
 	for k: String in pinned:
 		kept = kept and got.get(k, -1) == pinned[k]
-	_check(got.size() == 39 and kept and not got.values().has(-1) and got.get("copper:trowel", -1) == 40051,
-		"39 cells (three metals in ten patterns, three woods in three), every one made (the copper trowel 40051, the starter's); the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
+	_check(got.size() == 45 and kept and not got.values().has(-1) and got.get("copper:trowel", -1) == 40051 and got.get("copper:knife", -1) == 40059,
+		"45 cells (three metals in twelve patterns, three woods in three), every one made (the copper trowel 40051 and knife 40059, the starter's); the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
 	var problems: Array[String] = MaterialTable.problems()
 	_check(problems.is_empty(), "the table is current: every cell and recipe as the table makes it%s" % ("" if problems.is_empty() else ": " + "; ".join(problems)))
 	var dry: Dictionary = MaterialTable.generate(false)
@@ -2150,10 +2505,10 @@ func _run_material_table() -> void:
 	axe.weapon_damage_pct = 100
 	iron.tier = 3
 	var tier_says: Array[String] = MaterialTable.problems()
-	_check(tier_says.size() == 3 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
+	_check(tier_says.size() == 4 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
 		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_axe.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_pickaxe.tres"))
-		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_trowel.tres")),
-		"iron moved to tier 3: its axe's, pickaxe's and trowel's tool tiers are out of date (a sword's and a head's have none): %s" % str(tier_says))
+		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_trowel.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_knife.tres")),
+		"iron moved to tier 3: its axe's, pickaxe's, trowel's and knife's tool tiers are out of date (a sword's and a head's have none): %s" % str(tier_says))
 	iron.tier = 2
 	var recipe: RecipeDef = RecipeDef.by_id(40006)
 	var was: Array[ItemDef] = recipe.inputs.duplicate()
@@ -2594,6 +2949,27 @@ func _run_skill_goldens() -> void:
 		if not start_ok or got != _ints(c["expected"]):
 			bad.append("carve %s: %s, wanted %s (start %s)" % [c["name"], str(got), str(c["expected"]), start_ok])
 	_check(carve.size() >= 6, "the carve's golden rounds are there (%d)" % carve.size())
+	var pull: Array = _golden_cases("pull")
+	for c: Dictionary in pull:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: PullParams = _params_from(PullParams.new(), c["params"]) as PullParams
+		var pm: PullModel = PullModel.start(seed_value, p)
+		var start_ok: bool = pm.snag_depth == _flat([c["snag_depth"]]) and pm.snag_jump == _flat([c["snag_jump"]]) \
+			and pm.snag_side == _flat([c["snag_side"]])
+		var got: Dictionary = PullModel.play(seed_value, p, _flat(c["inputs"]))
+		if not start_ok or got != _ints(c["expected"]):
+			bad.append("pull %s: %s, wanted %s (catches %s)" % [c["name"], str(got), str(c["expected"]), start_ok])
+	_check(pull.size() >= 10, "pull the root's golden rounds are there (%d)" % pull.size())
+	var skin: Array = _golden_cases("skin")
+	for c: Dictionary in skin:
+		var seed_value: int = (int(c["seed_hi"]) << 32) | int(c["seed_lo"])
+		var p: SkinParams = _params_from(SkinParams.new(), c["params"]) as SkinParams
+		var sm: SkinModel = SkinModel.start(seed_value, p)
+		var start_ok: bool = sm.px == _flat([c["line_x"]]) and sm.py == _flat([c["line_y"]])
+		var got: Dictionary = SkinModel.play(seed_value, p, _flat(c["inputs"]))
+		if not start_ok or got != _ints(c["expected"]):
+			bad.append("skin %s: %s, wanted %s (first line %s)" % [c["name"], str(got), str(c["expected"]), start_ok])
+	_check(skin.size() >= 10, "the cut line's golden rounds are there (%d)" % skin.size())
 	_check(crack.size() >= 6 and brittle_cases >= 3 and smelt.size() >= 6 and shape.size() >= 6 and beat.size() >= 6 and slag_cases >= 3 and bad.is_empty(),
 		"the GDScript models play every golden round exactly (%d crack, %d smelt, %d shape, %d beat)%s" % [crack.size(), smelt.size(), shape.size(), beat.size(),
 			"" if bad.is_empty() else ": " + "; ".join(bad)])
@@ -2785,10 +3161,12 @@ func _run_two_strikes() -> void:
 		"the readout's smith taps, and taps lift the iron axe head's ceiling (%d with, %d without, per mille)" % [with_tap["mean"], without["mean"]])
 
 	# THE BANDS (Luke's test, 2026-11-05: copper 1, iron 2, steel 3): the same hands do worse each band up, on every
-	# part; and the bands' rules are where he put them.
+	# part; and the bands' rules are where he put them. Luke's play, 2026-11-09: the quench is off on every part; the
+	# pattern fades once lifted, copper 3 s to a faint ghost, iron 1.5 s to a fainter one, steel 3 s to nothing; the
+	# trowel blades (made by the table from the copper pattern) carry their metal's band too.
 	var skilled: SimPlayer = SimPlayer.presets()[1]
 	var ladder: Array[String] = []
-	for part: String in ["axe head", "sword blade", "pickaxe head"]:
+	for part: String in ["axe head", "sword blade", "pickaxe head", "trowel blade"]:
 		var means: Array[int] = []
 		var rules_ok: bool = true
 		for metal: String in ["Copper", "Iron", "Steel"]:
@@ -2799,7 +3177,8 @@ func _run_two_strikes() -> void:
 			means.append(int(MinigameReadout.measure(rr, skilled, 12)["mean"]))
 			var band: int = ["Copper", "Iron", "Steel"].find(metal) + 1
 			rules_ok = rules_ok and rr.max_reheats > 0 and rr.reheat_cost_pm > 0 and rr.hide_outline == 1 and rr.outline_vary > 0
-			rules_ok = rules_ok and (rr.lay_cost_pm > 0) == (band >= 2) and (rr.red_ms > 0 and rr.quench_hi_pm > 0) == (band == 3)
+			rules_ok = rules_ok and (rr.lay_cost_pm > 0) == (band >= 2) and (rr.red_ms > 0) == (band == 3) and rr.quench_hi_pm == 0
+			rules_ok = rules_ok and [rr.pattern_fade_ms, rr.pattern_ghost_pm] == [[3000, 250], [1500, 120], [3000, 0]][band - 1]
 		if not (means[0] > means[1] and means[1] > means[2]) or not rules_ok:
 			ladder.append("%s %s%s" % [part, str(means), "" if rules_ok else " (rules misplaced)"])
 	_check(ladder.is_empty(), "copper, iron, steel: each band's rules where Luke put them, and a skilled smith does worse each band up (not: %s)" % str(ladder))
@@ -2867,14 +3246,22 @@ func _run_two_strikes() -> void:
 	await get_tree().process_frame
 	shape.toggle_template()
 	var lifted: bool = not shape.model.laid
+	# Lifted, the outline FADES (Luke's play, 2026-11-09; iron: 1.5 s to 120 per mille, and stays that faint).
+	var fresh_alpha: float = shape.outline_alpha()
+	shape._started_usec -= 800 * 1000
+	var mid_alpha: float = shape.outline_alpha()
+	shape._started_usec -= 2000 * 1000
+	var ghost_alpha: float = shape.outline_alpha()
+	var fades: bool = fresh_alpha > 0.95 and mid_alpha < fresh_alpha and mid_alpha > ghost_alpha and absf(ghost_alpha - 0.12) < 0.001
 	shape.toggle_template()
 	var relaid: bool = shape.model.laid and shape.model.lays == 1 and shape.model.ceiling_pm() == 1000 - head.lay_cost_pm
 	shape.toggle_template()
 	shape.set_down()
 	await get_tree().process_frame
-	_check(lifted and relaid and shape.state == SkillMinigame.State.DONE and shape.live_result == shape.replayed_result
+	_check(lifted and fades and relaid and shape.state == SkillMinigame.State.DONE and shape.live_result == shape.replayed_result
 		and int(shape.live_result["lays"]) == 1 and not shape.shows_clock(),
-		"Space lifts the pattern and lays it on again (iron: %d off the best it can be); Enter sets the part down, the round ends, the replay agrees" % head.lay_cost_pm)
+		"Space lifts the pattern (its outline fading %.2f, %.2f, %.2f) and lays it on again (iron: %d off the best it can be); setting it down ends the round, the replay agrees" % [
+			fresh_alpha, mid_alpha, ghost_alpha, head.lay_cost_pm])
 	Settings.set_value(ShapeMinigame.SETTING, kept)
 	holder.queue_free()
 	await get_tree().process_frame
@@ -3079,16 +3466,282 @@ func _run_stages() -> void:
 	enter.keycode = KEY_ENTER
 	enter.pressed = true
 	carve._started_usec = Time.get_ticks_usec() - 3000 * 1000
+	# Luke's play, 2026-11-09: a TAP of Enter no longer sets it down (it says to hold); Enter HELD does.
+	var enter_up: InputEventKey = InputEventKey.new()
+	enter_up.keycode = KEY_ENTER
+	enter_up.pressed = false
 	carve._unhandled_key_input(enter)
-	var set_down: bool = cm.done_ms >= 0 and carve.is_over()
+	carve._unhandled_key_input(enter_up)
+	carve._process(0.0)
+	var tap_kept: bool = cm.done_ms < 0 and carve.state == SkillMinigame.State.PLAYING and carve.finish_hold() == 0.0
+	carve._unhandled_key_input(enter)
+	carve._process(0.0)
+	var not_yet: bool = cm.done_ms < 0 and carve._finish_down_ms >= 0 and carve.finish_hold() < 1.0
+	carve._finish_down_ms -= SkillMinigame.FINISH_HOLD_MS   # held the whole hold
+	carve._process(0.0)
+	var set_down: bool = tap_kept and not_yet and cm.done_ms >= 0 and carve.is_over()
 	carve.finish()
 	_check(bow_r.quality == RecipeDef.Quality.FROM_ROUND and cstage != null and _no_character(cstage) and carve.title().begins_with("Carving")
 		and lifted and placed and deep_left and fine_right and asym and set_down and carve.live_result == carve.replayed_result,
-		"carving the yew bow: a stave on the bench (%s); a click lifts the pattern (%s); left of a row's middle cuts its left edge deep (%s), right of it a fine shave off the right (%s); its back and belly differ (%s); Enter sets it down (%s); the replay agrees"
+		"carving the yew bow: a stave on the bench (%s); a click lifts the pattern (%s); left of a row's middle cuts its left edge deep (%s), right of it a fine shave off the right (%s); its back and belly differ (%s); a tap of Enter is kept, Enter held sets it down (%s); the replay agrees"
 			% [cstage != null, lifted, deep_left, fine_right, asym, set_down])
 	carve.queue_free()
+	# HERBALISM (pull the root, PROGRESS 51; redrawn after Luke's play, 2026-11-08): a clump of flax in its mound, the
+	# trowel alone (no character); A digs the left side (the mound's half sinks, its furrow opens), D the right; Space
+	# held pulls (the stem rises, its short root showing); the soil cracks on a side root's side (its tip out, no
+	# shaking) and a stroke there cuts it; held on, it snaps and the next stem comes forward; the round ends at its
+	# time; the replay agrees.
+	# (Its soil all packed here, so A has a side to dig: flax's loose sides, Luke's 2026-11-09, are checked after.)
+	var flax_own: PullParams = NodeDef.all_by_tier()[6].minigame as PullParams
+	var flax_round: PullParams = flax_own.duplicate() as PullParams
+	flax_round.loose_pm = 0
+	var pull: PullMinigame = SkillMinigames.make_ui(flax_round) as PullMinigame
+	holder.add_child(pull)
+	pull.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pull.begin(5, flax_round)
+	await get_tree().process_frame
+	var pstage: PullStage = pull.get_child(0) as PullStage
+	var pm: PullModel = pull.model
+	var a_key: InputEventKey = InputEventKey.new()
+	a_key.physical_keycode = KEY_A
+	a_key.pressed = true
+	pull._started_usec = Time.get_ticks_usec() - 10 * 1000
+	pull._unhandled_key_input(a_key)
+	var mound_y: float = pstage._mound_left.scale.y
+	for _f: int in 20:
+		pstage._process(0.05)
+	var dug_left: bool = pm.pack_left == 1000 - flax_round.dig_pm and pstage._soil_left.emitting and pstage._mound_left.scale.y < mound_y \
+		and pstage._furrow_left.visible and not pstage._furrow_right.visible
+	for at: Array in [[300, PullModel.LEFT], [600, PullModel.RIGHT], [900, PullModel.RIGHT]]:
+		pull.press_at(at[0], at[1])
+	var space: InputEventKey = InputEventKey.new()
+	space.keycode = KEY_SPACE
+	space.pressed = true
+	pull._started_usec = Time.get_ticks_usec() - 1200 * 1000
+	pull._unhandled_key_input(space)
+	var cracked: bool = false
+	var tip_shown: bool = false
+	var cut_ok: bool = false
+	var rising: bool = false
+	var at_ms: int = 1200
+	while pm.cut == 0 and at_ms < 6000:
+		at_ms += 50
+		pm.advance_to(at_ms)
+		pull._follow(at_ms)
+		pstage._process(0.05)
+		var side: int = pm.showing()
+		if side != 0:
+			cracked = (pstage._crack_left.visible if side == PullModel.LEFT else pstage._crack_right.visible) \
+				and not (pstage._crack_right.visible if side == PullModel.LEFT else pstage._crack_left.visible)
+			tip_shown = (pstage._crack_left if side == PullModel.LEFT else pstage._crack_right).get_node(^"Tip").scale.x > 0.1
+			rising = pm.down and pm.up_by > 0 and pstage._held and pstage._up_by > 0.0 and pstage._plant.position.y > pstage._home.y
+			cut_ok = cracked and pull.press_at(at_ms, side) == PullModel.CUT and pull._word == "Cut!" and is_instance_valid(pstage._cut_tip)
+	# Held on until it snaps (side roots pulled through, the strain past the top), the stage told every tick.
+	while pm.snapped == 0 and at_ms < flax_round.duration_ms:
+		at_ms += 50
+		pm.advance_to(at_ms)
+		pull._follow(at_ms)
+	var flew: bool = pstage._flying and pull._word == "Snapped!"
+	var next_stem: bool = pm.plant == 1 and pm.up_by == 0 and pm.pack_left == 1000 and pull.state == SkillMinigame.State.PLAYING
+	pull._started_usec = Time.get_ticks_usec() - (flax_round.duration_ms + 10) * 1000
+	pull._process(0.016)   # its time run out: it finishes
+	_check(pstage != null and _no_character(pstage) and pull.title().begins_with("Pulling") and dug_left and cracked and tip_shown
+		and cut_ok and rising and flew and next_stem and pull.state == SkillMinigame.State.DONE and pull.live_result == pull.replayed_result,
+		"pulling flax: A digs the left (the mound sinks, its furrow opens: %s); held, the stem rises with its root (%s); the soil cracks on the side root's side, its tip out (%s, %s), a stroke there cuts it (%s); held on it snaps (%s), the next stem comes forward packed (%s); the round ends at its time; the replay agrees"
+			% [dug_left, rising, cracked, tip_shown, cut_ok, flew, next_stem])
+	# LOOSE OR PACKED (Luke, 2026-11-09, "cutaway, no chore"): flax's stems start with some sides loose, from the soil's
+	# own stream (the side roots the same as with none); a loose side is drawn dug.
+	var loose_sides: int = 0
+	var packed_sides: int = 0
+	var same_roots: bool = true
+	var loose_seed: int = -1
+	for sd: int in range(1, 41):
+		var lm: PullModel = PullModel.start(sd, flax_own)
+		var pm0: PullModel = PullModel.start(sd, flax_round)
+		loose_sides += int(lm.pack_left == 0) + int(lm.pack_right == 0)
+		packed_sides += int(lm.pack_left == 1000) + int(lm.pack_right == 1000)
+		same_roots = same_roots and lm.snag_depth == pm0.snag_depth and lm.snag_side == pm0.snag_side
+		if loose_seed < 0 and lm.pack_left == 0 and lm.pack_right == 1000:
+			loose_seed = sd
+	pull.begin(loose_seed, flax_own)
+	await get_tree().process_frame
+	pull._follow(0)
+	for _f: int in 20:
+		pstage._process(0.05)
+	var loose_drawn: bool = pstage._furrow_left.visible and not pstage._furrow_right.visible
+	_check(flax_own.loose_pm > 0 and loose_sides > 20 and packed_sides > 20 and same_roots and loose_seed > 0 and loose_drawn,
+		"flax: of 80 sides %d start loose, %d packed; the side roots the same as with all packed (%s); a loose left side drawn dug, the packed right not (%s)"
+			% [loose_sides, packed_sides, same_roots, loose_drawn])
+	pull.queue_free()
+	# SKINNING (the cut line, 2026-11-10): the carcass on its stage, the knife floating; the mouse pressed on the line's
+	# start and dragged along it cuts; off it a red rip; a line cut through lifts the knife (let go, then press again);
+	# the hide's points and the panel's agree both ways; the replay agrees.
+	var skin_p: SkinParams = NodeDef.all_by_tier()[7].minigame as SkinParams
+	var skin: SkinMinigame = SkillMinigames.make_ui(skin_p) as SkinMinigame
+	holder.add_child(skin)
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.begin(7, skin_p)
+	await get_tree().process_frame
+	var sstage: SkinStage = skin.get_child(0) as SkinStage
+	skin.set_process(false)   # the test drives the clock
+	var sm: SkinModel = skin.model
+	var start: Vector2i = sm.tip()
+	var on_panel: Vector2 = skin.hide_to_panel(start.x, start.y)
+	var back: Vector2i = skin.panel_to_hide(on_panel)
+	var round_trip: bool = absi(back.x - start.x) <= 2 and absi(back.y - start.y) <= 2 and Rect2(Vector2.ZERO, skin.size).has_point(on_panel)
+	skin._mouse = on_panel
+	skin.button(true)
+	var pressed: bool = sm.down and skin.inputs.size() == 3
+	var st: int = 0
+	var cut_some: bool = false
+	var ripped: bool = false
+	while st < 6000 and sm.line == 0:
+		st += 50
+		sm.advance_to(st)
+		skin._follow(st)
+		cut_some = cut_some or sm.f > 0 or sm.seg > 0
+		ripped = ripped or not skin._rips.is_empty()
+		var aim: Vector2 = sm.ahead(float(skin_p.cut_speed))
+		var skew: float = 90.0 if st >= 600 and st < 700 else 0.0
+		skin._mouse = skin.hide_to_panel(aim.x, aim.y + skew)
+		skin._drag(st)
+	var waits: bool = skin._wait_release and not sm.down
+	sstage.knife(skin._mouse, true, true)
+	var knife_seen: bool = sstage._knife != null and sstage._knife.visible
+	skin.button(false)
+	var released: bool = not skin._wait_release and not skin._held
+	skin._end_model()
+	var skin_r: Dictionary = skin.model.result()
+	var skin_replay: Dictionary = SkillMinigames.play(7, skin_p, skin.inputs)
+	_check(sstage != null and sstage.shown_carcass() != null and sstage.shown_carcass().find_children("*", "Skeleton3D", true, false).size() == 1 and round_trip and pressed and cut_some and ripped
+		and sm.lines == 1 and sm.torn > 0 and waits and released and knife_seen and skin_r == skin_replay and skin.inputs.size() / 3 <= skin.max_inputs(),
+		"skinning: the carcass on its stage (its one skeleton the carcass's), the knife floating; the hide and the panel agree (%s); pressed on the start (%s), dragged it cuts (%s), off the line a rip (%s, %d torn), a line cut through lifts the knife until the button is let go (%s, %s); the replay agrees (%s)"
+			% [round_trip, pressed, cut_some, ripped, sm.torn, waits, released, str(skin_r)])
+	skin.queue_free()
+	await _run_skin_line_end(holder, skin_p)
+	await _run_skin_stage_carcasses()
 	holder.queue_free()
 	await get_tree().process_frame
+
+
+## A LINE'S END, THE BUTTON STILL HELD AND THE HAND STILL MOVING (Luke, 2026-11-11: "at the end of a line you almost
+## always result in a tear because the line finishes while you are holding left click"): the knife lifts itself and
+## stays out until the button is let go and pressed again; nothing is sent meanwhile, nothing tears, the next press
+## cuts, and the replay agrees. NEGATIVE: a place sent before the model has run (the old order) presses the knife down
+## again on the next line, where it tears.
+func _run_skin_line_end(holder: Control, skin_p: SkinParams) -> void:
+	var skin: SkinMinigame = SkillMinigames.make_ui(skin_p) as SkinMinigame
+	holder.add_child(skin)
+	skin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	skin.begin(7, skin_p)
+	await get_tree().process_frame
+	skin.set_process(false)   # the test drives the clock
+	var sm: SkinModel = skin.model
+	var start: Vector2i = sm.tip()
+	skin._mouse = skin.hide_to_panel(start.x, start.y)
+	skin.button(true)
+	# A hand that never rests: every look its place is a little different, so every look it has something to send.
+	var st: int = maxi(0, sm.last_t_ms)
+	while st < 8000 and sm.line == 0:
+		st += 50
+		var aim: Vector2 = sm.ahead(float(skin_p.cut_speed))
+		skin._mouse = skin.hide_to_panel(aim.x + float((st / 50) % 3) - 1.0, aim.y)
+		skin._look(st)
+	var sent_at_end: int = skin.inputs.size()
+	var lifted_itself: bool = sm.line == 1 and not sm.down and skin._wait_release and skin._held
+	# Still held, still moving, for a second: off toward where the next line starts.
+	var next_start: Vector2i = sm.tip()
+	for k: int in 20:
+		st += 50
+		skin._mouse = skin._mouse.lerp(skin.hide_to_panel(next_start.x, next_start.y), 0.2) + Vector2(float(k % 2), 0.0)
+		skin._look(st)
+	var held_harmless: bool = sm.torn == 0 and not sm.down and skin.inputs.size() == sent_at_end
+	skin.button(false)
+	var let_go_sends_nothing: bool = skin.inputs.size() == sent_at_end and not skin._wait_release
+	# Pressed again on the next line's start: it cuts. (The press is stamped by the minigame's own clock, behind the
+	# test's: the model takes it as now.)
+	skin._mouse = skin.hide_to_panel(next_start.x, next_start.y)
+	var again: int = skin.press_at(st + 100, next_start.x, next_start.y)
+	skin._held = true
+	var pressed_again: bool = again == SkinModel.PRESSED and sm.down and sm.torn == 0
+	st += 100
+	for k: int in 6:
+		st += 50
+		var aim2: Vector2 = sm.ahead(float(skin_p.cut_speed))
+		skin._mouse = skin.hide_to_panel(aim2.x, aim2.y)
+		skin._look(st)
+	var cuts_next: bool = sm.torn == 0 and (sm.f > 0 or sm.seg > 0)
+	skin._end_model()
+	var agree: bool = skin.model.result() == SkillMinigames.play(7, skin_p, skin.inputs)
+	# NEGATIVE: the model's own trap, which the old order walked into: an input that runs the line's last tick itself.
+	var trap: SkinModel = SkinModel.start(7, skin_p)
+	var tp: Vector2i = trap.tip()
+	trap.press(0, tp.x, tp.y)
+	var tt: int = 0
+	while tt < 8000 and trap.line == 0:
+		tt += 50
+		var ta: Vector2 = trap.ahead(float(skin_p.cut_speed))
+		trap.press(tt, clampi(roundi(ta.x), 0, 1000), clampi(roundi(ta.y), 0, 1000))   # no look first: this runs the tick
+	var far: bool = Vector2(trap.kx, trap.ky).distance_to(Vector2(trap.tip())) > float(skin_p.reach)
+	trap.advance_to(tt + 500)
+	var trapped: bool = trap.line == 1 and trap.down and (trap.torn >= 9 or not far)
+	_check(lifted_itself and held_harmless and let_go_sends_nothing and pressed_again and cuts_next and agree and trapped,
+		"skinning, a line's end with the button held and the hand moving: the knife lifts itself (%s), a second held on sends and tears nothing (%s, %d torn), letting go sends nothing (%s), the next press cuts (%s, %s), the replay agrees (%s); NEGATIVE, a place sent before the look presses it down again on the next line (%s: %d torn in half a second)"
+			% [lifted_itself, held_harmless, sm.torn, let_go_sends_nothing, pressed_again, cuts_next, agree, trapped, trap.torn])
+	skin.queue_free()
+
+
+## EVERY CARCASS IS PLACED ON THE SKINNING STAGE (Luke, 2026-11-11: the wolf's round showed bare grass): each node
+## with a cut line round has its own round name (the stage finds its carcass by it) and its model placed under the
+## stage's `Carcasses`; its round shows that one alone, its torso under the cut. NEGATIVE: a model not placed is not
+## there.
+func _run_skin_stage_carcasses() -> void:
+	var stage: SkinStage = (load("res://game/regents/skilling/skinning/skin_stage.tscn") as PackedScene).instantiate() as SkinStage
+	add_child(stage)
+	await get_tree().process_frame   # each carcass held in its pose
+	await get_tree().process_frame
+	var holder3d: Node3D = stage.get_node(^"Viewport/Stage/Carcasses") as Node3D
+	var mid: Vector3 = (stage.get_node(^"Viewport/Stage/HideLeft") as Node3D).position.lerp((stage.get_node(^"Viewport/Stage/HideRight") as Node3D).position, 0.5)
+	var names: Array[String] = []
+	var said: PackedStringArray = PackedStringArray()
+	var ok: bool = true
+	for n: NodeDef in NodeDef.all_by_tier():
+		var sp: SkinParams = n.minigame as SkinParams
+		if sp == null:
+			continue
+		var own_name: bool = not names.has(sp.display_name) and SkinMinigame.node_of(sp) == n
+		names.append(sp.display_name)
+		var placed: bool = stage.has_carcass(n)
+		stage.set_carcass(n)
+		var shown: Node3D = stage.shown_carcass()
+		var seen: int = 0
+		for c: Node in holder3d.get_children():
+			seen += int((c as Node3D).visible)
+		var alone: bool = shown != null and shown.scene_file_path == n.models[0].resource_path and seen == 1
+		# Its flank under the cut: the middle of its torso bones within 0.25 m of the middle of the two markers, from above.
+		var off_m: float = 99.0
+		if shown != null:
+			var sk: Skeleton3D = shown.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+			var sum: Vector3 = Vector3.ZERO
+			var count: int = 0
+			for b: int in sk.get_bone_count():
+				if sk.get_bone_name(b).begins_with("Torso"):
+					sum += holder3d.global_transform.affine_inverse() * (sk.global_transform * sk.get_bone_global_pose(b).origin)
+					count += 1
+			if count > 0:
+				var torso: Vector3 = sum / float(count)
+				off_m = Vector2(torso.x - mid.x, torso.z - mid.z).length()
+		said.append("%s %.2f m" % [sp.display_name, off_m])
+		ok = ok and own_name and placed and alone and off_m < 0.25
+	var stray: NodeDef = NodeDef.new()
+	stray.display_name = "Stray"
+	var stray_models: Array[PackedScene] = [load("res://game/regents/art/nature/Rock_Medium_1.gltf") as PackedScene]
+	stray.models = stray_models
+	var not_placed: bool = not stage.has_carcass(stray)
+	_check(ok and names.size() >= 2 and not_placed,
+		"skinning's stage: every carcass with a round (%s) has its own round name, is placed under Carcasses, is shown alone for its round, its torso under the cut (%s); one not placed is not there (%s)"
+			% [", ".join(names), ", ".join(said), not_placed])
+	stage.queue_free()
 
 
 ## A stage shows no character (Luke's play, 2026-11-06): the player's own is the one working.
@@ -3130,12 +3783,13 @@ func _run_looks() -> void:
 			continue   # a weapon mastery: trained by fighting, no working pose
 		_check(aset.has_exact(sk.pose), "%s works in the set's %s" % [sk.display_name, sk.pose])
 	for k: KitDef in KitDef.all():
+		var kset: AnimationSet = k.timing_set if k.timing_set != null else aset
 		var abilities: Array[AbilityDef] = []
 		abilities.assign(k.light + k.skills)
 		for a: AbilityDef in abilities:
 			# The driver plays an ability as `ability.<id>` (anything else falls back to Interact: owner, 2026-10-19).
-			_check(a.animation == StringName("ability.%d" % a.id) and aset.has_exact(a.animation) and aset.clip(a.animation).anim_name != aset.clip(&"interact").anim_name,
-				"the %s kit's %s plays the set's ability.%d, its own clip (%s)" % [k.key, a.display_name, a.id, aset.clip(a.animation).anim_name if aset.has_exact(a.animation) else "none"])
+			_check(a.animation == StringName("ability.%d" % a.id) and kset.has_exact(a.animation) and kset.clip(a.animation).anim_name != kset.clip(&"interact").anim_name,
+				"the %s kit's %s plays the set's ability.%d, its own clip (%s)" % [k.key, a.display_name, a.id, kset.clip(a.animation).anim_name if kset.has_exact(a.animation) else "none"])
 	_check(aset.has_exact(&"ability.40010") and aset.clip(&"ability.40010").anim_name == &"Roll" and aset.has_exact(&"pose.block"), "the roll plays Roll; the block is in the set")
 	var tools: Dictionary[String, StringName] = {"res://game/regents/skilling/woodcutting/axe.tscn": &"pose.chop",
 		"res://game/regents/skilling/woodcutting/iron_axe.tscn": &"pose.chop", "res://game/regents/skilling/mining/pickaxe.tscn": &"pose.mine",
@@ -3178,7 +3832,31 @@ func _run_looks() -> void:
 ## The minigames in one place: their kinds, the server's challenge kinds, a faster tool's swing.
 func _run_registry() -> void:
 	print("== regents: the minigames' registry ==")
-	_check(SkillMinigames.CHALLENGE == {&"chop": 100, &"crack": 101, &"smelt": 102, &"shape": 103, &"beat": 104, &"carve": 105}, "the challenge kinds the server deals them as")
+	_check(SkillMinigames.CHALLENGE == {&"chop": 100, &"crack": 101, &"smelt": 102, &"shape": 103, &"beat": 104, &"carve": 105, &"pull": 106,
+		&"skin": 107}, "the challenge kinds the server deals them as")
+	var skin_p: SkinParams = NodeDef.all_by_tier()[7].minigame as SkinParams
+	var quick_knife: SkinParams = SkillMinigames.with_speed(skin_p, 50) as SkinParams
+	var eased_knife: SkinParams = SkillMinigames.eased(skin_p, 12) as SkinParams
+	var skin_ui: SkillMinigame = SkillMinigames.make_ui(skin_p)
+	var is_skin_ui: bool = skin_ui is SkinMinigame
+	skin_ui.free()
+	_check(SkillMinigames.kind_of(skin_p) == SkillMinigames.SKIN and SkillMinigames.gathers(SkillMinigames.SKIN) and SkillMinigames.arity(SkillMinigames.SKIN) == 3
+		and quick_knife.cut_speed == skin_p.cut_speed * 2 and eased_knife.near == skin_p.near * 112 / 100 and skin_p.near == 45
+		and is_skin_ui,
+		"the cut line: kind 107, a gathering round of (time, x, y); a knife twice as quick cuts twice as fast (%d), rank widens the line (%d)"
+			% [quick_knife.cut_speed, eased_knife.near])
+	var flax_p: PullParams = NodeDef.all_by_tier()[6].minigame as PullParams
+	var quick_trowel: PullParams = SkillMinigames.with_speed(flax_p, 50) as PullParams
+	var eased_p: PullParams = SkillMinigames.eased(flax_p, 12) as PullParams
+	var pull_ui: SkillMinigame = SkillMinigames.make_ui(flax_p)
+	var is_pull_ui: bool = pull_ui is PullMinigame
+	pull_ui.free()
+	_check(SkillMinigames.kind_of(flax_p) == SkillMinigames.PULL and SkillMinigames.kind_of_challenge(106) == SkillMinigames.PULL
+		and is_pull_ui and SkillMinigames.duration_of(flax_p) == flax_p.duration_ms
+		and quick_trowel.stroke_ms == flax_p.stroke_ms / 2 and flax_p.stroke_ms == 250
+		and eased_p.jump_lo == flax_p.jump_lo * 88 / 100 and eased_p.jump_hi == flax_p.jump_hi * 88 / 100 and flax_p.jump_hi == 400
+		and eased_p.hold_pm == flax_p.hold_pm * 88 / 100 and flax_p.hold_pm == 600,
+		"pull the root: its own kind (106), its UI; a trowel twice as fast strokes in half the time, rank eases the side roots' jumps and the soil's hold; the content untouched")
 	_check(SkillMinigames.kind_of(BeatParams.new()) == SkillMinigames.BEAT and SkillMinigames.with_speed(BeatParams.new(), 50) is BeatParams
 		and SkillMinigames.duration_of(BeatParams.new()) == 20 * 600 + 4000,
 		"smelting's rhythm track: its own kind, no swing to speed, as long as its count-in, its beats and its pour")
@@ -3266,6 +3944,217 @@ func _run_active_pay() -> void:
 
 ## BRITTLE NOTCHES (band 2's new thing for mining, a TEST, 2026-11-07): the coal rock's brittle notch struck while the
 ## rock still rings cracks wrong (a jar); struck once the ring fades, it opens; a seam's first notch is never brittle.
+## HERBALISM'S PULL THE ROOT (`HERBALISM_HUNTING_PREP.md` §3, Luke's H3; PROGRESS 51; the trowel's work after his play,
+## 2026-11-08): packed soil holds the root back and a trowel stroke digs a side loose; held, the strain rises and the
+## root comes up (faster at a higher strain), let go or while a stroke runs it eases; a side root shows (the soil
+## cracks on its side) once the root is coming up near it, and a stroke on that side cuts it, the other side only digs;
+## pulled through uncut it jumps the strain; past 1000 it snaps; up whole is 1000; a CLUMP (Luke, 2026-11-08): stem
+## after stem until the time runs out, each packed again, a snap losing the rest of that stem, never the round.
+## SKINNING'S CUT LINE (2026-11-10): the model's rules on a straight line (`SkinModel` writes them out).
+func _run_skin() -> void:
+	print("== regents: the cut line ==")
+	var p: SkinParams = SkinParams.new()
+	p.points = 2
+	p.wobble = 0
+	p.target_lines = 1
+	var m: SkinModel = SkinModel.start(3, p)
+	var dir: int = signi(m.px[1] - m.px[0])
+	var straight: bool = m.py == PackedInt32Array([500, 500]) and absi(m.px[1] - m.px[0]) == 800 and m.seg_len[0] == 800
+	m.press(0, m.px[0], 500)
+	m.advance_to(500)
+	var still: bool = m.f == 0 and m.torn == 0
+	# Dragged at the cut's pace: 30 of 800 a tick is 37 thousandths of the stretch.
+	var x: int = m.px[0]
+	for k: int in 4:
+		x += dir * 30
+		m.press(550 + k * 50, x, 500)
+	m.advance_to(750)
+	var paced: bool = m.f == 37 * 4 and m.torn == 0
+	m.press(800, x + dir * 30, 500 + 44)   # within 45 of the line: still cuts
+	m.advance_to(850)
+	var near_ok: bool = m.torn == 0 and m.f > 150
+	m.press(850, x + dir * 60, 500 + 60)   # 60 off: tears
+	m.advance_to(950)
+	var off_tears: bool = m.torn == 2 and m.tears == 2
+	var tip: Vector2i = m.tip()
+	m.press(950, tip.x + dir * 200, 500)   # on the line, past its reach: tears
+	m.advance_to(1000)
+	var ahead_tears: bool = m.torn == 3
+	m.press(1000, SkinModel.LIFT, SkinModel.LIFT)
+	m.advance_to(1500)
+	var lifted_safe: bool = m.torn == 3 and not m.down
+	# Pressed again at the tip and dragged to the end: the line done, worth 1000 less 35 a tear, the knife lifted.
+	var t: int = 1500
+	tip = m.tip()
+	x = tip.x
+	m.press(t, x, 500)
+	while t < 8000:
+		t += 50
+		m.advance_to(t)
+		if m.line > 0:
+			break
+		x = clampi(x + dir * 30, 0, 1000)
+		m.press(t, x, 500)
+	var done: bool = m.lines == 1 and m.clean == 0 and m.worth == 1000 - 3 * 35 and not m.down and m.tears == 0 and m.seg == 0 and m.f == 0
+	var lifted_at_end: int = m.press(t + 50, x, 500)
+	m.finish()
+	var part: SkinModel = SkinModel.start(3, p)
+	part.press(0, part.px[0], 500)
+	for k: int in 6:
+		part.press(50 + k * 50, part.px[0] + dir * 30 * (k + 1), 500)
+	part.press(350, SkinModel.LIFT, SkinModel.LIFT)
+	part.advance_to(400)
+	var cut_pm: int = part.done_pm()
+	part.finish()
+	var part_ok: bool = part.lines == 0 and cut_pm > 0 and part.worth == 1000 * cut_pm / 1000 * p.part_keep_pm / 1000
+	_check(straight and still and paced and near_ok and off_tears and ahead_tears and lifted_safe and done and lifted_at_end == SkinModel.PRESSED and part_ok,
+		"the cut line: a straight line 800 long; the knife held still on the start cuts nothing and tears nothing (%s); dragged at the cut's pace it runs 37 a tick (%s); 44 off the line still cuts (%s), 60 off tears and runs nothing (%s), 200 ahead on the line tears (%s); lifted, nothing tears (%s); cut through: worth 1000 less 35 a tear, the knife lifted, the next line drawn (%s); a line part cut at the end is worth half what was cut (%s)"
+			% [still, paced, near_ok, off_tears, ahead_tears, lifted_safe, done, part_ok])
+	var readout: Dictionary = MinigameReadout.measure(NodeDef.all_by_tier()[7].minigame, SimPlayer.presets()[1], 40)
+	var careless: Dictionary = MinigameReadout.measure(NodeDef.all_by_tier()[7].minigame, SimPlayer.presets()[3], 40)
+	_check(bool(readout["agree"]) and bool(careless["agree"]) and int(readout["mean"]) >= 900 and int(careless["mean"]) < int(readout["mean"]),
+		"the deer's cut line, simulated: skilled %d %%, careless %d %%, every round replayed exactly" % [int(readout["mean"]) / 10, int(careless["mean"]) / 10])
+
+
+func _run_pull() -> void:
+	print("== regents: pull the root ==")
+	var p0: PullParams = PullParams.new()
+	p0.snags = 0
+	# Packed both sides: (10 + 40 x 40 / 1000) x (1000 - 600) / 1000 = 4 a tick; dug round: 11.
+	var packed: PullModel = PullModel.start(1, p0)
+	packed.press(0, PullModel.DOWN)
+	packed.advance_to(50)
+	var loose: PullModel = PullModel.start(1, p0)
+	var dug: Array = [loose.press(0, PullModel.LEFT), loose.press(100, PullModel.LEFT), loose.press(250, PullModel.LEFT),
+		loose.press(500, PullModel.RIGHT), loose.press(750, PullModel.RIGHT), loose.press(1000, PullModel.RIGHT)]
+	var packs: Vector2i = Vector2i(loose.pack_left, loose.pack_right)
+	loose.press(1250, PullModel.DOWN)
+	loose.advance_to(1300)
+	_check(packed.up_by == 4 and loose.up_by == 11 and packed.strain == 40
+		and dug == [PullModel.DUG, PullModel.IGNORED, PullModel.DUG, PullModel.DUG, PullModel.DUG, PullModel.SCRAPED] and packs == Vector2i(0, 0)
+		and loose.dug == 4,
+		"packed soil holds the root (4 a tick, dug round 11); a stroke digs a side 500, none while one runs, none past loose (%s, %s)" % [str(dug), str(packs)])
+	# A stroke stops the pull while it runs: held, the strain eases and nothing comes up.
+	var mid: PullModel = PullModel.start(1, p0)
+	mid.press(0, PullModel.DOWN)
+	mid.advance_to(500)
+	var before: Vector2i = Vector2i(mid.up_by, mid.strain)
+	mid.press(500, PullModel.RIGHT)
+	mid.advance_to(750)
+	var during: Vector2i = Vector2i(mid.up_by, mid.strain)
+	mid.advance_to(850)
+	_check(during.x == before.x and during.y == before.y - 5 * p0.strain_ease and mid.up_by > during.x and mid.strain > during.y,
+		"a stroke stops the pull while it runs (%s -> %s), then held it pulls again" % [str(before), str(during)])
+	# The strain: let go it eases 60 a tick; past 1000 it snaps (worth a quarter of what came up), the next stem packed again.
+	var top: PullParams = p0.duplicate() as PullParams
+	top.hold_pm = 0
+	var at_top: PullModel = PullModel.start(1, top)
+	at_top.press(0, PullModel.DOWN)
+	at_top.advance_to(25 * 50)
+	var held_at_top: bool = at_top.strain == 1000 and at_top.snapped == 0 and at_top.whole == 0
+	var up_at_top: int = at_top.up_by
+	at_top.advance_to(26 * 50)
+	var snap_ok: bool = at_top.snapped == 1 and at_top.worth == mini(1000, up_at_top + top.pull_rate + 1040 * top.pull_gain / 1000) * top.snap_keep_pm / 1000
+	_check(held_at_top and snap_ok and not at_top.over and at_top.plant == 1 and at_top.up_by == 0 and at_top.strain == 0
+		and at_top.pack_left == 1000 and at_top.pack_right == 1000 and at_top.last_event == PullModel.SNAPPED,
+		"at exactly 1000 it holds; one tick past it snaps, worth a quarter of what came up (%d); the next stem starts packed, never the round's end" % at_top.worth)
+	at_top.press(1300, PullModel.UP)
+	at_top.advance_to(1400)
+	_check(at_top.strain == 0 and at_top.press(1400, PullModel.UP) == PullModel.IGNORED, "let go, it eases (never below 0); an UP while up is nothing")
+	# A side root: it shows once the root is coming up near it, on its side; the other side only digs; that side cuts it.
+	var p1: PullParams = PullParams.new()
+	p1.snags = 1
+	p1.hold_pm = 0
+	p1.jump_lo = 300
+	p1.jump_hi = 300
+	var sd: int = -1
+	for k: int in 50:
+		var probe: PullModel = PullModel.start(1 + k * 7919, p1)
+		if probe.snag_depth[0] > p1.show_depth + 100:
+			sd = 1 + k * 7919
+			break
+	var c: PullModel = PullModel.start(sd, p1)
+	var depth: int = c.snag_depth[0]
+	var side: int = c.snag_side[0]
+	var other: int = PullModel.RIGHT if side == PullModel.LEFT else PullModel.LEFT
+	var hidden_at_start: bool = c.showing() == 0
+	c.press(0, PullModel.DOWN)
+	var t: int = 0
+	while c.showing() == 0 and t < 5000:
+		t += 50
+		c.advance_to(t)
+	var shown_near: bool = c.showing() == side and depth - c.up_by <= p1.show_depth and depth - c.up_by > 0
+	var wrong: int = c.press(t, other)
+	var right_side: int = c.press(t + p1.stroke_ms, side)
+	c.advance_to(t + p1.stroke_ms + 50)
+	_check(sd > 0 and hidden_at_start and shown_near and wrong == PullModel.DUG and right_side == PullModel.CUT and c.cut == 1 and c.caught == 0
+		and c.next_snag == 1 and c.showing() == 0 and c.plant == 0,
+		"a side root (at %d, side %d) shows near it once the root comes up; a stroke on the other side digs, on its side it cuts: never caught" % [depth, side])
+	var u: PullModel = PullModel.start(sd, p1)
+	u.press(0, PullModel.DOWN)
+	var strain_before: int = 0
+	t = 0
+	while u.caught == 0 and t < 5000:
+		if u.strain > 600:
+			u.press(t, PullModel.UP)
+			u.advance_to(t + 300)
+			u.press(t + 300, PullModel.DOWN)
+			t += 300
+		strain_before = u.strain
+		t += 50
+		u.advance_to(t)
+	_check(u.caught == 1 and u.strain == strain_before + p1.strain_rise + 300 and u.last_event == PullModel.CAUGHT and u.snapped == 0,
+		"uncut, pulling through it jumps the strain by its 300 (%d -> %d)" % [strain_before, u.strain])
+	# Up whole, stem after stem until the time runs out: packed it comes up 40 a tick; dug round (4 strokes of 250) 100,
+	# so 10 ticks a stem; two for a full score.
+	var easy: PullParams = PullParams.new()
+	easy.snags = 0
+	easy.strain_rise = 1
+	easy.pull_rate = 100
+	easy.pull_gain = 0
+	easy.target_plants = 2
+	var w: PullModel = PullModel.start(3, easy)
+	w.press(0, PullModel.DOWN)
+	w.advance_to(9 * 50)
+	var first_packed: bool = w.up_by == 40 * 9 and w.whole == 0
+	w.finish()
+	var b: PullModel = PullModel.start(3, easy)
+	var stems_ok: bool = true
+	var ms: int = 0
+	for stem: int in 3:
+		for side_k: int in 4:
+			b.press(ms, PullModel.LEFT if side_k < 2 else PullModel.RIGHT)
+			ms += easy.stroke_ms
+		b.press(ms, PullModel.DOWN)
+		ms += 10 * 50
+		b.press(ms, PullModel.UP)
+		stems_ok = stems_ok and b.whole == stem + 1 and b.plant == stem + 1 and b.pack_left == 1000 and b.up_by == 0
+	b.finish()
+	_check(first_packed and stems_ok and b.whole == 3 and b.worth == 3000 and b.score_pm() == 1000 and b.dug == 12 and w.over and w.snapped == 0,
+		"up whole: 1000; each stem dug round anew; three in a clump, two wanted: a full score (%s)" % str(b.result()))
+	# Dealt by the server (a challenge row of kind 106): the client finds the NODE (flax), not a recipe, and hands its
+	# round to the UI at the trowel's speed (the skilling playtest found it went looking for a recipe and dropped it).
+	var sk: SkillingComponent = SkillingComponent.new()
+	var dealt: Array = []
+	sk.round_dealt.connect(func(id: int, s: int, params: Resource, target: int, name: String) -> void: dealt.append([id, s, params, target, name]))
+	var row: ChallengeRow = ChallengeRow.new()
+	row.fields = {"id": 77, "kind": 106, "seed": 5, "payload": "1234 40007 50"}
+	sk._on_challenge(null, row)
+	var got_p: PullParams = (dealt[0][2] as PullParams) if dealt.size() == 1 else null
+	_check(SkillMinigames.gathers(SkillMinigames.PULL) and not SkillMinigames.gathers(SkillMinigames.CARVE) and got_p != null
+		and dealt[0][3] == 1234 and dealt[0][4] == "Flax" and got_p.stroke_ms == 125 and sk.round_def is NodeDef and sk.run_target == 1234,
+		"a pull round dealt at flax: the client finds the node, plays it at the trowel's speed (a 125 ms stroke at 50 %%), and runs rounds back to back (%s)" % str(dealt))
+	sk.free()
+	var one: PullParams = easy.duplicate() as PullParams
+	one.target_plants = 1
+	one.duration_ms = 400
+	one.hold_pm = 0
+	var g: Dictionary = PullModel.play(3, one, PackedInt32Array([200, PullModel.DOWN]))
+	_check(int(g["whole"]) == 0 and int(g["score_pm"]) == 4 * 100 * one.snap_keep_pm / 1000,
+		"still in the ground at the end: worth a quarter of what came up (%s)" % str(g))
+	_check(int(PullModel.play(3, one, PackedInt32Array()).get("score_pm", -1)) == 0, "nothing pulled: nothing")
+
+
 func _run_brittle() -> void:
 	print("== regents: brittle notches ==")
 	var coal: CrackParams = null
@@ -3544,8 +4433,8 @@ func _run_lab() -> void:
 	var buttons: Array[Button] = []
 	buttons.assign(lab.get("buttons"))
 	var game: SkillMinigame = lab.get("game") as SkillMinigame
-	_check(buttons.size() == 23 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
-		"twenty-three rounds to play (six nodes, flax having none yet; three bars, twelve smithed parts with the trowel blades, the carved bow and staff), the first, a tree's, on show (%d)" % buttons.size())
+	_check(buttons.size() == 29 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"twenty-nine rounds to play (nine nodes, flax's pull the root and the two carcasses' cut lines among them; three bars, fifteen smithed parts with the trowel and knife blades, the carved bow and staff), the first, a tree's, on show (%d)" % buttons.size())
 	if buttons.size() == 9:
 		buttons[3].pressed.emit()
 		game = lab.get("game") as SkillMinigame

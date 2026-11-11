@@ -5,8 +5,8 @@ class_name NodeDef extends ContentDef
 ## everyone: it is worked out for everyone (a stump, rubble) and comes back after `regrow_s`. Worked two
 ## ways at the player's choice (owner, 2026-10-18):
 ##   AFK      tap E: one `yield_item` every `afk_ms_per_item` (faster with a better tool, a higher rank)
-##   active   hold E: a round of `minigame` (its tier band's: branch dodge for trees 1-3, crack the rock
-##            for rocks 1-3), paying what AFK makes in the round's time x `regents.active_yield_mult` x
+##   active   hold E: a round of `minigame` (its tier band's: branch dodge for trees, crack the rock for
+##            rocks, pull the root for plants), paying what AFK makes in the round's time x `regents.active_yield_mult` x
 ##            the score
 ## Each item gives `xp` in its skill, may bring `rare_item`, and may exhaust the node (`deplete_permille`).
 ## The server compiles these numbers in (`server/build/regents.rs`).
@@ -17,7 +17,7 @@ enum Depleted { STUMP, RUBBLE }
 @export var skill: SkillDef
 ## Its tier: harder rounds, better yields, slower AFK.
 @export_range(1, 20) var tier: int = 1
-## Its round (a `ChopParams`, a `CrackParams`: `SkillMinigames`). Played in the skilling lab.
+## Its round (a `ChopParams`, a `CrackParams`, a `PullParams`, a `SkinParams`: `SkillMinigames`; none: AFK only). Played in the skilling lab.
 @export var minigame: Resource
 @export_group("Working it")
 ## What it gives.
@@ -38,6 +38,13 @@ enum Depleted { STUMP, RUBBLE }
 ## A rare find that may come with an item (empty: none), and its chance per item AFK.
 @export var rare_item: ItemDef
 @export_range(0, 1000, 1, "suffix:‰") var rare_permille: int = 0
+## The most it gives before it is worked out, however lucky the rolls (0: no cap): a carcass's hides (Luke, 2026-11-10:
+## a deer holds several, "like a node depletion", a better round more "up to a cap").
+@export_range(0, 1000) var max_items: int = 0
+## A played round works the WHOLE node at once (a carcass skinned in one round): it pays what AFK work gets out of all
+## of it on average (`expected_items`) x the round's factor (M11), never past `max_items`, and the node is worked out as
+## the round ends. Needs a round and a cap. Off: a round pays what AFK makes in its time, as a tree's or a rock's.
+@export var whole_round: bool = false
 @export_group("How it shows")
 ## Its looks (one is picked per node, by its entity).
 @export var models: Array[PackedScene] = []
@@ -47,6 +54,10 @@ enum Depleted { STUMP, RUBBLE }
 @export var depleted_color: Color = Color(0.42, 0.29, 0.18)
 ## Ore showing on a rock (its nuggets' color); transparent for none.
 @export var ore_color: Color = Color(0, 0, 0, 0)
+## What the worker is told the moment it is worked out ("Timber!", "The rock is worked out"). Presentation only.
+@export var depleted_notice: String = "Worked out"
+## The prompt beside it while it is worked out, after its name ("worked out, coming back").
+@export var depleted_prompt: String = "worked out, coming back"
 
 static var _by_id: Dictionary[int, NodeDef] = {}
 ## Each model's footprint (`footprint_cm`), worked out once per model and scale.
@@ -84,6 +95,8 @@ func to_bake() -> Dictionary:
 		"rare_item": ContentDef.ref(rare_item),
 		"rare_permille": rare_permille,
 		"radii_cm": radii_cm(),
+		"max_items": max_items,
+		"whole_round": whole_round,
 	}
 
 
@@ -153,15 +166,31 @@ func validate() -> Array[String]:
 		out.append("it trains no skill: set `skill`")
 	var kind: StringName = SkillMinigames.kind_of(minigame)
 	# None: AFK only (holding E works it AFK too), as a plant before its round is built (2026-11-07).
-	if minigame != null and kind != SkillMinigames.CHOP and kind != SkillMinigames.CRACK:
-		out.append("its `minigame` is not a gathering round (a ChopParams or a CrackParams; or none: AFK only)")
+	if minigame != null and not SkillMinigames.gathers(kind):
+		out.append("its `minigame` is not a gathering round (a ChopParams, a CrackParams, a PullParams or a SkinParams; or none: AFK only)")
 	if yield_item == null:
 		out.append("it gives nothing: set `yield_item`")
 	if rare_permille > 0 and rare_item == null:
 		out.append("a rare chance with no rare item: set `rare_item` or the chance to 0")
 	if models.is_empty() or models.has(null):
 		out.append("it has no look: add `models`")
+	if whole_round and (max_items < 1 or minigame == null):
+		out.append("worked whole in a round, it needs a round (`minigame`) and a cap (`max_items`)")
 	return out
+
+
+## What AFK work gets out of the whole node before it is worked out, on average (each item the last with
+## `deplete_permille`, never past `max_items`; 0 when it never runs out). The server's `expected_items_milli`.
+func expected_items() -> float:
+	var d: float = clampf(float(deplete_permille) / 1000.0, 0.0, 1.0)
+	if max_items <= 0:
+		return 1.0 / d if d > 0.0 else 0.0
+	var sum: float = 0.0
+	var stay: float = 1.0
+	for k: int in max_items:
+		sum += stay
+		stay *= 1.0 - d
+	return sum
 
 
 static func by_id(node_id: int) -> NodeDef:

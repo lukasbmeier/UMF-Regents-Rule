@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_cqx0l"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="2_a1rq7"]
 
-[node name="Cell_11_-18" type="Node3D" unique_id=733615136]
+[node name="Cell_11_-18" type="Node3D" unique_id=701839263]
 
-[node name="w_flax_58" type="Marker3D" parent="." unique_id=1631548296]
+[node name="w_flax_58" type="Marker3D" parent="." unique_id=603305002]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 726.7525, 1.8426607, -1095.4348)
 gizmo_extents = 0.5
 script = ExtResource("1_cqx0l")

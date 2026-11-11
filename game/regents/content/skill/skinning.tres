@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/skill_def.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+key = &"skinning"
+xp_to_rank = PackedInt32Array(60, 150, 280, 450, 680, 980, 1350, 1800, 2400)
+pose = &"pose.craft"
+color = Color(0.72, 0.5, 0.36, 1)
+id = 40011
+display_name = "Skinning"
+designer_notes = "SKINNING (Luke's H1, 2026-11-07; built 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 4): a slain creature leaves a CARCASS; tap E skins it AFK, hold E (its drag-the-knife round, H4: the next step) plays it. A smithed KNIFE from the bag (Luke, 2026-11-09); Skinning rank and the knife's tier gate the better hides. Its pose is the reach (pose.craft) until a skinning clip is in the animation set."

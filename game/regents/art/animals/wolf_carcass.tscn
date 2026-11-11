@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/regents/art/animals/posed_clip.gd" id="1_posed"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/Wolf.gltf" id="2_wolf"]
+
+[node name="WolfCarcass" type="Node3D"]
+script = ExtResource("1_posed")
+
+[node name="Wolf" parent="." instance=ExtResource("2_wolf")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)

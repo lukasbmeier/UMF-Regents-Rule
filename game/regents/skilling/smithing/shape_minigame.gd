@@ -11,8 +11,11 @@ class_name ShapeMinigame extends SkillMinigame
 ##
 ## THE BANDS' RULES (Luke, 2026-11-05; `ShapeModel` says each), as played: the TEMPLATE (Space, or its button) shows
 ## the outline while it is on the bar; a click while it is on lifts it (no strike); HEATS, not a clock: the heats
-## left and the best the part can still be are shown, and Enter (or its button) SETS THE PART DOWN, or QUENCHES it
-## in a round with a quench (the window marked on the heat bar). RED heat shows on the bar and the heat bar.
+## left and the best the part can still be are shown, and Enter (or its button) HELD SETS THE PART DOWN, or QUENCHES
+## it in a round with a quench (the window marked on the heat bar). RED heat shows on the bar and the heat bar.
+## Luke's play, 2026-11-09: the outline FADES once the pattern is lifted, to a ghost or to nothing by the band
+## (`pattern_fade_ms`, `pattern_ghost_pm`); a single Enter no longer ends the round (a hold does, `SkillMinigame`); the
+## quench is off on every part for now (it ended the round, and read as a step).
 
 const STAGE: PackedScene = preload("res://game/regents/skilling/smithing/anvil_stage.tscn")
 
@@ -37,6 +40,8 @@ var _acts_seen: int = 0
 var _stage: AnvilStage = null
 var _lay_button: Button = null
 var _done_button: Button = null
+## When the pattern was last lifted (round time, ms; -1: not yet).
+var _lifted_ms: int = -1
 
 
 ## The setting, defined once (the HUD defines it at start so the settings panel lists it before a first round).
@@ -70,7 +75,9 @@ func _ready() -> void:
 	row.add_theme_constant_override(&"separation", 8)
 	add_child(row)
 	_lay_button = _button(row, toggle_template)
-	_done_button = _button(row, set_down)
+	_done_button = _button(row, Callable())
+	_done_button.button_down.connect(finish_hold_begin)   # held, as Enter (Luke's play, 2026-11-09)
+	_done_button.button_up.connect(finish_hold_end)
 	if model != null:
 		_show_stage()
 
@@ -79,7 +86,8 @@ func _button(row: HBoxContainer, act: Callable) -> Button:
 	var b: Button = Button.new()
 	b.focus_mode = Control.FOCUS_NONE   # Space and Enter are the round's keys, never a focused button's
 	b.custom_minimum_size = Vector2(0, 34)
-	b.pressed.connect(act)
+	if act.is_valid():
+		b.pressed.connect(act)
 	b.visible = false
 	row.add_child(b)
 	return b
@@ -124,7 +132,7 @@ func how_to() -> String:
 	if has_template():
 		keys += "   Space: the pattern"
 	if has_heats():
-		keys += "   Enter: %s" % ("quench" if has_quench() else "set it down")
+		keys += "   Hold Enter: %s" % finish_words()
 	return keys
 
 
@@ -143,6 +151,7 @@ func _new_model() -> void:
 	last_event = ShapeModel.IGNORED
 	last_event_ms = -100000
 	_acts_seen = 0
+	_lifted_ms = -1
 	if _stage != null:
 		_stage.build(model.heights.size())
 		_show_stage()
@@ -188,6 +197,8 @@ func strike_at(t_ms: int, column: int) -> int:
 		return ShapeModel.IGNORED
 	record([t_ms, column])
 	var ev: int = model.strike(t_ms, column)
+	if column == ShapeModel.LIFT and not model.laid:
+		_lifted_ms = t_ms
 	_follow()
 	queue_redraw()
 	return ev
@@ -199,7 +210,27 @@ func toggle_template() -> void:
 		strike_at(elapsed_ms(), ShapeModel.LIFT if model.laid else ShapeModel.LAY)
 
 
-## Set the part down (or quench it): the round ends (Enter, its button).
+func _finish_held() -> void:
+	set_down()
+
+
+func finish_words() -> String:
+	return "quench it" if has_quench() else "set it down"
+
+
+## Under the set-down button (the foot of the panel is the heat bar's).
+func finish_hold_rect() -> Rect2:
+	return Rect2(size.x - 16.0 - 230.0, 128.0, 230.0, 10.0)
+
+
+## How strongly the outline is drawn now (1 full, 0 not at all): the pattern on, or fading after it was lifted.
+func outline_alpha() -> float:
+	if model == null or part() == null:
+		return 0.0
+	return MinigameLook.pattern_alpha(_shows_outline(), _now(), _lifted_ms, part().pattern_fade_ms, part().pattern_ghost_pm)
+
+
+## Set the part down (or quench it): the round ends (Enter held, its button held).
 func set_down() -> void:
 	if state == State.PLAYING and has_heats():
 		strike_at(elapsed_ms(), ShapeModel.DONE)
@@ -258,7 +289,7 @@ func _process(delta: float) -> void:
 		_done_button.visible = playing and has_heats()
 		if playing:
 			_lay_button.text = "Lift the pattern (Space)" if model.laid else "Lay the pattern on (Space)"
-			_done_button.text = "Quench (Enter)" if has_quench() else "Set it down (Enter)"
+			_done_button.text = "Hold: quench (Enter)" if has_quench() else "Hold: set it down (Enter)"
 	super(delta)
 
 
@@ -292,14 +323,15 @@ func _gui_input(event: InputEvent) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k: InputEventKey = event as InputEventKey
+	if k != null and state == State.PLAYING and is_visible_in_tree() and has_heats() and finish_key(k):
+		get_viewport().set_input_as_handled()   # Enter held sets the part down (`SkillMinigame.finish_key`)
+		return
 	if k == null or not k.pressed or k.echo or state != State.PLAYING or not is_visible_in_tree():
 		return
 	if k.keycode == KEY_R:
 		strike_at(elapsed_ms(), ShapeModel.REHEAT_COLUMN)
 	elif k.keycode == KEY_SPACE and has_template():
 		toggle_template()
-	elif (k.keycode == KEY_ENTER or k.keycode == KEY_KP_ENTER) and has_heats():
-		set_down()
 	else:
 		return
 	get_viewport().set_input_as_handled()
@@ -329,8 +361,8 @@ func _draw() -> void:
 		return
 	if _stage == null:
 		_draw_flat()
-	elif _shows_outline():
-		_draw_outline()
+	elif outline_alpha() > 0.0:
+		_draw_outline(outline_alpha())
 	_draw_heat(font)
 	if has_heats():
 		_draw_heats(font)
@@ -388,8 +420,8 @@ func _draw_heats(font: Font) -> void:
 
 
 ## The round's outline over the 3D bar: a dark line under a bright one, so it reads on hot and cold metal alike; with
-## a template on, a pale plate behind it, as the pattern laid on the bar.
-func _draw_outline() -> void:
+## a template on, a pale plate behind it, as the pattern laid on the bar; `alpha` below 1 as it fades once lifted.
+func _draw_outline(alpha: float = 1.0) -> void:
 	var n: int = model.outline.size()
 	var pts: PackedVector2Array = PackedVector2Array()
 	for i: int in n:
@@ -400,8 +432,8 @@ func _draw_outline() -> void:
 		plate.append(_stage.screen_point(float(n), 0.0))
 		plate.append(_stage.screen_point(0.0, 0.0))
 		draw_colored_polygon(plate, PARCHMENT)
-	draw_polyline(pts, Color(0, 0, 0, 0.6), 5.0)
-	draw_polyline(pts, Color(1, 1, 1, 0.92), 2.0)
+	draw_polyline(pts, Color(0, 0, 0, 0.6 * alpha), 5.0)
+	draw_polyline(pts, Color(1, 1, 1, 0.92 * alpha), 2.0)
 	var hover: int = column_at(get_local_mouse_position().x) if state == State.PLAYING and not model.laid else -1
 	if hover >= 0:
 		var a: Vector2 = _stage.screen_point(float(hover), 0.0)
@@ -420,11 +452,12 @@ func _draw_flat() -> void:
 	for i: int in n:
 		var h: float = model.heights[i] * px
 		draw_rect(Rect2(r.position.x + i * col_w + 1.0, r.end.y - h, col_w - 2.0, h), metal)
-	if not _shows_outline():
+	var alpha: float = outline_alpha()
+	if alpha <= 0.0:
 		return
 	var pts: PackedVector2Array = PackedVector2Array()
 	for i: int in n:
 		var y: float = r.end.y - model.outline[i] * px
 		pts.append(Vector2(r.position.x + i * col_w, y))
 		pts.append(Vector2(r.position.x + (i + 1) * col_w, y))
-	draw_polyline(pts, Color.WHITE, 3.0)
+	draw_polyline(pts, Color(1, 1, 1, alpha), 3.0)

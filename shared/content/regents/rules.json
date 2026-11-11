@@ -281,6 +281,33 @@
 					"unit": "s"
 				},
 				{
+					"key": "regents.startle_ms",
+					"kind": "number",
+					"max": 20000.0,
+					"min": 0.0,
+					"number": 2500.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.carcass_own_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 0.0,
+					"number": 60.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
+					"key": "regents.carcass_rot_s",
+					"kind": "number",
+					"max": 3600.0,
+					"min": 5.0,
+					"number": 180.0,
+					"text": "",
+					"unit": "s"
+				},
+				{
 					"key": "regents.player_respawn_s",
 					"kind": "number",
 					"max": 120.0,

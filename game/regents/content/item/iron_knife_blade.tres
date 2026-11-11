@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_qyni5"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/knife_blade.tres" id="2_haljs"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_pnuv1"]
+
+[resource]
+script = ExtResource("3_pnuv1")
+max_stack = 1
+color = Color(0.65, 0.66, 0.7, 1)
+description = "A skinning knife's blade, shaped at the anvil: as good as its smith."
+material = ExtResource("1_qyni5")
+pattern = ExtResource("2_haljs")
+id = 40060
+display_name = "Iron knife blade"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Knife blade): made by Make the table."

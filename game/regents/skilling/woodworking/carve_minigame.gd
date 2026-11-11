@@ -3,13 +3,16 @@ class_name CarveMinigame extends SkillMinigame
 ## this draws it and takes presses). The stave stands on the workbench (`CarveStage`); click a row LEFT of its middle to
 ## cut its left edge, RIGHT of it for the right edge: left click a deep cut, right click a fine shave. The pattern (both
 ## profiles, which need not match) is laid on at the start: look, then click or Space to lift it and carve from memory;
-## Space to look again (it costs). Enter sets the piece down when it is done.
+## Space to look again (it costs). Enter HELD sets the piece down when it is done (Luke's play, 2026-11-09: one Enter
+## ended it at once). Lifted, the pattern FADES to a ghost or to nothing (`pattern_fade_ms`, `pattern_ghost_pm`).
 
 const STAGE_LINE: Color = Color(1, 1, 1, 0.92)
 
 var model: CarveModel
 var _stage: CarveStage = null
 var _cuts_seen: int = 0
+## When the pattern was last lifted (round time, ms; -1: not yet).
+var _lifted_ms: int = -1
 
 
 func _ready() -> void:
@@ -35,7 +38,7 @@ func title() -> String:
 
 
 func how_to() -> String:
-	return "Click a row left or right of its middle to cut that side: left click deep, right click a fine shave   Space: the pattern   Enter: set it down"
+	return "Click a row left or right of its middle to cut that side: left click deep, right click a fine shave   Space: the pattern   Hold Enter: set it down"
 
 
 func summary(r: Dictionary) -> String:
@@ -46,6 +49,7 @@ func summary(r: Dictionary) -> String:
 func _new_model() -> void:
 	model = CarveModel.start(seed_value, recipe())
 	_cuts_seen = 0
+	_lifted_ms = -1
 	if _stage != null and is_node_ready():
 		_stage.build(model.rows())
 
@@ -68,6 +72,8 @@ func press_at(t_ms: int, code: int) -> int:
 		return CarveModel.IGNORED
 	record([t_ms, code])
 	var ev: int = model.press(t_ms, code)
+	if code == CarveModel.LIFT and not model.laid:
+		_lifted_ms = t_ms
 	_follow()
 	queue_redraw()
 	return ev
@@ -129,12 +135,13 @@ func _gui_input(event: InputEvent) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k: InputEventKey = event as InputEventKey
+	if k != null and state == State.PLAYING and is_visible_in_tree() and finish_key(k):
+		get_viewport().set_input_as_handled()   # Enter held sets it down (`SkillMinigame.finish_key`)
+		return
 	if k == null or not k.pressed or k.echo or state != State.PLAYING or not is_visible_in_tree():
 		return
 	if k.keycode == KEY_SPACE:
 		toggle_pattern()
-	elif k.keycode == KEY_ENTER or k.keycode == KEY_KP_ENTER:
-		press_at(elapsed_ms(), CarveModel.DONE)
 	else:
 		return
 	get_viewport().set_input_as_handled()
@@ -157,6 +164,22 @@ func _process(delta: float) -> void:
 
 
 ## Whether the profiles show now: with no pattern always; with one while it is on, and once the round is over.
+func _finish_held() -> void:
+	press_at(elapsed_ms(), CarveModel.DONE)
+
+
+func finish_words() -> String:
+	return "set it down"
+
+
+## How strongly the profiles are drawn now (1 full, 0 not at all): the pattern on, or fading after it was lifted.
+func profile_alpha() -> float:
+	if model == null or recipe() == null:
+		return 0.0
+	var now: int = elapsed_ms() if state == State.PLAYING else model.last_t_ms
+	return MinigameLook.pattern_alpha(_shows_profiles(), now, _lifted_ms, recipe().pattern_fade_ms, recipe().pattern_ghost_pm)
+
+
 func _shows_profiles() -> bool:
 	return recipe().hide_outline <= 0 or model.laid or state == State.DONE
 
@@ -166,7 +189,8 @@ func _draw() -> void:
 	if model == null or _stage == null:
 		_draw_frame("")
 		return
-	if _shows_profiles():
+	var alpha: float = profile_alpha()
+	if alpha > 0.0:
 		for side: int in 2:
 			var line: PackedInt32Array = model.target_left if side == 0 else model.target_right
 			var out_dir: float = -1.0 if side == 0 else 1.0
@@ -174,8 +198,9 @@ func _draw() -> void:
 			for i: int in model.rows():
 				pts.append(_stage.screen_point(float(i), out_dir * float(line[i])))
 				pts.append(_stage.screen_point(float(i + 1), out_dir * float(line[i])))
-			draw_polyline(pts, Color(0, 0, 0, 0.6), 5.0)
-			draw_polyline(pts, STAGE_LINE if not model.laid else MinigameLook.GOLD, 2.0)
+			draw_polyline(pts, Color(0, 0, 0, 0.6 * alpha), 5.0)
+			var line_color: Color = STAGE_LINE if not model.laid else MinigameLook.GOLD
+			draw_polyline(pts, Color(line_color, line_color.a * alpha), 2.0)
 	var hint: String = how_to()
 	if state == State.PLAYING and model.laid:
 		hint = "The pattern: look, then click or Space to lift it and carve from memory" + ("" if model.lays == 0 else "   (each look costs)")

@@ -30,6 +30,11 @@ class_name CarveParams extends Resource
 ## piece can be (thousandths). 0: no pattern, the profiles always shown.
 @export_range(0, 1) var hide_outline: int = 1
 @export_range(0, 1000, 1, "suffix:‰") var lay_cost_pm: int = 30
+## THE PATTERN FADES (Luke, 2026-11-09, after playing: remembering a hidden outline made the bands too hard): lifted, the
+## outline fades over `pattern_fade_ms` to `pattern_ghost_pm` of full (thousandths) and stays that faint; 0 / 0 is gone at
+## once, as before. Only what is drawn: the round, its score and the server's replay are the same either way.
+@export_range(0, 10000, 50, "suffix:ms") var pattern_fade_ms: int = 0
+@export_range(0, 1000, 1, "suffix:‰") var pattern_ghost_pm: int = 0
 ## 1: the seed may swap the two profiles, so the piece bends one way or the other (Luke, 2026-11-07: an unstrung bow
 ## "backwards (curve going right or left)"). 0: always as written.
 @export_range(0, 1) var mirror: int = 0

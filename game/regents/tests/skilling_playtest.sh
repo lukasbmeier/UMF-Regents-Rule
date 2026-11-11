@@ -30,7 +30,10 @@ LEVEL=$(spacetime sql "$DB" "SELECT level_id FROM world_level WHERE world_id = 0
 echo "   world 0 runs level ${LEVEL:-none} (the frontier is 20)"
 
 chop_log="$(mktemp)"; buddy_log="$(mktemp)"; buddy_pid=""; chop_pid=""
-cleanup() { [ -n "$buddy_pid" ] && kill "$buddy_pid" 2>/dev/null; [ -n "$chop_pid" ] && kill "$chop_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$chop_log" "$buddy_log"; }
+cleanup() { [ -n "$buddy_pid" ] && kill "$buddy_pid" 2>/dev/null; [ -n "$chop_pid" ] && kill "$chop_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$chop_log" "$buddy_log"
+  spacetime call "$DB" reset_rule '"regents.foe_respawn_s"' >/dev/null 2>&1; }
+# Skinning slays the glade's deer twice: it comes back in 3 s for this run (reset as it ends).
+spacetime call "$DB" set_rule '"regents.foe_respawn_s"' 3.0 '""' >/dev/null 2>&1
 trap cleanup EXIT
 
 echo "== two clients at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
@@ -41,7 +44,7 @@ buddy_pid=$!
 CHOP_HEADLESS="--headless"; [ -n "${SHOTS:-}" ] && CHOP_HEADLESS="--resolution 1280x720"
 "$GODOT" $CHOP_HEADLESS --path . "$SCENE" -- --token=chopper --role=chopper --latency="$LATENCY" --jitter="$JITTER" --autoconnect --shots="${SHOTS:-}" >"$chop_log" 2>&1 &
 chop_pid=$!
-granted=""; ore_given=""; sword_given=""; stave_given=""
+granted=""; ore_given=""; sword_given=""; stave_given=""; slain=0; last_deer=""
 while kill -0 "$chop_pid" 2>/dev/null; do
   if [ -z "$ore_given" ]; then
     ent="$(grep -oE '^GRANT_ORE [0-9]+' "$chop_log" | head -1 | awk '{print $2}')"
@@ -67,6 +70,18 @@ while kill -0 "$chop_pid" 2>/dev/null; do
       spacetime call "$DB" admin_give_item "$ent" 40049 1 650 >/dev/null 2>&1
       stave_given="yes"
       echo "   gave entity $ent an unstrung yew bow of quality 650 (herbalism's stringing)"
+    fi
+  fi
+  # SKINNING asks for a deer each time (SLAY_DEER <entity> <n>): the glade's deer, once it is back (a fresh entity on
+  # deer_1: foes come back in 3 s for this run), slain as that player's kill.
+  asked="$(grep -cE '^SLAY_DEER [0-9]+' "$chop_log")"
+  if [ "$asked" -gt "$slain" ]; then
+    ent="$(grep -oE '^SLAY_DEER [0-9]+' "$chop_log" | tail -1 | awk '{print $2}')"
+    deer="$(spacetime sql "$DB" "SELECT entity_id FROM foe WHERE point_id = 'deer_1' AND gone = false" 2>/dev/null | tail -n +3 | head -1 | tr -d ' ')"
+    if [ -n "$deer" ] && [ "$deer" != "$last_deer" ]; then
+      spacetime call "$DB" admin_slay "$deer" "$ent" >/dev/null 2>&1
+      slain=$((slain + 1)); last_deer="$deer"
+      echo "   slew the glade's deer ($deer) as entity $ent's kill (skinning, $slain)"
     fi
   fi
   if [ -z "$sword_given" ]; then

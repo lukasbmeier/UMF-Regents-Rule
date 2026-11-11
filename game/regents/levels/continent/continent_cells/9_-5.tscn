@@ -1,8 +1,27 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_j2l0l"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ho0pp"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_05gjc"]
 
-[node name="Cell_9_-5" type="Node3D" unique_id=1364020842]
+[node name="Cell_9_-5" type="Node3D" unique_id=1187681185]
 
-[node name="bush_long_1_781" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("1_j2l0l")]
+[node name="w_deer_51" type="Marker3D" parent="." unique_id=1034383845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 622.3131, 1.3822131, -278.7883)
+gizmo_extents = 0.5
+script = ExtResource("1_ho0pp")
+point_id = "w_deer_51"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_52" type="Marker3D" parent="." unique_id=1135816015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 618.3334, 1.688042, -279.1906)
+gizmo_extents = 0.5
+script = ExtResource("1_ho0pp")
+point_id = "w_deer_52"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="bush_long_1_781" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_05gjc")]
 transform = Transform3D(1.3937722, 0, -0.038778678, 0, 1.3943117, 0, 0.038778678, 0, 1.3937722, 599.4772, 2.2810564, -269.48456)

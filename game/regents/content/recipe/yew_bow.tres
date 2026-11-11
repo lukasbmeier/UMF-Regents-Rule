@@ -20,6 +20,8 @@ fine_cut = 1
 outline_vary = 2
 error_scale = 40
 hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
 lay_cost_pm = 30
 mirror = 1
 

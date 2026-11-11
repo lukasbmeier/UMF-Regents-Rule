@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 500
+range_m = 3.0
+wind_up_ms = 820
+damage = 28.0
+animation = &"ability.40029"
+key = &"regents.combat"
+judged = true
+reach_m = 3.0
+radius_m = 0.6
+height_m = 0.7
+lunges = true
+id = 40029
+display_name = "Wolf lunge"
+designer_notes = "THE WOLF'S FINISHER (hunting, Luke 2026-11-10: an unblockable red-glint lunge that leaps forward and knocks back): winds up 820 ms (Attack at 1.0x), lunges forward at the end of its wind-up, cannot be blocked or parried, and pushes its target back when it lands."

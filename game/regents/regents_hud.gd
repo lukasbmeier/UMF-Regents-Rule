@@ -372,11 +372,11 @@ func _update_prompt() -> void:
 	if node != null and node.def != null:
 		var d: NodeDef = node.def
 		if node.depleted:
-			_prompt.text = "%s: worked out, coming back" % d.display_name
+			_prompt.text = "%s: %s" % [d.display_name, d.depleted_prompt]
 		elif skilling.rank_in(d.skill) < d.min_rank:
 			_prompt.text = "%s: needs %s rank %d (yours %d)" % [d.display_name, d.skill.display_name, d.min_rank, skilling.rank_in(d.skill)]
 		else:
-			var verb: String = String({&"axe": "chop", &"pick": "mine", &"trowel": "pull"}.get(d.tool_tag, "work"))
+			var verb: String = String({&"axe": "chop", &"pick": "mine", &"trowel": "pull", &"knife": "skin"}.get(d.tool_tag, "work"))
 			_prompt.text = "E: %s the %s (AFK)%s" % [verb, d.display_name.to_lower(), "     Hold E: play" if d.minigame != null else ""]
 	elif station != null and station.def != null:
 		# At most four times a second: it lists every recipe there (owner, 2026-10-19: lag by a bench).
@@ -487,6 +487,11 @@ func _on_round_dealt(_id: int, seed_value: int, params: Resource, _target_id: in
 		_local_input.hold_still(HOLD_REASON, true)
 	MouseCapture.hold_free(HOLD_REASON, true)
 	game.begin(seed_value, params)
+	# What the round pays so far, beside the run's tally (Luke, 2026-11-09: every round, as woodcutting's logs).
+	game.pay_afk = skilling.afk_items_in(game.duration_ms()) if skilling != null else 0.0
+	game.pay_item = skilling.round_item_name() if skilling != null else ""
+	game.pay_mult = HotRules.number(&"regents.active_yield_mult")
+	game.pay_floor = HotRules.number(&"regents.active_yield_floor")
 
 
 ## WHERE A ROUND IS PLAYED: every skill's in the big panel in the middle (Luke's play, 2026-11-06: the side panel
@@ -614,7 +619,10 @@ func _on_worked(r: Dictionary) -> void:
 		notice("Found: %s!" % item_name(int(r["rare_item"])), Color(1, 0.9, 0.3))
 	if bool(r["depleted"]):
 		var node: NodeComponent = SkillingComponent.node_of(int(r["target_id"]))
-		notice("Timber!" if node == null or not node.is_rock() else "The rock is worked out", Color(0.9, 1, 0.7))
+		# Each node says its own (`NodeDef.depleted_notice`): a tree "Timber!", flax and a carcass their own words.
+		var said: String = node.def.depleted_notice if node != null and node.def != null else ""
+		if not said.is_empty():
+			notice(said, Color(0.9, 1, 0.7))
 
 
 ## A foe slain by this player: its name, and what it dropped.
@@ -706,7 +714,7 @@ static func status_rows(st: StatusComponent) -> Array[Dictionary]:
 	if st == null:
 		return out
 	var d: StatusDef = st.def()
-	if st.status() != StatusDef.NORMAL and st.by_entity() != st.entity_id and is_finite(st.seconds_left()) and d != null:
+	if st.status() != StatusDef.NORMAL and st.by_entity() != st.entity_id and is_finite(st.seconds_left()) and d != null and d.show_on_nameplate:
 		out.append({"name": d.display_name, "left": st.seconds_left(), "total": st.seconds_total(), "color": d.color})
 	for n: int in st.effects():
 		var ed: StatusDef = StatusDef.find(n)

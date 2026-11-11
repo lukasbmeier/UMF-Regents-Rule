@@ -40,6 +40,11 @@ func admin_reset_skills(entity_id: int) -> SpacetimeDBReducerCall:
 func admin_set_rank(entity_id: int, skill_id: int, rank: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('admin_set_rank', [entity_id, skill_id, rank], [&'u64', &'u32', &'u32'], &'')
 
+## 0. entity_id: int [br]
+## 1. killer: int [br]
+func admin_slay(entity_id: int, killer: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_slay', [entity_id, killer], [&'u64', &'u64'], &'')
+
 ## 0. target_id: int [br]
 ## 1. amount: float [br]
 ## 2. source_id: int [br]

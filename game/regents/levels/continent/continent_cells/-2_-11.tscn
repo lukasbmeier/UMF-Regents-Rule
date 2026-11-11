@@ -1,44 +1,62 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="1_d3e2j"]
-[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="2_t6l8j"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_d3e2j"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="2_t6l8j"]
 
-[node name="Cell_-2_-11" type="Node3D" unique_id=1913323421]
+[node name="Cell_-2_-11" type="Node3D" unique_id=1537729180]
 
-[node name="rock_medium_1_361" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("1_d3e2j")]
+[node name="w_deer_23" type="Marker3D" parent="." unique_id=256571171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -83.559235, 2.3847425, -653.04614)
+gizmo_extents = 0.5
+script = ExtResource("1_d3e2j")
+point_id = "w_deer_23"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_24" type="Marker3D" parent="." unique_id=481028361]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -85.475815, 2.2141283, -656.55707)
+gizmo_extents = 0.5
+script = ExtResource("1_d3e2j")
+point_id = "w_deer_24"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="rock_medium_1_361" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_t6l8j")]
 transform = Transform3D(-0.8115767, 0, 0.8744326, 0, 1.1930169, 0, -0.8744326, 0, -0.8115767, -84.565834, 2.7413814, -643.1116)
 
-[node name="w_skeleton_16_1" type="Marker3D" parent="." unique_id=981490542]
+[node name="w_skeleton_16_1" type="Marker3D" parent="." unique_id=1000103528]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -112.319885, 1.0127214, -645.0075)
 gizmo_extents = 0.5
-script = ExtResource("2_t6l8j")
+script = ExtResource("1_d3e2j")
 point_id = "w_skeleton_16_1"
 kind = "skeleton_warrior"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_skeleton_16_2" type="Marker3D" parent="." unique_id=1943039867]
+[node name="w_skeleton_16_2" type="Marker3D" parent="." unique_id=1060399276]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -109.319885, 1.2812483, -641.5075)
 gizmo_extents = 0.5
-script = ExtResource("2_t6l8j")
+script = ExtResource("1_d3e2j")
 point_id = "w_skeleton_16_2"
 kind = "skeleton_axeman"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_skeleton_16_3" type="Marker3D" parent="." unique_id=594449237]
+[node name="w_skeleton_16_3" type="Marker3D" parent="." unique_id=1934023960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -108.319885, 1.2778451, -648.5075)
 gizmo_extents = 0.5
-script = ExtResource("2_t6l8j")
+script = ExtResource("1_d3e2j")
 point_id = "w_skeleton_16_3"
 kind = "skeleton_warrior"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_poi_skeletons_16" type="Marker3D" parent="." unique_id=1686521578]
+[node name="w_poi_skeletons_16" type="Marker3D" parent="." unique_id=2083659444]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -112.319885, 1.0127214, -645.0075)
 gizmo_extents = 10.0
-script = ExtResource("2_t6l8j")
+script = ExtResource("1_d3e2j")
 point_id = "w_poi_skeletons_16"
 kind = "poi"
 radius = 10.0

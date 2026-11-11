@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_kg0k5"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/knife.tres" id="2_tc85r"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_cnfvq"]
+
+[resource]
+script = ExtResource("3_cnfvq")
+max_stack = 1
+tool_tag = &"knife"
+tool_tier = 3
+tool_speed_pct = 75
+color = Color(0.55, 0.6, 0.68, 1)
+description = "A skinning knife: takes the hide off a carcass whole; skins hides up to its tier."
+material = ExtResource("1_kg0k5")
+pattern = ExtResource("2_tc85r")
+id = 40063
+display_name = "Steel knife"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Knife): made by Make the table."

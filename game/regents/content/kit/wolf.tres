@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/anim/wolf_animation.tres" id="3_timing"]
+[ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="4_hit"]
+[ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="5_slow"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_wolf_bite.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_wolf_hamstring.tres" id="a1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_wolf_lunge.tres" id="a2"]
+
+[sub_resource type="Resource" id="HitHamstring"]
+script = ExtResource("4_hit")
+ability = ExtResource("a1")
+status = ExtResource("5_slow")
+status_ms = 3000
+
+[sub_resource type="Resource" id="HitLunge"]
+script = ExtResource("4_hit")
+ability = ExtResource("a2")
+push_mps = 10.0
+
+[resource]
+script = ExtResource("1_kit")
+key = &"wolf"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
+unblockable = Array[Resource]([ExtResource("a2")])
+timing_set = ExtResource("3_timing")
+hits = Array[Resource]([SubResource("HitHamstring"), SubResource("HitLunge")])
+skill_ranks = PackedInt32Array()
+id = 40008
+display_name = "Wolf"
+designer_notes = "THE WOLF'S KIT (hunting, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): a three-step foe string timed against wolf_animation.tres: Wolf bite, Hamstring bite (Slowed 3 s when unblocked), and Wolf lunge (unblockable red glint, leaps forward and pushes back 10 m/s)."

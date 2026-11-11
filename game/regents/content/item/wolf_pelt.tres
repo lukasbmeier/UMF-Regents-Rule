@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+max_stack = 1000
+color = Color(0.5, 0.52, 0.56, 1)
+description = "A wolf's thick grey pelt, skinned from the carcass: tanned into supple leather at the tanning rack."
+id = 40064
+display_name = "Wolf pelt"
+designer_notes = "HUNTING'S SECOND HIDE (Luke's H7, 2026-11-07; built 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): tier 2 hide, skinned from a wolf's carcass (content/node/wolf_carcass.tres)."

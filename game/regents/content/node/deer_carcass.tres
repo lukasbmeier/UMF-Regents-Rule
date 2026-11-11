@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="NodeDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/node_def.gd" id="1_node"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/skinning.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/item/deer_hide.tres" id="3_yield"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/deer_carcass.tscn" id="m0"]
+[ext_resource type="Script" path="res://game/regents/skilling/skinning/skin_params.gd" id="4_params"]
+
+[sub_resource type="Resource" id="Round"]
+script = ExtResource("4_params")
+display_name = "Deer"
+duration_ms = 12000
+target_lines = 4
+points = 5
+wobble = 120
+near = 45
+reach = 120
+cut_speed = 30
+tear_pm = 35
+part_keep_pm = 500
+
+[resource]
+script = ExtResource("1_node")
+skill = ExtResource("2_skill")
+tier = 1
+minigame = SubResource("Round")
+yield_item = ExtResource("3_yield")
+tool_tag = &"knife"
+min_tool_tier = 1
+min_rank = 1
+xp = 15
+afk_ms_per_item = 5000
+deplete_permille = 350
+regrow_s = 5.0
+max_items = 4
+whole_round = true
+models = Array[PackedScene]([ExtResource("m0")])
+model_scale = 0.38
+depleted = 1
+depleted_color = Color(0.36, 0.12, 0.1, 1)
+depleted_notice = "The carcass is skinned"
+depleted_prompt = "skinned"
+id = 40008
+display_name = "Deer carcass"
+designer_notes = "A DEER'S CARCASS (skinning, Luke's H1, 2026-11-07; built 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 4): left where a deer fell (its FoeDef's carcass), never placed by a level. Skinned with a KNIFE of tier 1 (Luke, 2026-11-09) at Skinning rank 1. SEVERAL HIDES (Luke, 2026-11-10: \"like a node depletion and good rounds reward more up to a cap\"): AFK a hide every 5 s, each the last with 35 %, never more than 4 (max_items): about 2.3 a deer. ITS ROUND, THE CUT LINE (H4: drag the knife along the line, off it tears): a round skins the WHOLE carcass (whole_round): it pays that 2.3 x the round's factor (0.75 at a score of 0 to 1.25 at full: about 1.8 to 2.9 hides), never past the 4, and the carcass is worked out as it ends. Its look is the deer held at its Death clip's end (art/animals/deer_carcass.tscn); skinned, it sinks away (the rubble look, dark red) and is taken away. Its top damager's alone regents.carcass_own_s, then anyone's; it rots away after regents.carcass_rot_s. Claude's numbers, Luke's to change."

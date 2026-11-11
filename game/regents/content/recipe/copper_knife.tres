@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_ep768"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_knife_blade.tres" id="2_58d82"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_nuioe"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_knife.tres" id="4_y54my"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_o8lbr"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_kd4jb"]
+
+[resource]
+script = ExtResource("5_o8lbr")
+station = &"workbench"
+skill = ExtResource("6_kd4jb")
+inputs = Array[ExtResource("1_ep768")]([ExtResource("2_58d82"), ExtResource("3_nuioe")])
+input_qty = PackedInt32Array(1, 1)
+output = ExtResource("4_y54my")
+xp = 7
+afk_ms = 2000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1)
+from_table = true
+id = 40048
+display_name = "Copper knife"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Copper in Knife): its numbers are yours to tune."

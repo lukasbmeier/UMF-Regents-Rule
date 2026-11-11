@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_aga87"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_knife_blade.tres" id="2_h3mv4"]
+[ext_resource type="Resource" path="res://game/regents/content/item/handle.tres" id="3_eov2d"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_knife.tres" id="4_uvva6"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_27ih3"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_ngij3"]
+
+[resource]
+script = ExtResource("5_27ih3")
+station = &"workbench"
+skill = ExtResource("6_ngij3")
+inputs = Array[ExtResource("1_aga87")]([ExtResource("2_h3mv4"), ExtResource("3_eov2d")])
+input_qty = PackedInt32Array(1, 1)
+output = ExtResource("4_uvva6")
+xp = 15
+min_rank = 2
+afk_ms = 4000
+quality = 2
+part_slot = 1
+part_slots = PackedInt32Array(1)
+from_table = true
+id = 40050
+display_name = "Iron knife"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Iron in Knife): its numbers are yours to tune."

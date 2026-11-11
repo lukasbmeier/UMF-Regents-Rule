@@ -1,8 +1,27 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="1_eewby"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_2yvux"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_q1cy5"]
 
-[node name="Cell_1_6" type="Node3D" unique_id=1045172798]
+[node name="Cell_1_6" type="Node3D" unique_id=212161026]
 
-[node name="fern_1_507" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("1_eewby")]
+[node name="w_deer_35" type="Marker3D" parent="." unique_id=1931549462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113.67601, -1.8798947, 436.97412)
+gizmo_extents = 0.5
+script = ExtResource("1_2yvux")
+point_id = "w_deer_35"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="w_deer_36" type="Marker3D" parent="." unique_id=2125562377]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 111.536354, -1.636785, 433.59448)
+gizmo_extents = 0.5
+script = ExtResource("1_2yvux")
+point_id = "w_deer_36"
+kind = "deer"
+radius = 0.5
+tags = PackedStringArray()
+
+[node name="fern_1_507" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_q1cy5")]
 transform = Transform3D(-0.33675256, 0, -1.1749991, 0, 1.2223033, 0, 1.1749991, 0, -0.33675256, 112.69187, 0.40202716, 390.1188)

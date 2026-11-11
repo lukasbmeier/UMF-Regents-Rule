@@ -313,6 +313,45 @@
 			"range": 2.2,
 			"reach": 2.2,
 			"wind_up_ms": 1200
+		},
+		{
+			"ability_id": 40027,
+			"cooldown_ms": 500,
+			"damage": 14.0,
+			"height": 0.7,
+			"judged": true,
+			"lunges": false,
+			"name": "Wolf bite",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 550
+		},
+		{
+			"ability_id": 40028,
+			"cooldown_ms": 500,
+			"damage": 16.0,
+			"height": 0.7,
+			"judged": true,
+			"lunges": false,
+			"name": "Hamstring bite",
+			"radius": 0.5,
+			"range": 2.0,
+			"reach": 2.0,
+			"wind_up_ms": 620
+		},
+		{
+			"ability_id": 40029,
+			"cooldown_ms": 500,
+			"damage": 28.0,
+			"height": 0.7,
+			"judged": true,
+			"lunges": true,
+			"name": "Wolf lunge",
+			"radius": 0.6,
+			"range": 3.0,
+			"reach": 3.0,
+			"wind_up_ms": 820
 		}
 	],
 	"owner": "regents",

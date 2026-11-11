@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/foe.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/art/animals/Wolf.gltf" id="3_look"]
+[ext_resource type="Resource" path="res://game/regents/anim/wolf_animation.tres" id="4_anim"]
+[ext_resource type="Resource" path="res://game/regents/content/movement/wolf.tres" id="5_move"]
+
+[resource]
+script = ExtResource("1_def")
+id = 40010
+kind = 107
+scene = ExtResource("2_scene")
+brain = &"regents/foe"
+visual_scene = ExtResource("3_look")
+visual_yaw_deg = 180.0
+visual_scale = 0.35
+animation_set = ExtResource("4_anim")
+collision_radius = 0.45
+collision_height = 1.0
+movement_profile = ExtResource("5_move")
+display_name = "Wolf"
+designer_notes = "THE WOLF (hunting, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): Quaternius's CC0 wolf (Ultimate Animated Animals, game/regents/art/animals/Wolf.gltf, scaled 0.35 to about 1.45 m long), animated by game/regents/anim/wolf_animation.tres (written by build_animal_sets.gd). Driven by regents/foe with pack coordination (content/foe/wolf.tres)."

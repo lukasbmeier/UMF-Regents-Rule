@@ -1,0 +1,49 @@
+[gd_scene load_steps=7 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Handle"]
+albedo_color = Color(0.36, 0.22, 0.12, 1)
+roughness = 0.8
+
+[sub_resource type="CylinderMesh" id="Grip"]
+material = SubResource("Handle")
+top_radius = 0.012
+bottom_radius = 0.014
+height = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Copper"]
+albedo_color = Color(0.78, 0.45, 0.26, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="Guard"]
+material = SubResource("Copper")
+size = Vector3(0.04, 0.01, 0.018)
+
+[sub_resource type="PrismMesh" id="Blade"]
+material = SubResource("Copper")
+left_to_right = 0.0
+size = Vector3(0.03, 0.12, 0.005)
+
+[sub_resource type="BoxMesh" id="Back"]
+material = SubResource("Copper")
+size = Vector3(0.012, 0.06, 0.005)
+
+[node name="Knife" type="Node3D"]
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Grip" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("Grip")
+
+[node name="Guard" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.104, 0)
+mesh = SubResource("Guard")
+
+[node name="Blade" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.169, 0)
+mesh = SubResource("Blade")
+
+[node name="Head" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.015, 0.229, 0)
+gizmo_extents = 0.03

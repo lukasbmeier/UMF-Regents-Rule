@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MovementProfileDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/movement_profile_def.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+walk_speed = 1.4
+run_speed = 8.6
+sprint_speed = 8.6
+acceleration = 30.0
+friction = 30.0
+id = 40003
+display_name = "Deer"
+designer_notes = "A DEER'S GAIT (hunting, 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): it grazes at a walk and bolts at a gallop a little FASTER than a player's sprint (8.6 against 8 m/s), so it is caught with the bow, or cornered, not run down. It gets up to speed and stops less sharply than a person (30 against 70 and 60). Claude's numbers, Luke's to change."

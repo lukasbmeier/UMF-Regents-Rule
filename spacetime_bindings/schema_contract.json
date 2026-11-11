@@ -8,6 +8,7 @@
 		"admin_reset_bag": "(entity_id:U64)",
 		"admin_reset_skills": "(entity_id:U64)",
 		"admin_set_rank": "(entity_id:U64,skill_id:U32,rank:U32)",
+		"admin_slay": "(entity_id:U64,killer:U64)",
 		"apply_damage": "(target_id:U64,amount:F32,source_id:U64)",
 		"attach_as": "(entity_id:U64,carrier_id:U64,socket:String)",
 		"begin_interact": "(target_id:U64,verb:U8)",

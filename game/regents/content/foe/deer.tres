@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="FoeDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
+[ext_resource type="Resource" path="res://game/regents/content/character/deer.tres" id="2_char"]
+[ext_resource type="Resource" path="res://game/regents/content/node/deer_carcass.tres" id="3_carcass"]
+
+[resource]
+script = ExtResource("1_foe")
+key = &"deer"
+character = ExtResource("2_char")
+fights = false
+hp = 60
+damage_pct = 0
+poise = 10000
+family = &"beast"
+notice_m = 16.0
+leash_m = 45.0
+startle_m = 5.0
+flee_m = 25.0
+calm_ms = 6000
+graze_m = 6.0
+carcass = ExtResource("3_carcass")
+id = 40004
+display_name = "Deer"
+designer_notes = "THE FIRST CREATURE (Luke's H5, 2026-11-07; built 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): it grazes round its point and never fights. It sees you within notice_m (16 m, in sight), hears you within startle_m (5 m), and is startled by any hit: then it bolts flee_m (25 m) from you at a gallop a little faster than your sprint, never past leash_m from home; calm_ms (6 s) with nobody near, it walks back. Its poise never breaks (a hit never staggers it: it runs). Slain, it pays weapon mastery XP and leaves its CARCASS (skinning, 2026-11-09: content/node/deer_carcass.tres), skinned with a knife for its hide. Claude's numbers, Luke's to change."

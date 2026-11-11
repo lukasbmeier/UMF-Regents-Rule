@@ -9,6 +9,7 @@
 				200,
 				200
 			],
+			"hits": [],
 			"id": 40001,
 			"key": "sword",
 			"light": [
@@ -82,6 +83,7 @@
 				200,
 				200
 			],
+			"hits": [],
 			"id": 40002,
 			"key": "axe",
 			"light": [
@@ -119,6 +121,7 @@
 			"follow_ms": [
 				200
 			],
+			"hits": [],
 			"id": 40003,
 			"key": "bow",
 			"light": [
@@ -142,6 +145,7 @@
 			"follow_ms": [
 				200
 			],
+			"hits": [],
 			"id": 40004,
 			"key": "staff",
 			"light": [
@@ -200,6 +204,7 @@
 				200,
 				200
 			],
+			"hits": [],
 			"id": 40005,
 			"key": "skeleton_sword",
 			"light": [
@@ -236,6 +241,7 @@
 				200,
 				200
 			],
+			"hits": [],
 			"id": 40006,
 			"key": "skeleton_axe",
 			"light": [
@@ -268,6 +274,7 @@
 				200,
 				200
 			],
+			"hits": [],
 			"id": 40007,
 			"key": "sparring_sword",
 			"light": [
@@ -296,6 +303,57 @@
 			"skills": [],
 			"unblockable": [
 				40026
+			]
+		},
+		{
+			"draw_full_ms": 0,
+			"follow_ms": [
+				200,
+				200,
+				200
+			],
+			"hits": [
+				{
+					"ability": 40028,
+					"push_mps": 0.0,
+					"status": 108,
+					"status_ms": 3000
+				},
+				{
+					"ability": 40029,
+					"push_mps": 10.0,
+					"status": 0,
+					"status_ms": 0
+				}
+			],
+			"id": 40008,
+			"key": "wolf",
+			"light": [
+				40027,
+				40028,
+				40029
+			],
+			"locks": [
+				[
+					40027,
+					952
+				],
+				[
+					40028,
+					1067
+				],
+				[
+					40029,
+					1333
+				]
+			],
+			"name": "Wolf",
+			"resource": 0,
+			"roles": [],
+			"skill": 40006,
+			"skills": [],
+			"unblockable": [
+				40029
 			]
 		}
 	],

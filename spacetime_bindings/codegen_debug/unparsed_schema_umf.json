@@ -1341,6 +1341,103 @@
 								},
 								{
 									"name": {
+										"some": "owner_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "foe_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "fell_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "skinned_at"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "some"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__timestamp_micros_since_unix_epoch__"
+																	},
+																	"algebraic_type": {
+																		"I64": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "none"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": []
+														}
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
 										"some": "chunk"
 									},
 									"algebraic_type": {
@@ -3529,7 +3626,7 @@
 										"some": "frame"
 									},
 									"algebraic_type": {
-										"Ref": 52.0
+										"Ref": 53.0
 									}
 								},
 								{
@@ -4240,6 +4337,36 @@
 									},
 									"algebraic_type": {
 										"String": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "taken"
+									},
+									"algebraic_type": {
+										"U32": []
 									}
 								}
 							]
@@ -7093,7 +7220,7 @@
 						"scope": [],
 						"source_name": "Entity"
 					},
-					"ty": 34.0,
+					"ty": 35.0,
 					"custom_ordering": true
 				},
 				{
@@ -7109,7 +7236,7 @@
 						"scope": [],
 						"source_name": "LinkCode"
 					},
-					"ty": 55.0,
+					"ty": 56.0,
 					"custom_ordering": true
 				},
 				{
@@ -7117,7 +7244,7 @@
 						"scope": [],
 						"source_name": "HeldHit"
 					},
-					"ty": 45.0,
+					"ty": 46.0,
 					"custom_ordering": true
 				},
 				{
@@ -7131,9 +7258,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SessionMember"
+						"source_name": "SessionMatch"
 					},
-					"ty": 80.0,
+					"ty": 81.0,
 					"custom_ordering": true
 				},
 				{
@@ -7141,15 +7268,15 @@
 						"scope": [],
 						"source_name": "FoeKill"
 					},
-					"ty": 39.0,
+					"ty": 40.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WhereSample"
+						"source_name": "SessionMember"
 					},
-					"ty": 95.0,
+					"ty": 82.0,
 					"custom_ordering": true
 				},
 				{
@@ -7157,15 +7284,15 @@
 						"scope": [],
 						"source_name": "ChallengePruneSchedule"
 					},
-					"ty": 21.0,
+					"ty": 22.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WorldConfig"
+						"source_name": "WhereSample"
 					},
-					"ty": 100.0,
+					"ty": 97.0,
 					"custom_ordering": true
 				},
 				{
@@ -7173,7 +7300,7 @@
 						"scope": [],
 						"source_name": "Wielded"
 					},
-					"ty": 96.0,
+					"ty": 98.0,
 					"custom_ordering": true
 				},
 				{
@@ -7181,7 +7308,7 @@
 						"scope": [],
 						"source_name": "GroundItem"
 					},
-					"ty": 41.0,
+					"ty": 42.0,
 					"custom_ordering": true
 				},
 				{
@@ -7189,7 +7316,7 @@
 						"scope": [],
 						"source_name": "Poise"
 					},
-					"ty": 69.0,
+					"ty": 71.0,
 					"custom_ordering": true
 				},
 				{
@@ -7197,7 +7324,15 @@
 						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 94.0,
+					"ty": 96.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldConfig"
+					},
+					"ty": 102.0,
 					"custom_ordering": true
 				},
 				{
@@ -7205,7 +7340,7 @@
 						"scope": [],
 						"source_name": "StatusExpiry"
 					},
-					"ty": 36.0,
+					"ty": 37.0,
 					"custom_ordering": true
 				},
 				{
@@ -7213,7 +7348,7 @@
 						"scope": [],
 						"source_name": "MetaShare"
 					},
-					"ty": 58.0,
+					"ty": 59.0,
 					"custom_ordering": true
 				},
 				{
@@ -7221,7 +7356,7 @@
 						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 72.0,
+					"ty": 74.0,
 					"custom_ordering": true
 				},
 				{
@@ -7229,7 +7364,7 @@
 						"scope": [],
 						"source_name": "Challenge"
 					},
-					"ty": 20.0,
+					"ty": 21.0,
 					"custom_ordering": true
 				},
 				{
@@ -7237,7 +7372,7 @@
 						"scope": [],
 						"source_name": "DropPity"
 					},
-					"ty": 31.0,
+					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -7245,7 +7380,7 @@
 						"scope": [],
 						"source_name": "CombatState"
 					},
-					"ty": 24.0,
+					"ty": 25.0,
 					"custom_ordering": true
 				},
 				{
@@ -7253,7 +7388,7 @@
 						"scope": [],
 						"source_name": "ItemDef"
 					},
-					"ty": 54.0,
+					"ty": 55.0,
 					"custom_ordering": true
 				},
 				{
@@ -7269,7 +7404,7 @@
 						"scope": [],
 						"source_name": "PerfReport"
 					},
-					"ty": 67.0,
+					"ty": 69.0,
 					"custom_ordering": true
 				},
 				{
@@ -7277,7 +7412,7 @@
 						"scope": [],
 						"source_name": "NpcBrainRow"
 					},
-					"ty": 64.0,
+					"ty": 66.0,
 					"custom_ordering": true
 				},
 				{
@@ -7285,7 +7420,7 @@
 						"scope": [],
 						"source_name": "SpellTimer"
 					},
-					"ty": 84.0,
+					"ty": 86.0,
 					"custom_ordering": true
 				},
 				{
@@ -7293,7 +7428,7 @@
 						"scope": [],
 						"source_name": "WorkResult"
 					},
-					"ty": 98.0,
+					"ty": 100.0,
 					"custom_ordering": true
 				},
 				{
@@ -7301,7 +7436,7 @@
 						"scope": [],
 						"source_name": "DevTools"
 					},
-					"ty": 30.0,
+					"ty": 31.0,
 					"custom_ordering": true
 				},
 				{
@@ -7317,7 +7452,7 @@
 						"scope": [],
 						"source_name": "EquipStateRow"
 					},
-					"ty": 35.0,
+					"ty": 36.0,
 					"custom_ordering": true
 				},
 				{
@@ -7325,7 +7460,7 @@
 						"scope": [],
 						"source_name": "InventoryItem"
 					},
-					"ty": 53.0,
+					"ty": 54.0,
 					"custom_ordering": true
 				},
 				{
@@ -7333,7 +7468,7 @@
 						"scope": [],
 						"source_name": "Noise"
 					},
-					"ty": 63.0,
+					"ty": 65.0,
 					"custom_ordering": true
 				},
 				{
@@ -7341,7 +7476,7 @@
 						"scope": [],
 						"source_name": "WorldLevel"
 					},
-					"ty": 101.0,
+					"ty": 103.0,
 					"custom_ordering": true
 				},
 				{
@@ -7355,9 +7490,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "InputFrame"
+						"source_name": "Carcass"
 					},
-					"ty": 52.0,
+					"ty": 19.0,
 					"custom_ordering": true
 				},
 				{
@@ -7365,7 +7500,15 @@
 						"scope": [],
 						"source_name": "EffectExpiry"
 					},
-					"ty": 33.0,
+					"ty": 34.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 53.0,
 					"custom_ordering": true
 				},
 				{
@@ -7373,7 +7516,7 @@
 						"scope": [],
 						"source_name": "LoginIssuer"
 					},
-					"ty": 57.0,
+					"ty": 58.0,
 					"custom_ordering": true
 				},
 				{
@@ -7381,7 +7524,7 @@
 						"scope": [],
 						"source_name": "MetaTally"
 					},
-					"ty": 59.0,
+					"ty": 60.0,
 					"custom_ordering": true
 				},
 				{
@@ -7389,21 +7532,13 @@
 						"scope": [],
 						"source_name": "Missile"
 					},
-					"ty": 60.0,
+					"ty": 61.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
 						"source_name": "Push"
-					},
-					"ty": 71.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RecipeLog"
 					},
 					"ty": 73.0,
 					"custom_ordering": true
@@ -7413,7 +7548,15 @@
 						"scope": [],
 						"source_name": "InputQueueRow"
 					},
-					"ty": 51.0,
+					"ty": 52.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RecipeLog"
+					},
+					"ty": 75.0,
 					"custom_ordering": true
 				},
 				{
@@ -7421,7 +7564,7 @@
 						"scope": [],
 						"source_name": "ResourceState"
 					},
-					"ty": 76.0,
+					"ty": 78.0,
 					"custom_ordering": true
 				},
 				{
@@ -7429,7 +7572,7 @@
 						"scope": [],
 						"source_name": "SessionEmpty"
 					},
-					"ty": 78.0,
+					"ty": 80.0,
 					"custom_ordering": true
 				},
 				{
@@ -7437,7 +7580,7 @@
 						"scope": [],
 						"source_name": "WorkOrder"
 					},
-					"ty": 97.0,
+					"ty": 99.0,
 					"custom_ordering": true
 				},
 				{
@@ -7445,7 +7588,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 103.0,
+					"ty": 105.0,
 					"custom_ordering": true
 				},
 				{
@@ -7469,7 +7612,7 @@
 						"scope": [],
 						"source_name": "DashWindowRow"
 					},
-					"ty": 29.0,
+					"ty": 30.0,
 					"custom_ordering": true
 				},
 				{
@@ -7477,7 +7620,7 @@
 						"scope": [],
 						"source_name": "Session"
 					},
-					"ty": 77.0,
+					"ty": 79.0,
 					"custom_ordering": true
 				},
 				{
@@ -7485,7 +7628,7 @@
 						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 92.0,
+					"ty": 94.0,
 					"custom_ordering": true
 				},
 				{
@@ -7493,7 +7636,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 88.0,
+					"ty": 90.0,
 					"custom_ordering": true
 				},
 				{
@@ -7501,7 +7644,7 @@
 						"scope": [],
 						"source_name": "Casting"
 					},
-					"ty": 19.0,
+					"ty": 20.0,
 					"custom_ordering": true
 				},
 				{
@@ -7509,7 +7652,7 @@
 						"scope": [],
 						"source_name": "OrderFilled"
 					},
-					"ty": 66.0,
+					"ty": 68.0,
 					"custom_ordering": true
 				},
 				{
@@ -7517,7 +7660,7 @@
 						"scope": [],
 						"source_name": "SpellArea"
 					},
-					"ty": 82.0,
+					"ty": 84.0,
 					"custom_ordering": true
 				},
 				{
@@ -7525,7 +7668,7 @@
 						"scope": [],
 						"source_name": "Station"
 					},
-					"ty": 86.0,
+					"ty": 88.0,
 					"custom_ordering": true
 				},
 				{
@@ -7533,7 +7676,7 @@
 						"scope": [],
 						"source_name": "Hurt"
 					},
-					"ty": 50.0,
+					"ty": 51.0,
 					"custom_ordering": true
 				},
 				{
@@ -7541,7 +7684,7 @@
 						"scope": [],
 						"source_name": "ClientRtt"
 					},
-					"ty": 23.0,
+					"ty": 24.0,
 					"custom_ordering": true
 				},
 				{
@@ -7557,7 +7700,7 @@
 						"scope": [],
 						"source_name": "Guide"
 					},
-					"ty": 43.0,
+					"ty": 44.0,
 					"custom_ordering": true
 				},
 				{
@@ -7565,7 +7708,7 @@
 						"scope": [],
 						"source_name": "HealthStateRow"
 					},
-					"ty": 44.0,
+					"ty": 45.0,
 					"custom_ordering": true
 				},
 				{
@@ -7573,7 +7716,7 @@
 						"scope": [],
 						"source_name": "CraftChoice"
 					},
-					"ty": 26.0,
+					"ty": 27.0,
 					"custom_ordering": true
 				},
 				{
@@ -7581,7 +7724,7 @@
 						"scope": [],
 						"source_name": "Guard"
 					},
-					"ty": 42.0,
+					"ty": 43.0,
 					"custom_ordering": true
 				},
 				{
@@ -7589,7 +7732,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 75.0,
+					"ty": 77.0,
 					"custom_ordering": true
 				},
 				{
@@ -7597,7 +7740,7 @@
 						"scope": [],
 						"source_name": "SkillXp"
 					},
-					"ty": 81.0,
+					"ty": 83.0,
 					"custom_ordering": true
 				},
 				{
@@ -7613,7 +7756,7 @@
 						"scope": [],
 						"source_name": "Dummy"
 					},
-					"ty": 32.0,
+					"ty": 33.0,
 					"custom_ordering": true
 				},
 				{
@@ -7621,7 +7764,7 @@
 						"scope": [],
 						"source_name": "SpellCooldown"
 					},
-					"ty": 83.0,
+					"ty": 85.0,
 					"custom_ordering": true
 				},
 				{
@@ -7629,7 +7772,7 @@
 						"scope": [],
 						"source_name": "NpcDriver"
 					},
-					"ty": 65.0,
+					"ty": 67.0,
 					"custom_ordering": true
 				},
 				{
@@ -7637,7 +7780,7 @@
 						"scope": [],
 						"source_name": "Swing"
 					},
-					"ty": 90.0,
+					"ty": 92.0,
 					"custom_ordering": true
 				},
 				{
@@ -7653,7 +7796,7 @@
 						"scope": [],
 						"source_name": "CraftGrade"
 					},
-					"ty": 27.0,
+					"ty": 28.0,
 					"custom_ordering": true
 				},
 				{
@@ -7661,7 +7804,7 @@
 						"scope": [],
 						"source_name": "StarterKitGiven"
 					},
-					"ty": 85.0,
+					"ty": 87.0,
 					"custom_ordering": true
 				},
 				{
@@ -7669,7 +7812,7 @@
 						"scope": [],
 						"source_name": "Tutorial"
 					},
-					"ty": 93.0,
+					"ty": 95.0,
 					"custom_ordering": true
 				},
 				{
@@ -7677,7 +7820,7 @@
 						"scope": [],
 						"source_name": "ChatMessage"
 					},
-					"ty": 22.0,
+					"ty": 23.0,
 					"custom_ordering": true
 				},
 				{
@@ -7693,7 +7836,7 @@
 						"scope": [],
 						"source_name": "Correction"
 					},
-					"ty": 25.0,
+					"ty": 26.0,
 					"custom_ordering": true
 				},
 				{
@@ -7709,7 +7852,7 @@
 						"scope": [],
 						"source_name": "NodeSeen"
 					},
-					"ty": 62.0,
+					"ty": 63.0,
 					"custom_ordering": true
 				},
 				{
@@ -7717,7 +7860,7 @@
 						"scope": [],
 						"source_name": "LobbyMember"
 					},
-					"ty": 56.0,
+					"ty": 57.0,
 					"custom_ordering": true
 				},
 				{
@@ -7725,7 +7868,7 @@
 						"scope": [],
 						"source_name": "StatusEffectRow"
 					},
-					"ty": 87.0,
+					"ty": 89.0,
 					"custom_ordering": true
 				},
 				{
@@ -7733,7 +7876,7 @@
 						"scope": [],
 						"source_name": "HotRuleRow"
 					},
-					"ty": 49.0,
+					"ty": 50.0,
 					"custom_ordering": true
 				},
 				{
@@ -7741,7 +7884,7 @@
 						"scope": [],
 						"source_name": "HoldTick"
 					},
-					"ty": 48.0,
+					"ty": 49.0,
 					"custom_ordering": true
 				},
 				{
@@ -7749,7 +7892,7 @@
 						"scope": [],
 						"source_name": "Foe"
 					},
-					"ty": 38.0,
+					"ty": 39.0,
 					"custom_ordering": true
 				},
 				{
@@ -7757,7 +7900,7 @@
 						"scope": [],
 						"source_name": "HoldProgress"
 					},
-					"ty": 47.0,
+					"ty": 48.0,
 					"custom_ordering": true
 				},
 				{
@@ -7773,7 +7916,7 @@
 						"scope": [],
 						"source_name": "StuckArrow"
 					},
-					"ty": 89.0,
+					"ty": 91.0,
 					"custom_ordering": true
 				},
 				{
@@ -7781,7 +7924,7 @@
 						"scope": [],
 						"source_name": "WorkSchedule"
 					},
-					"ty": 99.0,
+					"ty": 101.0,
 					"custom_ordering": true
 				},
 				{
@@ -7789,7 +7932,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 102.0,
+					"ty": 104.0,
 					"custom_ordering": true
 				},
 				{
@@ -7797,7 +7940,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 74.0,
+					"ty": 76.0,
 					"custom_ordering": true
 				},
 				{
@@ -7805,7 +7948,7 @@
 						"scope": [],
 						"source_name": "MovementStateRow"
 					},
-					"ty": 61.0,
+					"ty": 62.0,
 					"custom_ordering": true
 				},
 				{
@@ -7813,7 +7956,7 @@
 						"scope": [],
 						"source_name": "TickSchedule"
 					},
-					"ty": 91.0,
+					"ty": 93.0,
 					"custom_ordering": true
 				},
 				{
@@ -7829,7 +7972,7 @@
 						"scope": [],
 						"source_name": "DamageShare"
 					},
-					"ty": 28.0,
+					"ty": 29.0,
 					"custom_ordering": true
 				},
 				{
@@ -7837,7 +7980,7 @@
 						"scope": [],
 						"source_name": "GatherNode"
 					},
-					"ty": 40.0,
+					"ty": 41.0,
 					"custom_ordering": true
 				},
 				{
@@ -7853,7 +7996,7 @@
 						"scope": [],
 						"source_name": "HoldMember"
 					},
-					"ty": 46.0,
+					"ty": 47.0,
 					"custom_ordering": true
 				},
 				{
@@ -7867,9 +8010,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Player"
+						"source_name": "NodeTaken"
 					},
-					"ty": 68.0,
+					"ty": 64.0,
 					"custom_ordering": true
 				},
 				{
@@ -7885,13 +8028,13 @@
 						"scope": [],
 						"source_name": "Feedback"
 					},
-					"ty": 37.0,
+					"ty": 38.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "PoiseState"
+						"source_name": "Player"
 					},
 					"ty": 70.0,
 					"custom_ordering": true
@@ -7899,9 +8042,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SessionMatch"
+						"source_name": "PoiseState"
 					},
-					"ty": 79.0,
+					"ty": 72.0,
 					"custom_ordering": true
 				}
 			]
@@ -7910,7 +8053,7 @@
 			"Tables": [
 				{
 					"source_name": "dash_window",
-					"product_type_ref": 29.0,
+					"product_type_ref": 30.0,
 					"primary_key": [
 						0.0
 					],
@@ -7955,7 +8098,7 @@
 				},
 				{
 					"source_name": "guide",
-					"product_type_ref": 43.0,
+					"product_type_ref": 44.0,
 					"primary_key": [
 						0.0
 					],
@@ -8013,7 +8156,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 100.0,
+					"product_type_ref": 102.0,
 					"primary_key": [
 						0.0
 					],
@@ -8058,7 +8201,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 101.0,
+					"product_type_ref": 103.0,
 					"primary_key": [
 						0.0
 					],
@@ -8161,7 +8304,7 @@
 				},
 				{
 					"source_name": "hurt",
-					"product_type_ref": 50.0,
+					"product_type_ref": 51.0,
 					"primary_key": [
 						0.0
 					],
@@ -8219,7 +8362,7 @@
 				},
 				{
 					"source_name": "feedback",
-					"product_type_ref": 37.0,
+					"product_type_ref": 38.0,
 					"primary_key": [
 						0.0
 					],
@@ -8294,7 +8437,7 @@
 				},
 				{
 					"source_name": "poise",
-					"product_type_ref": 69.0,
+					"product_type_ref": 71.0,
 					"primary_key": [
 						0.0
 					],
@@ -8339,7 +8482,7 @@
 				},
 				{
 					"source_name": "wielded",
-					"product_type_ref": 96.0,
+					"product_type_ref": 98.0,
 					"primary_key": [
 						0.0
 					],
@@ -8410,7 +8553,7 @@
 				},
 				{
 					"source_name": "order_filled",
-					"product_type_ref": 66.0,
+					"product_type_ref": 68.0,
 					"primary_key": [
 						0.0
 					],
@@ -8614,7 +8757,7 @@
 				},
 				{
 					"source_name": "hot_rule",
-					"product_type_ref": 49.0,
+					"product_type_ref": 50.0,
 					"primary_key": [
 						0.0
 					],
@@ -8659,7 +8802,7 @@
 				},
 				{
 					"source_name": "movement_state",
-					"product_type_ref": 61.0,
+					"product_type_ref": 62.0,
 					"primary_key": [
 						0.0
 					],
@@ -8730,7 +8873,7 @@
 				},
 				{
 					"source_name": "starter_kit_given",
-					"product_type_ref": 85.0,
+					"product_type_ref": 87.0,
 					"primary_key": [
 						0.0
 					],
@@ -8775,7 +8918,7 @@
 				},
 				{
 					"source_name": "poise_state",
-					"product_type_ref": 70.0,
+					"product_type_ref": 72.0,
 					"primary_key": [
 						0.0
 					],
@@ -8846,7 +8989,7 @@
 				},
 				{
 					"source_name": "stuck_arrow",
-					"product_type_ref": 89.0,
+					"product_type_ref": 91.0,
 					"primary_key": [
 						0.0
 					],
@@ -8921,7 +9064,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 77.0,
+					"product_type_ref": 79.0,
 					"primary_key": [
 						0.0
 					],
@@ -9008,7 +9151,7 @@
 				},
 				{
 					"source_name": "referee_offer",
-					"product_type_ref": 74.0,
+					"product_type_ref": 76.0,
 					"primary_key": [
 						0.0
 					],
@@ -9124,7 +9267,7 @@
 				},
 				{
 					"source_name": "challenge_prune_schedule",
-					"product_type_ref": 21.0,
+					"product_type_ref": 22.0,
 					"primary_key": [
 						0.0
 					],
@@ -9186,7 +9329,7 @@
 				},
 				{
 					"source_name": "item_def",
-					"product_type_ref": 54.0,
+					"product_type_ref": 55.0,
 					"primary_key": [
 						0.0
 					],
@@ -9231,7 +9374,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 72.0,
+					"product_type_ref": 74.0,
 					"primary_key": [
 						0.0
 					],
@@ -9289,7 +9432,7 @@
 				},
 				{
 					"source_name": "foe_kill",
-					"product_type_ref": 39.0,
+					"product_type_ref": 40.0,
 					"primary_key": [
 						0.0
 					],
@@ -9364,7 +9507,7 @@
 				},
 				{
 					"source_name": "station",
-					"product_type_ref": 86.0,
+					"product_type_ref": 88.0,
 					"primary_key": [
 						0.0
 					],
@@ -9435,7 +9578,7 @@
 				},
 				{
 					"source_name": "where_sample",
-					"product_type_ref": 95.0,
+					"product_type_ref": 97.0,
 					"primary_key": [
 						0.0
 					],
@@ -9479,8 +9622,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "node_taken",
+					"product_type_ref": 64.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "node_taken_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "node_taken_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "node_taken_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "skill_xp",
-					"product_type_ref": 81.0,
+					"product_type_ref": 83.0,
 					"primary_key": [
 						0.0
 					],
@@ -9555,7 +9756,7 @@
 				},
 				{
 					"source_name": "login_issuer",
-					"product_type_ref": 57.0,
+					"product_type_ref": 58.0,
 					"primary_key": [
 						0.0
 					],
@@ -9600,7 +9801,7 @@
 				},
 				{
 					"source_name": "tutorial",
-					"product_type_ref": 93.0,
+					"product_type_ref": 95.0,
 					"primary_key": [
 						0.0
 					],
@@ -9645,7 +9846,7 @@
 				},
 				{
 					"source_name": "guard_state",
-					"product_type_ref": 42.0,
+					"product_type_ref": 43.0,
 					"primary_key": [
 						0.0
 					],
@@ -9690,7 +9891,7 @@
 				},
 				{
 					"source_name": "recipe_log",
-					"product_type_ref": 73.0,
+					"product_type_ref": 75.0,
 					"primary_key": [
 						0.0
 					],
@@ -9765,7 +9966,7 @@
 				},
 				{
 					"source_name": "work_schedule",
-					"product_type_ref": 99.0,
+					"product_type_ref": 101.0,
 					"primary_key": [
 						0.0
 					],
@@ -9915,7 +10116,7 @@
 				},
 				{
 					"source_name": "npc_brain",
-					"product_type_ref": 64.0,
+					"product_type_ref": 66.0,
 					"primary_key": [
 						0.0
 					],
@@ -9973,7 +10174,7 @@
 				},
 				{
 					"source_name": "node_seen",
-					"product_type_ref": 62.0,
+					"product_type_ref": 63.0,
 					"primary_key": [
 						0.0
 					],
@@ -10119,7 +10320,7 @@
 				},
 				{
 					"source_name": "ground_item",
-					"product_type_ref": 41.0,
+					"product_type_ref": 42.0,
 					"primary_key": [
 						0.0
 					],
@@ -10220,7 +10421,7 @@
 				},
 				{
 					"source_name": "held_hit",
-					"product_type_ref": 45.0,
+					"product_type_ref": 46.0,
 					"primary_key": [
 						0.0
 					],
@@ -10295,7 +10496,7 @@
 				},
 				{
 					"source_name": "perf_report",
-					"product_type_ref": 67.0,
+					"product_type_ref": 69.0,
 					"primary_key": [
 						0.0
 					],
@@ -10370,7 +10571,7 @@
 				},
 				{
 					"source_name": "spell_area",
-					"product_type_ref": 82.0,
+					"product_type_ref": 84.0,
 					"primary_key": [
 						0.0
 					],
@@ -10503,7 +10704,7 @@
 				},
 				{
 					"source_name": "noise",
-					"product_type_ref": 63.0,
+					"product_type_ref": 65.0,
 					"primary_key": [
 						0.0
 					],
@@ -10591,7 +10792,7 @@
 				},
 				{
 					"source_name": "equip_state",
-					"product_type_ref": 35.0,
+					"product_type_ref": 36.0,
 					"primary_key": [
 						0.0
 					],
@@ -10662,7 +10863,7 @@
 				},
 				{
 					"source_name": "health_state",
-					"product_type_ref": 44.0,
+					"product_type_ref": 45.0,
 					"primary_key": [
 						0.0
 					],
@@ -10733,7 +10934,7 @@
 				},
 				{
 					"source_name": "push",
-					"product_type_ref": 71.0,
+					"product_type_ref": 73.0,
 					"primary_key": [
 						0.0
 					],
@@ -10834,7 +11035,7 @@
 				},
 				{
 					"source_name": "client_rtt",
-					"product_type_ref": 23.0,
+					"product_type_ref": 24.0,
 					"primary_key": [
 						0.0
 					],
@@ -10879,7 +11080,7 @@
 				},
 				{
 					"source_name": "resource_state",
-					"product_type_ref": 76.0,
+					"product_type_ref": 78.0,
 					"primary_key": [
 						0.0
 					],
@@ -10980,7 +11181,7 @@
 				},
 				{
 					"source_name": "gather_node",
-					"product_type_ref": 40.0,
+					"product_type_ref": 41.0,
 					"primary_key": [
 						0.0
 					],
@@ -11051,7 +11252,7 @@
 				},
 				{
 					"source_name": "spell_timer",
-					"product_type_ref": 84.0,
+					"product_type_ref": 86.0,
 					"primary_key": [
 						0.0
 					],
@@ -11126,7 +11327,7 @@
 				},
 				{
 					"source_name": "lobby_member",
-					"product_type_ref": 56.0,
+					"product_type_ref": 57.0,
 					"primary_key": [
 						0.0
 					],
@@ -11197,7 +11398,7 @@
 				},
 				{
 					"source_name": "combat_state",
-					"product_type_ref": 24.0,
+					"product_type_ref": 25.0,
 					"primary_key": [
 						0.0
 					],
@@ -11268,7 +11469,7 @@
 				},
 				{
 					"source_name": "entity",
-					"product_type_ref": 34.0,
+					"product_type_ref": 35.0,
 					"primary_key": [
 						0.0
 					],
@@ -11356,7 +11557,7 @@
 				},
 				{
 					"source_name": "dev_tools",
-					"product_type_ref": 30.0,
+					"product_type_ref": 31.0,
 					"primary_key": [
 						0.0
 					],
@@ -11401,7 +11602,7 @@
 				},
 				{
 					"source_name": "status_expiry",
-					"product_type_ref": 36.0,
+					"product_type_ref": 37.0,
 					"primary_key": [
 						0.0
 					],
@@ -11476,7 +11677,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 88.0,
+					"product_type_ref": 90.0,
 					"primary_key": [
 						0.0
 					],
@@ -11547,7 +11748,7 @@
 				},
 				{
 					"source_name": "work_order",
-					"product_type_ref": 97.0,
+					"product_type_ref": 99.0,
 					"primary_key": [
 						0.0
 					],
@@ -11821,7 +12022,7 @@
 				},
 				{
 					"source_name": "foe",
-					"product_type_ref": 38.0,
+					"product_type_ref": 39.0,
 					"primary_key": [
 						0.0
 					],
@@ -11892,7 +12093,7 @@
 				},
 				{
 					"source_name": "hold_progress",
-					"product_type_ref": 47.0,
+					"product_type_ref": 48.0,
 					"primary_key": [
 						0.0
 					],
@@ -12139,7 +12340,7 @@
 				},
 				{
 					"source_name": "correction",
-					"product_type_ref": 25.0,
+					"product_type_ref": 26.0,
 					"primary_key": [
 						0.0
 					],
@@ -12184,7 +12385,7 @@
 				},
 				{
 					"source_name": "challenge",
-					"product_type_ref": 20.0,
+					"product_type_ref": 21.0,
 					"primary_key": [
 						0.0
 					],
@@ -12396,7 +12597,7 @@
 				},
 				{
 					"source_name": "hold_member",
-					"product_type_ref": 46.0,
+					"product_type_ref": 47.0,
 					"primary_key": [
 						0.0
 					],
@@ -12466,8 +12667,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "carcass",
+					"product_type_ref": 19.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "carcass_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "carcass_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "carcass_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "player",
-					"product_type_ref": 68.0,
+					"product_type_ref": 70.0,
 					"primary_key": [
 						0.0
 					],
@@ -12550,7 +12809,7 @@
 				},
 				{
 					"source_name": "hold_tick",
-					"product_type_ref": 48.0,
+					"product_type_ref": 49.0,
 					"primary_key": [
 						0.0
 					],
@@ -12612,7 +12871,7 @@
 				},
 				{
 					"source_name": "inventory_item",
-					"product_type_ref": 53.0,
+					"product_type_ref": 54.0,
 					"primary_key": [
 						0.0
 					],
@@ -12687,7 +12946,7 @@
 				},
 				{
 					"source_name": "link_code",
-					"product_type_ref": 55.0,
+					"product_type_ref": 56.0,
 					"primary_key": [
 						0.0
 					],
@@ -12987,7 +13246,7 @@
 				},
 				{
 					"source_name": "meta_share",
-					"product_type_ref": 58.0,
+					"product_type_ref": 59.0,
 					"primary_key": [
 						0.0
 					],
@@ -13062,7 +13321,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 78.0,
+					"product_type_ref": 80.0,
 					"primary_key": [
 						0.0
 					],
@@ -13165,7 +13424,7 @@
 				},
 				{
 					"source_name": "damage_share",
-					"product_type_ref": 28.0,
+					"product_type_ref": 29.0,
 					"primary_key": [
 						0.0
 					],
@@ -13240,7 +13499,7 @@
 				},
 				{
 					"source_name": "craft_choice",
-					"product_type_ref": 26.0,
+					"product_type_ref": 27.0,
 					"primary_key": [
 						0.0
 					],
@@ -13285,7 +13544,7 @@
 				},
 				{
 					"source_name": "input_queue",
-					"product_type_ref": 51.0,
+					"product_type_ref": 52.0,
 					"primary_key": [
 						0.0
 					],
@@ -13373,7 +13632,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 79.0,
+					"product_type_ref": 81.0,
 					"primary_key": [
 						0.0
 					],
@@ -13431,7 +13690,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 91.0,
+					"product_type_ref": 93.0,
 					"primary_key": [
 						0.0
 					],
@@ -13493,7 +13752,7 @@
 				},
 				{
 					"source_name": "spell_cooldown",
-					"product_type_ref": 83.0,
+					"product_type_ref": 85.0,
 					"primary_key": [
 						0.0
 					],
@@ -13568,7 +13827,7 @@
 				},
 				{
 					"source_name": "drop_pity",
-					"product_type_ref": 31.0,
+					"product_type_ref": 32.0,
 					"primary_key": [
 						0.0
 					],
@@ -13643,7 +13902,7 @@
 				},
 				{
 					"source_name": "status_effect",
-					"product_type_ref": 87.0,
+					"product_type_ref": 89.0,
 					"primary_key": [
 						0.0
 					],
@@ -13744,7 +14003,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 80.0,
+					"product_type_ref": 82.0,
 					"primary_key": [
 						0.0
 					],
@@ -13832,7 +14091,7 @@
 				},
 				{
 					"source_name": "chat_message",
-					"product_type_ref": 22.0,
+					"product_type_ref": 23.0,
 					"primary_key": [
 						0.0
 					],
@@ -13907,7 +14166,7 @@
 				},
 				{
 					"source_name": "craft_grade",
-					"product_type_ref": 27.0,
+					"product_type_ref": 28.0,
 					"primary_key": [
 						0.0
 					],
@@ -13952,7 +14211,7 @@
 				},
 				{
 					"source_name": "npc_driver",
-					"product_type_ref": 65.0,
+					"product_type_ref": 67.0,
 					"primary_key": [
 						0.0
 					],
@@ -14010,7 +14269,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 92.0,
+					"product_type_ref": 94.0,
 					"primary_key": [
 						0.0
 					],
@@ -14068,7 +14327,7 @@
 				},
 				{
 					"source_name": "missile",
-					"product_type_ref": 60.0,
+					"product_type_ref": 61.0,
 					"primary_key": [
 						0.0
 					],
@@ -14126,7 +14385,7 @@
 				},
 				{
 					"source_name": "meta_tally",
-					"product_type_ref": 59.0,
+					"product_type_ref": 60.0,
 					"primary_key": [
 						0.0
 					],
@@ -14188,7 +14447,7 @@
 				},
 				{
 					"source_name": "dummy",
-					"product_type_ref": 32.0,
+					"product_type_ref": 33.0,
 					"primary_key": [
 						0.0
 					],
@@ -14259,7 +14518,7 @@
 				},
 				{
 					"source_name": "swing",
-					"product_type_ref": 90.0,
+					"product_type_ref": 92.0,
 					"primary_key": [
 						0.0
 					],
@@ -14304,7 +14563,7 @@
 				},
 				{
 					"source_name": "casting",
-					"product_type_ref": 19.0,
+					"product_type_ref": 20.0,
 					"primary_key": [
 						0.0
 					],
@@ -14375,7 +14634,7 @@
 				},
 				{
 					"source_name": "work_result",
-					"product_type_ref": 98.0,
+					"product_type_ref": 100.0,
 					"primary_key": [
 						0.0
 					],
@@ -14463,7 +14722,7 @@
 				},
 				{
 					"source_name": "effect_expiry",
-					"product_type_ref": 33.0,
+					"product_type_ref": 34.0,
 					"primary_key": [
 						0.0
 					],
@@ -14538,7 +14797,7 @@
 				},
 				{
 					"source_name": "unscored_press",
-					"product_type_ref": 94.0,
+					"product_type_ref": 96.0,
 					"primary_key": [
 						0.0
 					],
@@ -14805,6 +15064,40 @@
 								},
 								"algebraic_type": {
 									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "admin_slay",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "killer"
+								},
+								"algebraic_type": {
+									"U64": []
 								}
 							}
 						]
@@ -15915,7 +16208,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 33.0
+									"Ref": 34.0
 								}
 							}
 						]
@@ -15941,7 +16234,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 36.0
+									"Ref": 37.0
 								}
 							}
 						]
@@ -16298,7 +16591,7 @@
 									"some": "h"
 								},
 								"algebraic_type": {
-									"Ref": 45.0
+									"Ref": 46.0
 								}
 							}
 						]
@@ -16690,7 +16983,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 21.0
+									"Ref": 22.0
 								}
 							}
 						]
@@ -16858,7 +17151,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 75.0
+										"Ref": 77.0
 									}
 								}
 							}
@@ -17175,7 +17468,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 54.0
+										"Ref": 55.0
 									}
 								}
 							}
@@ -17934,7 +18227,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 84.0
+									"Ref": 86.0
 								}
 							}
 						]
@@ -17997,7 +18290,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 52.0
+										"Ref": 53.0
 									}
 								}
 							}
@@ -18050,7 +18343,7 @@
 									"some": "_tick"
 								},
 								"algebraic_type": {
-									"Ref": 48.0
+									"Ref": 49.0
 								}
 							}
 						]
@@ -18076,7 +18369,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 91.0
+									"Ref": 93.0
 								}
 							}
 						]
@@ -18430,7 +18723,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 99.0
+									"Ref": 101.0
 								}
 							}
 						]
@@ -18465,7 +18758,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 102.0
+										"Ref": 104.0
 									}
 								}
 							}
@@ -18501,7 +18794,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 103.0
+										"Ref": 105.0
 									}
 								}
 							}
@@ -18894,6 +19187,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "node_taken",
+							"canonical_name": "node_taken"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "skill_xp",
 							"canonical_name": "skill_xp"
 						}
@@ -19146,6 +19445,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "carcass",
+							"canonical_name": "carcass"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "player",
 							"canonical_name": "player"
 						}
@@ -19364,6 +19669,12 @@
 						"Function": {
 							"source_name": "admin_set_rank",
 							"canonical_name": "admin_set_rank"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "admin_slay",
+							"canonical_name": "admin_slay"
 						}
 					},
 					{

@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_ny3us"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_an58m"]
 
-[node name="Cell_13_-11" type="Node3D" unique_id=1255588452]
+[node name="Cell_13_-11" type="Node3D" unique_id=1618546002]
 
-[node name="w_flax_63" type="Marker3D" parent="." unique_id=985945456]
+[node name="w_flax_63" type="Marker3D" parent="." unique_id=383489091]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 885.6118, -3.6263216, -668.5598)
 gizmo_extents = 0.5
 script = ExtResource("1_ny3us")
@@ -17,5 +17,5 @@ tags = PackedStringArray("Flax")
 [node name="fern_1_893" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_an58m")]
 transform = Transform3D(1.2783313, 0, -0.6703231, 0, 1.4434209, 0, 0.6703231, 0, 1.2783313, 870.3297, -2.6547492, -672.8217)
 
-[node name="fern_1_894" type="Node3D" parent="." unique_id=1332793725 instance=ExtResource("2_an58m")]
+[node name="fern_1_894" type="Node3D" parent="." unique_id=1515147450 instance=ExtResource("2_an58m")]
 transform = Transform3D(1.2554662, 0, -0.27531442, 0, 1.285299, 0, 0.27531442, 0, 1.2554662, 835.72003, 0.0468325, -667.09216)

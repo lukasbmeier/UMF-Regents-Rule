@@ -396,6 +396,10 @@ height against the level); chases at 4.2 m/s (a player runs 5, so you can always
 lock; a combo ends with `rest_ms` 900 (your opening); past `leash_m` 25 m from home it walks back, deaf to
 everyone until home. Since 2026-10-29 its chase follows the level's walk map round obstacles, and a target
 lost from sight is chased to where it was last seen for `lose_sight_ms` (2500) before it gives up.
+Since 2026-11-11 ITS STRING FOLLOWS ITS TARGET (Luke: the wolves' second and third bites hit air): a target that
+steps out of `reach_m` between two swings is run down once the last swing's lock is over, and the string goes on
+where it stopped; out of reach longer than `string_chase_ms` (1500, per foe) the string is dropped, and the next
+is its first swing again after its rest (the chase counts toward it). It never swings at a target out of reach.
 
 - A foe fights with its kit exactly as a player: the same abilities (`use_ability_as`), wind-ups, Swinging,
   flinches, the same referee. It does not block, roll, parry or use skills.

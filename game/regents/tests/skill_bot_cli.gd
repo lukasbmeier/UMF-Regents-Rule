@@ -1,7 +1,7 @@
 extends SceneTree
 ## A SKILLING ROUND PLAYED FROM A SHELL (the integration hook's): what a client would submit for a round
 ## the server dealt, played well by a bot through the client's own models. `--kind` is chop, crack, smelt,
-## shape or beat; `--def` the NodeDef (chop, crack) or RecipeDef (smelt, shape, beat) id; `--speed` the payload's tool
+## shape, beat, carve, pull or skin; `--def` the NodeDef (chop, crack, pull, skin) or RecipeDef (smelt, shape, beat, carve) id; `--speed` the payload's tool
 ## speed; `--ease` how much rank eases it (0: none); the seed's halves `--seed_hi`/`--seed_lo`. Prints `RESULT [values...]` (the inputs, as the
 ## challenge takes them) and `PLAYED <result>`.
 ##   godot --headless --path . --script res://game/regents/tests/skill_bot_cli.gd -- --kind=crack --def=40004 --speed=100 --seed_hi=0 --seed_lo=5
@@ -16,7 +16,7 @@ func _initialize() -> void:
 	var seed_value: int = (int(args.get("seed_hi", "0")) << 32) | int(args.get("seed_lo", "0"))
 	var kind: StringName = StringName(String(args.get("kind", "")))
 	var def_id: int = int(args.get("def", "0"))
-	var content: ContentDef = NodeDef.by_id(def_id) if kind == SkillMinigames.CHOP or kind == SkillMinigames.CRACK else RecipeDef.by_id(def_id)
+	var content: ContentDef = NodeDef.by_id(def_id) if SkillMinigames.gathers(kind) else RecipeDef.by_id(def_id)
 	var minigame: Resource = (content as NodeDef).minigame if content is NodeDef else ((content as RecipeDef).minigame if content is RecipeDef else null)
 	if minigame == null or SkillMinigames.kind_of(minigame) != kind:
 		printerr("skill_bot_cli: no %s round for %d" % [kind, def_id])
@@ -38,6 +38,10 @@ func _initialize() -> void:
 			inputs = _beat(seed_value, p as BeatParams)
 		SkillMinigames.CARVE:
 			inputs = _carve(seed_value, p as CarveParams)
+		SkillMinigames.PULL:
+			inputs = _pull(seed_value, p as PullParams)
+		SkillMinigames.SKIN:
+			inputs = _skin(seed_value, p as SkinParams, args.get("wander", "0") != "0")
 	var parts: PackedStringArray = PackedStringArray()
 	for v: int in inputs:
 		parts.append(str(v))
@@ -159,4 +163,49 @@ func _shape(seed_value: int, p: ShapeParams) -> PackedInt32Array:
 			out.append_array(PackedInt32Array([t, c]))
 			m.strike(t, c)
 		t += 10
+	return out
+
+
+## Pull the root (herbalism): digs each stem's packed sides (left, then right, until both are loose), then pulls, letting go
+## at 880 strain and pulling again at 450 (as the readout's flawless puller); where the soil cracks it strokes that
+## side at once. Looks every 50 ms (it knows the strain exactly: a bot, not a player).
+func _pull(seed_value: int, p: PullParams) -> PackedInt32Array:
+	var m: PullModel = PullModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var t: int = 0
+	while t <= p.duration_ms:
+		m.advance_to(t)
+		var code: int = 0
+		if not m.stroking(t):
+			if m.showing() != 0:
+				code = m.showing()
+			elif m.up_by == 0 and m.pack_left > 0:
+				code = PullModel.LEFT
+			elif m.up_by == 0 and m.pack_right > 0:
+				code = PullModel.RIGHT
+		if code == 0 and (m.up_by > 0 or m.pack_left + m.pack_right == 0):
+			var want: bool = m.strain < 880 if m.down else m.strain <= 450
+			if want != m.down:
+				code = PullModel.DOWN if want else PullModel.UP
+		if code != 0:
+			out.append_array(PackedInt32Array([t, code]))
+			m.press(t, code)
+		t += 50
+	return out
+
+
+## The cut line (skinning): presses each line's start as it shows and drags the knife at the cut's own pace along it,
+## a look every 50 ms (the readout's flawless hand). `wander`: it drags 70 off the line instead (every look torn).
+func _skin(seed_value: int, p: SkinParams, wander: bool) -> PackedInt32Array:
+	var m: SkinModel = SkinModel.start(seed_value, p)
+	var out: PackedInt32Array = PackedInt32Array()
+	var t: int = 0
+	while t <= p.duration_ms:
+		m.advance_to(t)
+		var at: Vector2 = Vector2(m.tip()) if not m.down else m.ahead(float(p.cut_speed))
+		var x: int = clampi(roundi(at.x), 0, 1000)
+		var y: int = clampi(roundi(at.y) + (70 if wander else 0), 0, 1000)
+		out.append_array(PackedInt32Array([t, x, y]))
+		m.press(t, x, y)
+		t += 50
 	return out

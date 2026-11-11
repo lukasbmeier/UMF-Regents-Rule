@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://foundation/level/level_point.gd" id="1_miw7l"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="2_veu57"]
 
-[node name="Cell_-4_20" type="Node3D" unique_id=1501828093]
+[node name="Cell_-4_20" type="Node3D" unique_id=1423112109]
 
-[node name="w_flax_23" type="Marker3D" parent="." unique_id=961205825]
+[node name="w_flax_23" type="Marker3D" parent="." unique_id=1727479413]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -224.08632, -2.1364543, 1315.728)
 gizmo_extents = 0.5
 script = ExtResource("1_miw7l")
