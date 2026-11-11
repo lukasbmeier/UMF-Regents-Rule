@@ -3,7 +3,7 @@
 ## Where it stands
 - COMMITTED 2026-11-11 (by Claude, at Luke's word): `31522d2b` "Steps 51-57", then the merge of
   `claude/compassionate-panini-246b25` (`4ede0bfa`, the integration suite's CLI-timed combat checks in timed runs:
-  `PROGRESS.md` step 50b). NOT PUSHED. Left out on purpose: `addons/SpacetimeDB/plugin_config.tres` (a tool's re-save
+  `PROGRESS.md` step 50b). PUSHED to origin (main at `89cce913`). Left out on purpose: `addons/SpacetimeDB/plugin_config.tres` (a tool's re-save
   that dropped its uids; revert it or leave it). Current section in `docs/regents_rule/PROGRESS.md`: **Step 57**.
 - PUBLISHED to the play database `regents-rule` after step 57 (no wipe, no codegen). Restart the game.
 - Suites on this tree: regents unit **3392/0** (after the merge too); skilling playtest (a real client) **117/0 + 8/0**;
