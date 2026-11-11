@@ -2448,6 +2448,64 @@ AFK, the prompt offering no round, spun, strung into a yew bow of the stave's qu
 **Left**: pull the root (step 2); a trowel model and a pulling clip; a spinning wheel model; the station refusal says
 the station's key ("spinning_wheel"), not its name.
 
+## Step 50b: the integration suite's last CLI-timed combat checks, in timed runs (2026-11-07)
+(A side session's, on its own branch `claude/compassionate-panini-246b25`, commit `4ede0bfa`; it was numbered 50 there, as
+herbalism's step above is here. MERGED INTO MAIN 2026-11-11, after steps 51-57 were committed: the hook merged with no
+conflict. Every integration run in steps 53-56 was WITHOUT it: their "known red" combat checks are the ones it fixes.)
+
+**Why**: integration failed 5 to 8 combat checks on every run, a clean worktree of `54c1973b` too: the pommel bash's
+14 (got 0.00), "(its hit, so nothing is left waiting)", the thrust's 800 ms stagger, the slain skeleton's loot ('')
+on the ground and in the bag, the bow's full draw (30), archery XP and point blank. The pass count swung ~40 a run.
+
+**The cause** (the test, not the game): each had two or more `spacetime` CLI calls (1-3 s each here, more under
+load) between something that runs out and the step that needs it, left over from before step 37:
+- A judged request runs out 3 s after it is due (`REQUEST_GRACE_MICROS`, `module/referee.rs`): the string's last
+  (943, 953) was read by one CLI call and answered by another, so it often ran out first: "no such request", or an
+  empty id ("Invalid arguments ... `resolve_action`"), and then no stagger in the log.
+- A dummy is whole again 4 s after its last hit (`regents.dummy_reset_s`): when the pommel bash did land, the dummy's
+  health was read three CLI calls later and had already come back (0.00).
+- A kill's `foe_kill` row lasts 10 s (`RESULT_TTL_MICROS`, `game/regents.rs`), and five CLI checks came between the
+  slaying chop and the loot read: the loot read as '' (and the sacks on the ground did not match it).
+- An arrow lives 8 s (`content/body/arrow.tres` `lifetime_s`) and `report_body_contacts` passes over a body that is
+  gone without an error: six CLI calls between the loose and the report, so the shot landed nothing (no 30, no XP),
+  and point blank measured against the unhurt skeleton.
+
+**Built** (tests only; no game, table or rule change; `game/regents/tests/hooks/integration_genre.sh`): each in one
+`timed` run (`game/regents/tests/timed_calls.py`, step 37), the reads it needs taken in the run:
+- Roles: the string's last (943, 953, 963), its request read (`sqlwait`), the fired ability read, answered at once, the
+  dummy's health after; 700 ms after the second (past its lock, as a press comes). The first two still lapse as misses.
+- Foes: the skeleton's slash at you, its sweep on skeleton_2, the new skeleton's slash, the rallying cut at the
+  skeleton (your health just before and after the answer, so regrowth is not counted).
+- The slaying chop reads its `foe_kill` loot in the run (`HITS_READ`), and a new check: the server's log says you slew
+  it, and what dropped.
+- The bow: `shot NAME DRAW_MS Z` draws, looses DRAW_MS later, finds the arrow, reads the arrows left, the
+  skeleton's health, reports the hit and reads the health after and whether it fell, all in one run.
+- What the first runs of the fix taught (each a mistake of the new reads, not the game's):
+  - A FOE'S HIT ON A PLAYER IS HELD for a late parry (`held_hit`), to its landing + `regents.parry_late_ms` +
+    `foundation.rewind_max_ms` + `press_credit_cap_ms` (~540 ms after the swing): your health is read 1 s after the
+    answer, and the "you are slain" log check waits 1 s (read at once, the slash did nothing: 100 -> 100).
+  - "a second on, its body is gone" and "the camp waits" are read straight after "the camp knows it fell": after
+    the loot and the meta's checks, twenty CLI calls outlasted the test's 40 s respawn (the camp was back).
+  - An empty stack has no `inventory_item` row: an in-run read of none is "-", counted 0 as `QTY` counts it.
+  - `timed_val` took awk's third field, so an EMPTY string (a kill that dropped nothing: `foe_kill.loot` '') read as
+    the step's ms ('9'); it now takes everything between the name and the ms.
+
+**Tested**: integration on the test database alone, three runs in a row on the final hook: 1303/0, 1290/1, 1286/2, none of the combat checks above among the failures (the three are the
+foundation's: "the push stays where it happened", the body contact read "once", Help up's third helper "again";
+each a row or a hold that ends 2-5 s on, read two or more CLI calls later: the template's to time, `../UMF Template`). The server's
+log of each has the pommel bash's 1200 ms stagger and the thrust's 800 ms, both kills (one dropped nothing, the
+empty-loot case), two 30-point shots and the point-blank 5.4, the rallying cut's 8. The negative: the old hook, the
+same checks CLI-timed, failed them every run (the task's report; the cause above); the first runs of the fix failed
+on each new read taken too early (the held hit, an empty stack, an empty loot), so the reads check what they say.
+(An earlier attempt at a baseline ran two of this session's suites on the database at once, from a stop that left
+`integration_test.sh` running: its failures, foundation and skilling ones too, were that, not the game. Stop a
+suite by its whole process tree.)
+
+**Left**: the skilling chain's `play_round` sleeps the round's length from when the bot ENDS, not from when the round
+was dealt: three CLI reads + the bot (6-7 s) + the sleep reach close to the round's 30 s (10 s + `ROUND_GRACE_MICROS`)
+when the CLI is slow; it passed on every clean run (a margin, not a failure). The main checkout's minigame session
+has the helper in its work.
+
 ## Step 51: herbalism, step 2: PULL THE ROOT, flax's round (2026-11-08)
 **Why**: `HERBALISM_HUNTING_PREP.md` §7 step 2, Luke's H3 (2026-11-07, `GAME.md`): "hold to pull, strain rises and eases
 when let go, the plant trembles before a jump, past the top it snaps; band 2 roots that branch, band 3 a wilting

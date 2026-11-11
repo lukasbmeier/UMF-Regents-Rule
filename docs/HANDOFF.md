@@ -1,12 +1,15 @@
 # Handoff — Regent's Rule, 2026-11-11 (step 57: Luke's play of the wolf; step 56 reviewed)
 
 ## Where it stands
-- HEAD `2ecd04f3`. STEPS 51-57 ARE NOT COMMITTED (Luke commits). Current section in `docs/regents_rule/PROGRESS.md`: **Step 57**.
-- PUBLISHED to the play database `regents-rule` after step 57 (no wipe, no codegen: a rebake for two descriptions).
-  Restart the game.
-- Suites on this tree: regents unit **3392/0** (on the last bake); skilling playtest (a real client) **117/0 + 8/0**;
+- COMMITTED 2026-11-11 (by Claude, at Luke's word): `31522d2b` "Steps 51-57", then the merge of
+  `claude/compassionate-panini-246b25` (`4ede0bfa`, the integration suite's CLI-timed combat checks in timed runs:
+  `PROGRESS.md` step 50b). NOT PUSHED. Left out on purpose: `addons/SpacetimeDB/plugin_config.tres` (a tool's re-save
+  that dropped its uids; revert it or leave it). Current section in `docs/regents_rule/PROGRESS.md`: **Step 57**.
+- PUBLISHED to the play database `regents-rule` after step 57 (no wipe, no codegen). Restart the game.
+- Suites on this tree: regents unit **3392/0** (after the merge too); skilling playtest (a real client) **117/0 + 8/0**;
   `cargo test` **146/0** and the wasm check (before step 57, which touches no Rust; the publish built it).
-- NOT RUN since the wolf (step 56): integration, any real-referee fight.
+- NOT RUN since the wolf (step 56) NOR SINCE THE MERGE: integration, any real-referee fight. The merged hook parses
+  (`bash -n`) and its timed-run helpers are there; whether its combat checks are green now is the next run's to say.
 
 ## To playtest (Luke)
 - Skin a wolf (hold E): its carcass lies under the cut line now.
@@ -34,7 +37,8 @@
 
 ## Next, in order
 1. Luke plays step 57 and the wolf.
-2. The wolf's missing server tests, then ONE integration run for steps 56-57: checks in
+2. The wolf's missing server tests, then ONE integration run for steps 56-57 and the merged step 50b (its first
+   run on main: the combat checks called "known red" since step 53 should be green): checks in
    `game/regents/tests/hooks/integration_genre.sh` (a hamstring slows a player, a lunge pushes one, a blocked bite does
    neither, Startled on an idle wolf, its carcass and pelts, tanning) and a wolf leg in `skilling_playtest.sh`.
 3. `HERBALISM_HUNTING_PREP.md` §7 step 5's rest (parked by Luke): sinew, the wolf-fang charm, the stag (place its
@@ -52,4 +56,6 @@
   minigame's own frame order needs `SkinMinigame._look` (or a real client), not the model alone.
 - A `.tres`'s `designer_notes` is not baked, but the bake's manifest hashes the file: any edit to a content file
   needs `tools/bake_content.gd` (the unit suite's "the bake on disk is current" fails until then), then a publish.
+- The merged branch's worktree is still there (`.claude/worktrees/compassionate-panini-246b25`, about 1 GB) and its
+  branch: both can go now (`git worktree remove`, `git branch -d`), Luke's word first.
 - Another model's doc numbers: check them against the `.tres` files before trusting them (step 56's were wrong).
