@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="3_xtj1r"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Large.gltf" id="4_e4u1i"]
 
-[node name="Cell_0_-12" type="Node3D" unique_id=1280688838]
+[node name="Cell_0_-12" type="Node3D" unique_id=1823818721]
 
-[node name="w_tree_140" type="Marker3D" parent="." unique_id=424353026]
+[node name="w_tree_140" type="Marker3D" parent="." unique_id=1915360574]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.449776, -2.0908294, -724.4489)
 gizmo_extents = 0.6
 script = ExtResource("1_7a028")
@@ -16,7 +16,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_141" type="Marker3D" parent="." unique_id=1770365166]
+[node name="w_tree_141" type="Marker3D" parent="." unique_id=951697610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.984226, -1.6163855, -743.61865)
 gizmo_extents = 0.6
 script = ExtResource("1_7a028")
@@ -25,11 +25,11 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="rock_medium_1_446" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_ho8nb")]
+[node name="rock_medium_1_446" type="Node3D" parent="." unique_id=284986976 instance=ExtResource("2_ho8nb")]
 transform = Transform3D(-0.50454706, 0, -1.3575878, 0, 1.4483136, 0, 1.3575878, 0, -0.50454706, 11.773529, 1.7198583, -712.6695)
 
-[node name="rock_big_1_447" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("3_xtj1r")]
+[node name="rock_big_1_447" type="Node3D" parent="." unique_id=1369380149 instance=ExtResource("3_xtj1r")]
 transform = Transform3D(1.3353809, 0, -0.35884467, 0, 1.3827552, 0, 0.35884467, 0, 1.3353809, 2.0624864, -0.36270505, -749.4671)
 
-[node name="bush_large_448" type="Node3D" parent="." unique_id=1613323988 instance=ExtResource("4_e4u1i")]
+[node name="bush_large_448" type="Node3D" parent="." unique_id=1249062089 instance=ExtResource("4_e4u1i")]
 transform = Transform3D(-1.3544415, 0, -0.14198041, 0, 1.3618628, 0, 0.14198041, 0, -1.3544415, 19.73062, -1.9979932, -763.8886)

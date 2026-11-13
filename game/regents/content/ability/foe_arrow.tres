@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 500
+range_m = 0.0
+wind_up_ms = 1200
+damage = 30.0
+animation = &"ability.40030"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40030
+display_name = "Bone arrow"
+designer_notes = "A FOE'S SHOT (Luke's F1, F5, 2026-11-12, FOES_PREP.md section 6): the skeleton archer's arrow. Its wind-up IS THE TELL (the draw, 1200 ms): the server locks the aim regents.foe_shot_lock_ms before it ends and looses the arrow as it ends (its SpellDef, content/spell/foe_arrow.tres, says which missile and how fast). Its damage is this at the archer's damage_pct (30 at 55 % = 16.5). range_m MUST stay 0 and judged off: the missile carries the hit (the server refuses the shot otherwise)."

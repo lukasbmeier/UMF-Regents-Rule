@@ -63,6 +63,7 @@
 		"remove_bots": "(session_id:U64)",
 		"report_body_contacts": "(world_id:U32,contacts:[BodyContactWrite(body_id:U64,other_id:U64,pos:Vector3(x:F32,y:F32,z:F32),normal:Vector3(x:F32,y:F32,z:F32),speed:F32)])",
 		"report_perf": "(build:String,platform:String,window_s:F32,frames:U32,frame_ms_p50:F32,frame_ms_p95:F32,frame_ms_p99:F32,frame_ms_max:F32,spikes:U32,rtt_ms:F32,rtt_ms_max:F32,corrections:U32,memory_mb:F32,entities:U32,detail:String)",
+		"report_seen_delay": "(seen_delay_ms:U32)",
 		"reset_rule": "(key:String)",
 		"resolve_action": "(request_id:U64,hit_id:U64)",
 		"revoke_authority": "(identity:(__identity__:U256))",

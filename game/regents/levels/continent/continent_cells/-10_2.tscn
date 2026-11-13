@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="2_njyvh"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_5qyif"]
 
-[node name="Cell_-10_2" type="Node3D" unique_id=1875815507]
+[node name="Cell_-10_2" type="Node3D" unique_id=1650838084]
 
-[node name="w_copper_rock_5" type="Marker3D" parent="." unique_id=1492844418]
+[node name="w_copper_rock_5" type="Marker3D" parent="." unique_id=1255917057]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -593.649, 4.148738, 180.228)
 gizmo_extents = 0.6
 script = ExtResource("1_5468s")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Copper rock")
 
-[node name="w_deer_9" type="Marker3D" parent="." unique_id=1110947246]
+[node name="w_deer_9" type="Marker3D" parent="." unique_id=1890511691]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.50714, 3.0543368, 168.71286)
 gizmo_extents = 0.5
 script = ExtResource("1_5468s")
@@ -24,7 +24,7 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_deer_10" type="Marker3D" parent="." unique_id=874897991]
+[node name="w_deer_10" type="Marker3D" parent="." unique_id=1994018688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -616.4799, 3.1594036, 172.71277)
 gizmo_extents = 0.5
 script = ExtResource("1_5468s")
@@ -33,8 +33,8 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="bush_long_1_73" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("2_njyvh")]
+[node name="bush_long_1_73" type="Node3D" parent="." unique_id=2091150035 instance=ExtResource("2_njyvh")]
 transform = Transform3D(-0.5323276, 0, 0.6956815, 0, 0.8759826, 0, -0.6956815, 0, -0.5323276, -630.3496, 2.5579898, 157.9954)
 
-[node name="grass_common_tall_74" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_5qyif")]
+[node name="grass_common_tall_74" type="Node3D" parent="." unique_id=1877080617 instance=ExtResource("3_5qyif")]
 transform = Transform3D(0.41662484, 0, -1.0698806, 0, 1.1481379, 0, 1.0698806, 0, 0.41662484, -613.43066, 2.6380007, 141.24368)

@@ -6,7 +6,7 @@
 script = ExtResource("1_ability")
 cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 550
+wind_up_ms = 660
 damage = 14.0
 animation = &"ability.40017"
 key = &"regents.combat"
@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40017
 display_name = "Rusted cut"
-designer_notes = "A FOE'S OWN SWING (COMBAT_OVERHAUL.md section 2, 2026-10-31): the skeleton warrior's first light. A long wind-up you can see coming (~550 ms: Sword_Heavy_A at 0.7, its hand fastest at 383 ms of the clip). Foes never swing the player's abilities."
+designer_notes = "A FOE'S OWN SWING (COMBAT_OVERHAUL.md section 2, 2026-10-31): the skeleton warrior's first light. A long wind-up you can see coming (~660 ms: Sword_Heavy_A at 0.583, its hand fastest at 383 ms of the clip; 550 ms at 0.7 until 2026-11-11, when Luke asked for more anticipation). Foes never swing the player's abilities."

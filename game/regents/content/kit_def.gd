@@ -95,8 +95,8 @@ func follow_for(step: int) -> int:
 
 ## Whether `a` is this kit's FINISHER: its string's last step (armor, flinches a light, staggers), any role's.
 func is_finisher(a: AbilityDef) -> bool:
-	if a == null or light.is_empty():
-		return false
+	if a == null or light.size() < 2:
+		return false   # a string of one step has no finisher (the server's `KitSeed::is_finisher`)
 	if light[light.size() - 1] == a:
 		return true
 	for kr: KitRole in roles:

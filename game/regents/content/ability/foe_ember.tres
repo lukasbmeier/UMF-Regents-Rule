@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 500
+range_m = 0.0
+wind_up_ms = 1000
+damage = 30.0
+animation = &"ability.40032"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40032
+display_name = "Ember"
+designer_notes = "A FOE'S SHOT (Luke's F1, 2026-11-12, FOES_PREP.md section 6): the imp's bolt. Its wind-up IS THE TELL (the cast, 1000 ms); the server locks the aim regents.foe_shot_lock_ms before it ends and flies the missile (content/spell/foe_ember.tres: slow, 12 m/s, so a step aside at 8 m slips it). 30 at the imp's 45 % = 13.5. range_m MUST stay 0 and judged off."

@@ -589,6 +589,18 @@ func _skeleton_camps() -> void:
 			_cells.add_child(lp)
 			_own(lp)
 			_count("skeleton")
+		# ONE ARCHER BY EACH CAMP (Luke's F15, 2026-11-12: a test placement), where the glade's stands by its three.
+		# After the three and from no random stream, so nothing placed before it moves.
+		var aq: Vector2 = p + Vector2(8.0, 4.0)
+		var archer := LevelPoint.new()
+		archer.point_id = "w_skeleton_%d_archer" % n
+		archer.name = archer.point_id
+		archer.kind = "skeleton_archer"
+		archer.radius = 0.5
+		archer.position = Vector3(aq.x, _ground(aq.x, aq.y), aq.y)
+		_cells.add_child(archer)
+		_own(archer)
+		_count("archer")
 		_poi("w_poi_skeletons_%d" % n, p, "Skeleton camp")
 	print("build_continent: %d skeleton camps" % placed.size())
 

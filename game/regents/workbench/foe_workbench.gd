@@ -7,8 +7,9 @@ class_name FoeWorkbench extends Workbench
 ## string ends, with its finisher, in `rest_ms`).
 ##
 ##   sheet    health, its swings and what each does to you, its damage a second over a whole rhythm, its hits
-##            on you a second and the least gap between two of them (COMBAT_OVERHAUL.md §2), the XP a kill
-##            pays
+##            on you a second and the least gap between two of them (COMBAT_OVERHAUL.md §2), how it notices and
+##            rests, the XP a kill pays. A FOE THAT SHOOTS (2026-11-13): its casts round (`shot_rhythm`: its shot,
+##            every `ring_every`-th its ring, each after its lock and `shot_rest_ms`), its range, its step back
 ##   versus   how long each weapon in the game takes to kill it (its light combo, rank 1, an unmade
 ##            weapon), and how long it takes to kill you
 ##   loot     what a kill drops on average, and how many kills a rare drop takes
@@ -40,7 +41,7 @@ func test_info(action: StringName) -> String:
 
 
 func bench_actions() -> Array[Dictionary]:
-	return [{"name": &"swing", "label": "Play its swings", "tooltip": "Its light combo, then its heavy, on the model"}]
+	return [{"name": &"swing", "label": "Play its swings", "tooltip": "Its shot and ring if it shoots, then its string, on the model"}]
 
 
 func do_action(action: StringName) -> Dictionary:
@@ -86,7 +87,12 @@ func _play_swings() -> void:
 		return
 	var aset: AnimationSet = f.character.animation_set
 	var clips: Array[StringName] = []
-	for a: AbilityDef in f.kit.light:
+	var moves: Array[AbilityDef] = []
+	for a: AbilityDef in [f.shot(), f.ring()]:
+		if a != null:
+			moves.append(a)   # a foe that shoots: its draw and its cast first
+	moves.append_array(f.kit.light)
+	for a: AbilityDef in moves:
 		var clip: StringName = aset.anim_name(StringName("ability.%d" % a.id))
 		if _player.has_animation(clip):
 			clips.append(clip)
@@ -139,6 +145,40 @@ static func rhythm(f: FoeDef) -> Dictionary:
 		"least_gap_ms": least_gap}
 
 
+## A FOE THAT SHOOTS (FOES_PREP.md §9 step 6, 2026-11-13): its casts as its brain makes them, over one round of
+## `ring_every` (its shot, and every `ring_every`-th its ring): [{ability, damage, wait_ms, ring}], each waiting out its
+## lock and `shot_rest_ms`, the time a round takes, and its damage a second IF EVERY CAST LANDS (stood for, never
+## blocked, rolled or left). {} for a foe with no shot.
+static func shot_rhythm(f: FoeDef) -> Dictionary:
+	if f.kit == null or f.shot() == null:
+		return {}
+	var casts: Array[Dictionary] = []
+	var total_ms: int = 0
+	var dmg: float = 0.0
+	for n: int in maxi(1, f.ring_every):
+		var a: AbilityDef = f.cast_at(n)
+		var wait: int = f.kit.lock_ms(a) + f.shot_rest_ms
+		var d: float = hit_damage(a.damage, f.damage_pct, 0, 1)
+		casts.append({"ability": a, "damage": d, "wait_ms": wait, "ring": a == f.ring() and a != f.shot()})
+		total_ms += wait
+		dmg += d
+	var secs: float = maxf(float(total_ms) / 1000.0, 0.001)
+	return {"casts": casts, "ms": total_ms, "damage": dmg, "dps": dmg / secs, "hits_per_s": float(casts.size()) / secs}
+
+
+## The rhythm it fights by: its shots for a foe that shoots, else its string.
+static func fight_rhythm(f: FoeDef) -> Dictionary:
+	var s: Dictionary = shot_rhythm(f)
+	return s if not s.is_empty() else rhythm(f)
+
+
+## How it notices and rests (Luke's F9, F10, 2026-11-13), in a line.
+static func noticing(f: FoeDef) -> String:
+	var arc: String = "all round" if f.notice_arc_deg >= 360.0 else "%.0f degrees in front" % f.notice_arc_deg
+	var rest: String = "stands at its point" if f.wander_m <= 0.0 else "wanders %.0f m round its point" % f.wander_m
+	return "sees %.0f m %s, hears %.0f m all round (%.0f m a sprint); at rest it %s" % [f.notice_m, arc, f.hear_m, f.hear_sprint_m, rest]
+
+
 ## A weapon's string against a foe of `hp`: its damage a second at rank 1 (each step starts the moment its
 ## follow-through lets it; the finisher waits out its lock), and the seconds to kill.
 static func weapon_versus(weapon: ItemDef, hp: float) -> Dictionary:
@@ -164,10 +204,22 @@ static func sheet(f: FoeDef) -> String:
 	for a: AbilityDef in f.kit.light:
 		swings.append("%s %.1f" % [a.display_name, hit_damage(a.damage, f.damage_pct, 0, 1)])
 	var xp: int = roundi(float(f.hp) * rule(&"combat_xp_per_damage") * float(f.xp_pct) / 100.0)
+	var s: Dictionary = shot_rhythm(f)
+	if not s.is_empty():
+		var casts: PackedStringArray = PackedStringArray()
+		for c: Dictionary in s["casts"]:
+			casts.append("%s %.1f%s" % [(c["ability"] as AbilityDef).display_name, float(c["damage"]), " (a ring: left, never blocked)" if bool(c["ring"]) else ""])
+		var run_mps: float = MovementConfig.shared().run_speed
+		return ("%s   %d health\nit shoots from %.0f to %.0f m: %s, a round every %.1f s\n%.1f damage a second if every cast lands; standing still a player dies in %.0f s\n" +
+			"up close: %s; within %.0f m it steps back %.0f m, at most every %.0f s\nfrom its range you reach it in %.1f s at a run; one foe shot at a player at a time (%d)\n%s\na kill pays about %d mastery XP") % [
+			f.display_name, f.hp, f.shot_near_m, f.shot_range_m, ", ".join(casts), float(s["ms"]) / 1000.0,
+			float(s["dps"]), PLAYER_HP / maxf(float(s["dps"]), 0.001), ", ".join(swings),
+			f.back_within_m, f.back_m, float(f.back_every_ms) / 1000.0, maxf(f.shot_range_m - f.reach_m, 0.0) / maxf(run_mps, 0.1),
+			int(rule(&"ranged_tokens")), noticing(f), xp]
 	return ("%s   %d health\nits swings: %s\n%.1f damage a second; a player dies in %.0f s\n%.2f hits on you a second, its own at least %d ms apart; " +
-		"a group: %d at a time, at least %d ms apart\na kill pays about %d mastery XP") % [
+		"a group: %d at a time, at least %d ms apart\n%s\na kill pays about %d mastery XP") % [
 		f.display_name, f.hp, ", ".join(swings), float(r["dps"]), PLAYER_HP / maxf(float(r["dps"]), 0.001),
-		float(r["hits_per_s"]), int(r["least_gap_ms"]), int(rule(&"attack_tokens")), int(rule(&"token_gap_ms")), xp]
+		float(r["hits_per_s"]), int(r["least_gap_ms"]), int(rule(&"attack_tokens")), int(rule(&"token_gap_ms")), noticing(f), xp]
 
 
 ## What one kill drops on average, to each player who earns a roll: {item name: count} (its loot table's).
@@ -187,8 +239,9 @@ func run_test(action: StringName) -> String:
 		return "nothing on the bench"
 	match action:
 		&"sheet":
-			var r: Dictionary = rhythm(f)
-			last_measure = {"dps": r["dps"], "ms": r["ms"], "swings": (r["swings"] as Array).size()}
+			var r: Dictionary = fight_rhythm(f)
+			last_measure = {"dps": r["dps"], "ms": r["ms"], "swings": f.kit.light.size(), "shooter": r.has("casts"),
+				"casts": (r["casts"] as Array).size() if r.has("casts") else 0}
 			return sheet(f).replace("\n", "  ·  ")
 		&"versus":
 			var rows: Array[Dictionary] = []
@@ -197,7 +250,7 @@ func run_test(action: StringName) -> String:
 				if w != null and w.weapon_kit != &"":
 					rows.append(weapon_versus(w, float(f.hp)))
 			rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["seconds"]) < float(b["seconds"]))
-			var r: Dictionary = rhythm(f)
+			var r: Dictionary = fight_rhythm(f)
 			last_measure = {"weapons": rows, "kills_player_s": PLAYER_HP / maxf(float(r["dps"]), 0.001)}
 			var parts: PackedStringArray = PackedStringArray()
 			for row: Dictionary in rows:
@@ -223,7 +276,7 @@ func fit_checks() -> Array[String]:
 	var f: FoeDef = item as FoeDef
 	if f == null or f.kit == null:
 		return out
-	var r: Dictionary = rhythm(f)
+	var r: Dictionary = fight_rhythm(f)
 	if PLAYER_HP / maxf(float(r["dps"]), 0.001) < 3.0:
 		out.append("it kills a player in under 3 s")
 	var best: float = INF

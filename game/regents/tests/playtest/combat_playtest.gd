@@ -9,6 +9,8 @@ extends Node
 ## and plays each handle's last hit (COMBAT_OVERHAUL.md §5); and lets the target go (Esc). Exits 0/1.
 
 const OVERALL_TIMEOUT_SEC: float = 680.0
+## A hit dealt at once shows this soon after its blow lands as seen: the referee's settle (80 ms), its frame, ours.
+const AT_ONCE_MS: int = 220
 ## The camp's guide and the yard's sparring skeleton (the glade's `guide` and `sparring_1` points).
 const GUIDE: Vector3 = Vector3(5.0, 0.0, 22.5)
 const SPARRING: Vector3 = Vector3(13.5, 0.0, 24.5)
@@ -260,6 +262,16 @@ func _run() -> void:
 	_check(rolled > ran + 1.2 and int(mv.get_reconcile_stats()["reconciles"]) == fixed,
 		"Ctrl while running: the predicted dash carries %.2f m against a run's %.2f, and the server corrected none of it" % [rolled, ran])
 
+	# --- A SET ROLL (Luke, 2026-11-11: "if I roll forward but then press s it goes a short distance") ---
+	# Running north, Ctrl, then at once S for the rest of it: as far as the same roll with W held, and the server
+	# corrects none of it (the frames are a player's own).
+	await get_tree().create_timer(1.6).timeout
+	var roll_w: Vector2 = await _roll_for(false)
+	await get_tree().create_timer(1.7).timeout
+	var roll_s_key: Vector2 = await _roll_for(true)
+	_check(roll_w.x > 3.0 and absf(roll_w.x - roll_s_key.x) < 0.5 and roll_w.y + roll_s_key.y == 0.0,
+		"a roll goes a set length: %.2f m with W held, %.2f m with S pressed as it begins; the server corrected none of it (%d)" % [roll_w.x, roll_s_key.x, int(roll_w.y + roll_s_key.y)])
+
 	# --- THE ROLL PLAYS WHOLE; NOTHING SWINGS IN IT; NOT AGAIN TOO SOON ---
 	await get_tree().create_timer(1.6).timeout   # the roll above is off its cooldown
 	var roll_s: float = driver.shot_seconds(&"ability.40010")
@@ -324,16 +336,33 @@ func _run() -> void:
 	# leash it gives up and walks home. Its brain runs in the referee, as in play.
 	await _key(KEY_ESCAPE)
 	var my_hp: SpaceTimeHealthComponent = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
-	await _stand_at(Vector3(33.0, 0.05, 8.0), Vector3(33.0, 0.0, -1.0))   # 9 m from skeleton_1 (it notices at 10)
+	var camp: Vector3 = Vector3(33.0, 0.0, -1.0)
 	var foe_ent: SpaceTimeEntity = null
 	for id: int in EntityRegistry.all_entity_ids():
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
 		if e != null and e.definition != null and e.definition.kind == 103 \
-				and (foe_ent == null or e.global_position.distance_to(me.global_position) < foe_ent.global_position.distance_to(me.global_position)):
+				and (foe_ent == null or e.global_position.distance_to(camp) < foe_ent.global_position.distance_to(camp)):
 			foe_ent = e
+	# IT SEES IN FRONT (Luke's F9, 2026-11-13): 7 m off where it faces NOW (it notices at 10), never behind it. A rock
+	# or a tree may stand in that line, or it may turn on its next wander step as we arrive: then where it stood and
+	# faced is printed, and we stand in front of it again (a try is a fresh reading of where it faces).
+	var stood_at: Vector3 = foe_ent.global_position if foe_ent != null else camp
+	if foe_ent != null:
+		for attempt: int in 4:
+			var yaw: float = foe_ent.body.rotation.y if foe_ent.body != null else 0.0
+			var at_it: Vector3 = foe_ent.global_position
+			stood_at = at_it
+			var front: Vector3 = at_it + Vector3(-sin(yaw), 0.0, -cos(yaw)) * 7.0
+			await _stand_at(Vector3(front.x, at_it.y + 0.05, front.z), at_it)
+			await _until(func() -> bool: return foe_ent.global_position.distance_to(me.global_position) < 4.5, 4.0)
+			if foe_ent.global_position.distance_to(me.global_position) < 4.5:
+				break
+			print("   (in front of it, unnoticed: it at %s facing %.2f, we at %s, %.1f m; again)" % [str(at_it), yaw, str(me.global_position), foe_ent.global_position.distance_to(me.global_position)])
+	else:
+		await _stand_at(Vector3(33.0, 0.05, 8.0), camp)
 	_check(foe_ent != null, "a skeleton warrior at the camp")
 	if foe_ent != null:
-		var home: Vector3 = foe_ent.global_position
+		var home: Vector3 = stood_at   # where it stood as we came, before it moved (its point is within its wander)
 		var hp0: float = my_hp.get_current()
 		# Its swings are watched from now: one may start the moment it arrives.
 		var sdrv: AnimationDriverComponent = foe_ent.find_component(AnimationDriverComponent) as AnimationDriverComponent
@@ -397,8 +426,10 @@ func _run() -> void:
 		# Run: past its leash (25 m from home) it gives up and walks home.
 		await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
 		var hurt_hp: float = my_hp.get_current()
-		await _until(func() -> bool: return foe_ent.global_position.distance_to(home) < 2.0, 20.0)
-		_check(foe_ent.global_position.distance_to(home) < 2.0, "out of its reach, it walked home (%.1f m from its point)" % foe_ent.global_position.distance_to(home))
+		# Home is its point; where it stood when we came is within its wander of that (F10, 2026-11-13).
+		var home_m: float = FoeDef.by_kind(103).wander_m + 2.0
+		await _until(func() -> bool: return foe_ent.global_position.distance_to(home) < home_m, 20.0)
+		_check(foe_ent.global_position.distance_to(home) < home_m, "out of its reach, it walked home (%.1f m from where it stood as we came; its point is within its %.0f m wander of there)" % [foe_ent.global_position.distance_to(home), FoeDef.by_kind(103).wander_m])
 		# Out of the fight, health comes back (regents.regen_delay_s, then regen_pct_per_s): measured from
 		# leaving it, since the walk home may outlast the delay.
 		await _until(func() -> bool: return my_hp.get_current() > hurt_hp + 3.0 or my_hp.get_current() >= my_hp.get_max(), 20.0)
@@ -443,15 +474,20 @@ func _run() -> void:
 	await _until(func() -> bool: return dh.get_current() < before_shot, 4.0)
 	_check(dh.get_current() < before_shot and inv.count(ARROWS) == arrows0 - 1,
 		"let go: an arrow flew and hit the dummy (%.1f -> %.1f), one arrow used" % [before_shot, dh.get_current()])
-	# Free aim: no target, at the dummy along the view.
+	# Free aim: no target, the crosshair put on the dummy (Luke, 2026-11-11: a free shot goes TO THE CROSSHAIR; the
+	# camera is over the right shoulder, so looking straight at the dummy leaves the crosshair beside it).
 	combat.set_target(-1)
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 10.0), DUMMY_1)
+	var straight: Vector3 = combat.crosshair_point()
+	var beside: bool = not combat.crosshair_on_body
+	var on_it: bool = await _crosshair_onto(dummy)
+	_check(on_it, "the look turned a little puts the crosshair on the dummy (looking straight at it, it was %s: %s)" % ["beside it" if beside else "on it", straight])
 	var before_free: float = dh.get_current()
 	_mouse(MOUSE_BUTTON_LEFT, true)
 	await get_tree().create_timer(0.9).timeout
 	_mouse(MOUSE_BUTTON_LEFT, false)
 	await _until(func() -> bool: return dh.get_current() < before_free, 4.0)
-	_check(dh.get_current() < before_free, "no target: aimed along the view, it still hits what it flies into (%.1f -> %.1f)" % [before_free, dh.get_current()])
+	_check(dh.get_current() < before_free, "no target: the arrow flew to the crosshair and hit the dummy it was on (%.1f -> %.1f)" % [before_free, dh.get_current()])
 	# WHAT YOU HIT BECOMES YOUR TARGET (owner, 2026-10-20: "auto highlight that enemy"), on the hit, so free
 	# aim stays free.
 	await _until(func() -> bool: return combat.target_id == dummy, 1.0)
@@ -615,6 +651,8 @@ func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, th
 	var whole: Array[float] = []
 	var blocked: Array[float] = []
 	for f: FoeDef in FoeDef.all():
+		if f.kit == null:
+			continue   # a creature that never fights (the deer) swings nothing
 		for a: AbilityDef in f.kit.light:
 			var d: float = snappedf(a.damage * float(f.damage_pct) / 100.0, 0.01)
 			if f.kit.unblockable.has(a):
@@ -623,6 +661,21 @@ func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, th
 				blocked.append(snappedf(d * block, 0.01))
 	combat.set_block(true)
 	await _until(func() -> bool: return combat.blocking, 3.0)
+	# WHEN EACH FOE'S BLOW LANDS, AS THIS CLIENT SHOWS IT (its swing seen starting, plus its wind-up): how long
+	# after it the health drops is the lag Luke felt ("I think I dodged ... .5 or .8 seconds later to get hit").
+	var lands_ms: Array[int] = []
+	var watching: Array = []
+	for f: HitFeedbackComponent in feeds:
+		var foe_act: SpaceTimeActionComponent = (f.entity as SpaceTimeEntity).find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+		if foe_act == null:
+			continue
+		var on_swing: Callable = func(ability_id: int) -> void:
+			var swung: AbilityDef = ContentLibrary.find(&"ability", ability_id) as AbilityDef
+			if swung != null and swung.judged:
+				lands_ms.append(Time.get_ticks_msec() + swung.wind_up_ms)
+		foe_act.started_elsewhere.connect(on_swing)
+		watching.append([foe_act, on_swing])
+	var lags: Array[int] = []
 	var drops: Array[float] = []
 	var at_ms: Array[int] = []
 	var last: float = my_hp.get_current()
@@ -641,6 +694,12 @@ func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, th
 		if now_hp < last - 0.01:
 			drops.append(snappedf(last - now_hp, 0.01))
 			at_ms.append(Time.get_ticks_msec())
+			var landed: int = -1
+			for l: int in lands_ms:
+				if l <= Time.get_ticks_msec() + 30 and l > landed:
+					landed = l   # the latest blow that had landed by now, as seen
+			if landed >= 0:
+				lags.append(Time.get_ticks_msec() - landed)
 		last = now_hp
 		if now_hp < 50.0 and heals_asked < 6:
 			heals_asked += 1
@@ -648,6 +707,29 @@ func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, th
 			await _until(func() -> bool: return my_hp.get_current() > 60.0, 4.0)
 			last = my_hp.get_current()
 	combat.set_block(false)
+	for w: Array in watching:
+		if is_instance_valid(w[0]):
+			(w[0] as SpaceTimeActionComponent).started_elsewhere.disconnect(w[1] as Callable)
+	# A HIT SHOWS AS SOON AS THIS LINE ALLOWS (2026-11-11): it waits for a parry press still on its way only as long
+	# as THIS client's delay needs (told to the server, `report_seen_delay`), not the most any line may (320 ms).
+	lags.sort()
+	var seen: int = CombatComponent.seen_delay_ms()
+	var wait_ms: int = int(HotRules.number(&"regents.parry_late_ms")) + 2 * maxi(combat.seen_delay_told, 0) + int(HotRules.number(&"regents.hit_hold_slack_ms"))
+	var old_wait: int = int(HotRules.number(&"regents.parry_late_ms")) + int(HotRules.number(&"foundation.rewind_max_ms")) + int(HotRules.number(&"foundation.press_credit_cap_ms"))
+	var median: int = lags[lags.size() / 2] if not lags.is_empty() else -1
+	print("HIT LAG: %d hits, shown %s ms after their blow landed as seen (median %d); this line's wait %d ms (swings shown %d ms late), the old wait %d ms"
+		% [lags.size(), str(lags), median, wait_ms, seen, old_wait])
+	_check(combat.seen_delay_told >= 0 and absi(combat.seen_delay_told - seen) <= 25, "the server was told how late this client shows a swing (%d ms; now %d)" % [combat.seen_delay_told, seen])
+	_check(lags.size() >= 2 and median >= 0 and median <= wait_ms + 80,
+		"a hit shows %d ms after its blow lands (median of %d), inside this line's wait of %d ms and a frame or two" % [median, lags.size(), wait_ms])
+	if wait_ms + 60 < old_wait:
+		_check(median < old_wait, "sooner than the %d ms every hit waited before" % old_wait)
+	# DEALT AT ONCE (Luke, 2026-11-12): a hit that does not stagger or kill is dealt as the referee judges it, whatever
+	# the ping (a parry or a roll arriving after takes it back); only the finishers still wait. So most hits show
+	# within the referee's own 80 ms and a frame or two of the blow landing, far inside this line's wait.
+	var at_once: int = lags.filter(func(l: int) -> bool: return l <= AT_ONCE_MS).size()
+	_check(at_once >= 2 and at_once * 2 >= lags.size(),
+		"dealt at once: %d of %d hits showed within %d ms of their blow landing (this line's wait is %d ms); the rest are the finishers, which wait" % [at_once, lags.size(), AT_ONCE_MS, wait_ms])
 	var glinted: bool = feeds.any(func(f: HitFeedbackComponent) -> bool: return f.flashes.has(&"glint"))
 	_check(glinted, "a skeleton's finisher glinted red as it wound up (%d foes watched)" % feeds.size())
 	_check(drops.any(func(d: float) -> bool: return whole.any(func(w: float) -> bool: return is_equal_approx(d, w))),
@@ -660,7 +742,9 @@ func _blocking_the_camp(me: SpaceTimeEntity, my_hp: SpaceTimeHealthComponent, th
 	var least: int = 1 << 30
 	for i: int in range(1, at_ms.size()):
 		least = mini(least, at_ms[i] - at_ms[i - 1])
-	_check(at_ms.size() >= 2 and least >= gap - 100, "%d hits held up against them, never two together: the least gap %d ms (the rule %d)" % [at_ms.size(), least, gap])
+	# Since hits are dealt at once (2026-11-12) a finisher still WAITS (this line's wait) while the light after it
+	# does not: the two can show closer together than they landed by that wait, never closer.
+	_check(at_ms.size() >= 2 and least >= gap - 100 - wait_ms, "%d hits held up against them, never two together: the least gap %d ms (the rule %d; a waiting finisher and a light dealt at once show up to %d ms closer)" % [at_ms.size(), least, gap, wait_ms])
 
 
 ## THE PARRY, PLAYED (COMBAT_OVERHAUL.md §4): against the camp, a guard press made a whole wind-up before a
@@ -691,7 +775,13 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 	var early_ok: bool = false
 	var early_taken: float = -1.0
 	var tries: int = 0
-	while not early_ok and tries < 4 and my_hp.get_current() > 60.0:
+	# A TRY IS ONE LIGHT ALONE (2026-11-13): with the camp's three taking turns, another's hit already on its way (a
+	# finisher, 14.00, measured as the light's) is not this light's; such a try is not made, and worn low you are
+	# healed rather than the leg given up, as the parry's below.
+	var early_skipped: int = 0
+	while not early_ok and tries < 4 and early_skipped < 8:
+		if my_hp.get_current() < 60.0:
+			await _heal(my_hp)
 		tries += 1
 		var n: int = seen.size()
 		await _until(func() -> bool: return seen.size() > n and light_of.call(int(seen[seen.size() - 1]["ability"])) != null, 10.0)
@@ -700,6 +790,12 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 		var swing: Dictionary = seen[seen.size() - 1]
 		var a: AbilityDef = light_of.call(int(swing["ability"]))
 		var foe: SpaceTimeEntity = foes[int(swing["foe"])]
+		if _other_hit_due(seen, int(swing["foe"]), int(swing["at"]) + a.wind_up_ms + 300):
+			tries -= 1
+			early_skipped += 1
+			print("   (another foe's hit lands before or with this light: not this try)")
+			await get_tree().create_timer(0.8).timeout
+			continue
 		_face(foe)
 		var hp: float = my_hp.get_current()
 		combat.set_block(true)
@@ -715,10 +811,21 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 	# IN TIME: pressed 60 ms before the light lands as this client shows it (its clip's hit). Judged with no
 	# credit for the trips (the press's and the swing's), it would count 90 ms late: past the window.
 	var parried_ok: bool = false
+	var my_feed: HitFeedbackComponent = me.find_component(HitFeedbackComponent) as HitFeedbackComponent
+	var took_back_before: int = my_feed.taken_back if my_feed != null else 0
+	var took_back_after: int = took_back_before
 	var riposte_dealt: float = -1.0
 	var riposte_want: float = 0.0
 	tries = 0
-	while not parried_ok and tries < 6 and my_hp.get_current() > 40.0:
+	# A TRY IS A PRESS THE SERVER COULD JUDGE (2026-11-13): with two skeletons on you, the other's finisher often has you
+	# Staggered as the press is due, and a staggered player cannot guard ("you cannot while staggered"): the game's
+	# rule, not a missed parry. Such a press is not made and the try is not spent; and worn low you are healed rather
+	# than the leg given up (a quiet run lost both its tries to staggers and stopped at 22 health).
+	var my_status: StatusComponent = me.find_component(StatusComponent) as StatusComponent
+	var skipped: int = 0
+	while not parried_ok and tries < 6 and skipped < 8:
+		if my_hp.get_current() < 60.0:
+			await _heal(my_hp)
 		tries += 1
 		var n: int = seen.size()
 		await _until(func() -> bool: return seen.size() > n and light_of.call(int(seen[seen.size() - 1]["ability"])) != null, 10.0)
@@ -730,6 +837,12 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 		_face(foe)
 		var press_at: int = int(swing["at"]) + a.wind_up_ms - 60
 		await _until(func() -> bool: return Time.get_ticks_msec() >= press_at, 2.0)
+		if my_status != null and not my_status.can_act():
+			tries -= 1
+			skipped += 1
+			print("   (a press due while we could not act (status %d): not made, not counted)" % my_status.status())
+			await get_tree().create_timer(0.8).timeout
+			continue
 		var hp: float = my_hp.get_current()
 		var p0: int = parried_by.size()
 		combat.set_block(true)
@@ -738,6 +851,7 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 		await _until(func() -> bool: return parried_by.size() > p0, 1.5)
 		if parried_by.size() > p0 and parried_by[parried_by.size() - 1] == foe.entity_id:
 			parried_ok = is_equal_approx(my_hp.get_current(), hp) or my_hp.get_current() >= hp
+			took_back_after = (me.find_component(HitFeedbackComponent) as HitFeedbackComponent).taken_back
 			# STAGGERED, IT STANDS DAZED (Luke, 2026-11-01: "keep them in one spot and dazed animation for the
 			# length"): it does not move, and holds the dazed sway.
 			var fst: StatusComponent = foe.find_component(StatusComponent) as StatusComponent
@@ -768,12 +882,41 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 			_face(foe)
 			var step: int = combat.next_light_step(Time.get_ticks_msec())
 			await _click(0.03)
-			await _until(func() -> bool: return float(drop.call()) > 0.01, 2.0)
+			# Another foe's hit may flinch or stagger us mid-riposte (2026-11-13: three take turns on us): the game's
+			# rule, not a lost riposte. Such a riposte is not counted, and the parry is tried again.
+			var cut: Array[bool] = [false]
+			await _until(func() -> bool:
+				cut[0] = cut[0] or (my_status != null and (my_status.status() == 105 or my_status.status() == 103))
+				return float(drop.call()) > 0.01, 2.0)
 			riposte_dealt = snappedf(float(drop.call()), 0.01)
 			_check(step == 0, "after the parry the tap is the riposte: the string's first step (%d)" % step)
+			if riposte_dealt < 0.01 and cut[0]:
+				print("   (our riposte was flinched by another foe's hit: not counted, the parry tried again)")
+				parried_ok = false
+				tries -= 1
+				skipped += 1
 		await get_tree().create_timer(0.8).timeout
-	_check(parried_ok, "a guard pressed 60 ms before a light lands as seen PARRIES it: no damage, the skeleton staggered by us (%d tries)" % tries)
+	_check(parried_ok, "a guard pressed 60 ms before a light lands as seen PARRIES it: no damage, the skeleton staggered by us (%d tries, %d skipped while staggered)" % [tries, skipped])
+	# At this round trip that press ARRIVES after the hit was judged and dealt: the hit was taken back (the health
+	# straight back, no heal's number). On a quick line the press arrives first and nothing is ever dealt.
+	print("TAKEN BACK: %d hit(s) dealt at once and taken back by the parry (swings shown %d ms late)" % [took_back_after - took_back_before, CombatComponent.seen_delay_ms()])
+	if CombatComponent.seen_delay_ms() >= 60:
+		_check(took_back_after > took_back_before, "the parried hit had been dealt at once and was TAKEN BACK (%d): the press arrived after it, and still counted" % (took_back_after - took_back_before))
 	_check(is_equal_approx(riposte_dealt, riposte_want), "the riposte at once: the chop at %d%%: %.2f (%.2f)" % [int(HotRules.number(&"regents.riposte_damage_pct")), riposte_want, riposte_dealt])
+
+
+## Whether a swing seen from a foe other than `foe_id` lands (as seen: its start plus its wind-up) between now and
+## `by_ms`: a hit that would be measured in place of the one a leg watches.
+func _other_hit_due(seen: Array[Dictionary], foe_id: int, by_ms: int) -> bool:
+	var now: int = Time.get_ticks_msec()
+	for s: Dictionary in seen:
+		if int(s["foe"]) == foe_id:
+			continue
+		var a: AbilityDef = ContentLibrary.find(&"ability", int(s["ability"])) as AbilityDef
+		var lands: int = int(s["at"]) + (a.wind_up_ms if a != null else 0)
+		if lands >= now - 50 and lands <= by_ms:
+			return true
+	return false
 
 
 ## THE GUARD FACES FORWARD: the block held, turned away from the nearest skeleton, a light comes through in
@@ -781,6 +924,8 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 func _blocked_from_behind(my_hp: SpaceTimeHealthComponent) -> void:
 	var whole: Array[float] = []
 	for f: FoeDef in FoeDef.all():
+		if f.kit == null:
+			continue   # a creature that never fights (the deer) swings nothing
 		for a: AbilityDef in f.kit.light:
 			if not f.kit.unblockable.has(a):
 				whole.append(snappedf(a.damage * float(f.damage_pct) / 100.0, 0.01))
@@ -987,11 +1132,19 @@ func _data_of(row: int) -> String:
 
 
 ## The nearest foe, or null.
+## Whether entity kind `kind` is one of the camp's MELEE foes. The camp's archer and imp hold their fire in this suite
+## (`regents.ranged_tokens` 0) and stand a few meters off: a guard turned to the nearest of ALL foes sometimes had its
+## back to the three that were hitting (2026-11-13: two runs died of it).
+func _melee_foe(kind: int) -> bool:
+	var f: FoeDef = FoeDef.by_kind(kind)
+	return f != null and f.behavior == &"melee"
+
+
 func _nearest_foe() -> SpaceTimeEntity:
 	var best: SpaceTimeEntity = null
 	for id: int in EntityRegistry.all_entity_ids():
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
-		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null \
+		if e != null and e.definition != null and _melee_foe(e.definition.kind) \
 				and (best == null or e.global_position.distance_to(me.global_position) < best.global_position.distance_to(me.global_position)):
 			best = e
 	return best
@@ -1004,7 +1157,18 @@ func _back_at_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
 	if my_hp.is_dead():
 		print("   (the camp slew you: up at the spawn, and back)")
 		await _until(func() -> bool: return not my_hp.is_dead(), 12.0)
-		await _stand_at(home + Vector3(0, 0.05, 2.4), home)
+		# UP FIRST, THEN BACK (2026-11-13): the health comes back a moment before the Slain status goes, and a step
+		# sent in between is refused: the fighter stayed at the spawn, and every camp phase after saw nothing (four
+		# checks failed of it, none of them the game's). So: wait for the status, step, and see that we arrived.
+		var st: StatusComponent = me.find_component(StatusComponent) as StatusComponent
+		await _until(func() -> bool: return st == null or st.status() != 106, 6.0)
+		var back: Vector3 = home + Vector3(0, 0.05, 2.4)
+		for i: int in 4:
+			await _stand_at(back, home)
+			if me.global_position.distance_to(back) < 1.0:
+				break
+			await get_tree().create_timer(0.5).timeout
+		_check(me.global_position.distance_to(back) < 1.0, "slain by the camp, up again and back at it (%.1f m from where the phases stand)" % me.global_position.distance_to(back))
 	await _heal(my_hp)
 
 
@@ -1025,7 +1189,7 @@ func _face_nearest_foe() -> void:
 	var best: SpaceTimeEntity = null
 	for id: int in EntityRegistry.all_entity_ids():
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
-		if e != null and e.definition != null and FoeDef.by_kind(e.definition.kind) != null \
+		if e != null and e.definition != null and _melee_foe(e.definition.kind) \
 				and (best == null or e.global_position.distance_to(me.global_position) < best.global_position.distance_to(me.global_position)):
 			best = e
 	if best != null:
@@ -1045,6 +1209,45 @@ func _run_for(secs: float, roll: bool) -> float:
 	Input.action_release(&"move_forward")
 	await get_tree().create_timer(0.4).timeout
 	return d
+
+
+## Turn the look, a little at a time, until the crosshair is on entity `id` (a player putting it there). True when
+## it is.
+func _crosshair_onto(id: int) -> bool:
+	var yaw0: float = input.get_look_yaw()
+	for step: int in range(0, 41):
+		for side: float in [1.0, -1.0]:
+			input.set_look(yaw0 + side * deg_to_rad(0.25) * float(step), deg_to_rad(-3.0))
+			await get_tree().physics_frame
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var p: Vector3 = combat.crosshair_point()
+			var t: Node3D = EntityRegistry.get_entity(id) as Node3D
+			if combat.crosshair_on_body and t != null and Vector2(p.x - t.global_position.x, p.z - t.global_position.z).length() < 0.6:
+				return true
+	return false
+
+
+## Run north, roll (Ctrl), and say how far the body went in the roll's length (x) and how many times the server
+## corrected it meanwhile (y); `back`: S instead of W from the moment the roll begins.
+func _roll_for(back: bool) -> Vector2:
+	await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+	await get_tree().create_timer(0.5).timeout   # the step there is a correction of its own: let it settle
+	var mv: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+	Input.action_press(&"move_forward")
+	await get_tree().create_timer(0.4).timeout   # up to speed
+	var fixes: int = int(mv.get_reconcile_stats()["reconciles"])
+	var from: Vector3 = me.global_position
+	await _key(KEY_CTRL)
+	if back:
+		Input.action_release(&"move_forward")
+		Input.action_press(&"move_back")
+	await get_tree().create_timer(HotRules.number(&"regents.roll_ms") / 1000.0 - 0.05).timeout
+	var d: float = Vector2(me.global_position.x - from.x, me.global_position.z - from.z).length()
+	Input.action_release(&"move_forward")
+	Input.action_release(&"move_back")
+	await get_tree().create_timer(0.4).timeout
+	return Vector2(d, float(int(mv.get_reconcile_stats()["reconciles"]) - fixes))
 
 
 ## The bag panel's button on row `row`: its words, or "" when there is none.

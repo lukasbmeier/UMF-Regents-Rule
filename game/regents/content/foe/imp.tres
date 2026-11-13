@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="FoeDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
+[ext_resource type="Resource" path="res://game/regents/content/character/imp.tres" id="2_char"]
+[ext_resource type="Resource" path="res://game/regents/content/kit/imp.tres" id="3_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/loot_table/skeleton_camp.tres" id="4_loot"]
+
+[resource]
+script = ExtResource("1_foe")
+family = &"fiend"
+key = &"imp"
+character = ExtResource("2_char")
+kit = ExtResource("3_kit")
+hp = 70
+damage_pct = 45
+poise = 30
+loot_table = ExtResource("4_loot")
+behavior = &"ranged"
+notice_m = 13.0
+leash_m = 25.0
+reach_m = 1.7
+rest_ms = 1500
+rest_jitter_ms = 300
+shot_range_m = 11.0
+shot_near_m = 7.0
+shot_rest_ms = 2200
+ring_every = 3
+back_within_m = 0.0
+back_m = 0.0
+hidden_meshes = Array[StringName]([&"Imp_Mace"])
+id = 40007
+display_name = "Imp"
+designer_notes = "THE FIRST CASTING FOE (Luke's F1, F13, 2026-11-12, FOES_PREP.md section 6). Its question: can you stop its cast, or leave the ring? It stands 7 to 11 m off in sight and casts an ember (a 1000 ms cast, a pale glint, a slow bolt: step aside); every third cast is a ring on the ground where you stand (1500 ms to fill: leave it). Its poise is low: a hit or two staggers it and the cast is lost. 2200 ms between casts. It never steps back, never blinks, never slows or roots you. All numbers are first guesses, Luke's to change."

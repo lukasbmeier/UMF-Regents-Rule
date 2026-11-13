@@ -1,12 +1,22 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_6m821"]
-[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_utcoy"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Bush_Long_1.gltf" id="1_utcoy"]
+[ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="2_iqt4r"]
+[ext_resource type="Script" path="res://foundation/level/level_point.gd" id="3_3rr2l"]
 
-[node name="Cell_-6_12" type="Node3D" unique_id=1418554857]
+[node name="Cell_-6_12" type="Node3D" unique_id=1254178274]
 
-[node name="bush_long_1_175" type="Node3D" parent="." unique_id=1930779636 instance=ExtResource("1_6m821")]
+[node name="bush_long_1_175" type="Node3D" parent="." unique_id=2091150035 instance=ExtResource("1_utcoy")]
 transform = Transform3D(-1.3032247, 0, -0.0058918935, 0, 1.3032379, 0, 0.0058918935, 0, -1.3032247, -368.37802, 2.6791704, 797.8231)
 
-[node name="fern_1_176" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("2_utcoy")]
+[node name="fern_1_176" type="Node3D" parent="." unique_id=1875402222 instance=ExtResource("2_iqt4r")]
 transform = Transform3D(-0.055694364, 0, -0.7443691, 0, 0.74644977, 0, 0.7443691, 0, -0.055694364, -336.06848, 4.123358, 807.27563)
+
+[node name="w_skeleton_9_archer" type="Marker3D" parent="." unique_id=121919187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -383.0722, 2.1002662, 775.1836)
+gizmo_extents = 0.5
+script = ExtResource("3_3rr2l")
+point_id = "w_skeleton_9_archer"
+kind = "skeleton_archer"
+radius = 0.5
+tags = PackedStringArray()

@@ -1,0 +1,45 @@
+[gd_resource type="BehaviorTree" format=3]
+
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_slain.gd" id="1_foe_slain"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_go_home.gd" id="2_foe_go_home"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_rest.gd" id="3_foe_rest"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_hold_lock.gd" id="4_foe_hold_lock"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_shove.gd" id="5_foe_shove"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_step_back.gd" id="6_foe_step_back"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_approach.gd" id="7_foe_approach"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_shoot.gd" id="8_foe_shoot"]
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_foe"]
+
+[sub_resource type="BTAction" id="BTAction_foe_slain"]
+script = ExtResource("1_foe_slain")
+
+[sub_resource type="BTAction" id="BTAction_foe_go_home"]
+script = ExtResource("2_foe_go_home")
+
+[sub_resource type="BTAction" id="BTAction_foe_rest"]
+script = ExtResource("3_foe_rest")
+
+[sub_resource type="BTAction" id="BTAction_foe_hold_lock"]
+script = ExtResource("4_foe_hold_lock")
+
+[sub_resource type="BTAction" id="BTAction_foe_shove"]
+script = ExtResource("5_foe_shove")
+
+[sub_resource type="BTAction" id="BTAction_foe_step_back"]
+script = ExtResource("6_foe_step_back")
+
+[sub_resource type="BTAction" id="BTAction_foe_approach"]
+script = ExtResource("7_foe_approach")
+
+[sub_resource type="BTAction" id="BTAction_foe_shoot"]
+script = ExtResource("8_foe_shoot")
+
+[sub_resource type="BTDynamicSelector" id="BTDynamicSelector_root"]
+custom_name = "A foe that shoots, in the order it minds things"
+children = [SubResource("BTAction_foe_slain"), SubResource("BTAction_foe_go_home"), SubResource("BTAction_foe_rest"), SubResource("BTAction_foe_hold_lock"), SubResource("BTAction_foe_shove"), SubResource("BTAction_foe_step_back"), SubResource("BTAction_foe_approach"), SubResource("BTAction_foe_shoot")]
+
+[resource]
+description = "A FOE THAT SHOOTS (the skeleton archer; Luke's F1-F6, 2026-11-12): the first of these that is its to do, each think (a dynamic selector: tried from the top every time). Slain, home and finding a target are the melee tree's; then it holds a draw it has begun, shoves a target in its reach, steps back from one that is close (seldom: it is caught), walks in to its range, and shoots. A foe is given this tree by FoeDef.behavior = ranged; its numbers (shot_range_m, shot_rest_ms, back_m, back_every_ms) are its FoeDef's, and its shot is its kit's first skill a bolt SpellDef flies."
+blackboard_plan = SubResource("BlackboardPlan_foe")
+root_task = SubResource("BTDynamicSelector_root")

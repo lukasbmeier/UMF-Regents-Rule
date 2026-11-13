@@ -6,7 +6,7 @@
 script = ExtResource("1_ability")
 cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 620
+wind_up_ms = 720
 damage = 16.0
 animation = &"ability.40028"
 key = &"regents.combat"
@@ -17,4 +17,4 @@ height_m = 0.7
 lunges = false
 id = 40028
 display_name = "Hamstring bite"
-designer_notes = "THE WOLF'S SECOND BITE (hunting, Luke 2026-11-10: a hamstring bite that slows): winds up 620 ms (Attack at 1.25x); unblocked, the wolf kit's KitHit applies Slowed (3 s)."
+designer_notes = "THE WOLF'S SECOND BITE (hunting, Luke 2026-11-10: a hamstring bite that slows): winds up 720 ms (Attack at 1.076x; 620 ms at 1.25x until 2026-11-11); unblocked, the wolf kit's KitHit applies Slowed (3 s)."

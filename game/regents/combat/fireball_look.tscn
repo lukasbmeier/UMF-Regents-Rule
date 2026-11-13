@@ -1,4 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/regents/combat/shot_look.gd" id="1_shot"]
 
 [sub_resource type="SphereMesh" id="Mesh"]
 radius = 0.18
@@ -14,6 +16,19 @@ emission = Color(1.0, 0.5, 0.15, 1)
 emission_energy_multiplier = 3.0
 
 [node name="FireballLook" type="Node3D"]
+script = ExtResource("1_shot")
+trail_life_s = 0.3
+trail_width_m = 0.34
+trail_color = Color(1, 0.45, 0.1, 0.8)
+trail_glows = true
+sparks_per_s = 70
+spark_life_s = 0.55
+spark_size_m = 0.07
+spark_scatter_mps = 1.0
+spark_color = Color(1, 0.6, 0.2, 1)
+flicker = 0.4
+burst_size_m = 3.0
+burst_color = Color(1, 0.55, 0.15, 1)
 
 [node name="Core" type="MeshInstance3D" parent="."]
 mesh = SubResource("Mesh")

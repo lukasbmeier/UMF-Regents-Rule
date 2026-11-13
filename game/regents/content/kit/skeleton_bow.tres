@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/archery.tres" id="2_skill"]
+[ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="4_hit"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_bow_shove.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_arrow.tres" id="s0"]
+
+[sub_resource type="Resource" id="HitShove"]
+script = ExtResource("4_hit")
+ability = ExtResource("a0")
+push_mps = 6.0
+
+[resource]
+script = ExtResource("1_kit")
+key = &"skeleton_bow"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0")])
+skills = Array[Resource]([ExtResource("s0")])
+skill_ranks = PackedInt32Array(0)
+hits = Array[Resource]([SubResource("HitShove")])
+id = 40009
+display_name = "Skeleton bow"
+designer_notes = "A RANGED FOE'S KIT (Luke's F1, F3, 2026-11-12, FOES_PREP.md section 6): the skeleton archer's. Its SHOT is its first skill (an ability a bolt SpellDef flies: the ranged tree looses it); its string is what it does when caught up close: one slow shove that pushes you off it. No weapon names it, so no player wields it."

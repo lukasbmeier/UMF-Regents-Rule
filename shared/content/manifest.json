@@ -75,8 +75,8 @@
 			"type": "status"
 		},
 		"shared/content/regents/ability.json": {
-			"count": 27,
-			"hash": "ee65d046",
+			"count": 32,
+			"hash": "fec93de3",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
@@ -86,13 +86,18 @@
 				"game/regents/content/ability/bow_loose.tres": "7d47acb5",
 				"game/regents/content/ability/dodge.tres": "0b524f44",
 				"game/regents/content/ability/fireball.tres": "db3bb64e",
+				"game/regents/content/ability/foe_arrow.tres": "b2355146",
+				"game/regents/content/ability/foe_bow_shove.tres": "4943a620",
+				"game/regents/content/ability/foe_cinder_ring.tres": "088c6b17",
+				"game/regents/content/ability/foe_claw.tres": "eec2c9ae",
 				"game/regents/content/ability/foe_crushing_overhead.tres": "3760a001",
-				"game/regents/content/ability/foe_hack.tres": "5dfff231",
-				"game/regents/content/ability/foe_rusted_backswing.tres": "66823276",
-				"game/regents/content/ability/foe_rusted_cut.tres": "be73c55b",
+				"game/regents/content/ability/foe_ember.tres": "0c6e7e10",
+				"game/regents/content/ability/foe_hack.tres": "22b944e0",
+				"game/regents/content/ability/foe_rusted_backswing.tres": "ba12c7bb",
+				"game/regents/content/ability/foe_rusted_cut.tres": "18e06a93",
 				"game/regents/content/ability/foe_skull_splitter.tres": "0d3a0e76",
-				"game/regents/content/ability/foe_wolf_bite.tres": "2e549fb2",
-				"game/regents/content/ability/foe_wolf_hamstring.tres": "61a76d9b",
+				"game/regents/content/ability/foe_wolf_bite.tres": "ca446d7b",
+				"game/regents/content/ability/foe_wolf_hamstring.tres": "b826cc91",
 				"game/regents/content/ability/foe_wolf_lunge.tres": "d2c7d904",
 				"game/regents/content/ability/frost_ring.tres": "1beae04e",
 				"game/regents/content/ability/gale.tres": "ffdac2ae",
@@ -115,21 +120,23 @@
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/body/arrow.tres": "e49d4f90",
-				"game/regents/content/body/bolt.tres": "f76701e7",
-				"game/regents/content/body/fireball.tres": "89c4ecf5"
+				"game/regents/content/body/bolt.tres": "03452e42",
+				"game/regents/content/body/fireball.tres": "e42d76aa"
 			},
 			"type": "body"
 		},
 		"shared/content/regents/character.json": {
-			"count": 10,
-			"hash": "31e06644",
+			"count": 12,
+			"hash": "e75681b0",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/character/adventurer.tres": "82e9c25f",
 				"game/regents/content/character/deer.tres": "e1ca88ce",
 				"game/regents/content/character/dummy.tres": "f90a4f6b",
 				"game/regents/content/character/guide.tres": "9acdb325",
+				"game/regents/content/character/imp.tres": "97e011f8",
 				"game/regents/content/character/node.tres": "a593f709",
+				"game/regents/content/character/skeleton_archer.tres": "4cd08552",
 				"game/regents/content/character/skeleton_axeman.tres": "a500cadd",
 				"game/regents/content/character/skeleton_warrior.tres": "dc8f8ce6",
 				"game/regents/content/character/sparring_skeleton.tres": "6c734fd3",
@@ -139,14 +146,16 @@
 			"type": "character"
 		},
 		"shared/content/regents/foe.json": {
-			"count": 5,
-			"hash": "2d3fd6c4",
+			"count": 7,
+			"hash": "50985abf",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/foe/deer.tres": "9d4bdc68",
+				"game/regents/content/foe/imp.tres": "274ef46e",
+				"game/regents/content/foe/skeleton_archer.tres": "e1ec73a9",
 				"game/regents/content/foe/skeleton_axeman.tres": "448b5aa4",
 				"game/regents/content/foe/skeleton_warrior.tres": "a9f6de92",
-				"game/regents/content/foe/sparring_skeleton.tres": "a37f8232",
+				"game/regents/content/foe/sparring_skeleton.tres": "a56d87aa",
 				"game/regents/content/foe/wolf.tres": "939e05c8"
 			},
 			"type": "foe"
@@ -226,13 +235,15 @@
 			"type": "item"
 		},
 		"shared/content/regents/kit.json": {
-			"count": 8,
-			"hash": "2974ecab",
+			"count": 10,
+			"hash": "5ceb83df",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/kit/axe.tres": "80f4225d",
 				"game/regents/content/kit/bow.tres": "98e7e64a",
+				"game/regents/content/kit/imp.tres": "eae94fac",
 				"game/regents/content/kit/skeleton_axe.tres": "4a3e16d4",
+				"game/regents/content/kit/skeleton_bow.tres": "52bb2db2",
 				"game/regents/content/kit/skeleton_sword.tres": "a76d8361",
 				"game/regents/content/kit/sparring_sword.tres": "054385f5",
 				"game/regents/content/kit/staff.tres": "4f5a0693",
@@ -422,10 +433,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "fd9f1c6f",
+			"hash": "6eef2689",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "f9fa8ee4"
+				"game/regents/content/rules/regents.tres": "2d423238"
 			},
 			"type": "rules"
 		},
@@ -449,12 +460,15 @@
 			"type": "skill"
 		},
 		"shared/content/regents/spell.json": {
-			"count": 5,
-			"hash": "1837acd3",
+			"count": 8,
+			"hash": "a842c93c",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/spell/blink.tres": "9b4bb699",
 				"game/regents/content/spell/fireball.tres": "162f3e16",
+				"game/regents/content/spell/foe_arrow.tres": "7b04bddf",
+				"game/regents/content/spell/foe_cinder_ring.tres": "94d1873e",
+				"game/regents/content/spell/foe_ember.tres": "5c8a6307",
 				"game/regents/content/spell/frost_ring.tres": "33d82319",
 				"game/regents/content/spell/gale.tres": "c81e2097",
 				"game/regents/content/spell/staff_bolt.tres": "68b33581"

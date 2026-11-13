@@ -71,6 +71,14 @@ const POSE_CHANNEL: StringName = &"pose.spell_channel"
 const ROOTED_SLACK_M: float = 0.5
 ## Who is casting what (`game/regents.rs`): everyone's, for their casting pose.
 const TABLE_CASTING: StringName = &"casting"
+## Where a shot leaves, above its shooter's feet. Twin: the server's `loose_arrow` and `launch_missile`.
+const MUZZLE_HEIGHT_M: float = 1.45
+## How far along the crosshair's ray a shot is aimed when the crosshair is on nothing (the sky).
+const AIM_FAR_M: float = 120.0
+## A point under the crosshair nearer the muzzle than this is not aimed at (the shot goes along the look).
+const AIM_NEAR_M: float = 1.0
+## The pull on an arrow in flight. Twin: the server's `rules::ARROW_GRAVITY`.
+const ARROW_GRAVITY: float = 9.8
 ## The shortest draw a release looses (shorter: the draw is let go).
 const MIN_DRAW_MS: int = 120
 ## How long after a swing lands it is still committed (the server's `regents.swing_hold_ms`).
@@ -118,6 +126,10 @@ var swing_canceled: bool = false
 var queued: Dictionary = {}
 var _slowing: bool = false
 var _last_swing_ms: int = -100000
+## Whether the crosshair was on somebody when `crosshair_point` last looked (an arrow's arc is corrected onto a body).
+var crosshair_on_body: bool = false
+## When this client last loosed an arrow or let a spell go (msec): the upper body stays turned to it (`CombatLook`).
+var shot_ms: int = -100000
 ## Until when (msec) this client's roll holds it: no swing before.
 var roll_until_ms: int = -100000
 ## A roll asked for in the air (Luke's playtest, 2026-10-24: "I can roll in the air, shouldn't be doable,
@@ -399,6 +411,9 @@ func dodge() -> int:
 		return -1
 	if _local_input != null:
 		_local_input.dash_once()
+		# A SET ROLL (Luke, 2026-11-11: "if I roll forward but then press s it goes a short distance ... make it
+		# a set amount"): the way it began is the way it goes for its whole length, whatever keys are pressed.
+		_local_input.force_move(roll_direction(), HotRules.number(&"regents.roll_ms") / 1000.0)
 	draw_started_ms = -1   # the server's Rolling ends the Drawing too
 	_cast_over()   # and lets a cast go (the server ends it too)
 	var now: int = Time.get_ticks_msec()
@@ -409,6 +424,25 @@ func dodge() -> int:
 	queued = {}
 	combo_step = -1
 	return pid
+
+
+## The way a roll begun now goes (a world direction, as `InputFrame.move_dir`): the way the keys push, else the
+## way the body faces. The movement model's own choice for a dash (`MovementModel.step`, 0b), made here so the
+## roll can be held to it.
+func roll_direction() -> Vector2:
+	if _local_input == null:
+		return Vector2.ZERO
+	return roll_direction_for(Vector2(
+		Input.get_action_strength(LocalInputComponent.ACTION_RIGHT) - Input.get_action_strength(LocalInputComponent.ACTION_LEFT),
+		Input.get_action_strength(LocalInputComponent.ACTION_BACK) - Input.get_action_strength(LocalInputComponent.ACTION_FORWARD)),
+		_local_input.get_body_yaw())
+
+
+## `keys` (x right, y back, as pressed) turned to the world by the body's `yaw`; with none pressed, forward.
+static func roll_direction_for(keys: Vector2, yaw: float) -> Vector2:
+	if keys.length_squared() < 0.0001:
+		return Vector2(-sin(yaw), -cos(yaw))
+	return keys.normalized().rotated(-yaw)
 
 
 ## THE ROLL'S COOLDOWN (owner, 2026-10-21: "roll cooldown UI"): how long until Ctrl rolls again, and its
@@ -514,6 +548,35 @@ static func seen_delay_ms() -> int:
 	return maxi(0, roundi(float(ClockSync.rtt_usec()) / 2000.0))
 
 
+## How often the delay is looked at again, and how far it must have moved to be said again (ms).
+const SEEN_TELL_EVERY_MS: int = 2000
+const SEEN_TELL_STEP_MS: int = 8
+## The delay last told to the server (-1: never), and when it was last looked at.
+var seen_delay_told: int = -1
+var _seen_looked_ms: int = -100000
+
+
+## THE SERVER IS TOLD HOW LATE THIS CLIENT SHOWS A SWING (Luke, 2026-11-11: "the LAG when getting hit"): as it
+## joins and whenever it has moved, so a hit on this player waits for a parry only as long as this line needs
+## (it waited the most any line may, 320 ms) and a roll is judged where it was pressed (`report_seen_delay`).
+## True when it was told now.
+func _tell_seen_delay(now_ms: int) -> bool:
+	if now_ms - _seen_looked_ms < SEEN_TELL_EVERY_MS:
+		return false
+	_seen_looked_ms = now_ms
+	var ms: int = seen_delay_ms()
+	if not seen_delay_moved(seen_delay_told, ms):
+		return false
+	seen_delay_told = ms
+	SpaceTimeSync.call_reducer(&"report_seen_delay", [ms], ["u32"])
+	return true
+
+
+## Whether a delay of `now` ms is worth telling the server again after `told` (-1: never told).
+static func seen_delay_moved(told: int, now: int) -> bool:
+	return told < 0 or absi(now - told) >= SEEN_TELL_STEP_MS
+
+
 ## THE GUARD FACES FORWARD (`regents.guard_arc_deg`): whether a guard facing `yaw` (forward (-sin, -cos))
 ## stops a hit from an attacker at (`dx`, `dz`) from it. Twin: the server's `rules::in_guard_arc`.
 static func guard_stops(yaw: float, dx: float, dz: float) -> bool:
@@ -613,6 +676,7 @@ func _process(_delta: float) -> void:
 		return
 	var now: int = Time.get_ticks_msec()
 	_tick_cast(now)
+	_tell_seen_delay(now)
 	# Flinched or staggered by the server: the swing is over, and so is what was queued.
 	var st: StatusComponent = _status
 	if st != null and (st.status() == STATUS_FLINCHED or st.status() == STATUS_STAGGERED) and swinging(now):
@@ -688,20 +752,153 @@ func loose() -> bool:
 	if not drawing():
 		return false
 	var held: int = Time.get_ticks_msec() - draw_started_ms
+	var speed: float = arrow_speed(held)   # worked out before the draw is over: a riposte's draw fills sooner
 	draw_started_ms = -1
 	if held < MIN_DRAW_MS:
 		SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
 		return false
-	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
-	var pitch: float = _local_input.get_look_pitch() if _local_input != null else 0.0
-	var aim := Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	# TO THE CROSSHAIR (Luke, 2026-11-11). On a body, the arrow leaves on the arc that lands on it. On anything
+	# else (the ground behind what you aimed beside, the sky) it leaves straight for that point and falls short as
+	# an arrow does: an arc to a far point climbs well over the line of sight, and a near miss beside a wolf would
+	# be lobbed over its back (found by the combat playtest's free shot, 0.5 m beside the dummy).
+	var at_point: Vector3 = crosshair_point()
+	var aim: Vector3 = launch_direction(muzzle(), at_point, speed, ARROW_GRAVITY if crosshair_on_body else 0.0)
 	var at: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
-	SpaceTimeSync.call_reducer(&"loose_arrow", [at, aim], ["u64", "vector3[f32,f32,f32]"])
+	# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"; his
+	# pick: refuse): nothing is loosed, and the draw is let go.
+	if at != 0 and not target_in_front(at):
+		SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
+		refused.emit(FACE_YOUR_TARGET)
+		return false
+	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"loose_arrow", [at, aim], ["u64", "vector3[f32,f32,f32]"])
+	if req != null:
+		req.settled.connect(func(r: ReducerRequest) -> void:
+			if r.outcome == ReducerRequest.Outcome.REJECTED or r.outcome == ReducerRequest.Outcome.FAILED:
+				# The server's own word (it saw the body turned otherwise, no arrow left): the draw is let go.
+				SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
+				refused.emit(r.error_message.trim_prefix("loose_arrow: ").capitalize()))
 	if _driver != null and kit != null and not kit.light.is_empty():
 		_driver.play_upper(StringName("ability.%d" % kit.light[0].id))
 	_last_swing_ms = Time.get_ticks_msec()
+	shot_ms = _last_swing_ms
 	loosed.emit(at, held)
 	return true
+
+
+## What is said when a shot at a Tab target is refused for not facing it.
+const FACE_YOUR_TARGET: String = "Face your target"
+
+
+## Whether this player FACES entity `id`: it is inside `regents.aim_arc_deg` in front of the body (the way the body
+## faces, which in stance and while drawing is the way the camera looks). A bow's or a staff's shot is aimed at a
+## Tab target only then (the server's `faces_target`, a little wider for the turn's trip there).
+func target_in_front(id: int) -> bool:
+	var me: Node3D = entity as Node3D
+	var t: Node3D = EntityRegistry.get_entity(id) as Node3D
+	if me == null or t == null or not is_instance_valid(t):
+		return false
+	var yaw: float = _local_input.get_body_yaw() if _local_input != null else me.global_rotation.y
+	return within_arc(yaw, t.global_position.x - me.global_position.x, t.global_position.z - me.global_position.z, HotRules.number(&"regents.aim_arc_deg"))
+
+
+## Whether something at (`dx`, `dz`) from a body facing `yaw` (forward (-sin, -cos)) is inside `arc_deg` (the whole
+## arc) in front of it. On top of it: in front. Twin: the server's `rules::in_guard_arc`.
+static func within_arc(yaw: float, dx: float, dz: float, arc_deg: float) -> bool:
+	var length: float = sqrt(dx * dx + dz * dz)
+	if length < 0.001:
+		return true
+	var c: float = (-sin(yaw) * dx - cos(yaw) * dz) / length
+	return c >= cos(deg_to_rad(clampf(arc_deg, 0.0, 360.0) * 0.5)) - 0.000001
+
+
+## Where this player's shots leave: `MUZZLE_HEIGHT_M` over the feet (the server's start, on its own position).
+func muzzle() -> Vector3:
+	var me: Node3D = entity as Node3D
+	return (me.global_position if me != null and me.is_inside_tree() else Vector3.ZERO) + Vector3(0.0, MUZZLE_HEIGHT_M, 0.0)
+
+
+## The way the camera looks, from the look's yaw and pitch (what a shot follows with no camera: a headless run).
+func look_direction() -> Vector3:
+	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
+	var pitch: float = _local_input.get_look_pitch() if _local_input != null else 0.0
+	return Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+
+
+## WHERE THE CROSSHAIR IS (Luke, 2026-11-11: a shot with no target flies "to the crosshair"; before, it left the
+## chest along the look, beside the camera's ray and never meeting it, so it passed over a wolf the crosshair
+## was on): the first thing the camera's ray meets, the level or a body, past this player's own
+## (`aim_ray_start`), else `AIM_FAR_M` along it. With no camera, that far along the look. `crosshair_on_body` says
+## whether what it met was somebody you could fight (a foe, a dummy, a player: `_target_ok`).
+func crosshair_point() -> Vector3:
+	crosshair_on_body = false
+	var me: Node3D = entity as Node3D
+	var from: Vector3 = muzzle()
+	var cam: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam == null or me == null or not me.is_inside_tree():
+		return from + look_direction() * AIM_FAR_M
+	var origin: Vector3 = cam.global_position
+	var dir: Vector3 = -cam.global_basis.z
+	var start: Vector3 = origin + dir * aim_ray_start(origin, dir, from)
+	var far: Vector3 = start + dir * AIM_FAR_M
+	var q := PhysicsRayQueryParameters3D.create(start, far, SpaceTimeEntity.WORLD_MASK | SpaceTimeEntity.ENTITY_MASK)
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	if ent != null and ent.body != null:
+		q.exclude = [ent.body.get_rid()]
+	var hit: Dictionary = me.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return far
+	var p: Vector3 = hit["position"]
+	if p.distance_to(from) < AIM_NEAR_M:
+		return far
+	# Somebody you could fight (a foe, a dummy, a player), not a tree or a rock (they are entities too: the
+	# playtest's level look past the dummy ended on one 54 m off, and an arc to it is the same lob).
+	var who: int = entity_of_collider(hit.get("collider"))
+	crosshair_on_body = who >= 0 and who != entity_id and _target_ok(who)
+	return p
+
+
+## The entity a ray's collider belongs to (its body, or a wall it put up), or -1.
+static func entity_of_collider(collider: Variant) -> int:
+	if collider == null or not (collider is Node):
+		return -1
+	var n: Node = collider
+	var ent: SpaceTimeEntity = n as SpaceTimeEntity
+	if ent != null:
+		return ent.entity_id
+	return int(n.get_meta(&"entity_id")) if n.has_meta(&"entity_id") else -1
+
+
+## How far along the camera's ray (from `origin`, along `dir`) the crosshair's ray begins: level with the
+## muzzle, so nothing between the camera and the player is aimed at (the camera sits behind the shoulder).
+static func aim_ray_start(origin: Vector3, dir: Vector3, muzzle_at: Vector3) -> float:
+	return maxf((muzzle_at - origin).dot(dir), 0.0)
+
+
+## THE WAY A SHOT LEAVES `from` to reach `to` at `speed` under gravity `g`: the low arc; out of its reach, 45
+## degrees up toward it; with no gravity (a spell's missile), straight at it. Twin: the server's
+## `rules::aim_velocity`, which aims an arrow at a Tab target the same way.
+static func launch_direction(from: Vector3, to: Vector3, speed: float, g: float) -> Vector3:
+	var d: Vector3 = to - from
+	if d.length_squared() < 0.000001:
+		return Vector3.FORWARD
+	if g <= 0.0 or speed <= 0.0:
+		return d.normalized()
+	var x: float = maxf(Vector2(d.x, d.z).length(), 0.001)
+	var v2: float = speed * speed
+	var root: float = v2 * v2 - g * (g * x * x + 2.0 * d.y * v2)
+	var angle: float = atan((v2 - sqrt(root)) / (g * x)) if root >= 0.0 else PI / 4.0
+	return Vector3(d.x / x * cos(angle), sin(angle), d.z / x * cos(angle))
+
+
+## How fast an arrow drawn for `held_ms` leaves, as the server works it out (`loose_arrow`): the draw's power
+## between `regents.arrow_speed_min` and `_max`, through the bow's traits (Swift Draw: slower).
+func arrow_speed(held_ms: int) -> float:
+	var lo: float = clampf(HotRules.number(&"regents.draw_min_power_pct") / 100.0, 0.0, 1.0)
+	var power: float = lo + (1.0 - lo) * clampf(float(held_ms) / float(draw_full_ms()), 0.0, 1.0)
+	var slow: float = HotRules.number(&"regents.arrow_speed_min")
+	var traits: Array[int] = weapon_traits()
+	var m: float = Traits.mult(traits, &"projectile_speed") if not traits.is_empty() else 1.0
+	return (slow + (HotRules.number(&"regents.arrow_speed_max") - slow) * power) * m
 
 
 ## RMB (or a roll): the draw is let go, nothing loosed.
@@ -887,8 +1084,13 @@ func cast(a: AbilityDef) -> bool:
 	var yaw: float = _local_input.get_look_yaw() if _local_input != null else 0.0
 	var pitch: float = _local_input.get_look_pitch() if _local_input != null else 0.0
 	var aim := Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	if spell.kind == SpellDef.Kind.BOLT:
+		aim = launch_direction(muzzle(), crosshair_point(), spell.speed_mps, 0.0)   # a missile flies straight, to the crosshair
 	var at: Vector3 = area_point(a.range_m) if spell.kind == SpellDef.Kind.AREA else Vector3.ZERO
 	var at_target: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
+	if spell.kind == SpellDef.Kind.BOLT and at_target != 0 and not target_in_front(at_target):
+		refused.emit(FACE_YOUR_TARGET)   # as the bow's: a missile is aimed at a Tab target only from facing it
+		return true
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"cast_spell", [a.id, at_target, aim, at],
 		["u32", "u64", "vector3[f32,f32,f32]", "vector3[f32,f32,f32]"])
 	req.settled.connect(func(r: ReducerRequest) -> void:
@@ -912,6 +1114,7 @@ func cast(a: AbilityDef) -> bool:
 		swing_lock_ms = cast_until_ms + (kit.lock_ms(a) if kit != null else 0)
 	else:
 		swing_lock_ms = now + (kit.lock_ms(a) if kit != null else a.wind_up_ms)
+		shot_ms = now
 		if _driver != null:
 			_driver.play_upper(StringName("ability.%d" % a.id))
 	cast_sent.emit(a.id, at_target, aim, at)
@@ -956,6 +1159,7 @@ func _tick_cast(now: int) -> void:
 		swing_lock_ms = now
 		return
 	if now >= cast_until_ms:
+		shot_ms = now
 		if _driver != null:
 			_driver.play_upper(StringName("ability.%d" % cast_spell.ability.id))
 		cast_spell = null

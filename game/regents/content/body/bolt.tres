@@ -1,7 +1,12 @@
-[gd_resource type="Resource" script_class="BodyDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BodyDef" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/body_def.gd" id="1_body"]
 [ext_resource type="PackedScene" path="res://game/regents/combat/bolt_look.tscn" id="2_look"]
+
+[ext_resource type="Script" path="res://game/regents/combat/missile_flight.gd" id="9_flight"]
+
+[sub_resource type="Resource" id="Flight"]
+script = ExtResource("9_flight")
 
 [resource]
 script = ExtResource("1_body")
@@ -11,6 +16,7 @@ bounce = 0.0
 friction = 1.0
 linear_damp = 0.0
 angular_damp = 1.0
+forces = SubResource("Flight")
 ground_drag = 10.0
 gravity_scale = 0.0
 max_speed_mps = 60.0

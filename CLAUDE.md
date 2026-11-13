@@ -25,6 +25,7 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 | `docs/regents_rule/ARMOR_PREP.md` | before armor (2026-11-03): the road to armor, Luke's open armor decisions (A1-A10: Defense, weight and its cost, metal first, parts and traits, the look, wearing, numbers) | PARKED 2026-11-04 until herbalism and hunting: its §0 says what is settled (in `GAME.md`) and where to restart |
 | `docs/regents_rule/MINIGAMES_PREP.md` | before the minigame overhaul (2026-11-04): the four built, what each score pays, the tier ladder today, the skills to come and their families, tiers "harder but similar", the look (2D, in the world, a 3D stage), the difficulty readout; Luke's open decisions M1-M12 (revision 2, 2026-11-05) | minigame work: his answers go to `GAME.md` |
 | `docs/regents_rule/HERBALISM_HUNTING_PREP.md` | before herbalism and hunting (2026-11-07): what is settled, what is built, herbalism's and hunting's proposed shape, the first creatures, what fiber and hide make; Luke's open decisions H1-H11 | herbalism, hunting, creatures, fiber and hide work: his answers go to `GAME.md` |
+| `docs/regents_rule/FOES_PREP.md` | before new foes (2026-11-12): how a foe thinks today, LimboAI (unused here) and the trees proposed, the rules for smart but fun foes, the Bestiary models, a skeleton archer and an imp caster, what a ranged foe needs on the server; Luke's open decisions F1-F16; its §9 is the order of work | new foes, foe brains and trees: his answers go to `GAME.md` |
 | `docs/regents_rule/ANIMATIONS.md` | the animation checklist for the overhaul: every clip needed, the best Quaternius / Mixamo / other candidates, ticked as they go in | before adding a clip |
 | `docs/regents_rule/MATERIALS.md` | materials and modular gear (2026-10-23): the generated table, slots, trait picks and ranks, gear XP, catalysts; its §10 is the order of work | materials, parts, crafting work |
 | `docs/DECISIONS.md` | the FOUNDATION's decision log (arrives with pulls) | the last ~20, plus your system's rows |
@@ -43,6 +44,11 @@ GODOT=<path> ./tests/run_tests.sh -- --only=regents         # the genre's unit s
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh       # the whole chain by a real client at 150 ms
 GODOT=<path> ./game/regents/tests/walls_playtest.sh         # a real referee: a bot goes round a rock, through it once worked out
 GODOT=<path> ./game/regents/tests/deer_playtest.sh          # a real referee: the deer grazes, bolts from a player, calms and walks home
+"$GODOT" --path . res://game/regents/tests/glade_shot.tscn -- <out dir>   # windowed, no server: the glade from six fixed cameras (a look change, before and after)
+GODOT=<path> ./game/regents/tests/combat_playtest.sh          # a real client and a real referee at 150 ms (~12 min): the string, roll, guard, parry, the camp, roles, the bow; LATENCY=20 for how soon a hit shows
+GODOT=<path> ./game/regents/tests/archer_playtest.sh          # a real client and referee (~3 min): the archer's arrow taken, blocked, rolled, knocked away; it steps back, shoves
+GODOT=<path> ./game/regents/tests/caster_playtest.sh          # a real client and referee (~3 min): the imp's bolt taken and sidestepped, its ring stood in and left, its cast stopped
+"$GODOT" --path . res://game/regents/tests/aim_shot.tscn -- <out dir>     # windowed, no server: the aim poses against the crosshair (measured), a foe's swing trail, the shots in flight
 GODOT=<path> ./game/regents/tests/minigame_readout.sh         # every minigame round by four simulated players (~15 s, no server)
 GODOT=<path> ./game/regents/tests/load_300.sh                # 50-300 bots on the continent (~25 min): docs/regents_rule/REFEREE_SCALING.md
 ```

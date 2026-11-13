@@ -6,7 +6,7 @@
 script = ExtResource("1_ability")
 cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 590
+wind_up_ms = 710
 damage = 20.0
 animation = &"ability.40020"
 key = &"regents.combat"
@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40020
 display_name = "Hack"
-designer_notes = "A FOE'S OWN SWING: the skeleton axeman's light (Sword_Heavy_A at 0.65, ~590 ms). Placeholder clip until the axe clips (ANIMATIONS.md section 3)."
+designer_notes = "A FOE'S OWN SWING: the skeleton axeman's light (Sword_Heavy_A at 0.54, ~710 ms; 590 ms at 0.65 until 2026-11-11: more anticipation). Placeholder clip until the axe clips (ANIMATIONS.md section 3)."

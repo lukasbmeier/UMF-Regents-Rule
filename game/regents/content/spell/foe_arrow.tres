@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_arrow.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://game/regents/content/body/arrow.tres" id="3_body"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 0
+cost = 0.0
+cast_ms = 0
+body = ExtResource("3_body")
+speed_mps = 26.0
+id = 40006
+display_name = "Bone arrow"
+designer_notes = "HOW A FOE'S ARROW FLIES (Luke's F1, 2026-11-12): the arrow body (it arcs), 26 m/s: about half a second over the archer's 12 m, slow enough to see coming. A foe's shot is a bolt spell with no cost and no cast time: its tell is its ability's wind-up, and the server looses it (PROGRESS step 64)."

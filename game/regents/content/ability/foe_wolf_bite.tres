@@ -6,7 +6,7 @@
 script = ExtResource("1_ability")
 cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 550
+wind_up_ms = 650
 damage = 14.0
 animation = &"ability.40027"
 key = &"regents.combat"
@@ -17,4 +17,4 @@ height_m = 0.7
 lunges = false
 id = 40027
 display_name = "Wolf bite"
-designer_notes = "THE WOLF'S FIRST BITE (hunting, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): a fast snap at 550 ms wind-up (Attack at 1.4x, its jaws fastest around 550 ms)."
+designer_notes = "THE WOLF'S FIRST BITE (hunting, Luke 2026-11-10, HERBALISM_HUNTING_PREP.md §7 step 5): a fast snap at 650 ms wind-up (Attack at 1.185x; 550 ms at 1.4x until 2026-11-11: more anticipation)."

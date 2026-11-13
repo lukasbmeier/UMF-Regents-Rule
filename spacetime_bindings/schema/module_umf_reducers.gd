@@ -333,6 +333,10 @@ func report_body_contacts(world_id: int, contacts: Array[UmfBodyContactWrite]) -
 func report_perf(build: String, platform: String, window_s: float, frames: int, frame_ms_p50: float, frame_ms_p95: float, frame_ms_p99: float, frame_ms_max: float, spikes: int, rtt_ms: float, rtt_ms_max: float, corrections: int, memory_mb: float, entities: int, detail: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('report_perf', [build, platform, window_s, frames, frame_ms_p50, frame_ms_p95, frame_ms_p99, frame_ms_max, spikes, rtt_ms, rtt_ms_max, corrections, memory_mb, entities, detail], [&'string', &'string', &'f32', &'u32', &'f32', &'f32', &'f32', &'f32', &'u32', &'f32', &'f32', &'u32', &'f32', &'u32', &'string'], &'')
 
+## 0. seen_delay_ms: int [br]
+func report_seen_delay(seen_delay_ms: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('report_seen_delay', [seen_delay_ms], [&'u32'], &'')
+
 ## 0. key: String [br]
 func reset_rule(key: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('reset_rule', [key], [&'string'], &'')

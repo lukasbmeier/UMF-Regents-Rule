@@ -1,8 +1,8 @@
 @tool
-class_name ArrowFlight extends BodyForces
+class_name ArrowFlight extends MissileFlight
 ## AN ARROW'S FLIGHT (owner, 2026-10-20: a real arrow, it arcs): its fletching turns it into the wind, so
 ## it points the way it flies: a torque turning its nose (its -Z) toward its velocity, damped so it does
-## not wobble. Run by the referee and the shooter's game alike (`BodyForces`): it reads only the body.
+## not wobble. And, a shot (`MissileFlight`), it stops dead where it first touches. Run by the referee and the shooter's game alike (`BodyForces`): it reads only the body.
 
 ## How hard it turns into its flight, and how its turning dies away.
 @export var weathervane: float = 0.02
@@ -10,6 +10,8 @@ class_name ArrowFlight extends BodyForces
 
 
 func apply(state: PhysicsDirectBodyState3D, _def: BodyDef, _dt: float) -> void:
+	if MissileFlight.stop_on_touch(state):
+		return
 	var v: Vector3 = state.linear_velocity
 	if v.length_squared() < 1.0:
 		return

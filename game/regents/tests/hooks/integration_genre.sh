@@ -506,6 +506,13 @@ assert_ok "guard true 120" "pressed again at once"
 check "$(logged "guard .*entity $MYENT: status 0 -> 102 \(Blocking\)")" "the guard raises the block too"
 check "$(logged "$MYENT's guard press came in the whiff lockout")" "the second press, under regents.parry_whiff_ms after one that parried nothing: no parry"
 assert_ok 'reset_rule "regents.parry_whiff_ms"' "(test) the lockout back to its own"
+# HOW LATE THIS CLIENT SHOWS A SWING, TOLD (2026-11-11: "the LAG when getting hit"): what a hit on this player
+# waits for a parry by, and what their roll is judged by. A guard press says it; the client says it as it joins.
+assert_eq "$(sql_first "SELECT ms FROM seen_delay WHERE entity_id = $MYENT" 1)" "120" "the guard's press said how late this client shows a swing: 120 ms"
+assert_ok "report_seen_delay 9000" "a client claims 9 s"
+assert_eq "$(sql_first "SELECT ms FROM seen_delay WHERE entity_id = $MYENT" 1)" "150" "held to foundation.rewind_max_ms (150): a claim past it gains nothing"
+assert_ok "report_seen_delay 30" "the client says 30 ms"
+assert_eq "$(sql_first "SELECT ms FROM seen_delay WHERE entity_id = $MYENT" 1)" "30" "kept: 30 ms"
 # THE RING (template 1.0, this game's half): a ring client is sent only the cells round it, so every row of
 # ours that draws a player (the weapon, the block) follows them over a cell's edge, in the same step
 # (`follow_place`), and a placed thing's (the dummy's) is cut in the cell it stands in.
@@ -624,7 +631,7 @@ num_is "$(timed_val READ9602)" 10 "the string's last wears 40 (regents.poise_fin
 check "$([ "$(logged "$MYENT broke $DUMMY's poise")" = "false" ] && echo true || echo false)" "NEGATIVE: not broken (no stagger)"
 sleep 1.2
 poise_string "a second string" 40006:9603 40008:9604:600
-num_is "$(timed_val READ9603)" 1 "NEGATIVE: a light never breaks it: it stops at 1"
+num_is "$(timed_val READ9603)" 1 "NEGATIVE: the light that would empty it does not break it: it stops at 1, the bar full"
 check "$(logged "$MYENT broke $DUMMY's poise")" "the next last hit breaks it"
 check "$(logged "$MYENT's finisher staggered $DUMMY for 800 ms")" "and staggers it (regents.stagger_ms)"
 num_is "$(timed_val READ9604)" 60 "broken, it is whole again"
@@ -641,6 +648,21 @@ num_is "$(timed_val READ9607)" 60 "Heavy: one string breaks 60 (10 + 40 x 1.35 =
 check "$(logged "$MYENT broke $DUMMY's poise")" "(the second dummy's poise broke)"
 DUMMY="$DUMMY_A"
 assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
+# THE BAR FULL, ANY HIT BREAKS IT (Luke, 2026-11-12: "if the stagger bar is full (orange) the next hit should stagger
+# not just the next finisher hit"): on the first dummy, its Steadied run out, a poise of 11: one chop (10) fills the
+# bar and breaks nothing; the next chop, a LIGHT, breaks it and staggers.
+sleep 14
+assert_ok 'set_rule "regents.dummy_poise" 11.0 ""' "(test) a dummy's poise: 11"
+assert_ok 'set_rule "regents.poise_regen_ms" 100.0 ""' "(test) whole again at once: its poise is the new 11 as the chop lands"
+poise_ref regentspoisereferee3
+poise_string "a chop that fills the bar" 40006:9611
+num_is "$(timed_val READ9611)" 1 "a chop wears 10 of 11: 1 left, the bar full, nothing broken"
+check "$([ "$(logged "$MYENT's 40006 staggered $DUMMY")" = "false" ] && echo true || echo false)" "NEGATIVE: the hit that fills the bar does not stagger"
+assert_ok 'set_rule "regents.poise_regen_ms" 30000.0 ""' "(test) and it stays full between the slow CLI's chops"
+sleep 1.2
+poise_string "a chop on a full bar" 40006:9612
+check "$(logged "$MYENT's 40006 staggered $DUMMY for 800 ms: its poise was worn out")" "the next hit, a light, breaks a full bar and staggers (it waited for a last hit before)"
+num_is "$(timed_val READ9612)" 11 "broken, it is whole again"
 assert_ok 'set_rule "regents.dummy_poise" 0.0 ""' "(test) a dummy without poise again, for the checks below"
 assert_ok 'reset_rule "regents.poise_regen_ms"' "(test) poise's own regrowth"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
@@ -657,6 +679,9 @@ assert_ok "grant_item $MYENT 40040 2" "(two crossguard hilts)"
 assert_ok "grant_item $MYENT 40041 1" "(a banner hilt)"
 assert_ok "grant_item $MYENT 40012 6" "(rivets)"
 # Every shape fits every tool and weapon (Luke, 2026-11-01): a crossguard grip in an iron axe is taken.
+# (A head given here: when the board's first order is for iron axe heads, filling it above took every one, and this
+# failed for want of a head, by the day's draw: 2026-11-11.)
+assert_ok "grant_item $MYENT 40014 1" "(an iron axe head to make it with)"
 assert_ok "craft_choosing $BENCH 40006 false [40040,40012] []" "a crossguard grip in an iron axe: taken (a shape fits any tool or weapon)"
 assert_ok "work_stop" "(stopped: the playtest makes things for real)"
 assert_ok "admin_give_item $MYENT 40019 1 650" "(a Fine iron sword, made before roles: no parts noted)"
@@ -682,6 +707,8 @@ C_CODE_R='"regentsrolesrefereecode"'
 standin_up "$C_CODE_R" "a referee for the roles"
 HPR0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
 assert_ok "use_ability_seen 40001 0 $C_AIM 941 100" "the string's first"
+# (A quick CLI sends a step while the last still swings, 2026-11-13: "still swinging". Past its swing first.)
+sleep 0.7
 assert_ok "use_ability_seen 40002 0 $C_AIM 942 100" "its second"
 # Its last, its request read and answered, and the dummy's health, in one timed run (PROGRESS step 45): the request
 # runs out 3 s after it is due (340 ms) and the dummy is whole again 4 s after its last hit, and a CLI read, a CLI
@@ -709,6 +736,8 @@ standin_down
 C_CODE_RN='"regentsrolesrefereecodeneg"'
 standin_up "$C_CODE_RN" "a fresh referee"
 assert_ok "use_ability_seen 40001 0 $C_AIM 951 100" "the string's first"
+# (A quick CLI sends a step while the last still swings, 2026-11-13: "still swinging". Past its swing first.)
+sleep 0.7
 assert_ok "use_ability_seen 40002 0 $C_AIM 952 100" "its second"
 # (One timed run, as the pommel bash's above: two CLI reads before the answer outlasted the request.)
 timed "700 use_ability_seen [40022,0,$C_AIM,953,100]
@@ -738,6 +767,7 @@ standin_up "$C_CODE_R2" "a fresh referee"
 PHR0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 for step in 1 2; do
   assert_ok "use_ability_seen 4000$step 0 $C_AIM 96$step 100" "step $step of the string"
+  sleep 0.7   # (a quick CLI: past this step's swing before the next, 2026-11-13)
 done
 # (Its last and its answer in one timed run, as the pommel bash's above.)
 timed "700 use_ability_seen [40003,0,$C_AIM,963,100]
@@ -754,7 +784,7 @@ assert_ok "wield $AXE_ROW" "the axe again (what follows counts on it)"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
 sleep 5
 # --- FOES (owner, 2026-10-19: the first enemies, a skeleton camp east of the spawn) ---
-assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "5" "three skeletons at the camp, the yard's sparring skeleton and a deer (the level's foe points)"
+assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "9" "three skeletons at the camp, the yard's sparring skeleton, a deer, a pack of two wolves, the archer and the imp (the level's foe points; steps 65-66)"
 SKEL="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = $SKEL" 1)" "103" "skeleton_1 is a skeleton warrior (kind 103)"
 assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = $SKEL" 1)" "120" "with its FoeDef's health"
@@ -780,6 +810,61 @@ timed "$(printf '%s\n' \
 timed_ok 1 "the skeleton slashes (the sword kit's first light)"
 timed_ok 3 "the referee: it hit you"
 PHP1="$(timed_val PHP1)"
+# The hit waited for a late parry as long as THIS player's line needs, not the 320 ms every hit waited (the most any
+# line may carry): 50 late + the 30 ms they said swings show late + their press's trip + 40 slack. The trip is half
+# the round trip the server MEASURED when it has one (a timed press: this CLI player's is seconds, a CLI call, so it
+# is held to foundation.press_credit_cap_ms, 120: 240 ms in all), else what they said (30: 150 ms). The first run
+# expected 150 and the server said 240 (2026-11-12).
+HOLD_RTT="$(sql_first "SELECT min_ms FROM client_rtt WHERE entity_id = $MYENT" 1)"
+HOLD_WAIT="$(python -c "print(50 + 30 + min(int('${HOLD_RTT:-}' or 60) // 2, 120) + 40)")"
+# DEALT AT ONCE (Luke, 2026-11-12): the slash neither staggers nor kills, so it is dealt as it is judged, and may be
+# taken back until that same moment (a parry or a roll made in time but arriving after it).
+check "$(logged "regents: $SKEL's 40001 on $MYENT is dealt at once, to be taken back until $HOLD_WAIT ms past its landing for a parry")" "the hit was dealt at once, to be taken back until $HOLD_WAIT ms past its landing: this player's own line (30 ms shown late, a measured round trip of ${HOLD_RTT:-none} ms)"
+check "$([ "$HOLD_WAIT" -lt 320 ] && echo true || echo false)" "which is sooner than the 320 ms of any line ($HOLD_WAIT < 320)"
+# NEGATIVE: the rule off, the same slash WAITS as every hit did.
+assert_ok 'set_rule "regents.hit_at_once" 0.0 ""' "(test) hits wait for a late parry, as before"
+C_CODE3W='"regentscombatrefereecodewait"'
+standin_up "$C_CODE3W" "a referee for the waiting hit"
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]" \
+  "0 sqlwait RSW SELECT id FROM action_request WHERE actor_id = $SKEL" \
+  "0 resolve_action [{RSW},$MYENT]" \
+  "1000 sql PHPW SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 3 "the referee: it hit you (the rule off)"
+check "$(logged "regents: $SKEL's 40001 on $MYENT waits $HOLD_WAIT ms past its landing for a parry")" "NEGATIVE: with regents.hit_at_once off the same hit waits $HOLD_WAIT ms"
+assert_ok 'reset_rule "regents.hit_at_once"' "(test) hits dealt at once again"
+# THE ROLL, JUDGED WHERE IT WAS PRESSED (Luke, 2026-11-11: "Yes, credit the delay"): the blow is judged a hit, and
+# a roll its player pressed before it landed AS THEY SAW IT arrives after: they rolled clear, nothing is dealt.
+# (This client shows swings 150 ms late; the hit's wait made long, for a CLI's timing.)
+assert_ok 'set_rule "regents.hit_hold_slack_ms" 300.0 ""' "(test) a hit waits 300 ms more for its parry"
+assert_ok "report_seen_delay 150" "(test) this client shows swings 150 ms late"
+C_CODE3R='"regentscombatrefereecoderoll"'
+standin_up "$C_CODE3R" "a referee for the roll"
+PHPR0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+timed "$(printf '%s
+'   "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]"   "0 sqlwait RSR SELECT id FROM action_request WHERE actor_id = $SKEL"   "0 resolve_action [{RSR},$MYENT]"   "100 use_ability_seen [40010,0,$C_AIM,931,100]"   "1200 sql PHPR1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 3 "the referee: its slash hit you"
+timed_ok 4 "Ctrl: the roll, arriving after"
+PHPR1="$(timed_val PHPR1)"
+check "$(logged "regents: $MYENT rolled clear of $SKEL's 40001 as they saw it")" "the roll, judged where it was pressed, cleared the hit"
+check "$(logged "regents: $SKEL's 40001 on $MYENT is taken back \([0-9.]+ given back\): rolled clear")" "the hit, dealt at once, was TAKEN BACK: the health it took given back"
+check "$(python -c "print('true' if $PHPR1 >= $PHPR0 - 1e-3 else 'false')")" "and nothing is lost in the end ($PHPR0 -> $PHPR1)"
+# NEGATIVE: with nothing to credit (swings shown at once, no grace), the same roll arriving after the blow landed
+# is too late: the hit it waited out is dealt, rolling or not.
+assert_ok 'set_rule "regents.roll_late_ms" 0.0 ""' "(test) no grace for a late roll"
+assert_ok "report_seen_delay 0" "(test) this client shows swings at once"
+C_CODE3N='"regentscombatrefereecodelate"'
+standin_up "$C_CODE3N" "a referee for the late roll"
+PHPN0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+timed "$(printf '%s
+'   "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]"   "0 sqlwait RSN SELECT id FROM action_request WHERE actor_id = $SKEL"   "0 resolve_action [{RSN},$MYENT]"   "400 use_ability_seen [40010,0,$C_AIM,932,100]"   "1200 sql PHPN1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 3 "the referee: its slash hit you again"
+timed_ok 4 "Ctrl: a roll 400 ms after the answer, the blow already landed"
+PHPN1="$(timed_val PHPN1)"
+check "$(python -c "print('true' if $PHPN1 < $PHPN0 - 1.0 else 'false')")" "too late with nothing credited: the hit stands ($PHPN0 -> $PHPN1)"
+assert_ok 'reset_rule "regents.roll_late_ms"' "(test) the roll's grace back to its own"
+assert_ok 'reset_rule "regents.hit_hold_slack_ms"' "(test) the wait's slack back to its own"
+assert_ok "report_seen_delay 30" "(test) this client's delay as it was"
 SLASH="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40001" 1)"
 check "$(python -c "print('true' if abs(($PHP0 - $PHP1) - $SLASH * 0.5) < 1e-3 else 'false')")" "its slash at its 50 %: half the sword slash's $SLASH ($PHP0 -> $PHP1)"
 # DEATH INTERRUPTS AT ONCE (Luke's feedback 4099, 2026-10-31): it swings, dies before the sweep is judged, and
@@ -845,6 +930,8 @@ check "$(logged "entity $SKEL: status [0-9]+ -> 106 \(Slain\)")" "Slain: nothing
 check "$(sql_first "SELECT fell_at FROM foe WHERE entity_id = $SKEL" 1 | grep -qv none && echo true || echo false)" "the camp knows it fell"
 # Its body lies 1 s (regents.foe_corpse_s), the CLI calls above took longer: gone, and the camp waits. Read here, not
 # after the loot and the meta: twenty CLI calls outlasted its 40 s respawn (2026-11-08, PROGRESS step 50).
+# (A quick CLI reads it inside the second, 2026-11-13: waited for, up to 5 s.)
+for _ in $(seq 1 10); do [ "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" = "0" ] && break; sleep 0.5; done
 assert_eq "$(row_count "SELECT * FROM entity WHERE entity_id = $SKEL")" "0" "a second on, its body is gone"
 assert_eq "$(sql_first "SELECT gone FROM foe WHERE entity_id = $SKEL" 1)" "true" "and the camp waits for it"
 LOOT="$(timed_val READ921 | tr -d '"')"; [ "$LOOT" = "-" ] && LOOT=""
@@ -1005,6 +1092,176 @@ assert_rejected "craft $RACK 40046 false" "needs 1 Deer hide" "NEGATIVE: no hide
 assert_ok "grant_item $MYENT 40056 1" "an admin gives a deer hide"
 assert_ok "craft $RACK 40046 false" "a deer hide set to tan (AFK)"
 assert_rejected "craft $RACK 40038 false" "is not made at the" "a bowstring is not made at the tanning rack"
+# THE WOLF (hunting, 2026-11-10/11, HERBALISM_HUNTING_PREP.md §7 step 5; PROGRESS 56-57): a foe that fights with its own
+# kit. Hit while it stands, it is STARTLED (Luke, 2026-11-11: "Every foe" turns on who hit it from beyond its sight; its
+# brain's half is the unit suite's). Its string on you, as its brain asks: the BITE is plain; the HAMSTRING BITE slows
+# you 3 s; the LUNGE throws you back (the first push of a player in this game); each at its 55 %. Slain, it leaves its
+# carcass: Skinning 2, the cut line for its pelts; a pelt tans into supple leather at Crafting 2. (A BLOCKED bite that
+# slows nobody is the playtest's: a CLI call leaves at once, and leaving lowers a block.)
+WOLF="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'wolf_1'" 1)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = ${WOLF:-0}" 1)" "107" "wolf_1 is a wolf (kind 107)"
+assert_eq "$(sql_first "SELECT max FROM health_state WHERE entity_id = ${WOLF:-0}" 1)" "110" "with its FoeDef's health"
+assert_eq "$(sql_first "SELECT brain FROM npc_brain WHERE entity_id = ${WOLF:-0}" 1)" "\"regents/foe\"" "and the foe brain (it fights)"
+assert_ok 'teleport {"x":-32.0,"y":0.0,"z":-12.6}' "stand by wolf_1"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole"
+assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while its bites are measured"
+standin_down
+standin_up '"regentscombatrefereecodewolf"' "a fresh stand-in referee for the wolf"
+check "$([ "$(sql_first "SELECT status FROM status_state WHERE entity_id = ${WOLF:-0}" 1)" != "109" ] && echo true || echo false)" "NEGATIVE: unhurt, it is not startled"
+HITS_READ="SELECT by_entity FROM status_state WHERE entity_id = $WOLF AND status = 109" hits "a chop at the wolf" "$WOLF" 40006:981
+check "$(logged "entity $WOLF: status [0-9]+ -> 109 \(Startled\)")" "a fighting foe hit while it stands is Startled too (its brain turns on who hit it)"
+# WHO HIT IT (Luke's F11, 2026-11-13, PROGRESS step 68): the Startled status names the hitter, read at the hit.
+assert_eq "$(timed_val READ981)" "$MYENT" "its Startled names who hit it (by_entity: you), so its brain turns on you, not the nearest"
+sleep 1.5
+W_AIM='{"x":0.0,"y":0.0,"z":1.0}'
+W_PCT=0.55
+WP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+# ITS BITE (the string's first): damage, and nothing else. (Read 1.6 s after the answer: a hit on a player is held
+# for a late parry, to its landing + ~330 ms, so the lunge's (820 ms) lands 1.15 s after the swing. Read at 1 s, the
+# first run's lunge had not landed: no damage, no push, 2026-11-11; the server's log had its stagger 150 ms later.)
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$WOLF,40027,0,$W_AIM,0]" \
+  "0 sqlwait RW1 SELECT id FROM action_request WHERE actor_id = $WOLF" \
+  "0 resolve_action [{RW1},$MYENT]" \
+  "1600 sql WP1 SELECT current FROM health_state WHERE entity_id = $MYENT" \
+  "0 sql WS1 SELECT lasts_ms FROM status_effect WHERE entity_id = $MYENT AND status = 108" \
+  "0 sql WU1 SELECT by_id FROM push WHERE entity_id = $MYENT AND by_id = $WOLF")"
+timed_ok 1 "the wolf bites (its kit's first)"
+timed_ok 3 "the referee: it bit you"
+WP1="$(timed_val WP1)"
+W_BITE="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40027" 1)"
+check "$(python -c "print('true' if abs(($WP0 - $WP1) - $W_BITE * $W_PCT) < 1e-3 else 'false')" 2>/dev/null || echo false)" "its bite at its 55 %: $W_BITE x 0.55 ($WP0 -> $WP1)"
+assert_eq "$(timed_val WS1)" "-" "NEGATIVE: a plain bite slows nobody"
+assert_eq "$(timed_val WU1)" "-" "NEGATIVE: and pushes nobody"
+sleep 1.5
+# ITS HAMSTRING BITE: unblocked, you are Slowed 3 s, by the wolf.
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$WOLF,40028,0,$W_AIM,0]" \
+  "0 sqlwait RW2 SELECT id FROM action_request WHERE actor_id = $WOLF" \
+  "0 resolve_action [{RW2},$MYENT]" \
+  "1600 sql WP2 SELECT current FROM health_state WHERE entity_id = $MYENT" \
+  "0 sql WS2 SELECT lasts_ms FROM status_effect WHERE entity_id = $MYENT AND status = 108" \
+  "0 sql WB2 SELECT by_entity FROM status_effect WHERE entity_id = $MYENT AND status = 108" \
+  "0 sql WU2 SELECT by_id FROM push WHERE entity_id = $MYENT AND by_id = $WOLF")"
+timed_ok 1 "the wolf's hamstring bite (its second)"
+timed_ok 3 "the referee: it bit you"
+WP2="$(timed_val WP2)"
+W_HAM="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40028" 1)"
+check "$(python -c "print('true' if abs(($WP1 - $WP2) - $W_HAM * $W_PCT) < 1e-3 else 'false')" 2>/dev/null || echo false)" "the hamstring bite at its 55 %: $W_HAM x 0.55 ($WP1 -> $WP2)"
+assert_eq "$(timed_val WS2)" "3000" "it SLOWS you for 3 s (status 108, the kit's hit entry)"
+assert_eq "$(timed_val WB2)" "$WOLF" "the slow is the wolf's"
+assert_eq "$(timed_val WU2)" "-" "and it pushes nobody"
+sleep 1.5
+# ITS LUNGE (the string's last, unblockable): you are thrown back.
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$WOLF,40029,0,$W_AIM,0]" \
+  "0 sqlwait RW3 SELECT id FROM action_request WHERE actor_id = $WOLF" \
+  "0 resolve_action [{RW3},$MYENT]" \
+  "1600 sql WP3 SELECT current FROM health_state WHERE entity_id = $MYENT" \
+  "0 sql WU3 SELECT by_id FROM push WHERE entity_id = $MYENT AND by_id = $WOLF")"
+timed_ok 1 "the wolf's lunge (its last)"
+timed_ok 3 "the referee: it caught you"
+WP3="$(timed_val WP3)"
+W_LUNGE="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40029" 1)"
+check "$(python -c "print('true' if abs(($WP2 - $WP3) - $W_LUNGE * $W_PCT) < 1e-3 else 'false')" 2>/dev/null || echo false)" "the lunge at its 55 %: $W_LUNGE x 0.55 ($WP2 -> $WP3)"
+assert_eq "$(timed_val WU3)" "$WOLF" "it THROWS YOU BACK: a push on you, the wolf's (the kit's hit entry)"
+# NOT CHAINED (Luke's F12, 2026-11-13, PROGRESS step 68): the lunge staggered you though the same wolf's slow came
+# first (a foe's own string is never held off). Then two wolves: the second's finisher inside regents.unchained_ms
+# (1500) of the first's stagger still hurts, but does not stagger; once the window is over, one does.
+check "$(spacetime logs "$DB" 2>/dev/null | tail -200 | grep -qE "$WOLF's finisher staggered $MYENT for" && echo true || echo false)" "the lunge staggered you after its own slow: the same wolf's string is never held off"
+WOLF2="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'wolf_2'" 1)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = ${WOLF2:-0}" 1)" "107" "wolf_2 is a wolf"
+assert_ok 'teleport {"x":-33.5,"y":0.0,"z":-12.5}' "stand between wolf_1 and wolf_2"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole"
+sleep 2.5   # the first lunge's lock over, and its window with it
+XP0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
+timed "$(printf '%s\n' \
+  "0 use_ability_as [${WOLF2:-0},40029,0,$W_AIM,0]" \
+  "0 sqlwait RX1 SELECT id FROM action_request WHERE actor_id = ${WOLF2:-0}" \
+  "0 resolve_action [{RX1},$MYENT]" \
+  "200 use_ability_as [$WOLF,40029,0,$W_AIM,0]" \
+  "0 sqlwait RX2 SELECT id FROM action_request WHERE actor_id = $WOLF" \
+  "0 resolve_action [{RX2},$MYENT]" \
+  "2200 sql XP2 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 1 "wolf_2 lunges"
+timed_ok 3 "the referee: it caught you"
+timed_ok 4 "wolf_1 lunges a moment after"
+timed_ok 6 "the referee: it caught you too"
+CHAIN_LOG="$(spacetime logs "$DB" 2>/dev/null | tail -200)"
+check "$(echo "$CHAIN_LOG" | grep -qE "${WOLF2:-0}'s finisher staggered $MYENT for" && echo true || echo false)" "wolf_2's lunge staggers you"
+check "$(echo "$CHAIN_LOG" | grep -qE "$WOLF's finisher on $MYENT does not land: not chained" && echo true || echo false)" "wolf_1's, inside 1500 ms of it, does not stagger you: not chained"
+check "$(python -c "print('true' if abs(($XP0 - $(timed_val XP2)) - 2 * $W_LUNGE * $W_PCT) < 1e-3 else 'false')" 2>/dev/null || echo false)" "and both still hurt: 2 x $W_LUNGE x 0.55 ($XP0 -> $(timed_val XP2))"
+sleep 2.0   # the window over
+W1_STAGGERS="$(spacetime logs "$DB" -n 5000 2>/dev/null | grep -cE "$WOLF's finisher staggered $MYENT for")"
+timed "$(printf '%s\n' \
+  "0 use_ability_as [$WOLF,40029,0,$W_AIM,0]" \
+  "0 sqlwait RX3 SELECT id FROM action_request WHERE actor_id = $WOLF" \
+  "0 resolve_action [{RX3},$MYENT]" \
+  "1600 sql XP3 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 3 "the referee: wolf_1 caught you again"
+check "$([ "$(spacetime logs "$DB" -n 5000 2>/dev/null | grep -cE "$WOLF's finisher staggered $MYENT for")" -gt "${W1_STAGGERS:-0}" ] && echo true || echo false)" "NEGATIVE: with the window over, wolf_1's lunge staggers you"
+assert_ok 'reset_rule "regents.regen_delay_s"' "(test) regeneration back to its own"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
+# SLAIN, your kill: worn down by an authority, then a chop. Its carcass is yours first.
+sleep 1.5
+standin_down
+standin_up '"regentscombatrefereecodewolftwo"' "a fresh stand-in referee"
+assert_ok "apply_damage $WOLF $(python -c "print(float('$(sql_first "SELECT current FROM health_state WHERE entity_id = $WOLF" 1)' or 110) - 1.0)") 0" "(test) worn down to 1"
+hits "a chop to finish the wolf" "$WOLF" 40006:982
+check "$(logged "entity $WOLF: status [0-9]+ -> 106 \(Slain\)")" "the wolf is Slain"
+WCARCASS="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carcass_$WOLF'" 1)"
+check "$([ -n "$WCARCASS" ] && echo true || echo false)" "the slain wolf left its carcass ($WCARCASS)"
+assert_eq "$(sql_first "SELECT def_id FROM gather_node WHERE entity_id = ${WCARCASS:-0}" 1)" "40009" "a Wolf carcass (node 40009)"
+assert_eq "$(sql_first "SELECT owner_id FROM carcass WHERE entity_id = ${WCARCASS:-0}" 1)" "$MYENT" "yours to skin first: you did the damage"
+# SKINNING 2: refused at rank 1; at rank 2 the cut line skins the whole carcass for its pelts.
+assert_ok "admin_set_rank $MYENT 40011 1" "(test) Skinning at rank 1"
+assert_rejected "gather ${WCARCASS:-0} true" "needs Skinning rank 2" "NEGATIVE: a wolf's carcass needs Skinning rank 2"
+assert_ok "admin_set_rank $MYENT 40011 2" "(test) Skinning at rank 2"
+PELT0="$(qty_of 40064)"
+assert_ok "gather ${WCARCASS:-0} true" "hold E at the wolf's carcass: a round of the cut line"
+play_round skin 40009 13
+assert_eq "$ROUND_PAYLOAD" "${WCARCASS:-0} 40009 97" "dealt at the copper knife's speed, 3 % quicker at Skinning rank 2 (97 %: genre::regents::speed_pct), no ease at the rank it needs"
+PELTS=$(( $(qty_of 40064) - PELT0 ))
+check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 1000' && echo true || echo false)" "the bot traces the wolf's lines (6 points, a narrower line): a full score ($BOT_PLAYED)"
+check "$([ "$PELTS" -ge 2 ] && [ "$PELTS" -le 3 ] && echo true || echo false)" "the server replayed it and paid the whole carcass: $PELTS wolf pelts (2.93 at a full score)"
+for _ in $(seq 1 10); do [ "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${WCARCASS:-0}")" = "0" ] && break; sleep 1; done
+assert_eq "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${WCARCASS:-0}")" "0" "skinned whole in one round, it is taken away"
+# TANNING, the second leather: a wolf pelt into supple leather at the rack, at Crafting 2.
+assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "back at the tanning rack"
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40064" | awk '{print $1}'); do
+  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the skinned pelts put away)"
+done
+CRAFT_XP="$(xp_of 40005)"
+assert_ok "admin_set_rank $MYENT 40005 2" "(test) Crafting at rank 2"
+assert_rejected "craft $RACK 40053 false" "needs 1 Wolf pelt" "NEGATIVE: no pelt, no leather"
+assert_ok "grant_item $MYENT 40064 1" "an admin gives a wolf pelt"
+assert_ok "admin_set_rank $MYENT 40005 1" "(test) Crafting at rank 1"
+assert_rejected "craft $RACK 40053 false" "needs Crafting rank 2" "NEGATIVE: supple leather needs Crafting rank 2"
+assert_ok "admin_set_rank $MYENT 40005 2" "(test) Crafting at rank 2"
+assert_ok "craft $RACK 40053 false" "a wolf pelt set to tan (AFK)"
+# (Crafting's XP as it was, or rank 2's start if it had less: what follows counts on neither.)
+assert_ok "admin_set_rank $MYENT 40005 1" "(test) Crafting's XP put back"
+[ "${CRAFT_XP:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40005 $CRAFT_XP" "(test) to its $CRAFT_XP XP"
+# A FOE'S SHOT (FOES_PREP.md F4-F6, steps 64-67): the archer's draw, its brain's wish (the stand-in naming you), is
+# taken; but a foe never shoots a player who is not ONLINE (`foe_shot_due`), and the CLI's player is offline between
+# its calls: each call connects, and the server parks it after ("entity N parked", "back where it stood"; an SQL
+# read connects too, so it always reads online). 2026-11-13: two runs waited for an arrow that could not fly. So: the draw,
+# and NEGATIVE: nothing flies at you offline. The shot itself, its lead, block, parry and roll: archer_playtest.sh and
+# caster_playtest.sh, with a real client online.
+ARCHER="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_archer_1'" 1)"
+assert_eq "$(sql_first "SELECT kind FROM entity WHERE entity_id = ${ARCHER:-0}" 1)" "108" "skeleton_archer_1 is a skeleton archer"
+assert_ok 'teleport {"x":41.0,"y":0.0,"z":13.0}' "stand 10 m from the archer"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole"
+ARROWS0="$(row_count "SELECT * FROM body_state WHERE owner_id = ${ARCHER:-0}")"
+timed "$(printf '%s\n' \
+  "0 use_ability_as [${ARCHER:-0},40030,$MYENT,$W_AIM,0]" \
+  "0 sql AS1 SELECT ability_id FROM swing WHERE entity_id = ${ARCHER:-0}" \
+  "1600 sql AB1 SELECT entity_id FROM body_state WHERE owner_id = ${ARCHER:-0}")"
+timed_ok 1 "the archer draws on you (its brain's wish, the stand-in's call)"
+assert_eq "$(timed_val AS1)" "40030" "its draw is its swing (the tell)"
+check "$([ "$(row_count "SELECT * FROM body_state WHERE owner_id = ${ARCHER:-0}")" -eq "${ARROWS0:-0}" ] && [ "$(timed_val AB1)" = "-" ] && echo true || echo false)" "NEGATIVE: at a player who is not online, nothing flies"
+check "$(spacetime logs "$DB" 2>/dev/null | tail -120 | grep -qE "${ARCHER:-0} looses 40030" && echo false || echo true)" "NEGATIVE: and the server looses nothing"
+assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "(test) back at the tanning rack, where the next part stands"
 # A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
 # THE TUTORIAL SET ASIDE: nothing ticks; a death offers it again, once (T2).
 assert_ok "tutorial_set_aside" "the tutorial set aside before the death"
@@ -1053,6 +1310,7 @@ C_CODE_R3='"regentsrolesrefereecode3"'
 standin_up "$C_CODE_R3" "a fresh referee"
 for step in 1 2; do
   assert_ok "use_ability_seen 4000$step 0 $C_AIM 97$step 100" "step $step of the string, at the skeleton"
+  sleep 0.7   # (a quick CLI: past this step's swing before the next, 2026-11-13)
 done
 # Its last, the answer and your health just before and after it, in one timed run (as the pommel bash's above).
 timed "700 use_ability_seen [40003,0,$C_AIM,973,100]
@@ -1104,6 +1362,18 @@ $2 loose_arrow [$SKB,{\"x\":0.0,\"y\":0.0,\"z\":-1.0}]
 0 sql DEAD$1 SELECT is_dead FROM health_state WHERE entity_id = $SKB"
 }
 bow_referee
+# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"; his pick:
+# refuse): standing north of it, facing north (this CLI player never turns), the skeleton is behind: nothing is
+# loosed and no arrow is taken. From the south it is in front (the shots below).
+assert_ok 'teleport {"x":33.0,"y":0.0,"z":-11.0}' "stand ten meters north of skeleton_1, your back to it"
+ARROWS_FACING="$(qty_of 40022)"
+timed "0 draw_bow [true]
+400 loose_arrow [$SKB,{\"x\":0.0,\"y\":0.0,\"z\":-1.0}]
+0 draw_bow [false]"
+timed_ok 1 "draw"
+timed_refused 2 "face your target" "a loose at a Tab target behind you: refused"
+assert_eq "$(qty_of 40022)" "$ARROWS_FACING" "and no arrow was taken"
+assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "back ten meters south of it: it is in front"
 AXP0="$(xp_of 40008)"
 shot 1 900 -1.0
 timed_ok 1 "draw"
@@ -1180,6 +1450,12 @@ assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "needs Sorc
 # No healing until the fire is measured.
 assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the spells are measured"
 bow_referee
+# A missile at a Tab target is refused the same way from facing away (north of it, your back to it).
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 - 8)")")" "stand eight meters north of skeleton_2, your back to it"
+MANA_FACING="$(MANA)"
+assert_rejected "cast_spell 40012 $SK2 $NORTH $NONE" "face your target" "a Bolt at a Tab target behind you: refused"
+assert_eq "$(MANA)" "$MANA_FACING" "and nothing was spent"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "back eight meters south of it"
 H0="$(HP "$SK2")"
 SXP0="$(xp_of 40009)"
 # The Bolt and its hit, timed calls: a missile lives 3 s, and on a busy machine the CLI's calls between the cast and

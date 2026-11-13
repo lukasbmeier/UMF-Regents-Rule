@@ -587,6 +587,42 @@
 					"unit": "ms"
 				},
 				{
+					"key": "regents.foe_shot_lock_ms",
+					"kind": "number",
+					"max": 1500.0,
+					"min": 0.0,
+					"number": 250.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.foe_shot_lead_pct",
+					"kind": "number",
+					"max": 150.0,
+					"min": 0.0,
+					"number": 100.0,
+					"text": "",
+					"unit": "%"
+				},
+				{
+					"key": "regents.unchained_ms",
+					"kind": "number",
+					"max": 10000.0,
+					"min": 0.0,
+					"number": 1500.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.ranged_tokens",
+					"kind": "number",
+					"max": 6.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": "shots"
+				},
+				{
 					"key": "regents.combo_window_ms",
 					"kind": "number",
 					"max": 5000.0,
@@ -603,6 +639,33 @@
 					"number": 50.0,
 					"text": "",
 					"unit": "ms"
+				},
+				{
+					"key": "regents.roll_late_ms",
+					"kind": "number",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 50.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.hit_hold_slack_ms",
+					"kind": "number",
+					"max": 300.0,
+					"min": 0.0,
+					"number": 40.0,
+					"text": "",
+					"unit": "ms"
+				},
+				{
+					"key": "regents.hit_at_once",
+					"kind": "number",
+					"max": 1.0,
+					"min": 0.0,
+					"number": 1.0,
+					"text": "",
+					"unit": ""
 				},
 				{
 					"key": "regents.parry_whiff_ms",
@@ -654,6 +717,15 @@
 					"kind": "number",
 					"max": 360.0,
 					"min": 0.0,
+					"number": 120.0,
+					"text": "",
+					"unit": "deg"
+				},
+				{
+					"key": "regents.aim_arc_deg",
+					"kind": "number",
+					"max": 360.0,
+					"min": 10.0,
 					"number": 120.0,
 					"text": "",
 					"unit": "deg"

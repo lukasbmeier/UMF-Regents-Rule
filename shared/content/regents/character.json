@@ -91,6 +91,24 @@
 			"movement": 40004,
 			"name": "Wolf",
 			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40011,
+			"kind": 108,
+			"movement": 40002,
+			"name": "Skeleton archer",
+			"playable": false
+		},
+		{
+			"abilities": [],
+			"brain": "regents/foe",
+			"id": 40012,
+			"kind": 109,
+			"movement": 40002,
+			"name": "Imp",
+			"playable": false
 		}
 	],
 	"owner": "regents",

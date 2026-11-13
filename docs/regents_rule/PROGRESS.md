@@ -3115,3 +3115,831 @@ REBAKED AND PUBLISHED `regents-rule` (no wipe, no codegen). Pinned on a foe with
 archer 16 m off alone, Startled it goes for them, and one past its leash it does not. Unit **3392/0** on the fresh bake.
 
 **Left**: step 56's open review item (the wolf's server tests and one integration run); Luke's play of this.
+
+## Step 58: the wolf on a real server; the first integration run on the merged fix (2026-11-11)
+**Why**: step 56's review left the wolf with unit and Rust checks only: `deal`'s slow and knockback and `hurt_now`'s
+Startled are wasm-gated, and nothing had run them. Luke, after playing step 57 ("The playtest is decent ... fine spot for
+now until I get more eyes"), chose COMBAT BEFORE ARMOR (`GAME.md`); this is that order's first item.
+
+**Built** (the suite only: `game/regents/tests/hooks/integration_genre.sh`; no game code):
+- **THE WOLF's checks**, after the deer's tanning: kind 107, 110 health, the foe brain; hit while it stands it is
+  Startled (the every-foe rule on a real server); its BITE lands at 55 % and slows and pushes nobody (the negatives);
+  its HAMSTRING BITE lands and Slows you 3 s, the wolf's; its LUNGE lands and pushes you, the wolf's; worn down and
+  chopped it is Slain, its carcass (node 40009) yours first; Skinning rank 1 is refused it, rank 2 plays the cut line
+  for 2-3 pelts and the carcass is taken away; tanning refuses no pelt, refuses Crafting rank 1, takes rank 2.
+- The glade's foe count, 5 -> 7 (the two wolves): wrong since step 56, on any run.
+- A head given before "a crossguard grip in an iron axe": when the board's first order is for iron axe heads, filling
+  it took every one and the craft failed for want of a head, by the day's draw (the check is of 2026-11-04).
+
+**Tested**: ONE integration run (about 80 min), the first on main since `4ede0bfa` was merged: **1469 passed, 10 failed**
+(step 55's three runs: 1330/79, 1393/47, 1398/43). THE MERGED FIX HOLDS: none of the referee-timed combat checks that
+were "known red" since step 53 failed, nor the steps after them. The ten, each read from the logs, none re-run for:
+- THE LUNGE, two checks (no damage, no push): MY CHECK'S TIMING, not the game. A hit on a player is held for a late
+  parry to its landing + ~330 ms; the lunge winds up 820 ms, so it lands 1.15 s after the swing, and the check read at
+  1 s. The server's log has it 150 ms later ("114's finisher staggered 50"). REPLAYED on the test database, that leg
+  alone, read at 1.6 s: health 100 -> 84.6 (28 x 0.55), a push on the player by the wolf, velocity (0, 2, 10): 10 m/s
+  straight away from it and the 2 m/s lift. The three reads are at 1.6 s now (the hamstring's had 50 ms to spare).
+- THE ROUND'S SPEED (expected 100, got 97): my expectation. Work is 3 % quicker a rank above the first
+  (`genre::regents::speed_pct`), and the wolf's carcass is skinned at rank 2: 97 is right, and the check says so now.
+- THE CROSSGUARD GRIP: the order's draw, above. Fixed in the hook.
+- SIX OF THE FOUNDATION'S (`tests/integration_test.sh`, the template's file): a dropped item "sent to everyone", the
+  action event's target and predicted id, the referee's miss, a body's contact "once", a hold "again", a push that
+  "stays where it happened". Each reads an event row or a short-lived state after slower CLI calls: the kind step 50b
+  fixed in this game's hook. NOT TOUCHED here: a template session's.
+So, of this game's own checks, all pass but four, and those four are fixed and explained; the fixes are NOT RE-RUN as a
+whole (the lunge's by its replay; the speed's and the head's by reading the code and the log).
+
+**Left**: the six foundation timing checks (the template); a BLOCKED bite that slows nobody (a real client: a CLI call
+leaves at once and leaving lowers a block); a real-referee fight (the combat pass's first job).
+
+## Step 59: THE GLADE'S LOOK, a first pass: light and air, foliage lit on both sides, a ground that wears, a meadow (2026-11-11)
+
+Luke compared the glade with other games made from the same Quaternius kits and brought a list (ground, foliage
+shader, tree scale, sun and fog, MultiMesh grass, then SSAO, volumetric fog, station lights). Checked against the code
+first; his word: "Do A to D". Client and presentation only: no server, no content, no bake, no publish. The continent
+is NOT rebuilt (it still has the old look until it is).
+
+**Built**
+- **A. LIGHT AND AIR** (`levels/frontier.tscn`): the sun down from 50 to 32 degrees and warmer (`Color(1, 0.92, 0.78)`,
+  energy 1.4, since a lower sun lights flat ground less), `fog_aerial_perspective` 0.5, `fog_sun_scatter` 0.08,
+  `ssao_light_affect` 0.3. NOT height fog: Godot's is by height alone, not distance, so on a flat level it washes the
+  ground at your feet. Sun scatter was 0.25 first: looking at the sun the whole sky went white.
+- **B. FOLIAGE LIT ON BOTH SIDES** (`art/nature/`): `nature_foliage.gdshader`, `nature_foliage_opaque.gdshader`,
+  `nature_foliage.gdshaderinc`, `foliage_material.gd` (`FoliageMaterial`) copied from Fishing (they are Fishing's own
+  files, not the foundation's, though `docs/rules/presentation.md` reads as if they were), and `nature_import.gd`,
+  set as the import script of all 20 nature models: 16 leaf, petal and blade surfaces are the shader now; bark, rocks,
+  mushrooms and pebbles are untouched. Grass was black from behind and bushes had dark blotches (DECISIONS #141).
+  Every use of the models gets it: the world's trees, the skilling stages, the continent's decor.
+- **C. A GROUND THAT WEARS** (`levels/glade_ground.gdshader`, `levels/ground_paint.gd` `RegentsGroundPaint`): the
+  flat box's one green is a darker olive in two greens with big soft patches and a grain; trodden DIRT under every
+  station, dummy and the guide, along five trails (Path3D children of `GroundPaint`: draw the curve) and three worn
+  patches (plain Marker3D children: Gizmo Extents is the radius); bare SOIL under every gathering node but flax and
+  under the decor's rocks. Painted as the level loads from the level's own markers into one 512 px picture the shader
+  reads; never saved in the scene; three texture reads a pixel. Not Terrain3D: the glade stays a flat box, its
+  collision and bake untouched.
+- **D. A MEADOW** (`levels/ground_clutter.gd` `RegentsGroundClutter`, `levels/clutter_kind.gd` `RegentsClutterKind`):
+  the 70 grass, 18 flower and 12 pebble nodes are gone from `Decor`; about 4,400 tufts, flowers and pebbles are
+  scattered instead (seeded) as 97 MultiMeshes in 24 m cells, each kind a resource in the Inspector (model, how many
+  per 100 m2, size, tint, patchy, at the foot, on dirt, sway). They keep off the dirt and the bare soil and GATHER AT
+  THE FOOT of rocks and trees (three times the tries there). No shadows; in `detail_density`, so Medium draws half
+  and Low a quarter; a tuft SHRINKS into its foot from 38 to 52 m and SWAYS (both in the foliage shader, on the
+  clutter's own copies of the materials: 0 on a model as imported, so trees and bushes do neither). Ferns, mushrooms,
+  bushes and rocks stay nodes (rocks are solid).
+- Both nodes are `@tool`: the editor shows the dirt and the meadow, with a Repaint and a Scatter again button. A
+  headless process (the referee, the suites) paints and scatters nothing unless asked.
+- `tests/glade_shot.tscn`: the glade from six fixed cameras, for before-and-after pictures.
+
+**How to see it**: Play. The camp's stations stand on dirt with trails between them, to the yard, the flax and the
+skeleton camp; trees and rocks sit in dark soil with grass at their feet; shadows are long. To change it: open
+`frontier.tscn`, move a station or a trail's curve, press Repaint on `GroundPaint`; the grass is `Clutter`'s `kinds`;
+the ground's colors are the `Ground/Field` material's.
+
+**Tested**
+- Regents unit suite **3412 passed, 0 failed** (`_run_glade_look`, 20 checks). Its NEGATIVES: a leaf left as the
+  kit's plain material is caught; the tanning rack moved, its dirt moves with it; with no painter the grass grows on
+  the trails. The first version of the clutter checks PASSED EMPTILY: a headless MultiMesh hands back identity
+  transforms, so every tuft read as standing at its cell's middle; the "no painter" negative caught it (0 plants on
+  dirt), and the clutter now keeps its own record of places (`places_in`), which the checks read.
+- `tools/perf/perf_bench.tscn --level=frontier.tscn`, 400 frames a preset, RX 9060 XT, 1152x648, before -> after:
+  Low 0.42 -> 0.38 ms GPU, Medium 0.88 -> 0.87, High 1.16 -> 1.37 (whole frame 2.75 -> 2.77 ms). So free on Low and
+  Medium, +0.2 ms of GPU on High on this card. ONE strong GPU: no weak machine was measured.
+- Pictures before and after (`glade_shot`), and the editor opened on the glade: the preview draws, no script error.
+  It did switch `Mushrooms.png.import` to VRAM compression with mipmaps (Godot's own "detect 3D", as every other
+  nature texture already is); kept.
+- NOT run: the game itself against a server, any server suite (nothing they read changed).
+
+**Left**
+- THE CONTINENT has none of it until `build_continent.tscn` is run again, and then: it copies the glade's sun and
+  environment (so it gets A), its decor gets B already, but `_make_camp` copies `Decor` only, so the camp there would
+  lose its grass: the builder needs to carry `GroundPaint`'s job into the Terrain3D control map (dirt and soil as
+  textures, blended) and scatter clutter per cell at the ground's height (the clutter is FLAT GROUND ONLY).
+- Held, Luke's: tree scale (the common tree is 7-9 m, not small; 1.3x at most, a content edit), volumetric fog
+  (the one real GPU cost; try it measured), station lights (until day/night), Sky3D (only with #12 day/night; the
+  clock would be `ClockSync.server_sec()` and two hot rules, no table).
+- The grass's numbers and tints, the trails' lines and the ground's colors are Claude's.
+- The foliage shader is now in two games (Fishing's copy has no shrink or sway): a template session could own it.
+
+## Step 60: THE COMBAT PASS, Luke's list: shots to the crosshair, hits shown sooner, a set roll, trails, slower foe swings (2026-11-11 to 12)
+
+Luke's list after playing the wolf (`GAME.md` "THE COMBAT PASS" has his words and his three picks before he stepped
+away: to the crosshair; credit the delay; the editor closed). The bounded pass of `GAME.md`'s "COMBAT BEFORE ARMOR",
+its part (2). As built: `COMBAT_CURRENT.md` §5, §8.1, §11, §12, §13, §14.2.
+
+**Found first (why it felt wrong)**
+- THE CAMERA IS OVER THE RIGHT SHOULDER (`third_person.tres`, 0.5 m), and a free shot left the CHEST along the look:
+  parallel to the crosshair's ray, half a meter left of it and never meeting it.
+- THE AIM POSES ARE UPPER-BODY POSES over walking legs, so the turn of the hips the clips were made with is lost:
+  the bow pointed 32 degrees left of the crosshair's point, the casting hand 34 (`tests/aim_shot.tscn` measures it).
+- A TAB-TARGETED SHOT WAS AIMED 1.1 M UP whatever it was aimed at; a wolf's body is 1.0 m tall: every arrow and
+  bolt at a targeted wolf flew over its back.
+- EVERY HIT ON A PLAYER WAITED 320 MS for a parry press that might still be on its way (the most any line may
+  carry), on top of the referee's 80 ms: the "half second" between a blow landing and its damage.
+- THE ROLL'S DASH is an impulse the keys then steer: S after it braked it at once.
+
+**Built**
+- **To the crosshair** (`combat/combat_component.gd`): `crosshair_point` (the camera's ray against the level and
+  bodies, begun past the player, 120 m out for the sky; `crosshair_on_body`), `launch_direction` (the twin of the
+  server's `aim_velocity`), `arrow_speed`, `muzzle`. A bolt leaves straight for the point. An arrow is arced onto a
+  BODY the crosshair is on (somebody you could fight, `_target_ok`: not a tree), else leaves straight for the point and falls short as an arrow does: an arc to a far
+  point climbs over the line of sight (the playtest's free shot, the crosshair level and half a meter beside the
+  dummy, went 2.7 m over it). No reducer changed: `loose_arrow` and `cast_spell` always took an aim.
+- **The upper body turns to the shot** (`combat/aim_twist.gd` `AimTwist`, a `SkeletonModifier3D` on `spine_02`, the
+  skeleton's first child so the held item's wrist and off hand follow; `combat_look.gd` sets it): while you draw,
+  cast, or for 350 ms after a shot, the line the pose aims along (the bow's two hands; the casting arm, the LEFT)
+  points at the crosshair's point, or the Tab target's middle. Another player's is turned the way they face.
+- **The middle of its target** (`content/foe_def.gd` `aim_height_m`, baked; `server/build/regents.rs`, `FoeSeed`,
+  `regents.rs` `aim_height`): half the character's `collision_height` (wolf 0.5, deer 0.75), else 1.1.
+- **A hit waits only as long as that player's line needs** (`regents.rs`: table `seen_delay` (private), reducer
+  `report_seen_delay`, `guard` stores it too, `hit`; `genre/regents/mod.rs` `hold_deadline_us`): `parry_late_ms` +
+  the client's said delay + its press's trip + `hit_hold_slack_ms`. The client says it as it joins and when it moves
+  8 ms (`_tell_seen_delay`). A build that never said waits the old 320.
+- **A roll is judged where it was pressed** (`fought`, `rules::roll_clears`, `press_seen_now`): a waiting hit is
+  cleared by a roll that, as its player saw it, began before the hit landed or at most `roll_late_ms` after.
+- **A set roll**: `dodge()` holds the frames to the way the roll began for `roll_ms` (`LocalInputComponent.force_move`).
+- **Trails** (`combat/ribbon_trail.gd` `RibbonTrail`; `swing_trail.gd` `SwingTrail` on `adventurer.tscn` and
+  `foe.tscn`; `shot_look.gd` `ShotLook` at the root of `arrow_look.tscn`, `bolt_look.tscn`, `fireball_look.tscn`;
+  `impact_burst.gd`): a swing's sheet from 55 % of its wind-up to 130 ms after the hit, pale on a player, warm on a
+  foe, the blade found on what is shown (the held weapon; a skeleton's own sword or axe, the skinned mesh by its
+  hand; a wolf's head); a streak behind an arrow; glow, sparks, a flickering light and a burst for the spells.
+- **More anticipation** (five `content/ability/foe_*.tres`, `anim/adventurer.tres`, `anim/wolf_animation.tres` and
+  its builder): rusted cut 550 -> 660 ms, backswing 580 -> 700, hack 590 -> 710, wolf bite 550 -> 650, hamstring
+  620 -> 720, each clip and its recovery slowed to match; the finishers as they were.
+- Two hot rules (`content/rules/regents.tres`): `roll_late_ms` 50, `hit_hold_slack_ms` 40.
+- `tests/aim_shot.tscn` (windowed, no server): the aim poses before and after, a foe's swing with its trail, the
+  three shots in flight and a burst, as pictures in the folder given.
+
+**How to play it**: restart the game (the play database is published, bindings regenerated). Bow or staff with no
+Tab target: put the crosshair on a wolf and shoot. Tab a wolf and shoot. Fight the camp: a blow's damage shows as it
+lands; roll late and see. Roll, then press S. Watch a skeleton's swing and your own.
+
+**Tested**
+- Regents unit suite **3481 passed, 0 failed** (`_run_combat_pass`, `_run_crosshair`: 69 new checks). Its
+  NEGATIVES: an arrow loosed along the look from the chest, as before, passes the crosshair's point by 0.25 m or
+  more; aimed at a man's chest height a shot is over a wolf's back; the bow unturned points 32 degrees off; a roll not
+  held to its way is cut to under 60 % by S; an arrow arced to a far crosshair point goes 2.7 m over a man beside the
+  crosshair; a tree the crosshair lands on is not "somebody".
+- `cargo test` all green (`regents.rs` 53: `hold_deadline_us`, `roll_clears` with a roll that is too late and one
+  with nothing credited), `cargo check --target wasm32-unknown-unknown` green.
+- `tests/aim_shot.tscn` (windowed): bow 32.0 degrees left of the crosshair's point and 3.2 over before, 1.3 and 0.2
+  after; the casting hand 33.8 and 10.8 before, 1.3 and 0.4 after; the trail found on the warrior's sword (0.63 m of
+  it drawn), the axeman's axe (0.31 m) and the wolf's head; pictures of each.
+- `combat_playtest.sh` (a real client, a real referee, 150 ms round trip), FOUR runs:
+  1. 90 passed, 12 failed. Found: the playtest crashed on the deer (`f.kit.light` with no kit: broken since the deer
+     went in, never run since), which cascaded; my roll check counted its own teleport as a correction; and the REAL
+     one: the free shot, the crosshair half a meter beside the dummy and on nothing, was arced to a point 120 m off
+     and went over it. Hence the arc only onto a body.
+  2. 67 passed, 47 failed: THE REFEREE WENT QUIET two minutes in (no heartbeat from about 09:23:07 UTC, no error in
+     the lines the script kept; it was not seen again that run), and everything after needs it. NOT EXPLAINED. The
+     script now prints the referee's last 40 lines and whether it was still running when a run fails.
+  3. **116 passed, 0 failed.** The roll: 4.63 m with W held, 4.63 m with S pressed, no correction by the server. A
+     hit shows 308 ms after its blow lands as seen (median of 11 and of 13), inside this line's wait of 298 ms: at
+     this round trip the client's measured half trip is 104 ms, so the wait is nearly the old 320. Looking straight
+     at the dummy the crosshair was on a far tree, then turned onto the dummy: the free arrow hit it.
+  4. At 20 ms round trip, 5 ms jitter (`LATENCY=20 JITTER=5`): 116 passed, 2 failed. **A hit shows 166 ms after
+     its blow lands** (median of 8 and of 15; this line's wait 158 ms), "sooner than the 320 ms every hit waited
+     before": the measure of Luke's complaint where he plays. The two failures are checks tuned for 150 ms ("running
+     into a swing ... then 3.4 m/s again", wanted over 3.5; the rallying cut's heal, timed against the shell's HURT).
+- ONE integration run (about 80 min): **1474 passed, 7 failed**. Of this game's own checks ALL PASS BUT ONE, and
+  that one was my expectation: the new hook check wanted "waits 150 ms" and the server said 240, rightly (the suite's
+  CLI player has a MEASURED round trip of 2536 ms, a CLI call, so its press's trip is credited at the cap, 120:
+  50 + 30 + 120 + 40). The check now works the number out from `client_rtt` and the caps; NOT re-run (read from the
+  log: the same hit is there at 240). The other new checks passed: the guard's press and `report_seen_delay` kept
+  (120, a claim of 9 s held to 150, 30); a roll arriving after the blow was judged clear "as they saw it" and nothing
+  was dealt; with nothing credited and no grace the same roll was too late and the hit was dealt. Step 58's four
+  fixes (the lunge's reads, the round's speed, the crossguard grip) passed as a whole for the first time. The other
+  SIX are the foundation's timing checks after slow CLI calls (`tests/integration_test.sh`, the template's file), the
+  same kind as step 58's six: a status's grace step (63 against 64), the referee's miss, a body's contact "once" and
+  its taking away, a hold "again", a push that "stays where it happened". Not touched: a template session's.
+- NOT done: Luke's own play; a second client's view of the turned upper body; the Mac build.
+
+**Left**
+- THE REFEREE THAT WENT QUIET (run 2): one in four runs. If it comes back, the playtest's failure output now shows
+  its last lines.
+- A roll begun at a run goes about a meter further than one from a standstill (4.6 m against 3.6): the foundation's
+  dash ADDS to the body's speed. The same length either way is a foundation switch (the dash sets the speed), a
+  template change with golden vectors: Luke's call.
+- At a 150 ms round trip a hit still waits about 300 ms: that is the parry's own rule (a press 50 ms late as seen
+  may still be on its way). Shorter there means a smaller late window or no late parry at that ping: Luke's call.
+- A second client sees another player's bow turned level the way they face (the look's pitch is not sent).
+- "Better magic vfx (see LeLu youtube)": not watched; this is a first pass with trails, sparks, a flicker and a
+  burst. The square sparks and the flat burst are the obvious next things.
+- Luke's, not built: the ability bar and per-weapon abilities (Q, E, R, AOE: Cleave hits one, the referee reports a
+  sweep's first body), single against multi combat zones.
+- The numbers are Claude's: `roll_late_ms` 50, `hit_hold_slack_ms` 40, the five wind-ups, every trail.
+
+
+## Step 61: Luke's play of the combat pass: the bow and hand follow the Tab target, a shot leaves the hand, face your target, a full poise bar breaks on any hit (2026-11-12)
+
+Luke played step 60 and came back with four pictures and four notes (`GAME.md` "HIS PLAY OF IT"). One question was
+asked (a Tab target not faced: refuse, turn to face it, or shoot at the crosshair); his pick: refuse.
+
+**Found**
+- THE AIM TURN ALIGNED THE LINE BETWEEN THE BOW'S TWO HANDS, and the hands move all through a draw (the string hand
+  reaches for the arrow): the bow swung about with them. It was also given the crosshair's point while the SHOT went
+  to the Tab target (the server aims that one): his first picture, the bow at the screen's middle, the target left.
+- A SHOT IS STARTED AT THE CHEST by the server (0.6 m along its way): beside a bow now pointing elsewhere it visibly
+  came from "the middle of where my character is standing".
+- A TAB TARGET WAS NEVER CHECKED FOR FACING: his fourth picture, a bolt flying behind him from a hand pointing left.
+
+**Built**
+- **The turn, from the body** (`combat/aim_twist.gd`, rewritten): from the way the body is drawn facing to the
+  target, less where the pose points by itself (`turn_from`), shared over `spine_01`-`spine_03` (a 75 degree turn is
+  no longer one sharp twist), the same whatever the hands do. `combat_look.gd`: the target is the Tab target when it
+  is faced, else the crosshair; where each pose points is three numbers on the node ("pose points": bow 28.7 left
+  and 1.2 over, cast 32.0 and 9.1, a long cast -0.9 and -2.3), set from what `tests/aim_shot.tscn` printed and his
+  to adjust there (the tool reads them from `adventurer.tscn`, aims at the crosshair and at a target 40 degrees left
+  and 45 right, prints what is left and saves each picture).
+- **A shot leaves the hand** (`combat/shot_look.gd` `leave_hand_s` 0.12 s, `CombatLook.muzzle_point`,
+  `AimTwist.muzzle`): the look is drawn at its shooter's bow hand or casting hand at first (the turn in it) and comes
+  onto its true path. The body the referee flies is untouched.
+- **Face your target** (`combat_component.gd` `target_in_front`, `within_arc`, `FACE_YOUR_TARGET`; `regents.rs`
+  `faces_target`, in `loose_arrow` and a missile's `cast_spell`; hot rule `aim_arc_deg` 120; the server 30 degrees
+  wider, `rules::AIM_ARC_SLACK_DEG`): outside the arc nothing is loosed, the draw is let go, "Face your target". A
+  refusal by the server alone lets the draw go too (`loose` now reads its answer).
+- **A full bar breaks on any hit** (`genre/regents/mod.rs` `poise_hit`, `POISE_FLOOR`; `regents.rs` `deal`): a light
+  that would empty a poise stops at 1 as before (the bar full); a hit on a bar already full breaks it, whatever the
+  hit. A light's stagger is the plain `stagger_ms`; the last-hit lessons and the "finisher staggered" log stay the
+  last hit's ("<id> staggered ... its poise was worn out" for the rest).
+
+**Answered, not built (Luke's)**: how to make a hit show at once at any ping, and 200 ms with 50 ms of jitter feel
+better. See `GAME.md`; the closing summary of this sitting has the options and what each costs.
+
+**Tested**
+- Regents unit suite **3492 passed, 0 failed**. New or rewritten: the turn onto the crosshair and onto a target 50
+  degrees left, 50 right and 20 left, each within 1.5 degrees (NEGATIVE: turned to the crosshair instead, it is over
+  15 degrees off that target); its limits; what is aimed with, and each pose's own numbers; no hand to leave from
+  for a character never seen to aim; the three spine bones and the hands are the adventurer's; the arc (NEGATIVE: a
+  target behind, or 68 degrees to the side, is not faced).
+- `cargo test --test regents` 53 passed (`poise_breaks_on_the_last_hit_or_on_any_hit_once_worn_out_and_steadies`:
+  worn out, the next light breaks it; NEGATIVES: 2 left is only filled, a touch that would not empty it does not
+  break it, Steadied it is not broken; the sword on a skeleton breaks on the fifth hit, a tap). Wasm check green.
+- `tests/aim_shot.tscn`: with the numbers above every pose is within about 1 degree of the crosshair and of both side
+  targets (bow 0.4 / 0.1 / 0.2 degrees round; cast 0.9 / 0.1 / 1.1; a long cast 0.6 / 0.2 / 0.6); the bow mid-draw
+  is turned exactly as at full draw (-30.4 degrees round to the crosshair, both). Pictures looked at.
+- `combat_playtest.sh` at 150 ms: **116 passed, 0 failed** (the referee stayed), with the new poise rule, the facing
+  rule and the hand start in.
+- The integration hook has new checks NOT RUN (the suite is 80 minutes; one run a step): a light fills an 11-poise
+  bar and the next light breaks it; a loose and a Bolt at a Tab target behind you are refused, nothing taken or
+  spent. Read against the code only.
+- PUBLISHED to the play database (no wipe, no new table: the bindings are step 60's).
+- NOT done: Luke's own look at the bow and hand against a Tab target in the game; a second client's view.
+
+**Left**
+- A refusal says "Face your target" in the middle of the screen like any other; nothing shows the arc.
+- Another player's upper body still turns only the way they face (their target and their look's pitch are not sent).
+- THE HIT'S WAIT AND HIGH PING (his questions): the options and their costs are in the closing summary; nothing built.
+- The pose numbers and `leave_hand_s` are Claude's, measured: his to adjust.
+
+
+## Step 62: A HIT IS DEALT AT ONCE, and taken back by a parry or a roll that arrives after it (2026-11-12)
+
+Luke, after the answer on how other games give immediate feedback: "Lets either build 'deal the hit at once, take
+it back on a late parry' or have No late window whichever is preferred for gameplay and latency." DEAL AT ONCE was
+built (the agent's choice of his two): with no late window a press must ARRIVE before the hit is judged, so a player
+at a 200 ms round trip would have to press about 120 ms before they see the blow land: their parry window cut from
+250 ms to about 80, and gone at 300. Dealt at once keeps the whole window at any ping.
+
+**Built**
+- **The rule** (`genre/regents/mod.rs` `hit_waits`; `regents.rs` `hit`): a hit on a player is dealt as the referee
+  judges it. It WAITS, as every hit did, only when it could not be taken back: one that would STAGGER them (a foe's
+  last hit: a staggered player's roll is refused by the foundation before the game hears of it) or would KILL them,
+  or with the hot rule `regents.hit_at_once` at 0.
+- **Taken back** (table `dealt_hit`, private, scheduled to the same moment a waiting hit waits to; `take_back`): a
+  guard press that parries it (`guard_press`) or a roll that clears it (`fought`), judged as their player saw them,
+  gives back exactly the health it took; a parry staggers its attacker and opens the riposte as ever.
+- **What a hit DOES is owed** (`deal(.., owe_effect)`, `hit_effect`, reducer `settle_dealt_hit`): a kit's effect on
+  its target (the hamstring bite's slow) is done when the hit can no longer be taken back, so nothing else is undone.
+  `hit_amount`: the working out of a hit's damage, split from `deal`, asked first for "would it kill".
+- **Shown** (`combat/hit_feedback_component.gd` `is_taken_back`): health that comes back the size of the last drop
+  within 900 ms is that hit undone: no green number; a roll says "Dodged" (a parry already says "Parried").
+- **The string's lesson** (`deal`): "Three in a row" is ticked as the string's last hit LANDS unblocked, not when it
+  staggers: since step 61 a light can break a full bar a moment before, and the last hit then lands on a Steadied
+  foe (the playtest's yard lost the lesson that way).
+
+**Tested**
+- `cargo test --test regents` 53 passed (`hit_waits`: an ordinary hit is dealt at once; one that staggers or kills
+  waits; NEGATIVE: the rule off, every hit waits; past the window nothing waits). Wasm check green.
+- Regents unit suite **3497 passed, 0 failed** (a rise the size of the last drop soon after is a take-back;
+  NEGATIVES: another amount, too long after, no drop before; one number shown for a hit taken back, a heal after it
+  still shows).
+- `combat_playtest.sh` at 150 ms, twice. First: 116 passed, 3 failed: the lesson above, and the "never two hits
+  together" check (twice), which assumed every hit waits: a waiting finisher and a light dealt at once show up to
+  the wait closer than they landed (484 and 401 ms against the rule's 600); the check allows for it now. Second:
+  **119 passed, 0 failed**. Measured: **a hit shows 128 ms after its blow lands as seen** (median of 8 in the first
+  run, 129 of 15 in the second; 308 when every hit waited), 5 of 8 and 8 of 15 hits within 220 ms (the rest are the
+  finishers); "the parried hit had been dealt at once and was TAKEN BACK: the press arrived after it, and still
+  counted" (the server's log: "46's 40024 on 52 is taken back (1.4 given back): parried").
+- PUBLISHED to the play database with `--codegen` (a table and a reducer added; no wipe).
+- ONE integration run on this step's tree (about 80 min): **1509 passed, 5 failed**. EVERY CHECK OF THIS GAME'S
+  HOOK PASSES (the "regents: integration_genre" and skilling sections have no failure), for the first time with the
+  checks added in steps 60 to 62: the wait worked out from `client_rtt`, the slash dealt at once and, with
+  `regents.hit_at_once` off, waiting; the roll's take-back and its negative; a full poise bar broken by a light; the
+  bow's and the bolt's "face your target". The five are the foundation's, in `tests/integration_test.sh` (the
+  template's file), none in a section this step touched: a dropped item "everyone is sent it", chat's "twelve lines
+  at once" (4 refused), the referee's "as a miss", Help up's "again", "the push stays where it happened". The last
+  two are the same ones as in earlier runs (a row or a hold read several slow CLI calls later); not re-run.
+
+**Left**
+- A FOE'S LAST HIT STILL WAITS (about the player's ping plus 90 ms): the one a roll matters most for. To deal it at
+  once the foundation would have to let a roll be heard while staggered (a template change), or the stagger itself
+  be owed like an effect: Luke's call.
+- Hits can show closer together than `token_gap_ms` by up to the wait (above).
+- A hit taken back has already interrupted a hold (the foundation's `hurt`) and flashed red; the number it floated
+  stays.
+- Not built, Luke's: a foe's swing shown landing at the server's time; your own hits' spark at once.
+
+## Step 63: NEW FOES, the prep sheet answered; a foe's behavior is a LimboAI tree (2026-11-12)
+
+Luke: "Write foes prep and also take this time to deep dive enemy AI and if we are using limboai to its potential and
+creating smart but fun (not annoying or painful) enemies", then, of the sheet's sixteen decisions, "Accept all
+proposed". The sheet is `FOES_PREP.md`; his answers are in `GAME.md` ("NEW FOES, ANSWERED"); its §9 is the order of
+work, and this is its step 1.
+
+**Found (the deep dive, `FOES_PREP.md` §3, §7)**
+- This game used none of LimboAI: every fighting foe ran one hand-written cascade (`foe.gd`); Fowl Play uses trees
+  as flat priority lists only.
+- A foe cannot shoot: `loose_arrow` and `cast_spell` are a player's reducers, and a missile's splash and a circle
+  skip players. The missile itself (`launch_missile`, `missile_hit`, the `missile` table) is owned by any entity, and
+  `use_ability_as` reaches the game through `on_ability_used`: step 2 starts there.
+
+**Built (no change in what a foe does)**
+- **The brain's cascade is seven STEPS** (`sidecar/npc/brains/regents/foe.gd`, now `class_name RegentsFoeBrain`):
+  `be_slain`, `go_home`, `rest` (finds the target and reads where it is for the steps after it), `chase`, `wait_turn`,
+  `close_in`, `swing`. Each returns whether it was its to do. What a foe KNOWS stays in the script: its target, its
+  turn (tokens, the gap), its string, its pack, its aim lock.
+- **Seven tasks and a tree** (`tasks/foe_*.gd`, `RegentsFoeTask`; `trees/melee.tres`): a dynamic selector, the
+  tasks in the cascade's order, each named for what it does in the LimboAI tab.
+- **`FoeDef.behavior`** (default `melee`): the tree's name. `game/` never names the path (rule 7b). Not baked: the
+  server does not read it. `validate` refuses a foe that fights with none; a name with no tree leaves the foe
+  standing still with a warning in the referee's log.
+
+**How to see it**: nothing new to play. In the editor, open `sidecar/npc/brains/regents/trees/melee.tres` (the LimboAI
+tab): the seven tasks, top to bottom, are what a skeleton or a wolf minds first. Moving one changes every melee foe at
+the referee's next start (an editor run starts one).
+
+**Tested**
+- Regents unit suite **3504 passed, 0 failed** (3497 before): every earlier check of the brain (the chase and the
+  walk map, losing sight, turns and the gap, the aim lock, the string that follows, packs, Startled) passes THROUGH
+  the tree, unchanged; new: the brain's think is a tree's (`tree_status`), every fighting `FoeDef` names a tree the
+  referee has, NEGATIVES: no behavior is refused by `validate`; a behavior with no tree stands still beside a player,
+  no chase, no swing.
+- `combat_playtest.sh` (a real client, a real referee, 150 ms): **119 passed, 0 failed**, the count before the tree: the
+  skeletons and the camp fight as they did; no "no behavior tree" warning in the referee's log.
+
+**Left**
+- The melee tree has no numbers of its own (a foe's are its `FoeDef`'s; `CIRCLE_M`, `HOME_M` are still constants).
+- LimboAI's visual debugger against a running referee: not tried (the referee is a separate headless process).
+- `FOES_PREP.md` §9 steps 2 to 7: a foe's shot on the server, the skeleton archer, the imp caster, noticing and rest
+  (F9 to F12), the foe bench, integration.
+
+## Step 64: a foe's shot on the server (2026-11-12)
+
+Luke: "Yes, step 2". `FOES_PREP.md` §9 step 2: what a ranged foe needs from the server, before any ranged foe exists.
+NOTHING IN THE GAME SHOOTS YET: no foe's kit has a shot until step 3 (the skeleton archer), so this step is proven by
+its rules' tests and by the melee fight being unchanged, and its first live proof is the archer.
+
+**Built (`server/src/game/regents.rs`, `server/src/genre/regents/mod.rs`)**
+- **What a shot is** (`rules::is_shot`): an ability a `SpellDef` of the BOLT kind flies (its `body`, its `speed_mps`).
+  A foe's is one of its kit's abilities, used by its brain as any ability (`use_ability(id, aim, target)`), with
+  `range_m` 0 and not judged: the server refuses one with a range (the module's coarse resolution would deal its
+  damage at once as well as fly it).
+- **The draw, the lock, the loose** (`begin_foe_shot`, the `foe_shot` table, `foe_shot_due`; Luke's F5): the draw is the
+  foe's swing (the ability's `wind_up_ms` is the tell, shown by the `swing` row as a melee wind-up is).
+  `regents.foe_shot_lock_ms` (250, a new hot rule) before it ends the server LOCKS THE AIM on where the target
+  stands (its body's middle), and as it ends the missile flies THERE: no leading, no hit roll. An arrow body is aimed
+  over its drop; any other flies straight. It leaves the shooter a little over the middle of its body.
+- **Stopped** (F7): nothing flies if the swing was canceled (a finisher now flinches a shot being drawn, as it does a
+  light), or the foe is staggered, slain, or swinging something else by then; nor at a target gone, fallen, offline or
+  out of reach of targeting. The cooldown is spent all the same.
+- **A foe's missile lands on a player as a swing does** (`foe_missile_hit`, `shot_lands`, `land_on_player`; F4): a held
+  guard facing the shooter takes it through the block; a timed parry KNOCKS IT AWAY (`knocked_away`: nothing dealt, the
+  shooter not staggered, no riposte window, no whiff lockout); it is dealt at once and taken back by a late parry or
+  roll; one that would kill waits for them. A player ROLLING lets it through: it flies on from 1.2 m past them (a new
+  body: the referee's bodies stop on a person). It NEVER STAGGERS, wherever it sits in its kit. It hurts nothing but
+  a player (another foe or a dummy in its way only ends it). A PLAYER'S missile is as it was: it never hurts a player.
+- `hit`'s part for a player moved out whole into `land_on_player`, so a swing and a shot are judged by the same lines.
+
+**Decided here (mine, not Luke's)**
+- The target of a shot is read from the use's own `action_event` row: the game's `on_ability_used` hook is not told the
+  target, and the brain's `npc_brain.target_id` is written at most once a second. A wider hook is a TEMPLATE ask.
+- A shot already loosed still lands when its shooter has fallen since (a swing of the dead lands nothing).
+- A roll through an arrow ticks no tutorial lesson, and a knocked-away shot does not tick "Parried".
+
+**How to see it**: not yet. Step 3 gives the skeleton archer a kit with a shot.
+
+**Tested**
+- `cargo test --test regents` **54 passed, 0 failed** (53 before): `a_foes_shot_locks_its_aim_then_flies_and_a_roll_lets_it_through`
+  (which abilities are shots; the lock and loose times, a lock longer than the tell; the height; the way on past a
+  roller; NEGATIVES: a stopped or NaN missile has no way on, a hit that staggers still waits). Mutation: the lock taken
+  off unclamped fails it.
+- `cargo check --target wasm32-unknown-unknown`: clean.
+- Regents unit suite **3504 passed, 0 failed**.
+- `combat_playtest.sh` at 150 ms: **119 passed, 0 failed** (the parry, the late parry, the roll, the block and the hit dealt at
+  once all go through `land_on_player` now).
+
+**Left**
+- No live check of a shot: no reducer-level suite can make one until a foe has a shot (step 3's leg of the combat
+  playtest: loosed, blocked, knocked away, rolled through, stopped by a flinch; a player's call refused).
+- The client shows nothing for "knocked away" (no stagger to read it from): step 3, with the glint.
+- `regents.ranged_tokens` (F6) is the brain's: step 3.
+
+## Step 65: THE SKELETON ARCHER, the first foe that shoots (2026-11-12)
+
+Luke: "Yes, the archer". `FOES_PREP.md` §9 step 3, on step 64's server. Its numbers are the sheet's §6, all first
+guesses and Luke's to change.
+
+**How to play it**: one archer stands BY THE SKELETON CAMP (Luke's F15), a few steps south-east of the three (41, 3).
+It is the warrior's skeleton in dark red with a bow. Come at the camp: at 16 m it notices you, and inside
+14 m it stands and draws (the pose 1200 ms, a pale gold glint 300 ms before it looses). The arrow goes where you stood
+250 ms before it flew: keep moving and it misses; stand and it hits for 16.5. Hold the guard facing it (9.9 through
+with an axe), tap the guard as the arrow arrives (knocked away: nothing), or roll as it comes (it flies on past).
+1800 ms between shots is your time to close. Within 4 m it backs off 5 m, once, then not again for 6 s: reach it
+and it kicks you off it (4.4, a push, no stagger) and is helpless in the kick's recovery. 80 health, poise 50.
+
+**Built**
+- **Content**: `ability/foe_arrow.tres` (40030: the tell 1200 ms, 30 damage, range 0, not judged) and its
+  `spell/foe_arrow.tres` (a bolt spell: the arrow body, 26 m/s); `ability/foe_bow_shove.tres` (40031: a kick, 650 ms);
+  `kit/skeleton_bow.tres` (the shove its string, the arrow its skill; the shove pushes 6 m/s);
+  `character/skeleton_archer.tres` (kind 108, Skeleton_B), `foe/skeleton_archer.tres`; clips in `anim/adventurer.tres`
+  (`ability.40030` Bow_Aim_Neutral held 1200 ms, `recover.40030` Bow_Shoot, `ability.40031` Kick); the pack's second
+  texture set copied in (`art/monsters/T_Skeleton_BaseColor_2.png`); the character in `genre.tres`.
+- **`FoeDef`, a foe that shoots**: `shot_range_m`, `shot_near_m`, `shot_rest_ms`, `back_within_m`, `back_m`,
+  `back_every_ms`; `shot()` (its kit's first skill a bolt spell flies); `validate` refuses the ranged tree with no
+  shot, or a shot with a range or judged. **Its look**: `held_scene`, `hidden_meshes`, `albedo`, put on by a new
+  component on every foe, `combat/foe_look.gd` (`FoeLook`): a new foe that reuses a model needs no new scene.
+- **The ranged tree** (`sidecar/npc/brains/regents/trees/ranged.tres`): slain, go home, rest, then five new steps of
+  `RegentsFoeBrain` with a task each: `hold_lock` (mid-draw it stands), `shove`, `step_back`, `approach`, `shoot`.
+  The shot names its target; the server aims it.
+- **Turns for shots** (F6): `regents.ranged_tokens` (1, a new hot rule): one foe drawing on or with a shot in the air
+  at a player; a shot takes no melee turn, and keeps `token_gap_ms` from every other foe's hit (by when its arrow
+  arrives).
+- **The glint** (F5): `HitFeedbackComponent.shot_glint`, pale gold, 300 ms before the loose, not shown if the draw was
+  stopped; never the red of an unblockable swing.
+- **A STRING OF ONE STEP HAS NO FINISHER** (`KitSeed::is_finisher`, `KitDef.is_finisher`): the archer's lone shove
+  must not stagger or be unblockable. No player kit has a one-step melee string.
+- `foe_missile_hit` logs where a shot ended when it hurt nobody.
+
+**Decided here (mine, Luke's to change)**
+- WHERE BY THE CAMP: south-east of it (41, 3), so it can be met from the south without the three (its point is
+  `skeleton_archer_1` in `frontier.tscn`; moving it is a level bake and a publish). To meet it ALONE, come from the
+  south-east edge; from the west you get the camp and its arrows together.
+- `regents.ranged_tokens` may be 0 ("no foe shoots"): `combat_playtest.sh` sets it, because that suite measures the
+  melee camp's hits one at a time; the archer's own suite slays the three for its close-up leg.
+- It backs off at its own pace (4.2 m/s), not at a walk: at a walk the 5 m took over six seconds of doing nothing.
+- At 2 to 4 m with its step back spent it shoots point blank rather than circling: the draw is the opening.
+- The continent has no archer: `build_continent.tscn` was NOT run (it also carries the glade's new look over, step
+  59's "Left": Luke's say-so). The suite lists `skeleton_archer_1` as not yet built in, and fails the day it is.
+
+**Tested**
+- `game/regents/tests/archer_playtest.sh` (NEW; a real client at 150 ms, a real referee, ~3 min): **19 passed, 0
+  failed**, and five on the server's own log. Past its notice it draws nothing; at 11 m the arrow lands for 16.50,
+  1645 ms after the draw is seen (the tell, then the flight); the pale glint, no red; no stagger; a held guard 9.90
+  through; a roll as it comes: nothing taken, and the server's "rolled through: it flies on"; a tapped guard:
+  nothing taken, "knocked away", the hit dealt at once and taken back, the archer NOT staggered; within 4 m it steps
+  back 4.5 m; followed into reach it holds its ground and shoves: 4.40, pushed 1.7 m, no stagger. NEGATIVES: a
+  player's `use_ability` of the shot is refused ("wield a skeleton_bow first"); no shot staggered anyone.
+- Regents unit suite **3612 passed, 0 failed** (3504): `_run_foe_archer` (content, the tree's steps by a fake world:
+  walks in, draws naming its target, holds the draw, steps back and not twice, shoves, never shoots unseen, two
+  archers never overlap a shot on one player, its look; NEGATIVES: no shot refused, out of sight no shot, the
+  warrior keeps its sword and colors).
+- `cargo test --test regents` **55 passed, 0 failed**: the archer's content test; the finisher test now says a
+  one-step string has none.
+- `combat_playtest.sh` at 150 ms, the archer holding its fire: **118 passed, 1 failed**: "dealt at once: 5 of 11 hits" wants half or more of the hits it sampled shown at once, and this run sampled six finishers (which wait, as designed) to five lights. The server log of the run shows every light dealt at once and only the finishers (40019, 40021) waiting, as on step 64 (whose runs were 4 of 8 and 7 of 13: the check sits on its own line). No archer shot or shove in the run (0 in the log). Not rerun to get a pass; the check wants the hit kinds, not a ratio.
+- Pictures (windowed): `build/archer/archer_draw_side.png`, `archer_draw_front.png` (scratch, not committed).
+
+**Left**
+- NOT TESTED LIVE: a finisher flinching the draw (F7: built on the server, step 64; the playtest never hits the
+  archer mid-draw), two archers on one player (unit only), the archer and the melee camp together on one player (Luke's playtest is the
+  first: the gap between an arrow and a swing, and whether three and an archer is too much).
+- "Knocked away" shows only as no damage (your health dips and returns when the parry arrives late): no text, no
+  deflected arrow yet. The draw is the aim pose held, not a string pulled back; the bow hand's line is the player's.
+- The integration suite was not run (`FOES_PREP.md` §9 step 7 runs it once).
+
+## Step 66: the continent rebuilt, a shot ends where it touches, THE IMP CASTER (2026-11-12 to 13)
+
+Luke: "Lets rebuild continent and then move forward with mage user. There is an interesting issue with mage (player
+mage) where if a target is moving, the projectile get redeflected in a random direction"; then: "What I meant is mage
+enemy after the continent and player fix".
+
+**1. The continent, rebuilt** (`build_continent.tscn`, twice: with the archer, then with the imp)
+- `build_continent.gd`: one `skeleton_archer` by each of the 16 test camps, where the glade's stands by its three
+  (after the three, from no random stream: nothing placed before it moved). The camp at the start is the glade's, so
+  it has the glade's archer and imp. `shared/world/continent.json`: 831 points, 17 archers, 1 imp.
+- As step 59 said it would: the rebuild also took the glade's sun and environment and the nature import; the camp
+  there still has NO grass or painted ground (`GroundPaint` and `Clutter` are flat-ground only). Not looked at in the
+  game by me: Luke's eyes.
+- The suite's "not yet on the continent" list is empty again.
+
+**2. A shot ends where it first touches** (Luke's bug; `combat/missile_flight.gd`, NEW)
+- FOUND: the referee says what a shot hit a moment BEFORE it touches, and the server takes the shot away when that
+  word arrives. In between it is still a physics body. A target on the move is led, so it is met off its middle, and
+  the shot kept its sideways speed and skidded off (or was thrown by the target's own body walking into it) until
+  it was taken away. Reproduced with real physics before any fix: a bolt 1.45 m on from where it touched and still
+  at 4.7 m/s 20 frames later; an arrow 2.24 m and 7.9 m/s.
+- FIX: `MissileFlight` (a `BodyForces`): touching anything, a shot stops dead. On `body/bolt.tres` and
+  `body/fireball.tres`; `ArrowFlight` extends it, so arrows too (a player's and the archer's).
+- A rolled-through foe shot that was already stopped when the server heard of it flies on the way it came
+  (`foe_missile_hit`).
+- NOT a foundation change: `BodyDef.forces` is the genre's hook. If the template wants it for every missile, it is a
+  `BodyDef` flag there.
+
+**3. The imp caster** (`FOES_PREP.md` §9 step 4; the sheet's §6 numbers, all first guesses)
+- **How to play it**: one imp stands by the skeleton camp, north-east of the three (42, -8); the archer is south-east.
+  At 13 m it notices you; inside 11 m it stands and casts: an EMBER (a 1000 ms cast, a pale glint, then a slow
+  fiery bolt at where you stood 250 ms before: step aside and it passes; stand and it is 13.5), and every THIRD
+  cast a CINDER RING (a 700 ms cast, then an orange ring on the ground where you stood, 3 m, filling for 1500 ms:
+  still in it as it fills, 23.85; walk out and nothing). 2200 ms between casts. No guard or parry answers the ring.
+  It never steps back. Its poise is 30: two or three hits stagger it and the cast in its hands is lost. Up close
+  with a melee turn it claws (6.3, blockable). 70 health.
+- **Server** (`regents.rs`, `mod.rs`): `rules::is_foe_cast` (a shot or an AREA spell), `cast_lock_ms` (a ring is
+  placed as its cast ends: lock 0); `foe_shot_due` lays a `spell_area` for a ring; `land_area` lands a FOE'S ring
+  on players only (online, hittable), with no status (F8); a player's ring is as it was. A foe's cast of either
+  kind must have range 0 and not be judged, and a finisher flinches either.
+- **Content**: `ability/foe_ember.tres` (40032), `foe_cinder_ring.tres` (40033), `foe_claw.tres` (40034);
+  `spell/foe_ember.tres` (the fireball's body, 12 m/s), `spell/foe_cinder_ring.tres` (3 m, 1500 ms);
+  `kit/imp.tres`; `character/imp.tres` (kind 109, `art/monsters/Imp.glb`); `foe/imp.tres` (family "fiend", F13);
+  clips `ability.40032/33/34`, `recover.40032/33`; `genre.tres`; `imp_1` in `frontier.tscn`.
+- **THE IMPORT CHECK** (the sheet's open point): the imp's skeleton is the adventurer's less the little fingers and
+  two foot leaves (55 of 65 bones, the same names). It plays the humanoid clips as it is.
+- **`FoeDef.ring_every`**, `ring()`, `cast_at(n)`: every n-th cast is the kit's area spell. The imp runs the SAME
+  `ranged` tree as the archer (no caster tree: the order it minds things is the same; `back_m` 0 so it never steps
+  back). `RegentsFoeBrain.shoot` asks `cast_at`.
+- **Client**: a foe's ring is drawn orange-red (`SpellLooks`, by its owner), a player's own stays blue; a ring's cast
+  glints as a shot's does.
+
+**Decided here (mine, Luke's to change)**
+- No `caster.tres`: the sheet proposed one, but it would be the ranged tree again. A tree of its own the day the
+  order differs.
+- The imp's claw: a kit must have a string, and an imp that only stood there up close read as broken.
+- A roll's unhittable moment holds against a ring too (the sheet says a ring is "only left"; the roll's promise is
+  everywhere else, so I kept it).
+- The imp drops the camp's loot (F14) and nothing of its own yet.
+
+**Tested**
+- `game/regents/tests/caster_playtest.sh` (NEW; a real client at 150 ms, a real referee, ~3 min): **15 passed, 0
+  failed**, and five on the server's log: past its notice nothing; a bolt stood for 13.50; a bolt stepped out of
+  after the lock, nothing; a ring stood in 23.85 as it filled, and drawn; a ring walked out of, nothing; the casts
+  seen bolt, bolt, ring sixteen long; pale glints, never red; nothing staggered us; swung at up close it staggers
+  and 2 casts "stopped before it flew"; it never stepped back. NEGATIVE: a player's use of the ring is refused.
+- `archer_playtest.sh` after the arrow's new flight: **19 passed, 0 failed** and its five.
+- Regents unit suite **3713 passed, 0 failed** (3612): `_run_shot_stops` (bolt, fireball and arrow by real physics
+  into a walking body; NEGATIVE: the bolt with no `MissileFlight` skids on), `_run_foe_imp`.
+- `cargo test --test regents` **56 passed, 0 failed**; wasm check clean.
+- `combat_playtest.sh`, the archer and imp holding their fire: **119 passed, 0 failed** on a quiet machine (no
+  editor, no game; Luke closed them, 2026-11-13), after three fixes TO THE SUITE, none to the game. Seven runs before
+  it failed 1 to 9 checks, each traced in the fighter's whole log (`KEEP_LOGS=<dir>`, new):
+  - its "face the nearest foe" turned the guard to the silent archer or imp standing by: now the nearest MELEE foe;
+  - slain by the camp, it stepped back before its Slain status had gone, was refused, and stood at the spawn for
+    every phase after: now it waits for the status, steps, and checks it arrived;
+  - THE PARRY LEG: with two skeletons on you, the other's finisher often has you Staggered as a press is due, and the
+    server refuses a staggered player's guard ("you cannot while staggered": the game's rule). Both tries of a quiet
+    run went that way, and the leg quit under 40 health. Now such a press is not made and not counted, and you are
+    healed between tries rather than the leg given up. The green run skipped two, then parried on its first.
+  - My earlier guess that the failures were LOAD was wrong: the quiet run failed too, for the stagger reason.
+  - Neither new foe acted in any run (0 in the server's log).
+- Pictures: `build/imp/foe_draw_side.png` (scratch).
+
+**Left**
+- THE PLAYER'S BOLT FIX IS NOT SEEN LIVE at a moving foe by me (no playtest leg throws a staff bolt at a runner): the
+  physics test reproduces Luke's bug and passes with the fix; his eyes are the live check.
+- A shot that a body walks INTO without the referee's "about to hit" now stops on it with no word of a hit (before:
+  thrown aside, also no hit). Rare; a referee-side fix is the template's.
+- Not tested live: the imp, the archer and the three together on one player; a finisher flinching a cast (staggers
+  were what stopped the two casts).
+- No cue yet for a knocked-away shot; the ring has no sound; the imp has no loot of its own.
+
+## Step 67: A FOE'S SHOT LEADS A MOVER (2026-11-13)
+
+Luke, after playing the archer and the imp: "ranged (both archer and imp) are much easier to handle than melee ... the
+no prediction casts are easy to dodge when fighting solo ... I can pick them off and have the enemy ranged be more or
+less inconsequential". Asked whether foe shots should lead (reversing his F5 "no leading"): "Yes, lead first". Step 5
+of `FOES_PREP.md` §9 (noticing and rest) is next.
+
+**Why they were easy** (the numbers): the aim locked 250 ms before the loose on where you stood. The arrow (26 m/s,
+9-14 m) arrives 0.6-0.8 s after the lock, the ember (12 m/s, 7-11 m) up to 1.15 s: a walk carries you 3-5 m, and a body
+is under a meter wide. ANY movement missed; the tell asked nothing.
+
+**Built**
+- `rules::lead_point` (`server/src/genre/regents/mod.rs`): where a shot meets a target walking `vel` (flat: a jump is
+  not led), loosed `to_loose_s` after the lock, `pct` of the way; the walk capped at `LEAD_MAX_MPS` (8, past a sprint,
+  so a roll's burst is not followed far); three passes settle the flight time.
+- `foe_shot_due` (`server/src/game/regents.rs`), at the lock: a SHOT (not a ring) aims at `lead_point` of the target's
+  `movement_state.vel`; the server logs "aims <ability> N m ahead of <target>" when it leads.
+- Hot rule `regents.foe_shot_lead_pct` (100, 0-150; `content/rules/regents.tres`, baked): 0 puts the first build back.
+  `regents.foe_shot_lock_ms`'s description updated.
+- Docs: `GAME.md` F5 (the reversal, his words), `regents-genre.md` (A FOE'S SHOT), `COMBAT_CURRENT.md`, `FOES_PREP.md`
+  §4 rule 6.
+
+**How to play it**: the glade's imp (north-east of the skeleton camp) or archer (south-east). Walk across its line as
+it casts or draws: the shot meets you. Turn back, stop or roll after the glint: it flies to where you were going. A
+guard, a parry and a rock answer it as before. Standing still, nothing changed. Rings are not led (still "leave it").
+Restart the game; the play database is published (not fresh).
+
+**Decided here (mine, Luke's to change)**
+- The same lead for both foes (one hot rule). The ember is slow, so the same walk is led further and a turn slips it
+  more easily: the imp's real threat stays its ring. A per-foe share would be a `FoeDef` field.
+- The walk read is the server's `movement_state.vel` at the lock (what the client last reported), not an average.
+
+**Tested**
+- `cargo test --test regents` **56/0**, the shot test grown: a 5 m/s walk at 10 m met where it goes (more than 3 m
+  ahead); NEGATIVES: 0 % and a standing target are not led; 50 % half; a jump not led; a burst capped; the slow ember
+  led further. Wasm check clean.
+- `caster_playtest.sh` (two NEW legs; the bolt's ways are now four): **17 passed, 0 failed** on the fighter: a bolt
+  WALKED INTO (a steady strafe from 500 ms before the lock) is hit for 13.50; a bolt TURNED FROM (the strafe reversed
+  after the lock) takes nothing; stood 13.50 and stepped-out-after-the-lock 0.00 as before. Server: "led 2 bolts at a
+  walker (3.8 m 2.5 m)". ONE SERVER CHECK FAILED, not the lead's: "no cast was stopped by our swings". The log shows
+  why: with the camp slain the imp has a melee turn free, so at 1.3 m it CLAWS, and our finisher staggered it
+  mid-claw with no cast in its hands. Step 66's green run caught two casts by timing. Not rerun for a pass; the leg
+  needs to strike it while it casts (left below).
+- `archer_playtest.sh` **19/0** and its five (its legs stand still: nothing led).
+- Regents unit suite **3713/0**. Play database `regents-rule` published (not fresh).
+
+**Left**
+- The caster suite's close-up leg: strike the imp while it CASTS (F7), not whenever it is near.
+- Not tested live: a led arrow against a runner (no archer leg walks); two shooters on one player; the five together.
+
+## Step 68: NOTICING AND REST, F9 to F12 (`FOES_PREP.md` §9 step 5) (2026-11-13)
+
+Luke: "Start step 5". His answers (2026-11-12, `GAME.md`): F9 a foe notices in FRONT (140 degrees at `notice_m`) and
+hears all round at 4 m, further if you sprint; F10 at rest it wanders a few meters round its point; F11 hit from out
+of sight it turns on WHO HIT IT; F12 NOT CHAINED, after a foe's stagger or slow no other foe's lands for 1500 ms.
+
+**Built**
+- `FoeDef` (`content/foe_def.gd`), Behavior: `notice_arc_deg` 140, `hear_m` 4, `hear_sprint_m` 8, `wander_m` 3.
+  `foe/sparring_skeleton.tres`: `wander_m` 0 (it stands in its yard; its notice 4 m = its hearing, so it is unchanged).
+- The brain (`sidecar/npc/brains/regents/foe.gd`): `_notice` (the nearest player SEEN, `sees`: within `notice_m`,
+  `in_front` of its yaw, in sight; or HEARD, `hears`: within `hear_m`, or `hear_sprint_m` past 6.5 m/s, halfway from
+  a run to a sprint by `MovementConfig`); `_wander` (a stand of 4 to 10 s, a few steps at a walk, `walks`, to a spot
+  within `wander_m`; a step that has not arrived in 6 s is over; back from a fight, home ALL THE WAY first, `_homing`);
+  Startled turns on `status_by` (the status row's `by_entity`), with the old nearest-player fallback when the row
+  names nobody. `tasks/foe_rest.gd`'s description.
+- The server (`server/src/game/regents.rs`): `hurt_now` takes who hurt it and passes them as the Startled status's
+  `by_entity` (the three callers: a missile, a spell, a swing). NOT CHAINED: a private table `unchained` (a player,
+  the last foe that staggered or slowed them, until when); `unchained` asks before a foe's finisher staggers a player
+  and before a foe's kit effect (the wolf's hamstring slow) lands on one; `chained_by` marks it after. The hit's damage
+  is never held off. `rules::is_chained` (`genre/regents/mod.rs`). Hot rule `regents.unchained_ms` 1500 (0: off).
+- Published with `--codegen` (a table added): the schema fingerprint moved, so an exported build from before needs
+  exporting again.
+
+**How to play it**: the glade's camp. Walk up behind a skeleton at a walk: it does not turn until you are 4 m off.
+Sprint and it hears you at 8. Stand in front of one inside 10 m and it comes. At rest they wander a few steps and
+stand, so which way each faces changes. Shoot one from behind with the bow from 20 m: it comes for YOU, not for
+whoever stands nearer. With the three on you, after one's finisher staggers you the next one's finisher inside 1.5 s
+still hurts but does not stagger.
+
+**Decided here (mine, Luke's to change)**
+- A player standing still within `hear_m` is heard (F9 says "hears all round at 4 m"; nothing about moving).
+- Hearing needs no line of sight; a heard foe that cannot see you goes to where it heard you.
+- The window counts from when the stagger or slow LANDED (not from its end): with an 800 ms stagger you have about
+  700 ms after it before another foe's finisher may stagger you again. The same foe's own string is never held off.
+- What counts as a slow: any kit effect a foe's hit puts on a player (today only the wolf's hamstring). A push
+  (the wolf's lunge) is not held off.
+- The sparring skeleton stands (no wander): it teaches in one spot.
+- TEMPLATE ASK: the referee reads `by_entity` with `SpaceTimeSync.get_row(&"status_state", id)` (a test hook,
+  `status_by_of`, stands in for it); `NpcWorldView` could carry it beside `statuses`.
+
+**Tested**
+- Regents unit suite **3734 passed, 0 failed** (3713): `_run_foe_notice` (21 checks): seen 8 m in front, 60 degrees off;
+  NEGATIVES not seen at 80 degrees, behind running, in front behind a rock; heard 3.5 m behind out of sight, 7 m behind
+  sprinting; NEGATIVES not heard 7 m behind running, 9 m behind sprinting; 360 sees all round. Wandering: stands first,
+  six walks (slow) each within 3 m and back to a stand, spots round its point; 10 m off it goes home at its own pace and
+  goes on home inside its wander; NEGATIVE the sparring skeleton never walks. Who hit it: the hitter 14 m behind, not
+  the bystander 7 m at its side; NEGATIVE no name: the nearest, as before; NEGATIVE the hitter past its leash: nobody.
+  Six older fixtures now FACE their player (`_yaw_to`): they test what a foe does once it has noticed.
+- `cargo test --test regents` **56/0**: `is_chained` with its negatives (the window over, the same foe, a window of 0).
+  Wasm check clean.
+- `caster_playtest.sh` **17/0 and 6/6**, `archer_playtest.sh` **19/0 and 5/5**, `combat_playtest.sh` **119/0** and its
+  new server check: "of 24 staggers by a finisher, none by another foe inside 1500 ms of one (4 held off: not chained)".
+- The suites needed changes, none to the game, each from a log:
+  - archer and imp: they stood at a fixed side of the foe's spawn point; a foe that sees only in front, and wanders,
+    missed them. Now they first stand 3 m from where it stands NOW (heard), then go to the leg's spot.
+  - the imp's spot: the camp's archer, wandering, came within its sight and shot too (a bolt "stood for" took 30 =
+    13.5 + the arrow's 16.5); the shell keeps the archer down meanwhile (`ARCHER_DOWN`, slain every ~20 s). The archer's
+    legs likewise keep the skeletons and the imp down (`CAMP_DOWN`): a skeleton and the imp came for it.
+  - combat: the first skeleton is approached 7 m IN FRONT of where its body faces, and again (up to four) if it does
+    not come: one run's log shows it had turned away on a wander step as the fighter arrived. Its home is where it
+    stood before it moved. Two camp checks measured another foe's hit: the "too early" try took a finisher already on
+    its way (14.00) for the watched light, now such a try is not made (`_other_hit_due`); a riposte flinched by
+    another's hit is not counted and the parry is tried again. Three runs: 117/2, then 102/15 (the skeleton never
+    noticed, which led to the in-front retry), then 119/0.
+- Play database `regents-rule` published (`--codegen`, not fresh).
+
+**Left**
+- No live leg for F11 (a shot from behind) or for a wolf's hamstring held off (no wolf leg in a suite); both are unit
+  and server-rule tested only.
+- No live NEGATIVE for "not seen from behind": a wandering foe may turn at any moment, so a timed stand behind it is
+  not a fair check; the unit suite holds it.
+- The walked-home check is loose (within wander + 2 m of where it stood as we came).
+
+## Step 69: THE FOE BENCH SHOWS A SHOOTER; COMBAT_CURRENT §11 rewritten (`FOES_PREP.md` §9 step 6) (2026-11-13)
+
+Luke: "Start step 6".
+
+**Built**
+- The foe bench (`game/regents/workbench/foe_workbench.gd`): `shot_rhythm` (a foe that shoots: one round of its casts
+  as its brain makes them, its shot and every `ring_every`-th its ring, each after its lock and `shot_rest_ms`; its
+  damage a second if every cast lands), `fight_rhythm` (its shots for a shooter, its string otherwise: what "damage a
+  second", "it kills you in" and the amber checks now read), `noticing` (how it sees, hears and rests, on every foe's
+  sheet). A shooter's sheet: its range, its round of casts, its damage a second, its string up close, its step back,
+  how long you take to reach it from its range at a run, the one-shot-at-a-time rule. "Play its swings" plays its
+  shot and ring first.
+- `COMBAT_CURRENT.md` §11 rewritten whole (it had grown by appending, and said things no longer true: a heavy every
+  third swing, a 900 ms rest, a bolt at where you stood): the seven foes in one table; how a foe finds you and rests;
+  how a melee foe fights; how a foe shoots (the lead); never chained; slain, loot, placement; making and tuning one,
+  and the bench. §13 gains the foe rules it lacked (`attack_tokens`, `token_gap_ms`, `foe_aim_lock_ms`,
+  `ranged_tokens`, `foe_shot_lock_ms`, `foe_shot_lead_pct`, `unchained_ms`, `startle_ms`).
+- The handbook (`docs/HANDBOOK.md`) is the foundation's: nothing of the foundation changed, so it is unchanged; this
+  game's guide to foes is `COMBAT_CURRENT.md` §11.
+
+**How to use it**: in the editor, Content Dock, type `foe`, open the skeleton archer or the imp on its bench: the
+sheet says its round of shots and what they do; "versus" says how long it kills you in by its shots.
+
+**Tested**: regents unit suite **3741 passed, 0 failed** (3734): the archer's round is its arrow (16.5) every lock +
+1800 ms and its damage a second that; its sheet names its range, its step back, its shove; versus reads its shots;
+it fits; the imp's round is ember, ember, ring and its damage the three; every sheet says how the foe notices and
+rests; NEGATIVE: a melee foe has no round of shots, its fight is its string. No server change: nothing to publish.
+
+**Left**: step 7, integration once, with the hook's checks for steps 67-68 written first (the lead's log, the
+startle's `by_entity`, `unchained`), then the continent's test placement (F15).
+
+## Step 70: INTEGRATION, once (`FOES_PREP.md` §9 step 7) (2026-11-13)
+
+Luke: "Start step 7".
+
+**The hook's new checks** (`game/regents/tests/hooks/integration_genre.sh`)
+- F11: the wolf's Startled status names who hit it (`by_entity`, read in the hit's own timed run).
+- F12, in the wolf section where two wolves stand: the lunge staggers you after the same wolf's slow (its own string
+  never held off); wolf_2's lunge staggers, wolf_1's 200 ms after it hurts but "does not land: not chained", both
+  hurt in full; NEGATIVE: with the window over, wolf_1's lunge staggers again.
+- A foe's shot: the archer's arrow drawn on you (the stand-in naming you, as its brain does), loosed by the server as
+  the draw ends, an arrow of the archer's in the air; NEGATIVE: a CLI player stands still, so it is not led.
+
+**The run: 1524 passed, 38 failed** (1509/5 at step 62; not run since). Every failure read from the run's output
+and the server's log, none rerun:
+- MINE, two bugs in the new checks, fixed: the archer block sat inside the wolf section and teleported you 77 m away,
+  so the wolf's carcass legs that follow failed ("too far (76.8 m)", the cut line, the pelts, tanning: about ten);
+  and its `use_ability_as` put you in the delay's place (`[actor, ability, target, aim, delay]`): "draws 40030 at
+  nobody". The block now follows the tanning legs, with the target third, and steps back to the rack after.
+- WORKED, live: wolf 117's lunge staggered you; wolf 116's 1294 ms later was held off ("not chained"); after the
+  window 116's staggered.
+- STALE since steps 65-66: the glade's foe count, 7, is 9 with the archer and the imp. Fixed.
+- A QUICK CLI (this machine was quiet: no editor), about 25: the legs assumed "a CLI call takes a second or more".
+  The roles' and the skeleton's strings sent step 2 while step 1 still swung ("still swinging", then "out of the
+  combo's order", the pommel bash, the thrust, the rallying cut, lesson 40015 "Your grip" with them); a slain
+  skeleton's body was read inside its 1 s. Fixed in the suite: 0.7 s after each separate swing call (the string's
+  window is 5 s for the test), and the body waited for (up to 5 s).
+- NOT EXPLAINED, 3: the dummy's "full bar breaks" leg. The server's log shows its first chop (request 17) wore no
+  poise at all (no "wore" line), the next wore 11 to 1. Not the read's timing (a change for that was made and taken
+  back). Not in code steps 67-69 touched (a dummy is no foe and no player: `unchained` and the startle skip it). It
+  passed at step 62. Left open: `wear_poise` with `regents.dummy_poise` just set to 11 and a row whose `left` is 60.
+
+**F15**: the continent's test placement is in (step 66): 17 archers (one by each of the 16 test camps, and the
+glade's), the glade's imp. `shared/world/continent.json`: 34 warriors, 17 axemen, 17 archers, 1 imp, 30 wolves.
+
+**Left**: the integration run again to see the hook's fixes and new checks green (about 80 min); the poise leg.
+
+## Step 71: A PARRIED STRING GOES ON; THE BACKSWING READS; integration again (2026-11-13)
+
+Luke: "for some reason I was having a hard time parrying/blocking a skeleton on hit 2 of the combo. I could
+consistently get hit 1 parried but then it jumps straight to hit 3, and then if I purposely get hit by hit 1 and try
+to parry/block hit 2 it just doesnt work... after that you can rerun it and make sure your fixes took".
+
+**What his play's log said** (the play database's server log)
+- "Jumps to hit 3": every parry of a first swing (17366's hack, 17374's cut) was followed ~600 ms later by
+  "use_ability_as: you cannot while staggered": the parry staggers the foe, its brain sent its next swing anyway, the
+  server refused it, and the brain had already counted it (`_swing` steps the string before the server answers). Ten
+  such refusals in his session.
+- Hit 2: his guard presses against the backswing (40018) reached the server 187-408 ms before it landed (most 200-300),
+  against the cut (40017) 150 ms before to 106 after. Not the server: hit 2 is no different there. Not the clip's
+  blow either: measured, the hand moves fastest within 20 ms of every foe swing's landing. But the backswing's clip
+  (`Sword_Heavy_B`) BEGINS with the hand already in front (it starts where the cut ends, +34 degrees) and drifts slowly
+  across it from 400 to 600 ms; the blow is a short flick at the end. No wind-up to read: the drift looks like the blow.
+
+**Fixed**
+- The brain (`foe.gd`): `rest` reads whether its status lets it act (`StatusDef.can_act`: not Staggered, Flinched,
+  Slain); `swing` and `shoot` send nothing while it cannot. Its string goes on with its next step after the stagger.
+  A caster's round is not moved on either.
+- The backswing's clip (`anim/adventurer.tres`): `extra/Sword_Light_B` x0.335 (its recovery `Sword_Light_B_Rec`): the
+  hand held chambered on the right (+79 to +47 degrees) for half a second, then a sweep across the front, fastest at
+  701 ms (its wind-up 700, unchanged). Its lock, from the clip, 805 -> 1294 ms (baked: the kit's `locks`): the third
+  swing comes about half a second later than before. Mine to change; `Sword_Light_A` is the other clip with a clear
+  wind-up.
+- `ANIMATIONS.md`: the rule that a foe's clip holds the hand wide through the first half of its wind-up.
+
+**Tested**
+- Regents unit suite **3749 passed, 0 failed**: `_run_foe_stagger_string` (in reach, its first step; Staggered 3 s it
+  sends nothing, NEGATIVE: before the fix it sent one; on its feet, its SECOND step, not its finisher; the imp, Flinched,
+  casts nothing, then its round's first). `_least_hand_bearing`: the cut, the backswing, the hack each hold the hand 40
+  degrees or more off ahead through the first half of the wind-up; NEGATIVE: the old `Sword_Heavy_B` does not.
+- `combat_playtest.sh` **121/0** and its server checks: NEW "of 3 parries, no parried foe sent a swing while staggered";
+  "of 22 staggers by a finisher, none by another foe inside 1500 ms of one (7 held off)".
+- `cargo test --test regents` **56/0**; wasm check clean. Play database published (not fresh).
+- INTEGRATION again (Luke's ask): **1544 passed, 5 failed** (1524/38 before): every fix from step 70 took. The five:
+  - the dummy's full-bar poise leg, 3: still NOT EXPLAINED (step 70).
+  - the archer's shot, 2: nothing flew. The CLI's player connects for each call and is parked between them ("entity
+    52 parked", "back where it stood"), and a foe never shoots a player who is not online (`foe_shot_due`); its lock
+    comes ~1 s after the draw, between calls. A read of `online` connects too, so it always reads true: my first try to
+    show it was wrong. The leg now checks what it can: the draw taken (its swing row), and NEGATIVE: nothing flies at
+    a player offline, nothing loosed. NOT RUN YET: the test database had no foes left to replay it on.
+
+**Left**: the two rewritten archer checks, at the next integration run; the poise leg.

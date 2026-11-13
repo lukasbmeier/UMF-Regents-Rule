@@ -42,6 +42,10 @@ const FLASH_S: float = 0.18
 const GLINT: Color = Color(1.0, 0.1, 0.05, 0.95)
 const GLINT_S: float = 0.35
 const GLINT_Y: float = 1.9
+## A SHOT'S GLINT (Luke's F5, 2026-11-12: the draw pose, then a glint as it is about to loose): pale gold, never the
+## red of a swing no guard stops (a shot can be blocked and parried), this long before the missile flies.
+const SHOT_GLINT: Color = Color(1.0, 0.9, 0.55, 0.95)
+const SHOT_GLINT_LEAD_MS: int = 300
 ## The sparks: their colors, how long a burst lives, how high on the body it shows, and how far towards
 ## the attacker.
 const SPARK_HIT: Color = Color(1.0, 0.75, 0.35, 1.0)
@@ -52,6 +56,10 @@ const SPARK_Y: float = 1.2
 const SPARK_TOWARD_M: float = 0.35
 ## The statuses that change a flash (regents' status content).
 const STATUS_BLOCKING: int = 102
+const STATUS_ROLLING: int = 101
+## A rise in health this soon after a drop of the same size is that hit taken back, not a heal (ms). Longer than the
+## longest a press may be on its way (`foundation.rewind_max_ms` + `press_credit_cap_ms` + the slack, ~400).
+const TAKEN_BACK_MS: int = 900
 const STATUS_STAGGERED: int = 103
 ## What a stagger plays once as it lands (the set's clip), before its status's held dazed pose shows.
 const STAGGER_REACTION: StringName = &"react.stagger"
@@ -62,9 +70,21 @@ const STAGGER_REACTION: StringName = &"react.stagger"
 var shown: Array[float] = []
 var _health: SpaceTimeHealthComponent = null
 var _shake_left: float = 0.0
+## The last drop in its health (0: none to take back), when, and how many hits were taken back (tests read it).
+var _last_drop: float = 0.0
+var _last_drop_ms: int = -100000
+var taken_back: int = 0
+
+
+## Whether a rise of `rise` in health, `since_ms` after a drop of `last_drop`, is that hit TAKEN BACK (the server
+## gives back exactly what it took): the same amount, soon after.
+static func is_taken_back(rise: float, last_drop: float, since_ms: int) -> bool:
+	return last_drop > 0.0 and since_ms >= 0 and since_ms <= TAKEN_BACK_MS and absf(rise - last_drop) < 0.01
+
+
 ## The fire while it burns, or null.
 var fire: Node3D = null
-## Every flash shown, newest last, by name: &"hit", &"hurt", &"block", &"stagger", &"glint" (tests read it).
+## Every flash shown, newest last, by name: &"hit", &"hurt", &"block", &"stagger", &"glint", &"shot" (tests read it).
 var flashes: Array[StringName] = []
 ## Every spark shown, newest last: &"hit", &"big", &"block", &"stagger" (tests read it).
 var sparks: Array[StringName] = []
@@ -204,6 +224,14 @@ func _on_started(ability_id: int) -> void:
 		glint()
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	var foe: FoeDef = FoeDef.by_kind(ent.definition.kind) if ent != null and ent.definition != null else null
+	# A FOE'S SHOT: it glints a moment before it looses, unless the draw was stopped by then.
+	var shot: AbilityDef = foe.shot() if foe != null else null
+	var ring: AbilityDef = foe.ring() if foe != null else null
+	if ring != null and ring.id == ability_id:
+		shot = ring   # a ring's cast glints as a shot's does
+	if shot != null and shot.id == ability_id and is_inside_tree():
+		var wait_s: float = maxf(float(shot.wind_up_ms - SHOT_GLINT_LEAD_MS) / 1000.0, 0.0)
+		get_tree().create_timer(wait_s).timeout.connect(_shot_glint_if_drawing)
 	if foe != null and foe.parry_ring and foe.kit != null:
 		for a: AbilityDef in foe.kit.light:
 			if a != null and a.id == ability_id:
@@ -267,10 +295,28 @@ void fragment() {
 	return mi
 
 
+## The shot's glint, if its foe still draws (not staggered, flinched or slain since: the server looses nothing then).
+func _shot_glint_if_drawing() -> void:
+	var st: StatusDef = StatusDef.find(_status.status()) if _status != null else null
+	if st != null and not st.can_act:
+		return
+	shot_glint()
+
+
+## A SHOT'S GLINT: the star in pale gold, and no mark of an unblockable swing.
+func shot_glint() -> void:
+	flash(&"shot")
+	_star(SHOT_GLINT)
+
+
 ## THE GLINT: a red spark at its head, flaring and gone in `GLINT_S`, and a red flash over its body.
 func glint() -> void:
 	glinted_ms = Time.get_ticks_msec()
 	flash(&"glint")
+	_star(GLINT)
+
+
+func _star(color: Color) -> void:
 	var ent: Node3D = entity as Node3D
 	if ent == null or not ent.is_inside_tree():
 		return
@@ -281,7 +327,7 @@ func glint() -> void:
 	star.position = Vector3(0, GLINT_Y, 0)
 	star.scale = Vector3.ONE * 0.2
 	ent.add_child(star)
-	var mat: StandardMaterial3D = _glow(GLINT)
+	var mat: StandardMaterial3D = _glow(color)
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX   # over what is behind it: added to a pale skull, red turned orange
 	for size: Vector2 in [Vector2(0.45, 0.45), Vector2(1.3, 0.07), Vector2(0.07, 1.3)]:
 		var part := MeshInstance3D.new()
@@ -300,8 +346,20 @@ func glint() -> void:
 func _on_health_changed(_current: float, _max: float, delta: float) -> void:
 	if is_zero_approx(delta):
 		return
+	var now: int = Time.get_ticks_msec()
+	# A HIT TAKEN BACK (Luke, 2026-11-12: a hit is dealt at once, and a parry or a roll made in time but arriving
+	# after it takes it back): the health it took comes straight back. Not a heal: no green number; a roll says so
+	# (a parry already says "Parried" as its attacker staggers).
+	if delta > 0.0 and is_taken_back(delta, _last_drop, now - _last_drop_ms):
+		_last_drop = 0.0
+		taken_back += 1
+		if _status != null and _status.status() == STATUS_ROLLING:
+			say("Dodged", FLASH_BLOCK)
+		return
 	show_number(-delta)
 	if delta < 0.0:
+		_last_drop = -delta
+		_last_drop_ms = now
 		var source: int = _health.get_last_damage_source() if _health != null else 0
 		if _status != null and _status.status() == STATUS_BLOCKING and _guard_stopped(source):
 			flash(&"block")
@@ -471,7 +529,7 @@ func is_local() -> bool:
 ## LIGHT IT UP: every mesh of its look shows `kind`'s color over itself, fading over `FLASH_S`.
 func flash(kind: StringName) -> void:
 	flashes.append(kind)
-	var color: Color = {&"hit": FLASH_HIT, &"hurt": FLASH_HURT, &"block": FLASH_BLOCK, &"stagger": FLASH_STAGGER, &"glint": GLINT}.get(kind, FLASH_HIT)
+	var color: Color = {&"hit": FLASH_HIT, &"hurt": FLASH_HURT, &"block": FLASH_BLOCK, &"stagger": FLASH_STAGGER, &"glint": GLINT, &"shot": SHOT_GLINT}.get(kind, FLASH_HIT)
 	var ent: Node3D = entity as Node3D
 	if ent == null or not ent.is_inside_tree():
 		return

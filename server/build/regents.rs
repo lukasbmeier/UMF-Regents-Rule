@@ -346,8 +346,10 @@ pub fn regents_data() {
         let loot_table = f["loot_table"].as_i64().unwrap_or(-1).max(0);
         // What its kill leaves (skinning, 2026-11-09): a carcass node's id, or 0.
         let carcass = f["carcass"].as_i64().unwrap_or(-1).max(0);
+        // Where a shot the server aims at it goes (2026-11-11): the middle of its body; a man's chest in an older bake.
+        let aim_height = f.get("aim_height_m").and_then(|x| x.as_f64()).filter(|h| *h > 0.0).unwrap_or(1.1) as f32;
         out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, fights: {fights}, brain: {brain:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
-             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {}, carcass: {carcass} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
+             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {}, carcass: {carcass}, aim_height_m: {aim_height:?}f32 }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
             f["family"].as_str().unwrap_or(""), f["boss"].as_bool().unwrap_or(false), f["poise"].as_i64().unwrap_or(0).max(0)));
     }
     out.push_str("];\n\npub static SPELLS: &[SpellSeed] = &[\n");

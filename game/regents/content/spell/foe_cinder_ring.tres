@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_cinder_ring.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 1
+cost = 0.0
+cast_ms = 0
+radius_m = 3.0
+delay_ms = 1500
+id = 40008
+display_name = "Cinder ring"
+designer_notes = "THE IMP'S RING (Luke's F1, 2026-11-12): 3 m, on the ground under its target as the cast ends, landing 1500 ms later on every player still in it. A run leaves it in well under a second. No status (F8)."

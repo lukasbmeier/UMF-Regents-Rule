@@ -65,7 +65,11 @@ Foes get their own kits (`COMBAT_OVERHAUL.md` §2). These clips are the skeleton
 **Placeholders in use** (2026-10-31, PROGRESS step 26), UAL2 clips slowed in `game/regents/anim/adventurer.tres`
 until the real ones come: warrior `Sword_Heavy_A` ×0.7, `Sword_Heavy_B` ×0.75, finisher `Sword_Light_C` ×0.53;
 axeman `Sword_Heavy_A` ×0.65, finisher `Sword_Heavy_C` ×0.55. A new clip's wind-up is where its hand moves
-fastest (divided by its speed): set the ability's `wind_up_ms` to it when you swap one in.
+fastest (divided by its speed): set the ability's `wind_up_ms` to it when you swap one in. (Speeds since slowed a
+fifth, 2026-11-11.) THE WARRIOR'S BACKSWING is `Sword_Light_B` ×0.335 since 2026-11-13 (PROGRESS step 71; its
+recovery `Sword_Light_B_Rec`): `Sword_Heavy_B` began with the hand already in front and drifted across it, so its
+blow could not be read (Luke's presses came 200-400 ms early). A foe's clip must also HOLD THE HAND WIDE (40 degrees
+or more off straight ahead) through the first half of its wind-up: the regents suite checks every foe swing for it.
 
 - [ ] **Skeleton light swing, a long wind-up (~550 ms to the hit)**
   - M: *Zombie Attack: Zombie Swipe Attack* · *Mutant Swiping: Mutant Attacking With Left Hand* ·

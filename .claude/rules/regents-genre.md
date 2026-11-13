@@ -42,13 +42,68 @@ paths:
 - Still open, Luke's to decide (never default): #12 day/night, the other skills' minigames, how the
   minimap grows, what is still open in `MATERIALS.md` §11. The order of work: `GAME.md`. (#7 loot and #22 handles are settled:
   `GAME.md`.)
+- THE GLADE'S LOOK (PROGRESS step 59): a NEW NATURE MODEL (`game/regents/art/nature/`) gets `nature_import.gd` as its
+  import script (the suite names one that has not). The glade's ground is painted from its markers (`GroundPaint`:
+  a station, a child Path3D or Marker3D wears it; a gathering node sits in soil) and its grass is `Clutter`'s
+  MultiMeshes: never hand-place grass, flowers or pebbles as nodes. Both are flat-ground only; the continent has
+  neither yet. A check of where clutter stands reads `places_in`, never the MultiMesh (headless keeps no transforms).
 - The weapon and tool GRIPS (`*_grip.tres`, `*_grip_preview.tscn`) are Luke's to fix himself: never
   restore, rewrite or commit his edits to them; ask.
 - A content change publishes (`tools\publish.cmd`): the server takes content from the bake.
-- A FOE STAGGERS BY POISE (Luke, 2026-11-02, PROGRESS step 34): only the string's last hit breaks it; a new FoeDef
-  sets `poise` (0 = every last hit staggers). Shown on the target marker, never a bar under the health. PLAYERS HAVE
+- A FOE STAGGERS BY POISE (Luke, 2026-11-02, PROGRESS step 34): the string's last hit breaks it as it empties it; a
+  light that would empty it fills the bar instead, and ANY hit on a full bar breaks it (Luke, 2026-11-12, step 61); a
+  new FoeDef sets `poise` (0 = every last hit staggers). Shown on the target marker, never a bar under the health. PLAYERS HAVE
   NO POISE (Luke, 2026-11-04): a foe's unblocked last hit always staggers them. Armor (parked) has no weight: it never
   costs the roll or sprint.
+- SHOTS AND HITS AS THE PLAYER SEES THEM (Luke, 2026-11-11, PROGRESS step 60): a shot with no Tab target goes TO THE
+  CROSSHAIR (`CombatComponent.crosshair_point`, `launch_direction`: never along the look from the chest), with no aim
+  assist; a shot the server aims goes to the middle of its target (`FoeDef.aim_height_m`, from the character's
+  `collision_height`: give a new creature one). A hit on a player waits for a late parry only as long as THAT player's
+  line needs (`seen_delay`, `rules::hold_deadline_us`), and a roll is judged where it was pressed (`rules::roll_clears`):
+  never add a fixed wait to a hit. Since 2026-11-12 (step 62) a hit on a player is DEALT AT ONCE and taken back by a
+  parry or roll that arrives after it (`dealt_hit`, `take_back`; `regents.hit_at_once`); only one that staggers or
+  kills waits (`rules::hit_waits`). Anything new a hit DOES to a player (an effect, a push) is owed until it can no
+  longer be taken back (`settle_dealt_hit`), never done at once. A roll goes the way it began for its whole length. A new foe needs nothing for its
+  swing trail if its weapon is in its hand bone's mesh or it has a `Head` bone (`SwingTrail`); a new shot's look has
+  `shot_look.gd` at its root.
+- FACE YOUR TARGET (Luke, 2026-11-12, step 61): a bow's or a staff's shot is aimed at the Tab target only when it is
+  inside `regents.aim_arc_deg` (120) in front of the body; outside it the shot is REFUSED ("Face your target"), by the
+  client and by the server (`faces_target`). Never turn the body for the player, never quietly shoot elsewhere. The
+  upper body turns to the shot from the way the BODY faces, less where the pose points by itself (`CombatLook`'s
+  "pose points", Luke's to adjust with `tests/aim_shot.tscn`): never from the hands, which move through a draw.
+- A FOE'S BEHAVIOR IS A LIMBOAI TREE (Luke's F2, 2026-11-12, PROGRESS step 63; `FOES_PREP.md`): `FoeDef.behavior` names
+  `sidecar/npc/brains/regents/trees/<name>.tres`; a task (`tasks/foe_*.gd`, extends `RegentsFoeTask`) only calls a step
+  of `RegentsFoeBrain` (`foe.gd`), which keeps the foe's knowledge (target, turn, string, pack, aim). A new KIND of foe
+  is a new tree with new steps and tasks, never an `if` on the kind in an old step; the fighting tasks go BELOW
+  `foe_rest` (it finds the target they read). `game/` names a tree by its key only, never its path (rule 7b). Every foe
+  keeps the sheet's §4 rules (Luke: "smart but fun (not annoying or painful)"): every hurt announced, nothing from off
+  screen, a foe that keeps its distance is caught, never chained.
+- A FOE'S SHOT (Luke's F4-F7, 2026-11-12, PROGRESS step 64): a foe's kit ability that a BOLT `SpellDef` flies
+  (`rules::is_shot`), with `range_m` 0 and NOT judged (the server refuses one with a range). Its brain names the
+  target in `use_ability`; the server locks the aim `regents.foe_shot_lock_ms` before the tell ends and flies the
+  missile there (`foe_shot_due`), LED to where the target's walk carries it (`rules::lead_point`,
+  `regents.foe_shot_lead_pct`; Luke, 2026-11-13, step 67; a ring is never led): never roll its hit. On a player it goes through `land_on_player`,
+  the same lines a swing does: never judge a shot's hit anywhere else. A parry only knocks it away (`knocked_away`), it
+  never staggers, a roll lets it fly on, and it hurts nobody but players. A player's missile still never hurts a player.
+- A FOE THAT SHOOTS (PROGRESS step 65, the skeleton archer): `FoeDef.behavior = ranged`, its shot its kit's first skill
+  a bolt spell flies (`FoeDef.shot()`), its distances and rests on its FoeDef. Its kit's string is what it does up
+  close, and A STRING OF ONE STEP HAS NO FINISHER (server and client `is_finisher`): it never staggers and is never
+  unblockable. A shot takes a RANGED turn (`regents.ranged_tokens`), never a melee one. A NEW FOE ON AN OLD MODEL is
+  its FoeDef's look fields (`held_scene`, `hidden_meshes`, `albedo`: `FoeLook`), never a new scene. A change to a
+  ranged foe runs `game/regents/tests/archer_playtest.sh`.
+- NOTICING AND REST (Luke's F9-F12, 2026-11-13, PROGRESS step 68): a foe SEES only in front (`FoeDef.notice_arc_deg`,
+  from its yaw: the way it last walked or aimed) and HEARS all round (`hear_m`, `hear_sprint_m`); at rest it WANDERS
+  (`wander_m`); Startled, it turns on the status's `by_entity` (who hit it). A SUITE that needs a foe to notice it
+  stands IN FRONT of where the foe faces NOW (its body's `rotation.y`) or within its hearing of where it stands NOW,
+  never at a fixed side of its spawn point; and keeps other foes down when their wander could bring them in.
+  NOT CHAINED is the server's (`unchained`, private; `regents.unchained_ms`): a foe's stagger or slow on a player
+  goes through `unchained` / `chained_by`, never round them.
+- A SHOT'S BODY (PROGRESS step 66): every missile's `BodyDef.forces` is a `MissileFlight` (or extends it, as
+  `ArrowFlight`): it stops dead where it first touches. A new missile body without it skids off a moving target (the
+  suite's `_run_shot_stops` names the three; add a new one there).
+- A FOE THAT CASTS (step 66, the imp): the `ranged` tree, with `FoeDef.ring_every` and an AREA `SpellDef` skill for
+  its ring (range 0, not judged). A foe's ring lands on players only, damage only, and is LEFT, never blocked. A
+  change to it runs `game/regents/tests/caster_playtest.sh`.
 - AMERICAN SPELLING (Luke, 2026-11-04): armor, defense, color, gray, center, meter, canceled, behavior, mold, in
   everything a player reads and in every new name, rule, table and doc. Old names already published (tables, hot
   rules, ids) are renamed only where rule 17 allows. Swept 2026-11-04 (PROGRESS 38); British on purpose: the

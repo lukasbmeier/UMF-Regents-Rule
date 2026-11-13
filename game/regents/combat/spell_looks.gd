@@ -6,6 +6,8 @@ class_name SpellLooks extends Node3D
 
 const TABLE_AREA: StringName = &"spell_area"
 const RING_COLOR: Color = Color(0.55, 0.8, 1.0)
+## A FOE'S ring (the imp's, 2026-11-12): what to get out of, never the cool blue of a player's own.
+const FOE_RING_COLOR: Color = Color(1.0, 0.35, 0.12)
 ## How long a landed circle flashes.
 const FLASH_MSEC: int = 600
 
@@ -30,12 +32,15 @@ func _on_global(ev: RowEvent) -> void:
 		forget_area(int(ev.old.get(&"id")) if ev.old != null else -1)
 		return
 	var row: RefCounted = ev.current()
-	show_area(int(row.get(&"id")), row.get(&"pos") as Vector3, float(row.get(&"radius")), int(row.get(&"lands")), bool(row.get(&"landed")))
+	var owner_ent: SpaceTimeEntity = EntityRegistry.get_entity(int(row.get(&"owner"))) as SpaceTimeEntity
+	var hostile: bool = owner_ent != null and is_instance_valid(owner_ent) and owner_ent.definition != null and FoeDef.by_kind(owner_ent.definition.kind) != null
+	show_area(int(row.get(&"id")), row.get(&"pos") as Vector3, float(row.get(&"radius")), int(row.get(&"lands")), bool(row.get(&"landed")), hostile)
 
 
 ## A circle at `pos`, `radius` wide, landing at `lands_usec` (the server's clock); `landed` once it has.
-func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bool) -> void:
+func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bool, hostile: bool = false) -> void:
 	var a: Dictionary = _areas.get(id, {})
+	var color: Color = FOE_RING_COLOR if hostile else RING_COLOR
 	if a.is_empty():
 		var root := Node3D.new()
 		root.name = "Area_%d" % id
@@ -46,7 +51,7 @@ func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bo
 		torus.outer_radius = radius
 		ring.mesh = torus
 		ring.scale = Vector3(1, 0.1, 1)
-		ring.material_override = _glow(RING_COLOR, 1.0)
+		ring.material_override = _glow(color, 1.0)
 		root.add_child(ring)
 		var fill := MeshInstance3D.new()
 		fill.name = "Fill"
@@ -55,11 +60,11 @@ func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bo
 		disc.bottom_radius = radius
 		disc.height = 0.02
 		fill.mesh = disc
-		fill.material_override = _glow(Color(RING_COLOR, 0.35), 0.6)
+		fill.material_override = _glow(Color(color, 0.35), 0.6)
 		fill.scale = Vector3(0.01, 1, 0.01)
 		root.add_child(fill)
 		add_child(root)
-		a = {"node": root, "fill": fill, "seen_usec": ClockSync.server_usec(), "lands_usec": lands_usec, "landed_msec": -1}
+		a = {"node": root, "fill": fill, "seen_usec": ClockSync.server_usec(), "lands_usec": lands_usec, "landed_msec": -1, "color": color}
 		_areas[id] = a
 	(a["node"] as Node3D).position = pos + Vector3(0, 0.05, 0)
 	if landed and int(a["landed_msec"]) < 0:
@@ -90,7 +95,7 @@ func _process(_delta: float) -> void:
 		if int(a["landed_msec"]) >= 0:
 			var t: float = clampf(float(now - int(a["landed_msec"])) / float(FLASH_MSEC), 0.0, 1.0)
 			fill.scale = Vector3.ONE
-			(fill.material_override as StandardMaterial3D).albedo_color = Color(RING_COLOR, 0.7 * (1.0 - t))
+			(fill.material_override as StandardMaterial3D).albedo_color = Color(a.get("color", RING_COLOR) as Color, 0.7 * (1.0 - t))
 		else:
 			var k: float = maxf(area_fill(id), 0.01)
 			fill.scale = Vector3(k, 1, k)

@@ -736,6 +736,15 @@ fn a_foe_finisher_is_unblockable_and_a_player_has_nothing_unblockable() {
     for f in rules::FOES.iter().filter(|f| f.fights) {
         let kit = rules::kit_keyed(f.kit).unwrap();
         let last = *kit.light.last().unwrap();
+        // A STRING OF ONE STEP HAS NO FINISHER (2026-11-12, the archer's lone shove): it may be blocked and parried, and
+        // staggers nobody. A foe that shoots has its shot besides, and that is never unblockable either.
+        if kit.light.len() == 1 {
+            assert!(!kit.is_finisher(rules::KitSlot::Light(0)) && !kit.unblockable(last), "{}: its one swing is no finisher", f.name);
+            assert!(kit.skills.iter().any(|(a, _)| rules::is_shot(*a)), "{}: a foe with one swing is one that shoots", f.name);
+            assert!(kit.skills.iter().all(|(a, _)| !kit.unblockable(*a)), "{}: its shot may be blocked and parried", f.name);
+            continue;
+        }
+        assert!(kit.is_finisher(rules::KitSlot::Light(kit.light.len() as u32 - 1)));
         assert!(kit.unblockable(last), "{}: its finisher {last} is unblockable", f.name);
         assert!(kit.light[..kit.light.len() - 1].iter().all(|a| !kit.unblockable(*a)), "{}: its lights may be parried", f.name);
         assert!(rules::ITEMS.iter().all(|i| i.weapon_kit != f.kit), "no weapon wields {}", f.kit);
@@ -1076,6 +1085,35 @@ fn the_guard_parries_the_hit_as_seen_blocks_in_front_and_opens_a_riposte() {
     assert_eq!(rules::guard_credit_ms(None, 900, 120), 120, "a claim past the cap gains nothing");
     // A hit waits for the latest press that could still parry it.
     assert_eq!(rules::parry_deadline_us(land, 50, 150, 120), land + 320_000);
+    // ... as long as THAT PLAYER's line needs (2026-11-11: "the LAG when getting hit"): on a quick line little
+    // more than the late window; on a slow one as long as before; the latest press that parries still arrives
+    // inside it.
+    assert_eq!(rules::hold_deadline_us(land, 50, 2, 2, 40), land + 94_000, "a 4 ms round trip: 94 ms, not 320");
+    assert_eq!(rules::hold_deadline_us(land, 50, 150, 120, 0), rules::parry_deadline_us(land, 50, 150, 120), "at the caps: what it was");
+    for (seen, credit) in [(2u32, 2u32), (40, 40), (150, 120)] {
+        let arrives = land + (50 + seen as i64 + credit as i64) * 1000;   // pressed 50 ms after the hit, as seen
+        assert!(rules::parries(rules::press_seen_us(arrives, credit, seen, 150), land, 200, 50)
+            && arrives <= rules::hold_deadline_us(land, 50, seen, credit, 40), "the latest parry at {seen}+{credit} ms arrives before the hit is dealt");
+    }
+    assert!(land + (50 + 150 + 120) * 1000 > rules::hold_deadline_us(land, 50, 2, 2, 40), "(a press carrying more than the player's line said comes too late: the wait is theirs)");
+    // DEALT AT ONCE, TAKEN BACK IF A PARRY OR A ROLL COMES (Luke, 2026-11-12): a hit waits only while a press could
+    // still be coming AND it could not be taken back (it staggers, it kills), or with the rule off.
+    assert!(!rules::hit_waits(true, true, false, false), "an ordinary hit, a press maybe on its way: dealt at once");
+    assert!(rules::hit_waits(true, true, true, false), "one that staggers them waits (a staggered roll is refused unheard)");
+    assert!(rules::hit_waits(true, true, false, true), "one that would kill them waits (the dead are not brought back)");
+    assert!(rules::hit_waits(false, true, false, false), "NEGATIVE: the rule off, every hit waits as before");
+    assert!(!rules::hit_waits(true, false, true, true) && !rules::hit_waits(false, false, false, false),
+        "past the latest a press could arrive, nothing waits: it is dealt");
+    // THE ROLL, JUDGED WHERE IT WAS PRESSED (Luke, 2026-11-11): begun before the hit landed as its player saw
+    // it (or 50 ms after), and still rolling as it landed.
+    assert!(rules::roll_clears(land - 100_000, land, 550, 50), "rolled 100 ms before it landed, as seen: clear");
+    assert!(rules::roll_clears(land + 40_000, land, 550, 50), "40 ms after (the hand forgiven): clear");
+    assert!(!rules::roll_clears(land + 80_000, land, 550, 50), "80 ms after: hit");
+    assert!(!rules::roll_clears(land - 600_000, land, 550, 50), "a roll over before it landed: hit");
+    // The same roll with nothing taken off for its trip: judged at its arrival, too late. Arriving 120 ms
+    // after the hit landed, its trip 75 ms and the swing shown 75 ms late: pressed 30 ms before, as seen.
+    assert!(rules::roll_clears(rules::press_seen_us(land + 120_000, 75, 75, 150), land, 550, 50)
+        && !rules::roll_clears(land + 120_000, land, 550, 50), "the lag is what the roll is credited");
     // THE WHIFF LOCKOUT.
     assert!(rules::whiff_locked(s + 300_000, Some(s), false, 400), "a press 300 ms after one that parried nothing: locked");
     assert!(!rules::whiff_locked(s + 450_000, Some(s), false, 400), "450 ms after: counts");
@@ -1323,8 +1361,9 @@ fn a_roll_clears_a_swing_judged_a_miss() {
 }
 
 #[test]
-fn poise_breaks_only_on_the_last_hit_and_steadies() {
-    // Luke, 2026-11-02 (A with a short B): lights wear poise but never break it; the string's last hit breaks it.
+fn poise_breaks_on_the_last_hit_or_on_any_hit_once_worn_out_and_steadies() {
+    // Luke, 2026-11-02 (A with a short B): lights wear poise; the string's last hit breaks it as it empties it.
+    // Luke, 2026-11-12: a light that would empty it fills the bar instead, and the NEXT hit of any kind breaks it.
     let (most, light, last) = (70.0, 10.0, 40.0);
     let (a, broke) = rules::poise_hit(most, most, light, false, false);
     assert_eq!((a, broke), (60.0, false), "a light wears 10");
@@ -1332,9 +1371,24 @@ fn poise_breaks_only_on_the_last_hit_and_steadies() {
     let (c, broke) = rules::poise_hit(b, most, last, true, false);
     assert_eq!((c, broke), (10.0, false), "the sword's first string (10 + 10 + 40) leaves a skeleton 10 of 70: no stagger");
     let (d, _) = rules::poise_hit(c, most, light, false, false);
-    assert_eq!(d, 1.0, "NEGATIVE: a light never breaks it, it stops at 1");
+    assert_eq!(d, 1.0, "NEGATIVE: the light that would empty it does not break it: it stops at 1, the bar full");
     let (e, broke) = rules::poise_hit(d, most, last, true, false);
     assert_eq!((e, broke), (most, true), "the next last hit breaks it: a stagger, and it is whole again");
+    // THE BAR FULL, ANY HIT BREAKS IT (2026-11-12): the next LIGHT too, where before it sat full until a last hit.
+    assert_eq!(rules::poise_hit(d, most, light, false, false), (most, true), "worn out, the next light breaks it");
+    assert_eq!(rules::poise_hit(rules::POISE_FLOOR, most, 0.5, false, false), (rules::POISE_FLOOR, false),
+        "(a touch that would not empty it does not: the hit must wear it out)");
+    assert_eq!(rules::poise_hit(2.0, most, light, false, false), (1.0, false), "NEGATIVE: not yet full (2 left), a light only fills it");
+    assert_eq!(rules::poise_hit(d, most, light, false, true), (d, false), "NEGATIVE: steadied, a full bar is not broken either");
+    // The sword on a skeleton: 10 + 10 + 40 = 60 of 70; the fourth hit (a light) fills it; the fifth, any hit, breaks.
+    let mut left = most;
+    let mut broke_at = 0;
+    for (i, (wear, is_last)) in [(light, false), (light, false), (last, true), (light, false), (light, false)].into_iter().enumerate() {
+        let (after, broke) = rules::poise_hit(left, most, wear, is_last, false);
+        left = after;
+        if broke && broke_at == 0 { broke_at = i + 1; }
+    }
+    assert_eq!(broke_at, 5, "the string and two more taps: the second tap staggers (it waited for the next last hit before)");
     // HEAVY: 35 % more on the last hit breaks a 70-poise foe in one string (10 + 10 + 54 = 74).
     let (h, broke) = rules::poise_hit(50.0, most, last * 1.35, true, false);
     assert!(broke && h == most, "Heavy breaks it with the first string");
@@ -1347,4 +1401,141 @@ fn poise_breaks_only_on_the_last_hit_and_steadies() {
     assert_eq!(rules::poise_now(12.0, most, 3000, 3000.0), most);
     // Every foe has poise; the dummy's is a live rule.
     assert!(rules::FOES.iter().all(|f| f.poise > 0), "every foe has poise");
+}
+
+/// A FOE'S SHOT (FOES_PREP.md F4-F7, 2026-11-12): which abilities are shots, when one locks its aim and flies, where it
+/// leaves its shooter, how it goes on past a roller, and that it never waits as a hit that staggers does.
+#[test]
+fn a_foes_shot_locks_its_aim_then_flies_and_a_roll_lets_it_through() {
+    use umf_module::sim::Vector3;
+    // A shot is an ability a bolt spell flies: the staff's bolt is, a circle or a blink is not, nor any swing.
+    for s in rules::SPELLS {
+        assert_eq!(rules::is_shot(s.ability), s.kind == rules::SPELL_BOLT, "spell of ability {}", s.ability);
+    }
+    assert!(rules::SPELLS.iter().any(|s| s.kind == rules::SPELL_BOLT) && rules::SPELLS.iter().any(|s| s.kind != rules::SPELL_BOLT));
+    for k in rules::KITS.iter().filter(|k| k.resource == 0 && k.draw_full_ms == 0) {
+        for a in k.light {
+            assert!(!rules::is_shot(*a), "the {} kit's swing {a} is no shot", k.key);
+        }
+    }
+    assert!(!rules::is_shot(0) && !rules::is_shot(rules::ABILITY_DODGE));
+
+    // The aim locks `lock_ms` before the tell ends, and the missile flies as it ends.
+    let t0 = 5_000_000_i64;
+    assert_eq!(rules::shot_times_us(t0, 1200, 250), (t0 + 950_000, t0 + 1_200_000));
+    assert_eq!(rules::shot_times_us(t0, 1200, 0), (t0 + 1_200_000, t0 + 1_200_000), "no lock: aimed as it flies");
+    // A lock longer than the tell locks as the draw begins, never before it.
+    assert_eq!(rules::shot_times_us(t0, 300, 1500), (t0, t0 + 300_000));
+    let (lock, loose) = rules::shot_times_us(t0, 0, 250);
+    assert!(lock == t0 && loose == t0);
+
+    // A SHOT LEADS A MOVER (Luke, 2026-11-13): a target walking 5 m/s across a shooter 10 m off, the arrow at 26 m/s
+    // loosed 0.25 s after the lock, is met where the walk takes it as the shot arrives.
+    use umf_module::sim::Vector3 as V;
+    let (from, at, walk) = (V::new(0.0, 1.45, 0.0), V::new(0.0, 1.1, 10.0), V::new(5.0, 0.0, 0.0));
+    let led = rules::lead_point(from, at, walk, 26.0, 0.25, 100.0);
+    let d = ((led.x - from.x).powi(2) + (led.y - from.y).powi(2) + (led.z - from.z).powi(2)).sqrt();
+    let t = 0.25 + d / 26.0;
+    assert!((led.x - 5.0 * t).abs() < 0.02 && led.z == at.z && led.y == at.y, "met where the walk takes it: {led:?} at {t} s");
+    assert!(led.x > 3.0, "a steady walk is led meters, not a nudge: {}", led.x);
+    // NEGATIVE: 0 % is where they stood (the first build), and so is a target standing still, at any share.
+    let stood = rules::lead_point(from, at, walk, 26.0, 0.25, 0.0);
+    assert!(stood.x == at.x && stood.z == at.z, "0 %: no lead");
+    let still = rules::lead_point(from, at, V::new(0.0, 0.0, 0.0), 26.0, 0.25, 100.0);
+    assert!(still.x == at.x && still.z == at.z, "standing still: no lead");
+    // Half the share, half the lead; a jump (up only) is not led; a roll's burst is capped at LEAD_MAX_MPS.
+    let half = rules::lead_point(from, at, walk, 26.0, 0.25, 50.0);
+    assert!((half.x - led.x * 0.5).abs() < 0.05, "50 %: half way ({} of {})", half.x, led.x);
+    let jump = rules::lead_point(from, at, V::new(0.0, 6.0, 0.0), 26.0, 0.25, 100.0);
+    assert!(jump.x == at.x && jump.y == at.y && jump.z == at.z, "a jump is not led");
+    let burst = rules::lead_point(from, at, V::new(20.0, 0.0, 0.0), 26.0, 0.25, 100.0);
+    let capped = rules::lead_point(from, at, V::new(rules::LEAD_MAX_MPS, 0.0, 0.0), 26.0, 0.25, 100.0);
+    assert!((burst.x - capped.x).abs() < 1e-4, "a burst past {} m/s is led as that", rules::LEAD_MAX_MPS);
+    // The imp's slow ember (12 m/s) is led further for the same walk: its flight is longer.
+    assert!(rules::lead_point(from, at, walk, 12.0, 0.25, 100.0).x > led.x);
+
+    // NOT CHAINED (Luke's F12, 2026-11-13): foe 7 staggered a player, holding the window to 1.5 s. Another foe's
+    // stagger or slow inside it is kept off; after it, or foe 7's own string, lands.
+    let until = t0 + 1_500_000;
+    assert!(rules::is_chained(t0 + 400_000, until, 7, 8), "another foe 400 ms after: kept off");
+    assert!(rules::is_chained(until - 1, until, 7, 8), "to the last microsecond");
+    assert!(!rules::is_chained(until, until, 7, 8), "NEGATIVE: once the window is over, it lands");
+    assert!(!rules::is_chained(t0 + 400_000, until, 7, 7), "NEGATIVE: the same foe's own string is never kept off");
+    assert!(!rules::is_chained(t0 + 400_000, t0, 7, 8), "NEGATIVE: a window of 0 (regents.unchained_ms 0) keeps nothing off");
+
+    // It leaves a man at the height a player's arrow does; a smaller body lower.
+    assert!((rules::shot_height(rules::AIM_HEIGHT_M) - 1.45).abs() < 1e-5);
+    assert!(rules::shot_height(0.5) < rules::shot_height(rules::AIM_HEIGHT_M));
+
+    // Rolled through, it goes on from past the roller, along its own flight (not back, not aside).
+    let on = rules::pass_through(Vector3::new(10.0, 1.2, 4.0), Vector3::new(0.0, 0.0, -30.0), 1.2).expect("a flying missile goes on");
+    assert!((on.x - 10.0).abs() < 1e-5 && (on.y - 1.2).abs() < 1e-5 && (on.z - 2.8).abs() < 1e-5, "{on:?}");
+    let on = rules::pass_through(Vector3::new(0.0, 1.0, 0.0), Vector3::new(18.0, -6.0, 24.0), 2.0).unwrap();
+    let d = ((on.x * on.x) + (on.y - 1.0) * (on.y - 1.0) + (on.z * on.z)).sqrt();
+    assert!((d - 2.0).abs() < 1e-4 && on.x > 0.0 && on.z > 0.0 && on.y < 1.0, "{on:?}");
+    // NEGATIVE: one that has stopped (or a bad number) has no way on: it ends where it is.
+    assert!(rules::pass_through(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 0.0), 1.2).is_none());
+    assert!(rules::pass_through(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.2, 0.0, 0.3), 1.2).is_none());
+    assert!(rules::pass_through(Vector3::new(0.0, 0.0, 0.0), Vector3::new(f32::NAN, 0.0, 30.0), 1.2).is_none());
+
+    // A shot never staggers, so with the rule on it is dealt at once unless it would kill; a swing that staggers waits.
+    assert!(!rules::hit_waits(true, true, false, false), "a shot is dealt at once, to be taken back");
+    assert!(rules::hit_waits(true, true, false, true), "one that would kill waits for the parry or roll");
+    assert!(rules::hit_waits(true, true, true, false), "NEGATIVE: a last hit that staggers still waits");
+    assert!(!rules::hit_waits(true, false, false, true), "past the window nothing waits");
+}
+
+/// THE SKELETON ARCHER (FOES_PREP.md section 6, Luke's F1, 2026-11-12): a foe whose kit has a shot the server can fly.
+#[test]
+fn the_skeleton_archer_has_a_shot_the_server_can_fly() {
+    let f = rules::FOES.iter().find(|f| f.key == "skeleton_archer").expect("the archer is a foe");
+    assert!(f.fights && f.brain == "regents/foe" && rules::FOE_KINDS.contains(&f.kind) && f.family == "undead");
+    assert!(f.hp < 120 && f.poise > 0, "frailer than a warrior, with poise");
+    let kit = rules::kit_keyed(f.kit).expect("its kit");
+    let (shot, _) = *kit.skills.iter().find(|(a, _)| rules::is_shot(*a)).expect("its kit has a shot");
+    let spell = rules::spell_of(shot).unwrap();
+    assert_eq!(spell.body as u32, rules::BODY_ARROW, "it shoots an arrow (it arcs)");
+    assert!(spell.speed >= 15.0 && spell.speed <= 40.0, "fast enough to reach, slow enough to see: {}", spell.speed);
+    assert!(spell.splash_m == 0.0 && spell.burn_dps == 0.0 && spell.status == 0, "F8: a foe's shot does damage only");
+    assert_eq!(rules::kit_of_ability(shot).map(|(k, s)| (k.key, matches!(s, rules::KitSlot::Skill(..)))), Some((f.kit, true)));
+    assert!(kit.lock_ms(shot) > 0 && !kit.unblockable(shot) && kit.hit_of(shot).is_none());
+    // Its shove pushes, and (one step, no finisher) staggers nobody.
+    let shove = kit.light[0];
+    assert!(kit.hit_of(shove).is_some_and(|h| h.push_mps > 0.0) && !kit.is_finisher(rules::KitSlot::Light(0)));
+    // NEGATIVE: no weapon gives a player this kit, and the warriors' kits have no shot.
+    assert!(rules::ITEMS.iter().all(|i| i.weapon_kit != f.kit));
+    for other in rules::FOES.iter().filter(|o| o.fights && o.key != "skeleton_archer" && o.key != "imp") {
+        let k = rules::kit_keyed(other.kit).unwrap();
+        assert!(k.light.iter().chain(k.skills.iter().map(|(a, _)| a)).all(|a| !rules::is_shot(*a)), "{} does not shoot", other.name);
+    }
+}
+
+/// THE IMP CASTER (FOES_PREP.md section 6, Luke's F1, F8, F13, 2026-11-12): a bolt slow enough to sidestep, and a ring
+/// on the ground that is only left.
+#[test]
+fn the_imp_casts_a_slow_bolt_and_a_ring_that_is_only_left() {
+    let f = rules::FOES.iter().find(|f| f.key == "imp").expect("the imp is a foe");
+    assert!(f.fights && f.family == "fiend" && rules::FOE_KINDS.contains(&f.kind) && f.poise > 0 && f.poise <= 40, "poise low enough that a hit or two stops its cast");
+    let kit = rules::kit_keyed(f.kit).expect("its kit");
+    let (bolt, _) = *kit.skills.iter().find(|(a, _)| rules::is_shot(*a)).expect("a bolt");
+    let (ring, _) = *kit.skills.iter().find(|(a, _)| rules::spell_of(*a).is_some_and(|s| s.kind == rules::SPELL_AREA)).expect("a ring");
+    assert!(rules::is_foe_cast(bolt) && rules::is_foe_cast(ring) && !rules::is_shot(ring), "both are cast; only the bolt is a shot");
+    let (b, r) = (rules::spell_of(bolt).unwrap(), rules::spell_of(ring).unwrap());
+    let archer = rules::FOES.iter().find(|f| f.key == "skeleton_archer").unwrap();
+    let arrow = rules::kit_keyed(archer.kit).unwrap().skills.iter().find(|(a, _)| rules::is_shot(*a)).map(|(a, _)| rules::spell_of(*a).unwrap()).unwrap();
+    assert!(b.speed <= 15.0 && b.speed < arrow.speed, "its bolt is slower than an arrow: sidestepped at 8 m ({})", b.speed);
+    assert!(r.radius_m >= 2.0 && r.radius_m <= 4.0 && r.delay_ms >= 1200, "the ring: room and time to walk out ({} m, {} ms)", r.radius_m, r.delay_ms);
+    // F8: damage only from a foe's spell.
+    for s in [b, r] {
+        assert!(s.status == 0 && s.burn_dps == 0.0 && s.splash_m == 0.0 && s.push_mps == 0.0 && s.cost == 0.0);
+    }
+    // The aim: a shot locks before its tell ends; a ring is placed as its cast ends.
+    assert_eq!(rules::cast_lock_ms(bolt, 250), 250);
+    assert_eq!(rules::cast_lock_ms(ring, 250), 0);
+    // NEGATIVE: a blink or a cone is nothing a foe casts this way, nor is a swing.
+    for s in rules::SPELLS.iter().filter(|s| s.kind == rules::SPELL_BLINK || s.kind == rules::SPELL_CONE) {
+        assert!(!rules::is_foe_cast(s.ability));
+    }
+    assert!(!rules::is_foe_cast(kit.light[0]) && !kit.is_finisher(rules::KitSlot::Light(0)));
+    assert!(rules::ITEMS.iter().all(|i| i.weapon_kit != f.kit), "no weapon gives a player the imp's kit");
 }

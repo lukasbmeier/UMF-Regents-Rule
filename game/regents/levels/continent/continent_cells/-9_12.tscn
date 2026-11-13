@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_bc44i"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_a81fc"]
 
-[node name="Cell_-9_12" type="Node3D" unique_id=419068862]
+[node name="Cell_-9_12" type="Node3D" unique_id=241343773]
 
-[node name="w_flax_8" type="Marker3D" parent="." unique_id=1700821866]
+[node name="w_flax_8" type="Marker3D" parent="." unique_id=1833377355]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -542.36127, 0.7607263, 807.81323)
 gizmo_extents = 0.5
 script = ExtResource("1_rur2i")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.5
 tags = PackedStringArray("Flax")
 
-[node name="w_deer_11" type="Marker3D" parent="." unique_id=633647680]
+[node name="w_deer_11" type="Marker3D" parent="." unique_id=507053460]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -563.2543, 0.8763523, 778.95404)
 gizmo_extents = 0.5
 script = ExtResource("1_rur2i")
@@ -24,7 +24,7 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_deer_12" type="Marker3D" parent="." unique_id=826172960]
+[node name="w_deer_12" type="Marker3D" parent="." unique_id=1662177429]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -561.62134, 0.7116174, 775.30255)
 gizmo_extents = 0.5
 script = ExtResource("1_rur2i")
@@ -33,8 +33,8 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="rock_big_1_103" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_bc44i")]
+[node name="rock_big_1_103" type="Node3D" parent="." unique_id=1369380149 instance=ExtResource("2_bc44i")]
 transform = Transform3D(-0.004664945, 0, 0.8240676, 0, 0.8240808, 0, -0.8240676, 0, -0.004664945, -547.2, 0.948018, 791.0134)
 
-[node name="rock_medium_1_104" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_a81fc")]
+[node name="rock_medium_1_104" type="Node3D" parent="." unique_id=284986976 instance=ExtResource("3_a81fc")]
 transform = Transform3D(0.17405221, 0, 1.0394168, 0, 1.0538888, 0, -1.0394168, 0, 0.17405221, -543.14575, 1.3250531, 789.7239)

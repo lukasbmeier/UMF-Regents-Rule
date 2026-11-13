@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="KitDef" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/sorcery.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_claw.tres" id="a0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_ember.tres" id="s0"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_cinder_ring.tres" id="s1"]
+
+[resource]
+script = ExtResource("1_kit")
+key = &"imp"
+skill = ExtResource("2_skill")
+light = Array[Resource]([ExtResource("a0")])
+skills = Array[Resource]([ExtResource("s0"), ExtResource("s1")])
+skill_ranks = PackedInt32Array(0, 0)
+id = 40010
+display_name = "Imp"
+designer_notes = "A CASTING FOE'S KIT (Luke's F1, 2026-11-12, FOES_PREP.md section 6): the imp's. Its bolt (a skill a bolt SpellDef flies) and its ring (a skill an area SpellDef lays), cast by the ranged tree; its string is one claw for a player in its reach. No pool: a foe's casts are paced by its FoeDef's rests. No weapon names it."

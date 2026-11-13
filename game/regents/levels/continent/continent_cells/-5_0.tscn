@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Grass_Common_Tall.gltf" id="3_pjamq"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="4_nugn3"]
 
-[node name="Cell_-5_0" type="Node3D" unique_id=309601778]
+[node name="Cell_-5_0" type="Node3D" unique_id=1599168776]
 
-[node name="w_flax_15" type="Marker3D" parent="." unique_id=2145768803]
+[node name="w_flax_15" type="Marker3D" parent="." unique_id=1222322092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -311.8099, 3.0390575, 14.959232)
 gizmo_extents = 0.5
 script = ExtResource("1_dsrh8")
@@ -16,11 +16,11 @@ kind = "node"
 radius = 0.5
 tags = PackedStringArray("Flax")
 
-[node name="rock_medium_1_202" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("2_q718d")]
+[node name="rock_medium_1_202" type="Node3D" parent="." unique_id=284986976 instance=ExtResource("2_q718d")]
 transform = Transform3D(-1.1448756, 0, 0.2459041, 0, 1.1709863, 0, -0.2459041, 0, -1.1448756, -307.67615, 4.600868, 51.530396)
 
-[node name="grass_common_tall_203" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("3_pjamq")]
+[node name="grass_common_tall_203" type="Node3D" parent="." unique_id=1877080617 instance=ExtResource("3_pjamq")]
 transform = Transform3D(0.9455734, 0, -0.5562187, 0, 1.0970361, 0, 0.5562187, 0, 0.9455734, -299.53912, 4.6341066, 55.528164)
 
-[node name="rock_big_1_204" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("4_nugn3")]
+[node name="rock_big_1_204" type="Node3D" parent="." unique_id=1369380149 instance=ExtResource("4_nugn3")]
 transform = Transform3D(-0.680342, 0, -0.7943415, 0, 1.0458698, 0, 0.7943415, 0, -0.680342, -263.99994, 4.391056, 55.902393)

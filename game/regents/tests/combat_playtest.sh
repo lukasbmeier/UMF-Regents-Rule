@@ -30,10 +30,14 @@ spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 || { echo "set_dev_tools
 # shot hits, so a played check never fails one time in twelve on a rolled miss (2026-10-31: "92 % to hit: wide").
 spacetime call "$DB" set_rule '"regents.hit_near_pct"' 100.0 '""' >/dev/null 2>&1
 spacetime call "$DB" set_rule '"regents.hit_far_pct"' 100.0 '""' >/dev/null 2>&1
+# The camp's ARCHER holds its fire here (0 turns for a shot): this suite measures the melee camp's hits one at a time,
+# and an arrow in the middle of a block or parry leg is another hit. The archer has its own: archer_playtest.sh.
+spacetime call "$DB" set_rule '"regents.ranged_tokens"' 0.0 '""' >/dev/null 2>&1 || { echo "set_rule ranged_tokens failed" >&2; exit 1; }
 sleep 2
 
 ref_log="$(mktemp)"; fight_log="$(mktemp)"; ref_pid=""; fight_pid=""
-cleanup() { [ -n "$fight_pid" ] && kill "$fight_pid" 2>/dev/null; [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$ref_log" "$fight_log"; }
+# KEEP_LOGS=<dir>: the fighter's and the referee's whole logs are copied there as the run ends (to read a failure).
+cleanup() { [ -n "${KEEP_LOGS:-}" ] && mkdir -p "$KEEP_LOGS" && cp "$fight_log" "$KEEP_LOGS/fighter.log" 2>/dev/null && cp "$ref_log" "$KEEP_LOGS/referee.log" 2>/dev/null; [ -n "$fight_pid" ] && kill "$fight_pid" 2>/dev/null; [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$ref_log" "$fight_log"; }
 trap cleanup EXIT
 
 echo "== the world's referee =="
@@ -96,6 +100,13 @@ if grep -E "SCRIPT ERROR" "$fight_log" >/dev/null; then
   echo "VIOLATION: script errors:" >&2; grep -E "SCRIPT ERROR" -A3 "$fight_log" | head -12 >&2; status=1
 fi
 echo "-- the referee"; grep -E "judged|ERROR" "$ref_log" | head -8
+# A referee that went quiet mid-run fails everything after it and says nothing above: its last words, and whether
+# it was still running (2026-11-12: a run lost its referee two minutes in, with no error in its log's first lines).
+if [ "$status" -ne 0 ]; then
+  if kill -0 "$ref_pid" 2>/dev/null; then echo "   (the referee was still running at the end)"; else echo "   (THE REFEREE HAD EXITED before the end)"; fi
+  echo "-- the referee's last lines"; tail -40 "$ref_log" | cut -c1-300
+  cp "$ref_log" "${TMPDIR:-/tmp}/combat_playtest_referee.log" 2>/dev/null
+fi
 # Its feed (template #286): what it reads, never input_queue, and nothing read that it does not ask for.
 feed="$(grep -m1 "a referee's feed: " "$ref_log")"
 echo "   ${feed#*\[Sidecar\] }"
@@ -106,5 +117,28 @@ if grep -q "this referee read" "$ref_log"; then
   echo "  FAIL: the referee read a table it does not subscribe:" >&2; grep -o "this referee read '[a-z_]*'" "$ref_log" | sort -u >&2; status=1
 fi
 echo "-- the server's log"
-spacetime logs "$DB" 2>/dev/null | grep -E "regents: .* wields|Rolling|Blocking|parried" | tail -8
+all_logs="$(spacetime logs "$DB" -n 30000 2>/dev/null)"
+echo "$all_logs" | grep -E "regents: .* wields|Rolling|Blocking|parried" | tail -8
+# NOT CHAINED (Luke's F12, 2026-11-13): with the camp's three on us, no two DIFFERENT foes' finishers stagger one body
+# inside regents.unchained_ms (1500) of each other; a held-off one says "does not land: not chained".
+staggers="$(echo "$all_logs" | grep -E "'s finisher staggered [0-9]+ for" \
+  | sed -E "s/^[0-9-]+T([0-9:.]+)Z.*regents: ([0-9]+)'s finisher staggered ([0-9]+) for.*/\1 \2 \3/")"
+chained="$(echo "$staggers" | awk -v w=1.5 'NF == 3 { split($1, h, ":"); s = h[1] * 3600 + h[2] * 60 + h[3];
+  if (($3 in last) && who[$3] != $2 && s - last[$3] < w) bad++; last[$3] = s; who[$3] = $2 } END { print bad + 0 }')"
+held="$(echo "$all_logs" | grep -c "does not land: not chained")"
+seen="$(echo "$staggers" | grep -c .)"
+if [ "$chained" -eq 0 ]; then
+  echo "   ok: NEGATIVE: of $seen staggers by a finisher, none by another foe inside 1500 ms of one ($held held off: not chained)"
+else
+  echo "  FAIL: $chained staggers by a second foe inside 1500 ms of another's (of $seen; $held held off)" >&2; status=1
+fi
+# PARRIED, ITS STRING GOES ON (Luke, 2026-11-13: "it jumps straight to hit 3"): a staggered foe sends no swing to be
+# refused (one sent was counted as its next step: his play's log had 10).
+refused_stag="$(echo "$all_logs" | grep -c "use_ability_as: use_ability: you cannot while staggered")"
+parried_n="$(echo "$all_logs" | grep -cE "regents: [0-9]+ parried [0-9]+'s")"
+if [ "$refused_stag" -eq 0 ] && [ "$parried_n" -gt 0 ]; then
+  echo "   ok: NEGATIVE: of $parried_n parries, no parried foe sent a swing while staggered (a step of its string lost)"
+else
+  echo "  FAIL: $refused_stag foe swings refused while staggered ($parried_n parries)" >&2; status=1
+fi
 exit "$status"

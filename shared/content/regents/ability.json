@@ -195,7 +195,7 @@
 			"radius": 0.5,
 			"range": 2.0,
 			"reach": 2.0,
-			"wind_up_ms": 550
+			"wind_up_ms": 660
 		},
 		{
 			"ability_id": 40018,
@@ -208,7 +208,7 @@
 			"radius": 0.5,
 			"range": 2.0,
 			"reach": 2.0,
-			"wind_up_ms": 580
+			"wind_up_ms": 700
 		},
 		{
 			"ability_id": 40019,
@@ -234,7 +234,7 @@
 			"radius": 0.55,
 			"range": 2.0,
 			"reach": 2.0,
-			"wind_up_ms": 590
+			"wind_up_ms": 710
 		},
 		{
 			"ability_id": 40021,
@@ -325,7 +325,7 @@
 			"radius": 0.5,
 			"range": 2.0,
 			"reach": 2.0,
-			"wind_up_ms": 550
+			"wind_up_ms": 650
 		},
 		{
 			"ability_id": 40028,
@@ -338,7 +338,7 @@
 			"radius": 0.5,
 			"range": 2.0,
 			"reach": 2.0,
-			"wind_up_ms": 620
+			"wind_up_ms": 720
 		},
 		{
 			"ability_id": 40029,
@@ -352,6 +352,71 @@
 			"range": 3.0,
 			"reach": 3.0,
 			"wind_up_ms": 820
+		},
+		{
+			"ability_id": 40030,
+			"cooldown_ms": 500,
+			"damage": 30.0,
+			"height": 0.6,
+			"judged": false,
+			"lunges": false,
+			"name": "Bone arrow",
+			"radius": 0.35,
+			"range": 0.0,
+			"reach": 1.4,
+			"wind_up_ms": 1200
+		},
+		{
+			"ability_id": 40031,
+			"cooldown_ms": 500,
+			"damage": 8.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Shove",
+			"radius": 0.6,
+			"range": 1.9,
+			"reach": 1.9,
+			"wind_up_ms": 650
+		},
+		{
+			"ability_id": 40032,
+			"cooldown_ms": 500,
+			"damage": 30.0,
+			"height": 0.6,
+			"judged": false,
+			"lunges": false,
+			"name": "Ember",
+			"radius": 0.35,
+			"range": 0.0,
+			"reach": 1.4,
+			"wind_up_ms": 1000
+		},
+		{
+			"ability_id": 40033,
+			"cooldown_ms": 500,
+			"damage": 53.0,
+			"height": 0.6,
+			"judged": false,
+			"lunges": false,
+			"name": "Cinder ring",
+			"radius": 0.35,
+			"range": 0.0,
+			"reach": 1.4,
+			"wind_up_ms": 700
+		},
+		{
+			"ability_id": 40034,
+			"cooldown_ms": 500,
+			"damage": 14.0,
+			"height": 0.9,
+			"judged": true,
+			"lunges": false,
+			"name": "Claw",
+			"radius": 0.55,
+			"range": 1.7,
+			"reach": 1.7,
+			"wind_up_ms": 600
 		}
 	],
 	"owner": "regents",

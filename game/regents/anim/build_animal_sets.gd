@@ -45,8 +45,8 @@ const WOLF: Dictionary = {
 	&"react.dazed": [&"Idle_2_HeadLow", true, 1.0],
 	&"react.death": [&"Death", false, 1.0],
 	&"interact": [&"Eating", true, 1.0],
-	&"ability.40027": [&"Attack", false, 1.4],
-	&"ability.40028": [&"Attack", false, 1.25],
+	&"ability.40027": [&"Attack", false, 1.185],
+	&"ability.40028": [&"Attack", false, 1.076],
 	&"ability.40029": [&"Attack", false, 1.0],
 }
 const WOLF_UPPER: Array[StringName] = [&"Neck1", &"Neck2", &"Neck3", &"Head"]

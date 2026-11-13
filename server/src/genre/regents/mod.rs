@@ -566,7 +566,12 @@ pub struct FoeSeed {
     pub poise: u32,
     /// What its kill leaves (skinning, 2026-11-09): a CARCASS, a node of this id where it fell (0: its body only).
     pub carcass: u32,
+    /// How high above its feet a shot the server aims at it goes: the middle of its body (`FoeDef.aim_height_m`).
+    pub aim_height_m: f32,
 }
+
+/// Where a shot is aimed on a body with no size of its own (a player, a dummy): a man's chest.
+pub const AIM_HEIGHT_M: f32 = 1.1;
 
 /// How long more a carcass is `owner`'s alone, in ms, as `who` asks at `now_us` (0: anyone may skin it now; always 0
 /// for its owner). Skinning, Luke 2026-11-09: "the killer first, then anyone", for `own_s` seconds after it fell.
@@ -682,18 +687,29 @@ pub fn lessons_ticked(done: &[u32], deed: Deed, item: u32) -> (Vec<u32>, bool) {
 
 /// POISE (Luke, 2026-11-02: "the guard handle plus Heavy allows for almost infinite stagger"; option A, a bar that
 /// breaks, with a short B, Steadied, after each break): a hit of `wear` on poise `left` (of `most`). Every hit wears
-/// it; only the string's LAST hit (`last`) can break it, so a light stops at 1. Broken, it is whole again and the hit
-/// STAGGERS. While `steadied` nothing wears it. Returns what is left, and whether it broke.
+/// it. The string's LAST hit (`last`) breaks it the moment it empties it. A light that would empty it stops at 1: the
+/// bar is FULL; and ANY hit on a bar already full breaks it (Luke, 2026-11-12: "if the stagger bar is full (orange)
+/// the next hit should stagger not just the next finisher hit"; before, only the last hit ever broke it, so a full
+/// bar sat full through every light). Broken, it is whole again and the hit STAGGERS. While `steadied` nothing wears
+/// it. Returns what is left, and whether it broke.
 pub fn poise_hit(left: f32, most: f32, wear: f32, last: bool, steadied: bool) -> (f32, bool) {
     if steadied || most <= 0.0 {
         return (left, false);
     }
     let after = left - wear.max(0.0);
-    if last && after <= 0.0 {
+    let worn_out = left <= POISE_FLOOR;
+    if after <= 0.0 && (last || worn_out) {
         return (most, true);
     }
-    (after.max(1.0_f32.min(left)), false)
+    (after.max(POISE_FLOOR.min(left)), false)
 }
+
+/// What a light leaves of a poise it would have emptied: the bar reads full, and the next hit breaks it.
+pub const POISE_FLOOR: f32 = 1.0;
+
+/// How much wider than `regents.aim_arc_deg` the server takes a shooter's facing to be (degrees, the whole arc): the
+/// body's turn reaches the server a moment after the client checked it.
+pub const AIM_ARC_SLACK_DEG: f32 = 30.0;
 
 /// Poise `left` (of `most`) `since_ms` after its last hit: whole again once `regen_ms` have passed unhit.
 pub fn poise_now(left: f32, most: f32, since_ms: i64, regen_ms: f32) -> f32 {
@@ -848,9 +864,10 @@ impl KitSeed {
         self.follow_ms.get(step as usize).copied().unwrap_or(200)
     }
 
-    /// Whether `slot` is the FINISHER: the string's last step (armor, it flinches a light, it staggers).
+    /// Whether `slot` is the FINISHER: the string's last step (armor, it flinches a light, it staggers). A string of
+    /// ONE STEP has none (2026-11-12: the archer's lone shove must not stagger): a finisher ends a string.
     pub fn is_finisher(&self, slot: KitSlot) -> bool {
-        matches!(slot, KitSlot::Light(step) if step as usize + 1 == self.light.len())
+        self.light.len() > 1 && matches!(slot, KitSlot::Light(step) if step as usize + 1 == self.light.len())
     }
 }
 
@@ -964,6 +981,113 @@ pub fn parries(seen_us: i64, land_us: i64, parry_ms: u32, late_ms: u32) -> bool 
 /// after it, as seen, carrying the most credit and view delay the server allows. Until then the hit waits.
 pub fn parry_deadline_us(land_us: i64, late_ms: u32, view_cap_ms: u32, credit_cap_ms: u32) -> i64 {
     land_us + (late_ms as i64 + view_cap_ms as i64 + credit_cap_ms as i64) * 1000
+}
+
+/// HOW LONG A HIT ON ONE PLAYER WAITS (Luke, 2026-11-11: "the LAG when getting hit ... I think I dodged an attack
+/// only for .5 or .8 seconds later to get hit"): until the latest press THIS player could still parry it with
+/// arrives: `late_ms` after it as they see it, plus how late they see a swing (`seen_ms`, as their client last
+/// said) and their press's trip here (`credit_ms`), plus `slack_ms` for a trip slower than usual. Every hit on a
+/// player waited `parry_deadline_us`, the most any press may carry (320 ms); a player on a quick line now waits
+/// little more than `late_ms`.
+pub fn hold_deadline_us(land_us: i64, late_ms: u32, seen_ms: u32, credit_ms: u32, slack_ms: u32) -> i64 {
+    land_us + (late_ms as i64 + seen_ms as i64 + credit_ms as i64 + slack_ms as i64) * 1000
+}
+
+/// Whether a hit on a player WAITS for a late parry or roll, or is DEALT AT ONCE and taken back if one comes (Luke,
+/// 2026-11-12: "build 'deal the hit at once, take it back on a late parry' or have no late window, whichever is
+/// preferred for gameplay and latency"; dealt at once keeps the whole parry window at any ping, where no late
+/// window would cut a 200 ms player's from 250 ms to about 80). It waits only while a press could still be on its
+/// way (`in_window`), and then only when it could not be taken back: one that STAGGERS them (a staggered player's
+/// roll is refused before it is judged) or would KILL them (the dead are not brought back), or with the rule off.
+pub fn hit_waits(at_once_rule: bool, in_window: bool, staggers: bool, kills: bool) -> bool {
+    in_window && (!at_once_rule || staggers || kills)
+}
+
+/// Whether a ROLL its player saw themselves begin at `seen_us` clears a hit that landed at `land_us`: begun
+/// before it landed (or at most `late_ms` after, the hand forgiven as a parry's is), and still rolling as it
+/// did (`roll_ms`, the roll's length). The roll judged where it was pressed, not where it arrived.
+pub fn roll_clears(seen_us: i64, land_us: i64, roll_ms: u32, late_ms: u32) -> bool {
+    seen_us <= land_us + late_ms as i64 * 1000 && land_us < seen_us + roll_ms as i64 * 1000
+}
+
+// --- A FOE'S SHOT (Luke's F4-F7, 2026-11-12; `FOES_PREP.md` section 7) ---------------------------------------
+
+/// Whether `ability_id` is a SHOT: an ability a `SpellDef` of the bolt kind flies as a missile. A foe's lands on a
+/// player as a swing does (the guard, the parry, the roll, dealt at once and taken back) with three differences:
+/// a parry only KNOCKS IT AWAY (its shooter is far off: no stagger, no riposte), it NEVER STAGGERS whatever its
+/// place in its kit, and a roll lets it fly on.
+pub fn is_shot(ability_id: u32) -> bool {
+    spell_of(ability_id).is_some_and(|s| s.kind == SPELL_BOLT)
+}
+
+/// Whether `ability_id` is something a FOE CASTS through `foe_shot_due` (Luke's F1, 2026-11-12, the imp): a shot (a
+/// bolt), or a RING on the ground (an area spell: placed where its target stands as the cast ends, landing
+/// `delay_ms` later on every player still in it). Its draw or cast is its foe's swing; a flinch or a stagger stops it.
+pub fn is_foe_cast(ability_id: u32) -> bool {
+    spell_of(ability_id).is_some_and(|s| s.kind == SPELL_BOLT || s.kind == SPELL_AREA)
+}
+
+/// How long before its tell ends a foe's cast fixes where it goes: a shot `lock_ms` (`regents.foe_shot_lock_ms`); a
+/// ring 0 (it is placed where its target stands as the cast ends: the time to leave it is its fill).
+pub fn cast_lock_ms(ability_id: u32, lock_ms: u32) -> u32 {
+    if is_shot(ability_id) { lock_ms } else { 0 }
+}
+
+/// When a foe's shot LOCKS ITS AIM and when it is LOOSED (server micros), from when its draw began (`swing_us`), its
+/// tell (`wind_up_ms`, the ability's) and `regents.foe_shot_lock_ms`: it flies to where its target's walk at the lock
+/// carries them (`lead_point`), so a turn, a stop or a roll after it slips the shot and one before does not. A lock
+/// longer than the tell locks as the draw begins.
+pub fn shot_times_us(swing_us: i64, wind_up_ms: u32, lock_ms: u32) -> (i64, i64) {
+    let loose = swing_us + wind_up_ms as i64 * 1000;
+    (loose - lock_ms.min(wind_up_ms) as i64 * 1000, loose)
+}
+
+/// NOT CHAINED (Luke's F12, 2026-11-13): whether foe `actor`'s stagger or slow is kept off a player at `now_us`, the
+/// last foe's (`by`) holding the window until `until_us`. The same foe's own string is never kept off (its rest
+/// spaces it); another's is, until the window ends.
+pub fn is_chained(now_us: i64, until_us: i64, by: u64, actor: u64) -> bool {
+    by != actor && now_us < until_us
+}
+
+/// The fastest walk a shot leads (m/s): past a sprint, so a roll's burst is not followed far beyond where it ends.
+pub const LEAD_MAX_MPS: f32 = 8.0;
+
+/// A FOE'S SHOT LEADS A MOVER (Luke, 2026-11-13: shots at where you stood missed anyone who moved at all): where a
+/// shot from `from` at `speed` m/s, loosed `to_loose_s` after its aim locks, meets a target at `at` walking `vel` (flat:
+/// a jump is not led), `pct` of the way (`regents.foe_shot_lead_pct`; 0: where they stand, 100: a steady walk met).
+/// The walk is capped at `LEAD_MAX_MPS`. Height is `at`'s.
+pub fn lead_point(from: crate::sim::Vector3, at: crate::sim::Vector3, vel: crate::sim::Vector3, speed: f32, to_loose_s: f32, pct: f32) -> crate::sim::Vector3 {
+    let k = (pct / 100.0).clamp(0.0, 1.5);
+    let flat = (vel.x * vel.x + vel.z * vel.z).sqrt();
+    if k <= 0.0 || speed <= 0.0 || !flat.is_finite() || flat < 0.01 || !to_loose_s.is_finite() {
+        return at;
+    }
+    let cap = flat.min(LEAD_MAX_MPS) / flat;
+    let (vx, vz) = (vel.x * cap * k, vel.z * cap * k);
+    let mut aim = at;
+    // Three passes settle the time of flight to the led point (it moves the point by a few centimetres at most).
+    for _ in 0..3 {
+        let d = ((aim.x - from.x).powi(2) + (aim.y - from.y).powi(2) + (aim.z - from.z).powi(2)).sqrt();
+        let t = to_loose_s.max(0.0) + d / speed;
+        aim = crate::sim::Vector3::new(at.x + vx * t, at.y, at.z + vz * t);
+    }
+    aim
+}
+
+/// How high above a shooter's feet its shot leaves: a little over the middle of its body (a man's 1.45 m, as the
+/// player's bow and staff).
+pub fn shot_height(aim_height_m: f32) -> f32 {
+    aim_height_m + 0.35
+}
+
+/// Where a missile a ROLL let through goes on from: `clear_m` further along its flight from where it met the
+/// roller (past their body). None for one too slow to say which way it flies.
+pub fn pass_through(pos: crate::sim::Vector3, vel: crate::sim::Vector3, clear_m: f32) -> Option<crate::sim::Vector3> {
+    let speed = (vel.x * vel.x + vel.y * vel.y + vel.z * vel.z).sqrt();
+    if !speed.is_finite() || speed < 1.0 {
+        return None;
+    }
+    Some(crate::sim::Vector3::new(pos.x + vel.x / speed * clear_m, pos.y + vel.y / speed * clear_m, pos.z + vel.z / speed * clear_m))
 }
 
 /// THE WHIFF LOCKOUT: whether a guard press at `now_us` is no parry, because the last press (at `last_us`)

@@ -6,7 +6,7 @@
 script = ExtResource("1_ability")
 cooldown_ms = 500
 range_m = 2.0
-wind_up_ms = 580
+wind_up_ms = 700
 damage = 16.0
 animation = &"ability.40018"
 key = &"regents.combat"
@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40018
 display_name = "Rusted backswing"
-designer_notes = "A FOE'S OWN SWING: the skeleton warrior's second light (Sword_Heavy_B at 0.75: its hit is late in the clip, so the recovery is short)."
+designer_notes = "A FOE'S OWN SWING: the skeleton warrior's second light (Sword_Heavy_B at 0.621, 700 ms: its hit is late in the clip, so the recovery is short; 580 ms at 0.75 until 2026-11-11)."

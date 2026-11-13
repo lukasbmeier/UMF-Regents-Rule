@@ -210,8 +210,26 @@ the swing, sets Swinging), `hit` (what a hit does). Client: `CombatComponent.may
     It is judged on the hit **as the player saw it**: the press's arrival less its trip (half the round trip
     the server measured, #210, or the client's own until one is) and how late the client shows another's
     swing (its half round trip), at most `foundation.rewind_max_ms`. Every hit on a player WAITS for a press
-    still on its way (`held_hit`, until ~320 ms after it landed; an unparryable one as long, so hits keep the
-    spacing they landed with), then is dealt as judged.
+    still on its way (`held_hit`; an unparryable one as long, so hits keep the spacing they landed with), then is
+    dealt as judged. **How long it waits is that player's own** (2026-11-11, Luke: "the LAG when getting hit"):
+    `parry_late_ms` + how late their client shows a swing (it tells the server as it joins and when it changes,
+    `report_seen_delay`; every guard press says it too; the `seen_delay` row) + their press's trip here +
+    `hit_hold_slack_ms` (40). On a quick line that is about 90 ms, so a hit is dealt as soon as the referee has
+    judged it; at a 150 ms round trip about 240. A build that never said waits the most any press may carry, as
+    every hit did before (50 + 150 + 120 = 320 ms).
+  - **DEALT AT ONCE, TAKEN BACK** (2026-11-12, Luke: "build 'deal the hit at once, take it back on a late parry'
+    or have no late window, whichever is preferred for gameplay and latency"; hot rule `hit_at_once` 1). A hit on a
+    player is DEALT as the referee judges it, at any ping; until the moment above (`dealt_hit`, scheduled to it) a
+    parry press or a roll that was made in time but arrives after it TAKES IT BACK: the health it took is given
+    back (`take_back`), a parry staggers its attacker as ever. What the hit would also do (a hamstring bite's slow)
+    is done only when that moment passes (`settle_dealt_hit`), so nothing else needs undoing. STILL WAITING, as
+    every hit did: one that would STAGGER the player (a foe's last hit: a staggered player's roll is refused before
+    it is judged) and one that would KILL them (`rules::hit_waits`). Chosen over "no late window": that would cut a
+    200 ms player's parry window from 250 ms to about 80. Measured by the playtest at a 150 ms round trip: a hit
+    shows 128 ms after its blow lands as seen (308 waiting). The client shows a taken-back hit as the hit undone,
+    not a heal: no green number; a roll says "Dodged", a parry "Parried" (`HitFeedbackComponent.is_taken_back`).
+    Known costs: a waiting finisher and a light dealt at once can show up to the wait closer together than they
+    landed (`token_gap_ms`); a hit taken back has already interrupted a hold (the foundation's `hurt`).
   - **The whiff lockout**: a press under `parry_whiff_ms` (400) after one that parried nothing parries
     nothing (it still blocks); after a parry, never.
   - **The riposte**: the string's first step begun within `riposte_ms` (1 s) of a parry deals
@@ -232,6 +250,15 @@ the swing, sets Swinging), `hit` (what a hit does). Client: `CombatComponent.may
   - **No roll in the air** (since 2026-10-29 the server refuses it too: "no roll in the air"): Ctrl in the
     air is held and rolls as you land, within 1.5 s.
   - The HUD has a thin roll bar refilling over the cooldown.
+  - **A set length** (2026-11-11, Luke: "if I roll forward but then press s it goes a short distance"): the roll goes
+    the way it began (the keys held as Ctrl is pressed, else the way the body faces) for the whole `roll_ms`,
+    whatever keys are pressed meanwhile (`LocalInputComponent.force_move`; the frames are a player's own, the
+    server bounds them as any). 3.6 m from a standstill. A roll begun at a run still carries the run's speed in
+    (the dash ADDS to the body's speed, the foundation's model): about a meter further.
+  - **Judged where it was pressed** (2026-11-11, Luke: "credit the delay"): a hit that landed while the roll was on
+    its way to the server (it is waiting, `held_hit`) is cleared when the roll, as its player saw it (its arrival
+    less its trip and how late they see a swing, capped as a parry's), began before the hit landed or at most
+    `roll_late_ms` (50) after (`rules::roll_clears`). A hit that lands after the roll arrives meets Rolling as before.
 
 ---
 
@@ -275,7 +302,10 @@ In order:
 7. The damage is dealt (`damage_entity`); the target's regeneration waits (`regen_delay_s`).
 8. **The last hit staggers** what it lands on unblocked: a PLAYER every time; a FOE or a DUMMY only when it breaks
    their **POISE** (Luke, 2026-11-02): every melee hit wears it (`poise_light` 10, the last `poise_finisher` 40, Heavy
-   ×1.35 on the last), a light never below 1; broken, it is whole again, the stagger (the role's `stagger_pct`: the
+   ×1.35 on the last). The last hit breaks it as it empties it. A light that would empty it stops at 1: the bar is
+   FULL, and since 2026-11-12 (Luke: "if the stagger bar is full (orange) the next hit should stagger not just the
+   next finisher hit") ANY hit on a full bar breaks it (a light staggers the plain `stagger_ms`; before, a full bar
+   sat full until the next last hit). Broken, it is whole again, the stagger (the role's `stagger_pct`: the
    pommel bash ×1.5), then **Steadied** (`steadied_ms` 3 s after the stagger: nothing wears it); unhit for
    `poise_regen_ms` (8 s) it is whole. A foe's poise is its `FoeDef.poise` (70), a dummy's `dummy_poise` (50); a
    parry staggers whatever the poise (a punish). Shown on the TARGET MARKER: an arc round the ring under your target
@@ -307,7 +337,37 @@ off heals as it walks home). A placeholder until food or potions are decided.
   `hit_near_m` 8 m falling evenly to `hit_far_pct` 55 % at `hit_far_m` 40 m, minus `hit_moving_pct` 15 if
   the target is moving (or rolling). A hit is aimed on a ballistic low arc to land on the target, at a
   speed from `arrow_speed_min` 20 to `arrow_speed_max` 50 m/s by the draw; a miss is aimed beside it. The
-  HUD shows the chance while you aim. **With no target** it flies along your look.
+  HUD shows the chance while you aim. A shot aimed by the server goes to the MIDDLE of its target's body
+  (`FoeDef.aim_height_m`, half its character's height: a wolf's 0.5 m, a deer's 0.75; a skeleton, a player or a
+  dummy 1.1), since 2026-11-11: aimed at 1.1 m, every arrow and bolt at a targeted wolf flew over its back.
+  **With no target** it flies TO THE CROSSHAIR (Luke, 2026-11-11): the client finds the point the crosshair is on
+  (the camera's ray against the level and bodies, starting past the player; 120 m out for the sky) and sends the
+  direction from the shot's start (the chest, 1.45 m) to it: a bolt straight; an arrow, when the crosshair is ON A
+  BODY (somebody you could fight: a foe, a dummy, a player; not a tree or a rock, entities though they are), on the low arc that lands on it at the draw's speed
+  (`CombatComponent.launch_direction`, the twin of the server's `aim_velocity`), else STRAIGHT at the point, falling
+  short as an arrow does (0.2 m in 10 m at a full draw, 1.2 m at the weakest). An arc to a far point climbs well over
+  the line of sight: with the look level and the crosshair half a meter beside a dummy 10 m off (on nothing for
+  120 m), the arced arrow went 2.7 m over it (the combat playtest found it); straight, it passes at chest height. Before, it
+  left the chest along the look: beside the camera's ray (the camera is 0.5 m over the right shoulder) and never
+  meeting it. While you draw, cast, or have just shot, the UPPER BODY TURNS so the bow or the casting hand points
+  at what the shot is aimed at: THE TAB TARGET when you face it, else the crosshair's point (`AimTwist`, a skeleton
+  modifier that shares the turn over `spine_01`-`spine_03`, set by `CombatLook`). The aim poses are upper-body poses
+  over walking legs, so the bow pointed 32 degrees left of the crosshair and the casting hand 34. Since 2026-11-12
+  the turn is worked out from the way the BODY faces to the target, less where each pose points by itself
+  (`CombatLook`'s "pose points" on `adventurer.tscn`: bow 28.7 left and 1.2 over, cast 32.0 and 9.1, a long cast
+  -0.9 and -2.3), not from the hands: they move all through a draw, and the bow swung about with them; and it aimed
+  at the crosshair even with a Tab target. `tests/aim_shot.tscn` prints what each pose is still off its target (the
+  crosshair, a target 40 degrees left, one 45 right: all within about 1 degree) and saves pictures: change the
+  numbers on the node and run it. Another player's is turned the way their body faces.
+- **A shot is SEEN to leave the bow hand or the casting hand** (2026-11-12, Luke: it came from "the middle of where
+  my character is standing"): the server starts every shot at the chest, 0.6 m along its way; the shot's look
+  (`ShotLook.leave_hand_s`, 0.12 s) is drawn at its shooter's hand at first and comes onto its true path. Look only:
+  the body the referee flies is where it always was.
+- **FACE YOUR TARGET** (2026-11-12, Luke: "I can tab target and then face AWAY from the target and still shoot"; his
+  pick of three: refuse): a shot is aimed at the Tab target only when it is inside `aim_arc_deg` (120, the arc Tab
+  picks from) in front of the body, which while drawing and in stance faces where the camera looks. Outside it the
+  client looses nothing, lets the draw go and says "Face your target"; the server refuses the same
+  (`faces_target`, 30 degrees wider for the turn's trip there): `loose_arrow` and a missile's `cast_spell`.
 - **The arrow is a real body** (BodyDef 40001) the referee flies, nose into the wind; what it hits is
   reported and the server deals: `30 × power × bow % × arrow % × quality × mastery`, at `point_blank_pct`
   60 % inside `point_blank_m` 4 m. An arrow in a foe stays in it; when it falls, `arrow_recover_pct` 40 %
@@ -381,39 +441,96 @@ own table, not a status.
 
 ## 11. Foes (`content/foe/`, `FoeDef`; brain `sidecar/npc/brains/regents/foe.gd`)
 
-| foe | kind | kit | hp | damage % | xp % | family | poise |
-|---|---|---|---|---|---|---|---|
-| Skeleton warrior | 103 | sword | 120 | 50 | 100 | undead | 70 |
-| Skeleton axeman | 104 | axe | 150 | 55 | 100 | undead | 70 |
-| Sparring skeleton (the tutorial's yard, `sparring_1`) | 105 | sparring_sword (950 / 950 / 1200 ms, the last glints) | 1500 | 10 | 0 | undead | 70 |
+Rewritten 2026-11-13 (`FOES_PREP.md` §9 step 6), after the archer, the imp, the lead and noticing (PROGRESS 63-68).
 
-The sparring skeleton notices you at 4 m (leash 8 m), rests 2.5 s, drops nothing, and shows the PARRY RING
-(`FoeDef.parry_ring`): the only foe with it (PROGRESS step 33).
+### 11.1 The foes
+| foe | kind | behavior | kit (its string; its shot) | hp | damage % | poise | family | notice / leash |
+|---|---|---|---|---|---|---|---|---|
+| Skeleton warrior | 103 | melee | `skeleton_sword`: rusted cut 660, backswing 700, skull splitter 850 (unblockable) | 120 | 50 | 70 | undead | 10 / 25 m |
+| Skeleton axeman | 104 | melee | `skeleton_axe`: hack 710, crushing overhead 880 (unblockable) | 150 | 55 | 70 | undead | 10 / 25 m |
+| Sparring skeleton (the tutorial's yard) | 105 | melee | `sparring_sword`: 950, 950, 1200 ms (the last glints) | 1500 | 10 | 70 | undead | 4 / 8 m |
+| Wolf (packs of 2-3, `pack_m` 15) | 107 | melee | `wolf`: bite 650, hamstring bite 720 (slows 3 s), lunge (unblockable, leaps, pushes 10 m/s) | 110 | 55 | 70 | beast | 10 / 25 m |
+| Skeleton archer | 108 | ranged | a shove up close (one step: no finisher); its arrow (1200 ms draw, 26 m/s, 16.5) | 80 | 55 | 50 | undead | 16 / 25 m |
+| Imp | 109 | ranged | a claw up close; its ember (1000 ms, 12 m/s, 13.5), every third cast a cinder ring (700 ms, 3 m, fills 1500 ms, 23.85) | 70 | 45 | 30 | fiend | 13 / 25 m |
+| Deer (never fights: a creature that flees, its own brain) | 106 | (deer) | none | 60 | 0 | never staggered | beast | 16 / 45 m |
 
-Behavior (FoeDef defaults, both): notices a player within `notice_m` 10 m **and in sight** (a ray at eye
-height against the level); chases at 4.2 m/s (a player runs 5, so you can always get away); stops at
-`reach_m` 1.9 m and fights; every `heavy_every` 3rd swing is its heavy; each swing waits out the last one's
-lock; a combo ends with `rest_ms` 900 (your opening); past `leash_m` 25 m from home it walks back, deaf to
-everyone until home. Since 2026-10-29 its chase follows the level's walk map round obstacles, and a target
-lost from sight is chased to where it was last seen for `lose_sight_ms` (2500) before it gives up.
-Since 2026-11-11 ITS STRING FOLLOWS ITS TARGET (Luke: the wolves' second and third bites hit air): a target that
-steps out of `reach_m` between two swings is run down once the last swing's lock is over, and the string goes on
-where it stopped; out of reach longer than `string_chase_ms` (1500, per foe) the string is dropped, and the next
-is its first swing again after its rest (the chase counts toward it). It never swings at a target out of reach.
+Wind-ups are each ability's `wind_up_ms` (the tell); a foe's light swings were slowed a fifth on 2026-11-11 (Luke:
+"antipaction for enemy attacks"). The sparring skeleton shows the PARRY RING (`FoeDef.parry_ring`), the only foe that does.
 
-- A foe fights with its kit exactly as a player: the same abilities (`use_ability_as`), wind-ups, Swinging,
-  flinches, the same referee. It does not block, roll, parry or use skills.
-- **Slain**: the Slain status. Each player who did at least 5 % of the recent damage (60 s) gets mastery XP
-  for their hits and their OWN loot roll (personal rolls with pity, template #268), dropped as sacks on
-  the ground: yours alone for 60 s, then anyone's for 60 s (template #269). The body lies `foe_corpse_s`
-  (6 s); it comes back on its point `foe_respawn_s` (60 s) after it fell. Loot: the Skeleton camp table
-  (copper ore 60 %, iron ore 30 %, an uncut gem 4 % with pity).
-- **A player slain** gets up at the spawn, whole, `player_respawn_s` (5 s) later. **No death penalty**
-  (a placeholder).
-- The foe bench (`game/regents/workbench/foe_workbench.tscn`) shows a foe's damage a second, time to kill a
-  player and to be killed by each weapon, and its loot.
-- Placement: level points of kind = the foe's key. The continent's camps are a TEST placement (Luke's own
-  replaces it): 34 warriors and 17 axemen.
+### 11.2 How a foe finds you, and rests (every foe that fights; Luke's F9-F11, step 68)
+- IT SEES IN FRONT: a player within `notice_m`, in sight (a ray at eye height; only rocks block it, not bushes),
+  inside `notice_arc_deg` (140) of the way it faces. It faces the way it last walked or aimed. 360 sees all round.
+- IT HEARS ALL ROUND, seen or not: within `hear_m` (4 m), or `hear_sprint_m` (8 m) if you sprint (past 6.5 m/s).
+  So a camp can be come at from behind, at a walk, to 4 m.
+- AT REST IT WANDERS: a stand of 4 to 10 s, then a few steps at a walk to a spot within `wander_m` (3 m) of its point.
+  Back from a fight it walks all the way home first. `wander_m` 0 stands (the sparring skeleton).
+- HIT FROM BEYOND ITS SIGHT (the server's Startled, on any idle foe hit) it turns on WHO HIT IT (the status's
+  `by_entity`), if they are inside its leash. A pack foe calls its packmates within `pack_m`. Switching target by
+  threat waits for the overhaul's threat step.
+- It keeps its target while in sight and inside its leash; out of sight it goes to where it last saw them for
+  `lose_sight_ms` (2500); past `leash_m` from home it walks back, deaf to everyone until home. Its chase follows the
+  level's walk map round rocks. It runs 4.2 m/s; you run 5: you can always get away.
+
+### 11.3 How a melee foe fights (the `melee` tree)
+- TURNS (COMBAT_OVERHAUL.md §2): at most `regents.attack_tokens` foes swing at one player; the rest circle a little
+  beyond their reach, facing you. No foe hit lands within `regents.token_gap_ms` (600) of another's on you. A turn is
+  the whole string.
+- ITS STRING: in `reach_m` it swings its kit's light string, each swing after the last one's lock; the last is its
+  finisher (unblockable, a red glint; it staggers you if it lands unguarded). Then it rests `rest_ms` (+/-
+  `rest_jitter_ms`): your opening. Its aim follows you until `regents.foe_aim_lock_ms` (300) before the hit lands: a
+  step aside after that slips it.
+- ITS STRING FOLLOWS ITS TARGET (2026-11-11): stepped out of reach between two swings, it runs you down and goes on
+  where it stopped; out of reach longer than `string_chase_ms` (1500) the string is dropped.
+- It does not block, roll, parry or use skills. It fights with its kit exactly as a player does: `use_ability_as`, the
+  same wind-ups, Swinging, flinches, the same referee and `hit`.
+- POISE (Luke, 2026-11-02): every melee hit wears it; the string's last hit, or any hit on a full bar, breaks it: a
+  stagger, then a short Steadied. Players have no poise.
+
+### 11.4 How a foe shoots (the `ranged` tree; Luke's F1-F8, steps 64-67)
+- Its order: mid-draw it stands (its opening); in its reach with a melee turn free, its string (a shove, a claw);
+  within `back_within_m` it steps back `back_m`, at most every `back_every_ms` (the archer; the imp never); out of
+  sight or past `shot_range_m`, it walks in (to a little inside, never nearer than `shot_near_m`); then it stands and
+  casts, `shot_rest_ms` between two. `FoeDef.ring_every` makes every n-th cast its ring.
+- TURNS: one foe shot drawn or in the air at a player at a time (`regents.ranged_tokens`, 1; 0: no foe shoots); a
+  shot takes no melee turn and keeps the gap from every other foe's hit (counted when it arrives).
+- THE SHOT, on the server (`foe_shot_due`): the aim locks `regents.foe_shot_lock_ms` (250) before the loose, on where
+  your walk at that moment carries you as it arrives (`regents.foe_shot_lead_pct`, 100; Luke, 2026-11-13: "the no
+  prediction casts are easy to dodge"). A TURN, A STOP OR A ROLL after the glint slips it; a guard facing the shooter
+  blocks it; a timed parry knocks it away (no stagger, no riposte); it is dealt at once and taken back by a late parry
+  or roll. It never staggers and hurts only players. A flinch or stagger in the draw stops it (its cooldown spent).
+- THE RING (the imp's): laid where you stand as its cast ends, landing `delay_ms` later on every player still in it.
+  Not led; no guard answers it: it is LEFT. Drawn orange-red. Damage only (F8: no slow or burn from a foe yet).
+- A shot ends where it first touches (`MissileFlight`).
+
+### 11.5 Never chained (Luke's F12, step 68)
+After one foe staggers or slows you, no OTHER foe's stagger or slow lands on you for `regents.unchained_ms` (1500,
+counted from when it landed); its damage still does. The same foe's own string is not held off. The server keeps it
+in a private table, `unchained`, and logs "does not land: not chained".
+
+### 11.6 Slain, loot, placement
+- **Slain**: the Slain status. Each player who did at least 5 % of the recent damage (60 s) gets mastery XP for their
+  hits and their OWN loot roll (personal, with pity), dropped as sacks: yours alone for 60 s, then anyone's. The body
+  lies `foe_corpse_s` (6 s); it is back on its point `foe_respawn_s` (60 s) after it fell. Loot: the skeleton camp's
+  table (copper ore 60 %, iron ore 30 %, an uncut gem 4 % with pity), for the archer and the imp too (F14).
+- **A player slain** gets up at the spawn, whole, `player_respawn_s` (5 s) later. No death penalty (a placeholder).
+- **Placement**: level points of kind = the foe's key. The glade: three skeletons by the camp, an archer south-east
+  of it, an imp north-east, a sparring skeleton in the yard, wolves and deer. The continent's camps are a TEST
+  placement (Luke's own replaces it): 34 warriors, 17 axemen, 17 archers, 1 imp.
+
+### 11.7 Making and tuning a foe
+- A foe is a `FoeDef` (`content/foe/`), its look a character (`content/character/`, the model and its animation
+  set), its moves a `KitDef` and `AbilityDef`s; a shot or a ring a `SpellDef` too. Every number above is a field
+  there or a hot rule (§13). A content edit bakes (`tools/bake_content.gd`) and publishes; a brain or tree edit
+  restarts the referee.
+- THE FOE BENCH (`game/regents/workbench/foe_workbench.tscn`, opened from a FoeDef in the Content Dock): its sheet
+  (health, its swings and what each does, its damage a second over its rhythm, its hits a second and their least
+  gap, how it notices and rests, the XP a kill pays); for a FOE THAT SHOOTS, its round of casts (its shot, every
+  `ring_every`-th its ring, each after its lock and `shot_rest_ms`), its damage a second if every cast lands, its range
+  and step back, how long you take to reach it at a run; versus every weapon (time to kill it at rank 1, and how long
+  it takes to kill you: by its shots for a shooter); its loot. Amber when it kills a player in under 3 s or no weapon
+  kills it in a minute.
+- The suites: `combat_playtest.sh` (the camp), `archer_playtest.sh`, `caster_playtest.sh`; the regents unit suite
+  (`_run_foe_*`, the bench).
 
 ---
 
@@ -425,6 +542,13 @@ is its first swing again after its rest (the chase counts toward it). It never s
   the status bar under the target's health says it); your own parry says "Parried".
 - **The target marker** (a gold ring under your target) carries its POISE (2026-11-02): an arc just outside it fills
   as poise wears, pale to red, bursts as it breaks, gray while Steadied (`CombatComponent._place_poise_arc`).
+- **Trails** (2026-11-11, Luke: "trails for weapon swings (enemy and yours)", "trails for arrow projectile ... and better
+  magic vfx"; `RibbonTrail`): a SWING draws the sheet its weapon sweeps, from 55 % of its wind-up to 130 ms after the
+  hit, pale on a player and warm orange on a foe (`SwingTrail`, a component on `adventurer.tscn` and `foe.tscn`; the
+  blade is found on what is shown: the held weapon, a skeleton's own sword or axe by its hand, a wolf's head). An
+  ARROW leaves a thin pale streak; a BOLT a blue glow and sparks; a FIREBALL a wide orange one, embers, a flickering
+  light; a spell's missile BURSTS where it ends (`ShotLook`, `ImpactBurst`; every number is in `arrow_look.tscn`,
+  `bolt_look.tscn`, `fireball_look.tscn`).
 - **The parry ring** (`FoeDef.parry_ring`, the tutorial's sparring skeleton only): a ring closes on each swing, shut
   as the blow lands.
 - **Weight** (Luke's feedback 4098, 2026-10-31): a SPARK where the blow lands (warm, bigger on a hit of 20+,
@@ -464,10 +588,14 @@ is its first swing again after its rest (the chase counts toward it). It never s
 | roll_ms | 550 ms | how long Rolling lasts (i-frames) |
 | combo_window_ms | 2000 ms | the string's next step this long after a lock (2026-10-31; was the kit's 900) |
 | parry_ms / parry_late_ms | 200 / 50 ms | a guard press this long before (or after) the hit as seen parries |
+| aim_arc_deg | 120 deg | a shot is aimed at the Tab target only inside this arc in front of you; outside it, refused |
+| roll_late_ms | 50 ms | a roll pressed this long after a hit landed, as seen, still clears it (Claude's number) |
+| hit_at_once | 1 | 1: a hit on a player is dealt as it lands and taken back by a late parry or roll (one that staggers or kills still waits); 0: every hit waits |
+| hit_hold_slack_ms | 40 ms | added to a player's own wait for a late parry (a slow trip); lower shows hits sooner (Claude's number) |
 | parry_whiff_ms | 400 ms | a press this soon after one that parried nothing is no parry |
 | riposte_ms / riposte_damage_pct / riposte_draw_pct | 1000 ms / 150 % / 50 % | the riposte window, its damage, a bow's draw in it |
 | stagger_ms | 800 ms | a parried attacker, a player a last hit lands on, or a foe whose poise breaks, is staggered this long |
-| poise_light / poise_finisher | 10 / 40 | what a melee hit wears off a foe's or a dummy's poise (a light never below 1; Heavy x1.35 on the last) |
+| poise_light / poise_finisher | 10 / 40 | what a melee hit wears off a foe's or a dummy's poise (a light that would empty it fills the bar, and any hit on a full bar breaks it; Heavy x1.35 on the last) |
 | poise_regen_ms / steadied_ms | 8000 / 3000 ms | unhit this long, poise is whole; after a break's stagger, this long nothing wears it |
 | dummy_poise | 50 | a training dummy's poise (a foe's is `FoeDef.poise`, 70) |
 | block_damage_pct | 25 % | the full guard (a guard handle: the crossguard hilt): what a blocked hit still deals |
@@ -491,6 +619,12 @@ is its first swing again after its rest (the chase counts toward it). It never s
 | mana_cost_pct / cast_time_pct | 100 % / 100 % | every spell's cost and cast time |
 | meta_period_s, meta_alarm_pct, meta_alarm_min_hits, meta_keep_days | 1 h, 45 %, 50, 14 | the weapon meta |
 | grade_fine_q / grade_masterwork_q, crafted_traits_* | 400 / 800; 1/2/3 | grades and trait room |
+| attack_tokens / token_gap_ms | 2 / 600 ms | FOES (§11.3): how many swing at one player at a time; the least gap between two foe hits on them |
+| foe_aim_lock_ms | 300 ms | a foe's swing stops turning this long before it lands |
+| ranged_tokens | 1 | FOE SHOTS (§11.4): one foe shot drawn or in the air at a player at a time (0: no foe shoots) |
+| foe_shot_lock_ms / foe_shot_lead_pct | 250 ms / 100 % | a foe's shot fixes its aim this long before the loose, led this share of the way your walk carries you (2026-11-13) |
+| unchained_ms | 1500 ms | NOT CHAINED (§11.5): after one foe's stagger or slow, no other foe's lands for this long (0: off; 2026-11-13) |
+| startle_ms | 2500 ms | how long a hit foe or deer is Startled (it turns on who hit it; a deer bolts) |
 
 Foundation rules combat reads: `foundation.rewind_max_ms` 150, `foundation.referee_two_sides` (on here),
 `foundation.trait_strength_pct` 100, `foundation.loot_*`, `foundation.ground_*`.
@@ -516,10 +650,13 @@ Rule 13: clients send inputs; servers derive outcomes. No reducer takes a client
 
 ### 14.2 The rows and reducers
 - Player-callable: `wield`, `unwield`, `guard` (and `block`, old builds'), `use_ability` / `use_ability_seen` (the foundation's; every
-  swing and the roll), `draw_bow`, `loose_arrow`, `cast_spell`, `cancel_cast`, `set_item_traits` (dev).
+  swing and the roll), `draw_bow`, `loose_arrow`, `cast_spell`, `cancel_cast`, `report_seen_delay` (2026-11-11: how
+  late this client shows a swing), `set_item_traits` (dev).
 - Tables (genre): `wielded` (public), `combat_state` (combo, block), `swing` (the swing's timeline),
   `guard_state` (private: the last counting press as seen, the last parry), `held_hit` (private, scheduled:
-  a hit waiting for a parry that may still arrive),
+  a hit waiting for a parry that may still arrive), `dealt_hit` (private, scheduled, 2026-11-12: a hit dealt at once that a
+  late parry or roll may still take back), `seen_delay` (private, 2026-11-11: how late each player's client
+  shows a swing, as it last said),
   `foe`, `foe_kill`, `hurt` (recent damage for loot shares), `arrow`, `stuck_arrow`, `casting`,
   `spell_cooldown`, `missile`, `spell_area`, `burning`, `spell_timer`, `dummy`, `meta_tally`, `meta_share`.
   Foundation: `ability_def`, `action_request`, `status_state`, `health_state`, `resource_state`,

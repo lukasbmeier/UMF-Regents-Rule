@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="3_xr6e1"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="4_w2gyh"]
 
-[node name="Cell_-5_22" type="Node3D" unique_id=236518144]
+[node name="Cell_-5_22" type="Node3D" unique_id=1975889373]
 
-[node name="w_tree_79" type="Marker3D" parent="." unique_id=135348604]
+[node name="w_tree_79" type="Marker3D" parent="." unique_id=104766486]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -301.51694, -3.7839684, 1427.9683)
 gizmo_extents = 0.6
 script = ExtResource("1_7la4q")
@@ -16,7 +16,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_tree_80" type="Marker3D" parent="." unique_id=869484626]
+[node name="w_tree_80" type="Marker3D" parent="." unique_id=106174159]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -307.62527, -3.8868544, 1459.677)
 gizmo_extents = 0.6
 script = ExtResource("1_7la4q")
@@ -25,7 +25,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Tree")
 
-[node name="w_oak_46" type="Marker3D" parent="." unique_id=1345450138]
+[node name="w_oak_46" type="Marker3D" parent="." unique_id=353966219]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -310.08524, -3.258533, 1450.7808)
 gizmo_extents = 0.6
 script = ExtResource("1_7la4q")
@@ -34,11 +34,11 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Oak")
 
-[node name="grass_common_tall_240" type="Node3D" parent="." unique_id=1473861065 instance=ExtResource("2_aoec7")]
+[node name="grass_common_tall_240" type="Node3D" parent="." unique_id=1877080617 instance=ExtResource("2_aoec7")]
 transform = Transform3D(0.09577971, 0, -0.8961744, 0, 0.90127814, 0, 0.8961744, 0, 0.09577971, -269.45972, -3.4900835, 1421.0066)
 
-[node name="rock_medium_1_241" type="Node3D" parent="." unique_id=441339028 instance=ExtResource("3_xr6e1")]
+[node name="rock_medium_1_241" type="Node3D" parent="." unique_id=284986976 instance=ExtResource("3_xr6e1")]
 transform = Transform3D(-0.8112473, 0, 0.38823274, 0, 0.8993591, 0, -0.38823274, 0, -0.8112473, -317.73892, -3.9709527, 1432.219)
 
-[node name="rock_big_1_242" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("4_w2gyh")]
+[node name="rock_big_1_242" type="Node3D" parent="." unique_id=1369380149 instance=ExtResource("4_w2gyh")]
 transform = Transform3D(1.3420022, 0, -0.58475965, 0, 1.4638695, 0, 0.58475965, 0, 1.3420022, -279.0172, -4.2863584, 1464.2125)

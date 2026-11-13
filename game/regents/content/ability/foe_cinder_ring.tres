@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 500
+range_m = 0.0
+wind_up_ms = 700
+damage = 53.0
+animation = &"ability.40033"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40033
+display_name = "Cinder ring"
+designer_notes = "A FOE'S RING (Luke's F1, 2026-11-12, FOES_PREP.md section 6): the imp's every third cast. A 700 ms cast, then a ring on the ground WHERE YOU STOOD as the cast ended (content/spell/foe_cinder_ring.tres: 3 m, 1500 ms to fill): whoever is still in it as it fills takes 53 at the imp's 45 % = 23.9 (the sheet's 80 %). No guard or parry answers it: leave it. range_m MUST stay 0 and judged off."

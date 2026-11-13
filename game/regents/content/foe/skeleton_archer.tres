@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="FoeDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/foe_def.gd" id="1_foe"]
+[ext_resource type="Resource" path="res://game/regents/content/character/skeleton_archer.tres" id="2_char"]
+[ext_resource type="Resource" path="res://game/regents/content/kit/skeleton_bow.tres" id="3_kit"]
+[ext_resource type="Resource" path="res://game/regents/content/loot_table/skeleton_camp.tres" id="4_loot"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/yew_bow.tscn" id="5_bow"]
+[ext_resource type="Texture2D" path="res://game/regents/art/monsters/T_Skeleton_BaseColor_2.png" id="6_tex"]
+
+[resource]
+script = ExtResource("1_foe")
+family = &"undead"
+key = &"skeleton_archer"
+character = ExtResource("2_char")
+kit = ExtResource("3_kit")
+hp = 80
+damage_pct = 55
+poise = 50
+loot_table = ExtResource("4_loot")
+behavior = &"ranged"
+notice_m = 16.0
+leash_m = 25.0
+reach_m = 1.9
+rest_ms = 1500
+rest_jitter_ms = 300
+shot_range_m = 14.0
+shot_near_m = 9.0
+shot_rest_ms = 1800
+back_within_m = 4.0
+back_m = 5.0
+back_every_ms = 6000
+held_scene = ExtResource("5_bow")
+hidden_meshes = Array[StringName]([&"Skeleton_Sword"])
+albedo = ExtResource("6_tex")
+id = 40006
+display_name = "Skeleton archer"
+designer_notes = "THE FIRST RANGED FOE (Luke's F1, 2026-11-12, FOES_PREP.md section 6). Its question: can you reach it, or roll its arrow? It stands 9 to 14 m off in sight and draws 1200 ms (the pose, then a glint), the aim locked the last 250 ms, no leading. Come within 4 m and it steps back 5 m, at most once every 6 s; caught, it shoves. 1800 ms between shots. It never staggers you and never shoots what it cannot see. All numbers are first guesses, Luke's to change."

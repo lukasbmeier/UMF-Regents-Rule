@@ -64,12 +64,12 @@ loop = true
 [sub_resource type="Resource" id="Resource_qv6hq"]
 script = ExtResource("1_cfj7x")
 anim_name = &"Attack"
-speed_scale = 1.4
+speed_scale = 1.185
 
 [sub_resource type="Resource" id="Resource_u4ops"]
 script = ExtResource("1_cfj7x")
 anim_name = &"Attack"
-speed_scale = 1.25
+speed_scale = 1.076
 
 [sub_resource type="Resource" id="Resource_538up"]
 script = ExtResource("1_cfj7x")

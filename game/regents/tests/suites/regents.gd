@@ -50,6 +50,10 @@ func run() -> void:
 	await _run_roles()
 	_run_status_bars()
 	_run_tutorial()
+	_run_glade_look()
+	_run_combat_pass()
+	await _run_crosshair()
+	await _run_shot_stops()
 
 
 ## THE CONTINENT (PROGRESS step 23): the generated level is baked as level 21, streamed, with the glade's
@@ -82,7 +86,14 @@ func _run_continent() -> void:
 		var q: Dictionary = theirs.get(str(p["id"]), {})
 		if q.is_empty() or Vector3(float(p["x"]), float(p["y"]), float(p["z"])).distance_to(Vector3(float(q["x"]), float(q["y"]), float(q["z"]))) > 0.01:
 			moved.append(str(p["id"]))
-	_check(glade != null and moved.is_empty(), "the glade's %d points are all in its camp, where the glade has them (moved or missing: %s)" % [glade_points.size(), str(moved)])
+	# NOT YET ON THE CONTINENT: glade points added since the continent was last built (`build_continent.tscn`: Luke's
+	# say-so, it also brings the glade's new look over, PROGRESS step 59 "Left"). Each must really be missing: built
+	# again, this list is emptied (the archer goes there with FOES_PREP.md section 9 step 7).
+	var not_yet: Array[String] = []
+	for id: String in not_yet:
+		_check(moved.has(id) and not theirs.has(id), "%s is not on the continent yet (built again: take it off this list)" % id)
+		moved.erase(id)
+	_check(glade != null and moved.is_empty(), "the glade's %d points are all in its camp, where the glade has them (moved or missing: %s; not yet built in: %s)" % [glade_points.size(), str(moved), str(not_yet)])
 	# The rest: nodes of a known kind, foes of a known kind, on dry land.
 	var bad: Array[String] = []
 	var nodes: int = 0
@@ -919,9 +930,10 @@ func _run_foes() -> void:
 	var all_foes: Array[FoeDef] = FoeDef.all()
 	# The camp's two, the tutorial's sparring partner (Luke, 2026-11-01), the deer (hunting, 2026-11-09: never fights),
 	# and the wolf (2026-11-10: hunts in packs, fights with its own kit).
-	_check(all_foes.size() == 5 and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"sparring_skeleton")
+	_check(all_foes.size() == 7 and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"imp") and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"sparring_skeleton")
+		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"skeleton_archer")
 		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"deer")
-		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"wolf"), "five foes: %s" % ", ".join(all_foes.map(func(f: FoeDef) -> String: return String(f.key))))
+		and all_foes.any(func(f: FoeDef) -> bool: return f.key == &"wolf"), "seven foes: %s" % ", ".join(all_foes.map(func(f: FoeDef) -> String: return String(f.key))))
 	var foes: Array[FoeDef] = all_foes.filter(func(f: FoeDef) -> bool: return f.fights)
 	var deer: FoeDef = FoeDef.by_kind(106)
 	var wolf: FoeDef = FoeDef.by_kind(107)
@@ -997,8 +1009,12 @@ func _run_foes() -> void:
 		for a: AbilityDef in lights:
 			_check(a.wind_up_ms >= 500, "%s's %s winds up %d ms: long enough to see coming (500 or more)" % [f.display_name, a.display_name, a.wind_up_ms])
 		var last: AbilityDef = lights[lights.size() - 1]
-		_check(f.kit.unblockable.size() == 1 and f.kit.unblockable[0] == last and KitDef.is_unblockable(last.id) and last.wind_up_ms >= 800,
-			"%s's string ends in its finisher, %s: unblockable, winding up %d ms" % [f.display_name, last.display_name, last.wind_up_ms])
+		if lights.size() == 1:
+			# A STRING OF ONE STEP HAS NO FINISHER (2026-11-12: a foe that shoots, its lone shove): nothing unblockable.
+			_check(f.shot() != null and f.kit.unblockable.is_empty() and not f.kit.is_finisher(last),
+				"%s's one swing, %s, is no finisher: it is a foe that shoots, with nothing unblockable" % [f.display_name, last.display_name])
+		_check(lights.size() == 1 or f.kit.unblockable.size() == 1 and f.kit.unblockable[0] == last and KitDef.is_unblockable(last.id) and last.wind_up_ms >= 800,
+			"%s's string (of more than one) ends in its finisher, %s: unblockable, winding up %d ms" % [f.display_name, last.display_name, last.wind_up_ms])
 		for it: ItemDef in RegentsContent.items(&"item").map(func(d: ContentDef) -> ItemDef: return d as ItemDef):
 			_check(it == null or it.weapon_kit != f.kit.key, "no weapon fights with %s's kit (%s)" % [f.display_name, it.display_name if it != null else "?"])
 	for key: StringName in [&"sword", &"axe", &"bow", &"staff"]:
@@ -1017,6 +1033,12 @@ func _run_foes() -> void:
 		"its loot is the skeleton camp's table, the gem with pity")
 
 
+## The yaw that faces a body at `from` toward `at` (-Z forward): a foe that SEES in front (Luke's F9, 2026-11-13) is
+## turned to face its test's player where the test is about what it does once it has noticed them.
+static func _yaw_to(from: Vector3, at: Vector3) -> float:
+	return atan2(-(at.x - from.x), -(at.z - from.z))
+
+
 class _FoeWorld extends NpcWorldView:
 	var way: PackedVector3Array = PackedVector3Array()
 	var sight: bool = true
@@ -1030,6 +1052,36 @@ class _FoeWorld extends NpcWorldView:
 
 ## A FOE GOES ROUND THINGS, AND A TARGET OUT OF SIGHT IS NOT FORGOTTEN AT ONCE (Luke's continent playtest,
 ## 2026-10-24, #4: "a bush blocks a skeleton's sight and it turns back").
+## A FOE'S BEHAVIOR IS A TREE (Luke's F2, 2026-11-12, FOES_PREP.md section 3.1): `chased` is a brain that has thought.
+func _run_foe_tree(chased: NpcBrain) -> void:
+	print("== regents: a foe's behavior is a tree ==")
+	_check(chased.tree_status() == BT.SUCCESS, "the brain that chased ran a tree: one of its tasks did the think (%d)" % chased.tree_status())
+	var trees_dir: String = String(chased.get(&"TREES_DIR"))
+	for f: FoeDef in FoeDef.all():
+		if not f.fights:
+			continue
+		var path: String = trees_dir + String(f.behavior) + ".tres"
+		_check(f.behavior != &"" and ResourceLoader.exists(path) and load(path) is BehaviorTree,
+			"%s fights by a tree the referee has (%s)" % [f.key, path])
+	var none: FoeDef = FoeDef.by_kind(103).duplicate() as FoeDef
+	none.behavior = &""
+	_check(not none.validate().filter(func(e: String) -> bool: return e.contains("behavior")).is_empty(),
+		"a foe that fights with no behavior: refused by its validate")
+	none.behavior = &"no_such_tree"
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 2)
+	b.self_id = 901
+	b.set(&"foe", none)
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = Vector3(3, 0, 0)
+	w.states = {901: me, 1: them}
+	w.kinds = {901: 103, 1: 0}
+	b.think(me, w)
+	_check(b.state == &"lost" and b.target() == 0 and not b.has_goal() and b.take_acts().is_empty(),
+		"a behavior with no tree: it stands still beside a player, chasing and swinging nothing (%s)" % b.describe())
+
+
 func _run_foe_brain() -> void:
 	print("== regents: a foe's chase ==")
 	var brain: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 1)
@@ -1040,6 +1092,7 @@ func _run_foe_brain() -> void:
 	var me := MovementState.new()
 	var them := MovementState.new()
 	them.pos = Vector3(6, 0, 0)
+	me.yaw = _yaw_to(me.pos, them.pos)   # it faces them (F9: it sees in front)
 	w.states = {900: me, 1: them}
 	w.kinds = {900: 103, 1: 0}
 	w.way = PackedVector3Array([Vector3.ZERO, Vector3(0, 0, 3), Vector3(6, 0, 3), Vector3(6, 0, 0)])
@@ -1057,12 +1110,498 @@ func _run_foe_brain() -> void:
 	t[0] += lost.lose_sight_ms
 	brain.think(me, w)
 	_check(brain.target() == 0, "out of sight past %d ms: given up (%s)" % [lost.lose_sight_ms, brain.describe()])
+	_run_foe_tree(brain)
 	_run_foe_turns()
 	_run_foe_aim()
 	_run_deer_brain()
 	_run_wolf_pack()
 	_run_foe_string_chase(107)
 	_run_foe_string_chase(103)
+	_run_foe_archer()
+	_run_foe_imp()
+	_run_foe_notice()
+	_run_foe_stagger_string()
+
+
+## PARRIED, ITS STRING GOES ON (Luke, 2026-11-13: "I could consistently get hit 1 parried but then it jumps straight to
+## hit 3"): a parry staggers the foe, and its next swing, sent then, was refused by the server ("you cannot while
+## staggered") but counted, so its second step was lost. Staggered, it sends nothing; after, its NEXT step comes.
+func _run_foe_stagger_string() -> void:
+	print("== regents: a staggered foe's string waits, and goes on ==")
+	var t: Array[int] = [960000]
+	var kit: KitDef = FoeDef.by_kind(103).kit
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 61)
+	b.clock = func() -> int: return t[0]
+	b.self_id = 8501
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = Vector3(FoeDef.by_kind(103).reach_m - 0.4, 0, 0)
+	me.yaw = _yaw_to(me.pos, them.pos)
+	w.states = {8501: me, 8601: them}
+	w.kinds = {8501: 103, 8601: 0}
+	var first: int = -1
+	for i: int in 10:
+		b.think(me, w)
+		var acts: Array[Dictionary] = b.take_acts()
+		if not acts.is_empty():
+			first = int(acts[0]["ability"])
+			break
+		t[0] += 100
+	_check(first == kit.light[0].id, "in reach, its string's first step (%d)" % first)
+	w.statuses = {8501: 103}   # parried: Staggered
+	var sent: int = 0
+	for i: int in 30:
+		t[0] += 100
+		b.think(me, w)
+		sent += b.take_acts().size()
+	_check(sent == 0, "NEGATIVE: staggered for 3 s, it sends no swing to be refused (%d sent)" % sent)
+	w.statuses = {}
+	var next: int = -1
+	for i: int in 30:
+		t[0] += 100
+		b.think(me, w)
+		var acts: Array[Dictionary] = b.take_acts()
+		if not acts.is_empty():
+			next = int(acts[0]["ability"])
+			break
+	_check(next == kit.light[1].id, "on its feet again, its SECOND step (%d), not its finisher (%d)" % [next, kit.light[2].id])
+	# A caster too: staggered it casts nothing, and the round of its casts is not moved on (its first is still an ember).
+	var imp: FoeDef = FoeDef.by_kind(109)
+	var ib: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 62)
+	ib.clock = func() -> int: return t[0]
+	ib.self_id = 8502
+	var iw := _FoeWorld.new()
+	var ime := MovementState.new()
+	var prey := MovementState.new()
+	prey.pos = Vector3(9.0, 0, 0)
+	ime.yaw = _yaw_to(ime.pos, prey.pos)
+	iw.states = {8502: ime, 8602: prey}
+	iw.kinds = {8502: 109, 8602: 0}
+	iw.statuses = {8502: 105}   # Flinched
+	var cast_while: int = 0
+	for i: int in 20:
+		t[0] += 100
+		ib.think(ime, iw)
+		cast_while += ib.take_acts().size()
+	iw.statuses = {}
+	var cast: int = -1
+	for i: int in 30:
+		t[0] += 100
+		ib.think(ime, iw)
+		var acts: Array[Dictionary] = ib.take_acts()
+		if not acts.is_empty():
+			cast = int(acts[0]["ability"])
+			break
+	_check(cast_while == 0 and cast == imp.shot().id, "the imp, flinched, casts nothing; then its round's first, an ember (%d sent while, then %d)" % [cast_while, cast])
+
+
+## A brain of foe `kind` (with `def` in place of its own, when given) at the origin facing -Z (yaw 0), and one player
+## (id 1) at `at` moving `vel`, `sight` whether a ray reaches them: whether one think makes them its target.
+func _noticed(at: Vector3, vel: Vector3, sight: bool, def: FoeDef = null) -> bool:
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 51)
+	b.clock = func() -> int: return 800000
+	b.self_id = 8401
+	if def != null:
+		b.set(&"foe", def)
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = at
+	them.vel = vel
+	w.sight = sight
+	w.states = {8401: me, 1: them}
+	w.kinds = {8401: 103, 1: 0}
+	b.think(me, w)
+	return b.target() == 1
+
+
+## NOTICING AND REST (Luke's F9-F11, 2026-11-13; FOES_PREP.md section 9 step 5): a foe SEES in front (`notice_arc_deg`
+## at `notice_m`, in sight) and HEARS all round (`hear_m`; `hear_sprint_m` sprinting), so a camp can be come at from
+## behind; at rest it WANDERS a few meters round its point; hit from beyond its sight it turns on WHO HIT IT.
+func _run_foe_notice() -> void:
+	print("== regents: a foe sees in front, hears all round, wanders, turns on who hit it ==")
+	var skel: FoeDef = FoeDef.by_kind(103)
+	_check(is_equal_approx(skel.notice_arc_deg, 140.0) and is_equal_approx(skel.hear_m, 4.0) and is_equal_approx(skel.hear_sprint_m, 8.0)
+		and is_equal_approx(skel.wander_m, 3.0) and skel.notice_m > 8.0,
+		"a skeleton warrior sees 140 degrees in front to %.0f m, hears 4 m all round (8 m a sprint), wanders 3 m" % skel.notice_m)
+	var side60: Vector3 = Vector3(0, 0, -8).rotated(Vector3.UP, deg_to_rad(60.0))
+	var side80: Vector3 = Vector3(0, 0, -8).rotated(Vector3.UP, deg_to_rad(80.0))
+	_check(_noticed(Vector3(0, 0, -8), Vector3.ZERO, true), "8 m in front of it, in sight: seen")
+	_check(_noticed(side60, Vector3.ZERO, true), "8 m off, 60 degrees from its front (inside its 70): seen")
+	_check(not _noticed(side80, Vector3.ZERO, true), "NEGATIVE: 8 m off, 80 degrees from its front (past its 70): not seen")
+	_check(not _noticed(Vector3(0, 0, 8), Vector3(0, 0, -5), true), "NEGATIVE: 8 m behind it, running at it (5 m/s): not seen, not heard")
+	_check(not _noticed(Vector3(0, 0, -8), Vector3.ZERO, false), "NEGATIVE: 8 m in front but out of sight (a rock between): not seen")
+	_check(_noticed(Vector3(0, 0, 3.5), Vector3.ZERO, false), "3.5 m behind it, out of sight: heard")
+	_check(_noticed(Vector3(0, 0, 7), Vector3(0, 0, -8), true), "7 m behind it, SPRINTING (8 m/s): heard")
+	_check(not _noticed(Vector3(0, 0, 7), Vector3(0, 0, -5), true), "NEGATIVE: 7 m behind it, running (5 m/s, no sprint): not heard")
+	_check(not _noticed(Vector3(0, 0, 9), Vector3(0, 0, -8), true), "NEGATIVE: 9 m behind it, sprinting (past its 8 m): not heard")
+	var all_round: FoeDef = skel.duplicate() as FoeDef
+	all_round.notice_arc_deg = 360.0
+	_check(_noticed(Vector3(0, 0, 8), Vector3.ZERO, true, all_round), "a foe of notice_arc_deg 360 sees all round: 8 m behind it, seen")
+
+	# AT REST IT WANDERS (F10): a stand, then a few steps at a walk to a spot within wander_m of its point, and again.
+	var t: Array[int] = [900000]
+	var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 52)
+	b.clock = func() -> int: return t[0]
+	b.self_id = 8402
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	w.states = {8402: me}
+	w.kinds = {8402: 103}
+	b.think(me, w)
+	_check(b.state == &"idle" and not b.has_goal(), "nobody near: it stands at its point first (%s)" % b.describe())
+	var stand_max: int = int(b.get(&"WANDER_STAND_MAX_MS"))
+	var spots: Array[Vector3] = []
+	var walked: bool = true
+	var stood: bool = true
+	for i: int in 6:
+		t[0] += stand_max + 1
+		b.think(me, w)
+		if not b.has_goal():
+			walked = false
+			break
+		var spot: Vector3 = b.goal()
+		spots.append(spot)
+		walked = walked and b.walks() and b.frame(me).slow
+		me.pos = spot
+		b.frame(me)   # there: the goal is done with
+		b.think(me, w)
+		stood = stood and not b.has_goal() and not b.walks()
+	var inside: bool = spots.size() == 6 and spots.all(func(v: Vector3) -> bool: return Vector2(v.x, v.z).length() <= skel.wander_m + 0.01)
+	var ways: Dictionary[int, bool] = {}
+	for v: Vector3 in spots:
+		ways[int(floor((atan2(v.z, v.x) + PI) / (PI / 2.0))) % 4] = true
+	_check(inside and walked and stood, "after each stand it walks (slow) to a spot within %.0f m of its point, then stands again: %s" % [skel.wander_m, str(spots)])
+	_check(ways.size() >= 2, "its spots lie round its point, not one way (%d quarters of 4)" % ways.size())
+	me.pos = Vector3(10, 0, 0)
+	b.think(me, w)
+	_check(b.has_goal() and b.goal().is_equal_approx(Vector3.ZERO) and not b.walks(),
+		"10 m from its point (back from a fight): home first, at its own pace (%s)" % b.describe())
+	me.pos = Vector3(skel.wander_m, 0, 0)
+	b.think(me, w)
+	_check(b.has_goal() and b.goal().is_equal_approx(Vector3.ZERO),
+		"on its way home and inside its wander: it goes on home, all the way (%s)" % b.describe())
+	me.pos = Vector3(0.5, 0, 0)
+	b.think(me, w)
+	_check(not b.has_goal() and not b.walks(), "home: it stands, then wanders again (%s)" % b.describe())
+	var still: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 53)
+	still.clock = func() -> int: return t[0]
+	still.self_id = 8403
+	var sw := _FoeWorld.new()
+	var sme := MovementState.new()
+	sw.states = {8403: sme}
+	sw.kinds = {8403: 105}
+	var sparring: FoeDef = FoeDef.by_kind(105)
+	var moved: int = 0
+	for i: int in 10:
+		t[0] += stand_max + 1
+		still.think(sme, sw)
+		moved += 1 if still.has_goal() else 0
+	_check(sparring != null and sparring.key == &"sparring_skeleton" and sparring.wander_m == 0.0 and moved == 0,
+		"NEGATIVE: the tutorial's sparring skeleton (wander_m 0) stands at its point (%d walks in %d s)" % [moved, (stand_max + 1) * 10 / 1000])
+
+	# WHO HIT IT (F11): Startled, it goes for the player the server names (the row's `by_entity`), not the nearest.
+	var hit_by: Array[int] = [5]
+	var hw := _FoeWorld.new()
+	var hme := MovementState.new()
+	var shooter := MovementState.new()
+	shooter.pos = Vector3(0, 0, 14)   # behind it, past its hearing
+	var bystander := MovementState.new()
+	bystander.pos = Vector3(7, 0, 0)  # to its side, nearer, unseen and unheard
+	hw.states = {8404: hme, 5: shooter, 6: bystander}
+	hw.kinds = {8404: 103, 5: 0, 6: 0}
+	var hb: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 54)
+	hb.clock = func() -> int: return t[0]
+	hb.self_id = 8404
+	hb.set(&"status_by_of", func(_id: int) -> int: return hit_by[0])
+	hb.think(hme, hw)
+	var calm: bool = hb.target() == 0
+	hw.statuses = {8404: 109}
+	hb.think(hme, hw)
+	_check(calm and hb.target() == 5 and hb.state == &"chase",
+		"hit from behind by a player 14 m off, another 7 m off at its side: it turns on WHO HIT IT, not the nearest (%s)" % hb.describe())
+	var nb: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 55)
+	nb.clock = func() -> int: return t[0]
+	nb.self_id = 8404
+	nb.set(&"status_by_of", func(_id: int) -> int: return 0)
+	nb.think(hme, hw)
+	_check(nb.target() == 6, "NEGATIVE: with no word of who (an older server's row): the nearest within twice its leash, as before (%s)" % nb.describe())
+	shooter.pos = Vector3(0, 0, skel.leash_m + 5.0)
+	var fb: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 56)
+	fb.clock = func() -> int: return t[0]
+	fb.self_id = 8404
+	fb.set(&"status_by_of", func(_id: int) -> int: return hit_by[0])
+	fb.think(hme, hw)
+	_check(fb.target() == 0, "NEGATIVE: who hit it is past its leash of home: it does not go, nor turns on the one near it (%s)" % fb.describe())
+
+
+## THE SKELETON ARCHER (Luke's F1-F6, 2026-11-12, FOES_PREP.md section 6): the ranged tree. It walks in to its range,
+## stands and shoots what it sees, naming its target (the server aims the shot); holds a draw it has begun; steps back
+## from a target that is close, seldom; shoves one in its reach; and two archers never draw on one player together.
+func _run_foe_archer() -> void:
+	print("== regents: a foe that shoots ==")
+	var foe: FoeDef = FoeDef.by_kind(108)
+	_check(foe != null and foe.key == &"skeleton_archer" and foe.behavior == &"ranged" and foe.validate().is_empty(),
+		"the skeleton archer is a foe of the ranged tree, and valid (%s)" % (str(foe.validate()) if foe != null else "none"))
+	if foe == null:
+		return
+	var shot: AbilityDef = foe.shot()
+	var spell: SpellDef = SpellDef.by_ability(shot.id) if shot != null else null
+	_check(shot != null and spell != null and spell.kind == SpellDef.Kind.BOLT and shot.range_m == 0.0 and not shot.judged,
+		"its shot is its kit's skill a bolt spell flies, with no range of its own and not judged")
+	if shot == null or spell == null:
+		return
+	_check(shot.wind_up_ms == 1200 and foe.kit.lock_ms(shot) >= shot.wind_up_ms, "its tell is 1200 ms (%d), and it is held at least as long (%d)" % [shot.wind_up_ms, foe.kit.lock_ms(shot)])
+	_check(not foe.kit.is_finisher(foe.kit.light[0]) and not KitDef.is_unblockable(foe.kit.light[0].id),
+		"its lone shove is no finisher: it staggers nobody and may be blocked")
+	for other: FoeDef in FoeDef.all():
+		if other != foe and other.fights and other.key != &"imp":
+			_check(other.shot() == null and other.ring() == null and other.behavior == &"melee", "%s does not shoot" % other.key)
+	# NEGATIVE: the ranged tree with a kit that has no shot is refused.
+	var no_shot: FoeDef = foe.duplicate() as FoeDef
+	no_shot.kit = FoeDef.by_kind(103).kit
+	_check(not no_shot.validate().filter(func(e: String) -> bool: return e.contains("no shot")).is_empty(),
+		"NEGATIVE: a ranged foe whose kit has no shot is refused by its validate")
+
+	var t: Array[int] = [200000]
+	var brain: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 31)
+	brain.clock = func() -> int: return t[0]
+	brain.self_id = 7401
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	w.states = {7401: me, 7301: them}
+	w.kinds = {7401: 108, 7301: 0}
+	them.pos = Vector3(foe.notice_m + 4.0, 0, 0)
+	me.yaw = _yaw_to(me.pos, them.pos)   # it faces the way they come from (F9: it sees in front)
+	brain.think(me, w)
+	_check(brain.state == &"idle" and brain.take_acts().is_empty(), "a player past its notice: it rests (%s)" % brain.describe())
+	them.pos = Vector3(foe.shot_range_m + 1.0, 0, 0)
+	brain.think(me, w)
+	_check(brain.state == &"chase" and brain.target() == 7301 and brain.take_acts().is_empty(),
+		"noticed, past its range: it walks in, and shoots nothing yet (%s)" % brain.describe())
+	# Walking in, it stops a little inside its range, never at the edge.
+	them.pos = Vector3(foe.shot_range_m - 0.5, 0, 0)
+	brain.think(me, w)
+	_check(brain.state == &"chase", "just inside its range it still walks in (%s)" % brain.describe())
+	them.pos = Vector3(11.0, 0, 0)
+	t[0] += 100
+	brain.think(me, w)
+	var acts: Array[Dictionary] = brain.take_acts()
+	_check(brain.state == &"aim" and not brain.has_goal() and acts.size() == 1 and int(acts[0].get("ability", 0)) == shot.id,
+		"in range and in sight: it stands and draws its shot (%s, %s)" % [brain.describe(), str(acts)])
+	_check(acts.size() == 1 and int(acts[0].get("target", 0)) == 7301, "the shot NAMES ITS TARGET (the server aims at them): %s" % str(acts))
+	var f: InputFrame = brain.frame(me)
+	_check(f.face and absf(angle_difference(f.look_yaw, atan2(1.0, 0.0) + PI)) < 0.01, "it faces them as it draws")
+	var drawn_at: int = t[0]
+	# Mid-draw it stands, whatever they do: its opening.
+	them.pos = Vector3(3.0, 0, 0)
+	t[0] += 400
+	brain.think(me, w)
+	_check(brain.state == &"fight" and not brain.has_goal() and brain.take_acts().is_empty(),
+		"mid-draw with them 3 m off: it stands and finishes the draw, no step back, no second shot (%s)" % brain.describe())
+	# After the draw: they are close, so one step back, away from them, facing them.
+	t[0] = drawn_at + foe.kit.lock_ms(shot) + 50
+	brain.think(me, w)
+	var spot: Vector3 = brain.goal()
+	_check(brain.state == &"back" and brain.has_goal() and spot.is_equal_approx(Vector3(-foe.back_m, 0, 0)) and brain.take_acts().is_empty(),
+		"the draw over and them within %.0f m: it steps back %.0f m straight away from them (%s, to %s)" % [foe.back_within_m, foe.back_m, brain.describe(), str(spot)])
+	f = brain.frame(me)
+	_check(f.face and not f.slow and f.move_dir.length() > 0.1, "it backs away at its own pace, facing them")
+	me.pos = spot
+	them.pos = spot + Vector3(3.0, 0, 0)   # they followed
+	t[0] += 2500
+	brain.think(me, w)
+	brain.take_acts()
+	# CAUGHT: it has stepped back once; within back_every_ms it does not again.
+	t[0] += 200
+	brain.think(me, w)
+	_check(brain.state != &"back" and not brain.has_goal(),
+		"followed at once: no second step back inside %d ms: it is caught (%s)" % [foe.back_every_ms, brain.describe()])
+	# ... and in its reach, it shoves.
+	var shoved: bool = false
+	them.pos = me.pos + Vector3(1.5, 0, 0)
+	for i: int in 60:
+		t[0] += 100
+		brain.think(me, w)
+		for a: Dictionary in brain.take_acts():
+			if int(a.get("ability", 0)) == foe.kit.light[0].id:
+				shoved = true
+		if shoved:
+			break
+	_check(shoved, "caught in its reach: it shoves (%s)" % brain.describe())
+	# Past back_every_ms, they still close: it steps back again.
+	them.pos = me.pos + Vector3(3.0, 0, 0)
+	var backed: bool = false
+	for i: int in 100:
+		t[0] += 100
+		brain.think(me, w)
+		brain.take_acts()
+		if brain.state == &"back":
+			backed = true
+			break
+	_check(backed, "past %d ms it steps back again (%s)" % [foe.back_every_ms, brain.describe()])
+
+	# NEGATIVE: it never shoots what it cannot see; it walks to where it last saw them.
+	var blind: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 32)
+	blind.clock = func() -> int: return t[0]
+	blind.self_id = 7402
+	var bme := MovementState.new()
+	var bthem := MovementState.new()
+	bthem.pos = Vector3(0, 0, 11.0)
+	bme.yaw = _yaw_to(bme.pos, bthem.pos)
+	var bw := _FoeWorld.new()
+	bw.states = {7402: bme, 7302: bthem}
+	bw.kinds = {7402: 108, 7302: 0}
+	blind.think(bme, bw)
+	_check(blind.take_acts().size() == 1, "(it draws on one it sees)")
+	t[0] += foe.kit.lock_ms(shot) + foe.shot_rest_ms - 100
+	blind.think(bme, bw)   # it sees them still, a moment before it is rested
+	_check(blind.take_acts().is_empty(), "(not rested yet: no second shot)")
+	t[0] += 200
+	bw.sight = false
+	var blind_shots: int = 0
+	for i: int in 20:
+		t[0] += 100
+		blind.think(bme, bw)
+		blind_shots += blind.take_acts().size()
+	_check(blind_shots == 0 and blind.state == &"chase" and blind.goal().is_equal_approx(Vector3(0, 0, 11.0)),
+		"NEGATIVE: rested, in range, but out of sight: no shot; it walks to where it last saw them (%s)" % blind.describe())
+
+	# ONE SHOT AT A PLAYER AT A TIME (regents.ranged_tokens), and the rest between a foe's own shots.
+	var tokens: int = int(HotRules.number(&"regents.ranged_tokens"))
+	var pw := _FoeWorld.new()
+	var prey := MovementState.new()
+	pw.states = {7303: prey}
+	pw.kinds = {7303: 0}
+	var pair: Array[NpcBrain] = []
+	for i: int in 2:
+		var b: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 41 + i)
+		b.clock = func() -> int: return t[0]
+		b.self_id = 7411 + i
+		var st := MovementState.new()
+		st.pos = Vector3(11.0 if i == 0 else -11.0, 0, 0)
+		st.yaw = _yaw_to(st.pos, prey.pos)
+		pw.states[b.self_id] = st
+		pw.kinds[b.self_id] = 108
+		pair.append(b)
+	var flight_ms: int = int(11.0 / spell.speed_mps * 1000.0)
+	var draws: Array[Vector2i] = []   # (when, who)
+	var end: int = t[0] + 30000
+	while t[0] < end:
+		for b: NpcBrain in pair:
+			b.think(pw.states[b.self_id], pw)
+			for a: Dictionary in b.take_acts():
+				if int(a.get("ability", 0)) == shot.id:
+					draws.append(Vector2i(t[0], b.self_id))
+		t[0] += 100
+	var overlaps: int = 0
+	var own_gap_ok: bool = true
+	var last_by: Dictionary[int, int] = {}
+	for i: int in draws.size():
+		if i > 0 and draws[i].x < draws[i - 1].x + shot.wind_up_ms + flight_ms:
+			overlaps += 1
+		if last_by.has(draws[i].y) and draws[i].x - last_by[draws[i].y] < foe.kit.lock_ms(shot) + foe.shot_rest_ms:
+			own_gap_ok = false
+		last_by[draws[i].y] = draws[i].x
+	_check(tokens == 1 and draws.size() >= 8 and last_by.size() == 2 and overlaps == 0,
+		"two archers on one player for 30 s: both shoot (%d draws), and never is a second drawn while the first is drawn or in the air (%d overlaps)" % [draws.size(), overlaps])
+	_check(own_gap_ok, "no archer draws again sooner than its lock and its %d ms rest" % foe.shot_rest_ms)
+
+	# ITS LOOK: the warrior's model with the sword hidden, the other colors, a bow in its hand.
+	var model: Node3D = (foe.character.visual_scene as PackedScene).instantiate() as Node3D
+	add_child(model)
+	var skel: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var look := FoeLook.new()
+	look.dress(skel, foe)
+	var sword: MeshInstance3D = skel.get_node_or_null(^"Skeleton_Sword") as MeshInstance3D
+	var body: MeshInstance3D = skel.get_node_or_null(^"Skeleton_Body") as MeshInstance3D
+	var worn: BaseMaterial3D = body.get_surface_override_material(0) as BaseMaterial3D if body != null else null
+	_check(sword != null and not sword.visible and body != null and body.visible, "its sword is hidden, its body is not")
+	_check(worn != null and worn.albedo_texture == foe.albedo and foe.albedo != null, "it wears the pack's second colors")
+	_check(look.held != null and look.held.get_parent() is BoneAttachment3D and (look.held.get_parent() as BoneAttachment3D).bone_name == "hand_l",
+		"a bow is in its left hand")
+	var plain := FoeLook.new()
+	var model2: Node3D = (FoeDef.by_kind(103).character.visual_scene as PackedScene).instantiate() as Node3D
+	add_child(model2)
+	var skel2: Skeleton3D = model2.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	plain.dress(skel2, FoeDef.by_kind(103))
+	_check(plain.held == null and (skel2.get_node(^"Skeleton_Sword") as MeshInstance3D).visible
+		and (skel2.get_node(^"Skeleton_Body") as MeshInstance3D).get_surface_override_material(0) == null,
+		"NEGATIVE: the warrior keeps its sword, its own colors and an empty left hand")
+	look.free()
+	plain.free()
+	model.queue_free()
+	model2.queue_free()
+
+
+## THE IMP CASTER (Luke's F1, 2026-11-12, FOES_PREP.md section 6): the ranged tree again, with a ring every third cast
+## and no step back. Its bolt and its ring both name their target; the server flies the one and lays the other.
+func _run_foe_imp() -> void:
+	print("== regents: a foe that casts ==")
+	var foe: FoeDef = FoeDef.by_kind(109)
+	_check(foe != null and foe.key == &"imp" and foe.family == &"fiend" and foe.behavior == &"ranged" and foe.validate().is_empty(),
+		"the imp is a fiend of the ranged tree, and valid (%s)" % (str(foe.validate()) if foe != null else "none"))
+	if foe == null:
+		return
+	var bolt: AbilityDef = foe.shot()
+	var ring: AbilityDef = foe.ring()
+	_check(bolt != null and ring != null and bolt != ring and foe.ring_every == 3, "it has a bolt and a ring, the ring every third cast")
+	if bolt == null or ring == null:
+		return
+	var ring_spell: SpellDef = SpellDef.by_ability(ring.id)
+	_check(ring.range_m == 0.0 and not ring.judged and ring_spell.kind == SpellDef.Kind.AREA and ring_spell.status == null and ring_spell.delay_ms >= 1200,
+		"its ring has no range of its own, no status (damage only), and %d ms to leave it" % ring_spell.delay_ms)
+	_check(SpellDef.by_ability(bolt.id).speed_mps < SpellDef.by_ability(FoeDef.by_kind(108).shot().id).speed_mps, "its bolt is slower than the archer's arrow")
+	_check(foe.cast_at(0) == bolt and foe.cast_at(1) == bolt and foe.cast_at(2) == ring and foe.cast_at(3) == bolt and foe.cast_at(5) == ring,
+		"bolt, bolt, ring, bolt, bolt, ring")
+	_check(FoeDef.by_kind(108).ring() == null and FoeDef.by_kind(108).cast_at(2) == FoeDef.by_kind(108).shot(), "NEGATIVE: the archer has no ring: every cast is its arrow")
+	var no_ring: FoeDef = FoeDef.by_kind(108).duplicate() as FoeDef
+	no_ring.ring_every = 3
+	_check(not no_ring.validate().filter(func(e: String) -> bool: return e.contains("no ring")).is_empty(),
+		"NEGATIVE: `ring_every` on a foe whose kit has no ring is refused by its validate")
+	for a: AbilityDef in foe.kit.abilities():
+		_check(foe.character.animation_set.has_exact(StringName("ability.%d" % a.id)), "it plays its %s" % a.display_name)
+	var t: Array[int] = [400000]
+	var brain: NpcBrain = NpcBrainComponent.make_brain(&"regents/foe", 51)
+	brain.clock = func() -> int: return t[0]
+	brain.self_id = 7501
+	var w := _FoeWorld.new()
+	var me := MovementState.new()
+	var them := MovementState.new()
+	them.pos = Vector3(9.0, 0, 0)
+	me.yaw = _yaw_to(me.pos, them.pos)
+	w.states = {7501: me, 7305: them}
+	w.kinds = {7501: 109, 7305: 0}
+	var casts: Array[int] = []
+	var named: bool = true
+	var moved: bool = false
+	var end: int = t[0] + 26000
+	while t[0] < end:
+		# They come close for a while: an imp never steps back.
+		them.pos = Vector3(3.0 if (t[0] > 408000 and t[0] < 411000) else 9.0, 0, 0)
+		brain.think(me, w)
+		moved = moved or brain.state == &"back" or (brain.has_goal() and brain.state != &"chase")
+		for a: Dictionary in brain.take_acts():
+			casts.append(int(a.get("ability", 0)))
+			named = named and int(a.get("target", 0)) == 7305
+		t[0] += 100
+	var want: Array[int] = []
+	for i: int in casts.size():
+		want.append(ring.id if i % 3 == 2 else bolt.id)
+	_check(casts.size() >= 6 and casts == want and named, "9 m off for 26 s: bolt, bolt, ring, and again, each naming its target (%s)" % str(casts))
+	_check(not moved, "NEGATIVE: with them 3 m off it does not step back (back_m 0): it stands and casts")
+	# A foe's ring is drawn in a danger's color, a player's own in its blue.
+	var looks := SpellLooks.new()
+	add_child(looks)
+	looks.show_area(1, Vector3.ZERO, 3.0, ClockSync.server_usec() + 1_000_000, false, true)
+	looks.show_area(2, Vector3(10, 0, 0), 3.0, ClockSync.server_usec() + 1_000_000, false, false)
+	var foe_ring: StandardMaterial3D = (looks.get_node(^"Area_1/Ring") as MeshInstance3D).material_override as StandardMaterial3D
+	var own_ring: StandardMaterial3D = (looks.get_node(^"Area_2/Ring") as MeshInstance3D).material_override as StandardMaterial3D
+	_check(foe_ring.albedo_color.r > 0.9 and foe_ring.albedo_color.b < 0.3 and own_ring.albedo_color.b > 0.9,
+		"a foe's ring is drawn orange-red, a player's own blue")
+	looks.queue_free()
 
 
 ## A FOE'S STRING FOLLOWS ITS TARGET (Luke, 2026-11-11: "the wolves start their attack and dont stop even if I move far
@@ -1239,6 +1778,7 @@ func _run_wolf_pack() -> void:
 	p.pos = Vector3(8.0, 0.0, 0.0)   # 8 m from wolf 1 (inside its 10 m notice), 12 m from wolf 2 (past its 10 m notice)
 	var w1 := MovementState.new()
 	w1.pos = Vector3.ZERO
+	w1.yaw = _yaw_to(w1.pos, p.pos)   # wolf 1 faces them (F9); wolf 2 would not see them at 12 m either way
 	var w2 := MovementState.new()
 	w2.pos = Vector3(-4.0, 0.0, 0.0)
 	var w3 := MovementState.new()
@@ -1497,6 +2037,37 @@ func _run_foe_bench() -> void:
 	brute.damage_pct = 1000
 	bench.item = brute
 	_check(bench.fit_checks().size() == 2, "a foe nothing kills in a minute, that kills you in seconds, is flagged: %s" % str(bench.fit_checks()))
+	# HOW IT NOTICES (F9, F10), on every foe's sheet.
+	_check(sheet.contains("sees 10 m 140 degrees in front, hears 4 m all round (8 m a sprint); at rest it wanders 3 m"),
+		"the sheet says how it notices and rests: %s" % sheet)
+	# A FOE THAT SHOOTS (FOES_PREP.md section 9 step 6): its round of casts, not its shove, is its fight.
+	_check(FoeWorkbench.shot_rhythm(warrior).is_empty() and FoeWorkbench.fight_rhythm(warrior)["dps"] == r["dps"] and not sheet.contains("it shoots"),
+		"NEGATIVE: a melee foe has no round of shots: its fight is its string")
+	var archer: FoeDef = FoeDef.by_kind(108)
+	bench.item = archer
+	await get_tree().process_frame
+	var asheet: String = await bench.run_named_test(&"sheet")
+	var shot: AbilityDef = archer.shot()
+	var arrow: float = FoeWorkbench.hit_damage(shot.damage, archer.damage_pct, 0, 1)
+	var round_ms: int = archer.kit.lock_ms(shot) + archer.shot_rest_ms
+	var ar: Dictionary = FoeWorkbench.shot_rhythm(archer)
+	_check(bool(bench.last_measure["shooter"]) and int(bench.last_measure["casts"]) == 1 and int(ar["ms"]) == round_ms
+		and is_equal_approx(float(ar["dps"]), arrow / (float(round_ms) / 1000.0)) and is_equal_approx(arrow, 16.5),
+		"the archer's fight is its arrow (16.5) every %d ms (its lock and %d ms rest): %.2f a second" % [round_ms, archer.shot_rest_ms, float(ar["dps"])])
+	_check(asheet.contains("it shoots from 9 to 14 m") and asheet.contains("steps back 5 m") and asheet.contains("up close: Shove"),
+		"its sheet: its range, its step back, its shove up close: %s" % asheet)
+	await bench.run_named_test(&"versus")
+	_check(is_equal_approx(float(bench.last_measure["kills_player_s"]), 100.0 / float(ar["dps"])),
+		"versus: it kills a player who stands for every arrow in %.0f s (its shots, not its shove)" % float(bench.last_measure["kills_player_s"]))
+	_check(bench.fit_checks().is_empty(), "the archer fits: %s" % str(bench.fit_checks()))
+	var imp: FoeDef = FoeDef.by_kind(109)
+	var ir: Dictionary = FoeWorkbench.shot_rhythm(imp)
+	var icasts: Array = ir["casts"]
+	var ember: float = FoeWorkbench.hit_damage(imp.shot().damage, imp.damage_pct, 0, 1)
+	var cinder: float = FoeWorkbench.hit_damage(imp.ring().damage, imp.damage_pct, 0, 1)
+	_check(icasts.size() == imp.ring_every and icasts.size() == 3 and not bool(icasts[0]["ring"]) and not bool(icasts[1]["ring"]) and bool(icasts[2]["ring"])
+		and is_equal_approx(float(ir["damage"]), 2.0 * ember + cinder),
+		"the imp's round: ember, ember, ring (%.2f, %.2f, %.2f: %.2f a round)" % [ember, ember, cinder, float(ir["damage"])])
 	bench.queue_free()
 	await get_tree().process_frame
 
@@ -2173,6 +2744,36 @@ func _fastest_hand_ms(set: AnimationSet, sem: StringName) -> int:
 		t += dt
 	scene.free()
 	return roundi(best_t * 1000.0 / (ref.speed_scale if ref.speed_scale > 0.0 else 1.0))
+
+
+## The least angle (degrees) the right hand is off straight ahead of the body (+Z, the rig's front), round the body,
+## through the first `until_ms` of clip `sem` of `set` at its speed: how wide the blow is held before it comes.
+func _least_hand_bearing(set: AnimationSet, sem: StringName, until_ms: int) -> float:
+	var ref: AnimationClipRef = set.clip(sem)
+	var anim: Animation = AnimationTreeBuilder.clip_animation(set, sem)
+	if ref == null or anim == null:
+		return -1.0
+	var speed: float = ref.speed_scale if ref.speed_scale > 0.0 else 1.0
+	var scene: Node3D = (load("res://game/characters/mannequin_f.glb") as PackedScene).instantiate() as Node3D
+	var skel: Skeleton3D = scene.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var hand: int = skel.find_bone("hand_r")
+	var least: float = 180.0
+	var t: float = 0.0
+	while t <= minf(anim.length, float(until_ms) / 1000.0 * speed):
+		for tr: int in anim.get_track_count():
+			var b: int = skel.find_bone(String(anim.track_get_path(tr).get_concatenated_subnames()))
+			if b < 0:
+				continue
+			match anim.track_get_type(tr):
+				Animation.TYPE_ROTATION_3D:
+					skel.set_bone_pose_rotation(b, anim.rotation_track_interpolate(tr, t))
+				Animation.TYPE_POSITION_3D:
+					skel.set_bone_pose_position(b, anim.position_track_interpolate(tr, t))
+		var p: Vector3 = _bone_origin(skel, hand)
+		least = minf(least, absf(rad_to_deg(atan2(p.x, p.z))))
+		t += 1.0 / 240.0
+	scene.free()
+	return least
 
 
 ## THE CHEST'S PEAK TURN (deg/s) while clip `to` of `set` fades in over its blend time from `from` playing (as the
@@ -4515,3 +5116,670 @@ func _trait_id(key: StringName) -> int:
 			if d != null and d.key == key:
 				return d.id
 	return -1
+
+
+## THE GLADE'S LOOK (PROGRESS step 59: foliage lit on both sides, a ground that wears where the level is used, a meadow
+## of MultiMesh clutter). Every nature model's leaves, petals and blades are the foliage shader (a model imported
+## without `nature_import.gd` is named); the glade's ground is painted from its own markers (dirt under a station, a
+## trail and a worn patch, soil under a tree, none under flax or in open meadow); the clutter is many, seeded, off
+## the dirt and the bare soil, gathered at the soil's rim, shadowless, and thinned by Detail. NEGATIVES: a plain
+## foliage material is caught; a station moved away takes its dirt with it; with no painter the grass grows on
+## the trails.
+func _run_glade_look() -> void:
+	print("== regents: the glade's foliage, ground and clutter ==")
+	const NATURE: String = "res://game/regents/art/nature/"
+	var plain := PackedStringArray()
+	var lit: int = 0
+	var models: int = 0
+	for file: String in DirAccess.get_files_at(NATURE):
+		if not file.ends_with(".gltf"):
+			continue
+		models += 1
+		var model: Node = (load(NATURE + file) as PackedScene).instantiate()
+		for mat_name: String in _plain_foliage(model):
+			plain.append("%s: %s" % [file, mat_name])
+		lit += _foliage_surfaces(model)
+		model.free()
+	_check(plain.is_empty() and lit >= 16, "every leaf, petal and blade of the %d nature models is the foliage shader (%d surfaces; plain: %s)" % [models, lit, plain])
+	# NEGATIVE: a foliage material as the kit ships it is caught, and bark is not foliage.
+	var kit_leaf := StandardMaterial3D.new()
+	kit_leaf.resource_name = "Leaves_NormalTree"
+	kit_leaf.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	var bark := StandardMaterial3D.new()
+	bark.resource_name = "Bark_NormalTree"
+	var probe := MeshInstance3D.new()
+	var quad := ArrayMesh.new()
+	quad.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, QuadMesh.new().get_mesh_arrays())
+	quad.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, QuadMesh.new().get_mesh_arrays())
+	quad.surface_set_material(0, kit_leaf)
+	quad.surface_set_material(1, bark)
+	probe.mesh = quad
+	_check(_plain_foliage(probe) == PackedStringArray(["Leaves_NormalTree"]), "NEGATIVE: a leaf left as the kit's plain material is caught, bark is not (%s)" % _plain_foliage(probe))
+	var swapped: ShaderMaterial = FoliageMaterial.from_standard(kit_leaf)
+	_check(swapped.shader == FoliageMaterial.SHADER_CUTOUT and swapped.get_shader_parameter(&"shrink_to_m") == null,
+		"swapped, a cut-out leaf is the cut-out foliage shader, and neither shrinks nor sways until the clutter says so")
+	probe.free()
+
+	var level: Node3D = (load("res://game/regents/levels/frontier.tscn") as PackedScene).instantiate() as Node3D
+	add_child(level)
+	var paint: RegentsGroundPaint = level.get_node("GroundPaint") as RegentsGroundPaint
+	var clutter: RegentsGroundClutter = level.get_node("Clutter") as RegentsGroundClutter
+	var field: CSGBox3D = level.get_node("Ground/Field") as CSGBox3D
+	_check(paint != null and clutter != null and field.material == paint.material and paint.material.shader.resource_path.ends_with("glade_ground.gdshader"),
+		"the glade has a ground painter and clutter, and its ground is the painter's material")
+	if paint == null or clutter == null:
+		level.free()
+		return
+	if DisplayServer.get_name() == "headless":
+		_check(not paint.painted() and clutter.made.is_empty() and paint.dirt_at(-6.0, 14.0) == 0.0,
+			"a headless process (the referee) paints and scatters nothing by itself")
+	paint.repaint()
+	var flax: Vector3 = Vector3.INF
+	var tree: Vector3 = Vector3.INF
+	for found: Node in level.get_node("Nodes").get_children():
+		var point: LevelPoint = found as LevelPoint
+		if point != null and point.tags.size() > 0 and point.tags[0] == "Flax" and flax == Vector3.INF:
+			flax = point.global_position
+		if point != null and point.tags.size() > 0 and point.tags[0] == "Tree" and tree == Vector3.INF:
+			tree = point.global_position
+	var rack: Marker3D = level.get_node("Stations/tanning_rack") as Marker3D
+	var by_rack: Vector3 = rack.global_position + Vector3(0.0, 0.0, -1.0)
+	_check(paint.painted() and paint.dirt_at(-6.0, 14.0) > 0.9 and paint.dirt_at(by_rack.x, by_rack.z) > 0.9,
+		"trodden dirt under the furnace and by the tanning rack (%.2f, %.2f)" % [paint.dirt_at(-6.0, 14.0), paint.dirt_at(by_rack.x, by_rack.z)])
+	_check(paint.dirt_at(35.0, -1.0) > 0.9 and paint.dirt_at(0.0, 8.0) > 0.9, "a worn patch where a plain marker stands (the skeleton camp, the camp)")
+	var on_trail: float = 0.0
+	for dz: int in range(-4, 5):
+		on_trail = maxf(on_trail, paint.dirt_at(15.0, 5.25 + float(dz) * 0.4))
+	_check(on_trail > 0.9, "a trail is worn along its curve (east of camp: %.2f)" % on_trail)
+	_check(tree != Vector3.INF and paint.soil_at(tree.x, tree.z) > 0.9 and paint.dirt_at(tree.x, tree.z) == 0.0, "bare soil under a tree, not dirt")
+	_check(flax != Vector3.INF and paint.soil_at(flax.x, flax.z) == 0.0, "flax grows in the grass: no soil under it (%.2f)" % paint.soil_at(flax.x, flax.z))
+	_check(paint.dirt_at(-20.0, 24.0) == 0.0 and paint.soil_at(-20.0, 24.0) == 0.0 and paint.dirt_at(500.0, 0.0) == 0.0,
+		"open meadow is neither, nor is anywhere off the picture")
+	# NEGATIVE: the dirt is the marker's: the rack moved away, its ground is grass again and the dirt went with it.
+	var rack_was: Vector3 = rack.position
+	rack.position = Vector3(-40.0, 0.0, 40.0)
+	paint.repaint()
+	_check(paint.dirt_at(by_rack.x, by_rack.z) == 0.0 and paint.dirt_at(-40.0, 39.0) > 0.9,
+		"NEGATIVE: the tanning rack moved, its dirt moved with it (%.2f where it was)" % paint.dirt_at(by_rack.x, by_rack.z))
+	rack.position = rack_was
+	paint.repaint()
+
+	clutter.scatter()
+	var total: int = clutter.count()
+	var on_dirt: int = 0
+	var in_soil: int = 0
+	var at_rim: int = 0
+	var plants: int = 0
+	var grouped: bool = true
+	for m: int in range(clutter.made.size()):
+		var mmi: MultiMeshInstance3D = clutter.made[m]
+		if not (mmi.is_in_group(GraphicsQuality.GROUP_DENSITY) and mmi.visibility_range_end > clutter.draw_distance_m
+				and mmi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF):
+			grouped = false
+		var pebbles: bool = String(mmi.name).begins_with("Pebble")
+		if clutter.places_in(m).size() != mmi.multimesh.instance_count:
+			grouped = false
+		for at: Vector3 in clutter.places_in(m):
+			if paint.soil_at(at.x, at.z) > RegentsGroundClutter.SOIL_MAX:
+				in_soil += 1
+			if pebbles:
+				continue
+			plants += 1
+			if paint.dirt_at(at.x, at.z) > RegentsGroundClutter.DIRT_MAX:
+				on_dirt += 1
+			if RegentsGroundClutter.at_foot(paint, at.x, at.z):
+				at_rim += 1
+	_check(total > 2000 and total < 12000 and clutter.made.size() > 25, "a meadow: %d scattered in %d MultiMeshes (the glade had 100 nodes)" % [total, clutter.made.size()])
+	_check(grouped, "every one of them thins with Detail, is not drawn past its distance, casts no shadow and knows where its own are")
+	_check(on_dirt == 0 and in_soil == 0, "no plant on trodden dirt, nothing in bare soil (%d, %d of %d)" % [on_dirt, in_soil, total])
+	# How much of the ground that could grow something is a foot: a plant there is likelier than its share of it.
+	var foot_m2: int = 0
+	var open_m2: int = 0
+	for gx: int in range(-60, 60):
+		for gz: int in range(-60, 60):
+			var wx: float = float(gx) + 0.5
+			var wz: float = float(gz) + 0.5
+			if paint.soil_at(wx, wz) > RegentsGroundClutter.SOIL_MAX or paint.dirt_at(wx, wz) > RegentsGroundClutter.DIRT_MAX:
+				continue
+			if RegentsGroundClutter.at_foot(paint, wx, wz):
+				foot_m2 += 1
+			else:
+				open_m2 += 1
+	var foot_density: float = float(at_rim) / maxf(float(foot_m2), 1.0)
+	var open_density: float = float(plants - at_rim) / maxf(float(open_m2), 1.0)
+	_check(foot_m2 > 200 and foot_density > open_density * 2.0,
+		"plants gather at the foot of rocks and trees: %.2f a square meter there (%d on %d m2), %.2f on open ground" % [foot_density, at_rim, foot_m2, open_density])
+	var first: MultiMeshInstance3D = clutter.made[0] if not clutter.made.is_empty() else null
+	if first != null:
+		var own: ShaderMaterial = first.multimesh.mesh.surface_get_material(0) as ShaderMaterial
+		var kit_model: Node = clutter.kinds[0].model.instantiate()
+		var model_mesh: MeshInstance3D = kit_model.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		var kit: ShaderMaterial = model_mesh.mesh.surface_get_material(0) as ShaderMaterial
+		var shrinks: Variant = own.get_shader_parameter(&"shrink_to_m") if own != null else null
+		_check(own != null and kit != null and own != kit and shrinks is float and is_equal_approx(float(shrinks), clutter.draw_distance_m)
+			and kit.get_shader_parameter(&"shrink_to_m") == null,
+			"a tuft shrinks away by the clutter's distance on its own copy of the material: the model's is untouched")
+		kit_model.free()
+		var was: int = GraphicsQuality.detail
+		GraphicsQuality.detail = GraphicsQuality.Detail.LOW
+		GraphicsQuality.apply_node(first)
+		var low: int = first.multimesh.visible_instance_count
+		GraphicsQuality.detail = GraphicsQuality.Detail.HIGH
+		GraphicsQuality.apply_node(first)
+		_check(low == maxi(1, int(float(first.multimesh.instance_count) * 0.25)) and first.multimesh.visible_instance_count == -1,
+			"Low detail draws a quarter of a cell's tufts (%d of %d), High all of them" % [low, first.multimesh.instance_count])
+		GraphicsQuality.detail = was
+		GraphicsQuality.apply_node(first)
+	var places: PackedVector3Array = clutter.places()
+	clutter.scatter()
+	_check(clutter.count() == total and clutter.places() == places, "scattered again it is the same meadow (seeded)")
+	# NEGATIVE: the painter is what keeps the grass off the trails: without it, plants stand on the dirt.
+	var paint_path: NodePath = clutter.paint
+	clutter.paint = NodePath("")
+	clutter.scatter()
+	var trampled: int = 0
+	for m: int in range(clutter.made.size()):
+		if String(clutter.made[m].name).begins_with("Pebble"):
+			continue
+		for at: Vector3 in clutter.places_in(m):
+			if paint.dirt_at(at.x, at.z) > RegentsGroundClutter.DIRT_MAX:
+				trampled += 1
+	_check(trampled > 0, "NEGATIVE: with no painter the grass grows on the trails (%d plants on dirt)" % trampled)
+	clutter.paint = paint_path
+	level.free()
+
+
+## The names of `root`'s foliage materials that are still the kit's plain double-sided ones (lit black from behind).
+func _plain_foliage(root: Node) -> PackedStringArray:
+	var out := PackedStringArray()
+	var meshes: Array[Node] = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)
+	for n: Node in meshes:
+		var mi: MeshInstance3D = n as MeshInstance3D
+		for i: int in range(mi.mesh.get_surface_count() if mi.mesh != null else 0):
+			var mat: Material = mi.mesh.surface_get_material(i)
+			if mat is StandardMaterial3D and FoliageMaterial.is_foliage(mat):
+				out.append(mat.resource_name)
+	return out
+
+
+## How many of `root`'s surfaces are drawn by the foliage shader.
+func _foliage_surfaces(root: Node) -> int:
+	var n: int = 0
+	for found: Node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = found as MeshInstance3D
+		for i: int in range(mi.mesh.get_surface_count() if mi.mesh != null else 0):
+			var mat: ShaderMaterial = mi.mesh.surface_get_material(i) as ShaderMaterial
+			if mat != null and (mat.shader == FoliageMaterial.SHADER_CUTOUT or mat.shader == FoliageMaterial.SHADER_OPAQUE):
+				n += 1
+	return n
+
+
+## A use the server never answers: enough of an `ability_def` row for the action component to begin one.
+class RollDefRow extends RefCounted:
+	var ability_id: int = CombatComponent.DODGE_ID
+	var cooldown_ms: int = 1500
+	var wind_up_ms: int = 100
+
+
+## THE COMBAT PASS (Luke's list, 2026-11-11; PROGRESS step 60): a free shot flies to the crosshair; a shot the
+## server aims goes to the middle of what it is aimed at; a roll goes a set length; the server is told how late
+## this client shows a swing.
+func _run_combat_pass() -> void:
+	print("== regents: the combat pass ==")
+	# TO THE CROSSHAIR. The camera sits 4 m behind and above the shoulder, looking down a little; the crosshair is
+	# on a wolf's back (0.5 m up). The muzzle is at the chest.
+	var muzzle := Vector3(0.0, CombatComponent.MUZZLE_HEIGHT_M, 0.0)
+	var pitch: float = deg_to_rad(-8.0)
+	var cam: Vector3 = Vector3(0.0, 1.6, 0.0) + Vector3(0.0, 0.0, 4.0).rotated(Vector3.RIGHT, pitch)
+	var look := Vector3(0.0, sin(pitch), -cos(pitch))
+	var wolf: Vector3 = cam + look * ((cam.y - 0.5) / -look.y)
+	_check(wolf.z < -5.0 and is_equal_approx(wolf.y, 0.5), "(the crosshair is on a wolf %.1f m ahead)" % -wolf.z)
+	for speed: float in [20.0, 35.0, 50.0]:
+		var dir: Vector3 = CombatComponent.launch_direction(muzzle, wolf, speed, CombatComponent.ARROW_GRAVITY)
+		var miss: float = _shot_miss(muzzle, dir * speed, wolf, CombatComponent.ARROW_GRAVITY)
+		var old_miss: float = _shot_miss(muzzle, look * speed, wolf, CombatComponent.ARROW_GRAVITY)
+		_check(is_equal_approx(dir.length(), 1.0) and miss < 0.05, "an arrow at %.0f m/s lands where the crosshair is (%.2f m off)" % [speed, miss])
+		_check(old_miss > 0.25, "NEGATIVE: loosed along the look from the chest, as before, it passes %.2f m from it" % old_miss)
+	for to: Vector3 in [Vector3(3.0, 0.0, -25.0), Vector3(-2.0, 4.0, -18.0), Vector3(0.5, 0.3, -3.0)]:
+		var dir: Vector3 = CombatComponent.launch_direction(muzzle, to, 40.0, CombatComponent.ARROW_GRAVITY)
+		_check(_shot_miss(muzzle, dir * 40.0, to, CombatComponent.ARROW_GRAVITY) < 0.05, "and on the ground far off, a ledge above, a point at its feet (%s)" % to)
+	var bolt: Vector3 = CombatComponent.launch_direction(muzzle, wolf, 32.0, 0.0)
+	_check(_shot_miss(muzzle, bolt * 32.0, wolf, 0.0) < 0.03 and _shot_miss(muzzle, look * 32.0, wolf, 0.0) > 0.1,
+		"a bolt (no gravity) flies straight to it; along the look from the chest it did not")
+	var out_of_reach: Vector3 = CombatComponent.launch_direction(muzzle, Vector3(0.0, 0.0, -500.0), 20.0, CombatComponent.ARROW_GRAVITY)
+	_check(is_equal_approx(out_of_reach.y, sin(PI / 4.0)) and out_of_reach.z < 0.0, "out of an arrow's reach: 45 degrees up toward it (the server's rule)")
+	# The crosshair's ray begins level with the muzzle: a thing between the camera and the player is not aimed at.
+	var start: float = CombatComponent.aim_ray_start(cam, look, muzzle)
+	_check(start > 3.5 and start < 4.5 and is_zero_approx(CombatComponent.aim_ray_start(muzzle + look, look, muzzle)),
+		"the crosshair's ray starts past the player (%.1f m along it), never behind the camera" % start)
+	# With no camera (headless) a shot goes along the look, as it did.
+	var c: CombatComponent = CombatComponent.new()
+	var far: Vector3 = c.crosshair_point()
+	_check(far.distance_to(c.muzzle() + c.look_direction() * CombatComponent.AIM_FAR_M) < 0.001, "no camera: the crosshair is far along the look")
+	# THE UPPER BODY TURNS TO THE SHOT (`AimTwist`): from the way the body faces to the target, less where the pose
+	# points by itself. The bow's pose points 32 degrees left and 3.2 over (the aim pose is over the upper body only:
+	# `aim_shot.tscn` measures it); the crosshair's point is right of straight ahead (the camera's shoulder).
+	var ahead := Vector3(0.0, 0.0, -1.0)
+	var bow_points := Vector2(deg_to_rad(32.0), deg_to_rad(3.2))
+	var bow_line: Vector3 = AimTwist.rotation_for(ahead, Vector2(bow_points.x, -bow_points.y)) * ahead   # where the pose points
+	var want := Vector3(0.3, -0.4, -12.0)
+	var turn: Vector2 = AimTwist.turn_from(ahead, bow_points, want, deg_to_rad(95.0), deg_to_rad(40.0))
+	var turned_line: Vector3 = AimTwist.rotation_for(bow_line, turn) * bow_line
+	_check(turn.x < deg_to_rad(-30.0) and rad_to_deg(turned_line.angle_to(want)) < 0.5,
+		"a bow pointing 32 degrees left of straight ahead is turned %.1f degrees right onto the crosshair (%.2f degrees off)" % [-rad_to_deg(turn.x), rad_to_deg(turned_line.angle_to(want))])
+	_check(rad_to_deg(bow_line.angle_to(want)) > 30.0, "NEGATIVE: unturned, as before, it points %.0f degrees off" % rad_to_deg(bow_line.angle_to(want)))
+	# A TAB TARGET, well to one side (Luke, 2026-11-12: "if tab target hand and bow should point towards them").
+	for side_deg: float in [50.0, -50.0, 20.0]:
+		var to_target: Vector3 = Vector3(0.0, -0.9, -9.0).rotated(Vector3.UP, deg_to_rad(side_deg))
+		var side_turn: Vector2 = AimTwist.turn_from(ahead, bow_points, to_target, deg_to_rad(95.0), deg_to_rad(40.0))
+		var onto: Vector3 = AimTwist.rotation_for(bow_line, side_turn) * bow_line
+		_check(rad_to_deg(onto.angle_to(to_target)) < 1.5, "a target %.0f degrees to the %s: the bow is turned onto it (%.1f degrees off; turned %.0f)"
+			% [absf(side_deg), "left" if side_deg > 0.0 else "right", rad_to_deg(onto.angle_to(to_target)), rad_to_deg(side_turn.x)])
+		var to_crosshair: Vector2 = AimTwist.turn_from(ahead, bow_points, want, deg_to_rad(95.0), deg_to_rad(40.0))
+		_check(absf(side_turn.x - to_crosshair.x) > deg_to_rad(15.0), "NEGATIVE: turned to the crosshair instead, it would be %.0f degrees off that target" % rad_to_deg(absf(side_turn.x - to_crosshair.x)))
+	# The same turn whatever the hands are doing: it reads the body's facing, not the pose (the draw moves the hands).
+	var behind: Vector2 = AimTwist.turn_from(ahead, Vector2.ZERO, Vector3(-0.2, 3.0, 1.0), deg_to_rad(95.0), deg_to_rad(40.0))
+	_check(is_equal_approx(absf(behind.x), deg_to_rad(95.0)) and is_equal_approx(absf(behind.y), deg_to_rad(40.0)) and AimTwist.turn_from(ahead, bow_points, Vector3.UP, PI, PI) == Vector2.ZERO,
+		"it turns no further than its limits (95 degrees round, 40 up), and not at all toward straight up")
+	var aim_look := CombatLook.new()
+	var shooter: CombatComponent = CombatComponent.new()
+	shooter.is_local_authority = true
+	aim_look._combat = shooter
+	_check(aim_look.aiming_with() == CombatLook.AIM_NONE, "nothing wielded: nothing is aimed")
+	shooter.kit = KitDef.by_key(&"bow")
+	_check(aim_look.aiming_with() == CombatLook.AIM_NONE, "a bow, not drawn: the body is left as its clips pose it")
+	shooter.draw_started_ms = Time.get_ticks_msec()
+	var bow_deg: Vector2 = aim_look.bow_pose_points_deg
+	_check(aim_look.aiming_with() == CombatLook.AIM_BOW and aim_look.pose_points(CombatLook.AIM_BOW).is_equal_approx(Vector2(deg_to_rad(bow_deg.x), deg_to_rad(bow_deg.y)))
+		and bow_deg.x > 20.0 and bow_deg.x < 40.0,
+		"drawing: turned, with where the bow's pose points by itself taken out (%s degrees left and over: the node's own numbers)" % bow_deg)
+	shooter.draw_started_ms = -1
+	shooter.shot_ms = Time.get_ticks_msec()
+	_check(aim_look.aiming_with() == CombatLook.AIM_BOW, "just loosed: still turned, while the loose plays")
+	shooter.shot_ms = Time.get_ticks_msec() - aim_look.aim_after_shot_ms - 1
+	_check(aim_look.aiming_with() == CombatLook.AIM_NONE, "and let go after it")
+	shooter.kit = KitDef.by_key(&"staff")
+	shooter.shot_ms = Time.get_ticks_msec()
+	_check(aim_look.aiming_with() == CombatLook.AIM_CAST and not aim_look.pose_points(CombatLook.AIM_CAST).is_equal_approx(aim_look.pose_points(CombatLook.AIM_CHANNEL)),
+		"a bolt just cast: turned by the casting pose's own numbers (%s; a long cast's pose has its own, %s)" % [aim_look.cast_pose_points_deg, aim_look.channel_pose_points_deg])
+	shooter.kit = KitDef.by_key(&"sword")
+	_check(aim_look.aiming_with() == CombatLook.AIM_NONE, "a sword never is")
+	_check(aim_look.muzzle_point() == Vector3.INF, "a character never seen to aim has no hand a shot leaves from: the shot is drawn on its path")
+	var twist_default := AimTwist.new()
+	var adv_model: Node3D = (load("res://game/regents/content/character/adventurer.tres") as EntityDefinition).visual_variants[0].instantiate() as Node3D
+	var adv_skel: Skeleton3D = adv_model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	_check(twist_default.spine_bones.size() == 3 and twist_default.spine_bones.all(func(bone: StringName) -> bool: return adv_skel.find_bone(String(bone)) >= 0)
+		and adv_skel.find_bone(String(aim_look.bow_muzzle_bone)) >= 0 and adv_skel.find_bone(String(aim_look.cast_muzzle_bone)) >= 0,
+		"the turn is shared over three spine bones the adventurer has (%s); the hands a shot leaves from are its bones" % str(twist_default.spine_bones))
+	adv_model.free()
+	twist_default.free()
+	# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"): a
+	# shot is aimed at a Tab target only inside the arc in front of the body.
+	var arc: float = HotRules.number(&"regents.aim_arc_deg")
+	_check(is_equal_approx(arc, 120.0) and CombatComponent.within_arc(0.0, 0.0, -5.0, arc) and CombatComponent.within_arc(0.0, 4.0, -3.0, arc),
+		"a target straight ahead, or 53 degrees to the side, is faced (the arc: %.0f degrees)" % arc)
+	_check(not CombatComponent.within_arc(0.0, 0.0, 5.0, arc) and not CombatComponent.within_arc(0.0, 5.0, -2.0, arc),
+		"NEGATIVE: one behind you, or 68 degrees to the side, is not: the shot is refused")
+	_check(CombatComponent.within_arc(PI, 0.0, 5.0, arc) and not CombatComponent.within_arc(PI, 0.0, -5.0, arc), "turned right round, it is the other way about")
+	_check(CombatComponent.FACE_YOUR_TARGET == "Face your target", "and it says so")
+	shooter.free()
+	aim_look.free()
+	# A SHOT THE SERVER AIMS (a Tab target) goes to the middle of what it is aimed at.
+	var wolf_def: FoeDef = load("res://game/regents/content/foe/wolf.tres") as FoeDef
+	var warrior: FoeDef = load("res://game/regents/content/foe/skeleton_warrior.tres") as FoeDef
+	_check(wolf_def.aim_height_m() < wolf_def.character.collision_height and is_equal_approx(wolf_def.aim_height_m(), wolf_def.character.collision_height * 0.5),
+		"a shot aimed at a wolf goes to the middle of its body (%.2f m of %.1f)" % [wolf_def.aim_height_m(), wolf_def.character.collision_height])
+	_check(FoeDef.DEFAULT_AIM_HEIGHT_M > wolf_def.character.collision_height,
+		"NEGATIVE: at a man's chest (%.1f m), as before, it flew over the wolf's back (%.1f m)" % [FoeDef.DEFAULT_AIM_HEIGHT_M, wolf_def.character.collision_height])
+	_check(is_equal_approx(warrior.aim_height_m(), FoeDef.DEFAULT_AIM_HEIGHT_M) and is_equal_approx(float(wolf_def.to_bake()["aim_height_m"]), wolf_def.aim_height_m()),
+		"a skeleton is aimed at where it was; the bake carries the height to the server")
+
+	# TRAILS (`RibbonTrail`): behind a point that flies, and the sheet a blade sweeps; each fades off its tail.
+	var flier := Node3D.new()
+	add_child(flier)
+	var trail := RibbonTrail.new()
+	trail.lifetime_s = 0.2
+	add_child(trail)
+	trail.follow(flier)
+	for i: int in range(6):
+		flier.position.x += 0.5
+		trail.step(0.02)
+	_check(trail.sample_count() == 6 and trail.showing() and trail.mesh.get_surface_count() == 1, "a trail behind a flying point: a sample a frame, drawn as one ribbon")
+	trail.step(0.15)
+	_check(trail.sample_count() >= 1 and trail.sample_count() < 6, "its tail falls off after its lifetime (%d of 6 left)" % trail.sample_count())
+	flier.position.x += 50.0
+	trail.step(0.02)
+	_check(trail.sample_count() == 1, "a jump (its entity placed, a teleport) starts it over: never a streak across the world")
+	trail.step(0.5)
+	_check(not trail.showing() and trail.mesh.get_surface_count() == 0, "left alone it is gone")
+	var sheet := RibbonTrail.new()
+	add_child(sheet)
+	for i: int in range(5):
+		sheet.add_blade(Vector3(0.0, 1.0, 0.0), Vector3(cos(float(i) * 0.3), 1.0, -sin(float(i) * 0.3)))
+		sheet.step(0.016)
+	sheet.add_blade(Vector3(0.0, 1.0, 0.0), Vector3(cos(1.2), 1.0, -sin(1.2)))
+	_check(sheet.sample_count() == 5 and sheet.showing(), "a blade's sheet: an edge for every frame of the cut, none for a blade that has not moved")
+	for n: Node3D in [flier, trail, sheet]:
+		n.free()
+	# Every shot's look has its trail; the spells' missiles shed sparks and burst where they end; an arrow does not.
+	for path: String in ["arrow", "bolt", "fireball"]:
+		var shot: ShotLook = (load("res://game/regents/combat/%s_look.tscn" % path) as PackedScene).instantiate() as ShotLook
+		_check(shot != null and shot.trail_life_s > 0.0 and (shot.burst_size_m > 0.0) == (path != "arrow") and (shot.sparks_per_s > 0) == (path != "arrow"),
+			"the %s's look: a trail%s" % [path, "" if path == "arrow" else ", sparks, a burst where it ends"])
+		if shot != null:
+			shot.free()
+	# A SWING'S TRAIL (`SwingTrail`): only a swing draws one, through its cut; the blade found on what is shown.
+	var cut: AbilityDef = ContentLibrary.find(&"ability", 40017) as AbilityDef
+	var window: Vector2i = SwingTrail.cut_window(cut, 1000, 0.55, 130)
+	_check(window == Vector2i(1000 + roundi(float(cut.wind_up_ms) * 0.55), 1000 + cut.wind_up_ms + 130), "a swing draws its cut from late in the wind-up to just after it lands (%s)" % window)
+	_check(SwingTrail.cut_window(ContentLibrary.find(&"ability", CombatComponent.DODGE_ID) as AbilityDef, 0, 0.55, 130) == Vector2i(-1, -1)
+		and SwingTrail.cut_window(ContentLibrary.find(&"ability", 40011) as AbilityDef, 0, 0.55, 130) == Vector2i(-1, -1)
+		and SwingTrail.cut_window(null, 0, 0.55, 130) == Vector2i(-1, -1), "a roll and a bow's loose draw none")
+	var edge: Array = SwingTrail.blade_in_box(AABB(Vector3(-0.05, -0.2, -0.05), Vector3(0.1, 1.2, 0.1)), Vector3.ZERO, 0.3)
+	_check(edge.size() == 2 and (edge[1] as Vector3).is_equal_approx(Vector3(0.0, 1.0, 0.0)) and (edge[0] as Vector3).is_equal_approx(Vector3(0.0, 0.3, 0.0)),
+		"a weapon's blade: along its longest side from the grip, its far end the tip, the hilt left out")
+	for kind: int in [103, 104]:
+		var foe_model: Node3D = FoeDef.by_kind(kind).character.visual_scene.instantiate() as Node3D
+		add_child(foe_model)
+		var foe_skel: Skeleton3D = foe_model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+		var found: Array = SwingTrail.blade_in_bone(foe_skel, foe_skel.find_bone("hand_r"), 0.3)
+		_check(found.size() == 2 and (found[1] as Vector3).length() > 0.4 and (found[1] as Vector3).length() < 1.3,
+			"%s's own weapon is found by its hand: its tip %.2f m from the grip" % [FoeDef.by_kind(kind).display_name, (found[1] as Vector3).length() if found.size() == 2 else 0.0])
+		foe_model.free()
+	var wolf_model: Node3D = wolf_def.character.visual_scene.instantiate() as Node3D
+	add_child(wolf_model)
+	var wolf_skel: Skeleton3D = wolf_model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var default_trail := SwingTrail.new()
+	_check(wolf_skel.find_bone(String(default_trail.hand_bone)) < 0 and wolf_skel.find_bone(String(default_trail.head_bone)) >= 0,
+		"a wolf has no hand: its trail is drawn at its head (%s)" % default_trail.head_bone)
+	default_trail.free()
+	wolf_model.free()
+	for scene: String in ["res://game/regents/adventurer.tscn", "res://game/regents/combat/foe.tscn"]:
+		var fighter: Node = (load(scene) as PackedScene).instantiate()
+		_check(fighter.get_node_or_null(^"Components/SwingTrail") is SwingTrail, "%s carries the swing trail" % scene.get_file())
+		fighter.free()
+	# MORE ANTICIPATION (Luke, 2026-11-11): a foe's light swings wind up a fifth longer, their clips slowed to match.
+	var foe_set: AnimationSet = load("res://game/regents/anim/adventurer.tres") as AnimationSet
+	for row: Array in [[40017, 660], [40018, 700], [40020, 710], [40027, 650], [40028, 720]]:
+		var swing_def: AbilityDef = ContentLibrary.find(&"ability", int(row[0])) as AbilityDef
+		_check(swing_def.wind_up_ms == int(row[1]), "%s winds up %d ms" % [swing_def.display_name, swing_def.wind_up_ms])
+	for id: int in [40017, 40018, 40020]:
+		var swing_def: AbilityDef = ContentLibrary.find(&"ability", id) as AbilityDef
+		var hand_ms: int = _fastest_hand_ms(foe_set, StringName("ability.%d" % id))
+		_check(absi(hand_ms - swing_def.wind_up_ms) <= 60, "%s: the blow at %d ms in its slowed clip, its wind-up %d ms" % [swing_def.display_name, hand_ms, swing_def.wind_up_ms])
+	# A TELL YOU CAN READ (Luke, 2026-11-13: the backswing could not be parried; his presses came 200-400 ms early):
+	# through the first half of a foe's wind-up its sword hand is held WIDE, 40 degrees or more off straight ahead, so
+	# the blow is plainly still to come. The old backswing (Sword_Heavy_B) began in front and drifted across it.
+	for id: int in [40017, 40018, 40020]:
+		var swing_def: AbilityDef = ContentLibrary.find(&"ability", id) as AbilityDef
+		var wide: float = _least_hand_bearing(foe_set, StringName("ability.%d" % id), swing_def.wind_up_ms / 2)
+		_check(wide >= 40.0, "%s: its hand held %.0f degrees or more off straight ahead through the first half of its wind-up" % [swing_def.display_name, wide])
+	var old_set: AnimationSet = foe_set.duplicate() as AnimationSet
+	old_set.clips = foe_set.clips.duplicate()   # its own map: the loaded set is everyone's
+	var old_ref := AnimationClipRef.new()
+	old_ref.anim_name = &"extra/Sword_Heavy_B"
+	old_ref.speed_scale = 0.621
+	old_set.clips[&"ability.40018"] = old_ref
+	var old_wide: float = _least_hand_bearing(old_set, &"ability.40018", 350)
+	_check(old_wide < 40.0, "NEGATIVE: the old backswing (Sword_Heavy_B) held it only %.0f degrees off: no tell" % old_wide)
+
+	# A SET ROLL. The roll through the real input component and the real movement model, the adventurer's numbers.
+	var cfg: MovementConfig = (load("res://game/regents/content/movement/adventurer.tres") as MovementProfileDef).apply_to(MovementConfig.shared())
+	var roll_s: float = HotRules.number(&"regents.roll_ms") / 1000.0
+	var plain: float = _roll_length(cfg, roll_s, true, false)
+	var reversed: float = _roll_length(cfg, roll_s, true, true)
+	var old_reversed: float = _roll_length(cfg, roll_s, false, true)
+	_check(plain > 2.5 and absf(plain - reversed) < 0.01, "a roll forward goes %.2f m, and %.2f m with S pressed as it begins: a set length" % [plain, reversed])
+	_check(old_reversed < plain * 0.6, "NEGATIVE: not held to its way, as before, S cut it to %.2f m" % old_reversed)
+	_check(CombatComponent.roll_direction_for(Vector2.ZERO, 0.0).is_equal_approx(Vector2(0.0, -1.0))
+		and CombatComponent.roll_direction_for(Vector2(0.0, 1.0), 0.0).is_equal_approx(Vector2(0.0, 1.0))
+		and CombatComponent.roll_direction_for(Vector2(1.0, 0.0), PI / 2.0).is_equal_approx(Vector2(1.0, 0.0).rotated(-PI / 2.0)),
+		"a roll goes the way the keys push, turned by the body; with none pressed, forward")
+	# Ctrl through the combat component: the roll is asked for, dashes, and is held to its way.
+	var input := LocalInputComponent.new()
+	input.send_to_server = false
+	var act := SpaceTimeActionComponent.new()
+	act._def_override = func(_id: int) -> RefCounted: return RollDefRow.new()
+	act._reducer_override = func(_ab: int, _tg: int, _aim: Vector3, _pid: int) -> ReducerRequest: return ReducerRequest.new()
+	c._local_input = input
+	c._action = act
+	_check(not input.is_forced() and c.dodge() >= 0 and input.is_forced(), "Ctrl: the roll is taken and the body is held to its way")
+	var first: InputFrame = input.sample()
+	_check(first.dash and first.move_dir.is_equal_approx(Vector2(0.0, -1.0)), "its first frame dashes forward (no key pressed: the way it faces)")
+	Input.action_press(LocalInputComponent.ACTION_BACK)
+	var held: bool = true
+	for i: int in range(ceili(roll_s * float(Engine.physics_ticks_per_second)) - 1):
+		held = held and input.sample().move_dir.is_equal_approx(Vector2(0.0, -1.0))
+	var after: InputFrame = input.sample()
+	Input.action_release(LocalInputComponent.ACTION_BACK)
+	_check(held and not input.is_forced() and after.move_dir.y > 0.5, "S pressed all the roll long: every frame of it goes forward; the frame after it is the key's again")
+	act.free()
+	input.free()
+
+	# A HIT DEALT AT ONCE AND TAKEN BACK (Luke, 2026-11-12): the health it took comes straight back; shown as the hit
+	# undone, not as a heal.
+	_check(HitFeedbackComponent.is_taken_back(14.0, 14.0, 180) and HitFeedbackComponent.is_taken_back(4.2, 4.2, HitFeedbackComponent.TAKEN_BACK_MS),
+		"a rise the size of the last drop, soon after it: that hit taken back")
+	_check(not HitFeedbackComponent.is_taken_back(8.0, 14.0, 180) and not HitFeedbackComponent.is_taken_back(14.0, 14.0, HitFeedbackComponent.TAKEN_BACK_MS + 1)
+		and not HitFeedbackComponent.is_taken_back(14.0, 0.0, 10),
+		"NEGATIVE: another amount (a rallying cut's 8), the same amount too long after, or with no drop before: a heal")
+	var hurt_feed := HitFeedbackComponent.new()
+	hurt_feed._on_health_changed(86.0, 100.0, -14.0)
+	hurt_feed._on_health_changed(100.0, 100.0, 14.0)
+	_check(hurt_feed.shown.size() == 1 and hurt_feed.taken_back == 1, "a hit of 14 shown, then taken back: one number (the hit), no green 14 after it (%s)" % str(hurt_feed.shown))
+	hurt_feed._on_health_changed(100.0, 100.0, 8.0)
+	_check(hurt_feed.shown.size() == 2 and hurt_feed.taken_back == 1, "a heal after that is a heal: its number shows")
+	hurt_feed.free()
+	_check(is_equal_approx(HotRules.number(&"regents.hit_at_once"), 1.0), "hits on a player are dealt at once (a hot rule: 0 makes them wait as before)")
+	# THE SERVER IS TOLD HOW LATE THIS CLIENT SHOWS A SWING: once, then only when it has moved.
+	_check(CombatComponent.seen_delay_moved(-1, 0) and not CombatComponent.seen_delay_moved(40, 44) and CombatComponent.seen_delay_moved(40, 52) and CombatComponent.seen_delay_moved(40, 30),
+		"the delay is told as it joins, and again when it has moved %d ms" % CombatComponent.SEEN_TELL_STEP_MS)
+	c._local_input = null
+	c._action = null
+	_check(c._tell_seen_delay(100000) and c.seen_delay_told == CombatComponent.seen_delay_ms() and not c._tell_seen_delay(100000 + CombatComponent.SEEN_TELL_EVERY_MS + 1),
+		"told once (%d ms here); not again while it stays" % c.seen_delay_told)
+	c.free()
+	_check(is_equal_approx(HotRules.number(&"regents.roll_late_ms"), 50.0) and is_equal_approx(HotRules.number(&"regents.hit_hold_slack_ms"), 40.0),
+		"the roll's late grace and the hit's wait slack are hot rules (50 and 40 ms)")
+
+
+## THE CROSSHAIR, FOUND (step 60): the camera's ray against real bodies and ground. On a body, an arrow's arc is
+## corrected onto it; beside it (the ground behind), the arrow leaves straight for that point: an arc to the far
+## point would climb over what is near (the combat playtest's free shot, half a meter beside the dummy, flew over it).
+func _run_crosshair() -> void:
+	print("== regents: the crosshair ==")
+	var at := Vector3(600.0, 300.0, 600.0)   # away from every other suite's level
+	var stage := Node3D.new()
+	add_child(stage)
+	stage.position = at
+	var ground := StaticBody3D.new()
+	var ground_shape := CollisionShape3D.new()
+	var slab := BoxShape3D.new()
+	slab.size = Vector3(200.0, 1.0, 200.0)
+	ground_shape.shape = slab
+	ground_shape.position = Vector3(0.0, -0.5, 0.0)
+	ground.add_child(ground_shape)
+	stage.add_child(ground)
+	var wolf := SpaceTimeEntity.new()   # somebody: an entity with health, as a foe is
+	wolf.collision_layer = SpaceTimeEntity.ENTITY_MASK
+	wolf.collision_mask = 0
+	var wolf_shape := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = 0.45
+	capsule.height = 1.0
+	wolf_shape.shape = capsule
+	wolf_shape.position = Vector3(0.0, 0.5, 0.0)
+	wolf.add_child(wolf_shape)
+	stage.add_child(wolf)
+	wolf.entity_id = 9871
+	wolf.position = Vector3(0.5, 0.0, -10.0)
+	wolf.add_runtime_component(SpaceTimeHealthComponent.new())
+	EntityRegistry.register(9871, wolf)
+	# A tree: an entity too (a gathering node), with no health: never "somebody".
+	var tree := SpaceTimeEntity.new()
+	tree.collision_layer = SpaceTimeEntity.ENTITY_MASK
+	tree.collision_mask = 0
+	var trunk_shape := CollisionShape3D.new()
+	var trunk := CylinderShape3D.new()
+	trunk.radius = 0.5
+	trunk.height = 6.0
+	trunk_shape.shape = trunk
+	trunk_shape.position = Vector3(0.0, 3.0, 0.0)
+	tree.add_child(trunk_shape)
+	stage.add_child(tree)
+	tree.entity_id = 9872
+	tree.position = Vector3(0.5, 0.0, -60.0)
+	EntityRegistry.register(9872, tree)
+	var who := Node3D.new()
+	stage.add_child(who)
+	var c: CombatComponent = CombatComponent.new()
+	who.add_child(c)
+	c.entity = who
+	c.set_process(false)
+	# The game's camera: over the right shoulder, the crosshair on the wolf's middle.
+	var cam := Camera3D.new()
+	stage.add_child(cam)
+	cam.position = Vector3(0.5, 2.1, 4.4)
+	cam.look_at(at + Vector3(0.5, 0.5, -10.0))
+	cam.make_current()
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var on: Vector3 = c.crosshair_point() - at
+	_check(c.crosshair_on_body and on.distance_to(Vector3(0.5, 0.5, -10.0)) < 0.6, "the crosshair on a wolf 10 m off: it is on a body, at %s" % on)
+	var muzzle: Vector3 = c.muzzle() - at
+	var arced: Vector3 = CombatComponent.launch_direction(muzzle, on, 35.0, CombatComponent.ARROW_GRAVITY)
+	_check(_shot_miss(muzzle, arced * 35.0, on, CombatComponent.ARROW_GRAVITY) < 0.05, "an arrow's arc is corrected onto it")
+	# The wolf steps aside: the same crosshair is on the ground behind where it stood.
+	wolf.position = Vector3(3.0, 0.0, -10.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var behind: Vector3 = c.crosshair_point() - at
+	_check(not c.crosshair_on_body and absf(behind.y) < 0.05 and behind.z < -12.0, "beside it, the crosshair is on the ground behind (%s): not a body" % behind)
+	# The look level at a man 10 m straight ahead of the body: the crosshair, over the right shoulder, passes half a
+	# meter beside him (the combat playtest's free shot at the dummy) and meets nothing for 120 m. Sent straight for
+	# that far point, a full draw still passes through him; arced to land on it, it goes meters over his head.
+	cam.position = Vector3(0.5, 1.5, 4.5)
+	cam.rotation = Vector3.ZERO
+	await get_tree().process_frame
+	var on_tree: Vector3 = c.crosshair_point() - at
+	_check(not c.crosshair_on_body and absf(on_tree.z + 59.5) < 0.1, "the look level, past where it stood: the crosshair is on a tree 60 m off, an entity but nobody (%s)" % on_tree)
+	tree.position = Vector3(30.0, 0.0, -60.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var far_point: Vector3 = c.crosshair_point() - at
+	_check(not c.crosshair_on_body and far_point.z < -100.0 and absf(far_point.y - 1.5) < 0.01, "with no tree: nothing met, the crosshair far along the ray (%.0f m)" % -far_point.z)
+	var chest := Vector3(0.0, 1.0, -10.0)
+	var straight: Vector3 = CombatComponent.launch_direction(muzzle, far_point, 50.0, 0.0)
+	var lobbed: Vector3 = CombatComponent.launch_direction(muzzle, far_point, 50.0, CombatComponent.ARROW_GRAVITY)
+	var straight_miss: float = _shot_miss(muzzle, straight * 50.0, chest, CombatComponent.ARROW_GRAVITY)
+	var lobbed_miss: float = _shot_miss(muzzle, lobbed * 50.0, chest, CombatComponent.ARROW_GRAVITY)
+	_check(straight_miss < 0.4, "an arrow sent straight at the far point passes %.2f m from the middle of the man beside the crosshair: a hit" % straight_miss)
+	_check(lobbed_miss > 2.0, "NEGATIVE: arced to land on the far point, it passes %.2f m off, over his head: why the arc is only onto a body" % lobbed_miss)
+	# A thing between the camera and the player is never aimed at.
+	cam.position = Vector3(0.5, 2.1, 4.4)
+	cam.look_at(at + Vector3(0.5, 0.5, -10.0))
+	wolf.position = Vector3(0.5, 1.2, 2.5)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	c.crosshair_point()
+	_check(not c.crosshair_on_body, "a body between the camera and the player is not what the crosshair is on")
+	EntityRegistry.unregister(9871)
+	EntityRegistry.unregister(9872)
+	stage.free()
+
+
+## How near a shot from `from` at `vel` under gravity `g` comes to `to`, stepped a millisecond at a time.
+func _shot_miss(from: Vector3, vel: Vector3, to: Vector3, g: float) -> float:
+	var best: float = INF
+	var p: Vector3 = from
+	var v: Vector3 = vel
+	for i: int in range(6000):
+		best = minf(best, p.distance_to(to))
+		v.y -= g * 0.001
+		p += v * 0.001
+	return best
+
+
+## How far a roll forward from a standstill goes in `roll_s`: its first frame dashes; `held` holds it to its way
+## (the input component's `force_move`, as the combat component asks); `back` presses S from its second frame on.
+func _roll_length(cfg: MovementConfig, roll_s: float, held: bool, back: bool) -> float:
+	var input := LocalInputComponent.new()
+	input.send_to_server = false
+	input.dash_once()
+	if held:
+		input.force_move(Vector2(0.0, -1.0), roll_s)
+	var s := MovementState.new()
+	s.pos = Vector3(0.0, cfg.ground_y, 0.0)
+	s.grounded = true
+	var dt: float = 1.0 / float(Engine.physics_ticks_per_second)
+	for i: int in range(ceili(roll_s * float(Engine.physics_ticks_per_second))):
+		if back and i == 1:
+			Input.action_press(LocalInputComponent.ACTION_BACK)
+		s = MovementModel.simulate(s, input.sample(), cfg, dt)
+	Input.action_release(LocalInputComponent.ACTION_BACK)
+	input.free()
+	return Vector2(s.pos.x, s.pos.z).length()
+
+
+## A SHOT ENDS WHERE IT FIRST TOUCHES (Luke, 2026-11-12: a bolt at a moving target "gets redeflected in a random
+## direction"): a bolt, a fireball and an arrow flown by real physics into a body that is walking across their path,
+## met off its middle. Each stops within a step of where it touched and stays; the hit is still reported. NEGATIVE:
+## the same bolt with no `MissileFlight` skids on well past its target.
+func _run_shot_stops() -> void:
+	print("== regents: a shot ends where it first touches ==")
+	for path: String in ["res://game/regents/content/body/bolt.tres", "res://game/regents/content/body/fireball.tres", "res://game/regents/content/body/arrow.tres"]:
+		var def: BodyDef = load(path) as BodyDef
+		_check(def.forces is MissileFlight, "%s flies by MissileFlight (or a kind of it)" % def.display_name)
+		var got: Dictionary = await _fly_at_walker(def)
+		_check(bool(got["hit"]), "%s: the hit on the walker is reported" % def.display_name)
+		_check(float(got["past"]) < 0.5 and float(got["speed"]) < 0.1,
+			"%s: it ends where it touched (%.2f m on from there, %.1f m/s left)" % [def.display_name, float(got["past"]), float(got["speed"])])
+	var bare: BodyDef = (load("res://game/regents/content/body/bolt.tres") as BodyDef).duplicate() as BodyDef
+	bare.forces = null
+	var skid: Dictionary = await _fly_at_walker(bare)
+	_check(bool(skid["hit"]) and float(skid["past"]) > 1.0 and float(skid["speed"]) > 1.0,
+		"NEGATIVE: the bolt with no MissileFlight skids on past its target (%.2f m on, %.1f m/s left)" % [float(skid["past"]), float(skid["speed"])])
+
+
+## `def` flown at 30 m/s at a man-sized body walking across its path (as the referee's stand-ins move: placed each
+## frame), aimed to meet it off its middle. Says whether a hit on it was reported, and, 20 frames after, how far the
+## shot is from where it touched and how fast it still goes.
+func _fly_at_walker(def: BodyDef) -> Dictionary:
+	var walker := AnimatableBody3D.new()
+	walker.sync_to_physics = false
+	walker.collision_layer = FlyingBody.PROXY_LAYER
+	walker.collision_mask = 0
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.4
+	cap.height = 1.8
+	var shape := CollisionShape3D.new()
+	shape.shape = cap
+	shape.position.y = 0.9
+	walker.add_child(shape)
+	get_tree().root.add_child(walker)
+	walker.global_position = Vector3(-0.6, 500.0, 0.0)
+	var b: FlyingBody = FlyingBody.make(def)
+	get_tree().root.add_child(b)
+	var hit_at: Array[Vector3] = []
+	b.hit.connect(func(o: Object, p: Vector3, _n: Vector3, _s: float) -> void:
+		if o == walker and hit_at.is_empty():
+			hit_at.append(p))
+	b.launch(Vector3(0.0, 501.0, 6.0), Vector3(0.0, 0.0, -30.0), Vector3.ZERO, Vector3.ZERO)
+	var after: int = 0
+	for i: int in 90:
+		walker.global_position.x += 4.0 / 60.0   # walking across, 4 m/s
+		await get_tree().physics_frame
+		if not hit_at.is_empty():
+			after += 1
+			if after >= 20:
+				break
+	# Over the ground only: an arrow stopped in the air then falls, as it should.
+	var out: Dictionary = {"hit": not hit_at.is_empty(), "past": 0.0, "speed": Vector2(b.linear_velocity.x, b.linear_velocity.z).length()}
+	if not hit_at.is_empty():
+		out["past"] = Vector2(b.global_position.x - hit_at[0].x, b.global_position.z - hit_at[0].z).length()
+	b.queue_free()
+	walker.queue_free()
+	await get_tree().physics_frame
+	return out

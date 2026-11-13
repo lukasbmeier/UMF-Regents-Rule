@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_ember.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://game/regents/content/body/fireball.tres" id="3_body"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 0
+cost = 0.0
+cast_ms = 0
+body = ExtResource("3_body")
+speed_mps = 12.0
+id = 40007
+display_name = "Ember"
+designer_notes = "HOW THE IMP'S BOLT FLIES (Luke's F1, 2026-11-12): the fireball's body and look, 12 m/s: two thirds of a second over 8 m, slow enough to step out of. No splash, no burn (F8: a foe's spell does damage only)."

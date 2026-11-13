@@ -14,6 +14,7 @@ hp = 1500
 damage_pct = 10
 xp_pct = 0
 notice_m = 4.0
+wander_m = 0.0
 leash_m = 8.0
 rest_ms = 2500
 rest_jitter_ms = 300

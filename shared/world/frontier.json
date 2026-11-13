@@ -515,6 +515,24 @@
       "tags": []
     },
     {
+      "id": "skeleton_archer_1",
+      "kind": "skeleton_archer",
+      "x": 41.0,
+      "y": 0.0,
+      "z": 3.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
+      "id": "imp_1",
+      "kind": "imp",
+      "x": 42.0,
+      "y": 0.0,
+      "z": -8.0,
+      "radius": 0.5,
+      "tags": []
+    },
+    {
       "id": "deer_1",
       "kind": "deer",
       "x": -30.0,

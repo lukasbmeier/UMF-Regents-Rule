@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="2_bsmje"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Fern_1.gltf" id="3_v2dk3"]
 
-[node name="Cell_1_-9" type="Node3D" unique_id=668309954]
+[node name="Cell_1_-9" type="Node3D" unique_id=1033980828]
 
-[node name="w_copper_rock_25" type="Marker3D" parent="." unique_id=494721153]
+[node name="w_copper_rock_25" type="Marker3D" parent="." unique_id=1318598637]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.55318, 6.672305, -520.9139)
 gizmo_extents = 0.6
 script = ExtResource("1_w8flp")
@@ -15,7 +15,7 @@ kind = "node"
 radius = 0.6
 tags = PackedStringArray("Copper rock")
 
-[node name="w_flax_43" type="Marker3D" parent="." unique_id=459133553]
+[node name="w_flax_43" type="Marker3D" parent="." unique_id=651353636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112.5417, 5.733626, -536.64246)
 gizmo_extents = 0.5
 script = ExtResource("1_w8flp")
@@ -24,7 +24,7 @@ kind = "node"
 radius = 0.5
 tags = PackedStringArray("Flax")
 
-[node name="w_deer_31" type="Marker3D" parent="." unique_id=1588479270]
+[node name="w_deer_31" type="Marker3D" parent="." unique_id=404202754]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 91.44259, 5.6335287, -536.6095)
 gizmo_extents = 0.5
 script = ExtResource("1_w8flp")
@@ -33,7 +33,7 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="w_deer_32" type="Marker3D" parent="." unique_id=1063066138]
+[node name="w_deer_32" type="Marker3D" parent="." unique_id=229933749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.89927, 5.8212805, -532.9192)
 gizmo_extents = 0.5
 script = ExtResource("1_w8flp")
@@ -42,8 +42,8 @@ kind = "deer"
 radius = 0.5
 tags = PackedStringArray()
 
-[node name="rock_big_1_492" type="Node3D" parent="." unique_id=1888288694 instance=ExtResource("2_bsmje")]
+[node name="rock_big_1_492" type="Node3D" parent="." unique_id=1369380149 instance=ExtResource("2_bsmje")]
 transform = Transform3D(-0.53372294, 0, -1.0787432, 0, 1.2035561, 0, 1.0787432, 0, -0.53372294, 112.195946, 6.2355065, -527.5312)
 
-[node name="fern_1_493" type="Node3D" parent="." unique_id=1281323990 instance=ExtResource("3_v2dk3")]
+[node name="fern_1_493" type="Node3D" parent="." unique_id=1875402222 instance=ExtResource("3_v2dk3")]
 transform = Transform3D(-1.0228772, 0, -0.08140537, 0, 1.0261114, 0, 0.08140537, 0, -1.0228772, 69.039825, 7.0642524, -515.15063)

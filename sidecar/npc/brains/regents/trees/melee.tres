@@ -1,0 +1,41 @@
+[gd_resource type="BehaviorTree" format=3]
+
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_slain.gd" id="1_foe_slain"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_go_home.gd" id="2_foe_go_home"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_rest.gd" id="3_foe_rest"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_chase.gd" id="4_foe_chase"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_wait_turn.gd" id="5_foe_wait_turn"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_close_in.gd" id="6_foe_close_in"]
+[ext_resource type="Script" path="res://sidecar/npc/brains/regents/tasks/foe_swing.gd" id="7_foe_swing"]
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_foe"]
+
+[sub_resource type="BTAction" id="BTAction_foe_slain"]
+script = ExtResource("1_foe_slain")
+
+[sub_resource type="BTAction" id="BTAction_foe_go_home"]
+script = ExtResource("2_foe_go_home")
+
+[sub_resource type="BTAction" id="BTAction_foe_rest"]
+script = ExtResource("3_foe_rest")
+
+[sub_resource type="BTAction" id="BTAction_foe_chase"]
+script = ExtResource("4_foe_chase")
+
+[sub_resource type="BTAction" id="BTAction_foe_wait_turn"]
+script = ExtResource("5_foe_wait_turn")
+
+[sub_resource type="BTAction" id="BTAction_foe_close_in"]
+script = ExtResource("6_foe_close_in")
+
+[sub_resource type="BTAction" id="BTAction_foe_swing"]
+script = ExtResource("7_foe_swing")
+
+[sub_resource type="BTDynamicSelector" id="BTDynamicSelector_root"]
+custom_name = "A melee foe, in the order it minds things"
+children = [SubResource("BTAction_foe_slain"), SubResource("BTAction_foe_go_home"), SubResource("BTAction_foe_rest"), SubResource("BTAction_foe_chase"), SubResource("BTAction_foe_wait_turn"), SubResource("BTAction_foe_close_in"), SubResource("BTAction_foe_swing")]
+
+[resource]
+description = "A MELEE FOE (the skeletons, the wolf; Luke's F2, 2026-11-12): the first of these that is its to do, each think (a dynamic selector: tried from the top every time). The tasks are sidecar/npc/brains/regents/tasks/; each calls a step of RegentsFoeBrain (foe.gd), which keeps what the foe knows (its target, its turn, its string, its pack). A foe is given this tree by FoeDef.behavior = melee; its numbers (notice, leash, reach, rest) are its FoeDef's."
+blackboard_plan = SubResource("BlackboardPlan_foe")
+root_task = SubResource("BTDynamicSelector_root")

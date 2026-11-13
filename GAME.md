@@ -105,6 +105,95 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   rest of the combat deep-dive (overhaul steps 5-7: mastery picks, threat and Support, content fill; the cast queue,
   crits, NPC tiers) AFTER hunting, so its new creatures give them something to work against; the in-game lookup, the
   economy (marks, vendors), writs, potions, death and shrines, party, duels, the lair and the Undercroft after that.
+- **COMBAT BEFORE ARMOR** (Luke, 2026-11-11, after playing the wolf: "The playtest is decent, i think its in a fine
+  spot for now until I get more eyes"; "Combat definitely needs some work but armor first or after we get combat in a
+  good spot?"; of the two, "Combat first"). The order from here: (1) the wolf's server tests and one integration run;
+  (2) a BOUNDED combat pass: what Luke felt in play (his list, still to come) and a real-referee fight check; (3) one or
+  two new foe types (a caster or an archer), so armor has its combat triangle; (4) **ARMOR** (`ARMOR_PREP.md` §0, a
+  prep session first); (5) the rest of the combat deep-dive (mastery picks, threat and Support). The parked hunting
+  items (stag, sinew, the fang charm, hemp and nettle) come as content when armor's material tiers need them. Why
+  combat first (the agent's reasons, accepted): armor's numbers are tuned against how hard and how often foes hit, and
+  its open question (why wear lighter armor) needs foes that do not exist yet.
+- **THE COMBAT PASS, his list** (Luke, 2026-11-11, `PROGRESS.md` step 60). What he felt, in his words, and what he
+  chose when asked before he stepped away:
+  - **A free shot goes TO THE CROSSHAIR** (asked: to the crosshair, the same with a light assist, or level and lower;
+    his pick, the first): "arrows and magic attacks dont come from where you think they would ... point the hand and
+    the bow less to the left and more to the center of the screen", "they also fly at a height that makes hitting
+    wolves nearly impossible". A bolt with no Tab target lands where the crosshair is; an arrow lands on the BODY
+    the crosshair is on, and with the crosshair on the ground or the sky leaves straight for that point and falls
+    short as an arrow does (the agent's narrowing, found in the playtest: arced to a far point it flew over whatever
+    stood near the crosshair; Luke's to overrule); the upper body
+    turns so the bow and the casting hand point there; a shot the server aims at a Tab target goes to the middle of
+    its body (a wolf's is 0.5 m up, not a man's 1.1). No aim assist.
+  - **A roll is judged where it was pressed; a hit shows as soon as your own line allows** (asked whether the server
+    may credit the network delay to a roll, for foes and players alike, foes only, or not at all; his pick: "Yes,
+    credit the delay"): "the LAG when getting hit is really annoying, the delay that I think I dodged an attack only
+    for .5 or .8 seconds later to get hit". Capped as a parry's is (`foundation.rewind_max_ms` 150 +
+    `foundation.press_credit_cap_ms` 120). In PvP, when there is any, an attacker will sometimes see a hit that
+    looked good roll clear: accepted with the pick.
+  - **A roll goes a set length**: "if I roll forward but then press s it goes a short distance. I think maybe we make
+    it a set amount for consistency?" Held to the way it began for its whole length.
+  - **Melee is visual clarity**: "trails for weapon swings (enemy and yours) mixed with slowing some things down
+    (antipaction for enemy attacks)"; and "trails for arrow projectile ... and better magic vfx" as juice.
+  - CLAUDE'S NUMBERS in it, his to change: `regents.roll_late_ms` 50 (a roll up to 50 ms late still clears, as the
+    parry's late window) and `regents.hit_hold_slack_ms` 40, both on the Rules page; the foes' light swings a fifth
+    slower (rusted cut 550 -> 660 ms, backswing 580 -> 700, hack 590 -> 710, wolf bite 550 -> 650, hamstring 620 ->
+    720; the finishers as they were); every trail's color, width and length (the three `*_look.tscn` and the
+    `SwingTrail` node in `adventurer.tscn` and `foe.tscn`).
+  - **HIS PLAY OF IT, the same day** (2026-11-12, `PROGRESS.md` step 61):
+    - "if tab target hand and bow should point towards them": the upper body turns to the Tab target, not the
+      crosshair, and a shot is seen to leave the hand ("rather at the middle of where my character is standing").
+      He will adjust the last degrees himself if needed (`CombatLook`'s "pose points", `tests/aim_shot.tscn`).
+    - **FACE YOUR TARGET**: "I can tab target and then face AWAY from the target and still shoot, I think either it
+      should turn the model and force facing ... or refuse to shoot if not facing somewhat near". Asked (refuse, turn
+      to face it, or shoot at the crosshair instead); his pick: **refuse the shot**, inside the same 120 degree arc
+      Tab picks from (`regents.aim_arc_deg`).
+    - **A FULL POISE BAR BREAKS ON ANY HIT**: "if the stagger bar is full (orange) the next hit should stagger not
+      just the next finisher hit". Narrows 2026-11-02's "only the last hit breaks it": a light still cannot empty a
+      bar in one go (it fills it), but the hit after, of any kind, breaks it.
+    - He played at 200 ms with 50 ms of jitter: "the combat still works but feels worse", and asked how other games
+      give immediate feedback when a hit waits for a late parry. Given the options, his word: "Lets either build
+      'deal the hit at once, take it back on a late parry' or have No late window whichever is preferred for
+      gameplay and latency." BUILT: **deal at once, take back** (the agent's choice of his two, `PROGRESS.md` step
+      62: no late window would cut a 200 ms player's parry window from 250 ms to about 80); a hit that would
+      stagger or kill still waits; `regents.hit_at_once` 0 puts the wait back. NOT DECIDED, his: a foe's swing
+      shown landing at the server's time (skipping the start of its wind-up by the delay); your own hits' spark
+      shown at once.
+  - **HIS VERDICT** (2026-11-12, after playing step 62): "Combat feels better." The combat pass is CLOSED. Next, his
+    word: a new session "to continue through the order sent with the first message": (1) the combat pass, done;
+    (2) one or two new foe types, a caster or an archer, "so armor has its triangle"; (3) armor, starting with a prep
+    session on what was left open when it was parked (`ARMOR_PREP.md` §0); (4) the rest of the combat deep-dive:
+    mastery picks, threat and Support. His own list's later items (just below) are for "answering and more depth".
+  - STILL HIS, for the next session (not built, not defaulted): the ability bar in place of the text at the bottom,
+    with each weapon's choices and its XP and next unlock shown ("like albion"); Q, E, R at the least on every weapon,
+    more for ranged and melee, with AOE (the axe's Cleave hits one today: the referee reports a sweep's first body);
+    single combat zones against multi combat ("like osrs or not").
+- **NEW FOES, ANSWERED** (Luke, 2026-11-12: "Accept all proposed"; the sheet is `docs/regents_rule/FOES_PREP.md`, its §9
+  the order of work). His word for the aim: foes "smart but fun (not annoying or painful)"; the sheet's §4 rules stand
+  for every foe (every hurt announced, one question per foe, nothing from off screen, a foe that keeps its distance is
+  caught, a fair miss, an opening always, never chained).
+  - F1 the foes: a SKELETON ARCHER and an IMP CASTER; the Puglin with AOE and the Hellwarden as the first boss, later.
+  - F2 foes run on LimboAI TREES, the melee brain moved first with no change in behavior.
+  - F3 the archer up close: one step back at most every 6 s, then a slow shove. It never runs for good.
+  - F4 your defenses against an arrow or a bolt: a held guard facing it blocks it as a swing; a timed parry knocks it
+    away, no riposte; a roll passes through it. A ring on the ground is only left.
+  - F5 a shot's tell: the draw pose 1200 ms, a glint as it is about to loose, aim locked the last 250 ms. "No leading"
+    REVERSED (Luke, 2026-11-13, his playtest: ranged foes "much easier to handle than melee", "the no prediction casts
+    are easy to dodge"; asked whether shots should lead: "Yes, lead first"): A SHOT LEADS A MOVER, to where the walk it
+    reads at the lock carries you as it arrives (`regents.foe_shot_lead_pct`, 100). A turn, a stop or a roll after the
+    lock, a guard, a parry or a rock still answer it. Rings are not led (PROGRESS step 67).
+  - F6 shots and turns: a shot keeps the gap between foe hits; one foe shot in the air per player
+    (`regents.ranged_tokens`, a hot rule); a shooter takes no melee turn.
+  - F7 any hit that flinches stops a cast; its cooldown is still spent.
+  - F8 a foe's spell does damage only (no slow, burn or root) until armor says what resists what.
+  - F9 a foe notices in FRONT (140 degrees at `notice_m`) and hears all round at 4 m, further if you sprint.
+  - F10 foes at rest wander a few meters round their point.
+  - F11 hit from out of sight, a foe turns on WHO HIT IT; switching by threat waits for the overhaul's threat step.
+  - F12 NOT CHAINED: after a stagger or a slow from a foe, no other foe's can land on you for 1500 ms (the hit hurts).
+  - F9 to F12 BUILT 2026-11-13 (PROGRESS step 68, "Luke: Start step 5"); the agent's calls there are his to change.
+  - F13 the imp's family is "fiend". F14 loot: the archer the camp's table and 2 to 5 arrows half the time; the imp
+    the camp's table for now. F15 the glade gets one archer and one imp by the skeleton camp; the continent one archer
+    in each camp of three or more (a test placement). F16 the sheet's §6 numbers as a start (the agent's, his to change).
 - **Bushes are not solid** (Luke's playtest note, 2026-10-24; CONFIRMED 2026-10-26: "bushes should be passable
   like the other grass foliage"): of a level's props only ROCKS stop you and a foe's sight
   (`RegentsSolidProps.solid_models`); bushes, grass and flowers are walked and seen through. Narrows his
@@ -410,6 +499,14 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
 - **American spelling** (Luke, 2026-11-04): "all spelling in the game is not English version, but American": armor,
   defense, color, gray, center, meter, canceled. Everything a player reads, and every new name, rule and doc from now
   on (`regents.defense_k`). The first sweep was done 2026-11-04 (PROGRESS step 38).
+- **THE GLADE'S LOOK, a first pass** (Luke, 2026-11-11, from his comparison with other games on the same kits:
+  "Do A to D"): the sun lower and warmer with air in the distance; the nature kit's leaves and grass lit on both
+  sides; a darker ground with dirt where the level is used and soil under trees and rocks, painted from the level's
+  own markers; grass as MultiMesh clutter (PROGRESS step 59). To change it, in `frontier.tscn`: move a station or a
+  trail's curve under `GroundPaint` and press Repaint; the grass is `Clutter`'s `kinds`; the colors are the ground
+  material's. HELD, his to say: tree scale, volumetric fog, station lights, the continent's ground; **Sky3D only if
+  #12 (day/night) is a yes** (he asked 2026-11-11: it is a day/night sky, not fog; the time would come from the
+  server's clock, no table).
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
