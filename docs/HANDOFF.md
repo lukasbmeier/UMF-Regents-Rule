@@ -2,7 +2,8 @@
 
 ## Where it stands
 - **1.8.0** (DECISIONS #309, #310), started from a Regent's Rule session (Luke: "Lets do some template work on both the roll
-  and resizable window"). Committed on main; see the commit for push state. `umf-template` republished with `--codegen`
+  and resizable window"). Committed on main (1a03c2c), NOT PUSHED (the session's
+  push was refused by its permission check): `git push origin main` first, then the games can pull it. `umf-template` republished with `--codegen`
   (a new PRIVATE table `roll_state`: add-only, old builds keep playing). NOT shipped to the games yet (`ship_template.sh`).
 - Green: `tests/run_tests.sh` 2466/0 (the `content` project-task check passed this time too), `cargo check --target
   wasm32-unknown-unknown`, `cargo test` (new `server/tests/roll.rs` 8/8), `tests/integration_test.sh` 699/0 (its first run
