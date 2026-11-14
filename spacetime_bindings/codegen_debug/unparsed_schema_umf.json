@@ -15652,6 +15652,48 @@
 					}
 				},
 				{
+					"source_name": "admin_set_item_level",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "entity_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "item_row"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "level"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "admin_set_rank",
 					"params": {
 						"elements": [
@@ -16059,6 +16101,56 @@
 					}
 				},
 				{
+					"source_name": "change_pick",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "station_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "item_row"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "pick"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "ability_id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "check_authorities",
 					"params": {
 						"elements": [
@@ -16094,6 +16186,48 @@
 								},
 								"algebraic_type": {
 									"U8": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "choose_pick",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_row"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "pick"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "ability_id"
+								},
+								"algebraic_type": {
+									"U32": []
 								}
 							}
 						]
@@ -20398,6 +20532,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "admin_set_item_level",
+							"canonical_name": "admin_set_item_level"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "admin_set_rank",
 							"canonical_name": "admin_set_rank"
 						}
@@ -20470,6 +20610,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "change_pick",
+							"canonical_name": "change_pick"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "check_authorities",
 							"canonical_name": "check_authorities"
 						}
@@ -20478,6 +20624,12 @@
 						"Function": {
 							"source_name": "choose_character",
 							"canonical_name": "choose_character"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "choose_pick",
+							"canonical_name": "choose_pick"
 						}
 					},
 					{

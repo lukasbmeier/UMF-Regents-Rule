@@ -57,8 +57,8 @@ func _run() -> void:
 		return
 	input.capture_mouse = false   # a display-less run has no cursor to capture
 	await _until(func() -> bool: return inv.count(AXE) == 1, 5.0)
-	await _until(func() -> bool: return hud._skillbar.text != "", 3.0)
-	_check(combat.kit == null and hud._skillbar.text.contains("No weapon"), "nothing wielded: the bar says so (\"%s\")" % hud._skillbar.text)
+	await _until(func() -> bool: return _bar_text() != "", 3.0)
+	_check(combat.kit == null and hud.ability_bar.visible and _bar_text().contains("No weapon"), "nothing wielded: the ability bar's weapon says so (\"%s\")" % _bar_text())
 
 	# --- WIELD: the bag panel's button ---
 	hud.toggle_bag()
@@ -78,9 +78,9 @@ func _run() -> void:
 	await _until(func() -> bool: return _bag_button(row) == "Put away", 2.0)
 	_check(_bag_button(row) == "Put away", "its button now puts it away")
 	hud.toggle_bag()
-	await _until(func() -> bool: return combat.weapon != null and hud._skillbar.text.contains("LMB Chop"), 2.0)
-	_check(hud._skillbar.text.contains("Copper axe") and hud._skillbar.text.contains("LMB Chop") and hud._skillbar.text.contains("Q Cleave"),
-		"the bar: \"%s\"" % hud._skillbar.text)
+	await _until(func() -> bool: return combat.weapon != null and _bar_text().contains("Left click: Chop"), 2.0)
+	_check(_bar_text().contains("Copper axe") and _bar_text().contains("Left click: Chop") and _bar_text().contains("Q Cleave"),
+		"the ability bar: \"%s\"" % _bar_text())
 
 	# --- TARGET: Tab onto the dummy ---
 	var dummy: int = await _dummy_at(DUMMY_1)
@@ -449,11 +449,11 @@ func _run() -> void:
 			bow_row = s.id
 	combat.wield(bow_row)
 	await _until(func() -> bool: return combat.kit != null and combat.kit.draws, 5.0)
-	_check(combat.kit != null and combat.kit.key == &"bow" and hud._skillbar.text.contains("hold LMB draw"), "wielded: the bar says draw and loose (\"%s\")" % hud._skillbar.text)
+	_check(combat.kit != null and combat.kit.key == &"bow" and _bar_text().contains("Hold left click: draw"), "wielded: the bar says draw and loose (\"%s\")" % _bar_text())
 	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 10.0), DUMMY_1)
 	combat.set_target(dummy)
 	await get_tree().create_timer(0.3).timeout
-	_check(hud._skillbar.text.contains("to hit"), "with the dummy targeted it says the chance to hit (\"%s\")" % hud._skillbar.text)
+	_check(_bar_text().contains("to hit"), "with the dummy targeted it says the chance to hit, beside the arrows (\"%s\")" % _bar_text())
 	var arrows0: int = inv.count(ARROWS)
 	var before_shot: float = dh.get_current()
 	_mouse(MOUSE_BUTTON_LEFT, true)
@@ -878,7 +878,9 @@ func _parrying_the_camp(my_hp: SpaceTimeHealthComponent) -> void:
 						most = maxf(most, float(before[id]) - h.get_current())
 				return most
 			var chop: AbilityDef = combat.kit.light[0]
-			riposte_want = snappedf(chop.damage * float(combat.weapon.weapon_damage_pct) / 100.0 * HotRules.number(&"regents.riposte_damage_pct") / 100.0, 0.01)
+			# Mastery counts (1-33, PROGRESS 73: the axe reaches rank 2 at 15 XP, inside this test).
+			var axe_bonus: float = 1.0 + float(SkillDef.mastery_bp(skilling.rank_in(combat.kit.skill))) / 10000.0
+			riposte_want = snappedf(chop.damage * float(combat.weapon.weapon_damage_pct) / 100.0 * HotRules.number(&"regents.riposte_damage_pct") / 100.0 * axe_bonus, 0.01)
 			_face(foe)
 			var step: int = combat.next_light_step(Time.get_ticks_msec())
 			await _click(0.03)
@@ -1015,9 +1017,9 @@ func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
 		await _until(func() -> bool: return combat.weapon_row == row and combat.kit != null, 5.0)
 		var role: RoleDef = combat.role()
 		var last: AbilityDef = sword_kit.finisher_for(role)
-		await _until(func() -> bool: return hud._skillbar.text.contains(last.display_name), 2.0)
-		_check(hud._skillbar.text.contains("Slash - Slash (second) - %s" % last.display_name) and hud._skillbar.text.contains("hold for " + role.guard_words.get_slice(":", 0))
-			and not hud._skillbar.text.to_lower().contains("finisher"), "wielded, the key line: \"%s\"" % hud._skillbar.text)
+		await _until(func() -> bool: return _bar_text().contains(last.display_name), 2.0)
+		_check(_bar_text().contains("Slash - Slash (second) - %s" % last.display_name) and _bar_text().contains("hold for " + role.guard_words.get_slice(":", 0))
+			and not _bar_text().to_lower().contains("finisher"), "wielded, the weapon's moves: \"%s\"" % _bar_text())
 		await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
 		combat.set_target(dummy)
 		await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
@@ -1035,6 +1037,7 @@ func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
 		for step: int in 3:
 			if step == 2:
 				hp_before_last = dh.get_current()
+				rank = skilling.rank_in(sword_kit.skill)   # the first two hits' XP may have raised it (1-33: finer steps)
 			await _click(0.04)
 			var deadline: int = Time.get_ticks_msec() + 1200
 			while Time.get_ticks_msec() < deadline:
@@ -1058,7 +1061,7 @@ func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
 		_check(theirs.size() >= 3 and theirs[theirs.size() - 1] == want, "%s: the server fired the same (%s)" % [name, str(theirs)])
 		_check(clip == StringName(case[2]), "%s plays its own clip (%s)" % [name, clip])
 		var dealt: float = snappedf(hp_before_last - dh.get_current(), 0.01)
-		var expect: float = snappedf(float(case[3]) * 1.13 * (1.0 + float(mini(3 * (rank - 1), 27)) / 100.0), 0.01)
+		var expect: float = snappedf(float(case[3]) * 1.13 * (1.0 + float(SkillDef.mastery_bp(rank)) / 10000.0), 0.01)
 		_check(is_equal_approx(dealt, expect), "%s hit the dummy for %.2f (%.0f at Fine quality 650: %.2f)" % [name, dealt, float(case[3]), expect])
 		var stagger_want: int = roundi(HotRules.number(&"regents.stagger_ms") * float(case[4]) / 100.0)
 		_check(staggered_ms == stagger_want, "%s staggered the dummy %d ms (want %d)" % [name, staggered_ms, stagger_want])
@@ -1300,6 +1303,20 @@ func _key(code: Key) -> void:
 		e.pressed = down
 		Input.parse_input_event(e)
 		await get_tree().physics_frame
+
+
+## What the ability bar shows, as words: the weapon's tooltip (its moves), each slot's key and name, and what is
+## beside it (mana, or the arrows and the chance to hit). "" before it shows anything.
+func _bar_text() -> String:
+	var m: Dictionary = hud.ability_bar.model if hud != null and hud.ability_bar != null else {}
+	if m.is_empty():
+		return ""
+	var out: String = String((m.get("weapon", {}) as Dictionary).get("tip", ""))
+	for d: Dictionary in m.get("slots", []) as Array:
+		out += "
+%s %s" % [String(d.get("key", "")), String(d.get("name", ""))]
+	return out + "
+" + String((m.get("pool", {}) as Dictionary).get("text", ""))
 
 
 func _until(cond: Callable, timeout_s: float) -> void:

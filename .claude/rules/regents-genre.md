@@ -22,8 +22,16 @@ paths:
   ticks (#270). Melee is paced by its combo and the roll, the bow by its arrows.
 - No global cooldown: each ability has its own; the cast queue only buffers a press. Melee never
   rolls to hit; the bow and the Staff do.
-- Mastery: XP stored, rank from a content curve (v1 ranks 1-10, abilities at 1/3/6/9); harder nodes
-  need a gathering rank AND a tool tier.
+- Mastery: XP stored, rank from a content curve: EVERY skill 1-33 for now (Luke's S1 + S2, 2026-11-13, a third of
+  99; the old ranks 1-10 mapped to 1, 5, 8, 12, 15, 19, 22, 26, 29, 33 with their XP unchanged; finalized before the
+  public demo, with a wipe). The top is `rules::RANK_TOP` / `SkillDef.RANK_TOP` and every curve ends there (both
+  suites check); mastery's share (`mastery_bp`: damage, tool speed) is 27 % at the top, an even step a rank. Harder
+  nodes need a gathering rank AND a tool tier.
+- A PLAYER'S ABILITIES OPEN ON THE ITEM (PROGRESS 74, Luke's B1-B6): an item's XP and picks are its bag row's
+  `instance_data` (`"x"`, `"k"`), never a side table, and EVERY writer of `instance_data` keeps them (`keep_level`, as the
+  refit does). The kit's layout is content (`KitDef.skill_slots`, `unlock_levels`); the server gates by `need_slot`
+  (`KitSeed::slot_refusal`) and the client's twin is `RegentsItemLevel`: change both together. Combat XP goes through
+  `train` (the holder and the wielded weapon, catch-up), never `add_xp` alone.
 - Items: three grades; Power is the number; a trait changes how an item plays and never its Power,
   and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6). Materials and modular gear:
   `docs/regents_rule/MATERIALS.md` (2026-10-23; crafted items hold Common 1 / Fine 2 / MW 3 traits, picked).

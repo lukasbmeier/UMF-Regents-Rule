@@ -4624,6 +4624,28 @@
 			"return_data": {}
 		},
 		{
+			"name": "admin_set_item_level",
+			"wire_name": "admin_set_item_level",
+			"namespace": [],
+			"local_name": "admin_set_item_level",
+			"params": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "item_row",
+					"type": "U64"
+				},
+				{
+					"name": "level",
+					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "admin_set_rank",
 			"wire_name": "admin_set_rank",
 			"namespace": [],
@@ -4843,6 +4865,32 @@
 			"return_data": {}
 		},
 		{
+			"name": "change_pick",
+			"wire_name": "change_pick",
+			"namespace": [],
+			"local_name": "change_pick",
+			"params": [
+				{
+					"name": "station_id",
+					"type": "U64"
+				},
+				{
+					"name": "item_row",
+					"type": "U64"
+				},
+				{
+					"name": "pick",
+					"type": "U32"
+				},
+				{
+					"name": "ability_id",
+					"type": "U32"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "check_authorities",
 			"wire_name": "check_authorities",
 			"namespace": [],
@@ -4867,6 +4915,28 @@
 				{
 					"name": "kind",
 					"type": "U8"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
+			"name": "choose_pick",
+			"wire_name": "choose_pick",
+			"namespace": [],
+			"local_name": "choose_pick",
+			"params": [
+				{
+					"name": "item_row",
+					"type": "U64"
+				},
+				{
+					"name": "pick",
+					"type": "U32"
+				},
+				{
+					"name": "ability_id",
+					"type": "U32"
 				}
 			],
 			"return_type": "",

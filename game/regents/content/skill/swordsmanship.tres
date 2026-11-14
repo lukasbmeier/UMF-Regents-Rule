@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_skill")
 key = &"swordsmanship"
-xp_to_rank = PackedInt32Array(60, 150, 280, 450, 680, 980, 1350, 1800, 2400)
+xp_to_rank = PackedInt32Array(15, 30, 45, 60, 90, 120, 150, 182, 215, 248, 280, 337, 393, 450, 508, 565, 622, 680, 780, 880, 980, 1072, 1165, 1258, 1350, 1500, 1650, 1800, 1950, 2100, 2250, 2400)
 color = Color(0.85, 0.85, 0.95, 1)
 id = 40006
 display_name = "Swordsmanship"

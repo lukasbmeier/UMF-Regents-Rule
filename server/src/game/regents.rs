@@ -683,6 +683,22 @@ pub fn admin_set_rank(ctx: &ReducerContext, entity_id: u64, skill_id: u32, rank:
     Ok(())
 }
 
+/// Admin: the weapon in `entity_id`'s bag row `item_row` is at level `level` (its XP that level's start on its kind's
+/// curve: down as well as up). The Tester page's and the suites' (ABILITIES_PREP.md §7 step 2).
+#[reducer]
+pub fn admin_set_item_level(ctx: &ReducerContext, entity_id: u64, item_row: u64, level: u32) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_set_item_level")?;
+    let mut row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == entity_id)
+        .ok_or("admin_set_item_level: that row is not in their bag")?;
+    let kit = rules::item(row.item_def_id).and_then(|i| rules::kit_keyed(i.weapon_kit)).ok_or("admin_set_item_level: that is no weapon")?;
+    let s = rules::skill(kit.skill).ok_or("admin_set_item_level: its kind has no mastery")?;
+    let xp = rules::xp_for_rank(s, level).ok_or_else(|| format!("admin_set_item_level: levels are 1 to {}", rules::max_rank(s)))?;
+    row.instance_data = rules::with_item_xp(&row.instance_data, xp);
+    ctx.db.inventory_item().id().update(row);
+    log::info!("regents: the admin set {entity_id}'s weapon {item_row} to level {level} ({xp} XP)");
+    Ok(())
+}
+
 /// Admin: `entity_id` starts over in every skill: no XP, no recipe made before (the first-make bonus
 /// back, nothing stale), no work order filled. Whatever they were working at stops.
 #[reducer]
@@ -763,6 +779,140 @@ pub fn admin_reset_bag(ctx: &ReducerContext, entity_id: u64) -> Result<(), Strin
     ctx.db.starter_kit_given().entity_id().delete(entity_id);
     starter_kit(ctx, entity_id);
     log::info!("regents: the admin reset {entity_id}'s bag");
+    Ok(())
+}
+
+/// THE WIELDED WEAPON LEARNS WITH ITS HOLDER (Luke's B1, 2026-11-13): `who` earns `xp` in `skill_id`, and the weapon
+/// they wield, when it trains that skill, earns it too: `regents.item_catch_up` times as much while its level is below
+/// their mastery (CATCH-UP), as much at or above it. Its XP is its own row's (`"x"`), so it goes where it goes.
+fn train(ctx: &ReducerContext, who: u64, skill_id: u32, xp: u32) {
+    let mastery = rank_in(ctx, who, skill_id);
+    add_xp(ctx, who, skill_id, xp);
+    let Some(w) = ctx.db.wielded().entity_id().find(who) else { return };
+    let Some(mut row) = ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == who && r.qty > 0) else { return };
+    let Some(kit) = rules::kit_keyed(&w.kit).filter(|k| k.skill == skill_id) else { return };
+    let Some(s) = rules::skill(kit.skill) else { return };
+    let before = rules::item_xp_of(&row.instance_data);
+    let level = rules::item_level(s, before);
+    let after = before.saturating_add(rules::item_xp_gain(xp, level, mastery, hot_number(ctx, hot::ITEM_CATCH_UP)));
+    row.instance_data = rules::with_item_xp(&row.instance_data, after);
+    ctx.db.inventory_item().id().update(row);
+    let now = rules::item_level(s, after);
+    if now > level {
+        log::info!("regents: {who}'s {} reaches level {now}", rules::item(w.item_id).map_or("weapon", |i| i.name));
+    }
+}
+
+/// The level `who`'s wielded weapon counts as for them (B2: up to their mastery of its kind) and its picks; level 1 and
+/// none with nothing wielded.
+fn weapon_level(ctx: &ReducerContext, who: u64, kit: &rules::KitSeed) -> (u32, [u32; 3]) {
+    let row = ctx.db.wielded().entity_id().find(who)
+        .and_then(|w| ctx.db.inventory_item().id().find(w.item_row).filter(|r| r.owner_entity_id == who));
+    let Some(row) = row else { return (1, [0; 3]) };
+    let level = rules::skill(kit.skill).map_or(1, |s| rules::item_level(s, rules::item_xp_of(&row.instance_data)));
+    (rules::usable_level(level, rank_in(ctx, who, kit.skill)), rules::picks_of(&row.instance_data))
+}
+
+/// A PLAYER'S SKILL OPENS ON THE ITEM (ABILITIES_PREP.md §7 step 2): its slot open at the weapon's level as they use it,
+/// and an option or ult only as one of its picks (`KitSeed::slot_refusal`). A foe's kit gates nothing here.
+fn need_slot(ctx: &ReducerContext, who: u64, kit: &rules::KitSeed, ability_id: u32, verb: &str) -> Result<(), String> {
+    if ctx.db.player().entity_id().find(who).is_none() {
+        return Ok(());
+    }
+    let (usable, picks) = weapon_level(ctx, who, kit);
+    match kit.slot_refusal(ability_id, usable, picks) {
+        Some(why) => Err(format!("{verb}: {why}")),
+        None => Ok(()),
+    }
+}
+
+/// IN A FIGHT, for what may only be done out of one (B6: picks): hurt within `regents.regen_delay_s` (the same wait
+/// health takes to come back).
+fn in_fight(ctx: &ReducerContext, who: u64) -> bool {
+    let delay = (hot_number(ctx, hot::REGEN_DELAY_S).max(0.0) * 1_000_000.0) as i64;
+    ctx.db.hurt().entity_id().find(who).is_some_and(|h| micros(ctx.timestamp) - micros(h.at) < delay)
+}
+
+/// CHOOSE A PICK (Luke's B6, 2026-11-13): at pick `pick` (0 the first, 1 the second, 2 the last, the ult) of the weapon in
+/// bag row `item_row`, `ability_id` from its kit's options. Out of a fight; the pick open at the weapon's level as you use
+/// it; a newly opened pick is free; a chosen one is CHANGED (`change_pick`, B13). The picks are
+/// the item's own (`"k"`): they go wherever it goes.
+#[reducer]
+pub fn choose_pick(ctx: &ReducerContext, item_row: u64, pick: u32, ability_id: u32) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "pick")?;
+    let mut row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me && r.qty > 0)
+        .ok_or("choose_pick: that is not in your bag")?;
+    let kit = rules::item(row.item_def_id).and_then(|i| rules::kit_keyed(i.weapon_kit)).ok_or("choose_pick: that is no weapon")?;
+    if in_fight(ctx, me) {
+        return Err("choose_pick: not in a fight".into());
+    }
+    let s = rules::skill(kit.skill).ok_or("choose_pick: its kind has no mastery")?;
+    let usable = rules::usable_level(rules::item_level(s, rules::item_xp_of(&row.instance_data)), rank_in(ctx, me, kit.skill));
+    let mut picks = rules::picks_of(&row.instance_data);
+    if let Some(why) = kit.pick_refusal(pick, ability_id, usable, picks) {
+        return Err(format!("choose_pick: {why}"));
+    }
+    picks[pick as usize] = ability_id;
+    row.instance_data = rules::with_picks(&row.instance_data, picks);
+    ctx.db.inventory_item().id().update(row);
+    log::info!("regents: {me} picks {ability_id} at pick {pick} of their {}", kit.key);
+    Ok(())
+}
+
+/// CHANGE A PICK (Luke's B13, 2026-11-13): pick `pick` of the weapon in bag row `item_row`, chosen already, becomes
+/// `ability_id`. Out of a fight. FREE once a week from the weapon's level `regents.respec_free_level` (anywhere); past it
+/// at a workbench (`station_id`, 0 for none), paying `regents.respec_bars` of the head's material, doubled for each paid
+/// change before (`regents.respec_max_steps` at most), one doubling forgiven for each `regents.respec_halve_days` without
+/// one. Per pick changed. When, and how far the price has climbed, are the item's own (`"f"`, `"e"`, `"c"`).
+#[reducer]
+pub fn change_pick(ctx: &ReducerContext, station_id: u64, item_row: u64, pick: u32, ability_id: u32) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "pick")?;
+    let mut row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me && r.qty > 0)
+        .ok_or("change_pick: that is not in your bag")?;
+    let kit = rules::item(row.item_def_id).and_then(|i| rules::kit_keyed(i.weapon_kit)).ok_or("change_pick: that is no weapon")?;
+    if in_fight(ctx, me) {
+        return Err("change_pick: not in a fight".into());
+    }
+    let s = rules::skill(kit.skill).ok_or("change_pick: its kind has no mastery")?;
+    let level = rules::item_level(s, rules::item_xp_of(&row.instance_data));
+    let usable = rules::usable_level(level, rank_in(ctx, me, kit.skill));
+    let mut picks = rules::picks_of(&row.instance_data);
+    if let Some(why) = kit.change_refusal(pick, ability_id, usable, picks) {
+        return Err(format!("change_pick: {why}"));
+    }
+    let now_s = (micros(ctx.timestamp) / 1_000_000).max(0) as u32;
+    let free_level = hot_number(ctx, hot::RESPEC_FREE_LEVEL).max(1.0) as u32;
+    let mut data = row.instance_data.clone();
+    if rules::free_change_open(level, free_level, rules::last_free_change(&data), now_s, hot_number(ctx, hot::RESPEC_FREE_DAYS)) {
+        data = rules::with_field(&data, "f", &now_s.to_string());
+        log::info!("regents: {me} changes pick {pick} of their {} to {ability_id} (the week's free change)", kit.key);
+    } else {
+        let (st, _) = near_station(ctx, me, station_id, "change_pick")
+            .map_err(|_| "change_pick: past the free one, a change is made at a workbench".to_string())?;
+        if st.key != "workbench" {
+            return Err("change_pick: past the free one, a change is made at a workbench".into());
+        }
+        let head = rules::head_material(row.item_def_id).ok_or("change_pick: it has no head to pay in")?;
+        let (stored, last_paid) = rules::change_escalation(&data);
+        let steps = rules::escalation_now(stored, last_paid, now_s, hot_number(ctx, hot::RESPEC_HALVE_DAYS));
+        let max_steps = hot_number(ctx, hot::RESPEC_MAX_STEPS).max(0.0) as u32;
+        let qty = rules::change_qty(hot_number(ctx, hot::RESPEC_BARS).max(0.0) as u32, steps, max_steps);
+        if count_item(ctx, me, head) < qty {
+            return Err(format!("change_pick: it takes {qty} {} (you have {})", rules::item(head).map_or("?", |i| i.name), count_item(ctx, me, head)));
+        }
+        let mut taken: Vec<u32> = Vec::new();
+        take_items(ctx, me, head, qty, &mut taken);
+        data = rules::with_field(&data, "e", &(steps + 1).min(max_steps).to_string());
+        data = rules::with_field(&data, "c", &now_s.to_string());
+        log::info!("regents: {me} changes pick {pick} of their {} to {ability_id} for {qty} {}", kit.key, rules::item(head).map_or("?", |i| i.name));
+    }
+    picks[pick as usize] = ability_id;
+    // The row may have been taken from (the bars): read it again before writing its data.
+    row = ctx.db.inventory_item().id().find(item_row).ok_or("change_pick: the weapon is gone")?;
+    row.instance_data = rules::with_picks(&data, picks);
+    ctx.db.inventory_item().id().update(row);
     Ok(())
 }
 
@@ -1234,7 +1384,8 @@ pub fn refit(ctx: &ReducerContext, station_id: u64, item_row: u64, parts: Vec<u3
     let q = rules::quality_of(&row.instance_data).unwrap_or(0);
     let kept = rules::crafted_traits(&traits, &offered, trait_room(ctx, q));
     let mut fresh = row;
-    fresh.instance_data = rules::made_data(q, &new_parts, &kept);
+    // THE REFIT KEEPS THE ITEM'S LEVEL AND PICKS (Luke's B15, 2026-11-13): they are the item's, not its parts'.
+    fresh.instance_data = rules::keep_level(&fresh.instance_data, &rules::made_data(q, &new_parts, &kept));
     ctx.db.inventory_item().id().update(fresh);
     log::info!("regents: {me} refits a {} with {:?}, traits {:?}", r.name, new_parts, kept);
     Ok(())
@@ -2038,7 +2189,7 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
                 if ctx.db.player().entity_id().find(a.owner).is_some() {
                     let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 }
                         else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
-                    add_xp(ctx, a.owner, a.skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+                    train(ctx, a.owner, a.skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
                     if dummy.is_none() {
                         tally_hit(ctx, a.skill_id, dmg);
                     }
@@ -2204,7 +2355,8 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
         return Err(format!("cast_spell: that is a {} spell; you wield a {}", kit.key, weapon.name.to_lowercase()));
     }
     if let rules::KitSlot::Skill(_, rank) = slot {
-        need_rank(ctx, me, kit.skill, rank, "cast")?;
+        need_rank(ctx, me, kit.skill, if kit.slots.is_empty() { rank } else { 0 }, "cast")?;
+        need_slot(ctx, me, kit, ability_id, "cast")?;
     }
     let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
     if now_status == rules::STATUS_ROLLING || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
@@ -2367,15 +2519,38 @@ fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, ai
         }
         _ => {
             // A CONE: everything in it (not a player: no harm between players outside a duel) hurt and thrown back.
+            // GALE, BUFFED (Luke, 2026-11-13: "gale needs buffed largely as it does 8 dmg and nothing else"): what it
+            // hurts also takes the spell's status (as the ring's does), and its poise is worn as by a last hit, so a
+            // gale breaks a foe's poise and staggers it as the string's last hit would.
             let hit: Vec<(u64, Vector3)> = ctx.db.movement_state().world_id().filter(m.world_id)
                 .filter(|o| o.entity_id != me && ctx.db.player().entity_id().find(o.entity_id).is_none())
                 .filter(|o| rules::in_cone(m.pos, aim, o.pos, range, spell.angle_deg))
                 .map(|o| (o.entity_id, o.pos)).collect();
             for (id, pos) in hit {
-                if spell_hurt(ctx, me, kit.skill, id, damage, m.world_id) && spell.push_mps > 0.0 {
+                if !spell_hurt(ctx, me, kit.skill, id, damage, m.world_id) {
+                    continue;
+                }
+                if spell.push_mps > 0.0 {
                     let (dx, dz) = (pos.x - m.pos.x, pos.z - m.pos.z);
                     let d = (dx * dx + dz * dz).sqrt().max(0.01);
                     let _ = crate::module::push_entity(ctx, id, Vector3::new(dx / d * spell.push_mps, 2.0, dz / d * spell.push_mps), me);
+                }
+                if !ctx.db.health_state().entity_id().find(id).is_some_and(|h| !h.is_dead) {
+                    continue;
+                }
+                if spell.status > 0 {
+                    if let Err(e) = crate::module::add_effect_internal(ctx, id, spell.status as u8, spell.status_ms.max(1) as u32, me) {
+                        log::warn!("regents: {me}'s cone on {id}, but: {e}");
+                    }
+                }
+                if wear_poise(ctx, me, id, true, &["skill"]) {
+                    let ms = hot_number(ctx, hot::STAGGER_MS).max(0.0) as u32;
+                    if crate::module::set_status_internal(ctx, id, rules::STATUS_STAGGERED, ms, me, String::new()).is_ok() {
+                        chained_by(ctx, me, id, m.world_id);
+                        steady(ctx, id, ms);
+                        end_cast(ctx, id);
+                        log::info!("regents: {me}'s {ability_id} staggered {id} for {ms} ms");
+                    }
                 }
             }
             Ok(())
@@ -2668,7 +2843,7 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
     }
     if ctx.db.player().entity_id().find(owner).is_some() {
         let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
-        add_xp(ctx, owner, skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
+        train(ctx, owner, skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
         if dummy.is_none() {
             tally_hit(ctx, skill_id, dmg);
         }
@@ -3053,7 +3228,8 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
         }
     }
     if let rules::KitSlot::Skill(_, rank) = slot {
-        need_rank(ctx, actor, kit.skill, rank, what)?;
+        need_rank(ctx, actor, kit.skill, if kit.slots.is_empty() { rank } else { 0 }, what)?;
+        need_slot(ctx, actor, kit, ability_id, "use")?;
     }
     Ok(())
 }
@@ -3489,7 +3665,7 @@ fn deal(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, kit: &
             foe_seed_of(ctx, target.entity_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0)
         };
         let xp = (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32;
-        add_xp(ctx, actor, kit.skill, xp);
+        train(ctx, actor, kit.skill, xp);
         if dummy.is_none() {
             tally_hit(ctx, kit.skill, dmg);
         }

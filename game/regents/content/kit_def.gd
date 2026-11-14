@@ -5,7 +5,7 @@ class_name KitDef extends ContentDef
 ## each tap the next in `light`, inside `regents.combo_window_ms` of the last), whose LAST step is the
 ## FINISHER (COMBAT_OVERHAUL.md §3, 2026-10-31: the heavy merged into it: armor, it flinches a light it
 ## hits, it staggers), and its SKILLS on Q, E, R and F, each unlocked at its mastery rank in `skill`
-## (`skill_ranks`: 1, 3, 6, 9). The guard (the right button: a tap parries, held it blocks) and the dodge
+## (`skill_ranks`: 1, 8, 19, 29 on the 1-33 track, Luke's S1 2026-11-13; 1, 3, 6, 9 on the old 1-10). The guard (the right button: a tap parries, held it blocks) and the dodge
 ## roll (Ctrl) are everyone's.
 ## The server refuses an ability the wielded weapon's kit does not give, or a rank does not unlock
 ## (`game/regents.rs`, `may_use_ability`), and scales its damage by the weapon and the mastery.
@@ -18,8 +18,20 @@ class_name KitDef extends ContentDef
 @export var light: Array[AbilityDef] = []
 ## Q, E, R, F, in that order.
 @export var skills: Array[AbilityDef] = []
-## The mastery rank each skill unlocks at, one per skill.
-@export var skill_ranks: PackedInt32Array = PackedInt32Array([1, 3, 6, 9])
+## The mastery rank each skill unlocked at, one per skill: THE OLD GATE, before item levels (PROGRESS 74). A player's
+## skills are gated by `skill_slots` and `unlock_levels` now; kept for the bake (a foe's kit lists 0s).
+@export var skill_ranks: PackedInt32Array = PackedInt32Array([1, 8, 19, 29])
+@export_group("Item levels")
+## THE BAR SLOT EACH SKILL GOES TO (Luke's B4-B6, `ABILITIES_PREP.md` §7 step 2), one per skill, in `skills`' order:
+##   0  the BASE: Q, the item's from its making (one at most)
+##   1  a PICK OPTION: chosen into E at one of the item's picks (`unlock_levels` 1 and 2)
+##   2  an ULT OPTION: chosen into R at the ult's level (`unlock_levels` 3)
+##   3  F: the chest's slot; a weapon's ability there stands in until chests carry abilities (the staff's Blink)
+## Empty: every skill a base (a foe's kit; its brain uses them).
+@export var skill_slots: PackedInt32Array = PackedInt32Array()
+## THE ITEM LEVEL EACH OPENS AT (Luke's B4: Q at 1, picks at ~5 and ~12, the ult at ~20): [Q and F, the first pick, the
+## second pick, the ult]. The item's level counts only up to its holder's mastery of the kind (B2).
+@export var unlock_levels: PackedInt32Array = PackedInt32Array([1, 5, 12, 20])
 ## UNBLOCKABLE (COMBAT_OVERHAUL.md §2, 2026-10-31): of this kit's abilities, those no block or parry stops
 ## (roll, or step out of the sweep). Each glints red on its user as its wind-up starts. A foe's finisher.
 @export var unblockable: Array[AbilityDef] = []
@@ -165,9 +177,34 @@ func abilities() -> Array[AbilityDef]:
 	return out
 
 
-## The key slot `slot` (0 Q, 1 E, 2 R, 3 F) unlocks at (99: never).
+## The key slot `slot` (0 Q, 1 E, 2 R, 3 F) unlocked at, by the OLD mastery gate (99: never). Players' are item levels.
 func rank_for(slot: int) -> int:
 	return skill_ranks[slot] if slot >= 0 and slot < skill_ranks.size() else 99
+
+
+const SLOT_BASE: int = 0
+const SLOT_OPTION: int = 1
+const SLOT_ULT: int = 2
+const SLOT_F: int = 3
+
+
+## The bar slot skill `i` goes to (`skill_slots`; a base when unset).
+func slot_of_skill(i: int) -> int:
+	return skill_slots[i] if i >= 0 and i < skill_slots.size() else SLOT_BASE
+
+
+## The skills that go to bar slot kind `kind` (`SLOT_*`), in order.
+func skills_in(kind: int) -> Array[AbilityDef]:
+	var out: Array[AbilityDef] = []
+	for i: int in skills.size():
+		if slot_of_skill(i) == kind:
+			out.append(skills[i])
+	return out
+
+
+## The item level unlock `n` opens at (0 Q and F, 1 the first pick, 2 the second, 3 the ult; 999: none).
+func unlock_level(n: int) -> int:
+	return unlock_levels[n] if n >= 0 and n < unlock_levels.size() else 999
 
 
 func to_bake() -> Dictionary:
@@ -190,6 +227,8 @@ func to_bake() -> Dictionary:
 		"light": lights,
 		"follow_ms": follows,
 		"skills": sk,
+		"slots": Array(skill_slots),
+		"unlock_levels": Array(unlock_levels),
 		"draw_full_ms": draw_full_ms if draws else 0,
 		"resource": ContentDef.ref(resource) if resource != null else 0,
 		"locks": locks,
@@ -223,6 +262,18 @@ func validate() -> Array[String]:
 	for f: int in follow_ms:
 		if f < 0:
 			out.append("a follow-through below 0 ms")
+	if not skill_slots.is_empty() and skill_slots.size() != skills.size():
+		out.append("`skill_slots` needs a slot per skill (%d skills, %d slots)" % [skills.size(), skill_slots.size()])
+	for k: int in skill_slots:
+		if k < SLOT_BASE or k > SLOT_F:
+			out.append("`skill_slots`: %d is no slot (0 base, 1 pick option, 2 ult option, 3 F)" % k)
+	if not skill_slots.is_empty() and (skills_in(SLOT_BASE).size() > 1 or skills_in(SLOT_F).size() > 1):
+		out.append("one base (Q) and one F at most")
+	if unlock_levels.size() != 4:
+		out.append("`unlock_levels` is four levels: Q and F, the first pick, the second, the ult")
+	for i: int in range(1, unlock_levels.size()):
+		if unlock_levels[i] < unlock_levels[i - 1]:
+			out.append("`unlock_levels` must not fall")
 	if skill_ranks.size() < skills.size():
 		out.append("`skill_ranks` needs a rank per skill (%d skills, %d ranks)" % [skills.size(), skill_ranks.size()])
 	for a: AbilityDef in unblockable:

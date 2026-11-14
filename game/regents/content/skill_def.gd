@@ -2,13 +2,25 @@
 class_name SkillDef extends ContentDef
 ## A SKILL (design §3, #3): Woodcutting, Mining, Smelting, Smithing, Crafting. A character's MASTERY of it
 ## is XP the server keeps (`skill_xp`); the rank comes from `xp_to_rank`, so the cap can grow later
-## without a migration (owner, 2026-10-18: v1 ranks 1-10, production higher). Nodes and recipes name the
+## without a migration (owner, 2026-10-18: v1 ranks 1-10, production higher; Luke's S1 + S2, 2026-11-13: every skill
+## 1-33 for now, a third of 99, `RANK_TOP`). Nodes and recipes name the
 ## rank they need. While a player works at it, the body plays `pose` with `tool_scene` in the hand.
+
+## THE TOP RANK OF EVERY SKILL and what mastery adds there (basis points): the server's `rules::RANK_TOP` and
+## `RANK_TOP_BONUS_BP`, which these twin. Every skill's curve ends at it (the regents suite checks).
+const RANK_TOP: int = 33
+const RANK_TOP_BONUS_BP: int = 2700
+
+
+## Mastery's share at `rank` in basis points (the server's `mastery_bp`): an even step a rank past the first.
+static func mastery_bp(rank: int) -> int:
+	return mini(maxi(rank - 1, 0) * RANK_TOP_BONUS_BP / (RANK_TOP - 1), RANK_TOP_BONUS_BP)
+
 
 ## Its key, as the server and a node's or recipe's content name it.
 @export var key: StringName = &""
 ## XP to reach each rank from 2 up (cumulative: rank 2 at the first, rank 3 at the second...).
-@export var xp_to_rank: PackedInt32Array = PackedInt32Array([60, 150, 280, 450, 680, 980, 1350, 1800, 2400])
+@export var xp_to_rank: PackedInt32Array = PackedInt32Array([15, 30, 45, 60, 90, 120, 150, 182, 215, 248, 280, 337, 393, 450, 508, 565, 622, 680, 780, 880, 980, 1072, 1165, 1258, 1350, 1500, 1650, 1800, 1950, 2100, 2250, 2400])
 @export_group("How it shows")
 ## The animation set's pose while working at it (a semantic name: `pose.chop`).
 @export var pose: StringName = &""

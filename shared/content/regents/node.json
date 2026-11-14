@@ -41,7 +41,7 @@
 			"deplete_permille": 125,
 			"id": 40002,
 			"max_items": 0,
-			"min_rank": 2,
+			"min_rank": 5,
 			"min_tool_tier": 1,
 			"minigame": {
 				"branch_permille": 500,
@@ -75,7 +75,7 @@
 			"deplete_permille": 100,
 			"id": 40003,
 			"max_items": 0,
-			"min_rank": 4,
+			"min_rank": 12,
 			"min_tool_tier": 2,
 			"minigame": {
 				"branch_permille": 620,
@@ -146,7 +146,7 @@
 			"deplete_permille": 200,
 			"id": 40005,
 			"max_items": 0,
-			"min_rank": 2,
+			"min_rank": 5,
 			"min_tool_tier": 1,
 			"minigame": {
 				"bend_pm": 190,
@@ -183,7 +183,7 @@
 			"deplete_permille": 200,
 			"id": 40006,
 			"max_items": 0,
-			"min_rank": 3,
+			"min_rank": 8,
 			"min_tool_tier": 2,
 			"minigame": {
 				"bend_pm": 220,
@@ -292,7 +292,7 @@
 			"deplete_permille": 350,
 			"id": 40009,
 			"max_items": 4,
-			"min_rank": 2,
+			"min_rank": 5,
 			"min_tool_tier": 1,
 			"minigame": {
 				"cut_speed": 30,

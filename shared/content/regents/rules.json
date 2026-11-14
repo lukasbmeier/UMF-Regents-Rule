@@ -60,16 +60,16 @@
 					"kind": "number",
 					"max": 15.0,
 					"min": 0.0,
-					"number": 4.0,
+					"number": 1.2,
 					"text": "",
 					"unit": "%"
 				},
 				{
 					"key": "regents.rank_ease_ranks",
 					"kind": "number",
-					"max": 9.0,
+					"max": 32.0,
 					"min": 0.0,
-					"number": 3.0,
+					"number": 10.0,
 					"text": "",
 					"unit": "ranks"
 				},
@@ -846,6 +846,60 @@
 					"number": 50.0,
 					"text": "",
 					"unit": ""
+				},
+				{
+					"key": "regents.item_catch_up",
+					"kind": "number",
+					"max": 50.0,
+					"min": 1.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "x"
+				},
+				{
+					"key": "regents.respec_free_level",
+					"kind": "number",
+					"max": 99.0,
+					"min": 1.0,
+					"number": 20.0,
+					"text": "",
+					"unit": "level"
+				},
+				{
+					"key": "regents.respec_free_days",
+					"kind": "number",
+					"max": 60.0,
+					"min": 0.0,
+					"number": 7.0,
+					"text": "",
+					"unit": "days"
+				},
+				{
+					"key": "regents.respec_bars",
+					"kind": "number",
+					"max": 50.0,
+					"min": 0.0,
+					"number": 2.0,
+					"text": "",
+					"unit": "items"
+				},
+				{
+					"key": "regents.respec_halve_days",
+					"kind": "number",
+					"max": 60.0,
+					"min": 0.0,
+					"number": 7.0,
+					"text": "",
+					"unit": "days"
+				},
+				{
+					"key": "regents.respec_max_steps",
+					"kind": "number",
+					"max": 10.0,
+					"min": 0.0,
+					"number": 5.0,
+					"text": "",
+					"unit": "doublings"
 				}
 			]
 		}

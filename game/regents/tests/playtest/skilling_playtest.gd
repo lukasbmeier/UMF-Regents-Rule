@@ -350,12 +350,15 @@ func _chopper(tree_id: int) -> void:
 	var fighter: CombatComponent = hud.combat
 	var kept_kit: KitDef = fighter.kit
 	fighter.kit = KitDef.by_key(&"staff")
+	fighter.weapon_data_for_tests = JSON.stringify({"x": 2400, "k": [40014, 0, 0]})   # Frost Ring picked: E holds it
+	_check(fighter.on_slot(1) != null and fighter.on_slot(1).display_name == "Frost Ring", "(the staff's E is Frost Ring)")
 	fighter._last_swing_ms = Time.get_ticks_msec()
 	await _tap(&"interact", 0.08)
 	await _until(func() -> bool: return hud.station_window.is_open(), 2.0)
 	_check(hud.station_window.is_open() and fighter.in_stance() and not fighter.fighting(),
 		"in stance with a staff (E: Frost Ring), no target: E at the workbench opens its window")
 	fighter.kit = kept_kit
+	fighter.weapon_data_for_tests = ""
 	# THE WINDOW STAYS PUT (owner, 2026-10-20: "crafting clicks dont feel immediate"): open and idle, it is
 	# not rebuilt (it rebuilt every button twice a second, losing clicks and the list's scroll).
 	var drawn0: int = hud.station_window.draws

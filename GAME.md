@@ -168,6 +168,150 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     with each weapon's choices and its XP and next unlock shown ("like albion"); Q, E, R at the least on every weapon,
     more for ranged and melee, with AOE (the axe's Cleave hits one today: the referee reports a sweep's first body);
     single combat zones against multi combat ("like osrs or not").
+- **THE ABILITY REWORK BEFORE ARMOR** (Luke, 2026-11-13, after the foes: "I want to do the ability rework before armor
+  as armor chest piece will add 1 ability"). What he said is settled, the rest is open in
+  `docs/regents_rule/ABILITIES_PREP.md` (its decisions B1-B15):
+  - The light attacks stay as they are: "for melee and ranged (bow) the auto attacks feel good. Mage autos feel less
+    good but I think because of the placeholder projectile model and the low damage."
+  - At most FOUR abilities on Q, E, F, R, "added from weapons and armor chest (or set bonus maybe ... lets brainstorm".
+  - A clean bottom bar ("albion like or other examples"), in place of the text line.
+  - Every weapon starts with its base ability (Q) as part of crafting, "unique to each weapon or role type"; the rest
+    come from leveling the weapon: the 2nd level a choice of a 2nd ability OR enhancing the base, the 3rd the same,
+    the 4th an "ult". A player will not always have four; an empty slot may hold a potion or another thing ("maybe").
+  - Open in his words: "im torn if we offer more levels (cause level 1-4 wont take that long or if it does take that
+    long then the player is missing abilites for a long time) that offer damage and other perks".
+  - His direction after the sheet's first draft (not final; the sheet's revision 2): plan for a long track ("99 or 60
+    ... a fun time sink, we should plan for future scope"); ITEM levels over mastery-only ("tinkers tools ... its a
+    trade"), leaning to a new item catching up fast to your mastery, feeding an old item into a new and re-heading an
+    item later (re-heading's groundwork now), an item's picks its own; content not minimized ("unique playstyles are
+    important"); and two questions to answer early: trading a levelled item, and losing one ("insurance ... or some
+    portion of XP given in a lamp to be used on a new weapon").
+  - ALL ANSWERED (B1-B15, 2026-11-13), one by one (`ABILITIES_PREP.md` §6); the order of work is its §7:
+    - B1 ITEM LEVELS (Luke, 2026-11-13: "Accept B1"): two layers. MASTERY, the character's per weapon kind, never
+      lost: it sets the catch-up, gates better gear and the deepest options, keeps its 3 % a rank. THE ITEM'S LEVEL,
+      by use: it opens the item's slots and picks, and its PICKS ARE ITS OWN. CATCH-UP: below your mastery an item
+      earns XP faster (a hot rule, 5x to start), above it at normal speed; the deepest options need both. Feeding an
+      old item into a new (with the "lamp") and re-heading come later; re-heading's GROUNDWORK now: level, XP and
+      picks keyed by the item, the head stored as a part.
+    - B2 TRADING A LEVELLED ITEM (Luke, 2026-11-13: "T4, use up to mastery"): tradeable WITH its level; a holder uses
+      it only up to their own mastery of its kind (a 40 sword works as 25 for a mastery-25 holder, the rest opening
+      as their mastery grows). The tooltip shows both numbers. Not bound.
+    - B3 LOSING A LEVELLED ITEM (Luke, 2026-11-13: "As proposed"): nothing is lost now (as v1). A RULE FROM NOW: an
+      item is only ever lost where the place says so (a PvP zone, a hardcore realm, a quest), with INSURANCE bought
+      before, once marks and vendors exist. THE LAMP is how loss and salvage both work when either is built: a lost or
+      salvaged item leaves an essence of half its XP, poured into a new item of its kind (the essence trades as an
+      item does, T4). Durability stays parked.
+    - B4 THE LONG TRACK (Luke, 2026-11-13: "99, slots by 20"): mastery and item levels run 1-99 (replacing v1's 10).
+      All four slots open by ~20 (Q at 1, the 2nd pick ~5, the 3rd ~12, the ult ~20); 20-99 is depth, never slots
+      (more options in each pool, ability ranks, passives, gear needing the rank, a mark at 99). The curve steep at
+      the top; the hours to 99 (a first guess 100-200 of fighting a kind) tuned in play. All of it content (curves,
+      unlock levels), not code.
+    - B5 THE SLOTS (Luke, 2026-11-13: "Fix where they come from (3 from weapon, only one from chestpiece ...) but let
+      the player reassign to any order if they want? for now we can just keep it simple but input reassign/
+      accessibility is nice to have"): the SOURCES are fixed: up to three from the weapon (its base, its 2nd ability,
+      its ult), at most one from the chest. The KEYS are the player's to reorder, later; for now the default stands:
+      Q, E, R the weapon's, F the chest's. Build the bar so a slot's key is a setting, not a constant.
+    - B6 THE PICKS (Luke, 2026-11-13: "Accept b6 but changing picks should cost something"): at the item's ~5 and ~12,
+      one pick each: a 2nd ability for E (one of its pool's) or an upgrade (of Q, or E once there); the ult at ~20.
+      Each item's its own; changed out of combat, AT A COST (which cost: B13).
+    - B7 CONSUMABLES AND AN EMPTY SLOT (Luke, 2026-11-13: "I like option 3", after: "potions and food seem like a
+      necessary eventuality so maybe we just make them their own thing"): ONE POTION KEY for everyone (a combat potion,
+      its own key, G proposed, its own cooldown); FOOD eaten from the bag out of combat as a long buff (no slot); an
+      EMPTY ABILITY SLOT (E for a tall build, F with a chest that has no ability) takes UTILITY TOOLS only (a bomb, a
+      trap, throwing knives, a smoke flask: crafted, used up, in stacks), never potions. His worry, "does a wide build
+      miss out on utility tools (so less people go wide)": answered by the trade (abilities free and growing, tools
+      paid and used up) and by F (a plain chest frees a tool slot for anyone); the levers, a tool's strength and cost,
+      tuned on the bench and in play. Until tools exist an empty slot shows what fills it.
+    - B8 THE CHEST'S ABILITY (Luke, 2026-11-13: "accept b8 with me liking future full set bonuses being a thing
+      (either enhancing the ability or something else)"): the CHEST carries its own ability on F, by its material
+      family (cloth casting and moving, leather quick utility, metal guarding), which of its family's picked at
+      crafting as traits are, the chest levelling as a weapon does (B1); a chest made without one frees F for a tool
+      (B7). BLINK MOVES from the staff to cloth chests. FULL-SET BONUSES are WANTED LATER (enhancing the chest's
+      ability, or something else), on top of the chest's ability, never in place of it.
+    - B9 POOLS IN LAYERS (Luke, 2026-11-13: "Accept B9"): an item's options are ASSEMBLED from layers, each content a
+      designer adds without code: its weapon KIND (the core), its ROLE (the handle's own options), THE ITEM (a unique
+      drop, later a rare pattern), later its material or a trait, and the chest (F). The system holds every layer from
+      the start; content ships in slices, the roles' options in the first. A pick shows every option you qualify for
+      (more open along the long track); a unique's option is sideways, not stronger.
+    - ROLES IN THE LAST HIT AND IN Q (Luke, 2026-11-13, B10's discussion): every weapon's BASE Q DIFFERS BY ROLE
+      ("sword dps is lunge, sword support is healing swipe, etc.  kinda an extension of how finishers play now").
+      The role's LAST HIT stays, as a SMALL ALWAYS-ON effect distinct from its Q (option C: "the small effects can be
+      universal per weapon type ... all dps swords have the small effect on finisher all axes have same effects etc";
+      not by material); "if we dont feel like C is feasible to maintain content wise, b is safest option" (B: roles
+      in abilities only, one last hit per weapon kind).
+    - SEPARATE POOLS PER ROLE (Luke, 2026-11-13): each role of each weapon its OWN full set (no shared weapon-kind
+      pool that a role adds to: that made a damage role strictly worse). He wants "each weapon of each role a unique
+      set of abilites even if that means way more content work" (a sword 9-12, 3-4 a role).
+    - MATERIALS: he likes "the twist/variance per metal" (a metal giving its role's abilities a twist, or an extra
+      option, rather than a whole new set), keeping "every upgrade is new toys and exploration"; wood for bows and
+      staves as metal for melee. Whole sets per material: open until the ANIMATION INVENTORY (UAL1, UAL2) says what is
+      feasible.
+    - B10 THE POOLS' CONTENT (Luke, 2026-11-13: "Yes, roles + twist", after the inventory, `ABILITIES_PREP.md` 3.11):
+      PER-ROLE SETS (3-4 abilities a role, separate pools, each role's own base Q) for every weapon kind, motions
+      shared between abilities and the EFFECT carrying the difference (the bow and the staff lean on effects); a
+      MATERIAL gives its role's abilities a TWIST (an effect and a rule: iron sparks or bleeds, steel pierces, oak
+      staggers, yew flies further), never a whole new set. The real content (names, numbers) is designed at each
+      weapon's build step, played and benched; §3.8 is a draft.
+    - B11 THE BAR (Luke, 2026-11-13: "I like round or square, maybe we do a small build of both like cinema lab has
+      speech bubbles and osrs like boxes. otherwise accept b11"): a row low in the middle, Q, E, R, F (keys
+      reorderable later, B5), the potion key G a little apart; on each its key, its cooldown counted on it, a locked
+      one dim with what opens it, an empty one showing it takes a tool; a ring round the weapon's three filling to the
+      item's next unlock; health above, mana or arrows beside; hover for what it does, no role or mechanic names; the
+      mouse's string and guard off it, the text line's hints to the tutorial and a tooltip; it fades out of stance.
+      The item's level against your mastery in the item's tooltip, not on the bar. ROUND AND SQUARE BOTH BUILT FIRST,
+      a small lab to switch between (as the cinema lab shows its presenters), his pick after seeing them.
+    - B12 KEYS (Luke, 2026-11-13: "keep as now with clear indication if in combat/stance or not. i do like context for
+      option 3, but that can come later"): Q, E, R, F fire in stance; out of it E is the world's key (gather, talk),
+      as now. The bar and the HUD SHOW CLEARLY whether you are in stance or in combat. LATER, liked: a context E in
+      stance (looting a sack, reviving a downed player without putting the weapon away).
+    - B13 CHANGING PICKS (Luke, 2026-11-13: "I like 2, 3, 4, 5. dont like 1 because as you stated can always make a
+      new sword (but lose xp). I do think before level 20, the price should be equal to the amount of abilites unlocked
+      so respecing one thing cost less than 3 or all 4"): ONE FREE CHANGE PER ITEM PER WEEK; past it, MATERIALS of the
+      item's head at a workbench, out of combat, ESCALATING with each change (1x, 2x, 4x), the escalation halving each
+      week without one; MARKS join the cost when they exist; a NEWLY OPENED pick is always free to choose. The price is
+      PER PICK CHANGED: changing one costs less than three or four, so an item below 20 (fewer picks open) is cheaper
+      to change. No free changes below 20. Every number a hot rule.
+    - B14 THE STAFF'S BOLT (Luke, 2026-11-13: "Accept B14"): inside this rework: a real projectile (flight, trail, a
+      cast flash, an impact burst, from the arrow's and fireball's looks), its damage benched against the other light
+      strings and set in line, a feel check in play; it stays free (no mana). When: with the axe's and bow's pools (the
+      order of work's step 4) unless he asks for it sooner.
+    - B15 ONE XP TRACK (Luke, 2026-11-13: "one xp track is fine", with a REFIT): an item's XP is its LEVEL and is never
+      spent. Trait ranks are GATED by the item's level (the level each rank needs is placed on the 99 track, hot rules)
+      and paid in bulk material and a catalyst (`MATERIALS.md` §5), never in XP. Once levelled, an item is REFIT at the
+      workbench with higher-ranked parts (a handle, a binding) its level now takes: the swap `MATERIALS.md` §11 already
+      allows (the new part, the old lost, bars of the head's metal; traits re-picked within the grade's room), and the
+      item keeps its level (keyed by the item, B1's groundwork). A part of a rank above the item's level does not fit.
+      Trait ranks work for WHOEVER HOLDS the item (they are the item's, like its metal); only abilities and picks follow
+      the holder's mastery (B2). The grade still sets how many traits it holds: a Common item holds one at any level.
+    - AFTER STEP 1 (the bar, PROGRESS 72), S1-S4 (`ABILITIES_PREP.md` §8):
+      - S1 + S2, THE LONG TRACK IN CHUNKS (Luke, 2026-11-13: "lets do it in chunks, lets move everything from 1-10 to
+        1-33 (a third of 99) for testing. There will be wipes between now and the demo for public so we can finalize
+        it then"): EVERY skill (weapon masteries, gathering, making) runs 1-33 for now, a third of B4's 99; the 99
+        curve, its hours and the bonuses are finalized before the public demo, with a wipe.
+      - S3 THE SWORD'S POOLS (Luke, 2026-11-13: "draft a short sheet for me to rewrite"): the agent drafts, he rewrites.
+      - S4 THE STAFF'S POOL (Luke, 2026-11-13: "yes on s4, but gale needs buffed largely as it does 8 dmg and nothing
+        else right now on a long cooldown"): Q Fireball; its first pick (~5) Frost Ring OR Gale OR a Fireball upgrade;
+        Blink on F until cloth chests (step 5); no ult before step 4. GALE BUFFED LARGELY.
+      - R ASSIGNED (Luke, 2026-11-14, after play: "right now mage seems to only be able to take an e ability (gale or
+        frost ring) even though I am level 33 ... fix the R ability not being assigned"; "the mage abilites are in an okay
+        spot"): until a weapon has an ult of its own, its LAST PICK (level 20, R) takes the option E did not, so a staff
+        at 20 has Fireball, Frost Ring, Gale and Blink. He fleshes out the axe's, sword's and bow's role abilities next.
+- **THE UI, A REBUILD SOON AFTER ARMOR** (Luke, 2026-11-14: "we need a separate ui from the bag and possibly new UI
+  anyway to match the feel of our ability bar. The inventory and other UI was placeholder and its about time we were able
+  to drag, resize, etc in a most robust inventory system plus C for character sheet when armor is introduced. we dont have
+  to do that now, but lets at least write some to dos and later work for it soon after armor. for now basic weapon
+  ability ui once you click a weapon in your bar or your bag will work"). Built now: the weapon's ABILITIES WINDOW
+  (PROGRESS 76). TO DO, soon after armor (each his to shape before it is built):
+  1. THE INVENTORY REBUILT in the bar's look: DRAG AND DROP (move, swap, split a stack, drag out to drop on the ground),
+     windows that DRAG AND RESIZE and remember their place and size (a player setting), sort and filter, a tooltip that
+     compares with what you wield or wear.
+  2. C, THE CHARACTER SHEET (with armor): the five slots (weapon, head, chest, legs, trinket: the standing rule) on a
+     figure, equip by dragging from the bag, what each piece gives (armor's numbers, the chest's ability on F, full-set
+     bonuses later: B8), the weapon's level and picks (the abilities window folds in here or opens from it).
+  3. ONE LOOK for every window (the bag, the skills K, the stations, the world map, the Tester page): a UiStyle theme
+     from `RegentsBarStyle` (round or square), so a window and the bar read as one game.
+  4. The bar's keys reordered by the player (B5: accessibility), from the sheet or the Settings.
+  The foundation's `UiWindow` drags but does not resize or remember: that part is TEMPLATE work (`foundation/ui/kit/`).
 - **NEW FOES, ANSWERED** (Luke, 2026-11-12: "Accept all proposed"; the sheet is `docs/regents_rule/FOES_PREP.md`, its §9
   the order of work). His word for the aim: foes "smart but fun (not annoying or painful)"; the sheet's §4 rules stand
   for every foe (every hurt announced, one question per foe, nothing from off screen, a foe that keeps its distance is
@@ -521,12 +665,20 @@ first make pays extra, and a recipe repeated too long wears stale. Tune a recipe
 **Combat, the first slice**: wield a weapon from the bag (I), Tab onto one of camp's training dummies (a
 ring under it), tap LMB for the string (its last hit the finisher, which staggers), tap RMB to parry a hit
 as it lands (then tap LMB at once: the riposte), hold RMB to block what is in front, Ctrl to roll, Q for the
-kit's first skill; the world's referee judges every swing (an editor run starts it). A sword's HANDLE picks its
+kit's first skill; the world's referee judges every swing (an editor run starts it). **The ability bar** (PROGRESS 72)
+sits low in the middle: health above, the weapon's three slots (Q E R) in a ring filling toward the next unlock, the
+chest's (F), the roll and the potion key (G); it fades out of stance, lights in it, glows red in a fight; hover (with
+the cursor free) for what each does; Settings, Game, "Ability bar" picks round or square, and
+`game/regents/ui/bar_lab.tscn` (F6) shows both. **Weapons level** (PROGRESS 74): a weapon levels as you fight with it (five
+times as fast while below your mastery), counts only up to your mastery, and opens its slots by its level: a staff
+has Fireball (Q) and Blink (F) at once, and at level 5 a pick of Frost Ring or Gale for E, chosen in the bag (I). A pick
+is CHANGED in the bag too (PROGRESS 75): free once a week from the weapon's level 20, anywhere; otherwise at a workbench
+for the weapon's head's material (2, doubling with each paid change, a doubling forgiven each week without one). A sword's HANDLE picks its
 last hit (a plain grip a piercing thrust, a crossguard hilt a pommel bash and a full guard, a banner hilt a
 rallying cut that mends those near you): make or re-hilt one at the workbench. **The tutorial**: the Drillmaster by the training yard
 (walk up, E, E again) walks you through making your own copper sword, then fighting with it against a slow sparring
 skeleton (a ring closes on each of its blows); N sets it aside. Each lesson ticks when the server sees it done. The server replays every round from its
-inputs; mastery ranks 1-10 per skill gate the better nodes. How to play it, what makes it, how it is
+inputs; mastery ranks 1-33 per skill (PROGRESS 73: the old 1-10 spread a third of the way to 99) gate the better nodes. How to play it, what makes it, how it is
 tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alone:
 `game/regents/skilling/skilling_lab.tscn` (F6); **T** there shows the round's **difficulty readout** (four simulated
 players of set skill on many seeds: their mean, Fine and Masterwork shares, how often they beat AFK), and

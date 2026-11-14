@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="SpellDef" format=3]
+[gd_resource type="Resource" script_class="SpellDef" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/gale.tres" id="2_ability"]
+[ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="3_status"]
 
 [resource]
 script = ExtResource("1_spell")
@@ -9,8 +10,10 @@ ability = ExtResource("2_ability")
 kind = 3
 cost = 35.0
 cast_ms = 0
-angle_deg = 45.0
-push_mps = 9.0
+angle_deg = 60.0
+push_mps = 12.0
+status = ExtResource("3_status")
+status_ms = 2500
 id = 40005
 display_name = "Gale"
-designer_notes = "F, Sorcery rank 9: everything within 8 m and 45° of where you look is hurt and thrown back."
+designer_notes = "F, Sorcery rank 29 (the old 9): everything within 8 m and 60° of where you look is hurt, thrown back, slowed 2.5 s, and its poise worn as by a last hit (a full or worn bar breaks: staggered). Buffed largely 2026-11-13 (Luke): it was 6 damage and a push on 20 s."

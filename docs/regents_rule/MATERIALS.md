@@ -110,6 +110,9 @@ Tiers 4-6 and their names (a new setting: not Runite or Mithril) come later.
   grade's room. The head and quality never change.
 - **Where trait ranks come from**: both a better-made part (a higher start) and upgrades through use are
   liked; open until the minigames are harder (Masterwork not routine) and AFK crafting still pays.
+  Since 2026-11-13 (Luke's B15, `ABILITIES_PREP.md`): §7's gear XP IS the item's level (one track, never spent); a
+  rank is GATED by the item's level, a part of a rank above it does not fit, and a levelled item is refit with
+  better parts by the swap above, keeping its level.
 - **A dropped or given item keeps its traits, their ranks and its gear XP**: a player may level an item and
   hand it to a friend, or sell it for more for the hours put in.
 - **Gear XP per rank, and what earns it**: hot rules, starting from base numbers (to be set when step 5 is

@@ -314,10 +314,18 @@ pub fn regents_data() {
             assert!(push > 0.0 || (status > 0 && status_ms > 0), "regents content: the {name} kit's hit entry for {ab} does nothing");
             hit_map.push_str(&format!("KitHitSeed {{ ability: {ab}, push_mps: {push:?}f32, status: {status}, status_ms: {status_ms} }}, "));
         }
+        // ITEM LEVELS (ABILITIES_PREP.md §7 step 2): each skill's bar slot (0 base, 1 pick option, 2 ult option, 3 F; none:
+        // every skill a base), and the item level each unlock opens at.
+        let slots: Vec<u32> = k["slots"].as_array().map_or(Vec::new(), |a| a.iter().map(|v| v.as_i64().unwrap().clamp(0, 3) as u32).collect());
+        assert!(slots.is_empty() || slots.len() == skills.len(), "regents content: the {name} kit needs a bar slot per skill (re-bake)");
+        let unlock: Vec<u32> = k["unlock_levels"].as_array().map_or(vec![1, 5, 12, 20], |a| a.iter().map(|v| v.as_i64().unwrap().max(1) as u32).collect());
+        assert!(unlock.len() == 4 && unlock.windows(2).all(|w| w[1] >= w[0]), "regents content: the {name} kit's unlock levels: four, never falling");
         kit_keys.push(key.clone());
         out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, follow_ms: &{follow:?}, skills: &{skills:?}, \
-             locks: &{locks:?}, draw_full_ms: {}, resource: {}, unblockable: &{unblockable:?}, roles: &[{role_map}], hits: &[{hit_map}] }},\n",
-            int(k, "id", &name), k["draw_full_ms"].as_i64().unwrap_or(0), k["resource"].as_i64().unwrap_or(0).max(0)));
+             locks: &{locks:?}, draw_full_ms: {}, resource: {}, unblockable: &{unblockable:?}, roles: &[{role_map}], hits: &[{hit_map}], \
+             slots: &{slots:?}, unlock_levels: [{}, {}, {}, {}] }},\n",
+            int(k, "id", &name), k["draw_full_ms"].as_i64().unwrap_or(0), k["resource"].as_i64().unwrap_or(0).max(0),
+            unlock[0], unlock[1], unlock[2], unlock[3]));
         if k["resource"].as_i64().unwrap_or(0) > 0 {
             casting_kits.push((name.clone(), light.iter().copied().chain(skills.iter().map(|(a, _)| *a)).collect()));
         }

@@ -173,8 +173,8 @@
 		},
 		{
 			"ability_id": 40016,
-			"cooldown_ms": 20000,
-			"damage": 6.0,
+			"cooldown_ms": 12000,
+			"damage": 18.0,
 			"height": 0.6,
 			"judged": false,
 			"lunges": false,

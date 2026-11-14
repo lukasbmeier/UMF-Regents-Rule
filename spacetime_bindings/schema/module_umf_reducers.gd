@@ -35,6 +35,12 @@ func admin_reset_skills(entity_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('admin_reset_skills', [entity_id], [&'u64'], &'')
 
 ## 0. entity_id: int [br]
+## 1. item_row: int [br]
+## 2. level: int [br]
+func admin_set_item_level(entity_id: int, item_row: int, level: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_set_item_level', [entity_id, item_row, level], [&'u64', &'u64', &'u32'], &'')
+
+## 0. entity_id: int [br]
 ## 1. skill_id: int [br]
 ## 2. rank: int [br]
 func admin_set_rank(entity_id: int, skill_id: int, rank: int) -> SpacetimeDBReducerCall:
@@ -91,9 +97,22 @@ func challenge_press(challenge_id: int) -> SpacetimeDBReducerCall:
 func challenge_seen(challenge_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('challenge_seen', [challenge_id], [&'u64'], &'')
 
+## 0. station_id: int [br]
+## 1. item_row: int [br]
+## 2. pick: int [br]
+## 3. ability_id: int [br]
+func change_pick(station_id: int, item_row: int, pick: int, ability_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('change_pick', [station_id, item_row, pick, ability_id], [&'u64', &'u64', &'u32', &'u32'], &'')
+
 ## 0. kind: int [br]
 func choose_character(kind: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('choose_character', [kind], [&'u8'], &'')
+
+## 0. item_row: int [br]
+## 1. pick: int [br]
+## 2. ability_id: int [br]
+func choose_pick(item_row: int, pick: int, ability_id: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('choose_pick', [item_row, pick, ability_id], [&'u64', &'u32', &'u32'], &'')
 
 ## 0. world_id: int [br]
 ## 1. code: String [br]

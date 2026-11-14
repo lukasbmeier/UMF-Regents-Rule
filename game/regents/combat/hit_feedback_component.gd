@@ -374,7 +374,10 @@ func _on_health_changed(_current: float, _max: float, delta: float) -> void:
 		var me: SpaceTimeEntity = EntityRegistry.get_entity(EntityRegistry.local_entity_id) as SpaceTimeEntity
 		var c: CombatComponent = me.find_component(CombatComponent) as CombatComponent if me != null else null
 		if c != null:
-			c.target_what_you_hit(entity_id, _health.get_last_damage_source())
+			var source: int = _health.get_last_damage_source()
+			if entity_id == c.entity_id or source == c.entity_id:
+				c.note_fight()   # hurt, or a hit of yours landed: the bar shows the fight (B12)
+			c.target_what_you_hit(entity_id, source)
 
 
 func _on_status_changed(_from: int, to: int) -> void:

@@ -26,6 +26,7 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 | `docs/regents_rule/MINIGAMES_PREP.md` | before the minigame overhaul (2026-11-04): the four built, what each score pays, the tier ladder today, the skills to come and their families, tiers "harder but similar", the look (2D, in the world, a 3D stage), the difficulty readout; Luke's open decisions M1-M12 (revision 2, 2026-11-05) | minigame work: his answers go to `GAME.md` |
 | `docs/regents_rule/HERBALISM_HUNTING_PREP.md` | before herbalism and hunting (2026-11-07): what is settled, what is built, herbalism's and hunting's proposed shape, the first creatures, what fiber and hide make; Luke's open decisions H1-H11 | herbalism, hunting, creatures, fiber and hide work: his answers go to `GAME.md` |
 | `docs/regents_rule/FOES_PREP.md` | before new foes (2026-11-12): how a foe thinks today, LimboAI (unused here) and the trees proposed, the rules for smart but fun foes, the Bestiary models, a skeleton archer and an imp caster, what a ranged foe needs on the server; Luke's open decisions F1-F16; its §9 is the order of work | new foes, foe brains and trees: his answers go to `GAME.md` |
+| `docs/regents_rule/ABILITIES_PREP.md` | the ability rework (2026-11-13): the bar, four slots (Q, E, R the weapon's, F the chest's), item levels with mastery catch-up, a 1-99 track (picks ~5 and ~12, the ult ~20), the chest's ability; Luke's decisions B1-B15, ALL ANSWERED (`GAME.md`); its §7 the order of work (step 1, the bar: PROGRESS 72) | ability work, before armor |
 | `docs/regents_rule/ANIMATIONS.md` | the animation checklist for the overhaul: every clip needed, the best Quaternius / Mixamo / other candidates, ticked as they go in | before adding a clip |
 | `docs/regents_rule/MATERIALS.md` | materials and modular gear (2026-10-23): the generated table, slots, trait picks and ranks, gear XP, catalysts; its §10 is the order of work | materials, parts, crafting work |
 | `docs/DECISIONS.md` | the FOUNDATION's decision log (arrives with pulls) | the last ~20, plus your system's rows |
@@ -40,7 +41,8 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 - While iterating on feel (combat, minigames): the unit suite plus the one playtest or shot that shows
   the change, publish the play database, hand over for Luke's playtest; integration once it feels right.
 ```bash
-GODOT=<path> ./tests/run_tests.sh -- --only=regents         # the genre's unit suite
+GODOT=<path> ./tests/run_tests.sh                           # every unit suite and the lints (it takes no arguments)
+"$GODOT" --headless --path . res://tests/test_runner.tscn -- --only=regents,regents_bar   # the genre's unit suites alone
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh       # the whole chain by a real client at 150 ms
 GODOT=<path> ./game/regents/tests/walls_playtest.sh         # a real referee: a bot goes round a rock, through it once worked out
 GODOT=<path> ./game/regents/tests/deer_playtest.sh          # a real referee: the deer grazes, bolts from a player, calms and walks home
@@ -49,6 +51,7 @@ GODOT=<path> ./game/regents/tests/combat_playtest.sh          # a real client an
 GODOT=<path> ./game/regents/tests/archer_playtest.sh          # a real client and referee (~3 min): the archer's arrow taken, blocked, rolled, knocked away; it steps back, shoves
 GODOT=<path> ./game/regents/tests/caster_playtest.sh          # a real client and referee (~3 min): the imp's bolt taken and sidestepped, its ring stood in and left, its cast stopped
 "$GODOT" --path . res://game/regents/tests/aim_shot.tscn -- <out dir>     # windowed, no server: the aim poses against the crosshair (measured), a foe's swing trail, the shots in flight
+"$GODOT" --path . res://game/regents/ui/bar_lab.tscn -- <out dir>        # windowed, no server: the ability bar, round and square, per kit and state (F6 in the editor: the lab itself)
 GODOT=<path> ./game/regents/tests/minigame_readout.sh         # every minigame round by four simulated players (~15 s, no server)
 GODOT=<path> ./game/regents/tests/load_300.sh                # 50-300 bots on the continent (~25 min): docs/regents_rule/REFEREE_SCALING.md
 ```

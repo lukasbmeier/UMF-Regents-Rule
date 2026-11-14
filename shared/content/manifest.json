@@ -76,7 +76,7 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 32,
-			"hash": "fec93de3",
+			"hash": "08d2809b",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
@@ -100,7 +100,7 @@
 				"game/regents/content/ability/foe_wolf_hamstring.tres": "b826cc91",
 				"game/regents/content/ability/foe_wolf_lunge.tres": "d2c7d904",
 				"game/regents/content/ability/frost_ring.tres": "1beae04e",
-				"game/regents/content/ability/gale.tres": "ffdac2ae",
+				"game/regents/content/ability/gale.tres": "99dd1559",
 				"game/regents/content/ability/sparring_backswing.tres": "ff824341",
 				"game/regents/content/ability/sparring_cut.tres": "97c8d320",
 				"game/regents/content/ability/sparring_overhead.tres": "439611cd",
@@ -236,18 +236,18 @@
 		},
 		"shared/content/regents/kit.json": {
 			"count": 10,
-			"hash": "5ceb83df",
+			"hash": "8e7940b4",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/kit/axe.tres": "80f4225d",
+				"game/regents/content/kit/axe.tres": "22665d58",
 				"game/regents/content/kit/bow.tres": "98e7e64a",
 				"game/regents/content/kit/imp.tres": "eae94fac",
 				"game/regents/content/kit/skeleton_axe.tres": "4a3e16d4",
 				"game/regents/content/kit/skeleton_bow.tres": "52bb2db2",
 				"game/regents/content/kit/skeleton_sword.tres": "a76d8361",
 				"game/regents/content/kit/sparring_sword.tres": "054385f5",
-				"game/regents/content/kit/staff.tres": "4f5a0693",
-				"game/regents/content/kit/sword.tres": "6444263a",
+				"game/regents/content/kit/staff.tres": "f9278b32",
+				"game/regents/content/kit/sword.tres": "86b0ea05",
 				"game/regents/content/kit/wolf.tres": "aa1a13ea"
 			},
 			"type": "kit"
@@ -290,11 +290,11 @@
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/material/copper.tres": "18e29efa",
-				"game/regents/content/material/iron.tres": "7f798618",
-				"game/regents/content/material/oak.tres": "f3406422",
+				"game/regents/content/material/iron.tres": "7670583d",
+				"game/regents/content/material/oak.tres": "6c71420d",
 				"game/regents/content/material/plain_wood.tres": "f59bfabd",
-				"game/regents/content/material/steel.tres": "5e151bfb",
-				"game/regents/content/material/yew.tres": "2b0e6fba"
+				"game/regents/content/material/steel.tres": "13f00584",
+				"game/regents/content/material/yew.tres": "77f6dc99"
 			},
 			"type": "material"
 		},
@@ -312,18 +312,18 @@
 		},
 		"shared/content/regents/node.json": {
 			"count": 9,
-			"hash": "379e206f",
+			"hash": "a77c9e62",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/node/coal_rock.tres": "643dec49",
+				"game/regents/content/node/coal_rock.tres": "a6506af6",
 				"game/regents/content/node/copper_rock.tres": "d414ec3b",
 				"game/regents/content/node/deer_carcass.tres": "fca79801",
 				"game/regents/content/node/flax.tres": "10a6ddee",
-				"game/regents/content/node/iron_rock.tres": "8dde3de9",
-				"game/regents/content/node/oak.tres": "c4cb2746",
+				"game/regents/content/node/iron_rock.tres": "ad80e68e",
+				"game/regents/content/node/oak.tres": "dff70e2f",
 				"game/regents/content/node/tree.tres": "32ea1e7e",
-				"game/regents/content/node/wolf_carcass.tres": "2c6c34cf",
-				"game/regents/content/node/yew.tres": "bbad5f9f"
+				"game/regents/content/node/wolf_carcass.tres": "8b1e2160",
+				"game/regents/content/node/yew.tres": "5358f50a"
 			},
 			"type": "node"
 		},
@@ -352,7 +352,7 @@
 		},
 		"shared/content/regents/recipe.json": {
 			"count": 53,
-			"hash": "b237a8af",
+			"hash": "7b353e4c",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/recipe/arrow_shafts.tres": "f48adf34",
@@ -376,37 +376,37 @@
 				"game/regents/content/recipe/iron_axe.tres": "74ac6bab",
 				"game/regents/content/recipe/iron_axe_head.tres": "cfdf800c",
 				"game/regents/content/recipe/iron_bar.tres": "d14a173c",
-				"game/regents/content/recipe/iron_knife.tres": "0d68b45c",
-				"game/regents/content/recipe/iron_knife_blade.tres": "f1271d1c",
+				"game/regents/content/recipe/iron_knife.tres": "57c77397",
+				"game/regents/content/recipe/iron_knife_blade.tres": "739020a7",
 				"game/regents/content/recipe/iron_pickaxe.tres": "c3370fd3",
 				"game/regents/content/recipe/iron_pickaxe_head.tres": "e095981c",
-				"game/regents/content/recipe/iron_rivets.tres": "9718e2d9",
+				"game/regents/content/recipe/iron_rivets.tres": "7d8640a0",
 				"game/regents/content/recipe/iron_sword.tres": "b058f58f",
-				"game/regents/content/recipe/iron_sword_blade.tres": "dbcd9d89",
-				"game/regents/content/recipe/iron_trowel.tres": "74599916",
-				"game/regents/content/recipe/iron_trowel_blade.tres": "1ae8c263",
-				"game/regents/content/recipe/oak_banner_hilt.tres": "053f58d0",
-				"game/regents/content/recipe/oak_crossguard_hilt.tres": "7ec04d7c",
-				"game/regents/content/recipe/oak_handle.tres": "359a6cf5",
+				"game/regents/content/recipe/iron_sword_blade.tres": "fb333fac",
+				"game/regents/content/recipe/iron_trowel.tres": "453df669",
+				"game/regents/content/recipe/iron_trowel_blade.tres": "2d816a84",
+				"game/regents/content/recipe/oak_banner_hilt.tres": "40682769",
+				"game/regents/content/recipe/oak_crossguard_hilt.tres": "a76802ad",
+				"game/regents/content/recipe/oak_handle.tres": "aae69934",
 				"game/regents/content/recipe/soft_leather.tres": "3201e560",
-				"game/regents/content/recipe/steel_axe.tres": "a79be610",
-				"game/regents/content/recipe/steel_axe_head.tres": "9ead6087",
-				"game/regents/content/recipe/steel_bar.tres": "01c3013e",
-				"game/regents/content/recipe/steel_knife.tres": "ad884c3b",
-				"game/regents/content/recipe/steel_knife_blade.tres": "1353d078",
-				"game/regents/content/recipe/steel_pickaxe.tres": "92ab0727",
-				"game/regents/content/recipe/steel_pickaxe_head.tres": "d1bfb656",
-				"game/regents/content/recipe/steel_rivets.tres": "824a70b7",
-				"game/regents/content/recipe/steel_sword.tres": "8da6713b",
-				"game/regents/content/recipe/steel_sword_blade.tres": "8e1fe98e",
-				"game/regents/content/recipe/steel_trowel.tres": "f2ce475f",
-				"game/regents/content/recipe/steel_trowel_blade.tres": "f8136b76",
+				"game/regents/content/recipe/steel_axe.tres": "59bd9955",
+				"game/regents/content/recipe/steel_axe_head.tres": "866cf47a",
+				"game/regents/content/recipe/steel_bar.tres": "2385bb39",
+				"game/regents/content/recipe/steel_knife.tres": "e8bba378",
+				"game/regents/content/recipe/steel_knife_blade.tres": "5d05c59b",
+				"game/regents/content/recipe/steel_pickaxe.tres": "92af1aea",
+				"game/regents/content/recipe/steel_pickaxe_head.tres": "5366c693",
+				"game/regents/content/recipe/steel_rivets.tres": "c093c3fa",
+				"game/regents/content/recipe/steel_sword.tres": "1ddb26ba",
+				"game/regents/content/recipe/steel_sword_blade.tres": "3114df7b",
+				"game/regents/content/recipe/steel_trowel.tres": "86f19958",
+				"game/regents/content/recipe/steel_trowel_blade.tres": "9d5f7b71",
 				"game/regents/content/recipe/string_yew_bow.tres": "ad4238e5",
-				"game/regents/content/recipe/supple_leather.tres": "6ca855aa",
-				"game/regents/content/recipe/yew_banner_hilt.tres": "c668eb01",
+				"game/regents/content/recipe/supple_leather.tres": "2374521b",
+				"game/regents/content/recipe/yew_banner_hilt.tres": "7bba329c",
 				"game/regents/content/recipe/yew_bow.tres": "f219b430",
-				"game/regents/content/recipe/yew_crossguard_hilt.tres": "bb807e19",
-				"game/regents/content/recipe/yew_handle.tres": "170d6067",
+				"game/regents/content/recipe/yew_crossguard_hilt.tres": "581ba8fe",
+				"game/regents/content/recipe/yew_handle.tres": "6b93b9e6",
 				"game/regents/content/recipe/yew_staff.tres": "1e5b9c9a"
 			},
 			"type": "recipe"
@@ -433,35 +433,35 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "6eef2689",
+			"hash": "fd1257eb",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "2d423238"
+				"game/regents/content/rules/regents.tres": "43827154"
 			},
 			"type": "rules"
 		},
 		"shared/content/regents/skill.json": {
 			"count": 11,
-			"hash": "c5843145",
+			"hash": "f25581b0",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/skill/archery.tres": "a75b10aa",
-				"game/regents/content/skill/axemanship.tres": "c9df3486",
-				"game/regents/content/skill/crafting.tres": "c8d9df62",
-				"game/regents/content/skill/herbalism.tres": "1b8262c8",
-				"game/regents/content/skill/mining.tres": "1f6082fe",
-				"game/regents/content/skill/skinning.tres": "28a1460e",
-				"game/regents/content/skill/smelting.tres": "d67f273f",
-				"game/regents/content/skill/smithing.tres": "cec0824d",
-				"game/regents/content/skill/sorcery.tres": "39276365",
-				"game/regents/content/skill/swordsmanship.tres": "f529ff60",
-				"game/regents/content/skill/woodcutting.tres": "0c909809"
+				"game/regents/content/skill/archery.tres": "b2f8d7e5",
+				"game/regents/content/skill/axemanship.tres": "14afbd59",
+				"game/regents/content/skill/crafting.tres": "4ffef4e7",
+				"game/regents/content/skill/herbalism.tres": "c4cefc45",
+				"game/regents/content/skill/mining.tres": "66b2e0e1",
+				"game/regents/content/skill/skinning.tres": "c3fba7e7",
+				"game/regents/content/skill/smelting.tres": "49c8aed4",
+				"game/regents/content/skill/smithing.tres": "a010094e",
+				"game/regents/content/skill/sorcery.tres": "75cd687c",
+				"game/regents/content/skill/swordsmanship.tres": "260db305",
+				"game/regents/content/skill/woodcutting.tres": "43875b6e"
 			},
 			"type": "skill"
 		},
 		"shared/content/regents/spell.json": {
 			"count": 8,
-			"hash": "a842c93c",
+			"hash": "8f996ca2",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/spell/blink.tres": "9b4bb699",
@@ -470,7 +470,7 @@
 				"game/regents/content/spell/foe_cinder_ring.tres": "94d1873e",
 				"game/regents/content/spell/foe_ember.tres": "5c8a6307",
 				"game/regents/content/spell/frost_ring.tres": "33d82319",
-				"game/regents/content/spell/gale.tres": "c81e2097",
+				"game/regents/content/spell/gale.tres": "1139e8eb",
 				"game/regents/content/spell/staff_bolt.tres": "68b33581"
 			},
 			"type": "spell"

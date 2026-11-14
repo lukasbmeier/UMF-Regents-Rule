@@ -14,7 +14,8 @@ class_name CombatComponent extends SpaceTimeComponent
 ##   Ctrl       the dodge roll (the foundation's `dash` action; slow-walk moves to Alt): the dash moves you
 ##              at once, predicted here; the Dodge roll ability's Rolling status means nothing hits you
 ##   Q E R F    the kit's skills, unlocked at its mastery ranks (1, 3, 6, 9): IN STANCE only, else E
-##              works what is in front of you and Q picks at a station as before
+##              works what is in front of you and Q picks at a station as before. The keys are actions
+##              (`SLOT_ACTIONS`), rebindable; the bar at the bottom shows them (`RegentsAbilityBar`)
 ##   Tab        the next target in front of you: a ring under it, its health at the top. For reference,
 ##              not aim: a swing hits what it sweeps.
 ##   Esc        drops the target
@@ -53,7 +54,15 @@ const TABLE_KILL: StringName = &"foe_kill"
 const ACTION_DODGE: StringName = &"dash"
 const ACTION_SLOW: StringName = &"move_slow"
 const FACING: StringName = &"regents_combat"
-const SKILL_KEYS: Array[Key] = [KEY_Q, KEY_E, KEY_R, KEY_F]
+## THE BAR'S KEYS ARE ACTIONS, NOT CONSTANTS (Luke's B5, 2026-11-13: "let the player reassign ... input reassign/
+## accessibility is nice to have"): Q E R (the weapon's three) and F (the chest's) by default, each rebindable in
+## Settings' keys (`bind_keys`); the bar shows whatever each is bound to. E is also the world's key: out of stance
+## it works what is in front of you (`skill_key_is_skill`).
+const SLOT_ACTIONS: Array[StringName] = [&"regents_slot_1", &"regents_slot_2", &"regents_slot_3", &"regents_slot_4"]
+const SLOT_DEFAULTS: Array[Key] = [KEY_Q, KEY_E, KEY_R, KEY_F]
+const SLOT_LABELS: Array[String] = ["Weapon ability 1", "Weapon ability 2", "Weapon ability 3", "Chest ability"]
+## THE POTION KEY (Luke's B7, 2026-11-13: one combat potion key for everyone, G): bound now, nothing to drink yet.
+const POTION_ACTION: StringName = &"regents_potion"
 ## The dodge roll (`content/ability/dodge.tres`): everyone's, wielding or not.
 const DODGE_ID: int = 40010
 ## The Flinched, Staggered, Swinging and Drawing statuses (`content/status/`).
@@ -103,6 +112,12 @@ signal parried(attacker_id: int)
 @export var target_arc_deg: float = 120.0
 ## How long after the last swing the stance holds with no target.
 @export var stance_s: float = 5.0
+## IN A FIGHT (Luke's B12, 2026-11-13: "clear indication if in combat/stance or not"): this long after you last hit
+## something or were hurt. Shown, never judged: the server's "out of combat" (picks change out of it, B6) is its own.
+@export var fight_s: float = 8.0
+
+## When this player last hit something or was hurt (msec; `note_fight`).
+var fought_ms: int = -100000
 
 ## What this player wields: the item, its kit, its bag row (0 / null / -1: nothing).
 var weapon: ItemDef = null
@@ -222,6 +237,27 @@ static func bind_keys() -> void:
 		alt.physical_keycode = KEY_ALT
 		if not InputMap.action_has_event(ACTION_SLOW, alt):
 			InputMap.action_add_event(ACTION_SLOW, alt)
+	# The bar's keys: added once with their defaults, then the player's (Settings keeps and applies a rebinding).
+	var actions: Array[StringName] = SLOT_ACTIONS.duplicate()
+	actions.append(POTION_ACTION)
+	for i: int in actions.size():
+		if not InputMap.has_action(actions[i]):
+			InputMap.add_action(actions[i])
+			var key: InputEventKey = InputEventKey.new()
+			key.physical_keycode = SLOT_DEFAULTS[i] if i < SLOT_DEFAULTS.size() else KEY_G
+			InputMap.action_add_event(actions[i], key)
+		if Settings.entry(actions[i]).is_empty():
+			Settings.define_key(actions[i], SLOT_LABELS[i] if i < SLOT_LABELS.size() else "Potion")
+
+
+## What key `action` is bound to, as the keyboard says it ("Q"); "" for none.
+static func key_label(action: StringName) -> String:
+	if not InputMap.has_action(action):
+		return ""
+	for e: InputEvent in InputMap.action_get_events(action):
+		if e is InputEventKey or e is InputEventMouseButton:
+			return Settings.binding_label(Settings.event_to_text(e))
+	return ""
 
 
 func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> void:
@@ -260,7 +296,7 @@ func target_what_you_hit(hit_id: int, source_id: int) -> int:
 ## Whether key slot `slot` (0 Q .. 3 F) is a skill now: the kit has one there, you are in stance, and, for
 ## the key that also works what is in front of you (E), you are fighting or nothing is in front of you.
 func skill_key_is_skill(slot: int, is_interact_key: bool) -> bool:
-	if kit == null or slot < 0 or slot >= kit.skills.size() or not in_stance():
+	if kit == null or slot < 0 or slot > 3 or on_slot(slot) == null or not in_stance():
 		return false
 	if not is_interact_key or fighting():
 		return true
@@ -274,6 +310,42 @@ func in_stance() -> bool:
 	if kit == null:
 		return false
 	return target_id >= 0 or Time.get_ticks_msec() - _last_swing_ms < int(stance_s * 1000.0)
+
+
+## Whether this player is in a fight: they hit something or were hurt within `fight_s` (shown on the bar).
+func in_combat() -> bool:
+	return Time.get_ticks_msec() - fought_ms < int(fight_s * 1000.0)
+
+
+## A hit landed by this player, or on them (`HitFeedbackComponent`): the fight goes on.
+func note_fight() -> void:
+	fought_ms = Time.get_ticks_msec()
+
+
+## The bar slot (0..3) key event `k` presses, or -1.
+static func slot_of(k: InputEvent) -> int:
+	for i: int in SLOT_ACTIONS.size():
+		if InputMap.has_action(SLOT_ACTIONS[i]) and k.is_action(SLOT_ACTIONS[i]):
+			return i
+	return -1
+
+
+## Seconds until ability `a` (a spell or a swing) is ready again here (0: ready).
+func cooldown_left(a: AbilityDef) -> float:
+	if a == null:
+		return 0.0
+	if (kit != null and kit.casts() and SpellDef.by_ability(a.id) != null) or _action == null:
+		return spell_cooldown_sec(a)   # a spell's is this client's own clock; so is everything's with no body (the lab, a test)
+	return _action.cooldown_remaining_sec(a.id)
+
+
+## Its whole cooldown in seconds (a spell's counts its cast too, as `cast` does).
+func cooldown_total(a: AbilityDef) -> float:
+	if a == null:
+		return 0.0
+	var spell: SpellDef = SpellDef.by_ability(a.id)
+	var cast_ms: float = float(spell.cast_ms) * HotRules.number(&"regents.cast_time_pct") / 100.0 if spell != null and kit != null and kit.casts() else 0.0
+	return (cast_ms + float(a.cooldown_ms)) / 1000.0
 
 
 ## The step a tap now swings: the RIPOSTE (the first step) just after a parry; else the next after the last,
@@ -358,12 +430,14 @@ func press(kind: String, slot: int = 0) -> bool:
 	if kit == null:
 		return false
 	if kind == "skill":
-		if slot >= kit.skills.size():
-			refused.emit("No skill on that key yet")
+		var a: AbilityDef = on_slot(slot)
+		if a == null:
+			refused.emit("Nothing on that key yet")
 			return false
-		var sk: SkillingComponent = (entity as SpaceTimeEntity).find_component(SkillingComponent) as SkillingComponent
-		if (sk.rank_in(kit.skill) if sk != null else 1) < kit.rank_for(slot):
-			refused.emit("%s needs %s rank %d" % [kit.skills[slot].display_name, kit.skill.display_name, kit.rank_for(slot)])
+		# THE ITEM'S LEVEL AND PICKS (ABILITIES_PREP.md §7 step 2), as the server judges them (`slot_refusal`).
+		var why: String = RegentsItemLevel.slot_refusal(kit, a, item_usable(), item_picks())
+		if not why.is_empty():
+			refused.emit("%s: %s" % [a.display_name, why])
 			return false
 	if _try(kind, slot):
 		queued = {}
@@ -375,7 +449,7 @@ func press(kind: String, slot: int = 0) -> bool:
 func _try(kind: String, slot: int) -> bool:
 	var now: int = Time.get_ticks_msec()
 	if kit.casts():
-		var a: AbilityDef = kit.light[0] if kind == "light" else (kit.skills[slot] if kind == "skill" and slot < kit.skills.size() else null)
+		var a: AbilityDef = kit.light[0] if kind == "light" else (on_slot(slot) if kind == "skill" else null)
 		return a != null and may_cast(now) and cast(a)
 	match kind:
 		"light":
@@ -383,7 +457,8 @@ func _try(kind: String, slot: int) -> bool:
 			var a: AbilityDef = kit.light_at(step, role())
 			return step >= 0 and may_start(a, step, now) and swing(a, step) >= 0
 		"skill":
-			return slot < kit.skills.size() and may_start(kit.skills[slot], -1, now) and swing(kit.skills[slot]) >= 0
+			var sa: AbilityDef = on_slot(slot)
+			return sa != null and may_start(sa, -1, now) and swing(sa) >= 0
 	return false
 
 
@@ -651,7 +726,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		next_target()
 		get_viewport().set_input_as_handled()
 	elif _can_fight():
-		var slot: int = SKILL_KEYS.find(k.physical_keycode)
+		var slot: int = slot_of(k)
 		if slot >= 0 and skill_key_is_skill(slot, InputMap.has_action(&"interact") and k.is_action(&"interact")):
 			skill(slot)
 			get_viewport().set_input_as_handled()
@@ -944,8 +1019,58 @@ func role() -> RoleDef:
 	return ItemDef.role_of(weapon, weapon_data()) if weapon != null else null
 
 
+## THE ABILITY ON BAR SLOT `slot` (0 Q, 1 E, 2 R, 3 F) with the wielded weapon: its kit's layout and the item's own
+## picks (`RegentsItemLevel.bar`); null for none. Locked ones too (`RegentsItemLevel.slot_refusal` says why).
+func on_slot(slot: int) -> AbilityDef:
+	if kit == null or slot < 0 or slot > 3:
+		return null
+	return RegentsItemLevel.bar(kit, item_picks())[slot]
+
+
+## The wielded weapon's picks [first, second, ult] (its row's `"k"`).
+func item_picks() -> Array[int]:
+	return RegentsItemLevel.picks_of(weapon_data())
+
+
+## The wielded weapon's XP (its row's `"x"`).
+func item_xp() -> int:
+	return RegentsItemLevel.xp_of(weapon_data())
+
+
+## This player's mastery of the wielded kind (1 with none; `mastery_for_tests` with no body).
+func mastery() -> int:
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var sk: SkillingComponent = ent.find_component(SkillingComponent) as SkillingComponent if ent != null else null
+	if sk == null:
+		return mastery_for_tests
+	return sk.rank_in(kit.skill) if kit != null and kit.skill != null else 1
+
+
+## The wielded weapon's level as this player uses it (B2: up to their mastery).
+func item_usable() -> int:
+	return RegentsItemLevel.usable(RegentsItemLevel.level(kit, item_xp()), mastery())
+
+
+## CHOOSE pick `n` (0, 1, 2 the ult) of the weapon in bag row `row`: `ability` (the server's `choose_pick`).
+func choose_pick(row: int, n: int, ability: AbilityDef) -> ReducerRequest:
+	return SpaceTimeSync.call_reducer(&"choose_pick", [row, n, ability.id], ["u64", "u32", "u32"])
+
+
+## CHANGE pick `n` of the weapon in bag row `row` to `ability`, at workbench `station` (0: none; the week's free change
+## needs none) (the server's `change_pick`, Luke's B13).
+func change_pick(station: int, row: int, n: int, ability: AbilityDef) -> ReducerRequest:
+	return SpaceTimeSync.call_reducer(&"change_pick", [station, row, n, ability.id], ["u64", "u64", "u32", "u32"])
+
+
+## The weapon's `instance_data` and the mastery to use with no body (the bar lab, the tests).
+var weapon_data_for_tests: String = ""
+var mastery_for_tests: int = 1
+
+
 ## The wielded weapon's bag row's `instance_data` ("" for none).
 func weapon_data() -> String:
+	if not weapon_data_for_tests.is_empty():
+		return weapon_data_for_tests
 	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
 	var inv: SpaceTimeInventoryComponent = ent.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent if ent != null else null
 	if inv == null or weapon_row < 0:

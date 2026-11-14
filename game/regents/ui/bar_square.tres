@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RegentsBarStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/ui/bar_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+shape = 1
+slot_size = 56
+small_size = 40
+gap = 4
+group_gap = 16
+corner_radius = 4
+border_width = 2.0
+ring_width = 3.0
+ring_margin = 5
+slot_bg = Color(0.18, 0.15, 0.11, 0.92)
+slot_border = Color(0.32, 0.27, 0.2, 1)

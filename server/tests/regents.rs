@@ -86,9 +86,9 @@ fn the_chain_is_compiled_in() {
     assert_eq!((carcass.tool_tag, carcass.min_tool_tier, carcass.deplete_permille, carcass.rare_item), ("knife", 1, 350, 0));
     assert!(carcass.max_items == 4 && carcass.whole_round && carcass.minigame.challenge_kind() == rules::CHALLENGE_SKIN,
         "the carcass: four hides at most, skinned whole in one round of the cut line");
-    assert!(wolf_carcass.max_items == 4 && wolf_carcass.whole_round && wolf_carcass.min_rank == 2 && wolf_carcass.rare_permille == 8
+    assert!(wolf_carcass.max_items == 4 && wolf_carcass.whole_round && wolf_carcass.min_rank == 5 && wolf_carcass.rare_permille == 8
         && wolf_carcass.minigame.challenge_kind() == rules::CHALLENGE_SKIN,
-        "the wolf's carcass: Skinning 2, four pelts at most, a rare wolf fang (0.8 %), skinned whole in one round of the cut line");
+        "the wolf's carcass: Skinning 5 (the old 2 on the 1-33 track), four pelts at most, a rare wolf fang (0.8 %), skinned whole in one round of the cut line");
     assert_eq!((rules::item(wolf_carcass.yield_item).map(|i| i.name), rules::item(wolf_carcass.rare_item).map(|i| i.name)),
         (Some("Wolf pelt"), Some("Wolf fang")));
     assert!(rules::NODES.iter().filter(|n| n.name != "Deer carcass" && n.name != "Wolf carcass").all(|n| n.max_items == 0 && !n.whole_round),
@@ -103,8 +103,8 @@ fn the_chain_is_compiled_in() {
     let tan = rules::RECIPES.iter().find(|r| r.name == "Soft leather").expect("tanning");
     assert_eq!((tan.station, rules::item(tan.inputs[0].0).map(|i| i.name)), ("tanning_rack", Some("Deer hide")), "a deer hide to soft leather at the rack");
     let supple = rules::RECIPES.iter().find(|r| r.name == "Supple leather").expect("tanning a wolf pelt");
-    assert_eq!((supple.station, supple.min_rank, rules::item(supple.inputs[0].0).map(|i| i.name)), ("tanning_rack", 2, Some("Wolf pelt")),
-        "a wolf pelt to supple leather at the rack (Crafting 2)");
+    assert_eq!((supple.station, supple.min_rank, rules::item(supple.inputs[0].0).map(|i| i.name)), ("tanning_rack", 5, Some("Wolf pelt")),
+        "a wolf pelt to supple leather at the rack (Crafting 5, the old 2)");
     let wolf_kit = rules::kit_keyed(wolf.kit).expect("the wolf's kit");
     assert_eq!(wolf_kit.light, &[40027, 40028, 40029], "bite, hamstring bite, lunge");
     assert_eq!(wolf_kit.hit_of(40028).map(|h| (h.status, h.status_ms, h.push_mps)), Some((108, 3000, 0.0)), "hamstring bite slows for 3 s");
@@ -136,7 +136,7 @@ fn the_chain_is_compiled_in() {
     let iron = rules::item(axe.output).unwrap();
     assert_eq!((iron.tool_tag, iron.tool_tier, iron.tool_speed_pct), ("axe", 2, 85), "the iron axe: tier 2, 85 % of the time");
     let yew = rules::node_named("yew").unwrap();
-    assert_eq!((yew.min_tool_tier, yew.min_rank), (2, 4), "a yew needs the iron axe and woodcutting rank 4");
+    assert_eq!((yew.min_tool_tier, yew.min_rank), (2, 12), "a yew needs the iron axe and woodcutting rank 12 (the old 4)");
     // THE REACH FROM A NODE'S EDGE (Luke, 2026-11-06): each model's footprint, baked from the model, picked by entity.
     let iron_rock = rules::node_named("Iron rock").unwrap();
     assert_eq!(iron_rock.radii_cm.len(), 2, "the iron rock has two looks, each with its footprint");
@@ -209,12 +209,18 @@ fn crafting_pays_for_the_work_in_its_inputs_and_wears_stale_with_repetition() {
 #[test]
 fn ranks_come_from_the_curve_and_speed_from_tool_quality_and_rank() {
     let wc = rules::SKILLS.iter().find(|s| s.key == "woodcutting").unwrap();
-    assert_eq!((rules::rank_of(wc, 0), rules::rank_of(wc, 59), rules::rank_of(wc, 60), rules::rank_of(wc, 280)), (1, 1, 2, 4));
+    // THE 1-33 TRACK (Luke's S1 + S2, 2026-11-13): the old ranks' XP lands on their new levels (2 -> 5, 4 -> 12, 10 -> 33).
+    assert_eq!((rules::rank_of(wc, 0), rules::rank_of(wc, 14), rules::rank_of(wc, 15), rules::rank_of(wc, 60), rules::rank_of(wc, 280), rules::rank_of(wc, 2400)),
+        (1, 1, 2, 5, 12, 33));
+    for s in rules::SKILLS {
+        assert_eq!(rules::max_rank(s), rules::RANK_TOP, "{}: its curve ends at the top rank", s.name);
+    }
     assert_eq!(rules::rank_of(wc, 1_000_000), wc.xp_to_rank.len() as u32 + 1, "the cap is the curve's length");
     assert_eq!(rules::speed_pct(100, 0, 1), 100, "a copper tool, no quality, rank 1: as authored");
     assert_eq!(rules::speed_pct(85, 0, 1), 85, "the iron axe");
     assert_eq!(rules::speed_pct(85, 1000, 1), 76, "a perfect iron axe: a tenth more off (85 x 0.9)");
-    assert_eq!(rules::speed_pct(100, 0, 4), 91, "rank 4: 9 % off");
+    assert_eq!(rules::speed_pct(100, 0, 12), 90, "rank 12 of 33 (the old rank 4): 9.28 % off");
+    assert_eq!(rules::speed_pct(100, 0, rules::RANK_TOP), 73, "the top rank: 27 % off");
     assert_eq!(rules::speed_pct(100, 0, 99), 73, "the rank's share stops at 27 %");
     assert_eq!(rules::afk_interval_ms(4000, 85), 3400);
     assert_eq!(rules::quality_of(&rules::quality_data(734)), Some(734), "a quality written is read back");
@@ -649,7 +655,9 @@ fn weapons_fight_with_their_kit_and_hits_scale_with_the_weapon_and_mastery() {
     assert_eq!(rules::hit_damage(10.0, 100, 0, 1), 10.0, "as authored: no quality, rank 1");
     assert_eq!(rules::hit_damage(10.0, 70, 0, 1), 7.0, "a copper axe at 70 %");
     assert!((rules::hit_damage(10.0, 100, 1000, 1) - 12.0).abs() < 1e-4, "a perfect weapon: a fifth more");
-    assert!((rules::hit_damage(10.0, 100, 0, 4) - 10.9).abs() < 1e-4, "rank 4: 9 % more");
+    assert!((rules::hit_damage(10.0, 100, 0, 12) - 10.928).abs() < 1e-4, "rank 12 of 33 (the old rank 4): 9.28 % more");
+    assert!((rules::hit_damage(10.0, 100, 0, 2) - 10.084).abs() < 1e-4, "rank 2: 0.84 % more (27 % over 32 steps)");
+    assert!((rules::hit_damage(10.0, 100, 0, rules::RANK_TOP) - 12.7).abs() < 1e-4, "the top rank: 27 % more");
     assert!((rules::hit_damage(10.0, 100, 0, 99) - 12.7).abs() < 1e-4, "mastery's share stops at 27 %");
     assert!(rules::combo_allows(0, -1, 0, 900) && rules::combo_allows(0, 2, 5000, 900), "the first swing always");
     assert!(rules::combo_allows(1, 0, 400, 900) && rules::combo_allows(2, 1, 900, 900), "the next step, inside the window");
@@ -862,7 +870,7 @@ fn the_staff_casts_its_spells_from_mana() {
     let kinds: Vec<i64> = staff.skills.iter().map(|(a, _)| rules::spell_of(*a).expect("each skill a spell").kind).collect();
     assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_BLINK, rules::SPELL_CONE], "Fireball, Frost Ring, Blink, Gale");
     let ranks: Vec<u32> = staff.skills.iter().map(|(_, r)| *r).collect();
-    assert_eq!(ranks, vec![1, 3, 6, 9]);
+    assert_eq!(ranks, vec![1, 8, 19, 29], "the old 1, 3, 6, 9 on the 1-33 track");
     let fireball = rules::spell_of(staff.skills[0].0).unwrap();
     assert!(fireball.cost == 25.0 && fireball.splash_m == 3.0 && fireball.burn_ms == 3000 && rules::may_walk_casting(fireball),
         "Fireball: 25 mana, a 3 m splash, a 3 s burn, a cast you may walk through");
@@ -1538,4 +1546,111 @@ fn the_imp_casts_a_slow_bolt_and_a_ring_that_is_only_left() {
     }
     assert!(!rules::is_foe_cast(kit.light[0]) && !kit.is_finisher(rules::KitSlot::Light(0)));
     assert!(rules::ITEMS.iter().all(|i| i.weapon_kit != f.kit), "no weapon gives a player the imp's kit");
+}
+
+/// ITEM LEVELS AND PICKS (Luke's B1-B6, B15, 2026-11-13; ABILITIES_PREP.md §7 step 2): an item's XP and picks in its own
+/// row's data, its level on its kind's curve, used up to its holder's mastery, catch-up, the slot gate, the picks.
+#[test]
+fn item_levels_and_picks() {
+    // The data: read, set, kept by a refit, every other field as it was.
+    let made = rules::made_data(650, &[40016, 40012], &[40001]);
+    assert_eq!((rules::item_xp_of(&made), rules::picks_of(&made)), (0, [0, 0, 0]), "a new item: no XP, no picks");
+    let x = rules::with_item_xp(&made, 280);
+    assert_eq!(rules::item_xp_of(&x), 280);
+    assert_eq!((rules::quality_of(&x), rules::parts_of_row(&x), rules::traits_of_row(&x)), (Some(650), vec![40016, 40012], vec![40001]), "the rest kept");
+    let x2 = rules::with_item_xp(&x, 300);
+    assert_eq!((rules::item_xp_of(&x2), x2.matches("\"x\":").count()), (300, 1), "set again: replaced, never twice");
+    let k = rules::with_picks(&x2, [40014, 0, 0]);
+    assert_eq!((rules::picks_of(&k), rules::item_xp_of(&k)), ([40014, 0, 0], 300));
+    assert_eq!(rules::picks_of(&rules::with_picks(&k, [40014, 0, 40099])), [40014, 0, 40099], "replaced in place");
+    assert_eq!(rules::with_item_xp("", 15), "{\"x\":15}", "no data yet");
+    assert_eq!(rules::with_item_xp("{}", 15), "{\"x\":15}");
+    assert_eq!(rules::with_item_xp("{\"q\":700}", 15), "{\"q\":700,\"x\":15}");
+    let refit = rules::keep_level(&k, &rules::made_data(650, &[40017, 40012], &[]));
+    assert_eq!((rules::item_xp_of(&refit), rules::picks_of(&refit), rules::parts_of_row(&refit)), (300, [40014, 0, 0], vec![40017, 40012]),
+        "a refit keeps the level and the picks, its parts new (B15)");
+    assert_eq!(rules::keep_level(&made, &made), made, "NEGATIVE: an item with neither gains neither");
+    // The level: the kind's curve; used up to the holder's mastery (T4); catch-up below it.
+    let sorcery = rules::SKILLS.iter().find(|s| s.key == "sorcery").unwrap();
+    assert_eq!((rules::item_level(sorcery, 0), rules::item_level(sorcery, 60), rules::item_level(sorcery, 280)), (1, 5, 12));
+    assert_eq!((rules::usable_level(20, 12), rules::usable_level(5, 12), rules::usable_level(5, 0)), (12, 5, 1), "a 20 used by a 12 is a 12");
+    assert_eq!(rules::item_xp_gain(10, 3, 12, 5.0), 50, "below your mastery: five times");
+    assert_eq!(rules::item_xp_gain(10, 12, 12, 5.0), 10, "at it: the same");
+    assert_eq!(rules::item_xp_gain(10, 20, 12, 5.0), 10, "above it: the same");
+    assert_eq!(rules::item_xp_gain(10, 3, 12, 0.5), 10, "NEGATIVE: catch-up never slows an item");
+    // The staff: Fireball the base, Frost Ring and Gale the options, Blink on F; Q at 1, picks at 5 and 12, the ult at 20.
+    let staff = rules::kit_keyed("staff").unwrap();
+    let (fireball, frost, blink, gale) = (40013, 40014, 40015, 40016);
+    assert_eq!(staff.skills.iter().map(|(a, _)| *a).collect::<Vec<_>>(), vec![fireball, frost, blink, gale]);
+    assert_eq!((staff.slot_of(fireball), staff.slot_of(frost), staff.slot_of(blink), staff.slot_of(gale), staff.slot_of(40012)),
+        (Some(rules::SLOT_BASE), Some(rules::SLOT_OPTION), Some(rules::SLOT_F), Some(rules::SLOT_OPTION), None));
+    assert_eq!(staff.unlock_levels, [1, 5, 12, 20]);
+    assert!(staff.slot_refusal(fireball, 1, [0; 3]).is_none() && staff.slot_refusal(blink, 1, [0; 3]).is_none(), "Fireball and Blink from level 1");
+    assert!(staff.slot_refusal(frost, 33, [0; 3]).is_some_and(|w| w.contains("not chosen")), "NEGATIVE: Frost Ring unpicked, at any level");
+    assert!(staff.slot_refusal(frost, 4, [frost, 0, 0]).is_some_and(|w| w.contains("level 5")), "NEGATIVE: picked, but the weapon counts as 4");
+    assert!(staff.slot_refusal(frost, 5, [frost, 0, 0]).is_none() && staff.slot_refusal(gale, 5, [frost, 0, 0]).is_some(), "Frost Ring picked: it, not Gale");
+    // The picks.
+    assert!(staff.pick_refusal(0, frost, 4, [0; 3]).is_some_and(|w| w.contains("level 5")), "NEGATIVE: the first pick opens at 5");
+    assert!(staff.pick_refusal(0, frost, 5, [0; 3]).is_none() && staff.pick_refusal(0, gale, 5, [0; 3]).is_none(), "at 5: Frost Ring or Gale");
+    assert!(staff.pick_refusal(0, fireball, 5, [0; 3]).is_some() && staff.pick_refusal(0, blink, 5, [0; 3]).is_some(), "NEGATIVE: not the base, not F");
+    assert!(staff.pick_refusal(0, gale, 5, [frost, 0, 0]).is_some_and(|w| w.contains("change it instead")), "NEGATIVE: a chosen pick is changed, not chosen again (B13)");
+    assert!(staff.pick_refusal(0, frost, 5, [frost, 0, 0]).is_some_and(|w| w.contains("already")));
+    assert!(staff.pick_refusal(1, gale, 11, [frost, 0, 0]).is_some_and(|w| w.contains("level 12")), "NEGATIVE: the second pick opens at 12");
+    assert!(staff.pick_refusal(1, gale, 12, [frost, 0, 0]).is_some_and(|w| w.contains("E holds one")), "NEGATIVE: E holds one ability");
+    // R (Luke, 2026-11-14: "fix the R ability not being assigned"): no ult of its own yet, so its last pick takes the
+    // option E did not.
+    assert!(!staff.has_ults(), "the staff has no ult of its own yet");
+    assert!(staff.pick_refusal(2, gale, 20, [frost, 0, 0]).is_none(), "level 20, Frost Ring on E: Gale for R");
+    assert!(staff.pick_refusal(2, gale, 19, [frost, 0, 0]).is_some_and(|w| w.contains("level 20")), "NEGATIVE: the last pick opens at 20");
+    assert!(staff.pick_refusal(2, frost, 20, [frost, 0, 0]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: Frost Ring is on E already");
+    assert!(staff.pick_refusal(0, gale, 5, [0, 0, gale]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: nor E what R has");
+    assert!(staff.pick_refusal(2, fireball, 20, [frost, 0, 0]).is_some(), "NEGATIVE: not the base");
+    assert!(staff.slot_refusal(gale, 20, [frost, 0, gale]).is_none() && staff.slot_refusal(gale, 19, [frost, 0, gale]).is_some_and(|w| w.contains("level 20")),
+        "Gale on R from 20, and NEGATIVE: counting as 19, shut");
+    assert!(staff.pick_refusal(3, frost, 33, [0; 3]).is_some(), "NEGATIVE: no pick 3");
+    // A foe's kit (no slots) gates nothing; the sword's one skill is its base.
+    let imp = rules::kit_keyed("imp").unwrap();
+    assert!(imp.slots.is_empty() && imp.skills.iter().all(|(a, _)| imp.slot_refusal(*a, 1, [0; 3]).is_none()), "a foe's kit: no gate");
+    let sword = rules::kit_keyed("sword").unwrap();
+    assert!(sword.slot_of(sword.skills[0].0) == Some(rules::SLOT_BASE) && sword.slot_refusal(sword.skills[0].0, 1, [0; 3]).is_none(), "Lunge from level 1");
+}
+
+/// CHANGING A PICK (Luke's B13, 2026-11-13): a free change a week from level 20; past it, the head's material at a
+/// workbench, doubling with each paid change and stepping back a doubling a week without one.
+#[test]
+fn changing_a_pick() {
+    let day = 86_400u32;
+    let t0 = 1_800_000_000u32;
+    // The item's own record.
+    let d = rules::with_field(&rules::with_field(&rules::with_field("{\"q\":650,\"x\":980,\"k\":[40014,0,0]}", "f", &t0.to_string()), "e", "2"), "c", &t0.to_string());
+    assert_eq!((rules::last_free_change(&d), rules::change_escalation(&d)), (t0, (2, t0)));
+    assert_eq!((rules::item_xp_of(&d), rules::picks_of(&d)), (980, [40014, 0, 0]), "its level and picks kept beside");
+    assert_eq!((rules::last_free_change("{}"), rules::change_escalation("{}")), (0, (0, 0)), "never changed: nothing recorded");
+    // The free change: from level 20, once a week.
+    assert!(rules::free_change_open(20, 20, 0, t0, 7.0), "level 20, never used: free");
+    assert!(!rules::free_change_open(19, 20, 0, t0, 7.0), "NEGATIVE: no free change below 20");
+    assert!(!rules::free_change_open(25, 20, t0, t0 + 6 * day, 7.0), "NEGATIVE: used six days ago: not yet");
+    assert!(rules::free_change_open(25, 20, t0, t0 + 7 * day, 7.0), "a week on: free again");
+    // The price: doubling, stepping back a doubling a week, capped.
+    assert_eq!((rules::change_qty(2, 0, 5), rules::change_qty(2, 1, 5), rules::change_qty(2, 2, 5), rules::change_qty(2, 9, 5)), (2, 4, 8, 64),
+        "2, 4, 8 ... 64 at the cap of five doublings");
+    assert_eq!(rules::escalation_now(3, t0, t0 + 6 * day, 7.0), 3, "within the week: as it was");
+    assert_eq!(rules::escalation_now(3, t0, t0 + 7 * day, 7.0), 2, "a week without one: one doubling forgiven");
+    assert_eq!(rules::escalation_now(3, t0, t0 + 30 * day, 7.0), 0, "four weeks: back to the base");
+    assert_eq!(rules::escalation_now(3, t0, t0 + 30 * day, 0.0), 0, "halving off (0 days): it never climbs");
+    // The head's material: what a refit charges too.
+    let named = |n: &str| rules::ITEMS.iter().find(|i| i.name == n).map(|i| i.id).unwrap();
+    assert_eq!(rules::head_material(named("Iron sword")), Some(named("Iron bar")), "an iron sword: iron bars");
+    assert_eq!(rules::head_material(named("Steel axe")), Some(named("Steel bar")), "a steel axe: steel bars");
+    assert!(rules::head_material(named("Yew staff")).is_some(), "a staff: its stave's own");
+    assert_eq!(rules::head_material(named("Iron bar")).is_some(), true, "a bar is made of ore (not a weapon, but a recipe's)");
+    // What may change: a chosen pick, to another option it could take.
+    let staff = rules::kit_keyed("staff").unwrap();
+    let (fireball, frost, gale) = (40013, 40014, 40016);
+    assert!(staff.change_refusal(0, gale, 5, [frost, 0, 0]).is_none(), "Frost Ring to Gale: allowed");
+    assert!(staff.change_refusal(0, gale, 5, [0, 0, 0]).is_some_and(|w| w.contains("nothing chosen")), "NEGATIVE: nothing chosen there: choose, no change");
+    assert!(staff.change_refusal(0, frost, 5, [frost, 0, 0]).is_some_and(|w| w.contains("already")), "NEGATIVE: the same again");
+    assert!(staff.change_refusal(0, fireball, 5, [frost, 0, 0]).is_some(), "NEGATIVE: to the base: no");
+    assert!(staff.change_refusal(0, gale, 4, [frost, 0, 0]).is_some_and(|w| w.contains("level 5")), "NEGATIVE: counting as 4, the pick is shut");
+    assert!(staff.change_refusal(3, gale, 33, [frost, 0, 0]).is_some(), "NEGATIVE: no pick 3");
 }

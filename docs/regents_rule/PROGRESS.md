@@ -3943,3 +3943,278 @@ to parry/block hit 2 it just doesnt work... after that you can rerun it and make
     a player offline, nothing loosed. NOT RUN YET: the test database had no foes left to replay it on.
 
 **Left**: the two rewritten archer checks, at the next integration run; the poise leg.
+
+## Step 72: THE ABILITY BAR (`ABILITIES_PREP.md` §7 step 1) (2026-11-13)
+
+Luke's B5, B7, B11, B12 (`GAME.md`, "THE ABILITY REWORK BEFORE ARMOR"): a bar low in the middle in place of the text
+line, round AND square built to compare, keys that are settings, a clear sign of stance and of a fight. Today's
+abilities only (no new content).
+
+**Built**
+- `game/regents/ui/ability_bar.gd` (`RegentsAbilityBar`): health above; the weapon (its picture; hover: what the old
+  line said, its string by its moves' names, the guard, the roll, Tab, and its mastery toward the next unlock), the
+  roll (Ctrl, its cooldown), THE WEAPON'S THREE (Q E R) inside a thin RING that fills toward the kit's next unlock rank,
+  the CHEST'S (F), the POTION key (G) apart, the staff's mana or the bow's arrows and chance to hit beside. A slot is
+  ready, cooling (a sweep round, a wipe square, its seconds on it), unpaid (the staff's mana, tinted), locked (dim, a
+  padlock, "rank 3"), or empty (faint; hover says what goes there: more with mastering the weapon, the chest's own
+  ability, potions). A slot flashes as it fires. Out of stance the four FADE (E is the world's key then); in stance
+  their edges LIGHT gold; in a FIGHT (you hit or were hurt in the last `CombatComponent.fight_s`, 8 s) a red glow
+  breathes under the row. No role or mechanic names anywhere. `model_for` reads the game into a Dictionary;
+  `show_model` draws it (the lab and the tests feed it their own).
+- `ability_slot.gd` (`RegentsAbilitySlot`): one slot, drawn. Until an ability has an icon (`icons/ability_<id>.png`,
+  the content's own icon path, wins) it shows a MARK of how it lands: a bolt, a circle on the ground, a blink, a fan,
+  a lunge, a cut; the roll a turning arrow (letters collided with the keys: Frost Ring's "F" sat on E beside F).
+- `bar_style.gd` (`RegentsBarStyle`) and its two looks, `bar_round.tres` (Albion) and `bar_square.tres` (boxes): sizes,
+  gaps, colors, the ring, the out-of-stance alpha, all in the Inspector. Settings, Game: "Ability bar" (Round/Square)
+  switches the game's at once.
+- THE LAB, `game/regents/ui/bar_lab.tscn` (F6, no server): both bars fed one made-up player through the real
+  `model_for`: buttons for the weapon (sword, axe, bow, staff, none), out of stance / in stance / in a fight, low mana;
+  a slider for mastery (locks, the ring); Q E R F fire a slot; "Use round/square in the game" sets the setting. With
+  `-- <out dir>` it saves nine shots (sword, staff, bow x the three states) and quits.
+- KEYS ARE ACTIONS (B5): `CombatComponent.SLOT_ACTIONS` (`regents_slot_1..4`, Q E R F) and `POTION_ACTION`
+  (`regents_potion`, G), added by `bind_keys` and defined with `Settings.define_key` (Controls: "Weapon ability 1-3",
+  "Chest ability", "Potion"): rebindable now; the panel notes E is "also Interact", which it is by design.
+  `slot_of(event)` replaces the old key constant; `key_label(action)` is what the bar prints.
+- `CombatComponent`: `in_combat()`, `note_fight()` (called by `HitFeedbackComponent` on a hit by or on the local
+  player), `cooldown_left(a)` and `cooldown_total(a)` for a spell or a swing (with no action component, this client's
+  clock: the lab and the tests).
+- The tutorial already teaches the string, the guard, the parry, the riposte and the roll; the weapon's tooltip holds
+  the rest of what the line said.
+- The HUD (`regents_hud.gd`): the text line (`_skillbar`, `skill_bar()`) and the bottom-left health/mana/roll bars are
+  gone; the bar replaces them. The E prompt, the work bar and the foundation's hold prompt moved up above it.
+  `make_bar` and `string_names` are public (the bar uses them).
+
+**How to play it**: wield a weapon (I). The bar sits at the bottom: Tab a target or swing and its slots light; hit a
+dummy and it glows red; Q fires Lunge and you see it cool. Settings, Game, "Ability bar" switches round and square.
+Compare them still: open `game/regents/ui/bar_lab.tscn`, F6.
+
+**Tested**
+- NEW suite `game/regents/tests/suites/regents_bar.gd` (`--only=regents_bar`: **58 passed, 0 failed**): both looks and
+  the setting; the keys (Q E R F G by default, each a Settings key; Q is slot 1, E slot 2 and still Interact; REBOUND
+  to 1, 1 fires slot 1 and Q does not, NEGATIVE, then back); the model for nothing wielded, the sword (Lunge ready, its
+  words, E R F empty and saying what goes there; no stance, then stance on a target, a fight on a hit, NEGATIVE: out of
+  it after `fight_s`; cooling 4 of 6 s, then ready), the staff (locks with what opens them, mana it cannot pay, all four
+  ready mastered), the bow (arrows); the ring (empty, half, starts over at an unlock, full); no "finisher", "tank",
+  "support", "dps", "stance" or "role" on it; the drawn bar (tooltips, health, the row, a flash on its slot only, the
+  fade out of stance and back, the square rebuild, the game's bar following the setting); the lab opens, Q cools on both.
+  MUTATION: the lock rule and the fight clock broken, 6 checks failed; restored.
+- The `regents` suite's old text-line check now reads the weapon's tooltip. Whole unit run **3836 passed, 0 failed**.
+- `combat_playtest.sh` (its five reads of the old line now read the bar's model): FIRST RUN 72/47, the first chop never
+  swung. FOUND: the slots STOPPED the mouse (for their tooltips); the playtest's clicks land at the window's corner and
+  a headless window is 64 px, so the bar covered them; in play a free cursor over the bar would have eaten a swing the
+  same way. FIXED: the slots PASS the mouse (still showing their words on hover). NEW check in `regents_bar`: a left
+  click over the bar reaches `_unhandled_input`; NEGATIVE: with the slots stopping it, it does not. Then **119 passed, 0 failed**, and its server checks (not chained; no parried foe swinging while staggered).
+- The lab's nine shots, looked at (round and square, sword, staff and bow, each state).
+
+**Left for later**
+- Icons for the abilities (a designer drops `game/regents/icons/ability_<id>.png`); until then the marks.
+- The staff keeps its four spells on Q E R F until step 5 moves Blink to cloth chests; its locks are still mastery
+  1/3/6/9 until step 2's item levels.
+- G does nothing yet (no potions). A context E in stance (loot, revive) is Luke's "later".
+- The fight sign is the client's (hit or hurt in 8 s); the server's own "out of combat" (for changing picks) comes
+  with step 2.
+
+## Step 73: EVERY SKILL 1-33; GALE BUFFED; THE SWORD'S POOLS DRAFTED (`ABILITIES_PREP.md` §8-9) (2026-11-13)
+
+Luke's answers to S1-S4 (`GAME.md`): "move everything from 1-10 to 1-33 (a third of 99) for testing. There will be
+wipes between now and the demo for public so we can finalize it then"; "draft a short sheet for me to rewrite"; "yes on
+s4, but gale needs buffed largely as it does 8 dmg and nothing else right now on a long cooldown".
+
+**Built**
+- THE 1-33 TRACK, every skill (weapon masteries, gathering, making). Old rank r became level round(1 + (r-1) x 32/9):
+  1, 5, 8, 12, 15, 19, 22, 26, 29, 33, the XP to each unchanged, the curve straight between them (2 at 15 XP, 5 at
+  60, 12 at 280, 33 at 2400): the same pace, finer steps; a character's XP keeps its place (60 XP was rank 2, is 5).
+  - Content: the 11 skills' `xp_to_rank` (32 steps); node and recipe `min_rank` (2 -> 5, 3 -> 8, 4 -> 12); materials'
+    `rank`; the kits' `skill_ranks` 1/3/6/9 -> 1/8/19/29 (the default too). Generated by a one-off script from the
+    mapping; the content's own numbers from now on.
+  - Server (`genre/regents/mod.rs`): `RANK_TOP` 33 and `mastery_bp(rank)`: mastery's share an even step a rank, 27 % at
+    the top (2700 basis points; the old 3 % a rank to 27 % at 10). `hit_damage` and `speed_pct` use it (rank 12, the
+    old 4: 9.28 %, was 9 %). A native test fails any skill whose curve does not end at `RANK_TOP`.
+  - Client twins: `SkillDef.RANK_TOP`, `RANK_TOP_BONUS_BP`, `mastery_bp` (the foe bench's damage reads it).
+  - Hot rules: rank eases a round 1.2 % a rank for up to 10 ranks (was 4 % for 3: still 12 % at most).
+  - The tester page's rank box reads the curve (1-33 already); the bar lab's slider runs to 33.
+- GALE, BUFFED LARGELY: 6 -> 18 damage, 20 -> 12 s, 45 -> 60 degrees, push 9 -> 12 m/s, and two new effects: it SLOWS
+  what it hurts 2.5 s (its spell's `status`, which a cone never applied before), and it WEARS POISE AS A LAST HIT
+  (`wear_poise(.., true, ..)`): a full or worn bar breaks and the foe is STAGGERED (`regents.stagger_ms`), as the
+  string's last hit does (the server's cone branch, `spell_lands`). Its tooltip says so ("It can knock a foe off its
+  feet"). Cost unchanged (35 mana).
+- THE SWORD'S POOLS, a draft for Luke to rewrite: `ABILITIES_PREP.md` §9 (per handle: a Q, three E options, upgrades,
+  an ult; every motion from UAL1/UAL2; a metal's twist; what the server needs for them).
+- THE BAR HIDES during a minigame round (it would sit over a round played with the mouse).
+
+**Tested**
+- `cargo test --test regents` **56/0** (the curve's points, `RANK_TOP` for every skill, `mastery_bp` at 2, 12 and the
+  top, the gates' new numbers); wasm check clean.
+- Unit `regents` + `regents_bar` **1460/0**: the curve, every skill ending at 33, `mastery_bp`, the gates.
+- `skilling_playtest.sh` **118/0 + 8/0** (first run: the skinning drag failed, the bar over the round in a 64 px
+  headless window; fixed by hiding it during a round).
+- `combat_playtest.sh`: first run 118/3, its damage expectations assumed rank 1 and 3 % a rank (the axe reaches rank 2
+  at 15 XP inside the test now); they read `SkillDef.mastery_bp`, and the role check the rank just before the last hit (the first two raise it now). Rerun **119/0** with its server negatives. PLAY DATABASE PUBLISHED (not fresh): characters keep their XP, read on the new curve.
+- The integration hooks' rank numbers and Gale's leg updated (rank 5/8/12 refusals, Skinning 5's 96 % speed, the
+  tester's 1-33 bounds; Gale's 22.9 at the top rank, slowed, its poise worn): NOT RUN (once per step: with step 2).
+
+**Left for later**: the real 99 curve and its hours, before the public demo (a wipe). Luke's rewrite of §9.
+
+## Step 74: ITEM LEVELS AND PICKS (`ABILITIES_PREP.md` §7 step 2, first slice) (2026-11-13)
+
+Luke: "Start step 2". His decisions it builds (`GAME.md`): B1 (two layers, CATCH-UP 5x, a hot rule), B2 (T4: a holder
+uses an item only up to their mastery), B4 (Q at 1, picks at ~5 and ~12, the ult at ~20), B5 (three slots from the
+weapon, F the chest's), B6 (picks out of a fight; changing one costs, B13), B15 (one XP track, a refit keeps the level),
+S4 (the staff: Q Fireball, its first pick Frost Ring or Gale, Blink on F).
+
+**Built**
+- THE ITEM'S OWN DATA: its XP (`"x"`) and picks (`"k"`: [first, second, ult], ability ids) in its bag row's
+  `instance_data`, beside its quality, parts and traits. They go wherever the item goes (dropped, picked up, traded:
+  T4) with NO new table; a REFIT keeps them (`keep_level`, B15). Server `genre/regents/mod.rs`: `item_xp_of`,
+  `picks_of`, `with_field`, `with_item_xp`, `with_picks`, `keep_level`, `item_level` (the kind's mastery curve, 1-33),
+  `usable_level` (min of the item's level and the holder's mastery), `item_xp_gain` (catch-up).
+- THE KIT'S LAYOUT, content (`KitDef`, "Item levels" group): `skill_slots`, one per skill (0 the base on Q, 1 a pick
+  option for E, 2 an ult option for R, 3 F), and `unlock_levels` [1, 5, 12, 20] (Q and F, the first pick, the second,
+  the ult). Validated (a slot per skill, one base and one F at most, four levels never falling) and baked
+  (`KitSeed::slots`, `unlock_levels`). The staff: Fireball 0, Frost Ring 1, Blink 3, Gale 1. Sword and axe: their one
+  skill the base. Foes' kits: none (they gate nothing). The old mastery gate (`skill_ranks`) no longer gates a player.
+- THE SERVER (`game/regents.rs`):
+  - `train`: every combat XP payment (a swing's hit, a spell's, a missile's) pays the holder's mastery AND the wielded
+    weapon when it trains that skill, `regents.item_catch_up` (5, NEW hot rule) times as much while the weapon's level
+    is below the holder's mastery. A level reached is logged.
+  - `need_slot` (cast_spell and every ability use): a player's skill only if its slot is open at the weapon's usable
+    level, an option or ult only as one of its picks (`KitSeed::slot_refusal`): "not chosen: choose it at one of the
+    weapon's picks", "opens at the weapon's level 5 (it counts as 3 for you)".
+  - `choose_pick(item_row, pick, ability_id)` (NEW reducer, rate limit `pick`): your bag's weapon, OUT OF A FIGHT (not
+    hurt within `regents.regen_delay_s`), the pick open at its usable level, an option of its kit's (an ult for the
+    last), E holding one ability; a NEWLY OPENED pick is free; CHANGING one is refused for now ("changing a pick comes
+    later (at a workbench, at a cost)": B13 not built).
+  - `admin_set_item_level(entity_id, item_row, level)` (NEW, admin only): for the suites, and the Tester page later.
+- THE CLIENT: `RegentsItemLevel` (`game/regents/combat/item_level.gd`), the twin of every rule above, plus `bar` (what
+  is on Q E R F with these picks), `open_picks`, `progress`. `CombatComponent.on_slot`, `item_xp`, `item_picks`,
+  `mastery`, `item_usable`, `choose_pick`: Q E R F press the item's abilities, refused here first as the server would.
+  THE BAR: a locked E says "lvl 5" and what it offers; an open pick shows "+", pulsing, "choose in the bag"; the ring
+  fills toward the weapon's next unlock; the weapon's tooltip says its level and what it counts as for you. THE BAG:
+  a weapon's "Level 7, counting as 5 for you (Sorcery 5). Next unlock at level 12 (40 %)", its picks, and a button per
+  option for each open pick. THE LAB: one slider for the weapon's level and mastery, "Take a pick".
+
+**How to play it**: wield a yew staff: Fireball on Q, Blink on F, E locked ("lvl 5"). Fight: the staff levels with you
+(five times as fast while below your Sorcery). At level 5 E pulses "+": open the bag (I), the staff, choose Frost Ring
+or Gale. A second staff can take the other. A sword or axe: Q from level 1, nothing to pick yet.
+
+**Tested**
+- `cargo test` all green; `--test regents` **57/0** with NEW `item_levels_and_picks` (the data read and set, kept by a
+  refit, NEGATIVE an item with neither gains neither; levels, T4, catch-up and NEGATIVE it never slows; the staff's
+  layout; the slot gate and its NEGATIVES (unpicked at any level, picked but counting as 4); the picks and their
+  NEGATIVES (below 5, the base, F, changing, the second at 11, E holding one, no ult, no pick 3); a foe's kit gates
+  nothing). Wasm check clean.
+- Unit: whole run **3864/0**; `regents_bar` **82/0**: the twin mirrors the Rust cases; the bar for a new staff, level 5
+  (choose), NEGATIVE level 5 in a Sorcery-3 hand (locked, "counting as 3"), Frost Ring picked, Gale instead; the press
+  refused here first (nothing on E; NEGATIVE picked on a level-1 staff); the bag's chooser at 5 and NEGATIVE at 4;
+  layouts with two bases or a slot short refused.
+- Integration hooks: the staff leg now picks (refusals: unpicked, below 5, NEGATIVE B2 a level-5 staff at Sorcery 1,
+  Blink, pick 3, changing, the second at 12, E holding one), measures CATCH-UP exactly (the staff's XP rose five times
+  Sorcery's), and casts Gale from a SECOND staff that picked it; a stranger's `admin_set_item_level` refused.
+  First run **1596 passed, 6 failed** (step 71's five known failures, the archer's two and the dummy's poise
+  leg, all passed): five were the new leg's own (Sorcery raised to 12 for catch-up made the Bolt and Fireball hit
+  with mastery's share; the XP read by a JSON parse of the SQL's escaped string), one the axe's round at 83 % (on
+  1-33 a few logs make Woodcutting 3, whose share shades it). FIXED in the hooks: Woodcutting held at 1 for that round
+  (its XP back after); Sorcery back to 1 after the picks, so the staff is ABOVE it there (NEGATIVE of catch-up: it
+  earned what you did, no more) and the 5x is measured at Sorcery 33 around Frost Ring; the XP read by a regex.
+  Rerun **1653 passed, 0 failed**: the whole suite green, step 71's five old failures included.
+- `skilling_playtest.sh` **118/0 + 8/0**; `combat_playtest.sh` **119/0**.
+- The lab's shots, looked at (the staff: Fireball cooling, E locked at 5, Blink on F).
+- PLAY DATABASE PUBLISHED with `--codegen` (two new reducers; no table changed).
+
+**Left for later**
+- The sword's per-handle pools (Luke's rewrite of §9), the axe's and bow's (§7 step 4), ults, UPGRADES (the second
+  pick has nothing to take until there are).
+- CHANGING A PICK (B13: one free change a week from level 20, then the head's materials at a workbench, escalating).
+- The Tester page's control for an item's level (the reducer is there).
+- The server's "out of a fight" is "not hurt lately"; dealing damage does not count yet.
+
+## Step 75: CHANGING A PICK (Luke's B13) (2026-11-13)
+
+Luke: "Build B13 next". His B13 (`GAME.md`): "one free change per item a week; then the head's materials at a workbench,
+escalating per change and halving weekly; a newly opened pick free; the price PER PICK CHANGED; no free changes below
+20; all hot rules". Read here as: the free change anywhere (out of a fight); the paid ones at a workbench; "halving
+weekly" as one doubling forgiven per week without a paid change (the doubling's exponent steps back).
+
+**Built**
+- `change_pick(station_id, item_row, pick, ability_id)` (NEW reducer, rate limit `pick`): a CHOSEN pick to another
+  option it could take (`KitSeed::change_refusal`: what a newly opened pick may take, the old choice set aside); out of
+  a fight. FREE when the weapon's own level is at least `regents.respec_free_level` (20) and its last free change is
+  `regents.respec_free_days` (7) old or never, anywhere. Otherwise at a WORKBENCH within reach (`station_id`), paying
+  `regents.respec_bars` (2) of the weapon's HEAD'S MATERIAL (`head_material`: the refit's metal; an iron sword's Iron
+  bar, a staff's Yew logs), doubled for each paid change before (`regents.respec_max_steps` 5 at most), one doubling
+  forgiven each `regents.respec_halve_days` (7) without one. One call, one pick: changing three costs three times one.
+- The item keeps its record in its own data: `"f"` (last free change, seconds), `"e"` (doublings), `"c"` (last paid,
+  seconds), beside `"x"` and `"k"`; `with_field` writes them, every other field kept.
+- `choose_pick` on a chosen pick now says "chosen already: change it instead (...)".
+- Client: `RegentsItemLevel.change_refusal`, `head_material`, `change_price` (twins); `CombatComponent.change_pick`;
+  THE BAG: under a weapon's picks, "Change it (free this week):" or "Change it (2 Yew logs, at a workbench):" and a
+  button per option; the workbench in front of you is sent (`workbench_in_front`), else 0.
+- Five NEW hot rules (`regents.respec_free_level`, `_free_days`, `_bars`, `_halve_days`, `_max_steps`).
+
+**How to play it**: a staff with Frost Ring picked: open the bag (I), the staff: "Change it (2 Yew logs, at a
+workbench): Gale". Stand at the workbench (E on it, or just in front), press Gale. Again: 4. At level 20 the first
+change each week is free, anywhere.
+
+**Tested**
+- `cargo test --test regents` **58/0**, NEW `changing_a_pick`: the record read and written beside the level and
+  picks; the free change from 20, NEGATIVE at 19, NEGATIVE six days after one, free again after seven; the price 2, 4,
+  8 to the cap 64; a doubling forgiven a week, four weeks back to the base, none climbing with halving off; the head's
+  material (iron sword: Iron bar; steel axe: Steel bar; a staff); what may change and its NEGATIVES (nothing chosen,
+  the same, the base, the pick shut, no pick 3). Wasm check clean.
+- Unit whole run **3875/0**; `regents_bar` **93/0**: the twin on the same cases; the bag's change row priced at a
+  workbench at level 5, free at 20, NEGATIVE none with nothing chosen.
+- Integration, NEW leg (the real server): NEGATIVE no workbench at level 12; NEGATIVE no yew logs (nothing changed);
+  Frost Ring to Gale for 2; NEGATIVE the same again; back for 4 (doubled); at level 20 the free change away from the
+  workbench, nothing paid; NEGATIVE the next is paid, at a workbench; paid 8. Whole suite **1583 passed, 0 failed** (the
+  total moves run to run: several checks are loops over rows the run makes; the test database's log shows the leg's
+  four changes: 2, 4, free, 8).
+- PLAY DATABASE PUBLISHED with `--codegen` (108 reducers).
+
+**Left for later**: MARKS joining the cost (B13: when marks exist); the bar's E slot does not say a change is
+possible (the bag does).
+
+## Step 76: R ASSIGNED; THE WEAPON'S ABILITIES WINDOW; THE UI TO-DOS (2026-11-14)
+
+Luke, after playing 74-75: "right now mage seems to only be able to take an e ability (gale or frost ring) even though I
+am level 33. Also we need a separate ui from the bag and possibly new UI anyway to match the feel of our ability bag ...
+for now basic weapon ability ui once you click a weapon in your bar or your bag will work. I think that the mage
+abilites are in an okay spot. ill flesh out the axe, sword and bow with all of their role abilites for next time. For now
+just fix the R ability not being assigned and the new UI". His UI direction is in `GAME.md` ("THE UI, A REBUILD SOON
+AFTER ARMOR"), with four to-dos.
+
+**Why R was empty**: as built in 74, R took only an ULT, and no weapon has one yet; E holds one ability, so a staff could
+only ever fill E.
+
+**Built**
+- R: UNTIL A WEAPON HAS AN ULT OF ITS OWN, ITS LAST PICK (level 20, R) TAKES THE OPTION E DID NOT (server `has_ults`,
+  `pick_refusal`, `slot_refusal`; the twin's `has_ults`, `choices_for`, `bar`). A choice already at another pick is
+  refused ("it is on the weapon already, at another pick"). A staff at 20: Fireball, Frost Ring, Gale, Blink.
+- THE WEAPON'S ABILITIES WINDOW (`game/regents/ui/abilities_window.gd`, `RegentsAbilitiesWindow`), in the bar's look
+  (the setting's round or square): the weapon's level against your mastery and a bar to its next unlock; its four slots
+  drawn as the bar draws them, each named; a card per option for each pick open ("Choose for R (level 20)"); for each
+  pick chosen, "Change E from Frost Ring (free this week):" and a card per option. Hover a card for what it does.
+- IT OPENS by clicking the weapon on the bar (with the cursor free, say the bag open: `RegentsAbilityBar.weapon_pressed`;
+  only that slot keeps a click, the rest still pass it to the game) or "Abilities" on a weapon in the bag. The bag's
+  inline chooser is gone; the bag shows the weapon's level and "A pick is open!".
+
+**How to play it**: a level-20 staff with Frost Ring: the bar's R pulses "+"; open the bag (I), click the staff on the
+bar (or the staff in the bag, then Abilities): "Choose for R (level 20)": Gale.
+
+**Tested**
+- `cargo test --test regents` **58/0** (R: no ults; Gale for R at 20; NEGATIVES at 19, Frost Ring again, E taking R's,
+  the base; Gale on R open from 20 and shut at 19).
+- Unit whole run **3884/0**; `regents_bar` **102/0**: the twin's R cases; a new staff's R locked "lvl 20"; the window
+  opened from the bag's button on the staff, its four slots (Fireball on Q, E waiting), the pick at 5, NEGATIVE none at
+  Sorcery 4, R offering Gale (not Frost Ring) at 20, both taken shown on E and R; a click on the bar's weapon heard; the
+  change rows priced (now in the window).
+- Integration: the staff leg's R (NEGATIVE at 12; NEGATIVE Frost Ring, NEGATIVE Fireball; Gale at 20, on the item;
+  later NEGATIVE Gale on R of a staff below 20): whole suite **1589 passed, 0 failed** (the test database's log shows the
+  R pick). `combat_playtest.sh`: first run 67/50, every failure after a skeleton that never noticed the fighter (step 68's
+  noticing: the foe faced away; nothing this step touches; the clicks before it passed); rerun **119/0**. A FLAKE to
+  watch: the suite stands where the foe should see it, not where it faces now (`regents-genre.md`, NOTICING).
+- The window's shot, looked at (a level-20 staff: its slots, R to choose, a free change): it was 1030 px wide at first
+  (the slot names took `UiKit.note`'s paragraph width); plain labels now, 485 px.
+- PLAY DATABASE PUBLISHED (no new reducer).
+
+**Left for later**: Luke's role abilities for the axe, sword and bow (he writes them next); the UI rebuild (`GAME.md`'s
+to-dos, soon after armor; resizing windows is template work).

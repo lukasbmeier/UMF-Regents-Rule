@@ -11,6 +11,10 @@ const COLUMNS: int = 6
 
 var inventory: SpaceTimeInventoryComponent = null
 var combat: CombatComponent = null
+## Its holder's skills (their mastery of a weapon's kind, for its level as they use it).
+var skilling: SkillingComponent = null
+## A weapon's abilities window (the HUD's), opened from a weapon here.
+var abilities: RegentsAbilitiesWindow = null
 ## The stack picked (its row id), or -1.
 var picked_row: int = -1
 var _grid: GridContainer = null
@@ -117,6 +121,8 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 			for a: AbilityDef in (kit.string_for(role) + kit.skills if kit.has_roles() else kit.abilities()):
 				moves.append(a.display_name)
 		_detail.add_child(UiKit.note("A weapon: the %s kit. %s" % [it.weapon_kit, ", ".join(moves)]))
+		if kit != null and not kit.skill_slots.is_empty():
+			_level_lines(st, kit)
 		if role != null:
 			var line := HBoxContainer.new()
 			line.name = "RoleLine"
@@ -153,6 +159,27 @@ func _fill_detail(stacks: Array[SpaceTimeInventoryComponent.Stack]) -> void:
 		var qty: int = st.qty
 		d.pressed.connect(func() -> void: inventory.request_drop(row, qty))
 		buttons.add_child(d)
+
+
+## THE WEAPON'S LEVEL (B11: against your mastery, here, not on the bar) and the way to its abilities: its own window
+## (`RegentsAbilitiesWindow`, Luke 2026-11-14), where its picks are chosen and changed.
+func _level_lines(st: SpaceTimeInventoryComponent.Stack, kit: KitDef) -> void:
+	var mastery: int = skilling.rank_in(kit.skill) if skilling != null and kit.skill != null else 1
+	var p: Dictionary = RegentsItemLevel.progress(kit, RegentsItemLevel.xp_of(st.instance_data), mastery)
+	var words: String = "Level %d" % int(p["level"])
+	if int(p["usable"]) < int(p["level"]):
+		words += ", counting as %d for you (%s %d)" % [int(p["usable"]), kit.skill.display_name, mastery]
+	var open: int = RegentsItemLevel.open_picks(kit, int(p["usable"]), RegentsItemLevel.picks_of(st.instance_data)).size()
+	if open > 0:
+		words += ".  A pick is open!"
+	var level_line: Label = UiKit.line(words, &"warn" if open > 0 else &"accent")
+	level_line.name = "Level"
+	_detail.add_child(level_line)
+	if abilities != null:
+		var b := UiKit.button("Abilities", "Abilities_%d" % st.id)
+		var item_row: int = st.id
+		b.pressed.connect(func() -> void: abilities.show_row(item_row))
+		_detail.add_child(b)
 
 
 ## A weapon's role in words, for its tooltip: its last hit by name, what its handle does ("Its last hit: Pommel

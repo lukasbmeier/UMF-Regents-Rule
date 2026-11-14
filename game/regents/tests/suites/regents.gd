@@ -54,6 +54,139 @@ func run() -> void:
 	_run_combat_pass()
 	await _run_crosshair()
 	await _run_shot_stops()
+	await _run_cinema_lab()
+
+
+func _run_cinema_lab() -> void:
+	# Proof-of-concept cinematic parser, VO resolver, 4 dialog presenters, flashbacks, trailer, and director.
+	var parsed: Dictionary = CinemaDialogue.parse(CinemaDialogue.FRONTIER_SCRIPT)
+	_check(parsed.has("start") and parsed.has("start_hub") and parsed.has("flashback_prompt"),
+		"cinema: frontier script sections parsed")
+
+	var dlg: CinemaDialogue = CinemaDialogue.new()
+	dlg.load_script(CinemaDialogue.FRONTIER_SCRIPT)
+	dlg.start("start")
+	_check(str(dlg.active_line.get("speaker", "")) == "Drillmaster" and str(dlg.active_line.get("line_id", "")) == "drill_01",
+		"cinema: first line speaker and VO id")
+	var first_tags: Dictionary = dlg.active_line.get("tags", {}) as Dictionary
+	_check(str(first_tags.get("cam", "")) == "wide_camp" and str(first_tags.get("pose", "")) == "locomotion.idle",
+		"cinema: inline cam and pose tags parsed")
+	var vo: AudioStream = CinemaDialogue.resolve_voice(dlg.active_line)
+	_check(vo is AudioStreamWAV and (vo as AudioStreamWAV).data.size() > 0,
+		"cinema: VO resolver yields non-empty AudioStreamWAV fallback")
+	dlg.state["asked_writ"] = true
+	_check(not dlg.eval_condition("not asked_writ") and dlg.eval_condition("asked_writ"),
+		"cinema: choice condition evaluator")
+
+	var lab_scene: PackedScene = load("res://game/regents/cinema/cinema_lab.tscn") as PackedScene
+	_check(lab_scene != null, "cinema: cinema_lab.tscn loads")
+	if lab_scene == null:
+		return
+	var lab: CinemaLab = lab_scene.instantiate() as CinemaLab
+	_check(lab != null, "cinema: cinema_lab instantiates CinemaLab")
+	add_child(lab)
+	await get_tree().process_frame
+
+	_check(lab.dialogue != null and lab.balloon != null, "cinema: lab wires dialogue and balloon")
+
+	# 1. All four dialog visual styles switch cleanly.
+	lab.set_dialog_style(CinemaBalloon.Style.OSRS_BOX)
+	_check(lab.balloon.current_style == CinemaBalloon.Style.OSRS_BOX
+		and lab.balloon._osrs_panel.visible
+		and not lab.balloon._bubble_root.visible
+		and not lab.balloon._plain_box.visible
+		and not lab.balloon._card_panel.visible,
+		"cinema: OSRS_BOX presenter active")
+	_check(lab.balloon._bust_mannequin != null and lab.balloon._bust_mannequin.definition != null,
+		"cinema: OSRS 3D bust mannequin loaded")
+	_check(lab.balloon._bust_mannequin.rotation.y > 2.5,
+		"cinema: OSRS 3D bust faces +Z portrait camera")
+	lab.balloon._process(1.0)
+	_check(is_zero_approx(lab.balloon._bust_gesture_timer),
+		"cinema: OSRS 3D bust returns to calm idle after opening gesture")
+
+	var dm_fwd: Vector3 = -lab._drillmaster.global_transform.basis.z
+	var to_adv: Vector3 = (lab._adventurer.global_position - lab._drillmaster.global_position).normalized()
+	_check(dm_fwd.dot(to_adv) > 0.5,
+		"cinema: Drillmaster -Z forward faces Adventurer")
+	_check(lab._drillmaster._tree != null and lab._drillmaster._tree.tree_root is AnimationNodeBlendTree,
+		"cinema: world actors use full AnimationTreeBuilder graph for non-looping one-shots")
+
+	lab.set_dialog_style(CinemaBalloon.Style.SPEECH_BUBBLE)
+	_check(lab.balloon._bubble_root.visible and not lab.balloon._osrs_panel.visible,
+		"cinema: SPEECH_BUBBLE presenter active")
+
+	lab.set_dialog_style(CinemaBalloon.Style.PLAIN_SUBTITLE)
+	_check(lab.balloon._plain_box.visible and not lab.balloon._bubble_root.visible,
+		"cinema: PLAIN_SUBTITLE presenter active")
+
+	lab.set_dialog_style(CinemaBalloon.Style.REGENTS_CARD)
+	_check(lab.balloon._card_panel.visible and not lab.balloon._plain_box.visible,
+		"cinema: REGENTS_CARD presenter active")
+
+	# 2. Branching hub choices + flag gating.
+	lab.set_part(CinemaLab.Part.DIALOG)
+	var safety: int = 0
+	while lab.dialogue.active_choices.is_empty() and safety < 8:
+		lab.dialogue.advance()
+		safety += 1
+	_check(lab.dialogue.active_choices.size() == 4, "cinema: hub presents 4 initial choices")
+	lab.dialogue.choose(0)
+	safety = 0
+	while lab.dialogue.active_choices.is_empty() and safety < 8:
+		lab.dialogue.advance()
+		safety += 1
+	_check(bool(lab.dialogue.state.get("asked_writ", false)) and lab.dialogue.active_choices.size() == 3,
+		"cinema: asked_writ removes Writ branch on return to hub")
+
+	# 3. Flashback modes (In-Place Echo and Isolated 3D Stage) + decision inside flashback.
+	lab.launch_flashback_demo(CinemaLab.FlashbackMode.ECHO)
+	_check(lab.active_part == CinemaLab.Part.FLASHBACK
+		and lab.active_flashback == CinemaLab.FlashbackMode.ECHO
+		and lab._echo_root.visible and not lab._present_root.visible and lab._memory_grade.visible,
+		"cinema: In-Place Memory Echo swaps to echo cast + memory shader")
+	var archer_rig: Dictionary = lab._actor_rigs.get(lab._echo_archer, {}) as Dictionary
+	var archer_sword: MeshInstance3D = lab._echo_archer.skeleton.find_child("Skeleton_Sword", true, false) as MeshInstance3D
+	_check(archer_sword != null and not archer_sword.visible and archer_rig.get("held", null) is HeldItem,
+		"cinema: skeleton archer hides sword mesh and equips HeldItem bow")
+
+	lab.launch_flashback_demo(CinemaLab.FlashbackMode.STAGE)
+	_check(lab.active_flashback == CinemaLab.FlashbackMode.STAGE and lab._stage_container.visible,
+		"cinema: Isolated 3D Stage shows diorama SubViewport")
+
+	lab.dialogue.advance()
+	_check(lab.dialogue.active_choices.size() == 2, "cinema: flashback presents tactical choice")
+	lab.dialogue.choose(0)
+	_check(str(lab.dialogue.state.get("memory_deed", "")) == "shield_wall",
+		"cinema: flashback choice records memory_deed")
+	lab.dialogue.advance()
+	_check(lab.active_flashback == CinemaLab.FlashbackMode.NONE and lab._present_root.visible,
+		"cinema: return_present ends flashback and restores frontier cast")
+
+	# 4. Trailer slow-mo + Director free-cam dolly rail.
+	lab.start_trailer()
+	_check(lab.active_part == CinemaLab.Part.TRAILER and lab.trailer_playing and lab._tr_anvil != null,
+		"cinema: trailer sequencer starts with forge anvil and directed shots")
+	for _step: int in range(4):
+		lab._process(1.0)
+	_check(Engine.time_scale < 0.5 and lab._trailer_cue >= 9, "cinema: trailer shot 2 engages slow motion")
+
+	lab.start_director()
+	_check(lab.director_active and not lab.trailer_playing and is_equal_approx(Engine.time_scale, 1.0),
+		"cinema: director resets trailer and restores normal time scale")
+	lab.add_dolly_keyframe()
+	lab._camera.global_position += Vector3(2.0, 0.5, -1.5)
+	lab.add_dolly_keyframe()
+	_check(lab._dolly_curve.point_count == 2, "cinema: director records Curve3D dolly keyframes")
+	lab.play_dolly()
+	lab._process(0.1)
+	lab.clear_dolly()
+	_check(lab._dolly_curve.point_count == 0, "cinema: director clears dolly curve")
+
+	lab.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(is_equal_approx(Engine.time_scale, 1.0), "cinema: Engine.time_scale clean on teardown")
 
 
 ## THE CONTINENT (PROGRESS step 23): the generated level is baked as level 21, streamed, with the glade's
@@ -193,8 +326,8 @@ func _run_combat() -> void:
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var axe: KitDef = KitDef.by_key(&"axe")
 	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
-	_check(sword.light.size() == 3 and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 3,
-		"the sword: a string of three, Lunge on Q at rank 1 (E would be 3)")
+	_check(sword.light.size() == 3 and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 8,
+		"the sword: a string of three, Lunge on Q at rank 1 (E would be 8, the old 3)")
 	# THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the last step, a little heavier and slower each.
 	_check(sword.is_finisher(sword.light[2]) and not sword.is_finisher(sword.light[1]) and axe.light.size() == 2 and axe.is_finisher(axe.light[1]),
 		"the finisher is the string's last step: the sword's third, the axe's second")
@@ -250,11 +383,13 @@ func _run_combat() -> void:
 	c.target_id = 7
 	_check(c.in_stance(), "a target picked: in stance (Q E R F are skills)")
 	c.weapon = iron_sword
-	var bar: String = RegentsHud.skill_bar(c, null)
+	var bar: String = RegentsAbilityBar.moves_words(c, null)
 	# The string by its moves' names, the last the plain grip's (no row in a bag: the plain role); never "finisher".
-	_check(bar.contains("Iron sword") and bar.contains("LMB Slash - Slash (second) - Piercing thrust") and bar.contains("Q Lunge")
-		and bar.contains("RMB tap parry, hold for a light guard") and not bar.contains("hold LMB") and not bar.to_lower().contains("finisher"),
-		"the skill bar: %s" % bar)
+	# The text line became the ability bar (step 72): its words are the weapon's tooltip (the regents_bar suite).
+	_check(bar.contains("Iron sword") and bar.contains("Left click: Slash - Slash (second) - Piercing thrust")
+		and bar.contains("Right click: tap to parry, hold for a light guard") and not bar.contains("Hold left click") and not bar.to_lower().contains("finisher"),
+		"the weapon's moves: %s" % bar.replace("
+", " / "))
 	c.free()
 	CombatComponent.bind_keys()
 	var ctrl_dodges: bool = false
@@ -2013,8 +2148,9 @@ func _run_foe_bench() -> void:
 	bench.item = warrior
 	await get_tree().process_frame
 	# The server's rule, mirrored: native tests hold the Rust; these the same numbers here.
-	_check(is_equal_approx(FoeWorkbench.hit_damage(11.0, 70, 0, 1), 7.7) and is_equal_approx(FoeWorkbench.hit_damage(10.0, 100, 1000, 10), 10.0 * 1.2 * 1.27),
-		"its damage rule is the server's: a chop at 70 %% is 7.7; quality and rank 10 add a fifth and 27 %%")
+	_check(is_equal_approx(FoeWorkbench.hit_damage(11.0, 70, 0, 1), 7.7) and is_equal_approx(FoeWorkbench.hit_damage(10.0, 100, 1000, SkillDef.RANK_TOP), 10.0 * 1.2 * 1.27)
+		and is_equal_approx(FoeWorkbench.hit_damage(10.0, 100, 0, 12), 10.928),
+		"its damage rule is the server's: a chop at 70 %% is 7.7; quality and the top rank add a fifth and 27 %%; rank 12 9.28 %%")
 	var sheet: String = await bench.run_named_test(&"sheet")
 	var r: Dictionary = FoeWorkbench.rhythm(warrior)
 	_check(sheet.contains("120 health") and int(bench.last_measure["swings"]) == warrior.kit.light.size() and float(bench.last_measure["dps"]) > 0.0,
@@ -2442,8 +2578,8 @@ func _run_roles() -> void:
 	_check(RegentsRoleBadge.does_line(iron_sword, tank).contains("pommel bash") and RegentsRoleBadge.does_line(iron_sword, tank).contains("a full guard")
 		and RegentsRoleBadge.does_line(iron_sword, support).contains("rallying cut") and RegentsRoleBadge.does_line(iron_axe, tank) == "",
 		"the crossguard says its pommel bash and full guard, the banner its rallying cut; an axe says nothing yet")
-	_check(RegentsHud._string_names(sword, tank) == "Slash - Slash (second) - Pommel bash" and RegentsHud._string_names(sword, null) == "Slash - Slash (second) - Piercing thrust",
-		"the key line names the string's moves, the last the handle's: %s" % RegentsHud._string_names(sword, tank))
+	_check(RegentsHud.string_names(sword, tank) == "Slash - Slash (second) - Pommel bash" and RegentsHud.string_names(sword, null) == "Slash - Slash (second) - Piercing thrust",
+		"the key line names the string's moves, the last the handle's: %s" % RegentsHud.string_names(sword, tank))
 	# THE CRAFT WINDOW: the iron sword's handle row, badges and a line; the axe's, neither.
 	var sk := SkillingComponent.new()
 	var inv := SpaceTimeInventoryComponent.new()
@@ -2941,8 +3077,16 @@ func _run_content() -> void:
 	_check(keys == [&"woodcutting", &"mining", &"smelting", &"smithing", &"crafting", &"swordsmanship", &"axemanship", &"archery", &"sorcery", &"herbalism", &"skinning"],
 		"seven working skills (herbalism, 2026-11-07; skinning, 2026-11-09) and four weapon masteries: %s" % str(keys))
 	var wc: SkillDef = SkillDef.by_key(&"woodcutting")
-	_check(wc.rank_of(0) == 1 and wc.rank_of(59) == 1 and wc.rank_of(60) == 2 and wc.rank_of(280) == 4 and wc.progress(100) == Vector2i(40, 90),
-		"ranks come from the curve: rank 2 at 60 XP, 4 at 280; 100 XP is 40 of rank 3's 90")
+	# THE 1-33 TRACK (Luke's S1 + S2, 2026-11-13): the old ranks' XP lands on their new levels (2 -> 5, 4 -> 12, 10 -> 33).
+	_check(wc.rank_of(0) == 1 and wc.rank_of(14) == 1 and wc.rank_of(15) == 2 and wc.rank_of(60) == 5 and wc.rank_of(280) == 12
+		and wc.rank_of(2400) == SkillDef.RANK_TOP and wc.progress(100) == Vector2i(10, 30),
+		"ranks come from the curve: rank 2 at 15 XP, 5 at 60 (the old 2), 12 at 280 (the old 4), 33 at 2400; 100 XP is 10 of rank 6's 30")
+	var tops: bool = true
+	for sd: SkillDef in SkillDef.all():
+		tops = tops and sd.xp_to_rank.size() + 1 == SkillDef.RANK_TOP
+	_check(tops, "every skill's curve ends at rank %d (the server's RANK_TOP)" % SkillDef.RANK_TOP)
+	_check(SkillDef.mastery_bp(1) == 0 and SkillDef.mastery_bp(2) == 84 and SkillDef.mastery_bp(12) == 928 and SkillDef.mastery_bp(SkillDef.RANK_TOP) == 2700
+		and SkillDef.mastery_bp(99) == 2700, "mastery's share: nothing at 1, 0.84 %% a rank, 27 %% at the top and never more (the server's mastery_bp)")
 	var names: Array[String] = []
 	for n: NodeDef in NodeDef.all_by_tier():
 		names.append(n.display_name)
@@ -2956,12 +3100,12 @@ func _run_content() -> void:
 		"the deer's carcass: skinned with a knife (Skinning), the cut line its round, up to four hides (about %.2f AFK), skinned whole in a round, the deer's kill leaves it, a footprint of %d cm"
 			% [carcass.expected_items(), carcass.radii_cm()[0]])
 	var wolf_carcass: NodeDef = NodeDef.all_by_tier()[8]
-	_check(wolf_carcass.tool_tag == &"knife" and wolf_carcass.tier == 2 and wolf_carcass.min_rank == 2 and wolf_carcass.minigame is SkinParams
+	_check(wolf_carcass.tool_tag == &"knife" and wolf_carcass.tier == 2 and wolf_carcass.min_rank == 5 and wolf_carcass.minigame is SkinParams
 		and wolf_carcass.yield_item.display_name == "Wolf pelt" and wolf_carcass.rare_item != null and wolf_carcass.rare_item.display_name == "Wolf fang"
 		and wolf_carcass.rare_permille == 8 and wolf_carcass.max_items == 4 and wolf_carcass.whole_round
 		and FoeDef.by_kind(107).carcass == wolf_carcass and wolf_carcass.models.size() == 1 and wolf_carcass.radii_cm()[0] > 30
 		and SkinMinigame.node_of(wolf_carcass.minigame as SkinParams) == wolf_carcass,
-		"the wolf's carcass: tier 2 at rank 2, gives Wolf pelt (up to 4, whole_round) and a rare Wolf fang (0.8 %%), its own stage model")
+		"the wolf's carcass: tier 2 at rank 5 (the old 2), gives Wolf pelt (up to 4, whole_round) and a rare Wolf fang (0.8 %%), its own stage model")
 	var no_cap: NodeDef = carcass.duplicate() as NodeDef
 	no_cap.max_items = 0
 	var no_round: NodeDef = carcass.duplicate() as NodeDef
@@ -2990,7 +3134,7 @@ func _run_content() -> void:
 				"%s is a harder round than the tier below" % n.display_name)
 		prev = t
 	var yew: NodeDef = NodeDef.by_id(40003)
-	_check(yew.min_tool_tier == 2 and yew.min_rank == 4, "a yew needs a tier 2 axe and woodcutting rank 4")
+	_check(yew.min_tool_tier == 2 and yew.min_rank == 12, "a yew needs a tier 2 axe and woodcutting rank 12 (the old 4)")
 	# The chain, by what each recipe takes and makes.
 	var made: Dictionary[String, Array] = {}
 	for r: RecipeDef in RecipeDef.all():
@@ -3152,15 +3296,15 @@ func _run_material_table() -> void:
 	for rr: RecipeDef in RecipeDef.all():
 		if rr.output == MaterialTable.cell(steel, MaterialTable.patterns()[1]):
 			steel_head = rr
-	_check(steel_head.from_table and steel_head.inputs[0] == steel_bar and steel_head.min_rank == 3, "the table's steel axe head takes that bar (at smithing rank 3)")
+	_check(steel_head.from_table and steel_head.inputs[0] == steel_bar and steel_head.min_rank == 8, "the table's steel axe head takes that bar (at smithing rank 8, the old 3)")
 	steel_bar.by_hand = false
 	_check(MaterialTable.problems(steel).any(func(p: String) -> bool: return p.contains("Steel has no raw form")),
 		"unticked, the steel bar would be the table's, which cannot make it from no ore: said")
 	steel_bar.by_hand = true
 	var coal_rock: NodeDef = NodeDef.by_id(40006)
-	_check(coal_rock.display_name == "Coal rock" and coal_rock.tier == 3 and coal_rock.min_tool_tier == 2 and coal_rock.min_rank == 3
+	_check(coal_rock.display_name == "Coal rock" and coal_rock.tier == 3 and coal_rock.min_tool_tier == 2 and coal_rock.min_rank == 8
 		and coal_rock.yield_item == ItemDef.by_id(40024) and ItemDef.by_id(40024).display_name == "Coal",
-		"the coal rock: mining tier 3, an iron pick (tier 2) and mining rank 3, yielding coal")
+		"the coal rock: mining tier 3, an iron pick (tier 2) and mining rank 8 (the old 3), yielding coal")
 	var iron_pick: ItemDef = MaterialTable.cell(iron, MaterialTable.patterns()[7])
 	_check(iron_pick.display_name == "Iron pickaxe" and iron_pick.tool_tier >= coal_rock.min_tool_tier and starter_pick.tool_tier < coal_rock.min_tool_tier,
 		"the iron pickaxe works coal; the starter's copper one does not")

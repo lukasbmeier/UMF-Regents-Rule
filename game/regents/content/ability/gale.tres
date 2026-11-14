@@ -4,14 +4,14 @@
 
 [resource]
 script = ExtResource("1_ability")
-cooldown_ms = 20000
+cooldown_ms = 12000
 range_m = 8.0
 wind_up_ms = 100
-damage = 6.0
+damage = 18.0
 animation = &"ability.40016"
 key = &"regents.combat"
 judged = false
 lunges = false
 id = 40016
 display_name = "Gale"
-designer_notes = "THE STAFF (owner, 2026-10-20): a spell's damage, cooldown (its own: no global cooldown) and range. How it lands is its SpellDef (content/spell/)."
+designer_notes = "GALE, BUFFED (Luke, 2026-11-13: \"gale needs buffed largely as it does 8 dmg and nothing else right now on a long cooldown\"): 6 -> 18 damage, 20 -> 12 s; its spell slows and wears poise as a last hit. THE STAFF (owner, 2026-10-20): a spell's damage, cooldown (its own: no global cooldown) and range. How it lands is its SpellDef (content/spell/)."

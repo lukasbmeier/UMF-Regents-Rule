@@ -418,6 +418,11 @@ pub struct KitSeed {
     pub roles: &'static [RoleFinisher],
     /// What its abilities do when they land unblocked (`KitHit`). Empty: damage only.
     pub hits: &'static [KitHitSeed],
+    /// ITEM LEVELS (ABILITIES_PREP.md §7 step 2): each skill's bar slot, in `skills`' order (`SLOT_BASE`, `SLOT_OPTION`,
+    /// `SLOT_ULT`, `SLOT_F`). Empty: every skill a base (a foe's kit).
+    pub slots: &'static [u32],
+    /// The item level each unlock opens at: Q and F, the first pick, the second pick, the ult (Luke's B4: 1, 5, 12, 20).
+    pub unlock_levels: [u32; 4],
 }
 
 /// A SPELL (`SpellDef`, owner 2026-10-20): how a casting kit's ability lands.
@@ -813,11 +818,23 @@ pub fn kit_of_ability(ability_id: u32) -> Option<(&'static KitSeed, KitSlot)> {
     None
 }
 
+/// THE TOP RANK OF EVERY SKILL (Luke's S1 + S2, 2026-11-13: "move everything from 1-10 to 1-33 (a third of 99) for
+/// testing"; finalized before the public demo, with a wipe). The content's curves must end here (`server/tests`).
+pub const RANK_TOP: u32 = 33;
+/// What mastery adds at the top rank, in basis points (27 %: the old 3 % a rank over ranks 2-10).
+pub const RANK_TOP_BONUS_BP: u32 = 2700;
+
+/// Mastery's share at `rank`, in basis points: an even step a rank past the first, `RANK_TOP_BONUS_BP` at
+/// `RANK_TOP` and never more (rank 12 of 33, the old rank 4: 928, about the old 9 %).
+pub fn mastery_bp(rank: u32) -> u32 {
+    (rank.saturating_sub(1) * RANK_TOP_BONUS_BP / (RANK_TOP - 1)).min(RANK_TOP_BONUS_BP)
+}
+
 /// A hit's damage (owner, 2026-10-19): the ability's, times the weapon's `weapon_damage_pct`, its
-/// quality adding up to a fifth more, and 3 % a mastery rank past the first (at most 27 %).
+/// quality adding up to a fifth more, and mastery's share (`mastery_bp`: at most 27 %, at the top rank).
 pub fn hit_damage(ability_damage: f32, weapon_damage_pct: u32, quality_pm: u32, rank: u32) -> f32 {
     let quality = 1.0 + quality_pm.min(1000) as f32 / 5000.0;
-    let mastery = 1.0 + (3 * rank.saturating_sub(1)).min(27) as f32 / 100.0;
+    let mastery = 1.0 + mastery_bp(rank) as f32 / 10_000.0;
     ability_damage * weapon_damage_pct as f32 / 100.0 * quality * mastery
 }
 
@@ -1165,12 +1182,12 @@ pub fn xp_for_rank(s: &SkillSeed, rank: u32) -> Option<u32> {
 }
 
 /// How long work takes, in percent of the base: the tool's speed, up to a tenth off for its quality
-/// (thousandths), and 3 % off per rank above the first (at most 27 %). Never under 10 %.
+/// (thousandths), and mastery's share off (`mastery_bp`: at most 27 %, at the top rank). Never under 10 %.
 pub fn speed_pct(tool_speed_pct: u32, quality_pm: u32, rank: u32) -> u32 {
     let q = quality_pm.min(1000) as u64;
     let with_quality = tool_speed_pct as u64 * (10_000 - q) / 10_000;
-    let rank_off = (3 * rank.saturating_sub(1)).min(27) as u64;
-    ((with_quality * (100 - rank_off) / 100) as u32).max(10)
+    let rank_off = mastery_bp(rank) as u64;
+    ((with_quality * (10_000 - rank_off) / 10_000) as u32).max(10)
 }
 
 /// AFK's interval at speed `speed_pct`.
@@ -1524,4 +1541,238 @@ pub fn meta_alarm(share_pct: f32, hour_hits: u32, alarm_pct: f64, min_hits: f64)
 /// The weapon type (its kit's key) that trains `skill_id`; "" for none.
 pub fn kit_of_skill(skill_id: u32) -> &'static str {
     KITS.iter().find(|k| k.skill == skill_id).map_or("", |k| k.key)
+}
+
+// --- ITEM LEVELS AND PICKS (Luke's B1-B6, B15, 2026-11-13; ABILITIES_PREP.md §7 step 2) --------------------------
+// An item's XP and its picks live in its own row's `instance_data` ("x", "k"), so they go wherever the item goes (a
+// drop, a trade: B2's T4) and a refit keeps them (B15). Its LEVEL is its XP on its kind's mastery curve; a holder uses
+// it only up to their own mastery (B2). The client's twin: `RegentsItemLevel`.
+
+/// A kit skill's bar slot (`KitSeed::slots`): the base (Q), a pick option (E), an ult option (R), F.
+pub const SLOT_BASE: u32 = 0;
+pub const SLOT_OPTION: u32 = 1;
+pub const SLOT_ULT: u32 = 2;
+pub const SLOT_F: u32 = 3;
+
+/// An item's XP (`"x"`); 0 for none.
+pub fn item_xp_of(instance_data: &str) -> u32 {
+    field_of(instance_data, "x").unwrap_or(0)
+}
+
+/// An item's picks (`"k":[first, second, ult]`): each an ability id, 0 unchosen.
+pub fn picks_of(instance_data: &str) -> [u32; 3] {
+    let mut out = [0u32; 3];
+    if let Some(at) = instance_data.find("\"k\":[") {
+        let rest = &instance_data[at + 5..];
+        if let Some(end) = rest.find(']') {
+            for (i, v) in rest[..end].split(',').filter_map(|s| s.trim().parse::<u32>().ok()).take(3).enumerate() {
+                out[i] = v;
+            }
+        }
+    }
+    out
+}
+
+/// `instance_data` with `key` set to `value` (a number or an array, written as JSON): replaced where it is, else
+/// added at the end; an empty `instance_data` becomes `{"key":value}`. Every other field is kept as written.
+pub fn with_field(instance_data: &str, key: &str, value: &str) -> String {
+    let tag = format!("\"{key}\":");
+    let data = instance_data.trim();
+    if let Some(at) = data.find(&tag) {
+        let start = at + tag.len();
+        let rest = &data[start..];
+        let len = if rest.starts_with('[') {
+            rest.find(']').map_or(rest.len(), |e| e + 1)
+        } else {
+            rest.find([',', '}']).unwrap_or(rest.len())
+        };
+        return format!("{}{}{}", &data[..start], value, &rest[len..]);
+    }
+    match data.rfind('}') {
+        Some(end) if data[..end].trim_end().ends_with('{') => format!("{}{tag}{value}{}", &data[..end], &data[end..]),
+        Some(end) => format!("{},{tag}{value}{}", &data[..end], &data[end..]),
+        None => format!("{{{tag}{value}}}"),
+    }
+}
+
+/// `instance_data` with the item's XP `xp`.
+pub fn with_item_xp(instance_data: &str, xp: u32) -> String {
+    with_field(instance_data, "x", &xp.to_string())
+}
+
+/// `fresh` (an item's new `instance_data`, a refit's) with `old`'s level and picks kept (B15).
+pub fn keep_level(old: &str, fresh: &str) -> String {
+    let mut out = fresh.to_string();
+    if old.contains("\"x\":") {
+        out = with_item_xp(&out, item_xp_of(old));
+    }
+    if old.contains("\"k\":[") {
+        out = with_picks(&out, picks_of(old));
+    }
+    out
+}
+
+/// `instance_data` with the item's picks.
+pub fn with_picks(instance_data: &str, picks: [u32; 3]) -> String {
+    with_field(instance_data, "k", &format!("[{},{},{}]", picks[0], picks[1], picks[2]))
+}
+
+/// The level an item with `xp` is at, on its kind's mastery curve `s` (B1: the same 1-33 track).
+pub fn item_level(s: &SkillSeed, xp: u32) -> u32 {
+    rank_of(s, xp)
+}
+
+/// The level an item counts as in the hands of a holder of `mastery` (B2, T4: used only up to your mastery).
+pub fn usable_level(item_level: u32, mastery: u32) -> u32 {
+    item_level.min(mastery.max(1))
+}
+
+/// The XP an item earns of `xp` its holder earned (B1, CATCH-UP): `mult` times as much while the item is below its
+/// holder's mastery, as much at or above it.
+pub fn item_xp_gain(xp: u32, item_level: u32, mastery: u32, mult: f64) -> u32 {
+    if item_level < mastery {
+        (xp as f64 * mult.max(1.0)).round() as u32
+    } else {
+        xp
+    }
+}
+
+impl KitSeed {
+    /// Whether the kit has an ult of its own (a skill on `SLOT_ULT`). Until it does, its last pick takes an option.
+    pub fn has_ults(&self) -> bool {
+        self.slots.contains(&SLOT_ULT)
+    }
+
+    /// The bar slot skill `ability` goes to (`SLOT_*`); None when it is not one of this kit's skills.
+    pub fn slot_of(&self, ability: u32) -> Option<u32> {
+        let i = self.skills.iter().position(|(a, _)| *a == ability)?;
+        Some(self.slots.get(i).copied().unwrap_or(SLOT_BASE))
+    }
+
+    /// Whether a PLAYER may use skill `ability` with an item they use at `usable` with `picks`: why not, or None.
+    /// The base and F from `unlock_levels[0]`; an option only as one of the item's picks, from that pick's level; an
+    /// ult only as its ult, from the ult's level. A kit with no slots (a foe's) gates nothing.
+    pub fn slot_refusal(&self, ability: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        if self.slots.is_empty() {
+            return None;
+        }
+        let slot = self.slot_of(ability)?;
+        let at = |n: usize| self.unlock_levels[n];
+        match slot {
+            SLOT_OPTION => {
+                // On E from one of the first two picks; or on R from the last, while the kit has no ult of its own.
+                let Some(j) = (0..3).find(|j| picks[*j] == ability && (*j < 2 || !self.has_ults())) else {
+                    return Some("not chosen: choose it at one of the weapon's picks".into());
+                };
+                (usable < at(1 + j)).then(|| format!("opens at the weapon's level {} (it counts as {usable} for you)", at(1 + j)))
+            }
+            SLOT_ULT => {
+                if picks[2] != ability {
+                    return Some("not chosen: choose it as the weapon's last pick".into());
+                }
+                (usable < at(3)).then(|| format!("opens at the weapon's level {} (it counts as {usable} for you)", at(3)))
+            }
+            _ => (usable < at(0)).then(|| format!("opens at the weapon's level {} (it counts as {usable} for you)", at(0))),
+        }
+    }
+
+    /// Whether `choice` may be chosen at pick `n` (0 the first, 1 the second, 2 the ult) of an item used at `usable`
+    /// with `picks`: why not, or None. A pick opens at its level; a newly opened pick is free to choose; a chosen one is
+    /// CHANGED (`change_refusal`, `change_pick`: Luke's B13). The first two take a pick option into E
+    /// (E holds one: the other takes an upgrade, once there are any); the last an ult option.
+    pub fn pick_refusal(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        if n > 2 {
+            return Some("no such pick (0, 1 or 2)".into());
+        }
+        let at = self.unlock_levels[1 + n as usize];
+        if usable < at {
+            return Some(format!("that pick opens at the weapon's level {at} (it counts as {usable} for you)"));
+        }
+        let mine = picks[n as usize];
+        if mine == choice && choice != 0 {
+            return Some("already chosen".into());
+        }
+        if mine != 0 {
+            return Some("chosen already: change it instead (free once a week from level 20, else at a workbench)".into());
+        }
+        // THE LAST PICK, R (Luke, 2026-11-14: "fix the R ability not being assigned"): an ult; while the kit has none of
+        // its own, the option E did not take (a staff ends with all four spells).
+        let want = if n == 2 && self.has_ults() { SLOT_ULT } else { SLOT_OPTION };
+        if self.slot_of(choice) != Some(want) || self.slots.is_empty() {
+            return Some(if n == 2 { "that is not one of this weapon's last picks" } else { "that is not one of this weapon's picks" }.into());
+        }
+        if (0..3).any(|j| j != n as usize && picks[j] == choice) {
+            return Some("it is on the weapon already, at another pick".into());
+        }
+        if n < 2 && self.slot_of(picks[1 - n as usize]) == Some(SLOT_OPTION) {
+            return Some("E holds one ability: this pick will take an upgrade, once there are any".into());
+        }
+        None
+    }
+}
+
+// --- CHANGING A PICK (Luke's B13, 2026-11-13: "I like 2, 3, 4, 5 ... before level 20, the price should be equal to the
+// amount of abilities unlocked so respecing one thing cost less than 3 or all 4") ----------------------------------
+// One FREE change a week per item, from its level 20 (none below). Past it, the HEAD'S MATERIAL at a workbench, per pick
+// changed, doubling with each paid change (1x, 2x, 4x), the doubling stepping back once a week without one. A newly
+// opened pick stays free to choose (`pick_refusal`). The item keeps when (`"f"`: its last free change, seconds), how far
+// the price has climbed (`"e"`: doublings) and when it last paid (`"c"`: seconds) in its own data. Every number is a hot
+// rule (`regents.respec_*`). The client's twin: `RegentsItemLevel.change_price`.
+
+/// When the item's last free change was (unix seconds; 0: never).
+pub fn last_free_change(instance_data: &str) -> u32 {
+    field_of(instance_data, "f").unwrap_or(0)
+}
+
+/// How many times its price has doubled, as stored (`"e"`), and when it last paid (`"c"`, unix seconds).
+pub fn change_escalation(instance_data: &str) -> (u32, u32) {
+    (field_of(instance_data, "e").unwrap_or(0), field_of(instance_data, "c").unwrap_or(0))
+}
+
+/// The doublings in force at `now_s`: those stored, one fewer for each `halve_days` since the last paid change.
+pub fn escalation_now(steps: u32, last_paid_s: u32, now_s: u32, halve_days: f64) -> u32 {
+    if steps == 0 || halve_days <= 0.0 {
+        return if halve_days <= 0.0 { 0 } else { steps };
+    }
+    let weeks = (now_s.saturating_sub(last_paid_s) as f64 / (halve_days * 86_400.0)).floor() as u32;
+    steps.saturating_sub(weeks)
+}
+
+/// Whether an item at `level` has its free change now: from `free_level`, and none in the last `free_days`.
+pub fn free_change_open(level: u32, free_level: u32, last_free_s: u32, now_s: u32, free_days: f64) -> bool {
+    level >= free_level && (last_free_s == 0 || now_s.saturating_sub(last_free_s) as f64 >= free_days.max(0.0) * 86_400.0)
+}
+
+/// What a paid change takes of the head's material: `base`, doubled `steps` times (at most `max_steps`).
+pub fn change_qty(base: u32, steps: u32, max_steps: u32) -> u32 {
+    base.saturating_mul(1u32 << steps.min(max_steps).min(16))
+}
+
+/// THE HEAD'S MATERIAL of a made item (what a refit charges too): the core input of its recipe (the input no part slot
+/// takes: the head), and what THAT is made of first (an iron blade: Iron bar); a core nothing makes is itself (a stave's
+/// logs). None for an item no recipe makes.
+pub fn head_material(item_id: u32) -> Option<u32> {
+    let r = RECIPES.iter().find(|r| r.output == item_id)?;
+    let core = r.inputs.iter().enumerate().find(|(i, _)| !r.part_slots.contains(&(*i as i32))).map(|(_, (item, _))| *item)?;
+    Some(RECIPES.iter().find(|x| x.output == core).and_then(|x| x.inputs.first()).map_or(core, |(item, _)| *item))
+}
+
+impl KitSeed {
+    /// Whether pick `n`, chosen already, may be CHANGED to `choice` with an item used at `usable` with `picks`: why not,
+    /// or None. What may be chosen there is what a newly opened pick may take, the old choice set aside (B13).
+    pub fn change_refusal(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        if n > 2 {
+            return Some("no such pick (0, 1 or 2)".into());
+        }
+        let mine = picks[n as usize];
+        if mine == 0 {
+            return Some("nothing chosen there yet: choose it, no change needed".into());
+        }
+        if mine == choice {
+            return Some("already chosen".into());
+        }
+        let mut cleared = picks;
+        cleared[n as usize] = 0;
+        self.pick_refusal(n, choice, usable, cleared)
+    }
 }

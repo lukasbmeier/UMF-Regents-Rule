@@ -8,10 +8,11 @@ class_name RegentsHud extends Node
 ## each piece of work gave ("+3 Copper ore", "+30 Mining XP", a rank, a rare find, the node worked out);
 ## the bag; the skills and their ranks. Presentation only.
 ##
-## READING THE GAME AT A GLANCE (owner, 2026-10-21): your health (and the Staff's mana) and the roll's
-## cooldown bottom left (`vitals`); a bar filling to the next piece while you work AFK, with how many of a
-## Make X are done; the edge of the screen pulses red when you are hit; the minimap top right
-## (`RegentsMinimap`); M the world map (`RegentsWorldMap`).
+## READING THE GAME AT A GLANCE (owner, 2026-10-21): THE ABILITY BAR low in the middle (`RegentsAbilityBar`, Luke's
+## B11, 2026-11-13: your health above it, the weapon's three and the chest's slot, the roll, the potion key, the
+## staff's mana or the bow's arrows beside, fading out of stance, glowing in a fight); a bar filling to the next
+## piece while you work AFK, with how many of a Make X are done; the edge of the screen pulses red when you are hit;
+## the minimap top right (`RegentsMinimap`); M the world map (`RegentsWorldMap`).
 
 const NOTICE_S: float = 3.0
 ## The most refusals the side column shows at once (the oldest goes).
@@ -43,7 +44,8 @@ var _target_bar: ProgressBar
 ## Under its health, a draining bar for each status on it (Luke's feedback, 2026-11-01: "a status bar under the enemy
 ## hp ... so the player can see how long the enemy is staggered for"), one a status, newest data each frame.
 var _target_statuses: VBoxContainer
-var _skillbar: Label
+## THE ABILITY BAR (B11), in place of the text line that said every key.
+var ability_bar: RegentsAbilityBar = null
 ## A bow's draw, under the crosshair while it is drawn.
 var _draw_bar: ProgressBar
 ## The station prompt's next redraw (msec) and what it was for.
@@ -52,10 +54,6 @@ var _prompt_target: int = -1
 ## The windows (owner, 2026-10-20: dedicated UI, the foundation's kit): the bag (I), the skills (K), a
 ## station's (tap E at it).
 var bag_window: RegentsBagWindow = null
-## Bottom left: health, mana (the Staff's), the roll's cooldown. Each a bar with its words on it.
-var health_bar: ProgressBar = null
-var mana_bar: ProgressBar = null
-var roll_bar: ProgressBar = null
 ## Under the prompt while working AFK: the piece being made.
 var work_bar: ProgressBar = null
 var minimap: RegentsMinimap = null
@@ -68,6 +66,8 @@ var world_map: RegentsWorldMap = null
 var discovery: RegentsDiscovery = null
 var station_window: RegentsStationWindow = null
 var _bag_weapon_row: int = -2
+## A weapon's abilities (Luke, 2026-11-14): click the weapon on the bar, or "Abilities" on one in the bag.
+var abilities_window: RegentsAbilitiesWindow = null
 ## THE TESTER PAGE (owner, 2026-10-23): the Escape menu's "Tester (admin)", for the admin only
 ## (`RegentsTesterPage`). Added once the menu exists; its button follows the local player's role.
 var tester_page: RegentsTesterPage = null
@@ -92,7 +92,10 @@ func _ready() -> void:
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(base)
-	base.add_child(HoldPrompt.new())
+	var hold: HoldPrompt = HoldPrompt.new()
+	hold.offset_top = -232.0   # above the ability bar (B11), where the foundation's would sit on its health
+	hold.offset_bottom = -172.0
+	base.add_child(hold)
 	base.add_child(TimingBar.new())
 	base.add_child(NoiseFeedback.new())
 	_status = _label(base, Vector2(16, 12), 18)
@@ -106,16 +109,20 @@ func _ready() -> void:
 	skills_window = RegentsSkillsWindow.new()
 	station_window = RegentsStationWindow.new()
 	world_map = RegentsWorldMap.new()
-	for w: UiWindow in [bag_window, skills_window, station_window, world_map]:
+	abilities_window = RegentsAbilitiesWindow.new()
+	bag_window.abilities = abilities_window
+	for w: UiWindow in [bag_window, skills_window, station_window, world_map, abilities_window]:
 		_layer.add_child(w)
 	discovery = RegentsDiscovery.new()
 	add_child(discovery)
 	_prompt = Label.new()
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_prompt.offset_top = -170.0
+	_prompt.offset_top = -300.0
+	_prompt.offset_bottom = -170.0
 	_prompt.offset_left = -500.0
 	_prompt.offset_right = 500.0
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_outline(_prompt, 22)
 	base.add_child(_prompt)
 	_notices = VBoxContainer.new()
@@ -182,41 +189,26 @@ func _ready() -> void:
 	edge.shader.code = "shader_type canvas_item;\nuniform float strength = 0.0;\nvoid fragment() {\n\tvec2 p = UV * 2.0 - 1.0;\n\tfloat d = max(abs(p.x), abs(p.y));\n\tCOLOR = vec4(0.75, 0.04, 0.02, smoothstep(0.55, 1.0, d) * strength);\n}\n"
 	hurt_edge.material = edge
 	base.add_child(hurt_edge)
-	var vitals := VBoxContainer.new()
-	vitals.name = "Vitals"
-	vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	vitals.offset_left = 16.0
-	vitals.offset_right = 276.0
-	vitals.offset_top = -132.0
-	vitals.offset_bottom = -64.0
-	vitals.alignment = BoxContainer.ALIGNMENT_END
-	vitals.add_theme_constant_override(&"separation", 4)
-	vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	base.add_child(vitals)
-	health_bar = _bar(vitals, Color(0.78, 0.16, 0.14), 22.0, "Health")
-	mana_bar = _bar(vitals, Color(0.22, 0.42, 0.92), 16.0, "Mana")
-	roll_bar = _bar(vitals, Color(0.92, 0.7, 0.22), 10.0, "Roll")
-	work_bar = _bar(base, Color(0.4, 0.78, 0.4), 12.0, "Work")
+	work_bar = make_bar(base, Color(0.4, 0.78, 0.4), 12.0, "Work")
 	work_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	work_bar.offset_left = -180.0
 	work_bar.offset_right = 180.0
-	work_bar.offset_top = -132.0
-	work_bar.offset_bottom = -120.0
+	work_bar.offset_top = -164.0
+	work_bar.offset_bottom = -152.0
 	work_bar.visible = false
 	minimap = RegentsMinimap.new()
 	base.add_child(minimap)
-	_skillbar = Label.new()
-	_skillbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_skillbar.offset_top = -44.0
-	_skillbar.offset_left = -600.0
-	_skillbar.offset_right = 600.0
-	_skillbar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_outline(_skillbar, 17)
-	base.add_child(_skillbar)
+	ability_bar = RegentsAbilityBar.new()
+	ability_bar.name = "AbilityBar"
+	ability_bar.visible = false
+	base.add_child(ability_bar)
+	ability_bar.weapon_pressed.connect(func() -> void:
+		if combat != null and combat.weapon_row >= 0:
+			abilities_window.show_row(combat.weapon_row))
 
 
 ## A bar of `color`, `height` tall, its words (`name`'s label, a child named Text) on it.
-func _bar(parent: Control, color: Color, height: float, bar_name: String) -> ProgressBar:
+static func make_bar(parent: Control, color: Color, height: float, bar_name: String) -> ProgressBar:
 	var b := ProgressBar.new()
 	b.name = bar_name
 	b.custom_minimum_size = Vector2(0, height)
@@ -261,7 +253,7 @@ func _label(parent: Control, at: Vector2, font_size: int) -> Label:
 	return l
 
 
-func _outline(l: Label, font_size: int) -> void:
+static func _outline(l: Label, font_size: int) -> void:
 	l.add_theme_font_size_override(&"font_size", font_size)
 	l.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.85))
 	l.add_theme_constant_override(&"outline_size", 6)
@@ -316,10 +308,16 @@ func _find_player() -> void:
 	if combat != null:
 		combat.refused.connect(refused)
 		combat.slew.connect(_on_slew)
+		combat.swung.connect(ability_bar.fired)
 	if _inventory != null:
 		_inventory.inventory_changed.connect(_show_bag)
 	bag_window.inventory = _inventory
 	bag_window.combat = combat
+	bag_window.skilling = s
+	abilities_window.inventory = _inventory
+	abilities_window.combat = combat
+	abilities_window.skilling = s
+	s.xp_changed.connect(func(_id: int, _xp: int) -> void: abilities_window.refresh())
 	skills_window.skilling = s
 	station_window.skilling = s
 	station_window.inventory = _inventory
@@ -654,23 +652,14 @@ func pulse_hurt(strength: float) -> void:
 	tw.tween_method(func(v: float) -> void: m.set_shader_parameter(&"strength", v), strength, 0.0, 0.55).set_ease(Tween.EASE_IN)
 
 
-## Your health, the Staff's mana while it is wielded, and the roll: ready, or how long until it is.
+## THE ABILITY BAR (B11): what it shows, read from the player's combat, skilling and health each frame.
 func _update_vitals() -> void:
-	var have: bool = _health != null and is_instance_valid(_health)
-	health_bar.get_parent().visible = have
-	if not have:
+	# Hidden while a minigame round is on screen (it is played with the mouse, and the bar would sit over it).
+	ability_bar.visible = skilling != null and not _round_box.visible
+	if not ability_bar.visible:
 		return
-	set_bar(health_bar, _health.get_current(), _health.get_max(), "%d / %d" % [roundi(_health.get_current()), roundi(_health.get_max())])
-	var p: ResourceComponent = combat.pool() if combat != null and combat.kit != null and combat.kit.casts() else null
-	mana_bar.visible = p != null
-	if p != null:
-		var rid: int = combat.kit.resource.id
-		set_bar(mana_bar, p.level(rid), p.max_of(rid), "%d / %d %s" % [roundi(p.level(rid)), roundi(p.max_of(rid)), combat.kit.resource.display_name.to_lower()])
-	var roll: Vector2 = combat.roll_cooldown() if combat != null else Vector2.ZERO
-	roll_bar.visible = combat != null
-	set_bar(roll_bar, roll.y - roll.x if roll.y > 0.0 else 1.0, roll.y if roll.y > 0.0 else 1.0, "")
-	roll_bar.modulate = Color(1, 1, 1, 1.0) if roll.x <= 0.0 else Color(0.75, 0.75, 0.75, 0.85)
-	roll_bar.tooltip_text = "Roll (Ctrl): ready" if roll.x <= 0.0 else "Roll (Ctrl): %.1f s" % roll.x
+	ability_bar.show_model(RegentsAbilityBar.model_for(combat if combat != null and is_instance_valid(combat) else null, skilling,
+		_health if _health != null and is_instance_valid(_health) else null))
 
 
 ## While working AFK: a bar filling to the next piece; a Make X says how many are done.
@@ -684,11 +673,10 @@ func _update_work() -> void:
 	work_bar.tooltip_text = "The next piece%s" % of
 
 
-## The target frame (name, health) and the skill bar (what each key does with the wielded weapon).
+## The target frame (name, health), and the bow's draw or the staff's cast under the crosshair.
 func _update_combat() -> void:
 	if combat == null or not is_instance_valid(combat):
 		_target_box.visible = false
-		_skillbar.text = ""
 		return
 	var t: SpaceTimeEntity = EntityRegistry.get_entity(combat.target_id) as SpaceTimeEntity if combat.target_id >= 0 else null
 	var h: SpaceTimeHealthComponent = t.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent if t != null else null
@@ -698,7 +686,6 @@ func _update_combat() -> void:
 		_target_bar.max_value = h.get_max()
 		_target_bar.value = h.get_current()
 	_show_statuses(status_rows(t.find_component(StatusComponent) as StatusComponent if t != null else null))
-	_skillbar.text = skill_bar(combat, skilling)
 	_draw_bar.visible = combat.drawing() or combat.casting()
 	_draw_bar.value = combat.draw_progress() if combat.drawing() else combat.cast_progress()
 	if bag_window.is_open() and combat.weapon_row != _bag_weapon_row:
@@ -732,47 +719,12 @@ func _show_statuses(rows: Array[Dictionary]) -> void:
 		_target_statuses.remove_child(last)
 		last.queue_free()
 	while _target_statuses.get_child_count() < rows.size():
-		_bar(_target_statuses, Color.WHITE, 14.0, "Status_%d" % _target_statuses.get_child_count())
+		make_bar(_target_statuses, Color.WHITE, 14.0, "Status_%d" % _target_statuses.get_child_count())
 	for i: int in rows.size():
 		var b: ProgressBar = _target_statuses.get_child(i) as ProgressBar
 		var r: Dictionary = rows[i]
 		(b.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = Color(r["color"] as Color, 0.85)
 		set_bar(b, float(r["left"]), float(r["total"]), "%s  %.1f s" % [String(r["name"]), float(r["left"])])
-
-
-## What the skill bar says: the weapon, its moves, each skill key (locked ones with the rank they need).
-static func skill_bar(c: CombatComponent, sk: SkillingComponent) -> String:
-	if c.kit == null:
-		return "No weapon wielded:  I  opens the bag"
-	var keys: PackedStringArray = PackedStringArray(["Q", "E", "R", "F"])
-	var parts: PackedStringArray = PackedStringArray()
-	if c.kit.casts():
-		var p: ResourceComponent = c.pool()
-		var mana: String = "%d/%d %s" % [roundi(p.level(c.kit.resource.id)), roundi(p.max_of(c.kit.resource.id)), c.kit.resource.display_name.to_lower()] if p != null else "?"
-		parts.append("%s:  LMB %s   Ctrl roll   Tab target   |   %s" % [c.weapon.display_name if c.weapon != null else "?", c.kit.light[0].display_name, mana])
-		var r: int = sk.rank_in(c.kit.skill) if sk != null else 1
-		for i: int in mini(4, c.kit.skills.size()):
-			var a: AbilityDef = c.kit.skills[i]
-			var sp: SpellDef = SpellDef.by_ability(a.id)
-			var note: String = " (rank %d)" % c.kit.rank_for(i) if r < c.kit.rank_for(i) else (" %.0fs" % ceilf(c.spell_cooldown_sec(a)) if c.spell_cooldown_sec(a) > 0.0 else "")
-			parts.append("%s %s %d%s" % [keys[i], a.display_name, roundi(sp.cost) if sp != null else 0, note])
-		return "   |   ".join(parts) + ("" if c.in_stance() else "   (spells in stance)")
-	if c.kit.draws:
-		var line: String = "%s:  hold LMB draw, let go loose   RMB let go and parry   Ctrl roll   Tab target   |   %d arrows" % [
-			c.weapon.display_name if c.weapon != null else "?", c.ammo_count()]
-		var chance: float = c.hit_chance_now()
-		return line + ("   |   to hit %d%%" % roundi(chance) if chance >= 0.0 else "   |   no target: it flies where you aim")
-	# The string by its moves' own names, the last the one the handle gives (no word for it: show, don't name).
-	var role: RoleDef = c.role()
-	var guard: String = "hold for " + role.guard_words.get_slice(":", 0) if role != null and not role.guard_words.is_empty() else "hold block"
-	parts.append("%s:  LMB %s   RMB tap parry, %s   Ctrl roll   Tab target" % [c.weapon.display_name if c.weapon != null else "?",
-		_string_names(c.kit, role), guard])
-	var rank: int = sk.rank_in(c.kit.skill) if sk != null else 1
-	for i: int in 4:
-		if i < c.kit.skills.size():
-			var locked: bool = rank < c.kit.rank_for(i)
-			parts.append("%s %s%s" % [keys[i], c.kit.skills[i].display_name, " (rank %d)" % c.kit.rank_for(i) if locked else ""])
-	return "   |   ".join(parts) + ("" if c.in_stance() else "   (skills in stance)")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -847,6 +799,7 @@ func notice(text: String, color: Color = Color.WHITE) -> void:
 func _show_bag() -> void:
 	_bag.text = "I: bag     K: skills" if _inventory != null else ""
 	bag_window.refresh()
+	abilities_window.refresh()
 
 
 func _show_skills() -> void:
@@ -864,7 +817,7 @@ func _show_skills() -> void:
 
 ## A kit's string as the key line names it, its last step the one `role`'s handle gives ("Slash - Slash -
 ## Pommel bash").
-static func _string_names(k: KitDef, role: RoleDef = null) -> String:
+static func string_names(k: KitDef, role: RoleDef = null) -> String:
 	var names: PackedStringArray = PackedStringArray()
 	for a: AbilityDef in k.string_for(role):
 		names.append(a.display_name)

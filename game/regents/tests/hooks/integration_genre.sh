@@ -203,7 +203,7 @@ assert_eq "$(qty_of 40002)" "$LOGS1" "...pays nothing: you have to be where you 
 
 # --- mining, and the rank a node needs ---
 assert_ok 'teleport {"x":-18.0,"y":0.0,"z":16.5}' "stand by iron_1"
-assert_rejected "gather $IRON true" "needs Mining rank 2" "an iron rock needs mining rank 2 (a new miner has 1)"
+assert_rejected "gather $IRON true" "needs Mining rank 5" "an iron rock needs mining rank 5 (the old 2 on the 1-33 track; a new miner has 1)"
 # The reach is from a node's EDGE (Luke, 2026-11-06): the copper rock stands ~2 m from its middle (baked footprint).
 assert_ok 'teleport {"x":14.0,"y":0.0,"z":20.4}' "stand 4.4 m from copper_1's middle (some 2.3 m from its edge)"
 assert_ok "gather $COPPER false" "worked from its edge's reach, though over 3 m from its middle"
@@ -268,7 +268,7 @@ assert_rejected "craft $BENCH 40006 false" "needs 1 Grip" "an iron axe needs a g
 assert_rejected "craft_with $BENCH 40006 false 40010" "takes a handle there" "a copper bar is no handle"
 assert_rejected "craft_with $BENCH 40006 false 40016" "needs 1 Oak grip" "an oak grip chosen: the bag must have one"
 assert_rejected "craft_with $BENCH 40005 false 40016" "takes no part" "a plain handle's recipe has no part slot"
-assert_rejected "craft $BENCH 40007 false" "needs Crafting rank 2" "an oak handle needs crafting rank 2"
+assert_rejected "craft $BENCH 40007 false" "needs Crafting rank 5" "an oak handle needs crafting rank 5 (the old 2)"
 # CHOOSING PARTS AND TRAITS (owner, 2026-10-23, MATERIALS.md step 3): craft_choosing takes the item in each part slot and
 # the traits wanted, in order; each must be offered by a part picked, none twice. Steady is 40001 (oak), Springy 40002 (yew).
 assert_rejected "craft_choosing $BENCH 40006 false [40010] []" "takes a handle there" "craft_choosing: a copper bar is no handle"
@@ -365,13 +365,18 @@ for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MY
 done
 assert_ok "grant_item $MYENT 40015 1" "an admin gives an iron axe (no quality)"
 assert_ok 'teleport {"x":-25.0,"y":0.0,"z":-28.5}' "stand by yew_1"
-assert_rejected "gather $(node_at yew_1) true" "needs Woodcutting rank 4" "a yew needs woodcutting rank 4"
+assert_rejected "gather $(node_at yew_1) true" "needs Woodcutting rank 12" "a yew needs woodcutting rank 12 (the old 4)"
 assert_ok 'teleport {"x":-3.0,"y":0.0,"z":-9.5}' "back by tree_2"
 if [ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $TREE2" 1)" = "100" ]; then
   assert_ok "set_status $TREE2 0 0 \"\"" "tree_2 grows back (an admin)"
 fi
+# (Woodcutting at rank 1 for this one, its XP back after: on the 1-33 track a few logs make rank 3, whose share
+# shades the speed and eases the round, PROGRESS 73.)
+WC_XP="$(xp_of 40001)"
+assert_ok "admin_set_rank $MYENT 40001 1" "(test) Woodcutting at rank 1"
 assert_ok "gather $TREE2 true" "a round with the iron axe in the bag"
 assert_eq "$(round_field "$(round_cid)" payload)" "\"$TREE2 40001 85\"" "the best axe is used: the round is at the iron axe's speed (85 %)"
+[ "${WC_XP:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40001 $WC_XP" "(test) Woodcutting's $WC_XP XP back"
 CID="$(round_cid)"
 assert_ok "submit_challenge_result $CID []" "nothing pressed"
 
@@ -1213,33 +1218,33 @@ WCARCASS="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carca
 check "$([ -n "$WCARCASS" ] && echo true || echo false)" "the slain wolf left its carcass ($WCARCASS)"
 assert_eq "$(sql_first "SELECT def_id FROM gather_node WHERE entity_id = ${WCARCASS:-0}" 1)" "40009" "a Wolf carcass (node 40009)"
 assert_eq "$(sql_first "SELECT owner_id FROM carcass WHERE entity_id = ${WCARCASS:-0}" 1)" "$MYENT" "yours to skin first: you did the damage"
-# SKINNING 2: refused at rank 1; at rank 2 the cut line skins the whole carcass for its pelts.
+# SKINNING 5 (the old 2 on the 1-33 track): refused at rank 1; at rank 5 the cut line skins the whole carcass for its pelts.
 assert_ok "admin_set_rank $MYENT 40011 1" "(test) Skinning at rank 1"
-assert_rejected "gather ${WCARCASS:-0} true" "needs Skinning rank 2" "NEGATIVE: a wolf's carcass needs Skinning rank 2"
-assert_ok "admin_set_rank $MYENT 40011 2" "(test) Skinning at rank 2"
+assert_rejected "gather ${WCARCASS:-0} true" "needs Skinning rank 5" "NEGATIVE: a wolf's carcass needs Skinning rank 5"
+assert_ok "admin_set_rank $MYENT 40011 5" "(test) Skinning at rank 5"
 PELT0="$(qty_of 40064)"
 assert_ok "gather ${WCARCASS:-0} true" "hold E at the wolf's carcass: a round of the cut line"
 play_round skin 40009 13
-assert_eq "$ROUND_PAYLOAD" "${WCARCASS:-0} 40009 97" "dealt at the copper knife's speed, 3 % quicker at Skinning rank 2 (97 %: genre::regents::speed_pct), no ease at the rank it needs"
+assert_eq "$ROUND_PAYLOAD" "${WCARCASS:-0} 40009 96" "dealt at the copper knife's speed, 3.37 % quicker at Skinning rank 5 (96 %: genre::regents::speed_pct), no ease at the rank it needs"
 PELTS=$(( $(qty_of 40064) - PELT0 ))
 check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 1000' && echo true || echo false)" "the bot traces the wolf's lines (6 points, a narrower line): a full score ($BOT_PLAYED)"
 check "$([ "$PELTS" -ge 2 ] && [ "$PELTS" -le 3 ] && echo true || echo false)" "the server replayed it and paid the whole carcass: $PELTS wolf pelts (2.93 at a full score)"
 for _ in $(seq 1 10); do [ "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${WCARCASS:-0}")" = "0" ] && break; sleep 1; done
 assert_eq "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${WCARCASS:-0}")" "0" "skinned whole in one round, it is taken away"
-# TANNING, the second leather: a wolf pelt into supple leather at the rack, at Crafting 2.
+# TANNING, the second leather: a wolf pelt into supple leather at the rack, at Crafting 5 (the old 2).
 assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "back at the tanning rack"
 for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40064" | awk '{print $1}'); do
   assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the skinned pelts put away)"
 done
 CRAFT_XP="$(xp_of 40005)"
-assert_ok "admin_set_rank $MYENT 40005 2" "(test) Crafting at rank 2"
+assert_ok "admin_set_rank $MYENT 40005 5" "(test) Crafting at rank 5"
 assert_rejected "craft $RACK 40053 false" "needs 1 Wolf pelt" "NEGATIVE: no pelt, no leather"
 assert_ok "grant_item $MYENT 40064 1" "an admin gives a wolf pelt"
 assert_ok "admin_set_rank $MYENT 40005 1" "(test) Crafting at rank 1"
-assert_rejected "craft $RACK 40053 false" "needs Crafting rank 2" "NEGATIVE: supple leather needs Crafting rank 2"
-assert_ok "admin_set_rank $MYENT 40005 2" "(test) Crafting at rank 2"
+assert_rejected "craft $RACK 40053 false" "needs Crafting rank 5" "NEGATIVE: supple leather needs Crafting rank 5"
+assert_ok "admin_set_rank $MYENT 40005 5" "(test) Crafting at rank 5"
 assert_ok "craft $RACK 40053 false" "a wolf pelt set to tan (AFK)"
-# (Crafting's XP as it was, or rank 2's start if it had less: what follows counts on neither.)
+# (Crafting's XP as it was, or rank 5's start if it had less: what follows counts on neither.)
 assert_ok "admin_set_rank $MYENT 40005 1" "(test) Crafting's XP put back"
 [ "${CRAFT_XP:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40005 $CRAFT_XP" "(test) to its $CRAFT_XP XP"
 # A FOE'S SHOT (FOES_PREP.md F4-F6, steps 64-67): the archer's draw, its brain's wish (the stand-in naming you), is
@@ -1444,7 +1449,61 @@ read -r X3 Y3 Z3 <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE e
 NORTH="$(vec 0.0 0.0 -1.0)"
 NONE="$(vec 0.0 0.0 0.0)"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "stand eight meters south of skeleton_2"
-assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "needs Sorcery rank 3" "Frost Ring needs Sorcery rank 3"
+# ITEM LEVELS AND PICKS (ABILITIES_PREP.md §7 step 2): Frost Ring is a PICK of the staff's, at its level 5, not a rank.
+IDATA() { sql_first "SELECT instance_data FROM inventory_item WHERE id = $1" 1; }
+assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X3" "$Y3" "$Z3")" "not chosen" "NEGATIVE: Frost Ring, not picked on this staff: refused"
+assert_rejected "choose_pick $STAFF_ROW 0 40014" "opens at the weapon's level 5" "NEGATIVE: a new staff's first pick opens at its level 5"
+assert_ok "admin_set_item_level $MYENT $STAFF_ROW 5" "(test) the staff at level 5"
+assert_ok "admin_set_rank $MYENT 40009 1" "(test) Sorcery 1"
+assert_rejected "choose_pick $STAFF_ROW 0 40014" "counts as 1 for you" "NEGATIVE (B2): a level-5 staff in a Sorcery-1 hand counts as 1"
+assert_ok "admin_set_rank $MYENT 40009 12" "(test) Sorcery 12"
+assert_rejected "choose_pick $STAFF_ROW 0 40015" "not one of this weapon's picks" "NEGATIVE: Blink is the F slot's, no pick"
+assert_rejected "choose_pick $STAFF_ROW 3 40014" "no such pick" "NEGATIVE: there is no pick 3"
+assert_ok "choose_pick $STAFF_ROW 0 40014" "the staff's first pick: Frost Ring"
+check "$(IDATA "$STAFF_ROW" | grep -q '"k":\[40014,0,0\]' && echo true || echo false)" "kept on the item itself ($(IDATA "$STAFF_ROW"))"
+assert_rejected "choose_pick $STAFF_ROW 0 40016" "change it instead" "NEGATIVE: a chosen pick is changed (change_pick), not chosen again"
+assert_rejected "choose_pick $STAFF_ROW 1 40016" "opens at the weapon's level 12" "NEGATIVE: the second pick opens at 12"
+assert_ok "admin_set_item_level $MYENT $STAFF_ROW 12" "(test) the staff at level 12"
+assert_rejected "choose_pick $STAFF_ROW 1 40016" "E holds one ability" "NEGATIVE: E holds one ability (Gale would be a second)"
+assert_rejected "choose_pick $STAFF_ROW 2 40016" "opens at the weapon's level 20" "NEGATIVE: the last pick (R) opens at 20"
+# CHANGING A PICK (Luke's B13): free once a week from level 20, anywhere; past it the head's material (a staff's: Yew logs)
+# at a workbench, doubling with each paid change. Out of a fight. The staff is at level 12 here, Frost Ring picked.
+YEW=40004
+for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $YEW" | awk '{print $1}'); do
+  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the yew logs put away)"
+done
+assert_rejected "change_pick 0 $STAFF_ROW 0 40016" "at a workbench" "NEGATIVE: level 12 (no free change below 20), no workbench: refused"
+assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "stand at the workbench"
+assert_rejected "change_pick $BENCH $STAFF_ROW 0 40016" "it takes 2 Yew logs" "NEGATIVE: no yew logs: refused, nothing changed"
+check "$(IDATA "$STAFF_ROW" | tr -d '\\' | grep -q '"k":\[40014,0,0\]' && echo true || echo false)" "still Frost Ring"
+assert_ok "grant_item $MYENT $YEW 20" "an admin gives 20 yew logs"
+assert_ok "change_pick $BENCH $STAFF_ROW 0 40016" "change Frost Ring to Gale at the workbench"
+assert_eq "$(qty_of $YEW)" "18" "for 2 yew logs (the staff's head)"
+check "$(IDATA "$STAFF_ROW" | tr -d '\\' | grep -q '"k":\[40016,0,0\]' && echo true || echo false)" "Gale on the staff now"
+assert_rejected "change_pick $BENCH $STAFF_ROW 0 40016" "already chosen" "NEGATIVE: the same again"
+assert_ok "change_pick $BENCH $STAFF_ROW 0 40014" "and back to Frost Ring"
+assert_eq "$(qty_of $YEW)" "14" "for 4 now: the price doubled"
+assert_ok "admin_set_item_level $MYENT $STAFF_ROW 20" "(test) the staff at level 20"
+assert_ok 'teleport {"x":4.0,"y":0.0,"z":9.0}' "away from the workbench"
+assert_ok "change_pick 0 $STAFF_ROW 0 40016" "level 20: the week's FREE change, anywhere"
+assert_eq "$(qty_of $YEW)" "14" "nothing paid"
+assert_rejected "change_pick 0 $STAFF_ROW 0 40014" "at a workbench" "NEGATIVE: the free one used: the next is paid, at a workbench"
+assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "back at the workbench"
+assert_ok "change_pick $BENCH $STAFF_ROW 0 40014" "Frost Ring again, paid"
+assert_eq "$(qty_of $YEW)" "6" "for 8: doubled again (2, 4, 8)"
+# R (Luke, 2026-11-14: "fix the R ability not being assigned"): the staff has no ult of its own yet, so its last pick, at
+# level 20, takes the spell E did not.
+assert_ok "admin_set_rank $MYENT 40009 20" "(test) Sorcery 20"
+assert_rejected "choose_pick $STAFF_ROW 2 40014" "another pick" "NEGATIVE: R cannot take Frost Ring, E has it"
+assert_rejected "choose_pick $STAFF_ROW 2 40013" "last picks" "NEGATIVE: nor Fireball, the base"
+assert_ok "choose_pick $STAFF_ROW 2 40016" "level 20: R takes Gale"
+check "$(IDATA "$STAFF_ROW" | tr -d '\' | grep -q '"k":\[40014,0,40016\]' && echo true || echo false)" "Frost Ring on E, Gale on R, on the item"
+assert_ok "admin_set_rank $MYENT 40009 12" "(test) Sorcery 12 again"
+assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "back eight meters south of skeleton_2"
+assert_ok "admin_set_item_level $MYENT $STAFF_ROW 5" "(test) the staff back at level 5"
+assert_ok "admin_set_rank $MYENT 40009 1" "(test) Sorcery 1 again (the spells below are measured at rank 1): the staff is ABOVE it"
+IX() { IDATA "$1" | tr -d '\\' | grep -o '"x":[0-9]*' | head -1 | cut -d: -f2; }
+STAFF_X0="$(IX "$STAFF_ROW")"
 # The Bolt's hit is old before the slow Fireball lands: skeleton_2 would be healing (regents.regen_delay_s) while
 # its health is read, and the fire looked 3 to 6 short of its 9 (2026-10-31; the server's log showed every tick).
 # No healing until the fire is measured.
@@ -1472,6 +1531,10 @@ assert_eq "$(timed_val CD)" "40012" "the Bolt's own cooldown begun"
 timed_ok 4 "the referee: it hit"
 check "$(python -c "print('true' if abs(($H0 - $(HP "$SK2")) - 9.0) < 1e-3 else 'false')")" "the Bolt's 9 ($H0 -> $(HP "$SK2"))"
 check "$(python -c "print('true' if $(xp_of 40009) > $SXP0 else 'false')")" "Sorcery XP"
+# THE STAFF LEARNS WITH YOU (B1), five times as fast below your mastery (CATCH-UP, `regents.item_catch_up`).
+STAFF_X1="$(IX "$STAFF_ROW")"
+check "$(python -c "print('true' if ${STAFF_X1:-0} - ${STAFF_X0:-0} == $(xp_of 40009) - $SXP0 and ${STAFF_X1:-0} > ${STAFF_X0:-0} else 'false')")" \
+  "NEGATIVE of catch-up: the staff (level 5) above your Sorcery earned what you did, no more: ${STAFF_X0} -> ${STAFF_X1}, Sorcery $SXP0 -> $(xp_of 40009)"
 sleep 0.7
 assert_ok 'set_rule "regents.cast_time_pct" 500.0 ""' "(test) casts five times slower, so the cast can be seen going"
 H2="$(HP "$SK2")"; H3="$(HP "$SK3")"
@@ -1510,7 +1573,7 @@ python -c "import time; time.sleep(max(0.0, $FIRE_AT + 3.6 - time.time()))"
 assert_eq "$(sql_rows "SELECT entity_id FROM burning WHERE entity_id = $SK2" | wc -l | tr -d ' ')" "0" "its fire out after its 3 s"
 check "$(python -c "d = $H2 - $(HP "$SK2"); print('true' if 28.0 <= d <= 29.1 else 'false')")" "its fire out after 3 s: the hit's 20 and about 9 of fire, 3 a second ($H2 -> $(HP "$SK2"))"
 assert_ok 'reset_rule "regents.regen_delay_s"' "(test) regeneration back to its own"
-assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 10"
+assert_ok "grant_xp $MYENT 40009 5000" "(test) Sorcery to rank 33, the top"
 FROST_AT="$(vec "$X3" "$Y3" "$Z3")"
 assert_rejected "cast_spell 40014 0 $NORTH $(vec "$X2" 0.0 "$(python -c "print($Z2 - 40)")")" "too far" "Frost Ring past its 20 m"
 M0="$(MANA)"
@@ -1525,6 +1588,7 @@ assert_eq "$(MANA)" "$M0" "and costs nothing"
 # skeleton's state, so its own swing (a state, set while it is Slowed) no longer wipes it; then Blink. Timed calls:
 # the cast is 3 s, the slow 3 s, and the CLI's calls between outlasted both on a busy machine (2026-11-01 and -04).
 assert_ok 'set_rule "regents.cast_time_pct" 300.0 ""' "(test) a 3 s cast, to read its row"
+CX0="$(IX "$STAFF_ROW")"; CS0="$(xp_of 40009)"
 timed "$(printf '%s\n' \
   "0 cast_spell [40014,0,$NORTH,$FROST_AT]" \
   "0 sql CAST_ENDS SELECT lands FROM casting WHERE entity_id = $MYENT" \
@@ -1534,6 +1598,9 @@ timed "$(printf '%s\n' \
   "0 cast_spell [40015,0,$(vec 1.0 0.0 0.0),$NONE]")"
 assert_ok 'reset_rule "regents.cast_time_pct"' "(test) casts as they were"
 timed_ok 1 "Frost Ring again"
+CX1="$(IX "$STAFF_ROW")"; CS1="$(xp_of 40009)"
+check "$(python -c "print('true' if ${CX1:-0} - ${CX0:-0} == 5 * ($CS1 - $CS0) and $CS1 > $CS0 else 'false')")" \
+  "CATCH-UP (B1): the staff (level 5) below your Sorcery (33) earned five times your XP from the ring: ${CX0} -> ${CX1}, Sorcery $CS0 -> $CS1"
 CAST_ENDS="$(timed_val CAST_ENDS)"; CIRCLE_LANDS="$(timed_val CIRCLE_LANDS)"
 check "$(python -c "
 c, a = '$CAST_ENDS', '$CIRCLE_LANDS'
@@ -1565,6 +1632,14 @@ check "$SLOWED" "and stays Slowed: a state no longer wipes the slow (it came off
 read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)")"
 check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight meters east, at once ($BX, $BZ)"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five meters south of skeleton_2"
+# GALE ON E: a second staff, its first pick Gale (an item's picks are its own: two staves, two builds; the first staff
+# has Gale on R, shut below its level 20).
+assert_rejected "cast_spell 40016 0 $NORTH $NONE" "opens at the weapon's level 20" "NEGATIVE: Gale on R of a staff below level 20: shut"
+assert_ok "grant_item $MYENT 40023 1" "an admin gives a second yew staff"
+STAFF2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40023 AND id <> $STAFF_ROW" 1)"
+assert_ok "admin_set_item_level $MYENT $STAFF2 5" "(test) at level 5"
+assert_ok "choose_pick $STAFF2 0 40016" "its first pick: Gale"
+assert_ok "wield $STAFF2" "wield the second staff"
 assert_ok 'set_rule "regents.mana_cost_pct" 300.0 ""' "(test) spells three times dearer: Gale 105, more than mana holds"
 assert_rejected "cast_spell 40016 0 $NORTH $NONE" "not enough mana" "too little mana: refused, nothing spent"
 assert_ok 'reset_rule "regents.mana_cost_pct"' "(test) costs back"
@@ -1575,7 +1650,9 @@ sleep 1.0
 H5="$(HP "$SK2")"
 assert_ok "cast_spell 40016 0 $NORTH $NONE" "Gale, the mana back"
 assert_eq "$(row_count "SELECT * FROM push WHERE entity_id = $SK2 AND by_id = $MYENT")" "1" "skeleton_2 is thrown back"
-check "$(logged "$MYENT's spell hit $SK2 for 7\.6")" "and hurt: Gale's 6 at Sorcery 10 (+27 %: 7.6, the server's log)"
+check "$(logged "$MYENT's spell hit $SK2 for 22\.9")" "and hurt: Gale's 18 at Sorcery 33 (+27 %: 22.9, the server's log; buffed from 6, Luke 2026-11-13)"
+assert_eq "$(row_count "SELECT * FROM status_effect WHERE entity_id = $SK2 AND status = 108")" "1" "and Slowed: Gale's spell slows what it hurts (2.5 s)"
+check "$(logged "$MYENT (wore|broke) $SK2's poise")" "and its poise worn as by a last hit"
 standin_down
 assert_ok "wield $AXE_ROW" "the axe again"
 assert_eq "$(row_count "SELECT * FROM resource_state WHERE entity_id = $MYENT AND resource_id = 40001")" "1" "your mana stays yours, as it was"
@@ -1592,18 +1669,18 @@ MINING=40002
 # the page's reducers with the admin check taken out printed nothing either way, 2026-10-23).
 before() { echo "$(xp_of $MINING) $(row_count "SELECT * FROM recipe_log WHERE entity_id = $MYENT") $(qty_of 40024) $(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT")"; }
 WAS="$(before)"
-for verb in "admin_set_rank $MYENT $MINING 3" "admin_reset_skills $MYENT" "admin_give_item $MYENT 40024 5 0" "admin_reset_bag $MYENT"; do
+for verb in "admin_set_rank $MYENT $MINING 8" "admin_set_item_level $MYENT ${STAFF_ROW:-0} 3" "admin_reset_skills $MYENT" "admin_give_item $MYENT 40024 5 0" "admin_reset_bag $MYENT"; do
   # shellcheck disable=SC2086
   out="$(spacetime call --anonymous "$DB" $verb 2>&1)"
   check "$(echo "$out" | grep -qi "admin only" && echo true || echo false)" "a stranger's ${verb%% *}: refused, admin only"
   assert_eq "$(before)" "$WAS" "and after a stranger's ${verb%% *}, the player's mining XP, recipe records, coal and bag are as they were"
 done
-assert_ok "admin_set_rank $MYENT $MINING 3" "the admin sets mining to rank 3"
-assert_eq "$(xp_of $MINING)" "150" "mining's XP is rank 3's start (150)"
+assert_ok "admin_set_rank $MYENT $MINING 8" "the admin sets mining to rank 8"
+assert_eq "$(xp_of $MINING)" "150" "mining's XP is rank 8's start (150: the old rank 3's)"
 assert_ok "admin_set_rank $MYENT $MINING 1" "and back down to rank 1"
 assert_eq "$(xp_of $MINING)" "0" "rank 1 is no XP"
-assert_rejected "admin_set_rank $MYENT $MINING 11" "ranks 1 to 10" "rank 11: refused (mining has ten)"
-assert_rejected "admin_set_rank $MYENT $MINING 0" "ranks 1 to 10" "rank 0: refused"
+assert_rejected "admin_set_rank $MYENT $MINING 34" "ranks 1 to 33" "rank 34: refused (mining has 33)"
+assert_rejected "admin_set_rank $MYENT $MINING 0" "ranks 1 to 33" "rank 0: refused"
 assert_rejected "admin_set_rank $MYENT 1 3" "no such skill" "a skill that is not: refused"
 assert_rejected "admin_set_rank $(node_at copper_1) $MINING 3" "is no player" "a rock is no player: refused"
 COAL0="$(qty_of 40024)"
