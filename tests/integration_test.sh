@@ -1052,6 +1052,32 @@ check "$([ "$(field correction_epoch)" != "$EPOCH" ] && echo true || echo false)
 assert_ok "set_effect $MYENT 2 0 false" "taken off"
 assert_ok "use_ability 0 $NEAR $AIM 55" "it may act again"
 
+echo "== the dodge roll (DECISIONS #309) =="
+# An ability whose content rolls: its status on its user as an EFFECT for its length (a live rule), when it was
+# pressed kept (private), refused in the air. The movement is the client's dash (tests/suites/roll.gd); the
+# referee's side (a hit judged against when the roll was pressed) is in the referee section below.
+assert_eq "$(sql_first 'SELECT data FROM ability_def WHERE ability_id = 1' 1 | grep -c rolls)" "1" "init ships the foundation's Dodge roll (ability 1), its row saying it rolls"
+assert_ok 'teleport {"x":0.0,"y":30.0,"z":0.0}' "up in the air (30 m: a 2.5 s fall)"
+assert_rejected "use_ability 1 0 $AIM 56" "no roll in the air" "a roll in the air is refused (its client holds the press until it lands)"
+assert_eq "$(effect_of $MYENT)" "" "and nothing was put on"
+assert_ok 'teleport {"x":0.0,"y":0.0,"z":0.0}' "back on the ground"
+sleep 1
+# 3 s long (the live rule): a 550 ms roll is over before the CLI's next call reads it (about a second a call).
+ROLL_RULE="$(sql_first "SELECT number FROM hot_rule WHERE key = 'foundation.roll_ms'" 1)"
+assert_eq "$(python -c "print(float('${ROLL_RULE:-0}') == 550.0)")" "True" "a roll lasts 550 ms unless tuned (foundation.roll_ms: $ROLL_RULE)"
+assert_ok "set_rule foundation.roll_ms 3000 \"\"" "tuned live to 3 s"
+assert_ok "use_ability 1 0 $AIM 57" "on the ground, the roll is taken"
+assert_eq "$(effect_of $MYENT)" "7" "its Rolling (status 7) is on the player, as an EFFECT"
+check "$(case "$(status_of $MYENT)" in ""|0) echo true;; *) echo false;; esac)" "beside its state, which it leaves alone"
+assert_eq "$(sql_first "SELECT lasts_ms FROM status_effect WHERE entity_id = $MYENT AND status = 7" 1)" "3000" "for the roll's length as the live rule says (3000 ms)"
+assert_eq "$(row_count "SELECT * FROM roll_state WHERE entity_id = $MYENT AND ability_id = 1")" "1" "when it was pressed is kept"
+assert_eq "$(sql_rows_anon "SELECT * FROM roll_state" | wc -l | tr -d ' ')" "0" "privately: a client cannot read anyone's"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 57" 1)" "1" "its event, which confirms its client's prediction"
+deadline=$((SECONDS + 8))
+while [ -n "$(effect_of $MYENT)" ] && [ "$SECONDS" -lt "$deadline" ]; do sleep 0.5; done
+assert_eq "$(effect_of $MYENT)" "" "and it comes off when the roll is over"
+assert_ok "reset_rule foundation.roll_ms" "(rolls back to 550 ms)"
+
 echo "== the referee: abilities a sidecar judges (DECISIONS #226) =="
 # The module's side. A judged ability is queued for its world's referee, not resolved; with nobody
 # judging it is refused; a referee is registered by presenting an admin's one-time code; its answer is
@@ -1150,6 +1176,34 @@ R62=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 62" 1)
 assert_eq "$(sql_first "SELECT rewind_ms FROM action_request WHERE id = $R62" 1)" "50" "rewound the live cap's 50"
 assert_ok "resolve_action $R62 0" "the referee: nothing in its way"
 assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 62" 1)" "1" "a MISS"
+# THE DODGE ROLL AGAINST A REFEREE'S HIT (DECISIONS #309): nothing judged hits a roller while the roll lasts; a
+# hit that landed while they rolled is cleared by when the roll was PRESSED, though the referee reports it after
+# the roll is over; one that lands after it, is not. Rolls 3 s long here (the live rule), so the CLI's pace
+# (about a second a call) cannot decide the outcome.
+assert_ok "set_rule foundation.roll_ms 3000 \"\"" "rolls last 3 s"
+assert_ok 'define_ability 12 0 0.0 2500 25.0 "{\"name\":\"swing\",\"judged\":true,\"reach\":1.4,\"radius\":0.35,\"height\":0.6}"' "a judged swing landing 2.5 s after it is used"
+for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
+  assert_ok "revoke_authority $REF_ID" "the last referee unregistered"
+done
+assert_ok "offer_referee 0 $REF_CODE" "a referee again"
+out="$(anon_call claim_referee 0 "$REF_CODE")"
+assert_ok "use_ability_seen 12 0 $AIM 70 0" "a swing at the victim (it lands in 2.5 s)"
+assert_ok "use_ability_seen 10 0 $AIM 71 0" "and a slow one (it lands in 20 s, long after any roll)"
+assert_ok "use_ability_as $VICTIM 1 0 $AIM 0" "the victim rolls before the swing lands"
+R70=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 70" 1)
+R71=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 71" 1)
+assert_eq "$(effect_of $VICTIM)" "7" "rolling"
+assert_rejected "resolve_action $R71 $VICTIM" "cannot be hit" "while it rolls nothing judged hits it (Rolling: not hittable)"
+deadline=$((SECONDS + 8))
+while [ -n "$(effect_of $VICTIM)" ] && [ "$SECONDS" -lt "$deadline" ]; do sleep 0.5; done
+assert_eq "$(effect_of $VICTIM)" "" "the roll is over (its status has come off)"
+HPR=$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)
+assert_ok "resolve_action $R70 $VICTIM" "the referee reports the swing hit it, after the roll"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 70" 1)" "1" "a MISS: it landed while the victim rolled, judged by when the roll was pressed"
+assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)" "$HPR" "and nothing was taken"
+assert_ok "resolve_action $R71 $VICTIM" "the slow one hit it"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 71" 1)" "0" "a HIT: it lands long after the roll, which clears nothing then"
+assert_ok "reset_rule foundation.roll_ms" "(rolls back to 550 ms)"
 for REF_ID in $(sql_rows 'SELECT identity FROM authority WHERE role = 1 AND world_id = 0' | awk '{print $1}'); do
   assert_ok "revoke_authority $REF_ID" "a test referee unregistered"
 done

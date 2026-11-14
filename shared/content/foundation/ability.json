@@ -14,6 +14,24 @@
 			"range": 2.0,
 			"reach": 1.4,
 			"wind_up_ms": 150
+		},
+		{
+			"ability_id": 1,
+			"cooldown_ms": 1500,
+			"damage": 0.0,
+			"height": 0.6,
+			"judged": false,
+			"lunges": false,
+			"name": "Dodge roll",
+			"radius": 0.35,
+			"range": 0.0,
+			"reach": 1.4,
+			"roll_in_air": false,
+			"roll_ms": 550,
+			"roll_ms_rule": "foundation.roll_ms",
+			"roll_status": 7,
+			"rolls": true,
+			"wind_up_ms": 100
 		}
 	],
 	"owner": "foundation",

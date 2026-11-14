@@ -60,6 +60,10 @@ pub mod resource;
 /// Chat (DECISIONS #273): what a line may say, how long a world keeps them. Pure.
 pub mod chat;
 
+/// The dodge roll (DECISIONS #309): which abilities roll, their status and length, a roll judged where it was
+/// pressed. Baked from `AbilityDef` content. Pure.
+pub mod roll;
+
 /// Traits (DECISIONS #275): what changes how an item plays (never its Power), as atoms the game reads
 /// where they act. Baked from `TraitDef` content. Pure.
 pub mod traits;

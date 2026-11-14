@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/status_def.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status = 7
+lasts_s = 0.55
+can_sprint = false
+can_jump = false
+hittable = false
+show_on_nameplate = false
+color = Color(0.8, 0.9, 1, 1)
+id = 7
+display_name = "Rolling"
+designer_notes = "A dodge roll's moment (DECISIONS #309): nothing a referee judges hits you, and you neither sprint nor jump. Put on as an EFFECT by a roll (an ability that rolls, its roll_status) for the roll's length (its roll_ms), beside whatever state you are in."

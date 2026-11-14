@@ -145,6 +145,13 @@ pub trait Genre: Sync {
         Ok(())
     }
 
+    /// A DODGE ROLL BEGAN (DECISIONS #309): `actor_id` used roll `ability_id` (its status is on them for
+    /// `roll_ms`), PRESSED at `seen_us` (server micros, on the clock of what they saw: `roll::seen_us`). What else a
+    /// roll does is the genre's: cancel its own actions (a swing in its wind-up, a raised block, a cast), and judge
+    /// the hits it holds against it (`crate::module::rolled_clear`, `crate::roll::clears`). Before
+    /// `on_ability_used`. Asked of the genre of the roller's kind (every genre, for a foundation kind).
+    fn on_roll(&self, _ctx: &ReducerContext, _actor_id: u64, _ability_id: u32, _seen_us: i64, _roll_ms: u32) {}
+
     /// WHICH ABILITY A USE IS (DECISIONS #303): `actor_id` asked for `ability_id`, and the genre may answer
     /// another (Regent's Rule: the string's last step is the one the wielded handle gives), so the server, not
     /// the client, decides what a press fires, and an older client's press still fires the right one. None:
@@ -364,6 +371,13 @@ fn genres_for(kind: u8) -> Vec<&'static dyn Genre> {
 pub fn on_ability_used(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32, aim: crate::sim::Vector3) {
     for g in genres_for(actor_kind) {
         g.on_ability_used(ctx, actor_id, ability_id, aim);
+    }
+}
+
+/// A dodge roll began (DECISIONS #309): the genre of its user's kind hears it (every genre, for a foundation kind).
+pub fn on_roll(ctx: &ReducerContext, actor_id: u64, actor_kind: u8, ability_id: u32, seen_us: i64, roll_ms: u32) {
+    for g in genres_for(actor_kind) {
+        g.on_roll(ctx, actor_id, ability_id, seen_us, roll_ms);
     }
 }
 

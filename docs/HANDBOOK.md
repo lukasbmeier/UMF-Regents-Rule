@@ -931,6 +931,17 @@ A character GLIDES (`glide_fall_speed`: holding jump after a flap it falls slowl
 with `hover_height`: held that high, steering as on the ground) by numbers in the same model (DECISIONS
 #236). An ability can have its own KEY (`AbilityDef.key`: an input action, e.g. `power` on the right
 mouse button); without one, a character's first ability is on the attack key (DECISIONS #237).
+A DODGE ROLL (DECISIONS #309): name an ability that `rolls` as a character's **Dodge roll**
+(`EntityDefinition.dodge_roll`; the foundation's is `foundation/content/ability/dodge_roll.tres`) and its
+dash key rolls (the ability's `key`, else the dash key): the body dashes at once by its movement profile's
+dash, the way the keys push (else forward), held that way for the roll's length; the server puts the roll's
+status on them as an effect (the foundation's Rolling: nothing a referee judges hits them, no sprint, no
+jump) and refuses a roll in the air (a press there waits for the ground, `foundation.roll_hold_ms`). A hit
+the referee reports after the roll is judged by when the player PRESSED it, as they saw the blow
+(`foundation.roll_late_ms` forgives a late hand). Its length is the live rule `foundation.roll_ms` (550 ms;
+a game's own roll may name its own rule). Its animation is `ability.<id>` in the character's set, played
+whole, the model facing the way it rolls. `RollComponent` (on every entity) does the client's half; a genre
+cancels its own actions on its `rolled` signal and on the server's `Genre::on_roll`.
 
 ### Animation
 Characters animate from a SET (`game/anim/fisher.tres`) mapping SEMANTIC names
@@ -1062,6 +1073,21 @@ says. Nothing in code tells an item how to be held.
   line in the style's good / warn / bad / accent colour), `UiKit.button`, `UiKit.slot_grid`; an item is a
   `UiSlot` (its colour or picture, its initials, a count, picked or not, a tooltip, and its `grade`: the
   edge in the grade's colour).
+- **Windows resize and remember** (DECISIONS #310), with no code of yours: a player drags an edge or a
+  corner to resize one (never smaller than what it holds or its `size_min`, never off the screen), and
+  where they left it and its size are kept in their settings file (`user://settings.cfg`, section
+  `[windows]`) and used the next time it opens. Each window is remembered by `window_id` if you set one,
+  else by its script (a `class_name MyBag extends UiWindow` window is remembered as itself), else by its
+  title. A double-click on the title bar puts it back where the game puts it; Settings, Game, **Remember
+  where windows are** off forgets them all. `resizable = false` or `remember = false` turns either off for
+  one window; `placed(rect)` says when the player moved or resized it. Call `fit()` after refilling a
+  window to shrink it to what it holds now: it keeps the size the player gave it.
+- **Windows scroll what they cannot show** (DECISIONS #311), with no code of yours: `content` sits in a
+  scroll box (`scroller`). A window grows to what it holds as you add rows, up to the screen less
+  `SCREEN_MARGIN` (24 px) on each side, and scrolls past that (a bag's long item description); one the
+  player made smaller scrolls too. Up and down by default; sideways only for a row that cannot wrap (give a
+  long `Label` `autowrap_mode` and it wraps instead). Empty `content` and fill it again in one go (a refresh)
+  and it stays scrolled where it was. `scrolls()` says whether it is scrolling now.
 - **Item icons, drawn from their models** (DECISIONS #271): a content type that has a model says so
   (`icon_scene()`: Regent's Rule's items return their held scene), and `tools/render_icons.tscn` draws
   every such piece into a square picture beside its content (`game/<genre>/icons/<type>_<id>.png`: the
@@ -1250,7 +1276,11 @@ status). Saving a template piece anyway is warned about in the Content panel's l
    where they happen and its speed over its head. Change a number in the Inspector and it plays again.
 6. **Its abilities.** **New ability for it** makes one, lists it on the character (the server lets
    a character use only the abilities its kind's characters list; a kind that lists none may use
-   any), and opens it on the ability bench, tried on that character.
+   any), and opens it on the ability bench, tried on that character. **A dodge roll** is not listed
+   there: pick it in the character's **Dodge roll** field (the foundation's Dodge roll, or your own
+   ability with **Rolls** ticked, its **Roll Status** a status that is not hittable, its **Roll Ms** or
+   a hot rule in **Roll Ms Rule**). Give the character's movement profile a dash (`dash_impulse`) for
+   the burst, and its animation set an `ability.<id>` clip for the roll.
 7. **Play as this.** On the character's bench (or a movement's) **Play as this** runs the game as it.
    A change the server reads (a speed, a range) is published first; a look, an animation or a fit
    plays at once. Content with a problem is not played until it is fixed. A movement or ability

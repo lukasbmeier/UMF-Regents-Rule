@@ -40,6 +40,7 @@ const SUITES: PackedStringArray = [
 	"resources",
 	"interaction",
 	"action",
+	"roll",
 	"referee",
 	"bodies",
 	"carry",
@@ -73,6 +74,7 @@ const SUITES: PackedStringArray = [
 	"greybox",
 	"equip",
 	"ui_kit",
+	"ui_window",
 ]
 
 

@@ -216,6 +216,62 @@ func reset(tab: String) -> void:
 		set_value(e["key"], e["default"])
 
 
+# --- where each window is (DECISIONS #310) ----------------------------------------------------
+
+## The section of the settings file that keeps each window's place.
+const WINDOWS_SECTION: String = "windows"
+
+
+## WHERE WINDOW `id` WAS LEFT (`UiWindow`, DECISIONS #310): {"position": Vector2, "size": Vector2 (zero: it fits
+## what it holds)}, or {} when it was never moved, or windows are not remembered.
+func window_place(id: String) -> Dictionary:
+	if id.is_empty() or not bool(get_value(&"remember_windows")) or not _cfg.has_section_key(WINDOWS_SECTION, window_key(id)):
+		return {}
+	var v: Variant = _cfg.get_value(WINDOWS_SECTION, window_key(id))
+	if not (v is Dictionary) or not ((v as Dictionary).get("position") is Vector2):
+		return {}
+	var d: Dictionary = v
+	return {"position": d["position"], "size": d.get("size", Vector2.ZERO) if d.get("size") is Vector2 else Vector2.ZERO}
+
+
+## Keep where window `id` is and its size (zero: it fits what it holds), unless windows are not remembered.
+func set_window_place(id: String, position: Vector2, size: Vector2) -> void:
+	if id.is_empty() or not bool(get_value(&"remember_windows")):
+		return
+	_cfg.set_value(WINDOWS_SECTION, window_key(id), {"position": position, "size": size})
+	_write()
+
+
+## Forget where window `id` was: it opens where the game puts it.
+func forget_window_place(id: String) -> void:
+	if _cfg.has_section_key(WINDOWS_SECTION, window_key(id)):
+		_cfg.erase_section_key(WINDOWS_SECTION, window_key(id))
+		_write()
+
+
+## Forget every window's place.
+func forget_window_places() -> void:
+	if _cfg.has_section(WINDOWS_SECTION):
+		_cfg.erase_section(WINDOWS_SECTION)
+		_write()
+
+
+## A window id as a key the settings file keeps (a script's path has characters a key cannot).
+static func window_key(id: String) -> String:
+	var out: String = ""
+	for c: String in id.trim_prefix("res://"):
+		out += c if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9") else "_"
+	return out
+
+
+func _write() -> void:
+	if _path.is_empty():
+		return
+	var err: Error = _cfg.save(_path)
+	if err != OK:
+		push_warning("Settings: could not save %s (%s)" % [_path, error_string(err)])
+
+
 ## Run on the defaults from now on, reading and writing no file (tests).
 func use_defaults() -> void:
 	_path = ""
@@ -544,6 +600,12 @@ func _define_foundation() -> void:
 	})
 	define(&"splash_at_start", GAME, "Splash screen at start", Kind.TOGGLE, true, {
 		"tooltip": "The game's name and its tips for a few seconds before connecting. Off: straight to the connect screen (handy while testing).",
+	})
+	define(&"remember_windows", GAME, "Remember where windows are", Kind.TOGGLE, true, {
+		"tooltip": "Windows (a bag, a map) open where you last moved them, the size you made them. Off: where the game puts them, and every place remembered is forgotten. Double-click a window's title bar to put that one back.",
+		"apply": func(v: Variant) -> void:
+			if not bool(v):
+				forget_window_places(),
 	})
 
 

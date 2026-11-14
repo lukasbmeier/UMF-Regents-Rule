@@ -194,7 +194,8 @@ func keyed_ability(event: InputEvent) -> AbilityDef:
 	if ent == null or ent.definition == null:
 		return null
 	for a: AbilityDef in ent.definition.abilities:
-		if a != null and not a.key.is_empty() and InputMap.has_action(a.key) and event.is_action_pressed(a.key) and not event.is_echo():
+		# A roll is the RollComponent's (DECISIONS #309): it dashes and holds its way, which a plain use does not.
+		if a != null and not a.rolls and not a.key.is_empty() and InputMap.has_action(a.key) and event.is_action_pressed(a.key) and not event.is_echo():
 			return a
 	return null
 
@@ -215,7 +216,7 @@ func use_first_ability() -> int:
 	if ent == null or ent.definition == null:
 		return -1
 	for a: AbilityDef in ent.definition.abilities:
-		if a != null and a.key.is_empty():
+		if a != null and a.key.is_empty() and not a.rolls:
 			return use_ability(a.id)
 	return -1
 
@@ -416,10 +417,13 @@ func is_forced() -> bool:
 	return _forced_frames > 0
 
 
-## Whether a character dashes only by an ability (one of its abilities lunges).
+## Whether a character dashes only by an ability (one of its abilities lunges, or it has a dodge roll: its dash
+## key rolls instead, DECISIONS #309).
 static func lunges_by_ability(defn: EntityDefinition) -> bool:
 	if defn == null:
 		return false
+	if defn.dodge_roll != null:
+		return true
 	for a: AbilityDef in defn.abilities:
 		if a != null and a.lunges:
 			return true

@@ -41,6 +41,24 @@ class_name AbilityDef extends ContentDef
 ## swipe. A character with an ability that lunges dashes only so: its dash key does nothing.
 @export var lunges: bool = false
 
+@export_group("A dodge roll")
+## A DODGE ROLL (DECISIONS #309): on its key (`key`; empty: the dash key) its user's body is thrown the way their
+## keys push (else the way it faces) by its movement profile's DASH, at once, and held to that way for `roll_ms`;
+## for as long, `roll_status` holds them (a status that is not `hittable`: nothing a referee judges hits them). A
+## press in the air waits for the ground (`foundation.roll_hold_ms`); the server refuses one there, unless
+## `roll_in_air`. A character rolls with the one its `dodge_roll` names (`RollComponent`). The animation it plays
+## is `animation` (`ability.<id>` in the character's set), whole, the model facing the way it goes.
+@export var rolls: bool = false
+## The status that holds its user while it lasts, put on as an EFFECT beside their state (the foundation's
+## Rolling: not hittable, no sprint, no jump).
+@export var roll_status: StatusDef
+## How long it lasts: the unhittable window and the time its way is held.
+@export_range(0, 3000, 10, "suffix:ms") var roll_ms: int = 550
+## A HOT RULE that gives its length live (a game's own: `regents.roll_ms`), over `roll_ms`. Empty: `roll_ms`.
+@export var roll_ms_rule: StringName = &""
+## May begin in the air. Off: no roll in the air.
+@export var roll_in_air: bool = false
+
 ## The shortest wind-up the network allows (ARCHITECTURE: the RTT floor).
 const MIN_WIND_UP_MS: int = 100
 
@@ -62,6 +80,19 @@ func to_bake() -> Dictionary:
 		"radius": radius_m,
 		"height": height_m,
 		"lunges": lunges,
+	}.merged(_roll_bake())
+
+
+## A roll's own keys, only on a roll: every other ability bakes as it did (no game's bake goes stale).
+func _roll_bake() -> Dictionary:
+	if not rolls:
+		return {}
+	return {
+		"rolls": true,
+		"roll_status": roll_status.status if roll_status != null else -1,
+		"roll_ms": roll_ms,
+		"roll_ms_rule": String(roll_ms_rule),
+		"roll_in_air": roll_in_air,
 	}
 
 
@@ -69,6 +100,17 @@ func validate() -> Array[String]:
 	var out: Array[String] = super()
 	if judged and reach_m <= 0.0:
 		out.append("it is judged by the referee but reaches nowhere: give it a reach")
+	if rolls:
+		if roll_status == null:
+			out.append("it rolls but has no status to hold its user while it lasts: pick one (the foundation's Rolling)")
+		elif roll_status.hittable:
+			out.append("it rolls, but its status '%s' can be hit: a roll that does not dodge (untick its hittable)" % roll_status.display_name)
+		if judged:
+			out.append("it rolls and is judged: a roll hits nothing, turn judged off")
+		if lunges:
+			out.append("it rolls and lunges: a roll is its own dash, turn lunges off")
+		if roll_ms <= 0 and roll_ms_rule.is_empty():
+			out.append("it rolls for no time: give roll_ms a value")
 	if wind_up_ms < MIN_WIND_UP_MS:
 		out.append("its wind-up (%d ms) is under the %d ms a round trip needs: players would see it land before it starts" % [wind_up_ms, MIN_WIND_UP_MS])
 	return out
