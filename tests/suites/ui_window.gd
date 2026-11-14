@@ -4,6 +4,9 @@ extends "res://tests/suite_base.gd"
 ## window holds and never off the screen; a drag kept on the screen; where it was left and its size remembered
 ## per window and restored when one opens again (and from the settings file); a window that is not resizable or
 ## not remembered; a double-click on the bar puts it back; the setting that forgets them all.
+## IT SCROLLS WHAT IT CANNOT SHOW (DECISIONS #311): content that fits shows no scrollbar; rows added grow it; content
+## taller than the screen stops it at the screen and scrolls; one made smaller than what it holds scrolls; sideways
+## only for a row that cannot wrap; its scroll kept when its rows are emptied and filled again.
 
 const PLACES_FILE: String = "user://test_window_places.cfg"
 const SCREEN: Vector2 = Vector2(1280, 720)
@@ -15,6 +18,7 @@ func run() -> void:
 	Settings.use_defaults()
 	_run_rules()
 	await _run_windows()
+	await _run_scrolling()
 	_run_file()
 	Settings.use_defaults()
 	await get_tree().process_frame
@@ -142,7 +146,7 @@ func _run_windows() -> void:
 	w.resize_input(_press(before.get_center(), false))
 	_check(w.get_global_rect() == before, "and nothing changed")
 
-	# What it holds needs more than the size given: it grows, and keeps the player's size otherwise.
+	# What it holds needs more than the size the player gave it: the player's size is kept, and it scrolls.
 	w.position = Vector2(100, 100)
 	w.size = Vector2(500, 300)
 	w._user_size = Vector2(500, 300)
@@ -150,10 +154,13 @@ func _run_windows() -> void:
 	tall.custom_minimum_size = Vector2(10, 600)
 	w.content.add_child(tall)
 	w.fit()
-	_check(w.size.x == 500.0 and w.size.y >= 600.0, "fit with more to hold: it grows to hold it, the player's width kept (%s)" % w.size)
+	await _settle()
+	_check(w.size == Vector2(500, 300) and w.scrolls(), "fit with more to hold than the player's size: the size kept, and it scrolls (%s)" % w.size)
 	tall.free()
 	w.fit()
-	_check(w.size == Vector2(500, 300) and w.position == Vector2(100, 100), "and fit again: back to the player's size, where it was (%s)" % w.size)
+	await _settle()
+	_check(w.size == Vector2(500, 300) and w.position == Vector2(100, 100) and not w.scrolls(),
+		"and fit again with less: the player's size, where it was, no scrollbar (%s)" % w.size)
 
 	# NOT RESIZABLE: its edges do nothing.
 	var fixed: UiWindow = _window("Fixed")
@@ -223,6 +230,100 @@ func _run_windows() -> void:
 	_check(Settings.window_place("Bag").is_empty(), "and none kept while it is off")
 	Settings.set_value(&"remember_windows", true)
 	again.close()
+	_view.queue_free()
+	await get_tree().process_frame
+
+
+func _row(height: float, width: float = 10.0) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(width, height)
+	return c
+
+
+func _run_scrolling() -> void:
+	print("== ui window: it scrolls what it cannot show ==")
+	_view = SubViewport.new()
+	_view.size = Vector2i(SCREEN)
+	add_child(_view)
+	Settings.forget_window_places()
+	_check(UiWindow.sized_to(Vector2(100, 50), Vector2(20, 40), Vector2(300, 200), Vector2(1000, 600)) == Vector2(300, 200),
+		"little to hold: its smallest size")
+	_check(UiWindow.sized_to(Vector2(500, 400), Vector2(20, 40), Vector2(300, 200), Vector2(1000, 600)) == Vector2(520, 440),
+		"more: all of it and its frame")
+	_check(UiWindow.sized_to(Vector2(500, 4000), Vector2(20, 40), Vector2(300, 200), Vector2(1000, 600)) == Vector2(520, 600),
+		"more than the screen allows: the screen's (the rest scrolls)")
+
+	var w: UiWindow = _window("Scroll test")
+	w.content.add_child(UiKit.line("A short line."))
+	w.open()
+	await _settle()
+	_check(not w.scrolls() and w.size == Vector2(300, 200), "what fits shows no scrollbar (%s)" % w.size)
+	# Rows added after it opened: it grows to them by itself (no fit, as a game's window refilled).
+	w.content.add_child(_row(400))
+	await _settle()
+	_check(w.size.y > 400.0 and not w.scrolls(), "a tall row added: it grows to show it, no scrollbar (%s)" % w.size)
+	# Taller than the screen: it stops at the screen (less its margin), stays on it, and scrolls.
+	w.content.add_child(_row(2000))
+	await _settle()
+	var r: Rect2 = w.get_global_rect()
+	_check(is_equal_approx(r.size.y, SCREEN.y - UiWindow.SCREEN_MARGIN * 2.0) and Rect2(Vector2.ZERO, SCREEN).encloses(r),
+		"more than the screen holds: it stops %d px from its edges, on the screen (%s)" % [UiWindow.SCREEN_MARGIN, r])
+	_check(w.scrolls() and w.scroller.get_v_scroll_bar().visible and not w.scroller.get_h_scroll_bar().visible,
+		"and scrolls up and down, not sideways")
+	# A long line wraps to the width; only a row that cannot wrap scrolls sideways.
+	var words := Label.new()
+	words.text = "A very long description that goes on and on about where this thing came from and what it is for. ".repeat(6)
+	words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	w.content.add_child(words)
+	await _settle()
+	_check(not w.scroller.get_h_scroll_bar().visible and r.size.x <= SCREEN.x, "a long line that wraps does not scroll sideways (%s wide)" % w.size.x)
+	w.content.add_child(_row(10, 3000))
+	await _settle()
+	_check(w.scroller.get_h_scroll_bar().visible, "a row that cannot wrap, wider than the screen: it scrolls sideways")
+
+	# The scroll kept when the rows are emptied and filled again (a game's refresh).
+	for c: Node in w.content.get_children():
+		c.queue_free()
+	await _settle()
+	for i: int in range(30):
+		w.content.add_child(_row(100))
+	await _settle()
+	w.scroller.scroll_vertical = 700
+	await _settle()
+	var before: int = w.scroller.scroll_vertical
+	for c: Node in w.content.get_children():
+		c.queue_free()
+	for i: int in range(30):
+		w.content.add_child(_row(100))
+	await _settle()
+	await _settle()
+	_check(before == 700 and w.scroller.scroll_vertical == 700, "emptied and filled again: scrolled where it was (%d, was %d)" % [w.scroller.scroll_vertical, before])
+	# Negative: refilled with too little to scroll that far, it scrolls as far as it can (the top).
+	for c: Node in w.content.get_children():
+		c.queue_free()
+	w.content.add_child(_row(50))
+	await _settle()
+	await _settle()
+	_check(w.scroller.scroll_vertical == 0 and not w.scroller.get_v_scroll_bar().visible, "refilled with little: at the top, nothing to scroll")
+	w.close()
+
+	# Made SMALLER than what it holds by the player: it scrolls, and keeps their size.
+	var s: UiWindow = _window("Small")
+	for i: int in range(5):
+		s.content.add_child(_row(80))
+	s.open()
+	await _settle()
+	_check(not s.scrolls() and s.size.y > 400.0, "five rows: shown whole (%s)" % s.size)
+	var bottom := Vector2(s.get_global_rect().get_center().x, s.get_global_rect().end.y - 2.0)
+	s.resize_input(_press(bottom, true))
+	s.resize_input(_motion(bottom + Vector2(0, -300)))
+	s.resize_input(_press(bottom + Vector2(0, -300), false))
+	await _settle()
+	_check(s.scrolls() and s.size.y < 400.0 and s.size.y >= 200.0, "resized smaller than what it holds: it scrolls (%s)" % s.size)
+	s.content.add_child(_row(80))
+	await _settle()
+	_check(s.size.y < 400.0, "a row added keeps the player's size (it scrolls; it does not grow) (%s)" % s.size)
+	s.close()
 	_view.queue_free()
 	await get_tree().process_frame
 

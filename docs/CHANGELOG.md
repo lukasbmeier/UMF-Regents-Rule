@@ -1175,3 +1175,10 @@ opts in: a game gives its character a `dodge_roll`.
 - WINDOWS (#310): every `UiWindow` resizes from its edges and corners (a minimum, on the screen) and remembers its place
   and size per window in the settings file; a double-click on its bar resets it; Settings, Game, "Remember where windows
   are". Tests: `tests/suites/ui_window.gd`.
+
+## 1.8.1 — a window scrolls what it cannot show (DECISIONS #311)
+Client only: nothing to republish, no codegen. Friends need a new build for it.
+- `UiWindow`: `content` sits in a ScrollContainer (`scroller`); the window grows to what it holds up to the screen less
+  24 px each side and scrolls past that; one resized smaller scrolls; sideways only for a row that cannot wrap; a refresh
+  keeps the scroll. `content_size()`, `scrolls()`, `sized_to()`. The resize minimum is `size_min` (no longer the content).
+  Tests: `tests/suites/ui_window.gd` (its scrolling section).

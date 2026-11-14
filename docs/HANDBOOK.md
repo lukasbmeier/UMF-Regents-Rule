@@ -1081,7 +1081,13 @@ says. Nothing in code tells an item how to be held.
   title. A double-click on the title bar puts it back where the game puts it; Settings, Game, **Remember
   where windows are** off forgets them all. `resizable = false` or `remember = false` turns either off for
   one window; `placed(rect)` says when the player moved or resized it. Call `fit()` after refilling a
-  window: it keeps the size the player gave it (grown if the new rows need more).
+  window to shrink it to what it holds now: it keeps the size the player gave it.
+- **Windows scroll what they cannot show** (DECISIONS #311), with no code of yours: `content` sits in a
+  scroll box (`scroller`). A window grows to what it holds as you add rows, up to the screen less
+  `SCREEN_MARGIN` (24 px) on each side, and scrolls past that (a bag's long item description); one the
+  player made smaller scrolls too. Up and down by default; sideways only for a row that cannot wrap (give a
+  long `Label` `autowrap_mode` and it wraps instead). Empty `content` and fill it again in one go (a refresh)
+  and it stays scrolled where it was. `scrolls()` says whether it is scrolling now.
 - **Item icons, drawn from their models** (DECISIONS #271): a content type that has a model says so
   (`icon_scene()`: Regent's Rule's items return their held scene), and `tools/render_icons.tscn` draws
   every such piece into a square picture beside its content (`game/<genre>/icons/<type>_<id>.png`: the

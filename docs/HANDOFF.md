@@ -1,6 +1,8 @@
-# Handoff — UMF Template, 2026-11-14 (1.8.0: the dodge roll; windows that resize and remember)
+# Handoff — UMF Template, 2026-11-14 (1.8.1: windows scroll; 1.8.0: the dodge roll, windows that resize and remember)
 
 ## Where it stands
+- **1.8.1** (DECISIONS #311, client only): a window scrolls what it cannot show (Luke, via Regent's Rule: the bag's long
+  descriptions). Committed on top of 1.8.0, NOT PUSHED either: one `git push origin main` sends both.
 - **1.8.0** (DECISIONS #309, #310), started from a Regent's Rule session (Luke: "Lets do some template work on both the roll
   and resizable window"). Committed on main (1a03c2c), NOT PUSHED (the session's
   push was refused by its permission check): `git push origin main` first, then the games can pull it. `umf-template` republished with `--codegen`
@@ -25,6 +27,11 @@
 - Tests: `tests/suites/roll.gd`, `tests/suites/ui_window.gd` (both in `test_runner.gd`), the integration suite's "dodge roll"
   section and its referee section's roll checks. HANDBOOK (movement, windows, the character recipe), CHANGELOG 1.8.0.
 
+- 1.8.1 SCROLLING (#311): `UiWindow.content` sits in `scroller` (a ScrollContainer); the window grows itself to what it
+  holds (`_grow_to_content`, on `content.minimum_size_changed`) up to the screen less `SCREEN_MARGIN` and scrolls past;
+  a player's size is kept and scrolls; the resize minimum is now `size_min`. A scroll restore of our own proved
+  redundant (mutation: Godot keeps it on a one-frame refill) and was removed; the suite guards the behaviour.
+
 ## Next, in order
 1. Ship 1.8.0 (and 1.7.5-1.7.8 for the others) with `ship_template.sh`; each game republishes `--codegen`.
 2. REGENT'S RULE switches its own roll to the foundation's (its own step, after `git pull template main`):
@@ -40,7 +47,8 @@
      and `_began`'s dodge branch; connect `RollComponent.rolled` to what a roll cancels; read `roll_until_ms`/`rolling()`
      and the bar's `cooldown()` from the RollComponent; Rolling checks become `StatusComponent.has_effect(101)`.
    - its tests that name `dodge()`/`DODGE_ID`/`STATUS_ROLLING` follow; `combat_playtest.sh` is the proof.
-   - windows need no code (its five windows are remembered by their scripts).
+   - windows need no code (its five windows are remembered by their scripts, and scroll past the screen). Check the
+     station window: it has its own ScrollContainer (260x340) inside `content`, now inside the window's scroll too.
 3. From before: the SDK btree patch upstream (ask Luke); effects' own presentation; a region referee's load.
 
 ## Waiting on Luke
