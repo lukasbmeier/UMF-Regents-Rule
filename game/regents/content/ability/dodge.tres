@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[ext_resource type="Resource" path="res://game/regents/content/status/rolling.tres" id="2_rolling"]
 
 [resource]
 script = ExtResource("1_ability")
@@ -9,12 +11,17 @@ range_m = 0.0
 wind_up_ms = 100
 damage = 0.0
 animation = &"ability.40010"
-key = &"dodge"
+key = &""
 judged = false
 reach_m = 0.0
 radius_m = 0.35
 height_m = 0.9
 lunges = false
+rolls = true
+roll_status = ExtResource("2_rolling")
+roll_ms = 550
+roll_ms_rule = &"regents.roll_ms"
+roll_in_air = false
 id = 40010
 display_name = "Dodge roll"
-designer_notes = "Ctrl: the roll's movement is the adventurer's dash, predicted at once; this ability gives its i-frames (the Rolling status) and cancels a swing. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."
+designer_notes = "THE FOUNDATION'S ROLL (DECISIONS #309; Regent's own until PROGRESS 77): rolls, Rolling (101) for regents.roll_ms, no roll in the air, on the dash key (key empty: Ctrl, as the combat component binds it); the adventurer names it as its dodge_roll. What a roll does to a fight is game/regents.rs `on_roll`. Before: Ctrl: the roll's movement is the adventurer's dash, predicted at once; this ability gives its i-frames (the Rolling status) and cancels a swing. Its key is the combat component's (game/regents/combat/), not the foundation's attack key."

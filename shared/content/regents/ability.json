@@ -104,6 +104,11 @@
 			"radius": 0.35,
 			"range": 0.0,
 			"reach": 0.0,
+			"roll_in_air": false,
+			"roll_ms": 550,
+			"roll_ms_rule": "regents.roll_ms",
+			"roll_status": 101,
+			"rolls": true,
 			"wind_up_ms": 100
 		},
 		{

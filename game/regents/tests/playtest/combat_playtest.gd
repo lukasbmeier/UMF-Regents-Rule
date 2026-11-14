@@ -242,7 +242,7 @@ func _run() -> void:
 	await get_tree().create_timer(0.15).timeout
 	var up_there: bool = not combat.grounded()
 	await _key(KEY_CTRL)
-	var held_aloft: bool = combat.roll_until_ms == rolled_before and combat.roll_on_landing_ms >= 0
+	var held_aloft: bool = combat.roll_until_ms == rolled_before and combat._roll != null and combat._roll.asked_ms >= 0   # the foundation's air hold
 	await _until(func() -> bool: return combat.roll_until_ms != rolled_before, 2.0)
 	var landed_first: bool = combat.grounded()
 	_check(up_there and held_aloft and combat.roll_until_ms != rolled_before and landed_first,

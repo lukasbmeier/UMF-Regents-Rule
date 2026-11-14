@@ -26,7 +26,7 @@ use spacetimedb::{client_visibility_filter, reducer, table, Filter, ReducerConte
 use crate::genre::regents::{self as rules, Minigame, NodeSeed, RecipeSeed, ENTITY_NODE, ENTITY_STATION, LEVEL_FRONTIER, STATUS_DEPLETED};
 use crate::hot::regents as hot;
 use crate::module::{
-    ability_def, action_event, body_state, challenge, damage_share, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_state,
+    ability_def, action_event, body_state, challenge, damage_share, entity, health_state, hot_number, inventory_item, item_def, movement_state, npc_brain, player, status_effect, status_state,
     world_config, world_level, client_rtt, Challenge, InventoryItem, ItemDef, StatusStateRow, DEFAULT_WORLD,
 };
 use crate::sim::Vector3;
@@ -2051,7 +2051,7 @@ pub fn draw_bow(ctx: &ReducerContext, on: bool) -> Result<(), String> {
     ammo_in_bag(ctx, me, kit.key).ok_or("draw_bow: no arrows")?;
     // Not mid-roll or mid-swing, nor in a status that cannot act (slain, flinched): any other is fine.
     let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
-    if now_status == rules::STATUS_ROLLING || now_status == rules::STATUS_SWINGING
+    if crate::module::is_rolling(ctx, me) || now_status == rules::STATUS_SWINGING
         || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
         return Err("draw_bow: not now".into());
     }
@@ -2359,7 +2359,7 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
         need_slot(ctx, me, kit, ability_id, "cast")?;
     }
     let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
-    if now_status == rules::STATUS_ROLLING || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
+    if crate::module::is_rolling(ctx, me) || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
         return Err("cast_spell: not now".into());
     }
     if ctx.db.casting().entity_id().find(me).is_some() {
@@ -2640,7 +2640,7 @@ fn foe_missile_hit(ctx: &ReducerContext, mi: Missile, other_id: u64, pos: Vector
     let target = (other_id != 0 && other_id != mi.owner).then(|| ctx.db.entity().entity_id().find(other_id)).flatten()
         .filter(|e| ctx.db.player().entity_id().find(e.entity_id).is_some() && !is_dead(ctx, e.entity_id));
     if let Some(t) = &target {
-        let rolling = ctx.db.status_state().entity_id().find(t.entity_id).is_some_and(|st| st.status == rules::STATUS_ROLLING);
+        let rolling = crate::module::is_rolling(ctx, t.entity_id);
         if rolling {
             let flight = ctx.db.movement_state().entity_id().find(body_id).zip(ctx.db.body_state().entity_id().find(body_id));
             if let Some((mut m, b)) = flight {
@@ -2974,16 +2974,6 @@ fn save_seen_delay(ctx: &ReducerContext, me: u64, seen_delay_ms: u32) {
     }
 }
 
-/// When `me` SAW a press of theirs that arrives now: less its trip here and how late their client shows a
-/// swing (as it last said; nothing said, nothing taken off for it).
-fn press_seen_now(ctx: &ReducerContext, me: u64) -> i64 {
-    let seen_ms = ctx.db.seen_delay().entity_id().find(me).map_or(0, |d| d.ms);
-    let min_rtt = ctx.db.client_rtt().entity_id().find(me).map(|r| r.min_ms);
-    let credit = rules::guard_credit_ms(min_rtt, seen_ms, hot_number(ctx, crate::hot::foundation::PRESS_CREDIT_CAP_MS).max(0.0) as u32);
-    let cap = hot_number(ctx, crate::hot::foundation::REWIND_MAX_MS).clamp(0.0, 1000.0) as u32;
-    rules::press_seen_us(micros(ctx.timestamp), credit, seen_ms, cap)
-}
-
 fn guard_from(ctx: &ReducerContext, me: u64, on: bool, seen_delay_ms: u32) -> Result<(), String> {
     crate::module::spend_rate(ctx, me, "block")?;
     if !on {
@@ -3160,13 +3150,9 @@ fn stop_block(ctx: &ReducerContext, entity_id: u64) {
 /// and a skill its mastery rank; a light step must follow the one before it; nobody swings while blocking.
 fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), String> {
     if ability_id == rules::ABILITY_DODGE {
-        // No roll in the air (Luke's continent playtest, 2026-10-24, #6: "a roll in the air should not
-        // happen"): the client holds Ctrl pressed there and rolls as it lands; the server refuses one sent
-        // before, as it refuses a swing.
-        if ctx.db.player().entity_id().find(actor).is_some()
-            && ctx.db.movement_state().entity_id().find(actor).is_some_and(|m| !m.grounded) {
-            return Err("no roll in the air".into());
-        }
+        // THE ROLL IS THE FOUNDATION'S (DECISIONS #309, PROGRESS 77): it checks one (no roll in the air,
+        // `module::may_roll`, Luke's #6 of 2026-10-24) and puts its status on as an effect; what a roll does to a
+        // fight is ours, in `on_roll`.
         return Ok(());
     }
     if rules::RETIRED_ABILITIES.contains(&ability_id) {
@@ -3196,11 +3182,8 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
     // No swing mid-roll (owner, 2026-10-19: "prevent melee usage like jumping"): the client holds a press
     // until its roll is over; a slack's worth before the end is allowed (its clock ran first).
     let slack = hot_number(ctx, hot::SWING_SLACK_MS).max(0.0) as i64;
-    if let Some(st) = ctx.db.status_state().entity_id().find(actor).filter(|st| st.status == rules::STATUS_ROLLING) {
-        let left = st.lasts_ms as i64 - (micros(ctx.timestamp) - micros(st.since)) / 1000;
-        if left > slack {
-            return Err("still rolling".into());
-        }
+    if roll_left_ms(ctx, actor).is_some_and(|left| left > slack) {
+        return Err("still rolling".into());
     }
     // No swing in the air (owner, 2026-10-19: a jump attack played a moment and was cut off): the client
     // holds a press made there until it lands.
@@ -3234,46 +3217,51 @@ fn may_fight(ctx: &ReducerContext, actor: u64, ability_id: u32) -> Result<(), St
     Ok(())
 }
 
-/// A use, recorded: the combo moves on (or starts over), a roll lowers the block and cannot be hit.
+/// A ROLL, AS THE FIGHT SEES IT (the foundation's roll, DECISIONS #309; Regent's own until PROGRESS 77): the block goes
+/// down, a cast is let go (owner, 2026-10-20), a swing is canceled (in its wind-up it never lands; in its recovery the
+/// recovery ends: owner, 2026-10-19), the combo is over; and a hit that landed while the roll was on its way here (held
+/// for a parry, or dealt to be taken back) is judged where the player PRESSED it (`seen_us`, the foundation's; Luke,
+/// 2026-11-11: "Yes, credit the delay"). Its status (Rolling, 101, not hittable) the foundation put on as an effect.
+fn rolled(ctx: &ReducerContext, actor: u64, seen: i64, ms: u32) {
+    stop_block(ctx, actor);
+    end_cast(ctx, actor);
+    if let Some(mut w) = ctx.db.swing().entity_id().find(actor) {
+        let t = ((micros(ctx.timestamp) - micros(w.at)) / 1000).max(0);
+        if t < w.lock_ms as i64 && !w.cancelled {
+            w.cancelled = t < w.wind_up_ms as i64;
+            w.lock_ms = t as u32;
+            ctx.db.swing().entity_id().update(w);
+        }
+    }
+    let mut cs = combat_state_of(ctx, actor);
+    cs.combo = -1;
+    save_combat_state(ctx, cs);
+    let late = hot_number(ctx, hot::ROLL_LATE_MS).max(0.0) as u32;
+    for h in ctx.db.held_hit().target().filter(actor).collect::<Vec<HeldHit>>() {
+        if rules::roll_clears(seen, h.land_us, ms, late) {
+            ctx.db.held_hit().scheduled_id().delete(h.scheduled_id);
+            log::info!("regents: {actor} rolled clear of {}'s {} as they saw it ({} ms before it landed)", h.actor, h.ability_id, (h.land_us - seen) / 1000);
+        }
+    }
+    for h in ctx.db.dealt_hit().target().filter(actor).collect::<Vec<DealtHit>>() {
+        if rules::roll_clears(seen, h.land_us, ms, late) {
+            take_back(ctx, &h, "rolled clear");
+            log::info!("regents: {actor} rolled clear of {}'s {} as they saw it ({} ms before it landed)", h.actor, h.ability_id, (h.land_us - seen) / 1000);
+        }
+    }
+    log::info!("regents: {actor} rolls for {ms} ms");
+}
+
+/// How long `who`'s roll still holds them (ms): its status is an EFFECT now (the foundation's roll); None when not rolling.
+fn roll_left_ms(ctx: &ReducerContext, who: u64) -> Option<i64> {
+    ctx.db.status_effect().entity_id().filter(who).find(|e| e.status == rules::STATUS_ROLLING)
+        .map(|e| e.lasts_ms as i64 - (micros(ctx.timestamp) - micros(e.since)) / 1000)
+}
+
+/// A use, recorded: the combo moves on (or starts over). A roll is `rolled`.
 fn fought(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     if ability_id == rules::ABILITY_DODGE {
-        stop_block(ctx, actor);
-        end_cast(ctx, actor);   // a roll lets a cast go (owner, 2026-10-20)
-        // A ROLL CANCELS A SWING (owner, 2026-10-19): in its wind-up it never lands; in its recovery the
-        // recovery ends. Either way the fighter is free, and the combo is over.
-        if let Some(mut w) = ctx.db.swing().entity_id().find(actor) {
-            let t = ((micros(ctx.timestamp) - micros(w.at)) / 1000).max(0);
-            if t < w.lock_ms as i64 && !w.cancelled {
-                w.cancelled = t < w.wind_up_ms as i64;
-                w.lock_ms = t as u32;
-                ctx.db.swing().entity_id().update(w);
-            }
-        }
-        let mut cs = combat_state_of(ctx, actor);
-        cs.combo = -1;
-        save_combat_state(ctx, cs);
-        let ms = (hot_number(ctx, hot::ROLL_MS).max(0.0)) as u32;
-        // THE ROLL, JUDGED WHERE IT WAS PRESSED (Luke, 2026-11-11: "Yes, credit the delay"): a hit that landed
-        // while this roll was on its way here (it waits, `held_hit`) is one the player rolled clear of as they
-        // saw it. A hit that lands from now on meets the Rolling status as before.
-        let seen = press_seen_now(ctx, actor);
-        let late = hot_number(ctx, hot::ROLL_LATE_MS).max(0.0) as u32;
-        for h in ctx.db.held_hit().target().filter(actor).collect::<Vec<HeldHit>>() {
-            if rules::roll_clears(seen, h.land_us, ms, late) {
-                ctx.db.held_hit().scheduled_id().delete(h.scheduled_id);
-                log::info!("regents: {actor} rolled clear of {}'s {} as they saw it ({} ms before it landed)", h.actor, h.ability_id, (h.land_us - seen) / 1000);
-            }
-        }
-        for h in ctx.db.dealt_hit().target().filter(actor).collect::<Vec<DealtHit>>() {
-            if rules::roll_clears(seen, h.land_us, ms, late) {
-                take_back(ctx, &h, "rolled clear");
-                log::info!("regents: {actor} rolled clear of {}'s {} as they saw it ({} ms before it landed)", h.actor, h.ability_id, (h.land_us - seen) / 1000);
-            }
-        }
-        if let Err(e) = crate::module::set_status_internal(ctx, actor, rules::STATUS_ROLLING, ms, actor, String::new()) {
-            log::warn!("regents: {actor} rolled, but: {e}");
-        }
-        return;
+        return;   // a roll's part in a fight is `rolled` (the foundation calls `on_roll` first)
     }
     let Some((kit, slot)) = rules::kit_of_ability(ability_id) else { return };
     let mut s = combat_state_of(ctx, actor);
@@ -4215,11 +4203,9 @@ fn rolled_through(ctx: &ReducerContext, actor: u64, ability_id: u32) {
     let (Some(foe), Some(def), Some((kit, _))) = (ctx.db.foe().entity_id().find(actor), ctx.db.ability_def().ability_id().find(ability_id),
         rules::kit_of_ability(ability_id)) else { return };
     let Some(at) = pos_of(ctx, actor) else { return };
-    let now = micros(ctx.timestamp);
     let rollers: Vec<u64> = ctx.db.tutorial().iter().filter(|t| t.state == rules::TUTORIAL_ON && t.world_id == foe.world_id).map(|t| t.entity_id).collect();
     for who in rollers {
-        let Some(st) = ctx.db.status_state().entity_id().find(who).filter(|st| st.status == rules::STATUS_ROLLING) else { continue };
-        let left = st.lasts_ms as i64 - (now - micros(st.since)) / 1000;
+        let Some(left) = roll_left_ms(ctx, who) else { continue };
         if pos_of(ctx, who).is_some_and(|me| rules::rolled_clear(left, flat_dist(me, at), def.range)) {
             lesson_done(ctx, who, rules::Deed::RolledThrough, 0);
             if kit.unblockable(ability_id) {
@@ -4315,6 +4301,10 @@ impl crate::game::Genre for Regents {
 
     fn loot_data(&self, ctx: &ReducerContext, item_id: u32, roll: u32) -> Option<String> {
         dropped_weapon_data(ctx, item_id, roll)
+    }
+
+    fn on_roll(&self, ctx: &ReducerContext, actor_id: u64, _ability_id: u32, seen_us: i64, roll_ms: u32) {
+        rolled(ctx, actor_id, seen_us, roll_ms);
     }
 
     fn on_ability_used(&self, ctx: &ReducerContext, actor_id: u64, ability_id: u32, _aim: Vector3) {

@@ -5677,19 +5677,44 @@ func _run_combat_pass() -> void:
 	var old_reversed: float = _roll_length(cfg, roll_s, false, true)
 	_check(plain > 2.5 and absf(plain - reversed) < 0.01, "a roll forward goes %.2f m, and %.2f m with S pressed as it begins: a set length" % [plain, reversed])
 	_check(old_reversed < plain * 0.6, "NEGATIVE: not held to its way, as before, S cut it to %.2f m" % old_reversed)
-	_check(CombatComponent.roll_direction_for(Vector2.ZERO, 0.0).is_equal_approx(Vector2(0.0, -1.0))
-		and CombatComponent.roll_direction_for(Vector2(0.0, 1.0), 0.0).is_equal_approx(Vector2(0.0, 1.0))
-		and CombatComponent.roll_direction_for(Vector2(1.0, 0.0), PI / 2.0).is_equal_approx(Vector2(1.0, 0.0).rotated(-PI / 2.0)),
-		"a roll goes the way the keys push, turned by the body; with none pressed, forward")
-	# Ctrl through the combat component: the roll is asked for, dashes, and is held to its way.
+	# THE ROLL IS THE FOUNDATION'S (DECISIONS #309, PROGRESS 77): its direction (`RollComponent.direction_for`, the
+	# foundation's own suite holds it), the adventurer's roll its content, and what a roll cancels in a fight ours.
+	_check(RollComponent.direction_for(Vector2.ZERO, 0.0).is_equal_approx(Vector2(0.0, -1.0))
+		and RollComponent.direction_for(Vector2(0.0, 1.0), 0.0).is_equal_approx(Vector2(0.0, 1.0)),
+		"a roll goes the way the keys push; with none pressed, forward")
+	var dodge: AbilityDef = ContentLibrary.find(&"ability", CombatComponent.DODGE_ID) as AbilityDef
+	var adventurer: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
+	_check(dodge != null and dodge.rolls and dodge.roll_status != null and dodge.roll_status.status == 101 and dodge.roll_ms_rule == &"regents.roll_ms"
+		and not dodge.roll_in_air and dodge.key == &"" and adventurer.dodge_roll == dodge,
+		"the dodge roll is the foundation's: it rolls, Rolling (101) for regents.roll_ms, not in the air, on the dash key; the adventurer's")
+	_check(RollComponent.length_of(dodge) == int(HotRules.number(&"regents.roll_ms")), "its length the live regents.roll_ms (%d ms)" % RollComponent.length_of(dodge))
+	# Ctrl: the foundation's roll taken, the body held to its way, and what it cancels here.
 	var input := LocalInputComponent.new()
 	input.send_to_server = false
 	var act := SpaceTimeActionComponent.new()
 	act._def_override = func(_id: int) -> RefCounted: return RollDefRow.new()
 	act._reducer_override = func(_ab: int, _tg: int, _aim: Vector3, _pid: int) -> ReducerRequest: return ReducerRequest.new()
-	c._local_input = input
-	c._action = act
-	_check(not input.is_forced() and c.dodge() >= 0 and input.is_forced(), "Ctrl: the roll is taken and the body is held to its way")
+	var roller := RollComponent.new()
+	roller.ability = dodge
+	roller._input = input
+	roller._action = act
+	roller._grounded_override = func() -> bool: return true
+	c._roll = roller
+	roller.rolled.connect(c._on_rolled)
+	var t0: int = Time.get_ticks_msec()
+	var sword_kit: KitDef = KitDef.by_key(&"sword")
+	c.kit = sword_kit
+	c.swing_ability = sword_kit.light[0]
+	c.swing_at_ms = t0
+	c.swing_hit_ms = t0 + 500
+	c.swing_lock_ms = t0 + 900
+	c.swing_canceled = false
+	c.queued = {"kind": "light", "slot": 0, "at": t0}
+	c.combo_step = 1
+	_check(not input.is_forced() and c.roll_until_ms < t0 and c.dodge() >= 0 and input.is_forced() and c.roll_until_ms >= t0 + 500,
+		"Ctrl: the foundation's roll is taken, the body held to its way, and the combat component waits on it (roll_until_ms)")
+	_check(c.swing_canceled and c.queued.is_empty() and c.combo_step == -1, "a roll in a swing's wind-up cancels it, the queue and the combo (`_on_rolled`)")
+	_check(not c.may_start(sword_kit.light[0], 0, Time.get_ticks_msec()), "and nothing swings while it rolls")
 	var first: InputFrame = input.sample()
 	_check(first.dash and first.move_dir.is_equal_approx(Vector2(0.0, -1.0)), "its first frame dashes forward (no key pressed: the way it faces)")
 	Input.action_press(LocalInputComponent.ACTION_BACK)
@@ -5699,6 +5724,8 @@ func _run_combat_pass() -> void:
 	var after: InputFrame = input.sample()
 	Input.action_release(LocalInputComponent.ACTION_BACK)
 	_check(held and not input.is_forced() and after.move_dir.y > 0.5, "S pressed all the roll long: every frame of it goes forward; the frame after it is the key's again")
+	c._roll = null
+	roller.free()
 	act.free()
 	input.free()
 

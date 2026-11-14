@@ -78,7 +78,7 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 32,
-			"hash": "08d2809b",
+			"hash": "67f20602",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
@@ -86,7 +86,7 @@
 				"game/regents/content/ability/axe_heavy.tres": "f976c1b2",
 				"game/regents/content/ability/blink.tres": "abf6228b",
 				"game/regents/content/ability/bow_loose.tres": "7d47acb5",
-				"game/regents/content/ability/dodge.tres": "0b524f44",
+				"game/regents/content/ability/dodge.tres": "9c453aed",
 				"game/regents/content/ability/fireball.tres": "db3bb64e",
 				"game/regents/content/ability/foe_arrow.tres": "b2355146",
 				"game/regents/content/ability/foe_bow_shove.tres": "4943a620",
@@ -129,10 +129,10 @@
 		},
 		"shared/content/regents/character.json": {
 			"count": 12,
-			"hash": "e75681b0",
+			"hash": "4ab63905",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/character/adventurer.tres": "82e9c25f",
+				"game/regents/content/character/adventurer.tres": "592fdd87",
 				"game/regents/content/character/deer.tres": "e1ca88ce",
 				"game/regents/content/character/dummy.tres": "f90a4f6b",
 				"game/regents/content/character/guide.tres": "9acdb325",

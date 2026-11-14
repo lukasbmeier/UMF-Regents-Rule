@@ -9,7 +9,8 @@
 			"kind": 0,
 			"movement": 40001,
 			"name": "Adventurer",
-			"playable": false
+			"playable": false,
+			"roll": 40010
 		},
 		{
 			"abilities": [],

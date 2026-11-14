@@ -353,7 +353,7 @@ func _on_health_changed(_current: float, _max: float, delta: float) -> void:
 	if delta > 0.0 and is_taken_back(delta, _last_drop, now - _last_drop_ms):
 		_last_drop = 0.0
 		taken_back += 1
-		if _status != null and _status.status() == STATUS_ROLLING:
+		if _status != null and _status.has_effect(STATUS_ROLLING):   # the roll's status is an effect (the foundation's)
 			say("Dodged", FLASH_BLOCK)
 		return
 	show_number(-delta)

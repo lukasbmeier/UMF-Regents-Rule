@@ -4218,3 +4218,119 @@ bar (or the staff in the bag, then Abilities): "Choose for R (level 20)": Gale.
 
 **Left for later**: Luke's role abilities for the axe, sword and bow (he writes them next); the UI rebuild (`GAME.md`'s
 to-dos, soon after armor; resizing windows is template work).
+
+## Step 77: TEMPLATE 1.8.1 PULLED; THE ROLL IS THE FOUNDATION'S (2026-11-14)
+
+Luke: "Lets do some template work on both the roll and resizable window" (the dodge roll); "if it cant be shown, its
+scrollable"; then "the push is done, lets continue" and, asked how Regent's uncommitted work should go, "Commit
+everything".
+
+**The template (another session, `UMF Template`)**: 1.8.0, the DODGE ROLL in the foundation (DECISIONS #309: an
+`AbilityDef` that `rolls`, `EntityDefinition.dodge_roll`, `RollComponent`, `module/rolls.rs` with the private
+`roll_state` table, `Genre::on_roll`) and WINDOWS THAT RESIZE AND REMEMBER (#310); 1.8.1, A WINDOW SCROLLS WHAT IT
+CANNOT SHOW (#311). Shipped with `ship_template.sh` to Fishing, Fowl Play, DiscGolf and Regent's (each merged and
+pushed). Regent's had committed steps 72-76 and the cinema lab first (`81a7afc2`, Luke's "commit everything").
+
+**Built here**
+- Republished `--codegen`; the merged repo green (unit 3990/0, cargo) before the switch.
+- THE ROLL SWITCHED to the foundation's (the template's own list in its HANDOFF):
+  - Content: `dodge.tres` (40010) `rolls`, `roll_status` Rolling (101), `roll_ms` 550, `roll_ms_rule`
+    `regents.roll_ms`, `key` empty (the dash key, Ctrl as `bind_keys` binds it); `adventurer.tres` `dodge_roll`.
+  - Server: `may_fight` no longer checks a roll (the foundation's `may_roll`: "no roll in the air"); `fought`'s
+    roll branch is `rolled`, called from the genre's NEW `on_roll` (block down, cast ended, swing canceled, combo
+    over, held and dealt hits judged with the foundation's `seen_us`); it no longer SETS Rolling: the foundation puts
+    it on as an EFFECT. Every "is it rolling" reads it as one (`crate::module::is_rolling`; `roll_left_ms` for the
+    still-rolling swing slack and the tutorial's roll-through). `press_seen_now` gone (unused).
+  - Client: the combat component's roll (`dodge` key handling, its dash and set direction, the air hold, its clip)
+    is the foundation's `RollComponent`; what a roll cancels here is `_on_rolled` (its `rolled` signal); `roll_until_ms`
+    and `roll_cooldown` read the RollComponent; `dodge()` asks it to roll. The hit feedback's "Dodged" reads the
+    Rolling effect.
+- Windows: no code here; Regent's windows (the bag, skills, stations, the map, abilities) now resize, remember and
+  scroll.
+
+**Tested**
+- Unit whole run **3994/0**: the regents suite's roll checks now on the foundation's (`RollComponent.direction_for`,
+  the dodge's content and the adventurer's `dodge_roll`, its length the live `regents.roll_ms`; Ctrl through a real
+  RollComponent: taken, the body held to its way, and `_on_rolled` canceling a swing's wind-up, the queue and the
+  combo, nothing swinging while it rolls). Cargo all green; wasm clean.
+- Server suites: archer **19/0**, caster **17/0**. Combat first run 67/50: its REFEREE STOPPED mid-run ("the project
+  changed since it started": another session was writing `game/regents/vfx/` then; the referee watches `game/`), so no
+  foe moved; the step-76 "flake" was the same (my own edit mid-run). Integration 1622/1: the late-roll NEGATIVE cleared
+  the hit: the foundation credits the delay the USE carries (its last argument), where Regent's read its own
+  `report_seen_delay` row; the suite's late roll now says 0 there too (nothing credited, as the check means).
+- Rerun, the repo quiet: combat **113/6**, the six the yard's lessons: "Roll through" never ticked, so the loop kept
+  rolling. FOUND, A TEMPLATE 1.8.0 BUG: the referee (`sidecar/combat/action_referee.gd` `may_be_hit`) reads only a
+  target's STATE; the roll is an EFFECT now, so it reports a hit on a rolling player, the module refuses it ("they
+  cannot be hit") and the genre never hears the miss (`on_ability_missed`, which ticks the lesson). Sent to the template
+  session (1.8.2). Integration **1659/1**: the bowstring check found no unstrung bow from the carve before it (passed in
+  the four runs before: watch it at the next run).
+
+**For Luke**: nothing to do; restart the game and its referee. The other three games are merged and pushed but not
+republished (each needs `tools\update_from_template.cmd`, or its own session).
+
+## Step 78: THE VFX LAB (2026-11-14)
+
+Luke: "how advanced or how far can we go (claude you generating) with vfx for abilites and effects? i think I want
+some labs (like cinema/ability bar) that show case really cool looking vfx. try to stay procedural if possible", then
+"Yes, build the lab". Steam's AI disclosure (`AI_ASSET_AUDIT.md`, his "No AI disclosure" rule the same day): effects
+are CODE here (shaders, particles, meshes built at run time, Godot's own noise), never an image from a generative
+model; none of this needs an asset.
+
+**Built** (all new, `game/regents/vfx/`; nothing in the fights yet)
+- THE SHADERS (`vfx/shaders/`): the ENERGY look (`vfx_energy.gdshaderinc`, glowing `_add` or covering `_mix`): two
+  scrolling noises, one bending the other, read through a color RAMP as heat; a rim or core, bands (the toon look),
+  eaten away by the noise with a hot edge, a sweep along U (a slash), heat across V, faded ends, a radial fade, pushed out
+  by noise, soft against the ground. A CIRCLE on the ground (`vfx_circle.gdshader`): rings, ticks, a band of RUNES
+  (each a hash's strokes on a 3 x 3 grid), a fill growing from the middle with a bright front (a warning), drawing itself
+  round, wisps. A PARTICLE's shape (`vfx_sprite.gdshaderinc`): dot, streak (along its flight), star, puff (lumpy, eaten
+  as it fades, lit by the scene in `_mix`), shard, ring; facing the camera, its own up, or its own turn. A RIPPLE in the
+  air (`vfx_distort.gdshader`): a bubble's rim or a ring on a disc bends what is behind.
+- `VfxKit` (`vfx_kit.gd`): the shared noises (FastNoiseLite, made once), ramps (HDR), the materials, particles and their
+  motion, a slash's ARC mesh, a spike, the fire / frost / arcane ramps. `VfxEffect` (`vfx_effect.gd`): an effect's
+  base: built once (`_build`), moved by its own clock (`_animate`; it gives every part the shaders' `fx_time`), plays,
+  stops, says it finished, frees itself (or hides, the lab's way), asks the camera to shake (`shook`), `target` and
+  `caster`.
+- TEN EFFECTS (`vfx/effects/*.tscn`, their look the root's exported values): `fire_charge` (and `frost_charge`, the
+  same in frost), `fire_missile` (core, banded flame drawn back, flame puffs, smoke, embers, a ribbon, `arrived`),
+  `fire_blast` (flash, a banded ball burning away from inside, a heat ring, a bending bubble, embers, chunks, smoke, a
+  cooling scorch, a light, a shake), `frost_ring` (the circle draws itself, its runes turn, it fills for the second
+  before it lands; then shards punch up in a wave from the middle, frost rolls out, glints, a cold ring; they crack
+  away), `blink` (a violet column snaps shut on you as you fade, a streak, the other end bursts open with a ripple, you
+  fade back in), `gale` (a funnel from the hands, blades of air sweeping out over the 60 degrees, streaks, dust and
+  leaves), `axe_overhead` (`VfxSlash`: a crescent swept down the axe's path, a bright edge, an echo, sparks, a flare,
+  dust, chips and a ring where it hits the ground), `parry_flash` (a star, rings snapping out, sparks sprayed back at
+  the attacker), `cinder_ring` (the imp's: a red circle on darkened ground filling from the middle with a bright front
+  as its 1.5 s run out, embers rising faster; then a banded wall of fire, sparks, smoke, a burnt floor).
+- THE LAB (`vfx/vfx_lab.tscn`, F6, no server): the adventurer, a skeleton and the imp on grass under the glade's own
+  light (sky, filmic, glow 0.6, fog, as `frontier.tscn`), seven SHOWCASES played as in a fight (the cast in the hand,
+  the missile, the blast; the axe's clip with its cut timed from its `wind_up_ms`; the skeleton's cut parried; the imp's
+  ring under you), speeds 1 to 1/10, Day / Dusk / Night, loop, an orbit camera, the camera shake, and a line of what is
+  on screen (fps, draw calls, particle systems). Shots: `-- <out dir> [name]` saves a contact sheet of six moments of
+  each, day and night, timed on the lab's own clock (a first-use shader compile never shifts them).
+
+**How to play it**: open `game/regents/vfx/vfx_lab.tscn`, F6. Pick a showcase (or Up / Down), Space again, L to loop,
+[ and ] for the speed, right mouse to turn round, the wheel to come nearer. To change an effect: open its scene in
+`effects/`, change the root's values in the Inspector (colors, sizes, counts, times), run the lab again.
+
+**Tested**
+- Unit `regents_vfx` (new) **100/0**: every effect scene builds, plays on its own clock, finishes and frees itself (and
+  kept, hides, plays again; stopped, hides); the missile flies distance / speed and arrives there once, not a tenth of a
+  second short; Blink fades its caster, moves it at its moment (and, told not to, leaves it) and puts the fade back; the
+  frost shards wait for the landing; the blast asks for its shake, and a blast with none for none; NO image file under
+  `game/regents/vfx/`; the lab opens, plays all seven, and gives the engine its speed back as it closes. NEGATIVE: an
+  effect that never frees itself fails each effect's "frees itself" check.
+- The look: the lab's shots, day and night, looked at after each pass (three passes: placement before entering the
+  tree, soft lit smoke, strands of wind, a slimmer crescent, gold parry rings, dimmer fire). No shader errors in a
+  windowed run. Headless runs cannot draw, so how it looks is the shots' and Luke's.
+- Unit whole run (`tests/run_tests.sh`, with step 77's and the audit's uncommitted work in the tree) **4094/0**, the
+  lints, no unexpected engine errors, nothing left over at exit.
+
+**Left for later (Luke's to decide)**
+- Wiring them into the fights: the fireball's look (`fireball_look.tscn` is `ShotLook` today) and its blast
+  (`ImpactBurst`), the frost and cinder circles where the areas are shown now, the parry, the last hit's cut. Each is a
+  presentation change on what the server already says.
+- Others in a crowd: 300 players' effects at once want a lighter version for others' casts (fewer particles, no bending
+  air) and a cap; the lab's line shows each showcase's cost.
+- The game's camera shake (the effects ask through `shook`; only the lab listens).
+- The style: Luke plays them and says what to push (brighter, more toon, more smoke, slower blasts); the axe's cut is
+  timed to the lab's clip and may want `starts_at_s` moved.

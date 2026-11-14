@@ -36,7 +36,8 @@ class_name CombatComponent extends SpaceTimeComponent
 ## press there waits for the ground (the queue), as the server refuses one. A ROLL in the
 ## wind-up cancels the swing (it never lands), in the recovery ends it. THE ROLL plays its Roll whole, facing
 ## the way it goes, and nothing swings until it is over (`regents.roll_ms`): a press waits for it, as in the air.
-## No roll starts in the air either: Ctrl there is held and rolls on landing (within `ROLL_HOLD_MS`). A finisher in a light's wind-up
+## THE ROLL IS THE FOUNDATION'S (`RollComponent`, DECISIONS #309, PROGRESS 77): on Ctrl (the dash key), held in the air
+## and taken on landing; what it cancels here is `_on_rolled`. A finisher in a light's wind-up
 ## FLINCHES you, and one that lands STAGGERS you (the server cancels the swing; the status shows here and clears the queue).
 ##
 ## A CASTING KIT (the Staff, owner 2026-10-20): its abilities are SPELLS (`SpellDef`), cast through the same
@@ -145,13 +146,10 @@ var _last_swing_ms: int = -100000
 var crosshair_on_body: bool = false
 ## When this client last loosed an arrow or let a spell go (msec): the upper body stays turned to it (`CombatLook`).
 var shot_ms: int = -100000
-## Until when (msec) this client's roll holds it: no swing before.
-var roll_until_ms: int = -100000
-## A roll asked for in the air (Luke's playtest, 2026-10-24: "I can roll in the air, shouldn't be doable,
-## queue it for when I land"): when it was asked (msec), taken on landing; -1 for none.
-var roll_on_landing_ms: int = -1
-## How long a roll asked for in the air waits for the ground before it lapses.
-const ROLL_HOLD_MS: int = 1500
+## Until when (msec) this client's roll holds it, no swing before: the foundation's `RollComponent` (none: never).
+var roll_until_ms: int:
+	get:
+		return _roll.roll_until_ms if _roll != null and is_instance_valid(_roll) else -100000
 var _rmb: bool = false
 ## When this client last pressed its guard, and when it last saw a parry of its own land (msec; -100000: never).
 var guard_pressed_ms: int = -100000
@@ -159,6 +157,8 @@ var parried_ms: int = -100000
 ## How long after a guard press a stagger by us is taken for its parry (the server's word arriving).
 const PARRY_SEEN_MS: int = 1200
 var _local_input: LocalInputComponent = null
+## The foundation's roll on this entity (DECISIONS #309).
+var _roll: RollComponent = null
 var _action: SpaceTimeActionComponent = null
 var _driver: AnimationDriverComponent = null
 var _movement: SpaceTimeMovementComponent = null
@@ -206,6 +206,9 @@ func _on_bound() -> void:
 	_driver = ent.find_component(AnimationDriverComponent) as AnimationDriverComponent if ent != null else null
 	_movement = ent.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent if ent != null else null
 	_status = ent.find_component(StatusComponent) as StatusComponent if ent != null else null
+	_roll = ent.find_component(RollComponent) as RollComponent if ent != null else null
+	if _roll != null and is_local_authority and not _roll.rolled.is_connected(_on_rolled):
+		_roll.rolled.connect(_on_rolled)
 	set_process(true)   # everyone's draw is drawn here; the keys only for our own
 	# Everyone's swings and rolls play whole, here and on every other client (their starts arrive later).
 	if _action != null:
@@ -471,66 +474,30 @@ func skill(slot: int) -> bool:
 	return press("skill", slot)
 
 
-## Ctrl: the dodge roll, the way you are moving. In a swing's wind-up it cancels the swing (it never
-## lands); in its recovery it ends it; the queue and the combo are over. The body DASHES only when the roll
-## is taken (owner, 2026-10-19: "it dashes forward instead of rolling"): Ctrl itself presses no dash.
-func dodge() -> int:
-	if _action == null:
-		return -1
-	if not grounded() or not can_act():
-		roll_on_landing_ms = Time.get_ticks_msec()   # no roll in the air, nor staggered: taken once it may
-		return -1
-	roll_on_landing_ms = -1
-	var pid: int = _action.request_use(DODGE_ID, 0, Vector3.ZERO)
-	if pid < 0:
-		return -1
-	if _local_input != null:
-		_local_input.dash_once()
-		# A SET ROLL (Luke, 2026-11-11: "if I roll forward but then press s it goes a short distance ... make it
-		# a set amount"): the way it began is the way it goes for its whole length, whatever keys are pressed.
-		_local_input.force_move(roll_direction(), HotRules.number(&"regents.roll_ms") / 1000.0)
-	draw_started_ms = -1   # the server's Rolling ends the Drawing too
-	_cast_over()   # and lets a cast go (the server ends it too)
+## A ROLL WAS TAKEN (the foundation's `RollComponent.rolled`, here, predicted): what it cancels. In a swing's wind-up the
+## swing never lands; in its recovery it ends; the queue and the combo are over; a draw and a cast let go (the server does
+## the same in `on_roll`). The body's dash, its set direction (Luke, 2026-11-11), the air hold and the clip are the
+## foundation's now.
+func _on_rolled(_ability_id: int, _direction: Vector2) -> void:
+	draw_started_ms = -1
+	_cast_over()
 	var now: int = Time.get_ticks_msec()
 	if swinging(now):
 		swing_canceled = now < swing_hit_ms
 		swing_lock_ms = now
-	roll_until_ms = now + int(HotRules.number(&"regents.roll_ms"))
 	queued = {}
 	combo_step = -1
-	return pid
 
 
-## The way a roll begun now goes (a world direction, as `InputFrame.move_dir`): the way the keys push, else the
-## way the body faces. The movement model's own choice for a dash (`MovementModel.step`, 0b), made here so the
-## roll can be held to it.
-func roll_direction() -> Vector2:
-	if _local_input == null:
-		return Vector2.ZERO
-	return roll_direction_for(Vector2(
-		Input.get_action_strength(LocalInputComponent.ACTION_RIGHT) - Input.get_action_strength(LocalInputComponent.ACTION_LEFT),
-		Input.get_action_strength(LocalInputComponent.ACTION_BACK) - Input.get_action_strength(LocalInputComponent.ACTION_FORWARD)),
-		_local_input.get_body_yaw())
+## Ctrl: roll now (the foundation's, its press held in the air): the predicted id, or -1. For tests and the archer's.
+func dodge() -> int:
+	return _roll.roll() if _roll != null else -1
 
 
-## `keys` (x right, y back, as pressed) turned to the world by the body's `yaw`; with none pressed, forward.
-static func roll_direction_for(keys: Vector2, yaw: float) -> Vector2:
-	if keys.length_squared() < 0.0001:
-		return Vector2(-sin(yaw), -cos(yaw))
-	return keys.normalized().rotated(-yaw)
-
-
-## THE ROLL'S COOLDOWN (owner, 2026-10-21: "roll cooldown UI"): how long until Ctrl rolls again, and its
-## whole cooldown, in seconds (the server's word as the action component holds it). (0, total) when ready.
+## THE ROLL'S COOLDOWN (owner, 2026-10-21: "roll cooldown UI"): how long until Ctrl rolls again and its whole cooldown,
+## in seconds, from the foundation's roll. (0, total) when ready.
 func roll_cooldown() -> Vector2:
-	if _roll_total_s < 0.0:
-		var def: AbilityDef = ContentLibrary.find(&"ability", DODGE_ID) as AbilityDef
-		_roll_total_s = float(def.cooldown_ms) / 1000.0 if def != null else 0.0
-	return Vector2(_action.cooldown_remaining_sec(DODGE_ID) if _action != null else 0.0, _roll_total_s)
-
-
-## The roll's whole cooldown (s), looked up once (-1: not yet).
-var _roll_total_s: float = -1.0
+	return _roll.cooldown() if _roll != null else Vector2.ZERO
 
 
 ## How long a swing's animation is held whatever the body does: to just after its hit; a LUNGE (it moves the
@@ -548,10 +515,7 @@ func _began(ability_id: int) -> void:
 	if _driver == null:
 		return
 	if ability_id == DODGE_ID:
-		var roll_s: float = _driver.shot_seconds(StringName("ability.%d" % DODGE_ID))
-		_driver.commit_action(roll_s)
-		_driver.face_motion(roll_s)
-		return
+		return   # the foundation's roll plays its own clip, facing its motion (`RollComponent`)
 	# A foe wields nothing: its swing is whichever kit has it.
 	for k: KitDef in ([kit] if kit != null else KitDef.all()):
 		for a: AbilityDef in k.abilities():
@@ -719,10 +683,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var k: InputEventKey = event as InputEventKey
 	if k == null or not k.pressed or k.echo:
 		return
-	if k.is_action_pressed(ACTION_DODGE) and _mouse_ours() and (_local_input == null or not _local_input.is_held_still()):
-		dodge()
-		get_viewport().set_input_as_handled()
-	elif k.physical_keycode == KEY_TAB:
+	if k.physical_keycode == KEY_TAB:
 		next_target()
 		get_viewport().set_input_as_handled()
 	elif _can_fight():
@@ -760,12 +721,6 @@ func _process(_delta: float) -> void:
 		queued = {}
 		combo_step = -1
 		_let_go()
-	# A roll asked for in the air: on landing, or let it lapse.
-	if roll_on_landing_ms >= 0 and grounded() and can_act():
-		var asked: int = roll_on_landing_ms
-		roll_on_landing_ms = -1
-		if now - asked <= ROLL_HOLD_MS:
-			dodge()
 	# The queue: fire when it may, or let it lapse.
 	if not queued.is_empty() and kit != null:
 		if now - int(queued["at"]) > combo_window_ms():

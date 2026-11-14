@@ -494,7 +494,9 @@ assert_eq "$(xp_of 40007)" "7" "axemanship XP: half a point a damage, half again
 logged() { spacetime logs "$DB" 2>/dev/null | tail -60 | grep -qE "$1" && echo true || echo false; }
 check "$(logged "finisher staggered $DUMMY for 800 ms")" "the overhead is the axe's finisher: it staggered the dummy (regents.stagger_ms)"
 assert_ok "use_ability_seen 40010 0 $C_AIM 907 100" "Ctrl: the dodge roll"
-check "$(logged "entity $MYENT: status [0-9]+ -> 101 \(Rolling\) for 550 ms")" "rolling for regents.roll_ms: nothing hits you, and its burst carries you"
+# THE ROLL IS THE FOUNDATION'S (DECISIONS #309, PROGRESS 77): its status an EFFECT, beside the state.
+check "$(logged "entity $MYENT: effect 101 \(Rolling\) on for 550 ms")" "rolling for regents.roll_ms: nothing hits you (the foundation's roll, its status an effect)"
+check "$(logged "entity $MYENT rolled \(40010\): 550 ms")" "the foundation's roll, told to the genre (on_roll)"
 standin_down
 sleep 0.6
 # A CLI call leaves at once, and leaving lowers a block: what it did is in the log; a block HELD by a
@@ -855,14 +857,15 @@ check "$(logged "regents: $MYENT rolled clear of $SKEL's 40001 as they saw it")"
 check "$(logged "regents: $SKEL's 40001 on $MYENT is taken back \([0-9.]+ given back\): rolled clear")" "the hit, dealt at once, was TAKEN BACK: the health it took given back"
 check "$(python -c "print('true' if $PHPR1 >= $PHPR0 - 1e-3 else 'false')")" "and nothing is lost in the end ($PHPR0 -> $PHPR1)"
 # NEGATIVE: with nothing to credit (swings shown at once, no grace), the same roll arriving after the blow landed
-# is too late: the hit it waited out is dealt, rolling or not.
+# is too late: the hit it waited out is dealt, rolling or not. The roll is the FOUNDATION'S now (PROGRESS 77): it
+# takes the delay from the use itself (its last argument, as a real client sends it), so the use says 0 too.
 assert_ok 'set_rule "regents.roll_late_ms" 0.0 ""' "(test) no grace for a late roll"
 assert_ok "report_seen_delay 0" "(test) this client shows swings at once"
 C_CODE3N='"regentscombatrefereecodelate"'
 standin_up "$C_CODE3N" "a referee for the late roll"
 PHPN0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $MYENT" 1)"
 timed "$(printf '%s
-'   "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]"   "0 sqlwait RSN SELECT id FROM action_request WHERE actor_id = $SKEL"   "0 resolve_action [{RSN},$MYENT]"   "400 use_ability_seen [40010,0,$C_AIM,932,100]"   "1200 sql PHPN1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+'   "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]"   "0 sqlwait RSN SELECT id FROM action_request WHERE actor_id = $SKEL"   "0 resolve_action [{RSN},$MYENT]"   "400 use_ability_seen [40010,0,$C_AIM,932,0]"   "1200 sql PHPN1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
 timed_ok 3 "the referee: its slash hit you again"
 timed_ok 4 "Ctrl: a roll 400 ms after the answer, the blow already landed"
 PHPN1="$(timed_val PHPN1)"
