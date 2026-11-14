@@ -179,13 +179,14 @@ pub fn resolve_action(ctx: &ReducerContext, request_id: u64, hit_id: u64) -> Res
         if !is_person(ctx, hit_id) {
             return Err("resolve_action: not someone (a thing is not hit)".into());
         }
+        // ONE WHO CANNOT BE HIT NOW (their state or an effect: downed, out, rolling) is a MISS, at once (DECISIONS
+        // #312): the referee proposed it from rows that had not yet caught up, which is a matter of timing, not a
+        // wrong report, so the use is answered (its genre hears the miss) rather than left to run out.
+        // A ROLL JUDGED WHERE IT WAS PRESSED (#309): one its player began as they saw this land, and still rolling
+        // then, clears it too, though its status had not reached the referee (or has run out since).
         if !is_targetable(ctx, hit_id) || !is_hittable(ctx, hit_id) {
-            return Err("resolve_action: they cannot be hit".into());
-        }
-        // A ROLL JUDGED WHERE IT WAS PRESSED (DECISIONS #309): one its player began as they saw this land, and
-        // still rolling then, clears it, though its status had not reached the referee (or has run out since):
-        // a miss, at once.
-        if rolled_clear(ctx, hit_id, req.due_at.to_micros_since_unix_epoch()) {
+            log::info!("ability {} by {}: {hit_id} cannot be hit now: a miss", req.ability_id, req.actor_id);
+        } else if rolled_clear(ctx, hit_id, req.due_at.to_micros_since_unix_epoch()) {
             log::info!("ability {} by {}: {hit_id} rolled clear of it", req.ability_id, req.actor_id);
         } else {
             outcome = OUTCOME_HIT;

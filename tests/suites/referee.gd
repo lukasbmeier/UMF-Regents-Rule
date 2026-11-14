@@ -17,6 +17,7 @@ func run() -> void:
 	await _run_walls_put_up()
 	await _run_genre_walls()
 	_run_who()
+	await _run_effects()
 	_run_two_sides()
 	_run_rows()
 	_run_people()
@@ -484,6 +485,65 @@ func _run_who() -> void:
 	_check(is_equal_approx(float(b2["radius"]), 0.28) and is_equal_approx(float(b2["height"]), 0.7) and is_equal_approx(float(b2["center_y"]), 0.35),
 		"a character's own size (a hen: 0.28 m by 0.7) is its hitbox (%s)" % str(b2))
 	ref.free()
+
+
+class _EffectRow extends RefCounted:
+	var id: int
+	var entity_id: int
+	var world_id: int = 0
+	var chunk: int = 0
+	var status: int
+	func _init(p_id: int, eid: int, st: int) -> void:
+		id = p_id
+		entity_id = eid
+		status = st
+
+
+## EFFECTS COUNT (DECISIONS #312, found adopting the roll in Regent's Rule): a target under an effect that cannot
+## be hit (a roll's Rolling, beside its state) is not hit: the sweep passes it and the use is reported as a miss.
+## The effect comes and goes as its `status_effect` row does. Before, only the state was read: a rolling player was
+## reported hit, the module refused it, and the genre never heard the miss.
+func _run_effects() -> void:
+	print("== referee: effects count (a roll) ==")
+	var root := Node3D.new()
+	add_child(root)
+	var ref := ActionReferee.new()
+	ref.send = false
+	root.add_child(ref)
+	await get_tree().physics_frame
+	var sides_off: RefCounted = _two_sides(0.0)
+	_check(ActionReferee.TABLES.has(&"status_effect") and SidecarMain.REFEREE_TABLES.has(&"status_effect"),
+		"it reads every entity's effects (status_effect is in its tables and its feed)")
+	ref.set_entity(40, 0)   # swinging -Z
+	ref.set_entity(41, 0)   # a metre in front of it
+	ref.set_sweep(502, 1.4, 0.35, 0.6)
+	ref.record(40, BASE, Vector3.ZERO, 0.0)
+	ref.record(41, BASE, Vector3(0, 0, -1.0), 0.0)
+	var rolling := _EffectRow.new(900, 41, 7)   # the foundation's Rolling (rolling.tres: not hittable)
+	_check(not StatusDef.find(7).hittable, "(Rolling cannot be hit)")
+	var judge_at := func(rid: int, at: int) -> int:
+		ref.add_request(rid, 40, 502, 0, at)
+		var out: Array[Dictionary] = ref.settle(at + ActionReferee.SETTLE_USEC)
+		return int(out[0]["hit_id"]) if out.size() == 1 else -1
+	_check(ref.may_be_hit(41) and judge_at.call(1, BASE + 100_000) == 41, "standing in front of the swing, with no effect: hit")
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"status_effect", null, rolling))
+	_check(ref.effects_on(41) == [7], "its Rolling arrives as an effect, beside its state (%s)" % str(ref.effects_on(41)))
+	_check(not ref.may_be_hit(41), "rolling: it may not be hit")
+	_check(judge_at.call(2, BASE + 200_000) == 0, "the same swing passes through: reported as a MISS (so the genre hears it)")
+	ref.on_row(RowEvent.make(RowEvent.Kind.DELETED, &"status_effect", rolling, null))
+	_check(ref.effects_on(41).is_empty() and ref.may_be_hit(41) and judge_at.call(3, BASE + 300_000) == 41,
+		"the roll over (its row gone): hit again")
+	# An effect that can be hit (Injured, as an effect) changes nothing; one entity's effect is not another's.
+	var hurt := _EffectRow.new(901, 41, StatusDef.INJURED)
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"status_effect", null, hurt))
+	_check(ref.may_be_hit(41), "an effect that can be hit (Injured) does not stop it")
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"status_effect", null, _EffectRow.new(902, 40, 7)))
+	_check(ref.may_be_hit(41) and not ref.may_be_hit(40), "another's roll is theirs alone")
+	ref.on_row(RowEvent.make(RowEvent.Kind.INSERTED, &"status_effect", null, _EffectRow.new(903, 41, 7)))
+	_check(not ref.may_be_hit(41), "Rolling beside Injured: it may not be hit")
+	_two_sides_back(sides_off)
+	root.queue_free()
+	await get_tree().process_frame
 
 
 ## TWO SIDES (DECISIONS #283, Regent's Rule: two skeletons side by side hit each other, never the player
