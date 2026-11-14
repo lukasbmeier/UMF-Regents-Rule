@@ -50,7 +50,7 @@ const BODY_KIND: int = 3
 ## each genre's `referee_tables`, and the recorder's while it records; never `input_queue`, which only a
 ## sidecar that MOVES the players replays (80 % of what a referee was sent: Regent's Rule's load test).
 const REFEREE_TABLES: Array[StringName] = [&"world_config", &"entity", &"player", &"movement_state",
-	&"status_state", &"ability_def", &"action_request", &"world_level", &"body_state", &"push", &"npc_brain"]
+	&"status_state", &"status_effect", &"ability_def", &"action_request", &"world_level", &"body_state", &"push", &"npc_brain"]
 
 var world: SimWorld = null
 var referee: ActionReferee = null

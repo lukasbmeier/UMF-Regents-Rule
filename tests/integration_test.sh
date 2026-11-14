@@ -1113,6 +1113,7 @@ out="$(anon_call claim_referee 0 "$REF_CODE")"
 # beat): queue two at once, and check after.
 assert_ok "use_ability_seen 10 0 $AIM 61 400" "a judged use, seen 400 ms behind: queued"
 assert_ok "use_ability_seen 10 0 $AIM 63 20" "a slow one, seen 20 ms behind"
+assert_ok "use_ability_seen 10 0 $AIM 65 20" "and another (for a target that cannot be hit)"
 check "$(echo "$out" | grep -qiE "^error|error:" && echo false || echo true)" "a sidecar presenting the code is registered ($(echo "$out" | grep -i error | head -1))"
 # Both run out 23 s after they were used (the 20 s wind-up, then REQUEST_GRACE_MICROS' 3 s), so what
 # needs them waiting comes first, from ONE read of them: a CLI call takes about a second on a busy
@@ -1122,11 +1123,11 @@ import json, sys
 t = sys.stdin.read()
 rows = json.loads(t[t.find('['):])[0]['rows'] if '[' in t else []
 by = {r[1]: r for r in rows}
-r61, r63 = by.get(61), by.get(63)
-print(r61[0] if r61 else '-', r63[0] if r63 else '-', len(rows), r61[2] if r61 else '-', r63[2] if r63 else '-',
+r61, r63, r65 = by.get(61), by.get(63), by.get(65)
+print(r61[0] if r61 else '-', r63[0] if r63 else '-', r65[0] if r65 else '-', len(rows), r61[2] if r61 else '-', r63[2] if r63 else '-',
       round((r61[4][0] - r61[3][0]) / 1000) if r61 else -1)")
-read -r R61 R63 NREQ RW61 RW63 DUE_MS <<< "$REQS"
-assert_eq "$NREQ" "2" "both wait for the referee"
+read -r R61 R63 R65 NREQ RW61 RW63 DUE_MS <<< "$REQS"
+assert_eq "$NREQ" "3" "all three wait for the referee"
 assert_eq "$RW61" "150" "seen 400 ms behind, rewound the cap's 150 (favouring the attacker, no further)"
 assert_eq "$RW63" "20" "under the cap, what it saw"
 assert_eq "$DUE_MS" "20000" "it lands its wind-up after it was used: when the referee judges it"
@@ -1135,7 +1136,10 @@ check "$([ "$(spacetime sql --anonymous "$DB" 'SELECT * FROM action_request' 2>/
 assert_eq "$(row_count 'SELECT * FROM action_event WHERE predicted_id = 61')" "0" "nothing has happened yet: no event"
 assert_rejected "resolve_action $R63 $MYENT" "not itself" "a referee cannot have it hit its own user"
 assert_ok "set_status $VICTIM 2 $UNTIL_CHANGED \"\"" "the one it would hit goes down"
-assert_rejected "resolve_action $R63 $VICTIM" "cannot be hit" "a downed one is not hit again (downed: not hittable)"
+HPD=$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)
+assert_ok "resolve_action $R65 $VICTIM" "the referee reports the downed one hit (its rows had not caught up)"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 65" 1)$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)" "1$HPD" \
+  "a downed one is not hit again (downed: not hittable): a MISS at once, its genre told, nothing taken (DECISIONS #312)"
 assert_ok "set_status $VICTIM 0 $UNTIL_CHANGED \"\"" "(up again)"
 assert_rejected "resolve_action $R63 $THING" "not someone" "a thing is not hit"
 
@@ -1189,11 +1193,14 @@ assert_ok "offer_referee 0 $REF_CODE" "a referee again"
 out="$(anon_call claim_referee 0 "$REF_CODE")"
 assert_ok "use_ability_seen 12 0 $AIM 70 0" "a swing at the victim (it lands in 2.5 s)"
 assert_ok "use_ability_seen 10 0 $AIM 71 0" "and a slow one (it lands in 20 s, long after any roll)"
+assert_ok "use_ability_seen 10 0 $AIM 72 0" "and another slow one, reported while the victim rolls"
 assert_ok "use_ability_as $VICTIM 1 0 $AIM 0" "the victim rolls before the swing lands"
 R70=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 70" 1)
 R71=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 71" 1)
+R72=$(sql_first "SELECT id FROM action_request WHERE predicted_id = 72" 1)
 assert_eq "$(effect_of $VICTIM)" "7" "rolling"
-assert_rejected "resolve_action $R71 $VICTIM" "cannot be hit" "while it rolls nothing judged hits it (Rolling: not hittable)"
+assert_ok "resolve_action $R72 $VICTIM" "a referee reports a hit on it while it rolls"
+assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 72" 1)" "1" "a MISS: while it rolls nothing judged hits it (Rolling, an effect: not hittable)"
 deadline=$((SECONDS + 8))
 while [ -n "$(effect_of $VICTIM)" ] && [ "$SECONDS" -lt "$deadline" ]; do sleep 0.5; done
 assert_eq "$(effect_of $VICTIM)" "" "the roll is over (its status has come off)"

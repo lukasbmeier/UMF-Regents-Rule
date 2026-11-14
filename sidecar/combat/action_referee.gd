@@ -21,7 +21,8 @@ class_name ActionReferee extends Node3D
 ##
 ## Who can be hit: people (a player, an NPC person, any playable character, anything a brain drives:
 ## Fowl Play's decoy hens), not a nest or a prop;
-## and only in a status that is targetable and hittable (a downed hen is not hit again). The module
+## and only in a status that is targetable and hittable (a downed hen is not hit again), with every EFFECT on
+## them too (DECISIONS #302, #312: a roll's Rolling is an effect, beside the state). The module
 ## checks the same again: this only proposes. With the hot rule `foundation.referee_two_sides` on
 ## (DECISIONS #283: an MMO's players against its monsters), a sweep passes through its user's own side
 ## (the players, or everyone else) to the first of the other: a skeleton's swing is not stopped by the
@@ -34,7 +35,8 @@ const SETTLE_USEC: int = 80_000
 ## The rule that splits people into two sides, the players and everyone else (DECISIONS #283).
 const TWO_SIDES: StringName = &"foundation.referee_two_sides"
 ## The tables it reads.
-const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"player", &"ability_def", &"npc_brain"]
+const TABLES: Array[StringName] = [&"movement_state", &"action_request", &"entity", &"status_state", &"status_effect", &"player",
+	&"ability_def", &"npc_brain"]
 
 var world_id: int = 0
 ## Off in tests: judged, not sent.
@@ -49,6 +51,10 @@ var judged: Array[Dictionary] = []
 var _histories: Dictionary[int, TransformHistory] = {}
 var _kinds: Dictionary[int, int] = {}
 var _statuses: Dictionary[int, int] = {}
+## The effects on each entity (DECISIONS #302): entity id -> {effect row id -> its status}.
+var _effects: Dictionary[int, Dictionary] = {}
+## Effect row id -> its entity, so a row that goes is found again.
+var _effect_of: Dictionary[int, int] = {}
 var _offline: Dictionary[int, bool] = {}
 var _players: Dictionary[int, bool] = {}
 ## Entities a brain drives (an `npc_brain` row): people, as the module counts them (`is_person`).
@@ -153,6 +159,7 @@ func on_row(ev: RowEvent) -> void:
 			if ev.kind == RowEvent.Kind.DELETED:
 				_kinds.erase(eid)
 				_histories.erase(eid)
+				_forget_effects(eid)
 				_drop_wall(eid)
 			else:
 				_kinds[eid] = int(row.get(&"kind"))
@@ -164,6 +171,9 @@ func on_row(ev: RowEvent) -> void:
 			else:
 				_statuses[eid] = int(row.get(&"status"))
 			_place_wall(eid)
+		&"status_effect":
+			var id: int = int(row.get(&"id"))
+			set_effect(eid, id, int(row.get(&"status")), ev.kind != RowEvent.Kind.DELETED)
 		&"player":
 			if ev.kind == RowEvent.Kind.DELETED:
 				_players.erase(eid)
@@ -178,6 +188,36 @@ func on_row(ev: RowEvent) -> void:
 			else:
 				_brained[eid] = true
 			_refresh_person(eid)
+
+
+## An effect on `entity_id` (its `status_effect` row `effect_id`, of `status`) went on (`on`) or came off.
+func set_effect(entity_id: int, effect_id: int, status: int, on: bool) -> void:
+	var held: int = int(_effect_of.get(effect_id, -1))
+	if held >= 0 and _effects.has(held):
+		(_effects[held] as Dictionary).erase(effect_id)
+		if (_effects[held] as Dictionary).is_empty():
+			_effects.erase(held)
+	_effect_of.erase(effect_id)
+	if not on:
+		return
+	if not _effects.has(entity_id):
+		_effects[entity_id] = {}
+	(_effects[entity_id] as Dictionary)[effect_id] = status
+	_effect_of[effect_id] = entity_id
+
+
+## The statuses of the effects on `entity_id`.
+func effects_on(entity_id: int) -> Array[int]:
+	var out: Array[int] = []
+	for s: Variant in (_effects.get(entity_id, {}) as Dictionary).values():
+		out.append(int(s))
+	return out
+
+
+func _forget_effects(entity_id: int) -> void:
+	for id: Variant in (_effects.get(entity_id, {}) as Dictionary).keys():
+		_effect_of.erase(int(id))
+	_effects.erase(entity_id)
 
 
 ## Where `entity_id` was at server time `ts_usec` (its movement row).
@@ -345,12 +385,19 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 
 
 ## Someone it may hit: a person (a player, kinds 0 and 1, a playable character, anything a brain drives:
-## the module's `is_person`) who is here, in a status that is targetable and hittable.
+## the module's `is_person`) who is here, in a status that is targetable and hittable, and under no effect that
+## is not (a roll's Rolling, DECISIONS #312: the module's `is_targetable` and `is_hittable`, state and effects).
 func may_be_hit(eid: int) -> bool:
 	if not _is_person(eid) or bool(_offline.get(eid, false)):
 		return false
 	var st: StatusDef = StatusDef.find(int(_statuses.get(eid, StatusDef.NORMAL)))
-	return st == null or (st.targetable and st.hittable)
+	if st != null and not (st.targetable and st.hittable):
+		return false
+	for n: int in effects_on(eid):
+		var e: StatusDef = StatusDef.find(n)
+		if e != null and not (e.targetable and e.hittable):
+			return false
+	return true
 
 
 ## A person (a player, kinds 0 and 1, a playable character, anything a brain drives), whatever its status.

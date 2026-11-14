@@ -1182,3 +1182,11 @@ Client only: nothing to republish, no codegen. Friends need a new build for it.
   24 px each side and scrolls past that; one resized smaller scrolls; sideways only for a row that cannot wrap; a refresh
   keeps the scroll. `content_size()`, `scrolls()`, `sized_to()`. The resize minimum is `size_min` (no longer the content).
   Tests: `tests/suites/ui_window.gd` (its scrolling section).
+
+## 1.8.2 — the referee reads effects; a hit on someone who cannot be hit is a miss (DECISIONS #312)
+Republish (module and referee; no codegen). Regent's Rule's roll is an effect since it adopted 1.8.0's.
+- `sidecar/combat/action_referee.gd`: keeps each entity's `status_effect` rows; `may_be_hit` needs the state and every
+  effect targetable and hittable. A rolling player is passed by a sweep and the use reported as a miss.
+- `resolve_action`: a target that cannot be hit now (state or effect) is a MISS at once (`on_ability_missed`, a miss
+  event), not an error. Tests: `tests/suites/referee.gd` "effects count (a roll)" (mutation-checked); the integration
+  suite's downed and rolling reports now expect a miss.

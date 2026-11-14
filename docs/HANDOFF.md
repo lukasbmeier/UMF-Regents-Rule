@@ -1,12 +1,14 @@
-# Handoff — UMF Template, 2026-11-14 (1.8.1: windows scroll; 1.8.0: the dodge roll, windows that resize and remember)
+# Handoff — UMF Template, 2026-11-14 (1.8.2: the referee reads effects; 1.8.1: windows scroll; 1.8.0: the roll, windows)
 
 ## Where it stands
+- **1.8.2** (DECISIONS #312): the referee reads effects (a rolling player was reported hit and the module refused it,
+  so Regent's never heard the miss), and `resolve_action` answers a hit on someone who cannot be hit as a MISS, not an
+  error. Committed on main, not pushed; 1.8.0 and 1.8.1 were pushed by Luke and shipped to all four games.
 - **1.8.1** (DECISIONS #311, client only): a window scrolls what it cannot show (Luke, via Regent's Rule: the bag's long
-  descriptions). Committed on top of 1.8.0, NOT PUSHED either: one `git push origin main` sends both.
+  descriptions). Pushed and shipped.
 - **1.8.0** (DECISIONS #309, #310), started from a Regent's Rule session (Luke: "Lets do some template work on both the roll
-  and resizable window"). Committed on main (1a03c2c), NOT PUSHED (the session's
-  push was refused by its permission check): `git push origin main` first, then the games can pull it. `umf-template` republished with `--codegen`
-  (a new PRIVATE table `roll_state`: add-only, old builds keep playing). NOT shipped to the games yet (`ship_template.sh`).
+  and resizable window"). Committed (1a03c2c), pushed by Luke and shipped to all four games
+  with 1.8.1. `umf-template` republished with `--codegen` (a new PRIVATE table `roll_state`: add-only, old builds keep playing).
 - Green: `tests/run_tests.sh` 2466/0 (the `content` project-task check passed this time too), `cargo check --target
   wasm32-unknown-unknown`, `cargo test` (new `server/tests/roll.rs` 8/8), `tests/integration_test.sh` 699/0 (its first run
   failed two of the new checks on CLI timing, a 550 ms roll gone before the next read and a referee still registered;
@@ -33,22 +35,10 @@
   redundant (mutation: Godot keeps it on a one-frame refill) and was removed; the suite guards the behaviour.
 
 ## Next, in order
-1. Ship 1.8.0 (and 1.7.5-1.7.8 for the others) with `ship_template.sh`; each game republishes `--codegen`.
-2. REGENT'S RULE switches its own roll to the foundation's (its own step, after `git pull template main`):
-   - content: `dodge.tres` (40010) ticks `rolls`, `roll_status` = its Rolling (101), `roll_ms` 550, `roll_ms_rule`
-     `&"regents.roll_ms"`, `key` EMPTY (= the `dash` action its `bind_keys` puts on Ctrl); `adventurer.tres`
-     `dodge_roll` = dodge.tres.
-   - server `regents.rs`: drop `may_fight`'s dodge air check (the foundation's); move `fought`'s dodge branch to
-     `fn on_roll` (block down, cast ended, swing canceled, combo reset, held/dealt hits taken back with the given
-     `seen_us`/`roll_ms`) and REMOVE its `set_status_internal(STATUS_ROLLING)`: the roll's status is now an EFFECT;
-     every `status_state.status == STATUS_ROLLING` check becomes `crate::module::is_rolling`; `rules::roll_clears` can
-     call `crate::roll::clears`.
-   - client `combat_component.gd`: delete `dodge()`, `roll_direction*`, `roll_cooldown`, the air hold, the Ctrl branch
-     and `_began`'s dodge branch; connect `RollComponent.rolled` to what a roll cancels; read `roll_until_ms`/`rolling()`
-     and the bar's `cooldown()` from the RollComponent; Rolling checks become `StatusComponent.has_effect(101)`.
-   - its tests that name `dodge()`/`DODGE_ID`/`STATUS_ROLLING` follow; `combat_playtest.sh` is the proof.
-   - windows need no code (its five windows are remembered by their scripts, and scroll past the screen). Check the
-     station window: it has its own ScrollContainer (260x340) inside `content`, now inside the window's scroll too.
+1. Push 1.8.2 (Luke), then ship it (`ship_template.sh`): every game republishes (module and referee).
+2. Regent's Rule has moved its roll onto the foundation's (done in its own session, 2026-11-14); after 1.8.2 its
+   combat_playtest's yard (the tutorial's "roll through") should pass again. The adoption list for any other game is
+   in `docs/HANDBOOK.md` (the movement section and the character recipe).
 3. From before: the SDK btree patch upstream (ask Luke); effects' own presentation; a region referee's load.
 
 ## Waiting on Luke
