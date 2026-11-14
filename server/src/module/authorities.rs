@@ -319,6 +319,11 @@ pub fn use_ability_from(
         }
     }
     let me = ctx.db.movement_state().entity_id().find(actor).ok_or("use_ability: actor has no movement_state")?;
+    // A DODGE ROLL (DECISIONS #309): not in the air, unless it may.
+    let roll = roll_of(ability_id);
+    if let Some(r) = roll {
+        may_roll(ctx, actor, r)?;
+    }
     // The game's own word (DECISIONS #228: a predator carrying a hen does not pounce).
     crate::game::may_use_ability(ctx, actor, ability_id)?;
 
@@ -367,6 +372,10 @@ pub fn use_ability_from(
         predicted_id,
         server_ts: ctx.timestamp,
     });
+    // The roll begins (its status on them, when they pressed it kept, every genre told) before the use is heard of.
+    if let Some(r) = roll {
+        begin_roll(ctx, actor, r, view_delay_ms);
+    }
     crate::game::on_ability_used(ctx, actor, kind, ability_id, aim);
     Ok(())
 }
@@ -501,6 +510,7 @@ pub fn despawn_entity_internal(ctx: &ReducerContext, entity_id: u64) {
     }
     ctx.db.lobby_member().entity_id().delete(entity_id);
     forget_status(ctx, entity_id);
+    forget_roll(ctx, entity_id);
     forget_holds(ctx, entity_id);
     forget_body(ctx, entity_id);
 }

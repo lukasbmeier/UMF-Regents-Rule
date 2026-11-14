@@ -3,10 +3,11 @@
 	"format": 1,
 	"outputs": {
 		"shared/content/foundation/ability.json": {
-			"count": 1,
-			"hash": "86874175",
+			"count": 2,
+			"hash": "8bd515e3",
 			"owner": "foundation",
 			"sources": {
+				"foundation/content/ability/dodge_roll.tres": "e9683c00",
 				"foundation/content/ability/melee.tres": "29e165b2"
 			},
 			"type": "ability"
@@ -52,16 +53,16 @@
 		},
 		"shared/content/foundation/rules.json": {
 			"count": 1,
-			"hash": "93acecce",
+			"hash": "faf781bc",
 			"owner": "foundation",
 			"sources": {
-				"foundation/content/rules/foundation.tres": "1a0e5abd"
+				"foundation/content/rules/foundation.tres": "d063aecd"
 			},
 			"type": "rules"
 		},
 		"shared/content/foundation/status.json": {
-			"count": 7,
-			"hash": "6ca31bed",
+			"count": 8,
+			"hash": "f87e0968",
 			"owner": "foundation",
 			"sources": {
 				"foundation/content/status/carried.tres": "3094695b",
@@ -70,7 +71,8 @@
 				"foundation/content/status/hidden.tres": "9f99c08a",
 				"foundation/content/status/injured.tres": "e9cb2d8d",
 				"foundation/content/status/normal.tres": "cf4ace4b",
-				"foundation/content/status/out.tres": "f63e33d4"
+				"foundation/content/status/out.tres": "f63e33d4",
+				"foundation/content/status/rolling.tres": "1652dc61"
 			},
 			"type": "status"
 		}

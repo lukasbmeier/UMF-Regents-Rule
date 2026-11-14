@@ -7,11 +7,30 @@ class_name UiWindow extends PanelContainer
 ## Escape menu do not fight over it), Escape closes it before the Escape menu hears the key, and `closed`
 ## says so. Put it on a CanvasLayer over the game (a HUD's). A subclass that has its own `_init` calls `super()`
 ## first: GDScript does not run this one for it, and `content` would not be there.
+##
+## RESIZED AND REMEMBERED (DECISIONS #310): drag an edge or a corner to resize it, never smaller than what it
+## holds (or `size_min`) and never off the screen; where it is and its size are kept per window in the player's
+## settings file (`Settings.window_place`, keyed by `place_id()`: `window_id`, else a subclass's script, else
+## its title) and it opens there next time. Double-click the title bar: back to where the game puts it, at the
+## size it needs. Settings, Game, "Remember where windows are" off forgets every window's place. Every game's
+## windows do this with no code of their own; `resizable` and `remember` turn either off for one.
 
 signal opened()
 signal closed()
+## The player moved or resized it (`rect` its place and size now), as they let go.
+signal placed(rect: Rect2)
 
 enum Place { CENTER, RIGHT, LEFT }
+
+## The edges a resize pulls (`edges_at`): a side alone, or a corner's two.
+const EDGE_LEFT: int = 1
+const EDGE_RIGHT: int = 2
+const EDGE_TOP: int = 4
+const EDGE_BOTTOM: int = 8
+## How far in from its edge (and out past it) a press resizes it, in pixels.
+const GRIP: float = 6.0
+## UiWindow's own script: a window of this class itself is remembered by its title.
+const OWN_SCRIPT: String = "res://foundation/ui/kit/ui_window.gd"
 
 ## Its title, in the bar.
 @export var title: String = "":
@@ -19,12 +38,18 @@ enum Place { CENTER, RIGHT, LEFT }
 		title = value
 		if _title_label != null:
 			_title_label.text = value
-## Where it opens on screen.
+## Where it opens on screen (the first time, or after a reset).
 @export var place: Place = Place.CENTER
-## Its size (it grows to fit what is in it).
+## Its smallest size (it grows to fit what is in it).
 @export var size_min: Vector2 = Vector2(360, 240)
 ## Escape closes it.
 @export var close_on_escape: bool = true
+## Its edges and corners resize it.
+@export var resizable: bool = true
+## Where it is and its size are remembered (per `place_id()`).
+@export var remember: bool = true
+## The name it is remembered by. Empty: a subclass's script path, else its title.
+@export var window_id: StringName = &""
 
 ## What the window shows: add rows here.
 var content: VBoxContainer = null
@@ -34,6 +59,14 @@ var _bar: PanelContainer = null
 var _dragging: bool = false
 var _drag_from: Vector2 = Vector2.ZERO
 var _placed: bool = false
+## The size the player gave it (zero: it fits what it holds).
+var _user_size: Vector2 = Vector2.ZERO
+## The edges a resize under way pulls (0: none), and where it began.
+var _resizing: int = 0
+var _resize_mouse: Vector2 = Vector2.ZERO
+var _resize_rect: Rect2 = Rect2()
+## Which window set the cursor's shape for a resize (its instance id; 0: none), so one never clears another's.
+static var _cursor_by: int = 0
 
 
 func _init() -> void:
@@ -81,7 +114,8 @@ func _ready() -> void:
 	custom_minimum_size = size_min
 
 
-## Show it (where `place` says, the first time; where it was dragged after), the cursor free.
+## Show it (where it was left, the first time: remembered, else where `place` says; where it was dragged after),
+## the cursor free.
 func open() -> void:
 	if visible:
 		return
@@ -97,14 +131,18 @@ func close() -> void:
 		return
 	visible = false
 	_dragging = false
+	_end_resize(false)
 	MouseCapture.hold_free(_reason(), false)
 	closed.emit()
 
 
-## Shrink (or grow) to what it holds now, where it is: call it after filling `content` again.
+## Shrink (or grow) to what it holds now, where it is: call it after filling `content` again. A size the player
+## gave it is kept (grown if what it holds needs more).
 func fit() -> void:
 	var at: Vector2 = position
 	reset_size()
+	if _user_size != Vector2.ZERO:
+		size = _user_size.max(get_combined_minimum_size())
 	position = at
 
 
@@ -119,29 +157,150 @@ func is_open() -> bool:
 	return visible
 
 
+## The name it is remembered by: `window_id`, else its script's path (a game's own window class), else its title.
+## Empty: it is not remembered.
+func place_id() -> String:
+	if not window_id.is_empty():
+		return String(window_id)
+	var s: Script = get_script() as Script
+	if s != null and not s.resource_path.is_empty() and s.resource_path != OWN_SCRIPT:
+		return s.resource_path
+	return title
+
+
+## PUT IT BACK where the game puts it, at the size it needs, and forget where it was left.
+func reset_place() -> void:
+	Settings.forget_window_place(place_id())
+	_user_size = Vector2.ZERO
+	_placed = false
+	if visible:
+		_place()
+
+
+## The size the player gave it (zero: it fits what it holds).
+func user_size() -> Vector2:
+	return _user_size
+
+
 func _exit_tree() -> void:
 	MouseCapture.hold_free(_reason(), false)
+	_set_cursor(0)
 
 
 func _input(event: InputEvent) -> void:
-	if not visible or not close_on_escape:
+	if not visible:
 		return
 	var k: InputEventKey = event as InputEventKey
-	if k != null and k.pressed and not k.echo and k.physical_keycode == KEY_ESCAPE:
-		close()
+	if k != null:
+		if close_on_escape and k.pressed and not k.echo and k.physical_keycode == KEY_ESCAPE:
+			close()
+			get_viewport().set_input_as_handled()
+		return
+	if resizable and resize_input(event):
 		get_viewport().set_input_as_handled()
+
+
+## A mouse event, in the viewport's terms: a press on an edge or a corner begins a resize, motion carries it (or
+## shows the resize cursor over an edge), the release ends it and keeps the new size. True when it was the
+## resize's (nothing under it hears it). Public so tests can drive it.
+func resize_input(event: InputEvent) -> bool:
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:
+		if mb.pressed:
+			var edges: int = edges_at(mb.position)
+			if edges == 0 or _covered_at(mb.position):
+				return false
+			_resizing = edges
+			_resize_mouse = mb.position
+			_resize_rect = get_global_rect()
+			return true
+		if _resizing != 0:
+			_end_resize(true)
+			return true
+		return false
+	var mm: InputEventMouseMotion = event as InputEventMouseMotion
+	if mm == null:
+		return false
+	if _resizing != 0:
+		var r: Rect2 = resized(_resize_rect, _resizing, mm.position - _resize_mouse, get_combined_minimum_size(), _screen())
+		global_position = r.position
+		size = r.size
+		_user_size = r.size
+		return true
+	_set_cursor(0 if _covered_at(mm.position) else edges_at(mm.position))
+	return false
+
+
+## Which of its edges a point (in the viewport's terms) is on: within `GRIP` of one, inside or just out.
+func edges_at(p: Vector2) -> int:
+	return edges_of(get_global_rect(), p, GRIP)
+
+
+## Which edges of `rect` point `p` is on, `grip` either side of each (a corner: its two). 0: none.
+static func edges_of(rect: Rect2, p: Vector2, grip: float) -> int:
+	if not rect.grow(grip).has_point(p) or rect.grow(-grip).has_point(p):
+		return 0
+	var e: int = 0
+	if p.x < rect.position.x + grip:
+		e |= EDGE_LEFT
+	elif p.x > rect.end.x - grip:
+		e |= EDGE_RIGHT
+	if p.y < rect.position.y + grip:
+		e |= EDGE_TOP
+	elif p.y > rect.end.y - grip:
+		e |= EDGE_BOTTOM
+	return e
+
+
+## `from` resized by pulling `edges` by `delta`: never smaller than `min_size`, never past the screen (`screen`
+## from the origin). The edges not pulled stay where they were.
+static func resized(from: Rect2, edges: int, delta: Vector2, min_size: Vector2, screen: Vector2) -> Rect2:
+	var l: float = from.position.x
+	var t: float = from.position.y
+	var r: float = from.end.x
+	var b: float = from.end.y
+	if edges & EDGE_LEFT:
+		l = clampf(l + delta.x, 0.0, maxf(r - min_size.x, 0.0))
+	if edges & EDGE_RIGHT:
+		r = clampf(r + delta.x, l + min_size.x, maxf(screen.x, l + min_size.x))
+	if edges & EDGE_TOP:
+		t = clampf(t + delta.y, 0.0, maxf(b - min_size.y, 0.0))
+	if edges & EDGE_BOTTOM:
+		b = clampf(b + delta.y, t + min_size.y, maxf(screen.y, t + min_size.y))
+	return Rect2(l, t, r - l, b - t)
+
+
+## `rect` kept on a screen of `screen`: no larger than it (nor smaller than `min_size`), then moved onto it.
+static func kept_on_screen(rect: Rect2, min_size: Vector2, screen: Vector2) -> Rect2:
+	var s: Vector2 = rect.size.min(screen).max(min_size)
+	var p: Vector2 = rect.position.clamp(Vector2.ZERO, (screen - s).max(Vector2.ZERO))
+	return Rect2(p, s)
 
 
 func _reason() -> StringName:
 	return StringName("ui_window_%d" % get_instance_id())
 
 
+func _screen() -> Vector2:
+	return get_viewport_rect().size
+
+
+## Where it opens: where it was left (remembered), else where `place` says; on the screen either way.
 func _place() -> void:
 	if not is_inside_tree():
 		return
 	_placed = true
 	reset_size()
-	var screen: Vector2 = get_viewport_rect().size
+	var kept: Dictionary = Settings.window_place(place_id()) if remember else {}
+	if not kept.is_empty():
+		var s: Vector2 = kept["size"] if resizable else Vector2.ZERO
+		var need: Vector2 = get_combined_minimum_size()
+		var r: Rect2 = kept_on_screen(Rect2(kept["position"], s.max(need)), need, _screen())
+		position = r.position
+		size = r.size
+		_user_size = r.size if s != Vector2.ZERO else Vector2.ZERO
+		return
+	var screen: Vector2 = _screen()
 	var margin: float = 24.0
 	match place:
 		Place.RIGHT:
@@ -153,9 +312,66 @@ func _place() -> void:
 	position = position.max(Vector2.ZERO)
 
 
+## Keep where it is and its size, as the player leaves it.
+func _keep_place() -> void:
+	if remember:
+		Settings.set_window_place(place_id(), position, _user_size)
+	placed.emit(get_global_rect())
+
+
+func _end_resize(keep: bool) -> void:
+	if _resizing == 0:
+		return
+	_resizing = 0
+	_set_cursor(0)
+	if keep:
+		_keep_place()
+
+
+## Whether another window lies over this one at `p` (a press there is that window's, not this one's edge).
+func _covered_at(p: Vector2) -> bool:
+	if not is_inside_tree():
+		return false
+	var over: Control = get_viewport().gui_get_hovered_control()
+	while over != null:
+		if over == self:
+			return false
+		if over is UiWindow:
+			return (over as UiWindow).get_global_rect().has_point(p)
+		over = over.get_parent() as Control
+	return false
+
+
+func _set_cursor(edges: int) -> void:
+	var me: int = get_instance_id()
+	if edges == 0:
+		if _cursor_by == me:
+			_cursor_by = 0
+			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+		return
+	_cursor_by = me
+	var shape: Input.CursorShape = Input.CURSOR_VSIZE
+	var h: bool = edges & (EDGE_LEFT | EDGE_RIGHT) != 0
+	var v: bool = edges & (EDGE_TOP | EDGE_BOTTOM) != 0
+	if h and v:
+		var falling: bool = (edges & EDGE_LEFT != 0) == (edges & EDGE_TOP != 0)
+		shape = Input.CURSOR_FDIAGSIZE if falling else Input.CURSOR_BDIAGSIZE
+	elif h:
+		shape = Input.CURSOR_HSIZE
+	Input.set_default_cursor_shape(shape)
+
+
 func _on_bar_input(event: InputEvent) -> void:
 	var mb: InputEventMouseButton = event as InputEventMouseButton
 	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:
+		if mb.double_click and mb.pressed:
+			_dragging = false
+			reset_place()
+			return
+		if not mb.pressed and _dragging:
+			_dragging = false
+			_keep_place()
+			return
 		_dragging = mb.pressed
 		_drag_from = mb.global_position - global_position
 		return

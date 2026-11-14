@@ -182,7 +182,14 @@ pub fn resolve_action(ctx: &ReducerContext, request_id: u64, hit_id: u64) -> Res
         if !is_targetable(ctx, hit_id) || !is_hittable(ctx, hit_id) {
             return Err("resolve_action: they cannot be hit".into());
         }
-        outcome = OUTCOME_HIT;
+        // A ROLL JUDGED WHERE IT WAS PRESSED (DECISIONS #309): one its player began as they saw this land, and
+        // still rolling then, clears it, though its status had not reached the referee (or has run out since):
+        // a miss, at once.
+        if rolled_clear(ctx, hit_id, req.due_at.to_micros_since_unix_epoch()) {
+            log::info!("ability {} by {}: {hit_id} rolled clear of it", req.ability_id, req.actor_id);
+        } else {
+            outcome = OUTCOME_HIT;
+        }
     }
     ctx.db.action_request().id().delete(request_id);
     if outcome == OUTCOME_HIT {

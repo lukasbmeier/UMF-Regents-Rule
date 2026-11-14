@@ -1162,3 +1162,16 @@ Tests only: nothing to republish, no codegen, no new build.
   client's log, and a good release stopped (Regent's Rule's 1.7.7 build, 2026-11-08). It now publishes this source's
   server with fresh data first. Shown with another game's server on the test database: the old test fails, this
   one passes.
+
+## 1.8.0 — the dodge roll, and windows that resize and remember (DECISIONS #309, #310)
+Republish with `--codegen` (a new private table, `roll_state`; old clients keep working). No game's play changes until it
+opts in: a game gives its character a `dodge_roll`.
+- THE DODGE ROLL (#309): `AbilityDef` "A dodge roll" (`rolls`, `roll_status`, `roll_ms`, `roll_ms_rule`, `roll_in_air`),
+  `EntityDefinition.dodge_roll`, `RollComponent` on every entity (the key, the dash, the held way, held in the air, the
+  animation), the server's half (`server/src/roll.rs`, `module/rolls.rs`: no roll in the air, its status as an effect,
+  `roll_state`, `rolled_clear`, `Genre::on_roll`), a referee's late hit judged against when the roll was pressed. Foundation
+  content: the Dodge roll (ability 1), Rolling (status 7); hot rules `foundation.roll_ms`, `roll_late_ms`, `roll_hold_ms`.
+  `HotRules.has_rule`. Tests: `server/tests/roll.rs`, `tests/suites/roll.gd`, the integration suite's roll checks.
+- WINDOWS (#310): every `UiWindow` resizes from its edges and corners (a minimum, on the screen) and remembers its place
+  and size per window in the settings file; a double-click on its bar resets it; Settings, Game, "Remember where windows
+  are". Tests: `tests/suites/ui_window.gd`.

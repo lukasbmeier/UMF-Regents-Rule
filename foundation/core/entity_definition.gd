@@ -101,6 +101,10 @@ class_name EntityDefinition extends ContentDef
 ## characters do not list; a kind none of whose characters list any may use every ability (as
 ## before this existed).
 @export var abilities: Array[AbilityDef] = []
+## ITS DODGE ROLL (DECISIONS #309): an ability that `rolls` (the foundation's Dodge roll), used on its key by the
+## `RollComponent` every entity has. Empty: it does not roll. It need not be listed in `abilities`: a character
+## that lists abilities may also use its roll; one that lists none may use every ability, as before.
+@export var dodge_roll: AbilityDef
 
 
 ## The model entity `entity_id` wears: the variant its `appearance` names (DECISIONS #166), else
@@ -166,8 +170,11 @@ func to_bake() -> Dictionary:
 	var ability_ids: Array = []
 	for a: AbilityDef in abilities:
 		ability_ids.append(ContentDef.ref(a))
-	return {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile),
+	var out: Dictionary = {"id": id, "kind": kind, "name": display_name, "brain": String(brain), "movement": ContentDef.ref(movement_profile),
 		"abilities": ability_ids, "playable": playable}
+	if dodge_roll != null:
+		out["roll"] = ContentDef.ref(dodge_roll)   # only with one: a character without bakes as it did
+	return out
 
 
 func validate() -> Array[String]:
@@ -188,6 +195,8 @@ func validate() -> Array[String]:
 		out.append("its blocks_in list has an empty slot: pick a status or remove the slot")
 	if abilities.has(null):
 		out.append("its abilities list has an empty slot: pick an ability or remove the slot")
+	if dodge_roll != null and not dodge_roll.rolls:
+		out.append("its dodge roll '%s' is not a roll: tick its `rolls`, or pick one that is" % dodge_roll.display_name)
 	return out
 
 

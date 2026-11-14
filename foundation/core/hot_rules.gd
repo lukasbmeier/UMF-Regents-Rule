@@ -45,6 +45,11 @@ func text(key: StringName) -> String:
 	return String(_default(key).get("text", ""))
 
 
+## Whether this build or the server knows rule `key` (asking for an unknown one is an error).
+func has_rule(key: StringName) -> bool:
+	return _live.has(key) or defaults().has(String(key))
+
+
 ## Whether the value is the server's (else this build's default).
 func is_live(key: StringName) -> bool:
 	return _live.has(key)

@@ -76,3 +76,5 @@ mod place;
 pub use place::*;
 mod accounts;
 pub use accounts::*;
+mod rolls;
+pub use rolls::*;

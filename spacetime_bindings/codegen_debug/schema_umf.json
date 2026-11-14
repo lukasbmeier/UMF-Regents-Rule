@@ -2226,6 +2226,50 @@
 			]
 		},
 		{
+			"name": "RollState",
+			"namespace": [],
+			"source_name": "RollState",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "ability_id",
+					"type": "U32"
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				},
+				{
+					"name": "seen_us",
+					"type": "I64"
+				},
+				{
+					"name": "ms",
+					"type": "U32"
+				},
+				{
+					"name": "status",
+					"type": "U8"
+				}
+			],
+			"table_names": [
+				"roll_state"
+			],
+			"table_name": "roll_state",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				false
+			]
+		},
+		{
 			"name": "Session",
 			"namespace": [],
 			"source_name": "Session",
@@ -4215,7 +4259,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 60
+					"type_idx": 61
 				}
 			],
 			"return_type": "",
@@ -4364,7 +4408,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 66
+					"type_idx": 67
 				}
 			],
 			"return_type": "",
@@ -4387,7 +4431,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 67
+					"type_idx": 68
 				}
 			],
 			"return_type": "",
@@ -5673,11 +5717,30 @@
 			"is_public": true
 		},
 		{
+			"name": "roll_state",
+			"wire_name": "roll_state",
+			"namespace": [],
+			"local_name": "roll_state",
+			"type_idx": 54,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "roll_state_entity_id_key"
+				}
+			],
+			"btree_indexes": [],
+			"is_public": false
+		},
+		{
 			"name": "session",
 			"wire_name": "session",
 			"namespace": [],
 			"local_name": "session",
-			"type_idx": 54,
+			"type_idx": 55,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5701,7 +5764,7 @@
 			"wire_name": "session_empty",
 			"namespace": [],
 			"local_name": "session_empty",
-			"type_idx": 55,
+			"type_idx": 56,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -5720,7 +5783,7 @@
 			"wire_name": "session_match",
 			"namespace": [],
 			"local_name": "session_match",
-			"type_idx": 56,
+			"type_idx": 57,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "session_id",
@@ -5744,7 +5807,7 @@
 			"wire_name": "session_member",
 			"namespace": [],
 			"local_name": "session_member",
-			"type_idx": 57,
+			"type_idx": 58,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5772,7 +5835,7 @@
 			"wire_name": "status_effect",
 			"namespace": [],
 			"local_name": "status_effect",
-			"type_idx": 58,
+			"type_idx": 59,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -5832,7 +5895,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 59,
+			"type_idx": 60,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5860,7 +5923,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 60,
+			"type_idx": 61,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -5883,7 +5946,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 61,
+			"type_idx": 62,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5907,7 +5970,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 62,
+			"type_idx": 63,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -5926,7 +5989,7 @@
 			"wire_name": "where_sample",
 			"namespace": [],
 			"local_name": "where_sample",
-			"type_idx": 63,
+			"type_idx": 64,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -5945,7 +6008,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 64,
+			"type_idx": 65,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -5964,7 +6027,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 65,
+			"type_idx": 66,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -6065,6 +6128,7 @@
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
 		"ResourceState": "UmfResourceState",
+		"RollState": "UmfRollState",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -6165,6 +6229,7 @@
 		"RefereeOffer": "UmfRefereeOffer",
 		"BodyContactWrite": "UmfBodyContactWrite",
 		"ResourceState": "UmfResourceState",
+		"RollState": "UmfRollState",
 		"Session": "UmfSession",
 		"SessionEmpty": "UmfSessionEmpty",
 		"SessionMatch": "UmfSessionMatch",
@@ -9997,6 +10062,79 @@
 									}
 								]
 							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "ability_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					},
+					{
+						"name": {
+							"some": "seen_us"
+						},
+						"algebraic_type": {
+							"I64": []
+						}
+					},
+					{
+						"name": {
+							"some": "ms"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "status"
+						},
+						"algebraic_type": {
+							"U8": []
 						}
 					}
 				]

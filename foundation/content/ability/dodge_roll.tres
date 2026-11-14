@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+[ext_resource type="Resource" path="res://foundation/content/status/rolling.tres" id="2_rolling"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 1500
+range_m = 0.0
+wind_up_ms = 100
+damage = 0.0
+animation = &"ability.1"
+rolls = true
+roll_status = ExtResource("2_rolling")
+roll_ms = 550
+roll_ms_rule = &"foundation.roll_ms"
+id = 1
+display_name = "Dodge roll"
+designer_notes = "The foundation's dodge roll (DECISIONS #309): name it as a character's dodge_roll and the dash key rolls it (the way the keys push, else forward; held to that way), unhittable for roll_ms. The body's burst is the character's movement profile's dash (give it a dash_impulse). Its animation is ability.1 in the character's set."
