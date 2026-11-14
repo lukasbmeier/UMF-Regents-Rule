@@ -4264,8 +4264,12 @@ pushed). Regent's had committed steps 72-76 and the cinema lab first (`81a7afc2`
   cannot be hit") and the genre never hears the miss (`on_ability_missed`, which ticks the lesson). Sent to the template
   session (1.8.2). Integration **1659/1**: the bowstring check found no unstrung bow from the carve before it (passed in
   the four runs before: watch it at the next run).
+- TEMPLATE 1.8.2 (the referee reads effects; a hit reported on someone who cannot be hit is a miss), pushed by Luke,
+  merged into the four games locally (this session's push was refused by its permission check). Regent's republished
+  `--codegen`. Then: combat **119/0** (the referee ran throughout; the yard's six lessons ticked), integration
+  **1642/0** (the late-roll NEGATIVE and the bowstring check green), unit whole run **4104/0** (with step 78's suite).
 
-**For Luke**: nothing to do; restart the game and its referee. The other three games are merged and pushed but not
+**For Luke**: push the four games (1.8.2 is merged in each, locally); restart the game and its referee. The other three games are merged but not
 republished (each needs `tools\update_from_template.cmd`, or its own session).
 
 ## Step 78: THE VFX LAB (2026-11-14)

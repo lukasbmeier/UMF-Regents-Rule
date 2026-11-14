@@ -1,13 +1,14 @@
 # Handoff — Regent's Rule, 2026-11-14 (step 77: the roll is the foundation's; step 78: the VFX lab)
 
 ## Where it stands
-- Last commit `8703e633` (template 1.8.1 merged); steps 72-76 and the cinema lab are in `81a7afc2`. NOT COMMITTED:
-  step 77 (the roll switched to the foundation's: content, `server/src/game/regents.rs`, the combat component, bindings;
-  another session), the AI asset audit (`docs/regents_rule/AI_ASSET_AUDIT.md`, the "No AI disclosure" rule in `GAME.md`
+- Steps 72-76 and the cinema lab are in `81a7afc2`; step 77 in `59ecff11`; template 1.8.2 merged in `e87eae25`. NOT
+  COMMITTED: the AI asset audit (`docs/regents_rule/AI_ASSET_AUDIT.md`, the "No AI disclosure" rule in `GAME.md`
   and `regents-genre.md`; another session) and step 78 (`game/regents/vfx/`, `game/regents/tests/suites/regents_vfx.gd`,
   docs). Leave `addons/SpacetimeDB/plugin_config.tres` out of any commit, as before.
-- Current section in `docs/regents_rule/PROGRESS.md`: **Step 78** (step 77's "Server suites" line still reads
-  `SUITES77`: its session did not fill it in).
+- Current section in `docs/regents_rule/PROGRESS.md`: **Step 78**. Step 77 (the roll) is COMMITTED (`59ecff11`, which
+  also took this file and step 78's PROGRESS text: the files were shared) and its suites are filled in: on template
+  1.8.2 (merged locally in all four games, `e87eae25` here; NOT PUSHED: Luke pushes them) combat 119/0, integration
+  1642/0, unit 4104/0. The play database is at 1.8.2 + step 77 (`--codegen`).
 - The play database: published at step 77 (`--codegen`). Step 78 is client-only (no publish needed).
 - Suites (2026-11-14): `regents_vfx` 100/0 (new); unit whole run 4094/0, lints and engine-error checks ok.
 
