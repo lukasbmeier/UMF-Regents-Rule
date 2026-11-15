@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ShowcaseMood" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/showcase/showcase_mood.gd" id="1_mood"]
+
+[resource]
+script = ExtResource("1_mood")
+display_name = "Golden hour"
+sun_elevation = 12
+sun_azimuth = -58
+sun_color = Color(1, 0.8, 0.55, 1)
+sun_energy = 1.35
+zenith_color = Color(0.24, 0.38, 0.66, 1)
+horizon_color = Color(0.98, 0.78, 0.56, 1)
+glow_color = Color(1, 0.7, 0.38, 1)
+glow_spread = 0.45
+stars = 0.0
+cloud_cover = 0.42
+cloud_lit_color = Color(1, 0.86, 0.66, 1)
+cloud_shade_color = Color(0.55, 0.5, 0.58, 1)
+fog_color = Color(0.92, 0.78, 0.6, 1)
+fog_density = 0.0018
+mist_density = 0.004
+mist_color = Color(1, 0.88, 0.7, 1)
+ambient_energy = 0.85
+exposure = 1.0
+glow = 0.75
+fireflies = 0.0
+dust = 0.6
+fire_energy = 1.2
+windows = 0.3

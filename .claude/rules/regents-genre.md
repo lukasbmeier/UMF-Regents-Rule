@@ -136,6 +136,12 @@ paths:
   or its store page: anything that would need Steam's AI disclosure. Otherwise human-made, CC0 or licensed, its
   source in the folder's ATTRIBUTION.md. A new asset whose source is unknown is asked about, never added. The
   continent map (`continent_map.webp`) is AI-made and to be replaced: never build more on it.
+- THE SHOWCASE AND THE LOGIN (PROGRESS 84): `game/regents/showcase/` is a place made to be LOOKED AT (the login's
+  picture, the vista and battle labs, the composers' renders), never the game's world: no server, no collision, no
+  bake, and it never reads the continent. Made in code or from the CC0 kits like everything else. A lab's shots are
+  its scene's `ShowcaseShot`s and a battle's beats are timelines of the game's own clips and `VfxEffect`s (never a
+  look of its own). The login (`RegentsLogin`) stays the foundation's `ConnectScreen` dressed: a change to the form
+  is the template's; its valley is built only while it shows (the `regents_showcase` suite checks it is freed).
 - THE WARDROBE (PROGRESS 81, `docs/regents_rule/WARDROBE.md`): an outfit piece is a `<Male|Female>_<Outfit>_<Part>.gltf`
   in one of `Wardrobe.PIECE_DIRS` (found by name, never listed); an outfit's colors come from the DYE
   (`outfit_dye.gdshader` through `Wardrobe.dress`, a `DyePalette`, a `MetalFinish` per metal), never a repainted

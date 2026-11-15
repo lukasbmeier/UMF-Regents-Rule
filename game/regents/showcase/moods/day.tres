@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ShowcaseMood" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/showcase/showcase_mood.gd" id="1_mood"]
+
+[resource]
+script = ExtResource("1_mood")
+display_name = "Day"
+sun_elevation = 52
+sun_azimuth = 150
+sun_color = Color(1, 0.97, 0.92, 1)
+sun_energy = 1.25
+zenith_color = Color(0.2, 0.42, 0.8, 1)
+horizon_color = Color(0.7, 0.8, 0.9, 1)
+glow_color = Color(1, 0.95, 0.85, 1)
+glow_spread = 0.15
+stars = 0.0
+cloud_cover = 0.38
+cloud_lit_color = Color(1, 1, 1, 1)
+cloud_shade_color = Color(0.62, 0.68, 0.78, 1)
+fog_color = Color(0.72, 0.8, 0.88, 1)
+fog_density = 0.0011
+mist_density = 0.0
+ambient_energy = 1.0
+exposure = 1.0
+glow = 0.45
+fireflies = 0.0
+dust = 0.2
+fire_energy = 0.6
+windows = 0.0

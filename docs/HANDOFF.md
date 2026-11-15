@@ -1,45 +1,82 @@
-# Handoff — Regent's Rule, 2026-11-14 (step 77: the roll is the foundation's; step 78: the VFX lab)
+# Handoff — Regent's Rule, 2026-11-15 (steps 78-85: the VFX, the wardrobe, the showcase and login, the towns)
 
 ## Where it stands
-- Steps 72-76 and the cinema lab are in `81a7afc2`; step 77 in `59ecff11`; template 1.8.2 merged in `e87eae25`. NOT
-  COMMITTED: the AI asset audit (`docs/regents_rule/AI_ASSET_AUDIT.md`, the "No AI disclosure" rule in `GAME.md`
-  and `regents-genre.md`; another session) and step 78 (`game/regents/vfx/`, `game/regents/tests/suites/regents_vfx.gd`,
-  docs). Leave `addons/SpacetimeDB/plugin_config.tres` out of any commit, as before.
-- Current section in `docs/regents_rule/PROGRESS.md`: **Step 78**. Step 77 (the roll) is COMMITTED (`59ecff11`, which
-  also took this file and step 78's PROGRESS text: the files were shared) and its suites are filled in: on template
-  1.8.2 (merged locally in all four games, `e87eae25` here; NOT PUSHED: Luke pushes them) combat 119/0, integration
-  1642/0, unit 4104/0. The play database is at 1.8.2 + step 77 (`--codegen`).
-- The play database: published at step 77 (`--codegen`). Step 78 is client-only (no publish needed).
-- Suites (2026-11-14): `regents_vfx` 100/0 (new); unit whole run 4094/0, lints and engine-error checks ok.
+- EVERYTHING IS COMMITTED on `main` (NOT PUSHED: Luke pushes). On top of `27a8fc7b` (step 77) and the template 1.8.2
+  merge `e87eae25`: `ddbb2850` the towns (step 85), `2031e982` the wardrobe (step 81), `c8aa439f` steps 78-83 (the
+  VFX) and the AI asset audit, then the commit holding step 84 (the showcase and login) and this HANDOFF.
+  `addons/SpacetimeDB/plugin_config.tres` stays out of every commit, as before.
+- Current section in `docs/regents_rule/PROGRESS.md`: **Step 85** (the towns); 78-84 just above it (81 the wardrobe).
+- The play database: PUBLISHED 2026-11-15 with `--codegen` (step 83's NEW table `spell_landed`, add-only; 63 tables).
+  Steps 81, 84 and 85 are client-only: no publish. Luke restarts the editor's game (and reloads `adventurer.tscn`,
+  `foe.tscn`, `regents_game.tscn`) before he plays; the first open imports the village kit (~86 MB).
+- The local SpacetimeDB server was started by a session (`spacetime start`, background) on 2026-11-14.
+- Suites (2026-11-15): unit whole run on the committed `main` (all of 78-85 together) **4561/0**, lints and
+  engine-error checks ok; before that `regents_vfx` 179/0, `regents_wardrobe` 231/0, `regents_showcase` 104/0, `regents_town` 39/0;
+  `cargo test` green; `spells_seen_playtest.sh` caster 8/0, watcher 12/0, server 2/2; step 82's `caster_playtest.sh`
+  20/0 + 7/7, `combat_playtest.sh` 126/0. Integration NOT run since step 77 (PROGRESS 83 says why).
 
-## This session (step 78, the VFX lab)
-- Luke asked how far code-made VFX can go under Steam's AI disclosure, then for a lab. Answer: shaders, particles and
-  meshes made in code, no images (`AI_ASSET_AUDIT.md` §5 reads code-made as fine).
-- `game/regents/vfx/shaders/`: energy (noise through a heat ramp, bands, erosion, sweep), ground circle (runes, fill),
-  particle shapes, air ripple. `vfx_kit.gd` (`VfxKit`), `vfx_effect.gd` (`VfxEffect`: its own clock, `shook`).
-- Ten effect scenes in `vfx/effects/` (fire charge, missile, blast; frost charge and ring; blink; gale; axe overhead;
-  parry; cinder ring) and the lab `vfx/vfx_lab.tscn` (F6; seven showcases, speeds, day/dusk/night, shots).
-- `game/regents/tests/suites/regents_vfx.gd`; `GAME.md` (how to play), `CLAUDE.md` (the shot command),
-  `regents-genre.md` (AN EFFECT rule), PROGRESS step 78.
+## This session (four parallel sessions, all committed above)
+- VFX, steps 78-80: the VFX lab (`game/regents/vfx/`, `vfx_lab.tscn`), Luke's notes, old and new cuts side by side,
+  the gale's soft funnel.
+- VFX, step 82: the effects in every current ability (`SwingTrail` crescent, `ShotLook.end_scene`, `SpellLooks`
+  rings, NEW `AbilityVfx` from `vfx/ability_vfx.tres`).
+- VFX, step 83, Luke "Yes, add it": others see your Gale. Server table `spell_landed` (written in `land_spell`, gone on
+  `on_player_left`, a cell table); `AbilityVfx.landed_elsewhere` shows another player's landing while fresh (1.5 s).
+  NEW two-client playtest `spells_seen_playtest.sh`. Then Luke "Yes, add the pose": `CombatComponent.landed_elsewhere`
+  plays their arms' clip (`ability.<id>`) from the same row, every spell's landing (client only, no publish).
+- Wardrobe, step 81: `game/regents/wardrobe/` (Wardrobe, the dye shader, DyePalette, MetalFinish, zones, palettes,
+  metals, the lab), the Knight (`game/regents/art/outfits/`, CC0), `tools/wardrobe_assets.py`, `WARDROBE.md`. Luke
+  decided who wears what (`GAME.md`: Peasant start in chosen colors, leather Ranger, cloth Wizard, metal Knight,
+  Noble for NPCs); W1-W8 and the tier colors SETTLED ("Yes, all stand"; `GAME.md`, "W1-W8 ANSWERED").
+- Showcase, step 84: NEW `game/regents/showcase/` (world, sky, ground, water, moods, actor, stage, shot, the vista and
+  battle labs, the login's backdrop), NEW `game/regents/ui/login/` (`RegentsLogin`, an inherited scene of the
+  foundation's connect screen, named by Boot's `connect_screen` in `regents_game.tscn`), `showcase_render.sh`,
+  `login_shot.tscn`. Renders for the composers in `export/showcase/2026-11-15/` (git-ignored): 17 stills (1920x1080),
+  17 `.ogv` films (login 40 s, 9 vista, 7 battle; ~255 MB), `index.txt`. Re-make:
+  `tools\run.cmd game\regents\tests\showcase_render.sh`.
+- AI asset audit: `docs/regents_rule/AI_ASSET_AUDIT.md`; Luke's rule NO AI DISCLOSURE (`GAME.md`, `regents-genre.md`).
+- Towns, step 85: the Medieval Village kit (`game/regents/art/village/`, CC0), the town dye and `SettlementStyle`
+  (eight presets), `KitHouse`, `CastleWall`, `Settlement`; `town_world.tscn` (village, walled market town, castle in
+  1 km) and `town_lab.tscn` (one street in every style, live edit). All in `SETTLEMENTS_PREP.md` §8.
 
 ## Next, in order
-1. Luke opens the VFX lab (F6) and says what to push in the look; then which effects go into the fights first
-   (PROGRESS 78, "Left for later": the fireball's `ShotLook`/`ImpactBurst`, the areas' circles, the parry, the cut).
-2. Before wiring: a lighter version for others' casts (300 players) and the game camera's shake.
-3. From before: Luke plays the bar, Gale, a staff to 5 and its pick; writes the axe's, sword's and bow's role
-   abilities (`ABILITIES_PREP.md` §9); the UI rebuild after armor (`GAME.md`).
+1. Luke plays the effects (staff, sword, axe, the imp, the skeletons; two instances for Gale); his notes on the look.
+2. Luke looks at the town world and lab; on his okay, FURNISH them with the Fantasy Props kit (`SETTLEMENTS_PREP.md`
+   §8, "Left for later").
+3. Maybe: others' AIM held a moment after a spell lands (their upper body turns to the shot only while casting).
+4. Before many players: a lighter version for others' effects, the rings as one MultiMesh, the camera listening to `shook`.
+5. A look at the ten "binding after 2.0s without rows for session_member" warnings every playtest client prints
+   (not from step 83: an A/B probe showed them without it).
+6. Armor resumes from `ARMOR_PREP.md` §0 (its open parts, traits and numbers), the look now settled; the look's build
+   into the game is WARDROBE.md §6, which needs a foundation hook first (`ModularCharacter.wear`: template work), plus
+   W8's picker colors.
+7. From before: the bar, a staff to 5 and its pick; the role abilities (`ABILITIES_PREP.md` §9); the UI rebuild.
 
 ## Waiting on Luke
-- The VFX look and which effects go in first; whether others' casts get a lighter version.
+- The effects in play (two instances for others' Gale and its pose).
+- The towns: the look of the world and the lab, then "how everything furnishes"; S1-S8 in `SETTLEMENTS_PREP.md` §7.
+- The showcase: his look at the login and the films; the forest's colors, the moods, the keep, the tagline are a
+  first pass; MP4 needs ffmpeg (a download: his yes). Not done: deer only stand; "The line" is wide and small.
 - From before: round or square bar; his rewrite of §9; B13 as read; the lead's share; the archer's and imp's numbers;
   #12 day/night, tree scale, the wolf pack's place, `string_chase_ms`, the glade's grass and colors.
 
 ## Watch out
-- `VfxEffect` reads where it is in `_start` (as it enters the tree): set `position`/`basis`/`target` BEFORE `add_child`
-  (the lab's `_spawn`), or a missile flies from the origin.
-- The lab's waits are its own Timers and its `ticked` signal (never `get_tree().create_timer`): a showcase still
-  waiting when the lab is freed (the suite frees it) is dropped instead of resumed on a freed lab.
+- A PLAYTEST'S REFEREE STOPS when any project file changes on disk ("the project changed since it started"): another
+  session writing its files broke a combat run into 71/53. Ask busy sessions to hold writes and make none yourself.
+- `AbilityVfx` shows your own Blink only within 2 s of casting it (`JUMP_ARMED_MS`); another player's from the jump.
+  Another player's Gale comes from their `spell_landed` row, only while it is under 1.5 s old by `ClockSync`.
+- `VfxEffect` reads where it is in `_start`: set `position`/`basis`/`target` (and a cut's `weapon`) BEFORE `add_child`.
+- The lab's waits are its own Timers and its `ticked` signal (never `get_tree().create_timer`).
 - Shader edits: headless cannot compile or draw them; run the lab's shots (windowed) and look.
+- A fade at a mesh's edge needs UVs that reach it: never fade a `CylinderMesh`'s ends (its caps take part of the UV).
 - A Python patch on Windows writes CRLF unless `newline=''`: `.gitattributes` wants LF.
-- From before: `combat_playtest.sh` can flake at its first skeleton (rerun once); every writer of an item's
-  `instance_data` keeps `"x"` and `"k"`; `run_tests.sh` ignores `-- --only=`; never edit a shell suite while it runs.
+- Wardrobe: the zone masks are lossless and unmipmapped on purpose (their `.import`); a new outfit's zones are a
+  first pass to check with Z; re-run `wardrobe_assets.py zones` after editing `zones.json` (it rewrites the
+  `palettes/<outfit>_<n>.tres`; custom palettes are untouched).
+- Showcase: the movie writer records at the PROJECT's window size (never `--resolution`): the script writes and
+  removes `override.cfg`; never leave one in the project. A shot's camera is clamped over the land, and everything
+  stands on `ground_at` (the mesh as drawn), never `height_at` (the smooth shape).
+- Towns: every kit piece brings its own collision body; a building must go through `TownKit.instance_building` /
+  a `Settlement` (one body each) or a town passes Jolt's 10240-body limit. The world builds in ~17 s.
+- From before: `combat_playtest.sh` can flake at its first skeleton, `caster_playtest.sh` at the imp noticing (rerun
+  once); every writer of an item's `instance_data` keeps `"x"` and `"k"`; `run_tests.sh` ignores `-- --only=`.

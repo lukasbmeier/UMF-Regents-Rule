@@ -683,9 +683,14 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   #12 (day/night) is a yes** (he asked 2026-11-11: it is a day/night sky, not fog; the time would come from the
   server's clock, no table).
 - Still open: #12 day/night; how the minimap grows; the ore nuggets' placement (Luke's, by hand).
+- **THE LOGIN SCREEN AND THE SHOWCASE** (Luke, 2026-11-15, commissioning music: "a login screen is a classic must
+  have ... build a few labs that can really showcase the visuals ... and then a few still or short videos of combat"):
+  built in PROGRESS 84. Press Play: the form over the valley at dusk (`RegentsLogin`); the vista and battle labs
+  (`game/regents/showcase/`); the composers' pictures and films by `showcase_render.sh` into `export/showcase/`. The
+  forest's colors, the moods, the keep and the login's words are the agent's first pass: his to change.
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
-A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the frontier glade (level 20):
+A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the login screen (the valley at dusk behind the form, PROGRESS 84), then the frontier glade (level 20):
 trees (Tree, Oak, Yew), copper, iron and coal rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**, then an iron
 pickaxe for coal and **steel** (the ladder: copper, iron, steel; `MATERIALS.md`, the material table): at a node or a
@@ -748,6 +753,12 @@ and has a 0.8 % rare **Wolf fang**); hold E for **the cut line**: press the
 mouse on the gold ring and drag the knife along the marked line (off it, or too fast, tears the hide); the round skins
 the whole carcass, 2 to 3 hides or pelts for a clean one. The tanning rack (by the spinning wheel) turns a deer hide
 into soft leather and a wolf pelt into supple leather (Crafting 2).
+**Labs with no server** (F6 on each; nothing in them is in the game's levels yet): **the wardrobe**
+(PROGRESS 81) `game/regents/wardrobe/wardrobe_lab.tscn`, every outfit dyed any color, the metal tiers;
+**the towns** (PROGRESS 85) `game/regents/town/town_world.tscn`, a kilometer with a village, a walled market town and a
+castle, every building the Medieval Village kit's pieces in the town dye (L day/dusk/night, S the next style), and
+`game/regents/town/town_lab.tscn`, one street in eight styles, live-edited; **the showcase** (PROGRESS 84)
+`game/regents/showcase/vista_lab.tscn` and `battle_lab.tscn`.
 
 ```bash
 GODOT=<path> ./game/regents/tests/skilling_playtest.sh   # the whole chain by a real client at 150 ms

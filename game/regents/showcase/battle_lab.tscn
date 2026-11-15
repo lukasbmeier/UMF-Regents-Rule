@@ -1,0 +1,121 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://game/regents/showcase/battle_lab.gd" id="1_lab"]
+[ext_resource type="Script" path="res://game/regents/showcase/showcase_shot.gd" id="2_shot"]
+[ext_resource type="Resource" path="res://game/regents/showcase/moods/dusk.tres" id="mood_dusk"]
+[ext_resource type="Resource" path="res://game/regents/showcase/moods/golden.tres" id="mood_golden"]
+[ext_resource type="Resource" path="res://game/regents/showcase/moods/night.tres" id="mood_night"]
+
+[sub_resource type="Resource" id="Shot_1"]
+script = ExtResource("2_shot")
+title = "Steel"
+mood = ExtResource("mood_dusk")
+seconds = 11.5
+eye_from = Vector3(20.2, 1.7, 14.6)
+eye_to = Vector3(19.6, 1.6, 13.4)
+at_from = Vector3(16, 1.1, 12)
+at_to = Vector3(17, 1.1, 11.5)
+orbit_deg = -35
+fov_from = 42
+fov_to = 40
+handheld_m = 0.04
+focus_m = 4.5
+still_at = 0.33
+beat = &"steel"
+
+[sub_resource type="Resource" id="Shot_2"]
+script = ExtResource("2_shot")
+title = "The finisher"
+mood = ExtResource("mood_dusk")
+seconds = 7
+eye_from = Vector3(13.3, 1.05, 12.5)
+eye_to = Vector3(13.6, 1.2, 11.4)
+at_from = Vector3(16, 1.2, 12)
+at_to = Vector3(16, 1.1, 11.6)
+orbit_deg = 30
+fov_from = 34
+fov_to = 30
+focus_m = 2.2
+time_scale = 0.25
+still_at = 0.48
+beat = &"finisher"
+
+[sub_resource type="Resource" id="Shot_3"]
+script = ExtResource("2_shot")
+title = "Fire and frost"
+mood = ExtResource("mood_night")
+seconds = 9.5
+eye_from = Vector3(10.5, 1.6, 9)
+eye_to = Vector3(9.5, 1.9, 10.5)
+at_from = Vector3(16, 1.2, 12)
+at_to = Vector3(15, 1.1, 12.5)
+fov_from = 46
+fov_to = 44
+handheld_m = 0.03
+still_at = 0.14
+beat = &"fire"
+
+[sub_resource type="Resource" id="Shot_4"]
+script = ExtResource("2_shot")
+title = "Fire and frost, the ring"
+mood = ExtResource("mood_night")
+seconds = 9.5
+eye_from = Vector3(6, 2, 15.5)
+eye_to = Vector3(5.5, 2.4, 13.5)
+at_from = Vector3(18, 1, 8.5)
+at_to = Vector3(18, 1, 8.5)
+fov_from = 44
+fov_to = 42
+still_at = 0.62
+beat = &"fire"
+
+[sub_resource type="Resource" id="Shot_5"]
+script = ExtResource("2_shot")
+title = "Arrows"
+mood = ExtResource("mood_golden")
+seconds = 8
+eye_from = Vector3(25.4, 1.6, 17.7)
+eye_to = Vector3(24.6, 1.7, 18.6)
+at_from = Vector3(16, 1.2, 11.75)
+at_to = Vector3(15.5, 1.2, 12)
+fov_from = 50
+fov_to = 48
+handheld_m = 0.03
+still_at = 0.22
+beat = &"arrows"
+
+[sub_resource type="Resource" id="Shot_6"]
+script = ExtResource("2_shot")
+title = "The pack"
+mood = ExtResource("mood_night")
+seconds = 9
+eye_from = Vector3(16.5, 1.5, 17)
+eye_to = Vector3(14.5, 1.7, 16.2)
+at_from = Vector3(16, 0.9, 10.5)
+at_to = Vector3(16, 0.9, 11)
+orbit_deg = 25
+fov_from = 48
+fov_to = 44
+handheld_m = 0.05
+focus_m = 5
+still_at = 0.6
+beat = &"pack"
+
+[sub_resource type="Resource" id="Shot_7"]
+script = ExtResource("2_shot")
+title = "The line"
+mood = ExtResource("mood_dusk")
+seconds = 12
+eye_from = Vector3(11.5, 2.8, 21)
+eye_to = Vector3(11, 7, 24.5)
+at_from = Vector3(11.5, 1, 13)
+at_to = Vector3(11.5, 1, 11.5)
+fov_from = 50
+fov_to = 55
+still_at = 0.32
+beat = &"melee"
+
+[node name="BattleLab" type="Node3D"]
+script = ExtResource("1_lab")
+shots = Array[ExtResource("2_shot")]([SubResource("Shot_1"), SubResource("Shot_2"), SubResource("Shot_3"), SubResource("Shot_4"), SubResource("Shot_5"), SubResource("Shot_6"), SubResource("Shot_7")])
+mood = ExtResource("mood_dusk")

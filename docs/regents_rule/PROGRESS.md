@@ -4618,3 +4618,111 @@ add the pose"**). Client only, no publish.
 - From step 82: a lighter version of others' effects for 300 players; the rings' rising meshes as one MultiMesh;
   the game camera listening to `shook`.
 
+## Step 84: THE LOGIN SCREEN AND THE SHOWCASE (pictures and films for the composers) (2026-11-15)
+
+Luke: "I am starting to commission some people for music sound tracks. I think I want to send them some cinematic and
+or still images/videos to get a feel for the game. First off, a login screen is a classic must have. lets start there
+and build a few labs that can really showcase the visuals with the nice skybox/assets and terrain and then a few still
+or short videos of combat etc". A parallel session (step 83) worked beside this one; none of its files were touched.
+
+**What was built** (all client-only, all genre files: no publish; everything made in code or from the CC0 kits: no
+image, no AI-made asset, `GAME.md` "No AI disclosure"):
+- `game/regents/showcase/`: THE VALLEY (`ShowcaseWorld`), made from a seed: a meadow camp round a fire at the origin,
+  forested hills, a lake (`showcase_water.gdshader`), the regent's keep on its hill (stone blocks, cones, lit windows,
+  gate torches), snowy ridges far off, painted by height and slope (`showcase_ground.gdshader`), the nature kit's trees,
+  rocks, bushes, grass, ferns and flowers as MultiMeshes, the camp's props, its fire (flames, embers, a breathing
+  light), fireflies and sunlit dust. THE SKY (`showcase_sky.gdshader`): the gradient, the sun's glow, the sun and the
+  moon, drifting clouds lit from the sun's side, twinkling stars; there was no skybox before (every level used
+  Godot's procedural one). FIVE MOODS (`ShowcaseMood`, `moods/*.tres`: dawn, day, golden hour, dusk, night) set the
+  sun, the moon, the sky, the clouds, the fog, the valley mist, the fire, the fireflies and the windows: data in the
+  Inspector. The forest's colors are the showcase's own (`LEAF_LOOKS`): the kit draws TallThick blue and TwistedTree
+  red; here 88 % are green (the kit's own green leaf pictures), 12 % keep the kit's color as autumn. The glade is
+  untouched. Trees and rocks step out of every shot's line of sight and out of the "clearings" a lab names, so a new
+  shot never starts inside a trunk. Everything stands on the land AS DRAWN (`ground_at`, the mesh's own triangles):
+  set on the smooth shape, grass and a deer floated over the lake's steep bowl where the grid is wide. And a shot's
+  camera never goes under the land (`CAMERA_ABOVE_M`): the lake shot's did, and looked out through a hillside's back.
+- `ShowcaseActor`: a character that acts with no server (the login ships it, so not the workbench's `Mannequin`): a
+  look, a weapon or a foe's dress, the game's clips by their semantic names with a crossfade, one-shots, held deaths,
+  walks on the ground.
+- `ShowcaseStage` + `ShowcaseShot`: a lab plays its scene's `shots` (camera from/to, orbit, lens, focus, a handheld
+  drift, slow motion, a mood, a beat) with fades and film bars; F the free camera and C prints a place for a new shot;
+  `-- stills <dir>`, `-- reel`, `-- clip <n>` for the renders. Effects through the game's own `VfxEffect` scenes.
+- THE VISTA LAB (`vista_lab.tscn`, 9 shots): the valley at golden hour, the keep at dusk, the lake at dawn with deer,
+  the camp at dusk (orbit), the smith, a traveler arriving, the wizard's cold light at night, the night watch, over the
+  forest by day.
+- THE BATTLE LAB (`battle_lab.tscn`, 7 shots), timelines of the game's own swings and effects: "Steel" (the sword's
+  string with its crescents, a skeleton's cut parried with the flash, the finisher, an axeman charging in, a roll, a
+  lunge, a second kill), "The finisher" at a quarter speed, "Fire and frost" twice (Fireball, the imp's cinder ring left
+  by a Blink, Frost Ring, the last fireball), "Arrows" (the skeleton archer's arrow rolled clear, two answered), "The
+  pack" (two wolves at night: a lunge rolled, a bite parried), "The line" (a wide crane over both fights).
+- THE LOGIN SCREEN (`game/regents/ui/login/regents_login.tscn`, `RegentsLogin extends ConnectScreen`, an inherited
+  scene of the foundation's): the form, signing in, the character and settings are the foundation's, unchanged; behind
+  them the valley at dusk, live (`LoginBackdrop` in a SubViewport with its own world: the fire, a guard looking out to
+  the keep, the smith, the ranger and the wizard, the camera drifting over 70 s), "REGENT'S RULE" in a serif the system
+  has (`SystemFont`: Cinzel, Palatino Linotype, Book Antiqua, Georgia...; no font file shipped), the form lower down in
+  a dark panel with a gold edge. Built when the screen shows, freed when it hides: play pays nothing. `regents_game.tscn`
+  Boot's `connect_screen` now names it (one line). Its looks are its exported values.
+- `game/regents/tests/showcase_render.sh [stills|films|all]`: everything at 1920x1080 into `export/showcase/<date>/`
+  (git-ignored): `stills/` (login, vista_NN, battle_NN), `films/` (login 40 s, one .ogv a shot, 30 fps), `index.txt`
+  (each file, its mood). Godot's movie writer records Theora `.ogv` (VLC, Chrome, Firefox play it; Windows' own player
+  does not) at the PROJECT's window size whatever `--resolution` says, so the script writes a 1920x1080 `override.cfg`
+  for the run and removes it after (it refuses to start if one exists). `login_shot.tscn` shoots the front door.
+
+**How to look at it**: F6 on `game/regents/showcase/vista_lab.tscn` or `battle_lab.tscn` (←/→ shots, M moods, F the free
+camera, P a still); press Play for the login screen (untick "Connect automatically" if it skips it). The renders:
+`tools\run.cmd game\regents\tests\showcase_render.sh`.
+
+**Tested**: `regents_showcase` (NEW) 104/0: the moods; the valley's shape (the camp flat, the keep's hill,
+the ridges, the lake's bed), the ground as drawn (NEGATIVE: not the smooth shape on the bowl), trees and grass placed, never in the lake, the keep's yard, a line of sight or (tall) a
+clearing; a mood relights it (night: moon and fireflies, no sun); the actor (its look and sword, a one-shot then idle,
+NEGATIVE an unknown clip refused, a held death, a walk ending on the ground); a shot's camera, lens and orbit, and lifted over the land when set under it; every
+lab shot's beat a method of its lab, and every battle beat played to its end on the stage's clock with its foes down
+and the timeline empty, NEGATIVE a new shot starts clean; the login: the foundation's form kept, nothing built while
+hidden, the valley built in its own world when shown, freed and its view stopped when hidden, NEGATIVE nothing built
+with the picture off; the game's Boot names it. Mutations: a login that never frees its valley and a swing that
+never kills both fail it (3 fails), restored. The look: the labs' stills, looked at shot by shot over five passes.
+Unit whole run 4522/0, lints and engine-error checks ok (2026-11-15). The renders: `showcase_render.sh all`, 17 stills and 17 films, every still looked at.
+
+**Choices of mine, Luke's to change** (none is a game rule): the forest's colors (`LEAF_LOOKS`, `KIT_LEAVES`), the five
+moods' numbers, the keep's look (stone blocks; a real castle kit would be better), the login's dusk, its tagline ("The
+frontier waits"), its title face, the shots and their beats. The valley is not the game's world: no server, no
+collision; the continent (AI-derived) is not used anywhere in it.
+
+**Left for later**: MP4 (needs ffmpeg on this machine, a download: Luke's yes); music-free cuts longer than a shot (the
+`reel` mode plays every shot back to back into one film); the vista's "The keep" at dusk is still hazy; "The line" is
+wide and its fighters small; deer only stand (their set has no grazing clip); a skybox in the game's own levels (the
+glade, the continent) from `showcase_sky.gdshader` if Luke likes it (the glade's look is his, #12 day/night open).
+
+## Step 85: TOWNS: THE TOWN DYE, THE TOWN WORLD AND THE TOWN LAB (2026-11-15)
+
+Luke, 2026-11-15: "start making the world feel more alive in parallel with the actual content work ... similar to
+clothes, each asset should have a shader with external parameters that allow for nearly infinite customization so
+things dont look too similar from village to village"; then "a small 3d scene (say 1km x 1km) that packs in a small
+village, middle market town and a castle with code made walls and reusing the walls. and then another wardrobe like
+lab that shows some preset village sets for colors". A parallel session; presentation only, no server, nothing in the
+game's levels yet. Committed `ddbb2850`.
+
+**The full write-up is `docs/regents_rule/SETTLEMENTS_PREP.md`**: §1-5 the kits (Medieval Village MegaKit, Fantasy
+Props), the shader plan, the routes to a castle or a capital; §6 the order of work; §7 Luke's open S1-S8; **§8 what is
+built, how to look at it, how it is tested, what is left.** In short:
+- `game/regents/art/village/`: the kit's 305 pieces (CC0, its glTF Godot export, collisions included), textures, wear
+  masks; `ATTRIBUTION.md`.
+- `game/regents/town/`: `town_surface.gdshader` (THE TOWN DYE: each kit material a slot, the wardrobe's idea, plus
+  each building's nudge and the weather: wear, moss, grime, sun-fade, snow, lit windows at night); `SettlementStyle`
+  (a `.tres`, eight presets in `styles/`); `TownKit` (dress, merge each building to one mesh and one body);
+  `KitHouse` (a house from the kit's pieces by footprint, floors, finishes); `CastleWall` (walls, towers, gates and
+  keeps in code, round any outline); `Settlement` (dresses and merges every building under it as the game runs);
+  `houses/demo_*.tscn` (the kit's own demo buildings, rebuilt by `game/regents/tools/town_kit.py demo`).
+
+**How to look at it** (F6, no server): `game/regents/town/town_world.tscn` (the 1 km world: the village, the walled
+market town, the castle on its mound; 1-7 views, right mouse and WASD QE to fly, L day/dusk/night, S every place to
+the next style, H help) and `game/regents/town/town_lab.tscn` (one street in all eight styles; 2 the live editor,
+3 seeds, 4 one house per style). The world takes ~17 s to build.
+
+**Tested**: `regents_town` (NEW) 39/0 (NEGATIVES: a kit material taken out of the table fails three checks; a wall
+with no gate is solid where the gate was); unit whole run 4043/0 at the time (before steps 78-84 joined it). The look:
+windowed shots of both scenes, day, dusk and night.
+
+**Left for later** (SETTLEMENTS_PREP §8): FURNISHING with the Fantasy Props kit once Luke okays the look ("once i
+okay the test Ill want to see how eveything furnishes"); a saved bake of merged buildings and far LODs; the village
+kit's own small props; interiors (S7); the ground is a stand-in.
