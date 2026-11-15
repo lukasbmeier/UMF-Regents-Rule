@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SettlementStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/settlement_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+title = "As painted"
+note = "The kit's own colors: every slot keeps its painting. Only the weather and each building's nudge."
+wear = 0.5
+grime = 0.2

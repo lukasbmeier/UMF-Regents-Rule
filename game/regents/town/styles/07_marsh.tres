@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SettlementStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/settlement_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+title = "Fenwick"
+note = "A marsh village: damp green plaster, dark wood, mossy roofs, mud up the walls."
+plaster = Color(0.66, 0.68, 0.55, 1)
+stone = Color(0.45, 0.47, 0.4, 1)
+masonry = Color(0.4, 0.42, 0.36, 1)
+paving = Color(0.36, 0.37, 0.32, 1)
+roof = Color(0.36, 0.33, 0.24, 1)
+timber = Color(0.2, 0.18, 0.12, 1)
+planks = Color(0.38, 0.34, 0.24, 1)
+foliage = Color(0.25, 0.38, 0.12, 1)
+wear = 1
+wear_color = Color(0.3, 0.36, 0.18, 1)
+moss = 0.75
+grime = 0.65
+grime_height = 2
+grime_color = Color(0.35, 0.33, 0.25, 1)

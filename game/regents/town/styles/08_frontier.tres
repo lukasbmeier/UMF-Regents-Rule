@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SettlementStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/settlement_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+title = "Ashfall"
+note = "A burned frontier town: soot on the plaster, charred beams, rusted roofs; few lights."
+plaster = Color(0.55, 0.53, 0.5, 1)
+stone = Color(0.38, 0.36, 0.34, 1)
+masonry = Color(0.33, 0.31, 0.3, 1)
+paving = Color(0.3, 0.29, 0.28, 1)
+roof = Color(0.42, 0.24, 0.16, 1)
+timber = Color(0.09, 0.08, 0.07, 1)
+planks = Color(0.25, 0.2, 0.16, 1)
+metal = Color(0.2, 0.12, 0.08, 1)
+wear = 1.3
+wear_color = Color(0.12, 0.1, 0.08, 1)
+grime = 0.8
+grime_height = 2.5
+grime_color = Color(0.25, 0.22, 0.2, 1)
+fade = 0.1
+window_light = Color(1, 0.55, 0.25, 1)
+lit_share = 0.35

@@ -27,6 +27,7 @@ record decisions, rewrite `docs/HANDOFF.md`. This game's decisions never go in `
 | `docs/regents_rule/HERBALISM_HUNTING_PREP.md` | before herbalism and hunting (2026-11-07): what is settled, what is built, herbalism's and hunting's proposed shape, the first creatures, what fiber and hide make; Luke's open decisions H1-H11 | herbalism, hunting, creatures, fiber and hide work: his answers go to `GAME.md` |
 | `docs/regents_rule/FOES_PREP.md` | before new foes (2026-11-12): how a foe thinks today, LimboAI (unused here) and the trees proposed, the rules for smart but fun foes, the Bestiary models, a skeleton archer and an imp caster, what a ranged foe needs on the server; Luke's open decisions F1-F16; its §9 is the order of work | new foes, foe brains and trees: his answers go to `GAME.md` |
 | `docs/regents_rule/ABILITIES_PREP.md` | the ability rework (2026-11-13): the bar, four slots (Q, E, R the weapon's, F the chest's), item levels with mastery catch-up, a 1-99 track (picks ~5 and ~12, the ult ~20), the chest's ability; Luke's decisions B1-B15, ALL ANSWERED (`GAME.md`); its §7 the order of work (step 1, the bar: PROGRESS 72) | ability work, before armor |
+| `docs/regents_rule/SETTLEMENTS_PREP.md` | towns (2026-11-15): the Medieval Village and Fantasy Props kits, the town dye and `SettlementStyle`, castle and capital pieces, the routes to a castle; Luke's open decisions S1-S8; its §8 what is built (the town world, the town lab, `KitHouse`, `CastleWall`, `Settlement`) | villages, towns, castles, town shaders: his answers go to `GAME.md` |
 | `docs/regents_rule/ANIMATIONS.md` | the animation checklist for the overhaul: every clip needed, the best Quaternius / Mixamo / other candidates, ticked as they go in | before adding a clip |
 | `docs/regents_rule/MATERIALS.md` | materials and modular gear (2026-10-23): the generated table, slots, trait picks and ranks, gear XP, catalysts; its §10 is the order of work | materials, parts, crafting work |
 | `docs/DECISIONS.md` | the FOUNDATION's decision log (arrives with pulls) | the last ~20, plus your system's rows |
@@ -52,6 +53,8 @@ GODOT=<path> ./game/regents/tests/archer_playtest.sh          # a real client an
 GODOT=<path> ./game/regents/tests/caster_playtest.sh          # a real client and referee (~3 min): the imp's bolt taken and sidestepped, its ring stood in and left, its cast stopped
 "$GODOT" --path . res://game/regents/tests/aim_shot.tscn -- <out dir>     # windowed, no server: the aim poses against the crosshair (measured), a foe's swing trail, the shots in flight
 "$GODOT" --path . res://game/regents/ui/bar_lab.tscn -- <out dir>        # windowed, no server: the ability bar, round and square, per kit and state (F6 in the editor: the lab itself)
+"$GODOT" --path . res://game/regents/town/town_world.tscn -- <out dir>   # windowed, no server: the 1 km town world (village, market town, castle) by day and night
+"$GODOT" --path . res://game/regents/town/town_lab.tscn -- <out dir>     # windowed, no server: one street in every preset style, seeds, a style edited live
 GODOT=<path> ./game/regents/tests/minigame_readout.sh         # every minigame round by four simulated players (~15 s, no server)
 GODOT=<path> ./game/regents/tests/load_300.sh                # 50-300 bots on the continent (~25 min): docs/regents_rule/REFEREE_SCALING.md
 ```

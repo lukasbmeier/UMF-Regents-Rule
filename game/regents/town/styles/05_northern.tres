@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SettlementStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/settlement_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+title = "Frostmark"
+note = "The north: tarred timber, gray stone, dark slate under snow; every window lit."
+plaster = Color(0.78, 0.78, 0.76, 1)
+stone = Color(0.48, 0.5, 0.52, 1)
+masonry = Color(0.42, 0.43, 0.45, 1)
+paving = Color(0.4, 0.41, 0.43, 1)
+roof = Color(0.24, 0.25, 0.28, 1)
+timber = Color(0.13, 0.1, 0.08, 1)
+planks = Color(0.32, 0.24, 0.18, 1)
+metal = Color(0.18, 0.18, 0.2, 1)
+wear = 0.4
+snow = 0.75
+grime = 0.2
+window_light = Color(1, 0.7, 0.35, 1)
+lit_share = 0.85

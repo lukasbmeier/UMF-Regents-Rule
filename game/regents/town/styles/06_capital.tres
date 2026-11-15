@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SettlementStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/settlement_style.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+title = "The capital"
+note = "The Regent's seat: whitewash, limestone, walnut, blue slate, gilt; kept clean."
+plaster = Color(0.97, 0.96, 0.92, 1)
+stone = Color(0.8, 0.78, 0.73, 1)
+masonry = Color(0.68, 0.66, 0.62, 1)
+brick = Color(0.62, 0.3, 0.24, 1)
+paving = Color(0.7, 0.68, 0.64, 1)
+roof = Color(0.22, 0.3, 0.45, 1)
+timber = Color(0.22, 0.15, 0.11, 1)
+planks = Color(0.5, 0.36, 0.24, 1)
+metal = Color(0.85, 0.65, 0.25, 1)
+wear = 0.15
+grime = 0.1
+moss = 0
+jitter_hue = 0.015
+jitter_value = 0.06
+lit_share = 0.8
