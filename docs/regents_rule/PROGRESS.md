@@ -4338,3 +4338,81 @@ model; none of this needs an asset.
 - The game's camera shake (the effects ask through `shook`; only the lab listens).
 - The style: Luke plays them and says what to push (brighter, more toon, more smoke, slower blasts); the axe's cut is
   timed to the lab's clip and may want `starts_at_s` moved.
+## Step 81: THE WARDROBE: CLOTHES, ARMOR AND THE DYE (2026-11-14)
+
+Luke, 2026-11-14: "I want to continue armor next but before we do, we need to figure out clothes and shaders on them
+... do we have armor models? all colors on every model should have a shader material that allows for any color combo
+... a lab that is basically a more advanced character selector ... a full inventory of what clothes/armor potential we
+have based on our prep, what we need and how we can reuse metal for all tiers/metals with shaders and recoloring."
+The inventory, the plan and his open decisions (W1-W8): **`docs/regents_rule/WARDROBE.md`**.
+
+**Built** (all the genre's; nothing in the game yet, presentation only)
+- **The Knight outfit** (plate armor, the pack's only one; the foundation's import left it out): male and female,
+  20 pieces, in `game/regents/art/outfits/knight/` (`ATTRIBUTION.md`), brought in by
+  `python game/regents/tools/wardrobe_assets.py knight` (textures at 1024, its three colorways, no LODs).
+- **The dye zones**: `wardrobe_assets.py zones` sorts each outfit's atlas into six DYE SLOTS (metal, main, accent,
+  trim, leather, under) by how texels change together across the pack's three colorways, from reference colors in
+  `game/regents/wardrobe/zones.json` (designer-editable); metal from the ORM's blue channel. Writes
+  `wardrobe/zones/T_<Outfit>_Zones.png` (lossless, no mipmaps) and each colorway as a palette (`palettes/*.tres`).
+- **The dye**: `outfit_dye.gdshader` (the outfit's own albedo, ORM and normal textures plus the zones: a slot's color
+  times the painting's brightness against the slot's mean; metal also takes metallic, roughness and wear in its
+  hollows; alpha is how much; a trim glow; `show_zones`). `DyePalette` (five cloth colors and a `MetalFinish`) and
+  `MetalFinish` (`metals/`: copper, iron, steel, four studies for later tiers) as `.tres`.
+- **`Wardrobe`** (`wardrobe.gd`): pieces FOUND by file name (`<Male|Female>_<Outfit>_<Part>`) in its `PIECE_DIRS`, by
+  body and slot (head, shoulders, neck, torso, arms, legs, feet); `full_set`; `dress(model, palette)` (one material
+  per outfit on a figure, re-tinted, never skin or hair; undressing gives back what was worn, a colorway's material
+  too); `makeup(piece)` (its vertices by dye slot); `figure(look)`; a closed helm hides hair and beard, a hood the hair.
+- **The wardrobe lab** (`wardrobe_lab.tscn`, F6): a figure on a turntable, animated (a `Mannequin` on the adventurer's
+  animation set); views One, Metal tiers (the Knight in each finish), Outfits (all five on both bodies), Colorways
+  (the pack's painted colorways beside the dye's own); Z zones; every piece per slot with what it is made of; the
+  colors (palette, metal and its sliders, each cloth slot); Random, Clear, Save palette. Shots: `-- <dir>`, plus
+  `wardrobe_inventory.md` (the piece table in WARDROBE.md §2.2).
+
+**How to play it**: open `res://game/regents/wardrobe/wardrobe_lab.tscn` in the editor, F6. Try Metal tiers (2), then
+Random colors a few times, then Z.
+
+**Tested**
+- Unit `regents_wardrobe` **208/0** (`-- --only=regents_wardrobe`): every outfit's pieces found for both bodies and
+  each slot; the Knight's set wears its armored torso; a woman's four headwear; a part's slot from its name, and
+  NEGATIVE: heads, hair and names of no slot are not pieces. Every outfit's mask is 1024, no mipmaps, every sampled
+  texel exactly a slot, with metal, main and leather; its three colorway palettes and the copper, iron and steel
+  finishes load, in range; NEGATIVE: a material with no zones (skin, an unknown outfit, none) is no outfit's. A mixed
+  figure (Noble top, Knight legs) dresses every outfit surface, one material per outfit, wearing the palette's main and
+  metal; NEGATIVE: skin and hair keep theirs; a second dressing re-tints the same materials; undressed, its own
+  materials return, and a painted colorway's material returns after two dressings; NEGATIVE: undressing an undressed
+  figure does nothing. A closed helm hides hair and beard, a hood the hair only, a crown and no headwear neither. The
+  armet is metal, the Knight's cloth torso has main cloth, shares add to 1; NEGATIVE: no piece, no makeup. The lab
+  opens on one dressed, animated figure; Metal tiers a figure per finish, each in its own metal; Outfits ten; the
+  Knight's Colorways six; Z shows zones on all of them, painted ones too; Random colors re-dyes.
+- The shots, looked at (windowed): the dye's colorways beside the pack's painted ones (all five outfits: close; the
+  Knight's gold colorway made from the silver texture), the seven metal tiers, the zones on all ten figures, six custom
+  looks front and back. Found and fixed from them: figures facing away, labels running together, the female helm
+  under her hair (hair now hidden under closed helms).
+- Unit whole run **4377/0** (with the VFX session's work in the tree), the lints (the lab's quit goes through
+  `AppExit`), no unexpected engine errors, nothing left over at exit. No server suite: nothing here touches the server.
+
+**Left for later**
+- Luke's W1-W8 (WARDROBE.md §7): the family table, who picks colors (dyes from herbalism?), silhouette by tier, the
+  gaps (cloth headwear, a leather helm), the four studies, any-color in the character picker.
+- Into the game (WARDROBE.md §6): a public `wear(pieces)` on the foundation's `ModularCharacter` (template work), a
+  genre look component reading `worn` and dressing, the picker's colors on the `appearance` text (add-only); measure
+  the dye's cost with the load test.
+- The zones are a first pass: some small parts (buckles, the Noble's boots) may sit in a neighbor slot. Fix in
+  `zones.json`, re-bake, look with Z.
+
+**Luke's calls, the same day** (`GAME.md`, "The wardrobe: who wears what"): every player starts in the Peasant clothes
+in colors they pick; leather is the Ranger, cloth the Wizard, metal the Knight; the Noble is for NPCs. "Brown leather
+to start and then can scale with different animals"; "cloth ... needs more neutral". Then built:
+- **Tier palettes** (`wardrobe/palettes/`): `leather_1_soft` (deer: tan buckskin), `leather_2_supple` (wolf: cool
+  gray-brown), `leather_3_hardened` (stag: deep oxblood); `cloth_1_flax` (linen: oatmeal), `cloth_2_hemp` (stone
+  gray-taupe), `cloth_3_nettle` (deep slate, silver-gray thread); the fittings in the tier's metal (copper, iron,
+  steel); four `starter_*` examples of a player's own Peasant colors. Hardened was deepened after its first shot (it
+  read orange).
+- **The lab's Tiers view by family** ("Tiers of": Metal on the Knight, Leather on the Ranger, Cloth on the Wizard,
+  Starter on the Peasant, without headwear), `tier_palettes(prefix)`; shots `wardrobe_tiers_<family>.png`.
+- WARDROBE.md §5 (who wears what, the tier table, the gaps) and §7 (W1-W8). **Luke: "Yes, all stand"**: W1-W8 and
+  the tier colors are settled (`GAME.md`, "W1-W8 ANSWERED").
+- Tested: `regents_wardrobe` **231/0** (each family a figure per palette, each wearing its palette's leather; the
+  Ranger's tiers wear the hood, NEGATIVE: the Wizard's and the starters' none). Shots looked at: the three families'
+  tiers and the starters.
+

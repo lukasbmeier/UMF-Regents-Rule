@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DyePalette" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="1"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/metals/2_iron.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+title = "Leather 2: supple (wolf)"
+note = "Tier 2 leather: the wolf's cool gray-brown, darker and smoother; iron buckles."
+metal = ExtResource("2")
+main = Color(0.4314, 0.4000, 0.3647, 1)
+accent = Color(0.2902, 0.2510, 0.2196, 1)
+trim = Color(0.5412, 0.5098, 0.4549, 1)
+leather = Color(0.3294, 0.2745, 0.2275, 1)
+under = Color(0.1843, 0.1647, 0.1490, 1)

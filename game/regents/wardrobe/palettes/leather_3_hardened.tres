@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DyePalette" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="1"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/metals/3_steel.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+title = "Leather 3: hardened (stag)"
+note = "Tier 3 leather: boiled and burnished, a deep oxblood brown; steel buckles."
+metal = ExtResource("2")
+main = Color(0.3686, 0.1725, 0.1176, 1)
+accent = Color(0.1804, 0.1020, 0.0784, 1)
+trim = Color(0.5569, 0.3529, 0.2039, 1)
+leather = Color(0.2902, 0.1176, 0.0784, 1)
+under = Color(0.1412, 0.1020, 0.0863, 1)

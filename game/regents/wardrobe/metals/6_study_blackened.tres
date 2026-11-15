@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MetalFinish" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/metal_finish.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+title = "Study: blackened (a later tier?)"
+color = Color(0.16, 0.16, 0.18, 1)
+metallic = 0.75
+roughness = 0.45
+wear = 0.15
+wear_color = Color(0.32, 0.12, 0.06, 1)

@@ -1,0 +1,38 @@
+{
+  "_what": "Each outfit's DYE ZONES, by reference colours: one per colourway (T_<Outfit>_BaseColor, _2, _3). Every texel goes to its nearest reference (metal texels, the ORM's blue channel, always to metal). Slots: metal, main, accent, trim, leather, under. Edit, then: python game/regents/tools/wardrobe_assets.py zones; open the wardrobe lab and press Z.",
+  "outfits": {
+    "Knight": {"zones": [
+      {"slot": "main",    "refs": [["#a49c9f", "#a49c9f", "#141213"]]},
+      {"slot": "accent",  "refs": [["#72221f", "#312929", "#1c3137"], ["#731e1f", "#2c4169", "#141011"]]},
+      {"slot": "trim",    "refs": [["#ad6c04", "#ac6c06", "#2a2119"]]},
+      {"slot": "leather", "refs": [["#5d4432", "#4c341d", "#342f2a"], ["#58371d", "#785329", "#1b130d"]]},
+      {"slot": "under",   "refs": [["#191817", "#1e0f07", "#1e0f07"]]}
+    ]},
+    "Noble": {"zones": [
+      {"slot": "main",    "refs": [["#682924", "#17293a", "#273e12"]]},
+      {"slot": "accent",  "refs": [["#341b18", "#463620", "#483104"], ["#461513", "#2e2211", "#302208"], ["#381d19", "#493821", "#2c4905"]]},
+      {"slot": "leather", "refs": [["#69462e", "#4f4d44", "#5a5335"], ["#654227", "#3f2e20", "#3f2f21"]]},
+      {"slot": "under",   "refs": [["#181212", "#181312", "#281a06"]]}
+    ]},
+    "Peasant": {"zones": [
+      {"slot": "main",    "refs": [["#8f866a", "#362a1d", "#242e2f"]]},
+      {"slot": "accent",  "refs": [["#25180a", "#1c1610", "#7c6149"]]},
+      {"slot": "trim",    "refs": [["#8e8568", "#847c5f", "#43240c"]]},
+      {"slot": "leather", "refs": [["#35220f", "#2d2317", "#311e0f"], ["#231409", "#1d1610", "#42240e"], ["#4b3b26", "#292017", "#271e15"]]},
+      {"slot": "under",   "refs": [["#583a17", "#3d3a24", "#232d2f"]]}
+    ]},
+    "Ranger": {"zones": [
+      {"slot": "main",    "refs": [["#254316", "#11100f", "#1d1404"], ["#405923", "#221b1a", "#33220a"]]},
+      {"slot": "accent",  "refs": [["#514f38", "#31302a", "#473f2f"]]},
+      {"slot": "leather", "refs": [["#5b3b22", "#2e251d", "#342516"], ["#4e311b", "#24231f", "#463908"]]},
+      {"slot": "under",   "refs": [["#081c0d", "#0f100f", "#5f5444"], ["#172e18", "#211d1a", "#806d59"]]}
+    ]},
+    "Wizard": {"zones": [
+      {"slot": "main",    "refs": [["#162034", "#3c152d", "#4a0000"]]},
+      {"slot": "accent",  "refs": [["#3c2412", "#201a0d", "#3e0100"], ["#402815", "#201c10", "#410000"]]},
+      {"slot": "trim",    "refs": [["#7e664a", "#4f1a2c", "#300000"]]},
+      {"slot": "leather", "refs": [["#563d22", "#5f4528", "#594636"], ["#3b312d", "#482d2a", "#42231d"]]},
+      {"slot": "under",   "refs": [["#1e272e", "#311827", "#1b0e0c"]]}
+    ]}
+  }
+}

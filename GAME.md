@@ -501,6 +501,32 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   - **Open, for when armor comes back**: the parts and traits (plates + what secondary parts; each piece needs enough
     trait-bearing parts for Fine and Masterwork), which traits (Padded and Warded likely move to the lining), what
     makes lighter armor worth wearing (the combat triangle), the materials' tiers and the numbers.
+- **THE WARDROBE: WHO WEARS WHAT** (Luke, 2026-11-14, after the wardrobe lab, `docs/regents_rule/WARDROBE.md`, PROGRESS
+  81): "all players start as peasant outfit but can pick the color they want (plus hair style and any other things)
+  then leather is ranger, cloth is wizard, noble is not usable (so we can use it on higher npcs and things) and metal
+  is metal." So: EVERY PLAYER STARTS IN THE PEASANT CLOTHES, colors of their own choosing, with hair and the rest;
+  LEATHER armor is the RANGER outfit, CLOTH the WIZARD, METAL the KNIGHT; the NOBLE is NOT for players (higher NPCs).
+  Tiers look like: "green base is not good, I think brown leather to start and then can scale with different
+  animals. Cloth feels like it needs more neutral too": LEATHER STARTS BROWN and changes with its animal (deer, wolf,
+  stag); CLOTH stays NEUTRAL. The tier palettes proposed for his look: `wardrobe/palettes/leather_*`, `cloth_*`,
+  `starter_*` (the lab's Tiers view), ACCEPTED with W1-W8 below.
+  - **W1-W8 ANSWERED** (Luke, 2026-11-14: "Yes, all stand", to WARDROBE.md §7 as proposed, and the tier colors):
+    - W1 THE PIECES: metal = the armet; plate torso + plate arms + round pauldrons + the scarf as the CHEST; plate legs
+      + feet. Leather = the Ranger's hood (dyed as leather); jerkin + bracers + its pauldron; trousers + boots. Cloth
+      = no headwear yet (hair shows); robe + sleeves; trousers + shoes. The Knight's tabard torso is for NPCs, with the
+      Noble.
+    - W2 COLORS: the starting clothes the player's, freely; ARMOR shows its TIER'S palette (leather by animal, cloth by
+      fiber, metal by bar), so a tier reads at a glance; LATER, herbalism DYES recolor armor's cloth and leather slots,
+      NEVER its metal. Dyes are not in the armor step.
+    - W3 TIERS BEYOND COLOR: the finish and the fittings (buckles and clasps in the tier's metal), plus ONE shape
+      step: steel wears the SPIKED pauldrons. The horned helm is kept for a later tier or a rare. Trim glow from tier 4.
+    - W4 AN EMPTY SLOT shows the player's own starting Peasant pieces, in their colors.
+    - W5 THE GAPS: leather's head is the dyed hood; cloth's head shows hair until a HAT exists (one rigid mesh on the
+      head bone; its source, by hand, CC0 or commissioned, still his).
+    - W6 GRADE AND QUALITY on the look: not now.
+    - W7 THE FOUR METAL STUDIES (blued, gilded, blackened, pale): candidates, chosen when tiers 4-6 are named.
+    - W8 THE PICKER: WITH THE ARMOR WORK, colors for the starting clothes, one per slot (main, accent, under, trim,
+      leather) on the `appearance` text (add-only), a free picker with a row of suggested swatches.
 - **Minigame prep** (2026-11-04; revision 2 2026-11-05 after an outside review): `docs/regents_rule/MINIGAMES_PREP.md`,
   decisions M1-M12 (the ladder's shape, the bands, rank easing a round, what a score is worth, woodworking's minigame,
   smelting's reward and bellows, the look, art sources, each band's new thing, the new skills' minigames, what active

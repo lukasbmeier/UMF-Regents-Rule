@@ -11,6 +11,10 @@ have nothing more to pick.
 multiplied in order, `FoeDef.defense`); A2 (no weight, no player poise); A4.3 (quality raises Defense); A5; A6;
 the words (§3, as amended by §6 below); A8-A10 as recommended.
 
+**The look, worked out first (2026-11-14)**: `WARDROBE.md`: the Knight is in, any piece takes any color, one plate
+mesh for every metal tier. SETTLED (Luke, 2026-11-14, `GAME.md`): Peasant start in chosen colors, leather the Ranger,
+cloth the Wizard, metal the Knight, the tier palettes, W1-W8 (pieces per slot, tier colors, steel's spiked pauldrons).
+
 **Open when armor comes back** (start here):
 1. **Parts**: plates (the core) + which secondary parts, enough of them for three traits (§6, point 3).
 2. **Traits**: which, on which part. Padded and Warded likely move to the lining, alive once foes push, poison or

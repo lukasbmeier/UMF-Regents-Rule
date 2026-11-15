@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DyePalette" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="1"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/metals/3_steel.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+title = "Cloth 3: nettle"
+note = "Tier 3 cloth: nettle's fine weave, dyed a deep slate, silver-gray thread; steel clasps."
+metal = ExtResource("2")
+main = Color(0.2745, 0.3137, 0.3686, 1)
+accent = Color(0.1490, 0.1647, 0.1961, 1)
+trim = Color(0.7843, 0.7686, 0.7137, 1)
+leather = Color(0.2353, 0.1725, 0.1333, 1)
+under = Color(0.1176, 0.1294, 0.1569, 1)

@@ -118,3 +118,9 @@ paths:
   `swing` table's `cancelled` column, and the foundation's `UiKit.colour`, `InterestManager.centre`, `Cells.recentre`.
 - The TUTORIAL's lessons are content (`content/lesson/`, `LessonDef`); the server ticks them where a deed happens
   (`lesson_done`): a new deed is a new `LessonDef.Done` and `rules::Deed`, and a call where it happens.
+- THE WARDROBE (PROGRESS 81, `docs/regents_rule/WARDROBE.md`): an outfit piece is a `<Male|Female>_<Outfit>_<Part>.gltf`
+  in one of `Wardrobe.PIECE_DIRS` (found by name, never listed); an outfit's colors come from the DYE
+  (`outfit_dye.gdshader` through `Wardrobe.dress`, a `DyePalette`, a `MetalFinish` per metal), never a repainted
+  texture or a new mesh per tier. A new outfit gets its zones in `wardrobe/zones.json` and a bake
+  (`game/regents/tools/wardrobe_assets.py zones`); look at it in the wardrobe lab with Z. The Knight is the genre's
+  (`game/regents/art/outfits/knight/`), the other four outfits the foundation's.

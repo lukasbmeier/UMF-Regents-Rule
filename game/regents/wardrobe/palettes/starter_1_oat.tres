@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DyePalette" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+title = "Starter: oat and brown"
+note = "A new character's Peasant clothes, as a player might pick them."
+main = Color(0.7686, 0.7059, 0.5569, 1)
+accent = Color(0.3529, 0.2667, 0.1882, 1)
+trim = Color(0.6039, 0.5176, 0.3765, 1)
+leather = Color(0.4157, 0.2902, 0.1804, 1)
+under = Color(0.2902, 0.2275, 0.1725, 1)
