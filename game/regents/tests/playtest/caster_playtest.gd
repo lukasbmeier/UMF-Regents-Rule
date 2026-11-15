@@ -85,6 +85,9 @@ func _run() -> void:
 	var done: Dictionary[String, String] = {}
 	var order: Array[int] = []
 	var staggered: bool = false
+	# PROGRESS 82: the lab's looks in the fight (its ring of fire, its embers' blast where they end).
+	var fire_ring_seen: bool = false
+	var blast_seen: bool = false
 	# IT SEES ONLY IN FRONT, AND HEARS ALL ROUND (Luke's F9, 2026-11-13): 3.5 m off its side it knows we are here,
 	# whichever way it faces; then it keeps us while it sees us. Where it stands NOW: at rest it wanders (F10).
 	# The camp's archer is kept down meanwhile (the shell): wandering, it can come within sight of our spot.
@@ -138,6 +141,12 @@ func _run() -> void:
 		while Time.get_ticks_msec() < until_ms:
 			await get_tree().physics_frame
 			staggered = staggered or status.status() == STATUS_STAGGERED
+			if looks != null and not fire_ring_seen:
+				for id: int in looks._areas:
+					var r: VfxGroundRing = looks.ring_of(id)
+					fire_ring_seen = fire_ring_seen or (r != null and r.element == VfxGroundRing.Element.FIRE)
+			if not blast_seen:
+				blast_seen = not get_tree().root.find_children("*", "VfxFireBlast", true, false).is_empty()
 		Input.action_release(&"move_left")
 		Input.action_release(&"move_right")
 		var took: float = hp - my_hp.get_current()
@@ -172,6 +181,11 @@ func _run() -> void:
 	_check(pattern_ok, "seen to cast bolt, bolt, ring, and again (%s)" % str(order))
 	_check(feed != null and feed.flashes.count(&"shot") >= 2 and not feed.flashes.has(&"glint"), "each cast glinted pale before it flew, never red")
 	_check(not staggered, "nothing it cast staggered us")
+	var imp_vfx: AbilityVfx = imp.find_component(AbilityVfx) as AbilityVfx
+	_check(imp_vfx != null and imp_vfx.played.has("fire_charge:%d" % bolt.id) and imp_vfx.played.has("fire_charge:%d" % ring.id),
+		"the lab's looks: a charge in its hand(s) through each tell (%s)" % (str(imp_vfx.played) if imp_vfx != null else "no AbilityVfx"))
+	_check(fire_ring_seen, "the lab's looks: its ring drawn as the fire ring")
+	_check(blast_seen, "the lab's looks: its embers end in the fire blast")
 
 	# --- ON IT: swung at, its cast is lost (the server says so) ---
 	print("SLAY_CAMP")

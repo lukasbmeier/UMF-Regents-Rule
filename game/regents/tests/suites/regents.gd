@@ -1732,10 +1732,14 @@ func _run_foe_imp() -> void:
 	add_child(looks)
 	looks.show_area(1, Vector3.ZERO, 3.0, ClockSync.server_usec() + 1_000_000, false, true)
 	looks.show_area(2, Vector3(10, 0, 0), 3.0, ClockSync.server_usec() + 1_000_000, false, false)
-	var foe_ring: StandardMaterial3D = (looks.get_node(^"Area_1/Ring") as MeshInstance3D).material_override as StandardMaterial3D
-	var own_ring: StandardMaterial3D = (looks.get_node(^"Area_2/Ring") as MeshInstance3D).material_override as StandardMaterial3D
-	_check(foe_ring.albedo_color.r > 0.9 and foe_ring.albedo_color.b < 0.3 and own_ring.albedo_color.b > 0.9,
-		"a foe's ring is drawn orange-red, a player's own blue")
+	# Since PROGRESS 82 the rings are the VFX lab's (`VfxGroundRing`): a foe's of fire, a player's own of frost.
+	var foe_ring: VfxGroundRing = looks.ring_of(1)
+	var own_ring: VfxGroundRing = looks.ring_of(2)
+	_check(foe_ring != null and own_ring != null and foe_ring.element == VfxGroundRing.Element.FIRE and own_ring.element == VfxGroundRing.Element.FROST
+		and foe_ring.color.r > 0.9 and foe_ring.color.b < 0.3 and own_ring.color.b > 0.9,
+		"a foe's ring is drawn orange-red (fire), a player's own blue (frost)")
+	_check(own_ring != null and is_equal_approx(own_ring.radius_m, 3.0) and own_ring.warn_s > 0.8 and own_ring.warn_s < 1.05,
+		"a ring is the row's radius, and its warning runs until the row's landing (%.2f s)" % (own_ring.warn_s if own_ring != null else -1.0))
 	looks.queue_free()
 
 
@@ -5607,11 +5611,22 @@ func _run_combat_pass() -> void:
 	_check(sheet.sample_count() == 5 and sheet.showing(), "a blade's sheet: an edge for every frame of the cut, none for a blade that has not moved")
 	for n: Node3D in [flier, trail, sheet]:
 		n.free()
-	# Every shot's look has its trail; the spells' missiles shed sparks and burst where they end; an arrow does not.
+	# Every shot's look has its trail; since PROGRESS 82 the spells' missiles are the VFX lab's (a riding
+	# `VfxFireMissile`: its flame, its ribbon, its sparks) and end in an effect (the fireball's blast on the ground, the
+	# bolt's flash); an arrow keeps its own plain trail and ends in nothing.
 	for path: String in ["arrow", "bolt", "fireball"]:
 		var shot: ShotLook = (load("res://game/regents/combat/%s_look.tscn" % path) as PackedScene).instantiate() as ShotLook
-		_check(shot != null and shot.trail_life_s > 0.0 and (shot.burst_size_m > 0.0) == (path != "arrow") and (shot.sparks_per_s > 0) == (path != "arrow"),
-			"the %s's look: a trail%s" % [path, "" if path == "arrow" else ", sparks, a burst where it ends"])
+		var rider: VfxFireMissile = null
+		for child: Node in shot.get_children() if shot != null else []:
+			rider = child as VfxFireMissile if child is VfxFireMissile else rider
+		if path == "arrow":
+			_check(shot != null and shot.trail_life_s > 0.0 and shot.end_scene == null and rider == null, "the arrow's look: its own trail, no effect")
+		else:
+			var ends: Node = shot.end_scene.instantiate() if shot != null and shot.end_scene != null else null
+			_check(rider != null and rider.rides and rider.trail_width_m > 0.0 and ends is VfxEffect and shot.end_on_ground == (path == "fireball"),
+				"the %s's look: the lab's missile riding on it (its own ribbon), and an effect where it ends%s" % [path, " (on the ground)" if path == "fireball" else ""])
+			if ends != null:
+				ends.free()
 		if shot != null:
 			shot.free()
 	# A SWING'S TRAIL (`SwingTrail`): only a swing draws one, through its cut; the blade found on what is shown.

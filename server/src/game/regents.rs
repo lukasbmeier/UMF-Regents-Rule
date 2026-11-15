@@ -2239,6 +2239,28 @@ pub struct Casting {
     pub lands: Timestamp,
 }
 
+/// A SPELL LANDED (Luke, 2026-11-15: "yes, add it": the players near see your Gale): who cast which, where they stood,
+/// the way it was aimed, and when. One row a caster, written as each of their spells lands (`land_spell`). Public, by
+/// cell: a spell with no cast time has no `casting` row, and this is the only word the clients near get of it. An
+/// EVENT: it stays in the cell it happened in (as `spell_area`), and a client shows it only while it is fresh (a row
+/// seconds old, handed over as a client comes near, is history: `AbilityVfx`).
+#[table(accessor = spell_landed, public)]
+pub struct SpellLanded {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    /// The cell it landed in (`crate::cell`): what a ring client is sent by.
+    #[index(btree)]
+    pub chunk: u32,
+    pub ability: u32,
+    /// Where the caster stood as it landed.
+    pub from: Vector3,
+    /// The way it was aimed (where they looked).
+    pub aim: Vector3,
+    pub at: Timestamp,
+}
+
 /// A SPELL'S OWN COOLDOWN (no global cooldown, owner 2026-10-20): when its caster may cast it again.
 #[table(accessor = spell_cooldown, public)]
 pub struct SpellCooldown {
@@ -2446,6 +2468,17 @@ fn check_spell_place(ctx: &ReducerContext, me: u64, spell: &rules::SpellSeed, ab
     Ok(())
 }
 
+/// `me`'s spell `ability_id` landed, from where they stand (`m`), aimed along `aim`: its `spell_landed` row, for the
+/// players near to see.
+fn tell_landed(ctx: &ReducerContext, me: u64, ability_id: u32, m: &crate::module::MovementStateRow, aim: Vector3) {
+    let row = SpellLanded { entity_id: me, world_id: m.world_id, chunk: m.chunk, ability: ability_id, from: m.pos, aim, at: ctx.timestamp };
+    if ctx.db.spell_landed().entity_id().find(me).is_some() {
+        ctx.db.spell_landed().entity_id().update(row);
+    } else {
+        ctx.db.spell_landed().insert(row);
+    }
+}
+
 /// What a spell costs now: its own cost at `regents.mana_cost_pct`.
 fn spell_cost(ctx: &ReducerContext, spell: &rules::SpellSeed) -> f32 {
     spell.cost * (hot_number(ctx, hot::MANA_COST_PCT).max(0.0) as f32) / 100.0
@@ -2503,6 +2536,7 @@ fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, ai
         }
     }
     let damage = rules::hit_damage(base, weapon.weapon_damage_pct, quality, rank_in(ctx, me, kit.skill));
+    tell_landed(ctx, me, ability_id, &m, aim);
     match spell.kind {
         rules::SPELL_BOLT => launch_missile(ctx, me, spell, ability_id, &m, target_id, aim, range, damage, kit.skill),
         rules::SPELL_AREA => {
@@ -4361,6 +4395,7 @@ impl crate::game::Genre for Regents {
 
     fn on_player_left(&self, ctx: &ReducerContext, entity_id: u64) {
         ctx.db.afk_work().entity_id().delete(entity_id);
+        ctx.db.spell_landed().entity_id().delete(entity_id);
         stop_block(ctx, entity_id);
     }
 

@@ -4338,6 +4338,92 @@ model; none of this needs an asset.
 - The game's camera shake (the effects ask through `shook`; only the lab listens).
 - The style: Luke plays them and says what to push (brighter, more toon, more smoke, slower blasts); the axe's cut is
   timed to the lab's clip and may want `starts_at_s` moved.
+
+## Step 79: THE VFX LAB, LUKE'S FIRST NOTES (2026-11-14)
+
+Luke, after playing the lab: "this looks pretty awesome"; (1) "the fireball (and other magic) originates from behind
+the hand instead of slightly infront of it"; (2) "axe overhead is an overhead hit when the animation is a sideways
+hit"; (3) "parry should be at the block hand not higher than head"; (4) "frost ring starts 2 handed but then jumps to
+one handed all of a sudden"; "the frost ring and cinder ring should be more similar and cohesive but I love the
+fireball and ice shards coming up from the ground"; "are these expensive? i think replacing the sword/melee swings
+with the vfx from the overhead is nice if cheap".
+
+**Built**
+- (1) A spell leaves IN FRONT of the hand: the lab's `_cast_point` (the hand bone, or the middle of two, then on toward
+  the target: the charge 0.16 m, the missile 0.3 m, let go 0.06 s into the throw).
+- (2) THE CUT FOLLOWS THE REAL BLADE (`effects/blade_cut.gd`, `VfxBladeCut`; replaces the fixed arc `VfxSlash` and
+  `axe_overhead.tscn`): the sheet the held weapon sweeps (found as `SwingTrail` finds a blade: `blade_of_item`),
+  drawn by two `RibbonTrail`s wearing the crescent's look (`VfxBladeCut.look()`: hot at the tip, nothing at the hilt,
+  eaten away as it ages; a thin bright line along the tip); at the hit a flare, sparks and a light at the tip, and dust,
+  chips and a ring only when the tip ends at the ground. Any swing, sideways, overhead or a thrust. `RibbonTrail` (a
+  combat file the game uses) gains `look` (a material of its own) and UVs (U along it, V base to tip); with no look
+  it draws exactly as before.
+- (3) The parry's flash is at the BLOCKING HAND (the one nearer the foe's weapon hand), 0.15 m toward the foe.
+- (4) Frost Ring is two-handed throughout: `pose.spell_channel`, its charge between both hands, let go with
+  `ability.40014` (the two-handed cast).
+- ONE FAMILY OF RINGS (`effects/ground_ring.gd`, `VfxGroundRing`, `element` FROST or FIRE; replaces `frost_ring.gd`
+  and `cinder_ring.gd`; the two scenes are its values): the same rune circle, filling warning, rising motes and wave
+  from the middle; frost's ice shards stand then crack away, fire's tongues of flame leap and burn out; the foe's
+  ring keeps its darker ground and stronger fill (it must read at a glance).
+- The lab: "Axe Heavy" and a new "Sword String" (the sword's three hits, each wearing the cut: what any swing could
+  wear), the weapon in the hand (`_arm`). `-- cost` measures every showcase (below).
+
+**What they cost** (`"$GODOT" --path . res://game/regents/vfx/vfx_lab.tscn -- cost`; this machine, 1280 x 720, the
+stage alone 84 draw calls and 1.16 ms of GPU): at their peak, Fireball +14 draw calls, 126 particles, +0.52 ms; Frost
+Ring +38, 70, +0.45; Blink 40 particles, +0.39; Gale +10, 94, +0.33; Axe Heavy +14, 30, +0.39; Sword String +15, 30,
++0.41; Parry +10, 48, +0.37; Cinder Ring +36, 112, +0.56. So a cut on a swing is cheap: two ribbons while it cuts (the
+plain trail is one), and the hit's flare, sparks and light for a moment. The rings' draw calls are their 24-30 rising
+meshes, one each: a MultiMesh would make them one.
+
+**Tested**
+- Unit `regents_vfx` **114/0**: as step 78, and both rings are ground rings of their element where nothing rises before
+  the landing and everything is up after it; the cut wears its look, draws nothing before its window, draws the
+  blade's path through it (a sword swept round), lands its hit at the tip, and with no weapon draws nothing.
+- The shots of every changed showcase, looked at (the fireball leaving the palm, the axe's sideways crescent, the
+  sword's three cuts thinned once, the parry at the hand, frost two-handed, the cinder ring's flame tongues).
+- Unit whole run **4118/0**, the lints, no unexpected engine errors, nothing left over at exit.
+
+**Left for later (Luke's to decide)**
+- Wiring the cut into the game's swings: `SwingTrail` makes a `RibbonTrail` per fighter today; giving it
+  `VfxBladeCut.look()` (and the hit's flare and sparks) is a small change, presentation only. Others' swings in a crowd
+  could keep the cut and drop the hit's light.
+- The rings' rising meshes as a MultiMesh before they are in the game (300 players).
+
+## Step 80: TODAY'S CUTS BESIDE THE NEW ONES, IN THE LAB (2026-11-14)
+
+Luke: "add to the lab comparison of todays cuts with axe and sword and the new cuts before I decide to wire them in or
+not".
+
+**Built** (`game/regents/vfx/vfx_lab.gd` only)
+- Two showcases, **"Axe: today | new"** and **"Sword: today | new"**: a second adventurer and skeleton beside the
+  first pair, each pair tagged ("Today" on the left, "New" on the right), the same weapon in both hands, the same
+  swings at the same moment (the axe's heavy hit; the sword's three hits).
+- TODAY is drawn as the game draws it now: a plain `RibbonTrail` along the blade with `SwingTrail`'s own values (its
+  `lifetime_s`, `player_color`, `from_wind_up`, `after_hit_ms`, `blade_from`, read from a fresh one, so a change there
+  shows here). NEW is `VfxBladeCut`. Neither shows the hit feedback (`hit_feedback_component.gd`), which is the same
+  for both.
+- A Blink cut off part way no longer leaves anything faded: `_reset` puts back every mesh under the five roots (the tag
+  above the hero was left invisible). Shot names are slugs (`slug()`: "Axe: today | new" is `axe_today_new`).
+
+**How to play it**: the lab (F6), the two "today | new" entries; slow it to 1/4 to see each sheet form.
+
+**Tested**
+- Unit `regents_vfx` **125/0**: both comparisons show the second pair and the tags, draw today's plain trail (no look
+  of its own) and the new cut along a moving blade, and another showcase hides the second pair. NEGATIVE: today's trail
+  never drawn fails both "today's plain trail" checks.
+- The shots of both, looked at: today's faint sheet beside the crescent, swing for swing.
+- Unit whole run **4129/0**, the lints, no unexpected engine errors, nothing left over at exit.
+
+**Gale's funnel, softened** (Luke, with a picture: "The gale cone needs softened at its end, the hard lines at the
+cones base dont look good"): the hard rim at the funnel's mouth was the MESH, found by hiding the funnel for one shot:
+Godot's `CylinderMesh` keeps part of its UV for its caps, so a fade toward the mouth never reached the edge.
+`VfxKit.tube` (and `spike`) now build their own cone with exact UVs (V 0 at the top, 1 at the bottom), which also lets
+the blink column's top and the flame tongues fade as meant. The funnel fades over most of its length to the mouth and
+at its silhouette (`rim_fade`), the wind blades lost their hard bands (smooth, softer erosion, wider fades) and fade in
+over 0.12 s. Shots looked at: the gale (cropped close), the blink, the cinder ring. `regents_vfx` 125/0 after.
+
+**Waiting on Luke**: whether the game's swings take the cut (PROGRESS 79, "Left for later"). Answered in step 82.
+
 ## Step 81: THE WARDROBE: CLOTHES, ARMOR AND THE DYE (2026-11-14)
 
 Luke, 2026-11-14: "I want to continue armor next but before we do, we need to figure out clothes and shaders on them
@@ -4415,4 +4501,120 @@ to start and then can scale with different animals"; "cloth ... needs more neutr
 - Tested: `regents_wardrobe` **231/0** (each family a figure per palette, each wearing its palette's leather; the
   Ranger's tiers wear the hood, NEGATIVE: the Wizard's and the starters' none). Shots looked at: the three families'
   tiers and the starters.
+
+## Step 82: THE LAB'S EFFECTS IN EVERY CURRENT ABILITY (2026-11-14)
+
+Luke: "Okay lets use the vfx in all the current abilites we have". (Step 81 is the wardrobe, another session's.)
+
+**What each ability shows now** (presentation only: the server decides everything, as before)
+| Ability | Who sees it | How |
+|---|---|---|
+| Every melee swing (sword, axe, the foes' cuts, the wolf's bite) | everyone | `SwingTrail` wears the crescent: `VfxBladeCut.look()` on its sheet and a bright line along the tip (`crescent`, on; off draws the old plain ribbon). Colors: `crescent_player_color`, `foe_color` |
+| Fireball (and the imp's ember: same body) | everyone | the body's look `combat/fireball_look.tscn`: the lab's `fire_missile.tscn` RIDING on it (`rides`), its ribbon; where it ends, `fire_blast.tscn` on the ground below (`ShotLook.end_scene`, `end_on_ground`) |
+| The staff's Bolt | everyone | `combat/bolt_look.tscn`: the same missile in arcane violet (`element` Arcane, small, no smoke), ending in `bolt_hit.tscn` (the parry flash's script in violet) |
+| Frost Ring; the imp's Cinder Ring | everyone | `SpellLooks` draws `frost_ring.tscn` / `cinder_ring.tscn` (`VfxGroundRing`), its warning running exactly until the row's `lands`; a row gone mid-landing lets it play out |
+| Fireball's and Frost Ring's casts | the caster and everyone who gets their `casting` row | `AbilityVfx` (NEW component on `adventurer.tscn` and `foe.tscn`): the charge in front of the hand(s) for the cast time |
+| The imp's ember and ring tells | everyone | `AbilityVfx`: the charge in its hand(s) through the wind-up (`started_elsewhere`) |
+| Gale | the caster only | `AbilityVfx`: the gust at the feet the way it was aimed, as `cast_sent` says it went. OTHER CLIENTS ARE NOT TOLD of a cast with no cast time (no row for it): showing it to them is a server change, Luke's call |
+| Blink | everyone | `AbilityVfx`: a jump of 3-12 m in one frame by a fighter wielding a kit that casts (both clients see teleports snap): the columns at both ends, the body faded in where it landed. Your own character only within 2 s of casting Blink (a teleport of yours, as the playtests use, is none) |
+| A parry | the parrier | `AbilityVfx`: the flash at the blocking hand (the one nearer the attacker), out toward them |
+| The bow's arrows | everyone | unchanged (`arrow_look.tscn`, its own trail); the hit's spark is `HitFeedbackComponent`'s, as before |
+
+Which effect an ability shows is a table a designer edits: `game/regents/vfx/ability_vfx.tres` (`AbilityVfxSet`, rows
+`AbilityVfxEntry`: the charge, one or two hands, how far ahead, the effect as it lands or as it jumps; the parry's).
+The lab's "Axe/Sword: old | new" now compare the plain ribbon the game drew before with the crescent it wears now.
+
+**Tested**
+- Unit `regents_vfx` **166/0**: as before, plus COVERAGE (every spell drawn by the lab's looks; every spell with a cast
+  time and the imp's two tells show a charge; every swing wears the crescent) and `AbilityVfx` on a stand-in fighter (a
+  real adventurer model and combat component, bound by hand): no cast no charge; Fireball's charge 0.16 m in front of
+  the left hand, gone with the cast; Frost Ring's between both hands; Gale at the feet the way it was aimed, and
+  NOTHING for Fireball as it is sent; Blink for an 8 m jump with a staff, NOT for a step, a 30 m jump or a sword; the
+  imp's ember charge in its right hand through its wind-up; the parry's flash; `SpellLooks`' rings (frost for a
+  player's, fire for a foe's, landing at once when seen late, playing out when the row goes). NEGATIVE: the charge put
+  back in the wrist fails three checks.
+- Unit `regents` **1407/0**: its ring-color check now reads the `VfxGroundRing`s; the shot-look check reads the riding
+  missile and the end effect.
+- `caster_playtest.sh` (a real client and referee): its fighter's three NEW checks (the imp's charge through each
+  tell, its ring drawn as the fire ring, its embers ending in the fire blast). Three runs: the first 20/0 with one
+  server check failing ("no cast was stopped by our swings", a timing check: our swings must stagger the imp mid-cast);
+  the second never fought (the imp never noticed the fighter: the known noticing flake); the third **20/0 and 7/7**.
+- `combat_playtest.sh`: a NEW leg, "LAB_LOOKS" (the shell's NEW `GRANT_STAFF`): the swings wore the crescent, our
+  parries flashed, a staff's Fireball showed its charge, rode as the lab's missile and burst in the blast on the
+  dummy, Blink's jump showed its columns (after the cast). Runs: the first **125/1** (Blink: the server blinked us,
+  this client never moved), the second broke all over (71/53: the REFEREE STOPPED itself mid-run, "the project changed
+  since it started", while another session wrote its files into the project), the third, nothing else writing,
+  **126/0**. Between them a probe client (deleted) blinked from the playtest's spot, alone and after a Fireball, and
+  saw its move and its blink every time. It also showed the first runs' blink check was passing on a false blink: the
+  playtest's own teleport (6-8 m) had been shown as one; since then your own character's jump is a Blink only just
+  after you cast it, and the check reads the blink played after the cast.
+- Unit whole run **4402/0** (with the wardrobe in the tree), the lints, no unexpected engine errors, nothing left over.
+
+**Left for later (Luke's to decide)**
+- Others' Gale (and any instant spell): a server row or event so every client can show it.
+- A lighter version of others' effects for 300 players (fewer particles, no lights); the rings' rising meshes as one
+  MultiMesh; the game camera listening to the effects' `shook`.
+
+## Step 83: OTHER PLAYERS SEE YOUR GALE (2026-11-15)
+
+Luke, asked "Should other players see your Gale too? It needs a small server event": **"Yes, add it"**.
+
+**Built**
+- SERVER (`server/src/game/regents.rs`): a NEW public table `spell_landed` (add-only, rule 17: one `--codegen`
+  publish, no wipe): `entity_id` (the caster, PK), `world_id`, `chunk`, `ability`, `from` (where they stood), `aim`, `at`.
+  One row a caster, written as EACH of their spells lands (`land_spell` → `tell_landed`), so only a cast the server
+  accepted and paid for is told. An EVENT: it stays in the cell it landed in (not in `follow_place`), and goes when
+  the player leaves (`on_player_left`). Ring interest: in `genre.tres` (`tables`, `world_tables`, `cell_tables`) and
+  the net config's `cell_tables` (not `follow_tables`: an event).
+- CLIENT (`game/regents/vfx/ability_vfx.gd`): `AbilityVfx` is sent each fighter's row (`required_tables` and
+  `optional_tables`: none until they cast) and shows ANOTHER player's landing as their own client did
+  (`landed_elsewhere` → `_land`, the same as `cast_landing`): their spell's `on_land` (Gale's gust) where the server
+  says they stood, the way they aimed. Not ours (shown as we cast it), not a row older than `FRESH_MS` (1.5 s, by the
+  server's clock: a row handed over as we come near is history), not the same landing twice (its stamp), nothing for
+  a spell with a cast time (its `casting` row and missile already show it). Blink still shows from the jump (no
+  `on_land`), so nothing doubles.
+- What it costs: one row update a cast, sent only to the clients whose ring has that cell.
+
+**How to play it**: two instances from the editor, both near each other, one with a staff that has Gale picked:
+cast it, and the other window sees the gust at the caster's feet, aimed their way.
+
+**Tested**
+- Unit `regents_vfx` **173/0** (7 NEW): the component asks for `spell_landed` (optional); another player's Gale from
+  its row, where they stood, the way they aimed; their next one (a new stamp) again. NEGATIVE: our own row plays
+  nothing more; a row 2 s old plays nothing; their Fireball's landing plays nothing; the same row rewritten (same
+  stamp) plays once. Mutations: the freshness check taken out fails 5 checks, the same-stamp guard 2 (restored).
+- NEW `game/regents/tests/spells_seen_playtest.sh` (two real clients at 150 ms, no referee, ~2 min): **caster 8/0,
+  watcher 10/0, the server 2/2**, run twice. The caster picks Gale on a staff, casts it ALONE; the watcher comes in
+  after: that row reaches it 13.5 s old and shows NOTHING; the caster casts again: the watcher sees the gust at the
+  caster's feet (to the centimeter where the row says they stood), facing south as aimed, once; a third Gale sent
+  straight at the server while it cools is refused ("not ready") and shows nothing anywhere; the caster's own client
+  showed each of its two Gales once (not again from the row); the row said Gale while they played and was gone
+  after they left.
+- `cargo check` (wasm) and `cargo test`: green. Unit whole run **4412/0**, the lints, no unexpected engine errors.
+- Published to `regents-rule` with `--codegen` (63 tables).
+- Not run: the integration suite (~80 min; the new playtest covers the reducer, its refusal, the row and its cleanup
+  through real clients). Both playtests' clients warn "binding after 2.0s without rows for session_member" for ten
+  entities: the same with this change taken out (an A/B probe), so not this step's; for a later look.
+
+**Their arms too** (Luke, same day, asked "Should other players also see the caster's arms move for Gale?": **"Yes,
+add the pose"**). Client only, no publish.
+- `CombatComponent` is sent the same row (`TABLE_LANDED`, optional) and plays another player's landing on their arms
+  (`landed_elsewhere`): `play_upper("ability.<id>")`, the clip their own client plays as it lands (`cast` for an
+  instant spell, `_tick_cast` at a cast's end). So others now see Gale's push, Blink's, the Bolt's, and the release at
+  the end of a Fireball or a Frost Ring (before, they saw the cast pose held, then nothing). The same gates as the
+  effect: not ours, the same stamp once, fresh only (`AbilityVfx.is_fresh`, now the one test for every reader).
+- Unit `regents_vfx` **179/0** (6 NEW, with a stand-in driver that records what it is asked to play): the row asked
+  for; another player's Gale plays `ability.40016`, their Frost Ring's landing its own; NEGATIVE: ours, a stale row,
+  the same stamp twice. Mutations: the freshness gate out fails 4, the same-stamp guard 2 (restored).
+- `spells_seen_playtest.sh` again: caster 8/0, **watcher 12/0** (2 NEW: on the watcher's screen the caster's arms
+  played `Spell_Double_Shoot`, the clip their own client plays for Gale; NEGATIVE: the stale and the refused Gale moved
+  no arm), the server 2/2. Unit whole run **4418/0**, lints and engine errors ok.
+- Not run for it: `combat_playtest.sh` and `caster_playtest.sh` (the change is another player's arms only; neither has
+  a second player).
+
+**Left for later**
+- Others' AIM after a spell lands (their upper body turning to the shot for a moment, as ours does for
+  `aim_after_shot_ms`): it reads only their `casting` row today.
+- From step 82: a lighter version of others' effects for 300 players; the rings' rising meshes as one MultiMesh;
+  the game camera listening to `shook`.
 

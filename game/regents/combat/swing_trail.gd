@@ -10,12 +10,26 @@ class_name SwingTrail extends SpaceTimeComponent
 ##     hand bone's frame (`blade_in_bone`);
 ##   - neither (a wolf): a short upright edge at its `head_bone`, so a bite or a lunge still draws its path.
 ##
+## THE CRESCENT (Luke, 2026-11-14, after the VFX lab's "today | new": "lets use the vfx in all the current abilites";
+## PROGRESS 82): the sheet wears the lab's cut (`VfxBladeCut.look()`: hot at the tip, nothing at the hilt, eaten away
+## as it ages) and a thin bright line runs along the tip. `crescent` off: the plain pale ribbon it drew before.
+##
 ## Presentation only (hard rule 11): it reads when a swing began (the ability event everyone gets) and the pose.
 
 ## The trail's color on a player's weapon and on a foe's, and how long a stretch of it shows.
 @export var player_color: Color = Color(0.92, 0.96, 1.0, 0.5)
 @export var foe_color: Color = Color(1.0, 0.5, 0.22, 0.6)
 @export_range(0.05, 1.0, 0.01, "suffix:s") var lifetime_s: float = 0.16
+@export_group("The crescent")
+## Wear the lab's cut (off: the plain ribbon, with the colors and length above).
+@export var crescent: bool = true
+## Its color on a player's weapon (a foe's is `foe_color`), how long a stretch of the sheet and of the bright line
+## along the tip shows, and how far along the blade that line begins.
+@export var crescent_player_color: Color = Color(1.0, 0.9, 0.72)
+@export_range(0.05, 1.0, 0.01, "suffix:s") var crescent_life_s: float = 0.2
+@export_range(0.02, 1.0, 0.01, "suffix:s") var edge_life_s: float = 0.11
+@export_range(0.5, 0.98, 0.01) var edge_from: float = 0.85
+@export_group("")
 ## It starts this far through the wind-up (the cut, not the drawing back) and goes on this long after the hit.
 @export_range(0.0, 1.0, 0.05) var from_wind_up: float = 0.55
 @export_range(0, 1000, 10, "suffix:ms") var after_hit_ms: int = 130
@@ -31,6 +45,8 @@ const MODEL_WEAPON_NEAR_M: float = 0.3
 const BITE_HALF_M: float = 0.18
 
 var trail: RibbonTrail = null
+## The bright line along the tip (the crescent only).
+var edge_trail: RibbonTrail = null
 ## The cut is drawn from `_from_ms` to `_until_ms` (msec; -1: none).
 var _from_ms: int = -1
 var _until_ms: int = -1
@@ -96,10 +112,24 @@ func _process(_delta: float) -> void:
 	if trail == null or not is_instance_valid(trail):
 		trail = RibbonTrail.new()
 		trail.name = "SwingTrail"
-		trail.lifetime_s = lifetime_s
-		trail.color = player_color if _look != null else foe_color
+		if crescent:
+			var tint: Color = crescent_player_color if _look != null else Color(foe_color, 1.0)
+			trail.lifetime_s = crescent_life_s
+			trail.color = Color.WHITE   # the look is tinted; the vertex alpha is its life
+			trail.look = VfxBladeCut.look(tint)
+			edge_trail = RibbonTrail.new()
+			edge_trail.name = "SwingEdge"
+			edge_trail.lifetime_s = edge_life_s
+			edge_trail.color = Color.WHITE
+			edge_trail.look = VfxBladeCut.look(tint, true)
+			add_child(edge_trail)
+		else:
+			trail.lifetime_s = lifetime_s
+			trail.color = player_color if _look != null else foe_color
 		add_child(trail)
 	trail.add_blade(edge[0], edge[1])
+	if edge_trail != null and is_instance_valid(edge_trail):
+		edge_trail.add_blade((edge[0] as Vector3).lerp(edge[1] as Vector3, edge_from), edge[1])
 
 
 ## Where the blade is now, [base, tip] in the world; [] when the fighter is not drawn.

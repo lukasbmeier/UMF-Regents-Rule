@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://game/regents/combat/combat_component.gd" id="2_combat"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://game/regents/combat/swing_trail.gd" id="4_trail"]
 
 [ext_resource type="Script" path="res://game/regents/combat/foe_look.gd" id="5_look"]
+[ext_resource type="Script" path="res://game/regents/vfx/ability_vfx.gd" id="6_vfx"]
 
 [node name="Foe" instance=ExtResource("1_player")]
 
@@ -23,3 +24,6 @@ script = ExtResource("5_look")
 
 [node name="Animation" parent="Components" index="7"]
 action_cancel_speed = 1.6
+
+[node name="AbilityVfx" type="Node" parent="Components"]
+script = ExtResource("6_vfx")

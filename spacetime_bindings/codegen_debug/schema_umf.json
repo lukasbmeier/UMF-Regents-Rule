@@ -3693,6 +3693,52 @@
 			]
 		},
 		{
+			"name": "SpellLanded",
+			"namespace": [],
+			"source_name": "SpellLanded",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "ability",
+					"type": "U32"
+				},
+				{
+					"name": "from",
+					"type": "Vector3",
+					"type_idx": 6
+				},
+				{
+					"name": "aim",
+					"type": "Vector3",
+					"type_idx": 6
+				},
+				{
+					"name": "at",
+					"type": "__timestamp_micros_since_unix_epoch__"
+				}
+			],
+			"table_names": [
+				"spell_landed"
+			],
+			"table_name": "spell_landed",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "SpellTimer",
 			"namespace": [],
 			"source_name": "SpellTimer",
@@ -6492,7 +6538,7 @@
 				{
 					"name": "timer",
 					"type": "SpellTimer",
-					"type_idx": 90
+					"type_idx": 91
 				}
 			],
 			"return_type": "",
@@ -6580,7 +6626,7 @@
 				{
 					"name": "_sched",
 					"type": "TickSchedule",
-					"type_idx": 97
+					"type_idx": 98
 				}
 			],
 			"return_type": "",
@@ -6771,7 +6817,7 @@
 				{
 					"name": "_sched",
 					"type": "WorkSchedule",
-					"type_idx": 106
+					"type_idx": 107
 				}
 			],
 			"return_type": "",
@@ -6795,7 +6841,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 109
+					"type_idx": 110
 				}
 			],
 			"return_type": "",
@@ -6818,7 +6864,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 110
+					"type_idx": 111
 				}
 			],
 			"return_type": "",
@@ -8980,11 +9026,39 @@
 			"is_public": true
 		},
 		{
+			"name": "spell_landed",
+			"wire_name": "spell_landed",
+			"namespace": [],
+			"local_name": "spell_landed",
+			"type_idx": 90,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "spell_landed_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
+		},
+		{
 			"name": "spell_timer",
 			"wire_name": "spell_timer",
 			"namespace": [],
 			"local_name": "spell_timer",
-			"type_idx": 90,
+			"type_idx": 91,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -9012,7 +9086,7 @@
 			"wire_name": "starter_kit_given",
 			"namespace": [],
 			"local_name": "starter_kit_given",
-			"type_idx": 91,
+			"type_idx": 92,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9031,7 +9105,7 @@
 			"wire_name": "station",
 			"namespace": [],
 			"local_name": "station",
-			"type_idx": 92,
+			"type_idx": 93,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9059,7 +9133,7 @@
 			"wire_name": "status_effect",
 			"namespace": [],
 			"local_name": "status_effect",
-			"type_idx": 93,
+			"type_idx": 94,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -9119,7 +9193,7 @@
 			"wire_name": "status_state",
 			"namespace": [],
 			"local_name": "status_state",
-			"type_idx": 94,
+			"type_idx": 95,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9147,7 +9221,7 @@
 			"wire_name": "stuck_arrow",
 			"namespace": [],
 			"local_name": "stuck_arrow",
-			"type_idx": 95,
+			"type_idx": 96,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -9171,7 +9245,7 @@
 			"wire_name": "swing",
 			"namespace": [],
 			"local_name": "swing",
-			"type_idx": 96,
+			"type_idx": 97,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9190,7 +9264,7 @@
 			"wire_name": "tick_schedule",
 			"namespace": [],
 			"local_name": "tick_schedule",
-			"type_idx": 97,
+			"type_idx": 98,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -9213,7 +9287,7 @@
 			"wire_name": "timed_press",
 			"namespace": [],
 			"local_name": "timed_press",
-			"type_idx": 98,
+			"type_idx": 99,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -9237,7 +9311,7 @@
 			"wire_name": "tutorial",
 			"namespace": [],
 			"local_name": "tutorial",
-			"type_idx": 99,
+			"type_idx": 100,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9256,7 +9330,7 @@
 			"wire_name": "unchained",
 			"namespace": [],
 			"local_name": "unchained",
-			"type_idx": 100,
+			"type_idx": 101,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9280,7 +9354,7 @@
 			"wire_name": "unscored_press",
 			"namespace": [],
 			"local_name": "unscored_press",
-			"type_idx": 101,
+			"type_idx": 102,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "challenge_id",
@@ -9299,7 +9373,7 @@
 			"wire_name": "where_sample",
 			"namespace": [],
 			"local_name": "where_sample",
-			"type_idx": 102,
+			"type_idx": 103,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9318,7 +9392,7 @@
 			"wire_name": "wielded",
 			"namespace": [],
 			"local_name": "wielded",
-			"type_idx": 103,
+			"type_idx": 104,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "entity_id",
@@ -9346,7 +9420,7 @@
 			"wire_name": "work_order",
 			"namespace": [],
 			"local_name": "work_order",
-			"type_idx": 104,
+			"type_idx": 105,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -9370,7 +9444,7 @@
 			"wire_name": "work_result",
 			"namespace": [],
 			"local_name": "work_result",
-			"type_idx": 105,
+			"type_idx": 106,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "id",
@@ -9398,7 +9472,7 @@
 			"wire_name": "work_schedule",
 			"namespace": [],
 			"local_name": "work_schedule",
-			"type_idx": 106,
+			"type_idx": 107,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "scheduled_id",
@@ -9421,7 +9495,7 @@
 			"wire_name": "world_config",
 			"namespace": [],
 			"local_name": "world_config",
-			"type_idx": 107,
+			"type_idx": 108,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -9440,7 +9514,7 @@
 			"wire_name": "world_level",
 			"namespace": [],
 			"local_name": "world_level",
-			"type_idx": 108,
+			"type_idx": 109,
 			"is_event": false,
 			"primary_key": 0,
 			"primary_key_name": "world_id",
@@ -9577,6 +9651,7 @@
 		"SkillXp": "UmfSkillXp",
 		"SpellArea": "UmfSpellArea",
 		"SpellCooldown": "UmfSpellCooldown",
+		"SpellLanded": "UmfSpellLanded",
 		"SpellTimer": "UmfSpellTimer",
 		"StarterKitGiven": "UmfStarterKitGiven",
 		"Station": "UmfStation",
@@ -9720,6 +9795,7 @@
 		"SkillXp": "UmfSkillXp",
 		"SpellArea": "UmfSpellArea",
 		"SpellCooldown": "UmfSpellCooldown",
+		"SpellLanded": "UmfSpellLanded",
 		"SpellTimer": "UmfSpellTimer",
 		"StarterKitGiven": "UmfStarterKitGiven",
 		"Station": "UmfStation",
@@ -15906,6 +15982,79 @@
 					{
 						"name": {
 							"some": "ready_at"
+						},
+						"algebraic_type": {
+							"Product": {
+								"elements": [
+									{
+										"name": {
+											"some": "__timestamp_micros_since_unix_epoch__"
+										},
+										"algebraic_type": {
+											"I64": []
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "ability"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "from"
+						},
+						"algebraic_type": {
+							"Ref": 6.0
+						}
+					},
+					{
+						"name": {
+							"some": "aim"
+						},
+						"algebraic_type": {
+							"Ref": 6.0
+						}
+					},
+					{
+						"name": {
+							"some": "at"
 						},
 						"algebraic_type": {
 							"Product": {

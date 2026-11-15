@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/vfx/effects/fire_charge.gd" id="1_fx"]
+
+[node name="FrostCharge" type="Node3D"]
+script = ExtResource("1_fx")
+duration_s = 1.0
+element = 1
+light_color = Color(0.5, 0.8, 1, 1)

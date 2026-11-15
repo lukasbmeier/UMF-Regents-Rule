@@ -1,41 +1,22 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/regents/combat/shot_look.gd" id="1_shot"]
-
-[sub_resource type="SphereMesh" id="Mesh"]
-radius = 0.09
-height = 0.18
-radial_segments = 16
-rings = 8
-
-[sub_resource type="StandardMaterial3D" id="Glow"]
-shading_mode = 0
-albedo_color = Color(0.55, 0.75, 1.0, 1)
-emission_enabled = true
-emission = Color(0.55, 0.75, 1.0, 1)
-emission_energy_multiplier = 3.0
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/fire_missile.tscn" id="2_missile"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/bolt_hit.tscn" id="3_hit"]
 
 [node name="BoltLook" type="Node3D"]
 script = ExtResource("1_shot")
-trail_life_s = 0.15
-trail_width_m = 0.16
-trail_color = Color(0.45, 0.7, 1, 0.8)
-trail_glows = true
-sparks_per_s = 40
-spark_life_s = 0.3
-spark_size_m = 0.035
-spark_scatter_mps = 0.5
-spark_color = Color(0.6, 0.8, 1, 1)
-flicker = 0.25
-burst_size_m = 0.7
-burst_color = Color(0.55, 0.75, 1, 1)
+trail_life_s = 0.0
+end_scene = ExtResource("3_hit")
 
-[node name="Core" type="MeshInstance3D" parent="."]
-mesh = SubResource("Mesh")
-surface_material_override/0 = SubResource("Glow")
-cast_shadow = 0
-
-[node name="Light" type="OmniLight3D" parent="."]
-light_color = Color(0.55, 0.75, 1.0, 1)
-light_energy = 1.2
-omni_range = 3.0
+[node name="ArcaneMissile" parent="." instance=ExtResource("2_missile")]
+rides = true
+element = 1
+core_m = 0.14
+flames_per_s = 90
+smoke_per_s = 0
+embers_per_s = 25
+light_color = Color(0.6, 0.45, 1, 1)
+trail_life_s = 0.16
+trail_width_m = 0.18
+trail_color = Color(0.6, 0.45, 1, 0.75)

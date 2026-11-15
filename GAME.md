@@ -605,6 +605,11 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     trunk (`NodeDef.radii_cm`, baked from the models). The big iron rock (2.57 m) fits its work spot now.
   - **Art** (M8): the game's own models plus CC0 (Kenney, freesound); Gemini for mockups only. (Paid packs and AI art
     not chosen.)
+  - **NO AI DISCLOSURE** (Luke, 2026-11-14, after the audit `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make
+    a thing procedurally, in code (draw calls, shaders, noise, synthesis, renders of the game's own models), and never
+    add anything that would need Steam's AI disclosure: no image, model, texture, sound, music, voice or text from a
+    generative model, nor anything traced or derived from one, in the build or on the store page. Otherwise
+    human-made (CC0 or licensed, its source noted). The continent map is the one known exception, to be replaced.
   - **Each band's new thing** (M9): smithing first: two strikes in band 1 (the buttons a UI setting, tried both ways),
     heat colors with hard and soft spots in band 2, a quench in band 3 that lifts or lowers but never destroys a part;
     the others' band things are prototyped and played before deciding.
@@ -695,7 +700,11 @@ kit's first skill; the world's referee judges every swing (an editor run starts 
 sits low in the middle: health above, the weapon's three slots (Q E R) in a ring filling toward the next unlock, the
 chest's (F), the roll and the potion key (G); it fades out of stance, lights in it, glows red in a fight; hover (with
 the cursor free) for what each does; Settings, Game, "Ability bar" picks round or square, and
-`game/regents/ui/bar_lab.tscn` (F6) shows both. **Weapons level** (PROGRESS 74): a weapon levels as you fight with it (five
+`game/regents/ui/bar_lab.tscn` (F6) shows both. **The VFX lab** (PROGRESS 78): `game/regents/vfx/vfx_lab.tscn` (F6)
+plays the spells' and blows' effects on a stage as they would happen in a fight (Fireball, Frost Ring, Blink, Gale, the
+axe's heavy hit and the sword's string, each cut drawn along the real blade, and both beside today's swing trail, a
+parry, the imp's cinder ring), down to a
+tenth of the speed, by day, dusk or night; all made in code (no images). **They are in the fights** (PROGRESS 82): every swing leaves the crescent, Fireball and the Bolt fly and burst as in the lab, the rings are the lab's, a cast shows its charge in the hands, Blink its columns, Gale its gust (everyone near sees it, and the caster's arms push it: Luke, 2026-11-15, "yes, add it", "yes, add the pose"; PROGRESS 83), a parry its flash; which effect an ability shows is `game/regents/vfx/ability_vfx.tres`. **Weapons level** (PROGRESS 74): a weapon levels as you fight with it (five
 times as fast while below your mastery), counts only up to your mastery, and opens its slots by its level: a staff
 has Fireball (Q) and Blink (F) at once, and at level 5 a pick of Frost Ring or Gale for E, chosen in the bag (I). A pick
 is CHANGED in the bag too (PROGRESS 75): free once a week from the weapon's level 20, anywhere; otherwise at a workbench

@@ -33,6 +33,12 @@ const LEAVE_HAND_MAX_M: float = 10.0
 ## The burst where it ends: how wide (0: none) and its color.
 @export_range(0.0, 6.0, 0.05, "suffix:m") var burst_size_m: float = 0.0
 @export var burst_color: Color = Color(1.0, 0.8, 0.5)
+## An EFFECT played where it ends, instead of the burst (a `VfxEffect` scene: the fireball's blast, the bolt's
+## flash; PROGRESS 82). On the ground below where it ended (`end_on_ground`: a blast, within `END_GROUND_M`), else
+## right there.
+@export var end_scene: PackedScene = null
+@export var end_on_ground: bool = false
+const END_GROUND_M: float = 4.0
 
 var trail: RibbonTrail = null
 ## How far off its path it is drawn as it leaves (world), shrinking to nothing over `leave_hand_s`; whether the hand
@@ -97,10 +103,28 @@ func shooter_hand() -> Vector3:
 	return look.muzzle_point() if look != null else Vector3.INF
 
 
-## It is gone (it hit, or its time ran out): a burst where it was.
+## It is gone (it hit, or its time ran out): its effect or a burst where it was.
 func _ended() -> void:
-	if burst_size_m > 0.0 and _age > 0.05 and is_inside_tree():
+	if _age <= 0.05 or not is_inside_tree():
+		return
+	if end_scene != null:
+		var fx: Node3D = end_scene.instantiate() as Node3D
+		if fx != null:
+			fx.position = end_point()
+			get_tree().root.add_child.call_deferred(fx)
+		return
+	if burst_size_m > 0.0:
 		ImpactBurst.at(get_tree(), global_position, burst_color, burst_size_m)
+
+
+## Where its end effect plays: on the ground under it (`end_on_ground`, a ray straight down), else where it is.
+func end_point() -> Vector3:
+	var at: Vector3 = global_position
+	if not end_on_ground or not is_inside_tree():
+		return at
+	var q := PhysicsRayQueryParameters3D.create(at + Vector3(0, 0.2, 0), at - Vector3(0, END_GROUND_M, 0), 1)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(q)
+	return hit["position"] as Vector3 if not hit.is_empty() else at
 
 
 ## The sparks it sheds: small glowing quads left behind in the world, shrinking as they go out.

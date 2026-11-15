@@ -6,9 +6,10 @@ extends Node
 ## judged by the referee; the numbers float up; axemanship XP), waits for the dummy to be whole, rolls (Ctrl:
 ## further than a run in the same time), blocks (no swing behind it); at the skeleton camp PARRIES a light it
 ## saw (and fails one pressed too early), ripostes, blocks the rest; ROLES: re-hilts two swords at the workbench
-## and plays each handle's last hit (COMBAT_OVERHAUL.md §5); and lets the target go (Esc). Exits 0/1.
+## and plays each handle's last hit (COMBAT_OVERHAUL.md §5); THE LAB'S LOOKS (PROGRESS 82): the swings wore the
+## crescent, the parries flashed, a staff's Fireball and Blink show theirs; and lets the target go (Esc). Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 680.0
+const OVERALL_TIMEOUT_SEC: float = 720.0
 ## A hit dealt at once shows this soon after its blow lands as seen: the referee's settle (80 ms), its frame, ours.
 const AT_ONCE_MS: int = 220
 ## The camp's guide and the yard's sparring skeleton (the glade's `guide` and `sparring_1` points).
@@ -24,6 +25,7 @@ const ARROWS: int = 40022
 const IRON_SWORD: int = 40019
 const CROSSGUARD: int = 40040
 const BANNER: int = 40041
+const STAFF: int = 40023
 
 var _passes: int = 0
 var _failures: int = 0
@@ -506,12 +508,78 @@ func _run() -> void:
 	await get_tree().create_timer(0.5).timeout
 
 	await _yard()
+	await _lab_looks(dummy)
 
 	# --- LET THE TARGET GO ---
 	await _key(KEY_ESCAPE)
 	await _until(func() -> bool: return combat.target_id == -1, 1.0)
 	_check(combat.target_id == -1 and not hud._target_box.visible and not combat._ring.visible, "Esc: no target, no ring, no frame")
 	_finish()
+
+
+## THE LAB'S LOOKS IN THE FIGHT (PROGRESS 82; Luke, 2026-11-14: "lets use the vfx in all the current abilites"): the
+## swings this run made wore the crescent, the parries flashed at the hand; a staff's Fireball shows its charge in the
+## hand, flies as the lab's fireball (riding on its body) and bursts in its blast where it ends; Blink's jump, made by
+## the server, shows its columns at both ends.
+func _lab_looks(dummy: int) -> void:
+	print("LAB_LOOKS")
+	var trail: SwingTrail = me.find_component(SwingTrail) as SwingTrail
+	_check(trail != null and trail.crescent and is_instance_valid(trail.trail) and trail.trail.look is ShaderMaterial and is_instance_valid(trail.edge_trail),
+		"the swings wore the crescent: the cut's look on the sheet, a bright line along the tip")
+	var vfx: AbilityVfx = me.find_component(AbilityVfx) as AbilityVfx
+	_check(vfx != null and vfx.played.has("parry_flash:-1"), "our parries flashed at the hand (%s)" % (str(vfx.played) if vfx != null else "no AbilityVfx"))
+	if vfx == null:
+		return
+	print("GRANT_STAFF %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(STAFF) == 1, 20.0)
+	var row: int = -1
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == STAFF:
+			row = s.id
+	combat.wield(row)
+	await _until(func() -> bool: return combat.kit != null and combat.kit.casts(), 5.0)
+	_check(combat.kit != null and combat.kit.casts(), "the shell gave a staff, and it is wielded")
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 8.0), DUMMY_1)
+	combat.set_target(dummy)
+	await get_tree().create_timer(0.4).timeout
+	var fireball: AbilityDef = combat.on_slot(0)
+	var before: float = ((EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent).get_current()
+	combat.cast(fireball)
+	await _until(func() -> bool: return is_instance_valid(vfx.charge), 1.0)
+	_check(fireball != null and is_instance_valid(vfx.charge) and vfx.charge is VfxFireCharge and vfx.played.has("fire_charge:%d" % fireball.id),
+		"Fireball: its charge in the hand as it is cast")
+	var rode: bool = false
+	var blast: bool = false
+	var until_ms: int = Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < until_ms and not blast:
+		await get_tree().process_frame
+		for n: Node in get_tree().root.find_children("*", "VfxFireMissile", true, false):
+			rode = rode or (n as VfxFireMissile).rides
+		blast = not get_tree().root.find_children("*", "VfxFireBlast", true, false).is_empty()
+	var after: float = ((EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent).get_current()
+	_check(rode and blast and after < before, "it flew as the lab's fireball and burst in its blast where it hit the dummy (%.0f -> %.0f)" % [before, after])
+	_check(not is_instance_valid(vfx.charge) or (vfx.charge as Node).is_queued_for_deletion(), "the charge went as the cast ended")
+	# Blink, turned away from the dummy: the server moves us, this client sees the jump and shows it.
+	await get_tree().create_timer(1.2).timeout
+	combat.set_target(-1)
+	input.set_look(PI, 0.0)
+	await get_tree().create_timer(0.3).timeout
+	var blink: AbilityDef = ContentLibrary.find(&"ability", (ContentLibrary.find(&"spell", 40004) as SpellDef).ability.id) as AbilityDef
+	var from: Vector3 = me.global_position
+	var shown: int = vfx.played.size()
+	combat.cast(blink)
+	await _until(func() -> bool: return vfx.played.size() > shown and vfx.played[-1] == "blink:%d" % blink.id, 3.0)
+	var moved: float = Vector2(me.global_position.x - from.x, me.global_position.z - from.z).length()
+	_check(vfx.played.size() > shown and vfx.played[-1] == "blink:%d" % blink.id and moved > 3.0,
+		"Blink: the server moved us %.1f m, and its columns showed at both ends (after the cast)" % moved)
+	if moved <= 3.0:
+		var mv: SpaceTimeMovementComponent = me.find_component(SpaceTimeMovementComponent) as SpaceTimeMovementComponent
+		var auth: Variant = mv.get(&"_auth")
+		print("BLINK_DEBUG from=%s now=%s row=%s epoch=%s kit=%s casting=%s status=%d played=%s" % [from, me.global_position,
+			(auth as MovementState).pos if auth != null else "-", mv.get(&"_epoch"), combat.kit.key if combat.kit != null else &"none",
+			combat.casting(), (me.find_component(StatusComponent) as StatusComponent).status(), vfx.played])
+	combat.wield(-1)
+	await get_tree().create_timer(0.5).timeout
 
 
 ## THE YARD (the tutorial, Luke 2026-11-01): begun at the guide (E twice, as the HUD answers it); a sword taken in

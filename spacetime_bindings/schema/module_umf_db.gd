@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"chat_message", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"meta_share", &"movement_state", &"node_seen", &"noise", &"npc_brain", &"npc_driver", &"order_filled", &"player", &"poise_state", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"station", &"status_effect", &"status_state", &"swing", &"timed_press", &"tutorial", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"chat_message", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"meta_share", &"movement_state", &"node_seen", &"noise", &"npc_brain", &"npc_driver", &"order_filled", &"player", &"poise_state", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"spell_landed", &"station", &"status_effect", &"status_state", &"swing", &"timed_press", &"tutorial", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -55,6 +55,7 @@ var session_member: UmfSessionMemberTable
 var skill_xp: UmfSkillXpTable
 var spell_area: UmfSpellAreaTable
 var spell_cooldown: UmfSpellCooldownTable
+var spell_landed: UmfSpellLandedTable
 var station: UmfStationTable
 var status_effect: UmfStatusEffectTable
 var status_state: UmfStatusStateTable
@@ -119,6 +120,7 @@ func _init(p_local_db: LocalDatabase) -> void:
 	skill_xp = preload('res://spacetime_bindings/schema/tables/umf_skill_xp_table.gd').new(p_local_db)
 	spell_area = preload('res://spacetime_bindings/schema/tables/umf_spell_area_table.gd').new(p_local_db)
 	spell_cooldown = preload('res://spacetime_bindings/schema/tables/umf_spell_cooldown_table.gd').new(p_local_db)
+	spell_landed = preload('res://spacetime_bindings/schema/tables/umf_spell_landed_table.gd').new(p_local_db)
 	station = preload('res://spacetime_bindings/schema/tables/umf_station_table.gd').new(p_local_db)
 	status_effect = preload('res://spacetime_bindings/schema/tables/umf_status_effect_table.gd').new(p_local_db)
 	status_state = preload('res://spacetime_bindings/schema/tables/umf_status_state_table.gd').new(p_local_db)

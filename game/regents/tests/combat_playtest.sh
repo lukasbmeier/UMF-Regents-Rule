@@ -54,6 +54,7 @@ timeout 760 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="
 fight_pid=$!
 bow_given=""
 swords_given=""
+staff_given=""
 heals=0
 hurts=0
 while kill -0 "$fight_pid" 2>/dev/null; do
@@ -82,6 +83,14 @@ while kill -0 "$fight_pid" 2>/dev/null; do
       spacetime call "$DB" grant_item "$ent" 40041 1 >/dev/null 2>&1
       spacetime call "$DB" grant_item "$ent" 40011 4 >/dev/null 2>&1
       swords_given=1
+    fi
+  fi
+  # GRANT_STAFF <entity>: a yew staff, for the lab's looks on its spells (PROGRESS 82).
+  if [ -z "$staff_given" ]; then
+    ent="$(grep -oE '^GRANT_STAFF [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      spacetime call "$DB" grant_item "$ent" 40023 1 >/dev/null 2>&1
+      staff_given=1
     fi
   fi
   if [ -z "$bow_given" ]; then

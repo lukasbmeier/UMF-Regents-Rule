@@ -20,6 +20,10 @@ class_name RibbonTrail extends MeshInstance3D
 @export var additive: bool = false
 ## Frees itself once what it follows is gone and its last stretch has faded.
 @export var free_when_done: bool = false
+## A LOOK of its own instead of the plain one (the VFX lab, PROGRESS 78-79: a cut's crescent, `VfxBladeCut`). Its
+## UV: U along the trail (0 the newest edge, 1 the tail), V across it (0 the base, 1 the tip); its vertex alpha is
+## how much life is left (the energy shader eats the trail away by it). Null: the plain ribbon, as before.
+@export var look: Material = null
 ## Samples nearer than this to the last are not kept (m).
 const MIN_STEP_M: float = 0.01
 ## A step longer than this in one frame is a jump, not a flight: the trail starts over (m).
@@ -43,7 +47,7 @@ func _ready() -> void:
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_mesh = ImmediateMesh.new()
 	mesh = _mesh
-	material_override = ribbon_material(additive)
+	material_override = look if look != null else ribbon_material(additive)
 
 
 ## Draw behind `node` from now on (`at`: a point in its own frame).
@@ -124,8 +128,11 @@ func _draw() -> void:
 			b = a + side
 			a = a - side
 		_mesh.surface_set_color(c)
+		_mesh.surface_set_uv(Vector2(1.0 - life, 0.0))
 		_mesh.surface_add_vertex(a)
-		_mesh.surface_set_color(Color(c.r, c.g, c.b, c.a * (0.25 if _blade else 1.0)))   # a blade's sheet is faint at the hilt
+		# A plain blade's sheet is faint at one edge; a look of its own shades its edges itself.
+		_mesh.surface_set_color(Color(c.r, c.g, c.b, c.a * (0.25 if _blade and look == null else 1.0)))
+		_mesh.surface_set_uv(Vector2(1.0 - life, 1.0))
 		_mesh.surface_add_vertex(b)
 	_mesh.surface_end()
 

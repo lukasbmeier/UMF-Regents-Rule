@@ -55,6 +55,7 @@ const SessionMember = preload('res://spacetime_bindings/schema/types/umf_session
 const SkillXp = preload('res://spacetime_bindings/schema/types/umf_skill_xp.gd')
 const SpellArea = preload('res://spacetime_bindings/schema/types/umf_spell_area.gd')
 const SpellCooldown = preload('res://spacetime_bindings/schema/types/umf_spell_cooldown.gd')
+const SpellLanded = preload('res://spacetime_bindings/schema/types/umf_spell_landed.gd')
 const Station = preload('res://spacetime_bindings/schema/types/umf_station.gd')
 const StatusEffectRow = preload('res://spacetime_bindings/schema/types/umf_status_effect_row.gd')
 const StatusStateRow = preload('res://spacetime_bindings/schema/types/umf_status_state_row.gd')

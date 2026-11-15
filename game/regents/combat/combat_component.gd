@@ -81,6 +81,8 @@ const POSE_CHANNEL: StringName = &"pose.spell_channel"
 const ROOTED_SLACK_M: float = 0.5
 ## Who is casting what (`game/regents.rs`): everyone's, for their casting pose.
 const TABLE_CASTING: StringName = &"casting"
+## The server's word that a spell landed (PROGRESS 83): another player's arms play its release from it.
+const TABLE_LANDED: StringName = &"spell_landed"
 ## Where a shot leaves, above its shooter's feet. Twin: the server's `loose_arrow` and `launch_missile`.
 const MUZZLE_HEIGHT_M: float = 1.45
 ## How far along the crosshair's ray a shot is aimed when the crosshair is on nothing (the sky).
@@ -183,6 +185,8 @@ var cast_from: Vector3 = Vector3.ZERO
 var spell_ready_ms: Dictionary[int, int] = {}
 ## Another player's cast, from their `casting` row: its ability, or -1.
 var remote_cast_ability: int = -1
+## The last of another player's spells whose release played here (`landed_elsewhere`; -1 none): tests read it.
+var remote_landed_ability: int = -1
 ## The swing's recovery to come (`_plan_recovery`): its clip in the set, the strike it follows, when (msec; -1: none).
 var _recover_semantic: StringName = &""
 var _recover_strike: StringName = &""
@@ -192,11 +196,11 @@ var recoveries: int = 0
 
 
 func required_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING, TABLE_LANDED]
 
 
 func optional_tables() -> Array[StringName]:
-	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING]
+	return [TABLE_WIELDED, TABLE_STATE, TABLE_KILL, TABLE_CASTING, TABLE_LANDED]
 
 
 func _on_bound() -> void:
@@ -276,6 +280,9 @@ func _on_row_updated(table: StringName, old: RefCounted, new: RefCounted) -> voi
 				slew.emit(int(new.get(&"foe_id")), String(new.get(&"loot")))
 		TABLE_CASTING:
 			remote_cast_ability = int(new.get(&"ability")) if new != null else -1
+		TABLE_LANDED:
+			if new != null and (old == null or int(old.get(&"at")) != int(new.get(&"at"))):
+				landed_elsewhere(int(new.get(&"ability")), int(new.get(&"at")))
 
 
 ## Whether this player is FIGHTING: a weapon wielded and a target picked. Then Q E R F are always its
@@ -1244,6 +1251,19 @@ func _tick_cast(now: int) -> void:
 			_driver.play_upper(StringName("ability.%d" % cast_spell.ability.id))
 		cast_spell = null
 		cast_until_ms = -1
+
+
+## ANOTHER PLAYER'S SPELL LANDED (their `spell_landed` row, stamped `at_usec`; Luke 2026-11-15, "yes, add the pose"):
+## their arms play its release here, as their own client played it as it landed (`cast`, `_tick_cast`): Gale's push,
+## Blink's, the Bolt's, the end of a Fireball or a Frost Ring. Not ours (played as it landed), not a row that is
+## history (`AbilityVfx.is_fresh`). Whether it played.
+func landed_elsewhere(ability_id: int, at_usec: int) -> bool:
+	if is_local_authority or _driver == null or not AbilityVfx.is_fresh(at_usec):
+		return false
+	if not _driver.play_upper(StringName("ability.%d" % ability_id)):
+		return false
+	remote_landed_ability = ability_id
+	return true
 
 
 ## The cast is over (landed, let go, refused).

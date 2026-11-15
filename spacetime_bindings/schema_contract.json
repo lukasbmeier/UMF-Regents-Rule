@@ -163,6 +163,7 @@
 		"skill_xp": "SkillXp(id:U64,entity_id:U64,skill_id:U32,xp:U32)",
 		"spell_area": "SpellArea(id:U64,world_id:U32,chunk:U32,owner:U64,ability:U32,pos:Vector3(x:F32,y:F32,z:F32),radius:F32,damage:F32,skill_id:U32,lands:(__timestamp_micros_since_unix_epoch__:I64),landed:Bool)",
 		"spell_cooldown": "SpellCooldown(id:U64,entity_id:U64,ability:U32,ready_at:(__timestamp_micros_since_unix_epoch__:I64))",
+		"spell_landed": "SpellLanded(entity_id:U64,world_id:U32,chunk:U32,ability:U32,from:Vector3(x:F32,y:F32,z:F32),aim:Vector3(x:F32,y:F32,z:F32),at:(__timestamp_micros_since_unix_epoch__:I64))",
 		"station": "Station(entity_id:U64,world_id:U32,chunk:U32,key:String,point_id:String)",
 		"status_effect": "StatusEffectRow(id:U64,entity_id:U64,world_id:U32,chunk:U32,status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,serial:U32)",
 		"status_state": "StatusStateRow(entity_id:U64,world_id:U32,chunk:U32,status:U8,prev_status:U8,since:(__timestamp_micros_since_unix_epoch__:I64),lasts_ms:U32,by_entity:U64,data:String,serial:U32)",

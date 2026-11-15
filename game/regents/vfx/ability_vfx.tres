@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="AbilityVfxSet" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://game/regents/vfx/ability_vfx_set.gd" id="1_set"]
+[ext_resource type="Script" path="res://game/regents/vfx/ability_vfx_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/fireball.tres" id="3_fireball"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/frost_ring.tres" id="4_frost"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/blink.tres" id="5_blink"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/gale.tres" id="6_gale"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_ember.tres" id="7_ember"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/foe_cinder_ring.tres" id="8_cinder"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/fire_charge.tscn" id="9_fire_charge"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/frost_charge.tscn" id="10_frost_charge"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/blink.tscn" id="11_blink_fx"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/gale.tscn" id="12_gale_fx"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/parry_flash.tscn" id="13_parry"]
+
+[sub_resource type="Resource" id="Fireball"]
+script = ExtResource("2_entry")
+ability = ExtResource("3_fireball")
+charge = ExtResource("9_fire_charge")
+hand_bone = &"hand_l"
+ahead_m = 0.16
+
+[sub_resource type="Resource" id="FrostRing"]
+script = ExtResource("2_entry")
+ability = ExtResource("4_frost")
+charge = ExtResource("10_frost_charge")
+two_hands = true
+ahead_m = 0.2
+
+[sub_resource type="Resource" id="Blink"]
+script = ExtResource("2_entry")
+ability = ExtResource("5_blink")
+on_jump = ExtResource("11_blink_fx")
+
+[sub_resource type="Resource" id="Gale"]
+script = ExtResource("2_entry")
+ability = ExtResource("6_gale")
+on_land = ExtResource("12_gale_fx")
+
+[sub_resource type="Resource" id="ImpEmber"]
+script = ExtResource("2_entry")
+ability = ExtResource("7_ember")
+charge = ExtResource("9_fire_charge")
+hand_bone = &"hand_r"
+ahead_m = 0.14
+
+[sub_resource type="Resource" id="ImpCinderRing"]
+script = ExtResource("2_entry")
+ability = ExtResource("8_cinder")
+charge = ExtResource("9_fire_charge")
+two_hands = true
+ahead_m = 0.2
+
+[resource]
+script = ExtResource("1_set")
+entries = Array[ExtResource("2_entry")]([SubResource("Fireball"), SubResource("FrostRing"), SubResource("Blink"), SubResource("Gale"), SubResource("ImpEmber"), SubResource("ImpCinderRing")])
+parry = ExtResource("13_parry")

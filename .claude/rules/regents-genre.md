@@ -118,6 +118,24 @@ paths:
   `swing` table's `cancelled` column, and the foundation's `UiKit.colour`, `InterestManager.centre`, `Cells.recentre`.
 - The TUTORIAL's lessons are content (`content/lesson/`, `LessonDef`); the server ticks them where a deed happens
   (`lesson_done`): a new deed is a new `LessonDef.Done` and `rules::Deed`, and a call where it happens.
+- AN EFFECT (the VFX lab, PROGRESS 78) is a scene in `game/regents/vfx/effects/` whose root extends `VfxEffect`: built
+  in code from `VfxKit` and the shaders in `vfx/shaders/` (noise, ramps, math: NO image file under `vfx/`, the
+  `regents_vfx` suite fails one), moved by its own clock (`_animate`; the shaders' `fx_` instance values), its look the
+  root's exported values. Presentation only: it shows what the server said, never decides. A new one gets a showcase
+  in `vfx_lab.gd` and the suite's every-effect check picks it up; look at it with the lab's shots before handing over.
+  A MELEE CUT follows the real blade (`VfxBladeCut`, Luke 2026-11-14, PROGRESS 79), never a fixed arc guessed from the
+  clip; a spell leaves IN FRONT of the hand; a landing ring is a `VfxGroundRing` of its element (frost and fire one
+  family). Cost: `vfx_lab.tscn -- cost`. IN THE GAME (PROGRESS 82): swings by `SwingTrail` (the crescent), missiles by their
+  body's look (`ShotLook` + a riding `VfxFireMissile`, `end_scene`), rings by `SpellLooks`, the rest (charges, Gale,
+  Blink, the parry) by `AbilityVfx` from the table `vfx/ability_vfx.tres` (another player's instant spell from the
+  server's `spell_landed` row, while fresh: PROGRESS 83; a change to it runs `spells_seen_playtest.sh`): a new ability gets a row there or is drawn by
+  one of those three (the `regents_vfx` coverage check fails one drawn by none).
+- NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
+  in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
+  texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game
+  or its store page: anything that would need Steam's AI disclosure. Otherwise human-made, CC0 or licensed, its
+  source in the folder's ATTRIBUTION.md. A new asset whose source is unknown is asked about, never added. The
+  continent map (`continent_map.webp`) is AI-made and to be replaced: never build more on it.
 - THE WARDROBE (PROGRESS 81, `docs/regents_rule/WARDROBE.md`): an outfit piece is a `<Male|Female>_<Outfit>_<Part>.gltf`
   in one of `Wardrobe.PIECE_DIRS` (found by name, never listed); an outfit's colors come from the DYE
   (`outfit_dye.gdshader` through `Wardrobe.dress`, a `DyePalette`, a `MetalFinish` per metal), never a repainted

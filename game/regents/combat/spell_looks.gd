@@ -1,17 +1,22 @@
 class_name SpellLooks extends Node3D
 ## WHAT SPELLS LOOK LIKE IN THE WORLD (owner, 2026-10-20: the Staff): every client draws, from the server's
-## rows, a Frost Ring's circle on the ground filling until it lands (`spell_area`), then a flash. (What
-## burns: its `HitFeedbackComponent`. Missiles: bodies, their own looks.) Presentation only: the server
-## decides what lands. The HUD adds one.
+## rows, an area spell's circle on the ground (`spell_area`) and its landing. (What burns: its
+## `HitFeedbackComponent`. Missiles: bodies, their own looks.) Presentation only: the server decides what lands.
+## The HUD adds one.
+##
+## THE RING IS THE VFX LAB'S (Luke, 2026-11-14: "lets use the vfx in all the current abilites"; PROGRESS 82): a
+## `VfxGroundRing`, the staff's Frost Ring in frost (`frost_ring.tscn`), a foe's ring in fire (`cinder_ring.tscn`,
+## the imp's: what to get out of, never the cool blue of a player's own), its warning filling for exactly the time
+## the server gives until it lands (`lands`), then landing. Change their look in those two scenes.
 
 const TABLE_AREA: StringName = &"spell_area"
-const RING_COLOR: Color = Color(0.55, 0.8, 1.0)
-## A FOE'S ring (the imp's, 2026-11-12): what to get out of, never the cool blue of a player's own.
-const FOE_RING_COLOR: Color = Color(1.0, 0.35, 0.12)
-## How long a landed circle flashes.
-const FLASH_MSEC: int = 600
+const FROST_RING: PackedScene = preload("res://game/regents/vfx/effects/frost_ring.tscn")
+const CINDER_RING: PackedScene = preload("res://game/regents/vfx/effects/cinder_ring.tscn")
+## The shortest warning drawn (a row seen as it lands, or late) and the longest.
+const MIN_WARN_S: float = 0.05
+const MAX_WARN_S: float = 4.0
 
-## area id -> {"node": Node3D, "fill": MeshInstance3D, "seen_usec": int, "lands_usec": int, "landed_msec": int}
+## area id -> {"node": VfxGroundRing, "seen_usec": int, "lands_usec": int, "landed_msec": int, "hostile": bool}
 var _areas: Dictionary[int, Dictionary] = {}
 
 
@@ -40,42 +45,39 @@ func _on_global(ev: RowEvent) -> void:
 ## A circle at `pos`, `radius` wide, landing at `lands_usec` (the server's clock); `landed` once it has.
 func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bool, hostile: bool = false) -> void:
 	var a: Dictionary = _areas.get(id, {})
-	var color: Color = FOE_RING_COLOR if hostile else RING_COLOR
 	if a.is_empty():
-		var root := Node3D.new()
-		root.name = "Area_%d" % id
-		var ring := MeshInstance3D.new()
-		ring.name = "Ring"
-		var torus := TorusMesh.new()
-		torus.inner_radius = maxf(radius - 0.12, 0.05)
-		torus.outer_radius = radius
-		ring.mesh = torus
-		ring.scale = Vector3(1, 0.1, 1)
-		ring.material_override = _glow(color, 1.0)
-		root.add_child(ring)
-		var fill := MeshInstance3D.new()
-		fill.name = "Fill"
-		var disc := CylinderMesh.new()
-		disc.top_radius = radius
-		disc.bottom_radius = radius
-		disc.height = 0.02
-		fill.mesh = disc
-		fill.material_override = _glow(Color(color, 0.35), 0.6)
-		fill.scale = Vector3(0.01, 1, 0.01)
-		root.add_child(fill)
-		add_child(root)
-		a = {"node": root, "fill": fill, "seen_usec": ClockSync.server_usec(), "lands_usec": lands_usec, "landed_msec": -1, "color": color}
+		var ring: VfxGroundRing = (CINDER_RING if hostile else FROST_RING).instantiate() as VfxGroundRing
+		ring.name = "Area_%d" % id
+		ring.radius_m = radius
+		var left_s: float = float(lands_usec - ClockSync.server_usec()) / 1_000_000.0
+		ring.warn_s = clampf(left_s, MIN_WARN_S, MAX_WARN_S) if not landed else MIN_WARN_S
+		ring.free_when_done = false   # its row says when it goes (`forget_area`)
+		ring.position = pos + Vector3(0, 0.02, 0)
+		add_child(ring)
+		a = {"node": ring, "seen_usec": ClockSync.server_usec(), "lands_usec": lands_usec, "landed_msec": -1, "hostile": hostile}
 		_areas[id] = a
-	(a["node"] as Node3D).position = pos + Vector3(0, 0.05, 0)
 	if landed and int(a["landed_msec"]) < 0:
 		a["landed_msec"] = Time.get_ticks_msec()
 
 
+## Its row is gone: a ring still landing plays on and frees itself; one done (or never seen) goes now.
 func forget_area(id: int) -> void:
 	var a: Dictionary = _areas.get(id, {})
 	if not a.is_empty():
-		(a["node"] as Node3D).queue_free()
+		var v: Variant = a["node"]
+		if is_instance_valid(v):
+			var ring: VfxGroundRing = v as VfxGroundRing
+			if ring.playing:
+				ring.free_when_done = true
+			else:
+				ring.queue_free()
 	_areas.erase(id)
+
+
+## The ring drawn for area `id` (null: none).
+func ring_of(id: int) -> VfxGroundRing:
+	var v: Variant = _areas.get(id, {}).get("node")
+	return v as VfxGroundRing if is_instance_valid(v) else null
 
 
 ## How far circle `id` has filled, 0..1 (1 when it lands).
@@ -85,29 +87,3 @@ func area_fill(id: int) -> float:
 		return 0.0
 	var span: float = float(maxi(int(a["lands_usec"]) - int(a["seen_usec"]), 1))
 	return clampf(1.0 - float(int(a["lands_usec"]) - ClockSync.server_usec()) / span, 0.0, 1.0)
-
-
-func _process(_delta: float) -> void:
-	var now: int = Time.get_ticks_msec()
-	for id: int in _areas:
-		var a: Dictionary = _areas[id]
-		var fill: MeshInstance3D = a["fill"]
-		if int(a["landed_msec"]) >= 0:
-			var t: float = clampf(float(now - int(a["landed_msec"])) / float(FLASH_MSEC), 0.0, 1.0)
-			fill.scale = Vector3.ONE
-			(fill.material_override as StandardMaterial3D).albedo_color = Color(a.get("color", RING_COLOR) as Color, 0.7 * (1.0 - t))
-		else:
-			var k: float = maxf(area_fill(id), 0.01)
-			fill.scale = Vector3(k, 1, k)
-
-
-static func _glow(c: Color, energy: float) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if c.a < 1.0 else BaseMaterial3D.TRANSPARENCY_DISABLED
-	m.albedo_color = c
-	m.emission_enabled = true
-	m.emission = Color(c, 1.0)
-	m.emission_energy_multiplier = energy
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return m
