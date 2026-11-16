@@ -570,7 +570,9 @@ sword's string is the one its handle gives). Every check, the cooldown, the refe
 are then the answer's, so the server, not the client, decides what fires, and an older client asking for the
 old one still fires the right one. A client predicts the same where it can; when it guesses wrong it sees the
 server's answer in the event.
-A sweep hits the first person in its path. With the hot rule **Referee two sides** on
+A sweep hits the first person in its path; one marked **Hits All** (its `.tres`: `hits_all`, a cleave) hits
+everyone in it, each judged as a single hit is (the referee answers with `resolve_action_all`; a genre keeps
+once-a-swing parts, a heal, once itself). DECISIONS #314. With the hot rule **Referee two sides** on
 (`foundation.referee_two_sides`, an override in a game's rule set) it passes through its user's own
 side (the players, or everyone else) to the first of the other: an MMO's monsters do not block each other's swings,
 nor its players each other's. DECISIONS #283.

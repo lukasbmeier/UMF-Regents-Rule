@@ -1190,3 +1190,13 @@ Republish (module and referee; no codegen). Regent's Rule's roll is an effect si
 - `resolve_action`: a target that cannot be hit now (state or effect) is a MISS at once (`on_ability_missed`, a miss
   event), not an error. Tests: `tests/suites/referee.gd` "effects count (a roll)" (mutation-checked); the integration
   suite's downed and rolling reports now expect a miss.
+
+## (next release) — a sweep that hits all (DECISIONS #314; the master sets the version at merge)
+Module, referee and client: republish WITH `--codegen` (a new reducer). Old clients and old referees keep working.
+- `AbilityDef.hits_all` (the Judged group): a judged sweep that hits every body it meets; baked only when on.
+- `sidecar/combat/lunge_judge.gd`: `judge_all` (every body met, nearest first; `judge` is its first, unchanged results).
+- `sidecar/combat/action_referee.gd`: a verdict's `hit_ids` and `all`; a hits-all sweep that met more than one is answered
+  with `resolve_action_all`.
+- `server/src/module/referee.rs`: NEW reducer `resolve_action_all(request_id, hit_ids: Vec<u64>)` (authority only),
+  refused whole for an ability without Hits All, a duplicate, over 32, or a name `resolve_action` refuses; `resolve_action`
+  unchanged. Tests: `tests/suites/referee.gd` (a sweep that hits all), `tests/integration_test.sh` (the refusal).
