@@ -12,6 +12,9 @@ extends "res://tests/suite_base.gd"
 ##   - the STREETS are code-made (no texture), each place's paving its style's, every preset's paving apart from its walls
 ##   - the PROPS kit: every material it wears a slot the dye knows; a `PropGroup` is one building (one mesh, one body),
 ##     its cloth in the style's cloth; the world's market, doors and yard furnished, no stall on the kit's tower
+##   - the VILLAGE KIT'S SMALL PROPS (`VillageDressing`): none without a dressing; with one, vines hang on a back or side
+##     wall's face (never the front), the yard's fence, crates and wagon stand clear of the house, merged with it, the
+##     wagon's bodies one; the same seed the same props; the town world's village wears its preset
 ##   - the town world builds its three places inside its square kilometer, no two town houses overlapping
 ##   - the town lab shows every preset, six seeds, and a style changed live
 
@@ -23,6 +26,7 @@ func run() -> void:
 	_run_kit()
 	_run_house()
 	await _run_settlement()
+	await _run_dressing()
 	_run_wall()
 	_run_roofs()
 	_run_streets()
@@ -222,6 +226,99 @@ func _run_settlement() -> void:
 	stranger.free()
 	TownKit.unknown.clear()
 	s.free()
+
+
+## A settlement of houses with `d` (null: none), added and dressed; the houses returned in order.
+func _dressed_street(d: VillageDressing, town_seed: int) -> Array[KitHouse]:
+	var s := Settlement.new()
+	s.style = _styles()[1]
+	s.town_seed = town_seed
+	s.dressing = d
+	var out: Array[KitHouse] = []
+	for i: int in 6:
+		var h := KitHouse.new()
+		h.width = 2 + i % 3
+		h.depth = 2 + i % 2
+		h.position = Vector3(i * 30.0, 0, 0)
+		h.rotation.y = i * 0.7
+		s.add_child(h)
+		out.append(h)
+	add_child(s)
+	return out
+
+
+func _run_dressing() -> void:
+	var none: Array[KitHouse] = _dressed_street(null, 7)
+	await get_tree().process_frame
+	var any: bool = false
+	for h: KitHouse in none:
+		any = any or h.get_node_or_null(VillageDressing.GROUP) != null
+	_check(not any, "no dressing, no village props (the look before them)")
+	none[0].get_parent().free()
+	var all := VillageDressing.new()
+	all.vine_share = 1.0
+	all.fence_share = 1.0
+	all.crate_share = 1.0
+	all.wagon_share = 1.0
+	var houses: Array[KitHouse] = _dressed_street(all, 7)
+	await get_tree().process_frame
+	var every: bool = true
+	var vines_ok: bool = true
+	var vines: int = 0
+	var clear: bool = true
+	var bodies_ok: bool = true
+	var one_mesh: bool = true
+	var bad: Array[String] = []
+	var record: Array[PackedStringArray] = []
+	for h: KitHouse in houses:
+		var g: PropGroup = h.get_node_or_null(VillageDressing.GROUP) as PropGroup
+		if g == null:
+			every = false
+			continue
+		record.append(g.placed)
+		every = every and g.placed.has("Prop_Wagon") and g.placed.has("Prop_Crate") 			and Array(g.placed).any(func(n: String) -> bool: return n.begins_with("Prop_Vine")) 			and Array(g.placed).any(func(n: String) -> bool: return n.contains("Fence"))
+		var hw: float = h.effective_width() * KitHouse.CELL * 0.5
+		var hd: float = h.depth * KitHouse.CELL * 0.5
+		var house := AABB(Vector3(-hw, 0.0, -hd), Vector3(hw * 2.0, 6.0, hd * 2.0))
+		for c: Node in g.get_children():
+			var n: Node3D = c as Node3D
+			if n == null or n.scene_file_path.is_empty():
+				continue
+			var piece_name: String = n.scene_file_path.get_file().get_basename()
+			var p: Vector3 = n.position
+			if piece_name.begins_with("Prop_Vine"):
+				vines += 1
+				# On a wall's face: just outside the footprint on one axis, inside it on the other; never the front.
+				var on_back: bool = absf(p.z + hd + VillageDressing.WALL_FACE) < 0.05 and absf(p.x) < hw
+				var on_side: bool = absf(absf(p.x) - hw - VillageDressing.WALL_FACE) < 0.05 and absf(p.z) < hd
+				if not (on_back or on_side) or p.z > hd - 0.5:
+					vines_ok = false
+					bad.append("%s at %s" % [piece_name, p])
+			else:
+				var box: AABB = n.transform * TownKit.piece_bounds(piece_name)
+				if box.grow(-0.05).intersects(house):
+					clear = false
+					bad.append("%s at %s" % [piece_name, p])
+		# The house's one body and the group's one (the wagon alone brings eleven).
+		bodies_ok = bodies_ok and h.find_children("*", "StaticBody3D", true, false).size() == 2 			and g.body().get_child_count() > 11
+		one_mesh = one_mesh and h.find_children("*", "MeshInstance3D", true, false).size() == 1
+	_check(every, "with every share 1, every house gets vines, a fenced yard, crates and the wagon")
+	_check(vines > 6 and vines_ok, "the vines hang on the back and side walls' faces, never the front (%d; %s)" % [vines, bad])
+	_check(clear, "the yard's fence, the crates and the wagon stand clear of the house (%s)" % [bad])
+	_check(bodies_ok, "the props' collisions are one body beside the house's (the wagon's eleven in it)")
+	_check(one_mesh, "the props are merged with their house: one mesh")
+	houses[0].get_parent().free()
+	var again: Array[KitHouse] = _dressed_street(all.duplicate() as VillageDressing, 7)
+	await get_tree().process_frame
+	var same: bool = true
+	for i: int in again.size():
+		var g2: PropGroup = again[i].get_node_or_null(VillageDressing.GROUP) as PropGroup
+		same = same and g2 != null and i < record.size() and g2.placed == record[i]
+	_check(same, "the same houses, the same props")
+	again[0].get_parent().free()
+	var preset: VillageDressing = load("res://game/regents/town/dressing/village.tres") as VillageDressing
+	_check(preset != null and preset.placeholder and preset.vine_share > 0.0 and preset.wagon_share > 0.0,
+		"the village preset loads, marked a placeholder")
 
 
 func _run_wall() -> void:
@@ -425,6 +522,13 @@ func _run_world() -> void:
 			var p: Vector3 = bld.global_position
 			inside = inside and absf(p.x) < 500.0 and absf(p.z) < 500.0
 	_check(inside, "every building inside the square kilometer")
+	var dressed: Array[int] = [0, 0, 0]
+	for k: int in 3:
+		for bld: Node3D in (places[[&"village", &"town", &"castle"][k]] as Settlement).buildings:
+			if bld.get_node_or_null(VillageDressing.GROUP) != null:
+				dressed[k] += 1
+	_check(dressed[0] >= 5 and dressed[1] == 0 and dressed[2] == 0,
+		"the village's cottages wear the village kit's props, the town and castle none (%s)" % [dressed])
 	var walls: int = 0
 	for key: Variant in places:
 		for bld: Node3D in (places[key] as Settlement).buildings:

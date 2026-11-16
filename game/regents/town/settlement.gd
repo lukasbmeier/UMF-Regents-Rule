@@ -18,6 +18,9 @@ class_name Settlement extends Node3D
 @export var merge: bool = true
 ## Beyond this (m), a building is not drawn; 0 always draws it.
 @export_range(0.0, 3000.0) var draw_distance: float = 900.0
+## The village kit's small props about every `KitHouse` here (vines, a fenced yard, crates, the wagon), each house from
+## its own seed. None (null): no props, the look before it.
+@export var dressing: VillageDressing
 
 ## The buildings found and dressed by the last `dress_all` (the suite and the labs read it).
 var buildings: Array[Node3D] = []
@@ -59,8 +62,17 @@ func dress_all() -> int:
 	if style == null:
 		return buildings.size()
 	for b: Node3D in buildings:
+		if dressing != null and b is KitHouse:
+			dressing.place(b as KitHouse, props_rng(b))
 		dress_one(b)
 	return buildings.size()
+
+
+## A building's dice for its props: its seed, stirred apart from anything else drawn from it.
+func props_rng(b: Node3D) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_of(b), "village props"])
+	return rng
 
 
 ## One building: dressed, merged, dressed again (the merged mesh carries the seed), and its draw distance set.
