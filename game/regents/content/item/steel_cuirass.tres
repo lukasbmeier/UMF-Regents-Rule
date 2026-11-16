@@ -3,12 +3,14 @@
 [ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_r6m81"]
 [ext_resource type="Resource" path="res://game/regents/content/pattern/cuirass.tres" id="2_ct1sp"]
 [ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_7f2lm"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/chest_shove.tres" id="4_ct1sp"]
 
 [resource]
 script = ExtResource("3_7f2lm")
 max_stack = 1
 armor_slot = &"chest"
 defense = 15
+worn_ability = ExtResource("4_ct1sp")
 color = Color(0.55, 0.6, 0.68, 1)
 description = "Steel plate for the chest and arms."
 material = ExtResource("1_r6m81")

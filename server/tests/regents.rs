@@ -868,10 +868,10 @@ fn the_staff_casts_its_spells_from_mana() {
     let bolt = rules::spell_of(staff.light[0]).expect("its left button is a spell");
     assert!(bolt.kind == rules::SPELL_BOLT && bolt.cost == 0.0 && bolt.cast_ms == 0 && bolt.body > 0, "the bolt: free, instant, a missile");
     let kinds: Vec<i64> = staff.skills.iter().map(|(a, _)| rules::spell_of(*a).expect("each skill a spell").kind).collect();
-    assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_BLINK, rules::SPELL_CONE, rules::SPELL_AREA],
-        "Fireball, Frost Ring, Blink, Gale, Meteor (placeholder: armor run P1)");
-    let ranks: Vec<u32> = staff.skills.iter().take(4).map(|(_, r)| *r).collect();
-    assert_eq!(ranks, vec![1, 8, 19, 29], "the old 1, 3, 6, 9 on the 1-33 track");
+    assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_CONE, rules::SPELL_AREA],
+        "Fireball, Frost Ring, Gale, Meteor (placeholder: armor run P1); Blink moved to cloth chests (S4, B8)");
+    let ranks: Vec<u32> = staff.skills.iter().take(3).map(|(_, r)| *r).collect();
+    assert_eq!(ranks, vec![1, 8, 29], "the old 1, 3, 9 on the 1-33 track");
     let fireball = rules::spell_of(staff.skills[0].0).unwrap();
     assert!(fireball.cost == 25.0 && fireball.splash_m == 3.0 && fireball.burn_ms == 3000 && rules::may_walk_casting(fireball),
         "Fireball: 25 mana, a 3 m splash, a 3 s burn, a cast you may walk through");
@@ -1230,7 +1230,7 @@ fn a_handles_shape_is_its_role() {
     assert!(!rules::part_fits(hilt, "binding", Some(sword)), "not a binding slot");
     // NEGATIVE: a part that names one kit (`fits_kit`, still the content's to use) fits only that kit's.
     let only_swords = rules::ItemSeed { id: 1, name: "Test hilt", max_stack: 1, tool_tag: "", tool_tier: 0, tool_speed_pct: 100, weapon_kit: "",
-        weapon_damage_pct: 100, part_tag: "handle", handle_trait: 0, weapon_trait: 0, ammo_for: "", ammo_damage_pct: 100, role: 0, fits_kit: "sword", armor_slot: "", defense: 0 };
+        weapon_damage_pct: 100, part_tag: "handle", handle_trait: 0, weapon_trait: 0, ammo_for: "", ammo_damage_pct: 100, role: 0, fits_kit: "sword", armor_slot: "", defense: 0, worn_ability: 0 };
     assert!(rules::part_fits(&only_swords, "handle", Some(sword)) && !rules::part_fits(&only_swords, "handle", Some(axe))
         && !rules::part_fits(&only_swords, "handle", Some(pick)), "a part for swords alone fits no axe or pickaxe");
     let plain = rules::item(40013).unwrap();
@@ -1589,14 +1589,15 @@ fn item_levels_and_picks() {
     assert_eq!(rules::item_xp_gain(10, 12, 12, 5.0), 10, "at it: the same");
     assert_eq!(rules::item_xp_gain(10, 20, 12, 5.0), 10, "above it: the same");
     assert_eq!(rules::item_xp_gain(10, 3, 12, 0.5), 10, "NEGATIVE: catch-up never slows an item");
-    // The staff: Fireball the base, Frost Ring and Gale the options, Blink on F; Q at 1, picks at 5 and 12, the ult at 20.
+    // The staff: Fireball the base, Frost Ring and Gale the options; Q at 1, picks at 5 and 12, the ult at 20. Blink is no
+    // longer the staff's (S4, B8): it is the cloth chest's F.
     let staff = rules::kit_keyed("staff").unwrap();
     let (fireball, frost, blink, gale, meteor) = (40013, 40014, 40015, 40016, 40048);
-    assert_eq!(staff.skills.iter().map(|(a, _)| *a).collect::<Vec<_>>(), vec![fireball, frost, blink, gale, meteor]);
+    assert_eq!(staff.skills.iter().map(|(a, _)| *a).collect::<Vec<_>>(), vec![fireball, frost, gale, meteor]);
     assert_eq!((staff.slot_of(fireball), staff.slot_of(frost), staff.slot_of(blink), staff.slot_of(gale), staff.slot_of(meteor), staff.slot_of(40012)),
-        (Some(rules::SLOT_BASE), Some(rules::SLOT_OPTION), Some(rules::SLOT_F), Some(rules::SLOT_OPTION), Some(rules::SLOT_ULT), None));
+        (Some(rules::SLOT_BASE), Some(rules::SLOT_OPTION), None, Some(rules::SLOT_OPTION), Some(rules::SLOT_ULT), None));
     assert_eq!(staff.unlock_levels, [1, 5, 12, 20]);
-    assert!(staff.slot_refusal(fireball, 1, [0; 3]).is_none() && staff.slot_refusal(blink, 1, [0; 3]).is_none(), "Fireball and Blink from level 1");
+    assert!(staff.slot_refusal(fireball, 1, [0; 3]).is_none(), "Fireball from level 1");
     assert!(staff.slot_refusal(frost, 33, [0; 3]).is_some_and(|w| w.contains("not chosen")), "NEGATIVE: Frost Ring unpicked, at any level");
     assert!(staff.slot_refusal(frost, 4, [frost, 0, 0]).is_some_and(|w| w.contains("level 5")), "NEGATIVE: picked, but the weapon counts as 4");
     assert!(staff.slot_refusal(frost, 5, [frost, 0, 0]).is_none() && staff.slot_refusal(gale, 5, [frost, 0, 0]).is_some(), "Frost Ring picked: it, not Gale");
@@ -1610,7 +1611,7 @@ fn item_levels_and_picks() {
     assert!(staff.pick_refusal(1, gale, 12, [frost, 0, 0]).is_some_and(|w| w.contains("E holds one")), "NEGATIVE: E holds one ability");
     // R (Luke, 2026-11-14: "fix the R ability not being assigned"): a kit with NO ult of its own has its last pick take
     // the option E did not: checked on the staff without its ult (step 76's rule stays in the code).
-    let no_ult = rules::KitSeed { skills: &staff.skills[..4], slots: &staff.slots[..4], ..*staff };
+    let no_ult = rules::KitSeed { skills: &staff.skills[..3], slots: &staff.slots[..3], ..*staff };
     assert!(!no_ult.has_ults(), "the staff without its ult has none");
     assert!(no_ult.pick_refusal(2, gale, 20, [frost, 0, 0]).is_none(), "no ult, level 20, Frost Ring on E: Gale for R");
     assert!(no_ult.pick_refusal(2, gale, 19, [frost, 0, 0]).is_some_and(|w| w.contains("level 20")), "NEGATIVE: the last pick opens at 20");
@@ -1764,4 +1765,34 @@ fn armor_pieces_are_share_times_tier_for_every_family() {
             assert_eq!(rules::offered_for(part, piece), 0, "{} offers {} a trait", part.name, piece.name);
         }
     }
+}
+
+#[test]
+fn the_chest_gives_f_one_ability_a_family() {
+    // S4, THE CHEST'S ABILITY ON F (GAME.md B5, B8): a chest gives its family's ability (cloth Blink, moved from the staff;
+    // leather and metal PLACEHOLDERS), nothing else gives one, and the staff no longer carries Blink.
+    let id_of = |name: &str| rules::ITEMS.iter().find(|i| i.name == name).unwrap_or_else(|| panic!("{name}"));
+    let blink = id_of("Linen robe").worn_ability;
+    let snare = id_of("Soft leather jerkin").worn_ability;
+    let shove = id_of("Iron cuirass").worn_ability;
+    assert!(blink != 0 && snare != 0 && shove != 0 && blink != snare && snare != shove && blink != shove, "three abilities, one a family");
+    assert_eq!(blink, 40015, "the cloth chest's is Blink (B8: Blink moves to cloth chests)");
+    for (family, prefixes, want) in [("cloth", vec!["Linen"], blink), ("leather", vec!["Soft leather", "Supple leather"], snare),
+        ("metal", vec!["Copper", "Iron", "Steel"], shove)] {
+        for p in prefixes {
+            let chest = rules::ITEMS.iter().find(|i| i.name.starts_with(p) && i.armor_slot == "chest").unwrap_or_else(|| panic!("{p}'s chest"));
+            assert_eq!(chest.worn_ability, want, "{}: its family's ({family})", chest.name);
+        }
+    }
+    assert!(rules::ITEMS.iter().filter(|i| i.armor_slot != "chest").all(|i| i.worn_ability == 0), "only a chest gives an ability");
+    for a in [blink, snare, shove] {
+        assert!(rules::is_worn_ability(a), "{a} is a chest's");
+        assert!(rules::kit_of_ability(a).is_none(), "{a} is in no weapon's kit: a staff alone cannot cast it");
+        assert!(rules::spell_of(a).is_some(), "{a} is a spell (cast as a staff's are)");
+    }
+    // NEGATIVES: a weapon's ability is no chest's; the staff keeps its own four.
+    let staff = rules::kit_keyed("staff").expect("the staff");
+    assert!(staff.skills.iter().all(|(s, _)| !rules::is_worn_ability(*s)), "no staff spell is a chest's");
+    assert!(!staff.skills.iter().any(|(s, _)| *s == blink), "the staff no longer carries Blink");
+    assert!(!rules::is_worn_ability(0), "nothing is no ability");
 }

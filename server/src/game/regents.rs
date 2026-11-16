@@ -2423,14 +2423,23 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
     let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
     crate::module::spend_rate(ctx, me, "spell")?;
     let spell = rules::spell_of(ability_id).ok_or("cast_spell: that is no spell")?;
-    let (kit, slot) = rules::kit_of_ability(ability_id).ok_or("cast_spell: no kit casts that")?;
-    let (weapon, _) = wielded_weapon(ctx, me).ok_or("cast_spell: wield a staff first")?;
-    if weapon.weapon_kit != kit.key {
-        return Err(format!("cast_spell: that is a {} spell; you wield a {}", kit.key, weapon.name.to_lowercase()));
-    }
-    if let rules::KitSlot::Skill(_, rank) = slot {
-        need_rank(ctx, me, kit.skill, if kit.slots.is_empty() { rank } else { 0 }, "cast")?;
-        need_slot(ctx, me, kit, ability_id, "cast")?;
+    // THE CHEST'S ABILITY ON F (S4, Luke's B5, B8): one the worn chest gives, whatever is wielded; nothing else gives it
+    // (Blink moved from the staff to cloth chests).
+    let chest = rules::is_worn_ability(ability_id);
+    if chest {
+        if worn_ability_of(ctx, me) != ability_id {
+            return Err("cast_spell: wear a chest that gives it".into());
+        }
+    } else {
+        let (kit, slot) = rules::kit_of_ability(ability_id).ok_or("cast_spell: no kit casts that")?;
+        let (weapon, _) = wielded_weapon(ctx, me).ok_or("cast_spell: wield a staff first")?;
+        if weapon.weapon_kit != kit.key {
+            return Err(format!("cast_spell: that is a {} spell; you wield a {}", kit.key, weapon.name.to_lowercase()));
+        }
+        if let rules::KitSlot::Skill(_, rank) = slot {
+            need_rank(ctx, me, kit.skill, if kit.slots.is_empty() { rank } else { 0 }, "cast")?;
+            need_slot(ctx, me, kit, ability_id, "cast")?;
+        }
     }
     let now_status = ctx.db.status_state().entity_id().find(me).map_or(crate::status::NORMAL, |s| s.status);
     if crate::module::is_rolling(ctx, me) || crate::status::find(now_status).is_some_and(|s| !s.can_act) {
@@ -2444,8 +2453,10 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
             return Err(format!("cast_spell: not ready ({:.1} s)", (micros(cd.ready_at) - micros(ctx.timestamp)) as f32 / 1e6));
         }
     }
-    let have = crate::module::resource_now(ctx, me, kit.resource).unwrap_or(0.0);
-    if have + 1e-4 < spell_cost(ctx, spell) {
+    // A chest's ability costs no mana (mana is the staff's alone): its cooldown is its price.
+    let kit_res = if chest { 0 } else { rules::kit_of_ability(ability_id).map_or(0, |(k, _)| k.resource) };
+    let have = crate::module::resource_now(ctx, me, kit_res).unwrap_or(0.0);
+    if kit_res != 0 && have + 1e-4 < spell_cost(ctx, spell) {
         return Err(format!("cast_spell: not enough mana ({have:.0} of {:.0})", spell_cost(ctx, spell)));
     }
     let m = ctx.db.movement_state().entity_id().find(me).ok_or("cast_spell: you are nowhere")?;
@@ -2567,14 +2578,26 @@ pub fn spell_lands(ctx: &ReducerContext, timer: SpellTimer) -> Result<(), String
 /// THE SPELL LANDS for `me`: paid for (mana), its cooldown begun, then as its kind says.
 fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, aim: Vector3, at: Vector3) -> Result<(), String> {
     let spell = rules::spell_of(ability_id).ok_or("no such spell")?;
-    let (kit, _) = rules::kit_of_ability(ability_id).ok_or("no kit casts that")?;
-    let (weapon, quality) = wielded_weapon(ctx, me).filter(|(w, _)| w.weapon_kit == kit.key).ok_or("the staff was put away")?;
+    // A CHEST'S (S4): from the worn chest, no mana, trains no mastery (`skill` 0), its damage as written.
+    let chest = rules::is_worn_ability(ability_id);
+    let (skill, damage_pct, quality, rank, resource) = if chest {
+        if worn_ability_of(ctx, me) != ability_id {
+            return Err("the chest was taken off".into());
+        }
+        (0, 100, 0, 1, 0)
+    } else {
+        let (kit, _) = rules::kit_of_ability(ability_id).ok_or("no kit casts that")?;
+        let (weapon, quality) = wielded_weapon(ctx, me).filter(|(w, _)| w.weapon_kit == kit.key).ok_or("the staff was put away")?;
+        (kit.skill, weapon.weapon_damage_pct, quality, rank_in(ctx, me, kit.skill), kit.resource)
+    };
     if ctx.db.health_state().entity_id().find(me).is_some_and(|h| h.is_dead) {
         return Err("dead".into());
     }
     let m = ctx.db.movement_state().entity_id().find(me).ok_or("nowhere")?;
     check_spell_place(ctx, me, spell, ability_id, &m, aim, at)?;
-    crate::module::spend_resource(ctx, me, kit.resource, spell_cost(ctx, spell))?;
+    if resource != 0 {
+        crate::module::spend_resource(ctx, me, resource, spell_cost(ctx, spell))?;
+    }
     let def = ctx.db.ability_def().ability_id().find(ability_id);
     let (base, range, cooldown_ms) = def.as_ref().map_or((0.0, 0.0, 0), |d| (d.damage, d.range, d.cooldown_ms));
     let ready_at = ctx.timestamp + TimeDuration::from_micros(cooldown_ms as i64 * 1000);
@@ -2587,14 +2610,14 @@ fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, ai
             ctx.db.spell_cooldown().insert(SpellCooldown { id: 0, entity_id: me, ability: ability_id, ready_at });
         }
     }
-    let damage = rules::hit_damage(base, weapon.weapon_damage_pct, quality, rank_in(ctx, me, kit.skill));
+    let damage = rules::hit_damage(base, damage_pct, quality, rank);
     tell_landed(ctx, me, ability_id, &m, aim);
     match spell.kind {
-        rules::SPELL_BOLT => launch_missile(ctx, me, spell, ability_id, &m, target_id, aim, range, damage, kit.skill),
+        rules::SPELL_BOLT => launch_missile(ctx, me, spell, ability_id, &m, target_id, aim, range, damage, skill),
         rules::SPELL_AREA => {
             let lands = ctx.timestamp + TimeDuration::from_micros(spell.delay_ms * 1000);
             let id = ctx.db.spell_area().insert(SpellArea { id: 0, world_id: m.world_id, chunk: crate::cell::chunk_of(at), owner: me, ability: ability_id, pos: at,
-                radius: spell.radius_m, damage, skill_id: kit.skill, lands, landed: false }).id;
+                radius: spell.radius_m, damage, skill_id: skill, lands, landed: false }).id;
             ctx.db.spell_timer().insert(SpellTimer { scheduled_id: 0, scheduled_at: ScheduleAt::Time(lands), entity_id: 0, area_id: id });
             Ok(())
         }
@@ -2613,7 +2636,7 @@ fn land_spell(ctx: &ReducerContext, me: u64, ability_id: u32, target_id: u64, ai
                 .filter(|o| rules::in_cone(m.pos, aim, o.pos, range, spell.angle_deg))
                 .map(|o| (o.entity_id, o.pos)).collect();
             for (id, pos) in hit {
-                if !spell_hurt(ctx, me, kit.skill, id, damage, m.world_id) {
+                if !spell_hurt(ctx, me, skill, id, damage, m.world_id) {
                     continue;
                 }
                 if spell.push_mps > 0.0 {
@@ -2927,7 +2950,7 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
     if dummy.is_none() {
         hurt_now(ctx, other_id, world_id, owner);
     }
-    if ctx.db.player().entity_id().find(owner).is_some() {
+    if ctx.db.player().entity_id().find(owner).is_some() && skill_id != 0 {
         let share = if dummy.is_some() { hot_number(ctx, hot::DUMMY_XP_PCT) / 100.0 } else { foe_seed_of(ctx, other_id).map_or(1.0, |f| f.xp_pct as f64 / 100.0) };
         train(ctx, owner, skill_id, (dmg as f64 * hot_number(ctx, hot::COMBAT_XP_PER_DAMAGE) * share).round().max(1.0) as u32);
         if dummy.is_none() {
@@ -3086,6 +3109,14 @@ fn defense_of(ctx: &ReducerContext, entity_id: u64) -> f32 {
             Some(rules::piece_defense(it.defense, rules::quality_of(&row.instance_data).unwrap_or(0)))
         })
         .sum()
+}
+
+/// THE ABILITY `entity_id`'s WORN CHEST GIVES ON F (S4, B8): its item's `worn_ability` while it is still in their bag; 0
+/// for none (no chest, a chest that gives none, one gone from the bag).
+fn worn_ability_of(ctx: &ReducerContext, entity_id: u64) -> u32 {
+    let Some(w) = ctx.db.worn().entity_id().find(entity_id).filter(|w| w.chest_row != 0) else { return 0 };
+    ctx.db.inventory_item().id().find(w.chest_row).filter(|r| r.owner_entity_id == entity_id && r.qty > 0)
+        .and_then(|r| rules::item(r.item_def_id)).filter(|i| i.armor_slot == "chest").map_or(0, |i| i.worn_ability)
 }
 
 /// What a hit on `target` keeps of its damage through its Defense (`rules::defense_mult`, K the hot rule `regents.defense_k`).

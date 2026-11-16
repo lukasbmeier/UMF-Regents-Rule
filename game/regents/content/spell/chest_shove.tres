@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/chest_shove.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 3
+cost = 0.0
+cast_ms = 0
+angle_deg = 80.0
+push_mps = 9.0
+status_ms = 0
+id = 40011
+display_name = "Shove (placeholder)"
+designer_notes = "PLACEHOLDER (S4, the chest's ability on F; GAME.md B8): the metal chest's ability until Luke's, built from an existing atom only (a cone, as Gale's). Its name, numbers and what it does are his to rewrite. Within 2.5 m and 80 degrees in front: a little hurt, thrown back, and its poise worn as by a last hit."

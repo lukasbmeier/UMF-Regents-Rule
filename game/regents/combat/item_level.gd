@@ -66,6 +66,25 @@ static func bar(k: KitDef, picks: Array[int]) -> Array[AbilityDef]:
 	return out
 
 
+## WHETHER `a` IS A CHEST'S ABILITY (S4, Luke's B5, B8; the server's `is_worn_ability`): one some piece of armor gives on F
+## while worn. It is used from the worn chest, whatever is wielded, and never from a weapon's kit.
+static func is_worn_ability(a: AbilityDef) -> bool:
+	if a == null:
+		return false
+	for d: ContentDef in RegentsContent.items(&"item"):
+		var it: ItemDef = d as ItemDef
+		if it != null and it.worn_ability != null and it.worn_ability.id == a.id:
+			return true
+	return false
+
+
+## THE ABILITY A CHEST GIVES ON F (S4): item `chest_item`'s (a worn row's `chest_item`), or null (none worn, or one that
+## gives none: F is free, B7).
+static func worn_ability_of(chest_item: int) -> AbilityDef:
+	var it: ItemDef = ItemDef.by_id(chest_item) if chest_item > 0 else null
+	return it.worn_ability if it != null and it.armor_slot == &"chest" else null
+
+
 ## Whether kit `k` has an ult of its own (a skill on `SLOT_ULT`). Until it does, its LAST PICK (R) takes the option E did
 ## not (Luke, 2026-11-14: "fix the R ability not being assigned"; the server's `has_ults`).
 static func has_ults(k: KitDef) -> bool:

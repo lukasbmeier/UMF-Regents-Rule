@@ -306,6 +306,7 @@ static func model_for(c: CombatComponent, sk: SkillingComponent, health: SpaceTi
 	var picks: Array[int] = c.item_picks()
 	var use: int = RegentsItemLevel.usable(RegentsItemLevel.level(k, xp), mastery)
 	var on_bar: Array[AbilityDef] = RegentsItemLevel.bar(k, picks)
+	on_bar[RegentsItemLevel.F] = c.chest_ability()   # F IS THE WORN CHEST'S (S4, B5): whatever is wielded
 	var open: Array[Dictionary] = RegentsItemLevel.open_picks(k, use, picks)
 	m["weapon"] = {"state": RegentsAbilitySlot.READY, "icon": c.weapon.icon() if c.weapon != null else null,
 		"glyph": c.weapon.display_name.left(1) if c.weapon != null else "?", "tip": moves_words(c, sk) + "
@@ -321,7 +322,7 @@ Click it (the cursor free, say with the bag open) for its abilities."}
 			"glyph": a.display_name.left(1), "mark": mark_of(a, k), "icon": a.icon(), "ability_id": a.id, "left": 0.0, "total": 0.0,
 			"note": "", "count": -1, "state": RegentsAbilitySlot.READY}
 		var words: String = ability_words(a, k)
-		var why: String = RegentsItemLevel.slot_refusal(k, a, use, picks)
+		var why: String = "" if i == RegentsItemLevel.F else RegentsItemLevel.slot_refusal(k, a, use, picks)
 		if not why.is_empty():
 			d["state"] = RegentsAbilitySlot.LOCKED
 			d["note"] = "lvl %d" % RegentsItemLevel.opens_at(k, i)
@@ -334,7 +335,7 @@ Click it (the cursor free, say with the bag open) for its abilities."}
 			d["state"] = RegentsAbilitySlot.COOLING
 			d["left"] = left
 			d["total"] = maxf(c.cooldown_total(a), left)
-		elif pool != null and k.resource != null:
+		elif pool != null and k.resource != null and i != RegentsItemLevel.F:
 			var spell: SpellDef = SpellDef.by_ability(a.id)
 			var cost: float = spell.cost * HotRules.number(&"regents.mana_cost_pct") / 100.0 if spell != null else 0.0
 			if cost > 0.0 and not pool.can_pay(k.resource.id, cost):
@@ -398,7 +399,7 @@ static func _unfilled_slot(i: int, c: CombatComponent, use: int, open: Array[Dic
 static func _empty_slot(i: int, c: CombatComponent) -> Dictionary:
 	var tip: String
 	if i == 3:
-		tip = "Empty.  The chest you wear will put its own ability here (armor comes later)."
+		tip = "Empty.  A chest you wear may put its own ability here: a robe, a jerkin or a cuirass each gives one."
 	elif c == null or c.kit == null:
 		tip = "Empty.  Wield a weapon: its abilities go here."
 	else:
@@ -433,7 +434,7 @@ static func level_words(c: CombatComponent, mastery: int) -> String:
 
 ## The mark drawn for `a` until it has an icon (`RegentsAbilitySlot.draw_mark`): by how it lands.
 static func mark_of(a: AbilityDef, k: KitDef) -> String:
-	var spell: SpellDef = SpellDef.by_ability(a.id) if k != null and k.casts() else null
+	var spell: SpellDef = SpellDef.by_ability(a.id) if (k != null and k.casts()) or RegentsItemLevel.is_worn_ability(a) else null
 	if spell != null:
 		return ["bolt", "area", "blink", "cone"][spell.kind]
 	return "lunge" if a.lunges else "strike"
@@ -442,7 +443,7 @@ static func mark_of(a: AbilityDef, k: KitDef) -> String:
 ## WHAT AN ABILITY DOES, in the player's words, from its numbers (no role or mechanic names).
 static func ability_words(a: AbilityDef, k: KitDef) -> String:
 	var lines: PackedStringArray = PackedStringArray()
-	var spell: SpellDef = SpellDef.by_ability(a.id) if k != null and k.casts() else null
+	var spell: SpellDef = SpellDef.by_ability(a.id) if (k != null and k.casts()) or RegentsItemLevel.is_worn_ability(a) else null
 	if spell != null:
 		var dmg: String = "%d damage" % roundi(a.damage)
 		match spell.kind:

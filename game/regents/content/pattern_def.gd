@@ -39,6 +39,8 @@ class_name PatternDef extends ContentDef
 ## THE PARTS THAT WILL CARRY ARMOR TRAITS (ARMOR_PREP.md A4, open: which, and their traits, are Luke's). The structure only:
 ## three names a piece; NONE offers a trait yet (an armor cell offers no part's trait: the server's `offered_for`).
 @export var trait_parts: PackedStringArray = PackedStringArray()
+## THE ABILITY ITS CELLS GIVE ON F while worn (a chest's: B8). One a family for now (nothing to pick at crafting yet).
+@export var worn_ability: AbilityDef
 @export_group("The recipe")
 ## The station it is made at ("furnace", "anvil", "workbench").
 @export var station: StringName = &"workbench"
@@ -166,6 +168,8 @@ func validate() -> Array[String]:
 		out.append("its cells are worn in \"%s\", which is no slot: head, chest, legs or trinket" % armor_slot)
 	if armor_slot != &"" and (defense_share <= 0 or max_stack != 1 or weapon_kit != &"" or tool_tag != &""):
 		out.append("armor has a share of Defense, does not stack, and is no weapon or tool")
+	if worn_ability != null and armor_slot != &"chest":
+		out.append("only a chest gives an ability on F: clear `worn_ability`")
 	if armor_slot == &"" and (defense_share > 0 or not trait_parts.is_empty()):
 		out.append("it has a share of Defense or trait parts but is worn nowhere: set `armor_slot`")
 	if carries_trait and part_tag == &"":

@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_slot"]
 [ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="5_pat"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/blink.tres" id="9_worn"]
 
 [sub_resource type="Resource" id="Slot_core"]
 script = ExtResource("2_slot")
@@ -19,6 +20,7 @@ family = 3
 max_stack = 1
 armor_slot = &"chest"
 defense_share = 5
+worn_ability = ExtResource("9_worn")
 trait_parts = PackedStringArray("lining", "straps", "fittings")
 station = &"workbench"
 skill = ExtResource("6_skill")
