@@ -1342,6 +1342,11 @@ assert_ok "grant_item $MYENT 40020 1" "an admin gives a yew bow"
 assert_ok "grant_item $MYENT 40022 3" "and three copper arrows"
 BOW_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40020" 1)"
 assert_ok "wield $BOW_ROW" "wield the bow"
+# THE BOW'S PLACEHOLDER POOL (armor run P1): its skills are judged sweeps ahead, gated by the item as every weapon's are.
+assert_eq "$(row_count 'SELECT * FROM ability_def WHERE ability_id = 40043 OR ability_id = 40044 OR ability_id = 40047')" "3" "the bow's Q, an E option and its ult are published abilities"
+assert_rejected "use_ability_seen 40044 0 $C_AIM 9601 100" "not chosen" "NEGATIVE: a new bow's E option (Pinning Shot), not picked: refused"
+assert_rejected "use_ability_seen 40047 0 $C_AIM 9602 100" "not chosen" "NEGATIVE: its ult (Arrow Volley), not picked: refused"
+assert_rejected "use_ability_seen 40035 0 $C_AIM 9603 100" "that is a sword move" "NEGATIVE: a sword's option with a bow in hand: refused"
 assert_rejected "loose_arrow 0 {\"x\":0.0,\"y\":0.0,\"z\":-1.0}" "draw first" "a loose with no draw is refused"
 SKB="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "stand ten meters from skeleton_1"
@@ -1494,13 +1499,14 @@ assert_rejected "change_pick 0 $STAFF_ROW 0 40014" "at a workbench" "NEGATIVE: t
 assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "back at the workbench"
 assert_ok "change_pick $BENCH $STAFF_ROW 0 40014" "Frost Ring again, paid"
 assert_eq "$(qty_of $YEW)" "6" "for 8: doubled again (2, 4, 8)"
-# R (Luke, 2026-11-14: "fix the R ability not being assigned"): the staff has no ult of its own yet, so its last pick, at
-# level 20, takes the spell E did not.
+# R: the staff has an ult of its own now (armor run P1: Meteor, a placeholder, 40048), so its last pick, at level 20,
+# takes it and never the spell E did not (step 76's rule holds only for a kit with no ult: the unit twin's `no_ult` case).
 assert_ok "admin_set_rank $MYENT 40009 20" "(test) Sorcery 20"
-assert_rejected "choose_pick $STAFF_ROW 2 40014" "another pick" "NEGATIVE: R cannot take Frost Ring, E has it"
+assert_rejected "choose_pick $STAFF_ROW 2 40016" "last picks" "NEGATIVE: with an ult, R no longer takes Gale (the option E left)"
+assert_rejected "choose_pick $STAFF_ROW 2 40014" "last picks" "NEGATIVE: nor Frost Ring"
 assert_rejected "choose_pick $STAFF_ROW 2 40013" "last picks" "NEGATIVE: nor Fireball, the base"
-assert_ok "choose_pick $STAFF_ROW 2 40016" "level 20: R takes Gale"
-check "$(IDATA "$STAFF_ROW" | tr -d '\' | grep -q '"k":\[40014,0,40016\]' && echo true || echo false)" "Frost Ring on E, Gale on R, on the item"
+assert_ok "choose_pick $STAFF_ROW 2 40048" "level 20: R takes the staff's ult, Meteor (placeholder)"
+check "$(IDATA "$STAFF_ROW" | tr -d '\' | grep -q '"k":\[40014,0,40048\]' && echo true || echo false)" "Frost Ring on E, Meteor on R, on the item"
 assert_ok "admin_set_rank $MYENT 40009 12" "(test) Sorcery 12 again"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "back eight meters south of skeleton_2"
 assert_ok "admin_set_item_level $MYENT $STAFF_ROW 5" "(test) the staff back at level 5"
@@ -1636,8 +1642,9 @@ read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE e
 check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight meters east, at once ($BX, $BZ)"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five meters south of skeleton_2"
 # GALE ON E: a second staff, its first pick Gale (an item's picks are its own: two staves, two builds; the first staff
-# has Gale on R, shut below its level 20).
-assert_rejected "cast_spell 40016 0 $NORTH $NONE" "opens at the weapon's level 20" "NEGATIVE: Gale on R of a staff below level 20: shut"
+# has Meteor on R, shut below its level 20, and no Gale at all).
+assert_rejected "cast_spell 40048 0 $NORTH $NONE" "opens at the weapon's level 20" "NEGATIVE: Meteor on R of a staff below level 20: shut"
+assert_rejected "cast_spell 40016 0 $NORTH $NONE" "not chosen" "NEGATIVE: Gale, chosen on no pick of this staff"
 assert_ok "grant_item $MYENT 40023 1" "an admin gives a second yew staff"
 STAFF2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40023 AND id <> $STAFF_ROW" 1)"
 assert_ok "admin_set_item_level $MYENT $STAFF2 5" "(test) at level 5"

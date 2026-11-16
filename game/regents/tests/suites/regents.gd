@@ -326,8 +326,8 @@ func _run_combat() -> void:
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var axe: KitDef = KitDef.by_key(&"axe")
 	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
-	_check(sword.light.size() == 3 and sword.skills.size() == 1 and sword.rank_for(0) == 1 and sword.rank_for(1) == 8,
-		"the sword: a string of three, Lunge on Q at rank 1 (E would be 8, the old 3)")
+	_check(sword.light.size() == 3 and sword.skills.size() == 5 and sword.skills[0].display_name == "Lunge" and sword.slot_of_skill(0) == KitDef.SLOT_BASE,
+		"the sword: a string of three, Lunge on Q, then its pool (armor run P1: three options and an ult, placeholders)")
 	# THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the last step, a little heavier and slower each.
 	_check(sword.is_finisher(sword.light[2]) and not sword.is_finisher(sword.light[1]) and axe.light.size() == 2 and axe.is_finisher(axe.light[1]),
 		"the finisher is the string's last step: the sword's third, the axe's second")
@@ -420,7 +420,7 @@ func _run_staff() -> void:
 	for a: AbilityDef in staff.light + staff.skills:
 		var sp: SpellDef = SpellDef.by_ability(a.id)
 		names.append("%s %s" % [a.display_name, ["bolt", "area", "blink", "cone"][sp.kind] if sp != null else "NONE"])
-	_check(" / ".join(names) == "Bolt bolt / Fireball bolt / Frost Ring area / Blink blink / Gale cone", "its spells: %s" % " / ".join(names))
+	_check(" / ".join(names) == "Bolt bolt / Fireball bolt / Frost Ring area / Blink blink / Gale cone / Meteor (placeholder) area", "its spells: %s" % " / ".join(names))
 	var aset: AnimationSet = staff.timing_set
 	for a: AbilityDef in staff.light + staff.skills:
 		_check(aset.has_exact(StringName("ability.%d" % a.id)) and staff.lock_ms(a) > 0, "%s has its clip (%s)" % [a.display_name, aset.clip(StringName("ability.%d" % a.id)).anim_name])

@@ -480,5 +480,12 @@ clips = Dictionary[StringName, ExtResource("1_qscmp")]({
 &"recover.40026": SubResource("Clip_rec_40026"),
 &"recover.40030": SubResource("Clip_rec_40030"),
 &"recover.40032": SubResource("Clip_rec_40032"),
-&"recover.40033": SubResource("Clip_rec_40033")
+&"recover.40033": SubResource("Clip_rec_40033"),
+&"recover.40035": SubResource("Clip_rec_40002"),
+&"recover.40036": SubResource("Clip_rec_40023"),
+&"recover.40037": SubResource("Clip_rec_40022"),
+&"recover.40038": SubResource("Clip_rec_40009"),
+&"recover.40039": SubResource("Clip_rec_40006"),
+&"recover.40040": SubResource("Clip_rec_40008"),
+&"recover.40042": SubResource("Clip_rec_40009")
 })
