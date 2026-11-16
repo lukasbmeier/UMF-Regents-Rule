@@ -151,21 +151,21 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 ## 7. The ledger (the master updates it at every start, merge and token change)
 | Id | Session | Branch | State | Step | Merge commit | Tokens held |
 |---|---|---|---|---|---|---|
-| M1 | town session | claude/medieval-village-worldbuilding-dd942b | DONE (on main) | 85 (extended) | 34bedf9d, 9064c56b | |
-| M2 | master | — | to do | | | |
-| T1 | | | to do | | | |
-| S1 | | | to do | | | |
+| M1 | town session | (deleted) | DONE: worktree and branch removed 2026-11-15 (an empty locked folder `.claude/worktrees/medieval-...` is left: delete by hand) | 85 (extended) | 34bedf9d, 9064c56b | |
+| M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
+| T1 | (not started) | | BLOCKED: the app asks Luke to TRUST the `UMF Template` repository before a session may start there | | | |
+| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all | running | | | |
 | S2 | | | waiting S1 | | | |
 | S3 | | | waiting S2 | | | |
 | S4 | | | waiting S3, P1 | | | ui/ |
-| P1 | | | to do | | | |
+| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | running | | | |
 | W1 | | | waiting T1? | | | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |
-| E1 | | | to do | | | |
-| E2 | | | to do | | | |
-| E3 | | | to do | | | |
+| E1 | e1-effects-scale (local_e7199708) | e1-effects-scale | running | | | |
+| E2 | e2-binding-warnings (local_ee2e2534) | e2-binding-warnings | running | | | |
+| E3 | e3-towns-bake (local_4afd208b) | e3-towns-bake | running | | | |
 | M3 | master | — | waiting T1 | | | |
 | M9 | master | — | waiting all | | | |
 
