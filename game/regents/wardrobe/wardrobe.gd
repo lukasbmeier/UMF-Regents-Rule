@@ -173,6 +173,54 @@ static func dress(model: Node, palette: DyePalette, show_zones: bool = false) ->
 	return count
 
 
+## DRESSED IN THE GAME (W1, before 300 players): every outfit surface under `model` in the palette `palette_of`
+## gives its outfit (`func(outfit: String) -> DyePalette`; null leaves that outfit's surfaces as the foundation
+## dressed them). The materials are SHARED: one per outfit and palette for every body in those colors (a palette's
+## `share_key` meta, else the object itself), never re-tinted after it is made (the lab's `dress` re-tints its own).
+## Returns how many surfaces wear the dye.
+static func dress_shared(model: Node, palette_of: Callable) -> int:
+	var count: int = 0
+	for n: Node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = n as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for i: int in range(mi.mesh.get_surface_count()):
+			var src: StandardMaterial3D = mi.mesh.surface_get_material(i) as StandardMaterial3D
+			var outfit: String = outfit_of(src)
+			if outfit.is_empty():
+				continue
+			var palette: DyePalette = palette_of.call(outfit) as DyePalette
+			if palette == null:
+				continue
+			mi.set_surface_override_material(i, shared_material(src, outfit, palette))
+			count += 1
+	return count
+
+
+## The one dye material for `outfit` (on `src`'s textures) in `palette`, made once and shared.
+static func shared_material(src: StandardMaterial3D, outfit: String, palette: DyePalette) -> ShaderMaterial:
+	# By the outfit's TEXTURE, not its material: every piece's glTF carries its own copy of the same material, and
+	# both bodies paint from the one texture, so one material serves every piece of an outfit on every body.
+	var tex: Texture2D = src.albedo_texture
+	var key: String = "%s|%s|%s" % [outfit, tex.resource_path if tex != null and not tex.resource_path.is_empty() else str(src.get_instance_id()),
+		String(palette.get_meta(&"share_key", str(palette.get_instance_id())))]
+	var mat: ShaderMaterial = _shared.get(key, null) as ShaderMaterial
+	if mat == null:
+		mat = material_for(src, outfit)
+		mat.set_shader_parameter(&"show_zones", false)
+		palette.apply_to(mat)
+		_shared[key] = mat
+	return mat
+
+
+## How many shared dye materials exist (tests, and the load test's count).
+static func shared_count() -> int:
+	return _shared.size()
+
+
+static var _shared: Dictionary[String, ShaderMaterial] = {}
+
+
 ## A fresh dye material for one outfit, on the textures its imported material `src` uses.
 static func material_for(src: StandardMaterial3D, outfit: String) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
