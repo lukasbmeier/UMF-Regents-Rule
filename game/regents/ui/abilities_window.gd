@@ -69,7 +69,7 @@ func refresh() -> void:
 	for o: Dictionary in RegentsItemLevel.open_picks(kit, use, picks):
 		_pick_row(st, kit, o)
 	_change_rows(st, it, kit, int(p["level"]), use, picks)
-	var foot: Label = UiKit.note("Q comes with the weapon; E and R are its picks, its own (another weapon, another build); F is the chest's (a staff's Blink stands in until chests carry abilities).")
+	var foot: Label = UiKit.note("Q comes with the weapon; E and R are its picks, its own (another weapon, another build); F comes from the chest you wear.")
 	foot.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	foot.custom_minimum_size = Vector2(430, 0)
 	content.add_child(foot)

@@ -35,6 +35,9 @@ paths:
 - A WEAPON KIT'S SKILLS ARE A POOL (PROGRESS 91): `skill_slots`: one base, options, ults; more than four allowed; with
   an ult the last pick takes only the ult. Every placeholder ability is named `... (placeholder)` and says
   PLACEHOLDER in its `designer_notes`. Ability ids to 40048 and spell 40009 are taken.
+- EACH HANDLE ITS OWN SET (PROGRESS 100): a role claims its skills (`KitRole.skills`); the gates and the bar read the
+  item's role's view (`KitDef.for_role` / `KitSeed::in_pool`); a stored pick outside it reads as empty (free to choose
+  again). A new role's set is content: claim the skills, give each a slot. Ability ids to 40057 are taken.
 - Items: three grades; Power is the number; a trait changes how an item plays and never its Power,
   and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6). Materials and modular gear:
   `docs/regents_rule/MATERIALS.md` (2026-10-23; crafted items hold Common 1 / Fine 2 / MW 3 traits, picked).

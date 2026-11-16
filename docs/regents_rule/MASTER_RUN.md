@@ -157,7 +157,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
 | T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | claude/t1-wear-hook-69d351 (template) | MERGED into the template's main 2026-11-16 (`9b2e4aa`: #313 wear + assembled, #315 NPCs bind), SHIPPED in 1.8.3 | — | template 4437fa4 | |
 | S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | MERGED 2026-11-16 | 89 | c94bdc92 | |
-| S1b | the Lane S session (local_2bb14966), reused | claude/s1b-role-pools | running since 2026-11-16 (also the workbench look's early-out) | | | `combat_component.gd`; three named functions in `ui/` |
+| S1b | the Lane S session (local_2bb14966), reused | claude/s1b-role-pools | MERGED 2026-11-16 | 100 | 7e5de58a | |
 | S2 | the S1 session (local_2bb14966), reused | claude/s2-armor-core | MERGED 2026-11-16 | 92 | 8171e4a2 | |
 | S3 | the Lane S session (local_2bb14966), reused | claude/s3-armor-pieces | MERGED 2026-11-16 | 94 | cf78f9ea | |
 | S4 | the Lane S session (local_2bb14966), reused | claude/s4-chest-ability | MERGED 2026-11-16 | 97 | 04e9bf76 | |

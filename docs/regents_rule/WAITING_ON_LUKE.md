@@ -20,7 +20,8 @@ One line each: the question, today's value or the proposal, where it is written.
 - Which other abilities hit every foe in their sweep (only Cleave is marked; `hits_all` on the ability's .tres; PROGRESS 89).
 - YOUR STAFF: the staff now has a placeholder ult (Meteor) on R, so a staff that took Gale or Frost Ring on R keeps the pick but it no longer fires: change the pick to Meteor (free once a week), or say the staff should have no ult until yours is designed.
 - The second pick (~12) has nothing to take once E holds an option: upgrades are not built (B6).
-- Per-role pools (each handle its own Q and options) wait on server work (S1b); today each weapon kind has ONE pool.
+- Per-role sets are in for the SWORD (step 100). The axe and the bow keep one set each: no shaped handle gives them a role yet (your "the axe has none yet").
+- Picks taken from the old one sword pool that the handle's own set does not hold read as EMPTY and are free to choose again.
 - A respec's cost once testing is over; the 99 curve and its hours (before the public demo, with a wipe).
 
 **Armor** (`ARMOR_PREP.md` §0; this run builds it with placeholders, §2 below)
@@ -73,7 +74,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - ARMOR'S RECIPES: plates 2 bars; armet 1, cuirass 3, legplates 2 plates + copper rivets; leather 1 / 3 / 2; linen robe 4, trousers 3 flax; their XP (`content/recipe/`, made by the table).
 - THE CLOTH UNDER METAL: the scarf and padding keep the Knight's first colorway (gray, a red scarf) at every bar: `game/regents/wardrobe/palettes/metal_1_copper|2_iron|3_steel.tres`. Pick it per tier, or one for all.
 - THE CHEST ABILITIES: leather's Snare (placeholder) and metal's Shove (placeholder): what each does and its numbers: `game/regents/content/ability/chest_*.tres`, `content/spell/chest_*.tres`.
-(more as each item merges)
+- THE SWORD'S HANDLE SETS, stand-ins: crossguard Q Shield Bash, options Charge, Hold the Line, ult Bulwark; banner Q Swipe, options Shoulder Check, Banner Sweep, ult Banner Storm; the plain grip keeps Lunge, Flurry, Hamstring Cut, Execute: `game/regents/content/ability/sword_*.tres` (40051-40057 new), claimed per role in `content/kit/sword.tres`. The draft's real mechanics (a mend by a share, a taunt, a guard window) are only imitated.
 
 ## 3. To play and look at
 - The effects in play: staff, sword, axe, the imp, the skeletons; two instances for another player's Gale and its pose.
@@ -81,6 +82,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
 - Step 99, THE FIRST THING TO PLAY: `admin_give_item <you> 40075 1 500` (an iron cuirass), I: the doll at the top; pick the cuirass, read its words ("Wearing it, you'd take N% less, now M%"), Wear; click it on the doll to take it off; in a fight Wear is refused with its reason.
+- Step 100: re-hilt a sword at the workbench (crossguard or banner grip): its Q is that handle's, its picks at 5, 12, 20 that handle's set only.
 - Step 97: `admin_give_item <you> 40087 1 0` (a linen robe), `wear <row>` out of a fight, F: Blink. A soft leather jerkin (40082): Snare; an iron cuirass (40075): Shove. With a staff and no robe, F is empty.
 - Step 96, two instances: wear an iron cuirass (40075), a copper armet, leather trousers: each sees the other's armor; steel's pauldrons are spiked; a helm hides the hair. `figure_shot.tscn` shows every tier on both bodies.
 - Step 94: craft iron plates at the anvil (two iron bars, a shape round), the Iron cuirass at the workbench (three plates, two copper rivets), or `admin_give_item <you> 40075 1 0`; `wear <row>` out of a fight (no doll yet). The workbench lists them under Armor.
