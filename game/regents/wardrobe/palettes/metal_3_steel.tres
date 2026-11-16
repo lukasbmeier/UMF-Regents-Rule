@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DyePalette" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/wardrobe/metals/3_steel.tres" id="1_u41ot"]
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="2_s21ad"]
+
+[resource]
+script = ExtResource("2_s21ad")
+title = "Metal 3 (steel)"
+note = "Metal armor of steel: the bar's finish (metals/3_steel.tres). PLACEHOLDER: the scarf and padding keep the Knight's first colorway until Luke picks the cloth under metal."
+metal = ExtResource("1_u41ot")
+main = Color(0.6482, 0.6162, 0.6285, 1)
+accent = Color(0.4642, 0.1367, 0.1292, 1)
+trim = Color(0.6862, 0.4288, 0.015, 1)
+leather = Color(0.3691, 0.2573, 0.181, 1)
+under = Color(0.104, 0.0988, 0.0932, 1)

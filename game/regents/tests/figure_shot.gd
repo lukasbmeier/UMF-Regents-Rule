@@ -3,7 +3,9 @@ extends Node3D
 ##   "$GODOT" --path . res://game/regents/tests/figure_shot.tscn -- <out dir>
 ## Saves `figures.png` (four players side by side: the Peasant as painted from an old text, then three in colors of
 ## their own, one in a Knight's torso over them, as W2 will wear armor) and `picker.png` (the character picker on the
-## adventurer: Peasant looks only, hair, beard, brows and skin), then quits.
+## adventurer: Peasant looks only, hair, beard, brows and skin, the five colors), then `armor_male.png` and
+## `armor_female.png` (W2: a Peasant, then every armor family in every tier as `armor_looks.tres` dresses it: copper,
+## iron, steel; soft and supple leather; linen), then quits.
 
 const LOOKS: Array[Array] = [
 	["res://game/regents/looks/peasant_m.tscn", "peasant_m;hair=3"],
@@ -78,4 +80,42 @@ func _ready() -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(dir.path_join("picker.png"))
 	print("saved ", dir.path_join("picker.png"), " look: ", picker.current())
+	picker.close()
+	layer.visible = false
+	for body: String in ["male", "female"]:
+		await _armor_row(dir, body)
 	AppExit.quit(get_tree(), 0)
+
+
+## Every armor set in every tier on `body`, beside a Peasant: `armor_<body>.png`.
+func _armor_row(dir: String, body: String) -> void:
+	var sets: Array[Array] = [
+		[], ["copper_armet", "copper_cuirass", "copper_legplates"], ["iron_armet", "iron_cuirass", "iron_legplates"],
+		["steel_armet", "steel_cuirass", "steel_legplates"], ["soft_leather_hood", "soft_leather_jerkin", "soft_leather_trousers"],
+		["supple_leather_hood", "supple_leather_jerkin", "supple_leather_trousers"], ["linen_robe", "linen_trousers"]]
+	var row: Array[Node] = []
+	var look: String = "res://game/regents/looks/peasant_%s.tscn" % ("m" if body == "male" else "f")
+	for i: int in sets.size():
+		var f: RegentsFigure = (load(look) as PackedScene).instantiate() as RegentsFigure
+		f.apply_appearance(RegentsColors.with_colors("peasant_%s" % ("m" if body == "male" else "f"), {&"main": Color8(74, 106, 142)}))
+		f.position = Vector3((float(i) - 3.0) * 1.15, 0, 0)
+		add_child(f)
+		var ids: Array[int] = []
+		for item: String in sets[i]:
+			ids.append((load("res://game/regents/content/item/%s.tres" % item) as ItemDef).id)
+		var got: Array = ArmorLooks.current().dress_for(ids, f.body)
+		var pieces: Dictionary[StringName, PackedScene] = got[0]
+		var palettes: Dictionary[String, DyePalette] = got[1]
+		f.wear_armor(pieces, palettes)
+		row.append(f)
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	cam.position = Vector3(0, 1.25, 6.6)
+	cam.look_at(Vector3(0, 0.95, 0))
+	for i: int in 30:
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var file: String = dir.path_join("armor_%s.png" % body)
+	get_viewport().get_texture().get_image().save_png(file)
+	print("saved ", file)
+	for n: Node in row:
+		n.queue_free()
