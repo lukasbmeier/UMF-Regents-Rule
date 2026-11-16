@@ -335,6 +335,10 @@ class WornRow extends RefCounted:
 	var chest_item: int = 0
 	var legs_item: int = 0
 	var trinket_item: int = 0
+	var head_row: int = 0
+	var chest_row: int = 0
+	var legs_row: int = 0
+	var trinket_row: int = 0
 
 
 func _worn(head: int, chest: int, legs: int) -> WornRow:

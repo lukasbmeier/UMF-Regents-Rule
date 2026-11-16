@@ -7,9 +7,16 @@ class_name ArmorLookComponent extends SpaceTimeComponent
 ## Presentation only (hard rule 11): it shows the row and decides nothing. A referee draws nothing.
 
 const TABLE_WORN: StringName = &"worn"
+## The slots, as the server names them (`take_off`), and each one's columns on the row.
+const SLOTS: Array[StringName] = [&"head", &"chest", &"legs", &"trinket"]
+
+## The worn row changed (the bag's doll draws from it): low frequency, this entity's own.
+signal worn_changed()
 
 ## The items worn now, in the row's order (head, legs, chest, trinket), copied out of the row (rule 6).
 var items: Array[int] = [0, 0, 0, 0]
+## The bag row worn in each slot (`SLOTS` order), copied out of the row: 0 for nothing.
+var rows: Dictionary[StringName, int] = {&"head": 0, &"chest": 0, &"legs": 0, &"trinket": 0}
 ## The body dressed last (kept as a Variant: checked before each use); a new model is dressed again.
 var _figure: Variant = null
 
@@ -26,14 +33,23 @@ func _on_row_updated(table: StringName, _old: RefCounted, new: RefCounted) -> vo
 	if table != TABLE_WORN:
 		return
 	var now: Array[int] = [0, 0, 0, 0]
+	var now_rows: Dictionary[StringName, int] = {&"head": 0, &"chest": 0, &"legs": 0, &"trinket": 0}
 	if new != null:
 		for i: int in ArmorLooks.SLOT_COLUMNS.size():
 			now[i] = int(new.get(ArmorLooks.SLOT_COLUMNS[i]))
+		for slot: StringName in SLOTS:
+			var r: Variant = new.get(StringName("%s_row" % slot))
+			now_rows[slot] = int(r) if r != null else 0
+	var rows_changed: bool = now_rows != rows
+	rows = now_rows
 	if now == items:
+		if rows_changed:
+			worn_changed.emit()
 		return
 	items = now
 	if is_bound():
 		dress()
+	worn_changed.emit()
 
 
 func _on_bound() -> void:
@@ -47,6 +63,22 @@ func _on_bound() -> void:
 func _process(_delta: float) -> void:
 	if not is_instance_valid(_figure) and is_bound() and figure() != null:
 		dress()
+
+
+## WEAR bag row `row` (this client's own player; the bag's doll): the server checks and answers; what is worn shows
+## when the `worn` row comes back, never from this call.
+func wear(row: int) -> ReducerRequest:
+	return SpaceTimeSync.call_reducer(&"wear", [row], ["u64"])
+
+
+## TAKE OFF what is worn in `slot` (head, chest, legs, trinket).
+func take_off(slot: StringName) -> ReducerRequest:
+	return SpaceTimeSync.call_reducer(&"take_off", [String(slot)], ["string"])
+
+
+## The bag row worn in `slot` (0: nothing).
+func row_in(slot: StringName) -> int:
+	return int(rows.get(slot, 0))
 
 
 ## Put `items` on the body now. Whether there was a body to dress.
