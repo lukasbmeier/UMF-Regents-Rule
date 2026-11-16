@@ -130,6 +130,10 @@ paths:
   Blink, the parry) by `AbilityVfx` from the table `vfx/ability_vfx.tres` (another player's instant spell from the
   server's `spell_landed` row, while fresh: PROGRESS 83; a change to it runs `spells_seen_playtest.sh`): a new ability gets a row there or is drawn by
   one of those three (the `regents_vfx` coverage check fails one drawn by none).
+- ANOTHER PLAYER'S EFFECT IS THE LIGHTER VERSION (PROGRESS 88): `VfxEffect.lighter` (half the particles, no light, no
+  shake; `AbilityVfx.lighter_for`), yours and a foe's whole: a new place that spawns an effect for a fighter sets it.
+  A ring's pieces are one MultiMesh (`instanced` in the energy shader): a new piece-heavy effect does the same. The
+  game's camera shakes from `shook` through `VfxCameraShake` (installed by the local player's `AbilityVfx`).
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

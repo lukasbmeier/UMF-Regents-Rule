@@ -8,6 +8,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The archer's and the imp's numbers (F16: the sheet's as a start); the lead's share of a shot (`FOES_PREP.md` §6).
 - `regents.string_chase_ms`, `regents.roll_late_ms` 50: the agent's numbers, yours to change (hot rules).
 - The wolf pack's place; others' aim held a moment after a spell lands ("maybe").
+- Others' effects: always the lighter version (half the particles, no light), or whole when few players are near? Today: always half (PROGRESS 88).
 - The combat triangle as foe design; single against multi combat zones (`COMBAT_OVERHAUL.md` §8).
 
 **Abilities**
@@ -55,4 +56,6 @@ One line each: the question, today's value or the proposal, where it is written.
 - The effects in play: staff, sword, axe, the imp, the skeletons; two instances for another player's Gale and its pose.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
+- Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 87: walk into the frontier camp: the foes and the Drillmaster move at once.
 (more as each item merges)

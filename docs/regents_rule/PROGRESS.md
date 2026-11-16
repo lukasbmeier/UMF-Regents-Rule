@@ -4816,3 +4816,67 @@ warnings; WITH it 3/0, the same ten in 99-117 ms. Unit whole 4610/0. No server c
 
 **Left for later**: the general fix is the template's (`SessionComponent.optional_tables`, DECISIONS #315, in the
 release M3 ships); once pulled, `npc_session_component.gd` and the two overrides are redundant and may go.
+
+## Step 88: OTHERS' EFFECTS AT SCALE (the lighter version, rings as one MultiMesh, the camera's shake) (2026-11-16, the armor run's E1)
+
+**Built**:
+- `game/regents/vfx/vfx_effect.gd`: THE LIGHTER VERSION. `lighter` / `make_lighter()`: the same effect at
+  `LIGHTER_PARTICLES` (0.5) of each particle system's amount, its own lights out, no camera shake. Works set before
+  it enters the world or called after (once). An effect not lighter connects its `shook` to the game's camera
+  listener if one is there.
+- `game/regents/vfx/ability_vfx.gd`: who gets it. `AbilityVfx.lighter_for(who)`: another PLAYER's effect, seen by
+  this client. Not your own, not a foe's or creature's (a foe's warning must read at a glance), not one with no
+  fighter (the lab, the showcase). `lighter_for_shot(look)` does the same for a missile's end, by its body's owner.
+  `play` sets it on every charge, landing, Blink and parry; the local player's `AbilityVfx` installs the camera listener.
+  (These live on `AbilityVfx`, not `VfxEffect`: naming `CombatComponent` from `VfxEffect` makes a load cycle through
+  SpellLooks' ring scenes.)
+- NEW `game/regents/vfx/vfx_camera_shake.gd` (`VfxCameraShake`): THE CAMERA LISTENING TO `shook`. A child of this
+  client's camera. It shakes as hard as an effect asks within 6 m of your character, fading to nothing by 20 m, and
+  never for a lighter effect. It moves only the picture (`h_offset`/`v_offset`, 0.25 m at strength 1), never the rig
+  or the aim. The lab and the showcase keep their own shakes (no listener there).
+- `game/regents/vfx/effects/ground_ring.gd` + `vfx/shaders/vfx_energy.gdshaderinc`: A RING'S PIECES ARE ONE
+  MULTIMESH (one draw for all 30 shards or flames, instead of 30). Each instance is a unit spike stretched to its size.
+  The energy shader's new `instanced` mode reads each piece's erosion, heat and true size from its custom data. Its
+  normal is undone from the stretch, and its push (`displace`) is made as on a piece that size, so it looks as the
+  separate pieces did (shots below). The layout is the same throw of the same seed. `risen_count()` is for the suites.
+- `game/regents/combat/spell_looks.gd`, `combat/shot_look.gd` (the master's yes): one line each. Another player's
+  ring and fireball blast are lighter.
+- `game/regents/vfx/vfx_lab.gd`: O (or `others` on the command line) plays every showcase as another player's;
+  shots then end `_others.png`. `-- cost` now measures every showcase twice, ours and "(another player's)".
+
+**How to play it**: two instances. On the second, the first player's Frost Ring, fireball blast, Gale, Blink and charges
+show with half the particles and no light; your own stay whole. Your own fireball's blast or ring landing near you
+shakes your camera a little; someone else's never does. VFX lab (F6): O switches to "as another player sees it".
+
+**Tested**:
+- `vfx_lab.tscn -- cost`, BEFORE (b2e27908) -> AFTER (ours) -> AFTER (another player's): draw calls added at most /
+  particles at most / GPU at most over the stage's 0.84 ms:
+  Fireball +14/126/+0.67 -> +14/126/+0.47 -> +14/63/+0.23; Frost Ring +38/70/+0.54 -> +9/70/+0.34 -> +9/35/+0.25;
+  Blink -13/40/+0.37 -> -21/40/+0.48 -> -7/20/+0.15; Gale +10/94/+0.34 -> +10/94/+0.29 -> +10/47/+0.15;
+  Axe Heavy +14/30/+0.38 -> +14/30/+0.34 -> +14/15/+0.16; Sword String +15/30/+0.35 -> +15/30/+0.24 -> +15/15/+0.20;
+  Parry +12/48/+0.32 -> +12/48/+0.22 -> +10/24/+0.13; Cinder Ring +36/112/+0.35 -> +13/112/+0.34 -> +13/56/+0.21.
+  (The GPU times are this machine's and noisy at ±0.1 ms. The rings' draws are the sure win: 38 -> 9 and 36 -> 13.)
+- Shots looked at (windowed, day): Frost Ring and Cinder Ring before and after match: the same shards in the same
+  places, the same shading (particles differ by their own randomness). Fireball and Gale as another player's read as the
+  same effect, thinner, and the fireball's glow on the ground is gone (no light).
+- `regents_vfx` 212/0 (was 179; 33 new checks: one MultiMesh per ring, its drawn pieces the risen ones, others' half
+  particles and no light, made lighter late, the listener near/far/lighter/put back/freed). NEGATIVES: `make_lighter`
+  a no-op and no listener connected: 11 FAIL; the old `ground_ring.gd`: its two MultiMesh checks FAIL (and
+  `risen_count` missing). `regents` + `regents_showcase` 1534/0.
+- `spells_seen_playtest.sh` (under the lock, after `main` was merged in): caster 8/0, watcher 12/0, so another
+  player's Gale is still seen, now as the lighter version. The playtest does not assert lighter-ness itself; the unit
+  suite does.
+
+**Needs on merge**: none (client only; no publish).
+**Placeholders made**: none. (The numbers 0.5 of the particles, shake 6-20 m and 0.25 m are tuning, in constants at the
+top of `vfx_effect.gd` / `vfx_camera_shake.gd`.)
+**For Luke**: should others' effects be lighter still, or as whole as yours when few players are near (a distance or
+count rule)? Today it is always half for another player.
+For the rules/handbook (regents-genre.md, the AN EFFECT rule, add): "ANOTHER PLAYER'S effect is the LIGHTER
+version (`VfxEffect.lighter`: half the particles, no light, no shake; `AbilityVfx.lighter_for`), yours and a foe's
+whole: a new place that spawns an effect for a fighter sets it. A ring's pieces are one MultiMesh (`instanced` in
+the energy shader): a new piece-heavy effect does the same. The game's camera shakes from `shook` through
+`VfxCameraShake` (installed by the local player's `AbilityVfx`)."
+**Left for later**: a missile's riding look (`VfxFireMissile` inside `fireball_look.tscn`) is still whole for others
+(ShotLook builds it before its owner is known; `make_lighter()` can be called on it later). A "camera shake" on/off in
+Settings is foundation work. Other players' swing crescents (`SwingTrail`) are untouched (one ribbon each, cheap).
