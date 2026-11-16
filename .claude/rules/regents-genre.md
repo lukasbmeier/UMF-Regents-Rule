@@ -137,6 +137,9 @@ paths:
 - A SWEEP THAT HITS ALL (PROGRESS 89, template #314): a player's judged sweep marked Hits All (`AbilityDef.hits_all`:
   Cleave) lands on every foe in it, each judged as a single hit; a rallying hit heals once a swing (`rallied`).
   Which abilities hit all is Luke's content call.
+- TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
+  piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
+  (`VillageDressing`), never placed by hand round a house.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

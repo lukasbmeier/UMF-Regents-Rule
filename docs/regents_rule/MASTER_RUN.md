@@ -168,7 +168,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | W4 | | | waiting W2 | | | test DB |
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
-| E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | PARTIAL `591a590a`, HELD for a free slot: the piece cache (world 30.5 s -> 4.2 s), no saved bake (measured: ~80 MB for ~1 s); left: the small props, windowed shots, merge of main | | | |
+| E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | MERGED 2026-11-16 | 90 | cb3a6df2 | |
 | M3 | master | — | DONE 2026-11-16: template 1.8.3 (`4437fa4`: T1 + S1's `resolve_action_all` #314) shipped to all four games; here `aca81080` | | aca81080 | |
 | M9 | master | — | waiting all | | | |
 

@@ -30,6 +30,8 @@ One line each: the question, today's value or the proposal, where it is written.
 - S3 the castle's walls: code-made (proposed), the Ruins pack, or a bought kit. S4 snow, moss, soot: by region or season.
 - S5 houses placed by hand (proposed first) or a builder. S6 free dye on clothes (done for players: W8).
 - S7 interiors: all, or only some. S8 do towns change with play.
+- LODs or impostors for far buildings: allowed (the no-LOD rule is for worn pieces only), none built: wanted?
+- A saved bake of merged buildings: measured, not built (~80 MB of binaries in git to save ~1 s; the cache took the world from 24 s to 4 s): say if you want it anyway.
 - Which roof style where (today: the town hipped, the castle slate bells, the keep turrets); the streets' colors.
 
 **Showcase and login**
@@ -51,13 +53,15 @@ One line each: the question, today's value or the proposal, where it is written.
 - Herbalism dyes for armor's cloth and leather; hats.
 
 ## 2. Placeholders this run made (fill in; each says where)
-(filled in as each item merges)
+- THE VILLAGE'S PROPS: how many houses get vines, a fenced yard, crates, a wagon, the yard's depth; which places wear them (only the town world's village now): `game/regents/town/dressing/village.tres`.
+(more as each item merges)
 
 ## 3. To play and look at
 - The effects in play: staff, sword, axe, the imp, the skeletons; two instances for another player's Gale and its pose.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 90: F6 on `game/regents/town/town_world.tscn` (up in ~4 s now); 2 or 3: the village's fenced yards, vines, crates, a wagon.
 - Step 89: the copper axe at the frontier camp, stand on the line between the two training dummies, Q (Cleave): both lose 12.6.
 - Step 87: walk into the frontier camp: the foes and the Drillmaster move at once.
 (more as each item merges)
