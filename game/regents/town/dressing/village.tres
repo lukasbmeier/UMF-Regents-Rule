@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VillageDressing" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/town/village_dressing.gd" id="1_vd"]
+
+[resource]
+script = ExtResource("1_vd")
+vine_share = 0.25
+fence_share = 0.4
+yard_depth = 4.0
+metal_fence_share = 0.0
+crate_share = 0.35
+wagon_share = 0.12
+placeholder = true

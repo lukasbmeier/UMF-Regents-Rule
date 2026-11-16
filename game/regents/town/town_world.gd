@@ -31,6 +31,8 @@ const STYLES_DIR: String = "res://game/regents/town/styles/"
 ## Each place's first style (a file in `styles/`).
 const FIRST_STYLES: Dictionary[StringName, String] = {&"village": "02_riverside", &"town": "04_hilltown",
 	&"castle": "06_capital"}
+## The village's small props (`VillageDressing`; its shares are placeholders, Luke's).
+const VILLAGE_DRESSING: String = "res://game/regents/town/dressing/village.tres"
 const LIGHTS: PackedStringArray = ["Day", "Dusk", "Night"]
 const HOUSES: Dictionary[String, String] = {"inn": "res://game/regents/town/houses/demo_house_d.tscn",
 	"hall": "res://game/regents/town/houses/demo_house_c.tscn", "row": "res://game/regents/town/houses/demo_houses_a.tscn",
@@ -165,6 +167,8 @@ func _demo(parent: Node3D, key: String, at: Vector3, yaw: float) -> Node3D:
 ## THE VILLAGE: cottages round a green, facing it, the inn (the kit's House D) at its head, a few along the road out.
 func _build_village() -> void:
 	var s: Settlement = _settlement(&"village", VILLAGE, 0.0)
+	# The village kit's small props about its cottages (vines, yards, crates, a wagon): how much is a placeholder.
+	s.dressing = load(VILLAGE_DRESSING) as VillageDressing
 	_door_odds = Vector3(0.35, 0.04, 0.5)
 	var finishes: Array[KitHouse.Finish] = [KitHouse.Finish.WOOD_WEAR, KitHouse.Finish.WOOD_BRICK, KitHouse.Finish.PLASTER,
 		KitHouse.Finish.WOOD_WEAR]
