@@ -11,6 +11,13 @@ class_name CharacterPicker extends CenterContainer
 ## dropped. The picker never knows what a key means: it writes `Appearance` text and hands it to
 ## `apply_appearance` on the preview.
 ##
+## A FREE COLOUR (DECISIONS #316): an option with `"color": true` is not a list but a colour:
+## {key, label, color: true, swatches: [Color...], own: Color}. It shows a colour button (any colour)
+## and a row of the suggested `swatches` under it, and a "Look's own" button that takes the choice off.
+## The value is `Appearance.color_value` (0xRRGGBB + 1; 0 the look's own), so the text, the server and
+## an old client (which ignores a key it does not know) are unchanged. `own` (optional) is the colour
+## the button shows while nothing is chosen. The look reads it with `Appearance.color_of`.
+##
 ## Opened from the connect screen and the Escape menu (boot builds one for each). Done emits
 ## `chosen` with the text; boot remembers it (ConnectSettings) and, connected, tells the server
 ## (`set_appearance`), whose row every client then dresses that player by.
@@ -37,6 +44,8 @@ var _model: Node3D = null
 var _name_label: Label = null
 var _options_box: VBoxContainer = null
 var _drag: bool = false
+## A colour dragged in the colour button: the preview is rebuilt once a frame, not once an event.
+var _model_dirty: bool = false
 
 
 func _init() -> void:
@@ -86,14 +95,23 @@ func step(by: int) -> void:
 	_show_look()
 
 
-## Choose `index` for option `key` (0 = the look's own).
+## Choose `index` for option `key` (0 = the look's own); for a colour option, its
+## `Appearance.color_value`.
 func pick(key: String, index: int) -> void:
 	_picked[key] = index
 	_show_model()
 	_build_options()
 
 
+## A colour for option `key`, `Color` or null for the look's own (the colour row's buttons).
+func pick_color(key: String, c: Variant) -> void:
+	pick(key, Appearance.color_value(c as Color) if c is Color else 0)
+
+
 func _process(delta: float) -> void:
+	if visible and _model_dirty:
+		_model_dirty = false
+		_show_model()
 	if visible and _turntable != null and not _drag:
 		_turntable.rotate_y(deg_to_rad(TURN_DEG_PER_SEC) * delta)
 
@@ -286,6 +304,10 @@ func _build_options() -> void:
 	for o: Variant in options:
 		var opt: Dictionary = o as Dictionary
 		var key: String = String(opt.get("key", ""))
+		if bool(opt.get("color", false)):
+			offered[key] = -1   # a colour: any value Appearance.is_color takes
+			_options_box.add_child(_color_row(key, opt))
+			continue
 		var labels: PackedStringArray = PackedStringArray(opt.get("choices", PackedStringArray()))
 		offered[key] = labels.size()
 		var row: HBoxContainer = rows.get(String(opt.get("beside", "")), null)
@@ -316,12 +338,81 @@ func _build_options() -> void:
 		row.add_child(pick_button)
 	# A choice this model does not offer (a colourway the new piece lacks) is not part of the look.
 	var stale: bool = false
+	# A colour out of range is refused the same way (DECISIONS #316).
 	for key: Variant in _picked.keys():
-		if int(_picked[key]) >= int(offered.get(String(key), 0)) and int(_picked[key]) > 0:
+		var v: int = int(_picked[key])
+		var n: int = int(offered.get(String(key), 0))
+		if v == 0:
+			continue
+		if (n < 0 and not Appearance.is_color(v)) or (n >= 0 and v >= n):
 			_picked.erase(key)
 			stale = true
 	if stale:
 		_show_model()
+
+
+## A colour option's row: its label, the colour button and "Look's own", then the swatches.
+func _color_row(key: String, opt: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "Row_" + key
+	row.add_theme_constant_override(&"separation", 6)
+	var label := Label.new()
+	label.text = String(opt.get("label", key))
+	label.custom_minimum_size = Vector2(84, 0)
+	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(label)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override(&"separation", 4)
+	row.add_child(col)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override(&"separation", 6)
+	col.add_child(top)
+	var value: int = int(_picked.get(key, 0))
+	var swatches: Array = opt.get("swatches", [])
+	var own: Color = opt.get("own", swatches[0] if not swatches.is_empty() else Color(0.5, 0.5, 0.5)) as Color
+	var button := ColorPickerButton.new()
+	button.name = key
+	button.tooltip_text = String(opt.get("label", key))
+	button.edit_alpha = false
+	button.color = Appearance.color_of(value, own)
+	button.custom_minimum_size = Vector2(0, 30)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Dragged: the preview follows (once a frame); closed: the options are asked for again.
+	button.color_changed.connect(func(c: Color) -> void:
+		_picked[key] = Appearance.color_value(c)
+		_model_dirty = true)
+	button.popup_closed.connect(func() -> void: pick_color(key, button.color))
+	top.add_child(button)
+	var reset := Button.new()
+	reset.name = key + "_own"
+	reset.text = "Look's own"
+	reset.disabled = value == 0
+	reset.pressed.connect(func() -> void: pick_color(key, null))
+	top.add_child(reset)
+	if swatches.is_empty():
+		return row
+	var line := HFlowContainer.new()
+	line.name = key + "_swatches"
+	line.add_theme_constant_override(&"h_separation", 4)
+	col.add_child(line)
+	for i: int in range(swatches.size()):
+		var sw: Color = swatches[i] as Color
+		var b := Button.new()
+		b.name = "%s_swatch_%d" % [key, i]
+		b.tooltip_text = "#" + sw.to_html(false)
+		b.custom_minimum_size = Vector2(24, 24)
+		var box := StyleBoxFlat.new()
+		box.bg_color = sw
+		box.set_corner_radius_all(4)
+		var chosen: bool = value == Appearance.color_value(sw)
+		box.set_border_width_all(2 if chosen else 1)
+		box.border_color = Color.WHITE if chosen else Color(0, 0, 0, 0.5)
+		for state: StringName in [&"normal", &"hover", &"pressed", &"focus"]:
+			b.add_theme_stylebox_override(state, box)
+		b.pressed.connect(func() -> void: pick_color(key, sw))
+		line.add_child(b)
+	return row
 
 
 func _clear_model() -> void:

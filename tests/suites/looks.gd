@@ -475,6 +475,78 @@ func _run_wear_tests() -> void:
 		"and the first assembly wears it (%s)" % ", ".join(worn))
 	fresh.queue_free()
 	await get_tree().process_frame
+	await _run_color_tests()
+
+
+## A FREE COLOUR (DECISIONS #316): a colour choice is an int in the text (0xRRGGBB + 1, 0 the look's
+## own), refused out of range; a genre's own look (a scene outside foundation/ and game/characters/)
+## offers one; the picker shows a colour button and swatches, keeps a colour through its stale check
+## while still dropping a bad index; an old look ignores the key.
+func _run_color_tests() -> void:
+	print("== a chosen look: a free colour ==")
+	var c: Color = Color8(18, 52, 86)
+	var v: int = Appearance.color_value(c)
+	var text: String = Appearance.make("colour_f", {"main": v, "torso": 2})
+	_check(v == 0x123456 + 1 and Appearance.is_valid(text) and int(Appearance.choices(text).get("main", 0)) == v
+		and Appearance.color_of(int(Appearance.choices(text)["main"]), Color.RED).to_rgba32() == c.to_rgba32(),
+		"a colour round-trips through the text, which the module takes (%s)" % text)
+	_check(Appearance.color_value(Color.BLACK) == 1 and Appearance.color_value(Color.WHITE) == Appearance.COLOR_MAX,
+		"black is a colour (1), not the look's own; white is the largest")
+	var own: Color = Color(0.1, 0.2, 0.3)
+	_check(Appearance.color_of(0, own) == own and not Appearance.make("x", {"main": 0}).contains("main"),
+		"0 is the look's own, and never written")
+	_check(Appearance.color_of(Appearance.COLOR_MAX + 1, own) == own and Appearance.color_of(-7, own) == own
+		and not Appearance.is_color(Appearance.COLOR_MAX + 1),
+		"a value past 24 bits is refused (the look's own), not clamped")
+	# An old look (the foundation's) reads a text with the key as if it were not there.
+	var plain: ModularCharacter = (load("res://game/characters/looks/peasant_f.tscn") as PackedScene).instantiate() as ModularCharacter
+	var plain_without: ModularCharacter = (load("res://game/characters/looks/peasant_f.tscn") as PackedScene).instantiate() as ModularCharacter
+	plain.apply_appearance("peasant_f;main=%d;torso=3" % v)
+	plain_without.apply_appearance("peasant_f;torso=3")
+	_check(_pieces_worn(plain) == _pieces_worn(plain_without) and plain.skin_tint == plain_without.skin_tint,
+		"a look that knows no colour key ignores it")
+	get_tree().root.add_child(plain)
+	get_tree().root.add_child(plain_without)
+	plain.queue_free()
+	plain_without.queue_free()
+
+	# The picker on a genre's look.
+	var defn := EntityDefinition.new()
+	defn.visual_variants = [load("res://tests/fixtures/genre_look/colour_f.tscn") as PackedScene]
+	var picker := CharacterPicker.new()
+	picker.definition = defn
+	picker.appearance = "colour_f;main=%d;torso=99;brows=1" % v
+	add_child(picker)
+	picker.open()
+	var button: ColorPickerButton = picker.find_child("main", true, false) as ColorPickerButton
+	_check(button != null and button.color.to_rgba32() == c.to_rgba32(),
+		"the genre's colour option is a colour button showing the colour chosen")
+	_check(picker.current().contains("main=%d" % v) and not picker.current().contains("torso="),
+		"the stale check keeps a colour and still drops an index the look lacks (%s)" % picker.current())
+	var shown: Node = picker.preview_model()
+	_check(shown != null and shown.get(&"main_chosen") == true and (shown.get(&"main_color") as Color).to_rgba32() == c.to_rgba32(),
+		"the preview wears the colour")
+	var swatch: Button = picker.find_child("main_swatch_1", true, false) as Button
+	_check(swatch != null, "the suggested colours are a row of swatches")
+	var sw: Color = (swatch.get_theme_stylebox(&"normal") as StyleBoxFlat).bg_color if swatch != null else Color.RED
+	if swatch != null:
+		swatch.pressed.emit()
+	_check(picker.current().contains("main=%d" % Appearance.color_value(sw)),
+		"a swatch pressed is the choice (%s)" % picker.current())
+	var reset: Button = picker.find_child("main_own", true, false) as Button
+	_check(reset != null and not reset.disabled, "with a colour chosen, Look's own can take it off")
+	if reset != null:
+		reset.pressed.emit()
+	shown = picker.preview_model()
+	_check(not picker.current().contains("main=") and shown != null and shown.get(&"main_chosen") == false,
+		"Look's own: the key gone, the look's own colour (%s)" % picker.current())
+	picker.close()
+	picker.appearance = "colour_f;main=%d" % (Appearance.COLOR_MAX + 5)
+	picker.open()
+	_check(not picker.current().contains("main="), "a colour out of range is dropped by the picker (%s)" % picker.current())
+	picker.close()
+	picker.queue_free()
+	await get_tree().process_frame
 
 
 func _piece_meshes(look: ModularCharacter, piece: String) -> Array[MeshInstance3D]:
