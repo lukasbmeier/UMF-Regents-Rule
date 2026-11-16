@@ -15,6 +15,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The bar: round or square (`bar_lab.tscn`; B11).
 - Your rewrite of the sword's pools (`ABILITIES_PREP.md` §9); then the axe's, bow's and staff's real content (§2 below).
 - B13 as read (one free change a week, then the head's materials, escalating): confirm the reading.
+- Which other abilities hit every foe in their sweep (only Cleave is marked; `hits_all` on the ability's .tres; PROGRESS 89).
 - A respec's cost once testing is over; the 99 curve and its hours (before the public demo, with a wipe).
 
 **Armor** (`ARMOR_PREP.md` §0; this run builds it with placeholders, §2 below)
@@ -57,5 +58,6 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 89: the copper axe at the frontier camp, stand on the line between the two training dummies, Q (Cleave): both lose 12.6.
 - Step 87: walk into the frontier camp: the foes and the Drillmaster move at once.
 (more as each item merges)

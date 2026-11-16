@@ -4880,3 +4880,53 @@ the energy shader): a new piece-heavy effect does the same. The game's camera sh
 **Left for later**: a missile's riding look (`VfxFireMissile` inside `fireball_look.tscn`) is still whole for others
 (ShotLook builds it before its owner is known; `make_lighter()` can be called on it later). A "camera shake" on/off in
 Settings is foundation work. Other players' swing crescents (`SwingTrail`) are untouched (one ribbon each, cheap).
+
+## Step 89: A SWEEP THAT HITS ALL (Cleave reaches every foe in it; a rally heals once a swing) (2026-11-16, the armor run's S1)
+
+**Branches**: TEMPLATE `claude/s1-resolve-action-all` (UMF Template worktree `.claude/worktrees/s1-resolve-action-all`),
+head `9e47ea7` (two commits on `0a8681a`: `65007b7`, `9e47ea7`). REGENT'S `claude/s1-areas-hit-all-b949af`: the two
+"TEMP foundation copy, dropped at merge" commits `4f3e4ac1` and `8556ce3e` (the template's files exactly; drop them and
+take the real pull), the genre commit `7f7d96e3`, then `main` merged in. Nothing pushed.
+
+**Built**:
+- What already hit all, unchanged: a player's AREA spell (Frost Ring, `land_area`) and cone (Gale, `land_spell`) hurt every
+  foe inside on the server; a foe's ring lands on players only, damage only. The one-body case was the referee's
+  JUDGED sweep (the axe's Cleave): the referee reported its first body.
+- TEMPLATE (DECISIONS #314; T1 takes the number before it, renumber at merge if needed; no version bump): an ability may be
+  marked **Hits All** (`AbilityDef.hits_all`, judged only; baked only when on, and carried into the row's `data` by
+  `server/build/content.rs`). The referee judges every body its sweep meets by the single hit's test
+  (`LungeJudge.judge_all`; `judge` is now its first, same results) and answers with a NEW reducer
+  `resolve_action_all(request_id, hit_ids)` when it met more than one. The module checks each name as `resolve_action`
+  checks one (authority only), deals them in order (hurt, the genre's `on_ability_hit`, an `action_event` each), passes
+  over those who cannot be hit now or rolled clear, and refuses the answer whole for an ability without Hits All, a
+  duplicate, more than 32, or a name `resolve_action` refuses. `resolve_action` keeps its arguments and behaviour (its
+  checks now shared). HANDBOOK paragraph, CHANGELOG block (unversioned), DECISIONS row and index lines.
+- GENRE: `axe_cleave.tres` `hits_all = true` (re-baked; no number changed). A rallying last hit heals ONCE a swing
+  however many it lands on: private table `rallied` (add-only) + `rules::rallies` (`regents.rs` `first_rally_of_swing`).
+  Each body is otherwise judged by `hit` as before (the guard, a parry, owed effects, poise, XP per body).
+
+**How to play it**: wield the copper axe at the frontier camp, stand beside the two training dummies on the line between them
+and press Q (Cleave): both dummies lose 12.6. Before, only the nearer one did.
+
+**Tested**:
+- Template: unit `referee` 183/0 (new "a sweep that hits all": three in a line nearest first, one behind and one wide not,
+  a fence hides one, the referee reports all for a hits-all sweep and the first for a plain one); `cargo test` green;
+  wasm check clean. NEGATIVE (mutation): the referee cutting every sweep to its first: the suite fails ("a cleave reports
+  all three ... ([41])"). Integration refusal written (`resolve_action_all` for a hits-one ability), for M9.
+- Regent's: `combat_playtest.sh` 132/0 after the fix (new: Cleave through a real client and referee hits both dummies,
+  12.60 each). NEGATIVE: the run before the build fix (the row lacked `hits_all`, so the referee answered with the first
+  body) failed exactly there ("the second ... (0.00)"). One rerun was for the known yard flake (the player downed before
+  "your chop hit a skeleton back"), green on the rerun. Native `a_sweep_that_hits_several_rallies_once`; `cargo test` green;
+  unit `regents,referee,content` 1643/0 before and after `git merge main`. Integration leg written in
+  `integration_genre.sh` (Cleave answered with both dummies, 12.6 each; refused: a body named twice, a chop as hitting all).
+  NOT RUN: integration (M9). After `git merge main` (step 87): combat playtest 130/0, Cleave on both dummies again.
+  DECISIONS: E2 took #315 on main, so #314 may collide with T1: renumber at the template merge.
+- Bindings regenerated against the TEST database (codegen pointed at `regents-rule-test`; `plugin_config.tres` restored).
+
+**Needs on merge**: the template release (M3) first; then drop the two TEMP commits, re-bake, `publish.sh --codegen`
+(a new reducer and a new table: add-only).
+**Placeholders made**: none.
+**For Luke**: which other abilities should hit all (the sword's pools, the ults) is his content call; only Cleave is marked.
+**For the rules/handbook**: regents-genre.md: "A player's judged sweep marked Hits All (Cleave) lands on every foe in it, each
+judged as a single hit; a rallying hit heals once a swing (`rallied`)." HANDBOOK: the template's paragraph comes with the pull.
+**Left for later**: a foe's sweep may be marked Hits All too (content); the client shows each body's hit from its own event.

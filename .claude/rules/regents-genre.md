@@ -134,6 +134,9 @@ paths:
   shake; `AbilityVfx.lighter_for`), yours and a foe's whole: a new place that spawns an effect for a fighter sets it.
   A ring's pieces are one MultiMesh (`instanced` in the energy shader): a new piece-heavy effect does the same. The
   game's camera shakes from `shook` through `VfxCameraShake` (installed by the local player's `AbilityVfx`).
+- A SWEEP THAT HITS ALL (PROGRESS 89, template #314): a player's judged sweep marked Hits All (`AbilityDef.hits_all`:
+  Cleave) lands on every foe in it, each judged as a single hit; a rallying hit heals once a swing (`rallied`).
+  Which abilities hit all is Luke's content call.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

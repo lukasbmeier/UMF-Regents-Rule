@@ -155,8 +155,8 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 |---|---|---|---|---|---|---|
 | M1 | town session | (deleted) | DONE: worktree and branch removed 2026-11-15 (an empty locked folder `.claude/worktrees/medieval-...` is left: delete by hand) | 85 (extended) | 34bedf9d, 9064c56b | |
 | M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
-| T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | t1-wear-hook | running | | | |
-| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | running. Spells already hit all; the gap is the referee-JUDGED sweep (Cleave), which is FOUNDATION: S1 builds add-only `AbilityDef.hits_all` + `resolve_action_all` in a template worktree (DECISIONS number after T1's, no version bump), shipped with T1 in M3; its game branch merges AFTER M3 | | | |
+| T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | claude/t1-wear-hook-69d351 (template) | MERGED into the template's main 2026-11-16 (`9b2e4aa`: #313 wear + assembled, #315 NPCs bind), SHIPPED in 1.8.3 | — | template 4437fa4 | |
+| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | MERGED 2026-11-16 | 89 | c94bdc92 | |
 | S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
 | S2 | | | waiting S1 (so M3 too) | | | |
 | S3 | | | waiting S2 | | | |
@@ -169,7 +169,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
 | E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | PARTIAL `591a590a`, HELD for a free slot: the piece cache (world 30.5 s -> 4.2 s), no saved bake (measured: ~80 MB for ~1 s); left: the small props, windowed shots, merge of main | | | |
-| M3 | master | — | waiting T1 | | | |
+| M3 | master | — | DONE 2026-11-16: template 1.8.3 (`4437fa4`: T1 + S1's `resolve_action_all` #314) shipped to all four games; here `aca81080` | | aca81080 | |
 | M9 | master | — | waiting all | | | |
 
 ## 8. The master's prompt (what Luke pastes to start it)
