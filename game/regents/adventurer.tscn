@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://game/regents/skilling/skilling_component.gd" id="2_skilling"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://game/regents/tutorial/tutorial_component.gd" id="8_tutorial"]
 [ext_resource type="Script" path="res://game/regents/combat/swing_trail.gd" id="9_trail"]
 [ext_resource type="Script" path="res://game/regents/vfx/ability_vfx.gd" id="10_vfx"]
+[ext_resource type="Script" path="res://game/regents/wardrobe/armor_look_component.gd" id="11_armor"]
 
 [node name="Adventurer" instance=ExtResource("1_player")]
 
@@ -42,3 +43,6 @@ script = ExtResource("8_tutorial")
 
 [node name="AbilityVfx" type="Node" parent="Components"]
 script = ExtResource("10_vfx")
+
+[node name="ArmorLook" type="Node" parent="Components"]
+script = ExtResource("11_armor")
