@@ -5104,3 +5104,86 @@ test pieces only; S3's real pieces replace them (Luke fills the slot shares and 
 slot); a piece is an `ItemDef` with `armor_slot` and `defense`; a hit's damage goes through `rules::through` (guard, armor,
 traits, multiplied): a new damage path calls it, never a flat cut. Worn and taken off out of a fight only."
 **Left for later**: the doll and words (W3), the look (W2), armor traits (A4.1), a foe given a Defense (content).
+
+## Step 93: THE PLAYER'S OWN COLORS (Peasant-only looks, colors on the appearance text, shared materials) (2026-11-16, the armor run's W1)
+
+STOPPED AT THE PICKER, as briefed: the foundation's `CharacterPicker` has no hook for a free color (below). Everything
+else is built and tested.
+
+**Built**:
+- NEW `game/regents/wardrobe/regents_colors.gd` (`RegentsColors`): a player's clothes colors on the `appearance` text,
+  one key per dye slot (`main`, `accent`, `under`, `trim`, `leather`), each value the number 0xRRGGBB + 1
+  ("peasant_f;hair=6;main=4876943"). 0 or missing keeps the Peasant's painting. NOT `main=#rrggbb`: the module takes
+  only `a-z0-9_;=,.-` in a look, and the foundation's `Appearance.choices` / `make` keep whole numbers only. A number
+  survives both, and an old client ignores the key (add-only, rule 17). A bad value (text, negative, too big) is ignored.
+  `palette_of(text)` turns the colors into a `DyePalette`, the SAME object for the same colors (`share_key` meta).
+  `swatches(slot)` gives the suggested swatches (from the `starter_*` palettes) for the picker.
+- NEW `game/regents/wardrobe/regents_figure.gd` (`RegentsFigure extends ModularCharacter`): THE ONE PLACE THAT DECIDES
+  WHAT A BODY WEARS AND IN WHICH PALETTE. It is the root of NEW `game/regents/looks/peasant_m.tscn` and `peasant_f.tscn`
+  (the foundation's Peasant looks with this script). It reads the colors and drops the clothes keys (torso, arms, legs,
+  feet, head, shoulders, neck and their `_dye` colorways), so a player is Peasant only. It dresses on the foundation's
+  `assembled` (#313), after every assembly and re-dress, so a reassembly keeps the colors. `appearance_options()` offers
+  everything but clothes: hair, beard, brows, skin, hair color.
+  W2'S WAY IN: `wear_armor(pieces: {slot: PackedScene}, palettes: {outfit: DyePalette})`. An armor piece shows in its
+  tier's palette (`outfit_palettes`, e.g. {"Knight": metal tier}); a slot with no armor shows the player's own Peasant
+  piece in their colors (W4); `palette_for(outfit)` is the rule. W2's look component reads `worn`, maps each item to its
+  pieces and tier palette, and calls `wear_armor`, nothing else.
+- `game/regents/wardrobe/wardrobe.gd`: `dress_shared(model, palette_of)` and `shared_material`: ONE dye material per
+  outfit TEXTURE and palette, shared by every piece and both bodies (each glTF piece has its own copy of the outfit's
+  material, so it is keyed on the texture, not the material). 300 players in N distinct color sets cost N materials
+  per outfit, not 300. Made once, never re-tinted (the lab's `dress` still re-tints its own). `shared_count()` is for W4.
+- `game/regents/content/character/adventurer.tres`: `visual_variants` are only the two genre looks, so the picker steps
+  Peasant M / Peasant F. An old text naming "ranger_f" or another look falls back to a Peasant by entity id.
+  RE-BAKED (`tools/bake_content.gd`): only `shared/content/manifest.json`'s hash changed.
+- NEW `game/regents/tests/suites/regents_figure.gd` (the `regents_figure` suite) and NEW `game/regents/tests/figure_shot.tscn`
+  (windowed: `figures.png`, four players; `picker.png`).
+
+THE HOOK THAT IS MISSING (for Lane T, add-only): a COLOR option kind in `foundation/ui/character_picker.gd`, e.g.
+`{"key": "main", "label": "Main color", "color": true, "swatches": [Color...]}`. It would show a ColorPickerButton plus
+a row of swatch buttons, store `0xRRGGBB + 1` as the int choice (0 = the look's own), and be skipped by
+`_build_options`' stale check. TODAY THAT CHECK ERASES ANY KEY THE MODEL DOES NOT OFFER, so a player who opens the
+picker and presses Done loses their color keys (the shot shows it: opened on "peasant_f;hair=6;main=...", `current()`
+is "peasant_f;hair=6"). Since nothing can set the colors yet, nothing is lost in play today.
+THE GENRE SIDE IS READY FOR IT: `RegentsFigure.color_options()` declares the five options in that kind (main, accent,
+under, trim, leather, each with its swatches), and `appearance_options()` adds them only when
+`RegentsFigure.picker_has_colors()` sees `CharacterPicker.COLOR_OPTIONS` (the constant Lane T adds with the hook, the
+master's ask). So today's picker never shows them, and once 1.8.4 is pulled they appear with nothing else changed. No
+stopgap of index choices: those would store an index where the free picker stores a color.
+
+**How to play it**: the picker (connect screen or Escape > Character) offers Peasant M / Peasant F with hair, beard, brows,
+skin and hair color, and no clothes swaps. Colors can't be picked until the hook; to see them now, run the shot below,
+or set an `appearance` with `main=<0xRRGGBB+1>` keys.
+
+**Tested**:
+- `regents_figure` 49/0: colors round-trip through the text, which the module would take; all five keys fit (<120
+  characters); an old text with no keys is today's look (nothing dyed); bad values are ignored with no crash; colors
+  come back after a reassembly (a new beard puts the body together again); old clothes keys are dropped; the picker
+  offers no clothes keys; bodies in the same colors share one material, other colors get their own; armor (the Knight
+  torso) shows in its tier palette while the empty slots keep the player's colors, and armor off restores them;
+  the adventurer offers only the two figures, and an old Ranger text falls back to a Peasant.
+  NEGATIVE in the suite: the same body with its `assembled` handler cut loses its colors on reassembly.
+  NEGATIVE run by hand: with the `assembled.connect` line taken out of `RegentsFigure._init`, 7 checks FAIL (dressed,
+  survives reassembly, recolor, both sharing checks, armor on and off).
+- `regents_figure,regents_wardrobe,regents,regents_showcase` 1814/0; `content_test.sh` 18/0 after the re-bake (16
+  FAIL before it: the build stops on the stale bake, as it should). WHOLE UNIT RUN (`run_tests.sh`, after merging
+`main` 13408b0e): 4770 passed, 0 failed, lints OK. `regents_figure` also checks the five color options are declared
+with swatches, and shown only when the picker has `COLOR_OPTIONS` (today: not shown).
+- Shots looked at (`"$GODOT" --path . res://game/regents/tests/figure_shot.tscn -- <dir>`): four players told apart
+  at a glance (an old text's painted Peasant, a woman in blue and gray, a man in red and cream, a Knight torso in the
+  tier's metal over green Peasant pieces); the picker on Peasant F with hair, skin and hair color only.
+
+**Needs on merge**: the FREE PICKER needs template 1.8.4 (`CharacterPicker`'s color option kind and `COLOR_OPTIONS`);
+until then the colors are built, tested and shown on bodies, but a player can't pick them. The content manifest is baked: on conflict, re-bake (`tools/bake_content.gd`). No publish needed for
+play (nothing the server reads changed except the manifest's hash; a publish with the next server change carries it).
+**Placeholders made**: THE SUGGESTED SWATCHES, `RegentsColors.swatches` (`game/regents/wardrobe/regents_colors.gd`, marked
+`PLACEHOLDER`): the four `starter_*` palettes' colors per slot. Luke picks the row (or keeps it).
+**For Luke**: the suggested swatch row (the placeholder above): keep the starter colors, or choose your own?
+For the rules/handbook (regents-genre.md, under THE WARDROBE): "A PLAYER'S BODY is a `RegentsFigure`
+(`game/regents/looks/peasant_m|f.tscn`, the adventurer's only looks): Peasant clothes in the player's own colors
+(`RegentsColors`: keys `main`, `accent`, `under`, `trim`, `leather` on the `appearance` text, each 0xRRGGBB + 1; never
+`#`, which the module refuses), dressed on the foundation's `assembled` with materials shared by palette
+(`Wardrobe.dress_shared`). Armor goes on through `wear_armor` (pieces + tier palettes); nothing else dresses a player."
+HANDBOOK: the same, plus how to see it (`figure_shot.tscn`).
+**Left for later**: the free color picker (the hook above, then ~10 lines). W4 measures the shared materials at 300
+(`Wardrobe.shared_count()`). `_shared` and `RegentsColors._palettes` keep every palette seen, so hundreds of distinct
+color sets mean hundreds of small materials kept for the session; prune if W4 says so.
