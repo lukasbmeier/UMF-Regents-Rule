@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/soft_leather.tres" id="1_icr1h"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/jerkin.tres" id="2_ns6kk"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_3uwao"]
+
+[resource]
+script = ExtResource("3_3uwao")
+max_stack = 1
+armor_slot = &"chest"
+defense = 5
+color = Color(0.62, 0.45, 0.3, 1)
+description = "Soft leather, a jerkin with bracers."
+material = ExtResource("1_icr1h")
+pattern = ExtResource("2_ns6kk")
+id = 40082
+display_name = "Soft leather jerkin"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Soft leather in Jerkin): made by Make the table."

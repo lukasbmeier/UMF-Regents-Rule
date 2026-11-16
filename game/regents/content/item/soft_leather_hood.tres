@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/soft_leather.tres" id="1_domvt"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/hood.tres" id="2_njsk4"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_a1k6b"]
+
+[resource]
+script = ExtResource("3_a1k6b")
+max_stack = 1
+armor_slot = &"head"
+defense = 2
+color = Color(0.62, 0.45, 0.3, 1)
+description = "Soft leather, cut and stitched into a hood."
+material = ExtResource("1_domvt")
+pattern = ExtResource("2_njsk4")
+id = 40081
+display_name = "Soft leather hood"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Soft leather in Hood): made by Make the table."

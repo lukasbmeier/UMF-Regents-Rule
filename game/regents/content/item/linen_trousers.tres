@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/linen.tres" id="1_rixd1"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/cloth_trousers.tres" id="2_4oado"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_qi55k"]
+
+[resource]
+script = ExtResource("3_qi55k")
+max_stack = 1
+armor_slot = &"legs"
+defense = 3
+color = Color(0.85, 0.82, 0.72, 1)
+description = "Linen, trousers and shoes."
+material = ExtResource("1_rixd1")
+pattern = ExtResource("2_4oado")
+id = 40088
+display_name = "Linen trousers"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Linen in Cloth trousers): made by Make the table."

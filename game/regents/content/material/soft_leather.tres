@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/item/soft_leather.tres" id="1_raw"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_mat"]
+
+[resource]
+script = ExtResource("2_mat")
+key = &"soft_leather"
+prefix = "Soft leather"
+family = 2
+tier = 1
+raw = ExtResource("1_raw")
+weapon_damage_pct = 100
+tool_speed_pct = 100
+work_scale_pct = 100
+rank = 1
+color = Color(0.62, 0.45, 0.3, 1)
+id = 40007
+display_name = "Soft leather"
+designer_notes = "PLACEHOLDER (S3): its tier is the agent's, until Luke's materials and numbers for armor (ARMOR_PREP.md section 0, 4). Leather from deer hide: armor only (its cells are the leather pieces)."

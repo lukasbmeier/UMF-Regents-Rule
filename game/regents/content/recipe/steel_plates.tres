@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_g6ljg"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_bar.tres" id="2_4kqhy"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_lnaxr"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_plates.tres" id="4_rivj6"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_4qlkb"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_5xo75"]
+
+[sub_resource type="Resource" id="Resource_6786v"]
+script = ExtResource("3_lnaxr")
+display_name = "Steel plates"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
+outline_vary = 3
+outline = PackedInt32Array(14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_4qlkb")
+station = &"anvil"
+skill = ExtResource("6_5xo75")
+inputs = Array[ExtResource("1_g6ljg")]([ExtResource("2_4kqhy")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("4_rivj6")
+xp = 45
+min_rank = 8
+afk_ms = 12000
+minigame = SubResource("Resource_6786v")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40062
+display_name = "Steel plates"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Plates): its numbers are yours to tune."

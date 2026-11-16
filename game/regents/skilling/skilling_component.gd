@@ -191,11 +191,7 @@ func choices_at(station: StationComponent) -> Array[Dictionary]:
 		return out
 	# One a recipe (its parts are picked in the window, MATERIALS.md step 3), grouped by what it makes: a
 	# cell of the material table by its pattern, then its material's tier; the rest after, as listed.
-	var recipes: Array[RecipeDef] = station.recipes()
-	var keys: Dictionary[int, String] = {}
-	for r: RecipeDef in recipes:
-		keys[r.id] = _order_key(r)   # once each, not once a comparison (a station window looks every 500 ms)
-	recipes.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return keys[a.id] < keys[b.id])
+	var recipes: Array[RecipeDef] = _sorted_at(station)
 	for r: RecipeDef in recipes:
 		out.append({"recipe": r})
 	# REFIT (owner, 2026-10-23): each item in the bag made here of parts, last, under its own heading.
@@ -207,6 +203,27 @@ func choices_at(station: StationComponent) -> Array[Dictionary]:
 					out.append({"refit": st.id, "made_by": r, "data": st.instance_data})
 					break
 	return out
+
+
+## A station's recipes in their list's order, sorted once while its recipes stay the same (a station window looks every
+## 500 ms: with armor's pieces the workbench lists 46, S3): station key -> [the recipes as given, sorted].
+static var _sorted: Dictionary[StringName, Array] = {}
+
+
+static func _sorted_at(station: StationComponent) -> Array[RecipeDef]:
+	var recipes: Array[RecipeDef] = station.recipes()
+	var held: Array = _sorted.get(station.key, [])
+	if held.size() == 2 and held[0] == recipes:
+		var out: Array[RecipeDef] = []
+		out.assign(held[1])
+		return out
+	var given: Array[RecipeDef] = recipes.duplicate()
+	var keys: Dictionary[int, String] = {}
+	for r: RecipeDef in recipes:
+		keys[r.id] = _order_key(r)   # once each, not once a comparison
+	recipes.sort_custom(func(a: RecipeDef, b: RecipeDef) -> bool: return keys[a.id] < keys[b.id])
+	_sorted[station.key] = [given, recipes.duplicate()]
+	return recipes
 
 
 ## Where a recipe sorts in a station's list: by its output's pattern and material tier; not a cell, last.
@@ -222,6 +239,8 @@ static func group_of(r: RecipeDef) -> String:
 	var it: ItemDef = r.output if r != null else null
 	if it == null or it.pattern == null:
 		return "Other"
+	if it.pattern.armor_slot != &"":
+		return "Armor"   # every piece under one heading (S3), not one a pattern
 	return plural(group_pattern(it.pattern).display_name)
 
 
@@ -332,8 +351,10 @@ func core_grades(r: RecipeDef, inv: SpaceTimeInventoryComponent = null) -> Dicti
 	if core == null or inv == null:
 		return out
 	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		if st.item_def_id != core.id:
+			continue   # its own item first: reading a stack's quality parses its data (a station window looks every 500 ms)
 		var q: int = RegentsGrade.quality_of(st.instance_data)
-		if st.item_def_id == core.id and q >= 0:
+		if q >= 0:
 			out[RegentsGrade.of_quality(q)] += st.qty
 	return out
 

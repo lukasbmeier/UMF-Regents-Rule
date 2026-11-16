@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_clr24"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/cuirass.tres" id="2_t8idm"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_3r7gn"]
+
+[resource]
+script = ExtResource("3_3r7gn")
+max_stack = 1
+armor_slot = &"chest"
+defense = 10
+color = Color(0.65, 0.66, 0.7, 1)
+description = "Iron plate for the chest and arms."
+material = ExtResource("1_clr24")
+pattern = ExtResource("2_t8idm")
+id = 40075
+display_name = "Iron cuirass"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Cuirass): made by Make the table."

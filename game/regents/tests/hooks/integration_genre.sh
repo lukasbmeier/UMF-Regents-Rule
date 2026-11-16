@@ -335,6 +335,14 @@ assert_ok "refit $BENCH $AXE_R [40016,40012] [40001,40009]" "refit: the oak hand
 assert_eq "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $AXE_R" 1)" "\"{\"q\":650,\"h\":40016,\"p\":[40016,40012],\"t\":[40001,40009]}\""   "the same row: its quality kept, its parts and its two traits (Fine holds two)"
 assert_eq "$(qty_of 40016) $(qty_of 40011)" "$((OAK0 - 1)) 0" "the oak handle used up, the two iron bars paid"
 assert_rejected "refit $BENCH $AXE_R [40016,40012] [40001,40009]" "how it is already" "the same again: nothing to change"
+# ARMOR'S PIECES (S3: cells of the material table): a copper armet (recipe 40055) of copper plates and copper rivets at
+# the workbench; armor offers no trait (armor traits are Luke's). The CLI player is offline: the playtest wears made pieces.
+assert_rejected "craft $BENCH 40055 false" "needs 1 Copper plates" "a copper armet with no plates: refused"
+assert_ok "admin_give_item $MYENT 40069 1 500" "(test) copper plates, quality 500"
+assert_ok "grant_item $MYENT 40012 2" "(two copper rivets)"
+assert_rejected "craft_choosing $BENCH 40055 false [] [40009]" "offers no trait 40009" "NEGATIVE: the rivets offer an armet no trait (Gentle is a tool's)"
+assert_ok "craft $BENCH 40055 false" "a copper armet: begun (as good as its plates)"
+assert_ok "work_stop" "stop"
 
 # --- the order board ---
 assert_eq "$(row_count 'SELECT * FROM work_order WHERE world_id = 0')" "3" "the board has three work orders"

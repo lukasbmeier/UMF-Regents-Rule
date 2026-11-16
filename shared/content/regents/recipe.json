@@ -2127,6 +2127,614 @@
 			"skill": 40005,
 			"station": "tanning_rack",
 			"xp": 20
+		},
+		{
+			"afk_ms": 4000,
+			"afk_quality": 350,
+			"id": 40054,
+			"inputs": [
+				[
+					40010,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {
+				"crack_cost_pm": 0,
+				"duration_ms": 60000,
+				"error_scale": 50,
+				"hammer_drop": 6,
+				"heat_ms": 5000,
+				"hide_outline": 1,
+				"kind": "shape",
+				"lay_cost_pm": 0,
+				"max_reheats": 5,
+				"outline": [
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14
+				],
+				"outline_vary": 3,
+				"pattern_fade_ms": 3000,
+				"pattern_ghost_pm": 250,
+				"quench_bonus_pm": 0,
+				"quench_hi_pm": 0,
+				"quench_lo_pm": 0,
+				"quench_loss_pm": 0,
+				"red_ms": 0,
+				"reheat_cost_pm": 40,
+				"reheat_ms": 600,
+				"spread_pct": 17,
+				"start_height": 23,
+				"start_jitter": 2,
+				"swing_ms": 280,
+				"tap_drop": 1,
+				"tap_spread_pct": 0
+			},
+			"name": "Copper plates",
+			"output": 40069,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 15
+		},
+		{
+			"afk_ms": 2500,
+			"afk_quality": 350,
+			"id": 40055,
+			"inputs": [
+				[
+					40069,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper armet",
+			"output": 40070,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 2500,
+			"afk_quality": 350,
+			"id": 40056,
+			"inputs": [
+				[
+					40069,
+					3
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper cuirass",
+			"output": 40071,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 2500,
+			"afk_quality": 350,
+			"id": 40057,
+			"inputs": [
+				[
+					40069,
+					2
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Copper legplates",
+			"output": 40072,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 12
+		},
+		{
+			"afk_ms": 8000,
+			"afk_quality": 350,
+			"id": 40058,
+			"inputs": [
+				[
+					40011,
+					2
+				]
+			],
+			"min_rank": 5,
+			"minigame": {
+				"crack_cost_pm": 0,
+				"duration_ms": 60000,
+				"error_scale": 50,
+				"hammer_drop": 6,
+				"heat_ms": 5000,
+				"hide_outline": 1,
+				"kind": "shape",
+				"lay_cost_pm": 0,
+				"max_reheats": 5,
+				"outline": [
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14
+				],
+				"outline_vary": 3,
+				"pattern_fade_ms": 3000,
+				"pattern_ghost_pm": 250,
+				"quench_bonus_pm": 0,
+				"quench_hi_pm": 0,
+				"quench_lo_pm": 0,
+				"quench_loss_pm": 0,
+				"red_ms": 0,
+				"reheat_cost_pm": 40,
+				"reheat_ms": 600,
+				"spread_pct": 17,
+				"start_height": 23,
+				"start_jitter": 2,
+				"swing_ms": 280,
+				"tap_drop": 1,
+				"tap_spread_pct": 0
+			},
+			"name": "Iron plates",
+			"output": 40073,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 30
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40059,
+			"inputs": [
+				[
+					40073,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 5,
+			"minigame": {},
+			"name": "Iron armet",
+			"output": 40074,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40060,
+			"inputs": [
+				[
+					40073,
+					3
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 5,
+			"minigame": {},
+			"name": "Iron cuirass",
+			"output": 40075,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40061,
+			"inputs": [
+				[
+					40073,
+					2
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 5,
+			"minigame": {},
+			"name": "Iron legplates",
+			"output": 40076,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 12000,
+			"afk_quality": 350,
+			"id": 40062,
+			"inputs": [
+				[
+					40025,
+					2
+				]
+			],
+			"min_rank": 8,
+			"minigame": {
+				"crack_cost_pm": 0,
+				"duration_ms": 60000,
+				"error_scale": 50,
+				"hammer_drop": 6,
+				"heat_ms": 5000,
+				"hide_outline": 1,
+				"kind": "shape",
+				"lay_cost_pm": 0,
+				"max_reheats": 5,
+				"outline": [
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14,
+					14
+				],
+				"outline_vary": 3,
+				"pattern_fade_ms": 3000,
+				"pattern_ghost_pm": 250,
+				"quench_bonus_pm": 0,
+				"quench_hi_pm": 0,
+				"quench_lo_pm": 0,
+				"quench_loss_pm": 0,
+				"red_ms": 0,
+				"reheat_cost_pm": 40,
+				"reheat_ms": 600,
+				"spread_pct": 17,
+				"start_height": 23,
+				"start_jitter": 2,
+				"swing_ms": 280,
+				"tap_drop": 1,
+				"tap_spread_pct": 0
+			},
+			"name": "Steel plates",
+			"output": 40077,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"xp": 45
+		},
+		{
+			"afk_ms": 7500,
+			"afk_quality": 350,
+			"id": 40063,
+			"inputs": [
+				[
+					40077,
+					1
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 8,
+			"minigame": {},
+			"name": "Steel armet",
+			"output": 40078,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 7500,
+			"afk_quality": 350,
+			"id": 40064,
+			"inputs": [
+				[
+					40077,
+					3
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 8,
+			"minigame": {},
+			"name": "Steel cuirass",
+			"output": 40079,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 7500,
+			"afk_quality": 350,
+			"id": 40065,
+			"inputs": [
+				[
+					40077,
+					2
+				],
+				[
+					40012,
+					2
+				]
+			],
+			"min_rank": 8,
+			"minigame": {},
+			"name": "Steel legplates",
+			"output": 40080,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 37
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40066,
+			"inputs": [
+				[
+					40057,
+					1
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Soft leather hood",
+			"output": 40081,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40067,
+			"inputs": [
+				[
+					40057,
+					3
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Soft leather jerkin",
+			"output": 40082,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40068,
+			"inputs": [
+				[
+					40057,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Soft leather trousers",
+			"output": 40083,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40069,
+			"inputs": [
+				[
+					40066,
+					1
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Supple leather hood",
+			"output": 40084,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40070,
+			"inputs": [
+				[
+					40066,
+					3
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Supple leather jerkin",
+			"output": 40085,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40071,
+			"inputs": [
+				[
+					40066,
+					2
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Supple leather trousers",
+			"output": 40086,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40072,
+			"inputs": [
+				[
+					40046,
+					4
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Linen robe",
+			"output": 40087,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
+		},
+		{
+			"afk_ms": 5000,
+			"afk_quality": 350,
+			"id": 40073,
+			"inputs": [
+				[
+					40046,
+					3
+				]
+			],
+			"min_rank": 1,
+			"minigame": {},
+			"name": "Linen trousers",
+			"output": 40088,
+			"output_qty": 1,
+			"part_slot": -1,
+			"part_slots": [],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"xp": 25
 		}
 	],
 	"owner": "regents",

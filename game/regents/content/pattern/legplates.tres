@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_slot"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/plates.tres" id="3_core"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="4_rivets"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="5_pat"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_skill"]
+
+[sub_resource type="Resource" id="Slot_core"]
+script = ExtResource("2_slot")
+name = "plates"
+takes = 1
+pattern = ExtResource("3_core")
+qty = 2
+core = true
+
+[sub_resource type="Resource" id="Slot_rivets"]
+script = ExtResource("2_slot")
+name = "rivets"
+takes = 3
+item = ExtResource("4_rivets")
+qty = 2
+
+[resource]
+script = ExtResource("5_pat")
+key = &"legplates"
+name_format = "{m} legplates"
+family = 0
+max_stack = 1
+armor_slot = &"legs"
+defense_share = 3
+trait_parts = PackedStringArray("lining", "straps", "fittings")
+station = &"workbench"
+skill = ExtResource("6_skill")
+parts = Array[ExtResource("2_slot")]([SubResource("Slot_core"), SubResource("Slot_rivets")])
+output_qty = 1
+quality = 2
+xp = 25
+afk_ms = 5000
+description = "{m} plate for the legs and feet."
+id = 40019
+display_name = "Legplates"
+designer_notes = "PLACEHOLDER (S3): its share of Defense (3) is ARMOR_PREP.md A7's proposal, until Luke's numbers; its trait parts are the structure only (no trait offered: armor traits are Luke's, A4)."

@@ -1724,3 +1724,44 @@ fn armor_is_content_in_its_slots() {
     assert!(rules::ITEMS.iter().filter(|i| i.armor_slot.is_empty()).all(|i| i.defense == 0), "nothing else has a Defense");
     assert!(rules::FOES.iter().all(|f| f.defense == 0), "today's foes have no Defense (Luke: 0 on today's skeletons)");
 }
+
+#[test]
+fn armor_pieces_are_share_times_tier_for_every_family() {
+    // S3, THE PIECES (ARMOR_PREP.md A7; GAME.md W1): every piece the material table makes, its slot and its Defense =
+    // its pattern's share (PLACEHOLDERS: head 2, chest 5, legs 3) x its material's tier (copper 1, iron 2, steel 3; soft
+    // leather 1, supple leather 2, linen 1: the last three PLACEHOLDERS too). Quality adds on top (`piece_defense`).
+    let share = |slot: &str| match slot { "head" => 2, "chest" => 5, "legs" => 3, _ => panic!("{slot}") };
+    let tiers = [("Copper", 1), ("Iron", 2), ("Steel", 3), ("Soft leather", 1), ("Supple leather", 2), ("Linen", 1)];
+    let pieces = [("armet", "head"), ("cuirass", "chest"), ("legplates", "legs"), ("hood", "head"), ("jerkin", "chest"),
+        ("trousers", "legs"), ("robe", "chest")];
+    let mut found = 0;
+    for (prefix, tier) in tiers {
+        for (piece, slot) in pieces {
+            let name = format!("{prefix} {piece}");
+            let Some(it) = rules::ITEMS.iter().find(|i| i.name == name) else { continue };
+            assert_eq!(it.armor_slot, slot, "{name}'s slot");
+            assert_eq!(it.defense, share(slot) * tier, "{name}: {} x {tier}", share(slot));
+            assert_eq!(it.max_stack, 1, "{name} does not stack");
+            found += 1;
+        }
+    }
+    assert_eq!(found, 17, "three metals x armet, cuirass, legplates; two leathers x hood, jerkin, trousers; linen x robe, trousers");
+    // Each family has each of its slots (W1), and cloth has NO headwear yet (hair shows): a NEGATIVE.
+    for (prefix, slots) in [("Iron", vec!["head", "chest", "legs"]), ("Soft leather", vec!["head", "chest", "legs"]), ("Linen", vec!["chest", "legs"])] {
+        let mut got: Vec<&str> = rules::ITEMS.iter().filter(|i| i.name.starts_with(prefix) && !i.armor_slot.is_empty()).map(|i| i.armor_slot).collect();
+        got.sort_by_key(|s| rules::ARMOR_SLOTS.iter().position(|x| x == s));
+        assert_eq!(got, slots, "{prefix}'s pieces");
+    }
+    assert!(!rules::ITEMS.iter().any(|i| i.name.starts_with("Linen") && i.armor_slot == "head"), "no cloth head");
+    assert!(!rules::ITEMS.iter().any(|i| i.armor_slot == "trinket"), "the trinket stays empty");
+    // NO TRAIT ON ARMOR (armor traits are Luke's, A4): no part a piece is made with offers it one, not even rivets that
+    // offer a weapon or a tool theirs.
+    let rivets = rules::ITEMS.iter().find(|i| i.name == "Copper rivets").expect("copper rivets");
+    let sword = rules::ITEMS.iter().find(|i| i.name == "Iron sword").expect("an iron sword");
+    assert_ne!(rules::offered_for(rivets, sword), 0, "(rivets offer a weapon their trait)");
+    for piece in rules::ITEMS.iter().filter(|i| !i.armor_slot.is_empty()) {
+        for part in rules::ITEMS.iter() {
+            assert_eq!(rules::offered_for(part, piece), 0, "{} offers {} a trait", part.name, piece.name);
+        }
+    }
+}

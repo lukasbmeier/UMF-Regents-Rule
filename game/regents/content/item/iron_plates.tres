@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_dsj23"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/plates.tres" id="2_gbw2n"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_exnbw"]
+
+[resource]
+script = ExtResource("3_exnbw")
+max_stack = 1
+color = Color(0.65, 0.66, 0.7, 1)
+description = "Hammered flat at the anvil: the core of a metal piece of armor; its quality is the smith's."
+material = ExtResource("1_dsj23")
+pattern = ExtResource("2_gbw2n")
+id = 40073
+display_name = "Iron plates"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Plates): made by Make the table."

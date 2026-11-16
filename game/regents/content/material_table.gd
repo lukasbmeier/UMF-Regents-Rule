@@ -19,7 +19,7 @@ class_name MaterialTable extends RefCounted
 ## be in players' bags). The bake refuses a table out of date (`MaterialDef.validate_with`: `problems`).
 
 const ITEM_FIELDS: PackedStringArray = ["display_name", "max_stack", "tool_tag", "tool_tier", "tool_speed_pct",
-	"weapon_kit", "weapon_damage_pct", "part_tag", "handle_trait", "part_weapon_trait", "role", "fits_kit"]
+	"weapon_kit", "weapon_damage_pct", "part_tag", "handle_trait", "part_weapon_trait", "role", "fits_kit", "armor_slot", "defense"]
 const RECIPE_FIELDS: PackedStringArray = ["display_name", "station", "skill", "inputs", "output", "output_qty",
 	"quality", "part_slot", "part_slots"]
 const HOW: String = "Make the table (the button on any material or pattern)"
@@ -88,6 +88,9 @@ static func item_wants(m: MaterialDef, p: PatternDef) -> Dictionary:
 		"part_weapon_trait": m.part_weapon_trait if p.carries_trait else null,
 		"role": p.role,
 		"fits_kit": p.fits_kit,
+		# ARMOR (S3): its slot, and its Defense: the pattern's share x the material's tier (ARMOR_PREP.md A7).
+		"armor_slot": p.armor_slot,
+		"defense": p.defense_share * m.tier if p.armor_slot != &"" else 0,
 	}
 
 

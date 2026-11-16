@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_3acf0"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_plates.tres" id="2_w77fl"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="3_h1ybs"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_cuirass.tres" id="4_0jj4a"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_mc3se"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_1y4iq"]
+
+[resource]
+script = ExtResource("5_mc3se")
+station = &"workbench"
+skill = ExtResource("6_1y4iq")
+inputs = Array[ExtResource("1_3acf0")]([ExtResource("2_w77fl"), ExtResource("3_h1ybs")])
+input_qty = PackedInt32Array(3, 2)
+output = ExtResource("4_0jj4a")
+xp = 37
+min_rank = 8
+afk_ms = 7500
+quality = 2
+part_slots = PackedInt32Array()
+from_table = true
+id = 40064
+display_name = "Steel cuirass"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Cuirass): its numbers are yours to tune."
