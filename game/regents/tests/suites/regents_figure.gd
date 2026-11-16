@@ -9,6 +9,10 @@ extends "res://tests/suite_base.gd"
 ##   - bodies in the same colors share their materials; other colors get their own
 ##   - armor over it (W2's way in): a worn piece in its tier's palette, the empty slots in the player's own colors
 ##   - the adventurer offers only the genre's two Peasant looks
+##   - WORN ARMOR (W2): the table `armor_looks.tres` covers every armor piece with files that exist and a palette; a
+##     `worn` row dresses its wearer (the pieces, the material's palette), a slot back to 0 or the row gone gives the
+##     Peasant piece back, another player's row dresses their body only, a reassembly keeps it, steel's pauldrons are
+##     spiked (iron's round), a closed helm hides hair and beard and a hood the hair, the practice piece draws nothing
 ##   - THE PICKER (template 1.8.4): a color picked lands in the text as `main=<int>` and survives Done, the preview
 ##     dyed in it; NEGATIVE: on a look that does not offer the colors, the same pick is dropped at Done
 ## How it LOOKS: `"$GODOT" --path . res://game/regents/tests/figure_shot.tscn -- <out dir>` (windowed).
@@ -29,6 +33,8 @@ func run() -> void:
 	await _run_armor()
 	_run_adventurer()
 	await _run_picker()
+	_run_armor_table()
+	_run_worn()
 
 
 func _run_text() -> void:
@@ -258,3 +264,157 @@ func _run_picker() -> void:
 	plain.visual_variants = [load("res://game/characters/looks/peasant_m.tscn") as PackedScene, load("res://game/characters/looks/peasant_f.tscn") as PackedScene]
 	var n: Array = await _pick_and_done(plain, "peasant_f;hair=6")
 	_check(not Appearance.choices(String(n[0])).has("main"), "NEGATIVE: on a look with no color options the pick is dropped at Done (%s)" % n[0])
+
+
+const ITEMS: String = "res://game/regents/content/item/"
+
+
+func _item(file: String) -> int:
+	return (load(ITEMS + file + ".tres") as ItemDef).id
+
+
+## Every armor piece in the content: its pattern has a row, for both bodies every file is a piece, and its material a
+## palette (metal ones with their bar's finish).
+func _run_armor_table() -> void:
+	var looks: ArmorLooks = ArmorLooks.current()
+	_check(looks != null and not looks.entries.is_empty(), "the armor table loads")
+	var pieces: int = 0
+	for f: String in ResourceLoader.list_directory(ITEMS):
+		if not f.ends_with(".tres"):
+			continue
+		var it: ItemDef = load(ITEMS + f) as ItemDef
+		if it == null or it.armor_slot.is_empty() or it.material == null or it.pattern == null:
+			continue
+		pieces += 1
+		var e: ArmorLookEntry = looks.entry_for(it.pattern.key, it.material.key)
+		_check(e != null, "%s: its pattern '%s' has a look" % [f, it.pattern.key])
+		if e == null:
+			continue
+		for body: StringName in [&"male", &"female"]:
+			var want: Dictionary[StringName, String] = e.pieces_for(body)
+			_check(not want.is_empty(), "%s on a %s: puts something on" % [f, body])
+			for slot: StringName in want:
+				_check(want[slot].is_empty() or not ArmorLooks.piece_path(want[slot]).is_empty(), "%s, %s, %s: the piece %s exists" % [f, body, slot, want[slot]])
+		var pal: DyePalette = looks.palettes.get(it.material.key, null) as DyePalette
+		_check(pal != null and (it.material.family != MaterialDef.Family.METAL or pal.metal != null), "%s: its material '%s' has a palette" % [f, it.material.key])
+	_check(pieces >= 17, "every armor piece the table made is covered (%d)" % pieces)
+	var steel: Dictionary = looks.dress_for([_item("steel_cuirass")] as Array[int], &"male")[0]
+	var iron: Dictionary = looks.dress_for([_item("iron_cuirass")] as Array[int], &"female")[0]
+	_check(String((steel[&"shoulders"] as PackedScene).resource_path).contains("Spike"), "steel wears the spiked pauldrons (W3)")
+	_check(String((iron[&"shoulders"] as PackedScene).resource_path).contains("Round"), "NEGATIVE: iron's are round")
+	var armet: Dictionary = looks.dress_for([_item("copper_armet")] as Array[int], &"male")[0]
+	var hood: Dictionary = looks.dress_for([_item("soft_leather_hood")] as Array[int], &"male")[0]
+	_check(armet.has(&"hairstyle") and armet[&"hairstyle"] == null and armet.has(&"beard") and armet[&"beard"] == null, "a closed helm takes off the hair and beard")
+	_check(hood.has(&"hairstyle") and hood[&"hairstyle"] == null and not hood.has(&"beard"), "a hood the hair only")
+	var practice: Array = looks.dress_for([40067, 40068] as Array[int], &"male")
+	_check((practice[0] as Dictionary).is_empty() and (practice[1] as Dictionary).is_empty(), "the practice pieces (no material) put on nothing")
+
+
+class WornRow extends RefCounted:
+	var entity_id: int = 0
+	var head_item: int = 0
+	var chest_item: int = 0
+	var legs_item: int = 0
+	var trinket_item: int = 0
+
+
+func _worn(head: int, chest: int, legs: int) -> WornRow:
+	var r := WornRow.new()
+	r.head_item = head
+	r.chest_item = chest
+	r.legs_item = legs
+	return r
+
+
+## A player as the game spawns one, out of the tree: an entity whose `Visual/Model` is a figure in `text`, with
+## an `ArmorLookComponent` bound to it.
+func _wearer(id: int, text: String) -> ArmorLookComponent:
+	var ent := SpaceTimeEntity.new()
+	ent.entity_id = id
+	var visual := Node3D.new()
+	visual.name = "Visual"
+	ent.add_child(visual)
+	var fig: RegentsFigure = (load(MALE) as PackedScene).instantiate() as RegentsFigure
+	fig.name = "Model"
+	fig.apply_appearance(text)
+	visual.add_child(fig)
+	var c := ArmorLookComponent.new()
+	ent.add_child(c)
+	c.bind(ent, {})
+	return c
+
+
+## The outfits a figure wears (Knight, Peasant, Ranger, Wizard), sorted.
+func _outfits(f: RegentsFigure) -> Array[String]:
+	var out: Array[String] = []
+	for p: PackedScene in f.wearing():
+		var o: String = ArmorLooks.outfit_of(p.resource_path.get_file().get_basename())
+		if ["Knight", "Peasant", "Ranger", "Wizard"].has(o) and not out.has(o):
+			out.append(o)
+	out.sort()
+	return out
+
+
+func _surface_param(f: Node, outfit: String, param: StringName) -> Variant:
+	for m: Node in f.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = m as MeshInstance3D
+		for i: int in range(mi.mesh.get_surface_count() if mi.mesh != null else 0):
+			if Wardrobe.outfit_of(mi.mesh.surface_get_material(i)) != outfit:
+				continue
+			var sm: ShaderMaterial = mi.get_surface_override_material(i) as ShaderMaterial
+			return sm.get_shader_parameter(param) if sm != null else null
+	return null
+
+
+func _wears(f: RegentsFigure, part: String) -> bool:
+	for p: PackedScene in f.wearing():
+		if p.resource_path.contains(part):
+			return true
+	return false
+
+
+func _run_worn() -> void:
+	var me: ArmorLookComponent = _wearer(9001, RegentsColors.with_colors("peasant_m;hair=2", {&"main": BLUE}))
+	var them: ArmorLookComponent = _wearer(9002, RegentsColors.with_colors("peasant_m", {&"main": RED}))
+	_check(me.required_tables() == [&"worn"] and me.optional_tables() == [&"worn"], "the look reads `worn` (optional: no row, no armor)")
+	var fm: RegentsFigure = me.figure()
+	var ft: RegentsFigure = them.figure()
+	_check(_outfits(fm) == ["Peasant"], "no row: the Peasant (%s)" % [_outfits(fm)])
+	var iron: MetalFinish = load("res://game/regents/wardrobe/metals/2_iron.tres") as MetalFinish
+	me._on_row_updated(&"worn", null, _worn(0, _item("iron_cuirass"), 0))
+	_check(_outfits(fm) == ["Knight", "Peasant"], "an iron cuirass worn: the Knight chest over the Peasant (%s)" % [_outfits(fm)])
+	var metal: Variant = _surface_param(fm, "Knight", &"metal_color")
+	_check(metal is Color and (metal as Color).is_equal_approx(iron.color), "in the iron finish (%s)" % [metal])
+	_check(_dyed(fm, BLUE).y >= 1, "the Peasant pieces left (legs, feet) in my colors")
+	_check(_outfits(ft) == ["Peasant"] and _dyed(ft, RED).y == _outfit_surfaces(ft), "another player: untouched by my row")
+	them._on_row_updated(&"worn", null, _worn(_item("supple_leather_hood"), _item("supple_leather_jerkin"), _item("supple_leather_trousers")))
+	_check(_outfits(ft) == ["Ranger"], "their own row: the Ranger leather, all of it (%s)" % [_outfits(ft)])
+	var wolf: DyePalette = load("res://game/regents/wardrobe/palettes/leather_2_supple.tres") as DyePalette
+	var main_t: Variant = _surface_param(ft, "Ranger", &"main_color")
+	_check(main_t is Color and (main_t as Color).is_equal_approx(wolf.main), "in the supple leather palette (the wolf)")
+	_check(_outfits(fm) == ["Knight", "Peasant"], "and mine as it was")
+	# A reassembly (a new beard) keeps the armor and its palette.
+	fm.apply_appearance(RegentsColors.with_colors("peasant_m;hair=2;beard=3", {&"main": BLUE}))
+	var metal2: Variant = _surface_param(fm, "Knight", &"metal_color")
+	_check(_outfits(fm) == ["Knight", "Peasant"] and metal2 is Color and (metal2 as Color).is_equal_approx(iron.color), "a reassembly keeps the armor in its finish")
+	# A slot back to 0, then the row gone: the Peasant piece back.
+	me._on_row_updated(&"worn", null, _worn(_item("steel_armet"), 0, _item("steel_legplates")))
+	_check(_outfits(fm) == ["Knight", "Peasant"] and not _wears(fm, "Knight_Body_Armor") and _wears(fm, "Peasant_Body"), "the chest back to 0: the Peasant shirt again")
+	_check(not _wears(fm, "Hair_"), "a closed helm: no hair")
+	me._on_row_updated(&"worn", _worn(0, 0, 0), null)
+	_check(_outfits(fm) == ["Peasant"] and _wears(fm, "Hair_") and _dyed(fm, BLUE).y == _outfit_surfaces(fm), "the row gone: all Peasant in my colors, the hair back")
+	# The practice piece: nothing drawn, nothing broken.
+	me._on_row_updated(&"worn", null, _worn(40068, 40067, 0))
+	_check(_outfits(fm) == ["Peasant"], "the practice pieces draw nothing")
+	# A new model (a look chosen again) is dressed as it comes.
+	me._on_row_updated(&"worn", null, _worn(0, _item("linen_robe"), 0))
+	var visual: Node = fm.get_parent()
+	visual.remove_child(fm)
+	fm.free()
+	var fresh: RegentsFigure = (load(MALE) as PackedScene).instantiate() as RegentsFigure
+	fresh.name = "Model"
+	visual.add_child(fresh)
+	me._process(0.0)
+	_check(_outfits(fresh) == ["Peasant", "Wizard"], "a new model is dressed again (%s)" % [_outfits(fresh)])
+	for c: ArmorLookComponent in [me, them]:
+		(c.entity as Node).free()

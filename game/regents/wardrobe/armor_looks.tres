@@ -1,0 +1,138 @@
+[gd_resource type="Resource" script_class="ArmorLooks" format=3]
+
+[ext_resource type="Script" path="res://game/regents/wardrobe/armor_look_entry.gd" id="1_foptc"]
+[ext_resource type="Script" path="res://game/regents/wardrobe/dye_palette.gd" id="2_i5wm5"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/metal_1_copper.tres" id="3_xpuw1"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/metal_2_iron.tres" id="4_5vxll"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/metal_3_steel.tres" id="5_kwiad"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/leather_1_soft.tres" id="6_p4mob"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/leather_2_supple.tres" id="7_1gjgc"]
+[ext_resource type="Resource" path="res://game/regents/wardrobe/palettes/cloth_1_flax.tres" id="8_pfr5d"]
+[ext_resource type="Script" path="res://game/regents/wardrobe/armor_looks.gd" id="9_qtal7"]
+
+[sub_resource type="Resource" id="Resource_5q6vx"]
+script = ExtResource("1_foptc")
+pattern = &"armet"
+male = Dictionary[StringName, String]({
+&"head": "Male_Knight_Head_Armet"
+})
+female = Dictionary[StringName, String]({
+&"head": "Female_Knight_Head_Armet"
+})
+
+[sub_resource type="Resource" id="Resource_kdngo"]
+script = ExtResource("1_foptc")
+pattern = &"cuirass"
+male = Dictionary[StringName, String]({
+&"arms": "Male_Knight_Arms",
+&"neck": "Male_Knight_Acc_Scarf",
+&"shoulders": "Male_Knight_Acc_Pauldron_Round",
+&"torso": "Male_Knight_Body_Armor"
+})
+female = Dictionary[StringName, String]({
+&"arms": "Female_Knight_Arms",
+&"neck": "Female_Knight_Acc_Scarf",
+&"shoulders": "Female_Knight_Acc_Pauldrons_Round",
+&"torso": "Female_Knight_Body_Armor"
+})
+
+[sub_resource type="Resource" id="Resource_ofdv4"]
+script = ExtResource("1_foptc")
+pattern = &"cuirass"
+material = &"steel"
+male = Dictionary[StringName, String]({
+&"arms": "Male_Knight_Arms",
+&"neck": "Male_Knight_Acc_Scarf",
+&"shoulders": "Male_Knight_Acc_Pauldron_Spike",
+&"torso": "Male_Knight_Body_Armor"
+})
+female = Dictionary[StringName, String]({
+&"arms": "Female_Knight_Arms",
+&"neck": "Female_Knight_Acc_Scarf",
+&"shoulders": "Female_Knight_Acc_Pauldrons_Spike",
+&"torso": "Female_Knight_Body_Armor"
+})
+
+[sub_resource type="Resource" id="Resource_ck01q"]
+script = ExtResource("1_foptc")
+pattern = &"legplates"
+male = Dictionary[StringName, String]({
+&"feet": "Male_Knight_Feet_Armor",
+&"legs": "Male_Knight_Legs_Armor"
+})
+female = Dictionary[StringName, String]({
+&"feet": "Female_Knight_Feet",
+&"legs": "Female_Knight_Legs"
+})
+
+[sub_resource type="Resource" id="Resource_3vbnk"]
+script = ExtResource("1_foptc")
+pattern = &"hood"
+male = Dictionary[StringName, String]({
+&"head": "Male_Ranger_Head_Hood"
+})
+female = Dictionary[StringName, String]({
+&"head": "Female_Ranger_Head_Hood"
+})
+
+[sub_resource type="Resource" id="Resource_cud7o"]
+script = ExtResource("1_foptc")
+pattern = &"jerkin"
+male = Dictionary[StringName, String]({
+&"arms": "Male_Ranger_Arms",
+&"shoulders": "Male_Ranger_Acc_Pauldron",
+&"torso": "Male_Ranger_Body"
+})
+female = Dictionary[StringName, String]({
+&"arms": "Female_Ranger_Arms",
+&"shoulders": "Female_Ranger_Acc_Pauldrons",
+&"torso": "Female_Ranger_Body"
+})
+
+[sub_resource type="Resource" id="Resource_32hl8"]
+script = ExtResource("1_foptc")
+pattern = &"leather_trousers"
+male = Dictionary[StringName, String]({
+&"feet": "Male_Ranger_Feet_Boots",
+&"legs": "Male_Ranger_Legs"
+})
+female = Dictionary[StringName, String]({
+&"feet": "Female_Ranger_Feet",
+&"legs": "Female_Ranger_Legs"
+})
+
+[sub_resource type="Resource" id="Resource_ygmk8"]
+script = ExtResource("1_foptc")
+pattern = &"robe"
+male = Dictionary[StringName, String]({
+&"arms": "Male_Wizard_Arms",
+&"torso": "Male_Wizard_Body"
+})
+female = Dictionary[StringName, String]({
+&"arms": "Female_Wizard_Arms",
+&"torso": "Female_Wizard_Body"
+})
+
+[sub_resource type="Resource" id="Resource_8ftkv"]
+script = ExtResource("1_foptc")
+pattern = &"cloth_trousers"
+male = Dictionary[StringName, String]({
+&"feet": "Male_Wizard_Feet",
+&"legs": "Male_Wizard_Legs"
+})
+female = Dictionary[StringName, String]({
+&"feet": "Female_Wizard_Feet",
+&"legs": "Female_Wizard_Legs"
+})
+
+[resource]
+script = ExtResource("9_qtal7")
+entries = Array[ExtResource("1_foptc")]([SubResource("Resource_5q6vx"), SubResource("Resource_kdngo"), SubResource("Resource_ofdv4"), SubResource("Resource_ck01q"), SubResource("Resource_3vbnk"), SubResource("Resource_cud7o"), SubResource("Resource_32hl8"), SubResource("Resource_ygmk8"), SubResource("Resource_8ftkv")])
+palettes = Dictionary[StringName, ExtResource("2_i5wm5")]({
+&"copper": ExtResource("3_xpuw1"),
+&"iron": ExtResource("4_5vxll"),
+&"linen": ExtResource("8_pfr5d"),
+&"soft_leather": ExtResource("6_p4mob"),
+&"steel": ExtResource("5_kwiad"),
+&"supple_leather": ExtResource("7_1gjgc")
+})
