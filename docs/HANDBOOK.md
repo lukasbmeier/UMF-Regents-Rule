@@ -1425,6 +1425,21 @@ option in another option's row) and takes `apply_appearance(text)`; `Appearance.
 reads the picks. The picker asks for the options again after every choice, so they may depend on
 what is worn (a piece's own colourways). See `game/characters/character_looks.gd`.
 
+**A game's own pieces on a character** (armour from a game's folder, which the picker's lists do
+not name): from the game's own look component, `model.wear({&"torso": knight_body, &"head": helm,
+&"hairstyle": null})` on the `ModularCharacter`. It is the whole set each call: a slot you leave out
+wears what the player chose again, a slot given `null` wears nothing (a closed helm hides the hair),
+`wear({})` takes all of the game's pieces off. The slots are `CharacterLooks.SLOTS`' keys (torso,
+arms, legs, feet, head, shoulders, neck, hairstyle, beard, brows); a game with its own slot names
+passes a second argument, a function naming the slot of each of the look's own pieces from its
+file path. The swap happens at once on the same skeleton, so the animations and a held item carry
+on. Every time the character is put together or dressed again (by `wear`, or because the player's
+appearance changed) it emits `assembled`: connect to it and do the game's own dressing (a dye)
+there, since the foundation's materials are back on. Wearing the same pieces again does nothing, so
+calling `wear` from that handler is safe. Your pieces stay on through an appearance change that
+reaches the same model (the picker's preview); a changed `appearance` row rebuilds the whole
+entity, so the component wears them again when it binds. Tested by the `looks` suite.
+
 **Music for a phase:** the game scene's `Music` node, Tracks: add the phase number and a stream.
 
 **A new level, built in the editor:**

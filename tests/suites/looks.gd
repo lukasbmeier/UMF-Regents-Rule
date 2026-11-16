@@ -364,6 +364,144 @@ func _run_piece_tests() -> void:
 	picker.close()
 	picker.queue_free()
 	await get_tree().process_frame
+	await _run_wear_tests()
+
+
+## A GENRE'S PIECES (DECISIONS #313): `wear` swaps pieces the foundation's slot lists do not know,
+## without the appearance text, IN PLACE (the skeleton and what holds it kept), emits `assembled`
+## once per change and never for the same pieces, keeps them through the appearance's own changes,
+## gives an empty slot back to the appearance and a null slot nothing, and the head's eyebrows back.
+func _run_wear_tests() -> void:
+	print("== a chosen look: a genre's pieces ==")
+	const MODELS: String = "res://game/characters/quaternius/models/"
+	# A piece no list names, as a genre's own folder would hold one (Regent's Rule's Knight).
+	var src: Node = (load(MODELS + "Female_Wizard_Body.gltf") as PackedScene).instantiate()
+	var genre_body := PackedScene.new()
+	genre_body.pack(src)
+	src.free()
+	genre_body.take_over_path("res://tests/genre_piece/Female_Knight_Body.gltf")
+	_check(CharacterLooks.slot_of(genre_body.resource_path) == "",
+		"the genre's piece is in none of the foundation's slot lists")
+
+	var p: ModularCharacter = (load("res://game/characters/looks/peasant_f.tscn") as PackedScene).instantiate() as ModularCharacter
+	get_tree().root.add_child(p)
+	var skel: Skeleton3D = p.skeleton()
+	# What holds the skeleton while it plays: a held item on a hand bone (its own mesh under it).
+	var hand := BoneAttachment3D.new()
+	hand.bone_name = skel.get_bone_name(skel.get_bone_count() - 1)
+	var held := MeshInstance3D.new()
+	held.name = "HeldSword"
+	held.mesh = BoxMesh.new()
+	hand.add_child(held)
+	skel.add_child(hand)
+	# And a game's own mesh put straight on the skeleton (no piece's): not the wardrobe's to take off.
+	var cape := MeshInstance3D.new()
+	cape.name = "GameCape"
+	cape.mesh = BoxMesh.new()
+	skel.add_child(cape)
+	var fired: Array[int] = [0]
+	var marker := StandardMaterial3D.new()
+	# The genre's dressing: on every assembly, its own material on the genre's piece, and the
+	# same pieces worn again (as a look component re-applying its row would): must not loop.
+	var dress_it: Callable = func() -> void:
+		fired[0] += 1
+		p.wear(p.overrides.duplicate(), p.slot_namer)
+		for mi: MeshInstance3D in _piece_meshes(p, "Female_Knight_Body"):
+			mi.set_surface_override_material(0, marker)
+	p.assembled.connect(dress_it)
+
+	var swapped: bool = p.wear({&"torso": genre_body})
+	var worn: PackedStringArray = _pieces_worn(p)
+	_check(swapped and worn.has("Female_Knight_Body") and not worn.has("Female_Peasant_Body")
+		and worn.has("Female_Peasant_Arms") and worn.has("Hair_Buns"),
+		"wear: the genre's torso in place of hers, the rest of her look kept (%s)" % ", ".join(worn))
+	_check(fired[0] == 1, "assembled once for the swap, though its handler wears again (%d)" % fired[0])
+	_check(p.skeleton() == skel and is_instance_valid(hand) and hand.get_parent() == skel and is_instance_valid(held)
+		and is_instance_valid(cape) and cape.get_parent() == skel
+		and p.find_children("*", "Skeleton3D", true, false).size() == 1,
+		"swapped in place: the same skeleton, the held item and the game's own mesh on it untouched")
+	var loose: Array[String] = []
+	for n: Node in p.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = n as MeshInstance3D
+		if mi != held and mi != cape and (mi.get_parent() != skel or mi.skeleton != NodePath("..")):
+			loose.append(String(mi.name))
+	_check(loose.is_empty(), "every worn mesh on the one skeleton (%s)" % str(loose))
+	_check(_marked(p, marker), "the genre dressed its piece from the signal")
+	_check(not p.wear({&"torso": genre_body}) and fired[0] == 1, "the same pieces again: nothing done, nothing emitted")
+
+	# The appearance changes under it: colours only (dressed again), then a piece (put together again).
+	p.apply_appearance("peasant_f;skin=3")
+	_check(fired[0] == 2 and _marked(p, marker) and _pieces_worn(p).has("Female_Knight_Body"),
+		"new colours from the appearance: assembled once more, the genre's piece and its dressing kept (%d)" % fired[0])
+	p.apply_appearance("peasant_f;skin=3;legs=3;torso=2")
+	worn = _pieces_worn(p)
+	_check(fired[0] == 3 and worn.has("Female_Knight_Body") and worn.has("Female_Noble_Legs")
+		and not worn.has("Female_Ranger_Body") and _marked(p, marker),
+		"a piece from the appearance: the genre's torso still over the chosen one, the chosen legs on (%s)" % ", ".join(worn))
+	skel = p.skeleton()   # the appearance's swap put her together on a new one (#178)
+
+	# Empty slots fall back; a null slot is bare; a slot the look had nothing in is added.
+	p.wear({&"torso": genre_body, &"hairstyle": null, &"shoulders": load(MODELS + "Female_Noble_Acc_Pauldron.gltf") as PackedScene})
+	worn = _pieces_worn(p)
+	_check(not worn.has("Hair_Buns") and worn.has("Female_Noble_Acc_Pauldron") and worn.has("Female_Knight_Body")
+		and p.skeleton() == skel, "a null slot wears nothing, an empty one is added to (%s)" % ", ".join(worn))
+	p.wear({&"brows": null})
+	_check(_brows(p) == ["Eyebrows"], "her brows taken off, the head's own come back (%s)" % str(_brows(p)))
+	p.wear({})
+	worn = _pieces_worn(p)
+	_check(worn.has("Female_Ranger_Body") and worn.has("Hair_Buns") and not worn.has("Female_Knight_Body")
+		and not worn.has("Female_Noble_Acc_Pauldron") and _brows(p) == ["Eyebrows_Female"],
+		"wear({}): every slot the appearance's own again (%s; brows %s)" % [", ".join(worn), str(_brows(p))])
+	_check(fired[0] == 6, "one assembled per change (%d)" % fired[0])
+
+	# The genre's own slot names.
+	var namer: Callable = func(path: String) -> StringName:
+		return &"chest" if path.get_file().contains("_Body") else &""
+	p.wear({&"chest": genre_body}, namer)
+	worn = _pieces_worn(p)
+	_check(worn.has("Female_Knight_Body") and not worn.has("Female_Ranger_Body"),
+		"a genre's slot names, by its own namer (%s)" % ", ".join(worn))
+	p.assembled.disconnect(dress_it)
+	p.queue_free()
+
+	# Worn before it is put together: the first assembly wears it.
+	var fresh := ModularCharacter.new()
+	fresh.head = load(MODELS + "Regular_Female_OnlyHead.gltf") as PackedScene
+	fresh.parts = [load(MODELS + "Female_Peasant_Body.gltf") as PackedScene, load(MODELS + "Female_Peasant_Legs.gltf") as PackedScene]
+	_check(not fresh.wear({&"torso": genre_body}), "worn before assembly: only kept")
+	get_tree().root.add_child(fresh)
+	worn = _pieces_worn(fresh)
+	_check(worn == PackedStringArray(["Female_Knight_Body", "Female_Peasant_Legs"]),
+		"and the first assembly wears it (%s)" % ", ".join(worn))
+	fresh.queue_free()
+	await get_tree().process_frame
+
+
+func _piece_meshes(look: ModularCharacter, piece: String) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	for n: Node in look.find_children("*", "MeshInstance3D", true, false):
+		if String(n.get_meta(ModularCharacter.PIECE_META, "")).get_file().get_basename() == piece:
+			out.append(n as MeshInstance3D)
+	return out
+
+
+## Whether every mesh of the genre's piece wears the genre's material.
+func _marked(look: ModularCharacter, marker: Material) -> bool:
+	var meshes: Array[MeshInstance3D] = _piece_meshes(look, "Female_Knight_Body")
+	if meshes.is_empty():
+		return false
+	for mi: MeshInstance3D in meshes:
+		if mi.get_surface_override_material(0) != marker:
+			return false
+	return true
+
+
+func _brows(look: ModularCharacter) -> Array[String]:
+	var out: Array[String] = []
+	for n: Node in look.find_children("Eyebrows*", "MeshInstance3D", true, false):
+		out.append(String(n.name))
+	out.sort()
+	return out
 
 
 func _dressed_color(look: ModularCharacter, prefix: String) -> Color:
