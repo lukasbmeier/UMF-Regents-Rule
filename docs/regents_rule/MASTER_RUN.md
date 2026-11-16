@@ -161,7 +161,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | S2 | | | waiting S1 (so M3 too) | | | |
 | S3 | | | waiting S2 | | | |
 | S4 | | | waiting S3, P1 | | | ui/ |
-| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | running | | | |
+| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | MERGED 2026-11-16 | 91 | 754818e4 | |
 | W1 | | | waiting T1? | | | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |

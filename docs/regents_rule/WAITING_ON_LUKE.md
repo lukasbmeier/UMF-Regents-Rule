@@ -16,6 +16,9 @@ One line each: the question, today's value or the proposal, where it is written.
 - Your rewrite of the sword's pools (`ABILITIES_PREP.md` §9); then the axe's, bow's and staff's real content (§2 below).
 - B13 as read (one free change a week, then the head's materials, escalating): confirm the reading.
 - Which other abilities hit every foe in their sweep (only Cleave is marked; `hits_all` on the ability's .tres; PROGRESS 89).
+- YOUR STAFF: the staff now has a placeholder ult (Meteor) on R, so a staff that took Gale or Frost Ring on R keeps the pick but it no longer fires: change the pick to Meteor (free once a week), or say the staff should have no ult until yours is designed.
+- The second pick (~12) has nothing to take once E holds an option: upgrades are not built (B6).
+- Per-role pools (each handle its own Q and options) wait on server work (S1b); today each weapon kind has ONE pool.
 - A respec's cost once testing is over; the 99 curve and its hours (before the public demo, with a wipe).
 
 **Armor** (`ARMOR_PREP.md` §0; this run builds it with placeholders, §2 below)
@@ -54,6 +57,8 @@ One line each: the question, today's value or the proposal, where it is written.
 
 ## 2. Placeholders this run made (fill in; each says where)
 - THE VILLAGE'S PROPS: how many houses get vines, a fenced yard, crates, a wagon, the yard's depth; which places wear them (only the town world's village now): `game/regents/town/dressing/village.tres`.
+- THE WEAPON POOLS, all stand-ins (names, numbers, what each really does): sword E Flurry, Hamstring Cut, Shield Bash, R Execute; axe E Hamstring Chop, Skull Splitter, Shoulder Shove, R Whirlwind; bow Q Point-Blank Shot, E Pinning Shot, Kick Away, Quick Shot, R Arrow Volley; staff R Meteor: `game/regents/content/ability/{sword,axe,bow}_*.tres`, `staff_meteor.tres`, `content/spell/staff_meteor.tres`; their slows and shoves in `content/kit/*.tres` `hits`. Whirlwind and Arrow Volley hit every foe in the sweep (`hits_all`).
+- The staff's Bolt at 12 damage (was 9), for your feel check: `content/ability/staff_bolt.tres`.
 (more as each item merges)
 
 ## 3. To play and look at
@@ -61,6 +66,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 91: sword, axe or bow: Q from level 1; at 5 open the weapon's abilities and pick E from three; at 20 R is the ult. A staff at 20: R offers Meteor. `admin_set_item_level` jumps a weapon's level. A bow skill has never been pressed by a real client: tell me how it feels.
 - Step 90: F6 on `game/regents/town/town_world.tscn` (up in ~4 s now); 2 or 3: the village's fenced yards, vines, crates, a wagon.
 - Step 89: the copper axe at the frontier camp, stand on the line between the two training dummies, Q (Cleave): both lose 12.6.
 - Step 87: walk into the frontier camp: the foes and the Drillmaster move at once.
