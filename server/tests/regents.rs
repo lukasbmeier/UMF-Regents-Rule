@@ -868,8 +868,9 @@ fn the_staff_casts_its_spells_from_mana() {
     let bolt = rules::spell_of(staff.light[0]).expect("its left button is a spell");
     assert!(bolt.kind == rules::SPELL_BOLT && bolt.cost == 0.0 && bolt.cast_ms == 0 && bolt.body > 0, "the bolt: free, instant, a missile");
     let kinds: Vec<i64> = staff.skills.iter().map(|(a, _)| rules::spell_of(*a).expect("each skill a spell").kind).collect();
-    assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_BLINK, rules::SPELL_CONE], "Fireball, Frost Ring, Blink, Gale");
-    let ranks: Vec<u32> = staff.skills.iter().map(|(_, r)| *r).collect();
+    assert_eq!(kinds, vec![rules::SPELL_BOLT, rules::SPELL_AREA, rules::SPELL_BLINK, rules::SPELL_CONE, rules::SPELL_AREA],
+        "Fireball, Frost Ring, Blink, Gale, Meteor (placeholder: armor run P1)");
+    let ranks: Vec<u32> = staff.skills.iter().take(4).map(|(_, r)| *r).collect();
     assert_eq!(ranks, vec![1, 8, 19, 29], "the old 1, 3, 6, 9 on the 1-33 track");
     let fireball = rules::spell_of(staff.skills[0].0).unwrap();
     assert!(fireball.cost == 25.0 && fireball.splash_m == 3.0 && fireball.burn_ms == 3000 && rules::may_walk_casting(fireball),
@@ -1590,10 +1591,10 @@ fn item_levels_and_picks() {
     assert_eq!(rules::item_xp_gain(10, 3, 12, 0.5), 10, "NEGATIVE: catch-up never slows an item");
     // The staff: Fireball the base, Frost Ring and Gale the options, Blink on F; Q at 1, picks at 5 and 12, the ult at 20.
     let staff = rules::kit_keyed("staff").unwrap();
-    let (fireball, frost, blink, gale) = (40013, 40014, 40015, 40016);
-    assert_eq!(staff.skills.iter().map(|(a, _)| *a).collect::<Vec<_>>(), vec![fireball, frost, blink, gale]);
-    assert_eq!((staff.slot_of(fireball), staff.slot_of(frost), staff.slot_of(blink), staff.slot_of(gale), staff.slot_of(40012)),
-        (Some(rules::SLOT_BASE), Some(rules::SLOT_OPTION), Some(rules::SLOT_F), Some(rules::SLOT_OPTION), None));
+    let (fireball, frost, blink, gale, meteor) = (40013, 40014, 40015, 40016, 40048);
+    assert_eq!(staff.skills.iter().map(|(a, _)| *a).collect::<Vec<_>>(), vec![fireball, frost, blink, gale, meteor]);
+    assert_eq!((staff.slot_of(fireball), staff.slot_of(frost), staff.slot_of(blink), staff.slot_of(gale), staff.slot_of(meteor), staff.slot_of(40012)),
+        (Some(rules::SLOT_BASE), Some(rules::SLOT_OPTION), Some(rules::SLOT_F), Some(rules::SLOT_OPTION), Some(rules::SLOT_ULT), None));
     assert_eq!(staff.unlock_levels, [1, 5, 12, 20]);
     assert!(staff.slot_refusal(fireball, 1, [0; 3]).is_none() && staff.slot_refusal(blink, 1, [0; 3]).is_none(), "Fireball and Blink from level 1");
     assert!(staff.slot_refusal(frost, 33, [0; 3]).is_some_and(|w| w.contains("not chosen")), "NEGATIVE: Frost Ring unpicked, at any level");
@@ -1607,16 +1608,33 @@ fn item_levels_and_picks() {
     assert!(staff.pick_refusal(0, frost, 5, [frost, 0, 0]).is_some_and(|w| w.contains("already")));
     assert!(staff.pick_refusal(1, gale, 11, [frost, 0, 0]).is_some_and(|w| w.contains("level 12")), "NEGATIVE: the second pick opens at 12");
     assert!(staff.pick_refusal(1, gale, 12, [frost, 0, 0]).is_some_and(|w| w.contains("E holds one")), "NEGATIVE: E holds one ability");
-    // R (Luke, 2026-11-14: "fix the R ability not being assigned"): no ult of its own yet, so its last pick takes the
-    // option E did not.
-    assert!(!staff.has_ults(), "the staff has no ult of its own yet");
-    assert!(staff.pick_refusal(2, gale, 20, [frost, 0, 0]).is_none(), "level 20, Frost Ring on E: Gale for R");
-    assert!(staff.pick_refusal(2, gale, 19, [frost, 0, 0]).is_some_and(|w| w.contains("level 20")), "NEGATIVE: the last pick opens at 20");
-    assert!(staff.pick_refusal(2, frost, 20, [frost, 0, 0]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: Frost Ring is on E already");
-    assert!(staff.pick_refusal(0, gale, 5, [0, 0, gale]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: nor E what R has");
-    assert!(staff.pick_refusal(2, fireball, 20, [frost, 0, 0]).is_some(), "NEGATIVE: not the base");
-    assert!(staff.slot_refusal(gale, 20, [frost, 0, gale]).is_none() && staff.slot_refusal(gale, 19, [frost, 0, gale]).is_some_and(|w| w.contains("level 20")),
-        "Gale on R from 20, and NEGATIVE: counting as 19, shut");
+    // R (Luke, 2026-11-14: "fix the R ability not being assigned"): a kit with NO ult of its own has its last pick take
+    // the option E did not: checked on the staff without its ult (step 76's rule stays in the code).
+    let no_ult = rules::KitSeed { skills: &staff.skills[..4], slots: &staff.slots[..4], ..*staff };
+    assert!(!no_ult.has_ults(), "the staff without its ult has none");
+    assert!(no_ult.pick_refusal(2, gale, 20, [frost, 0, 0]).is_none(), "no ult, level 20, Frost Ring on E: Gale for R");
+    assert!(no_ult.pick_refusal(2, gale, 19, [frost, 0, 0]).is_some_and(|w| w.contains("level 20")), "NEGATIVE: the last pick opens at 20");
+    assert!(no_ult.pick_refusal(2, frost, 20, [frost, 0, 0]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: Frost Ring is on E already");
+    assert!(no_ult.pick_refusal(0, gale, 5, [0, 0, gale]).is_some_and(|w| w.contains("another pick")), "NEGATIVE: nor E what R has");
+    assert!(no_ult.pick_refusal(2, fireball, 20, [frost, 0, 0]).is_some(), "NEGATIVE: not the base");
+    assert!(no_ult.slot_refusal(gale, 20, [frost, 0, gale]).is_none() && no_ult.slot_refusal(gale, 19, [frost, 0, gale]).is_some_and(|w| w.contains("level 20")),
+        "no ult: Gale on R from 20, and NEGATIVE: counting as 19, shut");
+    // THE STAFF'S ULT (armor run P1: Meteor, a placeholder): R takes it, and only it.
+    assert!(staff.has_ults(), "the staff has an ult of its own");
+    assert!(staff.pick_refusal(2, meteor, 20, [frost, 0, 0]).is_none(), "level 20: Meteor for R");
+    assert!(staff.pick_refusal(2, meteor, 19, [frost, 0, 0]).is_some_and(|w| w.contains("level 20")), "NEGATIVE: the ult opens at 20");
+    assert!(staff.pick_refusal(2, gale, 20, [frost, 0, 0]).is_some_and(|w| w.contains("last picks")), "NEGATIVE: with an ult, Gale is no last pick");
+    assert!(staff.pick_refusal(0, meteor, 5, [0; 3]).is_some(), "NEGATIVE: the ult is no first pick");
+    assert!(staff.slot_refusal(gale, 33, [frost, 0, gale]).is_some_and(|w| w.contains("not chosen")),
+        "NEGATIVE: a staff that took Gale on R before the ult: Gale no longer fires from R");
+    assert!(staff.slot_refusal(meteor, 20, [frost, 0, meteor]).is_none() && staff.slot_refusal(meteor, 19, [frost, 0, meteor]).is_some_and(|w| w.contains("level 20")),
+        "Meteor on R from 20, and NEGATIVE: counting as 19, shut");
+    // Every weapon kind has a full placeholder pool: one base, options for E, one ult (armor run P1).
+    for key in ["sword", "axe", "bow", "staff"] {
+        let k = rules::kit_keyed(key).unwrap();
+        let count = |slot: u32| k.slots.iter().filter(|s| **s == slot).count();
+        assert!(count(rules::SLOT_BASE) == 1 && count(rules::SLOT_OPTION) >= 2 && count(rules::SLOT_ULT) == 1, "{key}: a base, options, an ult");
+    }
     assert!(staff.pick_refusal(3, frost, 33, [0; 3]).is_some(), "NEGATIVE: no pick 3");
     // A foe's kit (no slots) gates nothing; the sword's one skill is its base.
     let imp = rules::kit_keyed("imp").unwrap();

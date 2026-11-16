@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="KitDef" load_steps=14 format=3]
+[gd_resource type="Resource" script_class="KitDef" format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/swordsmanship.tres" id="2_skill"]
@@ -8,10 +8,27 @@
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_lunge.tres" id="a4"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_pommel_bash.tres" id="a5"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_rallying_cut.tres" id="a6"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_flurry.tres" id="p1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_hamstring_cut.tres" id="p2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_shield_bash.tres" id="p3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_execute.tres" id="p4"]
+[ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="h_script"]
+[ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="h_slow"]
 [ext_resource type="Script" path="res://game/regents/content/kit_role.gd" id="3_kit_role"]
 [ext_resource type="Resource" path="res://game/regents/content/role/damage.tres" id="r_damage"]
 [ext_resource type="Resource" path="res://game/regents/content/role/tank.tres" id="r_tank"]
 [ext_resource type="Resource" path="res://game/regents/content/role/support.tres" id="r_support"]
+
+[sub_resource type="Resource" id="Hit_hamstring"]
+script = ExtResource("h_script")
+ability = ExtResource("p2")
+status = ExtResource("h_slow")
+status_ms = 3000
+
+[sub_resource type="Resource" id="Hit_bash"]
+script = ExtResource("h_script")
+ability = ExtResource("p3")
+push_mps = 8.0
 
 [sub_resource type="Resource" id="Role_damage"]
 script = ExtResource("3_kit_role")
@@ -41,9 +58,10 @@ skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
 follow_ms = PackedInt32Array(200, 200, 200)
 roles = Array[ExtResource("3_kit_role")]([SubResource("Role_damage"), SubResource("Role_tank"), SubResource("Role_support")])
-skills = Array[Resource]([ExtResource("a4")])
-skill_ranks = PackedInt32Array(1, 8, 19, 29)
-skill_slots = PackedInt32Array(0)
+skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4")])
+skill_ranks = PackedInt32Array(1, 1, 1, 1, 1)
+skill_slots = PackedInt32Array(0, 1, 1, 1, 2)
+hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_bash")])
 id = 40001
 display_name = "Sword"
-designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut."
+designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut. PLACEHOLDER POOL (armor run P1, 2026-11-15): one pool for every handle until per-role pools exist on the server (Lane S); the options and the ult are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityVfxSet" load_steps=16 format=3]
+[gd_resource type="Resource" script_class="AbilityVfxSet" format=3]
 
 [ext_resource type="Script" path="res://game/regents/vfx/ability_vfx_set.gd" id="1_set"]
 [ext_resource type="Script" path="res://game/regents/vfx/ability_vfx_entry.gd" id="2_entry"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://game/regents/vfx/effects/blink.tscn" id="11_blink_fx"]
 [ext_resource type="PackedScene" path="res://game/regents/vfx/effects/gale.tscn" id="12_gale_fx"]
 [ext_resource type="PackedScene" path="res://game/regents/vfx/effects/parry_flash.tscn" id="13_parry"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/staff_meteor.tres" id="14_meteor"]
 
 [sub_resource type="Resource" id="Fireball"]
 script = ExtResource("2_entry")
@@ -52,7 +53,14 @@ charge = ExtResource("9_fire_charge")
 two_hands = true
 ahead_m = 0.2
 
+[sub_resource type="Resource" id="Meteor"]
+script = ExtResource("2_entry")
+ability = ExtResource("14_meteor")
+charge = ExtResource("9_fire_charge")
+two_hands = true
+ahead_m = 0.2
+
 [resource]
 script = ExtResource("1_set")
-entries = Array[ExtResource("2_entry")]([SubResource("Fireball"), SubResource("FrostRing"), SubResource("Blink"), SubResource("Gale"), SubResource("ImpEmber"), SubResource("ImpCinderRing")])
+entries = Array[ExtResource("2_entry")]([SubResource("Fireball"), SubResource("FrostRing"), SubResource("Blink"), SubResource("Gale"), SubResource("ImpEmber"), SubResource("ImpCinderRing"), SubResource("Meteor")])
 parry = ExtResource("13_parry")

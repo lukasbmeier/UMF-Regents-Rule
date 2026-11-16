@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 8000
+range_m = 1.6
+wind_up_ms = 250
+damage = 5.0
+animation = &"ability.40045"
+key = &"regents.combat"
+judged = true
+reach_m = 1.6
+radius_m = 0.5
+height_m = 0.9
+lunges = false
+id = 40045
+display_name = "Kick Away (placeholder)"
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Bow, E option: a kick that shoves a foe off you (the kit's KitHit push)."
