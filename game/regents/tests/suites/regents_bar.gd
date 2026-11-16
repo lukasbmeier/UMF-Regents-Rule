@@ -44,6 +44,8 @@ func run() -> void:
 	_run_words()
 	await _run_drawn()
 	await _run_lab()
+	await _run_doll()
+	_run_defense_twin()
 
 
 func _run_looks() -> void:
@@ -601,3 +603,129 @@ func _run_lab() -> void:
 	_check(lab.bars[0].slots[1].state() == RegentsAbilitySlot.LOCKED and lab.bars[0].pool_bar.visible, "the staff at rank 1 in the lab: locks, and mana beside")
 	lab.queue_free()
 	await get_tree().process_frame
+
+
+## The doll's armor, as the bag sees it: wear and take off only RECORD what was asked (the server answers through
+## `answer`); what is worn is `rows`, as the `worn` row would set it.
+class FakeArmor extends ArmorLookComponent:
+	var asked: Array[String] = []
+	var last: ReducerRequest = null
+
+	func wear(row: int) -> ReducerRequest:
+		asked.append("wear %d" % row)
+		last = ReducerRequest.new()
+		return last
+
+	func take_off(slot: StringName) -> ReducerRequest:
+		asked.append("take_off %s" % slot)
+		last = ReducerRequest.new()
+		return last
+
+
+## THE DOLL (W3): a click asks the server; the doll shows what the `worn` row says, never the click; a refusal shows its
+## reason; the words' percentages are the server's formula; a non-armor item offers no Wear; the trinket shows empty.
+func _run_doll() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var cuirass: ItemDef = load("res://game/regents/content/item/iron_cuirass.tres") as ItemDef
+	var helm: ItemDef = load("res://game/regents/content/item/practice_helm.tres") as ItemDef
+	var inv := SpaceTimeInventoryComponent.new()
+	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, cuirass.id, 1, 0, JSON.stringify({"q": 500}))
+	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, helm.id, 1, 0, JSON.stringify({"q": 1000}))
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40001, 1, 0, "")   # the Copper axe: not armor
+	var armor := FakeArmor.new()
+	var bag := RegentsBagWindow.new()
+	bag.inventory = inv
+	var cc := CombatComponent.new()
+	bag.combat = cc
+	bag.armor = armor
+	layer.add_child(bag)
+	bag.picked_row = 1
+	bag.open()
+	await get_tree().process_frame
+	var k: float = RegentsDefense.k_now()
+	_check(bag.find_child("Doll", true, false) != null and bag.find_child("Doll_head", true, false) != null and bag.find_child("Doll_trinket", true, false) != null,
+		"the doll: head, chest, legs and trinket")
+	var trinket: UiSlot = bag.find_child("Doll_trinket", true, false) as UiSlot
+	_check(trinket.tooltip_text.contains("nothing to wear here yet"), "the trinket shown empty (%s)" % trinket.tooltip_text)
+	var total: Label = bag.find_child("DollTotal", true, false) as Label
+	_check(total.text.contains("every hit lands whole"), "nothing worn: the total says so (%s)" % total.text)
+	# The piece's words: its Defense (the server's piece_defense with its quality) and what wearing it does.
+	var d: float = RegentsDefense.piece(cuirass.defense, 500)
+	var defense_line: Label = bag.find_child("Defense", true, false) as Label
+	var wearing: Label = bag.find_child("Wearing", true, false) as Label
+	_check(defense_line != null and defense_line.text == "Defense %d" % roundi(d), "its Defense as a number (%s)" % (defense_line.text if defense_line else "none"))
+	var expect: int = roundi((1.0 - k / (k + d)) * 100.0)
+	_check(wearing != null and wearing.text == "Wearing it, you'd take %d%% less, now 0%%." % expect,
+		"what wearing it does, by K / (K + Defense) with K %.0f (%s)" % [k, wearing.text if wearing else "none"])
+	# Wear: asked of the server; nothing worn on the doll until the row says so.
+	var wear_b: Button = bag.find_child("Wear_1", true, false) as Button
+	_check(wear_b != null and wear_b.text == "Wear", "a piece of armor offers Wear")
+	wear_b.pressed.emit()
+	await get_tree().process_frame
+	_check(armor.asked == ["wear 1"], "Wear asks the server to wear row 1 (%s)" % [armor.asked])
+	var chest_slot: UiSlot = bag.find_child("Doll_chest", true, false) as UiSlot
+	_check(chest_slot != null and chest_slot.tooltip_text.contains("nothing worn"), "NEGATIVE: the click alone puts nothing on the doll")
+	# The row comes back: the doll shows it.
+	armor.rows[&"chest"] = 1
+	armor.worn_changed.emit()
+	bag.refresh()
+	await get_tree().process_frame
+	chest_slot = bag.find_child("Doll_chest", true, false) as UiSlot
+	total = bag.find_child("DollTotal", true, false) as Label
+	_check(chest_slot.tooltip_text.contains("Iron cuirass") or chest_slot.tooltip_text.to_lower().contains("cuirass"), "the worn row: the cuirass on the doll's chest")
+	_check(total.text == "Defense %d: you take %d%% less from every hit." % [roundi(d), expect], "the doll's total (%s)" % total.text)
+	_check((bag.find_child("Wear_1", true, false) as Button).text == "Take off" and bag.find_child("Drop_1", true, false) == null,
+		"worn: Take off, and no Drop")
+	# The helm's words with the chest worn: the two added, as the server adds them (quality 1000: a fifth more).
+	bag.picked_row = 2
+	bag.refresh()
+	await get_tree().process_frame
+	var dh: float = RegentsDefense.piece(helm.defense, 1000)
+	wearing = bag.find_child("Wearing", true, false) as Label
+	_check(is_equal_approx(dh, helm.defense * 1.2), "quality 1000 adds a fifth (%.1f)" % dh)
+	_check(wearing.text == "Wearing it, you'd take %d%% less, now %d%%." % [roundi((1.0 - k / (k + d + dh)) * 100.0), expect],
+		"the helm's words count the chest already worn (%s)" % wearing.text)
+	# A refusal: its reason shown, nothing worn.
+	(bag.find_child("Wear_2", true, false) as Button).pressed.emit()
+	armor.last._settle(ReducerRequest.Outcome.REJECTED, "wear: not in a fight (wait until your health comes back)")
+	await get_tree().process_frame
+	var refused: Label = bag.find_child("Refusal", true, false) as Label
+	_check(refused != null and refused.text == "Not worn: not in a fight (wait until your health comes back).",
+		"in a fight: the refusal's reason shown (%s)" % (refused.text if refused else "none"))
+	_check(armor.row_in(&"head") == 0 and (bag.find_child("Doll_head", true, false) as UiSlot).tooltip_text.contains("nothing worn"),
+		"and nothing worn")
+	# Take off from the doll: asked of the server.
+	armor.asked.clear()
+	(bag.find_child("Doll_chest", true, false) as UiSlot).pressed.emit()
+	_check(armor.asked == ["take_off chest"], "clicking the doll's chest asks to take it off (%s)" % [armor.asked])
+	armor.rows[&"chest"] = 0
+	bag.refresh()
+	await get_tree().process_frame
+	_check((bag.find_child("Doll_chest", true, false) as UiSlot).tooltip_text.contains("nothing worn"), "the row says so: taken off")
+	# Not armor: no Wear.
+	bag.picked_row = 3
+	bag.refresh()
+	await get_tree().process_frame
+	_check(bag.find_child("Wear_3", true, false) == null and bag.find_child("Defense", true, false) == null, "NEGATIVE: an axe offers no Wear and no Defense")
+	layer.free()
+	armor.free()
+	cc.free()
+	inv.free()
+
+
+## THE TWIN, on the case the server's own tests pin (PROGRESS 92, `combat_playtest.sh`'s armor leg): the practice
+## cuirass at quality 0 and the practice helm at 1000, K 67: a skeleton's slash of 7 lands at 7 x 67 / 99 = 4.74.
+func _run_defense_twin() -> void:
+	var cuirass: ItemDef = load("res://game/regents/content/item/practice_cuirass.tres") as ItemDef
+	var helm: ItemDef = load("res://game/regents/content/item/practice_helm.tres") as ItemDef
+	var total: float = RegentsDefense.piece(cuirass.defense, 0) + RegentsDefense.piece(helm.defense, 1000)
+	_check(is_equal_approx(total, 32.0), "the practice pieces: Defense 20 + 10 x 1.2 = 32 (%.2f)" % total)
+	_check(is_equal_approx(7.0 * RegentsDefense.keeps(total, 67.0), 7.0 * 67.0 / 99.0) and absf(7.0 * RegentsDefense.keeps(total, 67.0) - 4.74) < 0.005,
+		"a slash of 7 through them at K 67: 4.74, as the server deals it")
+	_check(RegentsDefense.keeps(0.0, 67.0) == 1.0 and RegentsDefense.keeps(32.0, 0.0) == 1.0, "no Defense, or K not above 0: all of it")
+	_check(is_equal_approx(RegentsDefense.piece(10, 5000), 12.0), "quality past 1000 counts as 1000")
+	_check(is_equal_approx(HotRules.number(&"regents.defense_k"), RegentsDefense.k_now()), "K is the live hot rule")
+	for f: String in ["copper_cuirass", "iron_cuirass", "steel_cuirass", "soft_leather_jerkin", "linen_robe"]:
+		var it: ItemDef = load("res://game/regents/content/item/%s.tres" % f) as ItemDef
+		_check(it.defense > 0 and is_equal_approx(RegentsDefense.piece(it.defense, 0), float(it.defense)), "%s: Defense %d as baked" % [f, it.defense])
