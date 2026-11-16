@@ -219,6 +219,16 @@ static func lighter_for(who: Node) -> bool:
 	return FoeDef.by_kind(ent.definition.kind) == null and ent.find_component(CombatComponent) != null
 
 
+## Whether a shot's end (`ShotLook` under a missile's body) is the lighter version: its body's owner's
+## (`BodyComponent.owner_id`) as `lighter_for` says.
+static func lighter_for_shot(look: Node) -> bool:
+	var n: Node = look
+	while n != null and not (n is SpaceTimeEntity):
+		n = n.get_parent()
+	var body: BodyComponent = (n as SpaceTimeEntity).find_component(BodyComponent) as BodyComponent if n != null else null
+	return body != null and body.owner_id != 0 and lighter_for(EntityRegistry.get_entity(body.owner_id))
+
+
 ## Play `scene` at `at`, facing `toward` (a point), aimed at `target`, showing on `caster`: placed and set up before it
 ## enters the world (where it starts), beside the fighter so it outlives them. Null when it is no effect.
 func play(scene: PackedScene, ability_id: int, at: Vector3, toward: Vector3 = Vector3.INF, target: Vector3 = Vector3.ZERO,

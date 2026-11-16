@@ -34,8 +34,13 @@ enum Element { FROST, FIRE }
 
 var _circle: MeshInstance3D = null
 var _shock: MeshInstance3D = null
-## [pivot, how far out (0..1), its height]
+## THE PIECES ARE ONE MULTIMESH (one draw for the lot, however many: before many players), each instance a unit
+## spike stretched to its size; the energy shader (`instanced`) reads its erosion, heat and size from its custom data
+## so it looks as a piece of its own did. Per piece, in the order they rise (from the middle out):
+## [its turn (Basis), where it stands, how far out (0..1), its height, its width at the foot, its scale now
+## (Vector3), whether it has risen (bool), its erosion, its heat]
 var _shards: Array[Array] = []
+var _pieces: MultiMeshInstance3D = null
 var _motes: GPUParticles3D = null
 var _landing: Array[GPUParticles3D] = []
 var _light: OmniLight3D = null
@@ -62,20 +67,35 @@ func _build() -> void:
 	var look: ShaderMaterial = _flame() if _fire() else _ice()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = layout_seed
+	var turn := Node3D.new()   # (only to turn each piece as it always was turned)
 	for i: int in pieces:
 		var out: float = sqrt(rng.randf_range(0.12, 0.95))
 		var ang: float = TAU * (float(i) + rng.randf_range(-0.35, 0.35)) / float(maxi(pieces, 1))
 		var h: float = rng.randf_range(height_m.x, height_m.y) * lerpf(1.0, 0.7, out)
-		var pivot := Node3D.new()
-		pivot.position = Vector3(cos(ang), 0.0, sin(ang)) * radius_m * out
-		pivot.rotation = Vector3(0.0, -ang, 0.0)
-		pivot.rotate_object_local(Vector3.FORWARD, deg_to_rad(lean_deg * out * rng.randf_range(0.5, 1.0)))
-		pivot.rotate_object_local(Vector3.UP, rng.randf_range(0.0, TAU))
-		add_child(pivot)
+		turn.transform = Transform3D.IDENTITY
+		turn.rotation = Vector3(0.0, -ang, 0.0)
+		turn.rotate_object_local(Vector3.FORWARD, deg_to_rad(lean_deg * out * rng.randf_range(0.5, 1.0)))
+		turn.rotate_object_local(Vector3.UP, rng.randf_range(0.0, TAU))
 		var foot: float = rng.randf_range(0.12, 0.24) * h * (1.6 if _fire() else 1.0)
-		var mesh: MeshInstance3D = clocked(VfxKit.shape_node(VfxKit.spike(foot, h, 5 if not _fire() else 10), look), pivot) as MeshInstance3D
-		mesh.position.y = h * 0.5 - 0.15
-		_shards.append([pivot, out, h])
+		_shards.append([turn.basis.orthonormalized(), Vector3(cos(ang), 0.0, sin(ang)) * radius_m * out, out, h, foot,
+			Vector3(1.0, 0.001, 1.0), false, 0.0, 0.0])
+	turn.free()
+	_shards.sort_custom(func(x: Array, y: Array) -> bool: return float(x[2]) < float(y[2]))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = true
+	mm.mesh = VfxKit.spike(1.0, 1.0, 5 if not _fire() else 10)
+	mm.instance_count = _shards.size()
+	mm.visible_instance_count = 0
+	look.set_shader_parameter(&"instanced", true)
+	_pieces = MultiMeshInstance3D.new()
+	_pieces.name = "Pieces"
+	_pieces.multimesh = mm
+	_pieces.material_override = look
+	_pieces.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var reach: float = radius_m + height_m.y
+	_pieces.custom_aabb = AABB(Vector3(-reach, -1.0, -reach), Vector3(reach * 2.0, height_m.y + 2.0, reach * 2.0))
+	clocked(_pieces)
 	# Rising from the circle as it waits: cold motes, or embers.
 	var mote_move: ParticleProcessMaterial = VfxKit.from_ring(VfxKit.motion(Vector3.UP, 15.0, Vector2(0.3, 1.2), Vector3(0, 0.4, 0),
 		VfxKit.ramp(PackedColorArray([Color(color, 0.0), Color(color.lightened(0.3), 1.0), Color(color, 0.0)])), 1.0, 0.4), 0.0, radius_m * 0.95)
@@ -152,8 +172,9 @@ func _start() -> void:
 	_landed = false
 	_motes.emitting = true
 	for s: Array in _shards:
-		(s[0] as Node3D).scale = Vector3(1.0, 0.001, 1.0)
-		(s[0] as Node3D).visible = false
+		s[5] = Vector3(1.0, 0.001, 1.0)
+		s[6] = false
+	_pieces.multimesh.visible_instance_count = 0
 
 
 func _animate(a: float, _t: float) -> void:
@@ -179,21 +200,37 @@ func _animate(a: float, _t: float) -> void:
 	fx(_shock, &"fx_alpha", 1.0 - sr)
 	# What rises: a wave from the middle out, each punching up in a tenth of a second. Ice stands, then cracks away;
 	# flame leaps on up as it burns out.
+	var risen: int = 0
 	for s: Array in _shards:
-		var pivot: Node3D = s[0] as Node3D
-		var start: float = warn_s + float(s[1]) * 0.18
+		var start: float = warn_s + float(s[2]) * 0.18
 		var up: float = span(a, start, start + 0.12)
-		pivot.visible = a >= start
-		var mesh: GeometryInstance3D = pivot.get_child(0) as GeometryInstance3D
+		s[6] = a >= start
+		if not bool(s[6]):
+			continue
 		if _fire():
 			var burn: float = span(a, start + 0.1, start + 0.8)
-			pivot.scale = Vector3(lerpf(1.0, 0.6, burn), maxf(ease_back(up), 0.001) * lerpf(1.0, 1.5, burn), lerpf(1.0, 0.6, burn))
-			fx(mesh, &"fx_erosion", ease_in(burn))
-			fx(mesh, &"fx_heat", lerpf(0.25, -0.2, burn))
+			s[5] = Vector3(lerpf(1.0, 0.6, burn), maxf(ease_back(up), 0.001) * lerpf(1.0, 1.5, burn), lerpf(1.0, 0.6, burn))
+			s[7] = ease_in(burn)
+			s[8] = lerpf(0.25, -0.2, burn)
 		else:
-			pivot.scale = Vector3(1.0, maxf(ease_back(up), 0.001), 1.0)
-			fx(mesh, &"fx_erosion", ease_in(span(a, warn_s + 1.0 + float(s[1]) * 0.25, duration_s - 0.05)))
+			s[5] = Vector3(1.0, maxf(ease_back(up), 0.001), 1.0)
+			s[7] = ease_in(span(a, warn_s + 1.0 + float(s[2]) * 0.25, duration_s - 0.05))
+		var h: float = float(s[3])
+		var foot: float = float(s[4])
+		var piece := Transform3D(Basis.from_scale(Vector3(foot, h, foot)), Vector3(0.0, h * 0.5 - 0.15, 0.0))
+		_pieces.multimesh.set_instance_transform(risen, Transform3D((s[0] as Basis) * Basis.from_scale(s[5] as Vector3), s[1] as Vector3) * piece)
+		_pieces.multimesh.set_instance_custom_data(risen, Color(float(s[7]), float(s[8]), foot, h))
+		risen += 1
+	_pieces.multimesh.visible_instance_count = risen
 
+
+## How many pieces have risen, and of them how many stand at least `tall` of their height (the suite reads these:
+## headless keeps no MultiMesh transforms).
+func risen_count(tall: float = 0.0) -> int:
+	var n: int = 0
+	for s: Array in _shards:
+		n += 1 if bool(s[6]) and (s[5] as Vector3).y >= tall else 0
+	return n
 
 func _end() -> void:
 	_motes.emitting = false

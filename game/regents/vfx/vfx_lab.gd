@@ -5,7 +5,7 @@ extends Node3D
 ## missile, the blast; the circle, its warning and its landing; and so on.
 ##
 ##   the list (or Up / Down)   pick a showcase; it plays
-##   Space                      play it again          L   loop it
+##   Space                      play it again          L   loop it      O   as another player sees it (lighter)
 ##   the speed buttons ( [ ] )  full speed down to a tenth: watch a blast form
 ##   Day / Dusk / Night         the light: glow shows most at night
 ##   right mouse, drag          turn round the stage    wheel   nearer, farther
@@ -16,7 +16,8 @@ extends Node3D
 ##
 ## SHOTS (windowed, no server): `"$GODOT" --path . res://game/regents/vfx/vfx_lab.tscn -- <out dir>` plays every
 ## showcase and saves a contact sheet of six moments of each (`<out>/vfx_<name>.png`), then quits. A second argument,
-## a showcase's name, shoots that one only.
+## a showcase's name, shoots that one only. The word `others` among the arguments shoots them as ANOTHER player's
+## (the lighter version, `VfxEffect.lighter`); O toggles that in the lab. `-- cost` measures both.
 
 ## Each frame, after the lab has moved things: what a showcase waits on (its own signal, so a showcase still
 ## waiting when the lab closes is simply dropped, never resumed on a lab that is gone).
@@ -113,12 +114,17 @@ var _plain: Array[Array] = []
 ## The lab's own clock since the showcase began (s, slowed with it): the shots wait on it, so a first-use shader
 ## compile's stall never shifts them.
 var clock: float = 0.0
+## Every effect played as another player's (the lighter version; O, or `others` on the command line).
+var others: bool = false
 
 
 func _ready() -> void:
 	_build_world()
 	_build_ui()
 	var args: PackedStringArray = OS.get_cmdline_user_args()
+	if args.has("others"):
+		others = true
+		args.remove_at(args.find("others"))
 	if not args.is_empty() and not args[0].begins_with("--"):   # (the test runner passes its own "--only=")
 		_shoot.call_deferred(args[0], args[1] if args.size() > 1 else "")
 	else:
@@ -330,6 +336,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dist = minf(_dist * 1.1, 60.0)
 	elif event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
 		match (event as InputEventKey).keycode:
+			KEY_O:
+				others = not others
+				_select(current)
 			KEY_SPACE:
 				replay()
 			KEY_L:
@@ -551,6 +560,7 @@ func _spawn(scene: String, at: Vector3, toward: Vector3 = Vector3.INF, aim: Vect
 	fx.caster = who
 	if prep.is_valid():
 		prep.call(fx)
+	fx.lighter = others
 	fx.shook.connect(_on_shook)
 	# Placed before it enters the tree: it starts (and reads where it is) as it does.
 	fx.position = at
@@ -839,7 +849,7 @@ func _shoot(dir: String, only: String) -> void:
 				img.resize(SHOT_SIZE.x, SHOT_SIZE.y, Image.INTERPOLATE_BILINEAR)
 				img.convert(Image.FORMAT_RGB8)
 				sheet.blit_rect(img, Rect2i(Vector2i.ZERO, SHOT_SIZE), Vector2i((k % 3) * SHOT_SIZE.x, int(k / 3.0) * SHOT_SIZE.y))
-			var file: String = dir.path_join("vfx_%s_%s.png" % [slug(name_s), LIGHTS[li].to_lower()])
+			var file: String = dir.path_join("vfx_%s_%s%s.png" % [slug(name_s), LIGHTS[li].to_lower(), "_others" if others else ""])
 			sheet.save_png(file)
 			print("saved ", file)
 			_run += 1
@@ -866,30 +876,38 @@ func _measure() -> void:
 	_reset()
 	var base: Vector2 = await _sample_frames(60)
 	print("COST stage alone: %d draw calls, %.2f ms GPU" % [roundi(base.x), base.y])
-	for i: int in showcases.size():
-		_select(i)
-		var peak_draws: float = 0.0
-		var peak_parts: int = 0
-		var peak_gpu: float = 0.0
-		var sum_gpu: float = 0.0
-		var frames: int = 0
-		await get_tree().process_frame
-		while _running:
-			await RenderingServer.frame_post_draw
-			var draws: float = Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
-			var gpu: float = RenderingServer.viewport_get_measured_render_time_gpu(vp)
-			var parts: int = 0
-			for p: Node in _stage.find_children("*", "GPUParticles3D", true, false):
-				if (p as GPUParticles3D).is_visible_in_tree() and (p as GPUParticles3D).emitting:
-					parts += (p as GPUParticles3D).amount
-			peak_draws = maxf(peak_draws, draws)
-			peak_parts = maxi(peak_parts, parts)
-			peak_gpu = maxf(peak_gpu, gpu)
-			sum_gpu += gpu
-			frames += 1
-		print("COST %s: +%d draw calls at most, %d particles at most, GPU %.2f ms at most (+%.2f), %.2f ms on average" % [
-			showcases[i][0], roundi(peak_draws - base.x), peak_parts, peak_gpu, peak_gpu - base.y, sum_gpu / float(maxi(frames, 1))])
+	for pass_others: bool in [false, true]:
+		others = pass_others
+		for i: int in showcases.size():
+			await _measure_one(i, base)
 	AppExit.quit(get_tree(), 0)
+
+
+## One showcase through to its end: the most it adds at once, printed.
+func _measure_one(i: int, base: Vector2) -> void:
+	var vp: RID = get_viewport().get_viewport_rid()
+	_select(i)
+	var peak_draws: float = 0.0
+	var peak_parts: int = 0
+	var peak_gpu: float = 0.0
+	var sum_gpu: float = 0.0
+	var frames: int = 0
+	await get_tree().process_frame
+	while _running:
+		await RenderingServer.frame_post_draw
+		var draws: float = Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		var gpu: float = RenderingServer.viewport_get_measured_render_time_gpu(vp)
+		var parts: int = 0
+		for p: Node in _stage.find_children("*", "GPUParticles3D", true, false):
+			if (p as GPUParticles3D).is_visible_in_tree() and (p as GPUParticles3D).emitting:
+				parts += (p as GPUParticles3D).amount
+		peak_draws = maxf(peak_draws, draws)
+		peak_parts = maxi(peak_parts, parts)
+		peak_gpu = maxf(peak_gpu, gpu)
+		sum_gpu += gpu
+		frames += 1
+	print("COST %s%s: +%d draw calls at most, %d particles at most, GPU %.2f ms at most (+%.2f), %.2f ms on average" % [
+		showcases[i][0], " (another player's)" if others else "", roundi(peak_draws - base.x), peak_parts, peak_gpu, peak_gpu - base.y, sum_gpu / float(maxi(frames, 1))])
 
 
 ## Over `n` frames: the mean draw calls and the mean GPU time (ms).
