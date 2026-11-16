@@ -54,6 +54,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - Names for tiers 4-6, the fibers and the hides.
 
 **The UI rebuild** (`GAME.md`, "THE UI, A REBUILD SOON AFTER ARMOR": each yours to shape first)
+- The doll's empty slots show a letter (H, C, L, T), not a picture: a silhouette per slot with the rebuild?
 - 1 the inventory (drag, drop, resize). 2 C, the character sheet. 3 one look for every window. 4 the bar's keys reordered.
 
 **Art and the AI audit** (`AI_ASSET_AUDIT.md`)
@@ -79,6 +80,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 99, THE FIRST THING TO PLAY: `admin_give_item <you> 40075 1 500` (an iron cuirass), I: the doll at the top; pick the cuirass, read its words ("Wearing it, you'd take N% less, now M%"), Wear; click it on the doll to take it off; in a fight Wear is refused with its reason.
 - Step 97: `admin_give_item <you> 40087 1 0` (a linen robe), `wear <row>` out of a fight, F: Blink. A soft leather jerkin (40082): Snare; an iron cuirass (40075): Shove. With a staff and no robe, F is empty.
 - Step 96, two instances: wear an iron cuirass (40075), a copper armet, leather trousers: each sees the other's armor; steel's pauldrons are spiked; a helm hides the hair. `figure_shot.tscn` shows every tier on both bodies.
 - Step 94: craft iron plates at the anvil (two iron bars, a shape round), the Iron cuirass at the workbench (three plates, two copper rivets), or `admin_give_item <you> 40075 1 0`; `wear <row>` out of a fight (no doll yet). The workbench lists them under Armor.

@@ -150,6 +150,9 @@ paths:
   cells' Defense = share x material tier); a new piece or material is content and Make the table, never code. Leather
   is the HIDE family, cloth FIBER. A look finds a worn item's slot, family, material and piece from `ItemDef.by_id`
   (`armor_slot`, `material.family`, `material.key`, `pattern.key`). Armor's trait pools are EMPTY until Luke fills them.
+- ARMOR IS WORN FROM THE BAG'S DOLL (PROGRESS 99, `RegentsBagWindow`): what is worn is the server's `worn` row
+  (`ArmorLookComponent.rows`), never a click; a piece's words count as the server does through `RegentsDefense` (the
+  twin of `rules::piece_defense` / `defense_mult`): change both together. Never Light / Medium / Heavy.
 - F IS THE WORN CHEST'S (PROGRESS 97): a chest pattern's `worn_ability`, cast from the worn row whatever is wielded
   (`is_worn_ability`, `worn_ability_of`, both sides), no mana, no mastery; a weapon's kit never holds it. Blink is
   the cloth chest's (Luke's B8); the staff has four spells. Ability ids to 40050 and spells to 40011 are taken.

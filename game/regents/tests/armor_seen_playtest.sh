@@ -6,6 +6,7 @@
 #   GRANT_ARMOR <entity> <item> <item> <item>   the wearer asks: one of each, quality 0
 #   WORN                                        the wearer wears them: the watcher starts
 #   SEEN, WATCHER_DONE                          passed on to the wearer through the signal file
+# The wearer wears and takes off THROUGH THE BAG and its doll (W3), as a player does.
 #
 #   GODOT=/path/to/godot ./game/regents/tests/armor_seen_playtest.sh     # 150 ms round trip, 20 ms jitter (~2 min)
 #

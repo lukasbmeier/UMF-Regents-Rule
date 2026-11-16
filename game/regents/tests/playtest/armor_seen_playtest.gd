@@ -2,8 +2,12 @@ extends Node
 ## ANOTHER PLAYER'S ARMOR, SEEN (W2): two real clients at a simulated round trip in the frontier glade
 ## (game/regents/tests/armor_seen_playtest.sh starts them):
 ##   `--role=wearer`   asks the shell for three pieces (GRANT_ARMOR: a steel armet, an iron cuirass, soft leather
-##                     trousers), wears them through the server (`wear`), sees them on its own body (WORN); when the
-##                     watcher has looked (SEEN in the signal file), takes the chest off (`take_off`, CHEST_OFF).
+##                     trousers), wears them THROUGH THE BAG (W3: each picked, its Wear button), sees them on the bag's
+##                     doll as the `worn` row comes back and on its own body (WORN); when the watcher has looked (SEEN
+##                     in the signal file), takes the chest off by its slot ON THE DOLL (CHEST_OFF). The bag's buttons
+##                     and the doll's slot are driven by their `pressed` signals: a headless window's injected clicks
+##                     land at (0, 0), where the HUD passes the mouse (`headless-clicks-hud`), so a click cannot reach
+##                     them; the signal runs the same handler a click would.
 ##   `--role=watcher`  comes in after: the wearer's `worn` row comes with the ring, and their body wears the Knight's
 ##                     helm and chest (the chest's iron finish) and the Ranger's trousers, their hair hidden; ITS OWN
 ##                     body wears none of it (NEGATIVE). Then sees the chest come off: their Peasant shirt again.
@@ -61,23 +65,44 @@ func _wearer(look: ArmorLookComponent) -> void:
 	await _stand_at(WEARER_AT)
 	print("GRANT_ARMOR %d %d %d %d" % [me.entity_id, ARMET, CUIRASS, TROUSERS])
 	await _until(func() -> bool: return inv.count(ARMET) == 1 and inv.count(CUIRASS) == 1 and inv.count(TROUSERS) == 1, 20.0)
+	var hud: RegentsHud = get_tree().current_scene.find_child("HUD", true, false) as RegentsHud
+	var bag: RegentsBagWindow = hud.bag_window if hud != null else null
+	_check(bag != null and bag.armor == look, "the HUD's bag has the doll, on my own armor look")
+	if bag == null:
+		return
+	bag.open()
 	for item: int in [ARMET, CUIRASS, TROUSERS]:
 		var row: int = -1
 		for s: SpaceTimeInventoryComponent.Stack in inv.items():
 			if s.item_def_id == item:
 				row = s.id
-		var req: ReducerRequest = SpaceTimeSync.call_reducer(&"wear", [row], ["u64"])
-		await _until(func() -> bool: return req.outcome != ReducerRequest.Outcome.PENDING, 5.0)
-		_check(req.outcome == ReducerRequest.Outcome.OK, "wore item %d (row %d) through the server (%s)" % [item, row, req.error_message])
+		bag.picked_row = row
+		bag.refresh()
+		await get_tree().process_frame
+		var button: Button = bag.find_child("Wear_%d" % row, true, false) as Button
+		_check(button != null and button.text == "Wear", "the bag offers Wear on item %d (row %d)" % [item, row])
+		if button == null:
+			return
+		button.pressed.emit()
+		var slot: StringName = ItemDef.by_id(item).armor_slot
+		await _until(func() -> bool: return look.row_in(slot) == row, 5.0)
+		_check(look.row_in(slot) == row and bag.refusal.is_empty(), "worn through the bag: the server's row says row %d on the %s" % [row, slot])
+	await get_tree().process_frame
+	var chest_slot: UiSlot = bag.find_child("Doll_chest", true, false) as UiSlot
+	var total: Label = bag.find_child("DollTotal", true, false) as Label
+	_check(chest_slot != null and chest_slot.tooltip_text.to_lower().contains("iron cuirass") and total != null and total.text.begins_with("Defense "),
+		"the doll shows them, from the row: the cuirass on its chest, %s" % (total.text if total != null else "no total"))
 	await _until(func() -> bool: return _wears(look.figure(), "Knight_Body_Armor") and _wears(look.figure(), "Ranger_Legs"), 5.0)
 	var f: RegentsFigure = look.figure()
 	_check(_wears(f, "Knight_Head_Armet") and _wears(f, "Knight_Body_Armor") and _wears(f, "Ranger_Legs") and not _wears(f, "Hair_"),
 		"my own body wears them, as the `worn` row came back: helm, chest, trousers, no hair")
 	print("WORN")
 	await _until(func() -> bool: return _signal().contains("SEEN"), 90.0)
-	var off: ReducerRequest = SpaceTimeSync.call_reducer(&"take_off", ["chest"], ["string"])
-	await _until(func() -> bool: return off.outcome != ReducerRequest.Outcome.PENDING, 5.0)
-	_check(off.outcome == ReducerRequest.Outcome.OK, "took the chest off (%s)" % off.error_message)
+	(bag.find_child("Doll_chest", true, false) as UiSlot).pressed.emit()
+	await _until(func() -> bool: return look.row_in(&"chest") == 0, 5.0)
+	await get_tree().process_frame
+	_check(look.row_in(&"chest") == 0 and bag.refusal.is_empty() and (bag.find_child("Doll_chest", true, false) as UiSlot).tooltip_text.contains("nothing worn"),
+		"took the chest off by its slot on the doll: the row and the doll say so")
 	print("CHEST_OFF")
 	await _until(func() -> bool: return _signal().contains("WATCHER_DONE"), 30.0)
 

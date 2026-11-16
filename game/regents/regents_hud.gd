@@ -314,6 +314,10 @@ func _find_player() -> void:
 	bag_window.inventory = _inventory
 	bag_window.combat = combat
 	bag_window.skilling = s
+	# THE DOLL (W3): the worn row, and how to wear and take off.
+	bag_window.armor = me.find_component(ArmorLookComponent) as ArmorLookComponent
+	if bag_window.armor != null:
+		bag_window.armor.worn_changed.connect(bag_window.refresh)
 	abilities_window.inventory = _inventory
 	abilities_window.combat = combat
 	abilities_window.skilling = s

@@ -5485,3 +5485,65 @@ Merging a body's pieces into one mesh when it is far, or fewer pieces, would be 
 shared materials are bounded (`Wardrobe.RECENT`)". For REFEREE_SCALING.md: the table above, as the client's side of
 300 (a section "a watching client: 300 bodies in view").
 **Left for later**: the per-bot admin hook above, if worn rows should be in the load test.
+
+## Step 99: WEARING FROM THE BAG (the doll, wear and take off by a click, each piece's words) (2026-11-16, the armor run's W3)
+
+Built (minimal, in today's bag window and its style; the UI rebuild is Luke's to shape):
+- `game/regents/ui/bag_window.gd`: THE DOLL at the top of the bag (I): Worn, then four slots, head, chest, legs, trinket,
+  each the piece worn there FROM THE SERVER'S `worn` ROW (never from a click), and under them the total: "Defense 19:
+  you take 22% less from every hit." (none worn: "Nothing worn: every hit lands whole."). Click a worn piece on the doll
+  to take it off. The trinket slot shows empty ("Trinket: nothing to wear here yet."). A piece of armor picked in the
+  bag shows its words and a WEAR button (TAKE OFF when it is the one worn; a second piece in a taken slot swaps, as the
+  server does); a worn piece cannot be dropped. A refusal shows its REASON in red under the buttons ("Not worn: not in
+  a fight (wait until your health comes back).").
+  A PIECE'S WORDS (detail and tooltip): "Defense 16" (a number, as Power is); "Wearing it, you'd take 19% less, now 14%."
+  (or, worn: "Worn. Without it you'd take N% less, now M%.", or "...every hit would land whole; now you take M% less.");
+  a chest that gives an ability: "While worn, it gives F: <name>. <the bar's own words for it>" (`RegentsAbilityBar.
+  ability_words`). Never Light / Heavy, never a role. K is the live hot rule `regents.defense_k`.
+- NEW `game/regents/combat/regents_defense.gd` (`RegentsDefense`): THE CLIENT'S TWIN of `rules::piece_defense`,
+  `rules::defense_mult` and `defense_of` (only pieces still in the bag, each in its own slot, added up; quality up to a
+  fifth more). For the words only; the server decides every hit.
+- `game/regents/wardrobe/armor_look_component.gd`: also keeps the worn ROWS (`rows`, `row_in(slot)`), emits
+  `worn_changed`, and makes the calls `wear(row)` / `take_off(slot)` (the UI calls the component, as it does
+  `combat.wield`).
+- `game/regents/regents_hud.gd`: the bag gets the player's `ArmorLookComponent` and refreshes on `worn_changed`.
+- NEW `game/regents/tests/bag_doll_shot.tscn` (windowed): `doll.png` and `doll_tooltip.png`.
+- `game/regents/tests/playtest/armor_seen_playtest.gd`: the wearer now wears and takes off THROUGH THE BAG AND THE DOLL.
+
+**How to play it**: (dev) `admin_give_item <you> 40075 1 500` (an iron cuirass), then I: the doll at the top; pick the
+cuirass, read its words, Wear. The doll fills when the server answers; click it on the doll to take it off. In a fight
+Wear is refused with its reason.
+
+**Tested**:
+- `regents_bar` 144/0 (28 new). THE DOLL: four slots, the trinket empty, the total "lands whole" with nothing worn. The
+  piece's Defense number and its words equal K / (K + Defense) at the live K. Wear asks the server for that row, and
+  the click alone puts NOTHING on the doll (NEGATIVE). The row coming back shows it on the doll with the total, Take off
+  in place of Wear, no Drop. The helm's words count the chest already worn (quality 1000: a fifth more). A refusal
+  ("in a fight") shows its reason and nothing is worn. A click on the doll's chest asks to take it off; the row says so
+  and it is gone. NEGATIVE: an axe offers no Wear and no Defense.
+  THE TWIN, on the case the server's tests and the combat playtest pin: the practice cuirass (q 0) and helm (q 1000)
+  are Defense 32, and a slash of 7 lands at 7 x 67 / 99 = 4.74 at K 67 (`combat_playtest.sh`'s armor leg measured 4.74
+  on the real server); no Defense or K 0 keeps all; quality past 1000 counts as 1000; K is the live hot rule; the baked
+  pieces' Defense. (There is no Rust golden to compare against: the server is Lane S's; the pinned 4.74 is the bridge.)
+  MUTATIONS: the twin's quality divisor 5000 -> 1000 fails 4 checks; the bag filling the doll from the click fails
+  2 ("the click alone puts nothing on the doll", "and nothing worn").
+- `armor_seen_playtest.sh` (two real clients at 150 ms, under the lock): wearer 11/0, watcher 7/0, server 1/1. The wearer
+  WEARS THREE PIECES BY THE BAG'S WEAR BUTTON; each one's slot changes only when the server's row says so; the doll shows
+  them ("Defense 19: you take 22% less from every hit."); the chest comes OFF BY ITS SLOT ON THE DOLL. The watcher sees all
+  of it on the wearer's body. The bag's buttons and the doll's slot are driven by their `pressed` SIGNALS: a headless
+  window's injected clicks land at (0, 0), where the HUD passes the mouse, so a click cannot reach them; the signal runs
+  the same handler a click would.
+- Shot looked at (`"$GODOT" --path . res://game/regents/tests/bag_doll_shot.tscn -- <dir>`): the doll (H, the worn iron
+  cuirass edged green, L, T), the total, the bag below, and the steel cuirass picked: "Defense 16 / Wearing it, you'd take
+  19% less, now 14%. / While worn, it gives F: Shove (placeholder). ...", Wear and Drop. The tooltip over the doll's chest:
+  its name, Defense 11, what taking it off would do, its F, "Click to take it off."
+- Whole unit run (`run_tests.sh`, `main` merged in): 5131 passed, 0 failed, lints OK.
+
+**Needs on merge**: none (client only).
+**Placeholders made**: none (the steel cuirass's "Shove (placeholder)" is S4's).
+**For Luke**: the doll's empty slots show a letter (H, L, T), not a picture: a silhouette per slot can come with the UI rebuild.
+**For the rules/handbook**: regents-genre.md, THE WARDROBE (or the armor rule): "ARMOR IS WORN FROM THE BAG'S DOLL
+(`RegentsBagWindow`): what is worn is the server's `worn` row (`ArmorLookComponent.rows`), never a click; a piece's
+words count as the server does through `RegentsDefense` (the twin of `rules::piece_defense` / `defense_mult`): change both
+together." HANDBOOK: the bag's doll in the player's guide.
+**Left for later**: the UI rebuild (drag to the doll, the C sheet); the trinket, when one exists.
