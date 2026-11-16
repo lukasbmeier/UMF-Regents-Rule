@@ -446,7 +446,7 @@ func press(kind: String, slot: int = 0) -> bool:
 			return false
 		# THE ITEM'S LEVEL AND PICKS (ABILITIES_PREP.md §7 step 2), as the server judges them (`slot_refusal`); a chest's
 		# ability has no level yet (S4).
-		var why: String = "" if slot == RegentsItemLevel.F else RegentsItemLevel.slot_refusal(kit, a, item_usable(), item_picks())
+		var why: String = "" if slot == RegentsItemLevel.F else RegentsItemLevel.slot_refusal(pool_kit(), a, item_usable(), item_picks())
 		if not why.is_empty():
 			refused.emit("%s: %s" % [a.display_name, why])
 			return false
@@ -984,6 +984,12 @@ func role() -> RoleDef:
 	return ItemDef.role_of(weapon, weapon_data()) if weapon != null else null
 
 
+## THE KIT AS THE WIELDED WEAPON'S ROLE SEES IT (S1b, per-role pools: `KitDef.for_role`): its pool alone; the kit itself
+## when its roles claim nothing.
+func pool_kit() -> KitDef:
+	return kit.for_role(role()) if kit != null else null
+
+
 ## THE ABILITY ON BAR SLOT `slot` (0 Q, 1 E, 2 R, 3 F) with the wielded weapon: its kit's layout and the item's own
 ## picks (`RegentsItemLevel.bar`); null for none. Locked ones too (`RegentsItemLevel.slot_refusal` says why).
 func on_slot(slot: int) -> AbilityDef:
@@ -991,7 +997,7 @@ func on_slot(slot: int) -> AbilityDef:
 		return null
 	if slot == RegentsItemLevel.F:
 		return chest_ability()   # F IS THE WORN CHEST'S (S4, Luke's B5, B8), whatever is wielded
-	return RegentsItemLevel.bar(kit, item_picks())[slot]
+	return RegentsItemLevel.bar(pool_kit(), item_picks())[slot]
 
 
 ## The chest item worn, for tests (no rows): -1 reads the server's `worn` row.

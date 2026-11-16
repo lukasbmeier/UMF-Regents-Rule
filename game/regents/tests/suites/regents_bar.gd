@@ -305,20 +305,48 @@ func _run_item_twin() -> void:
 	_check(open_r.size() == 1 and int(open_r[0]["n"]) == 2 and (open_r[0]["options"] as Array[AbilityDef]) == [meteor], "at 33 with Frost Ring: R's pick open, offering Meteor")
 	var bar: Array[AbilityDef] = RegentsItemLevel.bar(staff, took_frost)
 	_check(bar[0] == fireball and bar[1] == frost and bar[2] == null and bar[3] == null, "the staff's own bar: Fireball, Frost Ring, nothing; F is the chest's")
-	var sword: KitDef = KitDef.by_key(&"sword")
+	# PER-ROLE POOLS (S1b): the sword as each handle sees it (`KitDef.for_role`): its own Q, options and ult.
+	var full: KitDef = KitDef.by_key(&"sword")
+	var sword: KitDef = full.for_role(RoleDef.plain_role())
 	var sword_open: Array[Dictionary] = RegentsItemLevel.open_picks(sword, 33, none)
 	_check(RegentsItemLevel.bar(sword, none)[0] == sword.skills[0] and sword.skills[0].display_name == "Lunge" and sword_open.size() == 3
-		and (sword_open[0]["options"] as Array[AbilityDef]).size() == 3 and int(sword_open[2]["n"]) == 2
+		and (sword_open[0]["options"] as Array[AbilityDef]).size() == 2 and int(sword_open[2]["n"]) == 2
 		and (sword_open[2]["options"] as Array[AbilityDef]) == sword.skills_in(KitDef.SLOT_ULT)
 		and RegentsItemLevel.open_picks(sword, 4, none).is_empty(),
-		"the sword's placeholder pool: Lunge on Q; at 33 three for E (either pick) and its ult for R; NEGATIVE: nothing open at 4")
+		"the plain grip's pool: Lunge on Q; at 33 two for E (either pick) and its ult for R; NEGATIVE: nothing open at 4")
+	var qs: PackedStringArray = PackedStringArray()
+	for kr: KitRole in full.roles:
+		var view: KitDef = full.for_role(kr.role)
+		qs.append(RegentsItemLevel.bar(view, none)[0].display_name)
+		var others: Array[AbilityDef] = []
+		for other: KitRole in full.roles:
+			if other != kr:
+				others.append_array(other.skills)
+		_check(view.skills.size() == 4 and not view.skills.any(func(a: AbilityDef) -> bool: return others.has(a))
+			and view.validate().is_empty(),
+			"the %s's pool: four of its own, NEGATIVE: none of another handle's" % kr.role.display_name)
+	_check(qs == PackedStringArray(["Lunge", "Shield Bash (placeholder)", "Swipe (placeholder)"]), "each handle its own Q: %s" % ", ".join(qs))
+	var kept_picks: Array[int] = [40035, 0, 40038]   # a crossguard sword that took Flurry and Execute from the one pool
+	var tank: KitDef = full.for_role(full.roles[1].role)
+	_check(RegentsItemLevel.own_picks(tank, kept_picks) == [0, 0, 0] and RegentsItemLevel.bar(tank, kept_picks)[1] == null
+		and RegentsItemLevel.open_picks(tank, 33, kept_picks).size() == 3,
+		"picks kept from the one pool: on a crossguard sword they read as empty, free to choose (three picks open at 33), never a crash")
+	_check(KitDef.by_key(&"staff").for_role(null) == KitDef.by_key(&"staff") and KitDef.by_key(&"axe").for_role(RoleDef.plain_role()) == KitDef.by_key(&"axe"),
+		"a kit whose roles claim nothing is its own view: one pool, as before (the staff, the axe)")
 	for key: StringName in [&"sword", &"axe", &"bow", &"staff"]:
-		var k: KitDef = KitDef.by_key(key)
-		var ok: bool = (k.validate().is_empty() and k.skills_in(KitDef.SLOT_BASE).size() == 1 and k.skills_in(KitDef.SLOT_ULT).size() == 1
-			and k.skills_in(KitDef.SLOT_OPTION).size() >= 2)
-		for a: AbilityDef in k.skills_in(KitDef.SLOT_OPTION) + k.skills_in(KitDef.SLOT_ULT):
-			ok = ok and (a.display_name.ends_with("(placeholder)") or a.display_name in ["Frost Ring", "Gale"])
-		_check(ok, "%s: one Q, options for E, one ult on R, every new one named (placeholder)" % key)
+		var whole: KitDef = KitDef.by_key(key)
+		var views: Array[KitDef] = []
+		if whole.has_role_pools():
+			for kr: KitRole in whole.roles:
+				views.append(whole.for_role(kr.role))
+		else:
+			views.append(whole)
+		for k: KitDef in views:
+			var ok: bool = (k.validate().is_empty() and k.skills_in(KitDef.SLOT_BASE).size() == 1 and k.skills_in(KitDef.SLOT_ULT).size() == 1
+				and k.skills_in(KitDef.SLOT_OPTION).size() >= 2)
+			for a: AbilityDef in k.skills_in(KitDef.SLOT_OPTION) + k.skills_in(KitDef.SLOT_ULT):
+				ok = ok and (a.display_name.ends_with("(placeholder)") or a.display_name in ["Frost Ring", "Gale"])
+			_check(ok, "%s: one Q, options for E, one ult on R (each handle's own), every new one named (placeholder)" % key)
 	var bad: KitDef = staff.duplicate() as KitDef
 	bad.skill_slots = PackedInt32Array([0, 0, 3, 1])
 	_check(bad.validate().any(func(e: String) -> bool: return e.contains("one base")), "NEGATIVE: two bases refused")

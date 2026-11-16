@@ -297,7 +297,7 @@ static func model_for(c: CombatComponent, sk: SkillingComponent, health: SpaceTi
 		m["potion"] = _potion_slot()
 		m["combat"] = c != null and c.in_combat()
 		return m
-	var k: KitDef = c.kit
+	var k: KitDef = c.pool_kit()   # the wielded weapon's role's pool (S1b)
 	m["stance"] = c.in_stance()
 	m["combat"] = c.in_combat()
 	# THE ITEM (ABILITIES_PREP.md §7 step 2): its level as you use it, its picks; the bar by its kit's layout.

@@ -24,6 +24,10 @@ var _refresh_at: int = 0
 ## What it last drew (`_drawn_state`): it is drawn again only when that changes (owner, 2026-10-20: the
 ## window rebuilt every button twice a second, so clicks were lost and the list's scroll jumped).
 var _drawn: String = ""
+## What the last look read (`_inputs_sig`): unchanged, a look does nothing more (the window looks every 500 ms).
+var _look_sig: String = ""
+## How many looks stopped there, unchanged (tests).
+var looks_skipped: int = 0
 ## How many times it has been drawn (tests).
 var draws: int = 0
 ## Make X's number (kept while the window is open), and the bar while working.
@@ -201,6 +205,14 @@ func refresh() -> void:
 	_refresh_at = Time.get_ticks_msec() + 500
 	if station == null or skilling == null:
 		return
+	# AN UNCHANGED LOOK DOES NOTHING (S1b; the armor's recipes made the workbench list 46 long): when what it reads (the
+	# station, its pick, the work going, the bag's stacks) is as last time and nothing asked for a redraw (`_drawn`
+	# cleared), stop here. The order board's orders are rows of their own: it always looks.
+	var sig: String = _inputs_sig()
+	if not _drawn.is_empty() and sig == _look_sig and station.key != SkillingComponent.ORDER_BOARD:
+		looks_skipped += 1
+		return
+	_look_sig = sig
 	choices = skilling.choices_at(station)
 	var picked_key: String = SkillingComponent._choice_key(picked()) if not picked().is_empty() else ""
 	var state: String = _drawn_state(picked_key)
@@ -532,6 +544,17 @@ func _order_detail(o: Dictionary) -> void:
 
 ## Everything the window shows, as one string: the choices and whether each can be made, the pick, what
 ## it takes and what you have, the rank and the record, the work going on.
+## What a look reads, cheaply: the station and its pick, the work going there, the grade picks, and every stack of the bag
+## (its row, item, count and data: a refit changes only the data).
+func _inputs_sig() -> String:
+	var parts: PackedStringArray = [String(station.key), str(target), str(skilling.afk_target == target),
+		String(skilling.recipe_pick.get(station.key, "")), str(skilling.grade_pick)]
+	if inventory != null:
+		for st: SpaceTimeInventoryComponent.Stack in inventory.items():
+			parts.append("%d:%d:%d:%d" % [st.id, st.item_def_id, st.qty, hash(st.instance_data)])
+	return "|".join(parts)
+
+
 func _drawn_state(picked_key: String) -> String:
 	var parts: PackedStringArray = [picked_key, str(skilling.afk_target == target)]
 	for c: Dictionary in choices:

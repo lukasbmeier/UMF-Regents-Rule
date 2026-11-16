@@ -222,6 +222,21 @@ func for_role(r: RoleDef) -> KitDef:
 	view.skills = keep_skills
 	view.skill_ranks = keep_ranks
 	view.skill_slots = keep_slots
+	# What its abilities do on a hit: those of its pool (and the strings') only.
+	var keep_hits: Array[KitHit] = []
+	for h: KitHit in hits:
+		if h != null and h.ability != null and claimed.has(h.ability.id) and claimed[h.ability.id] != rid:
+			continue
+		keep_hits.append(h)
+	view.hits = keep_hits
+	# The view is one pool: its roles keep their last hits, without pools of their own.
+	var view_roles: Array[KitRole] = []
+	for kr: KitRole in roles:
+		var copy: KitRole = kr.duplicate() as KitRole if kr != null else null
+		if copy != null:
+			copy.skills = []
+		view_roles.append(copy)
+	view.roles = view_roles
 	return view
 
 

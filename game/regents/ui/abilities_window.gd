@@ -47,6 +47,8 @@ func refresh() -> void:
 	var st: SpaceTimeInventoryComponent.Stack = _stack()
 	var it: ItemDef = ItemDef.by_id(st.item_def_id) if st != null else null
 	var kit: KitDef = KitDef.by_key(it.weapon_kit) if it != null and it.weapon_kit != &"" else null
+	if kit != null:
+		kit = kit.for_role(ItemDef.role_of(it, st.instance_data))   # this item's role's pool (S1b)
 	if kit == null:
 		title = "Abilities"
 		content.add_child(UiKit.note("No weapon: click a weapon in the bag, or the one you wield on the bar."))
