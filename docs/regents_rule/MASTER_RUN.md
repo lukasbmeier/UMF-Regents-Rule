@@ -149,23 +149,26 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | The master | Fable 5.2 | medium | merging and recording; raise it to high only for a hard merge or a red sweep |
 
 ## 7. The ledger (the master updates it at every start, merge and token change)
+2026-11-16: every child was cut by the 5-hour usage limit on 2026-11-15; T1, S1, P1, E1, E2 were told to continue
+(SendMessage to the same sessions), E3 waits for a slot. Template test database lock: `.umf-locks/umf-template-test`.
 | Id | Session | Branch | State | Step | Merge commit | Tokens held |
 |---|---|---|---|---|---|---|
-| M1 | town session | claude/medieval-village-worldbuilding-dd942b | DONE (on main) | 85 (extended) | 34bedf9d, 9064c56b | |
-| M2 | master | — | to do | | | |
-| T1 | | | to do | | | |
-| S1 | | | to do | | | |
-| S2 | | | waiting S1 | | | |
+| M1 | town session | (deleted) | DONE: worktree and branch removed 2026-11-15 (an empty locked folder `.claude/worktrees/medieval-...` is left: delete by hand) | 85 (extended) | 34bedf9d, 9064c56b | |
+| M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
+| T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | t1-wear-hook | running | | | |
+| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | running. Spells already hit all; the gap is the referee-JUDGED sweep (Cleave), which is FOUNDATION: S1 builds add-only `AbilityDef.hits_all` + `resolve_action_all` in a template worktree (DECISIONS number after T1's, no version bump), shipped with T1 in M3; its game branch merges AFTER M3 | | | |
+| S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
+| S2 | | | waiting S1 (so M3 too) | | | |
 | S3 | | | waiting S2 | | | |
 | S4 | | | waiting S3, P1 | | | ui/ |
-| P1 | | | to do | | | |
+| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | running | | | |
 | W1 | | | waiting T1? | | | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |
-| E1 | | | to do | | | |
-| E2 | | | to do | | | |
-| E3 | | | to do | | | |
+| E1 | e1-effects-scale (local_e7199708) | e1-effects-scale | running | | | |
+| E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | running again (2026-11-16): cause found (NPCs on `player.tscn` wait for a `session_member` row they never get), genre fix committed `f21cb858`, the after-fix `bind_playtest.sh` still to pass; the general fix (`SessionComponent.optional_tables`) passed to T1 | | | scene (foe.tscn, one change) |
+| E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | PARTIAL `591a590a`, HELD for a free slot: the piece cache (world 30.5 s -> 4.2 s), no saved bake (measured: ~80 MB for ~1 s); left: the small props, windowed shots, merge of main | | | |
 | M3 | master | — | waiting T1 | | | |
 | M9 | master | — | waiting all | | | |
 
