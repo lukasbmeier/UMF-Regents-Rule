@@ -497,6 +497,22 @@ assert_ok "use_ability_seen 40010 0 $C_AIM 907 100" "Ctrl: the dodge roll"
 # THE ROLL IS THE FOUNDATION'S (DECISIONS #309, PROGRESS 77): its status an EFFECT, beside the state.
 check "$(logged "entity $MYENT: effect 101 \(Rolling\) on for 550 ms")" "rolling for regents.roll_ms: nothing hits you (the foundation's roll, its status an effect)"
 check "$(logged "entity $MYENT rolled \(40010\): 550 ms")" "the foundation's roll, told to the genre (on_roll)"
+# AREAS THAT HIT ALL (S1, ABILITIES_PREP.md section 7 step 3): Cleave HITS ALL (its content's Hits All), so the referee
+# answers it with every body its sweep met (`resolve_action_all`), each dealt as a single hit is; a sweep that hits one
+# (the chop) is refused that answer. The stand-in referee names both dummies (the module trusts the referee for where
+# they were, as for one).
+DUMMY_B="$(sql_first "SELECT entity_id FROM dummy WHERE point_id = 'dummy_2'" 1)"
+timed "$(printf '%s
+'   "0 sql CA0 SELECT current FROM health_state WHERE entity_id = $DUMMY"   "0 sql CB0 SELECT current FROM health_state WHERE entity_id = $DUMMY_B"   "700 use_ability_seen [40009,0,$C_AIM,9051,100]"   "0 sqlwait R9051 SELECT id FROM action_request WHERE predicted_id = 9051"   "0 resolve_action_all [{R9051},[$DUMMY,$DUMMY]]"   "0 resolve_action_all [{R9051},[$DUMMY,$DUMMY_B]]"   "0 sql CA1 SELECT current FROM health_state WHERE entity_id = $DUMMY"   "0 sql CB1 SELECT current FROM health_state WHERE entity_id = $DUMMY_B"   "1500 use_ability_seen [40006,0,$C_AIM,9052,100]"   "0 sqlwait R9052 SELECT id FROM action_request WHERE predicted_id = 9052"   "0 resolve_action_all [{R9052},[$DUMMY,$DUMMY_B]]"   "0 resolve_action [{R9052},$DUMMY]")"
+timed_ok 3 "Cleave: queued for the referee"
+timed_refused 5 "named twice" "the referee names one dummy twice: refused whole"
+timed_ok 6 "the referee: Cleave met both dummies"
+num_is "$(python -c "print(round($(timed_val CA0) - $(timed_val CA1), 2))")" "12.6" "the first dummy: Cleave's 18 at the copper axe's 70 %"
+num_is "$(python -c "print(round($(timed_val CB0) - $(timed_val CB1), 2))")" "12.6" "and the second the same: an area hits all in it"
+check "$(logged "ability 40009 by $MYENT: hit \[$DUMMY, $DUMMY_B\]")" "the module's log names both"
+timed_ok 9 "a chop after it"
+timed_refused 11 "hits one" "a chop answered as hitting all: refused (it hits its first only)"
+timed_ok 12 "and answered with its first"
 standin_down
 sleep 0.6
 # A CLI call leaves at once, and leaving lowers a block: what it did is in the log; a block HELD by a

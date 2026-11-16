@@ -85,6 +85,7 @@
 			"cooldown_ms": 7000,
 			"damage": 18.0,
 			"height": 0.9,
+			"hits_all": true,
 			"judged": true,
 			"lunges": false,
 			"name": "Cleave",

@@ -365,6 +365,11 @@ func reset_rule(key: String) -> SpacetimeDBReducerCall:
 func resolve_action(request_id: int, hit_id: int) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('resolve_action', [request_id, hit_id], [&'u64', &'u64'], &'')
 
+## 0. request_id: int [br]
+## 1. hit_ids: Array of int [br]
+func resolve_action_all(request_id: int, hit_ids: Array[int]) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('resolve_action_all', [request_id, hit_ids], [&'u64', &'u64'], &'')
+
 ## 0. identity: PackedByteArray [br]
 func revoke_authority(identity: PackedByteArray) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('revoke_authority', [identity], [&'identity'], &'')

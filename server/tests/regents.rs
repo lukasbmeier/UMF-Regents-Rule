@@ -1315,6 +1315,16 @@ fn threat_is_stored_and_healing_draws_no_more_than_damage() {
 }
 
 #[test]
+fn a_sweep_that_hits_several_rallies_once() {
+    // S1, AREAS THAT HIT ALL: a sweep the referee reports on several bodies is dealt to each, but a rallying last hit
+    // heals once a swing. The first body of a swing heals; the second, third ... of the same swing do not.
+    assert!(rules::rallies(Some(1_000), None), "the first rally a fighter ever makes heals");
+    assert!(!rules::rallies(Some(1_000), Some(1_000)), "a second body of the same swing: no second heal");
+    assert!(rules::rallies(Some(2_000), Some(1_000)), "the next swing heals again");
+    assert!(rules::rallies(None, Some(1_000)), "a hit with no swing kept heals, as before");
+}
+
+#[test]
 fn the_tutorial_walks_a_sword_from_wood_to_its_grip() {
     use umf_module::genre::regents::Deed;
     // THE RUN (Luke, 2026-11-01: make your own sword, then the fight with it): fifteen lessons, in order.

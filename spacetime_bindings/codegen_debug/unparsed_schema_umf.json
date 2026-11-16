@@ -5396,6 +5396,39 @@
 							"elements": [
 								{
 									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "swing_at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
 										"some": "key"
 									},
 									"algebraic_type": {
@@ -7678,7 +7711,7 @@
 						"scope": [],
 						"source_name": "StatusEffectRow"
 					},
-					"ty": 94.0,
+					"ty": 95.0,
 					"custom_ordering": true
 				},
 				{
@@ -7686,7 +7719,7 @@
 						"scope": [],
 						"source_name": "StatusStateRow"
 					},
-					"ty": 95.0,
+					"ty": 96.0,
 					"custom_ordering": true
 				},
 				{
@@ -7694,31 +7727,7 @@
 						"scope": [],
 						"source_name": "RecipeLog"
 					},
-					"ty": 77.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "EquipStateRow"
-					},
-					"ty": 37.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "ItemDef"
-					},
-					"ty": 57.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Guide"
-					},
-					"ty": 46.0,
+					"ty": 78.0,
 					"custom_ordering": true
 				},
 				{
@@ -7732,33 +7741,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "DamageShare"
-					},
-					"ty": 29.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "LinkCode"
-					},
-					"ty": 58.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ResourceState"
 					},
-					"ty": 80.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SpellArea"
-					},
-					"ty": 88.0,
+					"ty": 81.0,
 					"custom_ordering": true
 				},
 				{
@@ -7772,9 +7757,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "AccountLogin"
+						"source_name": "SessionMember"
 					},
-					"ty": 4.0,
+					"ty": 87.0,
 					"custom_ordering": true
 				},
 				{
@@ -7783,14 +7768,6 @@
 						"source_name": "CombatState"
 					},
 					"ty": 25.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InventoryItem"
-					},
-					"ty": 56.0,
 					"custom_ordering": true
 				},
 				{
@@ -7812,22 +7789,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Noise"
-					},
-					"ty": 67.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMember"
-					},
-					"ty": 86.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "BodyState"
 					},
 					"ty": 17.0,
@@ -7836,9 +7797,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "NodeSeen"
+						"source_name": "SeenDelay"
 					},
-					"ty": 65.0,
+					"ty": 83.0,
 					"custom_ordering": true
 				},
 				{
@@ -7860,33 +7821,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "CraftGrade"
-					},
-					"ty": 28.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "AbilityState"
 					},
 					"ty": 1.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DashWindowRow"
-					},
-					"ty": 30.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "DevTools"
-					},
-					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -7900,25 +7837,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Authority"
+						"source_name": "DevTools"
 					},
-					"ty": 14.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FoeKill"
-					},
-					"ty": 41.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "FoeShot"
-					},
-					"ty": 42.0,
+					"ty": 32.0,
 					"custom_ordering": true
 				},
 				{
@@ -7932,6 +7853,22 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Authority"
+					},
+					"ty": 14.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FoeShot"
+					},
+					"ty": 42.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "Entity"
 					},
 					"ty": 36.0,
@@ -7940,57 +7877,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Feedback"
-					},
-					"ty": 39.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SeenDelay"
-					},
-					"ty": 82.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionMatch"
-					},
-					"ty": 85.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Push"
-					},
-					"ty": 75.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "EffectExpiry"
 					},
 					"ty": 35.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Poise"
-					},
-					"ty": 73.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SpellLanded"
-					},
-					"ty": 90.0,
 					"custom_ordering": true
 				},
 				{
@@ -8036,25 +7925,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "HotRuleRow"
+						"source_name": "SkillXp"
 					},
-					"ty": 52.0,
+					"ty": 88.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Challenge"
+						"source_name": "Unchained"
 					},
-					"ty": 21.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "LobbyMember"
-					},
-					"ty": 59.0,
+					"ty": 102.0,
 					"custom_ordering": true
 				},
 				{
@@ -8068,57 +7949,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "PoiseState"
-					},
-					"ty": 74.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "RollState"
-					},
-					"ty": 81.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "RateBudget"
 					},
-					"ty": 76.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "NpcDriver"
-					},
-					"ty": 69.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SkillXp"
-					},
-					"ty": 87.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Swing"
-					},
-					"ty": 97.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Unchained"
-					},
-					"ty": 101.0,
+					"ty": 77.0,
 					"custom_ordering": true
 				},
 				{
@@ -8164,14 +7997,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "HoldMember"
-					},
-					"ty": 49.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "Casting"
 					},
 					"ty": 20.0,
@@ -8182,15 +8007,7 @@
 						"scope": [],
 						"source_name": "RefereeOffer"
 					},
-					"ty": 78.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StatusExpiry"
-					},
-					"ty": 38.0,
+					"ty": 79.0,
 					"custom_ordering": true
 				},
 				{
@@ -8198,7 +8015,7 @@
 						"scope": [],
 						"source_name": "StarterKitGiven"
 					},
-					"ty": 92.0,
+					"ty": 93.0,
 					"custom_ordering": true
 				},
 				{
@@ -8206,31 +8023,7 @@
 						"scope": [],
 						"source_name": "Station"
 					},
-					"ty": 93.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "StuckArrow"
-					},
-					"ty": 96.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TickSchedule"
-					},
-					"ty": 98.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "InputFrame"
-					},
-					"ty": 55.0,
+					"ty": 94.0,
 					"custom_ordering": true
 				},
 				{
@@ -8244,57 +8037,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Wielded"
-					},
-					"ty": 104.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorldLevel"
-					},
-					"ty": 109.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "MovementWrite"
-					},
-					"ty": 111.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WhereSample"
-					},
-					"ty": 103.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Tutorial"
-					},
-					"ty": 100.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "TimedPress"
 					},
-					"ty": 99.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "AuthorityCheckSchedule"
-					},
-					"ty": 15.0,
+					"ty": 100.0,
 					"custom_ordering": true
 				},
 				{
@@ -8308,14 +8053,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "ClientRtt"
-					},
-					"ty": 24.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "AfkWork"
 					},
 					"ty": 10.0,
@@ -8324,17 +8061,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "OrderFilled"
+						"source_name": "WorldConfig"
 					},
-					"ty": 70.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Vector3"
-					},
-					"ty": 6.0,
+					"ty": 109.0,
 					"custom_ordering": true
 				},
 				{
@@ -8342,7 +8071,7 @@
 						"scope": [],
 						"source_name": "BodyContactWrite"
 					},
-					"ty": 79.0,
+					"ty": 80.0,
 					"custom_ordering": true
 				},
 				{
@@ -8372,25 +8101,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Correction"
-					},
-					"ty": 26.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "UnscoredPress"
 					},
-					"ty": 102.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "BodyContact"
-					},
-					"ty": 16.0,
+					"ty": 103.0,
 					"custom_ordering": true
 				},
 				{
@@ -8404,38 +8117,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "Burning"
-					},
-					"ty": 18.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkSchedule"
-					},
-					"ty": 107.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkOrder"
-					},
-					"ty": 105.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "SessionEmpty"
-					},
-					"ty": 84.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ChatMessage"
 					},
 					"ty": 23.0,
@@ -8444,25 +8125,9 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "WorldConfig"
-					},
-					"ty": 108.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Session"
-					},
-					"ty": 83.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 110.0,
+					"ty": 111.0,
 					"custom_ordering": true
 				},
 				{
@@ -8476,17 +8141,17 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SpellCooldown"
+						"source_name": "SpellTimer"
 					},
-					"ty": 89.0,
+					"ty": 92.0,
 					"custom_ordering": true
 				},
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "SpellTimer"
+						"source_name": "WorkResult"
 					},
-					"ty": 91.0,
+					"ty": 107.0,
 					"custom_ordering": true
 				},
 				{
@@ -8524,30 +8189,6 @@
 				{
 					"source_name": {
 						"scope": [],
-						"source_name": "PerfReport"
-					},
-					"ty": 71.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Account"
-					},
-					"ty": 2.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "WorkResult"
-					},
-					"ty": 106.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
 						"source_name": "ChallengePruneSchedule"
 					},
 					"ty": 22.0,
@@ -8567,6 +8208,406 @@
 						"source_name": "AccountCharacter"
 					},
 					"ty": 3.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "EquipStateRow"
+					},
+					"ty": 37.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ItemDef"
+					},
+					"ty": 57.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Guide"
+					},
+					"ty": 46.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DamageShare"
+					},
+					"ty": 29.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LinkCode"
+					},
+					"ty": 58.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellArea"
+					},
+					"ty": 89.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellLanded"
+					},
+					"ty": 91.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AccountLogin"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InventoryItem"
+					},
+					"ty": 56.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TickSchedule"
+					},
+					"ty": 99.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Noise"
+					},
+					"ty": 67.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "NodeSeen"
+					},
+					"ty": 65.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "CraftGrade"
+					},
+					"ty": 28.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "DashWindowRow"
+					},
+					"ty": 30.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "FoeKill"
+					},
+					"ty": 41.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Swing"
+					},
+					"ty": 98.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionMatch"
+					},
+					"ty": 86.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Feedback"
+					},
+					"ty": 39.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Push"
+					},
+					"ty": 75.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Poise"
+					},
+					"ty": 73.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "RollState"
+					},
+					"ty": 82.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HotRuleRow"
+					},
+					"ty": 52.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Challenge"
+					},
+					"ty": 21.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "LobbyMember"
+					},
+					"ty": 59.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PoiseState"
+					},
+					"ty": 74.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "NpcDriver"
+					},
+					"ty": 69.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Wielded"
+					},
+					"ty": 105.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "HoldMember"
+					},
+					"ty": 49.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "MovementWrite"
+					},
+					"ty": 112.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StatusExpiry"
+					},
+					"ty": 38.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "StuckArrow"
+					},
+					"ty": 97.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "InputFrame"
+					},
+					"ty": 55.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorldLevel"
+					},
+					"ty": 110.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WhereSample"
+					},
+					"ty": 104.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Tutorial"
+					},
+					"ty": 101.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "AuthorityCheckSchedule"
+					},
+					"ty": 15.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "ClientRtt"
+					},
+					"ty": 24.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "OrderFilled"
+					},
+					"ty": 70.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Vector3"
+					},
+					"ty": 6.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Correction"
+					},
+					"ty": 26.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "BodyContact"
+					},
+					"ty": 16.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Burning"
+					},
+					"ty": 18.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Rallied"
+					},
+					"ty": 76.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorkOrder"
+					},
+					"ty": 106.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SessionEmpty"
+					},
+					"ty": 85.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "WorkSchedule"
+					},
+					"ty": 108.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Session"
+					},
+					"ty": 84.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SpellCooldown"
+					},
+					"ty": 90.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "PerfReport"
+					},
+					"ty": 71.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Account"
+					},
+					"ty": 2.0,
 					"custom_ordering": true
 				}
 			]
@@ -9573,7 +9614,7 @@
 				},
 				{
 					"source_name": "session",
-					"product_type_ref": 83.0,
+					"product_type_ref": 84.0,
 					"primary_key": [
 						0.0
 					],
@@ -9722,7 +9763,7 @@
 				},
 				{
 					"source_name": "session_match",
-					"product_type_ref": 85.0,
+					"product_type_ref": 86.0,
 					"primary_key": [
 						0.0
 					],
@@ -9780,7 +9821,7 @@
 				},
 				{
 					"source_name": "session_member",
-					"product_type_ref": 86.0,
+					"product_type_ref": 87.0,
 					"primary_key": [
 						0.0
 					],
@@ -9930,7 +9971,7 @@
 				},
 				{
 					"source_name": "skill_xp",
-					"product_type_ref": 87.0,
+					"product_type_ref": 88.0,
 					"primary_key": [
 						0.0
 					],
@@ -10005,7 +10046,7 @@
 				},
 				{
 					"source_name": "spell_cooldown",
-					"product_type_ref": 89.0,
+					"product_type_ref": 90.0,
 					"primary_key": [
 						0.0
 					],
@@ -10235,7 +10276,7 @@
 				},
 				{
 					"source_name": "spell_timer",
-					"product_type_ref": 91.0,
+					"product_type_ref": 92.0,
 					"primary_key": [
 						0.0
 					],
@@ -10310,7 +10351,7 @@
 				},
 				{
 					"source_name": "starter_kit_given",
-					"product_type_ref": 92.0,
+					"product_type_ref": 93.0,
 					"primary_key": [
 						0.0
 					],
@@ -10500,18 +10541,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "referee_offer",
-					"product_type_ref": 78.0,
+					"source_name": "rallied",
+					"product_type_ref": 76.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "referee_offer_world_id_idx_btree"
+								"some": "rallied_entity_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "world_id"
+								"some": "entity_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -10523,7 +10564,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "referee_offer_world_id_key"
+								"some": "rallied_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -10691,18 +10732,18 @@
 					"is_event": false
 				},
 				{
-					"source_name": "roll_state",
-					"product_type_ref": 81.0,
+					"source_name": "referee_offer",
+					"product_type_ref": 79.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "roll_state_entity_id_idx_btree"
+								"some": "referee_offer_world_id_idx_btree"
 							},
 							"accessor_name": {
-								"some": "entity_id"
+								"some": "world_id"
 							},
 							"algorithm": {
 								"BTree": [
@@ -10714,7 +10755,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "roll_state_entity_id_key"
+								"some": "referee_offer_world_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -11077,8 +11118,53 @@
 					"is_event": false
 				},
 				{
-					"source_name": "seen_delay",
+					"source_name": "roll_state",
 					"product_type_ref": 82.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "roll_state_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "roll_state_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "seen_delay",
+					"product_type_ref": 83.0,
 					"primary_key": [
 						0.0
 					],
@@ -11123,7 +11209,7 @@
 				},
 				{
 					"source_name": "station",
-					"product_type_ref": 93.0,
+					"product_type_ref": 94.0,
 					"primary_key": [
 						0.0
 					],
@@ -11193,8 +11279,66 @@
 					"is_event": false
 				},
 				{
+					"source_name": "authority",
+					"product_type_ref": 14.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "authority_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "authority_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "authority_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "stuck_arrow",
-					"product_type_ref": 96.0,
+					"product_type_ref": 97.0,
 					"primary_key": [
 						0.0
 					],
@@ -11268,66 +11412,8 @@
 					"is_event": false
 				},
 				{
-					"source_name": "authority",
-					"product_type_ref": 14.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "authority_identity_idx_btree"
-							},
-							"accessor_name": {
-								"some": "identity"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						},
-						{
-							"source_name": {
-								"some": "authority_world_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "world_id"
-							},
-							"algorithm": {
-								"BTree": [
-									2.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "authority_identity_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
 					"source_name": "swing",
-					"product_type_ref": 97.0,
+					"product_type_ref": 98.0,
 					"primary_key": [
 						0.0
 					],
@@ -11366,51 +11452,6 @@
 					},
 					"table_access": {
 						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "where_sample",
-					"product_type_ref": 103.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "where_sample_entity_id_idx_btree"
-							},
-							"accessor_name": {
-								"some": "entity_id"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "where_sample_entity_id_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Private": []
 					},
 					"default_values": [],
 					"is_event": false
@@ -11475,7 +11516,7 @@
 				},
 				{
 					"source_name": "timed_press",
-					"product_type_ref": 99.0,
+					"product_type_ref": 100.0,
 					"primary_key": [
 						0.0
 					],
@@ -11532,8 +11573,53 @@
 					"is_event": false
 				},
 				{
+					"source_name": "where_sample",
+					"product_type_ref": 104.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "where_sample_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "where_sample_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Private": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
 					"source_name": "unscored_press",
-					"product_type_ref": 102.0,
+					"product_type_ref": 103.0,
 					"primary_key": [
 						0.0
 					],
@@ -11578,7 +11664,7 @@
 				},
 				{
 					"source_name": "world_config",
-					"product_type_ref": 108.0,
+					"product_type_ref": 109.0,
 					"primary_key": [
 						0.0
 					],
@@ -11623,7 +11709,7 @@
 				},
 				{
 					"source_name": "status_effect",
-					"product_type_ref": 94.0,
+					"product_type_ref": 95.0,
 					"primary_key": [
 						0.0
 					],
@@ -11782,7 +11868,7 @@
 				},
 				{
 					"source_name": "world_level",
-					"product_type_ref": 109.0,
+					"product_type_ref": 110.0,
 					"primary_key": [
 						0.0
 					],
@@ -11827,7 +11913,7 @@
 				},
 				{
 					"source_name": "rate_budget",
-					"product_type_ref": 76.0,
+					"product_type_ref": 77.0,
 					"primary_key": [
 						0.0
 					],
@@ -11960,7 +12046,7 @@
 				},
 				{
 					"source_name": "wielded",
-					"product_type_ref": 104.0,
+					"product_type_ref": 105.0,
 					"primary_key": [
 						0.0
 					],
@@ -12297,7 +12383,7 @@
 				},
 				{
 					"source_name": "work_order",
-					"product_type_ref": 105.0,
+					"product_type_ref": 106.0,
 					"primary_key": [
 						0.0
 					],
@@ -12372,7 +12458,7 @@
 				},
 				{
 					"source_name": "unchained",
-					"product_type_ref": 101.0,
+					"product_type_ref": 102.0,
 					"primary_key": [
 						0.0
 					],
@@ -12550,7 +12636,7 @@
 				},
 				{
 					"source_name": "status_state",
-					"product_type_ref": 95.0,
+					"product_type_ref": 96.0,
 					"primary_key": [
 						0.0
 					],
@@ -12621,7 +12707,7 @@
 				},
 				{
 					"source_name": "tick_schedule",
-					"product_type_ref": 98.0,
+					"product_type_ref": 99.0,
 					"primary_key": [
 						0.0
 					],
@@ -12957,7 +13043,7 @@
 				},
 				{
 					"source_name": "work_schedule",
-					"product_type_ref": 107.0,
+					"product_type_ref": 108.0,
 					"primary_key": [
 						0.0
 					],
@@ -13285,7 +13371,7 @@
 				},
 				{
 					"source_name": "recipe_log",
-					"product_type_ref": 77.0,
+					"product_type_ref": 78.0,
 					"primary_key": [
 						0.0
 					],
@@ -13405,7 +13491,7 @@
 				},
 				{
 					"source_name": "work_result",
-					"product_type_ref": 106.0,
+					"product_type_ref": 107.0,
 					"primary_key": [
 						0.0
 					],
@@ -13493,7 +13579,7 @@
 				},
 				{
 					"source_name": "tutorial",
-					"product_type_ref": 100.0,
+					"product_type_ref": 101.0,
 					"primary_key": [
 						0.0
 					],
@@ -14126,7 +14212,7 @@
 				},
 				{
 					"source_name": "session_empty",
-					"product_type_ref": 84.0,
+					"product_type_ref": 85.0,
 					"primary_key": [
 						0.0
 					],
@@ -14242,7 +14328,7 @@
 				},
 				{
 					"source_name": "spell_area",
-					"product_type_ref": 88.0,
+					"product_type_ref": 89.0,
 					"primary_key": [
 						0.0
 					],
@@ -14420,7 +14506,7 @@
 				},
 				{
 					"source_name": "resource_state",
-					"product_type_ref": 80.0,
+					"product_type_ref": 81.0,
 					"primary_key": [
 						0.0
 					],
@@ -15224,7 +15310,7 @@
 				},
 				{
 					"source_name": "spell_landed",
-					"product_type_ref": 90.0,
+					"product_type_ref": 91.0,
 					"primary_key": [
 						0.0
 					],
@@ -18202,7 +18288,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 79.0
+										"Ref": 80.0
 									}
 								}
 							}
@@ -18428,6 +18514,42 @@
 								},
 								"algebraic_type": {
 									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "resolve_action_all",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "request_id"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							},
+							{
+								"name": {
+									"some": "hit_ids"
+								},
+								"algebraic_type": {
+									"Array": {
+										"U64": []
+									}
 								}
 							}
 						]
@@ -19330,7 +19452,7 @@
 									"some": "timer"
 								},
 								"algebraic_type": {
-									"Ref": 91.0
+									"Ref": 92.0
 								}
 							}
 						]
@@ -19472,7 +19594,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 98.0
+									"Ref": 99.0
 								}
 							}
 						]
@@ -19826,7 +19948,7 @@
 									"some": "_sched"
 								},
 								"algebraic_type": {
-									"Ref": 107.0
+									"Ref": 108.0
 								}
 							}
 						]
@@ -19861,7 +19983,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 110.0
+										"Ref": 111.0
 									}
 								}
 							}
@@ -19897,7 +20019,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 111.0
+										"Ref": 112.0
 									}
 								}
 							}
@@ -20318,8 +20440,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "referee_offer",
-							"canonical_name": "referee_offer"
+							"source_name": "rallied",
+							"canonical_name": "rallied"
 						}
 					},
 					{
@@ -20336,8 +20458,8 @@
 					},
 					{
 						"Table": {
-							"source_name": "roll_state",
-							"canonical_name": "roll_state"
+							"source_name": "referee_offer",
+							"canonical_name": "referee_offer"
 						}
 					},
 					{
@@ -20372,6 +20494,12 @@
 					},
 					{
 						"Table": {
+							"source_name": "roll_state",
+							"canonical_name": "roll_state"
+						}
+					},
+					{
+						"Table": {
 							"source_name": "seen_delay",
 							"canonical_name": "seen_delay"
 						}
@@ -20384,26 +20512,20 @@
 					},
 					{
 						"Table": {
-							"source_name": "stuck_arrow",
-							"canonical_name": "stuck_arrow"
-						}
-					},
-					{
-						"Table": {
 							"source_name": "authority",
 							"canonical_name": "authority"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "swing",
-							"canonical_name": "swing"
+							"source_name": "stuck_arrow",
+							"canonical_name": "stuck_arrow"
 						}
 					},
 					{
 						"Table": {
-							"source_name": "where_sample",
-							"canonical_name": "where_sample"
+							"source_name": "swing",
+							"canonical_name": "swing"
 						}
 					},
 					{
@@ -20416,6 +20538,12 @@
 						"Table": {
 							"source_name": "timed_press",
 							"canonical_name": "timed_press"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "where_sample",
+							"canonical_name": "where_sample"
 						}
 					},
 					{
@@ -21256,6 +21384,12 @@
 						"Function": {
 							"source_name": "resolve_action",
 							"canonical_name": "resolve_action"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "resolve_action_all",
+							"canonical_name": "resolve_action_all"
 						}
 					},
 					{

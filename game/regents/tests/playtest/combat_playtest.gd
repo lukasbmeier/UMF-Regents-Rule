@@ -17,6 +17,8 @@ const GUIDE: Vector3 = Vector3(5.0, 0.0, 22.5)
 const SPARRING: Vector3 = Vector3(13.5, 0.0, 24.5)
 const SPARRING_KIND: int = 105
 const DUMMY_1: Vector3 = Vector3(7.0, 0.0, 20.0)
+## The camp's second dummy (`continent.json` dummy_2), 2.7 m from the first: one Cleave can reach both.
+const DUMMY_2: Vector3 = Vector3(9.5, 0.0, 21.0)
 const AXE: int = 40001
 const AXEMANSHIP: int = 40007
 const DUMMY_KIND: int = 102
@@ -145,6 +147,7 @@ func _run() -> void:
 	_check(int(skilling.xp.get(AXEMANSHIP, 0)) >= 7, "axemanship XP for the hits (%d)" % int(skilling.xp.get(AXEMANSHIP, 0)))
 	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
 	_check(is_equal_approx(dh.get_current(), 500.0), "the dummy is whole again a few seconds on")
+	await _cleave_both(dummy, dh)
 
 	# --- SPAM: held to the animation, every press kept ---
 	var starts: Array[int] = []
@@ -1339,6 +1342,35 @@ func _mouse(button: MouseButton, down: bool) -> void:
 	e.button_index = button
 	e.pressed = down
 	Input.parse_input_event(e)
+
+
+## AREAS THAT HIT ALL (S1, ABILITIES_PREP.md section 7 step 3): Q, Cleave, swept from beside the two dummies along the
+## line between them, lands on BOTH (the referee reports every body its sweep met; each is dealt as a single hit is).
+## Before, a sweep landed on its first body only. Then back where the string is played, the first dummy targeted.
+func _cleave_both(dummy: int, dh: SpaceTimeHealthComponent) -> void:
+	var other: int = await _dummy_at(DUMMY_2)
+	_check(other > 0, "the camp's second dummy")
+	if other <= 0:
+		return
+	var oh: SpaceTimeHealthComponent = (EntityRegistry.get_entity(other) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	# Beside the first dummy, 0.9 m off the line to the second, a quarter metre past it: the sweep (2.2 m, 0.9 m wide)
+	# passes both, the first at its start and the second at its end.
+	var along: Vector3 = (DUMMY_2 - DUMMY_1).normalized()
+	var side: Vector3 = Vector3(along.z, 0.0, -along.x)
+	var at: Vector3 = DUMMY_1 + along * 0.25 + side * 0.9 + Vector3(0, 0.05, 0)
+	combat.set_target(0)
+	await _stand_at(at, at + along * 3.0)
+	var a0: float = dh.get_current()
+	var b0: float = oh.get_current()
+	var swung: bool = combat.skill(0)
+	_check(swung and combat.on_slot(0) != null and combat.on_slot(0).id == 40009, "Q: Cleave swung")
+	await _until(func() -> bool: return dh.get_current() < a0 and oh.get_current() < b0, 3.0)
+	_check(is_equal_approx(snappedf(a0 - dh.get_current(), 0.01), 12.6), "Cleave hit the first dummy: 18 at the copper axe's 70 %% (%.2f)" % (a0 - dh.get_current()))
+	_check(is_equal_approx(snappedf(b0 - oh.get_current(), 0.01), 12.6), "and the second, in the same sweep: an area hits all in it (%.2f)" % (b0 - oh.get_current()))
+	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0) and is_equal_approx(oh.get_current(), 500.0), 8.0)
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
+	combat.set_target(dummy)
+	await get_tree().create_timer(0.3).timeout
 
 
 func _dummy_at(at: Vector3) -> int:
