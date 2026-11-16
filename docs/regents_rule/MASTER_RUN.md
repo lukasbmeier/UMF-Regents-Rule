@@ -154,8 +154,9 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | M1 | town session | (deleted) | DONE: worktree and branch removed 2026-11-15 (an empty locked folder `.claude/worktrees/medieval-...` is left: delete by hand) | 85 (extended) | 34bedf9d, 9064c56b | |
 | M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
 | T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | t1-wear-hook | running | | | |
-| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all | running | | | |
-| S2 | | | waiting S1 | | | |
+| S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | running. Spells already hit all; the gap is the referee-JUDGED sweep (Cleave), which is FOUNDATION: S1 builds add-only `AbilityDef.hits_all` + `resolve_action_all` in a template worktree (DECISIONS number after T1's, no version bump), shipped with T1 in M3; its game branch merges AFTER M3 | | | |
+| S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
+| S2 | | | waiting S1 (so M3 too) | | | |
 | S3 | | | waiting S2 | | | |
 | S4 | | | waiting S3, P1 | | | ui/ |
 | P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | running | | | |
