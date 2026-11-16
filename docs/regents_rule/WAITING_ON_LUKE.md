@@ -61,6 +61,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - THE WEAPON POOLS, all stand-ins (names, numbers, what each really does): sword E Flurry, Hamstring Cut, Shield Bash, R Execute; axe E Hamstring Chop, Skull Splitter, Shoulder Shove, R Whirlwind; bow Q Point-Blank Shot, E Pinning Shot, Kick Away, Quick Shot, R Arrow Volley; staff R Meteor: `game/regents/content/ability/{sword,axe,bow}_*.tres`, `staff_meteor.tres`, `content/spell/staff_meteor.tres`; their slows and shoves in `content/kit/*.tres` `hits`. Whirlwind and Arrow Volley hit every foe in the sweep (`hits_all`).
 - The staff's Bolt at 12 damage (was 9), for your feel check: `content/ability/staff_bolt.tres`.
 - TEST ARMOR: Practice cuirass (40067, Defense 20) and Practice helm (40068, Defense 10), `game/regents/content/item/practice_*.tres`: test pieces until the real ones (S3).
+- THE PICKER'S SUGGESTED SWATCHES: the four `starter_*` palettes' colors per slot: `RegentsColors.swatches` in `game/regents/wardrobe/regents_colors.gd`. Keep them or choose your own row.
 (more as each item merges)
 
 ## 3. To play and look at
@@ -68,6 +69,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 93: the picker (connect screen, or Escape > Character): Peasant M / F, hair, beard, brows, skin, and a color with swatches for main, accent, under, trim, leather. A character saved as Ranger, Wizard, Knight or Noble is now a Peasant. `figure_shot.tscn` shows four players together.
 - Step 92 (no UI yet): `admin_give_item <you> 40067 1 0` and `40068 1 1000`, out of a fight `wear <row>`: a skeleton's slash (7) lands at 4.74; `take_off "chest"`.
 - Step 91: sword, axe or bow: Q from level 1; at 5 open the weapon's abilities and pick E from three; at 20 R is the ult. A staff at 20: R offers Meteor. `admin_set_item_level` jumps a weapon's level. A bow skill has never been pressed by a real client: tell me how it feels.
 - Step 90: F6 on `game/regents/town/town_world.tscn` (up in ~4 s now); 2 or 3: the village's fenced yards, vines, crates, a wagon.

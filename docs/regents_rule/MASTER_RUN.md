@@ -163,7 +163,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | S4 | | | waiting S3, P1 | | | ui/ |
 | P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | MERGED 2026-11-16 | 91 | 754818e4 | |
 | T2 | the T1 session (local_8bc5463c), reused, in `../UMF Template` | claude/t2-picker-color (template) | NEW 2026-11-16 (W1's stop): a `color: true` option kind in the foundation's `CharacterPicker` (swatches, value 0xRRGGBB + 1), template 1.8.4, #316; running | | | |
-| W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | running: genre-side (Peasant-only looks on `RegentsFigure`, colors as `main=<int>` keys); the FREE picker needs T2 | | | |
+| W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | MERGED 2026-11-16 | 93 | a9322b2e | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |

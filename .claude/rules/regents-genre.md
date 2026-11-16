@@ -166,6 +166,11 @@ paths:
   texture or a new mesh per tier. A new outfit gets its zones in `wardrobe/zones.json` and a bake
   (`game/regents/tools/wardrobe_assets.py zones`); look at it in the wardrobe lab with Z. The Knight is the genre's
   (`game/regents/art/outfits/knight/`), the other four outfits the foundation's.
+- A PLAYER'S BODY (PROGRESS 93) is a `RegentsFigure` (`game/regents/looks/peasant_m|f.tscn`, the adventurer's only
+  looks): Peasant clothes in the player's own colors (`RegentsColors`: keys `main`, `accent`, `under`, `trim`, `leather`
+  on the `appearance` text, each 0xRRGGBB + 1; never `#`, which the module refuses), dressed on the foundation's
+  `assembled` with materials shared by palette (`Wardrobe.dress_shared`). Armor goes on through `wear_armor` (pieces +
+  tier palettes); nothing else dresses a player. The picker's color options need template 1.8.4 (`COLOR_OPTIONS`).
 - AN NPC'S SCENE (PROGRESS 87): a new NPC scene inherits `game/regents/npc.tscn` (or `combat/foe.tscn`), never
   `foundation/entities/player.tscn` directly: player.tscn's Session component waits 2 s for a `session_member` row an
   NPC never has (until the template's fix, DECISIONS #315, is pulled). A change to an NPC's scene runs
