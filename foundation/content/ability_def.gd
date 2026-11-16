@@ -26,7 +26,7 @@ class_name AbilityDef extends ContentDef
 ## JUDGED BY THE WORLD'S REFEREE (DECISIONS #226): a sidecar decides what it hits, against the
 ## level's walls and everyone where its user saw them (rewound by what they saw, at most
 ## `foundation.rewind_max_ms`), as it lands (`wind_up_ms` after the use). Untargeted: it hits the
-## first thing in its path. Off: the module's own coarse test (its target in `range_m`).
+## first thing in its path (everything in it, with Hits All). Off: the module's own coarse test (its target in `range_m`).
 @export var judged: bool = false
 ## How far its sweep goes, along the user's heading (a pounce's lunge).
 @export_range(0.0, 20.0, 0.05, "suffix:m") var reach_m: float = 1.4
@@ -34,6 +34,10 @@ class_name AbilityDef extends ContentDef
 @export_range(0.05, 3.0, 0.01, "suffix:m") var radius_m: float = 0.35
 ## How high above the user's feet it sweeps.
 @export_range(0.0, 3.0, 0.05, "suffix:m") var height_m: float = 0.6
+## IT HITS ALL in its sweep (a cleave), each judged as a single hit is, nearest first; off, the first only.
+## The referee answers it with every body it met (`resolve_action_all`), and the module refuses that
+## answer for an ability without it.
+@export var hits_all: bool = false
 
 @export_group("The user's body")
 ## IT LUNGES (DECISIONS #232): as its wind-up ends the user's body is thrown forward by its movement
@@ -80,7 +84,7 @@ func to_bake() -> Dictionary:
 		"radius": radius_m,
 		"height": height_m,
 		"lunges": lunges,
-	}.merged(_roll_bake())
+	}.merged(_roll_bake()).merged({"hits_all": true} if hits_all else {})
 
 
 ## A roll's own keys, only on a roll: every other ability bakes as it did (no game's bake goes stale).
@@ -100,6 +104,8 @@ func validate() -> Array[String]:
 	var out: Array[String] = super()
 	if judged and reach_m <= 0.0:
 		out.append("it is judged by the referee but reaches nowhere: give it a reach")
+	if hits_all and not judged:
+		out.append("it hits all in its sweep but is not judged: only the referee sweeps, tick judged")
 	if rolls:
 		if roll_status == null:
 			out.append("it rolls but has no status to hold its user while it lasts: pick one (the foundation's Rolling)")

@@ -11,6 +11,8 @@ class_name LungeJudge extends RefCounted
 ##                 referee says it was (rewound); the sweep hits the one its path meets first, if
 ##                 nothing of the level is between the ball and it (never through a wall: a hen pressed
 ##                 to the far side of a fence is within a ball's reach of where it stopped, not hit)
+##   all of them   an ability that HITS ALL (`AbilityDef.hits_all`: a cleave) asks `judge_all`: every
+##                 body its path meets, each by the same test, nearest first
 ##
 ## The bodies are tested by arithmetic, not by moving physics bodies about: a rewound position is a
 ## number, and the answer must not depend on when a physics step last ran.
@@ -109,34 +111,59 @@ static func path(space: PhysicsDirectSpaceState3D, start: Vector3, motion: Vecto
 ## was)}.
 static func judge(space: PhysicsDirectSpaceState3D, feet: Vector3, yaw: float, reach: float, radius: float,
 		height: float, targets: Array, mask: int = LEVEL_MASK, exclude: Array[RID] = []) -> Dictionary:
+	var all: Dictionary = judge_all(space, feet, yaw, reach, radius, height, targets, mask, exclude)
+	var ids: Array[int] = all["hit_ids"]
+	var alongs: Array[float] = all["alongs"]
+	return {"hit_id": ids[0] if not ids.is_empty() else 0, "reach": all["reach"],
+		"along": alongs[0] if not ids.is_empty() else -1.0}
+
+
+## JUDGE A SWEEP THAT HITS ALL (`AbilityDef.hits_all`): every body its path meets, each by the test `judge`
+## makes (in reach of the ball's path, nothing of the level between), nearest along the path first; a tie
+## keeps the order of `targets`. Returns {hit_ids, alongs (each one's distance along the path), reach}.
+static func judge_all(space: PhysicsDirectSpaceState3D, feet: Vector3, yaw: float, reach: float, radius: float,
+		height: float, targets: Array, mask: int = LEVEL_MASK, exclude: Array[RID] = []) -> Dictionary:
 	var dir: Vector3 = forward(yaw)
 	var start: Vector3 = feet + Vector3.UP * height
 	var way: PackedVector3Array = path(space, start, dir * reach, radius, mask, exclude)
 	var got: float = 0.0
 	for i: int in range(1, way.size()):
 		got += way[i - 1].distance_to(way[i])
-	var best_id: int = 0
-	var best_along: float = INF
+	var found: Array[Dictionary] = []
 	for t: Dictionary in targets:
-		var p: Vector3 = t["pos"]
-		var r: float = float(t.get("radius", 0.4))
-		var h: float = float(t.get("height", 1.8))
-		var cy: float = float(t.get("center_y", h * 0.5))
-		var half: float = maxf(h * 0.5 - r, 0.0)
-		var a: Vector3 = p + Vector3.UP * (cy - half)
-		var b: Vector3 = p + Vector3.UP * (cy + half)
-		var so_far: float = 0.0
-		for i: int in range(1, way.size()):
-			var c: Array = closest_between(way[i - 1], way[i], a, b)
-			var along: float = so_far + way[i - 1].distance_to(c[0] as Vector3)
-			so_far += way[i - 1].distance_to(way[i])
-			if (c[0] as Vector3).distance_to(c[1] as Vector3) > radius + r:
-				continue
-			if along < best_along and _in_sight(space, c[0] as Vector3, c[1] as Vector3, mask, exclude):
-				best_along = along
-				best_id = int(t["id"])
-			break
-	return {"hit_id": best_id, "reach": got, "along": best_along if best_id != 0 else -1.0}
+		var along: float = _met_along(space, way, radius, t, mask, exclude)
+		if along >= 0.0:
+			found.append({"id": int(t["id"]), "along": along, "n": found.size()})
+	found.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		return float(x["along"]) < float(y["along"]) or (float(x["along"]) == float(y["along"]) and int(x["n"]) < int(y["n"])))
+	var ids: Array[int] = []
+	var alongs: Array[float] = []
+	for f: Dictionary in found:
+		ids.append(int(f["id"]))
+		alongs.append(float(f["along"]))
+	return {"hit_ids": ids, "alongs": alongs, "reach": got}
+
+
+## How far along `way` (the ball's path) it first meets target `t` (a vertical capsule at its feet), if nothing
+## of the level is between them there; -1: it does not.
+static func _met_along(space: PhysicsDirectSpaceState3D, way: PackedVector3Array, radius: float, t: Dictionary,
+		mask: int, exclude: Array[RID]) -> float:
+	var p: Vector3 = t["pos"]
+	var r: float = float(t.get("radius", 0.4))
+	var h: float = float(t.get("height", 1.8))
+	var cy: float = float(t.get("center_y", h * 0.5))
+	var half: float = maxf(h * 0.5 - r, 0.0)
+	var a: Vector3 = p + Vector3.UP * (cy - half)
+	var b: Vector3 = p + Vector3.UP * (cy + half)
+	var so_far: float = 0.0
+	for i: int in range(1, way.size()):
+		var c: Array = closest_between(way[i - 1], way[i], a, b)
+		var along: float = so_far + way[i - 1].distance_to(c[0] as Vector3)
+		so_far += way[i - 1].distance_to(way[i])
+		if (c[0] as Vector3).distance_to(c[1] as Vector3) > radius + r:
+			continue
+		return along if _in_sight(space, c[0] as Vector3, c[1] as Vector3, mask, exclude) else -1.0
+	return -1.0
 
 
 ## Nothing of the level between the ball at `from` and the body at `to`.
