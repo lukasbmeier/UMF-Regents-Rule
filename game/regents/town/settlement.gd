@@ -8,7 +8,8 @@ class_name Settlement extends Node3D
 ## where it stands, so moving a house re-rolls it) and, with `merge` on, MERGED into one mesh, a surface per material.
 ## In the editor nothing is changed: the buildings show the kit's own colors there.
 ##
-## A building is a `KitHouse`, a `CastleWall` or the root of an instanced scene; anything else is searched inside.
+## A building is a `KitHouse`, a `CastleWall`, a `PropGroup` (props placed together) or the root of an instanced scene;
+## anything else is searched inside.
 
 @export var style: SettlementStyle
 ## Stirred into every building's seed: two villages of one style differ by it.
@@ -40,7 +41,7 @@ func _collect(n: Node, out: Array[Node3D]) -> void:
 		var b: Node3D = c as Node3D
 		if b == null:
 			continue
-		if b is KitHouse or b is CastleWall or not b.scene_file_path.is_empty():
+		if b is KitHouse or b is CastleWall or b is PropGroup or not b.scene_file_path.is_empty():
 			out.append(b)
 		else:
 			_collect(b, out)

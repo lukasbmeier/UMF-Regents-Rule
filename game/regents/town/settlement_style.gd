@@ -35,6 +35,8 @@ class_name SettlementStyle extends Resource
 @export var glass: Color = Color(1, 1, 1, 0)
 ## Vines on the walls.
 @export var foliage: Color = Color(1, 1, 1, 0)
+## Cloth: the props' banners, awnings and stall covers (the town's own color on its market).
+@export var cloth: Color = Color(1, 1, 1, 0)
 
 @export_group("Weather")
 ## How far the plaster has worn through to the stone, and how weathered roofs and old wood are.
@@ -59,6 +61,15 @@ class_name SettlementStyle extends Resource
 @export_range(0.0, 0.5) var jitter_value: float = 0.1
 @export_range(0.0, 1.0) var jitter_wear: float = 0.3
 
+@export_group("Streets")
+## The streets' stones (Luke, 2026-11-15: streets must never read as the walls): code-made, never a texture a wall
+## wears; their color is `paving` (kept well apart from `stone` and `masonry`: the suite checks every preset), a
+## second color for some of the stones, and the laying.
+## A second stone color; alpha is the share of stones that take it (0, none).
+@export var paving_mix: Color = Color(0, 0, 0, 0)
+## Round cobbles, or setts (cut blocks in rows).
+@export_enum("Cobbles", "Setts") var paving_pattern: int = 0
+
 @export_group("Night")
 ## Lamplight in the windows after dark.
 @export var window_light: Color = Color(1.0, 0.8, 0.45)
@@ -67,16 +78,27 @@ class_name SettlementStyle extends Resource
 
 ## The dye slots, in the shaders' order (`slot_ids`; each building's nudge moves each one its own way).
 const SLOTS: Array[StringName] = [&"plaster", &"stone", &"masonry", &"brick", &"paving", &"roof", &"timber", &"planks",
-	&"metal", &"glass", &"foliage"]
+	&"metal", &"glass", &"foliage", &"cloth"]
 ## The weather and night numbers, by the shaders' uniform names (the same as the fields').
 const NUMBERS: Array[StringName] = [&"wear", &"moss", &"grime", &"grime_height", &"snow", &"fade", &"jitter_hue",
 	&"jitter_value", &"jitter_wear", &"lit_share"]
 const COLORS: Array[StringName] = [&"wear_color", &"moss_color", &"grime_color", &"window_light"]
 
 
+## The streets' color when `paving` keeps the painting (alpha 0): a dark worn gray-brown, unlike the kit's walls.
+const PAVING_PAINTED: Color = Color(0.4, 0.37, 0.33)
+
+
 ## A slot's color (`SLOTS`).
 func color_of(slot: StringName) -> Color:
 	return get(slot) as Color
+
+
+## The streets' stone color: `paving` over `PAVING_PAINTED` by its alpha.
+func paving_color() -> Color:
+	var c: Color = PAVING_PAINTED.lerp(paving, paving.a)
+	c.a = 1.0
+	return c
 
 
 ## A copy to change freely (the lab's own; never the file's).

@@ -761,7 +761,7 @@ into soft leather and a wolf pelt into supple leather (Crafting 2).
 (PROGRESS 81) `game/regents/wardrobe/wardrobe_lab.tscn`, every outfit dyed any color, the metal tiers;
 **the towns** (PROGRESS 85) `game/regents/town/town_world.tscn`, a kilometer with a village, a walled market town and a
 castle, every building the Medieval Village kit's pieces in the town dye (L day/dusk/night, S the next style), and
-`game/regents/town/town_lab.tscn`, one street in eight styles, live-edited; **the showcase** (PROGRESS 84)
+`game/regents/town/town_lab.tscn`, one street in eight styles, live-edited, furnished, and (5) the towers' roof styles side by side; **the showcase** (PROGRESS 84)
 `game/regents/showcase/vista_lab.tscn` and `battle_lab.tscn`.
 
 ```bash

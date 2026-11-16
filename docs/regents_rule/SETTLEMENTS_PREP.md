@@ -99,8 +99,9 @@ give the clothes free dyes instead of the pack's 2-3 colorways (S6).
    the test (he wants to see everything furnished after).
 2. ~~The shader, `SettlementStyle`, the town lab~~ (built, §8).
 3. ~~A house from pieces, merged~~ (built, §8: merged at run time; a saved bake is still to do).
-4. ~~A test world~~ (built, §8: `town_world.tscn`, the castle by route 1). Next: Luke's look at both labs; then
-   furnishing with the props kit; then his S1-S8 and a first real village where he puts it.
+4. ~~A test world~~ (built, §8: `town_world.tscn`, the castle by route 1).
+5. ~~Luke's first look~~: the roofs workshopped, the streets their own, everything furnished (§9). Next: his pick of
+   the roofs and his look at the furnishing; then his S1-S8 and a first real village where he puts it.
 
 ## 7. Luke's open decisions
 
@@ -131,13 +132,13 @@ for colors to show how unique each can look using exact same models"; the kit's 
   demo houses at the market, the kit's tower in its corner; a `CastleWall` with square towers and three gates), the
   castle on its mound (The capital: a pentagon curtain wall with round towers and a gatehouse toward the town, a keep
   that is a small roofed `CastleWall`, a hall, barracks, a stable and the kit's tower). Roads between them, woods
-  (the nature kit's common trees, bushes, rocks; its red and blue trees left out). Keys: 1-7 views, right mouse to
+  (the nature kit's common trees, bushes, rocks; its red and blue trees left out). Keys: 1-9, 0 views, right mouse to
   look, WASD QE to fly, Shift, wheel for speed, L day/dusk/night, S every place to the next preset style, H help.
 - `game/regents/town/town_lab.tscn`, THE TOWN LAB: one little street (three `KitHouse`s, the kit's House D, a stretch
   of wall with towers and a gate) in every preset: 1 Presets (all eight side by side; Left/Right to step through them
   close), 2 One (the panel edits a style live: every slot's color and alpha, the weather, each building's spread,
   the night; Save style writes `styles/custom_<time>.tres`), 3 Seeds (one style, six streets: each building's own
-  nudge), 4 Houses (one house in every preset in a row). L light, H panel.
+  nudge), 4 Houses (one house in every preset in a row), 5 Roofs (§9). L light, H panel.
 - Shots (windowed): `"$GODOT" --path . res://game/regents/town/town_world.tscn -- <out dir>` and the same with
   `town_lab.tscn`.
 
@@ -193,3 +194,63 @@ the shots of both scenes (day, dusk, night; every preset close).
 - The ground is a stand-in (value-noise grass, painted roads): the real world's terrain and paths are Luke's.
 - Interiors, stairs and upper floors are left out of `KitHouse` (draw calls): S7.
 - The nature kit's twisted and tall-thick trees have red and blue leaves; the woods here leave them out.
+
+## 9. Since (2026-11-15, later): the roofs, the streets, furnished
+
+Luke, after looking: "The castle walls and everything looks really good, we need to workshop the roofs ... these
+kinda look janky"; "make sure that walls and building are distinct from streets since they use the same matieral,
+so maybe choosing a unique color mix for roads"; the Houses view "not quite right"; "lets see if we can make the roofs
+look better with a couple options and tries for style and then furnish".
+
+**The houses' roofs**: the kit's `Roof_RoundTiles_6x4` and `Roof_FlatTiles_6x4` are the only roofs whose origin is
+at one end (z -0.14..4.85), so a 2 x 3-cell house wore its roof 2.4 m to one side (the Houses view). `KitHouse` now
+centers every roof on its measured bounds (`TownKit.piece_bounds`). Tested over every footprint and both tiles
+(NEGATIVE: without the centering it names exactly the two 6x4 roofs).
+
+**The towers' roofs** (`CastleWall`, group Roofs): the first cones were 16 flat triangles, their tiles pinched to a
+point on each face, sitting on top of the battlements (sky through the gaps under the eaves). Now a roofed tower's
+wall rises solid to its eaves, banded under them, the eaves' underside closed, and the roof is smooth (32 sides, rows
+of rings), its tiles level rows round it, a whole number of tiles round its foot. The options, side by side in the
+lab's new view **5 Roofs** (Left/Right to step through them close):
+- `roof_style`: CONE (with `roof_flare` 0 a straight cone, more a bell or witch's hat), STEPPED (three courses, each
+  with its own tiles, each lipped over the one below), KIT (the kit's own `Roof_Tower_*` scaled to fit: octagonal,
+  big tiles), TURRET (the battlements kept, a small roofed turret rising inside them), OPEN (battlements, no roof).
+- `roof_slate` (flat tiles), `roof_pitch` (rise over radius), `roof_overhang`, `finial` (a metal spike and orb).
+- Square towers get the same as a hipped pyramid.
+- IN THE WORLD (my picks, Luke's to change): the town's square towers hipped in round tiles (flare 0.3, pitch 1.3);
+  the castle's round towers tall slate bells (flare 0.5, pitch 2.6); the keep's towers TURRETs in slate.
+
+**The streets** (Luke: never the walls' look): the paving is CODE-MADE now (`town_paving.gdshaderinc`: round cobbles
+or setts in running bond, a dark joint, each stone a little lighter or darker), never a texture any wall wears; the
+kit's `T_RoundRocks` is no longer used for streets. Each style says its paving: `paving` (its color, kept well apart
+from `stone` and `masonry` in every preset: the suite checks, NEGATIVE paving the masonry's color is caught), a
+second color for a share of the stones (`paving_mix`), and the laying (`paving_pattern`: Cobbles or Setts; the capital
+and Frostmark lay setts). The town world paves the town's streets, the market and the castle's yard and road, each in
+its place's paving (again when S steps the styles); the lab paves every street (`town_street.gdshader`). Far off the
+stones fade to their average (no shimmer).
+
+**Furnished** (the Fantasy Props kit, CC0, `game/regents/art/props/`: 212 props, its four trim sheets):
+- The dye knows every material it wears: its wood in the style's planks, its metal in its metal, its cloth (banners,
+  awnings, stall covers) in a new slot, CLOTH (each preset its own: Riverside faded blue, Sunreach terracotta, the
+  capital royal blue...); its props sheet, signs and pages keep their painting and the props' vertex colors (`KEEP`
+  mode, `use_vertex_color`). `TownKit.piece` finds a name in either kit.
+- `PropGroup` (`prop_group.gd`): props placed together, ONE building to its `Settlement` (dressed, merged to one mesh,
+  one body). `TownFurnish` (`town_furnish.gd`) sets them out from a seeded dice: a MARKET (rows of stalls facing
+  each other and back to back, goods behind them, tables and benches at the ends, bunting; clear of what stands in
+  the square), things at a house's DOOR (a lantern, sometimes a hanging sign, barrels, crates, a bench: merged with
+  the house), a village GREEN (a campfire and cauldron, benches, a cart), an INN's front (tables, benches, its pub
+  sign), a CASTLE YARD (three dummies and weapon stands, a smithy corner, the stable's wagon and barrels), BANNERS on
+  the keep and inside the gate, TORCHES at every gate.
+- New views in the town world: 8 the market's stalls, 9 the inn, 0 the castle yard.
+
+**Tested**: `regents_town` 66/0: the roofs (each style builds; a roofed tower solid to its eaves with no merlon under
+the roof, its roof starting there and reaching past the wall; slate, courses, the kit's, the turret, open, square;
+NEGATIVE tower roofs off builds none; and with the roofed tower's merlons put back, the check fails), the streets
+(above), the props (every material known, NEGATIVE with `MI_Banner` taken out two checks fail; a group one mesh and
+one body, its cloth the style's), the world's paving per place and after S, the world furnished (the market's stalls,
+none on the kit's tower), the lab's streets paved and furnished, the roofs view. Looked at in the shots of both.
+
+**Left for later**: the bunting hangs between nothing (posts or house fronts to tie it to); the props are not yet in
+the houses (interiors, S7); props by hand in a scene work (a `PropGroup`'s instanced children) but no tool places them.
+The props the game already used (the order board's `Stall_Empty`, `Scroll_1`; the combat slice's `Dummy`,
+`WeaponStand`, `Shield_Wooden`) stay the older exports with no collisions, so in a town they have none either.

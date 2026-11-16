@@ -14,10 +14,12 @@ class_name TownKit extends RefCounted
 ## two instance uniforms, never a material of its own.
 
 const VILLAGE: String = "res://game/regents/art/village/"
+## The Fantasy Props kit (CC0, `ATTRIBUTION.md` there): market stalls, barrels, banners, furniture.
+const PROPS: String = "res://game/regents/art/props/"
 const SURFACE_SHADER: Shader = preload("res://game/regents/town/town_surface.gdshader")
 const LEAVES_SHADER: Shader = preload("res://game/regents/town/town_leaves.gdshader")
 
-enum Mode { ONE, PLASTER, TRIM, ROOF, GLASS, METAL }
+enum Mode { ONE, PLASTER, TRIM, ROOF, GLASS, METAL, KEEP }
 
 ## Each kit material: its mode, its slots (`SettlementStyle.SLOTS`: a, b, c), its textures (`T_<tex>_BaseColor`,
 ## `_Normal`, `_Roughness` unless named) and its MEAN: the average linear brightness of its color texture (measured,
@@ -40,6 +42,29 @@ const SURFACES: Dictionary = {
 		"mean": 0.2501, "metallic": 1.0},
 	"MI_WindowGlass": {"mode": Mode.GLASS, "slots": [&"glass"], "albedo": "T_WindowGradient"},
 	"MI_Vine": {"leaves": true, "slots": [&"foliage"], "albedo": "T_VineLeaf"},
+	# The Fantasy Props kit (`PROPS`): its wood in the planks' color, its metal in the metal's, its cloth (banners,
+	# awnings, stall covers) in the style's CLOTH; its props sheet and its signs keep their painting (and the props'
+	# vertex colors, which tell their parts apart: fruit, rope, leather). The means measured like the village's.
+	"MI_Trim_Furniture": {"mode": Mode.ONE, "slots": [&"planks"], "tex": "Trim_Furniture", "rough": "T_Trim_Furniture_ORM",
+		"mean": 0.1776, "dir": PROPS},
+	"MI_Trim_Metal": {"mode": Mode.METAL, "slots": [&"metal"], "tex": "Trim_Metal", "rough": "T_Trim_Metal_ORM",
+		"mean": 0.2235, "metallic": 1.0, "dir": PROPS},
+	"MI_Trim_Metal_Vertex": {"mode": Mode.METAL, "slots": [&"metal"], "tex": "Trim_Metal", "rough": "T_Trim_Metal_ORM",
+		"mean": 0.2235, "metallic": 1.0, "vertex": true, "dir": PROPS},
+	"MI_Trim_Cloth": {"mode": Mode.ONE, "slots": [&"cloth"], "tex": "Trim_Cloth", "rough": "T_Trim_Cloth_ORM",
+		"mean": 0.3746, "dir": PROPS},
+	"MI_Banner": {"mode": Mode.ONE, "slots": [&"cloth"], "tex": "Trim_Cloth", "rough": "T_Trim_Cloth_ORM",
+		"mean": 0.3746, "dir": PROPS},
+	"MI_Trim_Props": {"mode": Mode.KEEP, "slots": [&"planks"], "tex": "Trim_Props", "rough": "T_Trim_Props_ORM",
+		"mean": 0.3121, "dir": PROPS},
+	"MI_Trim_Props_Vertex": {"mode": Mode.KEEP, "slots": [&"planks"], "tex": "Trim_Props", "rough": "T_Trim_Props_ORM",
+		"mean": 0.3121, "vertex": true, "dir": PROPS},
+	"MI_WoodenSign": {"mode": Mode.KEEP, "slots": [&"planks"], "tex": "Trim_Cloth", "rough": "T_Trim_Cloth_ORM",
+		"mean": 0.3746, "dir": PROPS},
+	"MI_Page_1": {"mode": Mode.KEEP, "slots": [&"planks"], "albedo": "T_Page_Noise", "dir": PROPS},
+	"MI_Page_2": {"mode": Mode.KEEP, "slots": [&"planks"], "albedo": "T_Page_Noise", "dir": PROPS},
+	"MI_Page_Empty": {"mode": Mode.KEEP, "slots": [&"planks"], "albedo": "T_Page_Noise", "dir": PROPS},
+	"MI_Runes": {"mode": Mode.KEEP, "slots": [&"metal"], "albedo": "T_Runes", "dir": PROPS},
 }
 ## The wood trim sheet's band means (light planks, dark timber, end grain, the stone strip), measured like `mean`.
 const TRIM_BANDS: Vector4 = Vector4(0.156, 0.071, 0.263, 0.307)
@@ -56,21 +81,54 @@ static var unknown: Dictionary[String, bool] = {}
 static var night: float = 0.0
 
 
-## A kit piece by its file name ("Wall_Plaster_Straight").
+## A kit piece by its file name ("Wall_Plaster_Straight", "Barrel"): the village kit's, else the props kit's.
 static func piece(piece_name: String) -> PackedScene:
-	return load(VILLAGE + piece_name + ".gltf") as PackedScene
+	return load(_piece_path(piece_name)) as PackedScene
 
 
 static func has_piece(piece_name: String) -> bool:
-	return ResourceLoader.exists(VILLAGE + piece_name + ".gltf")
+	return ResourceLoader.exists(_piece_path(piece_name))
 
 
-static func _tex(file: String) -> Texture2D:
-	if _textures.has(file):
-		return _textures[file]
-	var path: String = VILLAGE + file + ".png"
+static func _piece_path(piece_name: String) -> String:
+	var village: String = VILLAGE + piece_name + ".gltf"
+	return village if ResourceLoader.exists(village) else PROPS + piece_name + ".gltf"
+
+
+static var _bounds: Dictionary[String, AABB] = {}
+
+
+## A piece's drawn bounds in its own space (its meshes, not its collisions), measured once. The kit's pieces are
+## mostly centered on their origin, not all: `Roof_*Tiles_6x4` starts at its origin and runs 5 m along +z.
+static func piece_bounds(piece_name: String) -> AABB:
+	if _bounds.has(piece_name):
+		return _bounds[piece_name]
+	var box := AABB()
+	var first: bool = true
+	var scene: PackedScene = piece(piece_name) if has_piece(piece_name) else null
+	if scene != null:
+		var root: Node3D = scene.instantiate() as Node3D
+		var todo: Array[Node] = [root]
+		while not todo.is_empty():
+			var n: Node = todo.pop_back()
+			todo.append_array(n.get_children())
+			var mi: MeshInstance3D = n as MeshInstance3D
+			if mi == null or mi.mesh == null:
+				continue
+			var b: AABB = _relative(root, mi) * mi.mesh.get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+		root.free()
+	_bounds[piece_name] = box
+	return box
+
+
+static func _tex(file: String, dir: String = VILLAGE) -> Texture2D:
+	var path: String = dir + file + ".png"
+	if _textures.has(path):
+		return _textures[path]
 	var t: Texture2D = load(path) as Texture2D if ResourceLoader.exists(path) else null
-	_textures[file] = t
+	_textures[path] = t
 	return t
 
 
@@ -86,16 +144,18 @@ static func material_for(kit_material: String, style: SettlementStyle) -> Shader
 	mat.resource_name = kit_material
 	mat.shader = LEAVES_SHADER if bool(e.get("leaves", false)) else SURFACE_SHADER
 	var tex: String = str(e.get("tex", ""))
+	var dir: String = str(e.get("dir", VILLAGE))
 	if e.has("albedo"):
-		mat.set_shader_parameter(&"albedo_tex", _tex(str(e["albedo"])))
+		mat.set_shader_parameter(&"albedo_tex", _tex(str(e["albedo"]), dir))
 	elif not tex.is_empty():
-		mat.set_shader_parameter(&"albedo_tex", _tex("T_%s_BaseColor" % tex))
+		mat.set_shader_parameter(&"albedo_tex", _tex("T_%s_BaseColor" % tex, dir))
 	if not bool(e.get("leaves", false)):
 		mat.set_shader_parameter(&"mode", int(e["mode"]))
 		mat.set_shader_parameter(&"uv2_wear", bool(e.get("uv2_wear", false)))
+		mat.set_shader_parameter(&"use_vertex_color", bool(e.get("vertex", false)))
 		if not tex.is_empty():
-			mat.set_shader_parameter(&"normal_tex", _tex(str(e.get("normal", "T_%s_Normal" % tex))))
-			mat.set_shader_parameter(&"rough_tex", _tex(str(e.get("rough", "T_%s_Roughness" % tex))))
+			mat.set_shader_parameter(&"normal_tex", _tex(str(e.get("normal", "T_%s_Normal" % tex)), dir))
+			mat.set_shader_parameter(&"rough_tex", _tex(str(e.get("rough", "T_%s_Roughness" % tex)), dir))
 		mat.set_shader_parameter(&"mean_luma", float(e.get("mean", 0.25)))
 		mat.set_shader_parameter(&"metallic_value", float(e.get("metallic", 0.0)))
 		mat.set_shader_parameter(&"band_means", TRIM_BANDS)

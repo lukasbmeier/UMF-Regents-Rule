@@ -7,7 +7,8 @@ extends Node3D
 ## `CastleWall`, the same code for the town's wall and the castle's. Each place is a `Settlement` in its own style.
 ## Presentation only: nothing here is in the game yet, and nothing is furnished (the props come once Luke says).
 ##
-##   1-7   the views (overview, village, village lane, town, market, castle, castle gate)
+##   1-9, 0   the views (overview, village, village lane, town, market, castle, castle gate, market stalls, inn,
+##           castle yard)
 ##   right mouse, drag   look       W A S D   fly       Q E   down, up       Shift   faster       wheel   speed
 ##   L   day, dusk, night          S   every place's style to the next preset          H   this help
 ##
@@ -37,9 +38,15 @@ const HOUSES: Dictionary[String, String] = {"inn": "res://game/regents/town/hous
 
 ## The places, by name (village, town, castle).
 var settlements: Dictionary[StringName, Settlement] = {}
-## Roads (a.x, a.z, b.x, b.z) and paved squares (center x, z, half x, z), world meters.
+## Roads (a.x, a.z, b.x, b.z) and paved squares (center x, z, half x, z), world meters. Every road is drawn in dirt;
+## a street (inside a place) is paved over it in that place's paving, as a square is.
 var roads: Array[Vector4] = []
 var squares: Array[Vector4] = []
+var square_places: Array[int] = []
+var streets: Array[Vector4] = []
+var street_places: Array[int] = []
+## The places in the ground's paving order (`street_places`, `square_places`).
+const PLACES: Array[StringName] = [&"village", &"town", &"castle"]
 var view: int = 0
 var light: int = 0
 var styles: Array[SettlementStyle] = []
@@ -48,6 +55,8 @@ var style_step: int = 0
 var trees: int = 0
 
 var _cam: Camera3D = null
+## The ground's material (its paving is repainted when the styles step).
+var _ground: ShaderMaterial = null
 var _sun: DirectionalLight3D = null
 var _env: Environment = null
 var _sky: ProceduralSkyMaterial = null
@@ -60,10 +69,17 @@ var _speed: float = 30.0
 ## Each house's footprint in the town, to keep them apart (town-local rects).
 var _taken: Array[Rect2] = []
 var _rng := RandomNumberGenerator.new()
+## The props' own dice (`TownFurnish`), apart from the houses' so furnishing never moves a house.
+var _props_rng := RandomNumberGenerator.new()
+## At each new house's door (`TownFurnish.door`): the share with a lantern, a sign, things by it. Set per place.
+var _door_odds: Vector3 = Vector3.ZERO
+## The prop groups placed (the suite counts them).
+var furnished: Array[PropGroup] = []
 
 
 func _ready() -> void:
 	_rng.seed = 1115
+	_props_rng.seed = 2611
 	_load_styles()
 	_build_environment()
 	_build_village()
@@ -133,6 +149,8 @@ func _house(parent: Node3D, at: Vector3, yaw: float, w: int, d: int, floors: int
 	h.position = at
 	h.rotation.y = yaw
 	parent.add_child(h)
+	if _door_odds != Vector3.ZERO:
+		furnished.append(TownFurnish.door(h, _props_rng, _door_odds.x, _door_odds.y, _door_odds.z))
 	return h
 
 
@@ -147,6 +165,7 @@ func _demo(parent: Node3D, key: String, at: Vector3, yaw: float) -> Node3D:
 ## THE VILLAGE: cottages round a green, facing it, the inn (the kit's House D) at its head, a few along the road out.
 func _build_village() -> void:
 	var s: Settlement = _settlement(&"village", VILLAGE, 0.0)
+	_door_odds = Vector3(0.35, 0.04, 0.5)
 	var finishes: Array[KitHouse.Finish] = [KitHouse.Finish.WOOD_WEAR, KitHouse.Finish.WOOD_BRICK, KitHouse.Finish.PLASTER,
 		KitHouse.Finish.WOOD_WEAR]
 	_demo(s, "inn", Vector3(0, 0, -30), 0.0)
@@ -157,6 +176,17 @@ func _build_village() -> void:
 		var at := Vector3(70.0 + k * 16.0, 0, -18.0 if k % 2 == 0 else 18.0)
 		_house(s, at, 0.0 if at.z < 0 else PI, _rng.randi_range(2, 3), 2, 1, KitHouse.Finish.WOOD_WEAR,
 			KitHouse.Finish.WOOD_WEAR)
+	# The green's campfire and cart, the inn's tables, a wagon on the road out.
+	furnished.append(TownFurnish.green(s, Vector3(0, 0, 2), _props_rng))
+	furnished.append(TownFurnish.inn_front(s, Vector3(0, 0, -24.5), _props_rng))
+	var road := PropGroup.new()
+	road.name = "RoadOut"
+	road.put("Wagon", Vector3(58, 0, 7), PI * 0.5)
+	road.put("Barrel", Vector3(55.5, 0, 9.0), 0.5)
+	road.put("Crate_Wooden", Vector3(56.5, 0, 9.6), 0.2)
+	s.add_child(road)
+	furnished.append(road)
+	_door_odds = Vector3.ZERO
 	add_child(s)
 
 
@@ -179,6 +209,7 @@ func _village_ring(s: Settlement, radius: float, count: int, finishes: Array[Kit
 ## market square, a lane either side, houses along every street facing it, the kit's demo houses among them.
 func _build_town() -> void:
 	var s: Settlement = _settlement(&"town", TOWN, 0.0)
+	_door_odds = Vector3(0.5, 0.15, 0.45)
 	var wall := CastleWall.new()
 	wall.name = "TownWall"
 	var hx: float = TOWN_HALF.x
@@ -192,6 +223,10 @@ func _build_town() -> void:
 	wall.round_towers = false
 	wall.gate_width = 6.0
 	wall.gate_height = 5.5
+	# The town's square towers hipped in its round tiles, a little bell to them.
+	wall.roof_style = CastleWall.RoofStyle.CONE
+	wall.roof_flare = 0.3
+	wall.roof_pitch = 1.3
 	s.add_child(wall)
 	_taken.clear()
 	_taken.append(Rect2(-MARKET_HALF, MARKET_HALF * 2.0))
@@ -210,6 +245,20 @@ func _build_town() -> void:
 	for lane: float in [-48.0, 48.0]:
 		_row(s, -hx + 6, hx - 6, -street, false, lane)
 		_row(s, -hx + 6, hx - 6, street, false, lane)
+	_door_odds = Vector3.ZERO
+	# The market's stalls, torches at the gates.
+	var tower_spot: Vector2 = MARKET_HALF - Vector2(3, 3)
+	furnished.append(TownFurnish.market(s, Vector3.ZERO, MARKET_HALF, 6.5, 3.5, _props_rng, 12.0,
+		[Rect2(tower_spot - Vector2(4, 4), Vector2(8, 8))] as Array[Rect2]))
+	var gates := PropGroup.new()
+	gates.name = "Gates"
+	var face: float = wall.thickness * 0.5 + 0.35
+	var hw: float = wall.gate_width * 0.5 - 0.6
+	TownFurnish.gate_torches(gates, Vector3(0, 0, -hz - face), Vector3.RIGHT, Vector3.FORWARD, hw, 3.4)
+	TownFurnish.gate_torches(gates, Vector3(0, 0, hz + face), Vector3.RIGHT, Vector3.BACK, hw, 3.4)
+	TownFurnish.gate_torches(gates, Vector3(-hx - face, 0, 0), Vector3.BACK, Vector3.LEFT, hw, 3.4)
+	s.add_child(gates)
+	furnished.append(gates)
 	add_child(s)
 
 
@@ -277,6 +326,11 @@ func _build_castle() -> void:
 	curtain.tower_height = 20.0
 	curtain.gate_width = 6.0
 	curtain.gate_height = 7.0
+	# The castle's round towers: tall slate bells.
+	curtain.roof_style = CastleWall.RoofStyle.CONE
+	curtain.roof_slate = true
+	curtain.roof_flare = 0.5
+	curtain.roof_pitch = 2.6
 	s.add_child(curtain)
 	var keep := CastleWall.new()
 	keep.name = "Keep"
@@ -287,11 +341,30 @@ func _build_castle() -> void:
 	keep.tower_radius = 3.6
 	keep.tower_height = 29.0
 	keep.roofed = true
+	keep.roof_style = CastleWall.RoofStyle.TURRET
+	keep.roof_slate = true
+	keep.roof_flare = 0.45
+	keep.roof_pitch = 2.4
 	s.add_child(keep)
+	_door_odds = Vector3(0.6, 0.0, 0.3)
 	_house(s, Vector3(-30, 0, 4), PI * 0.5, 7, 4, 2, KitHouse.Finish.UNEVEN_BRICK, KitHouse.Finish.UNEVEN_BRICK)
 	_house(s, Vector3(30, 0, 4), -PI * 0.5, 5, 3, 2, KitHouse.Finish.UNEVEN_BRICK, KitHouse.Finish.PLASTER)
 	_house(s, Vector3(22, 0, 30), -PI * 0.5, 4, 3, 1, KitHouse.Finish.WOOD_WEAR, KitHouse.Finish.WOOD_WEAR)
 	_demo(s, "tower", Vector3(-24, 0, 28), 0.0)
+	_door_odds = Vector3.ZERO
+	# The yard's gear; banners on the keep's front and inside the gate; torches at the gate.
+	furnished.append(TownFurnish.castle_yard(s, _props_rng))
+	var dress := PropGroup.new()
+	dress.name = "Banners"
+	var keep_face: float = 4.0 + keep.thickness * 0.5
+	TownFurnish.wall_banners(dress, [Vector3(-5, 19, keep_face), Vector3(5, 19, keep_face)] as Array[Vector3], Vector3.BACK, 3.0)
+	var gate_z: float = CASTLE_RADIUS * sin(deg_to_rad(54.0))
+	var inner: float = gate_z - curtain.thickness * 0.5
+	TownFurnish.wall_banners(dress, [Vector3(-11, 12, inner), Vector3(11, 12, inner)] as Array[Vector3], Vector3.FORWARD, 2.2)
+	TownFurnish.gate_torches(dress, Vector3(0, 0, gate_z + curtain.thickness * 0.5 + 0.35), Vector3.RIGHT, Vector3.BACK,
+		curtain.gate_width * 0.5 - 0.6, 4.2)
+	s.add_child(dress)
+	furnished.append(dress)
 	add_child(s)
 
 
@@ -305,18 +378,20 @@ func _build_roads() -> void:
 	_road_path([TOWN + Vector3(0, 0, TOWN_HALF.y + 2), Vector3(70, 0, 300), Vector3(60, 0, 500)])
 	_road_path([VILLAGE + Vector3(-18, 0, 0), Vector3(-420, 0, 230), Vector3(-500, 0, 260)])
 	_road_path([VILLAGE + Vector3(60, 0, 0), VILLAGE + Vector3(150, 0, 0)])
-	_road_path([TOWN + Vector3(0, 0, -TOWN_HALF.y), TOWN + Vector3(0, 0, TOWN_HALF.y)])
-	_road_path([TOWN + Vector3(-TOWN_HALF.x, 0, 0), TOWN + Vector3(TOWN_HALF.x - 4, 0, 0)])
+	_road_path([TOWN + Vector3(0, 0, -TOWN_HALF.y), TOWN + Vector3(0, 0, TOWN_HALF.y)], 1)
+	_road_path([TOWN + Vector3(-TOWN_HALF.x, 0, 0), TOWN + Vector3(TOWN_HALF.x - 4, 0, 0)], 1)
 	for lane: float in [-48.0, 48.0]:
-		_road_path([TOWN + Vector3(-TOWN_HALF.x + 4, 0, lane), TOWN + Vector3(TOWN_HALF.x - 4, 0, lane)])
+		_road_path([TOWN + Vector3(-TOWN_HALF.x + 4, 0, lane), TOWN + Vector3(TOWN_HALF.x - 4, 0, lane)], 1)
 	var ring: Array[Vector3] = []
 	for k: int in 13:
 		var a: float = TAU * k / 12.0
 		ring.append(VILLAGE + Vector3(cos(a), 0, sin(a)) * 18.0)
 	_road_path(ring)
-	_road_path([castle_gate, _castle_point(Vector3(0, 0, 8))])
+	_road_path([castle_gate, _castle_point(Vector3(0, 0, 8))], 2)
 	squares.append(Vector4(TOWN.x, TOWN.z, MARKET_HALF.x, MARKET_HALF.y))
+	square_places.append(1)
 	squares.append(Vector4(CASTLE.x, CASTLE.z, 34, 34))
+	square_places.append(2)
 
 
 func _castle_point(local: Vector3) -> Vector3:
@@ -324,11 +399,15 @@ func _castle_point(local: Vector3) -> Vector3:
 	return s.global_transform * local
 
 
-func _road_path(pts: Array) -> void:
+## A road through `pts`; with a place (`PLACES`), a street paved in that place's paving.
+func _road_path(pts: Array, place: int = -1) -> void:
 	for i: int in pts.size() - 1:
 		var a: Vector3 = pts[i]
 		var b: Vector3 = pts[i + 1]
 		roads.append(Vector4(a.x, a.z, b.x, b.z))
+		if place >= 0:
+			streets.append(Vector4(a.x, a.z, b.x, b.z))
+			street_places.append(place)
 
 
 ## Distance from (x, z) to the nearest road.
@@ -369,8 +448,6 @@ func _build_ground() -> void:
 	mi.mesh = st.commit()
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://game/regents/town/town_ground.gdshader") as Shader
-	mat.set_shader_parameter(&"cobble_tex", load(TownKit.VILLAGE + "T_RoundRocks_BaseColor.png"))
-	mat.set_shader_parameter(&"cobble_normal", load(TownKit.VILLAGE + "T_RoundRocks_Normal.png"))
 	var rs := PackedVector4Array()
 	for r: Vector4 in roads:
 		rs.append(r)
@@ -380,9 +457,40 @@ func _build_ground() -> void:
 	for q: Vector4 in squares:
 		sq.append(q)
 	mat.set_shader_parameter(&"squares", sq)
+	mat.set_shader_parameter(&"square_place", PackedInt32Array(square_places))
 	mat.set_shader_parameter(&"square_count", squares.size())
+	var ss := PackedVector4Array()
+	for r: Vector4 in streets:
+		ss.append(r)
+	mat.set_shader_parameter(&"streets", ss)
+	mat.set_shader_parameter(&"street_place", PackedInt32Array(street_places))
+	mat.set_shader_parameter(&"street_count", streets.size())
 	mi.material_override = mat
 	add_child(mi)
+	_ground = mat
+	paint_paving()
+
+
+## Each place's paving onto the ground, from its style (again after S).
+func paint_paving() -> void:
+	if _ground == null:
+		return
+	var cols := PackedVector4Array()
+	var mixes := PackedVector4Array()
+	var patterns := PackedInt32Array()
+	for i: int in 4:
+		var s: SettlementStyle = settlements[PLACES[i]].style if i < PLACES.size() else null
+		var c: Color = (s.paving_color() if s != null else SettlementStyle.PAVING_PAINTED).srgb_to_linear()
+		var m: Color = s.paving_mix if s != null else Color(0, 0, 0, 0)
+		var share: float = m.a
+		m = m.srgb_to_linear()
+		m.a = share
+		cols.append(Vector4(c.r, c.g, c.b, 1.0))
+		mixes.append(Vector4(m.r, m.g, m.b, m.a))
+		patterns.append(s.paving_pattern if s != null else 0)
+	_ground.set_shader_parameter(&"paving", cols)
+	_ground.set_shader_parameter(&"paving_mix", mixes)
+	_ground.set_shader_parameter(&"paving_pattern", patterns)
 
 
 ## Woods: trees, bushes and rocks from the nature kit, kept off the places and the roads.
@@ -509,6 +617,9 @@ func views() -> Array[Array]:
 		["market", TOWN + Vector3(14, 1.8, 15), TOWN + Vector3(-14, 6, -22)],
 		["castle", CASTLE + to_town * 190.0 + Vector3(60, 40, 0), CASTLE + Vector3(0, 10, 0)],
 		["castle_gate", gate + to_town * 55.0 + Vector3(0, 1.8, 0), gate + Vector3(0, 8, 0)],
+		["market_stalls", TOWN + Vector3(-9, 7, 21), TOWN + Vector3(3, 0, -2)],
+		["inn", VILLAGE + Vector3(7, 2.4, -13), VILLAGE + Vector3(-1, 1.5, -26)],
+		["castle_yard", _castle_point(Vector3(10, 7, 42)), _castle_point(Vector3(-6, 2, 14))],
 	]
 
 
@@ -531,6 +642,7 @@ func step_styles() -> void:
 	for key: StringName in settlements:
 		var first: int = styles.find(_style_named(FIRST_STYLES[key]))
 		settlements[key].restyle(styles[posmod(first + style_step, styles.size())])
+	paint_paving()
 	_refresh_info()
 
 
@@ -574,8 +686,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_cam.rotation = Vector3(_pitch, _yaw, 0)
 	elif event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
 		var k: Key = (event as InputEventKey).keycode
-		if k >= KEY_1 and k <= KEY_7:
+		if k >= KEY_1 and k <= KEY_9:
 			set_view(k - KEY_1)
+		elif k == KEY_0:
+			set_view(9)
 		elif k == KEY_L:
 			set_light(light + 1)
 		elif k == KEY_S and not _looking:
@@ -607,7 +721,7 @@ func _refresh_info() -> void:
 		var s: Settlement = settlements[key]
 		lines.append("  %s: %s (%d buildings)" % [String(key).capitalize(), s.style.title, s.buildings.size()])
 	if _help:
-		lines.append("1-7 views   right mouse look   WASD QE fly   Shift fast   wheel speed   L light   S next styles   H help")
+		lines.append("1-9, 0 views   right mouse look   WASD QE fly   Shift fast   wheel speed   L light   S next styles   H help")
 	_info.text = "\n".join(lines)
 
 
@@ -618,7 +732,7 @@ func _shoot(dir: String) -> void:
 	var plan: Array[Array] = []
 	for i: int in views().size():
 		plan.append([i, 0])
-	for i: int in [0, 2, 4, 6]:
+	for i: int in [0, 2, 4, 6, 7, 8]:
 		plan.append([i, 2])
 	plan.append([3, 1])
 	for p: Array in plan:

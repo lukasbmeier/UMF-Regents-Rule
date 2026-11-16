@@ -11,6 +11,8 @@
 //   3 roof tiles        one slot, weathered by the kit's second UVs
 //   4 glass             dark by day; lit at night, some windows and not others (`lit_share`)
 //   5 metal             one slot, metallic
+//   6 keep              the painting kept (the props' sheet, signs, pages): only the nudge and the weather
+// `use_vertex_color` multiplies the painting by the mesh's vertex colors first (the props kit marks parts with them).
 // Then each building's nudge and the weather (`town_weather.gdshaderinc`). Set by `TownKit` from a `SettlementStyle`.
 shader_type spatial;
 render_mode cull_back;
@@ -19,6 +21,7 @@ render_mode cull_back;
 
 uniform int mode = 0;
 uniform bool uv2_wear = false;
+uniform bool use_vertex_color = false;
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D rough_tex : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -56,6 +59,9 @@ vec3 dyed(vec3 base, vec4 dye, float mean) {
 
 void fragment() {
 	vec3 base = texture(albedo_tex, UV).rgb;
+	if (use_vertex_color) {
+		base *= COLOR.rgb;
+	}
 	vec3 nrm = texture(normal_tex, UV).rgb;
 	float rough = texture(rough_tex, UV).g;
 	float metallic = metallic_value;
@@ -109,6 +115,8 @@ void fragment() {
 		vec3 cell = floor(v_world / vec3(2.0, 3.0, 2.0));
 		float lit = step(town_hash(dot(cell, vec3(3.1, 17.3, 7.7)) + building_seed * 0.37), lit_share);
 		glow = window_light.rgb * mix(0.25, 1.0, g) * 2.2 * night * lit;
+	} else if (mode == 6) {
+		col = town_jitter(base, slot_ids.x);
 	} else {
 		col = town_jitter(dyed(base, dye_a, mean_luma), slot_ids.x);
 	}

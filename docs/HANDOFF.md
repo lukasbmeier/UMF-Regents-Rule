@@ -43,13 +43,18 @@
   (the swings' root travel out, recoveries, the roll's dash); the imp casts (tell, release, ember); the keep stands on
   a flat hilltop with footings; the login film is a title card (Play in the title's letters), no tagline. Re-rendered.
 - AI asset audit: `docs/regents_rule/AI_ASSET_AUDIT.md`; Luke's rule NO AI DISCLOSURE (`GAME.md`, `regents-genre.md`).
+- Towns, step 85 (then Luke's first look, `SETTLEMENTS_PREP.md` §9): the house roofs centered (the kit's 6x4 roofs
+  start at their origin), tower roof styles and the lab's 5 Roofs view, code-made paving per style kept apart from
+  the walls, the Fantasy Props kit in (`game/regents/art/props/`, CC0; a style's new CLOTH slot), `PropGroup` and
+  `TownFurnish` furnishing the market, doors, green, inn and castle yard. Before that:
 - Towns, step 85: the Medieval Village kit (`game/regents/art/village/`, CC0), the town dye and `SettlementStyle`
   (eight presets), `KitHouse`, `CastleWall`, `Settlement`; `town_world.tscn` (village, walled market town, castle in
   1 km) and `town_lab.tscn` (one street in every style, live edit). All in `SETTLEMENTS_PREP.md` §8.
 
 ## Next, in order
 1. Luke plays the effects (staff, sword, axe, the imp, the skeletons; two instances for Gale); his notes on the look.
-2. Luke looks at the town world and lab; on his okay, FURNISH them with the Fantasy Props kit (`SETTLEMENTS_PREP.md`
+2. Luke picks the towers' roofs (town lab, 5 Roofs) and looks at the furnished world (views 8, 9, 0); then his S1-S8
+   (`SETTLEMENTS_PREP.md` §7, §9). Was: on his okay, FURNISH them with the Fantasy Props kit (`SETTLEMENTS_PREP.md`
    §8, "Left for later").
 3. Maybe: others' AIM held a moment after a spell lands (their upper body turns to the shot only while casting).
 4. Before many players: a lighter version for others' effects, the rings as one MultiMesh, the camera listening to `shook`.
@@ -62,7 +67,8 @@
 
 ## Waiting on Luke
 - The effects in play (two instances for others' Gale and its pose).
-- The towns: the look of the world and the lab, then "how everything furnishes"; S1-S8 in `SETTLEMENTS_PREP.md` §7.
+- The towns: which roof style for which place (my picks in the world: the town hipped, the castle slate bells, the
+  keep turrets), the streets' colors, how it furnishes; S1-S8 in `SETTLEMENTS_PREP.md` §7.
 - The showcase: his look at the re-rendered films (the game's login now opens on the title card: his "card first");
   MP4 needs ffmpeg (a download: his yes). Deer have no graze clip; "The line" is wide.
 - From before: round or square bar; his rewrite of §9; B13 as read; the lead's share; the archer's and imp's numbers;

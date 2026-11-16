@@ -122,6 +122,12 @@ func effective_width() -> int:
 	return floori(best / 2.0)
 
 
+## The door: the middle of its cell on the front (+z) wall's face, at the foot (where a lantern or a sign goes beside it).
+func door_point() -> Vector3:
+	var w: int = effective_width()
+	return Vector3(-w * CELL * 0.5 + 1.0 + mini(door_cell, w - 1) * CELL, 0.0, depth * CELL * 0.5)
+
+
 ## Builds the house from its fields (dropping the last build). Returns how many pieces it placed.
 func build() -> int:
 	if _pieces != null and is_instance_valid(_pieces):
@@ -170,7 +176,11 @@ func build() -> int:
 			var floor_piece: String = "Floor_Brick" if ground == Finish.UNEVEN_BRICK else "Floor_WoodDark"
 			_put(floor_piece, Vector3(-hw + 1.0 + i * CELL, 0.0, -hd + 1.0 + j * CELL), 0.0)
 	var tile_name: String = "RoundTiles" if tiles == Tiles.ROUND else "FlatTiles"
-	_put("Roof_%s_%dx%d" % [tile_name, depth * 2, w * 2], Vector3(0, top, 0), -90.0)
+	var roof: String = "Roof_%s_%dx%d" % [tile_name, depth * 2, w * 2]
+	# Centered on its measured bounds: not every kit roof is centered on its origin (the 6x4 starts at it).
+	var rb: AABB = TownKit.piece_bounds(roof)
+	var shift := Vector3(-(rb.position.x + rb.size.x * 0.5), 0.0, -(rb.position.z + rb.size.z * 0.5))
+	_put_xf(roof, _xf(Vector3(0, top, 0), -90.0) * Transform3D(Basis.IDENTITY, shift))
 	var gable: String = "Roof_Front_%s%d" % ["Brick" if stone_gables else "Wood", depth * 2]
 	_put(gable, Vector3(-hw, top, 0), -90.0)
 	_put(gable, Vector3(hw, top, 0), 90.0)

@@ -7,7 +7,11 @@ extends "res://tests/suite_base.gd"
 ##     narrowed; its collisions are one body
 ##   - a `Settlement` dresses and merges every building: one mesh each, the dye's shared materials, each building its
 ##     own seed; a style edited live reaches its materials
-##   - a `CastleWall`'s gate is open (and shut with no gate); its surfaces are named as the kit's
+##   - a `CastleWall`'s gate is open (and shut with no gate); its surfaces are named as the kit's; every ROOF STYLE
+##     builds, a roofed tower rising solid to its eaves and its roof starting there (no battlements under it)
+##   - the STREETS are code-made (no texture), each place's paving its style's, every preset's paving apart from its walls
+##   - the PROPS kit: every material it wears a slot the dye knows; a `PropGroup` is one building (one mesh, one body),
+##     its cloth in the style's cloth; the world's market, doors and yard furnished, no stall on the kit's tower
 ##   - the town world builds its three places inside its square kilometer, no two town houses overlapping
 ##   - the town lab shows every preset, six seeds, and a style changed live
 
@@ -20,6 +24,9 @@ func run() -> void:
 	_run_house()
 	await _run_settlement()
 	_run_wall()
+	_run_roofs()
+	_run_streets()
+	await _run_props()
 	await _run_world()
 	await _run_lab()
 
@@ -49,13 +56,13 @@ func _run_styles() -> void:
 	_check(titles.size() == all.size(), "no two presets share a title")
 
 
-## Every material name the kit's glTF pieces use (read from the files: the import keeps the names).
-func _kit_materials() -> Dictionary[String, bool]:
+## Every material name a kit's glTF pieces use (read from the files: the import keeps the names).
+func _kit_materials(dir: String = TownKit.VILLAGE) -> Dictionary[String, bool]:
 	var out: Dictionary[String, bool] = {}
-	for f: String in DirAccess.get_files_at(TownKit.VILLAGE):
+	for f: String in DirAccess.get_files_at(dir):
 		if not f.ends_with(".gltf"):
 			continue
-		var j: Variant = JSON.parse_string(FileAccess.get_file_as_string(TownKit.VILLAGE + f))
+		var j: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir + f))
 		if typeof(j) != TYPE_DICTIONARY:
 			continue
 		for m: Variant in ((j as Dictionary).get("materials", []) as Array):
@@ -128,6 +135,28 @@ func _run_house() -> void:
 		"no 4 x 14 roof: a long shallow house is narrowed to the 4 x 8 one")
 	for n: KitHouse in [h, again, other, wide, long_one]:
 		n.free()
+	# Every footprint and both tiles: the roof's drawn bounds centered over the house and covering it (the kit's 6x4
+	# roofs start at their origin: Luke saw one hang off a 4 x 6 house, 2026-11-15).
+	var off: Array[String] = []
+	for tiles: int in [KitHouse.Tiles.ROUND, KitHouse.Tiles.FLAT]:
+		for d: int in range(2, 5):
+			for w: int in range(1, 8):
+				var k: KitHouse = _house(w, d, 1, 3)
+				k.tiles = tiles as KitHouse.Tiles
+				k.build()
+				var hw: float = k.effective_width() * KitHouse.CELL * 0.5
+				var hd: float = d * KitHouse.CELL * 0.5
+				for i: int in k.placed.size():
+					var p: String = k.placed[i]
+					if not p.begins_with("Roof_") or p.begins_with("Roof_Front"):
+						continue
+					var node: Node3D = k.get_node("Pieces").get_child(i + 1) as Node3D
+					var b: AABB = node.transform * TownKit.piece_bounds(p)
+					var c: Vector3 = b.get_center()
+					if absf(c.x) > 0.3 or absf(c.z) > 0.3 or b.size.x < hw * 2.0 or b.size.z < hd * 2.0:
+						off.append("%s on %dx%d (center %.2f, %.2f)" % [p, w, d, c.x, c.z])
+				k.free()
+	_check(off.is_empty(), "every footprint's roof sits centered over the house and covers it (off: %s)" % [off])
 
 
 func _run_settlement() -> void:
@@ -216,6 +245,159 @@ func _run_wall() -> void:
 	w.free()
 
 
+## A wall's vertices by surface name.
+func _verts(w: CastleWall) -> Dictionary[String, PackedVector3Array]:
+	var out: Dictionary[String, PackedVector3Array] = {}
+	var mi: MeshInstance3D = w.find_children("Walls", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	for i: int in mi.mesh.get_surface_count():
+		out[mi.mesh.surface_get_material(i).resource_name] = mi.mesh.surface_get_arrays(i)[Mesh.ARRAY_VERTEX]
+	return out
+
+
+func _roof_try(style: CastleWall.RoofStyle, slate: bool, roofs_on: bool = true, round_ones: bool = true) -> CastleWall:
+	var w := CastleWall.new()
+	w.corners = PackedVector3Array([Vector3(-8, 0, 0), Vector3(8, 0, 0)])
+	w.closed = false
+	w.gates = PackedInt32Array()
+	w.height = 9.0
+	w.tower_radius = 3.5
+	w.tower_height = 14.0
+	w.roof_style = style
+	w.roof_slate = slate
+	w.tower_roofs = roofs_on
+	w.round_towers = round_ones
+	add_child(w)
+	return w
+
+
+## How a tower's top is built: [the roof's lowest y, its widest reach from the tower's middle, the masonry's highest y
+## within the tower, whether a merlon stands on the tower's top] for the tower at (-8, 0, 0).
+func _tower_top(w: CastleWall) -> Array:
+	var v: Dictionary[String, PackedVector3Array] = _verts(w)
+	var c := Vector2(-8, 0)
+	var roof_lo: float = INF
+	var reach: float = 0.0
+	for key: String in [CastleWall.ROOF, CastleWall.SLATE]:
+		for p: Vector3 in v.get(key, PackedVector3Array()):
+			if p.x < 0.0:
+				roof_lo = minf(roof_lo, p.y)
+				reach = maxf(reach, Vector2(p.x, p.z).distance_to(c))
+	var masonry_hi: float = 0.0
+	for p: Vector3 in v.get(CastleWall.MASONRY, PackedVector3Array()):
+		if Vector2(p.x, p.z).distance_to(c) < w.tower_radius + 0.5:
+			masonry_hi = maxf(masonry_hi, p.y)
+	var merlon: bool = false
+	for p: Vector3 in v.get(CastleWall.CUT, PackedVector3Array()):
+		var r: float = Vector2(p.x, p.z).distance_to(c)
+		# A merlon's top corners: inside the tower's rim, at the merlons' height (a cap's middle vertex is at r = 0).
+		if r > 1.0 and r < w.tower_radius - 0.05 and absf(p.y - (w.tower_height + w.merlon_height)) < 0.05:
+			merlon = true
+	return [roof_lo, reach, masonry_hi, merlon]
+
+
+func _run_roofs() -> void:
+	var eave: float = 14.0 + 1.3
+	var cone: CastleWall = _roof_try(CastleWall.RoofStyle.CONE, false)
+	var top: Array = _tower_top(cone)
+	var names: Dictionary[String, PackedVector3Array] = _verts(cone)
+	_check(names.has(CastleWall.ROOF) and names.has(CastleWall.METAL) and names.has(CastleWall.TIMBER),
+		"a cone: round tiles, a metal finial, the eaves' timber underside (%s)" % [names.keys()])
+	_check(float(top[2]) >= eave - 0.01 and not bool(top[3]),
+		"a roofed tower rises solid to its eaves, no battlements under the roof (masonry to %.2f; merlon: %s)" % [top[2], top[3]])
+	_check(float(top[0]) >= eave - 0.6 and float(top[0]) <= eave + 0.01 and float(top[1]) >= 3.5 + 0.2 + 0.6,
+		"its roof starts at the eaves and reaches past the wall (lowest %.2f, reach %.2f)" % [top[0], top[1]])
+	var cone_count: int = names[CastleWall.ROOF].size()
+	var slate: CastleWall = _roof_try(CastleWall.RoofStyle.CONE, true)
+	var sv: Dictionary[String, PackedVector3Array] = _verts(slate)
+	_check(sv.has(CastleWall.SLATE) and not sv.has(CastleWall.ROOF), "slate: flat tiles, no round ones")
+	var stepped: CastleWall = _roof_try(CastleWall.RoofStyle.STEPPED, false)
+	_check(_verts(stepped)[CastleWall.ROOF].size() > cone_count, "courses: the cone laid in three, more of it")
+	var kit: CastleWall = _roof_try(CastleWall.RoofStyle.KIT, false)
+	var kit_roofs: int = 0
+	for n: Node in kit.find_children("*", "Node3D", true, false):
+		if (n as Node3D).scene_file_path.contains(CastleWall.KIT_ROOF_ROUND):
+			kit_roofs += 1
+	_check(kit_roofs == 2 and not _verts(kit).has(CastleWall.ROOF), "the kit's own: its tower roof on both towers (%d)" % kit_roofs)
+	var turret: CastleWall = _roof_try(CastleWall.RoofStyle.TURRET, false)
+	var tt: Array = _tower_top(turret)
+	_check(bool(tt[3]) and float(tt[0]) >= 14.0 + 3.0 - 0.6, "a turret: the battlements kept, its roof on a turret above them")
+	var open: CastleWall = _roof_try(CastleWall.RoofStyle.OPEN, false)
+	var ov: Dictionary[String, PackedVector3Array] = _verts(open)
+	_check(bool(_tower_top(open)[3]) and not ov.has(CastleWall.ROOF) and not ov.has(CastleWall.SLATE), "open: battlements, no roof")
+	var off: CastleWall = _roof_try(CastleWall.RoofStyle.CONE, false, false)
+	_check(bool(_tower_top(off)[3]) and not _verts(off).has(CastleWall.ROOF), "NEGATIVE: tower roofs off, a cone style builds no roof")
+	var square: CastleWall = _roof_try(CastleWall.RoofStyle.CONE, false, true, false)
+	var hi: float = 0.0
+	for p: Vector3 in _verts(square)[CastleWall.ROOF]:
+		hi = maxf(hi, p.y)
+	_check(hi > eave + 3.0, "a square tower's roof: a hipped pyramid rising over it (top %.1f)" % hi)
+	for w: CastleWall in [cone, slate, stepped, kit, turret, open, off, square]:
+		w.free()
+
+
+## Whether a style's streets are kept apart from its walls: the paving at least `gap` from stone and masonry (RGB), for
+## the slots the style colors.
+static func _paving_apart(s: SettlementStyle, gap: float = 0.15) -> bool:
+	var pv: Color = s.paving_color()
+	for slot: StringName in [&"stone", &"masonry"]:
+		var c: Color = s.color_of(slot)
+		if c.a > 0.0 and Vector3(pv.r - c.r, pv.g - c.g, pv.b - c.b).length() < gap:
+			return false
+	return true
+
+
+func _run_streets() -> void:
+	var near: Array[String] = []
+	for s: SettlementStyle in _styles():
+		if not _paving_apart(s):
+			near.append(s.title)
+	_check(near.is_empty(), "every preset's paving is well apart from its stone and masonry (too near: %s)" % [near])
+	var same: SettlementStyle = _styles()[5].copy()
+	same.paving = same.masonry
+	_check(not _paving_apart(same), "NEGATIVE: paving the masonry's color is caught")
+	var textured: bool = false
+	for path: String in ["res://game/regents/town/town_ground.gdshader", "res://game/regents/town/town_street.gdshader",
+			"res://game/regents/town/town_paving.gdshaderinc"]:
+		textured = textured or FileAccess.get_file_as_string(path).contains("sampler2D")
+	_check(not textured, "the streets are code-made: no texture in the ground's, the street's or the paving's shader")
+
+
+func _run_props() -> void:
+	var names: Dictionary[String, bool] = _kit_materials(TownKit.PROPS)
+	_check(names.size() >= 10, "the props kit is in (%d materials)" % names.size())
+	var missing: Array[String] = []
+	for n: String in names:
+		if not TownKit.SURFACES.has(n):
+			missing.append(n)
+	_check(missing.is_empty(), "every material the props kit wears is a slot the dye knows (missing: %s)" % [missing])
+	_check(not TownKit.has_piece("Not_A_Prop") and TownKit.has_piece("Barrel") and TownKit.has_piece("Wall_Plaster_Straight"),
+		"a piece is found in either kit, an unknown name in neither")
+	var style: SettlementStyle = _styles()[1].copy()
+	style.cloth = Color(0.2, 0.7, 0.3, 1.0)
+	var s := Settlement.new()
+	s.style = style
+	var g := PropGroup.new()
+	g.put("Stall_Vegetables_Full", Vector3.ZERO)
+	g.put("Barrel", Vector3(2, 0, 0))
+	g.put("Banner_1_Cloth", Vector3(-2, 2, 0))
+	s.add_child(g)
+	add_child(s)
+	await get_tree().process_frame
+	_check(s.buildings.size() == 1 and s.buildings[0] == g, "a prop group is one building to its settlement")
+	var meshes: Array[Node] = g.find_children("*", "MeshInstance3D", true, false)
+	var bodies: Array[Node] = g.find_children("*", "StaticBody3D", true, false)
+	_check(meshes.size() == 1 and bodies.size() == 1 and bodies[0].get_child_count() > 3,
+		"its props merged to one mesh and one body (%d meshes, %d bodies)" % [meshes.size(), bodies.size()])
+	var cloth_ok: bool = false
+	var mi: MeshInstance3D = meshes[0] as MeshInstance3D
+	for i: int in mi.mesh.get_surface_count():
+		var m: ShaderMaterial = mi.get_surface_override_material(i) as ShaderMaterial
+		if m != null and m.resource_name == "MI_Banner":
+			cloth_ok = (m.get_shader_parameter(&"dye_a") as Color).is_equal_approx(style.cloth)
+	_check(cloth_ok, "its cloth wears the style's cloth color")
+	s.free()
+
+
 func _inside_any(w: CastleWall, p: Vector3) -> bool:
 	for b: Array in w.boxes:
 		var xf: Transform3D = b[0]
@@ -257,6 +439,40 @@ func _run_world() -> void:
 				overlaps.append("%d:%s x %d:%s" % [i, taken[i], j, taken[j]])
 	_check(overlaps.is_empty() and taken.size() > 30, "no two town houses overlap (%d footprints; %s)" % [taken.size(), overlaps])
 	_check(int(world.get("trees")) > 200 and (world.get("roads") as Array).size() > 10, "woods and roads")
+	# The streets: the town's and the castle's paved, each in its place's paving; again after the styles step.
+	var places_paved: Array = world.get("street_places") as Array
+	_check(places_paved.has(1) and places_paved.has(2) and (world.get("square_places") as Array).size() == 2,
+		"the town's streets and the castle's road paved, the market and the yard squares")
+	var ground: ShaderMaterial = world.get("_ground") as ShaderMaterial
+	var paving: PackedVector4Array = ground.get_shader_parameter(&"paving")
+	var want: Color = (places[&"town"] as Settlement).style.paving_color().srgb_to_linear()
+	_check(Vector3(paving[1].x, paving[1].y, paving[1].z).is_equal_approx(Vector3(want.r, want.g, want.b)),
+		"the town's paving is its style's")
+	world.call("step_styles")
+	paving = ground.get_shader_parameter(&"paving")
+	want = (places[&"town"] as Settlement).style.paving_color().srgb_to_linear()
+	_check(Vector3(paving[1].x, paving[1].y, paving[1].z).is_equal_approx(Vector3(want.r, want.g, want.b)),
+		"and the next style's after S")
+	# Furnished: every place has its props; the market's stalls, none on the kit's tower.
+	var groups: Array = world.get("furnished") as Array
+	var by_name: Dictionary[String, int] = {}
+	var stalls: int = 0
+	var on_tower: int = 0
+	var tower := Rect2(Vector2(19, 14) - Vector2(3.5, 3.5), Vector2(7, 7))
+	for gn: Variant in groups:
+		var pg: PropGroup = gn as PropGroup
+		by_name[String(pg.name)] = by_name.get(String(pg.name), 0) + 1
+		if pg.name == &"Market":
+			for c: Node in pg.get_children():
+				var n3: Node3D = c as Node3D
+				if n3 != null and n3.scene_file_path.contains("Stall_"):
+					stalls += 1
+					if tower.has_point(Vector2(n3.position.x, n3.position.z)):
+						on_tower += 1
+	_check(by_name.has("Market") and by_name.has("Green") and by_name.has("InnFront") and by_name.has("Yard")
+		and by_name.has("Banners") and by_name.get("AtTheDoor", 0) > 60,
+		"furnished: the market, the green, the inn, the yard, the banners, the doors (%s)" % [by_name])
+	_check(stalls >= 20 and on_tower == 0, "the market's stalls (%d), none on the kit's tower" % stalls)
 	world.free()
 
 
@@ -276,4 +492,11 @@ func _run_lab() -> void:
 		"the panel's change reaches the street's roofs")
 	lab.call("show_mode", 3)
 	_check((lab.get("sets") as Array).size() == presets, "one house in every preset")
+	lab.call("show_mode", 0)
+	var furnished: bool = true
+	for st: Variant in lab.get("sets") as Array:
+		furnished = furnished and (st as Node).find_children("Market", "PropGroup", true, false).size() == 1
+	_check(furnished and (lab.get("streets") as Array).size() == presets, "every preset's street paved and furnished")
+	lab.call("show_mode", 4)
+	_check((lab.get("sets") as Array).size() == (lab.get("ROOF_TRIES") as Array).size(), "the roofs, side by side")
 	lab.free()

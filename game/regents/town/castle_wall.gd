@@ -58,10 +58,45 @@ class_name CastleWall extends Node3D
 	set(v):
 		round_towers = v
 		_changed()
-## A tiled cone on each tower (round towers; a pyramid on square ones).
+## A roof on each tower (`roof_style`); off, every tower is OPEN.
 @export var tower_roofs: bool = true:
 	set(v):
 		tower_roofs = v
+		_changed()
+
+@export_group("Roofs")
+## How a tower is topped (Luke, 2026-11-15: the first cones "kinda look janky"; the roofs lab view shows them all):
+## OPEN battlements; a CONE of tiles on a solid top (`roof_flare` bends it into a bell); STEPPED, the cone laid in
+## three courses, each with its own tiles; KIT, the kit's own tower roof scaled to fit (round towers; a square one
+## gets the CONE); TURRET, the battlements kept and a small roofed turret rising inside them.
+@export var roof_style: RoofStyle = RoofStyle.CONE:
+	set(v):
+		roof_style = v
+		_changed()
+## Flat tiles (slate) instead of round ones.
+@export var roof_slate: bool = false:
+	set(v):
+		roof_slate = v
+		_changed()
+## The roof's rise over the tower's radius.
+@export_range(0.8, 3.5) var roof_pitch: float = 2.0:
+	set(v):
+		roof_pitch = v
+		_changed()
+## 0 a straight cone; more, gentler at the eaves and steeper at the top (a bell, a witch's hat).
+@export_range(0.0, 0.8) var roof_flare: float = 0.35:
+	set(v):
+		roof_flare = v
+		_changed()
+## How far the eaves reach past the wall (m).
+@export_range(0.0, 2.0) var roof_overhang: float = 0.7:
+	set(v):
+		roof_overhang = v
+		_changed()
+## A metal spike and orb on the top.
+@export var finial: bool = true:
+	set(v):
+		finial = v
 		_changed()
 
 @export_group("Gate")
@@ -91,12 +126,25 @@ class_name CastleWall extends Node3D
 		roofed = v
 		_changed()
 
+enum RoofStyle { OPEN, CONE, STEPPED, KIT, TURRET }
+
 const MASONRY: String = "MI_UnevenBrick"
 const CUT: String = "MI_Brick"
 const ROOF: String = "MI_RoundTiles"
+const SLATE: String = "MI_FlatTiles"
 const TIMBER: String = "MI_WoodTrim"
+const METAL: String = "MI_MetalOrnaments"
+## The order a build's surfaces are committed in.
+const SURFACE_ORDER: Array[String] = [MASONRY, CUT, ROOF, SLATE, TIMBER, METAL]
 ## The kit's tiling: 0.5 of a texture a meter.
 const UV_PER_M: float = 0.5
+## A roof's tiling: a little larger than the walls', as the kit's own roofs are.
+const ROOF_UV_PER_M: float = 0.42
+## A roof's courses (STEPPED): where each starts and ends, as a share of the way from the eaves to the top.
+const COURSES: Array[Vector2] = [Vector2(0.0, 0.45), Vector2(0.45, 0.75), Vector2(0.75, 1.0)]
+## The kit's tower roofs (KIT).
+const KIT_ROOF_ROUND: String = "Roof_Tower_RoundTiles"
+const KIT_ROOF_FLAT: String = "Roof_Tower_FlatTiles"
 ## Where the timber band lies on the wood trim sheet (v), for the portcullis.
 const TIMBER_V: float = 0.45
 
@@ -163,7 +211,7 @@ func build() -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.name = "Walls"
 	var mesh := ArrayMesh.new()
-	for key: String in [MASONRY, CUT, ROOF, TIMBER]:
+	for key: String in SURFACE_ORDER:
 		if not _surfaces.has(key):
 			continue
 		var st: SurfaceTool = _surfaces[key]
@@ -260,8 +308,26 @@ func _tower(c: Vector3, r: float, h: float, round_one: bool, frame: Basis = Basi
 	var rr: float = r if round_one else r * sqrt(2.0)
 	_prism(MASONRY, c, rr, 0.0, h, sides, turn, frame)
 	_prism(CUT, c, rr + 0.3, 0.0, 1.2, sides, turn, frame)
+	var style: RoofStyle = roof_style if tower_roofs else RoofStyle.OPEN
+	if style == RoofStyle.CONE or style == RoofStyle.STEPPED or style == RoofStyle.KIT:
+		# A roofed tower has no merlons: its wall rises to the eaves, banded under them, and the roof covers it all.
+		var eave: float = h + merlon_height
+		_prism(MASONRY, c, rr, h, eave, sides, turn, frame)
+		_prism(CUT, c, rr + 0.2, eave - 0.6, eave, sides, turn, frame)
+		_cap(CUT, c, rr + 0.2, eave, sides, turn, frame)
+		_roof(c, rr + 0.2, eave, round_one, turn, frame, style)
+		_tower_body(c, r, eave, round_one, frame)
+		return
 	_prism(CUT, c, rr + 0.2, h - 0.4, h, sides, turn, frame)
 	_cap(CUT, c, rr + 0.2, h, sides, turn, frame)
+	if style == RoofStyle.TURRET:
+		# A small round turret rising from the platform, roofed.
+		var tr: float = maxf(1.2, r * 0.5)
+		var top: float = h + maxf(3.0, r * 0.9)
+		_prism(MASONRY, c, tr, h, top, 12, 0.0, frame)
+		_prism(CUT, c, tr + 0.15, top - 0.5, top, 12, 0.0, frame)
+		_cap(CUT, c, tr + 0.15, top, 12, 0.0, frame)
+		_roof(c, tr + 0.15, top, true, 0.0, frame, RoofStyle.CONE)
 	var circ: float = TAU * r if round_one else 8.0 * r
 	var step: float = merlon_width + crenel_width
 	var n: int = maxi(4, int(circ / step))
@@ -287,8 +353,11 @@ func _tower(c: Vector3, r: float, h: float, round_one: bool, frame: Basis = Basi
 		tangent = frame * tangent
 		var mb := Basis(tangent, Vector3.UP, tangent.cross(Vector3.UP))
 		_box(CUT, Transform3D(mb, c + p + Vector3.UP * (h + merlon_height * 0.5)), Vector3(merlon_width, merlon_height, 0.5), false)
-	if tower_roofs:
-		_cone(ROOF, c, rr + 0.5, h + merlon_height * 0.6, r * 1.9, sides, turn, frame)
+	_tower_body(c, r, h, round_one, frame)
+
+
+## A tower's collision: a cylinder or a box from the ground to `h`.
+func _tower_body(c: Vector3, r: float, h: float, round_one: bool, frame: Basis) -> void:
 	var shape := CollisionShape3D.new()
 	if round_one:
 		var cyl := CylinderShape3D.new()
@@ -404,22 +473,141 @@ func _cap(material: String, c: Vector3, r: float, y: float, sides: int, turn: fl
 		_quad(material, top, p0, p1, top, Vector3.UP)
 
 
-## A tiled cone (a pyramid with 4 sides): the tiles' rows run round it, down the slope.
-func _cone(material: String, c: Vector3, r: float, y: float, rise: float, sides: int, turn: float, frame: Basis) -> void:
-	var tip: Vector3 = c + Vector3.UP * (y + rise)
-	var slant: float = sqrt(r * r + rise * rise)
-	var run: float = 0.0
+## A tower's roof on a top of radius `base_r` at height y: its eaves' underside, then the cone (in courses when
+## STEPPED; the kit's own when KIT on a round tower), then the finial.
+func _roof(c: Vector3, base_r: float, y: float, round_one: bool, turn: float, frame: Basis, style: RoofStyle) -> void:
+	var big_r: float = base_r + roof_overhang
+	var rise: float = base_r * roof_pitch
+	var sides: int = 32 if round_one else 4
+	var t: float = turn if not round_one else 0.0
+	_annulus_down(TIMBER, c, base_r - 0.05, big_r, y, sides, t, frame)
+	if style == RoofStyle.KIT and round_one:
+		_kit_roof(c, big_r, y, frame)
+		return
+	var tiles: String = SLATE if roof_slate else ROOF
+	var bands: Array[Vector2] = [Vector2(0.0, 1.0)]
+	if style == RoofStyle.STEPPED:
+		bands = COURSES
+	for i: int in bands.size():
+		var last: bool = i == bands.size() - 1
+		# A lower course runs a little under the next, so its lip never shows a gap.
+		var s1: float = bands[i].y if last else minf(bands[i].y + 0.05, 1.0)
+		_cone_band(tiles, c, big_r, y, rise, bands[i].x, s1, 0.18 if i > 0 else 0.0, sides, t, frame, round_one)
+	if finial:
+		_finial(c, y + rise, frame)
+
+
+## The roof's profile: how high (0-1 of the rise) it is a share s of the way from the eaves to the top, and its slope.
+func _profile(s: float) -> float:
+	return (1.0 - roof_flare) * s + roof_flare * pow(s, 2.2)
+
+
+func _profile_slope(s: float) -> float:
+	return (1.0 - roof_flare) + roof_flare * 2.2 * pow(s, 1.2)
+
+
+## One course of a tiled cone, from s0 to s1 of the way up: rings of quads, smooth round a round tower (flat faces on
+## a square one), the tiles' rows level round it and a whole number of tiles round its foot so they meet at the
+## seam. `lip` pushes the course's foot out and down over the one below.
+func _cone_band(material: String, c: Vector3, big_r: float, y: float, rise: float, s0: float, s1: float, lip: float,
+		sides: int, turn: float, frame: Basis, smooth: bool) -> void:
+	var rings: int = maxi(2, ceili((s1 - s0) * 14.0))
+	var rads: Array[float] = []
+	var hys: Array[float] = []
+	var ss: Array[float] = []
+	for j: int in rings + 1:
+		var s: float = lerpf(s0, s1, float(j) / rings)
+		var rad: float = big_r * (1.0 - s)
+		var hy: float = rise * _profile(s)
+		if j == 0 and lip > 0.0:
+			rad += lip
+			hy -= lip * 0.5
+		rads.append(rad)
+		hys.append(hy)
+		ss.append(s)
+	# v: the distance down the slope from the top, so a course's tiles keep their height.
+	var vs: Array[float] = []
+	vs.resize(rings + 1)
+	var top_r: float = big_r * (1.0 - s1)
+	vs[rings] = Vector2(top_r, rise * (1.0 - _profile(s1))).length()
+	for j: int in range(rings - 1, -1, -1):
+		vs[j] = vs[j + 1] + Vector2(rads[j] - rads[j + 1], hys[j] - hys[j + 1]).length()
+	var perim: float = sides * 2.0 * rads[0] * sin(PI / sides)
+	var n_rep: float = maxf(1.0, roundf(perim * ROOF_UV_PER_M))
+	var st: SurfaceTool = _st(material)
+	for i: int in sides:
+		for j: int in rings:
+			var pts: Array[Vector3] = []
+			var nrm: Array[Vector3] = []
+			var uvs: Array[Vector2] = []
+			var uv2s: Array[Vector2] = []
+			for corner: Vector2i in [Vector2i(i, j), Vector2i(i + 1, j), Vector2i(i + 1, j + 1), Vector2i(i, j + 1)]:
+				var a: float = turn + TAU * corner.x / sides
+				var dir: Vector3 = frame * Vector3(cos(a), 0, sin(a))
+				pts.append(c + dir * rads[corner.y] + Vector3.UP * (y + hys[corner.y]))
+				nrm.append((dir * rise * _profile_slope(ss[corner.y]) + Vector3.UP * big_r).normalized())
+				uvs.append(Vector2(float(corner.x) / sides * n_rep, vs[corner.y] * ROOF_UV_PER_M))
+				uv2s.append(Vector2(float(corner.x) / sides, 1.0 - ss[corner.y]))
+			var mid: float = turn + TAU * (i + 0.5) / sides
+			var outward: Vector3 = frame * Vector3(cos(mid), 0, sin(mid)) + Vector3.UP * 0.3
+			var face: Vector3 = (pts[1] - pts[0]).cross(pts[3] - pts[0])
+			if face.length_squared() < 1e-8:
+				face = (pts[2] - pts[1]).cross(pts[3] - pts[1])
+			if not smooth:
+				var fn: Vector3 = face.normalized() if face.dot(outward) >= 0.0 else -face.normalized()
+				nrm = [fn, fn, fn, fn]
+			var order: Array[int] = [0, 1, 2, 0, 2, 3]
+			if face.dot(outward) > 0.0:
+				order = [0, 2, 1, 0, 3, 2]
+			for k: int in order:
+				st.set_normal(nrm[k])
+				st.set_uv(uvs[k])
+				st.set_uv2(uv2s[k])
+				st.add_vertex(pts[k])
+
+
+## The eaves' underside: a ring facing down from r0 to r1 at y (so nobody sees into the roof from below).
+func _annulus_down(material: String, c: Vector3, r0: float, r1: float, y: float, sides: int, turn: float, frame: Basis) -> void:
 	for i: int in sides:
 		var a0: float = turn + TAU * i / sides
 		var a1: float = turn + TAU * (i + 1) / sides
-		var p0: Vector3 = c + Vector3.UP * y + frame * (Vector3(cos(a0), 0, sin(a0)) * r)
-		var p1: Vector3 = c + Vector3.UP * y + frame * (Vector3(cos(a1), 0, sin(a1)) * r)
-		var n: Vector3 = (p1 - p0).cross(tip - p0).normalized()
-		if n.y < 0.0:
-			n = -n
-		var w: float = p0.distance_to(p1)
-		var k: float = 0.42
-		var uv := PackedVector2Array([Vector2(run, slant) * k, Vector2(run + w, slant) * k,
-			Vector2(run + w * 0.5, 0.0) * k, Vector2(run + w * 0.5, 0.0) * k])
-		_quad(material, p0, p1, tip, tip, n, uv)
-		run += w
+		var d0: Vector3 = frame * Vector3(cos(a0), 0, sin(a0))
+		var d1: Vector3 = frame * Vector3(cos(a1), 0, sin(a1))
+		var base: Vector3 = c + Vector3.UP * y
+		_quad(material, base + d0 * r0, base + d1 * r0, base + d1 * r1, base + d0 * r1, Vector3.DOWN)
+
+
+## The kit's own tower roof, scaled so its eaves reach `big_r`; its collisions dropped (nobody stands on a roof).
+func _kit_roof(c: Vector3, big_r: float, y: float, frame: Basis) -> void:
+	var piece_name: String = KIT_ROOF_FLAT if roof_slate else KIT_ROOF_ROUND
+	var b: AABB = TownKit.piece_bounds(piece_name)
+	var half: float = maxf(b.size.x, b.size.z) * 0.5
+	if half <= 0.0:
+		return
+	var k: float = big_r / half
+	var n: Node3D = TownKit.piece(piece_name).instantiate() as Node3D
+	for body: Node in n.find_children("*", "CollisionObject3D", true, false):
+		body.free()
+	n.transform = Transform3D(frame * Basis.from_scale(Vector3(k, k, k)), c + Vector3.UP * y)
+	_built.add_child(n)
+
+
+## A metal spike with an orb, standing on the roof's top.
+func _finial(c: Vector3, top: float, frame: Basis) -> void:
+	var base: Vector3 = c + Vector3.UP * top
+	_prism(METAL, base, 0.07, -0.5, 1.2, 6, 0.0, frame)
+	# The orb: two short cones, point to point.
+	for i: int in 8:
+		var a0: float = TAU * i / 8.0
+		var a1: float = TAU * (i + 1) / 8.0
+		var p0: Vector3 = base + frame * (Vector3(cos(a0), 0, sin(a0)) * 0.2) + Vector3.UP * 0.55
+		var p1: Vector3 = base + frame * (Vector3(cos(a1), 0, sin(a1)) * 0.2) + Vector3.UP * 0.55
+		var n_mid: Vector3 = frame * Vector3(cos((a0 + a1) * 0.5), 0, sin((a0 + a1) * 0.5))
+		var up_tip: Vector3 = base + Vector3.UP * 0.8
+		var down_tip: Vector3 = base + Vector3.UP * 0.3
+		_quad(METAL, p0, p1, up_tip, up_tip, (n_mid + Vector3.UP).normalized())
+		_quad(METAL, p0, p1, down_tip, down_tip, (n_mid + Vector3.DOWN).normalized())
+		var sp0: Vector3 = base + frame * (Vector3(cos(a0), 0, sin(a0)) * 0.09) + Vector3.UP * 1.2
+		var sp1: Vector3 = base + frame * (Vector3(cos(a1), 0, sin(a1)) * 0.09) + Vector3.UP * 1.2
+		var spike: Vector3 = base + Vector3.UP * 1.9
+		_quad(METAL, sp0, sp1, spike, spike, (n_mid + Vector3.UP * 0.2).normalized())

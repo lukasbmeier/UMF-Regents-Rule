@@ -4727,6 +4727,19 @@ windowed shots of both scenes, day, dusk and night.
 okay the test Ill want to see how eveything furnishes"); a saved bake of merged buildings and far LODs; the village
 kit's own small props; interiors (S7); the ground is a stand-in.
 
+**Then, Luke's first look (2026-11-15)**: "The castle walls and everything looks really good, we need to workshop
+the roofs"; streets distinct from walls ("a unique color mix for roads"); the Houses view "not quite right"; then
+furnish. Built (all in `SETTLEMENTS_PREP.md` §9): the kit's two 6x4 roofs start at their origin, so `KitHouse`
+centers every roof on its measured bounds (the Houses view's 2 x 3 house); `CastleWall` roof styles (CONE with a
+flare, STEPPED courses, the KIT's own, a TURRET, OPEN; slate, pitch, overhang, a finial), a roofed tower solid to its
+eaves, the lab's view 5 Roofs to compare them; code-made paving (cobbles or setts, `town_paving.gdshaderinc`) in each
+style's own `paving`, `paving_mix` and `paving_pattern`, every preset's kept apart from its walls; the FANTASY PROPS
+KIT in (`game/regents/art/props/`, CC0), its cloth in a new style slot CLOTH, `PropGroup` (props as one building),
+`TownFurnish` (the market, doors, the green, the inn, the castle yard, banners, gate torches). `regents_town` 66/0
+(negatives: the roofs' centering, battlements under a roof, a prop material unknown); the whole unit run below.
+How to look: F6 on `town_world.tscn` (8 the market's stalls, 9 the inn, 0 the castle yard) and `town_lab.tscn`
+(5 Roofs). Waiting on Luke: which roof for which place, and his look at the furnishing.
+
 ## Step 86: THE SHOWCASE, LUKE'S NOTES ON THE FILMS (2026-11-15)
 
 Luke, on the first films: "the movement is unnatural and jumpy. It looks like instead of using the movement we have
