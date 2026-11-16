@@ -1427,6 +1427,21 @@ option in another option's row) and takes `apply_appearance(text)`; `Appearance.
 reads the picks. The picker asks for the options again after every choice, so they may depend on
 what is worn (a piece's own colourways). See `game/characters/character_looks.gd`.
 
+**A free colour in the character picker** (a cloak any colour, with suggestions): add an option
+with `"color": true` to the look's `appearance_options()`: `{"key": "main", "label": "Main colour",
+"color": true, "swatches": [Color(...), ...], "own": Color(...)}`. The picker draws a colour button
+(any colour), the swatches under it as a row of buttons, and "Look's own" to take the colour off;
+`own` is what the button shows while nothing is chosen. In `apply_appearance`, read it with
+`Appearance.color_of(int(Appearance.choices(text).get("main", 0)), own_colour)` and colour what
+you like. It travels as a number in the appearance text, so the server needs nothing and an older
+game ignores it. A game does this from its OWN look scene: give the scene a root script that
+`extends ModularCharacter`, return `super()`'s options plus yours, and call `super(text)` first in
+`apply_appearance`. The example is `tests/fixtures/genre_look/colour_look.gd`; the `looks` suite
+tests it. A look that must also run on an older template checks first that the picker understands
+colours: `var s: Script = CharacterPicker` then `s.get_script_constant_map().get("COLOR_OPTIONS",
+false)` is true from 1.8.4 (the class name alone cannot call it), and a picker without it is never
+handed a colour option.
+
 **A game's own pieces on a character** (armour from a game's folder, which the picker's lists do
 not name): from the game's own look component, `model.wear({&"torso": knight_body, &"head": helm,
 &"hairstyle": null})` on the `ModularCharacter`. It is the whole set each call: a slot you leave out

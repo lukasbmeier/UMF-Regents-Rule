@@ -1209,3 +1209,11 @@ Republish WITH `--codegen` (a new reducer, `resolve_action_all`). Old clients an
 - `server/src/module/referee.rs`: NEW reducer `resolve_action_all(request_id, hit_ids: Vec<u64>)` (authority only),
   refused whole for an ability without Hits All, a duplicate, over 32, or a name `resolve_action` refuses; `resolve_action`
   unchanged. Tests: `tests/suites/referee.gd` (a sweep that hits all), `tests/integration_test.sh` (the refusal).
+
+## 1.8.4 — a free colour in the character picker (DECISIONS #316)
+Client only: nothing to republish, no codegen. No look changes until it declares a colour option.
+- `CharacterPicker`: `COLOR_OPTIONS = true` (a look checks it in the script's constant map). An option with `"color": true` (`{key, label, color, swatches, own}`) is a colour button, a row of
+  suggested swatches and "Look's own". `Appearance.color_value` / `color_of` / `is_color` / `COLOR_MAX`: a colour is the
+  int 0xRRGGBB + 1 (0 the look's own); out of range is refused. A genre's own look declares one by extending
+  `ModularCharacter` (example: `tests/fixtures/genre_look/`). Tests: `tests/suites/looks.gd` "a free colour"
+  (mutation-checked).
