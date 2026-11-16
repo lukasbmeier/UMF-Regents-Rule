@@ -81,13 +81,18 @@ static var unknown: Dictionary[String, bool] = {}
 static var night: float = 0.0
 
 
-## A kit piece by its file name ("Wall_Plaster_Straight", "Barrel"): the village kit's, else the props kit's.
+## A kit piece by its file name ("Wall_Plaster_Straight", "Barrel"): the village kit's, else the props kit's. Kept
+## once found: asking the resource loader for a path costs ~2 ms even for a cached scene (measured 2026-11-15), and a
+## house places ~80 pieces.
 static func piece(piece_name: String) -> PackedScene:
-	return load(_piece_path(piece_name)) as PackedScene
+	if not _scenes.has(piece_name):
+		var path: String = _piece_path(piece_name)
+		_scenes[piece_name] = load(path) as PackedScene if ResourceLoader.exists(path) else null
+	return _scenes[piece_name]
 
 
 static func has_piece(piece_name: String) -> bool:
-	return ResourceLoader.exists(_piece_path(piece_name))
+	return piece(piece_name) != null
 
 
 static func _piece_path(piece_name: String) -> String:
@@ -95,6 +100,8 @@ static func _piece_path(piece_name: String) -> String:
 	return village if ResourceLoader.exists(village) else PROPS + piece_name + ".gltf"
 
 
+## The pieces found so far by name (null for a name neither kit has).
+static var _scenes: Dictionary[String, PackedScene] = {}
 static var _bounds: Dictionary[String, AABB] = {}
 
 
