@@ -150,6 +150,9 @@ paths:
   cells' Defense = share x material tier); a new piece or material is content and Make the table, never code. Leather
   is the HIDE family, cloth FIBER. A look finds a worn item's slot, family, material and piece from `ItemDef.by_id`
   (`armor_slot`, `material.family`, `material.key`, `pattern.key`). Armor's trait pools are EMPTY until Luke fills them.
+- F IS THE WORN CHEST'S (PROGRESS 97): a chest pattern's `worn_ability`, cast from the worn row whatever is wielded
+  (`is_worn_ability`, `worn_ability_of`, both sides), no mana, no mastery; a weapon's kit never holds it. Blink is
+  the cloth chest's (Luke's B8); the staff has four spells. Ability ids to 40050 and spells to 40011 are taken.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game
@@ -174,7 +177,8 @@ paths:
   looks): Peasant clothes in the player's own colors (`RegentsColors`: keys `main`, `accent`, `under`, `trim`, `leather`
   on the `appearance` text, each 0xRRGGBB + 1; never `#`, which the module refuses), dressed on the foundation's
   `assembled` with materials shared by palette (`Wardrobe.dress_shared`). Armor goes on through `wear_armor` (pieces +
-  tier palettes); nothing else dresses a player. The picker's color options need template 1.8.4 (`COLOR_OPTIONS`).
+  tier palettes); nothing else dresses a player. The shared dye materials are bounded (`Wardrobe.RECENT`, PROGRESS 98;
+  the cost: `game/regents/tests/dye_bench.tscn`). The picker's color options need template 1.8.4 (`COLOR_OPTIONS`).
 - WORN ARMOR IS SEEN (PROGRESS 96) through `ArmorLookComponent` (the `worn` row) and the table
   `game/regents/wardrobe/armor_looks.tres`: a pattern's pieces per body, a material's palette. A new armor pattern gets
   a row there (the `regents_figure` suite fails a piece with none), a new material a palette; never code. A change to

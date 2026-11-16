@@ -5415,3 +5415,73 @@ ability no kit holds is simply not on the weapon's bar; a stale pick of an abili
 **For the rules/handbook**: regents-genre.md: "F IS THE WORN CHEST'S (S4): a chest pattern's `worn_ability`, cast from the worn
 row whatever is wielded (`is_worn_ability`, `worn_ability_of`, both sides); a weapon's kit never holds it."
 **Left for later**: the chest's level and picks; tools on an empty F (B7); full-set bonuses (B8, later).
+
+## Step 98: THE DYE'S COST AT 300 (measured: cheap; the shared-material cache bounded) (2026-11-16, the armor run's W4)
+
+THE DYE IS CHEAP. At 300 players in view, six color sets cost +0.3 ms a frame over the old look, and every body in its own
+colors +1.1 ms (+5 %), with the same draw calls. ARMOR'S EXTRA PIECES cost more (+15 to +28 % draw calls, +1.1 to
++1.9 ms GPU), and THE BODY ITSELF is most of it: 27 draw calls each, 8100 at 300 in the old look (the foundation's
+modular character). One thing needed a fix: the shared-material cache kept every palette ever seen (1297 materials
+after about 2000 bodies had come and gone, growing without end); it is now bounded at 256.
+
+**Built**:
+- NEW `game/regents/tests/dye_bench.tscn` (+ `.gd`): THE MEASURE. Windowed, no server: 50 to 300 players in view, each a
+  `RegentsFigure` as the game spawns it, idling (the adventurer's idle), shadows on, vsync off. Five cases at each count:
+  `old` (the Peasant as painted: the baseline), `colors6` (6 color sets, no armor), `colors_all` (every body its own,
+  no armor), `likely` (6 color sets, armor of mixed families and tiers, a third bare), `worst` (every body its own
+  colors and armor of a random family and tier). Prints draw calls, surfaces, GPU ms and the whole frame's ms (mean,
+  p95), dye materials alive, video memory, the crowd's build time; then what is still kept after every crowd left.
+  Re-run: `"$GODOT" --path . res://game/regents/tests/dye_bench.tscn -- 50,100,200,300 240`.
+- `game/regents/wardrobe/wardrobe.gd`: THE CACHE IS BOUNDED. `_shared` holds WeakRefs, so a material lives while a body
+  wears it, plus the `RECENT` (256) newest held strongly. That bound matters: holding nothing at all doubled the worst
+  case's spawn time (3629 ms against 1571 for 300). Each armored body in its own colors makes its own-color material
+  and drops it the moment its armor covers the last Peasant piece; the 256 newest absorb that. Dead keys are swept
+  every 64 made. `shared_count()` is the number alive.
+- `game/regents/wardrobe/regents_colors.gd`: `_palettes` holds WeakRefs too (a palette lives while a body wears it), and
+  its dead keys are swept past 256 entries.
+- `game/regents/tests/suites/regents_figure.gd`: the bound checked (below).
+
+THE NUMBERS (this machine, 1280 x 720, Forward+; after the fix; the fix changed no frame cost, only what is kept and
+the worst case's spawn): draw calls | GPU ms mean | frame ms mean / p95 | build ms (the whole crowd at once)
+
+| players | old (baseline) | colors6 | colors_all | likely (armor, 6 sets) | worst (armor, all own) |
+|---|---|---|---|---|---|
+| 50  | 1350 / 1.03 / 3.31 / 3.60 / 137 | 1350 / 1.04 / 3.41 / 3.81 / 133 | 1350 / 1.04 / 3.48 / 3.79 / 135 | 1545 / 1.23 / 3.90 / 4.34 / 262 | 1695 / 1.37 / 4.16 / 4.64 / 314 |
+| 100 | 2700 / 1.81 / 7.05 / 7.53 / 262 | 2700 / 1.82 / 7.18 / 7.62 / 265 | 2700 / 1.83 / 7.45 / 7.88 / 270 | 3105 / 2.21 / 8.09 / 8.64 / 458 | 3486 / 2.55 / 9.07 / 9.59 / 550 |
+| 200 | 5400 / 3.36 / 14.75 / 15.33 / 519 | 5400 / 3.38 / 15.16 / 15.93 / 540 | 5400 / 3.39 / 15.57 / 16.32 / 551 | 6225 / 4.09 / 16.73 / 17.53 / 948 | 6885 / 4.63 / 18.06 / 18.96 / 1070 |
+| 300 | 8100 / 4.97 / 22.55 / 23.51 / 780 | 8100 / 4.98 / 22.87 / 24.08 / 808 | 8100 / 4.99 / 23.62 / 24.61 / 840 | 9330 / 6.06 / 25.28 / 26.19 / 1378 | 10365 / 6.84 / 27.40 / 28.52 / 1574 |
+
+Dye materials alive with 300 in view: colors6 6 (+ the tier palettes'), colors_all 300, likely 12, worst 6 (its armor
+covers the Peasant pieces). After every crowd had left: BEFORE 1297 kept (unbounded), AFTER 256 (the bound).
+Video memory at 300: old 585 MB, likely 641, worst 680 (the armor's extra meshes and textures).
+Earlier runs of the same bench before the fix gave the same frame numbers within noise (old 300: 22.4-23.7 ms; worst:
+28.1-29.2 ms).
+
+**Tested**:
+- `regents_figure` 224/0. New checks: a body in colors nobody else wears leaves, and its material is still held among
+  the newest; once 256 newer ones are made it is dropped (the cache is bounded); the materials alive stay near the bound.
+  NEGATIVE (mutation: the cache holding every material strongly, as before): "dropped once 256 newer ones were made"
+  FAILS. Bodies in the same colors still share one material (W1's checks pass).
+- Whole unit run (`run_tests.sh`, up to date with `main`): 5098 passed, 0 failed, lints OK.
+- `dye_bench.tscn` run four times (twice before the fix; an A/B of the worst case's spawn with no strong refs at all
+  against the strong cache; once after the fix): the table above.
+
+NOT RUN: `load_300.sh` with dressed bots. It measures the server, the referee and the bandwidth; no client there
+draws, so it cannot see the dye. On the server side the dye costs a few dozen characters more on each player's
+`appearance` row (sent as a player enters the ring), and armor one `worn` row per player, written on change, of the
+same kind as `wielded`, which the bots already write. The bots CAN be colored genre-side (`set_appearance` from
+`game/regents/load_bot.py`). They CANNOT wear: armor needs `admin_give_item`, and a bot is a guest. THE MISSING
+FOUNDATION HOOK, if you want worn rows in the load: a per-bot admin step in `tools/load/` (e.g. a genre hook
+`admin_setup(entity_id)` run with the CLI's admin identity after each bot binds), so the genre can grant pieces.
+I held off the 25-minute run to keep the test database free for S4.
+
+**Needs on merge**: none (client only).
+**Placeholders made**: none.
+**For Luke**: none on the dye (it is cheap). For later: 300 bodies IN VIEW at once are 22-28 ms a frame on this machine,
+and most of it is the body itself (27 draw calls each: head, eyes, brows, hair, beard and four or more outfit pieces).
+Merging a body's pieces into one mesh when it is far, or fewer pieces, would be the lever, but "no LODs"
+(`docs/rules/version_settings_looks.md`) is the foundation's rule; that would be Luke's call and template work.
+**For the rules/handbook**: HANDBOOK, the wardrobe: "the dye's cost: `game/regents/tests/dye_bench.tscn` (windowed); the
+shared materials are bounded (`Wardrobe.RECENT`)". For REFEREE_SCALING.md: the table above, as the client's side of
+300 (a section "a watching client: 300 bodies in view").
+**Left for later**: the per-bot admin hook above, if worn rows should be in the load test.

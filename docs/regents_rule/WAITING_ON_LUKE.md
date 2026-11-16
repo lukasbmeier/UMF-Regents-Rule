@@ -14,6 +14,8 @@ One line each: the question, today's value or the proposal, where it is written.
 **Abilities**
 - The bar: round or square (`bar_lab.tscn`; B11).
 - Your rewrite of the sword's pools (`ABILITIES_PREP.md` §9); then the axe's, bow's and staff's real content (§2 below).
+- CONFIRM: "Blink moves from the staff to cloth chests" (B8) is built: the staff has no Blink; a staff user with no robe has an empty F that says what fills it.
+- A chest's ability costs no mana and trains no mastery (mana is the staff's alone): yours to change. The chest's level (B8) waits for a family with more than one ability.
 - B13 as read (one free change a week, then the head's materials, escalating): confirm the reading.
 - Which other abilities hit every foe in their sweep (only Cleave is marked; `hits_all` on the ability's .tres; PROGRESS 89).
 - YOUR STAFF: the staff now has a placeholder ult (Meteor) on R, so a staff that took Gale or Frost Ring on R keeps the pick but it no longer fires: change the pick to Meteor (free once a week), or say the staff should have no ult until yours is designed.
@@ -45,6 +47,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The forest's colors, the moods, the keep, the login's words: the agent's first pass.
 
 **World**
+- 300 bodies IN VIEW cost 22-28 ms a frame on this machine, most of it the body itself (27 draw calls each); merging a far body's pieces would be the lever, but "no LODs" is the foundation's rule: your call, and template work (PROGRESS 98).
 - #12 day/night (Sky3D only if yes); how the minimap grows; the ore nuggets' placement (yours, by hand).
 - Tree scale, volumetric fog, station lights, the continent's ground; the glade's grass and colors.
 - The other skills' minigames; trait ranks: a better-made part, upgrades through use, or both (`MATERIALS.md` §11).
@@ -68,6 +71,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - ARMOR'S TRAIT PARTS: every piece names lining, straps, fittings (`trait_parts`), with NO trait offered: which traits, on which part, is yours.
 - ARMOR'S RECIPES: plates 2 bars; armet 1, cuirass 3, legplates 2 plates + copper rivets; leather 1 / 3 / 2; linen robe 4, trousers 3 flax; their XP (`content/recipe/`, made by the table).
 - THE CLOTH UNDER METAL: the scarf and padding keep the Knight's first colorway (gray, a red scarf) at every bar: `game/regents/wardrobe/palettes/metal_1_copper|2_iron|3_steel.tres`. Pick it per tier, or one for all.
+- THE CHEST ABILITIES: leather's Snare (placeholder) and metal's Shove (placeholder): what each does and its numbers: `game/regents/content/ability/chest_*.tres`, `content/spell/chest_*.tres`.
 (more as each item merges)
 
 ## 3. To play and look at
@@ -75,6 +79,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 97: `admin_give_item <you> 40087 1 0` (a linen robe), `wear <row>` out of a fight, F: Blink. A soft leather jerkin (40082): Snare; an iron cuirass (40075): Shove. With a staff and no robe, F is empty.
 - Step 96, two instances: wear an iron cuirass (40075), a copper armet, leather trousers: each sees the other's armor; steel's pauldrons are spiked; a helm hides the hair. `figure_shot.tscn` shows every tier on both bodies.
 - Step 94: craft iron plates at the anvil (two iron bars, a shape round), the Iron cuirass at the workbench (three plates, two copper rivets), or `admin_give_item <you> 40075 1 0`; `wear <row>` out of a fight (no doll yet). The workbench lists them under Armor.
 - Step 93: the picker (connect screen, or Escape > Character): Peasant M / F, hair, beard, brows, skin, and a color with swatches for main, accent, under, trim, leather. A character saved as Ranger, Wizard, Knight or Noble is now a Peasant. `figure_shot.tscn` shows four players together.

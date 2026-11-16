@@ -167,7 +167,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | W1b | the E1/W1 session (local_e7199708) | claude/w1b-picker-check | MERGED 2026-11-16 | 95 | 6f21ea82 | |
 | W2 | the E1/W1 session (local_e7199708), reused | claude/w2-armor-look | MERGED 2026-11-16 | 96 | 761444ac | |
 | W3 | | | waiting S4 | | | ui/ |
-| W4 | | | waiting W2 | | | test DB |
+| W4 |  |  | MERGED 2026-11-16 | 98 | c1bb55ef | |
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
 | E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | MERGED 2026-11-16 | 90 | cb3a6df2 | |

@@ -430,3 +430,24 @@ three or four is Luke's call.
 **What is left** (in order): 1. a region referee loads the whole level (~375 MB here) where its own part would do;
 2. how often an idle skeleton thinks (the combat overhaul's to set: the brains are now most of a referee's frame);
 3. the start-up stalls (2-3 s as a referee's skeletons bind, before players).
+
+## A watching client: 300 bodies in view (2026-11-16, PROGRESS 98)
+The client's side of 300 (`game/regents/tests/dye_bench.tscn`, windowed, no server): 50 to 300 `RegentsFigure`s in
+view, idling; `old` the painted Peasant, `colors6` six color sets, `colors_all` every body its own, `likely` armor of
+mixed tiers in six sets, `worst` every body its own colors and armor.
+
+THE NUMBERS (this machine, 1280 x 720, Forward+; after the fix; the fix changed no frame cost, only what is kept and
+the worst case's spawn): draw calls | GPU ms mean | frame ms mean / p95 | build ms (the whole crowd at once)
+
+| players | old (baseline) | colors6 | colors_all | likely (armor, 6 sets) | worst (armor, all own) |
+|---|---|---|---|---|---|
+| 50  | 1350 / 1.03 / 3.31 / 3.60 / 137 | 1350 / 1.04 / 3.41 / 3.81 / 133 | 1350 / 1.04 / 3.48 / 3.79 / 135 | 1545 / 1.23 / 3.90 / 4.34 / 262 | 1695 / 1.37 / 4.16 / 4.64 / 314 |
+| 100 | 2700 / 1.81 / 7.05 / 7.53 / 262 | 2700 / 1.82 / 7.18 / 7.62 / 265 | 2700 / 1.83 / 7.45 / 7.88 / 270 | 3105 / 2.21 / 8.09 / 8.64 / 458 | 3486 / 2.55 / 9.07 / 9.59 / 550 |
+| 200 | 5400 / 3.36 / 14.75 / 15.33 / 519 | 5400 / 3.38 / 15.16 / 15.93 / 540 | 5400 / 3.39 / 15.57 / 16.32 / 551 | 6225 / 4.09 / 16.73 / 17.53 / 948 | 6885 / 4.63 / 18.06 / 18.96 / 1070 |
+| 300 | 8100 / 4.97 / 22.55 / 23.51 / 780 | 8100 / 4.98 / 22.87 / 24.08 / 808 | 8100 / 4.99 / 23.62 / 24.61 / 840 | 9330 / 6.06 / 25.28 / 26.19 / 1378 | 10365 / 6.84 / 27.40 / 28.52 / 1574 |
+
+Dye materials alive with 300 in view: colors6 6 (+ the tier palettes'), colors_all 300, likely 12, worst 6 (its armor
+covers the Peasant pieces). After every crowd had left: BEFORE 1297 kept (unbounded), AFTER 256 (the bound).
+Video memory at 300: old 585 MB, likely 641, worst 680 (the armor's extra meshes and textures).
+Earlier runs of the same bench before the fix gave the same frame numbers within noise (old 300: 22.4-23.7 ms; worst:
+28.1-29.2 ms).
