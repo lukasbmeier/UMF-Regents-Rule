@@ -510,6 +510,9 @@ func _run_color_tests() -> void:
 	plain.queue_free()
 	plain_without.queue_free()
 
+	var picker_script: Script = CharacterPicker
+	_check(bool(picker_script.get_script_constant_map().get("COLOR_OPTIONS", false)),
+		"the picker says it draws colour options (COLOR_OPTIONS), for a look to check")
 	# The picker on a genre's look.
 	var defn := EntityDefinition.new()
 	defn.visual_variants = [load("res://tests/fixtures/genre_look/colour_f.tscn") as PackedScene]

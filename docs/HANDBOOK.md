@@ -1437,7 +1437,10 @@ you like. It travels as a number in the appearance text, so the server needs not
 game ignores it. A game does this from its OWN look scene: give the scene a root script that
 `extends ModularCharacter`, return `super()`'s options plus yours, and call `super(text)` first in
 `apply_appearance`. The example is `tests/fixtures/genre_look/colour_look.gd`; the `looks` suite
-tests it.
+tests it. A look that must also run on an older template checks first that the picker understands
+colours: `var s: Script = CharacterPicker` then `s.get_script_constant_map().get("COLOR_OPTIONS",
+false)` is true from 1.8.4 (the class name alone cannot call it), and a picker without it is never
+handed a colour option.
 
 **A game's own pieces on a character** (armour from a game's folder, which the picker's lists do
 not name): from the game's own look component, `model.wear({&"torso": knight_body, &"head": helm,

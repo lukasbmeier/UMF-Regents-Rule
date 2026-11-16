@@ -6,7 +6,7 @@
 - 1.8.4 (DECISIONS #316) committed on branch `claude/t2-picker-color` (child T2 of Regent's Rule's armor run), cut
   from main 4437fa4; not merged, not pushed, not shipped: the run's master merges and ships. Client only.
 - Green: `looks` 68/0 (the new "a free colour" section; 5 mutations each failed it: the stale check dropping colours,
-  keeping one out of range, no +1, clamping, no colour row); the full `tests/run_tests.sh` 2529/0.
+  keeping one out of range, no +1, clamping, no colour row); the full `tests/run_tests.sh` 2530/0 (with `COLOR_OPTIONS`, its check mutation-checked).
   A windowed shot of the picker with a colour row was taken and looked at (the armor run's notes folder,
   `t2_picker_colour_row.png`).
 

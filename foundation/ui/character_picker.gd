@@ -26,6 +26,11 @@ signal closed()
 ## Done: the look chosen, as `Appearance` text.
 signal chosen(appearance: String)
 
+## This picker draws `"color": true` options (DECISIONS #316). A look that offers one may check for
+## it first through the script's constant map (`var s: Script = CharacterPicker`, then
+## `s.get_script_constant_map().get("COLOR_OPTIONS", false)`), so a game on an older template never
+## hands a colour option to a picker that would draw it as an empty list.
+const COLOR_OPTIONS: bool = true
 const PREVIEW_SIZE: Vector2i = Vector2i(340, 480)
 ## Degrees a second the preview turns by itself.
 const TURN_DEG_PER_SEC: float = 24.0

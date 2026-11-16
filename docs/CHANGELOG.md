@@ -1212,7 +1212,7 @@ Republish WITH `--codegen` (a new reducer, `resolve_action_all`). Old clients an
 
 ## 1.8.4 — a free colour in the character picker (DECISIONS #316)
 Client only: nothing to republish, no codegen. No look changes until it declares a colour option.
-- `CharacterPicker`: an option with `"color": true` (`{key, label, color, swatches, own}`) is a colour button, a row of
+- `CharacterPicker`: `COLOR_OPTIONS = true` (a look checks it in the script's constant map). An option with `"color": true` (`{key, label, color, swatches, own}`) is a colour button, a row of
   suggested swatches and "Look's own". `Appearance.color_value` / `color_of` / `is_color` / `COLOR_MAX`: a colour is the
   int 0xRRGGBB + 1 (0 the look's own); out of range is refused. A genre's own look declares one by extending
   `ModularCharacter` (example: `tests/fixtures/genre_look/`). Tests: `tests/suites/looks.gd` "a free colour"
