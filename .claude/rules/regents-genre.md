@@ -143,6 +143,9 @@ paths:
 - TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
   piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
   (`VillageDressing`), never placed by hand round a house.
+- ARMOR (PROGRESS 92): what a player wears is the `worn` row (one a wearer, a column pair a slot); a piece is an
+  `ItemDef` with `armor_slot` and `defense`; a hit's damage goes through `rules::through` (guard, armor, traits,
+  multiplied): a new damage path calls it, never a flat cut. Worn and taken off out of a fight only.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game
