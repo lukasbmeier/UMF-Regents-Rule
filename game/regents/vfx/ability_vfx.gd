@@ -71,6 +71,8 @@ func _on_bound() -> void:
 	if _combat != null:
 		_combat.cast_sent.connect(func(id: int, _target: int, aim: Vector3, _at: Vector3) -> void: cast_landing(id, aim))
 		_combat.parried.connect(parried)
+	if is_local_authority and get_viewport() != null:
+		VfxCameraShake.install(get_viewport().get_camera_3d(), ent)   # this client's camera feels the shakes near it
 	set_process(true)
 
 
@@ -206,6 +208,27 @@ func _watch_jump() -> void:
 				return
 
 
+## (Here, not on `VfxEffect`: naming CombatComponent there makes a load cycle through SpellLooks' ring scenes.)
+## Whether an effect shown for `who` (the fighter it belongs to) is the lighter version: another PLAYER's, seen by
+## this client. Not this client's own, not a foe's or a creature's (a foe's warning must read at a glance), not one
+## with no fighter (the lab, the showcase).
+static func lighter_for(who: Node) -> bool:
+	var ent: SpaceTimeEntity = who as SpaceTimeEntity if is_instance_valid(who) else null
+	if ent == null or ent.is_local_authority or ent.definition == null:
+		return false
+	return FoeDef.by_kind(ent.definition.kind) == null and ent.find_component(CombatComponent) != null
+
+
+## Whether a shot's end (`ShotLook` under a missile's body) is the lighter version: its body's owner's
+## (`BodyComponent.owner_id`) as `lighter_for` says.
+static func lighter_for_shot(look: Node) -> bool:
+	var n: Node = look
+	while n != null and not (n is SpaceTimeEntity):
+		n = n.get_parent()
+	var body: BodyComponent = (n as SpaceTimeEntity).find_component(BodyComponent) as BodyComponent if n != null else null
+	return body != null and body.owner_id != 0 and lighter_for(EntityRegistry.get_entity(body.owner_id))
+
+
 ## Play `scene` at `at`, facing `toward` (a point), aimed at `target`, showing on `caster`: placed and set up before it
 ## enters the world (where it starts), beside the fighter so it outlives them. Null when it is no effect.
 func play(scene: PackedScene, ability_id: int, at: Vector3, toward: Vector3 = Vector3.INF, target: Vector3 = Vector3.ZERO,
@@ -216,6 +239,7 @@ func play(scene: PackedScene, ability_id: int, at: Vector3, toward: Vector3 = Ve
 	fx.target = target
 	fx.caster = caster
 	fx.free_when_done = frees
+	fx.lighter = lighter_for(entity)   # another player's: the lighter version
 	fx.position = at
 	if toward != Vector3.INF:
 		var flat: Vector3 = Vector3(toward.x - at.x, 0.0, toward.z - at.z)

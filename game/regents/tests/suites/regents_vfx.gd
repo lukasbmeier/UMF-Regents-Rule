@@ -5,6 +5,9 @@ extends "res://tests/suite_base.gd"
 ##   - the missile flies to its target in distance / speed and says so there, not before; its trail outlives it
 ##   - Blink fades its caster out, moves it at its moment (or, told not to, leaves it), and puts the fade back
 ##   - the frost ring's shards wait for the landing; the blast asks for a shake, and none when its shake is 0
+##   - AT SCALE: a ring's pieces are ONE MultiMesh (a handful of draws, not one a piece); another player's effect is
+##     the lighter version (half the particles, no light, no shake) and ours whole; the game's camera listens to
+##     `shook`, as hard as asked near this client's character, less far off, never for a lighter one
 ##   - nothing under `game/regents/vfx/` is an image file (Luke's "No AI disclosure": procedural first)
 ##   - the lab opens, plays each showcase, and gives back the engine's speed when it closes
 ## How they LOOK is the lab's shots (windowed): `"$GODOT" --path . res://game/regents/vfx/vfx_lab.tscn -- <out dir>`.
@@ -18,6 +21,7 @@ func run() -> void:
 	_run_missile()
 	_run_blink()
 	_run_frost_and_shake()
+	_run_at_scale()
 	_run_no_images()
 	_run_coverage()
 	await _run_ability_vfx()
@@ -50,6 +54,102 @@ func _step(fx: VfxEffect, seconds: float) -> bool:
 	if fx.finished.is_connected(on_done):
 		fx.finished.disconnect(on_done)
 	return done[0]
+
+
+func _run_at_scale() -> void:
+	# A ring's pieces: one MultiMesh, every one of them in it; the ring's own draws a handful, however many pieces.
+	for scene: String in ["frost_ring", "cinder_ring"]:
+		var ring: VfxGroundRing = _effect(scene) as VfxGroundRing
+		if ring == null:
+			_check(false, "%s builds" % scene)
+			continue
+		var meshes: int = ring.find_children("*", "MeshInstance3D", true, false).size()
+		var multis: Array[Node] = ring.find_children("*", "MultiMeshInstance3D", true, false)
+		_check(multis.size() == 1 and (multis[0] as MultiMeshInstance3D).multimesh.instance_count == ring.pieces,
+			"%s: its %d pieces are one MultiMesh" % [scene, ring.pieces])
+		_check(meshes <= 3 and ring.pieces >= 20, "%s: a handful of meshes beside it (%d), not one a piece" % [scene, meshes])
+		_step(ring, ring.warn_s + 0.4)
+		_check((multis[0] as MultiMeshInstance3D).multimesh.visible_instance_count == ring.risen_count(),
+			"%s: the risen pieces are the ones drawn" % scene)
+		ring.queue_free()
+	# Ours whole, another player's lighter: half the particles, its lights out; the same parts otherwise.
+	for scene: String in ["fire_blast", "frost_ring", "gale", "blink", "fire_charge"]:
+		var whole: VfxEffect = _effect(scene)
+		var packed: PackedScene = load(FX + scene + ".tscn") as PackedScene
+		var light: VfxEffect = packed.instantiate() as VfxEffect
+		light.lighter = true
+		add_child(light)
+		light.set_process(false)
+		var pw: int = _particles(whole)
+		var pl: int = _particles(light)
+		_check(pw > 0 and pl <= ceili(pw * VfxEffect.LIGHTER_PARTICLES) + _systems(whole) and pl < pw,
+			"%s: another player's has about half the particles (%d of %d)" % [scene, pl, pw])
+		_check(_lights_on(light) == 0 and (_lights_on(whole) > 0 or scene == "gale"),
+			"%s: another player's has no light of its own (ours %d)" % [scene, _lights_on(whole)])
+		_check(_systems(whole) == _systems(light), "%s: the same parts, only fewer" % scene)
+		whole.queue_free()
+		light.queue_free()
+	# Made lighter after it entered the world (a missile's look, built before its owner was known): the same.
+	var late: VfxEffect = _effect("fire_blast")
+	var before: int = _particles(late)
+	late.make_lighter()
+	late.make_lighter()   # (once only)
+	_check(_particles(late) < before and _particles(late) >= before / 4, "made lighter late: thinned once (%d of %d)" % [_particles(late), before])
+	late.queue_free()
+	# Whose is lighter: nobody's (the lab, the showcase) is whole.
+	var bare := Node3D.new()
+	_check(not AbilityVfx.lighter_for(null) and not AbilityVfx.lighter_for(bare), "an effect with no player is whole")
+	bare.free()
+	# The camera listening.
+	var cam := Camera3D.new()
+	add_child(cam)
+	var me := Node3D.new()
+	add_child(me)
+	var shaker: VfxCameraShake = VfxCameraShake.install(cam, me)
+	_check(VfxCameraShake.current == shaker and VfxCameraShake.install(cam, me) == shaker, "one listener on the camera")
+	var near: VfxEffect = _effect("fire_blast", Vector3(2, 0, 0))
+	var far: VfxEffect = _effect("fire_blast", Vector3(60, 0, 0))
+	var mid: VfxEffect = _effect("fire_blast", Vector3(13, 0, 0))
+	_check(near.shook.is_connected(shaker.heard), "an effect made while it listens is heard")
+	_check(is_equal_approx(shaker.heard(0.4, 0.3, near), 0.4), "near: as hard as it asks")
+	var k_mid: float = shaker.heard(0.4, 0.3, mid)
+	_check(k_mid > 0.0 and k_mid < 0.4, "farther: less (%.2f)" % k_mid)
+	_check(is_zero_approx(shaker.heard(0.4, 0.3, far)), "far off: none")
+	near.lighter = true
+	_check(is_zero_approx(shaker.heard(0.4, 0.3, near)), "another player's: none")
+	near.lighter = false
+	near.shook.emit(0.4, 0.3)
+	shaker._process(0.05)
+	_check(not is_zero_approx(cam.h_offset) or not is_zero_approx(cam.v_offset), "the picture moves while it shakes")
+	shaker._process(1.0)
+	shaker._process(0.01)
+	_check(is_zero_approx(cam.h_offset) and is_zero_approx(cam.v_offset), "and is put back after")
+	for n: Node in [near, far, mid, me]:
+		n.queue_free()
+	cam.queue_free()
+	await get_tree().process_frame
+	_check(VfxCameraShake.current == null, "the listener goes with its camera")
+	var lone: VfxEffect = _effect("fire_blast")
+	_check(lone.shook.get_connections().is_empty(), "no camera listening (the lab): nothing connected")
+	lone.queue_free()
+
+
+func _particles(fx: Node) -> int:
+	var n: int = 0
+	for p: Node in fx.find_children("*", "GPUParticles3D", true, false):
+		n += (p as GPUParticles3D).amount
+	return n
+
+
+func _systems(fx: Node) -> int:
+	return fx.find_children("*", "GPUParticles3D", true, false).size()
+
+
+func _lights_on(fx: Node) -> int:
+	var n: int = 0
+	for l: Node in fx.find_children("*", "Light3D", true, false):
+		n += 1 if (l as Light3D).visible else 0
+	return n
 
 
 func _run_every_effect() -> void:
@@ -132,14 +232,10 @@ func _run_frost_and_shake() -> void:
 			continue
 		_check((ring.element == VfxGroundRing.Element.FIRE) == (scene == "cinder_ring"), "%s: its element" % scene)
 		_step(ring, ring.warn_s * 0.5)
-		var up_early: int = 0
-		for s: Array in ring._shards:
-			up_early += 1 if (s[0] as Node3D).visible else 0
+		var up_early: int = ring.risen_count()
 		_check(up_early == 0, "%s: nothing rises before it lands (%d up)" % [scene, up_early])
 		_step(ring, ring.warn_s * 0.5 + 0.4)
-		var up_late: int = 0
-		for s: Array in ring._shards:
-			up_late += 1 if (s[0] as Node3D).visible and (s[0] as Node3D).scale.y > 0.5 else 0
+		var up_late: int = ring.risen_count(0.5)
 		_check(up_late == ring._shards.size(), "%s: everything up after it lands (%d of %d)" % [scene, up_late, ring._shards.size()])
 		ring.queue_free()
 	_run_blade_cut()

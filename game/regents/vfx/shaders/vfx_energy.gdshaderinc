@@ -67,11 +67,33 @@ float vfx_noise(vec2 uv) {
 	return clamp(na * 0.45 + nb * 0.55, 0.0, 1.0);
 }
 
+// A MULTIMESH OF PIECES (a ring's shards, one draw for all, `VfxGroundRing`): `instanced` on, the mesh one unit
+// piece, each instance's own erosion and heat in its custom data (r, g) and its true size in b (across) and a (tall),
+// so it looks exactly as a piece of its own would: its normal and its push made as on a piece that size.
+uniform bool instanced = false;
+varying float vary_erosion;
+varying float vary_heat;
+
 void vertex() {
+	vary_erosion = fx_erosion;
+	vary_heat = fx_heat;
+	vec3 size = vec3(1.0);
+	vec3 n_real = NORMAL;
+	if (instanced) {
+		vary_erosion += INSTANCE_CUSTOM.r;
+		vary_heat += INSTANCE_CUSTOM.g;
+		size = max(vec3(INSTANCE_CUSTOM.b, INSTANCE_CUSTOM.a, INSTANCE_CUSTOM.b), vec3(0.0001));
+		n_real = normalize(NORMAL / size);
+	}
 	if (displace > 0.0) {
 		vec2 ua = UV * tile_a + scroll_a * fx_time;
 		float n = textureLod(noise_a, ua, 0.0).r;
-		VERTEX += NORMAL * (n - 0.35) * displace;
+		VERTEX += n_real * (n - 0.35) * displace / size;
+	}
+	if (instanced) {
+		// The engine turns an instance's normal by its basis as it is (right only for an even scale): undo the stretch.
+		mat3 m = mat3(MODEL_MATRIX);
+		NORMAL = normalize(inverse(transpose(m) * m) * NORMAL);
 	}
 }
 
@@ -92,12 +114,12 @@ void fragment() {
 		head = 1.0 - smoothstep(0.0, sweep_tail * 0.25, behind);
 	}
 	// Eaten away: the noise (thinned toward the shape's edges) under a threshold that climbs with the erosion.
-	float er = max(fx_erosion, 1.0 - COLOR.a);
+	float er = max(vary_erosion, 1.0 - COLOR.a);
 	float value = n * shape;
 	float th = er * (1.0 + erode_softness) - erode_softness;
 	float mask = smoothstep(th, th + erode_softness, value);
 	float edge = (er > 0.001) ? 1.0 - smoothstep(th + erode_softness, th + erode_softness + edge_width, value) : 0.0;
-	float heat = n * noise_heat + heat_bias + fx_heat + rim * fresnel_heat + edge * edge_heat + head * sweep_heat + UV.y * v_heat;
+	float heat = n * noise_heat + heat_bias + vary_heat + rim * fresnel_heat + edge * edge_heat + head * sweep_heat + UV.y * v_heat;
 	heat = clamp(heat, 0.0, 1.0);
 	if (bands >= 2.0) {
 		heat = floor(heat * bands + 0.5) / bands;

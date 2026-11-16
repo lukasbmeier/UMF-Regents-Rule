@@ -39,11 +39,11 @@ func _on_global(ev: RowEvent) -> void:
 	var row: RefCounted = ev.current()
 	var owner_ent: SpaceTimeEntity = EntityRegistry.get_entity(int(row.get(&"owner"))) as SpaceTimeEntity
 	var hostile: bool = owner_ent != null and is_instance_valid(owner_ent) and owner_ent.definition != null and FoeDef.by_kind(owner_ent.definition.kind) != null
-	show_area(int(row.get(&"id")), row.get(&"pos") as Vector3, float(row.get(&"radius")), int(row.get(&"lands")), bool(row.get(&"landed")), hostile)
+	show_area(int(row.get(&"id")), row.get(&"pos") as Vector3, float(row.get(&"radius")), int(row.get(&"lands")), bool(row.get(&"landed")), hostile, owner_ent)
 
 
 ## A circle at `pos`, `radius` wide, landing at `lands_usec` (the server's clock); `landed` once it has.
-func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bool, hostile: bool = false) -> void:
+func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bool, hostile: bool = false, owner_ent: Node = null) -> void:
 	var a: Dictionary = _areas.get(id, {})
 	if a.is_empty():
 		var ring: VfxGroundRing = (CINDER_RING if hostile else FROST_RING).instantiate() as VfxGroundRing
@@ -52,6 +52,7 @@ func show_area(id: int, pos: Vector3, radius: float, lands_usec: int, landed: bo
 		var left_s: float = float(lands_usec - ClockSync.server_usec()) / 1_000_000.0
 		ring.warn_s = clampf(left_s, MIN_WARN_S, MAX_WARN_S) if not landed else MIN_WARN_S
 		ring.free_when_done = false   # its row says when it goes (`forget_area`)
+		ring.lighter = AbilityVfx.lighter_for(owner_ent)   # another player's ring: the lighter version
 		ring.position = pos + Vector3(0, 0.02, 0)
 		add_child(ring)
 		a = {"node": ring, "seen_usec": ClockSync.server_usec(), "lands_usec": lands_usec, "landed_msec": -1, "hostile": hostile}

@@ -111,6 +111,8 @@ func _ended() -> void:
 		var fx: Node3D = end_scene.instantiate() as Node3D
 		if fx != null:
 			fx.position = end_point()
+			if fx is VfxEffect:
+				(fx as VfxEffect).lighter = AbilityVfx.lighter_for_shot(self)   # another player's: the lighter version
 			get_tree().root.add_child.call_deferred(fx)
 		return
 	if burst_size_m > 0.0:
