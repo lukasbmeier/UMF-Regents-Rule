@@ -157,7 +157,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
 | T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | claude/t1-wear-hook-69d351 (template) | MERGED into the template's main 2026-11-16 (`9b2e4aa`: #313 wear + assembled, #315 NPCs bind), SHIPPED in 1.8.3 | — | template 4437fa4 | |
 | S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | MERGED 2026-11-16 | 89 | c94bdc92 | |
-| S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
+| S1b | the Lane S session (local_2bb14966), reused | claude/s1b-role-pools | running since 2026-11-16 (also the workbench look's early-out) | | | `combat_component.gd`; three named functions in `ui/` |
 | S2 | the S1 session (local_2bb14966), reused | claude/s2-armor-core | MERGED 2026-11-16 | 92 | 8171e4a2 | |
 | S3 | the Lane S session (local_2bb14966), reused | claude/s3-armor-pieces | MERGED 2026-11-16 | 94 | cf78f9ea | |
 | S4 | the Lane S session (local_2bb14966), reused | claude/s4-chest-ability | MERGED 2026-11-16 | 97 | 04e9bf76 | |
@@ -166,7 +166,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | MERGED 2026-11-16 | 93 | a9322b2e | |
 | W1b | the E1/W1 session (local_e7199708) | claude/w1b-picker-check | MERGED 2026-11-16 | 95 | 6f21ea82 | |
 | W2 | the E1/W1 session (local_e7199708), reused | claude/w2-armor-look | MERGED 2026-11-16 | 96 | 761444ac | |
-| W3 | | | waiting S4 | | | ui/ |
+| W3 | the E1/W session (local_e7199708), reused | claude/w3-bag-doll | running since 2026-11-16 | | | ui/ (the bag, the doll) |
 | W4 |  |  | MERGED 2026-11-16 | 98 | c1bb55ef | |
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
