@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EntityDefinition" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://foundation/core/entity_definition.gd" id="1_def"]
-[ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://game/regents/npc.tscn" id="2_scene"]
 [ext_resource type="PackedScene" path="res://game/characters/looks/noble_m.tscn" id="3_look"]
 [ext_resource type="Resource" path="res://game/regents/anim/adventurer.tres" id="4_anim"]
 [ext_resource type="Resource" path="res://game/regents/content/movement/adventurer.tres" id="5_move"]

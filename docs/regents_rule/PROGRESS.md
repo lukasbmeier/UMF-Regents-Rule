@@ -4794,3 +4794,25 @@ form); connecting by itself (auto-connect, a `--host` launch) puts the form up s
 mutation taking the step-aside out fails its check).
 
 **Left for later**: the deer still have no graze clip.
+
+## Step 87: NPCS BIND AT ONCE (the "binding after 2.0s without rows for session_member" warnings) (2026-11-16, the armor run's E2)
+
+**The cause**: `foundation/core/spacetime_entity.gd`'s bind timeout. The foundation's `SessionComponent` REQUIRES a
+`session_member` row (only `lobby_member` is optional). The foes (`combat/foe.tscn`) and the guide are built on
+`foundation/entities/player.tscn`, so they carry that component, but the server gives a member row only to a player
+joining a world's session. The ten warnings: the guide and the camp's nine foes. NOT ONLY NOISE: each stayed unbound,
+frozen at its first rows, ~2.9 s after coming into a client's ring, on every ring change.
+
+**Built**: `game/regents/npc_session_component.gd` (extends SessionComponent, both tables optional);
+`combat/foe.tscn`'s inherited `Components/Session` takes it; NEW `game/regents/npc.tscn` (player.tscn with the same
+override), used by `content/character/guide.tres` (re-baked: the manifest's hash only); NEW
+`game/regents/tests/bind_playtest.sh` (+ `tests/playtest/bind_playtest.{gd,tscn}`): one real client at 150 ms in the
+camp times every entity from entering the tree to `bound`, fails a stall over 1 s or any "binding after" line.
+
+**How to play it**: walk into the frontier camp: the foes and the Drillmaster move at once, not 2-3 s later.
+
+**Tested**: `bind_playtest.sh` WITHOUT the fix (the negative) failed: the ten bound 2936-2978 ms after spawn, ten
+warnings; WITH it 3/0, the same ten in 99-117 ms. Unit whole 4610/0. No server change, no publish.
+
+**Left for later**: the general fix is the template's (`SessionComponent.optional_tables`, DECISIONS #315, in the
+release M3 ships); once pulled, `npc_session_component.gd` and the two overrides are redundant and may go.
