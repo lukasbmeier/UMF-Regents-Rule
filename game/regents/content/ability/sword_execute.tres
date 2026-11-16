@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 40000
+range_m = 2.2
+wind_up_ms = 600
+damage = 45.0
+animation = &"ability.40038"
+key = &"regents.combat"
+judged = true
+reach_m = 2.2
+radius_m = 0.5
+height_m = 0.9
+lunges = false
+id = 40038
+display_name = "Execute (placeholder)"
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Sword, ult on R: one heavy blow (the draft's 'more the lower its health' is not built: a flat big hit)."

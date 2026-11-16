@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpellDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/spell_def.gd" id="1_spell"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/staff_meteor.tres" id="2_ability"]
+
+[resource]
+script = ExtResource("1_spell")
+ability = ExtResource("2_ability")
+kind = 1
+cost = 50.0
+cast_ms = 2000
+cast_while_moving = false
+radius_m = 5.0
+delay_ms = 1500
+id = 40009
+display_name = "Meteor (placeholder)"
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). The staff's ult: a 2 s cast standing still, then a 10 m circle where you aim (20 m) lands 1.5 s later for 40. Reuses the area spell (Frost Ring's kind, its ring's look)."

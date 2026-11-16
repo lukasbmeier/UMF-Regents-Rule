@@ -77,15 +77,24 @@
 			"type": "status"
 		},
 		"shared/content/regents/ability.json": {
-			"count": 32,
-			"hash": "67f20602",
+			"count": 46,
+			"hash": "b146fa6a",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
 				"game/regents/content/ability/axe_cleave.tres": "af886adf",
+				"game/regents/content/ability/axe_hamstring_chop.tres": "ee2d7931",
 				"game/regents/content/ability/axe_heavy.tres": "f976c1b2",
+				"game/regents/content/ability/axe_shoulder_shove.tres": "4b8a2d32",
+				"game/regents/content/ability/axe_skull_splitter.tres": "725157db",
+				"game/regents/content/ability/axe_whirlwind.tres": "9e915b28",
 				"game/regents/content/ability/blink.tres": "abf6228b",
+				"game/regents/content/ability/bow_arrow_volley.tres": "15f85c4e",
+				"game/regents/content/ability/bow_kick_away.tres": "dd9c5ba8",
 				"game/regents/content/ability/bow_loose.tres": "7d47acb5",
+				"game/regents/content/ability/bow_pinning_shot.tres": "8cc4f1c9",
+				"game/regents/content/ability/bow_point_blank.tres": "0aa4c1af",
+				"game/regents/content/ability/bow_quick_shot.tres": "76802b0c",
 				"game/regents/content/ability/dodge.tres": "9c453aed",
 				"game/regents/content/ability/fireball.tres": "db3bb64e",
 				"game/regents/content/ability/foe_arrow.tres": "b2355146",
@@ -106,10 +115,15 @@
 				"game/regents/content/ability/sparring_backswing.tres": "ff824341",
 				"game/regents/content/ability/sparring_cut.tres": "97c8d320",
 				"game/regents/content/ability/sparring_overhead.tres": "439611cd",
-				"game/regents/content/ability/staff_bolt.tres": "ae712752",
+				"game/regents/content/ability/staff_bolt.tres": "3216289f",
+				"game/regents/content/ability/staff_meteor.tres": "b123dade",
+				"game/regents/content/ability/sword_execute.tres": "e70589fe",
+				"game/regents/content/ability/sword_flurry.tres": "64440d04",
+				"game/regents/content/ability/sword_hamstring_cut.tres": "15f65550",
 				"game/regents/content/ability/sword_lunge.tres": "d82d59f5",
 				"game/regents/content/ability/sword_pommel_bash.tres": "557adf61",
 				"game/regents/content/ability/sword_rallying_cut.tres": "837d0797",
+				"game/regents/content/ability/sword_shield_bash.tres": "43563673",
 				"game/regents/content/ability/sword_slash_a.tres": "1db742b2",
 				"game/regents/content/ability/sword_slash_b.tres": "16ecb95d",
 				"game/regents/content/ability/sword_slash_c.tres": "a7971408"
@@ -238,18 +252,18 @@
 		},
 		"shared/content/regents/kit.json": {
 			"count": 10,
-			"hash": "8e7940b4",
+			"hash": "3fb64284",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/kit/axe.tres": "22665d58",
-				"game/regents/content/kit/bow.tres": "98e7e64a",
+				"game/regents/content/kit/axe.tres": "a954b91c",
+				"game/regents/content/kit/bow.tres": "7993327c",
 				"game/regents/content/kit/imp.tres": "eae94fac",
 				"game/regents/content/kit/skeleton_axe.tres": "4a3e16d4",
 				"game/regents/content/kit/skeleton_bow.tres": "52bb2db2",
 				"game/regents/content/kit/skeleton_sword.tres": "a76d8361",
 				"game/regents/content/kit/sparring_sword.tres": "054385f5",
-				"game/regents/content/kit/staff.tres": "f9278b32",
-				"game/regents/content/kit/sword.tres": "86b0ea05",
+				"game/regents/content/kit/staff.tres": "99b872e0",
+				"game/regents/content/kit/sword.tres": "3110de90",
 				"game/regents/content/kit/wolf.tres": "aa1a13ea"
 			},
 			"type": "kit"
@@ -462,8 +476,8 @@
 			"type": "skill"
 		},
 		"shared/content/regents/spell.json": {
-			"count": 8,
-			"hash": "8f996ca2",
+			"count": 9,
+			"hash": "eb9d8f17",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/spell/blink.tres": "9b4bb699",
@@ -473,7 +487,8 @@
 				"game/regents/content/spell/foe_ember.tres": "5c8a6307",
 				"game/regents/content/spell/frost_ring.tres": "33d82319",
 				"game/regents/content/spell/gale.tres": "1139e8eb",
-				"game/regents/content/spell/staff_bolt.tres": "68b33581"
+				"game/regents/content/spell/staff_bolt.tres": "68b33581",
+				"game/regents/content/spell/staff_meteor.tres": "4a75ae05"
 			},
 			"type": "spell"
 		},

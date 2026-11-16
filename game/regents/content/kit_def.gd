@@ -248,8 +248,10 @@ func validate() -> Array[String]:
 		out.append("it has no light combo (or an empty slot): set `light`")
 	if skills.has(null):
 		out.append("its skills have an empty slot")
-	if skills.size() > 4:
-		out.append("four skills at most (Q, E, R, F)")
+	# A kit with bar slots holds a POOL (Luke's B9: options and ults to pick from, more along the long track); the bar
+	# still shows four. One with none (a foe's) uses every skill as it is: four at most.
+	if skill_slots.is_empty() and skills.size() > 4:
+		out.append("four skills at most (Q, E, R, F) on a kit with no `skill_slots`")
 	for a: AbilityDef in abilities():
 		if a != null and timing_set != null and not timing_set.has_exact(StringName("ability.%d" % a.id)):
 			out.append("%s has no clip in its timing set (ability.%d): it would play Interact and lock only its wind-up" % [a.display_name, a.id])
