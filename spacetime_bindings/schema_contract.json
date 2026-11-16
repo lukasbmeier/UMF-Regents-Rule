@@ -69,6 +69,7 @@
 		"report_seen_delay": "(seen_delay_ms:U32)",
 		"reset_rule": "(key:String)",
 		"resolve_action": "(request_id:U64,hit_id:U64)",
+		"resolve_action_all": "(request_id:U64,hit_ids:[U64])",
 		"revoke_authority": "(identity:(__identity__:U256))",
 		"round_cancel": "(challenge_id:U64)",
 		"saw_nodes": "(node_ids:[U64])",

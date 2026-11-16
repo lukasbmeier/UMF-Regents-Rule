@@ -971,6 +971,13 @@ pub fn rally_self_heal(heal: f32, others_near: usize, self_share_pct: f64) -> f3
     if others_near == 0 { heal } else { heal * (self_share_pct.clamp(0.0, 100.0) / 100.0) as f32 }
 }
 
+/// WHETHER A RALLYING HIT HEALS (S1, areas that hit all): once a swing, however many bodies it lands on. `swing_at_us`:
+/// when the swing it came from began (none: a hit with no swing kept, which always heals, as before); `last_us`: the
+/// swing its fighter's rally last healed from.
+pub fn rallies(swing_at_us: Option<i64>, last_us: Option<i64>) -> bool {
+    swing_at_us.is_none() || swing_at_us != last_us
+}
+
 /// When a guard press arriving at `arrived_us` (server micros) was made, ON THE SERVER'S CLOCK OF THE SWING
 /// THE PLAYER SAW: less its trip here (`credit_ms`, the foundation's: half the quickest round trip the server
 /// measured) and how late their client shows another's swing (`seen_delay_ms`: a swing's animation starts as

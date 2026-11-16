@@ -78,11 +78,11 @@
 		},
 		"shared/content/regents/ability.json": {
 			"count": 32,
-			"hash": "67f20602",
+			"hash": "f97eed73",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
-				"game/regents/content/ability/axe_cleave.tres": "af886adf",
+				"game/regents/content/ability/axe_cleave.tres": "4d1928ee",
 				"game/regents/content/ability/axe_heavy.tres": "f976c1b2",
 				"game/regents/content/ability/blink.tres": "abf6228b",
 				"game/regents/content/ability/bow_loose.tres": "7d47acb5",

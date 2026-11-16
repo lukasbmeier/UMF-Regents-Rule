@@ -3675,7 +3675,7 @@ fn deal(ctx: &ReducerContext, actor: u64, target: &crate::module::Entity, kit: &
             }
         }
         if let Some(rf) = kit.role_finisher(ability_id).filter(|r| r.heal > 0.0) {
-            if dummy.is_none() {
+            if dummy.is_none() && first_rally_of_swing(ctx, actor, ability_id) {
                 rally(ctx, actor, rf);
             }
         }
@@ -3720,10 +3720,36 @@ fn role_threat_pct(ctx: &ReducerContext, role: &rules::RoleSeed, foe: u64) -> f6
     rules::threat_pct(live, bosses_only, foe_seed_of(ctx, foe).is_some_and(|f| f.boss))
 }
 
+/// WHEN A FIGHTER'S RALLY LAST HEALED (S1, areas that hit all): the moment of the swing it came from (`Swing.at`), so a
+/// sweep that lands on several (the referee reports every body in it, `resolve_action_all`) heals once. Private.
+#[table(accessor = rallied)]
+pub struct Rallied {
+    #[primary_key]
+    pub entity_id: u64,
+    pub swing_at: Timestamp,
+}
+
+/// Whether this hit is the first of `actor`'s current swing of `ability_id` to rally (and marks it so). A hit with no
+/// swing row (a test's, a hit from before swings were kept) always rallies, as before.
+fn first_rally_of_swing(ctx: &ReducerContext, actor: u64, ability_id: u32) -> bool {
+    let Some(at) = ctx.db.swing().entity_id().find(actor).filter(|w| w.ability_id == ability_id).map(|w| w.at) else { return true };
+    let last = ctx.db.rallied().entity_id().find(actor);
+    if !rules::rallies(Some(micros(at)), last.as_ref().map(|r| micros(r.swing_at))) {
+        return false;
+    }
+    let row = Rallied { entity_id: actor, swing_at: at };
+    if last.is_some() {
+        ctx.db.rallied().entity_id().update(row);
+    } else {
+        ctx.db.rallied().insert(row);
+    }
+    true
+}
+
 /// THE RALLYING CUT LANDED (the sword's banner hilt; Luke 2026-11-01): it heals every other living player within
 /// `rf.heal_radius_m` of `actor` by `rf.heal`, and `actor` too: in full alone, its `regents.rally_self_share_pct`
-/// with players near. Each through their weapon's `healing_received` (Thirsting). Once a swing: a swing is judged
-/// to one hit (`resolve_action`); a sweep that lands on several (the axe's cleave, later) must heal once.
+/// with players near. Each through their weapon's `healing_received` (Thirsting). Once a swing, however many bodies
+/// it lands on (`first_rally_of_swing`).
 fn rally(ctx: &ReducerContext, actor: u64, rf: &rules::RoleFinisher) {
     let Some(me) = ctx.db.movement_state().entity_id().find(actor) else { return };
     // The players only (300 at most), not the world's every moving row.
@@ -4396,6 +4422,7 @@ impl crate::game::Genre for Regents {
     fn on_player_left(&self, ctx: &ReducerContext, entity_id: u64) {
         ctx.db.afk_work().entity_id().delete(entity_id);
         ctx.db.spell_landed().entity_id().delete(entity_id);
+        ctx.db.rallied().entity_id().delete(entity_id);
         stop_block(ctx, entity_id);
     }
 
