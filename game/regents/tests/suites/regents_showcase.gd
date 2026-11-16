@@ -72,6 +72,10 @@ func _run_world() -> void:
 	_check(worst > 0.05, "NEGATIVE: on the bowl the drawn ground is not the smooth shape (%.2f m apart at most)" % worst)
 	_check(w.get_node_or_null(^"Land") != null and w.get_node_or_null(^"Keep") != null and w.get_node_or_null(^"Camp") != null,
 		"the land, the keep and the camp are built")
+	# THE KEEP STANDS ON ITS HILL (Luke, 2026-11-15: it floated): under every wall, tower and the hall, all round its
+	# foot, the drawn ground is above the foot of it.
+	var gap: float = _keep_gap(w)
+	_check(gap < 0.0, "the keep's walls, towers and hall stand in the ground all round (the closest foot %.2f m under it)" % -gap)
 	var trees: int = 0
 	for k: String in w.placed:
 		if k.begins_with("CommonTree") or k.begins_with("TallThick") or k.begins_with("TwistedTree"):
@@ -90,35 +94,139 @@ func _run_world() -> void:
 	_check(w.sun.global_basis.z.normalized().distance_to(ShowcaseMood.sky_direction(w.mood.sun_elevation, w.mood.sun_azimuth)) < 0.01,
 		"the sun shines from where the mood puts it")
 	w.queue_free()
+	var sloped := ShowcaseWorld.new()
+	sloped.detail = 0.2
+	sloped.keep_flat_m = 0.0
+	sloped.mood = load("res://game/regents/showcase/moods/day.tres") as ShowcaseMood
+	add_child(sloped)
+	var sloped_gap: float = _keep_gap(sloped)
+	_check(sloped_gap > 1.0, "NEGATIVE: on the hill's round top with no flat, its walls hang %.1f m over the slope" % sloped_gap)
+	sloped.queue_free()
 	await get_tree().process_frame
+
+
+## How far the highest foot of the keep's walls, towers and hall stands over the drawn ground (m; below 0: in it).
+func _keep_gap(w: ShowcaseWorld) -> float:
+	var worst: float = -INF
+	for n: Node in w.get_node(^"Keep").get_children():
+		var mi: MeshInstance3D = n as MeshInstance3D
+		if mi == null:
+			continue
+		var feet: Array[Vector3] = []
+		var box: BoxMesh = mi.mesh as BoxMesh
+		var cyl: CylinderMesh = mi.mesh as CylinderMesh
+		if box != null and box.size.y >= 9.0:
+			for c: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1), Vector2(0, -1), Vector2(0, 1)]:
+				feet.append(mi.global_transform * Vector3(c.x * box.size.x * 0.5, -box.size.y * 0.5, c.y * box.size.z * 0.5))
+		elif cyl != null and cyl.height >= 9.0:
+			for k: int in range(12):
+				var a: float = TAU * float(k) / 12.0
+				feet.append(mi.global_transform * Vector3(cos(a) * cyl.bottom_radius, -cyl.height * 0.5, sin(a) * cyl.bottom_radius))
+		for f: Vector3 in feet:
+			worst = maxf(worst, f.y - w.ground_at(f.x, f.z))
+	return worst
 
 
 func _run_actor() -> void:
-	var a: ShowcaseActor = ShowcaseActor.make(ADVENTURER, 4, SWORD)
-	add_child(a)
+	var a: ShowcaseActor = _actor(ADVENTURER, SWORD, null)
 	_check(a.model != null and a.skeleton != null, "an actor wears its look")
 	_check(a.held != null, "and holds its sword")
+	_check(a.driver.animation_tree() != null and a.driver.is_bound(), "the game's animation driver poses it, on the generated tree")
 	_check(a.playing() == &"locomotion.idle", "it stands idle at first")
+	# A swing plays IN PLACE (Luke, 2026-11-15: the attacks carried the body off and back): the set's root travel is
+	# taken out, as the game's driver takes it. Measured on the root bone, and the measure proved on a tree without.
+	_check(a.driver.animation_tree().root_motion_track == NodePath("Skeleton3D:root"), "its swings' root travel is taken out, as in the game")
 	var took: float = a.act(&"ability.40001")
 	_check(took > 0.1 and a.playing() == &"ability.40001", "a swing plays once (%.2f s)" % took)
-	a._process(took + 0.05)
+	var drift: float = _root_drift(a, took)
+	_check(drift < 0.05, "and its body stays where it stands through it (the root moved %.3f m)" % drift)
 	_check(a.playing() == &"locomotion.idle", "then it goes back to idle")
+	var b: ShowcaseActor = _actor(ADVENTURER, SWORD, null)
+	b.driver.animation_tree().root_motion_track = NodePath()
+	b.act(&"ability.40005")
+	var b_drift: float = _root_drift(b, b.clip_length(&"ability.40005"))
+	a.act(&"ability.40005")
+	var a2: float = _root_drift(a, a.clip_length(&"ability.40005"))
+	_check(b_drift > 0.2 and a2 < 0.05, "NEGATIVE: a lunge with the root travel left in carries the body %.2f m (in the game's way %.3f m)" % [b_drift, a2])
+	b.queue_free()
+	# Its recovery follows the strike, as the game's swing does (`CombatComponent._plan_recovery`).
+	a.act(&"ability.40001")
+	_steps(a, a.clip_length(&"ability.40001") - 0.05)
+	_check(a.driver.action_clip() == a.definition.animation_set.clip(&"recover.40001").anim_name,
+		"the swing's recovery is cross-faded in as its strike ends (%s)" % a.driver.action_clip())
+	_steps(a, 1.0)
 	_check(a.act(&"ability.99999") == 0.0 and a.playing() == &"locomotion.idle", "NEGATIVE: a clip its set has not is refused")
+	# A ranged player's shot is on the arms, the legs free; a foe's cast is its whole body, its tell then its release.
+	a.act(&"ability.40012")
+	a.step(1.0 / 60.0)
+	_check(a.driver.upper_playing() and not a.driver.action_playing(), "a player's spell is released on the arms")
+	var imp: ShowcaseActor = _actor(load("res://game/regents/content/character/imp.tres") as EntityDefinition, null,
+		load("res://game/regents/content/foe/imp.tres") as FoeDef)
+	var tell: float = imp.act(&"ability.40032")
+	var tell_clip: StringName = imp.driver.action_clip()
+	_steps(imp, tell + 0.05)
+	var release_clip: StringName = imp.driver.action_clip()
+	_check(absf(tell - 1.0) < 0.05 and tell_clip == &"Spell_Simple_Idle" and release_clip == &"Spell_Simple_Shoot",
+		"the imp's ember: its cast clip for its 1 s tell (%.2f s, %s), then its release (%s)" % [tell, tell_clip, release_clip])
+	imp.queue_free()
 	a.act(&"react.death", true)
-	a._process(5.0)
-	_check(a._holding and a._once_left <= 0.0, "a death is held on its last frame")
+	_steps(a, 3.0)
+	_check(a._holding and a.driver.current_state() == AnimationTreeBuilder.STATE_DEAD, "a death is held down")
 	a.play(&"locomotion.idle")
-	_check(not a._holding, "until it is told to play again")
+	_steps(a, 0.2)
+	_check(not a._holding and a.driver.current_state() != AnimationTreeBuilder.STATE_DEAD, "until it is told to play again")
+	# It walks by the game's movement: its config's walk, braking to a stop where it was sent, on the ground.
 	a.ground = func(x: float, _z: float) -> float: return x * 0.1
-	a.position = Vector3.ZERO
-	a.walk_to(Vector3(4.0, 0.0, 0.0), 2.0)
+	a.walk_to(Vector3.ZERO, 0.0)
+	a.walk_to(Vector3(4.0, 0.0, 0.0), 1.5)
 	_check(a.moving() and a.playing() == &"locomotion.walk", "a walk plays the walk")
-	for i: int in range(30):
-		a._process(0.1)
-	_check(not a.moving() and a.position.distance_to(Vector3(4.0, 0.4, 0.0)) < 0.01,
-		"and ends where it was sent, on the ground (%s)" % a.position)
+	a.step(1.0 / 60.0)
+	var first: float = a.movement.now_state().vel.length()
+	_steps(a, 1.5)
+	var cruise: float = Vector2(a.movement.now_state().vel.x, a.movement.now_state().vel.z).length()
+	var walk: float = ADVENTURER.movement_config().walk_speed
+	_check(first < cruise and absf(cruise - walk) < 0.05 and a.driver.speed_blend() > 0.05,
+		"it gets going as the movement model does (%.2f then %.2f m/s, its walk %.2f) and its legs follow (%.2f)" % [first, cruise, walk, a.driver.speed_blend()])
+	_steps(a, 4.0)
+	_check(not a.moving() and a.position.distance_to(Vector3(4.0, 0.4, 0.0)) < 0.1 and a.driver.speed_blend() < 0.05,
+		"and stops where it was sent, on the ground (%s)" % a.position)
+	var at_rest: Vector3 = a.position
+	a.position += Vector3(0.0, 0.0, 3.0)
+	_steps(a, 0.1)
+	_check(a.position.distance_to(at_rest + Vector3(0.0, 0.0, 3.0)) < 0.05, "a body moved from outside (a blink) stays where it was put")
 	a.queue_free()
 	await get_tree().process_frame
+
+
+## An actor in the suite, stepped by hand (`step`): its own clock and its pose's.
+func _actor(def: EntityDefinition, weapon: PackedScene, foe: FoeDef) -> ShowcaseActor:
+	var a: ShowcaseActor = ShowcaseActor.make(def, 0 if foe != null else 4, weapon, foe)
+	add_child(a)
+	a.set_process(false)
+	a.driver.set_process(false)
+	a.step(0.0)
+	return a
+
+
+func _steps(a: ShowcaseActor, seconds: float) -> void:
+	var t: float = 0.0
+	while t < seconds:
+		a.step(1.0 / 60.0)
+		t += 1.0 / 60.0
+
+
+## How far its root bone wanders from where it stood, flat, over `seconds` of a clip (m).
+func _root_drift(a: ShowcaseActor, seconds: float) -> float:
+	var root: int = a.skeleton.find_bone(&"root")
+	var start: Vector3 = a.skeleton.to_global(a.skeleton.get_bone_global_pose(root).origin)
+	var most: float = 0.0
+	var t: float = 0.0
+	while t < seconds:
+		a.step(1.0 / 60.0)
+		t += 1.0 / 60.0
+		var p: Vector3 = a.skeleton.to_global(a.skeleton.get_bone_global_pose(root).origin)
+		most = maxf(most, Vector2(p.x - start.x, p.z - start.z).length())
+	return most
 
 
 func _run_shot() -> void:
@@ -181,10 +289,13 @@ func _run_battle_beats(lab: BattleLab) -> void:
 		lab._paused = true
 		if not outcomes.has(s.beat):
 			continue
+		for a: ShowcaseActor in lab._all:
+			a.set_process(false)
+			a.driver.set_process(false)
 		for k: int in range(int(s.seconds * s.time_scale / 0.1) + 30):
 			lab._process(0.1 * Engine.time_scale)
 			for a: ShowcaseActor in lab._all:
-				a._process(0.1)
+				a.step(0.1)
 			# The effects keep their own clocks (a missile lands on its own): stepped with the rest.
 			for fx: Variant in lab._spawned.duplicate():
 				if is_instance_valid(fx) and fx is VfxEffect:
@@ -220,7 +331,51 @@ func _run_login() -> void:
 	await get_tree().process_frame
 	_check(not screen.has_picture(), "hidden again (the game began), the valley is freed")
 	_check(screen._viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED, "and its view stops drawing")
+	_check(screen.get_node_or_null("Headline/Tagline") == null, "the name stands alone (no tagline)")
 	screen.queue_free()
+	# THE TITLE CARD (Luke, 2026-11-15: "card first"): the name and one Play button in the title's letters; Play opens
+	# the form.
+	var card: RegentsLogin = (load("res://game/regents/ui/login/regents_login.tscn") as PackedScene).instantiate() as RegentsLogin
+	_check(card.title_card, "the game's login opens on the title card")
+	add_child(card)
+	await get_tree().process_frame
+	card.open("127.0.0.1", "Tester", false)
+	await get_tree().process_frame
+	var play: Button = card.get_node_or_null("Play") as Button
+	var title: Label = card.get_node_or_null("Headline/GameTitle") as Label
+	_check(card.showing_card() and not (card.get_node("Center") as Control).visible and play != null and play.visible,
+		"the title card shows only the Play button, no form")
+	_check(play != null and title != null and play.get_theme_font(&"font") == title.get_theme_font(&"font"),
+		"in the title's letters")
+	play.pressed.emit()
+	await get_tree().process_frame
+	_check(not card.showing_card() and (card.get_node("Center") as Control).visible, "Play opens the form")
+	card.visible = false
+	await get_tree().process_frame
+	card.open("127.0.0.1", "Tester", false, "Lost the connection", true)
+	await get_tree().process_frame
+	_check(not card.showing_card(), "NEGATIVE: once played, the screen coming back (a lost connection) shows the form, not the card")
+	card.queue_free()
+	# Connecting by itself (auto-connect, `--host`): the card steps aside, so its status is seen.
+	var auto: RegentsLogin = (load("res://game/regents/ui/login/regents_login.tscn") as PackedScene).instantiate() as RegentsLogin
+	add_child(auto)
+	await get_tree().process_frame
+	auto.open("127.0.0.1", "Tester", true)
+	await get_tree().process_frame
+	_check(auto.showing_card(), "the card shows while nothing is connecting")
+	auto._mode = ConnectScreen.Mode.CONNECTING
+	await get_tree().process_frame
+	_check(not auto.showing_card() and (auto.get_node("Center") as Control).visible, "connecting by itself puts the form (its status) up")
+	auto._mode = ConnectScreen.Mode.FORM
+	auto.queue_free()
+	var formed: RegentsLogin = (load("res://game/regents/ui/login/regents_login.tscn") as PackedScene).instantiate() as RegentsLogin
+	formed.title_card = false
+	add_child(formed)
+	await get_tree().process_frame
+	formed.open("127.0.0.1", "Tester", false)
+	await get_tree().process_frame
+	_check(not formed.showing_card() and (formed.get_node("Center") as Control).visible, "NEGATIVE: with the card off, the form at once")
+	formed.queue_free()
 	var plain: RegentsLogin = (load("res://game/regents/ui/login/regents_login.tscn") as PackedScene).instantiate() as RegentsLogin
 	plain.live_backdrop = false
 	add_child(plain)

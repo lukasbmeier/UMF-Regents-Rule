@@ -1,8 +1,9 @@
 extends Node
-## THE LOGIN SCREEN, SHOT (2026-11-15; windowed, no server): Regent's Rule's front door as a player first sees it, the
-## form open over the live valley. Saves `<out>/login.png` after it settles, then quits; with `seconds` it runs that
-## long first (for the movie writer: the drifting picture behind the form).
-##   godot --path . --resolution 1920x1080 res://game/regents/tests/login_shot.tscn -- <out dir> [seconds]
+## THE LOGIN SCREEN, SHOT (2026-11-15; windowed, no server): Regent's Rule's front door over the live valley, as its
+## title card (the name and one Play button: Luke, 2026-11-15, the composers' film shows no form), or with `form` the
+## form open. Saves `<out>/login.png` after it settles, then quits; with `seconds` it runs that long first (for the
+## movie writer: the drifting picture).
+##   godot --path . --resolution 1920x1080 res://game/regents/tests/login_shot.tscn -- <out dir> [seconds] [form]
 
 const LOGIN: PackedScene = preload("res://game/regents/ui/login/regents_login.tscn")
 
@@ -12,6 +13,7 @@ func _ready() -> void:
 	var out_dir: String = args[0] if args.size() > 0 else "user://"
 	var seconds: float = float(args[1]) if args.size() > 1 else 2.5
 	var screen: RegentsLogin = LOGIN.instantiate() as RegentsLogin
+	screen.title_card = not (args.size() > 2 and args[2] == "form")
 	add_child(screen)
 	screen.open("", "", false)
 	await get_tree().create_timer(seconds).timeout

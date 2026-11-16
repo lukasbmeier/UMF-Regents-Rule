@@ -66,7 +66,7 @@ fi
 	echo "Regent's Rule: pictures and films for the music ($(date +%Y-%m-%d))."
 	echo "Made in the game's engine with its own models and effects; no sound."
 	echo
-	echo "login        the title screen: the valley at dusk behind the sign-in form (main theme)"
+	echo "login        the title screen: the name and Play over the valley at dusk (main theme)"
 	for lab in vista battle; do
 		n=0
 		while IFS= read -r title; do

@@ -687,10 +687,14 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   have ... build a few labs that can really showcase the visuals ... and then a few still or short videos of combat"):
   built in PROGRESS 84. Press Play: the form over the valley at dusk (`RegentsLogin`); the vista and battle labs
   (`game/regents/showcase/`); the composers' pictures and films by `showcase_render.sh` into `export/showcase/`. The
-  forest's colors, the moods, the keep and the login's words are the agent's first pass: his to change.
+  forest's colors, the moods, the keep and the login's words are the agent's first pass: his to change. His notes
+  (2026-11-15, PROGRESS 86): the showcase's people move and fight by the game's own movement and animation (never set
+  by hand); the keep stands on its hill; NO TAGLINE; the composers' login film is a TITLE CARD (the name and one Play
+  button in the title's letters, no form), and the GAME opens on it too ("card first": Play opens the form; connecting
+  by itself, auto-connect or `--host`, puts the form up).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
-A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the login screen (the valley at dusk behind the form, PROGRESS 84), then the frontier glade (level 20):
+A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the login screen (the name and PLAY over the valley at dusk; PLAY opens the form; PROGRESS 84, 86), then the frontier glade (level 20):
 trees (Tree, Oak, Yew), copper, iron and coal rocks, and a camp with a furnace, an anvil, a workbench and an order board.
 Gather (woodcutting, mining), smelt, smith and craft your way from a log to an **Iron axe**, then an iron
 pickaxe for coal and **steel** (the ladder: copper, iron, steel; `MATERIALS.md`, the material table): at a node or a

@@ -42,6 +42,9 @@ const WATER_SHADER: Shader = preload("res://game/regents/showcase/showcase_water
 @export_group("The land")
 ## The keep on its hill, and the lake (x, z) and its radius (m).
 @export var keep_at: Vector2 = Vector2(-62.0, -128.0)
+## The keep's hilltop is flat this far round it (m): its walls (17 m out) and towers stand on it, never over a slope
+## (Luke, 2026-11-15: the keep floated). It falls away to the hill's sides over the next 16 m.
+@export_range(0.0, 60.0, 0.5, "suffix:m") var keep_flat_m: float = 24.0
 @export var lake_at: Vector2 = Vector2(48.0, -62.0)
 @export_range(5.0, 120.0, 1.0, "suffix:m") var lake_radius: float = 34.0
 @export var water_y: float = -1.4
@@ -141,8 +144,8 @@ func height_at(x: float, z: float) -> float:
 	var k: float = Vector2(x, z).distance_to(keep_at)
 	if k < 70.0:
 		h = maxf(h, 21.0 * exp(-pow(k / 34.0, 2.0)))
-	if k < 12.0:
-		h = lerpf(h, 21.0, 1.0 - k / 12.0)
+	if k < keep_flat_m + 16.0:
+		h = lerpf(h, KEEP_TOP_M, 1.0 - smoothstep(keep_flat_m, keep_flat_m + 16.0, k))
 	# The lake's bowl.
 	var l: float = Vector2(x, z).distance_to(lake_at)
 	var bowl: float = 1.0 - smoothstep(lake_radius * 0.55, lake_radius * 1.25, l)
@@ -253,6 +256,13 @@ func _build_water() -> void:
 
 ## The regent's keep: a curtain wall and its towers, the keep in the middle, battlements, roofs, lit windows. Stone
 ## blocks and cones only; it is seen from far off.
+## The keep's hilltop height (m).
+const KEEP_TOP_M: float = 21.0
+## How far every wall, tower and the hall go on down into the hill below the keep's floor (m): no gap shows under one
+## where the drawn ground dips between its points.
+const KEEP_FOOTING_M: float = 3.0
+
+
 func _build_keep() -> void:
 	var root := Node3D.new()
 	root.name = "Keep"
@@ -281,7 +291,7 @@ func _build_keep() -> void:
 		var span: float = p.distance_to(q)
 		var dir: Vector3 = (q - p).normalized()
 		var along: float = atan2(-dir.z, dir.x)
-		_block(root, (p + q) * 0.5 + Vector3(0.0, 4.5, 0.0), Vector3(span, 9.0, 2.2), along, stone)
+		_block(root, (p + q) * 0.5 + Vector3(0.0, (9.0 - KEEP_FOOTING_M) * 0.5, 0.0), Vector3(span, 9.0 + KEEP_FOOTING_M, 2.2), along, stone)
 		var outward: Vector3 = ((p + q) * 0.5).normalized()
 		var steps: int = int(span / 1.6)
 		for s: int in range(1, steps):
@@ -291,7 +301,7 @@ func _build_keep() -> void:
 			_block(root, at, Vector3(0.9, 1.0, 0.6), along, stone)
 		_tower(root, p, 3.2, 13.0 + float(i % 2) * 3.0, stone, roof)
 	# The keep and its high tower.
-	_block(root, Vector3(0.0, 9.0, 0.0), Vector3(12.0, 18.0, 10.0), 0.3, stone)
+	_block(root, Vector3(0.0, (18.0 - KEEP_FOOTING_M) * 0.5, 0.0), Vector3(12.0, 18.0 + KEEP_FOOTING_M, 10.0), 0.3, stone)
 	_tower(root, Vector3(4.5, 0.0, -3.0), 3.0, 30.0, stone, roof)
 	var hall_roof := MeshInstance3D.new()
 	var prism := PrismMesh.new()
@@ -345,11 +355,11 @@ func _tower(parent: Node3D, at: Vector3, radius: float, height: float, stone: Ma
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = radius
 	cyl.bottom_radius = radius * 1.08
-	cyl.height = height
+	cyl.height = height + KEEP_FOOTING_M
 	cyl.radial_segments = 16
 	body.mesh = cyl
 	body.material_override = stone
-	body.position = at + Vector3(0.0, height * 0.5, 0.0)
+	body.position = at + Vector3(0.0, (height - KEEP_FOOTING_M) * 0.5, 0.0)
 	parent.add_child(body)
 	var lip := MeshInstance3D.new()
 	var ring := CylinderMesh.new()

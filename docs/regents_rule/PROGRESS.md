@@ -4726,3 +4726,57 @@ windowed shots of both scenes, day, dusk and night.
 **Left for later** (SETTLEMENTS_PREP §8): FURNISHING with the Fantasy Props kit once Luke okays the look ("once i
 okay the test Ill want to see how eveything furnishes"); a saved bake of merged buildings and far LODs; the village
 kit's own small props; interiors (S7); the ground is a stand-in.
+
+## Step 86: THE SHOWCASE, LUKE'S NOTES ON THE FILMS (2026-11-15)
+
+Luke, on the first films: "the movement is unnatural and jumpy. It looks like instead of using the movement we have
+in game you manually are setting position. The attack animations also look like they are using IK and moving the
+characters when playing"; "the login .ogv should not have the connect play ui, just a Play button that matches the
+title font. we can get rid of the subtitle ... and the imp doesnt seem to be using any casting animations"; "the castle
+is also floating".
+
+**What was wrong, measured**: the first `ShowcaseActor` slid its body at a set speed (no getting going, no braking,
+its legs one clip whatever the speed) and played raw clips on a two-clip crossfade. The adventurer's set takes the
+swings' root travel out (`root_motion_bone = root`); the showcase's tree never did, so a Lunge carried the body 2.2 m
+and snapped it back (the suite measures it). The imp's cast is TWO clips in the game, its tell (`ability.40032`, the
+spell idle for its 1 s wind-up) then its release (`recover.40032`, cross-faded in by `CombatComponent._plan_recovery`);
+the lab played only the tell, which looks like standing. The keep's walls stood on the round top of a hill that falls
+4 m from its middle to its walls.
+
+**Built**:
+- `ShowcaseActor` is now a `SpaceTimeEntity` built in code from the game's own parts, never bound to a row:
+  `ShowcaseMovement` (NEW, a `SpaceTimeMovementComponent` that steps the game's `MovementModel` with the character's
+  movement config at the game's tick, drawn between ticks, standing on the showcase's land) and the game's
+  `AnimationDriverComponent` on the generated tree (the speed blend, the model easing round, the root travel out, two
+  action slots, the hit, the fall, held poses on the body or the arms). It is told as a player's keys would tell it:
+  `walk_to` steers (walk, run or sprint by the speed asked; it brakes to stop there), `roll` is the dodge's dash and
+  clip (`RollComponent`'s way), `act` shows a swing as `CombatComponent._began` does (held to its hit, then its
+  recovery), a ranged player's shot or cast's release on the arms (`play_upper`), a foe's every move on the whole
+  body. A hit, a fall, a getting up go through an unbound `SpaceTimeHealthComponent`'s signals, as the game's do. The
+  driver's commit and face-motion timers run on the wall clock; the actor refreshes them on the stage's clock so a
+  slowed shot or a film rendered slower than real time keeps them. A body moved from outside (a Blink carries its
+  caster) is put there.
+- The battle lab: the game's roll goes its own way (~5 m), so the hero closes again with the Lunge (`lunge`); the fire
+  beat begins with the imp's ember (its tell with a glint in its hand, the release, the slow bolt; the mage steps
+  aside), then its ring later; the fire shot reframed side-on; shots lengthened (Steel 12.5, Fire 11.5, Pack 10, The
+  line 13.5 s). The vista: the deer walk a few steps and stop on the bank (at their real walk they waded in).
+- The keep: a flat hilltop out to `keep_flat_m` (24 m, an export) falling to the hill over 16 m, and every wall,
+  tower and the hall going 3 m on into the ground (`KEEP_FOOTING_M`).
+- The login: no tagline (`tagline` empty: none); a TITLE CARD (`title_card`, off in the game): the name and one PLAY
+  button in the title's letters, the form when it is pressed. `login_shot.tscn` shows the card (`form` as a third
+  argument shows the form), so the composers' still and film have no form.
+
+**Tested**: `regents_showcase` 120/0. New: the game's driver poses it; its swings' root travel is out and the body
+stays put through a swing (NEGATIVE: with the root travel left in, a Lunge carries it 2 m+); the recovery follows the
+strike; a player's spell on the arms; the imp's 1 s tell then its release; the walk at the config's speed, getting
+going then stopping on the ground, its legs' blend following; a body moved from outside stays; the keep stands in the
+ground all round (NEGATIVE: with no flat top its walls hang over 1 m above the slope); the title card shows only Play
+in the title's font, Play opens the form (NEGATIVE: once played, a lost connection shows the form). The look: PNG
+frame strips (10 fps) of Steel, Fire and frost, The pack, A traveler arrives and The lake at dawn, looked at.
+
+**Then Luke: "card first"**: the GAME's login opens on the title card too (`title_card` on by default; Play opens the
+form); connecting by itself (auto-connect, a `--host` launch) puts the form up so its status is seen. `regents_showcase`
+124/0 (new: the card by default, connecting puts the form up, NEGATIVE: the card off shows the form at once; a
+mutation taking the step-aside out fails its check).
+
+**Left for later**: the deer still have no graze clip.

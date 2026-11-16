@@ -140,7 +140,9 @@ paths:
   picture, the vista and battle labs, the composers' renders), never the game's world: no server, no collision, no
   bake, and it never reads the continent. Made in code or from the CC0 kits like everything else. A lab's shots are
   its scene's `ShowcaseShot`s and a battle's beats are timelines of the game's own clips and `VfxEffect`s (never a
-  look of its own). The login (`RegentsLogin`) stays the foundation's `ConnectScreen` dressed: a change to the form
+  look of its own). Its people are `ShowcaseActor`s: the game's `MovementModel` (`ShowcaseMovement`) and
+  `AnimationDriverComponent`, told as keys and the combat component would tell them (Luke, 2026-11-15, PROGRESS 86):
+  never set a body's position or play a raw clip by hand. The login (`RegentsLogin`) stays the foundation's `ConnectScreen` dressed: a change to the form
   is the template's; its valley is built only while it shows (the `regents_showcase` suite checks it is freed).
 - THE WARDROBE (PROGRESS 81, `docs/regents_rule/WARDROBE.md`): an outfit piece is a `<Male|Female>_<Outfit>_<Part>.gltf`
   in one of `Wardrobe.PIECE_DIRS` (found by name, never listed); an outfit's colors come from the DYE

@@ -135,12 +135,19 @@ func parried(who: ShowcaseActor, id: int, by: ShowcaseActor) -> void:
 	after(hit + 0.25, func() -> void: by.play(&"locomotion.idle"))
 
 
-## `who` rolls `side_m` to its right (negative: left) in half a second.
-func roll(who: ShowcaseActor, side_m: float) -> void:
-	who.act(&"ability.40010")
-	var right: Vector3 = who.global_basis.x.normalized()
-	var to: Vector3 = who.position + right * side_m
-	who.walk_to(to, absf(side_m) / 0.5)
+## `who` rolls to its right (`side` > 0) or left: the game's dodge roll, its dash and its length.
+func roll(who: ShowcaseActor, side: float) -> void:
+	var f: Vector3 = who.facing()
+	who.roll(Vector3(-f.z, 0.0, f.x) * signf(side))
+
+
+## `who` closes on `target` with a lunging swing `id` (its dash and its clip held whole), stopping a blade's reach short.
+func lunge(who: ShowcaseActor, id: int, target: ShowcaseActor, react: StringName = &"react.stagger") -> void:
+	who.face(target.global_position, true)
+	swing(who, id, target, react)
+	var back: Vector3 = who.global_position - target.global_position
+	back.y = 0.0
+	who.walk_to(target.global_position + back.normalized() * 1.1, 8.0, true)
 
 
 ## A shot of `look` (a `ShotLook` scene) from `from` to `to` at `speed` m/s; `done` when it lands.
@@ -193,13 +200,14 @@ func steel() -> void:
 	after(6.3, func() -> void:
 		axeman.face(hero.global_position, true)
 		axeman.act(&"ability.40020"))
-	after(6.75, func() -> void: roll(hero, -2.4))
-	after(7.6, func() -> void:
+	after(6.75, func() -> void: roll(hero, -1.0))
+	# The roll carries it clear (the game's dash): it closes again with the Lunge.
+	after(8.25, func() -> void: lunge(hero, 40005, axeman))
+	after(9.1, func() -> void:
 		hero.face(axeman.global_position, true)
-		swing(hero, 40005, axeman, &"react.stagger"))
-	after(8.5, func() -> void: swing(hero, 40001, axeman))
-	after(9.15, func() -> void: swing(hero, 40002, axeman))
-	after(9.9, func() -> void: swing(hero, 40023, axeman, &"react.death", true))
+		swing(hero, 40001, axeman))
+	after(9.75, func() -> void: swing(hero, 40002, axeman))
+	after(10.5, func() -> void: swing(hero, 40023, axeman, &"react.death", true))
 
 
 ## The finisher alone, close, for a slowed shot.
@@ -214,26 +222,41 @@ func finisher() -> void:
 func fire(o: Vector3 = Vector3.ZERO) -> void:
 	_place(mage, o + Vector3(-3.0, 0.0, 4.0), o + Vector3(3.0, 0.0, -4.0))
 	_place(imp, o + Vector3(3.0, 0.0, -4.0), o + Vector3(-3.0, 0.0, 4.0))
-	after(0.3, func() -> void: fireball(mage, imp, func() -> void: imp.act(&"react.stagger")))
-	after(2.4, func() -> void:
+	# The ember: its tell (the cast clip, a glint in its hand) for its wind-up, then the release and the slow bolt;
+	# the mage steps aside and it burns out on the grass behind.
+	var ember_s: float = imp.act(&"ability.40032")
+	charge("fire_charge", imp, [&"hand_r"], 0.14, _chest(mage), ember_s)
+	after(ember_s, func() -> void:
+		var aim: Vector3 = _chest(mage)
+		var from: Vector3 = cast_point(imp, [&"hand_r"], 0.3, aim)
+		var past: Vector3 = mage.global_position + (mage.global_position - imp.global_position).normalized() * 5.0
+		past.y = world.ground_at(past.x, past.z) + 0.2
+		var bolt: VfxFireMissile = spawn_fx("fire_missile", from, Vector3.INF, past) as VfxFireMissile
+		bolt.arrived.connect(func(where: Variant) -> void: spawn_fx("fire_blast", where as Vector3, Vector3.INF)))
+	after(ember_s + 0.2, func() -> void:
+		var f: Vector3 = mage.facing()
+		mage.walk_to(mage.global_position + Vector3(-f.z, 0.0, f.x) * 1.6, 5.0))
+	after(ember_s + 1.0, func() -> void: fireball(mage, imp, func() -> void: imp.act(&"react.stagger")))
+	# The ring: its quicker tell, the ring filling under the mage, a blink out of it.
+	after(4.3, func() -> void:
 		imp.face(mage.global_position, true)
 		imp.act(&"ability.40033")
 		spawn_fx("cinder_ring", mage.global_position, Vector3.INF))
-	after(3.3, func() -> void:
+	after(5.2, func() -> void:
 		var to: Vector3 = ARENA + o + Vector3(-6.2, 0.0, 0.6)
 		to.y = world.ground_at(to.x, to.z)
 		mage.act(&"ability.40012")
 		spawn_fx("blink", mage.global_position, to, to, mage))
-	after(4.4, func() -> void:
+	after(6.3, func() -> void:
 		mage.face(imp.global_position, true)
 		mage.play(&"pose.spell_channel")
 		charge("frost_charge", mage, [&"hand_l", &"hand_r"], 0.2, _chest(imp), 1.0))
-	after(5.4, func() -> void:
+	after(7.3, func() -> void:
 		mage.play(&"locomotion.idle")
 		mage.act(&"ability.40014")
-		spawn_fx("frost_ring", imp.global_position + Vector3(0.0, 0.0, 0.0), Vector3.INF))
-	after(6.3, func() -> void: imp.act(&"react.hit"))
-	after(7.4, func() -> void: fireball(mage, imp, func() -> void: imp.act(&"react.death", true)))
+		spawn_fx("frost_ring", imp.global_position, Vector3.INF))
+	after(8.2, func() -> void: imp.act(&"react.hit"))
+	after(9.2, func() -> void: fireball(mage, imp, func() -> void: imp.act(&"react.death", true)))
 
 
 ## Arrows: the skeleton archer's shot rolled clear, two answered; it falls to the second.
@@ -277,19 +300,21 @@ func pack() -> void:
 	after(1.9, func() -> void:
 		wolves[0].face(hero.global_position, true)
 		wolves[0].act(&"ability.40029")
-		wolves[0].walk_to(ARENA + Vector3(-0.9, 0.0, -0.6), 7.0))
-	after(2.05, func() -> void: roll(hero, 2.2))
-	after(2.9, func() -> void:
+		wolves[0].walk_to(ARENA + Vector3(-0.9, 0.0, -0.6), 7.0, true))
+	after(2.05, func() -> void: roll(hero, 1.0))
+	after(3.5, func() -> void: lunge(hero, 40005, wolves[0], &"react.hit"))
+	after(4.3, func() -> void:
 		hero.face(wolves[0].global_position, true)
-		swing(hero, 40001, wolves[0]))
-	after(3.6, func() -> void: swing(hero, 40002, wolves[0], &"react.stagger"))
-	after(4.0, func() -> void: wolves[1].walk_to(hero.position + Vector3(1.4, 0.0, -1.0), 5.0))
-	after(4.9, func() -> void:
+		swing(hero, 40002, wolves[0], &"react.stagger"))
+	after(4.4, func() -> void:
+		var f: Vector3 = hero.facing()
+		wolves[1].walk_to(hero.global_position + Vector3(-f.z, 0.0, f.x) * 1.5, 5.0))
+	after(5.4, func() -> void:
 		wolves[1].face(hero.global_position, true)
 		hero.face(wolves[1].global_position, true)
 		parried(wolves[1], 40027, hero))
-	after(5.8, func() -> void: swing(hero, 40023, wolves[1], &"react.death", true))
-	after(6.9, func() -> void:
+	after(6.3, func() -> void: swing(hero, 40023, wolves[1], &"react.death", true))
+	after(7.3, func() -> void:
 		hero.face(wolves[0].global_position, true)
 		swing(hero, 40003, wolves[0], &"react.death", true))
 

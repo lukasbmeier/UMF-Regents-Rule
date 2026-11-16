@@ -1,11 +1,15 @@
-# Handoff — Regent's Rule, 2026-11-15 (steps 78-85: the VFX, the wardrobe, the showcase and login, the towns)
+# Handoff — Regent's Rule, 2026-11-15 (steps 78-86: the VFX, the wardrobe, the showcase and login, the towns)
 
 ## Where it stands
-- EVERYTHING IS COMMITTED on `main` (NOT PUSHED: Luke pushes). On top of `27a8fc7b` (step 77) and the template 1.8.2
+- EVERYTHING IS COMMITTED on `main` and PUSHED to `origin` (2026-11-15). On top of `27a8fc7b` (step 77) and the template 1.8.2
   merge `e87eae25`: `ddbb2850` the towns (step 85), `2031e982` the wardrobe (step 81), `c8aa439f` steps 78-83 (the
   VFX) and the AI asset audit, then the commit holding step 84 (the showcase and login) and this HANDOFF.
   `addons/SpacetimeDB/plugin_config.tres` stays out of every commit, as before.
-- Current section in `docs/regents_rule/PROGRESS.md`: **Step 85** (the towns); 78-84 just above it (81 the wardrobe).
+- STEP 86 (Luke's notes on the showcase films) is NOT COMMITTED: `game/regents/showcase/` (the actor on the game's
+  movement and driver, NEW `showcase_movement.gd`, the battle and vista beats, the keep), `ui/login/regents_login.gd`
+  (title card, on in the game too, no tagline), `tests/login_shot.gd`, the `regents_showcase` suite, PROGRESS 86, GAME.md, the genre rule.
+  The village textures' `.import` files also show changed (reimported as 3D at 18:26): NOT this session's.
+- Current section in `docs/regents_rule/PROGRESS.md`: **Step 86** (the showcase notes); 85 the towns, 78-84 above.
 - The play database: PUBLISHED 2026-11-15 with `--codegen` (step 83's NEW table `spell_landed`, add-only; 63 tables).
   Steps 81, 84 and 85 are client-only: no publish. Luke restarts the editor's game (and reloads `adventurer.tscn`,
   `foe.tscn`, `regents_game.tscn`) before he plays; the first open imports the village kit (~86 MB).
@@ -32,8 +36,11 @@
   battle labs, the login's backdrop), NEW `game/regents/ui/login/` (`RegentsLogin`, an inherited scene of the
   foundation's connect screen, named by Boot's `connect_screen` in `regents_game.tscn`), `showcase_render.sh`,
   `login_shot.tscn`. Renders for the composers in `export/showcase/2026-11-15/` (git-ignored): 17 stills (1920x1080),
-  17 `.ogv` films (login 40 s, 9 vista, 7 battle; ~255 MB), `index.txt`. Re-make:
+  17 `.ogv` films, `index.txt`. Re-make:
   `tools\run.cmd game\regents\tests\showcase_render.sh`.
+- Showcase, step 86 (Luke's notes): its people move and fight by the game's `MovementModel` and animation driver
+  (the swings' root travel out, recoveries, the roll's dash); the imp casts (tell, release, ember); the keep stands on
+  a flat hilltop with footings; the login film is a title card (Play in the title's letters), no tagline. Re-rendered.
 - AI asset audit: `docs/regents_rule/AI_ASSET_AUDIT.md`; Luke's rule NO AI DISCLOSURE (`GAME.md`, `regents-genre.md`).
 - Towns, step 85: the Medieval Village kit (`game/regents/art/village/`, CC0), the town dye and `SettlementStyle`
   (eight presets), `KitHouse`, `CastleWall`, `Settlement`; `town_world.tscn` (village, walled market town, castle in
@@ -55,8 +62,8 @@
 ## Waiting on Luke
 - The effects in play (two instances for others' Gale and its pose).
 - The towns: the look of the world and the lab, then "how everything furnishes"; S1-S8 in `SETTLEMENTS_PREP.md` §7.
-- The showcase: his look at the login and the films; the forest's colors, the moods, the keep, the tagline are a
-  first pass; MP4 needs ffmpeg (a download: his yes). Not done: deer only stand; "The line" is wide and small.
+- The showcase: his look at the re-rendered films (the game's login now opens on the title card: his "card first");
+  MP4 needs ffmpeg (a download: his yes). Deer have no graze clip; "The line" is wide.
 - From before: round or square bar; his rewrite of §9; B13 as read; the lead's share; the archer's and imp's numbers;
   #12 day/night, tree scale, the wolf pack's place, `string_chase_ms`, the glade's grass and colors.
 
@@ -73,6 +80,9 @@
 - Wardrobe: the zone masks are lossless and unmipmapped on purpose (their `.import`); a new outfit's zones are a
   first pass to check with Z; re-run `wardrobe_assets.py zones` after editing `zones.json` (it rewrites the
   `palettes/<outfit>_<n>.tres`; custom palettes are untouched).
+- Showcase: a `ShowcaseActor` is a `SpaceTimeEntity` bound in its own `_ready` (no spawner, no rows); a suite steps
+  it by hand with `step(dt)` after turning its and its driver's processing off. PNG frames for a look:
+  `--fixed-fps 10 --write-movie <dir>/f.png <lab>.tscn -- clip <n>`.
 - Showcase: the movie writer records at the PROJECT's window size (never `--resolution`): the script writes and
   removes `override.cfg`; never leave one in the project. A shot's camera is clamped over the land, and everything
   stands on `ground_at` (the mesh as drawn), never `height_at` (the smooth shape).

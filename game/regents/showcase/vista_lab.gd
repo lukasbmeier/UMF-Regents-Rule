@@ -73,10 +73,16 @@ func arrive() -> void:
 	ranger.face(Vector3(-2.2, 0.0, 3.6))
 
 
-## The deer walk slowly along the shore.
+## The deer walk a few steps along the shore (at their own walk), stopping short of the water.
 func graze() -> void:
 	for i: int in range(deer.size()):
-		deer[i].walk_to(deer[i].position + Vector3(-1.0, 0.0, -6.0 - float(i)), 0.55 + float(i) * 0.08)
+		var from: Vector3 = deer[i].position
+		var to: Vector3 = from + Vector3(-0.5, 0.0, -2.4 - 0.5 * float(i))
+		# Back along the way until it is on the bank.
+		var u: float = 1.0
+		while u > 0.1 and world.ground_at(from.lerp(to, u).x, from.lerp(to, u).z) < world.water_y + 0.2:
+			u -= 0.1
+		deer[i].walk_to(from.lerp(to, u), 1.0)
 
 
 ## The wizard calls a cold light between the hands while the ranger watches.
