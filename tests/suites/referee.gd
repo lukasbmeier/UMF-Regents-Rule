@@ -19,6 +19,7 @@ func run() -> void:
 	_run_who()
 	await _run_effects()
 	_run_two_sides()
+	await _run_hits_all()
 	_run_rows()
 	_run_people()
 	_run_feed()
@@ -582,6 +583,64 @@ func _run_two_sides() -> void:
 	_check(int(two.get(3, -1)) == 32, "on: the skeleton's swing passes its friend and hits the player (%d)" % int(two.get(3, -1)))
 	_check(int(two.get(4, -1)) == 31, "and the player's passes the other player and hits the skeleton (%d)" % int(two.get(4, -1)))
 	_check(int(two.get(5, -1)) == 34, "and a player still hits an NPC with no brain (a training dummy) (%d)" % int(two.get(5, -1)))
+	ref.free()
+
+
+## A SWEEP THAT HITS ALL (`AbilityDef.hits_all`: a cleave): every body its path meets, each by the test a single
+## hit makes (in reach, nothing of the level between), nearest first; a plain sweep still the first alone.
+func _run_hits_all() -> void:
+	print("== referee: a sweep that hits all ==")
+	var at := func(id: int, p: Vector3) -> Dictionary: return {"id": id, "pos": p, "radius": 0.4, "height": 1.8, "center_y": 0.9}
+	var three: Array = [at.call(7, Vector3(0, 0, -1.8)), at.call(8, Vector3(0.1, 0, -0.9)), at.call(9, Vector3(-0.5, 0, -1.3)),
+		at.call(10, Vector3(0, 0, 1.0)), at.call(11, Vector3(1.6, 0, -1.0))]
+	var all: Dictionary = LungeJudge.judge_all(null, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, three)
+	var ids: Array[int] = all["hit_ids"]
+	_check(ids == ([8, 9, 7] as Array[int]), "three in its path, one behind, one wide: all three, nearest first (%s)" % str(ids))
+	_check(int(LungeJudge.judge(null, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, three)["hit_id"]) == 8,
+		"and `judge` of the same: the nearer alone, as before")
+	_check((all["hit_ids"] as Array).size() == (all["alongs"] as Array).size() and float((all["alongs"] as Array)[0]) <= float((all["alongs"] as Array)[2]),
+		"each with how far along its path it met them")
+	_check((LungeJudge.judge_all(null, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, [at.call(10, Vector3(0, 0, 1.0))])["hit_ids"] as Array).is_empty(),
+		"none in its path: none")
+	# A fence with a gap (as above): the hen in the gap is hit, the one through it is not, though she is in reach.
+	var root := Node3D.new()
+	add_child(root)
+	_fence(root, true)
+	var probe := Node3D.new()
+	root.add_child(probe)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var space: PhysicsDirectSpaceState3D = probe.get_world_3d().direct_space_state
+	var fenced: Array = [at.call(2, Vector3(0, 0, -1.0)), at.call(3, Vector3(0, 0, -1.6)), at.call(4, Vector3(0.3, 0, -0.4))]
+	var past: Array[int] = LungeJudge.judge_all(space, Vector3.ZERO, 0.0, 1.4, 0.35, 0.6, fenced)["hit_ids"]
+	_check(past == ([4, 2] as Array[int]), "a fence: the one this side and the one in the gap, never the one through it (%s)" % str(past))
+	root.queue_free()
+	# THE REFEREE: a sweep that hits all reports them all; a plain one, the first.
+	var ref := ActionReferee.new()
+	ref.send = false
+	ref.set_sweep(510, 1.4, 0.35, 0.6, true)
+	ref.set_sweep(511, 1.4, 0.35, 0.6)
+	ref.set_entity(40, 0, 0, true)                 # a player swinging -Z
+	ref.set_entity(41, 1, 0, false, true, true)    # three skeletons in front of it
+	ref.set_entity(42, 1, 0, false, true, true)
+	ref.set_entity(43, 1, 0, false, true, true)
+	ref.set_entity(44, 1, StatusDef.DOWNED, false, true, true)   # one down in it: not hit (as a single sweep)
+	ref.record(40, BASE, Vector3.ZERO, 0.0)
+	ref.record(41, BASE, Vector3(0, 0, -0.8), 0.0)
+	ref.record(42, BASE, Vector3(0.5, 0, -1.2), 0.0)
+	ref.record(43, BASE, Vector3(-0.4, 0, -1.7), 0.0)
+	ref.record(44, BASE, Vector3(0, 0, -1.0), 0.0)
+	ref.add_request(1, 40, 510, 0, BASE)
+	ref.add_request(2, 40, 511, 0, BASE)
+	var by: Dictionary = {}
+	for v: Dictionary in ref.settle(BASE + ActionReferee.SETTLE_USEC):
+		by[int(v["request_id"])] = v
+	var cleave: Dictionary = by.get(1, {})
+	var plain: Dictionary = by.get(2, {})
+	_check(bool(cleave.get("all", false)) and cleave.get("hit_ids", []) == ([41, 42, 43] as Array[int]) and int(cleave.get("hit_id", 0)) == 41,
+		"a cleave reports all three skeletons, nearest first, and not the downed one (%s)" % str(cleave.get("hit_ids", [])))
+	_check(not bool(plain.get("all", true)) and plain.get("hit_ids", []) == ([41] as Array[int]) and int(plain.get("hit_id", 0)) == 41,
+		"a plain swing over the same: the first alone (%s)" % str(plain.get("hit_ids", [])))
 	ref.free()
 
 

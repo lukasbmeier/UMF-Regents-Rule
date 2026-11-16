@@ -11,6 +11,8 @@ class_name ActionReferee extends Node3D
 ##      judged: the user where it was then, everyone else where they were `rewind_ms` earlier (what
 ##      the user saw: its view delay, capped by `foundation.rewind_max_ms`, favouring the attacker), the
 ##      ability's sweep (`LungeJudge`) against the level
+##   4. an ability that HITS ALL (`AbilityDef.hits_all`: a cleave) is answered with every body its sweep
+##      met (`resolve_action_all`), each judged as a single hit is; any other with the first
 ##
 ## Walls entities put up (DECISIONS #229: a shut gate) are in its space as they are now, built from
 ## their characters' `blocker_size` (`EntityBlocker`), so a pounce through a shut gate stops at it.
@@ -45,7 +47,7 @@ var send: bool = true
 ## does not is left for the referee whose region it is. Unset (one referee for the world): every use.
 var may_judge: Callable = Callable()
 
-## Judged so far, and how: [{request_id, hit_id, reach, rewind_ms}], newest last (the last 32).
+## Judged so far, and how: [{request_id, hit_id, hit_ids, all, reach, rewind_ms}], newest last (the last 32).
 var judged: Array[Dictionary] = []
 
 var _histories: Dictionary[int, TransformHistory] = {}
@@ -344,18 +346,30 @@ func settle(now_usec: int) -> Array[Dictionary]:
 		judged.append(verdict)
 		if judged.size() > 32:
 			judged.pop_front()
+		var ids: Array[int] = verdict["hit_ids"]
+		var names := PackedStringArray()
+		for i: int in ids:
+			names.append(str(i))
 		print("[Referee] request %d (ability %d by %d): %s, the sweep %.2f m, others %d ms back"
 			% [rid, int(req["ability_id"]), int(req["actor_id"]),
-			("hit %d" % int(verdict["hit_id"])) if int(verdict["hit_id"]) != 0 else "missed",
+			("hit %s" % ", ".join(names)) if not ids.is_empty() else "missed",
 			float(verdict["reach"]), int(verdict["rewind_ms"])])
 		if send:
-			SpaceTimeSync.call_reducer(&"resolve_action", [rid, int(verdict["hit_id"])], ["u64", "u64"])
+			# A sweep that hits all and met more than one: every one of them. Else the first, as always (an older
+			# module knows only `resolve_action`).
+			if bool(verdict["all"]) and ids.size() > 1:
+				SpaceTimeSync.call_reducer(&"resolve_action_all", [rid, ids], ["u64", "u64"])
+			else:
+				SpaceTimeSync.call_reducer(&"resolve_action", [rid, int(verdict["hit_id"])], ["u64", "u64"])
 	return out
 
 
-## One request: {request_id, hit_id, reach, rewind_ms}.
+## One request: {request_id, hit_id (the first, 0: none), hit_ids (every one, nearest first: one at most
+## unless it hits all), all (its ability hits all), reach, rewind_ms}.
 func judge(rid: int, req: Dictionary) -> Dictionary:
-	var verdict: Dictionary = {"request_id": rid, "hit_id": 0, "reach": 0.0, "rewind_ms": int(req["rewind_ms"])}
+	var none: Array[int] = []
+	var verdict: Dictionary = {"request_id": rid, "hit_id": 0, "hit_ids": none, "all": false, "reach": 0.0,
+		"rewind_ms": int(req["rewind_ms"])}
 	var actor: int = int(req["actor_id"])
 	var sweep: Dictionary = sweep_of(int(req["ability_id"]))
 	var mine: TransformHistory = _histories.get(actor, null)
@@ -377,9 +391,15 @@ func judge(rid: int, req: Dictionary) -> Dictionary:
 		var box: Dictionary = hitbox(_kinds.get(eid, 0))
 		targets.append({"id": eid, "pos": was["pos"], "radius": box["radius"], "height": box["height"], "center_y": box["center_y"]})
 	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state if is_inside_tree() else null
-	var r: Dictionary = LungeJudge.judge(space, me["pos"], float(me["yaw"]), float(sweep["reach"]), float(sweep["radius"]),
+	var r: Dictionary = LungeJudge.judge_all(space, me["pos"], float(me["yaw"]), float(sweep["reach"]), float(sweep["radius"]),
 		float(sweep["height"]), targets, LungeJudge.LEVEL_MASK, _bodies())
-	verdict["hit_id"] = int(r["hit_id"])
+	var ids: Array[int] = r["hit_ids"]
+	var all: bool = bool(sweep.get("all", false))
+	if not all and ids.size() > 1:
+		ids = ids.slice(0, 1)
+	verdict["hit_ids"] = ids
+	verdict["all"] = all
+	verdict["hit_id"] = ids[0] if not ids.is_empty() else 0
 	verdict["reach"] = float(r["reach"])
 	return verdict
 
@@ -438,13 +458,13 @@ func hitbox(kind: int) -> Dictionary:
 	return box
 
 
-## An ability's sweep, set directly (tests).
-func set_sweep(ability_id: int, reach: float, radius: float, height: float) -> void:
-	_sweeps[ability_id] = {"reach": reach, "radius": radius, "height": height}
+## An ability's sweep, set directly (tests). `all`: it hits all in it (`AbilityDef.hits_all`).
+func set_sweep(ability_id: int, reach: float, radius: float, height: float, all: bool = false) -> void:
+	_sweeps[ability_id] = {"reach": reach, "radius": radius, "height": height, "all": all}
 
 
 ## An ability's sweep: its `ability_def` row's data (the bake writes `judged`, `reach`, `radius`,
-## `height` there, from the ability's content). Empty when it is not judged.
+## `height` there, and `hits_all` when it does, from the ability's content). Empty when it is not judged.
 func sweep_of(ability_id: int) -> Dictionary:
 	if _sweeps.has(ability_id):
 		return _sweeps[ability_id]
@@ -455,7 +475,8 @@ func sweep_of(ability_id: int) -> Dictionary:
 	if not (data is Dictionary) or not bool((data as Dictionary).get("judged", false)):
 		return {}
 	var d: Dictionary = data
-	var sweep: Dictionary = {"reach": float(d.get("reach", 0.0)), "radius": float(d.get("radius", 0.35)), "height": float(d.get("height", 0.6))}
+	var sweep: Dictionary = {"reach": float(d.get("reach", 0.0)), "radius": float(d.get("radius", 0.35)), "height": float(d.get("height", 0.6)),
+		"all": bool(d.get("hits_all", false))}
 	_sweeps[ability_id] = sweep
 	return sweep
 

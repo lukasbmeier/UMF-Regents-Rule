@@ -164,49 +164,113 @@ pub fn resolve_action(ctx: &ReducerContext, request_id: u64, hit_id: u64) -> Res
     let req = ctx.db.action_request().id().find(request_id).ok_or("resolve_action: no such request (answered, or run out)")?;
     require_authority(ctx, req.world_id)?;
     let def = ctx.db.ability_def().ability_id().find(req.ability_id).ok_or("resolve_action: unknown ability")?;
-    let mut outcome = OUTCOME_MISS;
-    if hit_id != 0 {
-        if hit_id == req.actor_id {
-            return Err("resolve_action: not itself".into());
+    let hit = hit_id != 0 && may_land(ctx, &req, hit_id, "resolve_action")?;
+    ctx.db.action_request().id().delete(request_id);
+    if hit {
+        land(ctx, &req, &def, hit_id)?;
+    } else {
+        missed(ctx, &req);
+    }
+    log::info!("ability {} by {}: {} (request {request_id})", req.ability_id, req.actor_id,
+        if hit { format!("hit {hit_id}") } else { "missed".to_string() });
+    if !hit {
+        insert_action_event(ctx, &req, req.target_id, OUTCOME_MISS);
+    }
+    Ok(())
+}
+
+/// The most bodies one answer may name (a crowd in one sweep; a referee's wrong report is refused, not cut).
+pub const MOST_HIT_AT_ONCE: usize = 32;
+
+/// THE REFEREE'S ANSWER FOR A SWEEP THAT HITS ALL (`AbilityDef.hits_all`, its row's `data` saying
+/// `"hits_all":true`): request `request_id` met every one of `hit_ids` (nearest first; none: a miss). Each is
+/// checked and dealt as `resolve_action` deals one, in that order, with an `action_event` each; those who cannot
+/// be hit now are passed over, and if none could, it is a miss. Refused whole for an ability that does not hit
+/// all, a body named twice, more than `MOST_HIT_AT_ONCE`, or any name `resolve_action` would refuse.
+/// Add-only (rule 17): `resolve_action` is unchanged, and a referee sends this only for such a sweep.
+#[reducer]
+pub fn resolve_action_all(ctx: &ReducerContext, request_id: u64, hit_ids: Vec<u64>) -> Result<(), String> {
+    const WHO: &str = "resolve_action_all";
+    let req = ctx.db.action_request().id().find(request_id).ok_or("resolve_action_all: no such request (answered, or run out)")?;
+    require_authority(ctx, req.world_id)?;
+    let def = ctx.db.ability_def().ability_id().find(req.ability_id).ok_or("resolve_action_all: unknown ability")?;
+    if !hits_all(&def) {
+        return Err(format!("{WHO}: ability {} hits one (its first): answer it with resolve_action", def.ability_id));
+    }
+    if hit_ids.len() > MOST_HIT_AT_ONCE {
+        return Err(format!("{WHO}: {} bodies, at most {MOST_HIT_AT_ONCE}", hit_ids.len()));
+    }
+    let mut landing: Vec<u64> = Vec::with_capacity(hit_ids.len());
+    for (i, id) in hit_ids.iter().enumerate() {
+        if *id == 0 || hit_ids[..i].contains(id) {
+            return Err(format!("{WHO}: {id} named twice, or nobody"));
         }
-        let target = ctx.db.entity().entity_id().find(hit_id).ok_or("resolve_action: no such target")?;
-        if target.world_id != req.world_id {
-            return Err("resolve_action: the target is in another world".into());
-        }
-        if ctx.db.player().entity_id().find(hit_id).is_some_and(|p| !p.online) {
-            return Err("resolve_action: they are not here".into());
-        }
-        if !is_person(ctx, hit_id) {
-            return Err("resolve_action: not someone (a thing is not hit)".into());
-        }
-        // ONE WHO CANNOT BE HIT NOW (their state or an effect: downed, out, rolling) is a MISS, at once (DECISIONS
-        // #312): the referee proposed it from rows that had not yet caught up, which is a matter of timing, not a
-        // wrong report, so the use is answered (its genre hears the miss) rather than left to run out.
-        // A ROLL JUDGED WHERE IT WAS PRESSED (#309): one its player began as they saw this land, and still rolling
-        // then, clears it too, though its status had not reached the referee (or has run out since).
-        if !is_targetable(ctx, hit_id) || !is_hittable(ctx, hit_id) {
-            log::info!("ability {} by {}: {hit_id} cannot be hit now: a miss", req.ability_id, req.actor_id);
-        } else if rolled_clear(ctx, hit_id, req.due_at.to_micros_since_unix_epoch()) {
-            log::info!("ability {} by {}: {hit_id} rolled clear of it", req.ability_id, req.actor_id);
-        } else {
-            outcome = OUTCOME_HIT;
+        if may_land(ctx, &req, *id, WHO)? {
+            landing.push(*id);
         }
     }
     ctx.db.action_request().id().delete(request_id);
-    if outcome == OUTCOME_HIT {
-        hurt(ctx, hit_id);
-        let target = ctx.db.entity().entity_id().find(hit_id).ok_or("resolve_action: no such target")?;
-        if !crate::game::on_ability_hit(ctx, req.actor_id, &target, req.ability_id) && def.damage > 0.0 {
-            damage_entity(ctx, hit_id, def.damage, req.actor_id)?;
-        }
-    } else {
-        let kind = ctx.db.entity().entity_id().find(req.actor_id).map(|e| e.kind).unwrap_or(0);
-        crate::game::on_ability_missed(ctx, req.actor_id, kind, req.ability_id);
+    for id in &landing {
+        land(ctx, &req, &def, *id)?;
     }
-    log::info!("ability {} by {}: {} (request {request_id})", req.ability_id, req.actor_id,
-        if outcome == OUTCOME_HIT { format!("hit {hit_id}") } else { "missed".to_string() });
-    insert_action_event(ctx, &req, if outcome == OUTCOME_HIT { hit_id } else { req.target_id }, outcome);
+    if landing.is_empty() {
+        missed(ctx, &req);
+        insert_action_event(ctx, &req, req.target_id, OUTCOME_MISS);
+    }
+    log::info!("ability {} by {}: hit {:?} of {:?} (request {request_id})", req.ability_id, req.actor_id, landing, hit_ids);
     Ok(())
+}
+
+/// Whether the world's referee answers `def` with every body its sweep met (`resolve_action_all`).
+pub fn hits_all(def: &AbilityDef) -> bool {
+    def.data.replace(' ', "").contains("\"hits_all\":true")
+}
+
+/// Whether the referee's `hit_id` for `req` lands: Err for a report that cannot be right (itself, another world, someone
+/// gone, a thing); false for one who cannot be hit NOW (their state or an effect: downed, out, rolling: DECISIONS #312:
+/// the referee proposed it from rows that had not yet caught up, a matter of timing, not a wrong report) or who
+/// rolled clear of it where they pressed it (#309: one its player began as they saw this land, and still rolling then,
+/// though its status had not reached the referee or has run out since).
+fn may_land(ctx: &ReducerContext, req: &ActionRequest, hit_id: u64, who: &str) -> Result<bool, String> {
+    if hit_id == req.actor_id {
+        return Err(format!("{who}: not itself"));
+    }
+    let target = ctx.db.entity().entity_id().find(hit_id).ok_or(format!("{who}: no such target"))?;
+    if target.world_id != req.world_id {
+        return Err(format!("{who}: the target is in another world"));
+    }
+    if ctx.db.player().entity_id().find(hit_id).is_some_and(|p| !p.online) {
+        return Err(format!("{who}: they are not here"));
+    }
+    if !is_person(ctx, hit_id) {
+        return Err(format!("{who}: not someone (a thing is not hit)"));
+    }
+    if !is_targetable(ctx, hit_id) || !is_hittable(ctx, hit_id) {
+        log::info!("ability {} by {}: {hit_id} cannot be hit now: a miss", req.ability_id, req.actor_id);
+        return Ok(false);
+    }
+    if rolled_clear(ctx, hit_id, req.due_at.to_micros_since_unix_epoch()) {
+        log::info!("ability {} by {}: {hit_id} rolled clear of it", req.ability_id, req.actor_id);
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+/// `req` lands on `hit_id`: a hurt, then what the genre says a hit does, else the ability's damage; its `action_event`.
+fn land(ctx: &ReducerContext, req: &ActionRequest, def: &AbilityDef, hit_id: u64) -> Result<(), String> {
+    hurt(ctx, hit_id);
+    let target = ctx.db.entity().entity_id().find(hit_id).ok_or("resolve_action: no such target")?;
+    if !crate::game::on_ability_hit(ctx, req.actor_id, &target, req.ability_id) && def.damage > 0.0 {
+        damage_entity(ctx, hit_id, def.damage, req.actor_id)?;
+    }
+    insert_action_event(ctx, req, hit_id, OUTCOME_HIT);
+    Ok(())
+}
+
+/// `req` hit nothing: the genre hears it.
+fn missed(ctx: &ReducerContext, req: &ActionRequest) {
+    let kind = ctx.db.entity().entity_id().find(req.actor_id).map(|e| e.kind).unwrap_or(0);
+    crate::game::on_ability_missed(ctx, req.actor_id, kind, req.ability_id);
 }
 
 fn insert_action_event(ctx: &ReducerContext, req: &ActionRequest, target_id: u64, outcome: u8) {
