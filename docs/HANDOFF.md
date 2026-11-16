@@ -5,7 +5,8 @@
   merge `e87eae25`: `ddbb2850` the towns (step 85), `2031e982` the wardrobe (step 81), `c8aa439f` steps 78-83 (the
   VFX) and the AI asset audit, then the commit holding step 84 (the showcase and login) and this HANDOFF.
   `addons/SpacetimeDB/plugin_config.tres` stays out of every commit, as before.
-- STEP 86 (Luke's notes on the showcase films) is NOT COMMITTED: `game/regents/showcase/` (the actor on the game's
+- STEP 86 (Luke's notes on the showcase films) is COMMITTED and pushed (`13d8ed15` swept it in, `779ac93d` adds its
+  missing `showcase_movement.gd`; unit 4581/0 on a clean checkout): `game/regents/showcase/` (the actor on the game's
   movement and driver, NEW `showcase_movement.gd`, the battle and vista beats, the keep), `ui/login/regents_login.gd`
   (title card, on in the game too, no tagline), `tests/login_shot.gd`, the `regents_showcase` suite, PROGRESS 86, GAME.md, the genre rule.
   The village textures' `.import` files also show changed (reimported as 3D at 18:26): NOT this session's.
