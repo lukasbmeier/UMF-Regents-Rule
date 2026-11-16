@@ -164,7 +164,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | MERGED 2026-11-16 | 91 | 754818e4 | |
 | T2 | the T1 session (local_8bc5463c), reused | claude/t2-picker-color (template) | MERGED into the template's main (`9491439`), SHIPPED 2026-11-16 as 1.8.4 (#316) to all four games; here `e15c2f16` | — | e15c2f16 | |
 | W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | MERGED 2026-11-16 | 93 | a9322b2e | |
-| W1b | the E1/W1 session (local_e7199708) | claude/w1b-picker-check | NEW: confirm the free picker on main with 1.8.4 (shot, a picked color survives Done), remove the now-redundant NPC session override (#315) if `bind_playtest.sh` stays 3/0; running | | | scene (foe.tscn) |
+| W1b | the E1/W1 session (local_e7199708) | claude/w1b-picker-check | MERGED 2026-11-16 | 95 | 6f21ea82 | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |

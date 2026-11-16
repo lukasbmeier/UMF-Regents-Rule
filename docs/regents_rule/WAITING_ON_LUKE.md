@@ -27,6 +27,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - What makes lighter armor worth wearing (the combat triangle).
 - The materials' tiers and the numbers: slot shares, tier values, K (67 today, `regents.defense_k`).
 - A second piece worn in a taken slot SWAPS, the old one staying in the bag (the agent's call, as weapons do): or should it refuse?
+- Leather and cloth are as strong as metal of the same tier for now (what makes lighter armor worth wearing is yours); linen is made straight from flax (no spinning yet).
 - A cloth hat's source (W5: by hand, CC0 or commissioned); a short Steadied after a player's stagger (duels: an idea).
 
 **Towns** (`SETTLEMENTS_PREP.md` §7, §9)
@@ -62,6 +63,9 @@ One line each: the question, today's value or the proposal, where it is written.
 - The staff's Bolt at 12 damage (was 9), for your feel check: `content/ability/staff_bolt.tres`.
 - TEST ARMOR: Practice cuirass (40067, Defense 20) and Practice helm (40068, Defense 10), `game/regents/content/item/practice_*.tres`: test pieces until the real ones (S3).
 - THE PICKER'S SUGGESTED SWATCHES: the four `starter_*` palettes' colors per slot: `RegentsColors.swatches` in `game/regents/wardrobe/regents_colors.gd`. Keep them or choose your own row.
+- ARMOR'S NUMBERS: the slot shares head 2, chest 5, legs 3 (`defense_share` in `game/regents/content/pattern/{armet,cuirass,legplates,hood,jerkin,leather_trousers,robe,cloth_trousers}.tres`); the new materials' tiers: soft leather 1, supple leather 2, linen 1 (`content/material/*.tres`); metal uses copper 1, iron 2, steel 3. Change a number, press Make the table.
+- ARMOR'S TRAIT PARTS: every piece names lining, straps, fittings (`trait_parts`), with NO trait offered: which traits, on which part, is yours.
+- ARMOR'S RECIPES: plates 2 bars; armet 1, cuirass 3, legplates 2 plates + copper rivets; leather 1 / 3 / 2; linen robe 4, trousers 3 flax; their XP (`content/recipe/`, made by the table).
 (more as each item merges)
 
 ## 3. To play and look at
@@ -69,6 +73,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - The town lab: 5 Roofs, 6 Places; the town world: 8, 9, 0.
 - The showcase films in `export/showcase/2026-11-15/`.
 - Step 88, two instances: the other player's Frost Ring, fireball blast, Gale and Blink are thinner and cast no light; your own shake your camera a little when they land near you (`vfx_camera_shake.gd`: 0.25 m, 6-20 m). VFX lab: O shows "as another player sees it".
+- Step 94: craft iron plates at the anvil (two iron bars, a shape round), the Iron cuirass at the workbench (three plates, two copper rivets), or `admin_give_item <you> 40075 1 0`; `wear <row>` out of a fight (no doll yet). The workbench lists them under Armor.
 - Step 93: the picker (connect screen, or Escape > Character): Peasant M / F, hair, beard, brows, skin, and a color with swatches for main, accent, under, trim, leather. A character saved as Ranger, Wizard, Knight or Noble is now a Peasant. `figure_shot.tscn` shows four players together.
 - Step 92 (no UI yet): `admin_give_item <you> 40067 1 0` and `40068 1 1000`, out of a fight `wear <row>`: a skeleton's slash (7) lands at 4.74; `take_off "chest"`.
 - Step 91: sword, axe or bow: Q from level 1; at 5 open the weapon's abilities and pick E from three; at 20 R is the ult. A staff at 20: R offers Meteor. `admin_set_item_level` jumps a weapon's level. A bow skill has never been pressed by a real client: tell me how it feels.

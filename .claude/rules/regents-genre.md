@@ -146,6 +146,10 @@ paths:
 - ARMOR (PROGRESS 92): what a player wears is the `worn` row (one a wearer, a column pair a slot); a piece is an
   `ItemDef` with `armor_slot` and `defense`; a hit's damage goes through `rules::through` (guard, armor, traits,
   multiplied): a new damage path calls it, never a flat cut. Worn and taken off out of a fight only.
+- ARMOR PIECES (PROGRESS 94) are cells of the material table: a pattern with `armor_slot` and `defense_share` (its
+  cells' Defense = share x material tier); a new piece or material is content and Make the table, never code. Leather
+  is the HIDE family, cloth FIBER. A look finds a worn item's slot, family, material and piece from `ItemDef.by_id`
+  (`armor_slot`, `material.family`, `material.key`, `pattern.key`). Armor's trait pools are EMPTY until Luke fills them.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game
@@ -171,7 +175,6 @@ paths:
   on the `appearance` text, each 0xRRGGBB + 1; never `#`, which the module refuses), dressed on the foundation's
   `assembled` with materials shared by palette (`Wardrobe.dress_shared`). Armor goes on through `wear_armor` (pieces +
   tier palettes); nothing else dresses a player. The picker's color options need template 1.8.4 (`COLOR_OPTIONS`).
-- AN NPC'S SCENE (PROGRESS 87): a new NPC scene inherits `game/regents/npc.tscn` (or `combat/foe.tscn`), never
-  `foundation/entities/player.tscn` directly: player.tscn's Session component waits 2 s for a `session_member` row an
-  NPC never has (until the template's fix, DECISIONS #315, is pulled). A change to an NPC's scene runs
+- AN NPC'S SCENE (PROGRESS 87, 95): a new NPC scene inherits `game/regents/npc.tscn`, `combat/foe.tscn` or
+  `player.tscn` (template #315: no wait for a `session_member` row). A change to an NPC's scene runs
   `game/regents/tests/bind_playtest.sh`.
