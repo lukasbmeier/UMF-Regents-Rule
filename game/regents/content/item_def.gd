@@ -31,6 +31,15 @@ class_name ItemDef extends ContentDef
 @export var ammo_for: StringName = &""
 ## Its hits, in percent of the shot's (a better arrowhead higher).
 @export_range(10, 500, 1, "suffix:%") var ammo_damage_pct: int = 100
+@export_group("As armor")
+## The slot it is worn in (ARMOR_PREP.md, Luke's five slots: the weapon is wielded, these are worn): "head",
+## "chest", "legs" or "trinket". Empty: not armor. Worn from the bag (`wear`), out of a fight only.
+@export var armor_slot: StringName = &""
+## The slots armor is worn in (the weapon is wielded, not worn).
+const ARMOR_SLOTS: Array[StringName] = [&"head", &"chest", &"legs", &"trinket"]
+## Its DEFENSE: worn pieces add up, and a hit on its wearer becomes damage x K / (K + Defense) (K the hot rule
+## `regents.defense_k`). Its quality raises it as quality raises a weapon's damage (a fifth more at 1000).
+@export_range(0, 1000) var defense: int = 0
 @export_group("As a part")
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
@@ -100,7 +109,7 @@ func to_bake() -> Dictionary:
 		"weapon_trait": ContentDef.ref(part_weapon_trait),
 		"role": ContentDef.ref(role),
 		"fits_kit": String(fits_kit),
-	}
+	}.merged({"armor_slot": String(armor_slot), "defense": defense} if armor_slot != &"" else {})
 
 
 ## Its icon is drawn from its model: its look apart (`world_model`), else its held scene.
@@ -157,6 +166,14 @@ func validate() -> Array[String]:
 		out.append("a tool does not stack: `max_stack` 1")
 	if weapon_kit != &"" and max_stack != 1:
 		out.append("a weapon does not stack: `max_stack` 1")
+	if armor_slot != &"" and not ARMOR_SLOTS.has(armor_slot):
+		out.append("it is worn in \"%s\", which is no slot: head, chest, legs or trinket" % armor_slot)
+	if armor_slot != &"" and max_stack != 1:
+		out.append("armor does not stack: `max_stack` 1")
+	if armor_slot != &"" and weapon_kit != &"":
+		out.append("it is worn and wielded both: armor is no weapon (clear `weapon_kit` or `armor_slot`)")
+	if armor_slot == &"" and defense > 0:
+		out.append("it has a Defense but is worn nowhere: set `armor_slot`")
 	if part_tag == &"" and handle_trait != null:
 		out.append("it has a handle trait but is no part: set `part_tag` (\"handle\")")
 	if handle_trait != null and not handle_trait.applies_to.has(&"tool"):

@@ -80,6 +80,10 @@ pub struct ItemSeed {
     pub role: u32,
     /// As a part: the one kit it fits ("sword": a hilt; empty: any made of its kind).
     pub fits_kit: &'static str,
+    /// As ARMOR (S2): the slot it is worn in ("head", "chest", "legs", "trinket"; empty: not armor), and its Defense
+    /// at quality 0 (`piece_defense`).
+    pub armor_slot: &'static str,
+    pub defense: u32,
 }
 
 /// A ROLE (`RoleDef`, COMBAT_OVERHAUL.md §5, Luke 2026-11-01): what a weapon is for, by its handle's SHAPE.
@@ -573,6 +577,8 @@ pub struct FoeSeed {
     pub carcass: u32,
     /// How high above its feet a shot the server aims at it goes: the middle of its body (`FoeDef.aim_height_m`).
     pub aim_height_m: f32,
+    /// Its Defense (`FoeDef.defense`; 0: none): a hit on it takes `defense_mult` of its damage.
+    pub defense: u32,
 }
 
 /// Where a shot is aimed on a body with no size of its own (a player, a dummy): a man's chest.
@@ -836,6 +842,28 @@ pub fn hit_damage(ability_damage: f32, weapon_damage_pct: u32, quality_pm: u32, 
     let quality = 1.0 + quality_pm.min(1000) as f32 / 5000.0;
     let mastery = 1.0 + mastery_bp(rank) as f32 / 10_000.0;
     ability_damage * weapon_damage_pct as f32 / 100.0 * quality * mastery
+}
+
+/// THE SLOTS ARMOR IS WORN IN (Luke's five equipment slots: the weapon is wielded, these four worn; S2).
+pub const ARMOR_SLOTS: [&str; 4] = ["head", "chest", "legs", "trinket"];
+
+/// A worn piece's DEFENSE (S2, ARMOR_PREP.md A4.3, settled): its item's, its quality adding up to a fifth more as quality
+/// adds to a weapon's damage (`hit_damage`).
+pub fn piece_defense(defense: u32, quality_pm: u32) -> f32 {
+    defense as f32 * (1.0 + quality_pm.min(1000) as f32 / 5000.0)
+}
+
+/// What a hit on someone with Defense `defense` keeps of its damage (ARMOR_PREP.md A1, settled): K / (K + Defense), K the hot
+/// rule `regents.defense_k`. Never a flat cut: at Defense K a hit is halved, and no Defense makes one nothing. No
+/// Defense, or a K that is not above 0: all of it.
+pub fn defense_mult(defense: f32, k: f64) -> f32 {
+    if defense <= 0.0 || k <= 0.0 { 1.0 } else { (k / (k + defense as f64)) as f32 }
+}
+
+/// A HIT'S DAMAGE THROUGH WHAT STANDS IN ITS WAY, in the settled order (A1.2): the guard first, then armor, then the
+/// attacker's traits, each a multiplier, MULTIPLIED, never added.
+pub fn through(dmg: f32, guard_mult: f32, armor_mult: f32, trait_mult: f32) -> f32 {
+    dmg * guard_mult * armor_mult * trait_mult
 }
 
 /// Whether a light step `step` may follow: the first always; a later one only right after the step

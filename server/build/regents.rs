@@ -160,12 +160,16 @@ pub fn regents_data() {
         if !fits.is_empty() {
             weapon_kits.push((name.clone(), fits.clone()));
         }
+        // ARMOR (S2): the slot it is worn in ("" none) and its Defense (an older bake: none).
+        let armor = it["armor_slot"].as_str().unwrap_or("").to_string();
+        assert!(["", "head", "chest", "legs", "trinket"].contains(&armor.as_str()), "regents content: {name} is worn in '{armor}', which is no slot");
+        assert!(armor.is_empty() || kit.is_empty(), "regents content: {name} is worn and wielded both");
         out.push_str(&format!("    ItemSeed {{ id: {}, name: {name:?}, max_stack: {}, tool_tag: {tag:?}, tool_tier: {tier}, tool_speed_pct: {}, \
              weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_trait: {}, weapon_trait: {}, ammo_for: {:?}, \
-             ammo_damage_pct: {}, role: {role}, fits_kit: {fits:?} }},\n",
+             ammo_damage_pct: {}, role: {role}, fits_kit: {fits:?}, armor_slot: {armor:?}, defense: {} }},\n",
             int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name), int(it, "weapon_damage_pct", &name),
             it["handle_trait"].as_i64().unwrap_or(-1).max(0), it["weapon_trait"].as_i64().unwrap_or(-1).max(0), text(it, "ammo_for", &name),
-            it["ammo_damage_pct"].as_i64().unwrap_or(100)));
+            it["ammo_damage_pct"].as_i64().unwrap_or(100), it["defense"].as_i64().unwrap_or(0).max(0)));
     }
     let item = |id: i64, what: &str| assert!(item_ids.contains(&id), "regents content: {what} names item {id}, which is not an item");
 
@@ -357,8 +361,9 @@ pub fn regents_data() {
         // Where a shot the server aims at it goes (2026-11-11): the middle of its body; a man's chest in an older bake.
         let aim_height = f.get("aim_height_m").and_then(|x| x.as_f64()).filter(|h| *h > 0.0).unwrap_or(1.1) as f32;
         out.push_str(&format!("    FoeSeed {{ id: {}, name: {name:?}, key: {key:?}, kind: {kind}, kit: {kit:?}, fights: {fights}, brain: {brain:?}, hp: {hp}, damage_pct: {}, xp_pct: {}, \
-             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {}, carcass: {carcass}, aim_height_m: {aim_height:?}f32 }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
-            f["family"].as_str().unwrap_or(""), f["boss"].as_bool().unwrap_or(false), f["poise"].as_i64().unwrap_or(0).max(0)));
+             loot_table: {loot_table}, family: {:?}, boss: {}, poise: {}, carcass: {carcass}, aim_height_m: {aim_height:?}f32, defense: {} }},\n", int(f, "id", &name), int(f, "damage_pct", &name), int(f, "xp_pct", &name),
+            f["family"].as_str().unwrap_or(""), f["boss"].as_bool().unwrap_or(false), f["poise"].as_i64().unwrap_or(0).max(0),
+            f["defense"].as_i64().unwrap_or(0).max(0)));
     }
     out.push_str("];\n\npub static SPELLS: &[SpellSeed] = &[\n");
     // THE STAFF'S SPELLS (owner, 2026-10-20): how each casting ability lands.

@@ -4553,6 +4553,66 @@
 			]
 		},
 		{
+			"name": "Worn",
+			"namespace": [],
+			"source_name": "Worn",
+			"struct": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				},
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "head_row",
+					"type": "U64"
+				},
+				{
+					"name": "head_item",
+					"type": "U32"
+				},
+				{
+					"name": "chest_row",
+					"type": "U64"
+				},
+				{
+					"name": "chest_item",
+					"type": "U32"
+				},
+				{
+					"name": "legs_row",
+					"type": "U64"
+				},
+				{
+					"name": "legs_item",
+					"type": "U32"
+				},
+				{
+					"name": "trinket_row",
+					"type": "U64"
+				},
+				{
+					"name": "trinket_item",
+					"type": "U32"
+				}
+			],
+			"table_names": [
+				"worn"
+			],
+			"table_name": "worn",
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"is_public": [
+				true
+			]
+		},
+		{
 			"name": "BodyWrite",
 			"namespace": [],
 			"source_name": "BodyWrite",
@@ -6633,6 +6693,20 @@
 			"return_data": {}
 		},
 		{
+			"name": "take_off",
+			"wire_name": "take_off",
+			"namespace": [],
+			"local_name": "take_off",
+			"params": [
+				{
+					"name": "slot",
+					"type": "String"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "teleport",
 			"wire_name": "teleport",
 			"namespace": [],
@@ -6832,6 +6906,20 @@
 			"return_data": {}
 		},
 		{
+			"name": "wear",
+			"wire_name": "wear",
+			"namespace": [],
+			"local_name": "wear",
+			"params": [
+				{
+					"name": "item_row",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "wield",
 			"wire_name": "wield",
 			"namespace": [],
@@ -6887,7 +6975,7 @@
 					],
 					"is_array": true,
 					"type": "BodyWrite",
-					"type_idx": 111
+					"type_idx": 112
 				}
 			],
 			"return_type": "",
@@ -6910,7 +6998,7 @@
 					],
 					"is_array": true,
 					"type": "MovementWrite",
-					"type_idx": 112
+					"type_idx": 113
 				}
 			],
 			"return_type": "",
@@ -9592,6 +9680,34 @@
 			],
 			"btree_indexes": [],
 			"is_public": true
+		},
+		{
+			"name": "worn",
+			"wire_name": "worn",
+			"namespace": [],
+			"local_name": "worn",
+			"type_idx": 111,
+			"is_event": false,
+			"primary_key": 0,
+			"primary_key_name": "entity_id",
+			"unique_indexes": [
+				{
+					"name": "entity_id",
+					"type": "U64",
+					"constraint_name": "worn_entity_id_key"
+				}
+			],
+			"btree_indexes": [
+				{
+					"name": "chunk",
+					"type": "U32"
+				},
+				{
+					"name": "world_id",
+					"type": "U32"
+				}
+			],
+			"is_public": true
 		}
 	],
 	"type_map": {
@@ -9737,6 +9853,7 @@
 		"WorkSchedule": "UmfWorkSchedule",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
+		"Worn": "UmfWorn",
 		"BodyWrite": "UmfBodyWrite",
 		"MovementWrite": "UmfMovementWrite"
 	},
@@ -9882,6 +9999,7 @@
 		"WorkSchedule": "UmfWorkSchedule",
 		"WorldConfig": "UmfWorldConfig",
 		"WorldLevel": "UmfWorldLevel",
+		"Worn": "UmfWorn",
 		"BodyWrite": "UmfBodyWrite",
 		"MovementWrite": "UmfMovementWrite"
 	},
@@ -17447,6 +17565,100 @@
 						},
 						"algebraic_type": {
 							"U8": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"Product": {
+				"elements": [
+					{
+						"name": {
+							"some": "entity_id"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "world_id"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chunk"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "head_row"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "head_item"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "chest_row"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "chest_item"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "legs_row"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "legs_item"
+						},
+						"algebraic_type": {
+							"U32": []
+						}
+					},
+					{
+						"name": {
+							"some": "trinket_row"
+						},
+						"algebraic_type": {
+							"U64": []
+						}
+					},
+					{
+						"name": {
+							"some": "trinket_item"
+						},
+						"algebraic_type": {
+							"U32": []
 						}
 					}
 				]

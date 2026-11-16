@@ -163,7 +163,7 @@
 		},
 		"shared/content/regents/foe.json": {
 			"count": 7,
-			"hash": "50985abf",
+			"hash": "e5bc8522",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/foe/deer.tres": "9d4bdc68",
@@ -177,8 +177,8 @@
 			"type": "foe"
 		},
 		"shared/content/regents/item.json": {
-			"count": 66,
-			"hash": "846ebf8b",
+			"count": 68,
+			"hash": "010ebee4",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/item/arrow_shafts.tres": "890f07f6",
@@ -222,6 +222,8 @@
 				"game/regents/content/item/oak_crossguard_hilt.tres": "bce1db15",
 				"game/regents/content/item/oak_handle.tres": "43b3aa25",
 				"game/regents/content/item/oak_logs.tres": "de9da362",
+				"game/regents/content/item/practice_cuirass.tres": "d610e33d",
+				"game/regents/content/item/practice_helm.tres": "2e1d23e1",
 				"game/regents/content/item/seed_pod.tres": "0d4e5517",
 				"game/regents/content/item/soft_leather.tres": "852175d1",
 				"game/regents/content/item/steel_axe.tres": "95f05841",
@@ -449,10 +451,10 @@
 		},
 		"shared/content/regents/rules.json": {
 			"count": 1,
-			"hash": "fd1257eb",
+			"hash": "02f98dd5",
 			"owner": "regents",
 			"sources": {
-				"game/regents/content/rules/regents.tres": "43827154"
+				"game/regents/content/rules/regents.tres": "6aca9f97"
 			},
 			"type": "rules"
 		},

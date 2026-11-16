@@ -502,6 +502,10 @@ func submit_challenge_result(challenge_id: int, result: Array[float]) -> Spaceti
 func submit_input(frames: Array[UmfInputFrame]) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('submit_input', [frames], [&'UmfInputFrame'], &'')
 
+## 0. slot: String [br]
+func take_off(slot: String) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('take_off', [slot], [&'string'], &'')
+
 ## 0. pos: Vector3 [br]
 func teleport(pos: Vector3) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('teleport', [pos], [&'vector3[f32,f32,f32]'], &'')
@@ -550,6 +554,10 @@ func use_ability_seen(ability_id: int, target_id: int, aim: Vector3, predicted_i
 ## 0. code: String [br]
 func use_link_code(code: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('use_link_code', [code], [&'string'], &'')
+
+## 0. item_row: int [br]
+func wear(item_row: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('wear', [item_row], [&'u64'], &'')
 
 ## 0. item_row: int [br]
 func wield(item_row: int) -> SpacetimeDBReducerCall:
