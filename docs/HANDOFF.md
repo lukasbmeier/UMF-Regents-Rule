@@ -1,6 +1,10 @@
 # Handoff — Regent's Rule, 2026-11-15 (steps 78-86: the VFX, the wardrobe, the showcase and login, the towns)
 
 ## Where it stands
+- THE ARMOR RUN IS IN PROGRESS (a master session, 2026-11-15): `docs/regents_rule/MASTER_RUN.md` is the work list
+  and its §7 LEDGER says who runs what (children S1, P1, E1, E2, E3 in `.claude/worktrees/`, branches `claude/...`;
+  nothing merged yet). T1 (the template's `ModularCharacter.wear`) runs in a worktree of `../UMF Template`. A restarted master is given the prompt in MASTER_RUN §8 and reads the ledger.
+  What waits on Luke: `docs/regents_rule/WAITING_ON_LUKE.md`.
 - EVERYTHING IS COMMITTED on `main` and PUSHED to `origin` (2026-11-15). On top of `27a8fc7b` (step 77) and the template 1.8.2
   merge `e87eae25`: `ddbb2850` the towns (step 85), `2031e982` the wardrobe (step 81), `c8aa439f` steps 78-83 (the
   VFX) and the AI asset audit, then the commit holding step 84 (the showcase and login) and this HANDOFF.
