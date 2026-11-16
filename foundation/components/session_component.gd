@@ -56,9 +56,11 @@ func required_tables() -> Array[StringName]:
 	return [MEMBER_TABLE, LOBBY_TABLE]
 
 
-## A kind with no lobby has no lobby row.
+## A kind with no lobby has no lobby row. And only a player who joins a session has a member row
+## (DECISIONS #315): an NPC built on the player's scene has none, and waited out the bind timeout
+## for it. With none it is in no session (`_session_id` -1); one arriving later joins it.
 func optional_tables() -> Array[StringName]:
-	return [LOBBY_TABLE]
+	return [MEMBER_TABLE, LOBBY_TABLE]
 
 
 func also_reads() -> Array[StringName]:

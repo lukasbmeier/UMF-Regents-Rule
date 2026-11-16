@@ -1190,3 +1190,22 @@ Republish (module and referee; no codegen). Regent's Rule's roll is an effect si
 - `resolve_action`: a target that cannot be hit now (state or effect) is a MISS at once (`on_ability_missed`, a miss
   event), not an error. Tests: `tests/suites/referee.gd` "effects count (a roll)" (mutation-checked); the integration
   suite's downed and rolling reports now expect a miss.
+
+## 1.8.3 — a game wears its own pieces on a character; a sweep that hits all (DECISIONS #313, #314, #315)
+Republish WITH `--codegen` (a new reducer, `resolve_action_all`). Old clients and old referees keep working.
+- `ModularCharacter.wear(pieces, slot_name := Callable()) -> bool`: slot -> piece over what the look and its appearance
+  wear (any piece, named in no foundation list; a slot left out wears the appearance's own, null wears nothing,
+  `wear({})` takes all off), swapped in place on the same skeleton. Signal `assembled` after every assembly and every
+  re-dress, once per change. Tests: `tests/suites/looks.gd` "a genre's pieces" (mutation-checked).
+- An NPC on the player's scene binds at once (#315): `SessionComponent` takes `session_member` as optional, so an entity
+  with no member row no longer waits the 2 s bind timeout (Regent's Rule's NPCs froze ~2.9 s entering a ring). Tests:
+  `tests/suites/entity.gd` (fails without the fix).
+- `AbilityDef.hits_all` (the Judged group): a judged sweep that hits every body it meets; baked only when on.
+- `server/build/content.rs`: the ability row's `data` carries `"hits_all":true` (the referee and the module read it
+  there); a hits-all ability that is not judged stops the build.
+- `sidecar/combat/lunge_judge.gd`: `judge_all` (every body met, nearest first; `judge` is its first, unchanged results).
+- `sidecar/combat/action_referee.gd`: a verdict's `hit_ids` and `all`; a hits-all sweep that met more than one is answered
+  with `resolve_action_all`.
+- `server/src/module/referee.rs`: NEW reducer `resolve_action_all(request_id, hit_ids: Vec<u64>)` (authority only),
+  refused whole for an ability without Hits All, a duplicate, over 32, or a name `resolve_action` refuses; `resolve_action`
+  unchanged. Tests: `tests/suites/referee.gd` (a sweep that hits all), `tests/integration_test.sh` (the refusal).

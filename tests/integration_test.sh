@@ -1142,6 +1142,10 @@ assert_eq "$(sql_first "SELECT outcome FROM action_event WHERE predicted_id = 65
   "a downed one is not hit again (downed: not hittable): a MISS at once, its genre told, nothing taken (DECISIONS #312)"
 assert_ok "set_status $VICTIM 0 $UNTIL_CHANGED \"\"" "(up again)"
 assert_rejected "resolve_action $R63 $THING" "not someone" "a thing is not hit"
+# A SWEEP THAT HITS ALL is answered with every body it met (`resolve_action_all`, add-only); this ability hits one,
+# so that answer is refused whole and the request still waits (the referee's genre suite: tests/suites/referee.gd).
+assert_rejected "resolve_action_all $R61 [$VICTIM]" "hits one" "a sweep that hits one cannot be answered as hitting all"
+assert_eq "$(row_count "SELECT * FROM action_request WHERE id = $R61")" "1" "refused: the request still waits for its answer"
 
 HPV=$(sql_first "SELECT current FROM health_state WHERE entity_id = $VICTIM" 1)
 assert_ok "resolve_action $R61 $VICTIM" "the referee: request 61 hit"
