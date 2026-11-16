@@ -63,6 +63,7 @@ GODOT=<path> ./game/regents/tests/spells_seen_playtest.sh     # two real clients
 "$GODOT" --path . res://game/regents/wardrobe/wardrobe_lab.tscn -- <out dir>  # windowed, no server: every outfit, the metal tiers, the zones, the colorways painted beside dyed, and the piece inventory (F6: the lab; unit suite regents_wardrobe)
 "$GODOT" --path . res://game/regents/showcase/vista_lab.tscn -- stills <out dir>   # windowed, no server: the showcase valley's shots in their moods (F6: the lab, M moods, F free camera; also battle_lab.tscn; unit suite regents_showcase)
 GODOT=<path> ./game/regents/tests/showcase_render.sh [stills|films|all]  # windowed (~15 min): the login, the vista and the battle shots at 1080p, stills and .ogv films, into export/showcase/<date>/ (for the composers)
+GODOT=<path> ./game/regents/tests/armor_seen_playtest.sh      # two real clients (~2 min): one wears armor, the other sees it on them and not on itself; a piece taken off
 GODOT=<path> ./game/regents/tests/bind_playtest.sh            # a real client (~1 min): every entity in the camp binds within 1 s, no "binding after" warning
 GODOT=<path> ./game/regents/tests/minigame_readout.sh         # every minigame round by four simulated players (~15 s, no server)
 GODOT=<path> ./game/regents/tests/load_300.sh                # 50-300 bots on the continent (~25 min): docs/regents_rule/REFEREE_SCALING.md

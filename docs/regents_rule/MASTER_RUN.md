@@ -165,7 +165,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | T2 | the T1 session (local_8bc5463c), reused | claude/t2-picker-color (template) | MERGED into the template's main (`9491439`), SHIPPED 2026-11-16 as 1.8.4 (#316) to all four games; here `e15c2f16` | — | e15c2f16 | |
 | W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | MERGED 2026-11-16 | 93 | a9322b2e | |
 | W1b | the E1/W1 session (local_e7199708) | claude/w1b-picker-check | MERGED 2026-11-16 | 95 | 6f21ea82 | |
-| W2 | the E1/W1 session (local_e7199708), reused | claude/w2-armor-look | running since 2026-11-16 | | | scene (`adventurer.tscn`, `regents_game.tscn`; NOT `combat_component.gd`) |
+| W2 | the E1/W1 session (local_e7199708), reused | claude/w2-armor-look | MERGED 2026-11-16 | 96 | 761444ac | |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |

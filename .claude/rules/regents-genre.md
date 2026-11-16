@@ -175,6 +175,10 @@ paths:
   on the `appearance` text, each 0xRRGGBB + 1; never `#`, which the module refuses), dressed on the foundation's
   `assembled` with materials shared by palette (`Wardrobe.dress_shared`). Armor goes on through `wear_armor` (pieces +
   tier palettes); nothing else dresses a player. The picker's color options need template 1.8.4 (`COLOR_OPTIONS`).
+- WORN ARMOR IS SEEN (PROGRESS 96) through `ArmorLookComponent` (the `worn` row) and the table
+  `game/regents/wardrobe/armor_looks.tres`: a pattern's pieces per body, a material's palette. A new armor pattern gets
+  a row there (the `regents_figure` suite fails a piece with none), a new material a palette; never code. A change to
+  it runs `game/regents/tests/armor_seen_playtest.sh`; `figure_shot.tscn` shows every tier.
 - AN NPC'S SCENE (PROGRESS 87, 95): a new NPC scene inherits `game/regents/npc.tscn`, `combat/foe.tscn` or
   `player.tscn` (template #315: no wait for a `session_member` row). A change to an NPC's scene runs
   `game/regents/tests/bind_playtest.sh`.
