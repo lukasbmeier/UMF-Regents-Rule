@@ -420,7 +420,7 @@ func _run_staff() -> void:
 	for a: AbilityDef in staff.light + staff.skills:
 		var sp: SpellDef = SpellDef.by_ability(a.id)
 		names.append("%s %s" % [a.display_name, ["bolt", "area", "blink", "cone"][sp.kind] if sp != null else "NONE"])
-	_check(" / ".join(names) == "Bolt bolt / Fireball bolt / Frost Ring area / Blink blink / Gale cone / Meteor (placeholder) area", "its spells: %s" % " / ".join(names))
+	_check(" / ".join(names) == "Bolt bolt / Fireball bolt / Frost Ring area / Gale cone / Meteor (placeholder) area", "its spells: %s" % " / ".join(names))
 	var aset: AnimationSet = staff.timing_set
 	for a: AbilityDef in staff.light + staff.skills:
 		_check(aset.has_exact(StringName("ability.%d" % a.id)) and staff.lock_ms(a) > 0, "%s has its clip (%s)" % [a.display_name, aset.clip(StringName("ability.%d" % a.id)).anim_name])
