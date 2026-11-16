@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://foundation/entities/player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://game/regents/combat/combat_component.gd" id="2_combat"]
@@ -7,8 +7,12 @@
 
 [ext_resource type="Script" path="res://game/regents/combat/foe_look.gd" id="5_look"]
 [ext_resource type="Script" path="res://game/regents/vfx/ability_vfx.gd" id="6_vfx"]
+[ext_resource type="Script" path="res://game/regents/npc_session_component.gd" id="7_session"]
 
 [node name="Foe" instance=ExtResource("1_player")]
+
+[node name="Session" parent="Components" index="3"]
+script = ExtResource("7_session")
 
 [node name="Combat" type="Node" parent="Components"]
 script = ExtResource("2_combat")
