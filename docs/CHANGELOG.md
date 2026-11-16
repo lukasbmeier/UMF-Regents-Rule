@@ -1190,3 +1190,13 @@ Republish (module and referee; no codegen). Regent's Rule's roll is an effect si
 - `resolve_action`: a target that cannot be hit now (state or effect) is a MISS at once (`on_ability_missed`, a miss
   event), not an error. Tests: `tests/suites/referee.gd` "effects count (a roll)" (mutation-checked); the integration
   suite's downed and rolling reports now expect a miss.
+
+## 1.8.3 — a game wears its own pieces on a character (DECISIONS #313)
+Client only: nothing to republish, no codegen.
+- `ModularCharacter.wear(pieces, slot_name := Callable()) -> bool`: slot -> piece over what the look and its appearance
+  wear (any piece, named in no foundation list; a slot left out wears the appearance's own, null wears nothing,
+  `wear({})` takes all off), swapped in place on the same skeleton. Signal `assembled` after every assembly and every
+  re-dress, once per change. Tests: `tests/suites/looks.gd` "a genre's pieces" (mutation-checked).
+- An NPC on the player's scene binds at once (#315): `SessionComponent` takes `session_member` as optional, so an entity
+  with no member row no longer waits the 2 s bind timeout (Regent's Rule's NPCs froze ~2.9 s entering a ring). Tests:
+  `tests/suites/entity.gd` (fails without the fix).

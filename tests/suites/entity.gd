@@ -137,6 +137,35 @@ func _run_entity_tests() -> void:
 	reg.unregister(9)
 	quick.queue_free()
 
+	# AN NPC ON THE PLAYER'S SCENE (DECISIONS #315): it carries a SessionComponent, but only a player
+	# who joins a session gets a `session_member` row. It waited out the timeout (frozen ~2.9 s after
+	# entering a ring); it binds at once, outside any session, and a member row arriving later (a
+	# player's, merely late) still joins it.
+	var npc: SpaceTimeEntity = scene.instantiate() as SpaceTimeEntity
+	npc.definition = defn
+	npc.bind_timeout_sec = 5.0
+	get_tree().root.add_child(npc)
+	var npc_rows: Array = []
+	var member_ev: RowEvent = null
+	for ev: RowEvent in _player_rows(10):
+		if ev.table == &"session_member":
+			member_ev = ev
+		else:
+			npc_rows.append(ev)
+	npc.bind(10, 0, PackedByteArray(), npc_rows)
+	var npc_session: SessionComponent = npc.get_node(^"Components/Session") as SessionComponent
+	_check(npc.is_bound(), "an entity with no session_member row (an NPC) binds at once")
+	_check(npc_session != null and not npc_session.is_in_session() and npc_session.get_session_id() == -1,
+		"and is in no session")
+	var npc_joins: Array[int] = []
+	if npc_session != null:
+		npc_session.joined_session.connect(func(sid: int) -> void: npc_joins.append(sid))
+	npc.receive_row_event(member_ev)
+	_check(npc_session != null and npc_session.get_session_id() == 1 and npc_joins == [1],
+		"a member row arriving after the bind joins it (%s)" % str(npc_joins))
+	reg.unregister(10)
+	npc.queue_free()
+
 
 ## FRIENDLY COLLISION (DECISIONS #238): a character's kin layer; solid to its kin only while the rule is on.
 func _run_kin_tests() -> void:

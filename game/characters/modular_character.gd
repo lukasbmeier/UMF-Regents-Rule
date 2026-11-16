@@ -48,6 +48,22 @@ var worn: Array[PackedScene] = []
 ## A colourway per worn piece, by the piece's path, over its outfit's own (`CharacterLooks.apply`).
 var dyes: Dictionary[String, Texture2D] = {}
 
+## PUT TOGETHER, OR DRESSED AGAIN (DECISIONS #313): emitted after every assembly (the first, a swap
+## from `apply_appearance`, a `wear`) and after the foundation dresses it again for new colours.
+## Either way every worn mesh has the foundation's materials now: a genre that dresses the character
+## itself (its own dye) does it here. A `wear` in a handler that names the same pieces does nothing,
+## so it does not loop.
+signal assembled
+
+## A GENRE'S PIECES (DECISIONS #313), set by `wear`: slot -> piece, over what the look and its
+## appearance wear. A slot given null wears nothing there (a helm hides the hair); a slot not named
+## wears the appearance's own. Never saved, and kept through `apply_appearance`.
+var overrides: Dictionary[StringName, PackedScene] = {}
+## Names the slot of each of the look's own pieces for `overrides` (`func(path: String) -> StringName`);
+## unset, `CharacterLooks.slot_of` (the keys of `CharacterLooks.SLOTS`: torso, arms, legs, feet, head,
+## shoulders, neck, hairstyle, beard, brows). Set by `wear`.
+var slot_namer: Callable = Callable()
+
 const SKIN_PREFIX: String = "MI_Regular_"
 const HAIR_PREFIX: String = "MI_Hair"
 ## The materials an outfit's colourway replaces: the outfit packs' own. A colourway texture
@@ -59,6 +75,9 @@ const PIECE_META: StringName = &"piece"
 ## Head meshes a worn piece can stand in for. The heads come with a pair of eyebrows; a piece
 ## whose mesh is named `Eyebrows_Thick` wears INSTEAD of them rather than on top of them.
 const REPLACEABLE: Array[String] = ["Eyebrows"]
+## The meta on each of the head's own meshes, so `wear` can take them off with the pieces and put
+## the head on again (eyebrows a piece took off come back when that piece goes).
+const HEAD_META: StringName = &"umf_head"
 
 ## Dressed materials, by source material and look: see the header.
 static var _dressed_cache: Dictionary[String, Material] = {}
@@ -97,11 +116,58 @@ func apply_appearance(appearance: String) -> void:
 		_reassemble()
 	elif _skeleton != null:
 		_dress()
+		assembled.emit()
 
 
-## The pieces worn: the player's (`worn`) or the look's own (`parts`).
+## WEAR A GENRE'S PIECES (DECISIONS #313) without the `appearance` text: `pieces` is slot -> piece
+## scene, ANY piece on the 65-bone skeleton (the foundation's slot lists need not know it). The
+## whole set each call: a slot left out wears the appearance's own piece again, a slot given null
+## wears nothing, `wear({})` takes every genre piece off. `slot_name` (optional) names the slot of
+## each of the look's own pieces, for a genre whose slots are not `CharacterLooks.SLOTS`' keys.
+##
+## Swapped IN PLACE, in this frame: the skeleton stays (the animation driver, a held item, an IK
+## target keep it); only its meshes change. Then `assembled` is emitted: dress it there.
+## Returns whether the pieces changed (and so `assembled` was emitted); false leaves it as it was.
+## Called before the character is assembled, it is only kept: the assembly wears it.
+func wear(pieces: Dictionary[StringName, PackedScene], slot_name: Callable = Callable()) -> bool:
+	overrides = pieces.duplicate()
+	slot_namer = slot_name
+	if not _assembled or _skeleton == null or wearing() == _assembled_with:
+		return false
+	_rewear()
+	return true
+
+
+## The pieces worn: the player's (`worn`) or the look's own (`parts`), with a genre's `overrides`
+## over them (a named slot's pieces replaced where the first of them was; a slot the look had
+## nothing in, after the rest).
 func wearing() -> Array[PackedScene]:
-	return worn if not worn.is_empty() else parts
+	var base: Array[PackedScene] = worn if not worn.is_empty() else parts
+	if overrides.is_empty():
+		return base
+	var out: Array[PackedScene] = []
+	var placed: Dictionary[StringName, bool] = {}
+	for p: PackedScene in base:
+		var slot: StringName = _slot_of(p)
+		if slot.is_empty() or not overrides.has(slot):
+			out.append(p)
+		elif not placed.has(slot):
+			placed[slot] = true
+			if overrides[slot] != null:
+				out.append(overrides[slot])
+	for slot: StringName in overrides:
+		if not placed.has(slot) and overrides[slot] != null:
+			out.append(overrides[slot])
+	return out
+
+
+## The slot of one of the look's own pieces: `slot_namer`'s, else `CharacterLooks.slot_of`.
+func _slot_of(p: PackedScene) -> StringName:
+	if p == null:
+		return &""
+	if slot_namer.is_valid():
+		return StringName(str(slot_namer.call(p.resource_path)))
+	return StringName(CharacterLooks.slot_of(p.resource_path))
 
 
 ## What the character picker offers on top of choosing this look (`CharacterLooks.options`).
@@ -124,6 +190,15 @@ func assemble() -> void:
 	if not body.is_empty():
 		_skeleton.set_meta(HeldItem.BODY_META, body)
 	var head_meshes: Array[MeshInstance3D] = _meshes(_skeleton)
+	for mi: MeshInstance3D in head_meshes:
+		mi.set_meta(HEAD_META, true)
+	_put_on(head_meshes)
+	_dress()
+	assembled.emit()
+
+
+## Every piece of `wearing()` onto the skeleton, each mesh lifted off its own copy of it.
+func _put_on(head_meshes: Array[MeshInstance3D]) -> void:
 	_assembled_with = wearing().duplicate()
 	for part: PackedScene in _assembled_with:
 		if part == null:
@@ -137,7 +212,34 @@ func assemble() -> void:
 			_skeleton.add_child(mi, true)
 			mi.skeleton = NodePath("..")
 		piece.free()
+
+
+## `wear`'s swap: every mesh the head and the pieces put on the skeleton comes off (nothing else:
+## a held item's meshes under a bone attachment stay), the head's own meshes go on again from its
+## scene, then the pieces. The skeleton, its pose and everything holding it are kept.
+func _rewear() -> void:
+	for c: Node in _skeleton.get_children():
+		var mi: MeshInstance3D = c as MeshInstance3D
+		if mi == null or not (mi.has_meta(PIECE_META) or mi.has_meta(HEAD_META)):
+			continue
+		_skeleton.remove_child(mi)
+		for i: int in range(mi.get_surface_override_material_count()):
+			mi.set_surface_override_material(i, null)
+		mi.free()
+	var base: Node = head.instantiate()
+	var from: Skeleton3D = _find_skeleton(base)
+	var head_meshes: Array[MeshInstance3D] = []
+	for mi: MeshInstance3D in _meshes(from if from != null else base):
+		mi.get_parent().remove_child(mi)
+		mi.owner = null
+		mi.set_meta(HEAD_META, true)
+		_skeleton.add_child(mi, true)
+		mi.skeleton = NodePath("..")
+		head_meshes.append(mi)
+	base.free()
+	_put_on(head_meshes)
 	_dress()
+	assembled.emit()
 
 
 ## Put it together again from `wearing()`: the head's scene and every piece, freshly.
