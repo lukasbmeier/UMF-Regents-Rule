@@ -1,10 +1,27 @@
-[gd_resource type="Resource" script_class="KitDef" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="KitDef" format=3]
 
 [ext_resource type="Script" path="res://game/regents/content/kit_def.gd" id="1_kit"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/axemanship.tres" id="2_skill"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_chop_a.tres" id="a0"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_heavy.tres" id="a2"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_cleave.tres" id="a3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_hamstring_chop.tres" id="p1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_skull_splitter.tres" id="p2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_shoulder_shove.tres" id="p3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_whirlwind.tres" id="p4"]
+[ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="h_script"]
+[ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="h_slow"]
+
+[sub_resource type="Resource" id="Hit_hamstring"]
+script = ExtResource("h_script")
+ability = ExtResource("p1")
+status = ExtResource("h_slow")
+status_ms = 3000
+
+[sub_resource type="Resource" id="Hit_shove"]
+script = ExtResource("h_script")
+ability = ExtResource("p3")
+push_mps = 10.0
 
 [resource]
 script = ExtResource("1_kit")
@@ -12,8 +29,10 @@ key = &"axe"
 skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a2")])
 follow_ms = PackedInt32Array(200, 200)
-skills = Array[Resource]([ExtResource("a3")])
-skill_ranks = PackedInt32Array(1, 8, 19, 29)
-skill_slots = PackedInt32Array(0)
+skills = Array[Resource]([ExtResource("a3"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4")])
+skill_ranks = PackedInt32Array(1, 1, 1, 1, 1)
+skill_slots = PackedInt32Array(0, 1, 1, 1, 2)
+hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_shove")])
 id = 40002
 display_name = "Axe"
+designer_notes = "The axe: Chop, Overhead; Cleave on Q. PLACEHOLDER POOL (armor run P1, 2026-11-15): one pool for every handle until per-role pools exist on the server (Lane S); the options and the ult are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."

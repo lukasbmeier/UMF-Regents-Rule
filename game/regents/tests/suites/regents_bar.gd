@@ -119,10 +119,10 @@ func _run_models() -> void:
 		and int(q["ability_id"]) == sword.skills[0].id, "the sword: Lunge on Q, ready")
 	_check(String(q["tip"]).contains("Lunge") and String(q["tip"]).contains("forward") and String(q["tip"]).contains("6 s"),
 		"Lunge's words: it carries you forward, ready again after 6 s (%s)" % String(q["tip"]).replace("\n", " / "))
-	_check(_state(m, 1) == RegentsAbilitySlot.EMPTY and _state(m, 2) == RegentsAbilitySlot.EMPTY and _state(m, 3) == RegentsAbilitySlot.EMPTY,
-		"E, R, F empty: the sword has one ability today")
-	_check(String(_slot(m, 3)["tip"]).contains("chest") and String(_slot(m, 1)["tip"]).contains("sword")
-		and String((m["potion"] as Dictionary)["tip"]).contains("Potions"), "each empty slot says what goes there (B7): the chest's, more sword, potions")
+	_check(_state(m, 1) == RegentsAbilitySlot.LOCKED and _state(m, 2) == RegentsAbilitySlot.LOCKED and _state(m, 3) == RegentsAbilitySlot.EMPTY,
+		"a new sword: E and R locked (its pool opens at 5 and 20), F empty")
+	_check(String(_slot(m, 3)["tip"]).contains("chest") and String((m["potion"] as Dictionary)["tip"]).contains("Potions"),
+		"each empty slot says what goes there (B7): the chest's, potions")
 	_check(not bool(m["stance"]) and not bool(m["combat"]), "no target, no swing, no hit: out of stance, out of a fight")
 	c.target_id = 7
 	m = RegentsAbilityBar.model_for(c, sk)
@@ -234,12 +234,17 @@ func _run_item_twin() -> void:
 		and RegentsItemLevel.picks_of("") == [0, 0, 0], "the item's XP and picks read from its row")
 	_check(RegentsItemLevel.level(staff, 60) == 5 and RegentsItemLevel.level(staff, 280) == 12 and RegentsItemLevel.usable(20, 12) == 12
 		and RegentsItemLevel.usable(5, 0) == 1, "its level on the kind's curve; used up to the holder's mastery")
-	_check(staff.skill_slots == PackedInt32Array([0, 1, 3, 1]) and staff.unlock_levels == PackedInt32Array([1, 5, 12, 20]) and staff.validate().is_empty(),
-		"the staff's layout: Fireball the base, Frost Ring and Gale options, Blink on F; 1, 5, 12, 20")
+	_check(staff.skill_slots == PackedInt32Array([0, 1, 3, 1, 2]) and staff.unlock_levels == PackedInt32Array([1, 5, 12, 20]) and staff.validate().is_empty(),
+		"the staff's layout: Fireball the base, Frost Ring and Gale options, Blink on F, Meteor (placeholder) the ult; 1, 5, 12, 20")
 	var fireball: AbilityDef = staff.skills[0]
 	var frost: AbilityDef = staff.skills[1]
 	var blink: AbilityDef = staff.skills[2]
 	var gale: AbilityDef = staff.skills[3]
+	var meteor: AbilityDef = staff.skills[4]
+	# STEP 76'S RULE (a kit with no ult of its own: its last pick takes the option E did not) on a staff without its ult.
+	var no_ult: KitDef = staff.duplicate() as KitDef
+	no_ult.skills = staff.skills.slice(0, 4)
+	no_ult.skill_slots = PackedInt32Array([0, 1, 3, 1])
 	var none: Array[int] = [0, 0, 0]
 	var took_frost: Array[int] = [frost.id, 0, 0]
 	_check(RegentsItemLevel.slot_refusal(staff, fireball, 1, none).is_empty() and RegentsItemLevel.slot_refusal(staff, blink, 1, none).is_empty(), "Fireball and Blink from 1")
@@ -258,19 +263,44 @@ func _run_item_twin() -> void:
 	var open: Array[Dictionary] = RegentsItemLevel.open_picks(staff, 5, none)
 	_check(open.size() == 1 and int(open[0]["n"]) == 0 and (open[0]["options"] as Array[AbilityDef]).size() == 2 and RegentsItemLevel.open_picks(staff, 19, took_frost).is_empty()
 		and RegentsItemLevel.open_picks(staff, 4, none).is_empty(), "open picks: the first at 5 offers two; none once taken until 20 (no upgrades yet), none below 5")
-	_check(not RegentsItemLevel.has_ults(staff) and RegentsItemLevel.pick_refusal(staff, 2, gale, 20, took_frost).is_empty()
-		and RegentsItemLevel.pick_refusal(staff, 2, gale, 19, took_frost).contains("level 20") and RegentsItemLevel.pick_refusal(staff, 2, frost, 20, took_frost).contains("another pick"),
-		"R (no ult yet): at 20 the last pick takes Gale; NEGATIVES: at 19, and Frost Ring again")
+	_check(not RegentsItemLevel.has_ults(no_ult) and RegentsItemLevel.pick_refusal(no_ult, 2, gale, 20, took_frost).is_empty()
+		and RegentsItemLevel.pick_refusal(no_ult, 2, gale, 19, took_frost).contains("level 20") and RegentsItemLevel.pick_refusal(no_ult, 2, frost, 20, took_frost).contains("another pick"),
+		"R on a kit with no ult: at 20 the last pick takes Gale; NEGATIVES: at 19, and Frost Ring again")
 	var both: Array[int] = [frost.id, 0, gale.id]
-	_check(RegentsItemLevel.bar(staff, both)[2] == gale and RegentsItemLevel.slot_refusal(staff, gale, 20, both).is_empty()
-		and RegentsItemLevel.slot_refusal(staff, gale, 19, both).contains("level 20"), "Gale on R from 20; NEGATIVE: shut at 19")
+	_check(RegentsItemLevel.bar(no_ult, both)[2] == gale and RegentsItemLevel.slot_refusal(no_ult, gale, 20, both).is_empty()
+		and RegentsItemLevel.slot_refusal(no_ult, gale, 19, both).contains("level 20"), "no ult: Gale on R from 20; NEGATIVE: shut at 19")
+	var open_n: Array[Dictionary] = RegentsItemLevel.open_picks(no_ult, 33, took_frost)
+	_check(open_n.size() == 1 and int(open_n[0]["n"]) == 2 and (open_n[0]["options"] as Array[AbilityDef]) == [gale], "no ult, at 33 with Frost Ring: R's pick open, offering Gale")
+	# THE STAFF'S ULT (armor run P1): R takes Meteor only; the option E left over no longer goes there.
+	_check(RegentsItemLevel.has_ults(staff) and RegentsItemLevel.pick_refusal(staff, 2, meteor, 20, took_frost).is_empty()
+		and RegentsItemLevel.pick_refusal(staff, 2, meteor, 19, took_frost).contains("level 20"),
+		"the staff's ult: Meteor (placeholder) at the last pick from 20; NEGATIVE: at 19")
+	_check(RegentsItemLevel.pick_refusal(staff, 2, gale, 20, took_frost).contains("last picks") and not RegentsItemLevel.pick_refusal(staff, 0, meteor, 5, none).is_empty(),
+		"NEGATIVES: with an ult, Gale is no last pick; Meteor is no first pick")
+	var stale: Array[int] = [frost.id, 0, gale.id]
+	_check(RegentsItemLevel.slot_refusal(staff, gale, 33, stale).contains("not chosen") and RegentsItemLevel.bar(staff, stale)[2] == null,
+		"NEGATIVE: a staff that took Gale on R before the ult: Gale no longer fires from R (change the pick)")
+	var with_ult: Array[int] = [frost.id, 0, meteor.id]
+	_check(RegentsItemLevel.bar(staff, with_ult)[2] == meteor and RegentsItemLevel.slot_refusal(staff, meteor, 20, with_ult).is_empty()
+		and RegentsItemLevel.slot_refusal(staff, meteor, 19, with_ult).contains("level 20"), "Meteor on R from 20; NEGATIVE: shut at 19")
 	var open_r: Array[Dictionary] = RegentsItemLevel.open_picks(staff, 33, took_frost)
-	_check(open_r.size() == 1 and int(open_r[0]["n"]) == 2 and (open_r[0]["options"] as Array[AbilityDef]) == [gale], "at 33 with Frost Ring: R's pick open, offering Gale")
+	_check(open_r.size() == 1 and int(open_r[0]["n"]) == 2 and (open_r[0]["options"] as Array[AbilityDef]) == [meteor], "at 33 with Frost Ring: R's pick open, offering Meteor")
 	var bar: Array[AbilityDef] = RegentsItemLevel.bar(staff, took_frost)
 	_check(bar[0] == fireball and bar[1] == frost and bar[2] == null and bar[3] == blink, "the bar: Fireball, Frost Ring, nothing, Blink")
 	var sword: KitDef = KitDef.by_key(&"sword")
-	_check(RegentsItemLevel.bar(sword, none)[0] == sword.skills[0] and RegentsItemLevel.open_picks(sword, 33, none).is_empty(),
-		"the sword: Lunge on Q; nothing to pick yet (its pools wait on Luke's sheet)")
+	var sword_open: Array[Dictionary] = RegentsItemLevel.open_picks(sword, 33, none)
+	_check(RegentsItemLevel.bar(sword, none)[0] == sword.skills[0] and sword.skills[0].display_name == "Lunge" and sword_open.size() == 3
+		and (sword_open[0]["options"] as Array[AbilityDef]).size() == 3 and int(sword_open[2]["n"]) == 2
+		and (sword_open[2]["options"] as Array[AbilityDef]) == sword.skills_in(KitDef.SLOT_ULT)
+		and RegentsItemLevel.open_picks(sword, 4, none).is_empty(),
+		"the sword's placeholder pool: Lunge on Q; at 33 three for E (either pick) and its ult for R; NEGATIVE: nothing open at 4")
+	for key: StringName in [&"sword", &"axe", &"bow", &"staff"]:
+		var k: KitDef = KitDef.by_key(key)
+		var ok: bool = (k.validate().is_empty() and k.skills_in(KitDef.SLOT_BASE).size() == 1 and k.skills_in(KitDef.SLOT_ULT).size() == 1
+			and k.skills_in(KitDef.SLOT_OPTION).size() >= 2)
+		for a: AbilityDef in k.skills_in(KitDef.SLOT_OPTION) + k.skills_in(KitDef.SLOT_ULT):
+			ok = ok and (a.display_name.ends_with("(placeholder)") or a.display_name in ["Frost Ring", "Gale"])
+		_check(ok, "%s: one Q, options for E, one ult on R, every new one named (placeholder)" % key)
 	var bad: KitDef = staff.duplicate() as KitDef
 	bad.skill_slots = PackedInt32Array([0, 0, 3, 1])
 	_check(bad.validate().any(func(e: String) -> bool: return e.contains("one base")), "NEGATIVE: two bases refused")
@@ -339,21 +369,22 @@ func _run_bag_picks() -> void:
 	level = win.find_child("Level", true, false) as Label
 	_check(win.find_child("Pick_0", true, false) == null and level != null and level.text.contains("counting as 4"),
 		"NEGATIVE: in a Sorcery-4 hand it counts as 4: no pick open (%s)" % (level.text if level != null else "none"))
-	# R (Luke, 2026-11-14: "fix the R ability not being assigned"): at 20, the last pick takes the spell E did not.
+	# R: at 20 the last pick takes the staff's ult (armor run P1: Meteor, a placeholder), never the spell E did not.
 	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40023, 1, 0, JSON.stringify({"q": 650, "x": RegentsAbilityBar._xp_for(staff.skill, 20), "k": [40014, 0, 0]}))
 	sk.xp[staff.skill.id] = 100000
 	win.refresh()
 	await get_tree().process_frame
 	row = win.find_child("Pick_2", true, false)
-	_check(row != null and row.find_child("Choose_40016", true, false) != null and row.find_child("Choose_40014", true, false) == null,
-		"level 20, Frost Ring on E: the last pick (R) offers Gale, not Frost Ring again")
-	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40023, 1, 0, JSON.stringify({"q": 650, "x": RegentsAbilityBar._xp_for(staff.skill, 20), "k": [40014, 0, 40016]}))
+	_check(row != null and row.find_child("Choose_40048", true, false) != null and row.find_child("Choose_40016", true, false) == null
+		and row.find_child("Choose_40014", true, false) == null,
+		"level 20, Frost Ring on E: the last pick (R) offers Meteor (placeholder); NEGATIVE: not Gale, not Frost Ring")
+	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, 40023, 1, 0, JSON.stringify({"q": 650, "x": RegentsAbilityBar._xp_for(staff.skill, 20), "k": [40014, 0, 40048]}))
 	win.refresh()
 	await get_tree().process_frame
 	var r_name: Label = win.find_child("Slot_R", true, false).find_child("Name", true, false) as Label
 	var e_name: Label = win.find_child("Slot_E", true, false).find_child("Name", true, false) as Label
-	_check(r_name.text == "Gale" and e_name.text == "Frost Ring" and win.find_child("Pick_2", true, false) == null,
-		"both taken: Frost Ring on E, Gale on R, nothing open")
+	_check(r_name.text == "Meteor (placeholder)" and e_name.text == "Frost Ring" and win.find_child("Pick_2", true, false) == null,
+		"both taken: Frost Ring on E, Meteor on R, nothing open")
 	# The bar's weapon opens it too.
 	var bar := RegentsAbilityBar.new()
 	bar.follows_setting = false

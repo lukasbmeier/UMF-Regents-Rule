@@ -169,6 +169,27 @@
 			"splash_pct": 0,
 			"status": 0,
 			"status_ms": 3000
+		},
+		{
+			"ability": 40048,
+			"angle_deg": 45.0,
+			"body": -1,
+			"burn_dps": 0.0,
+			"burn_ms": 0,
+			"cast_ms": 2000,
+			"cast_while_moving": false,
+			"cost": 50.0,
+			"delay_ms": 1500,
+			"id": 40009,
+			"kind": 1,
+			"name": "Meteor (placeholder)",
+			"push_mps": 0.0,
+			"radius_m": 5.0,
+			"speed_mps": 30.0,
+			"splash_m": 0.0,
+			"splash_pct": 0,
+			"status": 0,
+			"status_ms": 3000
 		}
 	],
 	"owner": "regents",

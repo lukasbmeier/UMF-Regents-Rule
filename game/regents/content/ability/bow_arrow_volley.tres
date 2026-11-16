@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 45000
+range_m = 18.0
+wind_up_ms = 500
+damage = 35.0
+animation = &"ability.40047"
+key = &"regents.combat"
+judged = true
+hits_all = true
+reach_m = 18.0
+radius_m = 1.5
+height_m = 0.9
+lunges = false
+id = 40047
+display_name = "Arrow Volley (placeholder)"
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Bow, ult on R: a broad volley 18 m ahead (marked Hits All by the master at merge, step 91; was: it hits one until areas that hit all land)."

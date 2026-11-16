@@ -4930,3 +4930,124 @@ and press Q (Cleave): both dummies lose 12.6. Before, only the nearer one did.
 **For the rules/handbook**: regents-genre.md: "A player's judged sweep marked Hits All (Cleave) lands on every foe in it, each
 judged as a single hit; a rallying hit heals once a swing (`rallied`)." HANDBOOK: the template's paragraph comes with the pull.
 **Left for later**: a foe's sweep may be marked Hits All too (content); the client shows each body's hit from its own event.
+
+## Step 90: TOWNS, THE ENGINEERING HALF (the piece cache: the world in 4 s; the village's props) (2026-11-16, the armor run's E3)
+
+**Built**:
+- `game/regents/town/town_kit.gd`: `TownKit.piece` / `has_piece` keep each kit scene once found, by name. Asking the
+  resource loader for a piece cost ~2 ms (`exists` + `load`, even with the scene cached; measured), and a house places
+  ~80 pieces. A house now builds in 5.5 ms instead of 148 ms. THE TOWN WORLD, back to back on the same machine
+  (headless, props in both): 24.1 s before, 4.0 s after (HANDOFF's "~17 s" was the before on a quieter machine).
+  After, by phase: village 0.5 s, town 2.9 s, castle 0.2 s, ground 0.4 s. The look is unchanged: only the lookup changed.
+- THE SAVED BAKE, MEASURED AND NOT BUILT (agreed with the master): one merged house saves to 0.53 MB (compressed, 32k
+  vertices) and loads in 6.5 ms, against ~14 ms to build and merge it. For the world's ~150 houses that is ~80 MB of
+  binaries in git, re-made on every kit change, to save about 1 s.
+- NEW `game/regents/town/village_dressing.gd` (`VillageDressing`, a `.tres`): the village kit's small props about a
+  house, each a share a designer edits: `vine_share` (the flat vines `Prop_Vine1-4` hung on the ground floor's back
+  and side wall cells, on the wall's face, never the front), `fence_share` (a yard behind the house fenced in the
+  kit's 2 m panels, `yard_depth` deep; `metal_fence_share` of them metal), `crate_share` (crates stacked by one side
+  wall), `wagon_share` (the kit's wagon along the other side). Placed as one `PropGroup` "Village" under the house,
+  so it is dressed and merged with it, and its collisions are one body (the wagon alone brings eleven).
+- `settlement.gd`: `@export var dressing: VillageDressing`. Null (the default) places nothing: the look before.
+  With one, every `KitHouse` is dressed from its own seed (`props_rng`, from `seed_of`): the same house, the same props.
+- NEW `game/regents/town/dressing/village.tres`: the preset (vines 0.25, fences 0.4, crates 0.35, wagon 0.12),
+  `placeholder = true`. `town_world.gd`: the village wears it (`VILLAGE_DRESSING`); the town and the castle none.
+**How to play it**: F6 on `game/regents/town/town_world.tscn`. It is up in about 4 s now. Press 2 (the village) or 3 (its
+lane) to see the fenced yards behind the cottages, vines on their sides, crates and a wagon or two. To dress another
+place, set a `Settlement`'s `dressing` in the Inspector or edit `dressing/village.tres`.
+**Tested**: `regents_town` 77/0 (was 68), also after `git merge main`. New: no dressing, no props; with every share 1,
+every house gets vines, a yard, crates and the wagon; the vines on a back or side wall's face, never the front; the
+fence, crates and wagon clear of the house; two bodies a house (its own and the props', the wagon's in it); one mesh;
+the same seed the same props; the preset loads, a placeholder; the world's village dressed, its town and castle not.
+NEGATIVE: with the wagon set inside the house and the back vines set behind the wall's face, the vine check and the
+clear-of-the-house check fail (75/2); restored. Windowed shots, before and after, both scenes (52 each), looked at:
+the village shows its yards, vines and crates and the rest is the same; the lab is unchanged (byte-identical presets).
+**Needs on merge**: none (client only; no publish).
+**Placeholders made**: `game/regents/town/dressing/village.tres` (`placeholder = true`): how many of the village's houses
+get vines, a fenced yard, crates, a wagon, and how deep the yard is. These are Luke's to set; the town world's village wears it.
+**For Luke**:
+- The village props: how much of each (`dressing/village.tres`), and which places wear them (only the village now).
+- LODs and impostors: `docs/rules/version_settings_looks.md` forbids LODs only on WORN pieces (#177), not on
+  buildings. They are allowed on buildings, but none are built.
+- A saved bake of merged buildings was measured and not built (numbers above); the cache did the job.
+**For the rules/handbook**:
+- regents-genre.md (towns): "A kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path
+  per piece; the loader's lookup costs ~2 ms each. A place's small village props are its `Settlement`'s `dressing`
+  (`VillageDressing`), never placed by hand round a house."
+**Left for later**: the deep corner vines (`Prop_Vine5-9`) and the exterior stairs, borders and supports are not used;
+the yard can meet a neighbor's in a tight row (the town's rows would need gaps checked before wearing a dressing);
+LODs or impostors for the farthest buildings, if wanted.
+
+## Step 91: EVERY WEAPON'S POOLS, AS PLACEHOLDERS (one pool a weapon kind; the staff's ult; the Bolt at 12) (2026-11-16, the armor run's P1)
+
+Built (content, plus one validation line and tests; no server code, no schema change):
+- ONE PLACEHOLDER POOL PER WEAPON KIND. Per-ROLE pools (each handle its own Q and options, Luke's "SEPARATE POOLS PER
+  ROLE") need server code (`KitSeed` per-role skills/slots, the gates reading the wielded item's role, `build/regents.rs`,
+  the twin `item_level.gd`): Lane S's, queued by the master as S1b. Until then every handle of a kind shares its pool.
+  - Sword (`content/kit/sword.tres`): Q Lunge; E Flurry, Hamstring Cut (slows 3 s), Shield Bash (shoves back 8 m/s);
+    R Execute.
+  - Axe (`kit/axe.tres`): Q Cleave (untouched: S1 sets its `hits_all`); E Hamstring Chop (slows 3 s), Skull Splitter,
+    Shoulder Shove (shoves 10 m/s); R Whirlwind.
+  - Bow (`kit/bow.tres`, had no skills): Q Point-Blank Shot; E Pinning Shot (slows 3 s), Kick Away (shoves 10 m/s), Quick
+    Shot; R Arrow Volley. Bow skills are judged sweeps straight ahead (8-18 m), so they take no arrow.
+  - Staff (`kit/staff.tres`): its first ult, R Meteor (an AREA spell: 2 s cast standing, 50 mana, a 10 m circle 1.5 s
+    later for 40, 60 s cooldown; `content/spell/staff_meteor.tres`, spell 40009).
+  - New abilities 40035-40048 (`content/ability/sword_*`, `axe_*`, `bow_*`, `staff_meteor.tres`), every one named
+    "... (placeholder)" and marked PLACEHOLDER in `designer_notes`. Slows and shoves are `KitHit` rows on the kits (the
+    wolf's mechanic). Clips and recoveries reuse existing ones (`anim/adventurer.tres`: the sword's lights and heavies,
+    the hook, the kick, the bow's loose, the double cast). Drawn: swings by `SwingTrail`; Meteor's ring by `SpellLooks`
+    and its charge by a new row in `vfx/ability_vfx.tres` (fire charge, both hands).
+- THE STAFF'S BOLT (B14): damage 9 -> 12 (`content/ability/staff_bolt.tres`), benched from the bake: ~20 a second at its
+  0.6 s pace, beside the bow's full draws (~22/s, arrows paid), the axe's string (~23/s) and the sword's (~21-28/s by
+  handle); was ~15. Free, as before. Its projectile look (flight, trail, impact) is step 82's; a CAST FLASH at the hand
+  is not added: an instant spell's `on_land` plays at the feet, so a flash needs `AbilityVfx` code (E1's `vfx/`).
+- `content/kit_def.gd`: "four skills at most" only for a kit with no `skill_slots` (a foe's); a pooled kit holds more.
+- ULTS CHANGE R (step 76): with an ult, a kit's last pick takes only its ult. Step 76's rule ("R takes the option E did
+  not") stays in the code for a kit with none, and stays tested on a staff copy without its ult.
+**How to play it**: wield a sword, axe or bow: Q from level 1; at level 5 open the weapon's abilities (click it on the bar
+  with the bag open, or Abilities in the bag) and pick E from three; at 20 R offers the ult. A staff at 20: R offers
+  Meteor (hold still 2 s, then the ring lands). `admin_set_item_level` jumps a weapon's level for a look.
+**Tested**:
+- Unit `regents,regents_bar,regents_vfx` 1732/0. Updated deliberately: the sword's one-skill and empty-slot checks
+  (now E and R locked on a new sword), the staff's layout and spells list, step 76's R checks moved to a no-ult staff
+  copy; NEW: Meteor at R from 20 (NEGATIVES at 19, Gale/Frost Ring no last pick, Meteor no first pick, a staff that had
+  Gale on R no longer fires it), every kind has one Q, options and one ult named (placeholder), the sword's pool at 33
+  and NEGATIVE nothing at 4, the abilities window offering Meteor (NEGATIVE not Gale/Frost Ring). NEGATIVE of the whole:
+  with `staff.tres`/`bow.tres` as on `main` the bar suite fails 3 and aborts (Meteor missing).
+- `cargo test` all green (`--test regents` 58/0: the same cases in Rust, step 76's on a `KitSeed` copy without the ult,
+  every kind's pool), wasm check clean.
+- Whole `run_tests.sh`: **4651 passed, 0 failed**, the bake current, no engine errors (after merging `main` e5c07a05).
+- NOT run: integration (the master's M9) and the playtests. Integration hook changes, written and syntax-checked only:
+  the staff's R leg now picks Meteor (NEGATIVES: Gale, Frost Ring, Fireball refused at R); Meteor shut on R below 20,
+  Gale "not chosen"; NEW in the bow leg: the bow's Q, an option and the ult published, NEGATIVES the unpicked option
+  and ult refused, a sword option with a bow refused. A BOW SKILL PRESSED BY A REAL CLIENT (a swing on a drawing kit)
+  has never run: worth one look in play or in `combat_playtest.sh` (not changed).
+**Needs on merge**: re-bake (`shared/content/**` is in the branch, baked); no codegen (no table or reducer); publish the
+  play database (content changed).
+Placeholders made (Luke fills in names, numbers and what each really does):
+- Sword E Flurry, Hamstring Cut, Shield Bash; R Execute: `game/regents/content/ability/sword_{flurry,hamstring_cut,shield_bash,execute}.tres`, the slows/shoves in `content/kit/sword.tres` `hits`.
+- Axe E Hamstring Chop, Skull Splitter, Shoulder Shove; R Whirlwind: `content/ability/axe_{hamstring_chop,skull_splitter,shoulder_shove,whirlwind}.tres`, `kit/axe.tres` `hits`.
+- Bow Q Point-Blank Shot; E Pinning Shot, Kick Away, Quick Shot; R Arrow Volley: `content/ability/bow_*.tres`, `kit/bow.tres` `hits`.
+- Staff R Meteor: `content/ability/staff_meteor.tres`, `content/spell/staff_meteor.tres`.
+- The Bolt's 12: `content/ability/staff_bolt.tres` (his feel check).
+**For Luke**:
+- Per-role pools wait on server work (S1b); until then each weapon kind has one pool shared by its handles.
+- The staff's ult changes R: a staff that took Gale or Frost Ring on R before keeps it on the item but it no longer
+  fires; he changes the pick to Meteor (free once a week from level 20). His own level-33 staff is one.
+- The second pick (~12) still has nothing to take once E holds an option: upgrades are not built (B6).
+- The drafts' real effects (Execute by missing health, a fan or volley of arrows, a whirlwind you walk in, Riposte
+  Stance, War Cry, Last Stand, heals by share) need new mechanics: his rewrite of §9 first.
+**For the rules/handbook**: regents-genre.md, under A PLAYER'S ABILITIES OPEN ON THE ITEM: "A weapon kit's skills are a
+  POOL (`skill_slots`: one base, options, ults; more than four allowed); with an ult the last pick takes only the ult.
+  Every placeholder ability is named `... (placeholder)` and says PLACEHOLDER in its `designer_notes`."
+**Left for later**:
+- S1b: per-role pools (each handle its own base Q and options), then split these placeholders by handle.
+- Whirlwind and Arrow Volley (and the Point-Blank Shot's fan) should reach every body in their sweep: set S1's
+  `hits_all` on 40042, 40047 (and 40043) after S1 merges.
+- The bar's words for an ability's slow or shove (`RegentsAbilityBar.ability_words` says only damage and reach; the
+  `ui/` token's).
+- The Bolt's cast flash (`AbilityVfx`, E1's lane); Meteor's ring is the frost ring (a fire landing ring for players' areas is `SpellLooks`, E1's).
+- Ability ids 40035-40048 and spell 40009 are taken: S4's chest abilities start at 40049.
+
+**At the merge (the master)**: Whirlwind (40042) and Arrow Volley (40047) marked `hits_all` (step 89's flag), re-baked.
+Unit, `cargo test` and the wasm check on `main`: see HANDOFF.

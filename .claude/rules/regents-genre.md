@@ -32,6 +32,9 @@ paths:
   refit does). The kit's layout is content (`KitDef.skill_slots`, `unlock_levels`); the server gates by `need_slot`
   (`KitSeed::slot_refusal`) and the client's twin is `RegentsItemLevel`: change both together. Combat XP goes through
   `train` (the holder and the wielded weapon, catch-up), never `add_xp` alone.
+- A WEAPON KIT'S SKILLS ARE A POOL (PROGRESS 91): `skill_slots`: one base, options, ults; more than four allowed; with
+  an ult the last pick takes only the ult. Every placeholder ability is named `... (placeholder)` and says
+  PLACEHOLDER in its `designer_notes`. Ability ids to 40048 and spell 40009 are taken.
 - Items: three grades; Power is the number; a trait changes how an item plays and never its Power,
   and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6). Materials and modular gear:
   `docs/regents_rule/MATERIALS.md` (2026-10-23; crafted items hold Common 1 / Fine 2 / MW 3 traits, picked).
@@ -137,6 +140,9 @@ paths:
 - A SWEEP THAT HITS ALL (PROGRESS 89, template #314): a player's judged sweep marked Hits All (`AbilityDef.hits_all`:
   Cleave) lands on every foe in it, each judged as a single hit; a rallying hit heals once a swing (`rallied`).
   Which abilities hit all is Luke's content call.
+- TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
+  piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
+  (`VillageDressing`), never placed by hand round a house.
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

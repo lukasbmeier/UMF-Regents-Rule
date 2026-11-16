@@ -158,17 +158,18 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | claude/t1-wear-hook-69d351 (template) | MERGED into the template's main 2026-11-16 (`9b2e4aa`: #313 wear + assembled, #315 NPCs bind), SHIPPED in 1.8.3 | — | template 4437fa4 | |
 | S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | MERGED 2026-11-16 | 89 | c94bdc92 | |
 | S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
-| S2 | | | waiting S1 (so M3 too) | | | |
-| S3 | | | waiting S2 | | | |
+| S2 | the S1 session (local_2bb14966), reused | claude/s2-armor-core | running since 2026-11-16 | | | |
+| S3 | (the same Lane S session, after S2) | | waiting S2 | | | |
 | S4 | | | waiting S3, P1 | | | ui/ |
-| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | running | | | |
-| W1 | | | waiting T1? | | | |
+| P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | MERGED 2026-11-16 | 91 | 754818e4 | |
+| T2 | the T1 session (local_8bc5463c), reused, in `../UMF Template` | claude/t2-picker-color (template) | NEW 2026-11-16 (W1's stop): a `color: true` option kind in the foundation's `CharacterPicker` (swatches, value 0xRRGGBB + 1), template 1.8.4, #316; running | | | |
+| W1 | the E1 session (local_e7199708), reused | claude/w1-picker-colors | running: genre-side (Peasant-only looks on `RegentsFigure`, colors as `main=<int>` keys); the FREE picker needs T2 | | | |
 | W2 | | | waiting T1, S2, S3 | | | scene |
 | W3 | | | waiting S4 | | | ui/ |
 | W4 | | | waiting W2 | | | test DB |
 | E1 | e1-effects-scale (local_e7199708) | claude/e1-effects-scale-536c07 | MERGED 2026-11-16 | 88 | 127d571e | |
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
-| E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | PARTIAL `591a590a`, HELD for a free slot: the piece cache (world 30.5 s -> 4.2 s), no saved bake (measured: ~80 MB for ~1 s); left: the small props, windowed shots, merge of main | | | |
+| E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | MERGED 2026-11-16 | 90 | cb3a6df2 | |
 | M3 | master | — | DONE 2026-11-16: template 1.8.3 (`4437fa4`: T1 + S1's `resolve_action_all` #314) shipped to all four games; here `aca81080` | | aca81080 | |
 | M9 | master | — | waiting all | | | |
 

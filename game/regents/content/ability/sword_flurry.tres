@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 8000
+range_m = 2.0
+wind_up_ms = 200
+damage = 12.0
+animation = &"ability.40035"
+key = &"regents.combat"
+judged = true
+reach_m = 2.0
+radius_m = 0.6
+height_m = 0.9
+lunges = false
+id = 40035
+display_name = "Flurry (placeholder)"
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Sword, E option: a quick cut (the draft's four quick cuts; one hit until more exist)."
