@@ -871,7 +871,7 @@ adding components: `game/fishing/fisher.tscn` = player.tscn + `Fishing`, `Gear`,
 | Input | samples keys/mouse into input frames (local only) | — |
 | Health | health, death, revival | `health_state` |
 | Inventory | items | `inventory_item` |
-| Session | round phase, score, coins | `session`, `session_member` |
+| Session | round phase, score, coins | `session`, `session_member` (optional: an NPC has none and is in no session) |
 | Interaction | what you're looking at, the interact key | — (calls `interact`) |
 | Action | abilities and cooldowns | `ability_*`, `action_event` |
 | Animation | drives the generated AnimationTree from state | — |

@@ -1197,3 +1197,6 @@ Client only: nothing to republish, no codegen.
   wear (any piece, named in no foundation list; a slot left out wears the appearance's own, null wears nothing,
   `wear({})` takes all off), swapped in place on the same skeleton. Signal `assembled` after every assembly and every
   re-dress, once per change. Tests: `tests/suites/looks.gd` "a genre's pieces" (mutation-checked).
+- An NPC on the player's scene binds at once (#315): `SessionComponent` takes `session_member` as optional, so an entity
+  with no member row no longer waits the 2 s bind timeout (Regent's Rule's NPCs froze ~2.9 s entering a ring). Tests:
+  `tests/suites/entity.gd` (fails without the fix).
