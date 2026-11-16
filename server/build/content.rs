@@ -211,6 +211,12 @@ pub fn run(listed: &[String]) {
                 if it["lunges"].as_bool().unwrap_or(false) {
                     data["lunges"] = serde_json::Value::Bool(true);
                 }
+                // One whose sweep HITS ALL (DECISIONS #314) says so too: the referee answers it with every body it met
+                // (`resolve_action_all`), and the module refuses that answer for any other.
+                if it["hits_all"].as_bool().unwrap_or(false) {
+                    assert!(it["judged"].as_bool().unwrap_or(false), "{out}: ability {id} hits all but is not judged: only a referee sweeps, turn judged on");
+                    data["hits_all"] = serde_json::Value::Bool(true);
+                }
                 // A DODGE ROLL (DECISIONS #309) says so too (clients and referees read the row), and is one of
                 // `roll::ROLLS`: its status, its length, the hot rule that may give it live, whether in the air.
                 if it["rolls"].as_bool().unwrap_or(false) {
