@@ -159,7 +159,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all (game) + its own branch in `../UMF Template` | MERGED 2026-11-16 | 89 | c94bdc92 | |
 | S1b | (queued, Lane S, after S1) | | NEW (P1's stop, 2026-11-15): PER-ROLE POOLS on the server: `KitRole` its own skills + slots (bake), per-role `KitSeed`, the gates (`slot_refusal`, `pick_refusal`, `need_slot`, `choose_pick`) read the wielded item's role, the client twin `item_level.gd`; then P1's content per role. Until then P1 ships ONE placeholder pool per weapon KIND | | | |
 | S2 | the S1 session (local_2bb14966), reused | claude/s2-armor-core | MERGED 2026-11-16 | 92 | 8171e4a2 | |
-| S3 | the Lane S session (local_2bb14966), reused | claude/s3-armor-pieces | running since 2026-11-16 | | | |
+| S3 | the Lane S session (local_2bb14966), reused | claude/s3-armor-pieces | MERGED 2026-11-16 | 94 | cf78f9ea | |
 | S4 | | | waiting S3, P1 | | | ui/ |
 | P1 | p1-weapon-pools (local_fbb26ccb) | p1-weapon-pools | MERGED 2026-11-16 | 91 | 754818e4 | |
 | T2 | the T1 session (local_8bc5463c), reused | claude/t2-picker-color (template) | MERGED into the template's main (`9491439`), SHIPPED 2026-11-16 as 1.8.4 (#316) to all four games; here `e15c2f16` | — | e15c2f16 | |
