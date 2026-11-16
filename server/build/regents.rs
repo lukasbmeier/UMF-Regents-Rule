@@ -293,8 +293,16 @@ pub fn regents_data() {
         assert_eq!(follow.len(), light.len(), "regents content: the {name} kit needs a follow-through per step of its string");
         // THE ROLE MAP (COMBAT_OVERHAUL.md §5): per role, the string's last hit; the plain role's is the string's last.
         let mut role_map = String::new();
+        // PER-ROLE POOLS (S1b): each role's own skills, every one a skill of the kit and claimed by one role at most.
+        let mut role_skills: Vec<(u32, u32)> = Vec::new();
         for kr in k["roles"].as_array().cloned().unwrap_or_default() {
             let role = kr["role"].as_i64().unwrap_or(0);
+            for a in kr["skills"].as_array().cloned().unwrap_or_default() {
+                let a = a.as_i64().unwrap_or(0) as u32;
+                assert!(skills.iter().any(|(s, _)| *s == a), "regents content: the {name} kit's role {role} claims {a}, which is not one of its skills");
+                assert!(!role_skills.iter().any(|(_, x)| *x == a), "regents content: the {name} kit's skill {a} is claimed by two roles");
+                role_skills.push((role as u32, a));
+            }
             let fin = kr["finisher"].as_i64().unwrap_or(0) as u32;
             assert!(role_ids.contains(&role), "regents content: the {name} kit's role map names role {role}, which is no role");
             assert!(locks.iter().any(|(l, ms)| *l == fin && *ms > 0), "regents content: the {name} kit's last hit {fin} has no lock (re-bake)");
@@ -327,7 +335,7 @@ pub fn regents_data() {
         kit_keys.push(key.clone());
         out.push_str(&format!("    KitSeed {{ id: {}, key: {key:?}, skill: {sk}, light: &{light:?}, follow_ms: &{follow:?}, skills: &{skills:?}, \
              locks: &{locks:?}, draw_full_ms: {}, resource: {}, unblockable: &{unblockable:?}, roles: &[{role_map}], hits: &[{hit_map}], \
-             slots: &{slots:?}, unlock_levels: [{}, {}, {}, {}] }},\n",
+             slots: &{slots:?}, unlock_levels: [{}, {}, {}, {}], role_skills: &{role_skills:?} }},\n",
             int(k, "id", &name), k["draw_full_ms"].as_i64().unwrap_or(0), k["resource"].as_i64().unwrap_or(0).max(0),
             unlock[0], unlock[1], unlock[2], unlock[3]));
         if k["resource"].as_i64().unwrap_or(0) > 0 {

@@ -824,10 +824,18 @@ fn need_slot(ctx: &ReducerContext, who: u64, kit: &rules::KitSeed, ability_id: u
         return Ok(());
     }
     let (usable, picks) = weapon_level(ctx, who, kit);
-    match kit.slot_refusal(ability_id, usable, picks) {
+    // PER-ROLE POOLS (S1b): the wielded weapon's role chooses its pool (0: a kit whose roles claim nothing, one pool).
+    let role = if kit.role_skills.is_empty() { 0 } else { role_of(ctx, who).id };
+    match kit.slot_refusal_for(ability_id, usable, picks, role) {
         Some(why) => Err(format!("{verb}: {why}")),
         None => Ok(()),
     }
+}
+
+/// THE POOL a weapon of `kit` whose bag row says `data` picks from (S1b): its handle's role when the kit's roles have pools
+/// of their own, else 0 (one pool).
+fn pool_role_of(kit: &rules::KitSeed, data: &str) -> u32 {
+    if kit.role_skills.is_empty() { 0 } else { rules::role_of_parts(&rules::parts_of_row(data)).id }
 }
 
 /// IN A FIGHT, for what may only be done out of one (B6: picks): hurt within `regents.regen_delay_s` (the same wait
@@ -854,7 +862,7 @@ pub fn choose_pick(ctx: &ReducerContext, item_row: u64, pick: u32, ability_id: u
     let s = rules::skill(kit.skill).ok_or("choose_pick: its kind has no mastery")?;
     let usable = rules::usable_level(rules::item_level(s, rules::item_xp_of(&row.instance_data)), rank_in(ctx, me, kit.skill));
     let mut picks = rules::picks_of(&row.instance_data);
-    if let Some(why) = kit.pick_refusal(pick, ability_id, usable, picks) {
+    if let Some(why) = kit.pick_refusal_for(pick, ability_id, usable, picks, pool_role_of(kit, &row.instance_data)) {
         return Err(format!("choose_pick: {why}"));
     }
     picks[pick as usize] = ability_id;
@@ -883,7 +891,7 @@ pub fn change_pick(ctx: &ReducerContext, station_id: u64, item_row: u64, pick: u
     let level = rules::item_level(s, rules::item_xp_of(&row.instance_data));
     let usable = rules::usable_level(level, rank_in(ctx, me, kit.skill));
     let mut picks = rules::picks_of(&row.instance_data);
-    if let Some(why) = kit.change_refusal(pick, ability_id, usable, picks) {
+    if let Some(why) = kit.change_refusal_for(pick, ability_id, usable, picks, pool_role_of(kit, &row.instance_data)) {
         return Err(format!("change_pick: {why}"));
     }
     let now_s = (micros(ctx.timestamp) / 1_000_000).max(0) as u32;

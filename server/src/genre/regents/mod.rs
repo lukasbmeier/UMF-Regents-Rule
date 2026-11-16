@@ -429,6 +429,9 @@ pub struct KitSeed {
     pub slots: &'static [u32],
     /// The item level each unlock opens at: Q and F, the first pick, the second pick, the ult (Luke's B4: 1, 5, 12, 20).
     pub unlock_levels: [u32; 4],
+    /// PER-ROLE POOLS (S1b; Luke's "each weapon of each role a unique set"): (role id, ability) for each skill a role
+    /// claims as its own. A skill no role claims is every role's. Empty: one pool for the kit (the staff, foes).
+    pub role_skills: &'static [(u32, u32)],
 }
 
 /// A SPELL (`SpellDef`, owner 2026-10-20): how a casting kit's ability lands.
@@ -1686,6 +1689,28 @@ impl KitSeed {
         self.slots.contains(&SLOT_ULT)
     }
 
+    /// Whether skill `ability` is in role `role`'s pool: claimed by it, or by no role (S1b). Role 0: any pool (the
+    /// kit as one, as before roles had pools).
+    pub fn in_pool(&self, ability: u32, role: u32) -> bool {
+        role == 0 || !self.role_skills.iter().any(|(r, a)| *a == ability && *r != role)
+    }
+
+    /// Whether role `role`'s pool has an ult of its own.
+    pub fn has_ults_for(&self, role: u32) -> bool {
+        self.skills.iter().zip(self.slots.iter()).any(|((a, _), s)| *s == SLOT_ULT && self.in_pool(*a, role))
+    }
+
+    /// The bar slot skill `ability` goes to in role `role`'s pool; None when it is not in that pool.
+    pub fn pool_slot(&self, ability: u32, role: u32) -> Option<u32> {
+        self.in_pool(ability, role).then(|| self.slot_of(ability)).flatten()
+    }
+
+    /// An item's stored picks as role `role` reads them: one of an ability outside its pool is no pick (empty: it may be
+    /// chosen again, free, never a crash: the picks a sword kept from the one pool before S1b).
+    pub fn own_picks(&self, picks: [u32; 3], role: u32) -> [u32; 3] {
+        picks.map(|a| if a != 0 && self.pool_slot(a, role).is_none() { 0 } else { a })
+    }
+
     /// The bar slot skill `ability` goes to (`SLOT_*`); None when it is not one of this kit's skills.
     pub fn slot_of(&self, ability: u32) -> Option<u32> {
         let i = self.skills.iter().position(|(a, _)| *a == ability)?;
@@ -1696,15 +1721,24 @@ impl KitSeed {
     /// The base and F from `unlock_levels[0]`; an option only as one of the item's picks, from that pick's level; an
     /// ult only as its ult, from the ult's level. A kit with no slots (a foe's) gates nothing.
     pub fn slot_refusal(&self, ability: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        self.slot_refusal_for(ability, usable, picks, 0)
+    }
+
+    /// `slot_refusal` for a weapon of role `role` (S1b): a skill of another role's pool is refused.
+    pub fn slot_refusal_for(&self, ability: u32, usable: u32, picks: [u32; 3], role: u32) -> Option<String> {
         if self.slots.is_empty() {
             return None;
         }
         let slot = self.slot_of(ability)?;
+        if !self.in_pool(ability, role) {
+            return Some("not this weapon's: its handle gives other abilities".into());
+        }
+        let picks = self.own_picks(picks, role);
         let at = |n: usize| self.unlock_levels[n];
         match slot {
             SLOT_OPTION => {
                 // On E from one of the first two picks; or on R from the last, while the kit has no ult of its own.
-                let Some(j) = (0..3).find(|j| picks[*j] == ability && (*j < 2 || !self.has_ults())) else {
+                let Some(j) = (0..3).find(|j| picks[*j] == ability && (*j < 2 || !self.has_ults_for(role))) else {
                     return Some("not chosen: choose it at one of the weapon's picks".into());
                 };
                 (usable < at(1 + j)).then(|| format!("opens at the weapon's level {} (it counts as {usable} for you)", at(1 + j)))
@@ -1724,9 +1758,15 @@ impl KitSeed {
     /// CHANGED (`change_refusal`, `change_pick`: Luke's B13). The first two take a pick option into E
     /// (E holds one: the other takes an upgrade, once there are any); the last an ult option.
     pub fn pick_refusal(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        self.pick_refusal_for(n, choice, usable, picks, 0)
+    }
+
+    /// `pick_refusal` for a weapon of role `role` (S1b): only its pool's options and ult; a stored pick outside it is empty.
+    pub fn pick_refusal_for(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3], role: u32) -> Option<String> {
         if n > 2 {
             return Some("no such pick (0, 1 or 2)".into());
         }
+        let picks = self.own_picks(picks, role);
         let at = self.unlock_levels[1 + n as usize];
         if usable < at {
             return Some(format!("that pick opens at the weapon's level {at} (it counts as {usable} for you)"));
@@ -1740,14 +1780,14 @@ impl KitSeed {
         }
         // THE LAST PICK, R (Luke, 2026-11-14: "fix the R ability not being assigned"): an ult; while the kit has none of
         // its own, the option E did not take (a staff ends with all four spells).
-        let want = if n == 2 && self.has_ults() { SLOT_ULT } else { SLOT_OPTION };
-        if self.slot_of(choice) != Some(want) || self.slots.is_empty() {
+        let want = if n == 2 && self.has_ults_for(role) { SLOT_ULT } else { SLOT_OPTION };
+        if self.pool_slot(choice, role) != Some(want) || self.slots.is_empty() {
             return Some(if n == 2 { "that is not one of this weapon's last picks" } else { "that is not one of this weapon's picks" }.into());
         }
         if (0..3).any(|j| j != n as usize && picks[j] == choice) {
             return Some("it is on the weapon already, at another pick".into());
         }
-        if n < 2 && self.slot_of(picks[1 - n as usize]) == Some(SLOT_OPTION) {
+        if n < 2 && self.pool_slot(picks[1 - n as usize], role) == Some(SLOT_OPTION) {
             return Some("E holds one ability: this pick will take an upgrade, once there are any".into());
         }
         None
@@ -1804,9 +1844,15 @@ impl KitSeed {
     /// Whether pick `n`, chosen already, may be CHANGED to `choice` with an item used at `usable` with `picks`: why not,
     /// or None. What may be chosen there is what a newly opened pick may take, the old choice set aside (B13).
     pub fn change_refusal(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3]) -> Option<String> {
+        self.change_refusal_for(n, choice, usable, picks, 0)
+    }
+
+    /// `change_refusal` for a weapon of role `role` (S1b).
+    pub fn change_refusal_for(&self, n: u32, choice: u32, usable: u32, picks: [u32; 3], role: u32) -> Option<String> {
         if n > 2 {
             return Some("no such pick (0, 1 or 2)".into());
         }
+        let picks = self.own_picks(picks, role);
         let mine = picks[n as usize];
         if mine == 0 {
             return Some("nothing chosen there yet: choose it, no change needed".into());
@@ -1816,6 +1862,6 @@ impl KitSeed {
         }
         let mut cleared = picks;
         cleared[n as usize] = 0;
-        self.pick_refusal(n, choice, usable, cleared)
+        self.pick_refusal_for(n, choice, usable, cleared, role)
     }
 }

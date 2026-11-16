@@ -194,6 +194,60 @@ func slot_of_skill(i: int) -> int:
 
 
 ## The skills that go to bar slot kind `kind` (`SLOT_*`), in order.
+## THE KIT AS A WEAPON OF ROLE `r` SEES IT (S1b, per-role pools): its skills filtered to that role's pool (those it
+## claims and those no role claims), with their ranks and slots. A kit whose roles claim nothing is itself (the staff,
+## foes): one pool, as before. The server's twin: `KitSeed::in_pool`.
+func for_role(r: RoleDef) -> KitDef:
+	var claimed: Dictionary[int, int] = {}   # ability id -> the role that claims it
+	for kr: KitRole in roles:
+		if kr != null and kr.role != null:
+			for a: AbilityDef in kr.skills:
+				if a != null:
+					claimed[a.id] = kr.role.id
+	if claimed.is_empty():
+		return self
+	var view: KitDef = duplicate() as KitDef
+	var keep_skills: Array[AbilityDef] = []
+	var keep_ranks := PackedInt32Array()
+	var keep_slots := PackedInt32Array()
+	var rid: int = r.id if r != null else -1
+	for i: int in skills.size():
+		var a: AbilityDef = skills[i]
+		if a == null or (claimed.has(a.id) and claimed[a.id] != rid):
+			continue
+		keep_skills.append(a)
+		keep_ranks.append(skill_ranks[i] if i < skill_ranks.size() else 1)
+		if not skill_slots.is_empty():
+			keep_slots.append(skill_slots[i])
+	view.skills = keep_skills
+	view.skill_ranks = keep_ranks
+	view.skill_slots = keep_slots
+	# What its abilities do on a hit: those of its pool (and the strings') only.
+	var keep_hits: Array[KitHit] = []
+	for h: KitHit in hits:
+		if h != null and h.ability != null and claimed.has(h.ability.id) and claimed[h.ability.id] != rid:
+			continue
+		keep_hits.append(h)
+	view.hits = keep_hits
+	# The view is one pool: its roles keep their last hits, without pools of their own.
+	var view_roles: Array[KitRole] = []
+	for kr: KitRole in roles:
+		var copy: KitRole = kr.duplicate() as KitRole if kr != null else null
+		if copy != null:
+			copy.skills = []
+		view_roles.append(copy)
+	view.roles = view_roles
+	return view
+
+
+## Whether its roles have pools of their own (S1b).
+func has_role_pools() -> bool:
+	for kr: KitRole in roles:
+		if kr != null and not kr.skills.is_empty():
+			return true
+	return false
+
+
 func skills_in(kind: int) -> Array[AbilityDef]:
 	var out: Array[AbilityDef] = []
 	for i: int in skills.size():
@@ -269,8 +323,23 @@ func validate() -> Array[String]:
 	for k: int in skill_slots:
 		if k < SLOT_BASE or k > SLOT_F:
 			out.append("`skill_slots`: %d is no slot (0 base, 1 pick option, 2 ult option, 3 F)" % k)
-	if not skill_slots.is_empty() and (skills_in(SLOT_BASE).size() > 1 or skills_in(SLOT_F).size() > 1):
+	if not skill_slots.is_empty() and not has_role_pools() and (skills_in(SLOT_BASE).size() > 1 or skills_in(SLOT_F).size() > 1):
 		out.append("one base (Q) and one F at most")
+	if not skill_slots.is_empty() and has_role_pools():
+		var seen: Dictionary[int, bool] = {}
+		for kr: KitRole in roles:
+			if kr == null or kr.role == null:
+				continue
+			var view: KitDef = for_role(kr.role)
+			if view.skills_in(SLOT_BASE).size() != 1 or view.skills_in(SLOT_F).size() > 1:
+				out.append("the %s handle's pool needs one base (Q) and one F at most (it has %d bases)" % [kr.role.display_name, view.skills_in(SLOT_BASE).size()])
+			for a: AbilityDef in kr.skills:
+				if a == null or not skills.has(a):
+					out.append("a role claims %s, which is not one of the kit's skills" % (a.display_name if a != null else "an empty slot"))
+				elif seen.has(a.id):
+					out.append("%s is claimed by two roles" % a.display_name)
+				else:
+					seen[a.id] = true
 	if unlock_levels.size() != 4:
 		out.append("`unlock_levels` is four levels: Q and F, the first pick, the second, the ult")
 	for i: int in range(1, unlock_levels.size()):

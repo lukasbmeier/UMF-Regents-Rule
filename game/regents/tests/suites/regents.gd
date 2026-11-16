@@ -326,8 +326,9 @@ func _run_combat() -> void:
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var axe: KitDef = KitDef.by_key(&"axe")
 	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
-	_check(sword.light.size() == 3 and sword.skills.size() == 5 and sword.skills[0].display_name == "Lunge" and sword.slot_of_skill(0) == KitDef.SLOT_BASE,
-		"the sword: a string of three, Lunge on Q, then its pool (armor run P1: three options and an ult, placeholders)")
+	_check(sword.light.size() == 3 and sword.skills.size() == 12 and sword.skills[0].display_name == "Lunge" and sword.slot_of_skill(0) == KitDef.SLOT_BASE
+		and sword.has_role_pools(),
+		"the sword: a string of three, Lunge first, then each handle's own set (S1b: four a handle, twelve in all; placeholders)")
 	# THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the last step, a little heavier and slower each.
 	_check(sword.is_finisher(sword.light[2]) and not sword.is_finisher(sword.light[1]) and axe.light.size() == 2 and axe.is_finisher(axe.light[1]),
 		"the finisher is the string's last step: the sword's third, the axe's second")
@@ -2352,6 +2353,17 @@ func _run_crafting_choice() -> void:
 		w.refresh()
 	var look_ms: float = float(Time.get_ticks_usec() - look0) / 10000.0
 	_check(look_ms < 4.0, "the workbench window's look with nothing changed: %.2f ms (under 4)" % look_ms)
+	# THE EARLY-OUT (S1b): those ten looks read the same inputs and stopped there; NEGATIVE: a change to the bag (the rivets
+	# down to one: an iron axe can no longer be made) is seen at the next look and redrawn.
+	var skipped0: int = w.looks_skipped
+	var draws0: int = w.draws
+	w.refresh()
+	_check(w.looks_skipped == skipped0 + 1 and w.draws == draws0, "an unchanged look stops at its inputs (skipped %d of the ten and this one)" % w.looks_skipped)
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40012, 1, 2)
+	w.refresh()
+	_check(w.draws == draws0 + 1 and w.looks_skipped == skipped0 + 1, "NEGATIVE: the bag changed: the next look reads it and redraws")
+	inv._stacks[3] = SpaceTimeInventoryComponent.Stack.new(3, 40012, 4, 2)
+	w.refresh()
 	# The prompt facing the workbench is written every frame (its list asked twice): a frame's share, not a frame.
 	var say0: int = Time.get_ticks_usec()
 	for i: int in 10:

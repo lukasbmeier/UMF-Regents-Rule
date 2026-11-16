@@ -20,8 +20,15 @@ class_name KitRole extends Resource
 ## WHAT THE HANDLE DOES, in the player's words, for the craft window's handle row and the weapon's tooltip
 ## ("ends the string with a pommel bash that holds the foe"). Never a role's name (show, don't name).
 @export var does: String = ""
+## ITS OWN POOL (S1b; Luke, 2026-11-13: "each weapon of each role a unique set of abilities"): the kit's skills that are
+## this role's alone (its base Q, its options, its ult), each one of the kit's `skills` (whose `skill_slots` say where it
+## goes). A skill no role claims is every role's. No role claiming any: the kit is one pool, as before.
+@export var skills: Array[AbilityDef] = []
 
 
 func to_bake() -> Dictionary:
+	var own: Array = []
+	for a: AbilityDef in skills:
+		own.append(ContentDef.ref(a))
 	return {"role": ContentDef.ref(role), "finisher": ContentDef.ref(finisher), "stagger_pct": stagger_pct, "heal": heal,
-		"heal_radius_m": heal_radius_m}
+		"heal_radius_m": heal_radius_m}.merged({"skills": own} if not own.is_empty() else {})

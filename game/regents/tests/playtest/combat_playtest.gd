@@ -1182,8 +1182,8 @@ func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
 	var driver: AnimationDriverComponent = me.find_component(AnimationDriverComponent) as AnimationDriverComponent
 	var dst: StatusComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(StatusComponent) as StatusComponent
 	var sword_kit: KitDef = KitDef.by_key(&"sword")
-	for case: Array in [[swords[0], 40003, &"extra/Sword_Light_C", 26.0, 100], [swords[1], 40022, &"extra/Melee_Hook", 14.0, 150],
-			[swords[2], 40023, &"cuts/Sword_Light_D_Cut", 14.0, 100]]:
+	for case: Array in [[swords[0], 40003, &"extra/Sword_Light_C", 26.0, 100, "Lunge"], [swords[1], 40022, &"extra/Melee_Hook", 14.0, 150, "Shield Bash (placeholder)"],
+			[swords[2], 40023, &"cuts/Sword_Light_D_Cut", 14.0, 100, "Swipe (placeholder)"]]:
 		var row: int = case[0]
 		var want: int = case[1]
 		combat.wield(row)
@@ -1241,6 +1241,22 @@ func _roles(dummy: int, dh: SpaceTimeHealthComponent) -> void:
 		_check(bar_text.begins_with("Staggered") and absf(bar_text.get_slice("  ", 1).to_float() - float(stagger_want) / 1000.0) < 0.35,
 			"%s: under the dummy's health its stagger shows, draining (\"%s\")" % [name, bar_text])
 		await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0), 8.0)
+		# PER-ROLE POOLS (S1b): Q is this handle's own; pressed, the server takes it (its action resolved, nothing refused).
+		var q: AbilityDef = combat.on_slot(0)
+		var q_refused: Array[String] = []
+		var q_resolved: Array[int] = []
+		var on_q_refused: Callable = func(why: String) -> void: q_refused.append(why)
+		var on_q_resolved: Callable = func(id: int, _pid: int, _outcome: int, _target: int) -> void: q_resolved.append(id)
+		combat.refused.connect(on_q_refused)
+		act.action_resolved.connect(on_q_resolved)
+		await _stand_at(DUMMY_1 + Vector3(0, 0.05, 1.4), DUMMY_1)
+		var q_swung: bool = combat.skill(0)
+		await _until(func() -> bool: return q != null and q_resolved.has(q.id), 3.0)
+		combat.refused.disconnect(on_q_refused)
+		act.action_resolved.disconnect(on_q_resolved)
+		_check(q != null and q.display_name == String(case[5]) and q_swung and q_resolved.has(q.id) and q_refused.is_empty(),
+			"this handle's own Q, %s: on the bar, swung, and the server took it (%s; refused: %s)" % [q.display_name if q != null else "none", str(q_resolved), str(q_refused)])
+		await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0) and not combat.swinging(Time.get_ticks_msec()), 8.0)
 	# THE BAG: each sword wears its handle's badge.
 	hud.toggle_bag()
 	await get_tree().process_frame

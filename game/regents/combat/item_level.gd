@@ -41,6 +41,7 @@ static func usable(item_level: int, mastery: int) -> int:
 ## What a player may have on each bar slot (Q, E, R, F) with these picks: the ability, or null. The option on E is
 ## whichever pick took one; R the ult picked. Locked ones are here too (`slot_refusal` says why).
 static func bar(k: KitDef, picks: Array[int]) -> Array[AbilityDef]:
+	picks = own_picks(k, picks)
 	var out: Array[AbilityDef] = [null, null, null, null]
 	if k == null:
 		return out
@@ -63,6 +64,18 @@ static func bar(k: KitDef, picks: Array[int]) -> Array[AbilityDef]:
 			KitDef.SLOT_ULT:
 				if picks[2] == a.id:
 					out[R] = a
+	return out
+
+
+## AN ITEM'S STORED PICKS AS KIT `k` READS THEM (S1b; the server's `own_picks`): one of an ability `k` does not hold (a
+## sword's pick from the one pool before per-role pools, read through its role's view: `KitDef.for_role`) is no pick, free
+## to choose again. Never a crash.
+static func own_picks(k: KitDef, picks: Array[int]) -> Array[int]:
+	var out: Array[int] = [0, 0, 0]
+	for n: int in mini(3, picks.size()):
+		out[n] = picks[n]
+		if picks[n] != 0 and k != null and not k.skills.any(func(a: AbilityDef) -> bool: return a != null and a.id == picks[n]):
+			out[n] = 0
 	return out
 
 
@@ -109,6 +122,7 @@ static func opens_at(k: KitDef, slot: int) -> int:
 ## Why a player may not use skill `a` of kit `k` with an item used at `usable_level` with `picks`; "" when they may
 ## (the server's `slot_refusal`).
 static func slot_refusal(k: KitDef, a: AbilityDef, usable_level: int, picks: Array[int]) -> String:
+	picks = own_picks(k, picks)
 	if k == null or a == null or k.skill_slots.is_empty():
 		return ""
 	var i: int = k.skills.find(a)
@@ -130,6 +144,7 @@ static func slot_refusal(k: KitDef, a: AbilityDef, usable_level: int, picks: Arr
 
 ## Why `choice` may not be chosen at pick `n` (0, 1, 2 the ult) now; "" when it may (the server's `pick_refusal`).
 static func pick_refusal(k: KitDef, n: int, choice: AbilityDef, usable_level: int, picks: Array[int]) -> String:
+	picks = own_picks(k, picks)
 	if n < 0 or n > 2 or k == null:
 		return "no such pick"
 	if usable_level < k.unlock_level(1 + n):
@@ -155,6 +170,7 @@ static func pick_refusal(k: KitDef, n: int, choice: AbilityDef, usable_level: in
 
 ## The picks open now and not yet chosen, each {n, options}: what the item asks its holder to choose.
 static func open_picks(k: KitDef, usable_level: int, picks: Array[int]) -> Array[Dictionary]:
+	picks = own_picks(k, picks)
 	var out: Array[Dictionary] = []
 	if k == null or k.skill_slots.is_empty():
 		return out
@@ -197,6 +213,7 @@ static func progress(k: KitDef, xp: int, mastery: int) -> Dictionary:
 
 ## Why pick `n`, chosen already, may not change to `choice`; "" when it may (the server's `change_refusal`).
 static func change_refusal(k: KitDef, n: int, choice: AbilityDef, usable_level: int, picks: Array[int]) -> String:
+	picks = own_picks(k, picks)
 	if n < 0 or n > 2:
 		return "no such pick"
 	if picks[n] == 0:

@@ -724,6 +724,16 @@ assert_eq "$(sql_first "SELECT instance_data FROM inventory_item WHERE id = $SW"
 assert_eq "$(qty_of 40040)" "$((CG0 - 1))" "the hilt used up"
 assert_ok 'teleport {"x":7.0,"y":0.0,"z":21.5}' "by the dummy"
 assert_ok "wield $SW" "wield the sword with the crossguard hilt"
+# PER-ROLE POOLS (S1b; Luke: "each weapon of each role a unique set"): a crossguard sword's Q is Shield Bash, not the
+# plain grip's Lunge, and its picks are its own (Charge, Hold the Line; its ult Bulwark: placeholders).
+assert_rejected "use_ability_seen 40005 0 $C_AIM 9401 100" "not this weapon's" "NEGATIVE: Lunge (the plain grip's Q) refused on a crossguard sword"
+assert_ok "admin_set_item_level $MYENT $SW 5" "(test) the crossguard sword at level 5"
+SWX0="$(xp_of 40006)"
+assert_ok "admin_set_rank $MYENT 40006 33" "(test) Swordsmanship 33, so the level-5 sword counts as 5"
+assert_rejected "choose_pick $SW 0 40035" "not one of this weapon's picks" "NEGATIVE: Flurry (the plain grip's) is no crossguard's pick"
+assert_ok "choose_pick $SW 0 40051" "the crossguard's first pick: Charge (placeholder)"
+assert_ok "admin_set_rank $MYENT 40006 1" "(test) Swordsmanship back:"
+[ "${SWX0:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40006 $SWX0" "(test) ... its $SWX0 XP as it was"
 # A CLI call takes a second or more: the string's window is made its longest for the test, and each string is
 # played the moment a stand-in referee claims the world (it counts as there for 5 s after: three steps with the
 # answers between outlasted it, 2026-11-01). Only the last step is answered; the first two lapse as misses.
