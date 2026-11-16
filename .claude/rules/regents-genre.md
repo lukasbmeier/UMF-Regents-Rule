@@ -150,3 +150,7 @@ paths:
   texture or a new mesh per tier. A new outfit gets its zones in `wardrobe/zones.json` and a bake
   (`game/regents/tools/wardrobe_assets.py zones`); look at it in the wardrobe lab with Z. The Knight is the genre's
   (`game/regents/art/outfits/knight/`), the other four outfits the foundation's.
+- AN NPC'S SCENE (PROGRESS 87): a new NPC scene inherits `game/regents/npc.tscn` (or `combat/foe.tscn`), never
+  `foundation/entities/player.tscn` directly: player.tscn's Session component waits 2 s for a `session_member` row an
+  NPC never has (until the template's fix, DECISIONS #315, is pulled). A change to an NPC's scene runs
+  `game/regents/tests/bind_playtest.sh`.
