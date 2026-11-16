@@ -40,6 +40,9 @@ const ARMOR_SLOTS: Array[StringName] = [&"head", &"chest", &"legs", &"trinket"]
 ## Its DEFENSE: worn pieces add up, and a hit on its wearer becomes damage x K / (K + Defense) (K the hot rule
 ## `regents.defense_k`). Its quality raises it as quality raises a weapon's damage (a fifth more at 1000).
 @export_range(0, 1000) var defense: int = 0
+## THE ABILITY IT GIVES ON F while worn (a chest's, GAME.md B5, B8: by its family, cloth casting and moving, leather quick
+## utility, metal guarding). None: F is free (B7: for a tool, once tools exist). Chests only.
+@export var worn_ability: AbilityDef
 @export_group("As a part")
 ## What kind of part it is ("handle"): a recipe's part slot (`RecipeDef.part_slot`) takes any item of
 ## the same kind, so one Iron axe recipe takes a plain, an oak or a yew handle (owner, 2026-10-19).
@@ -109,7 +112,7 @@ func to_bake() -> Dictionary:
 		"weapon_trait": ContentDef.ref(part_weapon_trait),
 		"role": ContentDef.ref(role),
 		"fits_kit": String(fits_kit),
-	}.merged({"armor_slot": String(armor_slot), "defense": defense} if armor_slot != &"" else {})
+	}.merged({"armor_slot": String(armor_slot), "defense": defense, "worn_ability": ContentDef.ref(worn_ability)} if armor_slot != &"" else {})
 
 
 ## Its icon is drawn from its model: its look apart (`world_model`), else its held scene.
@@ -172,6 +175,8 @@ func validate() -> Array[String]:
 		out.append("armor does not stack: `max_stack` 1")
 	if armor_slot != &"" and weapon_kit != &"":
 		out.append("it is worn and wielded both: armor is no weapon (clear `weapon_kit` or `armor_slot`)")
+	if worn_ability != null and armor_slot != &"chest":
+		out.append("only a chest gives an ability on F: clear `worn_ability` or wear it on the chest")
 	if armor_slot == &"" and defense > 0:
 		out.append("it has a Defense but is worn nowhere: set `armor_slot`")
 	if part_tag == &"" and handle_trait != null:

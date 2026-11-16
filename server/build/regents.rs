@@ -166,10 +166,10 @@ pub fn regents_data() {
         assert!(armor.is_empty() || kit.is_empty(), "regents content: {name} is worn and wielded both");
         out.push_str(&format!("    ItemSeed {{ id: {}, name: {name:?}, max_stack: {}, tool_tag: {tag:?}, tool_tier: {tier}, tool_speed_pct: {}, \
              weapon_kit: {kit:?}, weapon_damage_pct: {}, part_tag: {part:?}, handle_trait: {}, weapon_trait: {}, ammo_for: {:?}, \
-             ammo_damage_pct: {}, role: {role}, fits_kit: {fits:?}, armor_slot: {armor:?}, defense: {} }},\n",
+             ammo_damage_pct: {}, role: {role}, fits_kit: {fits:?}, armor_slot: {armor:?}, defense: {}, worn_ability: {} }},\n",
             int(it, "id", &name), int(it, "max_stack", &name), int(it, "tool_speed_pct", &name), int(it, "weapon_damage_pct", &name),
             it["handle_trait"].as_i64().unwrap_or(-1).max(0), it["weapon_trait"].as_i64().unwrap_or(-1).max(0), text(it, "ammo_for", &name),
-            it["ammo_damage_pct"].as_i64().unwrap_or(100), it["defense"].as_i64().unwrap_or(0).max(0)));
+            it["ammo_damage_pct"].as_i64().unwrap_or(100), it["defense"].as_i64().unwrap_or(0).max(0), it["worn_ability"].as_i64().unwrap_or(-1).max(0)));
     }
     let item = |id: i64, what: &str| assert!(item_ids.contains(&id), "regents content: {what} names item {id}, which is not an item");
 

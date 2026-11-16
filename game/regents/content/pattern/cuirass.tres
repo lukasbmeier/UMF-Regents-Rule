@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="4_rivets"]
 [ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="5_pat"]
 [ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_skill"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/chest_shove.tres" id="9_worn"]
 
 [sub_resource type="Resource" id="Slot_core"]
 script = ExtResource("2_slot")
@@ -29,6 +30,7 @@ family = 0
 max_stack = 1
 armor_slot = &"chest"
 defense_share = 5
+worn_ability = ExtResource("9_worn")
 trait_parts = PackedStringArray("lining", "straps", "fittings")
 station = &"workbench"
 skill = ExtResource("6_skill")

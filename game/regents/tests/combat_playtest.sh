@@ -91,6 +91,7 @@ while kill -0 "$fight_pid" 2>/dev/null; do
     ent="$(grep -oE '^GRANT_STAFF [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
     if [ -n "$ent" ]; then
       spacetime call "$DB" grant_item "$ent" 40023 1 >/dev/null 2>&1
+      spacetime call "$DB" admin_give_item "$ent" 40087 1 0 >/dev/null 2>&1   # a linen robe: Blink is the cloth chest's (S4)
       staff_given=1
     fi
   fi

@@ -444,8 +444,9 @@ func press(kind: String, slot: int = 0) -> bool:
 		if a == null:
 			refused.emit("Nothing on that key yet")
 			return false
-		# THE ITEM'S LEVEL AND PICKS (ABILITIES_PREP.md §7 step 2), as the server judges them (`slot_refusal`).
-		var why: String = RegentsItemLevel.slot_refusal(kit, a, item_usable(), item_picks())
+		# THE ITEM'S LEVEL AND PICKS (ABILITIES_PREP.md §7 step 2), as the server judges them (`slot_refusal`); a chest's
+		# ability has no level yet (S4).
+		var why: String = "" if slot == RegentsItemLevel.F else RegentsItemLevel.slot_refusal(kit, a, item_usable(), item_picks())
 		if not why.is_empty():
 			refused.emit("%s: %s" % [a.display_name, why])
 			return false
@@ -468,6 +469,8 @@ func _try(kind: String, slot: int) -> bool:
 			return step >= 0 and may_start(a, step, now) and swing(a, step) >= 0
 		"skill":
 			var sa: AbilityDef = on_slot(slot)
+			if RegentsItemLevel.is_worn_ability(sa):
+				return may_cast(now) and cast(sa)   # a chest's spell, cast whatever is wielded (S4)
 			return sa != null and may_start(sa, -1, now) and swing(sa) >= 0
 	return false
 
@@ -986,7 +989,27 @@ func role() -> RoleDef:
 func on_slot(slot: int) -> AbilityDef:
 	if kit == null or slot < 0 or slot > 3:
 		return null
+	if slot == RegentsItemLevel.F:
+		return chest_ability()   # F IS THE WORN CHEST'S (S4, Luke's B5, B8), whatever is wielded
 	return RegentsItemLevel.bar(kit, item_picks())[slot]
+
+
+## The chest item worn, for tests (no rows): -1 reads the server's `worn` row.
+var chest_item_for_tests: int = -1
+
+
+## THE ABILITY THE WORN CHEST GIVES ON F (S4): its item's `worn_ability` while the piece is in the bag; null for none.
+func chest_ability() -> AbilityDef:
+	if chest_item_for_tests >= 0:
+		return RegentsItemLevel.worn_ability_of(chest_item_for_tests)
+	var ent: SpaceTimeEntity = entity as SpaceTimeEntity
+	var row: RefCounted = SpaceTimeSync.get_row(&"worn", ent.entity_id) if ent != null else null
+	if row == null or int(row.get(&"chest_row")) == 0:
+		return null
+	var inv: SpaceTimeInventoryComponent = ent.find_component(SpaceTimeInventoryComponent) as SpaceTimeInventoryComponent
+	if inv != null and not inv.items().any(func(st: SpaceTimeInventoryComponent.Stack) -> bool: return st.id == int(row.get(&"chest_row"))):
+		return null   # the piece left the bag: it gives nothing (the server's `worn_ability_of`)
+	return RegentsItemLevel.worn_ability_of(int(row.get(&"chest_item")))
 
 
 ## The wielded weapon's picks [first, second, ult] (its row's `"k"`).
@@ -1157,7 +1180,7 @@ func pool() -> ResourceComponent:
 ## ground. Its cooldown or too little mana: refused here (consumed, not queued). True when it was cast.
 func cast(a: AbilityDef) -> bool:
 	var spell: SpellDef = SpellDef.by_ability(a.id)
-	if spell == null or kit == null or not kit.casts():
+	if spell == null or kit == null or (not kit.casts() and not RegentsItemLevel.is_worn_ability(a)):
 		return false
 	var now: int = Time.get_ticks_msec()
 	if spell_cooldown_sec(a) > 0.0:

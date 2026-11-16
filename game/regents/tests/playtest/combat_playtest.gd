@@ -564,15 +564,35 @@ func _lab_looks(dummy: int) -> void:
 	var after: float = ((EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent).get_current()
 	_check(rode and blast and after < before, "it flew as the lab's fireball and burst in its blast where it hit the dummy (%.0f -> %.0f)" % [before, after])
 	_check(not is_instance_valid(vfx.charge) or (vfx.charge as Node).is_queued_for_deletion(), "the charge went as the cast ended")
-	# Blink, turned away from the dummy: the server moves us, this client sees the jump and shows it.
+	# BLINK IS THE CLOTH CHEST'S (S4, Luke's B5, B8): F with the staff alone does nothing; in a linen robe (the shell's) F
+	# Blinks, turned away from the dummy: the server moves us, this client sees the jump and shows it.
 	await get_tree().create_timer(1.2).timeout
 	combat.set_target(-1)
 	input.set_look(PI, 0.0)
 	await get_tree().create_timer(0.3).timeout
 	var blink: AbilityDef = ContentLibrary.find(&"ability", (ContentLibrary.find(&"spell", 40004) as SpellDef).ability.id) as AbilityDef
+	var bare_from: Vector3 = me.global_position
+	var bare_shown: int = vfx.played.size()
+	await _key(KEY_F)
+	await get_tree().create_timer(1.0).timeout
+	_check(combat.on_slot(3) == null and vfx.played.size() == bare_shown and me.global_position.distance_to(bare_from) < 0.5,
+		"NEGATIVE: F with the staff and no chest: no Blink (it is the cloth chest's now)")
+	var robe_row: int = -1
+	for st: SpaceTimeInventoryComponent.Stack in inv.items():
+		if st.item_def_id == 40087:
+			robe_row = st.id
+	var wear_until: int = Time.get_ticks_msec() + 20000
+	while robe_row > 0 and Time.get_ticks_msec() < wear_until:
+		var req: ReducerRequest = SpaceTimeSync.call_reducer(&"wear", [robe_row], ["u64"])
+		await _until(func() -> bool: return not req.is_pending(), 3.0)
+		if req.is_ok():
+			break
+		await get_tree().create_timer(1.0).timeout
+	await _until(func() -> bool: return combat.on_slot(3) == blink, 3.0)
+	_check(robe_row > 0 and combat.on_slot(3) == blink, "in the linen robe the shell gave, F holds Blink (from the worn row)")
 	var from: Vector3 = me.global_position
 	var shown: int = vfx.played.size()
-	combat.cast(blink)
+	await _key(KEY_F)
 	await _until(func() -> bool: return vfx.played.size() > shown and vfx.played[-1] == "blink:%d" % blink.id, 3.0)
 	var moved: float = Vector2(me.global_position.x - from.x, me.global_position.z - from.z).length()
 	_check(vfx.played.size() > shown and vfx.played[-1] == "blink:%d" % blink.id and moved > 3.0,

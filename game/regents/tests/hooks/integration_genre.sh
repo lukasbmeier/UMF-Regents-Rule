@@ -1531,7 +1531,7 @@ assert_ok "admin_set_item_level $MYENT $STAFF_ROW 5" "(test) the staff at level 
 assert_ok "admin_set_rank $MYENT 40009 1" "(test) Sorcery 1"
 assert_rejected "choose_pick $STAFF_ROW 0 40014" "counts as 1 for you" "NEGATIVE (B2): a level-5 staff in a Sorcery-1 hand counts as 1"
 assert_ok "admin_set_rank $MYENT 40009 12" "(test) Sorcery 12"
-assert_rejected "choose_pick $STAFF_ROW 0 40015" "not one of this weapon's picks" "NEGATIVE: Blink is the F slot's, no pick"
+assert_rejected "choose_pick $STAFF_ROW 0 40015" "not one of this weapon's picks" "NEGATIVE: Blink is no staff's pick (the cloth chest's F, S4)"
 assert_rejected "choose_pick $STAFF_ROW 3 40014" "no such pick" "NEGATIVE: there is no pick 3"
 assert_ok "choose_pick $STAFF_ROW 0 40014" "the staff's first pick: Frost Ring"
 check "$(IDATA "$STAFF_ROW" | grep -q '"k":\[40014,0,0\]' && echo true || echo false)" "kept on the item itself ($(IDATA "$STAFF_ROW"))"
@@ -1662,6 +1662,23 @@ assert_eq "$(MANA)" "$M0" "and costs nothing"
 # its `casting` row, the circle's landing on its row). Then its Slowed, an EFFECT (template #302) beside the
 # skeleton's state, so its own swing (a state, set while it is Slowed) no longer wipes it; then Blink. Timed calls:
 # the cast is 3 s, the slow 3 s, and the CLI's calls between outlasted both on a busy machine (2026-11-01 and -04).
+# THE CHEST'S ABILITY ON F (S4, Luke's B5, B8): Blink moved from the staff to cloth chests; a leather chest gives Snare,
+# a metal one Shove (both PLACEHOLDERS). A chest's ability is cast from the worn chest whatever is wielded, costs no mana,
+# and nothing else gives it.
+assert_rejected "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "wear a chest that gives it" "NEGATIVE: Blink from a staff alone: refused (no longer the staff's)"
+assert_ok "admin_give_item $MYENT 40087 1 0" "(test) a linen robe"
+assert_ok "admin_give_item $MYENT 40082 1 0" "(test) a soft leather jerkin"
+ROBE="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40087" 1)"
+JERKIN="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40082" 1)"
+assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
+assert_ok "wear $JERKIN" "the jerkin on"
+assert_rejected "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "wear a chest that gives it" "NEGATIVE: a leather chest gives no Blink"
+assert_rejected "cast_spell 40050 0 $NORTH $NONE" "wear a chest that gives it" "NEGATIVE: nor the metal chest's Shove"
+MS0="$(MANA)"
+assert_ok "cast_spell 40049 0 $NORTH $NONE" "the jerkin's own: Snare (placeholder)"
+MS1="$(MANA)"; check "$(python -c "print('true' if float('${MS1:-0}') >= float('${MS0:-0}') - 1e-3 else 'false')")" "a chest's ability costs no mana ($MS0 -> $MS1)"
+assert_ok "wear $ROBE" "the robe on (the jerkin swapped off)"
+assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
 assert_ok 'set_rule "regents.cast_time_pct" 300.0 ""' "(test) a 3 s cast, to read its row"
 CX0="$(IX "$STAFF_ROW")"; CS0="$(xp_of 40009)"
 timed "$(printf '%s\n' \
@@ -1683,7 +1700,7 @@ print('true' if c.isdigit() and a.isdigit() and 1.0 <= (int(a) - int(c)) / 1e6 <
 ")" "cast: its circle on the ground as the cast ends ($CAST_ENDS us), landing a second later ($CIRCLE_LANDS us)"
 assert_eq "$(timed_val SLOW)" "108" "it landed: skeleton_3 is Slowed, an effect"
 timed_ok 5 "(test) it swings (Swinging, its state), while Slowed"
-timed_ok 6 "Blink east"
+timed_ok 6 "Blink east, from the robe"
 # The slow is read from the server's log of it (a query after the state could outlast its 3 s, 2026-11-01): it came
 # off on its own time, after the state was set, not when it was.
 sleep 3.2
@@ -1706,6 +1723,10 @@ print('true' if on and st and off and st < off and (off - on).total_seconds() >=
 check "$SLOWED" "and stays Slowed: a state no longer wipes the slow (it came off on its own 3 s, after the state: $SLOWED)"
 read -r BX BY BZ <<< "$(xyz "$(sql_first "SELECT pos FROM movement_state WHERE entity_id = $MYENT" 1)")"
 check "$(python -c "print('true' if abs($BX - ($X2 + 8)) < 0.05 and abs($BZ - ($Z2 + 8)) < 0.05 else 'false')")" "eight meters east, at once ($BX, $BZ)"
+assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
+assert_ok 'take_off "chest"' "the robe off"
+assert_rejected "cast_spell 40015 0 $(vec 1.0 0.0 0.0) $NONE" "wear a chest that gives it" "NEGATIVE: the robe taken off: no Blink"
+assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 5)")")" "five meters south of skeleton_2"
 # GALE ON E: a second staff, its first pick Gale (an item's picks are its own: two staves, two builds; the first staff
 # has Meteor on R, shut below its level 20, and no Gale at all).

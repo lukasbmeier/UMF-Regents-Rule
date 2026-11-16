@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 14000
+range_m = 5.0
+wind_up_ms = 100
+damage = 2.0
+animation = &"ability.40016"
+key = &"regents.combat"
+judged = false
+lunges = false
+id = 40049
+display_name = "Snare (placeholder)"
+designer_notes = "PLACEHOLDER (S4, the chest's ability on F; GAME.md B8): the leather chest's ability until Luke's, built from an existing atom only (a cone, as Gale's). Its name, numbers and what it does are his to rewrite."

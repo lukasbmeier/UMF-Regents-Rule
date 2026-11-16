@@ -84,6 +84,8 @@ pub struct ItemSeed {
     /// at quality 0 (`piece_defense`).
     pub armor_slot: &'static str,
     pub defense: u32,
+    /// As a CHEST (S4, B8): the ability it gives on F while worn (an `AbilityDef` id; 0: none, F free).
+    pub worn_ability: u32,
 }
 
 /// A ROLE (`RoleDef`, COMBAT_OVERHAUL.md §5, Luke 2026-11-01): what a weapon is for, by its handle's SHAPE.
@@ -846,6 +848,12 @@ pub fn hit_damage(ability_damage: f32, weapon_damage_pct: u32, quality_pm: u32, 
 
 /// THE SLOTS ARMOR IS WORN IN (Luke's five equipment slots: the weapon is wielded, these four worn; S2).
 pub const ARMOR_SLOTS: [&str; 4] = ["head", "chest", "legs", "trinket"];
+
+/// WHETHER `ability` IS A CHEST'S (S4, B8): one some piece of armor gives on F while worn. It is used from the worn chest,
+/// never from a weapon's kit.
+pub fn is_worn_ability(ability: u32) -> bool {
+    ability != 0 && ITEMS.iter().any(|i| i.worn_ability == ability)
+}
 
 /// A worn piece's DEFENSE (S2, ARMOR_PREP.md A4.3, settled): its item's, its quality adding up to a fifth more as quality
 /// adds to a weapon's damage (`hit_damage`).

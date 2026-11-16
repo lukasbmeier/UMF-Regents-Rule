@@ -143,7 +143,8 @@ func _run_models() -> void:
 	var roll: Dictionary = m["roll"] as Dictionary
 	_check(String(roll["key"]) == CombatComponent.key_label(CombatComponent.ACTION_DODGE) and String(roll["tip"]).contains("Roll"),
 		"the roll's slot, on its key (%s)" % String(roll["key"]))
-	# THE STAFF BY ITS ITEM (ABILITIES_PREP.md §7 step 2): Fireball on Q and Blink on F from level 1; E a pick at 5.
+	# THE STAFF BY ITS ITEM (ABILITIES_PREP.md §7 step 2): Fireball on Q from level 1; E a pick at 5. F IS THE WORN CHEST'S
+	# (S4, B5, B8): empty with none, Blink in a linen robe (it moved there from the staff).
 	var staff: KitDef = KitDef.by_key(&"staff")
 	c.kit = staff
 	c.weapon = ItemDef.by_id(40023)
@@ -151,10 +152,23 @@ func _run_models() -> void:
 	c.pool_for_tests = mana
 	_fill(mana, staff.resource.id, staff.resource.max_amount)
 	m = RegentsAbilityBar.model_for(c, sk)
-	_check(_state(m, 0) == RegentsAbilitySlot.READY and String(_slot(m, 0)["name"]) == "Fireball" and _state(m, 3) == RegentsAbilitySlot.READY
-		and String(_slot(m, 3)["name"]) == "Blink" and _state(m, 1) == RegentsAbilitySlot.LOCKED and _state(m, 2) == RegentsAbilitySlot.LOCKED
-		and String(_slot(m, 2)["note"]) == "lvl 20",
-		"a new staff: Fireball on Q, Blink on F, E locked (its pick at 5), R locked (its last pick at 20)")
+	_check(_state(m, 0) == RegentsAbilitySlot.READY and String(_slot(m, 0)["name"]) == "Fireball" and _state(m, 3) == RegentsAbilitySlot.EMPTY
+		and String(_slot(m, 3)["tip"]).contains("chest") and _state(m, 1) == RegentsAbilitySlot.LOCKED and _state(m, 2) == RegentsAbilitySlot.LOCKED
+		and String(_slot(m, 2)["note"]) == "lvl 20" and c.on_slot(3) == null,
+		"a new staff, no chest: Fireball on Q; F empty, saying a chest fills it (%s); NEGATIVE: no Blink from the staff alone; E locked (its pick at 5), R locked (its last pick at 20)" % String(_slot(m, 3)["tip"]))
+	c.chest_item_for_tests = 40087   # a linen robe
+	m = RegentsAbilityBar.model_for(c, sk)
+	_check(_state(m, 3) == RegentsAbilitySlot.READY and String(_slot(m, 3)["name"]) == "Blink" and c.on_slot(3) != null and c.on_slot(3).id == 40015,
+		"in a linen robe: Blink on F, ready (from level 1: a chest's ability has no level yet)")
+	c.chest_item_for_tests = 40082   # a soft leather jerkin
+	_check(c.on_slot(3) != null and c.on_slot(3).display_name == "Snare (placeholder)"
+		and String(RegentsAbilityBar.model_for(c, sk)["slots"][3]["name"]) == "Snare (placeholder)",
+		"in a leather jerkin: its own on F, and NEGATIVE: not Blink")
+	c.chest_item_for_tests = 40075   # an iron cuirass
+	_check(c.on_slot(3) != null and c.on_slot(3).display_name == "Shove (placeholder)", "in an iron cuirass: its own on F")
+	c.chest_item_for_tests = 40070   # a copper armet: a head, no chest ability
+	_check(c.on_slot(3) == null, "NEGATIVE: a helm gives nothing on F")
+	c.chest_item_for_tests = 40087
 	_check(String(_slot(m, 1)["note"]) == "lvl 5" and String(_slot(m, 1)["tip"]).contains("Frost Ring") and String(_slot(m, 1)["tip"]).contains("Gale"),
 		"E says when it opens and what it offers (%s)" % String(_slot(m, 1)["tip"]))
 	_check(String((m["pool"] as Dictionary)["kind"]) == "mana" and is_equal_approx(float((m["pool"] as Dictionary)["most"]), staff.resource.max_amount),
@@ -177,7 +191,7 @@ func _run_models() -> void:
 	c.weapon_data_for_tests = JSON.stringify({"q": 650, "x": lvl5, "k": [40014, 0, 0]})
 	m = RegentsAbilityBar.model_for(c, sk)
 	_check(_state(m, 0) == RegentsAbilitySlot.READY and String(_slot(m, 1)["name"]) == "Frost Ring" and _state(m, 1) == RegentsAbilitySlot.READY
-		and _state(m, 3) == RegentsAbilitySlot.READY, "Frost Ring picked at 5: Fireball, Frost Ring, Blink ready")
+		and _state(m, 3) == RegentsAbilitySlot.READY, "Frost Ring picked at 5: Fireball, Frost Ring, and the robe's Blink ready")
 	_check(c.on_slot(1) != null and c.on_slot(1).id == 40014 and c.on_slot(2) == null and c.skill_key_is_skill(1, false),
 		"E presses Frost Ring now; R has nothing")
 	_check(String(_slot(m, 3)["tip"]).contains("Carries you") and String(_slot(m, 1)["tip"]).contains("circle"),
@@ -185,6 +199,7 @@ func _run_models() -> void:
 	c.weapon_data_for_tests = JSON.stringify({"q": 650, "x": lvl5, "k": [40016, 0, 0]})
 	_check(String(RegentsAbilityBar.model_for(c, sk)["slots"][1]["name"]) == "Gale", "Gale picked instead: Gale on E")
 	c.weapon_data_for_tests = ""
+	c.chest_item_for_tests = -1
 	# The bow: arrows beside.
 	c.kit = KitDef.by_key(&"bow")
 	c.weapon = ItemDef.by_id(40020)
@@ -234,20 +249,23 @@ func _run_item_twin() -> void:
 		and RegentsItemLevel.picks_of("") == [0, 0, 0], "the item's XP and picks read from its row")
 	_check(RegentsItemLevel.level(staff, 60) == 5 and RegentsItemLevel.level(staff, 280) == 12 and RegentsItemLevel.usable(20, 12) == 12
 		and RegentsItemLevel.usable(5, 0) == 1, "its level on the kind's curve; used up to the holder's mastery")
-	_check(staff.skill_slots == PackedInt32Array([0, 1, 3, 1, 2]) and staff.unlock_levels == PackedInt32Array([1, 5, 12, 20]) and staff.validate().is_empty(),
-		"the staff's layout: Fireball the base, Frost Ring and Gale options, Blink on F, Meteor (placeholder) the ult; 1, 5, 12, 20")
+	_check(staff.skill_slots == PackedInt32Array([0, 1, 1, 2]) and staff.unlock_levels == PackedInt32Array([1, 5, 12, 20]) and staff.validate().is_empty(),
+		"the staff's layout: Fireball the base, Frost Ring and Gale options, Meteor (placeholder) the ult; 1, 5, 12, 20 (Blink moved to cloth chests, S4)")
 	var fireball: AbilityDef = staff.skills[0]
 	var frost: AbilityDef = staff.skills[1]
-	var blink: AbilityDef = staff.skills[2]
-	var gale: AbilityDef = staff.skills[3]
-	var meteor: AbilityDef = staff.skills[4]
+	var gale: AbilityDef = staff.skills[2]
+	var meteor: AbilityDef = staff.skills[3]
+	var blink: AbilityDef = RegentsItemLevel.worn_ability_of(40087)
+	_check(blink != null and blink.id == 40015 and RegentsItemLevel.is_worn_ability(blink) and not staff.skills.any(func(a: AbilityDef) -> bool: return a.id == 40015)
+		and not RegentsItemLevel.is_worn_ability(fireball) and RegentsItemLevel.worn_ability_of(40070) == null,
+		"Blink is a chest's (the linen robe's), in no weapon's kit; NEGATIVES: Fireball is no chest's, a helm gives none")
 	# STEP 76'S RULE (a kit with no ult of its own: its last pick takes the option E did not) on a staff without its ult.
 	var no_ult: KitDef = staff.duplicate() as KitDef
-	no_ult.skills = staff.skills.slice(0, 4)
-	no_ult.skill_slots = PackedInt32Array([0, 1, 3, 1])
+	no_ult.skills = staff.skills.slice(0, 3)
+	no_ult.skill_slots = PackedInt32Array([0, 1, 1])
 	var none: Array[int] = [0, 0, 0]
 	var took_frost: Array[int] = [frost.id, 0, 0]
-	_check(RegentsItemLevel.slot_refusal(staff, fireball, 1, none).is_empty() and RegentsItemLevel.slot_refusal(staff, blink, 1, none).is_empty(), "Fireball and Blink from 1")
+	_check(RegentsItemLevel.slot_refusal(staff, fireball, 1, none).is_empty(), "Fireball from 1")
 	_check(RegentsItemLevel.slot_refusal(staff, frost, 33, none).contains("not chosen"), "NEGATIVE: Frost Ring unpicked, at any level")
 	_check(RegentsItemLevel.slot_refusal(staff, frost, 4, took_frost).contains("level 5"), "NEGATIVE: picked, but it counts as 4")
 	_check(RegentsItemLevel.slot_refusal(staff, frost, 5, took_frost).is_empty() and not RegentsItemLevel.slot_refusal(staff, gale, 5, took_frost).is_empty(),
@@ -286,7 +304,7 @@ func _run_item_twin() -> void:
 	var open_r: Array[Dictionary] = RegentsItemLevel.open_picks(staff, 33, took_frost)
 	_check(open_r.size() == 1 and int(open_r[0]["n"]) == 2 and (open_r[0]["options"] as Array[AbilityDef]) == [meteor], "at 33 with Frost Ring: R's pick open, offering Meteor")
 	var bar: Array[AbilityDef] = RegentsItemLevel.bar(staff, took_frost)
-	_check(bar[0] == fireball and bar[1] == frost and bar[2] == null and bar[3] == blink, "the bar: Fireball, Frost Ring, nothing, Blink")
+	_check(bar[0] == fireball and bar[1] == frost and bar[2] == null and bar[3] == null, "the staff's own bar: Fireball, Frost Ring, nothing; F is the chest's")
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var sword_open: Array[Dictionary] = RegentsItemLevel.open_picks(sword, 33, none)
 	_check(RegentsItemLevel.bar(sword, none)[0] == sword.skills[0] and sword.skills[0].display_name == "Lunge" and sword_open.size() == 3
@@ -416,7 +434,7 @@ func _run_bag_picks() -> void:
 func _run_changes() -> void:
 	var staff: KitDef = KitDef.by_key(&"staff")
 	var frost: AbilityDef = staff.skills[1]
-	var gale: AbilityDef = staff.skills[3]
+	var gale: AbilityDef = staff.skills[2]
 	var took_frost: Array[int] = [frost.id, 0, 0]
 	var none: Array[int] = [0, 0, 0]
 	_check(RegentsItemLevel.change_refusal(staff, 0, gale, 5, took_frost).is_empty(), "Frost Ring to Gale: allowed")
