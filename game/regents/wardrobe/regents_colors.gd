@@ -65,14 +65,20 @@ static func palette_of(text: String) -> DyePalette:
 	var key: String = ""
 	for k: StringName in KEYS:
 		key += "%s=%s;" % [k, (colors[k] as Color).to_html(false) if colors.has(k) else "-"]
-	if _palettes.has(key):
-		return _palettes[key]
+	var held: WeakRef = _palettes.get(key, null) as WeakRef
+	var kept: DyePalette = held.get_ref() as DyePalette if held != null else null
+	if kept != null:
+		return kept
 	var p := DyePalette.new()
 	p.title = "A player's own colors"
 	for k: StringName in colors:
 		p.set(k, colors[k])
 	p.set_meta(&"share_key", key)
-	_palettes[key] = p
+	if _palettes.size() >= 256:   # the gone ones' keys swept now and then
+		for k: String in _palettes.keys():
+			if (_palettes[k] as WeakRef).get_ref() == null:
+				_palettes.erase(k)
+	_palettes[key] = weakref(p)
 	return p
 
 
@@ -90,4 +96,5 @@ static func swatches(slot: StringName) -> Array[Color]:
 	return out
 
 
-static var _palettes: Dictionary[String, DyePalette] = {}
+## key -> WeakRef of its palette: kept only while a body wears it (W4: players come and go).
+static var _palettes: Dictionary[String, WeakRef] = {}

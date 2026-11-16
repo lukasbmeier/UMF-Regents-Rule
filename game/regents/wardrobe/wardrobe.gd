@@ -204,21 +204,46 @@ static func shared_material(src: StandardMaterial3D, outfit: String, palette: Dy
 	var tex: Texture2D = src.albedo_texture
 	var key: String = "%s|%s|%s" % [outfit, tex.resource_path if tex != null and not tex.resource_path.is_empty() else str(src.get_instance_id()),
 		String(palette.get_meta(&"share_key", str(palette.get_instance_id())))]
-	var mat: ShaderMaterial = _shared.get(key, null) as ShaderMaterial
+	var held: WeakRef = _shared.get(key, null) as WeakRef
+	var mat: ShaderMaterial = held.get_ref() as ShaderMaterial if held != null else null
 	if mat == null:
 		mat = material_for(src, outfit)
 		mat.set_shader_parameter(&"show_zones", false)
 		palette.apply_to(mat)
-		_shared[key] = mat
+		_shared[key] = weakref(mat)
+		if _recent.size() < RECENT:
+			_recent.resize(RECENT)
+		_recent[_made % RECENT] = mat   # the newest few held a while: a body dressed twice as it spawns makes one
+		_made += 1
+		if _made % PRUNE_EVERY == 0:
+			_prune()
 	return mat
 
 
-## How many shared dye materials exist (tests, and the load test's count).
+## How many shared dye materials are alive now (worn by some body): the tests', and the dye bench's count.
 static func shared_count() -> int:
+	_prune()
 	return _shared.size()
 
 
-static var _shared: Dictionary[String, ShaderMaterial] = {}
+## THE CACHE IS BOUNDED (W4, `game/regents/tests/dye_bench.tscn`): a material lives while a body wears it, or while
+## it is among the `RECENT` newest; so players coming and going over a session never pile them up (before: 1297 kept
+## after about 2000 bodies had come and gone; now at most `RECENT`). The keys of gone ones are swept now and then.
+static func _prune() -> void:
+	for k: String in _shared.keys():
+		if (_shared[k] as WeakRef).get_ref() == null:
+			_shared.erase(k)
+
+
+## How many of the newest materials are held even when nobody wears them: a body dressed in its own colors and then
+## covered by its armor as it spawns would otherwise make and free one each time (twice the spawn's cost, W4).
+const RECENT: int = 256
+## Every this many materials made, the gone ones' keys are swept.
+const PRUNE_EVERY: int = 64
+## key -> WeakRef of its ShaderMaterial.
+static var _shared: Dictionary[String, WeakRef] = {}
+static var _made: int = 0
+static var _recent: Array[ShaderMaterial] = []
 
 
 ## A fresh dye material for one outfit, on the textures its imported material `src` uses.

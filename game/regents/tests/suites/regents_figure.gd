@@ -172,6 +172,25 @@ func _run_shared() -> void:
 	_check(_mat(c) != null and _mat(c) != _mat(a), "other colors, their own")
 	for f: Node in [a, b, c, d]:
 		f.queue_free()
+	# W4: the cache is BOUNDED. A body in colors nobody else wears makes its material; gone, its material is still held
+	# while it is among the `Wardrobe.RECENT` newest (no churn as bodies spawn), and dropped once that many newer ones
+	# were made: players coming and going never pile materials up.
+	await get_tree().process_frame
+	var lone: RegentsFigure = await _figure(MALE, RegentsColors.with_colors("peasant_m", {&"main": Color8(1, 2, 3), &"trim": Color8(4, 5, 6)}))
+	var held: WeakRef = weakref(_mat(lone))
+	var src: StandardMaterial3D = null
+	for m: Node in lone.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = m as MeshInstance3D
+		for i: int in range(mi.mesh.get_surface_count() if mi.mesh != null else 0):
+			if Wardrobe.outfit_of(mi.mesh.surface_get_material(i)) == "Peasant":
+				src = mi.mesh.surface_get_material(i) as StandardMaterial3D
+	lone.free()
+	_check(held.get_ref() != null and src != null, "its body gone, its material is held a while (among the newest)")
+	for i: int in Wardrobe.RECENT:
+		var p: DyePalette = RegentsColors.palette_of(RegentsColors.with_colors("peasant_m", {&"main": Color8(i >> 8, i & 255, 77)}))
+		Wardrobe.shared_material(src, "Peasant", p)
+	_check(held.get_ref() == null, "and dropped once %d newer ones were made: the cache is bounded" % Wardrobe.RECENT)
+	_check(Wardrobe.shared_count() <= Wardrobe.RECENT + 8, "materials alive stay near the bound (%d)" % Wardrobe.shared_count())
 
 
 ## The first dye material on a body.
