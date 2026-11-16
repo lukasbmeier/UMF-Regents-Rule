@@ -39,6 +39,31 @@ static func make(variant: String, picked: Dictionary) -> String:
 	return text
 
 
+## A COLOUR CHOICE (DECISIONS #316): a free colour travels as an int like any other choice,
+## 0xRRGGBB + 1 ("main=1193047"), so 0 stays the look's own and black (1) is a colour. The largest
+## is white, 0x1000000. A value outside 1..COLOR_MAX is REFUSED: it reads as the look's own (and
+## the picker drops it), never clamped to some colour nobody chose.
+const COLOR_MAX: int = 0x1000000
+
+
+## The choice for colour `c` (its alpha is not kept).
+static func color_value(c: Color) -> int:
+	return ((c.r8 << 16) | (c.g8 << 8) | c.b8) + 1
+
+
+## Whether `value` is a colour choice (not 0, the look's own, and within 24 bits).
+static func is_color(value: int) -> bool:
+	return value >= 1 and value <= COLOR_MAX
+
+
+## The colour a choice names, or `own` (the look's) for 0 or a value out of range.
+static func color_of(value: int, own: Color) -> Color:
+	if not is_color(value):
+		return own
+	var v: int = value - 1
+	return Color8((v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff)
+
+
 ## Would the module take it? (Its own check is the one that counts.)
 static func is_valid(text: String) -> bool:
 	if text.length() > MAX_LENGTH:
