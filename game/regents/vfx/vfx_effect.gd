@@ -12,9 +12,12 @@ class_name VfxEffect extends Node3D
 ## shows it. It frees itself when done (`free_when_done`); the lab keeps it to play again.
 
 signal finished()
-## A request that the camera shake (`strength`, about 0..1, for `seconds`): the lab shakes its camera; the game's
-## camera may listen later.
+## A request that the camera shake (`strength`, about 0..1, for `seconds`): the lab shakes its camera; in the game
+## `VfxCameraShake` listens (this client's own camera, by how near it is; never for a `lighter` one).
 signal shook(strength: float, seconds: float)
+
+## ANOTHER PLAYER'S share of the particles (the lighter version, `make_lighter`): half as many, the same look.
+const LIGHTER_PARTICLES: float = 0.5
 
 @export_group("Timing")
 ## How long it lasts, start to gone.
@@ -33,10 +36,19 @@ var playing: bool = false
 ## The meshes and particles whose shader takes its clock (`fx_time`): kept as Variants (checked before each use).
 var _clocked: Array = []
 var _built: bool = false
+## THE LIGHTER VERSION (before many players: every per-player cost is judged at 300): another player's effect, seen by this client. The same
+## effect at a lower cost: its particle systems at `LIGHTER_PARTICLES` of their amount, no light of its own, no
+## camera shake. Your own and a foe's (what you must read in a fight) stay whole. Set it (or call `make_lighter`)
+## before or after it enters the tree.
+var lighter: bool = false
 
 
 func _ready() -> void:
 	_ensure_built()
+	if lighter:
+		make_lighter()
+	elif shook.get_connections().is_empty():
+		VfxCameraShake.listen(self)
 	if autoplay:
 		play()
 	else:
@@ -48,6 +60,21 @@ func _ensure_built() -> void:
 		return
 	_built = true
 	_build()
+
+
+## Make it the lighter version (`lighter`): its particles thinned, its lights out. Once; safe before it is built.
+func make_lighter() -> void:
+	lighter = true
+	if not _built or has_meta(&"vfx_lightened"):
+		return
+	set_meta(&"vfx_lightened", true)
+	for n: Node in find_children("*", "", true, false):
+		var p: GPUParticles3D = n as GPUParticles3D
+		if p != null:
+			p.amount = maxi(1, ceili(float(p.amount) * LIGHTER_PARTICLES))
+		var l: Light3D = n as Light3D
+		if l != null:
+			l.visible = false
 
 
 ## Start from the beginning (again).
