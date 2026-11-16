@@ -12,6 +12,13 @@
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_hamstring_cut.tres" id="p2"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_shield_bash.tres" id="p3"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_execute.tres" id="p4"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_charge.tres" id="n1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_hold_the_line.tres" id="n2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_bulwark.tres" id="n3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_swipe.tres" id="n4"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_shoulder_check.tres" id="n5"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_banner_sweep.tres" id="n6"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_banner_storm.tres" id="n7"]
 [ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="h_script"]
 [ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="h_slow"]
 [ext_resource type="Script" path="res://game/regents/content/kit_role.gd" id="3_kit_role"]
@@ -30,11 +37,44 @@ script = ExtResource("h_script")
 ability = ExtResource("p3")
 push_mps = 8.0
 
+[sub_resource type="Resource" id="Hit_charge"]
+script = ExtResource("h_script")
+ability = ExtResource("n1")
+push_mps = 8.0
+
+[sub_resource type="Resource" id="Hit_hold"]
+script = ExtResource("h_script")
+ability = ExtResource("n2")
+status = ExtResource("h_slow")
+status_ms = 2500
+
+[sub_resource type="Resource" id="Hit_bulwark"]
+script = ExtResource("h_script")
+ability = ExtResource("n3")
+push_mps = 10.0
+
+[sub_resource type="Resource" id="Hit_shoulder"]
+script = ExtResource("h_script")
+ability = ExtResource("n5")
+push_mps = 8.0
+
+[sub_resource type="Resource" id="Hit_sweep"]
+script = ExtResource("h_script")
+ability = ExtResource("n6")
+status = ExtResource("h_slow")
+status_ms = 2500
+
+[sub_resource type="Resource" id="Hit_storm"]
+script = ExtResource("h_script")
+ability = ExtResource("n7")
+push_mps = 10.0
+
 [sub_resource type="Resource" id="Role_damage"]
 script = ExtResource("3_kit_role")
 role = ExtResource("r_damage")
 finisher = ExtResource("a2")
 does = "The string ends in a piercing thrust: the hardest hit, and the longest reach."
+skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4")])
 
 [sub_resource type="Resource" id="Role_tank"]
 script = ExtResource("3_kit_role")
@@ -42,6 +82,7 @@ role = ExtResource("r_tank")
 finisher = ExtResource("a5")
 stagger_pct = 150
 does = "The string ends in a pommel bash that holds the foe reeling longer."
+skills = Array[Resource]([ExtResource("p3"), ExtResource("n1"), ExtResource("n2"), ExtResource("n3")])
 
 [sub_resource type="Resource" id="Role_support"]
 script = ExtResource("3_kit_role")
@@ -50,6 +91,7 @@ finisher = ExtResource("a6")
 heal = 8.0
 heal_radius_m = 6.0
 does = "The string ends in a wide rallying cut that mends you and the players near you."
+skills = Array[Resource]([ExtResource("n4"), ExtResource("n5"), ExtResource("n6"), ExtResource("n7")])
 
 [resource]
 script = ExtResource("1_kit")
@@ -58,10 +100,10 @@ skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
 follow_ms = PackedInt32Array(200, 200, 200)
 roles = Array[ExtResource("3_kit_role")]([SubResource("Role_damage"), SubResource("Role_tank"), SubResource("Role_support")])
-skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4")])
-skill_ranks = PackedInt32Array(1, 1, 1, 1, 1)
-skill_slots = PackedInt32Array(0, 1, 1, 1, 2)
-hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_bash")])
+skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4"), ExtResource("p3"), ExtResource("n1"), ExtResource("n2"), ExtResource("n3"), ExtResource("n4"), ExtResource("n5"), ExtResource("n6"), ExtResource("n7")])
+skill_ranks = PackedInt32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+skill_slots = PackedInt32Array(0, 1, 1, 2, 0, 1, 1, 2, 0, 1, 1, 2)
+hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_bash"), SubResource("Hit_charge"), SubResource("Hit_hold"), SubResource("Hit_bulwark"), SubResource("Hit_shoulder"), SubResource("Hit_sweep"), SubResource("Hit_storm")])
 id = 40001
 display_name = "Sword"
-designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut. PLACEHOLDER POOL (armor run P1, 2026-11-15): one pool for every handle until per-role pools exist on the server (Lane S); the options and the ult are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."
+designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut. PLACEHOLDER POOL (armor run P1, 2026-11-15): PER-ROLE POOLS (S1b, 2026-11-16): each handle its own set (the plain grip Lunge, Flurry, Hamstring Cut, Execute; the crossguard Shield Bash, Charge, Hold the Line, Bulwark; the banner Swipe, Shoulder Check, Banner Sweep, Banner Storm), its KitRole's `skills`; the options and the ults are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."

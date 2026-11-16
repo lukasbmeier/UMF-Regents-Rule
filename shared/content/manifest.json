@@ -77,8 +77,8 @@
 			"type": "status"
 		},
 		"shared/content/regents/ability.json": {
-			"count": 48,
-			"hash": "6913ca29",
+			"count": 55,
+			"hash": "f7c0da6c",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/ability/axe_chop_a.tres": "e1140aae",
@@ -119,16 +119,23 @@
 				"game/regents/content/ability/sparring_overhead.tres": "439611cd",
 				"game/regents/content/ability/staff_bolt.tres": "3216289f",
 				"game/regents/content/ability/staff_meteor.tres": "b123dade",
+				"game/regents/content/ability/sword_banner_storm.tres": "c277c608",
+				"game/regents/content/ability/sword_banner_sweep.tres": "99f34dbf",
+				"game/regents/content/ability/sword_bulwark.tres": "166a5a02",
+				"game/regents/content/ability/sword_charge.tres": "8f00f960",
 				"game/regents/content/ability/sword_execute.tres": "e70589fe",
 				"game/regents/content/ability/sword_flurry.tres": "64440d04",
 				"game/regents/content/ability/sword_hamstring_cut.tres": "15f65550",
+				"game/regents/content/ability/sword_hold_the_line.tres": "dab37db1",
 				"game/regents/content/ability/sword_lunge.tres": "d82d59f5",
 				"game/regents/content/ability/sword_pommel_bash.tres": "557adf61",
 				"game/regents/content/ability/sword_rallying_cut.tres": "837d0797",
-				"game/regents/content/ability/sword_shield_bash.tres": "43563673",
+				"game/regents/content/ability/sword_shield_bash.tres": "f447825e",
+				"game/regents/content/ability/sword_shoulder_check.tres": "bbcff8e1",
 				"game/regents/content/ability/sword_slash_a.tres": "1db742b2",
 				"game/regents/content/ability/sword_slash_b.tres": "16ecb95d",
-				"game/regents/content/ability/sword_slash_c.tres": "a7971408"
+				"game/regents/content/ability/sword_slash_c.tres": "a7971408",
+				"game/regents/content/ability/sword_swipe.tres": "54c684d9"
 			},
 			"type": "ability"
 		},
@@ -276,7 +283,7 @@
 		},
 		"shared/content/regents/kit.json": {
 			"count": 10,
-			"hash": "63919cc8",
+			"hash": "1900be3d",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/kit/axe.tres": "a954b91c",
@@ -287,7 +294,7 @@
 				"game/regents/content/kit/skeleton_sword.tres": "a76d8361",
 				"game/regents/content/kit/sparring_sword.tres": "054385f5",
 				"game/regents/content/kit/staff.tres": "f24d01b4",
-				"game/regents/content/kit/sword.tres": "3110de90",
+				"game/regents/content/kit/sword.tres": "200233e2",
 				"game/regents/content/kit/wolf.tres": "aa1a13ea"
 			},
 			"type": "kit"

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 10000
+range_m = 3.0
+wind_up_ms = 250
+damage = 10.0
+animation = &"ability.40051"
+key = &"regents.combat"
+judged = true
+reach_m = 3.0
+radius_m = 0.5
+height_m = 0.9
+hits_all = false
+lunges = true
+id = 40051
+display_name = "Charge (placeholder)"
+designer_notes = "PLACEHOLDER (S1b, per-role pools, 2026-11-16): a stand-in so the crossguard handle has its own full set; built from existing atoms only (a judged sweep, a lunge, a push). Its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9: the crossguard's E option CHARGE, run into a foe and knock it back)."

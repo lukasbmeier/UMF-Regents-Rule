@@ -1630,11 +1630,15 @@ fn item_levels_and_picks() {
         "NEGATIVE: a staff that took Gale on R before the ult: Gale no longer fires from R");
     assert!(staff.slot_refusal(meteor, 20, [frost, 0, meteor]).is_none() && staff.slot_refusal(meteor, 19, [frost, 0, meteor]).is_some_and(|w| w.contains("level 20")),
         "Meteor on R from 20, and NEGATIVE: counting as 19, shut");
-    // Every weapon kind has a full placeholder pool: one base, options for E, one ult (armor run P1).
+    // Every weapon kind has a full placeholder pool: one base, options for E, one ult (armor run P1), and since S1b each
+    // ROLE of a kit whose roles have pools its own (the sword's three handles).
     for key in ["sword", "axe", "bow", "staff"] {
         let k = rules::kit_keyed(key).unwrap();
-        let count = |slot: u32| k.slots.iter().filter(|s| **s == slot).count();
-        assert!(count(rules::SLOT_BASE) == 1 && count(rules::SLOT_OPTION) >= 2 && count(rules::SLOT_ULT) == 1, "{key}: a base, options, an ult");
+        let roles: Vec<u32> = if k.role_skills.is_empty() { vec![0] } else { k.roles.iter().map(|r| r.role).collect() };
+        for role in roles {
+            let count = |slot: u32| k.skills.iter().zip(k.slots.iter()).filter(|((a, _), s)| **s == slot && k.in_pool(*a, role)).count();
+            assert!(count(rules::SLOT_BASE) == 1 && count(rules::SLOT_OPTION) >= 2 && count(rules::SLOT_ULT) == 1, "{key} (role {role}): a base, options, an ult");
+        }
     }
     assert!(staff.pick_refusal(3, frost, 33, [0; 3]).is_some(), "NEGATIVE: no pick 3");
     // A foe's kit (no slots) gates nothing; the sword's one skill is its base.
@@ -1795,4 +1799,48 @@ fn the_chest_gives_f_one_ability_a_family() {
     assert!(staff.skills.iter().all(|(s, _)| !rules::is_worn_ability(*s)), "no staff spell is a chest's");
     assert!(!staff.skills.iter().any(|(s, _)| *s == blink), "the staff no longer carries Blink");
     assert!(!rules::is_worn_ability(0), "nothing is no ability");
+}
+
+#[test]
+fn each_role_of_a_weapon_its_own_pool() {
+    // S1b, PER-ROLE POOLS (Luke, 2026-11-13: "each weapon of each role a unique set of abilities"): the sword's plain grip,
+    // crossguard and banner each have their own base Q, options and ult; a kit whose roles claim nothing is one pool.
+    let sword = rules::kit_keyed("sword").unwrap();
+    let id = |key: &str| rules::role_keyed(key).unwrap().id;
+    let (plain, tank, support) = (id("damage"), id("tank"), id("support"));
+    let (lunge, flurry, hamstring, execute, bash, charge, bulwark, swipe, storm) =
+        (40005, 40035, 40036, 40038, 40037, 40051, 40053, 40054, 40057);
+    let base_of = |role: u32| sword.skills.iter().zip(sword.slots.iter())
+        .find(|((a, _), s)| **s == rules::SLOT_BASE && sword.in_pool(*a, role)).map(|((a, _), _)| *a);
+    assert_eq!((base_of(plain), base_of(tank), base_of(support)), (Some(lunge), Some(bash), Some(swipe)),
+        "each handle its own Q: Lunge, Shield Bash, Swipe");
+    // NEGATIVES: a role's Q refused on another role's weapon of the same kind; another role's pick refused.
+    assert!(sword.slot_refusal_for(lunge, 1, [0; 3], plain).is_none(), "Lunge on a plain grip");
+    assert!(sword.slot_refusal_for(lunge, 1, [0; 3], tank).is_some_and(|w| w.contains("not this weapon's")), "NEGATIVE: not on a crossguard");
+    assert!(sword.slot_refusal_for(bash, 1, [0; 3], plain).is_some_and(|w| w.contains("not this weapon's")), "NEGATIVE: Shield Bash not on a plain grip");
+    assert!(sword.pick_refusal_for(0, flurry, 5, [0; 3], plain).is_none(), "the plain grip's first pick: Flurry");
+    assert!(sword.pick_refusal_for(0, flurry, 5, [0; 3], tank).is_some(), "NEGATIVE: Flurry no crossguard's pick");
+    assert!(sword.pick_refusal_for(0, charge, 5, [0; 3], tank).is_none() && sword.pick_refusal_for(0, charge, 5, [0; 3], support).is_some(),
+        "Charge the crossguard's, NEGATIVE: not the banner's");
+    assert!(sword.pick_refusal_for(2, bulwark, 20, [charge, 0, 0], tank).is_none() && sword.pick_refusal_for(2, execute, 20, [charge, 0, 0], tank).is_some(),
+        "the crossguard's ult Bulwark; NEGATIVE: not the plain grip's Execute");
+    assert!(sword.pick_refusal_for(2, storm, 20, [0, 0, 0], support).is_none(), "the banner's ult Banner Storm");
+    // PICKS KEPT FROM THE ONE POOL (before S1b): one outside the role's pool reads as empty (chosen again, free), never a
+    // crash; the role's own still count.
+    assert_eq!(sword.own_picks([flurry, 0, execute], tank), [0, 0, 0], "a crossguard sword that took Flurry and Execute: both gone, free to choose");
+    assert_eq!(sword.own_picks([flurry, hamstring, execute], plain), [flurry, hamstring, execute], "the plain grip keeps its own");
+    assert!(sword.pick_refusal_for(0, charge, 5, [flurry, 0, 0], tank).is_none(), "the stale pick does not block choosing");
+    assert!(sword.slot_refusal_for(flurry, 33, [flurry, 0, 0], tank).is_some(), "NEGATIVE: the stale Flurry does not fire from a crossguard");
+    assert!(sword.change_refusal_for(0, charge, 5, [flurry, 0, 0], tank).is_some_and(|w| w.contains("nothing chosen")),
+        "and there is nothing to CHANGE there: it is a fresh choice");
+    // A KIT WHOSE ROLES CLAIM NOTHING behaves as before (the staff; the axe and bow have no roles).
+    for key in ["staff", "axe", "bow"] {
+        let k = rules::kit_keyed(key).unwrap();
+        assert!(k.role_skills.is_empty(), "{key}: one pool");
+        for (a, _) in k.skills {
+            assert_eq!(k.slot_refusal_for(*a, 33, [0; 3], 12345), k.slot_refusal(*a, 33, [0; 3]), "{key}: any role, as before");
+        }
+    }
+    // The sword's pools are whole: every skill one role's, three roles, twelve skills.
+    assert_eq!((sword.role_skills.len(), sword.skills.len()), (12, 12));
 }

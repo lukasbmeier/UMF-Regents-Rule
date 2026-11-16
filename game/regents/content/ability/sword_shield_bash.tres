@@ -17,4 +17,4 @@ height_m = 0.9
 lunges = false
 id = 40037
 display_name = "Shield Bash (placeholder)"
-designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Sword, E option: a bash that shoves the foe back (the kit's KitHit push)."
+designer_notes = "PLACEHOLDER (armor run P1, 2026-11-15): a stand-in so every weapon has a full pool to play; its name, numbers and what it really does are Luke's (ABILITIES_PREP.md section 9, his rewrite). Sword, E option: a bash that shoves the foe back (the kit's KitHit push). S1b (2026-11-16): the CROSSGUARD handle's base Q (section 9: SHIELD BASH), no longer an option of every sword."
