@@ -1194,6 +1194,8 @@ Republish (module and referee; no codegen). Regent's Rule's roll is an effect si
 ## (next release) — a sweep that hits all (DECISIONS #314; the master sets the version at merge)
 Module, referee and client: republish WITH `--codegen` (a new reducer). Old clients and old referees keep working.
 - `AbilityDef.hits_all` (the Judged group): a judged sweep that hits every body it meets; baked only when on.
+- `server/build/content.rs`: the ability row's `data` carries `"hits_all":true` (the referee and the module read it
+  there); a hits-all ability that is not judged stops the build.
 - `sidecar/combat/lunge_judge.gd`: `judge_all` (every body met, nearest first; `judge` is its first, unchanged results).
 - `sidecar/combat/action_referee.gd`: a verdict's `hit_ids` and `all`; a hits-all sweep that met more than one is answered
   with `resolve_action_all`.
