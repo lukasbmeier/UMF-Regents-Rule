@@ -7,6 +7,7 @@ extends Node3D
 ##   1 Presets   every preset's street side by side           2 One     one street, its style changed in the panel
 ##   3 Seeds     one style, six streets: each building's nudge   4 Houses  one house in every preset, in a row
 ##   5 Roofs     the towers' roofs side by side, in the panel's style (`CastleWall.roof_style`)
+##   6 Places    every preset's green, inn front and castle corner (the town world's furnishing, `TownFurnish`)
 ##   Left / Right   the next street (Presets, Seeds)    L   day, dusk, night    H   the panel
 ##   right mouse, drag   turn round it        wheel   nearer, farther
 ##   Save style   writes the panel's style to `styles/custom_<time>.tres` (in the editor)
@@ -21,7 +22,7 @@ extends Node3D
 const STYLES_DIR: String = "res://game/regents/town/styles/"
 const DEMO_D: String = "res://game/regents/town/houses/demo_house_d.tscn"
 const STREET_SHADER: Shader = preload("res://game/regents/town/town_street.gdshader")
-const MODES: PackedStringArray = ["Presets", "One", "Seeds", "Houses", "Roofs"]
+const MODES: PackedStringArray = ["Presets", "One", "Seeds", "Houses", "Roofs", "Places"]
 const LIGHTS: PackedStringArray = ["Day", "Dusk", "Night"]
 ## A street's footprint (m): the sets are laid out this far apart.
 const SET_STEP: Vector2 = Vector2(62, 92)
@@ -48,7 +49,7 @@ var style: SettlementStyle = null
 var focus: int = -1
 ## The streets built for this mode (the suite reads them).
 var sets: Array[Settlement] = []
-## Each street's paving material, in `sets`' order (Presets, One, Seeds).
+## Each street's paving material, in `sets`' order (Presets, One, Seeds, Places).
 var streets: Array[ShaderMaterial] = []
 
 var _root: Node3D = null
@@ -206,6 +207,73 @@ static func paint_street(m: ShaderMaterial, s: SettlementStyle) -> void:
 	m.set_shader_parameter(&"paving_pattern", s.paving_pattern)
 
 
+## THE PLACES (Luke, 2026-11-15: "add the places view"): what the town world furnishes beyond a street, in style `s`
+## at `at`: the inn (the kit's House D) with its tables out front, a village green, a stretch of castle wall (the
+## world's slate bells) with its gate's torches and banners inside, and in its paved yard a training yard and a smithy.
+## The same `TownFurnish` calls as `town_world.gd`, on the same dice for every preset.
+func make_places(s: SettlementStyle, at: Vector3, title: String) -> Settlement:
+	var st := Settlement.new()
+	st.style = s
+	st.position = at
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2611
+	var inn: Node3D = TownKit.instance_building(load(DEMO_D) as PackedScene)
+	inn.position = Vector3(-14, 0, -8)
+	st.add_child(inn)
+	TownFurnish.inn_front(st, Vector3(-14, 0, -2.5), rng)
+	TownFurnish.green(st, Vector3(-18, 0, 12), rng)
+	var w := CastleWall.new()
+	w.corners = PackedVector3Array([Vector3(2, 0, -14), Vector3(32, 0, -14)])
+	w.closed = false
+	w.gates = PackedInt32Array([0])
+	w.height = 9.0
+	w.thickness = 2.4
+	w.tower_radius = 3.4
+	w.tower_height = 14.0
+	w.roof_style = CastleWall.RoofStyle.CONE
+	w.roof_slate = true
+	w.roof_flare = 0.5
+	w.roof_pitch = 2.6
+	st.add_child(w)
+	# The yard's paving, the place's own (as the town world paves the castle's yard).
+	var yard_floor := MeshInstance3D.new()
+	yard_floor.name = "YardPaving"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(30, 20)
+	yard_floor.mesh = pm
+	yard_floor.position = Vector3(17, 0.03, -2.8)
+	var rm := ShaderMaterial.new()
+	rm.shader = STREET_SHADER
+	yard_floor.material_override = rm
+	st.add_child(yard_floor)
+	streets.append(rm)
+	paint_street(rm, s)
+	var yard := PropGroup.new()
+	yard.name = "Yard"
+	TownFurnish.training(yard, Vector3(21, 0, -2), rng)
+	TownFurnish.smithy(yard, Vector3(6, 0, 1))
+	st.add_child(yard)
+	var dress := PropGroup.new()
+	dress.name = "Banners"
+	var inner: float = -14.0 + w.thickness * 0.5
+	TownFurnish.wall_banners(dress, [Vector3(10, 8.5, inner), Vector3(24, 8.5, inner)] as Array[Vector3], Vector3.BACK, 1.8)
+	TownFurnish.gate_torches(dress, Vector3(17, 0, inner + 0.35), Vector3.RIGHT, Vector3.BACK, w.gate_width * 0.5 - 0.6,
+		3.6)
+	st.add_child(dress)
+	var label := Label3D.new()
+	label.text = title
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.font_size = 160
+	label.outline_size = 36
+	label.pixel_size = 0.02
+	label.position = Vector3(3, 26, 0)
+	label.no_depth_test = true
+	st.add_child(label)
+	_root.add_child(st)
+	sets.append(st)
+	return st
+
+
 ## One roof to try: a short wall between two towers topped as `spec` says (`ROOF_TRIES`), in the lab's style.
 func make_roof_try(spec: Array, at: Vector3) -> Settlement:
 	var st := Settlement.new()
@@ -290,6 +358,11 @@ func show_mode(m: int) -> void:
 				var col: int = i % 4
 				var row: int = floori(i / 4.0)
 				make_roof_try(ROOF_TRIES[i], Vector3((col - 1.5) * 34.0, 0, (row - 0.5) * 46.0))
+		5:
+			for i: int in styles.size():
+				var col: int = i % 4
+				var row: int = floori(i / 4.0)
+				make_places(styles[i], Vector3((col - 1.5) * SET_STEP.x, 0, (row - 0.5) * SET_STEP.y), styles[i].title)
 	focus = -1
 	_frame_mode()
 	_fill_panel()
@@ -299,7 +372,7 @@ func show_mode(m: int) -> void:
 ## The camera over the whole mode: [distance, pitch, yaw, center height] per mode.
 func _frame_mode() -> void:
 	var frames: Array[Vector4] = [Vector4(175, -0.5, 0.2, 0), Vector4(62, -0.24, 0.3, 6), Vector4(150, -0.5, 0.2, 0),
-		Vector4(58, -0.16, 0.0, 5), Vector4(150, -0.3, 0.15, 8)]
+		Vector4(58, -0.16, 0.0, 5), Vector4(150, -0.3, 0.15, 8), Vector4(175, -0.5, 0.2, 0)]
 	var f: Vector4 = frames[mode]
 	_center = Vector3(0, f.w, 0)
 	_dist = f.x
@@ -326,6 +399,11 @@ func set_focus(i: int) -> void:
 		_center = sets[focus].position + Vector3(0, 13, 0)
 		_dist = 34.0
 		_pitch = -0.12
+	elif mode == 5:
+		_center = sets[focus].position + Vector3(5, 2, -1)
+		_dist = 44.0
+		_yaw = 0.12
+		_pitch = -0.42
 	_place_camera()
 	_refresh_info()
 
@@ -383,7 +461,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_place_camera()
 	elif event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
 		var k: Key = (event as InputEventKey).keycode
-		if k >= KEY_1 and k <= KEY_5:
+		if k >= KEY_1 and k <= KEY_6:
 			show_mode(k - KEY_1)
 		elif k == KEY_RIGHT:
 			set_focus(focus + 1)
@@ -574,7 +652,7 @@ func _refresh_info() -> void:
 	var what: String = MODES[mode]
 	if focus >= 0 and focus < sets.size():
 		what += ": " + (str(ROOF_TRIES[focus][0]) if mode == 4 else sets[focus].style.title)
-	_info.text = "THE TOWN LAB   %s   %s   (1-5 modes, Left/Right a street, L light, H panel, right mouse turn, wheel zoom)" % [
+	_info.text = "THE TOWN LAB   %s   %s   (1-6 modes, Left/Right a street, L light, H panel, right mouse turn, wheel zoom)" % [
 		what, LIGHTS[light]]
 
 
@@ -595,7 +673,15 @@ func _shoot(dir: String) -> void:
 	await _snap(dir, "roofs_day", func() -> void: show_mode(4))
 	for i: int in ROOF_TRIES.size():
 		await _snap(dir, "roof_%d_%s" % [i + 1, str(ROOF_TRIES[i][0]).to_snake_case()], set_focus.bind(i))
-	await _snap(dir, "seeds_day", func() -> void: show_mode(2))
+	await _snap(dir, "places_day", func() -> void: show_mode(5))
+	for i: int in styles.size():
+		await _snap(dir, "place_%d_%s" % [i + 1, styles[i].title.to_snake_case()], set_focus.bind(i))
+	await _snap(dir, "places_night", func() -> void:
+		show_mode(5)
+		set_light(2))
+	await _snap(dir, "seeds_day", func() -> void:
+		set_light(0)
+		show_mode(2))
 	await _snap(dir, "one_day", func() -> void: show_mode(1))
 	await _snap(dir, "one_edited", func() -> void:
 		_set_field(Color(0.55, 0.75, 0.85, 1.0), &"plaster")

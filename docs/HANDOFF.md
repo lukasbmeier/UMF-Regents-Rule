@@ -10,6 +10,9 @@
   movement and driver, NEW `showcase_movement.gd`, the battle and vista beats, the keep), `ui/login/regents_login.gd`
   (title card, on in the game too, no tagline), `tests/login_shot.gd`, the `regents_showcase` suite, PROGRESS 86, GAME.md, the genre rule.
   The village textures' `.import` files also show changed (reimported as 3D at 18:26): NOT this session's.
+- THE TOWNS' FOLLOW-UP (Luke's first look: roofs, streets, furnishing; the lab's 5 Roofs and 6 Places) is on `main`
+  and PUSHED: `34bedf9d` and the Places commit after it, fast-forwarded from the worktree branch
+  `claude/medieval-village-worldbuilding-dd942b`. Client-only: no publish. `regents_town` 68/0.
 - Current section in `docs/regents_rule/PROGRESS.md`: **Step 86** (the showcase notes); 85 the towns, 78-84 above.
 - The play database: PUBLISHED 2026-11-15 with `--codegen` (step 83's NEW table `spell_landed`, add-only; 63 tables).
   Steps 81, 84 and 85 are client-only: no publish. Luke restarts the editor's game (and reloads `adventurer.tscn`,
@@ -53,7 +56,7 @@
 
 ## Next, in order
 1. Luke plays the effects (staff, sword, axe, the imp, the skeletons; two instances for Gale); his notes on the look.
-2. Luke picks the towers' roofs (town lab, 5 Roofs) and looks at the furnished world (views 8, 9, 0); then his S1-S8
+2. Luke picks the towers' roofs (town lab, 5 Roofs) and looks at the furnishing (lab 6 Places; world 8, 9, 0); then his S1-S8
    (`SETTLEMENTS_PREP.md` §7, §9). Was: on his okay, FURNISH them with the Fantasy Props kit (`SETTLEMENTS_PREP.md`
    §8, "Left for later").
 3. Maybe: others' AIM held a moment after a spell lands (their upper body turns to the shot only while casting).

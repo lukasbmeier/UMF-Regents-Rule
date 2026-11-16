@@ -499,4 +499,31 @@ func _run_lab() -> void:
 	_check(furnished and (lab.get("streets") as Array).size() == presets, "every preset's street paved and furnished")
 	lab.call("show_mode", 4)
 	_check((lab.get("sets") as Array).size() == (lab.get("ROOF_TRIES") as Array).size(), "the roofs, side by side")
+	# NEGATIVE first: a plain street is no place (it has a market, no green, inn, yard or banners).
+	lab.call("show_mode", 0)
+	_check(_place_missing((lab.get("sets") as Array)[0] as Node) != "", "a plain street is not counted as a place")
+	lab.call("show_mode", 5)
+	var places: Array = lab.get("sets") as Array
+	var missing: String = ""
+	for st: Variant in places:
+		var why: String = _place_missing(st as Node)
+		if why != "" and missing == "":
+			missing = "%s: %s" % [((st as Settlement).style as SettlementStyle).title, why]
+	_check(places.size() == presets and missing == "" and (lab.get("streets") as Array).size() == presets,
+		"the places view: every preset's green, inn front, banners and torches, a paved yard with a training yard and a smithy %s" % missing)
 	lab.free()
+
+
+## What a lab place lacks ("" when nothing): the town world's green, inn front, yard (three dummies, an anvil), banners
+## and a gate's torches.
+func _place_missing(st: Node) -> String:
+	for want: String in ["Green", "InnFront", "Yard", "Banners"]:
+		if st.find_children(want, "PropGroup", true, false).size() != 1:
+			return "no " + want
+	var yard: PropGroup = st.find_children("Yard", "PropGroup", true, false)[0] as PropGroup
+	if Array(yard.placed).count("Dummy") != 3 or not yard.placed.has("Anvil"):
+		return "a yard without its training or smithy"
+	var banners: PropGroup = st.find_children("Banners", "PropGroup", true, false)[0] as PropGroup
+	if Array(banners.placed).count("Torch_Metal") != 2:
+		return "no torches at the gate"
+	return ""

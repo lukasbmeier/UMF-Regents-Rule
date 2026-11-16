@@ -4738,7 +4738,8 @@ KIT in (`game/regents/art/props/`, CC0), its cloth in a new style slot CLOTH, `P
 `TownFurnish` (the market, doors, the green, the inn, the castle yard, banners, gate torches). `regents_town` 66/0
 (negatives: the roofs' centering, battlements under a roof, a prop material unknown); the whole unit run below.
 How to look: F6 on `town_world.tscn` (8 the market's stalls, 9 the inn, 0 the castle yard) and `town_lab.tscn`
-(5 Roofs). Waiting on Luke: which roof for which place, and his look at the furnishing.
+(5 Roofs, 6 Places: every preset's green, inn front and castle corner, Luke asked for it). Waiting on Luke: which
+roof for which place, and his look at the furnishing. Then merged into main and pushed (Luke's say-so).
 
 ## Step 86: THE SHOWCASE, LUKE'S NOTES ON THE FILMS (2026-11-15)
 

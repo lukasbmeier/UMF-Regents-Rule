@@ -57,7 +57,7 @@ GODOT=<path> ./game/regents/tests/spells_seen_playtest.sh     # two real clients
 "$GODOT" --path . res://game/regents/tests/aim_shot.tscn -- <out dir>     # windowed, no server: the aim poses against the crosshair (measured), a foe's swing trail, the shots in flight
 "$GODOT" --path . res://game/regents/ui/bar_lab.tscn -- <out dir>        # windowed, no server: the ability bar, round and square, per kit and state (F6 in the editor: the lab itself)
 "$GODOT" --path . res://game/regents/town/town_world.tscn -- <out dir>   # windowed, no server: the 1 km town world (village, market town, castle) by day and night
-"$GODOT" --path . res://game/regents/town/town_lab.tscn -- <out dir>     # windowed, no server: one street in every preset style, seeds, a style edited live
+"$GODOT" --path . res://game/regents/town/town_lab.tscn -- <out dir>     # windowed, no server: one street in every preset style, seeds, a style edited live, houses, roofs, places
 "$GODOT" --path . res://game/regents/vfx/vfx_lab.tscn -- <out dir> [name] # windowed, no server: a contact sheet of six moments of each effect showcase, day and night (F6: the lab; unit suite regents_vfx)
 "$GODOT" --path . res://game/regents/vfx/vfx_lab.tscn -- cost             # windowed: what each showcase adds at its peak (draw calls, particles, GPU ms)
 "$GODOT" --path . res://game/regents/wardrobe/wardrobe_lab.tscn -- <out dir>  # windowed, no server: every outfit, the metal tiers, the zones, the colorways painted beside dyed, and the piece inventory (F6: the lab; unit suite regents_wardrobe)

@@ -137,22 +137,12 @@ static func inn_front(parent: Node3D, front: Vector3, rng: RandomNumberGenerator
 
 
 ## A castle yard: a training yard (dummies, weapon stands), a smithy corner, a stable's gear; positions are the
-## castle's own (`town_world.gd` `_build_castle`).
+## castle's own (`town_world.gd` `_build_castle`). The town lab's Places view sets out the same training and smithy.
 static func castle_yard(parent: Node3D, rng: RandomNumberGenerator) -> PropGroup:
 	var g := PropGroup.new()
 	g.name = "Yard"
-	for i: int in 3:
-		g.put("Dummy", Vector3(-5.0 + i * 3.4, 0, 27.0 + rng.randf_range(-0.4, 0.4)), PI + rng.randf_range(-0.3, 0.3))
-	g.put("WeaponStand", Vector3(-9.5, 0, 24.0), PI * 0.5)
-	g.put("WeaponStand", Vector3(7.5, 0, 24.0), -PI * 0.5)
-	g.put("Barrel_Holder", Vector3(-1.5, 0, 31.5), PI)
-	# The smithy corner by the barracks.
-	g.put("Anvil_Log", Vector3(-21.5, 0, 16.0), 0.4)
-	g.put("Anvil", Vector3(-21.5, 1.07, 16.0), 0.4)
-	g.put("Workbench", Vector3(-24.0, 0, 18.5), PI * 0.5)
-	g.put("FirePit", Vector3(-19.0, 0, 18.5))
-	g.put("Bucket_Metal", Vector3(-20.0, 0, 15.0))
-	g.put("Crate_Wooden", Vector3(-24.5, 0, 14.5), 0.2)
+	training(g, Vector3(-1.6, 0, 27.0), rng)
+	smithy(g, Vector3(-21.5, 0, 16.0))
 	# The stable's gear.
 	g.put("Wagon", Vector3(12.0, 0, 37.0), 0.35)
 	for i: int in 4:
@@ -162,6 +152,25 @@ static func castle_yard(parent: Node3D, rng: RandomNumberGenerator) -> PropGroup
 	g.put("Ladder", Vector3(19.4, 0, 24.5), PI * 0.5)
 	parent.add_child(g)
 	return g
+
+
+## A training yard round `at` (the middle dummy's place): three dummies, a weapon stand either side, a barrel holder.
+static func training(g: PropGroup, at: Vector3, rng: RandomNumberGenerator) -> void:
+	for i: int in 3:
+		g.put("Dummy", at + Vector3(-3.4 + i * 3.4, 0, rng.randf_range(-0.4, 0.4)), PI + rng.randf_range(-0.3, 0.3))
+	g.put("WeaponStand", at + Vector3(-7.9, 0, -3.0), PI * 0.5)
+	g.put("WeaponStand", at + Vector3(9.1, 0, -3.0), -PI * 0.5)
+	g.put("Barrel_Holder", at + Vector3(0.1, 0, 4.5), PI)
+
+
+## A smithy corner round `at` (the anvil's place): the anvil on its log, a workbench, a fire, a bucket, a crate.
+static func smithy(g: PropGroup, at: Vector3) -> void:
+	g.put("Anvil_Log", at, 0.4)
+	g.put("Anvil", at + Vector3(0, 1.07, 0), 0.4)
+	g.put("Workbench", at + Vector3(-2.5, 0, 2.5), PI * 0.5)
+	g.put("FirePit", at + Vector3(2.5, 0, 2.5))
+	g.put("Bucket_Metal", at + Vector3(1.5, 0, -1.0))
+	g.put("Crate_Wooden", at + Vector3(-3.0, 0, -1.5), 0.2)
 
 
 ## Tall banners hanging on a wall's face: `at` each one's top middle on the face, `out` the way the face looks.

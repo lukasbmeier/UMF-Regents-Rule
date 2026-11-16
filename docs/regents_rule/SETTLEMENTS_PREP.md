@@ -138,7 +138,7 @@ for colors to show how unique each can look using exact same models"; the kit's 
   of wall with towers and a gate) in every preset: 1 Presets (all eight side by side; Left/Right to step through them
   close), 2 One (the panel edits a style live: every slot's color and alpha, the weather, each building's spread,
   the night; Save style writes `styles/custom_<time>.tres`), 3 Seeds (one style, six streets: each building's own
-  nudge), 4 Houses (one house in every preset in a row), 5 Roofs (§9). L light, H panel.
+  nudge), 4 Houses (one house in every preset in a row), 5 Roofs (§9), 6 Places (§9). L light, H panel.
 - Shots (windowed): `"$GODOT" --path . res://game/regents/town/town_world.tscn -- <out dir>` and the same with
   `town_lab.tscn`.
 
@@ -242,13 +242,20 @@ stones fade to their average (no shimmer).
   sign), a CASTLE YARD (three dummies and weapon stands, a smithy corner, the stable's wagon and barrels), BANNERS on
   the keep and inside the gate, TORCHES at every gate.
 - New views in the town world: 8 the market's stalls, 9 the inn, 0 the castle yard.
+- The town lab's view **6 Places** (Luke: "add the places view"): what the world furnishes beyond a street, in
+  every preset side by side (Left/Right one close): the inn (House D) and its tables, a village green, a stretch of
+  castle wall in the world's slate bells with its banners and gate torches, its yard paved in the style's paving
+  with a training yard and a smithy. The same `TownFurnish` calls as the world (`castle_yard` is now `training`,
+  `smithy` and the stable's gear, the world's yard unchanged).
 
 **Tested**: `regents_town` 66/0: the roofs (each style builds; a roofed tower solid to its eaves with no merlon under
 the roof, its roof starting there and reaching past the wall; slate, courses, the kit's, the turret, open, square;
 NEGATIVE tower roofs off builds none; and with the roofed tower's merlons put back, the check fails), the streets
 (above), the props (every material known, NEGATIVE with `MI_Banner` taken out two checks fail; a group one mesh and
 one body, its cloth the style's), the world's paving per place and after S, the world furnished (the market's stalls,
-none on the kit's tower), the lab's streets paved and furnished, the roofs view. Looked at in the shots of both.
+none on the kit's tower), the lab's streets paved and furnished, the roofs view, the places view (every preset's
+green, inn front, banners, two torches, a yard with three dummies and an anvil; NEGATIVE a plain street is no place,
+and with the smithy taken out the check fails). Looked at in the shots of both.
 
 **Left for later**: the bunting hangs between nothing (posts or house fronts to tie it to); the props are not yet in
 the houses (interiors, S7); props by hand in a scene work (a `PropGroup`'s instanced children) but no tool places them.
