@@ -153,7 +153,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 |---|---|---|---|---|---|---|
 | M1 | town session | (deleted) | DONE: worktree and branch removed 2026-11-15 (an empty locked folder `.claude/worktrees/medieval-...` is left: delete by hand) | 85 (extended) | 34bedf9d, 9064c56b | |
 | M2 | master | — | DONE: `WAITING_ON_LUKE.md` | | | |
-| T1 | (not started) | | BLOCKED: the app asks Luke to TRUST the `UMF Template` repository before a session may start there | | | |
+| T1 | t1-wear-hook (local_8bc5463c), in `../UMF Template` | t1-wear-hook | running | | | |
 | S1 | s1-areas-hit-all (local_2bb14966) | s1-areas-hit-all | running | | | |
 | S2 | | | waiting S1 | | | |
 | S3 | | | waiting S2 | | | |
