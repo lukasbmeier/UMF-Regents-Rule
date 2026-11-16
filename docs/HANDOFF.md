@@ -1,11 +1,11 @@
-# Handoff — Regent's Rule, 2026-11-16 (the armor run, in progress: steps 87-95 merged, template 1.8.4 pulled)
+# Handoff — Regent's Rule, 2026-11-16 (the armor run, in progress: steps 87-96 merged, template 1.8.4 pulled)
 
 ## Where it stands
 - THE ARMOR RUN IS IN PROGRESS (a master session). `docs/regents_rule/MASTER_RUN.md` is the work list; its §7
   LEDGER says who runs what and what is merged. A restarted master is given the prompt in MASTER_RUN §8, reads the
   ledger, and MESSAGES the existing child sessions (ids in the ledger): a new session can only be started when Luke
   asks in the chat (the app refuses a start from an automated turn), so idle children are reused for the next item.
-- `main` is committed and PUSHED through step 95. On `main` 2026-11-16 after step 95: unit whole **4931/0**, lints
+- `main` is committed and PUSHED through step 96. On `main` 2026-11-16 after step 96: unit whole **5095/0** (second run; see Watch out), lints
   and engine-error checks ok, `cargo test` green, wasm check clean. Playtests on `main` not re-run (the children ran
   theirs on their branches: combat 130/0 with Cleave on both dummies, spells_seen 8/0 + 12/0, bind 3/0).
   Integration last ran at step 77; it runs ONCE at the run's end (M9), with the legs S1 and P1 wrote.
@@ -14,8 +14,8 @@
 - Template 1.8.4 shipped and pulled (`e15c2f16`): a free color option in `CharacterPicker` (#316).
 - The play database: PUBLISHED 2026-11-16 with `--codegen` after step 95 (64 tables, 111 reducers: `worn`, `wear`,
   `take_off`, `resolve_action_all`, the placeholder pools). Luke restarts the editor's game before he plays.
-- Running: S4 (the chest's ability on F; holds the `ui/` token and `combat_component.gd`) in the Lane S session, W2
-  (the armor look; holds the character scenes) in the E1/W1 session. Not started: S1b, W3, W4. Idle and reusable: the P1, E3, T1 sessions.
+- Running: S4 (the chest's ability on F; holds the `ui/` token and `combat_component.gd`) in the Lane S session, W4
+  (the dye's cost at 300) in the E1/W1 session. Not started: S1b, W3. Idle and reusable: the P1, E3, T1 sessions.
 - What waits on Luke: `docs/regents_rule/WAITING_ON_LUKE.md`.
 
 ## This session (the master)
@@ -29,10 +29,11 @@
   practice pieces. Step 93 (W1): players are Peasant-only `RegentsFigure`s in their own colors (`RegentsColors` keys
   on the appearance text, shared materials); `wear_armor` is W2's way in. Step 94 (S3): 17 ARMOR PIECES from the
   material table (metal, leather, linen; recipes at the anvil and workbench; placeholder shares, tiers, amounts; trait
-  pools empty). Step 95 (W1b): the picker's five color rows confirmed on 1.8.4; the NPC session override removed. Each in PROGRESS with its tests.
+  pools empty). Step 96 (W2): WORN ARMOR IS SEEN: `ArmorLookComponent` on the adventurer, the table
+  `wardrobe/armor_looks.tres`, `armor_seen_playtest.sh` (client only: no publish). Step 95 (W1b): the picker's five color rows confirmed on 1.8.4; the NPC session override removed. Each in PROGRESS with its tests.
 
 ## Next, in order
-1. As S4 and W2 report: MASTER_RUN §5 each (inbox -> PROGRESS step 96+, WAITING_ON_LUKE, rules, ledger, this file).
+1. As S4 and W4 report: MASTER_RUN §5 each (inbox -> PROGRESS step 97+, WAITING_ON_LUKE, rules, ledger, this file).
 2. After S4: S1b (per-role pools) in the Lane S session, and W3 (the doll in the bag; the `ui/` token) in another
    idle session; after W2: W4 (`load_300.sh` with dressed bots).
 3. M9 at the end: unit, `cargo test`, wasm, integration once, combat / spells_seen / caster playtests (and one look
@@ -43,6 +44,9 @@
   Loudest: his level-33 staff's R now offers the placeholder Meteor (Gale / Frost Ring on R no longer fire).
 
 ## Watch out
+- A LOAD-SENSITIVE CHECK: "the workbench window's look with nothing changed ... (under 4)" (`regents.gd` ~2354)
+  fails at 4.06-4.14 ms when another Godot run loads the machine (S3's 20 armor recipes brought it to 3.6-3.7 ms).
+  Rerun with the machine quiet; the real fix (a cheaper unchanged look, NOT a higher limit) is queued with S1b.
 - AFTER A MERGE THAT ADDS A `class_name`, run Godot `--headless --path . --import` before `run_tests.sh`: without it
   the suite fails with "class not declared" (step 88's first run: 8 failed; green after the import). READ THE RESULT
   BEFORE PUSHING (that red run was pushed for a few minutes).
