@@ -9,7 +9,7 @@ extends Node
 ## and plays each handle's last hit (COMBAT_OVERHAUL.md §5); THE LAB'S LOOKS (PROGRESS 82): the swings wore the
 ## crescent, the parries flashed, a staff's Fireball and Blink show theirs; and lets the target go (Esc). Exits 0/1.
 
-const OVERALL_TIMEOUT_SEC: float = 720.0
+const OVERALL_TIMEOUT_SEC: float = 840.0
 ## A hit dealt at once shows this soon after its blow lands as seen: the referee's settle (80 ms), its frame, ours.
 const AT_ONCE_MS: int = 220
 ## The camp's guide and the yard's sparring skeleton (the glade's `guide` and `sparring_1` points).
@@ -390,6 +390,8 @@ func _run() -> void:
 		await _blocking_the_camp(me, my_hp)
 		await _back_at_camp(my_hp, home)
 		await _blocked_from_behind(my_hp)
+		await _back_at_camp(my_hp, home)
+		await _armor_in_the_camp(my_hp, home)
 		await _back_at_camp(my_hp, home)
 		# A sweep hits the first body in its path: with the camp round you that may be the skeleton beside this one
 		# (2026-11-01: two runs running), so what the chop did is read off the camp's skeletons, the most any lost.
@@ -994,6 +996,82 @@ func _other_hit_due(seen: Array[Dictionary], foe_id: int, by_ms: int) -> bool:
 
 ## THE GUARD FACES FORWARD: the block held, turned away from the nearest skeleton, a light comes through in
 ## full (COMBAT_OVERHAUL.md §4: a hit from behind takes full damage).
+## ARMOR, THE CORE (S2, ARMOR_PREP.md A1 and A6, settled): the shell gives the two test pieces (placeholders: a cuirass of
+## Defense 20, a helm of 10 at quality 1000, so 12); they are put on out of the fight, the server's `worn` row comes back
+## to this client (others draw it from the same row), and every hit the camp lands is its foe's hit x K / (K + 32),
+## never the whole of it. Then they come off again.
+func _armor_in_the_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
+	print("GRANT_ARMOR %d" % me.entity_id)
+	var row_of := func(item: int) -> int:
+		for st: SpaceTimeInventoryComponent.Stack in inv.items():
+			if st.item_def_id == item:
+				return st.id
+		return -1
+	await _until(func() -> bool: return int(row_of.call(40067)) > 0 and int(row_of.call(40068)) > 0, 8.0)
+	_check(int(row_of.call(40067)) > 0 and int(row_of.call(40068)) > 0, "the shell gave a practice cuirass and helm")
+	# Away from the camp, then out of the fight (`regents.regen_delay_s` after the last hurt): wearing waits for that.
+	await _stand_at(home + Vector3(0, 0.05, 40.0), home)
+	var worn_on := func(slot: String) -> int:
+		var r: RefCounted = SpaceTimeSync.get_row(&"worn", me.entity_id)
+		return int(r.get(StringName(slot + "_item"))) if r != null else 0
+	var refusals: Array[String] = []
+	for piece: int in [40067, 40068]:
+		var until_ms: int = Time.get_ticks_msec() + 20000
+		while Time.get_ticks_msec() < until_ms:
+			var req: ReducerRequest = SpaceTimeSync.call_reducer(&"wear", [int(row_of.call(piece))], ["u64"])
+			await _until(func() -> bool: return not req.is_pending(), 3.0)
+			if req.is_ok():
+				break
+			refusals.append(req.error_message)
+			await get_tree().create_timer(1.0).timeout
+	await _until(func() -> bool: return int(worn_on.call("chest")) == 40067 and int(worn_on.call("head")) == 40068, 3.0)
+	_check(int(worn_on.call("chest")) == 40067 and int(worn_on.call("head")) == 40068,
+		"worn out of the fight, and the server's worn row came back: the cuirass on the chest, the helm on the head%s"
+			% ((" (refused first while in the fight: %s)" % refusals[0]) if not refusals.is_empty() else ""))
+	_check(refusals.all(func(w: String) -> bool: return w.contains("not in a fight")), "refused only while in the fight (%s)" % str(refusals))
+	# The camp's hits, unblocked: each its foe's hit x K / (K + 20 + 12).
+	var k: float = HotRules.number(&"regents.defense_k")
+	var keep: float = k / (k + 20.0 + 10.0 * 1.2)
+	var whole: Array[float] = []
+	var kept: Array[float] = []
+	for f: FoeDef in FoeDef.all():
+		if f.kit == null:
+			continue
+		for a: AbilityDef in f.kit.light:
+			whole.append(snappedf(a.damage * float(f.damage_pct) / 100.0, 0.01))
+			kept.append(snappedf(a.damage * float(f.damage_pct) / 100.0 * keep, 0.01))
+	await _heal(my_hp)
+	await _stand_at(home + Vector3(0, 0.05, 2.4), home)
+	var drops: Array[float] = []
+	var last: float = my_hp.get_current()
+	var until: int = Time.get_ticks_msec() + 15000
+	while Time.get_ticks_msec() < until and my_hp.get_current() > 25.0 and drops.size() < 2:
+		await get_tree().process_frame
+		_face_nearest_foe()
+		var now_hp: float = my_hp.get_current()
+		if now_hp < last - 0.01:
+			drops.append(snappedf(last - now_hp, 0.01))
+		last = now_hp
+	var near := func(d: float, among: Array[float]) -> bool: return among.any(func(x: float) -> bool: return absf(x - d) <= 0.02)
+	_check(not drops.is_empty() and drops.all(func(d: float) -> bool: return near.call(d, kept)),
+		"in the armor every hit lands at its foe's hit x %.0f / (%.0f + 32) (one of %s): hits taken %s" % [k, k, str(kept), str(drops)])
+	_check(not drops.is_empty() and not drops.any(func(d: float) -> bool: return near.call(d, whole)),
+		"NEGATIVE: none lands whole (%s): hits taken %s" % [str(whole), str(drops)])
+	# Off again, out of the fight.
+	await _stand_at(home + Vector3(0, 0.05, 40.0), home)
+	for slot: String in ["chest", "head"]:
+		var until_ms: int = Time.get_ticks_msec() + 20000
+		while Time.get_ticks_msec() < until_ms:
+			var req: ReducerRequest = SpaceTimeSync.call_reducer(&"take_off", [slot], ["string"])
+			await _until(func() -> bool: return not req.is_pending(), 3.0)
+			if req.is_ok():
+				break
+			await get_tree().create_timer(1.0).timeout
+	await _until(func() -> bool: return int(worn_on.call("chest")) == 0 and int(worn_on.call("head")) == 0, 3.0)
+	_check(int(worn_on.call("chest")) == 0 and int(worn_on.call("head")) == 0, "taken off: nothing worn")
+	await _stand_at(home + Vector3(0, 0.05, 2.4), home)   # back where the camp's phases stand, for what follows
+
+
 func _blocked_from_behind(my_hp: SpaceTimeHealthComponent) -> void:
 	var whole: Array[float] = []
 	for f: FoeDef in FoeDef.all():

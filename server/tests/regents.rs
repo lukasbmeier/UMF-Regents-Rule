@@ -1229,7 +1229,7 @@ fn a_handles_shape_is_its_role() {
     assert!(!rules::part_fits(hilt, "binding", Some(sword)), "not a binding slot");
     // NEGATIVE: a part that names one kit (`fits_kit`, still the content's to use) fits only that kit's.
     let only_swords = rules::ItemSeed { id: 1, name: "Test hilt", max_stack: 1, tool_tag: "", tool_tier: 0, tool_speed_pct: 100, weapon_kit: "",
-        weapon_damage_pct: 100, part_tag: "handle", handle_trait: 0, weapon_trait: 0, ammo_for: "", ammo_damage_pct: 100, role: 0, fits_kit: "sword" };
+        weapon_damage_pct: 100, part_tag: "handle", handle_trait: 0, weapon_trait: 0, ammo_for: "", ammo_damage_pct: 100, role: 0, fits_kit: "sword", armor_slot: "", defense: 0 };
     assert!(rules::part_fits(&only_swords, "handle", Some(sword)) && !rules::part_fits(&only_swords, "handle", Some(axe))
         && !rules::part_fits(&only_swords, "handle", Some(pick)), "a part for swords alone fits no axe or pickaxe");
     let plain = rules::item(40013).unwrap();
@@ -1663,4 +1663,46 @@ fn changing_a_pick() {
     assert!(staff.change_refusal(0, fireball, 5, [frost, 0, 0]).is_some(), "NEGATIVE: to the base: no");
     assert!(staff.change_refusal(0, gale, 4, [frost, 0, 0]).is_some_and(|w| w.contains("level 5")), "NEGATIVE: counting as 4, the pick is shut");
     assert!(staff.change_refusal(3, gale, 33, [frost, 0, 0]).is_some(), "NEGATIVE: no pick 3");
+}
+
+#[test]
+fn armor_takes_its_share_of_a_hit_multiplied_in_order() {
+    // S2, THE ARMOR CORE (ARMOR_PREP.md A1, settled): a hit on someone with Defense D becomes damage x K / (K + D).
+    let k = umf_module::hot::find("regents.defense_k").expect("the hot rule regents.defense_k").number;
+    assert_eq!(k, 67.0, "K starts at 67 (Luke's A1)");
+    assert_eq!(rules::defense_mult(0.0, k), 1.0, "no Defense: the whole hit");
+    assert_eq!(rules::defense_mult(67.0, k), 0.5, "Defense K: halved");
+    assert!((rules::defense_mult(20.0, k) - 67.0 / 87.0).abs() < 1e-6, "Defense 20: 67/87 of it");
+    assert!(rules::defense_mult(100_000.0, k) > 0.0, "never a flat cut: no Defense makes a hit nothing");
+    assert_eq!(rules::defense_mult(20.0, 0.0), 1.0, "a K not above 0 takes nothing (a bad rule never divides by zero)");
+    // Worn pieces ADD UP before the formula: a helm (10) and a cuirass (20) are Defense 30, not two cuts one after the other.
+    let both = rules::defense_mult(10.0 + 20.0, k);
+    assert!((both - 67.0 / 97.0).abs() < 1e-6);
+    assert!((both - rules::defense_mult(10.0, k) * rules::defense_mult(20.0, k)).abs() > 1e-3, "pieces add, they do not stack as cuts");
+    // Quality raises Defense as it raises damage: a fifth more at 1000, nothing more past it.
+    assert_eq!(rules::piece_defense(20, 0), 20.0);
+    assert!((rules::piece_defense(20, 1000) - 24.0).abs() < 1e-5);
+    assert!((rules::piece_defense(20, 5000) - 24.0).abs() < 1e-5);
+    assert!((rules::piece_defense(20, 500) / 20.0 - rules::hit_damage(1.0, 100, 500, 1)).abs() < 1e-6, "the same share as a weapon's");
+    // THE ORDER (A1.2): the guard, then armor, then traits, each a multiplier, MULTIPLIED, never added: a 60 % block, a
+    // halving armor and a trait's +20 % leave 36 of 100 (added, they would leave 30).
+    let got = rules::through(100.0, 0.6, 0.5, 1.2);
+    assert!((got - 36.0).abs() < 1e-4, "multiplied: {got}");
+    assert!((got - 100.0 * (1.0 - 0.4 - 0.5 + 0.2)).abs() > 1.0, "not added");
+    assert_eq!(rules::through(100.0, 1.0, 1.0, 1.0), 100.0, "nothing in the way: the whole hit");
+}
+
+#[test]
+fn armor_is_content_in_its_slots() {
+    // The slots (Luke's five: the weapon wielded, these four worn) and what declares a piece: its item's slot and Defense.
+    assert_eq!(rules::ARMOR_SLOTS, ["head", "chest", "legs", "trinket"]);
+    let worn: Vec<_> = rules::ITEMS.iter().filter(|i| !i.armor_slot.is_empty()).collect();
+    assert!(worn.iter().all(|i| rules::ARMOR_SLOTS.contains(&i.armor_slot) && i.weapon_kit.is_empty() && i.max_stack == 1),
+        "every piece is worn in a slot, is no weapon and does not stack");
+    let cuirass = rules::ITEMS.iter().find(|i| i.name == "Practice cuirass (placeholder)").expect("the test cuirass");
+    assert_eq!((cuirass.armor_slot, cuirass.defense), ("chest", 20));
+    let helm = rules::ITEMS.iter().find(|i| i.name == "Practice helm (placeholder)").expect("the test helm");
+    assert_eq!((helm.armor_slot, helm.defense), ("head", 10));
+    assert!(rules::ITEMS.iter().filter(|i| i.armor_slot.is_empty()).all(|i| i.defense == 0), "nothing else has a Defense");
+    assert!(rules::FOES.iter().all(|f| f.defense == 0), "today's foes have no Defense (Luke: 0 on today's skeletons)");
 }

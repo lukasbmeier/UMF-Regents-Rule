@@ -304,6 +304,9 @@ fn follow_place(ctx: &ReducerContext, entity_id: u64, world_id: u32, chunk: u32)
     if let Some(r) = ctx.db.wielded().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
         ctx.db.wielded().entity_id().update(Wielded { world_id, chunk, ..r });
     }
+    if let Some(r) = ctx.db.worn().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
+        ctx.db.worn().entity_id().update(Worn { world_id, chunk, ..r });
+    }
     if let Some(r) = ctx.db.combat_state().entity_id().find(entity_id).filter(|r| off(r.world_id, r.chunk)) {
         ctx.db.combat_state().entity_id().update(CombatState { world_id, chunk, ..r });
     }
@@ -770,6 +773,7 @@ pub fn admin_reset_bag(ctx: &ReducerContext, entity_id: u64) -> Result<(), Strin
     tester_target(ctx, entity_id, "admin_reset_bag")?;
     stop_work(ctx, entity_id);
     ctx.db.wielded().entity_id().delete(entity_id);
+    ctx.db.worn().entity_id().delete(entity_id);
     stop_block(ctx, entity_id);
     end_cast(ctx, entity_id);
     let rows: Vec<u64> = ctx.db.inventory_item().owner_entity_id().filter(entity_id).map(|r| r.id).collect();
@@ -1741,6 +1745,54 @@ pub struct Wielded {
     pub kit: String,
 }
 
+/// WHAT A PLAYER WEARS (S2, ARMOR_PREP.md section 3; Luke's slots: head, chest, legs, trinket; the weapon is `wielded`): for
+/// each slot the bag row worn there (0: nothing) and its item (0: nothing). One row a wearer (hard rule 9), made at their
+/// first `wear`. A piece worn stays in the bag, as a wielded weapon does; one that has left the bag counts for nothing
+/// (`defense_of` reads the bag) until it is taken off or another is worn there. Public, a cell table (the ring), so
+/// everyone draws it: what a piece looks like is its item's (`ItemDef.material`, its pattern), read by the client.
+#[table(accessor = worn, public)]
+pub struct Worn {
+    #[primary_key]
+    pub entity_id: u64,
+    #[index(btree)]
+    pub world_id: u32,
+    /// The cell it is in (`crate::cell`): what a ring client is sent by; it follows its wearer (`follow_place`).
+    #[index(btree)]
+    pub chunk: u32,
+    pub head_row: u64,
+    pub head_item: u32,
+    pub chest_row: u64,
+    pub chest_item: u32,
+    pub legs_row: u64,
+    pub legs_item: u32,
+    pub trinket_row: u64,
+    pub trinket_item: u32,
+}
+
+impl Worn {
+    /// Slot `slot`: (bag row, item); None for a slot that is no armor slot.
+    pub fn slot(&self, slot: &str) -> Option<(u64, u32)> {
+        match slot {
+            "head" => Some((self.head_row, self.head_item)),
+            "chest" => Some((self.chest_row, self.chest_item)),
+            "legs" => Some((self.legs_row, self.legs_item)),
+            "trinket" => Some((self.trinket_row, self.trinket_item)),
+            _ => None,
+        }
+    }
+
+    /// The same row with slot `slot` holding bag row `row` of item `item` (0, 0: nothing).
+    pub fn with(self, slot: &str, row: u64, item: u32) -> Worn {
+        match slot {
+            "head" => Worn { head_row: row, head_item: item, ..self },
+            "chest" => Worn { chest_row: row, chest_item: item, ..self },
+            "legs" => Worn { legs_row: row, legs_item: item, ..self },
+            "trinket" => Worn { trinket_row: row, trinket_item: item, ..self },
+            _ => self,
+        }
+    }
+}
+
 /// A fighter's moment: the light combo's last step and when, and when the block went up.
 #[table(accessor = combat_state, public)]
 pub struct CombatState {
@@ -2173,7 +2225,7 @@ fn arrow_hit(ctx: &ReducerContext, body_id: u64, other_id: u64, pos: Vector3) {
         if let (true, Some(h)) = (hittable, ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead)) {
             let (dx, dz) = (pos.x - a.from.x, pos.z - a.from.z);
             let point_blank = (dx * dx + dz * dz).sqrt() < hot_number(ctx, hot::POINT_BLANK_M) as f32;
-            let base = traited_damage(ctx, a.owner, other_id, &["basic"], a.damage);
+            let base = rules::through(a.damage, 1.0, armor_mult(ctx, other_id), traited_damage(ctx, a.owner, other_id, &["basic"], 1.0));
             let mut dmg = if point_blank { base * hot_number(ctx, hot::POINT_BLANK_PCT) as f32 / 100.0 } else { base };
             let dummy = ctx.db.dummy().entity_id().find(other_id);
             if let Some(mut d) = dummy.clone() {
@@ -2855,7 +2907,7 @@ fn spell_hurt(ctx: &ReducerContext, owner: u64, skill_id: u32, other_id: u64, dm
     if !hurts(ctx, owner, other_id) {
         return false;
     }
-    let dmg = traited_damage(ctx, owner, other_id, &["skill"], dmg);
+    let dmg = rules::through(dmg, 1.0, armor_mult(ctx, other_id), traited_damage(ctx, owner, other_id, &["skill"], 1.0));
     let hittable = crate::module::is_hittable(ctx, other_id);
     let Some(h) = ctx.db.health_state().entity_id().find(other_id).filter(|h| !h.is_dead) else { return false };
     if !hittable {
@@ -2967,6 +3019,78 @@ pub fn unwield(ctx: &ReducerContext) -> Result<(), String> {
     stop_block(ctx, me);
     end_cast(ctx, me);
     Ok(())
+}
+
+/// WEAR bag row `item_row` (S2): a piece of armor (its item's `armor_slot`) goes on in its slot, OUT OF A FIGHT only
+/// (`in_fight`: hurt within `regents.regen_delay_s`). A piece already in that slot is SWAPPED for it (it stays in the bag,
+/// as a weapon put away does): one click on the doll, as wielding another weapon is.
+#[reducer]
+pub fn wear(ctx: &ReducerContext, item_row: u64) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "wear")?;
+    let row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == me && r.qty > 0)
+        .ok_or("wear: that is not in your bag")?;
+    let it = rules::item(row.item_def_id).ok_or("wear: that is no item")?;
+    if it.armor_slot.is_empty() {
+        return Err(format!("wear: a {} is not worn", it.name.to_lowercase()));
+    }
+    if in_fight(ctx, me) {
+        return Err("wear: not in a fight (wait until your health comes back)".into());
+    }
+    let (world_id, chunk) = place_of(ctx, me);
+    let blank = Worn { entity_id: me, world_id, chunk, head_row: 0, head_item: 0, chest_row: 0, chest_item: 0, legs_row: 0,
+        legs_item: 0, trinket_row: 0, trinket_item: 0 };
+    let had = ctx.db.worn().entity_id().find(me);
+    let before = had.as_ref().and_then(|w| w.slot(it.armor_slot)).map_or(0, |s| s.1);
+    let existed = had.is_some();
+    let w = had.unwrap_or(blank).with(it.armor_slot, item_row, it.id);
+    if existed {
+        ctx.db.worn().entity_id().update(w);
+    } else {
+        ctx.db.worn().insert(w);
+    }
+    log::info!("regents: {me} wears a {} on its {}{}", it.name, it.armor_slot,
+        if before != 0 { format!(" (for item {before})") } else { String::new() });
+    Ok(())
+}
+
+/// TAKE OFF what is worn in `slot` ("head", "chest", "legs", "trinket"), out of a fight only. Nothing there: refused.
+#[reducer]
+pub fn take_off(ctx: &ReducerContext, slot: String) -> Result<(), String> {
+    let me = ctx.db.player().identity().find(ctx.sender()).ok_or("no player row")?.entity_id;
+    crate::module::spend_rate(ctx, me, "wear")?;
+    if !rules::ARMOR_SLOTS.contains(&slot.as_str()) {
+        return Err(format!("take_off: \"{slot}\" is no slot (head, chest, legs, trinket)"));
+    }
+    let w = ctx.db.worn().entity_id().find(me).filter(|w| w.slot(&slot).is_some_and(|s| s.0 != 0))
+        .ok_or_else(|| format!("take_off: nothing is worn on your {slot}"))?;
+    if in_fight(ctx, me) {
+        return Err("take_off: not in a fight (wait until your health comes back)".into());
+    }
+    ctx.db.worn().entity_id().update(w.with(&slot, 0, 0));
+    log::info!("regents: {me} takes off what it wore on its {slot}");
+    Ok(())
+}
+
+/// THE DEFENSE `entity_id` has now (S2): a foe's its FoeDef's; a player's every worn piece still in their bag, each its
+/// item's Defense raised by its quality (`rules::piece_defense`), ADDED UP. Anyone else: none.
+fn defense_of(ctx: &ReducerContext, entity_id: u64) -> f32 {
+    if let Some(f) = foe_seed_of(ctx, entity_id) {
+        return f.defense as f32;
+    }
+    let Some(w) = ctx.db.worn().entity_id().find(entity_id) else { return 0.0 };
+    rules::ARMOR_SLOTS.iter().filter_map(|slot| w.slot(slot).filter(|s| s.0 != 0).map(|s| (*slot, s.0)))
+        .filter_map(|(slot, row_id)| {
+            let row = ctx.db.inventory_item().id().find(row_id).filter(|r| r.owner_entity_id == entity_id && r.qty > 0)?;
+            let it = rules::item(row.item_def_id).filter(|i| i.armor_slot == slot)?;
+            Some(rules::piece_defense(it.defense, rules::quality_of(&row.instance_data).unwrap_or(0)))
+        })
+        .sum()
+}
+
+/// What a hit on `target` keeps of its damage through its Defense (`rules::defense_mult`, K the hot rule `regents.defense_k`).
+fn armor_mult(ctx: &ReducerContext, target: u64) -> f32 {
+    rules::defense_mult(defense_of(ctx, target), hot_number(ctx, hot::DEFENSE_K))
 }
 
 /// THE GUARD (COMBAT_OVERHAUL.md §4, 2026-10-31): the right button pressed (`on`) or let go. A press is a
@@ -3516,7 +3640,7 @@ fn hit_amount(ctx: &ReducerContext, actor: u64, target_id: u64, kit: &'static ru
         None => wielded_weapon(ctx, actor).filter(|(w, _)| w.weapon_kit == kit.key).map_or((100, 0), |(w, q)| (w.weapon_damage_pct, q)),
     };
     let ons = rules::action_tags(kit, slot);
-    let mut dmg = traited_damage(ctx, actor, target_id, &ons, rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill)));
+    let mut dmg = rules::hit_damage(def.damage, pct, quality, rank_in(ctx, actor, kit.skill));
     // THE RIPOSTE (§4): the string's first step begun soon after its fighter parried.
     let first = slot == rules::KitSlot::Light(0) && ctx.db.player().entity_id().find(actor).is_some();
     let swung_us = ctx.db.swing().entity_id().find(actor).filter(|w| w.ability_id == ability_id).map(|w| micros(w.at));
@@ -3525,11 +3649,15 @@ fn hit_amount(ctx: &ReducerContext, actor: u64, target_id: u64, kit: &'static ru
     if riposte {
         dmg *= hot_number(ctx, hot::RIPOSTE_DAMAGE_PCT).max(0.0) as f32 / 100.0;
     }
-    if blocked {
-        dmg = rules::blocked_damage(dmg, role_of(ctx, target_id).full_block, hot_number(ctx, hot::BLOCK_DAMAGE_PCT) as f32,
-            hot_number(ctx, hot::WEAK_BLOCK_PCT) as f32);
-    }
-    (dmg, riposte)
+    // THROUGH WHAT STANDS IN ITS WAY (S2, ARMOR_PREP.md A1.2): the guard, then armor, then the attacker's traits, multiplied.
+    let guard = if blocked {
+        rules::blocked_damage(1.0, role_of(ctx, target_id).full_block, hot_number(ctx, hot::BLOCK_DAMAGE_PCT) as f32,
+            hot_number(ctx, hot::WEAK_BLOCK_PCT) as f32)
+    } else {
+        1.0
+    };
+    let traits = traited_damage(ctx, actor, target_id, &ons, 1.0);
+    (rules::through(dmg, guard, armor_mult(ctx, target_id), traits), riposte)
 }
 
 /// What a kit's hit DOES to what it lands on unblocked (`KitHit`: a status for a while, a push away from its attacker).

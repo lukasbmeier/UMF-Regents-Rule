@@ -856,6 +856,48 @@ timed "$(printf '%s\n' \
 timed_ok 3 "the referee: it hit you (the rule off)"
 check "$(logged "regents: $SKEL's 40001 on $MYENT waits $HOLD_WAIT ms past its landing for a parry")" "NEGATIVE: with regents.hit_at_once off the same hit waits $HOLD_WAIT ms"
 assert_ok 'reset_rule "regents.hit_at_once"' "(test) hits dealt at once again"
+# --- ARMOR, THE CORE (S2, ARMOR_PREP.md A1 and A6, settled): pieces worn from the bag out of a fight, their Defense ADDED
+# UP, a hit on the wearer damage x K / (K + Defense) (K: regents.defense_k, 67). The test pieces are placeholders.
+assert_ok "admin_give_item $MYENT 40067 1 0" "(test) a practice cuirass (Defense 20)"
+assert_ok "admin_give_item $MYENT 40068 1 1000" "(test) a practice helm of quality 1000 (Defense 10, a fifth more: 12)"
+CUIR="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40067" 1)"
+HELM="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40068" 1)"
+assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) the fight lasts 2 minutes after a hurt (the CLI is slow)"
+assert_rejected "wear $CUIR" "not in a fight" "just hit by the skeleton: armor is put on out of a fight only (regents.regen_delay_s)"
+assert_rejected 'take_off "chest"' "nothing is worn" "nothing worn yet: nothing to take off"
+assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
+assert_rejected "wear $AXE_ROW" "is not worn" "a weapon is not worn"
+assert_rejected "wear 999999" "not in your bag" "nor what is not in the bag"
+assert_ok "wear $CUIR" "the cuirass on"
+assert_ok "wear $HELM" "the helm on"
+assert_eq "$(sql_first "SELECT chest_item FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_item FROM worn WHERE entity_id = $MYENT" 1)" "4006740068" \
+  "the worn row: the cuirass on the chest, the helm on the head (public: everyone draws it)"
+assert_eq "$(sql_first "SELECT chunk FROM worn WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT chunk FROM wielded WHERE entity_id = $MYENT" 1)" \
+  "in the wearer's cell, as the weapon is (the ring)"
+assert_ok "admin_give_item $MYENT 40067 1 0" "(test) a second cuirass"
+CUIR2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40067 AND id <> $CUIR" 1)"
+assert_ok "wear $CUIR2" "a second cuirass on the chest: SWAPPED for the first (it stays in the bag)"
+assert_eq "$(sql_first "SELECT chest_row FROM worn WHERE entity_id = $MYENT" 1)" "$CUIR2" "the chest holds the second now"
+assert_eq "$(row_count "SELECT * FROM inventory_item WHERE id = $CUIR")" "1" "and the first is still in the bag"
+assert_ok "wear $CUIR" "the first back on"
+assert_rejected 'take_off "hat"' "no slot" "a slot that is none: refused"
+assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
+timed "$(printf '%s\n' \
+  "0 sql PHA0 SELECT current FROM health_state WHERE entity_id = $MYENT" \
+  "0 use_ability_as [$SKEL,40001,0,{\"x\":0.0,\"y\":0.0,\"z\":1.0},0]" \
+  "0 sqlwait RSA SELECT id FROM action_request WHERE actor_id = $SKEL" \
+  "0 resolve_action [{RSA},$MYENT]" \
+  "1000 sql PHA1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
+timed_ok 4 "the referee: the skeleton's slash hit you in your armor"
+num_is "$(python -c "print(round($(timed_val PHA0) - $(timed_val PHA1), 3))")" "$(python -c "print(round(7.0 * 67 / (67 + 20 + 12), 3))")" \
+  "its 7 (14 at the skeleton's 50 %) x 67 / (67 + 20 + 12): the cuirass and the helm ADDED UP, never a flat cut"
+assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
+assert_ok 'take_off "chest"' "the cuirass off"
+assert_ok 'take_off "head"' "the helm off"
+assert_eq "$(sql_first "SELECT chest_row FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_row FROM worn WHERE entity_id = $MYENT" 1)" "00" "nothing worn"
+assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
+assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
 # THE ROLL, JUDGED WHERE IT WAS PRESSED (Luke, 2026-11-11: "Yes, credit the delay"): the blow is judged a hit, and
 # a roll its player pressed before it landed AS THEY SAW IT arrives after: they rolled clear, nothing is dealt.
 # (This client shows swings 150 ms late; the hit's wait made long, for a CLI's timing.)

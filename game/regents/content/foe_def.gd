@@ -28,6 +28,9 @@ class_name FoeDef extends ContentDef
 ## (`regents.steadied_ms`: nothing wears it) after. Unhit for `regents.poise_regen_ms`, it is whole again. 0: no
 ## poise, every last hit staggers it (the old way).
 @export_range(0, 10000) var poise: int = 70
+## ITS DEFENSE (ARMOR_PREP.md A1): a hit on it becomes damage x K / (K + Defense), K the hot rule
+## `regents.defense_k`, as a player's worn armor does. 0: none (today's foes).
+@export_range(0, 1000) var defense: int = 0
 ## Mastery XP for hitting it, as a share of the usual (a dummy pays `regents.dummy_xp_pct`).
 @export_range(0, 1000, 1, "suffix:%") var xp_pct: int = 100
 
@@ -151,6 +154,7 @@ func to_bake() -> Dictionary:
 		"family": String(family),
 		"boss": boss,
 		"poise": poise,
+		"defense": defense,
 		"carcass": ContentDef.ref(carcass),
 		# Where a shot aimed at it by the server goes: the middle of its body (a wolf is half a man's height:
 		# aimed at a man's chest, every arrow at a Tab-targeted wolf flew over its back; Luke, 2026-11-11).

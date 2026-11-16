@@ -50,11 +50,12 @@ if ! grep -q "claim_referee: registered" "$ref_log"; then
 fi
 
 echo "== a fighter at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
-timeout 760 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
+timeout 880 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
 fight_pid=$!
 bow_given=""
 swords_given=""
 staff_given=""
+armor_given=""
 heals=0
 hurts=0
 while kill -0 "$fight_pid" 2>/dev/null; do
@@ -91,6 +92,15 @@ while kill -0 "$fight_pid" 2>/dev/null; do
     if [ -n "$ent" ]; then
       spacetime call "$DB" grant_item "$ent" 40023 1 >/dev/null 2>&1
       staff_given=1
+    fi
+  fi
+  # GRANT_ARMOR <entity>: the two test pieces of the armor core (S2, placeholders): a cuirass, a helm of quality 1000.
+  if [ -z "$armor_given" ]; then
+    ent="$(grep -oE '^GRANT_ARMOR [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
+    if [ -n "$ent" ]; then
+      spacetime call "$DB" admin_give_item "$ent" 40067 1 0 >/dev/null 2>&1
+      spacetime call "$DB" admin_give_item "$ent" 40068 1 1000 >/dev/null 2>&1
+      armor_given=1
     fi
   fi
   if [ -z "$bow_given" ]; then

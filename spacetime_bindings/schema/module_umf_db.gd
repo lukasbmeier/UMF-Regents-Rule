@@ -2,7 +2,7 @@
 # FILE WILL NOT BE SAVED. MODIFY TABLES IN YOUR MODULE SOURCE CODE INSTEAD.
 class_name UmfModuleDb extends RefCounted
 
-const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"chat_message", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"meta_share", &"movement_state", &"node_seen", &"noise", &"npc_brain", &"npc_driver", &"order_filled", &"player", &"poise_state", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"spell_landed", &"station", &"status_effect", &"status_state", &"swing", &"timed_press", &"tutorial", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level"]
+const table_names : Array[StringName] = [&"ability_def", &"ability_state", &"account_character", &"account_login", &"action_event", &"action_request", &"afk_work", &"appearance", &"attachment", &"authority", &"body_contact", &"body_state", &"burning", &"casting", &"challenge", &"chat_message", &"combat_state", &"dummy", &"entity", &"equip_state", &"foe", &"foe_kill", &"gather_node", &"ground_item", &"health_state", &"hold_member", &"hold_progress", &"hot_rule", &"input_queue", &"inventory_item", &"item_def", &"link_code", &"lobby_member", &"meta_share", &"movement_state", &"node_seen", &"noise", &"npc_brain", &"npc_driver", &"order_filled", &"player", &"poise_state", &"push", &"recipe_log", &"resource_state", &"session", &"session_match", &"session_member", &"skill_xp", &"spell_area", &"spell_cooldown", &"spell_landed", &"station", &"status_effect", &"status_state", &"swing", &"timed_press", &"tutorial", &"wielded", &"work_order", &"work_result", &"world_config", &"world_level", &"worn"]
 
 var ability_def: UmfAbilityDefTable
 var ability_state: UmfAbilityStateTable
@@ -67,6 +67,7 @@ var work_order: UmfWorkOrderTable
 var work_result: UmfWorkResultTable
 var world_config: UmfWorldConfigTable
 var world_level: UmfWorldLevelTable
+var worn: UmfWornTable
 
 func _init(p_local_db: LocalDatabase) -> void:
 	ability_def = preload('res://spacetime_bindings/schema/tables/umf_ability_def_table.gd').new(p_local_db)
@@ -132,3 +133,4 @@ func _init(p_local_db: LocalDatabase) -> void:
 	work_result = preload('res://spacetime_bindings/schema/tables/umf_work_result_table.gd').new(p_local_db)
 	world_config = preload('res://spacetime_bindings/schema/tables/umf_world_config_table.gd').new(p_local_db)
 	world_level = preload('res://spacetime_bindings/schema/tables/umf_world_level_table.gd').new(p_local_db)
+	worn = preload('res://spacetime_bindings/schema/tables/umf_worn_table.gd').new(p_local_db)

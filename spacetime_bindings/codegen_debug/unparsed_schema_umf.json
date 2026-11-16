@@ -7582,6 +7582,100 @@
 								},
 								{
 									"name": {
+										"some": "world_id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chunk"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "head_row"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "head_item"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "chest_row"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "chest_item"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "legs_row"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "legs_item"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "trinket_row"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
+										"some": "trinket_item"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "entity_id"
+									},
+									"algebraic_type": {
+										"U64": []
+									}
+								},
+								{
+									"name": {
 										"some": "pos"
 									},
 									"algebraic_type": {
@@ -8127,7 +8221,7 @@
 						"scope": [],
 						"source_name": "BodyWrite"
 					},
-					"ty": 111.0,
+					"ty": 112.0,
 					"custom_ordering": true
 				},
 				{
@@ -8439,7 +8533,7 @@
 						"scope": [],
 						"source_name": "MovementWrite"
 					},
-					"ty": 112.0,
+					"ty": 113.0,
 					"custom_ordering": true
 				},
 				{
@@ -8592,6 +8686,14 @@
 						"source_name": "SpellCooldown"
 					},
 					"ty": 90.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Worn"
+					},
+					"ty": 111.0,
 					"custom_ordering": true
 				},
 				{
@@ -12095,6 +12197,77 @@
 						{
 							"source_name": {
 								"some": "wielded_entity_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "worn",
+					"product_type_ref": 111.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "worn_chunk_idx_btree"
+							},
+							"accessor_name": {
+								"some": "chunk"
+							},
+							"algorithm": {
+								"BTree": [
+									2.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "worn_world_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "world_id"
+							},
+							"algorithm": {
+								"BTree": [
+									1.0
+								]
+							}
+						},
+						{
+							"source_name": {
+								"some": "worn_entity_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "entity_id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "worn_entity_id_key"
 							},
 							"data": {
 								"Unique": {
@@ -19534,6 +19707,32 @@
 					}
 				},
 				{
+					"source_name": "take_off",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "slot"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "teleport",
 					"params": {
 						"elements": [
@@ -19897,6 +20096,32 @@
 					}
 				},
 				{
+					"source_name": "wear",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "item_row"
+								},
+								"algebraic_type": {
+									"U64": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
 					"source_name": "wield",
 					"params": {
 						"elements": [
@@ -19983,7 +20208,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 111.0
+										"Ref": 112.0
 									}
 								}
 							}
@@ -20019,7 +20244,7 @@
 								},
 								"algebraic_type": {
 									"Array": {
-										"Ref": 112.0
+										"Ref": 113.0
 									}
 								}
 							}
@@ -20592,6 +20817,12 @@
 						"Table": {
 							"source_name": "wielded",
 							"canonical_name": "wielded"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "worn",
+							"canonical_name": "worn"
 						}
 					},
 					{
@@ -21568,6 +21799,12 @@
 					},
 					{
 						"Function": {
+							"source_name": "take_off",
+							"canonical_name": "take_off"
+						}
+					},
+					{
+						"Function": {
 							"source_name": "teleport",
 							"canonical_name": "teleport"
 						}
@@ -21630,6 +21867,12 @@
 						"Function": {
 							"source_name": "use_link_code",
 							"canonical_name": "use_link_code"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "wear",
+							"canonical_name": "wear"
 						}
 					},
 					{

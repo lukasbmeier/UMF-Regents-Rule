@@ -335,6 +335,15 @@
 					"unit": "%/s"
 				},
 				{
+					"key": "regents.defense_k",
+					"kind": "number",
+					"max": 10000.0,
+					"min": 1.0,
+					"number": 67.0,
+					"text": "",
+					"unit": ""
+				},
+				{
 					"key": "regents.draw_min_power_pct",
 					"kind": "number",
 					"max": 100.0,

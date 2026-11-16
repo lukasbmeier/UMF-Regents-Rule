@@ -67,5 +67,6 @@ const WorkOrder = preload('res://spacetime_bindings/schema/types/umf_work_order.
 const WorkResult = preload('res://spacetime_bindings/schema/types/umf_work_result.gd')
 const WorldConfig = preload('res://spacetime_bindings/schema/types/umf_world_config.gd')
 const WorldLevel = preload('res://spacetime_bindings/schema/types/umf_world_level.gd')
+const Worn = preload('res://spacetime_bindings/schema/types/umf_worn.gd')
 const BodyWrite = preload('res://spacetime_bindings/schema/types/umf_body_write.gd')
 const MovementWrite = preload('res://spacetime_bindings/schema/types/umf_movement_write.gd')
