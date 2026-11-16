@@ -47,7 +47,7 @@ Tested:
   the early-out: no look is ever skipped). The sword's checks moved deliberately to twelve skills in three pools.
 - `combat_playtest.sh` 144/0 (before merging): the roles leg now presses Q on each re-hilted sword through a real client
   and referee: Lunge, Shield Bash (placeholder), Swipe (placeholder), each on the bar and taken by the server, none refused.
-  Post-merge: see the last line.
+  After merging `main` (W3's doll in): 142/0, the same three Qs taken.
 - Integration legs WRITTEN (not run, M9): Lunge refused on the crossguard sword; Flurry refused as its pick, Charge chosen.
 
 Needs on merge: re-bake. No codegen.
