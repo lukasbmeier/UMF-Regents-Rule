@@ -94,12 +94,14 @@ while kill -0 "$fight_pid" 2>/dev/null; do
       staff_given=1
     fi
   fi
-  # GRANT_ARMOR <entity>: the two test pieces of the armor core (S2, placeholders): a cuirass, a helm of quality 1000.
+  # GRANT_ARMOR <entity> <a piece> <another>: two pieces of armor (S3: the material table's), the first at quality 0,
+  # the second at 1000.
   if [ -z "$armor_given" ]; then
-    ent="$(grep -oE '^GRANT_ARMOR [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
-    if [ -n "$ent" ]; then
-      spacetime call "$DB" admin_give_item "$ent" 40067 1 0 >/dev/null 2>&1
-      spacetime call "$DB" admin_give_item "$ent" 40068 1 1000 >/dev/null 2>&1
+    line="$(grep -oE '^GRANT_ARMOR [0-9]+ [0-9]+ [0-9]+' "$fight_log" | head -1)"
+    if [ -n "$line" ]; then
+      ent="$(echo "$line" | awk '{print $2}')"
+      spacetime call "$DB" admin_give_item "$ent" "$(echo "$line" | awk '{print $3}')" 1 0 >/dev/null 2>&1
+      spacetime call "$DB" admin_give_item "$ent" "$(echo "$line" | awk '{print $4}')" 1 1000 >/dev/null 2>&1
       armor_given=1
     fi
   fi

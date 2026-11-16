@@ -8,7 +8,9 @@ class_name MaterialDef extends ContentDef
 ## As a CORE (the head, the blade; the wood of a bow later) it sets the made item's tier and Power. As a
 ## SECONDARY part (a handle) it gives its trait.
 
-enum Family { METAL, WOOD }
+## METAL and WOOD from mining and woodcutting; HIDE (leather, from skinning) and FIBER (cloth, from herbalism) for armor
+## (S3): a pattern makes the materials of one family. Added at the end: a family's number never moves.
+enum Family { METAL, WOOD, HIDE, FIBER }
 
 ## Its key ("iron", "oak"), unique among materials.
 @export var key: StringName = &""

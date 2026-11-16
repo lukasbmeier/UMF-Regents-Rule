@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_6qcn7"]
+[ext_resource type="Resource" path="res://game/regents/content/item/soft_leather.tres" id="2_lxssl"]
+[ext_resource type="Resource" path="res://game/regents/content/item/soft_leather_trousers.tres" id="3_mvt6t"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_32oep"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_rcfk1"]
+
+[resource]
+script = ExtResource("4_32oep")
+station = &"workbench"
+skill = ExtResource("5_rcfk1")
+inputs = Array[ExtResource("1_6qcn7")]([ExtResource("2_lxssl")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("3_mvt6t")
+xp = 25
+afk_ms = 5000
+part_slots = PackedInt32Array()
+from_table = true
+id = 40068
+display_name = "Soft leather trousers"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Soft leather in Leather trousers): its numbers are yours to tune."

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MaterialDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/item/supple_leather.tres" id="1_raw"]
+[ext_resource type="Script" path="res://game/regents/content/material_def.gd" id="2_mat"]
+
+[resource]
+script = ExtResource("2_mat")
+key = &"supple_leather"
+prefix = "Supple leather"
+family = 2
+tier = 2
+raw = ExtResource("1_raw")
+weapon_damage_pct = 100
+tool_speed_pct = 100
+work_scale_pct = 100
+rank = 1
+color = Color(0.45, 0.32, 0.22, 1)
+id = 40008
+display_name = "Supple leather"
+designer_notes = "PLACEHOLDER (S3): its tier is the agent's, until Luke's materials and numbers for armor (ARMOR_PREP.md section 0, 4). Leather from wolf pelts: armor only."

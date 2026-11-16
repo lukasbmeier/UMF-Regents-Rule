@@ -30,6 +30,15 @@ class_name PatternDef extends ContentDef
 @export var role: RoleDef
 ## The one kit its cells are a part of ("sword"). Empty: any made of its kind.
 @export var fits_kit: StringName = &""
+@export_group("As armor")
+## The slot its cells are worn in ("head", "chest", "legs"; ARMOR_PREP.md, S3). Empty: not armor.
+@export var armor_slot: StringName = &""
+## ITS SHARE of a set's Defense: a cell's Defense is this x its material's `tier` (ARMOR_PREP.md A7; quality adds up to a
+## fifth more on top, as the server's `piece_defense`). PLACEHOLDER numbers until Luke's (head 2, chest 5, legs 3).
+@export_range(0, 100) var defense_share: int = 0
+## THE PARTS THAT WILL CARRY ARMOR TRAITS (ARMOR_PREP.md A4, open: which, and their traits, are Luke's). The structure only:
+## three names a piece; NONE offers a trait yet (an armor cell offers no part's trait: the server's `offered_for`).
+@export var trait_parts: PackedStringArray = PackedStringArray()
 @export_group("The recipe")
 ## The station it is made at ("furnace", "anvil", "workbench").
 @export var station: StringName = &"workbench"
@@ -95,7 +104,7 @@ func to_bake() -> Dictionary:
 		"parts": slots,
 		"output_qty": output_qty,
 		"quality": int(quality),
-	}
+	}.merged({"armor_slot": String(armor_slot), "defense_share": defense_share, "trait_parts": Array(trait_parts)} if armor_slot != &"" else {})
 
 
 ## Its cell's name for `m`: "{m} axe head" with "Iron" is "Iron axe head", with "" is "Axe head".
@@ -153,6 +162,12 @@ func validate() -> Array[String]:
 		out.append("one slot is its core (the material's own), not %d: tick `core` on one" % cores)
 	if (tool_tag != &"" or weapon_kit != &"" or quality != RecipeDef.Quality.NONE) and max_stack != 1:
 		out.append("a tool, a weapon or an item with a quality does not stack: `max_stack` 1")
+	if armor_slot != &"" and not ItemDef.ARMOR_SLOTS.has(armor_slot):
+		out.append("its cells are worn in \"%s\", which is no slot: head, chest, legs or trinket" % armor_slot)
+	if armor_slot != &"" and (defense_share <= 0 or max_stack != 1 or weapon_kit != &"" or tool_tag != &""):
+		out.append("armor has a share of Defense, does not stack, and is no weapon or tool")
+	if armor_slot == &"" and (defense_share > 0 or not trait_parts.is_empty()):
+		out.append("it has a share of Defense or trait parts but is worn nowhere: set `armor_slot`")
 	if carries_trait and part_tag == &"":
 		out.append("its cells carry their material's trait but are no part: set `part_tag` (\"handle\")")
 	if quality == RecipeDef.Quality.FROM_ROUND and minigame == null:

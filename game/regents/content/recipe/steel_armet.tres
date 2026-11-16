@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_hecuv"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_plates.tres" id="2_qqp4d"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="3_ipeh3"]
+[ext_resource type="Resource" path="res://game/regents/content/item/steel_armet.tres" id="4_yx7ql"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_gf3w3"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_vlk0b"]
+
+[resource]
+script = ExtResource("5_gf3w3")
+station = &"workbench"
+skill = ExtResource("6_vlk0b")
+inputs = Array[ExtResource("1_hecuv")]([ExtResource("2_qqp4d"), ExtResource("3_ipeh3")])
+input_qty = PackedInt32Array(1, 2)
+output = ExtResource("4_yx7ql")
+xp = 37
+min_rank = 8
+afk_ms = 7500
+quality = 2
+part_slots = PackedInt32Array()
+from_table = true
+id = 40063
+display_name = "Steel armet"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Steel in Armet): its numbers are yours to tune."

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_d2mer"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_bar.tres" id="2_3owwx"]
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="3_5os3v"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_plates.tres" id="4_e5g5f"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_ywweq"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="6_jq0yc"]
+
+[sub_resource type="Resource" id="Resource_kaekm"]
+script = ExtResource("3_5os3v")
+display_name = "Copper plates"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
+outline_vary = 3
+outline = PackedInt32Array(14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14)
+error_scale = 50
+
+[resource]
+script = ExtResource("5_ywweq")
+station = &"anvil"
+skill = ExtResource("6_jq0yc")
+inputs = Array[ExtResource("1_d2mer")]([ExtResource("2_3owwx")])
+input_qty = PackedInt32Array(2)
+output = ExtResource("4_e5g5f")
+xp = 15
+afk_ms = 4000
+minigame = SubResource("Resource_kaekm")
+quality = 1
+part_slots = PackedInt32Array()
+from_table = true
+id = 40054
+display_name = "Copper plates"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Copper in Plates): its numbers are yours to tune."

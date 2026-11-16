@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_ktq3v"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_plates.tres" id="2_hovgf"]
+[ext_resource type="Resource" path="res://game/regents/content/item/copper_rivets.tres" id="3_ai6f7"]
+[ext_resource type="Resource" path="res://game/regents/content/item/iron_legplates.tres" id="4_a5xao"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="5_31rs6"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="6_5fijx"]
+
+[resource]
+script = ExtResource("5_31rs6")
+station = &"workbench"
+skill = ExtResource("6_5fijx")
+inputs = Array[ExtResource("1_ktq3v")]([ExtResource("2_hovgf"), ExtResource("3_ai6f7")])
+input_qty = PackedInt32Array(2, 2)
+output = ExtResource("4_a5xao")
+xp = 25
+min_rank = 5
+afk_ms = 5000
+quality = 2
+part_slots = PackedInt32Array()
+from_table = true
+id = 40061
+display_name = "Iron legplates"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Iron in Legplates): its numbers are yours to tune."

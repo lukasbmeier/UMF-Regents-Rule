@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="1_jv6cl"]
+[ext_resource type="Resource" path="res://game/regents/content/item/soft_leather.tres" id="2_kawpv"]
+[ext_resource type="Resource" path="res://game/regents/content/item/soft_leather_hood.tres" id="3_5jmg5"]
+[ext_resource type="Script" path="res://game/regents/content/recipe_def.gd" id="4_p2ra0"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/crafting.tres" id="5_mllv0"]
+
+[resource]
+script = ExtResource("4_p2ra0")
+station = &"workbench"
+skill = ExtResource("5_mllv0")
+inputs = Array[ExtResource("1_jv6cl")]([ExtResource("2_kawpv")])
+input_qty = PackedInt32Array(1)
+output = ExtResource("3_5jmg5")
+xp = 25
+afk_ms = 5000
+part_slots = PackedInt32Array()
+from_table = true
+id = 40066
+display_name = "Soft leather hood"
+designer_notes = "THE RECIPE OF A CELL OF THE MATERIAL TABLE (Soft leather in Hood): its numbers are yours to tune."

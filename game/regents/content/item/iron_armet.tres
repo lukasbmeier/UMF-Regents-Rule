@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_5l5xi"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/armet.tres" id="2_q6h2u"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_jo1va"]
+
+[resource]
+script = ExtResource("3_jo1va")
+max_stack = 1
+armor_slot = &"head"
+defense = 4
+color = Color(0.65, 0.66, 0.7, 1)
+description = "Iron plates made into a closed helm."
+material = ExtResource("1_5l5xi")
+pattern = ExtResource("2_q6h2u")
+id = 40074
+display_name = "Iron armet"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Armet): made by Make the table."

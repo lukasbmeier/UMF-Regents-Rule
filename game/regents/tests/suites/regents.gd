@@ -2343,7 +2343,7 @@ func _run_crafting_choice() -> void:
 	for n: Node in w._list.get_children():
 		if n is Label:
 			heads.append((n as Label).text)
-	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Trowels", "Knives", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Trowels, Knives, Other, each once %s" % str(heads))
+	_check(heads == ["Grips", "Axes", "Swords", "Pickaxes", "Trowels", "Knives", "Armor", "Other"], "the workbench's list: one line a recipe, under Grips, Axes, Swords, Pickaxes, Trowels, Knives, Armor (every piece, S3), Other, each once %s" % str(heads))
 	# The window looks again every 500 ms while it is open; with nothing changed that look must cost next to nothing
 	# (Luke's play, 2026-11-03, feedback #8194/#8195: by the workbench a 140-210 ms frame every half second, the
 	# game at 50-70 fps: each look listed the patterns folder from disk once per comparison of its sort).
@@ -3155,9 +3155,9 @@ func _run_content() -> void:
 	var axe: RecipeDef = RecipeDef.by_id(40006)
 	_check(head.quality == RecipeDef.Quality.FROM_ROUND and head.minigame is ShapeParams and axe.quality == RecipeDef.Quality.FROM_INPUTS and axe.minigame == null,
 		"the head is shaped (as good as its round); the axe is assembled (as good as its head)")
-	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 18 and RecipeDef.at(&"workbench").size() == 29
+	_check(RecipeDef.at(&"furnace").size() == 3 and RecipeDef.at(&"anvil").size() == 21 and RecipeDef.at(&"workbench").size() == 46
 		and RecipeDef.at(&"spinning_wheel").size() == 1 and RecipeDef.at(&"tanning_rack").size() == 2 and RecipeDef.at(&"orders").is_empty(),
-		"three recipes at the furnace (copper, iron, steel bars), eighteen at the anvil (rivets, an axe head, a sword blade, a pickaxe head, a trowel blade and a knife blade of each metal), twenty-nine at the workbench (three handles and six sword hilts; an axe, a sword, a pickaxe, a trowel and a knife of each metal; the yew bow's stave and its stringing, arrow shafts, copper arrows, the yew staff), one at the spinning wheel (the bowstring), two at the tanning rack (soft and supple leather), none at the order board")
+		"three recipes at the furnace (copper, iron, steel bars), twenty-one at the anvil (rivets, an axe head, a sword blade, a pickaxe head, a trowel blade, a knife blade and plates of each metal), forty-six at the workbench (three handles and six sword hilts; an axe, a sword, a pickaxe, a trowel and a knife of each metal; the yew bow's stave and its stringing, arrow shafts, copper arrows, the yew staff; seventeen pieces of armor, S3), one at the spinning wheel (the bowstring), two at the tanning rack (soft and supple leather), none at the order board")
 	_check(made.get("Oak grip", []) == ["workbench", ["Oak logs"]] and made.get("Yew grip", []) == ["workbench", ["Yew logs"]],
 		"oak and yew logs carve into their handles")
 	_check(RecipeDef.by_id(40001).input_qty[0] == 2 and RecipeDef.by_id(40002).input_qty[0] == 2, "two ores to a bar, never one to one")
@@ -3196,10 +3196,11 @@ func _run_material_table() -> void:
 	var pkeys: Array[StringName] = []
 	for p: PatternDef in MaterialTable.patterns():
 		pkeys.append(p.key)
-	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel"]
+	_check(keys == [&"copper", &"iron", &"plain_wood", &"oak", &"yew", &"steel", &"soft_leather", &"supple_leather", &"linen"]
 		and pkeys == [&"bar", &"axe_head", &"sword_blade", &"handle", &"axe", &"sword", &"pickaxe_head", &"pickaxe", &"rivets", &"crossguard_hilt", &"banner_hilt",
-			&"trowel_blade", &"trowel", &"knife_blade", &"knife"],
-		"six materials and fifteen patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5; herbalism's trowel, 2026-11-07; skinning's knife, 2026-11-09): %s x %s" % [str(keys), str(pkeys)])
+			&"trowel_blade", &"trowel", &"knife_blade", &"knife", &"plates", &"armet", &"cuirass", &"legplates", &"hood", &"jerkin",
+			&"leather_trousers", &"robe", &"cloth_trousers"],
+		"nine materials (two leathers and linen for armor, S3) and twenty-four patterns (the sword's two hilts, COMBAT_OVERHAUL.md §5; herbalism's trowel, 2026-11-07; skinning's knife, 2026-11-09; armor's plates and pieces, S3): %s x %s" % [str(keys), str(pkeys)])
 	var bad: Array[String] = []
 	for type: StringName in [&"material", &"pattern"]:
 		for d: ContentDef in ContentLibrary.items(type):
@@ -3221,13 +3222,14 @@ func _run_material_table() -> void:
 	var kept: bool = true
 	for k: String in pinned:
 		kept = kept and got.get(k, -1) == pinned[k]
-	_check(got.size() == 45 and kept and not got.values().has(-1) and got.get("copper:trowel", -1) == 40051 and got.get("copper:knife", -1) == 40059,
-		"45 cells (three metals in twelve patterns, three woods in three), every one made (the copper trowel 40051 and knife 40059, the starter's); the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
+	_check(got.size() == 65 and kept and not got.values().has(-1) and got.get("copper:trowel", -1) == 40051 and got.get("copper:knife", -1) == 40059,
+		"65 cells (three metals in sixteen patterns, three woods in three, two leathers in three, linen in two), every one made (the copper trowel 40051 and knife 40059, the starter's); the items players hold are the cells they were, ids pinned (the starters 40001 and 40006 now copper's): %s" % str(got))
 	var problems: Array[String] = MaterialTable.problems()
 	_check(problems.is_empty(), "the table is current: every cell and recipe as the table makes it%s" % ("" if problems.is_empty() else ": " + "; ".join(problems)))
 	var dry: Dictionary = MaterialTable.generate(false)
 	_check((dry["made"] as Array).is_empty() and (dry["updated"] as Array).is_empty() and (dry["errors"] as Array).is_empty(),
 		"making it again would change nothing: %s" % str(dry["lines"]))
+	_run_armor_cells()
 	var iron: MaterialDef = MaterialDef.by_key(&"iron")
 	var plain: MaterialDef = MaterialDef.by_key(&"plain_wood")
 	var axe_p: PatternDef = MaterialTable.cell(iron, MaterialTable.patterns()[4]).pattern
@@ -3254,6 +3256,11 @@ func _run_material_table() -> void:
 	axe.weapon_damage_pct = 100
 	iron.tier = 3
 	var tier_says: Array[String] = MaterialTable.problems()
+	# Iron's armor follows its tier too (S3: a piece's Defense is its share x its material's tier).
+	var armor_says: Array[String] = tier_says.filter(func(p: String) -> bool: return p.contains("defense: has"))
+	_check(armor_says.size() == 3 and armor_says.any(func(p: String) -> bool: return p.begins_with("iron_cuirass.tres") and p.contains("defense: has 10, makes 15")),
+		"and iron's three pieces of armor, their Defense its share x the new tier: %s" % str(armor_says))
+	tier_says = tier_says.filter(func(p: String) -> bool: return not p.contains("defense: has"))
 	_check(tier_says.size() == 4 and tier_says.all(func(p: String) -> bool: return p.contains("tool_tier: has 2, makes 3"))
 		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_axe.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_pickaxe.tres"))
 		and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_trowel.tres")) and tier_says.any(func(p: String) -> bool: return p.begins_with("iron_knife.tres")),
@@ -3337,6 +3344,51 @@ func _run_material_table() -> void:
 ## MAKING THE TABLE, for real, in a scratch project: a new metal and a new wood become their cells and
 ## recipes; making it again changes nothing; the designer's numbers survive, the table's fields come back;
 ## a hole leaves its file (never deleted) and says so; a cell by hand is left alone.
+## ARMOR'S PIECES (S3, ARMOR_PREP.md A7, GAME.md W1): every armor cell is its pattern's slot and its pattern's share x its
+## material's tier (the shares and the leathers' and linen's tiers are PLACEHOLDERS); what a look (W2) reads from an item id:
+## its slot, its material's FAMILY (metal, hide, fiber) and its material (the tier's palette); cloth has no head.
+func _run_armor_cells() -> void:
+	var pieces: Array[String] = []
+	var off: Array[String] = []
+	for c: Dictionary in MaterialTable.plan():
+		var m: MaterialDef = c["material"]
+		var p: PatternDef = c["pattern"]
+		if p.armor_slot == &"":
+			continue
+		var it: ItemDef = MaterialTable.cell(m, p)
+		pieces.append(it.display_name)
+		if it.armor_slot != p.armor_slot or it.defense != p.defense_share * m.tier or it.max_stack != 1:
+			off.append("%s: %s %d (want %s %d x %d)" % [it.display_name, it.armor_slot, it.defense, p.armor_slot, p.defense_share, m.tier])
+	_check(pieces.size() == 17 and off.is_empty(), "17 pieces, each worn in its pattern's slot at its share x its material's tier%s" % ("" if off.is_empty() else ": " + "; ".join(off)))
+	var linen: MaterialDef = MaterialDef.by_key(&"linen")
+	var pattern := func(key: StringName) -> PatternDef:
+		for pd: PatternDef in MaterialTable.patterns():
+			if pd.key == key:
+				return pd
+		return null
+	_check(MaterialTable.cell(linen, pattern.call(&"armet")) == null and MaterialTable.cell(linen, pattern.call(&"hood")) == null
+		and not MaterialTable.plan().any(func(c: Dictionary) -> bool: return (c["material"] as MaterialDef).family == MaterialDef.Family.FIBER and (c["pattern"] as PatternDef).armor_slot == &"head"),
+		"NEGATIVE: cloth has no headwear (W1: hair shows until a hat exists)")
+	# W2's lookup from a `worn` column's item id, content only.
+	var look := func(name: String) -> String:
+		var it: ItemDef = null
+		for d: ContentDef in ContentLibrary.items(&"item"):
+			if d.display_name == name:
+				it = d as ItemDef
+		if it == null or it.material == null:
+			return "-"
+		return "%s %s %s" % [it.armor_slot, MaterialDef.Family.keys()[it.material.family], it.material.key]
+	_check(look.call("Steel cuirass") == "chest METAL steel" and look.call("Supple leather hood") == "head HIDE supple_leather"
+		and look.call("Linen trousers") == "legs FIBER linen",
+		"a look finds a piece's slot, family and material from its item: %s, %s, %s" % [look.call("Steel cuirass"), look.call("Supple leather hood"), look.call("Linen trousers")])
+	var traits: Array[String] = []
+	for c: Dictionary in MaterialTable.plan():
+		var it: ItemDef = MaterialTable.cell(c["material"], c["pattern"])
+		if it.armor_slot != &"" and (it.handle_trait != null or it.part_weapon_trait != null):
+			traits.append(it.display_name)
+	_check(traits.is_empty(), "NEGATIVE: no armor piece carries a trait (armor traits are Luke's): %s" % str(traits))
+
+
 func _run_material_table_writes() -> void:
 	print("== regents: making the material table ==")
 	var root: String = "user://material_table_test"
@@ -5182,8 +5234,8 @@ func _run_lab() -> void:
 	var buttons: Array[Button] = []
 	buttons.assign(lab.get("buttons"))
 	var game: SkillMinigame = lab.get("game") as SkillMinigame
-	_check(buttons.size() == 29 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
-		"twenty-nine rounds to play (nine nodes, flax's pull the root and the two carcasses' cut lines among them; three bars, fifteen smithed parts with the trowel and knife blades, the carved bow and staff), the first, a tree's, on show (%d)" % buttons.size())
+	_check(buttons.size() == 32 and game is ChopMinigame and game.state == SkillMinigame.State.READY,
+		"thirty-two rounds to play (nine nodes, flax's pull the root and the two carcasses' cut lines among them; three bars, eighteen smithed parts with the trowel and knife blades and armor's plates, the carved bow and staff), the first, a tree's, on show (%d)" % buttons.size())
 	if buttons.size() == 9:
 		buttons[3].pressed.emit()
 		game = lab.get("game") as SkillMinigame

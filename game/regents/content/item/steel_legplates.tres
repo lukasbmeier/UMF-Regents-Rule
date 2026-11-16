@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/steel.tres" id="1_dux7y"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/legplates.tres" id="2_sb66v"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_av26j"]
+
+[resource]
+script = ExtResource("3_av26j")
+max_stack = 1
+armor_slot = &"legs"
+defense = 9
+color = Color(0.55, 0.6, 0.68, 1)
+description = "Steel plate for the legs and feet."
+material = ExtResource("1_dux7y")
+pattern = ExtResource("2_sb66v")
+id = 40080
+display_name = "Steel legplates"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Steel in Legplates): made by Make the table."

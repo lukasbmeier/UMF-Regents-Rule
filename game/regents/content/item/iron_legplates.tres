@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/iron.tres" id="1_a4ann"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/legplates.tres" id="2_br26n"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_tjj2c"]
+
+[resource]
+script = ExtResource("3_tjj2c")
+max_stack = 1
+armor_slot = &"legs"
+defense = 6
+color = Color(0.65, 0.66, 0.7, 1)
+description = "Iron plate for the legs and feet."
+material = ExtResource("1_a4ann")
+pattern = ExtResource("2_br26n")
+id = 40076
+display_name = "Iron legplates"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Iron in Legplates): made by Make the table."

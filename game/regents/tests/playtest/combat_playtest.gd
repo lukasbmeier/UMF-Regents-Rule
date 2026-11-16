@@ -996,26 +996,30 @@ func _other_hit_due(seen: Array[Dictionary], foe_id: int, by_ms: int) -> bool:
 
 ## THE GUARD FACES FORWARD: the block held, turned away from the nearest skeleton, a light comes through in
 ## full (COMBAT_OVERHAUL.md §4: a hit from behind takes full damage).
-## ARMOR, THE CORE (S2, ARMOR_PREP.md A1 and A6, settled): the shell gives the two test pieces (placeholders: a cuirass of
-## Defense 20, a helm of 10 at quality 1000, so 12); they are put on out of the fight, the server's `worn` row comes back
-## to this client (others draw it from the same row), and every hit the camp lands is its foe's hit x K / (K + 32),
-## never the whole of it. Then they come off again.
+## ARMOR (S2 the core, S3 the pieces; ARMOR_PREP.md A1, A6, A7): the shell gives two real pieces of the material table,
+## an iron cuirass (Defense 5 x 2 = 10) and a copper armet of quality 1000 (2 x 1, a fifth more: 2.4); they are put on out
+## of the fight, the server's `worn` row comes back to this client (others draw it from the same row), and every hit the
+## camp lands is its foe's hit x K / (K + 12.4), never the whole of it. Then they come off again.
 func _armor_in_the_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
-	print("GRANT_ARMOR %d" % me.entity_id)
+	var cuirass: ItemDef = ItemDef.by_id(40075)
+	var armet: ItemDef = ItemDef.by_id(40070)
+	_check(cuirass != null and cuirass.armor_slot == &"chest" and cuirass.defense == 10 and armet != null and armet.armor_slot == &"head" and armet.defense == 2,
+		"the pieces are the table's: an iron cuirass (chest, 10) and a copper armet (head, 2)")
+	print("GRANT_ARMOR %d %d %d" % [me.entity_id, 40075, 40070])
 	var row_of := func(item: int) -> int:
 		for st: SpaceTimeInventoryComponent.Stack in inv.items():
 			if st.item_def_id == item:
 				return st.id
 		return -1
-	await _until(func() -> bool: return int(row_of.call(40067)) > 0 and int(row_of.call(40068)) > 0, 8.0)
-	_check(int(row_of.call(40067)) > 0 and int(row_of.call(40068)) > 0, "the shell gave a practice cuirass and helm")
+	await _until(func() -> bool: return int(row_of.call(40075)) > 0 and int(row_of.call(40070)) > 0, 8.0)
+	_check(int(row_of.call(40075)) > 0 and int(row_of.call(40070)) > 0, "the shell gave an iron cuirass and a copper armet")
 	# Away from the camp, then out of the fight (`regents.regen_delay_s` after the last hurt): wearing waits for that.
 	await _stand_at(home + Vector3(0, 0.05, 40.0), home)
 	var worn_on := func(slot: String) -> int:
 		var r: RefCounted = SpaceTimeSync.get_row(&"worn", me.entity_id)
 		return int(r.get(StringName(slot + "_item"))) if r != null else 0
 	var refusals: Array[String] = []
-	for piece: int in [40067, 40068]:
+	for piece: int in [40075, 40070]:
 		var until_ms: int = Time.get_ticks_msec() + 20000
 		while Time.get_ticks_msec() < until_ms:
 			var req: ReducerRequest = SpaceTimeSync.call_reducer(&"wear", [int(row_of.call(piece))], ["u64"])
@@ -1024,14 +1028,14 @@ func _armor_in_the_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
 				break
 			refusals.append(req.error_message)
 			await get_tree().create_timer(1.0).timeout
-	await _until(func() -> bool: return int(worn_on.call("chest")) == 40067 and int(worn_on.call("head")) == 40068, 3.0)
-	_check(int(worn_on.call("chest")) == 40067 and int(worn_on.call("head")) == 40068,
-		"worn out of the fight, and the server's worn row came back: the cuirass on the chest, the helm on the head%s"
+	await _until(func() -> bool: return int(worn_on.call("chest")) == 40075 and int(worn_on.call("head")) == 40070, 3.0)
+	_check(int(worn_on.call("chest")) == 40075 and int(worn_on.call("head")) == 40070,
+		"worn out of the fight, and the server's worn row came back: the cuirass on the chest, the armet on the head%s"
 			% ((" (refused first while in the fight: %s)" % refusals[0]) if not refusals.is_empty() else ""))
 	_check(refusals.all(func(w: String) -> bool: return w.contains("not in a fight")), "refused only while in the fight (%s)" % str(refusals))
-	# The camp's hits, unblocked: each its foe's hit x K / (K + 20 + 12).
+	# The camp's hits, unblocked: each its foe's hit x K / (K + 10 + 2 x 1.2).
 	var k: float = HotRules.number(&"regents.defense_k")
-	var keep: float = k / (k + 20.0 + 10.0 * 1.2)
+	var keep: float = k / (k + 10.0 + 2.0 * 1.2)
 	var whole: Array[float] = []
 	var kept: Array[float] = []
 	for f: FoeDef in FoeDef.all():
@@ -1054,7 +1058,7 @@ func _armor_in_the_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
 		last = now_hp
 	var near := func(d: float, among: Array[float]) -> bool: return among.any(func(x: float) -> bool: return absf(x - d) <= 0.02)
 	_check(not drops.is_empty() and drops.all(func(d: float) -> bool: return near.call(d, kept)),
-		"in the armor every hit lands at its foe's hit x %.0f / (%.0f + 32) (one of %s): hits taken %s" % [k, k, str(kept), str(drops)])
+		"in the armor every hit lands at its foe's hit x %.0f / (%.0f + 12.4) (one of %s): hits taken %s" % [k, k, str(kept), str(drops)])
 	_check(not drops.is_empty() and not drops.any(func(d: float) -> bool: return near.call(d, whole)),
 		"NEGATIVE: none lands whole (%s): hits taken %s" % [str(whole), str(drops)])
 	# Off again, out of the fight.

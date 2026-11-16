@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" format=3]
+
+[ext_resource type="Resource" path="res://game/regents/content/material/soft_leather.tres" id="1_d1w65"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/leather_trousers.tres" id="2_chffm"]
+[ext_resource type="Script" path="res://game/regents/content/item_def.gd" id="3_510fr"]
+
+[resource]
+script = ExtResource("3_510fr")
+max_stack = 1
+armor_slot = &"legs"
+defense = 3
+color = Color(0.62, 0.45, 0.3, 1)
+description = "Soft leather, trousers and boots."
+material = ExtResource("1_d1w65")
+pattern = ExtResource("2_chffm")
+id = 40083
+display_name = "Soft leather trousers"
+designer_notes = "A CELL OF THE MATERIAL TABLE (Soft leather in Leather trousers): made by Make the table."

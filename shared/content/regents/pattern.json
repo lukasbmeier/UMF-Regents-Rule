@@ -493,6 +493,341 @@
 			"station": "workbench",
 			"tool_tag": "knife",
 			"weapon_kit": ""
+		},
+		{
+			"carries_trait": false,
+			"family": 0,
+			"id": 40016,
+			"key": "plates",
+			"max_stack": 1,
+			"name": "Plates",
+			"name_format": "{m} plates",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "bar",
+					"pattern": 40001,
+					"qty": 2,
+					"takes": 1
+				}
+			],
+			"quality": 1,
+			"skill": 40004,
+			"station": "anvil",
+			"tool_tag": "",
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "head",
+			"carries_trait": false,
+			"defense_share": 2,
+			"family": 0,
+			"id": 40017,
+			"key": "armet",
+			"max_stack": 1,
+			"name": "Armet",
+			"name_format": "{m} armet",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "plates",
+					"pattern": 40016,
+					"qty": 1,
+					"takes": 1
+				},
+				{
+					"core": false,
+					"default_material": -1,
+					"item": 40012,
+					"name": "rivets",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 3
+				}
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "chest",
+			"carries_trait": false,
+			"defense_share": 5,
+			"family": 0,
+			"id": 40018,
+			"key": "cuirass",
+			"max_stack": 1,
+			"name": "Cuirass",
+			"name_format": "{m} cuirass",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "plates",
+					"pattern": 40016,
+					"qty": 3,
+					"takes": 1
+				},
+				{
+					"core": false,
+					"default_material": -1,
+					"item": 40012,
+					"name": "rivets",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 3
+				}
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "legs",
+			"carries_trait": false,
+			"defense_share": 3,
+			"family": 0,
+			"id": 40019,
+			"key": "legplates",
+			"max_stack": 1,
+			"name": "Legplates",
+			"name_format": "{m} legplates",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "plates",
+					"pattern": 40016,
+					"qty": 2,
+					"takes": 1
+				},
+				{
+					"core": false,
+					"default_material": -1,
+					"item": 40012,
+					"name": "rivets",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 3
+				}
+			],
+			"quality": 2,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "head",
+			"carries_trait": false,
+			"defense_share": 2,
+			"family": 2,
+			"id": 40020,
+			"key": "hood",
+			"max_stack": 1,
+			"name": "Hood",
+			"name_format": "{m} hood",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "leather",
+					"pattern": -1,
+					"qty": 1,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "chest",
+			"carries_trait": false,
+			"defense_share": 5,
+			"family": 2,
+			"id": 40021,
+			"key": "jerkin",
+			"max_stack": 1,
+			"name": "Jerkin",
+			"name_format": "{m} jerkin",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "leather",
+					"pattern": -1,
+					"qty": 3,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "legs",
+			"carries_trait": false,
+			"defense_share": 3,
+			"family": 2,
+			"id": 40022,
+			"key": "leather_trousers",
+			"max_stack": 1,
+			"name": "Leather trousers",
+			"name_format": "{m} trousers",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "leather",
+					"pattern": -1,
+					"qty": 2,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "chest",
+			"carries_trait": false,
+			"defense_share": 5,
+			"family": 3,
+			"id": 40023,
+			"key": "robe",
+			"max_stack": 1,
+			"name": "Robe",
+			"name_format": "{m} robe",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "cloth",
+					"pattern": -1,
+					"qty": 4,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
+		},
+		{
+			"armor_slot": "legs",
+			"carries_trait": false,
+			"defense_share": 3,
+			"family": 3,
+			"id": 40024,
+			"key": "cloth_trousers",
+			"max_stack": 1,
+			"name": "Cloth trousers",
+			"name_format": "{m} trousers",
+			"not_made_of": [],
+			"output_qty": 1,
+			"part_tag": "",
+			"parts": [
+				{
+					"core": true,
+					"default_material": -1,
+					"item": -1,
+					"name": "cloth",
+					"pattern": -1,
+					"qty": 3,
+					"takes": 0
+				}
+			],
+			"quality": 0,
+			"skill": 40005,
+			"station": "workbench",
+			"tool_tag": "",
+			"trait_parts": [
+				"lining",
+				"straps",
+				"fittings"
+			],
+			"weapon_kit": ""
 		}
 	],
 	"owner": "regents",

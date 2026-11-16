@@ -79,6 +79,45 @@
 			"tier": 3,
 			"tool_speed_pct": 75,
 			"weapon_damage_pct": 140
+		},
+		{
+			"family": 2,
+			"id": 40007,
+			"key": "soft_leather",
+			"name": "Soft leather",
+			"part_trait": -1,
+			"part_weapon_trait": -1,
+			"prefix": "Soft leather",
+			"raw": 40057,
+			"tier": 1,
+			"tool_speed_pct": 100,
+			"weapon_damage_pct": 100
+		},
+		{
+			"family": 2,
+			"id": 40008,
+			"key": "supple_leather",
+			"name": "Supple leather",
+			"part_trait": -1,
+			"part_weapon_trait": -1,
+			"prefix": "Supple leather",
+			"raw": 40066,
+			"tier": 2,
+			"tool_speed_pct": 100,
+			"weapon_damage_pct": 100
+		},
+		{
+			"family": 3,
+			"id": 40009,
+			"key": "linen",
+			"name": "Linen",
+			"part_trait": -1,
+			"part_weapon_trait": -1,
+			"prefix": "Linen",
+			"raw": 40046,
+			"tier": 1,
+			"tool_speed_pct": 100,
+			"weapon_damage_pct": 100
 		}
 	],
 	"owner": "regents",

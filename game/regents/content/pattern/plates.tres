@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="PatternDef" format=3]
+
+[ext_resource type="Script" path="res://game/regents/skilling/smithing/shape_params.gd" id="1_shape"]
+[ext_resource type="Script" path="res://game/regents/content/part_slot.gd" id="2_slot"]
+[ext_resource type="Resource" path="res://game/regents/content/pattern/bar.tres" id="3_bar"]
+[ext_resource type="Script" path="res://game/regents/content/pattern_def.gd" id="4_pat"]
+[ext_resource type="Resource" path="res://game/regents/content/skill/smithing.tres" id="5_smith"]
+
+[sub_resource type="Resource" id="Round_plates"]
+script = ExtResource("1_shape")
+display_name = "Iron plates"
+duration_ms = 60000
+reheat_ms = 600
+start_height = 23
+hammer_drop = 6
+spread_pct = 17
+tap_drop = 1
+max_reheats = 5
+reheat_cost_pm = 40
+hide_outline = 1
+pattern_fade_ms = 3000
+pattern_ghost_pm = 250
+outline_vary = 3
+error_scale = 50
+outline = PackedInt32Array(14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14)
+
+[sub_resource type="Resource" id="Slot_bar"]
+script = ExtResource("2_slot")
+name = "bar"
+takes = 1
+pattern = ExtResource("3_bar")
+qty = 2
+core = true
+
+[resource]
+script = ExtResource("4_pat")
+key = &"plates"
+name_format = "{m} plates"
+family = 0
+max_stack = 1
+station = &"anvil"
+skill = ExtResource("5_smith")
+parts = Array[ExtResource("2_slot")]([SubResource("Slot_bar")])
+output_qty = 1
+quality = 1
+xp = 30
+afk_ms = 8000
+minigame = SubResource("Round_plates")
+description = "Hammered flat at the anvil: the core of a metal piece of armor; its quality is the smith's."
+id = 40016
+display_name = "Plates"
+designer_notes = "S3: the core part of metal armor (ARMOR_PREP.md A3: the anvil smiths the plates, the workbench assembles the piece). Its round's outline is a flat sheet."
