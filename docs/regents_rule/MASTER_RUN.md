@@ -7,7 +7,7 @@ a child works (§4), how the master merges (§5), and the ledger (§7). Only the
 Luke's scope (2026-11-15): "Armor which might tie into wardrobe in game; anything else that is open not pending
 my decisions"; the engineering backlog, the wardrobe into the game, abilities step 3; "the specifics of abilities
 can come later but we know the number of abilities and most of the rules ... use placeholders and I'll fill in
-later"; a concise sheet of what waits on him; the dead town worktree adopted.
+later"; a concise sheet of what waits on him. (The town worktree, thought dead, finished itself: M1.)
 
 ## 1. Ground rules (on top of AGENTS.md, CLAUDE.md, `.claude/rules/*`)
 - **Luke's decisions are never defaulted.** Where a decision is his and the work needs a value, use a PLACEHOLDER:
@@ -28,7 +28,7 @@ Ids are fixed; PROGRESS step numbers are given by the master AT MERGE (the next 
 ### Lane 0 — the master itself (main checkout)
 | Id | What | Needs |
 |---|---|---|
-| M1 | **Adopt the dead town worktree** `.claude/worktrees/medieval-village-worldbuilding-dd942b` (branch `claude/medieval-village-worldbuilding-dd942b`, commit `34bedf9d` "roof styles, the house roofs centered, code-made streets, furnished with the props kit", plus uncommitted `town_furnish.gd`, `town_lab.gd`, `regents_town.gd`). Read the diff, finish or trim what is half done, run `regents_town` + the two town shots (windowed, look at them), commit on that branch, merge, remove the worktree. Small enough to do here; a child if it is not. | — |
+| M1 | **DONE before the run**: the town worktree's session was alive after all and finished its work; it is on `main` as `34bedf9d` (roofs, streets, the props kit's furnishing) and `9064c56b` (the town lab's Places view). Left: remove `.claude/worktrees/medieval-village-worldbuilding-dd942b` once the session list shows its session ended (the worktree is clean). | — |
 | M2 | **`docs/regents_rule/WAITING_ON_LUKE.md`**: the concise sheet. §1 decisions only Luke can make: one line each (the question, today's value or the proposal, the doc §), grouped (combat and foes, abilities, armor, towns S1-S8, showcase, world, UI rebuild to-dos, art/AI audit), gathered from HANDOFF "Waiting on Luke", every PREP doc's open list and `GAME.md`'s "still open" lines, deduplicated against what `GAME.md` already settles. §2 every placeholder this run makes (filled in as children report). §3 things to play and look at. Under ~80 lines; no essays. | — |
 | M3 | Ship Lane T's template release (`../ship_template.sh`) at a quiet moment (no merge in flight, no child mid-suite on the test database), then republish `--codegen` if the pull needs it, unit suite on `main`, push. | T1 |
 | M9 | **The end sweep**: on `main` with everything merged: `run_tests.sh` whole, `cargo test`, wasm check, `integration_test.sh` once, `combat_playtest.sh`, `spells_seen_playtest.sh`, `caster_playtest.sh`; publish the play database; final HANDOFF. | all |
@@ -134,7 +134,7 @@ holder in the ledger (§7); a child asks before taking one.
 7. Worktree cleanup only after the branch is merged and pushed.
 
 ## 6. Order of starting
-At once: M1 and M2 (master), T1, S1, P1, E1, E2. After M1: E3. After T1 (M3 shipped): W1 if it needs the hook,
+At once: M2 (master), T1, S1, P1, E1, E2, E3 (M1 is done). After T1 (M3 shipped): W1 if it needs the hook,
 else at once. After S1: S2; after S2: S3; after S3 + P1: S4; after S2 + S3 + M3: W2; after S4: W3; after W2: W4.
 At most ~5 children running at once; never two children holding the test-database lock or the same token.
 
@@ -151,7 +151,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 ## 7. The ledger (the master updates it at every start, merge and token change)
 | Id | Session | Branch | State | Step | Merge commit | Tokens held |
 |---|---|---|---|---|---|---|
-| M1 | master | claude/medieval-village-worldbuilding-dd942b | to do | | | |
+| M1 | town session | claude/medieval-village-worldbuilding-dd942b | DONE (on main) | 85 (extended) | 34bedf9d, 9064c56b | |
 | M2 | master | — | to do | | | |
 | T1 | | | to do | | | |
 | S1 | | | to do | | | |
@@ -165,7 +165,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | W4 | | | waiting W2 | | | test DB |
 | E1 | | | to do | | | |
 | E2 | | | to do | | | |
-| E3 | | | waiting M1 | | | |
+| E3 | | | to do | | | |
 | M3 | master | — | waiting T1 | | | |
 | M9 | master | — | waiting all | | | |
 
@@ -174,8 +174,8 @@ See the block in the chat of 2026-11-15; kept here so a restarted master can be 
 
 > You are the MASTER session for Regent's Rule's armor run. Read, in order: `docs/HANDOFF.md`, then
 > `docs/regents_rule/MASTER_RUN.md` (all of it: it is your work list, conflict map, child protocol, merge
-> procedure and ledger), then `GAME.md`'s armor, wardrobe and abilities sections. Then: (1) commit
-> `MASTER_RUN.md` to `main` (named path) and push, so every worktree sees it; (2) do M1 and M2 yourself;
+> procedure and ledger), then `GAME.md`'s armor, wardrobe and abilities sections. Then: (1) `MASTER_RUN.md` is already on `main`;
+> remove the town worktree if its session ended (M1); (2) do M2 yourself;
 > (3) start the children §6 says can start at once, each with `use_worktree: true`, the model and effort §6b names, a brief that is its §2 row,
 > the doc § it names, and §4 pasted in full; Lane T's child runs in `../UMF Template`. You build nothing big
 > yourself: you merge, test, push, publish and record. After EVERY merge: the §5 steps, the ledger, a rewritten
