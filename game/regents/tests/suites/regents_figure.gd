@@ -9,6 +9,8 @@ extends "res://tests/suite_base.gd"
 ##   - bodies in the same colors share their materials; other colors get their own
 ##   - armor over it (W2's way in): a worn piece in its tier's palette, the empty slots in the player's own colors
 ##   - the adventurer offers only the genre's two Peasant looks
+##   - THE PICKER (template 1.8.4): a color picked lands in the text as `main=<int>` and survives Done, the preview
+##     dyed in it; NEGATIVE: on a look that does not offer the colors, the same pick is dropped at Done
 ## How it LOOKS: `"$GODOT" --path . res://game/regents/tests/figure_shot.tscn -- <out dir>` (windowed).
 
 const MALE: String = "res://game/regents/looks/peasant_m.tscn"
@@ -26,6 +28,7 @@ func run() -> void:
 	await _run_shared()
 	await _run_armor()
 	_run_adventurer()
+	await _run_picker()
 
 
 func _run_text() -> void:
@@ -215,3 +218,43 @@ func _run_adventurer() -> void:
 		_check(n is RegentsFigure, "%s is a RegentsFigure" % v.resource_path.get_file())
 		n.free()
 	_check(def.look_worn(7, "ranger_f;torso=2") in ["peasant_m", "peasant_f"], "an old Ranger look falls back to a Peasant")
+
+
+## A picker on `def`, opened on `text`; `main` picked as BLUE; then Done. The text Done hands on.
+func _pick_and_done(def: EntityDefinition, text: String) -> Array:
+	var picker := CharacterPicker.new()
+	picker.definition = def
+	picker.appearance = text
+	add_child(picker)
+	picker.open()
+	await get_tree().process_frame
+	picker.pick_color("main", BLUE)
+	await get_tree().process_frame
+	var preview: RegentsFigure = picker.preview_model() as RegentsFigure
+	var dyed_blue: bool = preview != null and _dyed(preview, BLUE).y == _outfit_surfaces(preview) and _outfit_surfaces(preview) > 0
+	var got: Array[String] = []
+	picker.chosen.connect(func(t: String) -> void: got.append(t))
+	var done: Button = picker.find_child("Done", true, false) as Button
+	if done != null:
+		done.pressed.emit()
+	await get_tree().process_frame
+	picker.queue_free()
+	return [got[0] if not got.is_empty() else "", dyed_blue]
+
+
+func _run_picker() -> void:
+	_check(RegentsFigure.picker_has_colors(), "the foundation's picker shows color options (template 1.8.4)")
+	var def: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
+	var r: Array = await _pick_and_done(def, "peasant_f;hair=6;trim=%d" % RegentsColors.encode(RED))
+	var text: String = String(r[0])
+	_check(Appearance.choices(text).get("main") == RegentsColors.encode(BLUE), "a picked color lands in the text as main=<int> (%s)" % text)
+	_check((RegentsColors.colors_in(text).get(&"main", Color()) as Color).to_html(false) == BLUE.to_html(false)
+		and RegentsColors.colors_in(text).has(&"trim") and Appearance.choices(text).get("hair") == 6,
+		"and survives Done, with the color it opened on and the other choices")
+	_check(bool(r[1]), "the preview wears it as it is picked")
+	_check(Appearance.is_valid(text), "the module would take what Done hands on")
+	# NEGATIVE: the same pick on a look that does not offer the colors (the foundation's own Peasant) is dropped.
+	var plain := EntityDefinition.new()
+	plain.visual_variants = [load("res://game/characters/looks/peasant_m.tscn") as PackedScene, load("res://game/characters/looks/peasant_f.tscn") as PackedScene]
+	var n: Array = await _pick_and_done(plain, "peasant_f;hair=6")
+	_check(not Appearance.choices(String(n[0])).has("main"), "NEGATIVE: on a look with no color options the pick is dropped at Done (%s)" % n[0])
