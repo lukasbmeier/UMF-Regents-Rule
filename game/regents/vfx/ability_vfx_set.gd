@@ -25,6 +25,11 @@ static func current() -> AbilityVfxSet:
 	return _loaded
 
 
+## Let the loaded table go (a lab or a tool closing: nothing left holding its scenes at exit).
+static func release() -> void:
+	_loaded = null
+
+
 ## The row for ability `id`, or null.
 func entry(id: int) -> AbilityVfxEntry:
 	for e: AbilityVfxEntry in entries:

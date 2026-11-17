@@ -3,6 +3,8 @@ class_name AbilityVfx extends SpaceTimeComponent
 ## 81), on every player and foe, from the table `ability_vfx.tres` (`AbilityVfxSet`):
 ##   - A CHARGE in the hand(s) while a spell is cast (this client's own cast; another player's, while their `casting`
 ##     row says so; a foe's, through its wind-up: the imp's tell), a little in front of the palm, never in the wrist.
+##   - AS IT LEAVES THE HAND, a spell with no cast time (the Bolt): a flash in the hand, facing the way it was aimed;
+##     this client's own as it is cast, another player's from `spell_landed`, while that is fresh.
 ##   - AS IT LANDS, at the caster's feet facing the way it was aimed (Gale's gust): this client's own as it is cast;
 ##     another player's from the server's word that it landed (`spell_landed`, Luke 2026-11-15), while that is fresh.
 ##   - A JUMP (Blink): the caster seen to move 3 to 12 m in one frame, wielding a kit that casts: the columns at
@@ -92,6 +94,7 @@ func cast_landing(id: int, aim: Vector3) -> void:
 	if e != null and e.on_jump != null:
 		_jump_armed_until_ms = Time.get_ticks_msec() + JUMP_ARMED_MS
 	_land(e, spell, id, (entity as Node3D).global_position, aim)
+	_cast_flash(e, spell, id, aim)
 
 
 ## ANOTHER PLAYER'S spell `id` landed (the server's `spell_landed` row, stamped `at_usec`), cast from `from` aimed along
@@ -100,7 +103,10 @@ func cast_landing(id: int, aim: Vector3) -> void:
 func landed_elsewhere(id: int, from: Vector3, aim: Vector3, at_usec: int) -> bool:
 	if is_local_authority or vfx_set == null or not is_fresh(at_usec):
 		return false
-	return _land(vfx_set.entry(id), SpellDef.by_ability(id), id, from, aim) != null
+	var e: AbilityVfxEntry = vfx_set.entry(id)
+	var spell: SpellDef = SpellDef.by_ability(id)
+	var flashed: bool = _cast_flash(e, spell, id, aim) != null
+	return _land(e, spell, id, from, aim) != null or flashed
 
 
 ## Whether a `spell_landed` row stamped `at_usec` is a landing to show now (not history handed over as we came near).
@@ -117,6 +123,15 @@ func _land(e: AbilityVfxEntry, spell: SpellDef, id: int, at: Vector3, aim: Vecto
 	if flat.length() < 0.01:
 		flat = _forward()
 	return play(e.on_land, id, at, at + flat.normalized())
+
+
+## A spell with no cast time let go: its `on_cast` flash in the hand, facing along `aim`. Null when it shows none.
+func _cast_flash(e: AbilityVfxEntry, spell: SpellDef, id: int, aim: Vector3) -> VfxEffect:
+	if e == null or e.on_cast == null or (spell != null and spell.cast_ms > 0):
+		return null
+	var at: Vector3 = cast_point(e)
+	var toward: Vector3 = aim.normalized() if aim.length() > 0.01 else _forward()
+	return play(e.on_cast, id, at, at + toward)
 
 
 ## This client's parry turned `attacker_id`'s blow: the flash at the hand nearer the attacker, out toward them.

@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/vfx/effects/ground_ring.gd" id="1_fx"]
+
+[node name="MeteorRing" type="Node3D"]
+script = ExtResource("1_fx")
+duration_s = 3.0
+element = 1
+radius_m = 5.0
+warn_s = 1.5
+color = Color(1, 0.32, 0.08, 1)
+shade = 0.4
+fill_alpha = 0.42
+runes = 16.0
+pieces = 30
+height_m = Vector2(1.0, 2.6)
+lean_deg = 15.0
+layout_seed = 11
+light_color = Color(1, 0.4, 0.1, 1)

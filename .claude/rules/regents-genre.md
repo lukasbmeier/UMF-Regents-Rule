@@ -140,6 +140,9 @@ paths:
   shake; `AbilityVfx.lighter_for`), yours and a foe's whole: a new place that spawns an effect for a fighter sets it.
   A ring's pieces are one MultiMesh (`instanced` in the energy shader): a new piece-heavy effect does the same. The
   game's camera shakes from `shook` through `VfxCameraShake` (installed by the local player's `AbilityVfx`).
+- A MISSILE'S RIDING LOOK IS LIGHTER for another player's shot too (PROGRESS 104, `ShotLook.make_lighter`, from its
+  body's owner). A flash as a spell with no cast time leaves the hand is the effects table's `on_cast`; an area spell's
+  own ring is its row's `ring` (`SpellLooks.ring_scene`), otherwise frost for a player's and fire for a foe's.
 - A SWEEP THAT HITS ALL (PROGRESS 89, template #314): a player's judged sweep marked Hits All (`AbilityDef.hits_all`:
   Cleave) lands on every foe in it, each judged as a single hit; a rallying hit heals once a swing (`rallied`).
   Which abilities hit all is Luke's content call.

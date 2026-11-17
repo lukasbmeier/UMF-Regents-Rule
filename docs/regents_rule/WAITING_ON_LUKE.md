@@ -74,6 +74,8 @@ One line each: the question, today's value or the proposal, where it is written.
 - ARMOR'S TRAIT PARTS: every piece names lining, straps, fittings (`trait_parts`), with NO trait offered: which traits, on which part, is yours.
 - ARMOR'S RECIPES: plates 2 bars; armet 1, cuirass 3, legplates 2 plates + copper rivets; leather 1 / 3 / 2; linen robe 4, trousers 3 flax; their XP (`content/recipe/`, made by the table).
 - THE CLOTH UNDER METAL: the scarf and padding keep the Knight's first colorway (gray, a red scarf) at every bar: `game/regents/wardrobe/palettes/metal_1_copper|2_iron|3_steel.tres`. Pick it per tier, or one for all.
+- METEOR'S RING LOOK: the imp's cinder-ring fire colors, so a player's Meteor reads like the imp's ring you must get out of; a color of its own, or keep it (and should a player's fire ring look different from a foe's?): `game/regents/vfx/effects/meteor_ring.tscn` (`color`, `light_color`).
+- THE BOLT'S HAND FLASH: its size (0.45 m), sparks (10) and length (0.3 s): `game/regents/vfx/effects/bolt_cast.tscn`.
 - THE CHEST ABILITIES: leather's Snare (placeholder) and metal's Shove (placeholder): what each does and its numbers: `game/regents/content/ability/chest_*.tres`, `content/spell/chest_*.tres`.
 - THE SWORD'S HANDLE SETS, stand-ins: crossguard Q Shield Bash, options Charge, Hold the Line, ult Bulwark; banner Q Swipe, options Shoulder Check, Banner Sweep, ult Banner Storm; the plain grip keeps Lunge, Flurry, Hamstring Cut, Execute: `game/regents/content/ability/sword_*.tres` (40051-40057 new), claimed per role in `content/kit/sword.tres`. The draft's real mechanics (a mend by a share, a taunt, a guard window) are only imitated.
 

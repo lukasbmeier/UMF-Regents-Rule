@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/vfx/effects/parry_flash.gd" id="1_fx"]
+
+[node name="BoltCast" type="Node3D"]
+script = ExtResource("1_fx")
+duration_s = 0.3
+size_m = 0.45
+color = Color(0.72, 0.6, 1, 1)
+sparks = 10
+shake = 0.0

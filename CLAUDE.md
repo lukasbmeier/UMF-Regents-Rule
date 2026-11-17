@@ -50,7 +50,7 @@ GODOT=<path> ./game/regents/tests/skilling_playtest.sh       # the whole chain b
 GODOT=<path> ./game/regents/tests/walls_playtest.sh         # a real referee: a bot goes round a rock, through it once worked out
 GODOT=<path> ./game/regents/tests/deer_playtest.sh          # a real referee: the deer grazes, bolts from a player, calms and walks home
 "$GODOT" --path . res://game/regents/tests/glade_shot.tscn -- <out dir>   # windowed, no server: the glade from six fixed cameras (a look change, before and after)
-GODOT=<path> ./game/regents/tests/combat_playtest.sh          # a real client and a real referee at 150 ms (~12 min): the string, roll, guard, parry, the camp, roles, the bow; LATENCY=20 for how soon a hit shows
+GODOT=<path> ./game/regents/tests/combat_playtest.sh          # a real client and a real referee at 150 ms (~12 min): the string, roll, guard, parry, the camp, roles, the bow; LATENCY=20 for how soon a hit shows; LEG=bow_skills for the bow's Q, E, R alone (~2 min)
 GODOT=<path> ./game/regents/tests/archer_playtest.sh          # a real client and referee (~3 min): the archer's arrow taken, blocked, rolled, knocked away; it steps back, shoves
 GODOT=<path> ./game/regents/tests/caster_playtest.sh          # a real client and referee (~3 min): the imp's bolt taken and sidestepped, its ring stood in and left, its cast stopped
 GODOT=<path> ./game/regents/tests/spells_seen_playtest.sh     # two real clients (~2 min, no referee): another player's Gale seen, a stale one and a refused one not

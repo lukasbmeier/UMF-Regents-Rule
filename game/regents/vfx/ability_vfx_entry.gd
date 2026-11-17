@@ -14,6 +14,12 @@ class_name AbilityVfxEntry extends Resource
 @export var hand_bone: StringName = &"hand_l"
 ## How far in front of the hand(s) it sits, toward where the caster faces (never inside the wrist).
 @export_range(0.0, 1.0, 0.01, "suffix:m") var ahead_m: float = 0.16
+@export_group("As it leaves the hand")
+## A flash in the hand as a spell with NO cast time is let go, facing the way it was aimed (the Bolt's:
+## `bolt_cast.tscn`), in `hand_bone`, `ahead_m` in front of it. This client's own as it casts; another player's from
+## the server's word that it was cast (`spell_landed`), while fresh. Null: none. (A spell with a cast time shows its
+## charge instead.)
+@export var on_cast: PackedScene
 @export_group("As it lands")
 ## Played at the caster's feet facing the way it was aimed, as it lands (a cone: `gale.tscn`). This client's own
 ## cast only: other clients are not told of a cast with no cast time.
@@ -21,3 +27,7 @@ class_name AbilityVfxEntry extends Resource
 ## Played when the caster is seen to jump (`blink.tscn`): from where they were to where they are, the body faded.
 ## Every client sees it (the jump is in the movement every client gets).
 @export var on_jump: PackedScene
+@export_group("Its ring")
+## An AREA spell's circle on the ground (`SpellLooks`), a `VfxGroundRing` of its element (`frost_ring.tscn`,
+## `meteor_ring.tscn`). Null: a player's in frost, a foe's in fire (`cinder_ring.tscn`).
+@export var ring: PackedScene
