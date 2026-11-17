@@ -49,6 +49,13 @@ var _hand_looked: bool = false
 var _light: Light3D = null
 var _light_energy: float = 0.0
 var _age: float = 0.0
+## ANOTHER PLAYER'S SHOT IS THE LIGHTER VERSION (PROGRESS 88): its riding effects thinned and their lights out, its own
+## sparks halved, its light off (`make_lighter`). Decided once its body's owner is known (`_settle_lighter`); set it
+## before it enters the tree to decide it (the lab).
+var lighter: bool = false
+var _lighter_settled: bool = false
+## How long it waits for its body's owner to be known before it stays whole.
+const OWNER_WAIT_S: float = 0.5
 
 
 func _ready() -> void:
@@ -57,10 +64,12 @@ func _ready() -> void:
 	if sparks_per_s > 0:
 		add_child(_sparks())
 	tree_exiting.connect(_ended)
+	_settle_lighter()   # known already (the lab; a body bound before its look): lighter from its first frame
 
 
 func _process(delta: float) -> void:
 	_age += delta
+	_settle_lighter()
 	_leave_hand(delta)
 	# The trail begins a frame in, once the body's entity has been put where the shot is (never a streak from
 	# where its node was made).
@@ -68,6 +77,44 @@ func _process(delta: float) -> void:
 		trail = RibbonTrail.behind(self, trail_life_s, trail_width_m, trail_color, trail_glows)
 	if _light != null and flicker > 0.0:
 		_light.light_energy = _light_energy * (1.0 + flicker * (sin(_age * 37.0) * 0.6 + sin(_age * 91.0) * 0.4))
+
+
+## Whether it is another player's (`AbilityVfx.lighter_for` its body's owner), once the owner is known.
+func _settle_lighter() -> void:
+	if _lighter_settled:
+		return
+	if lighter:
+		_lighter_settled = true
+		make_lighter()
+		return
+	var n: Node = get_parent()
+	while n != null and not (n is SpaceTimeEntity):
+		n = n.get_parent()
+	var body: BodyComponent = (n as SpaceTimeEntity).find_component(BodyComponent) as BodyComponent if n != null else null
+	if body == null or body.owner_id == 0:
+		_lighter_settled = n == null or _age > OWNER_WAIT_S   # no body (the lab), or no owner by now: whole
+		return
+	_lighter_settled = true
+	if AbilityVfx.lighter_for(EntityRegistry.get_entity(body.owner_id)):
+		make_lighter()
+
+
+## Make it the lighter version: every riding `VfxEffect` (`VfxEffect.make_lighter`: half the particles, no light), its
+## own sparks halved and its light off. Once.
+func make_lighter() -> void:
+	lighter = true
+	if has_meta(&"shot_lightened"):
+		return
+	set_meta(&"shot_lightened", true)
+	for c: Node in find_children("*", "", true, false):
+		if c is VfxEffect:
+			(c as VfxEffect).make_lighter()
+	var sparks: CPUParticles3D = get_node_or_null(^"Sparks") as CPUParticles3D
+	if sparks != null:
+		sparks.amount = maxi(1, ceili(float(sparks.amount) * VfxEffect.LIGHTER_PARTICLES))
+	if _light != null:
+		_light.visible = false
+		_light = null   # (no flicker)
 
 
 ## IT LEAVES THE HAND (Luke, 2026-11-12: shots came from "the middle of where my character is standing"): the first
