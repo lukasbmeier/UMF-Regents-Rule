@@ -5758,3 +5758,37 @@ On `main` after the merge: the whole unit suite (the ledger has the count).
 
 **Left for later**: the bow's skills are worded as melee ("A strike in front of you: 10 damage, reaching 15.0 m"), a
 line older than B1 and wrong for a shot: it wants a line of its own for a kit that `draws`.
+
+## Step 103: A REAL CLIENT PRESSES THE BOW'S SKILLS (2026-11-17, the follow-up run's A1)
+
+**Built** (test files only: `game/regents/tests/playtest/combat_playtest.gd`, `game/regents/tests/combat_playtest.sh`):
+- `_bow_skills`, after the bow leg and before the yard: the bow's judged sweeps through the real keys (Q, E, R) at
+  150 ms, what the server recorded read back. The shell's new `BOW_SKILLS <entity> <row>` sets the bow to level 20
+  (`admin_set_item_level`) and Archery (40008) to 20 (`admin_set_rank`), so the first pick and the ult are open; the
+  picks go through the server's `choose_pick` (E Pinning Shot, R Arrow Volley).
+  - NEGATIVE: Kick Away, the option NOT chosen, sent straight at the server: refused ("not chosen").
+  - Q, Point-Blank Shot, 3 m from the first dummy: it lost 18.56, the second (beside the line) nothing: one body.
+  - R, Arrow Volley, along the line through both dummies: BOTH lost the same 40.61 (Hits All, each a single hit at its
+    own damage; the server's `ability 40047 by 54: hit [41, 40]`). Its spot is picked at run time, away from the yard's
+    sparring skeleton.
+  - E, Pinning Shot (over Kick Away: its slow is a `status_effect` row a client reads; a shove is judged only by a
+    position after the fact): on a camp skeleton 8 m in front, its Slowed effect (108) on it for 3 s.
+- `LEG=bow_skills` (`combat_playtest.sh` passes `--leg=`): that leg alone, ~2 min; the whole run's log checks skipped.
+- Two earlier legs: `_blocked_from_behind` re-pressed the guard every frame until the server's row came back (25 guards
+  refused by the rate limit in one run), now at most every 300 ms; the armor check prints the server's block flag.
+
+**How to play it**: wield the yew bow (level 20 on the Tester page, Archery 20), choose Pinning Shot and Arrow Volley in
+the abilities window; Q at a dummy, R along the two camp dummies (both lose the same), E at a skeleton (slower 3 s).
+
+**Tested**: `LEG=bow_skills combat_playtest.sh` 15/0 twice. NEGATIVE: `hits_all = false` on `bow_arrow_volley.tres`,
+re-baked: the leg failed (one dummy hit, the server's `hit 41`); restored. The whole `combat_playtest.sh`, three runs:
+154/1, then 157/0, then after merging `main` 155/0 (every log check green). No server code changed.
+
+**Left for later** (found by the whole run in other legs, both timing-dependent):
+- The armor leg failed once: its two hits were exactly a blocked light times the armor, with the player's status
+  Normal; not settled. The check now prints the block flag. If it repeats, look at a guard still up after
+  `_blocked_from_behind`.
+- "1 foe swing refused while staggered": the yard's sparring skeleton, parried, sent its next swing 3 ms later (in
+  flight as the stagger landed): a race between the referee's brain and the stagger row.
+- The local SpacetimeDB server was not running when A1 began; lane A started it (`spacetime start`, detached,
+  ~10:00 2026-11-17). That is why Fishing's first publish in M1 found no server.
