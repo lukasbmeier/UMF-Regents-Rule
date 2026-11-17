@@ -594,6 +594,10 @@ T_BALANCED=40003; T_HEAVY=40004; T_BRUTAL=40005; T_SWIFT=40007
 assert_rejected "set_item_traits $AXE_ROW [99999]" "no trait 99999" "a trait that is not one: refused"
 assert_rejected "set_item_traits $AXE_ROW [$T_SWIFT]" "is not on a copper axe" "Swift Draw is a bow's: refused on an axe"
 C_CODE_T='"regentstraitsrefereecode"'
+# ITS OWN STATE (M9, 2026-11-16): the numbers below are at Axemanship 1. Earlier legs train it (the Cleave on two dummies,
+# S1, took it to rank 2: every hit 0.84 % more, 8.47 for 8.4); it is set to 1 here and its XP given back after the leg.
+AXP_BEFORE="$(xp_of 40007)"
+assert_ok "admin_set_rank $MYENT 40007 1" "(test) Axemanship 1 for the traits' numbers"
 standin_up "$C_CODE_T" "a referee for the traits"
 sleep 1.0
 HPT0="$(sql_first "SELECT current FROM health_state WHERE entity_id = $DUMMY" 1)"
@@ -621,6 +625,10 @@ L1="$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)"
 assert_eq "$L1" "$(python -c "import math; print($W0 + int(math.floor(($L0 - $W0) * 0.85 + 0.5)))")" "Balanced: its recovery 15% shorter ($L0 -> $L1 ms, the wind-up $W0 as it was)"
 HPT2="$(timed_val HP932)"
 assert_eq "$(python -c "print(round($HPT1 - $HPT2, 2))")" "7.56" "Brutal, the dummy above 30 %: a tenth less (8.4 -> 7.56)"
+AXP_LEG="$(( $(xp_of 40007) ))"
+assert_ok "admin_set_rank $MYENT 40007 1" "(test) Axemanship back:"
+AXP_BACK="$(( ${AXP_BEFORE:-0} + AXP_LEG ))"
+[ "$AXP_BACK" -gt 0 ] && assert_ok "grant_xp $MYENT 40007 $AXP_BACK" "(test) ... its XP before the leg and the leg's own ($AXP_BACK)"
 assert_ok "set_item_traits $AXE_ROW [$T_HEAVY]" "(dev) now Heavy"
 sleep 1.2
 standin_down
@@ -908,8 +916,12 @@ timed "$(printf '%s\n' \
   "0 resolve_action [{RSA},$MYENT]" \
   "1000 sql PHA1 SELECT current FROM health_state WHERE entity_id = $MYENT")"
 timed_ok 4 "the referee: the skeleton's slash hit you in your armor"
-num_is "$(python -c "print(round($(timed_val PHA0) - $(timed_val PHA1), 3))")" "$(python -c "print(round(7.0 * 67 / (67 + 20 + 12), 3))")" \
-  "its 7 (14 at the skeleton's 50 %) x 67 / (67 + 20 + 12): the cuirass and the helm ADDED UP, never a flat cut"
+# The same slash UNARMORED was measured above (PHP0 -> PHP1: the sword kit's Slash, 8 at the skeleton's 50 %: 4; the armor
+# sheet's 14 is another foe's cut, M9 2026-11-16).
+SLASH_BARE="$(python -c "print(round($PHP0 - $PHP1, 3))")"
+num_is "$SLASH_BARE" "4.0" "(the slash unarmored: 8 at the skeleton's 50 %)"
+num_is "$(python -c "print(round($(timed_val PHA0) - $(timed_val PHA1), 3))")" "$(python -c "print(round($SLASH_BARE * 67 / (67 + 20 + 12), 3))")" \
+  "in armor the same slash x 67 / (67 + 20 + 12): the cuirass and the helm ADDED UP, never a flat cut"
 assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
 assert_ok 'take_off "chest"' "the cuirass off"
 assert_ok 'take_off "head"' "the helm off"
@@ -1614,7 +1626,10 @@ B1="$(timed_val B1)"
 check "$( [ "$B1" != "-" ] && [ -n "$B1" ] && echo true || echo false)" "a bolt flies, flown by the referee ($B1)"
 assert_eq "$(timed_val CD)" "40012" "the Bolt's own cooldown begun"
 timed_ok 4 "the referee: it hit"
-check "$(python -c "print('true' if abs(($H0 - $(HP "$SK2")) - 9.0) < 1e-3 else 'false')")" "the Bolt's 9 ($H0 -> $(HP "$SK2"))"
+# The Bolt's damage is its content's (the server's `ability_def` row; P1 made it 12, step 91), at the yew staff's 100 %, no
+# quality and Sorcery 1: the bare number.
+BOLT_DMG="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40012" 1)"
+check "$(python -c "print('true' if abs(($H0 - $(HP "$SK2")) - float('${BOLT_DMG:-0}')) < 1e-3 and float('${BOLT_DMG:-0}') > 0 else 'false')")" "the Bolt's ${BOLT_DMG} ($H0 -> $(HP "$SK2"))"
 check "$(python -c "print('true' if $(xp_of 40009) > $SXP0 else 'false')")" "Sorcery XP"
 # THE STAFF LEARNS WITH YOU (B1), five times as fast below your mastery (CATCH-UP, `regents.item_catch_up`).
 STAFF_X1="$(IX "$STAFF_ROW")"
