@@ -166,6 +166,10 @@ paths:
   the cloth chest's (Luke's B8); the staff has four spells. Ability ids to 40050 and spells to 40011 are taken.
 - AN INTEGRATION LEG THAT MEASURES A NUMBER sets its own state (ranks, rules) or reads its expectation from the
   server's rows: never a number an earlier leg or a content change can move (the armor run's M9).
+- AN INTEGRATION CHECK COUNTS ONCE A RUN (PROGRESS 108): never a check per row of a query, nor only in a branch
+  sometimes taken; tidy silently, then one check of the state (`put_away`, `give_back`). `COUNT_BY_SECTION=1` prints
+  each leg's count: compare two runs leg by leg. A wait reads the server's row (`steadied_out`), never a sleep that
+  counts on a slow CLI (PROGRESS 107).
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

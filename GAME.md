@@ -766,6 +766,7 @@ WORN CHEST'S: a robe gives Blink, a jerkin and a cuirass a stand-in each. Every 
 options for E, an ult on R at 20), and each SWORD HANDLE its own set; Cleave and the marked sweeps hit every foe in
 them. Another player's effects are a lighter version of yours. For a look without crafting (dev):
 `admin_give_item <you> <id> 1 <quality>` (armor is 40069-40088).
+**The follow-up run (PROGRESS 102-108, 2026-11-17)**: hover an ability on the bar or in the abilities window: it now says its slow (how much, how long), its shove, and whether it hits every foe in its sweep, all read from the data. On the staff the Bolt flashes violet in the hand as it leaves; Meteor's ring lands in fire (the imp's colors, a placeholder); another player's missiles are the lighter version. The practice cuirass and helm (40067, 40068) are gone: the table's pieces are the armor (iron cuirass 40075, steel armet 40078). The rest was tests: a real client presses the bow's Q, E and R (`combat_playtest.sh`, `LEG=bow_skills` alone), and the integration and caster suites no longer depend on timing.
 **The anvil** (PROGRESS 41-42) is a 3D stage of the game's own anvil and hammer: left click a column for a heavy
 strike (it spreads into its neighbors), right click for a light tap (finishing the line), R to put the bar back in the
 fire; or Shift + click taps and right click reheats (Controls, "Smithing: the light tap"; **B** in the lab switches

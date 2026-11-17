@@ -5905,3 +5905,36 @@ run. `integration_test.sh` once: 1703/0. Whole unit suite on `main` after the me
 **Left for later**: integration's count varies run to run (the armor run 1766+4 then 1761; this run 1737, then 1703,
 A3 adding one check): lane A is finding which checks are counted a varying number of times (A3b). The foundation's
 player `vel` in the movement row reads a few percent low (above): a template item.
+
+## Step 108: INTEGRATION'S CHECK COUNT MADE STEADY (2026-11-17, the follow-up run's A3b)
+
+Integration's total changed from run to run (the armor run 1766+4 then 1761; this run 1737, then 1703), so a check
+that stopped running could not show. Found by reading every check for a count that depends on the run.
+
+**Built** (`game/regents/tests/hooks/integration_genre.sh` only):
+- EIGHT TIDY-UP LOOPS, one `consume_item` check per BAG ROW (iron axe heads, iron axes, the order's item twice, flax,
+  deer hides, wolf pelts, yew logs): rows of an item with a quality never stack, so the count followed a random yield,
+  grade or loot. Now `put_away ITEM LABEL`: every row consumed silently, then ONE check that none is left (stronger: a
+  row it missed now fails).
+- THE LOOT PICK-UP, a check per sack on the ground: now every sack picked up, then ONE check that none is left.
+- TWO BRANCHES that checked only when taken (tree_2 regrown if worked out; a copper pickaxe given again if an order took
+  ours): the act silent, ONE check of the state after, every run.
+- FOUR XP GIVE-BACKS (`[ "$XP" -gt 0 ] && assert_ok ...`): now `give_back SKILL XP LABEL`, one check every run.
+- `COUNT_BY_SECTION=1` prints each of the hook's legs' check counts (`tally`, silent otherwise).
+- Not a gap: no loop stopped early, no section returned early; every varying check was a tidy-up or a give-back.
+
+**Tested**: `integration_test.sh` once with `COUNT_BY_SECTION=1` (and a temporary, uncommitted copy of the foundation's
+script carrying the proposal below): 1710/0. Per leg, the genre's: setup 8, THE TUTORIAL 13, woodcutting 29, mining 13,
+the furnace 14, the anvil 16, the workbench 60, the order board 26, a node worked out 10, herbalism 32, combat 70, TRAITS
+38, POISE 51, ROLES 62, FOES 21, ARMOR 29, THE ROLL 20, DEATH INTERRUPTS 15, YOU SLAY IT 27, THE DEER 20, SKINNING 51,
+THE WOLF 52, SKINNING 5 20, A FOE'S SHOT 8, A PLAYER SLAIN 37, THE YEW BOW 49, THE STAFF 171, THE WORLD MAP 11, NO ROLL
+IN THE AIR 5, THE TUTORIAL (end) 25. The next run compares with these leg by leg. NEGATIVE: each new single check fails
+if a row or a sack is left, where the old per-row checks passed whatever was left behind.
+
+**Left for later, THE TEMPLATE'S** (not edited here; `tests/integration_test.sh` is the foundation's):
+1. `COUNT_BY_SECTION` in the foundation's script: a `section NAME` helper in place of the 37 `echo "== X =="` lines
+   (and in `tests/lib/genre_hooks.sh`), printing each section's count, so a genre hook's checks are not counted inside
+   the section before it ("interact" showed 1018 with the genre's ~950). The text is in this run's A3b report
+   (git history: `docs/regents_rule/inbox/A3b.md` on `claude/followup-a3b-check-count`).
+2. The same varying count in the foundation's file: a `revoke_authority` check per registered referee (~lines 1194,
+   1219, 1291, 1598) and a `despawn_entity` check per ball (~1288): the loop silent, then one check of the rows left.

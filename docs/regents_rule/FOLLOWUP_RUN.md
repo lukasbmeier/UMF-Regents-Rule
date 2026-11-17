@@ -22,12 +22,16 @@ adds a `class_name`; never push red; `docs/HANDBOOK.md` is never edited here (ru
 | A1 | The bow's Q, an option and the ult pressed by a real client (combat_playtest) | `claude/followup-a1-bow-client-0980ca` | merged, unit 5228/0 on main, pushed | 103 | `79cf6bc5` |
 | A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | `claude/followup-a2-practice-armor` | merged; on main unit 5247/0 (11 fewer than 5258: per-item checks of the two deleted items, not traced one by one), content 18/0, cargo test, wasm clean; pushed; play DB published | 105 | `5e01ac41` |
 | A3 | M9's findings: the poise leg waits on its row (`steadied_out`); the caster's walked-bolt and cast-stopped legs made robust | `claude/followup-a3-m9-fixes` | merged; integration 1703/0 and caster 4 of 4 on its branch; unit 5249/0 on main, pushed | 107 | `07540b6b` |
-| A3b | Integration's varying check count (1766+4, 1761, 1737, 1703): which checks count a varying number of times | lane A | building | - | - |
+| A3b | Integration's varying check count (1766+4, 1761, 1737, 1703): which checks count a varying number of times | `claude/followup-a3b-check-count` | merged; integration 1710/0 on its branch with `COUNT_BY_SECTION=1`; unit 5249/0 on main, pushed; the foundation's half is a proposal for the template (PROGRESS 108) | 108 | `0d1f7cac` |
 | B1 | The bar's and tooltips' words: slow, shove, every foe in the sweep | `claude/followup-b1-ability-words-b17159` | merged, unit 5228/0 on main, pushed | 102 | `cf259946` |
 | B2 | Bolt's cast flash; Meteor's ring in fire; others' missile lighter | `claude/followup-b2-effects` | merged, unit 5258/0 on main, pushed | 104 | `dec49de2` |
 | B2b | B2's one-frame violet circle at the Bolt's cast: found and fixed, or shown older than B2 | `claude/followup-b2b-bolt-circle` | merged, unit 5249/0 on main, pushed (a lab-only leftover hit flash) | 106 | `de5f7099` |
-| M9 | Unit, cargo, wasm, integration once, combat / caster / spells_seen / armor_seen; publish; HANDOFF; cleanup | (main) | unit 5249/0, cargo test and wasm green; integration 1734/3 (14 min; poise leg, A3), combat 157/0, caster 19/1 (A3), spells_seen 12/0, armor_seen 7/0; play DB published after A2 | - | - |
+| M9 | Unit, cargo, wasm, integration once, combat / caster / spells_seen / armor_seen; publish; HANDOFF; cleanup | (main) | done: unit 5249/0, cargo test and wasm green; combat 157/0, spells_seen 12/0, armor_seen 7/0; integration 1734/3 and caster 19/1 at first, fixed by A3 (integration 1703/0, then 1710/0 with A3b; caster 4 of 4); play DB published after A2; children archived, worktrees and branches removed | - | - |
 
 ## Tokens
 - `ui/`: lane B (B1, then B2 if it needs it).
 - The test-database lock: by the file (`../.umf-locks/regents-rule-test`), one server suite at a time.
+
+## Done (2026-11-17)
+Steps 102-108 merged and pushed. Template items left: `COUNT_BY_SECTION` and the per-row checks in the foundation's
+integration script (PROGRESS 108); the player `vel` reading low (PROGRESS 107).

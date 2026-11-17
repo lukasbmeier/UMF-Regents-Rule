@@ -1,41 +1,41 @@
-# Handoff — Regent's Rule, 2026-11-17 (the follow-up run, in progress)
+# Handoff — Regent's Rule, 2026-11-17 (the follow-up run, finished)
 
 ## Where it stands
-- The FOLLOW-UP run (after the armor run 87-100 and step 101, the world builder): one master in the main checkout,
-  two children in worktrees. The ledger is `docs/regents_rule/FOLLOWUP_RUN.md`; the rules are `MASTER_RUN.md` §1, §3,
-  §4, §5.
-- `main`: step 101 (`54c7ecb4`), B1 step 102 (`cf259946`), A1 step 103 (`79cf6bc5`), B2 step 104 (`dec49de2`). The
-  whole unit suite on `main` after the last merge: **5258/0** (lints, engine errors, leaks ok). Pushed.
-- The play database `regents-rule` was last published by the armor run; 102-104 are client or test changes (no publish
-  needed).
-- M1 done: Fowl Play 2815/0, DiscGolf 2605/0, Fishing 3309/2 (its held-items grip suite: the rod up to 33 cm into the
-  body; Luke's grips). Each republished with `--codegen`, bindings committed and pushed.
+- The FOLLOW-UP run is done: steps 102-108 on `main`, pushed. The ledger is `docs/regents_rule/FOLLOWUP_RUN.md`.
+- Suites on `main` (2026-11-17): the whole unit suite after the last merge 5249/0; `cargo test` and wasm green; `content_test.sh` 18/0. M9 on `main`: combat
+  157/0, spells_seen 12/0, armor_seen 7/0; integration and caster red at first (1734/3, 19/1), fixed in 107: integration
+  1703/0 then 1710/0 (108), caster 4 of 4 green, on lane A's branch.
+- The play database `regents-rule` was published after A2 (step 105: the practice armor gone); later steps are client
+  or test changes. Schema unchanged.
+- Fishing, Fowl Play, DiscGolf republished with `--codegen`, bindings pushed: Fowl Play 2815/0, DiscGolf 2605/0,
+  Fishing 3309/2 (its held-items grip suite: the rod up to 33 cm into the body; the grips are Luke's).
+- Both children archived; their worktrees and branches removed.
 
 ## This session
-- Step 101 committed (Luke's yes). Lane A (`lane-a`, Opus 5.5 high), Lane B (`lane-b`, Opus 5.5 medium) started.
-- 102 (B1): the bar's words say a hit's slow, shove and every-foe sweep from the data (`RegentsAbilityBar.hit_words`).
-- 103 (A1): `combat_playtest.sh` presses the bow's Q, E (Pinning Shot) and R (Arrow Volley) through a real client and
-  reads the server's record; `LEG=bow_skills` runs it alone (~2 min).
-- 104 (B2): the Bolt's hand flash (`on_cast`), Meteor's fire ring (`ring`), another player's missile lighter
-  (`ShotLook.make_lighter`). New placeholders in `WAITING_ON_LUKE.md` §2.
+- 101 committed (Luke's yes). 102 (B1): the bar's words say a hit's slow, shove and sweep (`RegentsAbilityBar.hit_words`).
+- 103 (A1): a real client presses the bow's Q, E, R (`combat_playtest.sh`, `LEG=bow_skills`).
+- 104 (B2): the Bolt's hand flash (`on_cast`), Meteor's fire ring (`ring`), others' missiles lighter (`ShotLook.make_lighter`).
+- 105 (A2): the practice armor 40067/40068 deleted; integration and tests on the iron cuirass and steel armet.
+- 106 (B2b): the VFX lab's leftover Bolt hit flash (lab only). 107 (A3): the poise leg waits on its row
+  (`steadied_out`), the caster's walked-bolt and cast-stopped legs robust. 108 (A3b): integration's genre hook counts
+  the same checks every run (`put_away`, `give_back`, `COUNT_BY_SECTION=1`).
 
 ## Next, in order
-1. Lane A's A2 (the practice armor 40067/40068 removed, legs on real pieces, re-bake): merge by `MASTER_RUN.md` §5;
-   it re-bakes, so publish the play database after.
-2. Lane B's B2b (the one-frame violet circle at the Bolt's cast): merge by §5.
-3. M9 on `main`: unit, `cargo test`, wasm, integration ONCE, combat / caster / spells_seen / armor_seen playtests;
-   publish the play database; the final HANDOFF; archive both children, remove their worktrees and branches.
+1. Luke plays (GAME.md, "The follow-up run"): the bar's words, the staff's Bolt and Meteor, two instances for
+   another player's Bolt; restart the game for the new publish.
+2. TEMPLATE work (PROGRESS 108, 107): `COUNT_BY_SECTION` in the foundation's `tests/integration_test.sh` and its
+   per-row `revoke_authority` / `despawn_entity` checks; the player `vel` in the movement row reading ~4 % low.
+   In `../UMF Template`, then pull here.
+3. The bow's skills are worded as melee on the bar (PROGRESS 102): a line for a kit that `draws`.
+4. Whatever Luke answers in `WAITING_ON_LUKE.md` (armor's traits and numbers, the real ability content, the UI
+   rebuild, towns, the world builder's NPCs on the server).
 
 ## Waiting on Luke
-- `docs/regents_rule/WAITING_ON_LUKE.md` §1-§2; new this run: how a shove is worded (m/s or meters), Meteor's ring
-  colors (a player's fire ring like the imp's?), the Bolt's hand flash's size.
-- Not in this run: armor's traits, parts and numbers; the real ability content; the UI rebuild; towns S1-S8; the
-  server spawning the world builder's NPCs.
+- `docs/regents_rule/WAITING_ON_LUKE.md`; new this run: a shove worded in m/s or meters; Meteor's ring colors (a
+  player's fire ring like the imp's?); the Bolt's hand flash's size; foes' shots led a little short of a walker.
 
 ## Watch out
-- The bow's skills are worded as melee on the bar (PROGRESS 102): older than B1, not in this run.
-- Two timing-dependent failures in the whole combat run's other legs (PROGRESS 103): a blocked light read once in the
-  armor leg; the yard skeleton's swing 3 ms after its stagger.
-- The local SpacetimeDB server was down at the start of the run; lane A started it (detached). Fishing needed a Godot
+- The local SpacetimeDB server was down at the run's start; lane A started it (detached). Fishing needed a Godot
   `--import` before its unit suite.
+- Integration took 14-24 min this run (was ~80). Compare counts leg by leg with `COUNT_BY_SECTION=1` (PROGRESS 108).
 - `docs/HANDBOOK.md` is the template's: never edited here.
