@@ -624,24 +624,36 @@ func _bow_skills(dummy: int, dh: SpaceTimeHealthComponent, bow_row: int) -> void
 	_check(mine.has(point_blank.id) and theirs.has(point_blank.id) and q_dealt > 0.0 and is_equal_approx(oh.get_current(), b0) and refusals.is_empty(),
 		"Q: %s swung, the server took it and the first dummy lost %.2f; the second, beside its line, nothing (refused: %s)" % [point_blank.display_name, q_dealt, str(refusals)])
 
-	# --- R, ARROW VOLLEY: along the line through both dummies, from just past the second ---
-	# The yard's sparring skeleton stands 1.8 m off that line, 5 m on, and notices at 4 m (2026-11-17: from 1.5 m past
-	# the dummy it came, swung and staggered us before the volley): we stand where it is farthest, 0.8 to 1.5 m past.
-	var along: Vector3 = (DUMMY_2 - DUMMY_1).normalized()
+	# --- R, ARROW VOLLEY: along the line through both dummies, from just past one end ---
+	# The yard's sparring skeleton stands near that line (1.8 m off it at its point, 5 m past the second dummy) and
+	# notices at 4 m (2026-11-17: from 1.5 m past the second dummy it came, swung and staggered us before the volley; in
+	# a whole run it stands off its point). So: from either end, 0.8 to 3 m past it, the spot farthest from where it
+	# stands NOW whose sweep does not pass it.
 	var spar: Vector3 = SPARRING
 	for id: int in EntityRegistry.all_entity_ids():
 		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
 		if e != null and e.definition != null and e.definition.kind == SPARRING_KIND:
 			spar = e.global_position
-	var at: Vector3 = DUMMY_2 + along * 1.5
-	for i: int in range(15, 7, -1):
-		var p: Vector3 = DUMMY_2 + along * (float(i) / 10.0)
-		if Vector2(p.x - spar.x, p.z - spar.z).length() > Vector2(at.x - spar.x, at.z - spar.z).length():
-			at = p
+	var at: Vector3 = DUMMY_2 + (DUMMY_2 - DUMMY_1).normalized() * 0.8
+	var face: Vector3 = DUMMY_1
+	var best: float = -1.0
+	for end: Array in [[DUMMY_2, DUMMY_1], [DUMMY_1, DUMMY_2]]:
+		var out: Vector3 = ((end[0] as Vector3) - (end[1] as Vector3)).normalized()   # past this end, facing back along the line
+		for i: int in range(8, 31):
+			var p: Vector3 = (end[0] as Vector3) + out * (float(i) / 10.0)
+			var rel: Vector3 = spar - p
+			var ahead: float = -rel.x * out.x - rel.z * out.z
+			var off: float = absf(rel.x * out.z - rel.z * out.x)
+			var d: float = Vector2(rel.x, rel.z).length()
+			if (ahead < 0.0 or ahead > volley.reach_m or off > volley.radius_m + 1.0) and d > best:
+				best = d
+				at = p
+				face = end[1]
 	at += Vector3(0, 0.05, 0)
-	print("   (the volley from %.1f m past the second dummy, %.1f m from the sparring skeleton)" % [Vector2(at.x - DUMMY_2.x, at.z - DUMMY_2.z).length(), Vector2(at.x - spar.x, at.z - spar.z).length()])
+	print("   (the volley from %s toward %s, %.1f m from the sparring skeleton at %s)" % [str(at), str(face), best, str(spar)])
+	var along: Vector3 = (face - at).normalized() * -1.0   # `ahead` below is along -along: the way the volley flies
 	combat.set_target(-1)
-	await _stand_at(at, DUMMY_1)
+	await _stand_at(at, face)
 	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0) and is_equal_approx(oh.get_current(), 500.0), 8.0)
 	# Whatever else is near its line is said (only the dummies' health is read: Hits All may take more).
 	var near_line: Array[String] = []
