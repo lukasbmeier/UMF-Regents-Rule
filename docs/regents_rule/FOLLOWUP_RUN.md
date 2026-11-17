@@ -18,7 +18,7 @@ adds a `class_name`; never push red; `docs/HANDBOOK.md` is never edited here (ru
 ## Items
 | Item | What | Branch | State | Step | Merge commit |
 |---|---|---|---|---|---|
-| M1 | Fishing, Fowl Play, DiscGolf: `publish.sh --codegen`, `run_tests.sh` | (in place) | running | - | - |
+| M1 | Fishing, Fowl Play, DiscGolf: `publish.sh --codegen`, `run_tests.sh` | (in place) | done: Fowl Play 2815/0, DiscGolf 2605/0; Fishing 3309/2 (the held-items grip suite: the rod 33 cm into the body at worst, Luke's grips; needed an `--import` first for `RollComponent`); bindings committed in each, not pushed | - | Fishing `4eddebd`, Fowl Play `e75c2fb`, DiscGolf `832e3e0` |
 | A1 | The bow's Q, an option and the ult pressed by a real client (combat_playtest) | lane A | building | - | - |
 | A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | - | waiting on A1 | - | - |
 | A3 | On call for M9's integration findings | - | - | - | - |
