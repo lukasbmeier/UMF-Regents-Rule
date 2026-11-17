@@ -7,6 +7,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - A foe's swing shown landing at the server's time, your own hits' spark at once? Today: neither (`GAME.md`, "hit at once").
 - The archer's and the imp's numbers (F16: the sheet's as a start); the lead's share of a shot (`FOES_PREP.md` §6).
 - `regents.string_chase_ms`, `regents.roll_late_ms` 50: the agent's numbers, yours to change (hot rules).
+- A FINDING (PROGRESS 107): a foe's bolt or arrow is led a few percent short of a walking player (the server reads a walk of 3.5 m/s as ~3.37), so a walker straight across a slow bolt is hit near the back of the body. In play it still hits; if you want walkers hit squarely, the foundation's `vel` in a player's movement row is where to look (template work).
 - The wolf pack's place; others' aim held a moment after a spell lands ("maybe").
 - Others' effects: always the lighter version (half the particles, no light), or whole when few players are near? Today: always half (PROGRESS 88).
 - The combat triangle as foe design; single against multi combat zones (`COMBAT_OVERHAUL.md` §8).
