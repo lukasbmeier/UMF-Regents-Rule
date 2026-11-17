@@ -520,6 +520,8 @@ func _showcase(method: String, run: int) -> void:
 
 
 func _reset() -> void:
+	for look: Node in _stage.find_children("*", "ShotLook", true, false):
+		(look as ShotLook).cancel_end()   # a Bolt cut off mid-flight: no hit flash left in the next showcase
 	for c: Node in _stage.get_children():
 		c.queue_free()
 	_follow.clear()
