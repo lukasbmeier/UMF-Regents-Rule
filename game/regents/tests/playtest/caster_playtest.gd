@@ -124,6 +124,13 @@ func _run() -> void:
 			var walk_ms: int = (tell - lock_ms - 500) - (Time.get_ticks_msec() - cast.y)
 			await get_tree().create_timer(maxf(float(walk_ms) / 1000.0, 0.0)).timeout
 			Input.action_press(&"move_left")
+			if key == "bolt_walked":
+				# ... ACROSS AND TOWARD IT, 45 degrees (M9, 2026-11-17: straight across, 2 bolts in 8 missed: the lead reads
+				# the walk a few percent slow and the referee's stand-in moves in steps, so a 12 m/s bolt met a walker square
+				# on 0.2 m from the edge of their body; at 45 degrees an error along the walk counts 0.7 of it. Away from it,
+				# the walk ended past its 11 m and it came after us, too near for the next leg). Unled it still misses by
+				# meters: checked below, how far across its line the walk took us.
+				Input.action_press(&"move_forward")
 			if key == "bolt_turned":
 				# ... turned back once the aim has locked: the led bolt flies to where that walk was going.
 				var turn_ms: int = (tell - 100) - (Time.get_ticks_msec() - cast.y)
@@ -138,8 +145,31 @@ func _run() -> void:
 			await get_tree().create_timer(1.1).timeout
 			Input.action_release(&"move_left")
 		var until_ms: int = cast.y + tell + (ring_spell.delay_ms if is_ring else 1500) + 500
+		# WHAT HAPPENED, for a walked or turned bolt (M9, 2026-11-17: a walked bolt led 3.8 m missed once in three): our
+		# walk at the lock and after, where the imp stood, and the last place of each body that flew meanwhile.
+		var path: Array[Vector3] = []
+		var path_ms: Array[int] = []
+		var known: Array[int] = EntityRegistry.all_entity_ids()
+		var flown: Dictionary[int, Vector3] = {}
+		var imp_at_lock: Vector3 = imp.global_position
+		# The walked leg lets go a beat after the bolt arrives (its loose, then its flight): walked on to the end, it went
+		# 16 m from the imp, which came after us and stood 2 m from our spot at the next leg (M9 follow-up, 2026-11-17).
+		var stop_ms: int = tell + int(imp.global_position.distance_to(me.global_position) / SpellDef.by_ability(bolt.id).speed_mps * 1000.0) + 500
 		while Time.get_ticks_msec() < until_ms:
 			await get_tree().physics_frame
+			if key == "bolt_walked" and Time.get_ticks_msec() - cast.y >= stop_ms:
+				Input.action_release(&"move_left")
+				Input.action_release(&"move_forward")
+			if key == "bolt_walked" or key == "bolt_turned":
+				path.append(me.global_position)
+				path_ms.append(Time.get_ticks_msec() - cast.y)
+				if Time.get_ticks_msec() - cast.y <= tell - lock_ms:
+					imp_at_lock = imp.global_position
+				for id: int in EntityRegistry.all_entity_ids():
+					if not known.has(id) and id != me.entity_id:
+						var e: Node3D = EntityRegistry.get_entity(id) as Node3D
+						if e != null:
+							flown[id] = e.global_position
 			staggered = staggered or status.status() == STATUS_STAGGERED
 			if looks != null and not fire_ring_seen:
 				for id: int in looks._areas:
@@ -149,7 +179,30 @@ func _run() -> void:
 				blast_seen = not get_tree().root.find_children("*", "VfxFireBlast", true, false).is_empty()
 		Input.action_release(&"move_left")
 		Input.action_release(&"move_right")
+		Input.action_release(&"move_forward")
 		var took: float = hp - my_hp.get_current()
+		var across: float = -1.0
+		if not path.is_empty():
+			var at_lock: int = 0
+			while at_lock < path_ms.size() - 1 and path_ms[at_lock] < tell - lock_ms:
+				at_lock += 1
+			var at_loose: int = at_lock
+			while at_loose < path_ms.size() - 1 and path_ms[at_loose] < tell:
+				at_loose += 1
+			var flat := func(i: int, j: int) -> float: return Vector2(path[j].x - path[i].x, path[j].z - path[i].z).length()
+			# How far across the bolt's line (the imp to us, at the lock) the walk took us by the time it arrived (the loose,
+			# then its flight at its speed): where an unled bolt, aimed at where we stood, would have missed us.
+			var to_us: Vector3 = path[at_lock] - imp_at_lock
+			var arrive_ms: int = tell + int(Vector2(to_us.x, to_us.z).length() / SpellDef.by_ability(bolt.id).speed_mps * 1000.0)
+			var at_arrive: int = at_loose
+			while at_arrive < path_ms.size() - 1 and path_ms[at_arrive] < arrive_ms:
+				at_arrive += 1
+			var u: Vector2 = Vector2(to_us.x, to_us.z).normalized()
+			var moved: Vector2 = Vector2(path[at_arrive].x - path[at_lock].x, path[at_arrive].z - path[at_lock].z)
+			across = absf(u.x * moved.y - u.y * moved.x)
+			print("   (%s: took %.2f; walked %.2f m from %d ms (the cast at 0) to the lock, %.2f m lock to loose, %.2f m after it to the end; at the lock %s, at the end %s; the imp at the lock %s, %.1f m; bodies flown, last seen: %s)" % [
+				key, took, flat.call(0, at_lock), path_ms[0], flat.call(at_lock, at_loose), flat.call(at_loose, path.size() - 1),
+				str(path[at_lock]), str(path[path.size() - 1]), str(imp_at_lock), imp_at_lock.distance_to(path[at_lock]), str(flown)])
 		var areas: int = looks._areas.size() if looks != null else -1
 		var again: bool = done.has(key)
 		done[key] = "%.2f" % took
@@ -160,6 +213,7 @@ func _run() -> void:
 				_check(took < 0.01, "its bolt, stepped out of after the aim locked: nothing taken (%.2f)" % took)
 			"bolt_walked":
 				_check(is_equal_approx(snappedf(took, 0.01), snappedf(bolt_whole, 0.01)), "its bolt, walked into: a steady walk through the lock is led and hit, %.2f taken" % took)
+				_check(across > 1.5, "and that walk took us %.1f m across its line by the time it arrived: aimed where we stood, it would have missed" % across)
 			"bolt_turned":
 				_check(took < 0.01, "its bolt, the walk turned back after the aim locked: it flew to where the walk was going, nothing taken (%.2f)" % took)
 			"ring_stood":
@@ -198,14 +252,37 @@ func _run() -> void:
 	var imp_status: StatusComponent = imp.find_component(StatusComponent) as StatusComponent
 	var imp_hp: SpaceTimeHealthComponent = imp.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
 	var imp_staggered: bool = false
-	var swing_until: int = Time.get_ticks_msec() + 9000
-	while Time.get_ticks_msec() < swing_until and imp_hp.get_current() > 12.0:
+	# ITS CAST STOPPED (the shell reads the server's "was stopped before it flew"): its poise bar FILLED first by single
+	# CHOPS (each a string begun again: the axe's second step is its last, which breaks the bar at once; any hit on a full
+	# bar breaks it), then the next chop thrown as it begins a cast, landing inside the tell. (M9, 2026-11-17: swung
+	# blindly, the stagger fell between its casts 2 runs in 7.)
+	# Full: worn down to the server's floor (`rules::POISE_FLOOR`, 1 left) and not grown back yet (the imp's poise row).
+	var full_bar: Callable = func() -> bool:
+		return feed != null and feed.poise_most > 0.0 and feed.poise_left <= 1.0 + 1e-3 and feed.poise_worn(ClockSync.server_usec()) > 0.0
+	var seen_casts: int = casts.size()
+	var mid_cast: bool = false
+	var swing_until: int = Time.get_ticks_msec() + 25000
+	while Time.get_ticks_msec() < swing_until and imp_hp.get_current() > 12.0 and not mid_cast:
 		var to_it: Vector3 = imp.global_position - me.global_position
 		input.set_look(atan2(-to_it.x, -to_it.z), 0.0)
+		var full: bool = bool(full_bar.call())
+		var cast_now: bool = casts.size() > seen_casts
+		seen_casts = casts.size()
+		if full and not cast_now:
+			await get_tree().physics_frame   # full: hold the hit for its next cast
+			imp_staggered = imp_staggered or (imp_status != null and imp_status.status() == STATUS_STAGGERED)
+			continue
+		if not cast_now and combat.next_light_step(Time.get_ticks_msec()) != 0:
+			await get_tree().physics_frame   # the string's window still open: wait, so the next tap is a chop again
+			continue
+		var began: int = casts[casts.size() - 1].y if cast_now else -1
 		combat.light()
 		for i: int in 24:
 			await get_tree().physics_frame
-			imp_staggered = imp_staggered or (imp_status != null and imp_status.status() == STATUS_STAGGERED)
+			var st_now: bool = imp_status != null and imp_status.status() == STATUS_STAGGERED
+			imp_staggered = imp_staggered or st_now
+			mid_cast = mid_cast or (st_now and began >= 0 and Time.get_ticks_msec() - began < bolt.wind_up_ms)
+	print("   (up close: a stagger inside a cast's tell, as seen here: %s; its poise %.1f of %.0f)" % [str(mid_cast), feed.poise_left if feed != null else -1.0, feed.poise_most if feed != null else -1.0])
 	_check(imp_hp.get_current() < imp_hp.get_max() and imp_staggered, "swung at up close: it is hurt (%.0f of %.0f) and staggers (its poise is low)" % [imp_hp.get_current(), imp_hp.get_max()])
 	_check(imp.global_position.distance_to(at_it) < 2.5, "and it never stepped back from us (moved %.1f m)" % imp.global_position.distance_to(at_it))
 	_finish()

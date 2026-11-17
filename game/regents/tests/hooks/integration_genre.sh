@@ -658,6 +658,16 @@ poise_ref() { standin_up "\"$1\"" "a fresh stand-in referee for the string"; }
 # poise_string LABEL ABILITY:PREDICTED[:MS] ...: a string at the dummy in one run, its poise read after each hit
 # (READ<predicted>): one call after another ran past the string's window on a busy machine (2026-11-04).
 poise_string() { local label="$1"; shift; HITS_READ="SELECT left FROM poise_state WHERE entity_id = $DUMMY" hits "$label" "$DUMMY" "$@"; }
+# steadied_out ENTITY: wait until ENTITY's Steadied (its poise_state row's `steady_until`, microseconds by `timed`) has
+# passed, a beat over; checked: it was Steadied at most 25 s more (a row that says longer is a failure, not a wait).
+steadied_out() {
+  local until left
+  timed "0 sql SU SELECT steady_until FROM poise_state WHERE entity_id = $1"
+  until="$(timed_val SU)"
+  left="$(python -c "import sys, time; u = sys.argv[1]; print(round(max(0.0, (int(u) - time.time() * 1e6) / 1e6) + 0.3, 2) if u.isdigit() else -1)" "$until")"
+  check "$(python -c "print('true' if 0 <= $left <= 25.3 else 'false')")" "(its Steadied runs out in $left s, by its row: $until)"
+  python -c "import time; time.sleep(max(0.0, min($left, 25.3)))"
+}
 assert_ok 'set_rule "regents.dummy_poise" 60.0 ""' "(test) a dummy's poise: 60"
 assert_ok 'set_rule "regents.poise_regen_ms" 30000.0 ""' "(test) whole again only after 30 s unhit: the slow CLI's strings add up"
 assert_ok 'set_rule "regents.steadied_ms" 20000.0 ""' "(test) Steadied 20 s: the slow CLI's next chop lands inside it"
@@ -690,7 +700,9 @@ assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
 # THE BAR FULL, ANY HIT BREAKS IT (Luke, 2026-11-12: "if the stagger bar is full (orange) the next hit should stagger
 # not just the next finisher hit"): on the first dummy, its Steadied run out, a poise of 11: one chop (10) fills the
 # bar and breaks nothing; the next chop, a LIGHT, breaks it and staggers.
-sleep 14
+# ITS STEADIED RUN OUT, READ OFF ITS ROW (M9, 2026-11-17: a fixed `sleep 14` counted on a slow CLI to outlast the 20 s;
+# a fast run chopped a still-Steadied dummy, and all three checks below failed): the wait is until its `steady_until`.
+steadied_out "$DUMMY"
 assert_ok 'set_rule "regents.dummy_poise" 11.0 ""' "(test) a dummy's poise: 11"
 assert_ok 'set_rule "regents.poise_regen_ms" 100.0 ""' "(test) whole again at once: its poise is the new 11 as the chop lands"
 poise_ref regentspoisereferee3

@@ -28,7 +28,8 @@ spacetime call "$DB" set_dev_tools true >/dev/null 2>&1 || { echo "set_dev_tools
 sleep 2
 
 ref_log="$(mktemp)"; fight_log="$(mktemp)"; ref_pid=""; fight_pid=""
-cleanup() { [ -n "$fight_pid" ] && kill "$fight_pid" 2>/dev/null; [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$ref_log" "$fight_log"; }
+# KEEP_LOGS=<dir>: the fighter's and the referee's whole logs are copied there as the run ends (to read a failure).
+cleanup() { [ -n "${KEEP_LOGS:-}" ] && mkdir -p "$KEEP_LOGS" && cp "$fight_log" "$KEEP_LOGS/fighter.log" 2>/dev/null && cp "$ref_log" "$KEEP_LOGS/referee.log" 2>/dev/null; [ -n "$fight_pid" ] && kill "$fight_pid" 2>/dev/null; [ -n "$ref_pid" ] && kill "$ref_pid" 2>/dev/null; wait 2>/dev/null; rm -f "$ref_log" "$fight_log"; }
 trap cleanup EXIT
 
 echo "== the world's referee =="
