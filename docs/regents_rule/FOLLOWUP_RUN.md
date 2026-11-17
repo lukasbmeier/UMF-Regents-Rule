@@ -21,11 +21,11 @@ adds a `class_name`; never push red; `docs/HANDBOOK.md` is never edited here (ru
 | M1 | Fishing, Fowl Play, DiscGolf: `publish.sh --codegen`, `run_tests.sh` | (in place) | done: Fowl Play 2815/0, DiscGolf 2605/0; Fishing 3309/2 (the held-items grip suite: the rod 33 cm into the body at worst, Luke's grips; needed an `--import` first for `RollComponent`); bindings committed and pushed in each (Luke's yes) | - | Fishing `4eddebd`, Fowl Play `e75c2fb`, DiscGolf `832e3e0` |
 | A1 | The bow's Q, an option and the ult pressed by a real client (combat_playtest) | `claude/followup-a1-bow-client-0980ca` | merged, unit 5228/0 on main, pushed | 103 | `79cf6bc5` |
 | A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | `claude/followup-a2-practice-armor` | merged; on main unit 5247/0 (11 fewer than 5258: per-item checks of the two deleted items, not traced one by one), content 18/0, cargo test, wasm clean; pushed; play DB published | 105 | `5e01ac41` |
-| A3 | On call for M9's integration findings | - | - | - | - |
+| A3 | M9's findings: integration's poise leg ("the bar full", 3 checks: Steadied not run out on a fast run, a `sleep 14` leaning on the slow CLI); caster_playtest's walked-into bolt (0.00 taken, 1 check) | lane A | building | - | - |
 | B1 | The bar's and tooltips' words: slow, shove, every foe in the sweep | `claude/followup-b1-ability-words-b17159` | merged, unit 5228/0 on main, pushed | 102 | `cf259946` |
 | B2 | Bolt's cast flash; Meteor's ring in fire; others' missile lighter | `claude/followup-b2-effects` | merged, unit 5258/0 on main, pushed | 104 | `dec49de2` |
 | B2b | B2's one-frame violet circle at the Bolt's cast: found and fixed, or shown older than B2 | `claude/followup-b2b-bolt-circle` | merged, unit 5249/0 on main, pushed (a lab-only leftover hit flash) | 106 | `de5f7099` |
-| M9 | Unit, cargo, wasm, integration once, combat / caster / spells_seen / armor_seen; publish; HANDOFF; cleanup | (main) | running: unit 5249/0, cargo test and wasm green (after A2; no server change since); integration and the playtests under the lock | - | - |
+| M9 | Unit, cargo, wasm, integration once, combat / caster / spells_seen / armor_seen; publish; HANDOFF; cleanup | (main) | unit 5249/0, cargo test and wasm green; integration 1734/3 (14 min; poise leg, A3), combat 157/0, caster 19/1 (A3), spells_seen 12/0, armor_seen 7/0; play DB published after A2 | - | - |
 
 ## Tokens
 - `ui/`: lane B (B1, then B2 if it needs it).
