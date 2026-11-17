@@ -5874,3 +5874,34 @@ check cancels its end too.
 **Tested**: `regents_vfx` 248/0. NEGATIVE: the lab's `cancel_end()` call out, "a Bolt cut off by the next showcase
 leaves no hit flash in the world" fails. Shots looked at: the Bolt with the hand flash off (the circle still there),
 and after the fix (no circle; the hit on the foe at the end unchanged).
+
+## Step 107: M9'S RED LEGS SET THEIR OWN STATE (2026-11-17, the follow-up run's A3)
+
+M9's first pass on `main` (everything merged): integration 1734/3, caster 19/1; combat 157/0, spells_seen 12/0,
+armor_seen 7/0, unit 5249/0, cargo test and wasm green.
+
+**Built** (tests only):
+- `game/regents/tests/hooks/integration_genre.sh`, the poise leg's "THE BAR FULL, ANY HIT BREAKS IT": the fixed
+  `sleep 14` (it counted on a slow CLI to outlast the first dummy's 20 s Steadied; M9's fast run, 14 min, chopped a
+  still-Steadied dummy and all three checks failed) is now `steadied_out "$DUMMY"`: it reads the dummy's own
+  `poise_state.steady_until` and waits until it has passed, a beat over, checked to be no more than 25 s off. The other
+  "slow CLI" lines guard against a SLOW run and are fine on a fast one; the `sleep 14` was the only wait that counted
+  on slowness.
+- `game/regents/tests/playtest/caster_playtest.gd`:
+  - THE WALKED BOLT: straight across the imp's line a 12 m/s bolt met the walker with ~0.2 m to spare, and the
+    server's lead reads the walk at ~3.37 m/s against a true 3.5, so 2 walked bolts in 8 passed just behind. Now the
+    walk is across and TOWARD the imp at 45 degrees; a new check says how far across the bolt's line the walk took us
+    by its arrival (2.1 m, must be over 1.5): aimed where we stood, it would have missed.
+  - THE CAST STOPPED (2 runs in 7 red): the close-up swings were blind and the axe's second step breaks the poise at
+    once. Now single chops wear its poise to 1 (read off its `poise_state` row), then the next chop is thrown as it
+    begins a cast.
+- `game/regents/tests/caster_playtest.sh`: `KEEP_LOGS=<dir>` keeps the fighter's and referee's logs.
+
+**Tested**: `caster_playtest.sh` 4 of 4 green (21/0 each); before, 7 runs of the old code had the walked leg red once
+(and M9's) and the cast-stop red twice. NEGATIVE: `regents.foe_shot_lead_pct` 0: the walked leg fails (0.00 taken)
+while its across check passes, the turned leg fails, the server "led 0 bolts". The poise leg's negative is M9's own
+run. `integration_test.sh` once: 1703/0. Whole unit suite on `main` after the merge: the ledger.
+
+**Left for later**: integration's count varies run to run (the armor run 1766+4 then 1761; this run 1737, then 1703,
+A3 adding one check): lane A is finding which checks are counted a varying number of times (A3b). The foundation's
+player `vel` in the movement row reads a few percent low (above): a template item.
