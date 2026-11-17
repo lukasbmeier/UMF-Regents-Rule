@@ -712,7 +712,7 @@ func _run_doll() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var cuirass: ItemDef = load("res://game/regents/content/item/iron_cuirass.tres") as ItemDef
-	var helm: ItemDef = load("res://game/regents/content/item/practice_helm.tres") as ItemDef
+	var helm: ItemDef = load("res://game/regents/content/item/steel_armet.tres") as ItemDef
 	var inv := SpaceTimeInventoryComponent.new()
 	inv._stacks[1] = SpaceTimeInventoryComponent.Stack.new(1, cuirass.id, 1, 0, JSON.stringify({"q": 500}))
 	inv._stacks[2] = SpaceTimeInventoryComponent.Stack.new(2, helm.id, 1, 0, JSON.stringify({"q": 1000}))
@@ -798,16 +798,16 @@ func _run_doll() -> void:
 	inv.free()
 
 
-## THE TWIN, on the case the server's own tests pin (PROGRESS 92, `combat_playtest.sh`'s armor leg): the practice
-## cuirass at quality 0 and the practice helm at 1000, K 67: a skeleton's slash of 7 lands at 7 x 67 / 99 = 4.74.
+## THE TWIN, on the case the integration suite pins (its ARMOR leg; follow-up A2: the practice pieces gone): an iron
+## cuirass at quality 0 and a steel armet at 1000, K 67: a skeleton's slash of 4 lands at 4 x 67 / 84.2 = 3.18.
 func _run_defense_twin() -> void:
-	var cuirass: ItemDef = load("res://game/regents/content/item/practice_cuirass.tres") as ItemDef
-	var helm: ItemDef = load("res://game/regents/content/item/practice_helm.tres") as ItemDef
+	var cuirass: ItemDef = load("res://game/regents/content/item/iron_cuirass.tres") as ItemDef
+	var helm: ItemDef = load("res://game/regents/content/item/steel_armet.tres") as ItemDef
 	var total: float = RegentsDefense.piece(cuirass.defense, 0) + RegentsDefense.piece(helm.defense, 1000)
-	_check(is_equal_approx(total, 32.0), "the practice pieces: Defense 20 + 10 x 1.2 = 32 (%.2f)" % total)
-	_check(is_equal_approx(7.0 * RegentsDefense.keeps(total, 67.0), 7.0 * 67.0 / 99.0) and absf(7.0 * RegentsDefense.keeps(total, 67.0) - 4.74) < 0.005,
-		"a slash of 7 through them at K 67: 4.74, as the server deals it")
-	_check(RegentsDefense.keeps(0.0, 67.0) == 1.0 and RegentsDefense.keeps(32.0, 0.0) == 1.0, "no Defense, or K not above 0: all of it")
+	_check(is_equal_approx(total, 17.2), "an iron cuirass and a steel armet: Defense 10 + 6 x 1.2 = 17.2 (%.2f)" % total)
+	_check(is_equal_approx(4.0 * RegentsDefense.keeps(total, 67.0), 4.0 * 67.0 / 84.2) and absf(4.0 * RegentsDefense.keeps(total, 67.0) - 3.183) < 0.005,
+		"a slash of 4 through them at K 67: 3.18, as the server deals it")
+	_check(RegentsDefense.keeps(0.0, 67.0) == 1.0 and RegentsDefense.keeps(17.2, 0.0) == 1.0, "no Defense, or K not above 0: all of it")
 	_check(is_equal_approx(RegentsDefense.piece(10, 5000), 12.0), "quality past 1000 counts as 1000")
 	_check(is_equal_approx(HotRules.number(&"regents.defense_k"), RegentsDefense.k_now()), "K is the live hot rule")
 	for f: String in ["copper_cuirass", "iron_cuirass", "steel_cuirass", "soft_leather_jerkin", "linen_robe"]:

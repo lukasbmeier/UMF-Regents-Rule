@@ -40,8 +40,8 @@ func entry_for(pattern: StringName, material: StringName) -> ArmorLookEntry:
 
 
 ## WHAT A BODY WEARS for the items `items` (the `worn` row's item ids, any order; 0 for nothing) on `body`:
-## [pieces: {slot: PackedScene or null}, palettes: {outfit: DyePalette}]. An item that is not armor, or has no
-## material or pattern (the practice pieces), puts on nothing. A helm that hides the hair takes it off
+## [pieces: {slot: PackedScene or null}, palettes: {outfit: DyePalette}]. An item that is not armor, has no material or
+## pattern, or is no longer in the content (a database may hold one), puts on nothing. A helm that hides the hair takes it off
 ## (`Wardrobe.HIDES_HAIR`: a closed helm the hair and beard, a hood the hair).
 func dress_for(items: Array[int], body: StringName) -> Array:
 	var pieces: Dictionary[StringName, PackedScene] = {}

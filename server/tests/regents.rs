@@ -1722,10 +1722,14 @@ fn armor_is_content_in_its_slots() {
     let worn: Vec<_> = rules::ITEMS.iter().filter(|i| !i.armor_slot.is_empty()).collect();
     assert!(worn.iter().all(|i| rules::ARMOR_SLOTS.contains(&i.armor_slot) && i.weapon_kit.is_empty() && i.max_stack == 1),
         "every piece is worn in a slot, is no weapon and does not stack");
-    let cuirass = rules::ITEMS.iter().find(|i| i.name == "Practice cuirass (placeholder)").expect("the test cuirass");
-    assert_eq!((cuirass.armor_slot, cuirass.defense), ("chest", 20));
-    let helm = rules::ITEMS.iter().find(|i| i.name == "Practice helm (placeholder)").expect("the test helm");
-    assert_eq!((helm.armor_slot, helm.defense), ("head", 10));
+    let cuirass = rules::ITEMS.iter().find(|i| i.name == "Iron cuirass").expect("an iron cuirass");
+    assert_eq!((cuirass.armor_slot, cuirass.defense), ("chest", 10));
+    let helm = rules::ITEMS.iter().find(|i| i.name == "Steel armet").expect("a steel armet");
+    assert_eq!((helm.armor_slot, helm.defense), ("head", 6));
+    // EVERY PIECE IS THE MATERIAL TABLE'S (follow-up A2, 2026-11-17: the practice cuirass and helm, 40067 and 40068, are
+    // gone): the 17 cells `armor_pieces_are_share_times_tier_for_every_family` names, and every chest gives its family's F.
+    assert_eq!(worn.len(), 17, "only the table's pieces: {:?}", worn.iter().map(|i| i.name).collect::<Vec<_>>());
+    assert!(worn.iter().filter(|i| i.armor_slot == "chest").all(|i| i.worn_ability != 0), "every chest gives an F ability");
     assert!(rules::ITEMS.iter().filter(|i| i.armor_slot.is_empty()).all(|i| i.defense == 0), "nothing else has a Defense");
     assert!(rules::FOES.iter().all(|f| f.defense == 0), "today's foes have no Defense (Luke: 0 on today's skeletons)");
 }

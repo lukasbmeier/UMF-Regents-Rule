@@ -883,11 +883,12 @@ timed_ok 3 "the referee: it hit you (the rule off)"
 check "$(logged "regents: $SKEL's 40001 on $MYENT waits $HOLD_WAIT ms past its landing for a parry")" "NEGATIVE: with regents.hit_at_once off the same hit waits $HOLD_WAIT ms"
 assert_ok 'reset_rule "regents.hit_at_once"' "(test) hits dealt at once again"
 # --- ARMOR, THE CORE (S2, ARMOR_PREP.md A1 and A6, settled): pieces worn from the bag out of a fight, their Defense ADDED
-# UP, a hit on the wearer damage x K / (K + Defense) (K: regents.defense_k, 67). The test pieces are placeholders.
-assert_ok "admin_give_item $MYENT 40067 1 0" "(test) a practice cuirass (Defense 20)"
-assert_ok "admin_give_item $MYENT 40068 1 1000" "(test) a practice helm of quality 1000 (Defense 10, a fifth more: 12)"
-CUIR="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40067" 1)"
-HELM="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40068" 1)"
+# UP, a hit on the wearer damage x K / (K + Defense) (K: regents.defense_k, 67). The pieces are the material table's (the
+# practice pieces, 40067 and 40068, are gone: follow-up A2).
+assert_ok "admin_give_item $MYENT 40075 1 0" "(test) an iron cuirass (Defense 10)"
+assert_ok "admin_give_item $MYENT 40078 1 1000" "(test) a steel armet of quality 1000 (Defense 6, a fifth more: 7.2)"
+CUIR="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40075" 1)"
+HELM="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40078" 1)"
 assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) the fight lasts 2 minutes after a hurt (the CLI is slow)"
 assert_rejected "wear $CUIR" "not in a fight" "just hit by the skeleton: armor is put on out of a fight only (regents.regen_delay_s)"
 assert_rejected 'take_off "chest"' "nothing is worn" "nothing worn yet: nothing to take off"
@@ -895,13 +896,13 @@ assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at 
 assert_rejected "wear $AXE_ROW" "is not worn" "a weapon is not worn"
 assert_rejected "wear 999999" "not in your bag" "nor what is not in the bag"
 assert_ok "wear $CUIR" "the cuirass on"
-assert_ok "wear $HELM" "the helm on"
-assert_eq "$(sql_first "SELECT chest_item FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_item FROM worn WHERE entity_id = $MYENT" 1)" "4006740068" \
-  "the worn row: the cuirass on the chest, the helm on the head (public: everyone draws it)"
+assert_ok "wear $HELM" "the armet on"
+assert_eq "$(sql_first "SELECT chest_item FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_item FROM worn WHERE entity_id = $MYENT" 1)" "4007540078" \
+  "the worn row: the cuirass on the chest, the armet on the head (public: everyone draws it)"
 assert_eq "$(sql_first "SELECT chunk FROM worn WHERE entity_id = $MYENT" 1)" "$(sql_first "SELECT chunk FROM wielded WHERE entity_id = $MYENT" 1)" \
   "in the wearer's cell, as the weapon is (the ring)"
-assert_ok "admin_give_item $MYENT 40067 1 0" "(test) a second cuirass"
-CUIR2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40067 AND id <> $CUIR" 1)"
+assert_ok "admin_give_item $MYENT 40075 1 0" "(test) a second cuirass"
+CUIR2="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40075 AND id <> $CUIR" 1)"
 assert_ok "wear $CUIR2" "a second cuirass on the chest: SWAPPED for the first (it stays in the bag)"
 assert_eq "$(sql_first "SELECT chest_row FROM worn WHERE entity_id = $MYENT" 1)" "$CUIR2" "the chest holds the second now"
 assert_eq "$(row_count "SELECT * FROM inventory_item WHERE id = $CUIR")" "1" "and the first is still in the bag"
@@ -920,11 +921,11 @@ timed_ok 4 "the referee: the skeleton's slash hit you in your armor"
 # sheet's 14 is another foe's cut, M9 2026-11-16).
 SLASH_BARE="$(python -c "print(round($PHP0 - $PHP1, 3))")"
 num_is "$SLASH_BARE" "4.0" "(the slash unarmored: 8 at the skeleton's 50 %)"
-num_is "$(python -c "print(round($(timed_val PHA0) - $(timed_val PHA1), 3))")" "$(python -c "print(round($SLASH_BARE * 67 / (67 + 20 + 12), 3))")" \
-  "in armor the same slash x 67 / (67 + 20 + 12): the cuirass and the helm ADDED UP, never a flat cut"
+num_is "$(python -c "print(round($(timed_val PHA0) - $(timed_val PHA1), 3))")" "$(python -c "print(round($SLASH_BARE * 67 / (67 + 10 + 7.2), 3))")" \
+  "in armor the same slash x 67 / (67 + 10 + 7.2): the cuirass and the armet ADDED UP, never a flat cut"
 assert_ok 'set_rule "regents.regen_delay_s" 0.0 ""' "(test) out of the fight at once"
 assert_ok 'take_off "chest"' "the cuirass off"
-assert_ok 'take_off "head"' "the helm off"
+assert_ok 'take_off "head"' "the armet off"
 assert_eq "$(sql_first "SELECT chest_row FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_row FROM worn WHERE entity_id = $MYENT" 1)" "00" "nothing worn"
 assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
 assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"

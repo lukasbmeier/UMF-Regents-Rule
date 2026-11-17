@@ -15,7 +15,7 @@ func _ready() -> void:
 	layer.add_child(bg)
 	var inv := SpaceTimeInventoryComponent.new()
 	add_child(inv)
-	var ids: Array[Array] = [["iron_cuirass", 500], ["practice_helm", 800], ["steel_cuirass", 300], ["linen_trousers", -1], ["copper_axe", -1]]
+	var ids: Array[Array] = [["iron_cuirass", 500], ["steel_armet", 800], ["steel_cuirass", 300], ["linen_trousers", -1], ["copper_axe", -1]]
 	for i: int in ids.size():
 		var it: ItemDef = load("res://game/regents/content/item/%s.tres" % String(ids[i][0])) as ItemDef
 		var data: String = JSON.stringify({"q": int(ids[i][1])}) if int(ids[i][1]) >= 0 else ""
