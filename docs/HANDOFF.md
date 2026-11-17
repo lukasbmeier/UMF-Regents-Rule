@@ -1,63 +1,60 @@
-# Handoff — Regent's Rule, 2026-11-16 (THE ARMOR RUN IS DONE: steps 87-100, templates 1.8.3 and 1.8.4)
+# Handoff — Regent's Rule, 2026-11-17 (Step 101: World Builder & Lore Studio built + UX polish; Armor Run 87-100 on main)
 
 ## Where it stands
-- Everything is committed on `main` and PUSHED. The armor run (`docs/regents_rule/MASTER_RUN.md`, its §7 ledger) is
-  finished: every item merged, the end sweep (M9) run.
-- Suites on `main`, 2026-11-16, with everything merged: unit whole **5154/0** (lints, engine-error checks ok),
-  `cargo test` green, wasm clean; `combat_playtest.sh` 144/0, `spells_seen_playtest.sh` 8/0 + 12/0,
-  `caster_playtest.sh` 20/0, `armor_seen_playtest.sh` 11/0 + 7/0; INTEGRATION **1761/0** on its second run (the
-  first: 1766 passed, 4 failed, all four stale or order-dependent TESTS in the genre hook; PROGRESS "end sweep").
-  The integration pass was run on the fix branch (main + only the hook's fix), not again on `main` after the merge.
-- The play database: PUBLISHED 2026-11-16 with `--codegen` after step 100 (64 tables, 111 reducers). Luke restarts
-  the editor's game before he plays. Templates 1.8.3 (#313-#315) and 1.8.4 (#316) are shipped to all four games.
-- Current section in `docs/regents_rule/PROGRESS.md`: steps 87-100 and "The armor run's end sweep".
-- What waits on Luke: `docs/regents_rule/WAITING_ON_LUKE.md` (§1 decisions, §2 every placeholder with its file, §3
-  what to play).
+- Step 101 (**The World Builder & Lore Studio**, `docs/regents_rule/WORLD_BUILDER_PREP.md`, Luke's WB1-WB12 + UX polish)
+  is built and verified on `main` (uncommitted, ready for Luke to try or commit).
+- Suites on `main`, 2026-11-17: `tests/run_tests.sh` **5215/0** (including new `regents_builder` **61/0**, `workbench`,
+  `content`; lints, engine-error and leak checks ok), `tests/content_test.sh` **18/0**, `cargo test` green, wasm clean.
+- Earlier on `main` (`76f4a3bd`): the armor run (steps 87-100, templates 1.8.3 and 1.8.4) finished and was pushed
+  and published to `regents-rule` (64 tables, 111 reducers).
+- Current section in `docs/regents_rule/PROGRESS.md`: Step 101 ("THE WORLD BUILDER AND LORE STUDIO") after steps 87-100.
 
-## This session (the master; each step is in PROGRESS with its tests)
-- 87 NPCs bind at once (`bind_playtest.sh`). 88 another player's effects are the lighter version; rings one
-  MultiMesh; the camera shakes from `shook`. 89 a sweep that hits all (Cleave), template #314. 90 the town world in
-  4 s (`TownKit.piece`), the village's props (`VillageDressing`). 91 placeholder pools per weapon kind, the staff's
-  ult Meteor, the Bolt at 12.
-- 92 THE ARMOR CORE: the `worn` table, `wear` / `take_off` out of a fight, Defense in every hit (`rules::through`,
-  `regents.defense_k` 67). 94 17 ARMOR PIECES from the material table (metal, leather, linen; real recipes;
-  placeholder shares, tiers, amounts; trait pools EMPTY). 97 F IS THE WORN CHEST'S: the robe Blink (off the staff),
-  jerkin Snare and cuirass Shove (placeholders). 100 EACH SWORD HANDLE ITS OWN SET (`KitRole.skills`).
-- 93, 95 players are Peasant-only `RegentsFigure`s in their own colors; the picker's five color rows (template
-  #316). 96 worn armor is SEEN (`ArmorLookComponent`, `wardrobe/armor_looks.tres`, `armor_seen_playtest.sh`).
-  98 the dye measured cheap at 300 (`dye_bench.tscn`), the material cache bounded. 99 THE DOLL in the bag: wear and
-  take off by a click, each piece's words (`RegentsDefense`, the server formula's twin).
-- Template: `ModularCharacter.wear` + `assembled` (#313), `resolve_action_all` (#314), NPCs bind without a session
-  row (#315), a color option in `CharacterPicker` (#316).
+## This session (Step 101; full notes in `PROGRESS.md`)
+- **Locked in WB1-WB12** (`docs/regents_rule/WORLD_BUILDER_PREP.md`, `GAME.md`, `.claude/rules/regents-genre.md`):
+  Luke accepted all proposed decisions ("Accept all proposed and start building").
+- **World Builder UX & Bug Fixes (`game/regents/builder/world_builder.gd`, `game/regents/content/npc_def.gd`)**:
+  - **UI Focus / Scroll / Search Isolation**: `_palette_list` uses `FOCUS_NONE` and `_search_edit` auto-blurs when the
+    mouse moves off the left panel or selects an item, so pressing `R` in 3D never jumps/filters `R` props in the list;
+    menus only scroll/search when hovered (`_is_mouse_over_ui`).
+  - **Flexible Grid Snapping (`XZ` + `Y`, `Shift`/`Alt` Free Placement)**: custom `m XZ` and `m Y` `SpinBox`es alongside
+    grid presets; holding `Shift` or `Alt` temporarily disables snapping; Y snapping is hill-relative so upper-floor
+    pieces never sink into sloped terrain.
+  - **Centered Prefabs & `Pick Origin in 3D`**: `start_new_prefab` waits for the 1st placed piece (or `Pick Origin in 3D`)
+    instead of trapping origin at the button edge; `_instantiate_building_centered` recenters children BEFORE
+    `TownKit.gather_collisions` so visuals AND `StaticBody3D` colliders both stamp centered at the cursor.
+  - **Conditional Right Studio & Guided NPC Creator (`+ New NPC` -> `1. Appearance & Wardrobe` -> `2. Lore & Dialogue`)**:
+    Right panel hides completely in Terrain/Nature/Skilling/Foes, shows Prefab Studio in Towns/Pieces, and NPC Studio in
+    NPCs; new NPCs register as live drafts (`NpcDef.register_draft`), include a `DyePalette` selector + real weapon paths,
+    and update the 3D ghost/point preview immediately before saving `.tres`.
+- **`NpcDef` (`game/regents/content/npc_def.gd`) + 4 starter NPCs (`game/regents/content/npc/*.tres`)**:
+  `40001` Drillmaster Vane (`Knight` with `knight_tabard = true`), `40002` Chronicler Venn (`Noble`), `40003` Blacksmith
+  Hal (`Peasant` + `hammer.tscn`), `40004` Elder Maren (`Wizard` + `yew_staff.tscn`), baked to
+  `shared/content/regents/npc.json`. Validates outfits, unique `key`, and `CinemaDialogue` section/jump targets.
+- **Terrain-aware `RegentsGroundClutter` (`game/regents/levels/ground_clutter.gd`)**: optional `terrain` / `height_func`,
+  `max_slope`, `water_y`, and `erased_spots` (`erase_in_circle` / `clear_erased`); 100% backwards-compatible on flat levels.
+- **3D `LevelPoint` Visualizers & Tactical Rings (`game/regents/builder/level_point_preview.gd`, `RegentsPointPreview`)**:
+  `@tool` child attached with `Node.INTERNAL_MODE_BACK` (zero `.tscn` bloat on save) showing the real 3D model and rings
+  (`footprint`, `work_reach`, `wander`, `notice_cone`, `hear`, `leash`, `pack` + wolf packmate link lines).
+- **World Builder & Lore Studio (`game/regents/builder/world_builder.tscn` + `world_builder.gd`, `terrain_brush.gd`, `kit_catalog.gd`)**:
+  - Start From Scratch or Procedural Base with non-destructive layers (`hand_settlements`, `hand_props`, `hand_gameplay`,
+    `proc_scatter`) and `exclusion_zones` so `rescatter_procedural()` never touches hand-built towns.
+  - `RegentsTerrainBrush` (9 sculpt/paint/ramp/auto-slope modes, `carve_ramp`, `flatten_footprint`, `flatten_road_spline`,
+    snapshot undo/redo).
+  - 3 building tiers (parametric `KitHouse`, preset/demo houses, 2 m Grid-Snap Piece Mode + `save_custom_house_preset`),
+    `CastleWall` & Keep builder, `TownFurnish` stampers, and 3 prop modes (`SCENE_NODE`, `PROP_GROUP`, `TERRAIN_INSTANCER`).
+  - Dual-mode camera (`Tab`: Free-Fly vs Drop-In `ShowcaseActor` Walk Mode with `E` to talk to NPCs) + built-in Dialogue &
+    Lore Studio (`CinemaDialogue` + `CinemaBalloon` in `REGENTS_CARD`, `SPEECH_BUBBLE`, `OSRS_BOX`, `PLAIN_SUBTITLE`).
+  - One-click `save_level` and `bake_level` (`LevelBaker.bake`).
 
 ## Next, in order
-1. Luke plays it (`WAITING_ON_LUKE.md` §3, the doll first) and answers §1; his rewrites replace §2's placeholders.
-2. Armor's real parts, traits and numbers (`ARMOR_PREP.md` §0), once he has answered; then the UI rebuild's four
-   to-dos (`GAME.md`), each his to shape first.
-3. Small, left by the run: remove S2's practice pieces (40067, 40068) once nothing uses them; a missile's riding
-   look lighter for others; per-role sets for the axe and bow when a handle gives them a role; the chest's level;
-   a foundation per-bot admin hook if `load_300.sh` should have worn rows; `kit_def.gd`'s comment on F is stale;
-   `GAME.md` does not yet record this run's built state (its decisions are unchanged: nothing of Luke's was decided).
-4. From before: the role abilities' real content (`ABILITIES_PREP.md` §9, his rewrite); towns S1-S8.
-
-## Waiting on Luke
-- `WAITING_ON_LUKE.md`. Loudest: confirm "Blink moves to the cloth chest" (a staff with no robe has an empty F); his
-  level-33 staff's R offers the placeholder Meteor; old sword picks outside a handle's set read as empty (free to
-  choose again); a saved character that was Ranger / Wizard / Knight / Noble is now a Peasant.
+1. Luke tries `res://game/regents/builder/world_builder.tscn` (**F6**) and plays the armor run (`WAITING_ON_LUKE.md` §3).
+2. Optional server wire-up when Luke is ready: spawn `kind == "npc"` `LevelPoint`s on the server from `npc.json` (like
+   `guide`) so friendly lore NPCs placed in a baked level also stand in multiplayer worlds.
+3. Armor's real parts, traits and numbers (`ARMOR_PREP.md` §0) and role abilities (`ABILITIES_PREP.md` §9) once Luke answers
+   `WAITING_ON_LUKE.md` §1-§2.
 
 ## Watch out
-- AFTER A MERGE THAT ADDS A `class_name`, run Godot `--headless --path . --import` before `run_tests.sh`; READ THE
-  RESULT BEFORE PUSHING (step 88's first, red run was pushed for a few minutes).
-- `ship_template.sh` pushes each game's `main` with the pull before any suite ran there. No suites were run in
-  Fishing, Fowl Play or DiscGolf for 1.8.3 / 1.8.4: run theirs at their next session.
-- A new session can only be started when Luke asks in the chat (the app refuses a start from an automated turn): a
-  master reuses idle children by SendMessage. The 5-hour usage limit cut every child three times: a cut child shows
-  "failed"; message it to continue.
-- An integration leg that measures a number sets its own state or reads the server's rows (the rule, from M9).
-- Locks: `../.umf-locks/regents-rule-test`, `../.umf-locks/umf-template-test` (mkdir, `owner.txt`), both free now.
-- Four child worktrees are still checked out under `.claude/worktrees/` (their sessions are idle; all merged):
-  remove them once the sessions are archived. Removed worktrees leave empty locked folders (Windows): delete by hand.
-- From before: `combat_playtest.sh` can flake at its first skeleton, `caster_playtest.sh` at the imp noticing (rerun
-  once); every writer of `instance_data` keeps `"x"` and `"k"`; `run_tests.sh` ignores `-- --only=`; a Python patch
-  on Windows writes CRLF unless `newline=''`; shader edits need the windowed lab shots; a playtest's referee stops
-  when a project file changes in its checkout; a content SOURCE edit needs a re-bake before a publish.
+- After adding a `class_name`, always run `Godot --headless --path . --import` before `bake_content.gd` or `run_tests.sh`.
+- `Terrain3D` must be inside the SceneTree before `import_images` is called, and its import origin must be aligned to
+  `region_size * vertex_spacing` (`RegentsTerrainBrush.create_terrain_node` and `_push_all_to_terrain` handle this).
+- A content source edit (`game/regents/content/npc/*.tres`) requires `tools/bake_content.gd` before `run_tests.sh` or publish.

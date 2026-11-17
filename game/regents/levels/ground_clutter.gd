@@ -19,6 +19,16 @@ class_name RegentsGroundClutter extends Node3D
 
 ## The level's RegentsGroundPaint, if it has one.
 @export var paint: NodePath = ^"../GroundPaint"
+## Optional Terrain3D sibling (WB6): when present, each tuft sits on the terrain's height and skips steep cliffs or water.
+@export var terrain: NodePath = ^"../Terrain3D"
+## Steepest slope (rise over run) clutter will grow on when `terrain` or `height_func` is active.
+@export_range(0.05, 3.0, 0.05) var max_slope: float = 0.75
+## Water surface Y: clutter never grows at or below this height when terrain heights are sampled.
+@export var water_y: float = -1000.0
+## Round clearings `(world_x, radius_m, world_z)` erased by the World Builder's clutter brush.
+@export var erased_spots: PackedVector3Array = PackedVector3Array()
+## Optional custom height callback `func(wx: float, wz: float) -> float` for procedural/test hills without a Terrain3D node.
+var height_func: Callable = Callable()
 ## What grows.
 @export var kinds: Array[RegentsClutterKind] = []
 ## The side of the square it covers, centered on this node, and of the cells it is cut into, meters.
@@ -115,6 +125,8 @@ func _scatter_cell(k: int, kind: RegentsClutterKind, parts: Array[Array], cx: in
 	var corner: Vector2 = Vector2(float(cx) * cell_m - extent_m * 0.5, float(cz) * cell_m - extent_m * 0.5)
 	var middle: Vector3 = Vector3(corner.x + cell_m * 0.5, 0.0, corner.y + cell_m * 0.5)
 	var here: Vector3 = global_position if is_inside_tree() else position
+	var t3d: Terrain3D = get_node_or_null(terrain) as Terrain3D if not terrain.is_empty() else null
+	var has_terrain: bool = (t3d != null and t3d.data != null) or height_func.is_valid()
 	var tries: int = roundi(kind.per_100_m2 * cell_m * cell_m / 100.0)
 	var placed: Array[Transform3D] = []
 	# The first `tries` may grow anywhere; the rest only at a foot (there is none without a painter).
@@ -124,9 +136,19 @@ func _scatter_cell(k: int, kind: RegentsClutterKind, parts: Array[Array], cx: in
 		var s: float = rng.randf_range(kind.min_scale, kind.max_scale)
 		var yaw: float = rng.randf() * TAU
 		var roll: float = rng.randf()
-		if roll >= _chance(kind, here.x + x, here.z + z, mask, patches, i >= tries):
+		var wx: float = here.x + x
+		var wz: float = here.z + z
+		if _is_erased(wx, wz):
 			continue
-		placed.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), Vector3(x - middle.x, 0.0, z - middle.z)))
+		var local_y: float = 0.0
+		if has_terrain:
+			var wy: float = _ground_height(t3d, wx, wz, here.y)
+			if is_nan(wy) or wy <= water_y or _ground_slope(t3d, wx, wz, here.y) > max_slope:
+				continue
+			local_y = wy - here.y
+		if roll >= _chance(kind, wx, wz, mask, patches, i >= tries):
+			continue
+		placed.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), Vector3(x - middle.x, local_y, z - middle.z)))
 	if placed.is_empty():
 		return
 	var where := PackedVector3Array()
@@ -219,3 +241,51 @@ static func _under(n: Node3D, root: Node) -> Transform3D:
 		at = at.get_parent()
 	var top: Node3D = root as Node3D
 	return top.transform * t if top != null and n != root else t
+
+
+## Add a round clearing `(wx, radius_m, wz)` where no clutter will grow, then re-scatter.
+func erase_in_circle(wx: float, wz: float, radius_m: float, rescatter_now: bool = true) -> void:
+	if radius_m <= 0.0:
+		return
+	erased_spots.append(Vector3(wx, radius_m, wz))
+	if rescatter_now:
+		scatter()
+
+
+## Restore all erased clearings.
+func clear_erased(rescatter_now: bool = true) -> void:
+	erased_spots.clear()
+	if rescatter_now:
+		scatter()
+
+
+func _is_erased(wx: float, wz: float) -> bool:
+	for e: Vector3 in erased_spots:
+		var dx: float = wx - e.x
+		var dz: float = wz - e.z
+		if dx * dx + dz * dz <= e.y * e.y:
+			return true
+	return false
+
+
+func _ground_height(t3d: Terrain3D, wx: float, wz: float, fallback_y: float) -> float:
+	if height_func.is_valid():
+		return float(height_func.call(wx, wz))
+	if t3d != null and t3d.data != null:
+		var h: float = t3d.data.get_height(Vector3(wx, 0.0, wz))
+		if not is_nan(h):
+			return h
+	return fallback_y
+
+
+func _ground_slope(t3d: Terrain3D, wx: float, wz: float, fallback_y: float) -> float:
+	var step: float = t3d.vertex_spacing if t3d != null else 2.0
+	var hx1: float = _ground_height(t3d, wx + step, wz, fallback_y)
+	var hx0: float = _ground_height(t3d, wx - step, wz, fallback_y)
+	var hz1: float = _ground_height(t3d, wx, wz + step, fallback_y)
+	var hz0: float = _ground_height(t3d, wx, wz - step, fallback_y)
+	if is_nan(hx1) or is_nan(hx0) or is_nan(hz1) or is_nan(hz0):
+		return 0.0
+	var dx: float = (hx1 - hx0) / (2.0 * step)
+	var dz: float = (hz1 - hz0) / (2.0 * step)
+	return Vector2(dx, dz).length()

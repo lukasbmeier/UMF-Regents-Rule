@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/npc_def.gd" id="1_npc"]
+[ext_resource type="PackedScene" path="res://game/regents/skilling/smithing/hammer.tscn" id="2_hammer"]
+
+[resource]
+script = ExtResource("1_npc")
+id = 40003
+display_name = "Master Smith Hal"
+designer_notes = "Stands by the furnace and anvil; teaches modular crafting, grades, and refitting."
+key = &"blacksmith_hal"
+title = "Master of the Forge"
+body = "male"
+outfit = "Peasant"
+knight_tabard = false
+wear_extras = true
+hair_style = 4
+beard_style = 1
+skin_tone = 1
+skin_tint = Color(1, 1, 1, 1)
+hair_color = Color(0.16, 0.12, 0.1, 1)
+held_scene = ExtResource("2_hammer")
+idle_pose = &"locomotion.idle"
+wander_m = 1.5
+interact_m = 2.8
+map_poi = false
+lore_entry = "Hal forged iron and steel for three frontier expeditions. He swears by modular construction: the core metal sets a weapon's power and tier, while the timber grip and metal rivets carry its traits."
+dialogue_script = "~ start
+Master Smith Hal: [#cam=over_shoulder_npc] [#pose=interact] Mind the sparks! Listen to the bellows' beat at the furnace if you want clean bars and catalysts. [ID:hal_01]
+=> hub
+
+~ hub
+Master Smith Hal: [#cam=two_shot] [#pose=locomotion.idle] What are you shaping on the iron today? [ID:hal_02]
+- Ask how grades and traits work [if not asked_grades]
+    set asked_grades = true
+    Master Smith Hal: [#cam=closeup_npc] [#pose=interact] A Common head holds one trait, a Fine holds two, and a Masterwork holds three. Pick your grip and rivets at the workbench to choose which traits your piece carries. [ID:hal_03]
+    => hub
+- Ask about refitting an experienced weapon [if not asked_refit]
+    set asked_refit = true
+    Master Smith Hal: [#cam=closeup_npc] [#pose=interact] A weapon earns its own level in battle. Bring it back to the workbench with new parts and two bars of its head's metal: you'll swap the handle or binding and keep every drop of its XP. [ID:hal_04]
+    => hub
+- Back to the anvil
+    Master Smith Hal: [#cam=over_shoulder_npc] [#pose=locomotion.idle] Strike true before the bar cools! [ID:hal_05]
+    => END
+"

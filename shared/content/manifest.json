@@ -377,6 +377,18 @@
 			},
 			"type": "node"
 		},
+		"shared/content/regents/npc.json": {
+			"count": 4,
+			"hash": "13b3acdc",
+			"owner": "regents",
+			"sources": {
+				"game/regents/content/npc/blacksmith_hal.tres": "a3dfd19e",
+				"game/regents/content/npc/chronicler.tres": "b7250b83",
+				"game/regents/content/npc/drillmaster.tres": "428a698c",
+				"game/regents/content/npc/elder_maren.tres": "9e76de10"
+			},
+			"type": "npc"
+		},
 		"shared/content/regents/pattern.json": {
 			"count": 24,
 			"hash": "c0e01db2",

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/npc_def.gd" id="1_npc"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/iron_sword.tscn" id="2_sword"]
+
+[resource]
+script = ExtResource("1_npc")
+id = 40001
+display_name = "Drillmaster"
+designer_notes = "The frontier camp's veteran captain by the sparring yard. Wears the Knight tabard."
+key = &"drillmaster"
+title = "Camp Drillmaster"
+body = "male"
+outfit = "Knight"
+knight_tabard = true
+wear_extras = true
+hair_style = 1
+beard_style = 1
+skin_tone = 0
+skin_tint = Color(1, 1, 1, 1)
+hair_color = Color(0.28, 0.24, 0.2, 1)
+held_scene = ExtResource("2_sword")
+idle_pose = &"locomotion.idle"
+wander_m = 0.0
+interact_m = 3.0
+map_poi = true
+lore_entry = "Once a standard-bearer of the Regent's Third March, the Drillmaster stayed behind at the frontier glade when the northern pass collapsed. He insists every newcomer forge their own copper blade before facing the skeletons beyond the eastern ridge."
+dialogue_script = "~ start
+Drillmaster: [#cam=over_shoulder_npc] [#pose=locomotion.idle] Hold a moment, traveler. You don't step past the eastern ridge with bare hands and soft posture. [ID:drill_01]
+=> hub
+
+~ hub
+Drillmaster: [#cam=two_shot] [#pose=locomotion.idle] What do you need to know before you test your edge? [ID:drill_02]
+- Ask about forging your first weapon [if not asked_forge]
+    set asked_forge = true
+    Drillmaster: [#cam=closeup_npc] [#pose=interact] Cut wood for a grip, crack copper ore on the south ridge, smelt the bar, and shape the blade on the anvil. Every handle shape changes how your combo finishes. [ID:drill_03]
+    => hub
+- Ask about the foes east of camp [if not asked_foes]
+    set asked_foes = true
+    Drillmaster: [#cam=closeup_npc] [#pose=interact] Skeleton warriors swing in deliberate strings — parry a blow as it lands and answer with a riposte. Watch an archer's glint before you roll, and never stay inside an imp's cinder ring. [ID:drill_04]
+    => hub
+- I'm ready for the sparring yard
+    Drillmaster: [#cam=wide_camp] [#pose=interact] Keep your guard up out there. [ID:drill_05]
+    => END
+"

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/npc_def.gd" id="1_npc"]
+
+[resource]
+script = ExtResource("1_npc")
+id = 40002
+display_name = "Chronicler Venn"
+designer_notes = "Wears the NPC-only Noble outfit; keeps the camp's ledger, writs, and memories of the pass."
+key = &"chronicler"
+title = "Keeper of the Writ"
+body = "male"
+outfit = "Noble"
+knight_tabard = false
+wear_extras = true
+hair_style = 2
+beard_style = 2
+skin_tone = 0
+skin_tint = Color(1, 1, 1, 1)
+hair_color = Color(0.38, 0.36, 0.34, 1)
+idle_pose = &"locomotion.idle"
+wander_m = 2.0
+interact_m = 2.8
+map_poi = true
+lore_entry = "Appointed by the High Chancellery before the Regent vanished from the capital, Chronicler Venn records every work order filled in the frontier glade and collects firsthand accounts of the night the northern pass fell."
+dialogue_script = "~ start
+Chronicler: [#cam=over_shoulder_npc] [#pose=interact] Every blade tempered in this camp carries a past. Speak plainly, and I will set your record straight. [ID:chron_01]
+=> hub
+
+~ hub
+Chronicler: [#cam=two_shot] [#pose=locomotion.idle] Which ledger shall we open today? [ID:chron_02]
+- Ask about the Regent's Writ [if not asked_writ]
+    set asked_writ = true
+    Chronicler: [#cam=closeup_npc] [#pose=interact] The Regent is absent from the capital, yet his seal still binds every smith, forester, and scout in the glade. Fill the camp's rotating orders and your mastery will rise fast. [ID:chron_03]
+    => hub
+- Ask about the towns beyond the glade [if not asked_towns]
+    set asked_towns = true
+    Chronicler: [#cam=closeup_npc] [#pose=interact] West lies the riverside hamlet; across the crossroads stands the walled market town of Sunreach, and above it the old keep on the mound. [ID:chron_04]
+    => hub
+- Leave the ledger for now
+    Chronicler: [#cam=over_shoulder_npc] [#pose=locomotion.idle] May your work hold its grade. [ID:chron_05]
+    => END
+"

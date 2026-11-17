@@ -194,3 +194,12 @@ paths:
 - AN NPC'S SCENE (PROGRESS 87, 95): a new NPC scene inherits `game/regents/npc.tscn`, `combat/foe.tscn` or
   `player.tscn` (template #315: no wait for a `session_member` row). A change to an NPC's scene runs
   `game/regents/tests/bind_playtest.sh`.
+- THE WORLD BUILDER AND LORE STUDIO (Luke's WB1-WB12, 2026-11-16, PROGRESS 101; `docs/regents_rule/WORLD_BUILDER_PREP.md`):
+  `game/regents/builder/world_builder.tscn` (F6) builds and edits levels from a blank `Terrain3D` canvas or a procedural
+  base (`RegentsTerrainBrush`), keeping hand-built work (`hand_settlements`, `hand_props`, `hand_gameplay`) in separate
+  layer groups from `proc_scatter` (with exclusion circles so re-scattering never overwrites hand-built towns). Every
+  `LevelPoint`'s 3D preview and tactical rings (`RegentsPointPreview`) are attached with `Node.INTERNAL_MODE_BACK` so
+  saving a `.tscn` never bloats the level or cell scenes. Friendly lore NPCs are `NpcDef` content (`content/npc/*.tres`,
+  baked to `shared/content/regents/npc.json`; NPC-only `Noble` and `Knight` tabard allowed) with validated `CinemaDialogue`
+  scripts tested live in the builder. A change to the builder, `NpcDef`, or terrain-aware `RegentsGroundClutter` runs the
+  `regents_builder` unit suite.

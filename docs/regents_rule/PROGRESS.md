@@ -5626,3 +5626,109 @@ wrote. All four were TESTS (no code changed; `game/regents/tests/hooks/integrati
 INTEGRATION, second run (the fixer's, whole suite, under the lock): **1761 passed, 0 failed** (the count varies with
 loops over bag rows). The rule kept: an integration leg that measures a number sets its own state or reads its
 expectation from the server's rows.
+
+## Step 101: THE WORLD BUILDER AND LORE STUDIO (creative mode, Terrain3D brushes, houses/walls/piece snap, LevelPoint 3D visualizers, NpcDef & live Dialogue Studio) (2026-11-16, Luke's WB1-WB12)
+
+Luke answered `docs/regents_rule/WORLD_BUILDER_PREP.md` (2026-11-16: "Accept all proposed and start building", recorded in
+`WORLD_BUILDER_PREP.md` and `GAME.md`). Built 100% in Godot under `game/regents/builder/` (no web app, no foundation edits).
+
+**Built**:
+- **`NpcDef` (`game/regents/content/npc_def.gd`) + 4 starter NPCs (`game/regents/content/npc/*.tres`)**:
+  - New content type `npc` (`40001` Drillmaster Vane in Knight tabard `Body_Cloth`, `40002` Chronicler Venn in NPC-only
+    Noble robes, `40003` Blacksmith Hal with `hammer.tscn`, `40004` Elder Maren with `yew_staff.tscn`), baked to
+    `shared/content/regents/npc.json`.
+  - Validates body, outfit (`Peasant`, `Ranger`, `Wizard`, `Knight`, `Noble`), unique `key` across `NpcDef`s, and
+    structural `CinemaDialogue` syntax (`NpcDef.validate_dialogue`: requires `~ start`, checks every `=> target` jump,
+    including nested choice jumps).
+  - `build_figure()` dresses a `ModularCharacter` via `Wardrobe.figure` + `Wardrobe.dress` (honoring `knight_tabard`
+    and `wear_extras`) and attaches `held_scene`.
+- **Terrain-aware `RegentsGroundClutter` (`game/regents/levels/ground_clutter.gd`)**:
+  - Optional `terrain: NodePath` (or `height_func: Callable`), `max_slope`, `water_y`, and `erased_spots` (`erase_in_circle`
+    / `clear_erased`). Flat levels (`frontier.tscn`) work identically when `terrain` is unset; on `Terrain3D` hills,
+    tufts sit on the terrain height and skip underwater pits and steep cliffs (`slope > max_slope`).
+- **3D `LevelPoint` Preview & Tactical Rings (`game/regents/builder/level_point_preview.gd`, `RegentsPointPreview`)**:
+  - `@tool` child attached with `Node.INTERNAL_MODE_BACK` (never serialized into `.tscn` files).
+  - Instantiates the real 3D model for every `LevelPoint` (`node` with deterministic server yaw and copper/tin/iron/coal
+    ore nuggets via `OreOnRock`, `station` via `StationModels.build`, `dummy`, `guide`, `npc` dressed from `NpcDef`,
+    `poi` map pillar, and foes/animals dressed via `FoeLook.dress`) plus color-coded tactical rings (`footprint`,
+    `work_reach`, `wander`, `notice_cone`, `hear`, `leash`, `pack`, and cyan packmate link lines between nearby wolves).
+- **Terrain Sculpt, Paint, Ramp & Auto-Flatten (`game/regents/builder/terrain_brush.gd`, `RegentsTerrainBrush`)**:
+  - 9 brush modes (`Raise`, `Lower`, `Smooth`, `Flatten`, `Terrace`, `Ramp`, `Paint Texture`, `Paint Tint`,
+    `Auto-Slope Rock/Sand`) across 6 textures (`Grass`, `Rock`, `Sand`, `Dirt`, `Cobble`, `Snow`), region-aligned
+    `Terrain3D` image import, `carve_ramp(a, b, width_m, skirt_m)`, `flatten_footprint(center, yaw, size_xz, skirt_m)`
+    with cosine skirt blend, `flatten_road_spline(curve, width_m, skirt_m)`, and snapshot undo/redo (`restore_snapshot`).
+- **Asset & Content Catalog (`game/regents/builder/kit_catalog.gd`, `RegentsKitCatalog`)**:
+  - Indexes all 7 builder categories (`terrain`, `settlements`, `kit_pieces` with 305 village + 212 prop glTFs, `nature`
+    with rocks, pebbles, bushes, ferns, flowers, grass, mushrooms & clutter brushes — **0 non-harvestable trees**, since
+    all trees in Regent's Rule are harvestable skilling nodes in `skilling` — `skilling` nodes & stations, `foes` +
+    multi-point encounter stampers, and `npcs` + POIs & Spawn), with sub-group filtering (`groups_for`, `search`).
+- **The World Builder & Lore Studio (`game/regents/builder/world_builder.tscn` + `world_builder.gd`, `RegentsWorldBuilder`)**:
+  - **Mouse-Driven 3D Cursor, Continuous Brush Drag & Resizable Sliders**: `update_cursor_from_mouse` / `update_cursor_from_ray`
+    raycasts the mouse cursor directly onto the `Terrain3D` heightfield so the brush circle and ghost preview follow the
+    mouse smoothly without needing to fly around; holding LMB drags continuous paint/sculpt strokes; top-toolbar **Brush
+    Size (`0.5 m – 48 m`)** and **Strength** sliders + `[` / `]` + `Shift+Scroll` (or plain `Scroll` in Terrain brush mode)
+    resize the brush down to `0.5 m` single-vertex detail painting.
+  - **Live 3D Ghost Preview & Scroll-Wheel Piece Cycling**: `_ghost_root` shows a translucent 3D preview + facing arrow of
+    the active kit piece, house, prefab, furnishing, rock, skilling node, foe, or NPC right under the mouse cursor; scrolling
+    the **Mouse Wheel** (when not holding RMB in placement categories) or pressing `Up`/`Down`/`PgUp`/`PgDn` cycles through
+    the palette (`cycle_palette_entry`) and updates the ghost preview in real time.
+  - **Resizable Split Panels, Conditional Right Studio & Prefab Origin/Centering Fix**: `HSplitContainer` makes both
+    the Left Palette and Right Studio resizable; the Right Studio panel is **conditional** (hidden in `1.Land`,
+    `4.Nature`, `5.Skill`, and `6.Foes`; shows **Prefab Studio** only in `2.Towns` / `3.Pieces` or while building an
+    active prefab; shows **NPC Studio** only in `7.NPCs`). Creating a prefab (`start_new_prefab`) keeps the origin
+    unlocked until your **1st placed piece in 3D** sets it (or you click `Pick Origin in 3D`), fits the gold wireframe
+    box dynamically to the prefab's actual mesh bounds, and `stamp_demo_house` (`_instantiate_building_centered`)
+    recenters custom preset children **before** `TownKit.gather_collisions` so BOTH visuals and physics colliders
+    always stamp dead-center at the cursor.
+  - **UI Focus/Scroll Isolation & Flexible Grid Snapping (XZ + Y, Shift/Alt Free Placement)**: `_palette_list` uses
+    `FOCUS_NONE` and `_search_edit` releases focus when leaving the left panel, picking an entry, or pressing Enter/Esc,
+    so pressing `R` in 3D rotates pieces without ever typing or jumping to `R` items in the list; menus only scroll/search
+    when hovered (`_is_mouse_over_ui` checks panels + hovered controls). Top-bar presets and custom `m XZ` / `m Y`
+    `SpinBox`es configure horizontal and vertical snap steps (snapping Y relative to `Terrain3D` height so upper floors
+    never sink into hills), and holding **`Shift` or `Alt`** gives instant free placement.
+  - **Built-in NPC Creator, Wardrobe, Dialogue & Lore Studio (WB10)**: `+ New NPC` creates a new `NpcDef` draft in
+    memory (`NpcDef.register_draft`), immediately registering it in `7.NPCs` and the live 3D Ghost Preview even before
+    saving `.tres`. Organized into two clean steps: **1. Appearance & Wardrobe** (Body, Outfit, `DyePalette` preset
+    selector, Knight cloth tabard, hats/pauldrons, hair/beard/skin/hair color, valid held weapons/tools, wander & Map
+    POI) -> **2. Lore & Dialogue** (`lore_entry`, live-validated `dialogue_script`, `Test Card` / `Test 3D Bubble`).
+  - **Start From Scratch or Procedural Base (WB3)**: `start_from_scratch` and `start_from_procedural`, non-destructive
+    layer groups (`hand_settlements`, `hand_props`, `hand_gameplay`, `proc_scatter`) and `exclusion_zones` so
+    `rescatter_procedural()` never touches hand-built towns.
+  - **Dual-Mode Camera (WB2)**: `Tab` toggles between Free-Fly Creative Mode (`WASD/QE`, scroll speed, 3D cursor ring)
+    and Drop-In Walk Mode (`ShowcaseActor` Adventurer on the terrain with `E` to talk to placed NPCs).
+  - **3 Mesh Placement Modes (WB5)**: `SCENE_NODE` (`RegentsSolidProps`), `PROP_GROUP` (`PropGroup` merged batch), and
+    `TERRAIN_INSTANCER` (`MultiMeshInstance3D` batch).
+  - **3 Building Tiers + Castle Walls + Furnishings (WB7)**: parametric `KitHouse` stamper, preset/demo stamper,
+    configurable Grid-Snap Piece Mode (`place_kit_piece`, `save_custom_house_preset`), `CastleWall` & Keep builder
+    (`build_castle_wall`), and `TownFurnish` stampers (`stamp_furnishing`), all with auto-flatten under footprint and
+    exclusion zone registration.
+  - **Road & Trail Splines (WB6)**: `draw_road_spline` levels the roadbed along a `Path3D`, paints the `Terrain3D`
+    control map, and refreshes `RegentsGroundPaint`.
+  - **Undo/Redo + Save & One-Click Bake (WB1, WB11)**: `Ctrl+Z` / `Ctrl+Y`, `save_level` (zero preview bloat), and
+    `bake_level` (`LevelBaker.bake` writing `<level>.json`, `<level>_depth.bin`, and `<level>_cells/`).
+
+**How to use it**: open `res://game/regents/builder/world_builder.tscn` and press **F6**. Pick a category at the top
+(`1.Land`, `2.Towns`, `3.Pieces`, `4.Nature`, `5.Skill`, `6.Foes`, `7.NPCs`), filter by sub-group or search on the left
+(drag the split handle to widen the panel), move your mouse over the 3D world to aim the circle/ghost preview, and click
+(or hold LMB and drag for brushes). Use **Mouse Wheel** in 3D to cycle pieces (or resize the brush in Terrain mode /
+`Shift+Scroll`), `R` to rotate 45° (`Shift+R` 90°, `Alt+R` 15°), hold **`Shift` or `Alt`** while placing to bypass grid
+snapping, change `m XZ` / `m Y` in the top bar for custom snap increments, `[`/`]` for brush size, `Z`/`X` (or
+`F1..Roof` buttons) to step floor height, `G` to toggle grid snap, `V` for tactical rings, `Tab` for Walk Mode (`E` to
+talk), and `Ctrl+Z`/`Ctrl+Y` for undo/redo. In `7.NPCs`, type a name and click **`+ New NPC`**, customize **1. Appearance
+& Wardrobe**, switch to **2. Lore & Dialogue**, test live, and optionally save to `.tres`.
+
+**Tested**:
+- Unit suite `game/regents/tests/suites/regents_builder.gd` (**61/0**): catalog discovery (305 village + 212 prop pieces,
+  nature rocks/bushes/flowers/grass with **NEGATIVE 0 non-harvestable trees**, nodes, stations, foes, 4 `NpcDef`s),
+  `NpcDef` validation and negative broken-jump / duplicate-key detection, draft registration (`create_new_npc_from_ui` ->
+  `NpcDef.by_key`, catalog, live 3D `RegentsPointPreview`, Appearance <-> Lore sub-tabs, valid `NPC_HELD_PATHS`),
+  `RegentsTerrainBrush` sculpt/paint/ramp/footprint-flatten and snapshot undo, `set_brush_radius` (`1.0 m`..`22.0 m`),
+  `update_cursor_from_ray` mouse raycast, `cycle_palette_entry` + live 3D `_ghost_root`, `start_new_prefab` locking
+  origin on 1st placed piece, custom `m XZ` / `m Y` grid snap + hill-relative Y stacking + `Shift`/`Alt` free placement,
+  custom preset visual + `StaticBody3D` collision recentering on uncentered `.tscn` presets, conditional Right Studio
+  visibility, `FOCUS_NONE` search isolation on `_palette_list`, terrain-aware `RegentsGroundClutter` on hills,
+  non-destructive layers + exclusion zones, `KitHouse`/`CastleWall`/`TownFurnish`/`PROP_GROUP`/`TERRAIN_INSTANCER`,
+  `draw_road_spline`, `RegentsPointPreview` models/rings/links, Fly/Walk `ShowcaseActor`, `CinemaDialogue` + `CinemaBalloon`,
+  `save_level` (0 `_BuilderPreview` bloat), and `bake_level`.
+- Full verification: `tests/run_tests.sh` **5215 passed, 0 failed** (lints, engine-error and leak checks green),
+  `tests/content_test.sh` **18 passed, 0 failed**, `cargo test` green, `cargo check --target wasm32-unknown-unknown` clean.

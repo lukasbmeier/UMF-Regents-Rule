@@ -692,6 +692,32 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
   by hand); the keep stands on its hill; NO TAGLINE; the composers' login film is a TITLE CARD (the name and one Play
   button in the title's letters, no form), and the GAME opens on it too ("card first": Play opens the form; connecting
   by itself, auto-connect or `--host`, puts the form up).
+- **THE WORLD BUILDER AND LORE STUDIO, ANSWERED** (Luke, 2026-11-16: "Accept all proposed and start building"; the sheet
+  is `docs/regents_rule/WORLD_BUILDER_PREP.md`, its §10 the order of work). His aim: "Hypixel creative mode for our game
+  with tools adapted to what we need to place in the world. Can start on a procedural base or create it all from scratch."
+  - WB1 100 % in Godot as a playable Creative Mode scene (`game/regents/builder/world_builder.tscn`, F6) writing directly
+    to the real level `.tscn`, `Terrain3D` data folder, and `.tres` content files, plus `@tool` gizmos in the editor.
+  - WB2 Dual-mode camera (`Tab` to swap): Free-Fly camera (`WASD/QE`, scroll speed, 3D surface cursor) and instant Drop-In
+    Walk Mode (`Adventurer` at the cursor to test scale, jumps, collisions, work spots, and NPC dialogue in place).
+  - WB3 Procedural and hand-built non-destructively: start From Scratch (blank `Terrain3D`) or From Procedural Base;
+    separate `Cells` into `Hand_*` and `Proc_Scatter` layers with exclusion zones so re-scattering never touches hand work.
+  - WB4 `Terrain3D` sculpt/paint brushes (Raise, Lower, Smooth, Flatten, Ramp, Terrace, Texture Paint, Auto-Slope) in the
+    Creative Mode bar, plus Auto-Flatten Under Footprint (with blend skirt) when stamping a house, wall, or station.
+  - WB5 Three mesh placement modes from one palette: Cell Scene Nodes (`Cells/Hand_Props`, `RegentsSolidProps`),
+    `PropGroup` Batches (merged mesh + single Jolt body), and `Terrain3D` Instancer (background visual MultiMeshes).
+  - WB6 Terrain-aware `RegentsGroundClutter` and `RegentsGroundPaint` (per `64 m` cell on `Terrain3D` heights and slopes),
+    a `Path3D` Road/Trail drawer (dirt, cobbles, setts, optional roadbed leveling), and a Scatter/Erase brush.
+  - WB7 Three building tiers: parametric `KitHouse` stamper, preset/demo stamper (`demo_house_*` + custom presets), and
+    2 m Grid-Snap Piece Mode (305 village + 212 prop pieces, saveable as presets), plus click-to-draw `CastleWall` & Keep.
+  - WB8 `@tool` 3D preview visualizers on `LevelPoint` (not saved in `.tscn`) showing the real tree/rock/station/foe/NPC
+    model and work-reach, wander, sight-cone, hearing, leash, and pack-link rings.
+  - WB9 Friendly NPCs & Lore (`NpcDef` in `game/regents/content/npc/`): display name, title, `RegentsFigure` outfit
+    (including NPC-only Noble and Knight tabard looks), dye palette, held item, idle pose, lore notes, `.dialogue` script,
+    and an add-only `world_npc` cell table (rule 17) so `E` talks to any placed NPC.
+  - WB10 Built-in Dialogue Editor & Live Tester in the World Builder side panel (`CinemaDialogue` + `CinemaBalloon`),
+    with both 3D Speech Bubble and Bottom Cinematic Box styles.
+  - WB11 World Map POI (`kind = "poi"`) placement and live `M` World Map preview.
+  - WB12 Genre-clean under `game/regents/builder/` (rule 16).
 
 ## Current state (2026-10-19, with steps 9-16 since: see `PROGRESS.md`): the skilling chain in the frontier glade
 A fork of the template at 0.51.2 with the `regents` genre. **Press Play**: the login screen (the name and PLAY over the valley at dusk; PLAY opens the form; PROGRESS 84, 86), then the frontier glade (level 20):

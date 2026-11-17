@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/regents/content/npc_def.gd" id="1_npc"]
+[ext_resource type="PackedScene" path="res://game/regents/combat/weapons/yew_staff.tscn" id="2_staff"]
+
+[resource]
+script = ExtResource("1_npc")
+id = 40004
+display_name = "Warden Maren"
+designer_notes = "Woodland warden and herbalist in the Wizard robes, carrying a yew staff."
+key = &"elder_maren"
+title = "Timberline Warden"
+body = "female"
+outfit = "Wizard"
+knight_tabard = false
+wear_extras = true
+hair_style = 3
+beard_style = 0
+skin_tone = 0
+skin_tint = Color(1, 1, 1, 1)
+hair_color = Color(0.55, 0.26, 0.14, 1)
+held_scene = ExtResource("2_staff")
+idle_pose = &"locomotion.idle"
+wander_m = 3.0
+interact_m = 2.8
+map_poi = false
+lore_entry = "Maren watches the western meadow where the flax grows and the deer graze. She tracks the wolf packs coming down from the yew timberline and weaves linen robes imbued with Blink."
+dialogue_script = "~ start
+Warden Maren: [#cam=over_shoulder_npc] [#pose=interact] Step lightly through the meadow. Loosen the packed soil with a trowel before you pull a flax stem, or the root will snap. [ID:maren_01]
+=> hub
+
+~ hub
+Warden Maren: [#cam=two_shot] [#pose=locomotion.idle] Where does your path lead, traveler? [ID:maren_02]
+- Ask about hunting deer and wolves [if not asked_hunt]
+    set asked_hunt = true
+    Warden Maren: [#cam=closeup_npc] [#pose=interact] Deer bolt the moment they see or hear you — bring a bow. Wolves hunt in packs along the northwest trees; strike one and its packmates within fifteen meters will answer. [ID:maren_03]
+    => hub
+- Ask about cloth robes and staves [if not asked_cloth]
+    set asked_cloth = true
+    Warden Maren: [#cam=closeup_npc] [#pose=interact] A woven linen robe carries Blink on your chest slot, freeing your staff to focus on Fireball, Frost Ring, and Gale. [ID:maren_04]
+    => hub
+- Farewell
+    Warden Maren: [#cam=over_shoulder_npc] [#pose=locomotion.idle] Clear skies on your trail. [ID:maren_05]
+    => END
+"
