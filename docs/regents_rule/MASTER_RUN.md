@@ -172,7 +172,7 @@ A child inherits the master's model unless told otherwise: pass `model` on every
 | E2 | e2-binding-warnings (local_ee2e2534) | claude/e2-binding-warnings-7b4e42 | MERGED 2026-11-16 (the general fix in T1's branch, #315) | 87 | ebead5ac | |
 | E3 | e3-towns-bake (local_4afd208b) | claude/e3-towns-bake-d0f216 | MERGED 2026-11-16 | 90 | cb3a6df2 | |
 | M3 | master | — | DONE 2026-11-16: template 1.8.3 (`4437fa4`: T1 + S1's `resolve_action_all` #314) shipped to all four games; here `aca81080` | | aca81080 | |
-| M9 | master | — | waiting all | | | |
+| M9 | master | — | RUN 2026-11-16 on 1feb2d3d: unit 5154/0, cargo, wasm, combat 144/0, spells seen 8/0 + 12/0, caster 20/0, armor seen 11/0 + 7/0; INTEGRATION 1766 passed, 4 FAILED (the genre hook's new legs): the Lane S session fixes on `claude/m9-integration-fixes` | | | test DB (the fixer) |
 
 ## 8. The master's prompt (what Luke pastes to start it)
 See the block in the chat of 2026-11-15; kept here so a restarted master can be given it again:
