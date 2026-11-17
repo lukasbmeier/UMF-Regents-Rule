@@ -715,7 +715,7 @@ axe's heavy hit and the sword's string, each cut drawn along the real blade, and
 parry, the imp's cinder ring), down to a
 tenth of the speed, by day, dusk or night; all made in code (no images). **They are in the fights** (PROGRESS 82): every swing leaves the crescent, Fireball and the Bolt fly and burst as in the lab, the rings are the lab's, a cast shows its charge in the hands, Blink its columns, Gale its gust (everyone near sees it, and the caster's arms push it: Luke, 2026-11-15, "yes, add it", "yes, add the pose"; PROGRESS 83), a parry its flash; which effect an ability shows is `game/regents/vfx/ability_vfx.tres`. **Weapons level** (PROGRESS 74): a weapon levels as you fight with it (five
 times as fast while below your mastery), counts only up to your mastery, and opens its slots by its level: a staff
-has Fireball (Q) and Blink (F) at once, and at level 5 a pick of Frost Ring or Gale for E, chosen in the bag (I). A pick
+has Fireball (Q) at once, at level 5 a pick of Frost Ring or Gale for E, and at 20 Meteor (a placeholder) on R, chosen in the bag (I); F is the worn chest's (below). A pick
 is CHANGED in the bag too (PROGRESS 75): free once a week from the weapon's level 20, anywhere; otherwise at a workbench
 for the weapon's head's material (2, doubling with each paid change, a doubling forgiven each week without one). A sword's HANDLE picks its
 last hit (a plain grip a piercing thrust, a crossguard hilt a pommel bash and a full guard, a banner hilt a
@@ -727,6 +727,19 @@ tested and what is left: **`docs/regents_rule/PROGRESS.md`**. Every minigame alo
 `game/regents/skilling/skilling_lab.tscn` (F6); **T** there shows the round's **difficulty readout** (four simulated
 players of set skill on many seeds: their mean, Fine and Masterwork shares, how often they beat AFK), and
 `tools\run.cmd game\regents\tests\minigame_readout.sh` prints it for every round (`MINIGAMES_PREP.md` §6).
+**Armor, your colors and each handle's set (the armor run, PROGRESS 87-100, 2026-11-16; its numbers and most of its
+abilities are PLACEHOLDERS, each listed with its file in `docs/regents_rule/WAITING_ON_LUKE.md` §2)**: the picker
+(the connect screen, or Escape > Character) offers the Peasant only, with hair and the rest, and a free color with
+swatches for main, accent, under, trim and leather; everyone sees them. ARMOR is made at the anvil (plates) and the
+workbench (under Armor): a metal armet, cuirass and legplates; a leather hood, jerkin and trousers; a linen robe and
+trousers. In the bag (I) THE DOLL at the top wears a piece and takes it off by a click, out of a fight only; a piece
+says its Defense and what wearing it does ("you'd take N% less, now M%"), the doll the total; a hit lands at damage x
+K / (K + Defense), K the hot rule `regents.defense_k` (67). Worn armor shows on the body, to everyone in range (the
+Knight, Ranger and Wizard pieces in the tier's palette; an empty slot your own Peasant piece in your colors). F IS THE
+WORN CHEST'S: a robe gives Blink, a jerkin and a cuirass a stand-in each. Every weapon kind has a pool (Q, three
+options for E, an ult on R at 20), and each SWORD HANDLE its own set; Cleave and the marked sweeps hit every foe in
+them. Another player's effects are a lighter version of yours. For a look without crafting (dev):
+`admin_give_item <you> <id> 1 <quality>` (armor is 40069-40088).
 **The anvil** (PROGRESS 41-42) is a 3D stage of the game's own anvil and hammer: left click a column for a heavy
 strike (it spreads into its neighbors), right click for a light tap (finishing the line), R to put the bar back in the
 fire; or Shift + click taps and right click reheats (Controls, "Smithing: the light tap"; **B** in the lab switches

@@ -26,7 +26,8 @@ class_name KitDef extends ContentDef
 ##   0  the BASE: Q, the item's from its making (one at most)
 ##   1  a PICK OPTION: chosen into E at one of the item's picks (`unlock_levels` 1 and 2)
 ##   2  an ULT OPTION: chosen into R at the ult's level (`unlock_levels` 3)
-##   3  F: the chest's slot; a weapon's ability there stands in until chests carry abilities (the staff's Blink)
+##   3  F: the chest's slot. Since PROGRESS 97 the WORN CHEST fills F (`PatternDef.worn_ability`); no weapon kit uses
+##      3 today (the staff's Blink moved to the cloth chest)
 ## Empty: every skill a base (a foe's kit; its brain uses them).
 @export var skill_slots: PackedInt32Array = PackedInt32Array()
 ## THE ITEM LEVEL EACH OPENS AT (Luke's B4: Q at 1, picks at ~5 and ~12, the ult at ~20): [Q and F, the first pick, the
