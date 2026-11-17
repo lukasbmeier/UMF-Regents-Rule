@@ -5828,3 +5828,32 @@ Cost (peak particles): Bolt 46 / 46 before, 56 yours / 29 another's after; Meteo
 
 **Left for later**: on the first cast frame a faint violet circle shows about 1 m in front of the hand, gone a frame
 later, not placed (lane B is looking: B2b).
+
+## Step 105: THE PRACTICE ARMOR REMOVED (2026-11-17, the follow-up run's A2)
+
+**Built**:
+- Deleted `game/regents/content/item/practice_cuirass.tres` (40067) and `practice_helm.tres` (40068); content re-baked.
+  The two ids are free again as ITEM ids (recipes 40067 and 40068, the soft leather jerkin and trousers, stay).
+- `game/regents/tests/hooks/integration_genre.sh`, the ARMOR leg (S2): an iron cuirass (40075, Defense 10) and a steel
+  armet (40078, Defense 6, quality 1000: 7.2), Defense 17.2; the worn row reads `4007540078`; the armored slash is
+  4 x 67 / (67 + 17.2) = 3.183 (a steel pair, 3.00448, sat two f32 steps from the 3-place compare's rounding edge).
+- `regents_bar.gd`: the doll's helm a steel armet; the defense twin pinned on the leg's case (17.2, a slash of 4 at 3.18).
+- `regents_figure.gd`: 40067 and 40068 kept as PIECES SINCE REMOVED: no `ItemDef` for them, and a `worn` row naming them
+  draws nothing and breaks nothing (a database may still hold them).
+- `server/tests/regents.rs` `armor_is_content_in_its_slots`: the iron cuirass's and steel armet's slot and Defense; NEW:
+  every worn piece is one of the material table's 17 cells, and every chest gives an F ability.
+- `bag_doll_shot.gd`: the steel armet. Comments in `regents_defense.gd`, `armor_looks.gd`.
+- The combat playtest's armor leg already wore real pieces (40075, 40070).
+
+**How to play it**: nothing new: the practice pieces are gone from the Tester's items; the table's pieces (crafted, or
+`admin_give_item <you> 40075 1 0`) are the armor.
+
+**Tested**: `cargo test` green (`regents` 64/0), wasm clean; unit `regents_bar,regents_figure,regents,content` 2022/0;
+`content_test.sh` 18/0. NEGATIVES: the two `.tres` and the old bake put back, `armor_is_content` fails (19 pieces, not
+17) and `regents_figure` fails "the practice pieces are gone". `armor_seen_playtest.sh` 18/0; the whole
+`combat_playtest.sh` 157/0 (its armor leg read exactly; A1's two timing failures did not repeat). The integration leg
+was read through, not run (it has no single-leg mode): it runs in M9.
+
+**Left for later**: the play database may hold a 40067 or 40068 (Luke was told to try them in step 92). Safe as read:
+the server counts a worn item it no longer knows as Defense 0 and no F (`rules::item(..)?`), the figure draws nothing,
+the bag names it through `RegentsHud.item_name`, `take_off` frees the slot. `admin_reset_bag` or dropping clears them.

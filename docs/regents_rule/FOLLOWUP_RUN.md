@@ -20,7 +20,7 @@ adds a `class_name`; never push red; `docs/HANDBOOK.md` is never edited here (ru
 |---|---|---|---|---|---|
 | M1 | Fishing, Fowl Play, DiscGolf: `publish.sh --codegen`, `run_tests.sh` | (in place) | done: Fowl Play 2815/0, DiscGolf 2605/0; Fishing 3309/2 (the held-items grip suite: the rod 33 cm into the body at worst, Luke's grips; needed an `--import` first for `RollComponent`); bindings committed and pushed in each (Luke's yes) | - | Fishing `4eddebd`, Fowl Play `e75c2fb`, DiscGolf `832e3e0` |
 | A1 | The bow's Q, an option and the ult pressed by a real client (combat_playtest) | `claude/followup-a1-bow-client-0980ca` | merged, unit 5228/0 on main, pushed | 103 | `79cf6bc5` |
-| A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | lane A | building (cut from `79cf6bc5`) | - | - |
+| A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | `claude/followup-a2-practice-armor` | merged; on main unit 5247/0 (11 fewer than 5258: per-item checks of the two deleted items, not traced one by one), content 18/0, cargo test, wasm clean; pushed; play DB published | 105 | `5e01ac41` |
 | A3 | On call for M9's integration findings | - | - | - | - |
 | B1 | The bar's and tooltips' words: slow, shove, every foe in the sweep | `claude/followup-b1-ability-words-b17159` | merged, unit 5228/0 on main, pushed | 102 | `cf259946` |
 | B2 | Bolt's cast flash; Meteor's ring in fire; others' missile lighter | `claude/followup-b2-effects` | merged, unit 5258/0 on main, pushed | 104 | `dec49de2` |
