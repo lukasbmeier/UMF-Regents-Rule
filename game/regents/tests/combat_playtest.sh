@@ -7,6 +7,7 @@
 # of the target (Esc).
 #
 #   GODOT=/path/to/godot ./game/regents/tests/combat_playtest.sh     # 150 ms round trip, 20 ms jitter
+#   LEG=bow_skills GODOT=... ./game/regents/tests/combat_playtest.sh   # one leg alone (~2 min): the bow's Q, E and R
 #
 # Requires a local server (`spacetime start`). Republishes the TEST database with --delete-data.
 set -uo pipefail
@@ -50,12 +51,14 @@ if ! grep -q "claim_referee: registered" "$ref_log"; then
 fi
 
 echo "== a fighter at ${LATENCY} ms round trip, ${JITTER} ms jitter =="
-timeout 880 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" >"$fight_log" 2>&1 &
+LEG="${LEG:-}"
+timeout 880 "$GODOT" --headless --path . "$SCENE" -- --token=fighter --latency="$LATENCY" --jitter="$JITTER" ${LEG:+--leg="$LEG"} >"$fight_log" 2>&1 &
 fight_pid=$!
 bow_given=""
 swords_given=""
 staff_given=""
 armor_given=""
+bow_leveled=""
 heals=0
 hurts=0
 while kill -0 "$fight_pid" 2>/dev/null; do
@@ -106,6 +109,16 @@ while kill -0 "$fight_pid" 2>/dev/null; do
       armor_given=1
     fi
   fi
+  # BOW_SKILLS <entity> <row>: the bow at level 20 and our Archery 20, so its first pick and its ult are open (A1).
+  if [ -z "$bow_leveled" ]; then
+    line="$(grep -oE '^BOW_SKILLS [0-9]+ [0-9]+' "$fight_log" | head -1)"
+    if [ -n "$line" ]; then
+      ent="$(echo "$line" | awk '{print $2}')"
+      spacetime call "$DB" admin_set_item_level "$ent" "$(echo "$line" | awk '{print $3}')" 20 >/dev/null 2>&1
+      spacetime call "$DB" admin_set_rank "$ent" 40008 20 >/dev/null 2>&1
+      bow_leveled=1
+    fi
+  fi
   if [ -z "$bow_given" ]; then
     ent="$(grep -oE '^GRANT_BOW [0-9]+' "$fight_log" | head -1 | awk '{print $2}')"
     if [ -n "$ent" ]; then
@@ -141,6 +154,8 @@ fi
 echo "-- the server's log"
 all_logs="$(spacetime logs "$DB" -n 30000 2>/dev/null)"
 echo "$all_logs" | grep -E "regents: .* wields|Rolling|Blocking|parried" | tail -8
+# One leg alone (LEG): the checks below read the whole run's camp legs.
+if [ -n "$LEG" ]; then exit "$status"; fi
 # NOT CHAINED (Luke's F12, 2026-11-13): with the camp's three on us, no two DIFFERENT foes' finishers stagger one body
 # inside regents.unchained_ms (1500) of each other; a held-off one says "does not land: not chained".
 staggers="$(echo "$all_logs" | grep -E "'s finisher staggered [0-9]+ for" \

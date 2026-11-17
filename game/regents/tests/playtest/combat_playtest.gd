@@ -60,6 +60,11 @@ func _run() -> void:
 		_finish()
 		return
 	input.capture_mouse = false   # a display-less run has no cursor to capture
+	# LEG=bow_skills (the shell's): that leg alone, the bow given and wielded at the dummies first.
+	if OS.get_cmdline_user_args().has("--leg=bow_skills"):
+		await _bow_skills_alone()
+		_finish()
+		return
 	await _until(func() -> bool: return inv.count(AXE) == 1, 5.0)
 	await _until(func() -> bool: return _bar_text() != "", 3.0)
 	_check(combat.kit == null and hud.ability_bar.visible and _bar_text().contains("No weapon"), "nothing wielded: the ability bar's weapon says so (\"%s\")" % _bar_text())
@@ -509,6 +514,7 @@ func _run() -> void:
 	await get_tree().create_timer(0.8).timeout
 	var st_bow: StatusComponent = me.find_component(StatusComponent) as StatusComponent
 	_check(not combat.drawing() and inv.count(ARROWS) == arrows1 and st_bow.status() != 107, "RMB lets the draw go (and parries with the stave): no arrow, no Drawing")
+	await _bow_skills(dummy, dh, bow_row)
 	combat.wield(-1)
 	await get_tree().create_timer(0.5).timeout
 
@@ -520,6 +526,198 @@ func _run() -> void:
 	await _until(func() -> bool: return combat.target_id == -1, 1.0)
 	_check(combat.target_id == -1 and not hud._target_box.visible and not combat._ring.visible, "Esc: no target, no ring, no frame")
 	_finish()
+
+
+## The bow's skills alone (LEG=bow_skills): the bow given, wielded from the bag's row, then `_bow_skills`.
+func _bow_skills_alone() -> void:
+	var dummy: int = await _dummy_at(DUMMY_1)
+	_check(dummy > 0, "a training dummy at camp")
+	if dummy <= 0:
+		return
+	var dh: SpaceTimeHealthComponent = (EntityRegistry.get_entity(dummy) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	print("GRANT_BOW %d" % me.entity_id)
+	await _until(func() -> bool: return inv.count(BOW) == 1, 20.0)
+	var bow_row: int = -1
+	for s: SpaceTimeInventoryComponent.Stack in inv.items():
+		if s.item_def_id == BOW:
+			bow_row = s.id
+	combat.wield(bow_row)
+	await _until(func() -> bool: return combat.kit != null and combat.kit.draws, 5.0)
+	await _bow_skills(dummy, dh, bow_row)
+	combat.wield(-1)
+
+
+## THE BOW'S SKILLS, PRESSED (follow-up A1, 2026-11-17): the bow's judged sweeps through a real client and the real
+## keys, what the server recorded read back. The shell levels the bow to 20 and our Archery to 20 (BOW_SKILLS); E's first
+## pick, Pinning Shot, and the ult, Arrow Volley, are chosen (`choose_pick`). NEGATIVE: Kick Away, the option not chosen,
+## sent straight at the server, is refused. Q, Point-Blank Shot, lands on the first dummy and not the second (one body);
+## R, Arrow Volley, swept along the line through both dummies, lands on BOTH (Hits All), each its own damage as Q's was
+## its; E, Pinning Shot, on a camp skeleton coming at us SLOWS it (the kit's hit: a `status_effect` row; a dummy never
+## takes one). Pinning Shot rather than Kick Away: its slow is a row every client reads; a shove moves a body the
+## referee drives, which only a position after the fact could judge.
+func _bow_skills(dummy: int, dh: SpaceTimeHealthComponent, bow_row: int) -> void:
+	var bow_kit: KitDef = combat.kit
+	var point_blank: AbilityDef = ContentLibrary.find(&"ability", 40043) as AbilityDef
+	var pinning: AbilityDef = ContentLibrary.find(&"ability", 40044) as AbilityDef
+	var kick: AbilityDef = ContentLibrary.find(&"ability", 40045) as AbilityDef
+	var volley: AbilityDef = ContentLibrary.find(&"ability", 40047) as AbilityDef
+	_check(bow_kit != null and bow_kit.draws and point_blank != null and pinning != null and kick != null and volley != null and volley.hits_all,
+		"the bow wielded; its pool's Q, E options and ult in the content (the volley Hits All)")
+	if bow_kit == null or point_blank == null or pinning == null or kick == null or volley == null:
+		return
+	print("BOW_SKILLS %d %d" % [me.entity_id, bow_row])
+	await _until(func() -> bool: return combat.item_usable() >= 20, 20.0)
+	_check(combat.item_usable() >= 20, "the shell set the bow to level 20 and our Archery to 20: it counts as %d" % combat.item_usable())
+	# THE PICKS, out of a fight (the camp's hits may still count: then again a moment later).
+	for pick: Array in [[0, pinning], [2, volley]]:
+		var said: String = ""
+		for attempt: int in 4:
+			var req: ReducerRequest = combat.choose_pick(bow_row, int(pick[0]), pick[1] as AbilityDef)
+			await _until(func() -> bool: return req.outcome != ReducerRequest.Outcome.PENDING, 5.0)
+			said = "ok" if req.outcome == ReducerRequest.Outcome.OK else req.error_message
+			if not said.contains("not in a fight"):
+				break
+			await get_tree().create_timer(4.0).timeout
+		_check(said == "ok", "%s chosen at the bow's pick %d (%s)" % [(pick[1] as AbilityDef).display_name, int(pick[0]), said])
+	await _until(func() -> bool: return combat.on_slot(1) == pinning and combat.on_slot(2) == volley, 5.0)
+	_check(combat.on_slot(0) == point_blank and combat.on_slot(1) == pinning and combat.on_slot(2) == volley
+		and _bar_text().contains(point_blank.display_name) and _bar_text().contains(pinning.display_name) and _bar_text().contains(volley.display_name),
+		"the bar: Q %s, E %s, R %s (\"%s\")" % [point_blank.display_name, pinning.display_name, volley.display_name, _bar_text()])
+	var act: SpaceTimeActionComponent = me.find_component(SpaceTimeActionComponent) as SpaceTimeActionComponent
+	var mine: Array[int] = []
+	var theirs: Array[int] = []
+	var refusals: Array[String] = []
+	var on_swung: Callable = func(id: int) -> void: mine.append(id)
+	var on_resolved: Callable = func(id: int, _pid: int, _outcome: int, _target: int) -> void: theirs.append(id)
+	var on_refused: Callable = func(why: String) -> void: refusals.append(why)
+	combat.swung.connect(on_swung)
+	act.action_resolved.connect(on_resolved)
+	combat.refused.connect(on_refused)
+	# NEGATIVE: the option NOT chosen, straight at the server (our own bar has no key for it).
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 3.0), DUMMY_1)
+	act.request_use(kick.id, 0, Vector3(0, 0, -1))
+	await _until(func() -> bool: return not refusals.is_empty(), 3.0)
+	_check(refusals.any(func(w: String) -> bool: return w.contains("not chosen")) and not theirs.has(kick.id),
+		"NEGATIVE: %s, not chosen, sent straight at the server: refused (%s)" % [kick.display_name, str(refusals)])
+	refusals.clear()
+	await get_tree().create_timer(1.0).timeout
+
+	# --- Q, POINT-BLANK SHOT: 3 m from the first dummy, the second 2.7 m to its side ---
+	var other: int = await _dummy_at(DUMMY_2)
+	var oh: SpaceTimeHealthComponent = (EntityRegistry.get_entity(other) as SpaceTimeEntity).find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent if other > 0 else null
+	_check(oh != null, "the camp's second dummy")
+	if oh == null:
+		combat.swung.disconnect(on_swung)
+		act.action_resolved.disconnect(on_resolved)
+		combat.refused.disconnect(on_refused)
+		return
+	combat.set_target(dummy)
+	await _stand_at(DUMMY_1 + Vector3(0, 0.05, 3.0), DUMMY_1)
+	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0) and is_equal_approx(oh.get_current(), 500.0), 8.0)
+	var rank_q: int = skilling.rank_in(bow_kit.skill)
+	var a0: float = dh.get_current()
+	var b0: float = oh.get_current()
+	await _key(KEY_Q)
+	await _until(func() -> bool: return dh.get_current() < a0 and theirs.has(point_blank.id), 3.0)
+	await get_tree().create_timer(0.6).timeout
+	var q_dealt: float = a0 - dh.get_current()
+	_check(mine.has(point_blank.id) and theirs.has(point_blank.id) and q_dealt > 0.0 and is_equal_approx(oh.get_current(), b0) and refusals.is_empty(),
+		"Q: %s swung, the server took it and the first dummy lost %.2f; the second, beside its line, nothing (refused: %s)" % [point_blank.display_name, q_dealt, str(refusals)])
+
+	# --- R, ARROW VOLLEY: along the line through both dummies, from just past the second ---
+	# The yard's sparring skeleton stands 1.8 m off that line, 5 m on, and notices at 4 m (2026-11-17: from 1.5 m past
+	# the dummy it came, swung and staggered us before the volley): we stand where it is farthest, 0.8 to 1.5 m past.
+	var along: Vector3 = (DUMMY_2 - DUMMY_1).normalized()
+	var spar: Vector3 = SPARRING
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and e.definition.kind == SPARRING_KIND:
+			spar = e.global_position
+	var at: Vector3 = DUMMY_2 + along * 1.5
+	for i: int in range(15, 7, -1):
+		var p: Vector3 = DUMMY_2 + along * (float(i) / 10.0)
+		if Vector2(p.x - spar.x, p.z - spar.z).length() > Vector2(at.x - spar.x, at.z - spar.z).length():
+			at = p
+	at += Vector3(0, 0.05, 0)
+	print("   (the volley from %.1f m past the second dummy, %.1f m from the sparring skeleton)" % [Vector2(at.x - DUMMY_2.x, at.z - DUMMY_2.z).length(), Vector2(at.x - spar.x, at.z - spar.z).length()])
+	combat.set_target(-1)
+	await _stand_at(at, DUMMY_1)
+	await _until(func() -> bool: return is_equal_approx(dh.get_current(), 500.0) and is_equal_approx(oh.get_current(), 500.0), 8.0)
+	# Whatever else is near its line is said (only the dummies' health is read: Hits All may take more).
+	var near_line: Array[String] = []
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e == null or id == dummy or id == other or id == me.entity_id or e.definition == null:
+			continue
+		var rel: Vector3 = e.global_position - at
+		var ahead: float = -rel.x * along.x - rel.z * along.z
+		var off: float = absf(rel.x * along.z - rel.z * along.x)
+		if ahead > 0.0 and ahead < volley.reach_m and off < volley.radius_m + 1.0:
+			near_line.append("%d (kind %d) %.1f m on, %.1f m off" % [id, e.definition.kind, ahead, off])
+	print("   (near the volley's line: %s)" % str(near_line))
+	var rank_v: int = skilling.rank_in(bow_kit.skill)
+	var c0: float = dh.get_current()
+	var d0: float = oh.get_current()
+	await _key(KEY_R)
+	await _until(func() -> bool: return dh.get_current() < c0 and oh.get_current() < d0, 4.0)
+	await get_tree().create_timer(0.6).timeout
+	var v1: float = c0 - dh.get_current()
+	var v2: float = d0 - oh.get_current()
+	# The same weapon, quality and mastery: each volley hit is its damage as Q's was its (the rank read before each).
+	var per: float = q_dealt / (point_blank.damage * (1.0 + float(SkillDef.mastery_bp(rank_q)) / 10000.0))
+	var want_v: float = volley.damage * per * (1.0 + float(SkillDef.mastery_bp(rank_v)) / 10000.0)
+	_check(mine.has(volley.id) and theirs.has(volley.id) and refusals.is_empty(), "R: %s swung and the server took it (refused: %s)" % [volley.display_name, str(refusals)])
+	_check(v1 > 0.0 and v2 > 0.0 and absf(v1 - v2) < 0.05 and absf(v1 - want_v) < 0.1,
+		"R landed on BOTH dummies (it Hits All), each a single hit: %.2f and %.2f (want %.2f: %.0f as Q's %.0f did %.2f)" % [v1, v2, want_v, volley.damage, point_blank.damage, q_dealt])
+
+	# --- E, PINNING SHOT: a camp skeleton, coming at us, slowed ---
+	var my_hp: SpaceTimeHealthComponent = me.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+	await _heal(my_hp)
+	var camp: Vector3 = Vector3(33.0, 0.0, -1.0)
+	var foe: SpaceTimeEntity = null
+	for id: int in EntityRegistry.all_entity_ids():
+		var e: SpaceTimeEntity = EntityRegistry.get_entity(id) as SpaceTimeEntity
+		if e != null and e.definition != null and e.definition.kind == 103 and not (e.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent).is_dead() \
+				and (foe == null or e.global_position.distance_to(camp) < foe.global_position.distance_to(camp)):
+			foe = e
+	_check(foe != null, "a skeleton warrior at the camp")
+	var slowed: Array[bool] = []   # a lambda's own copy of a bool never reaches here: an array does
+	var pinned: bool = false
+	var fst: StatusComponent = foe.find_component(StatusComponent) as StatusComponent if foe != null else null
+	if foe != null and fst != null:
+		var on_effect: Callable = func(status: int, on: bool) -> void:
+			if status == 108 and on:
+				slowed.append(true)
+		fst.effect_changed.connect(on_effect)
+		var fh: SpaceTimeHealthComponent = foe.find_component(SpaceTimeHealthComponent) as SpaceTimeHealthComponent
+		# In FRONT of where it faces now, 8 m off (it sees at 10, F9): it comes at us along the shot's line.
+		for attempt: int in 3:
+			var yaw: float = foe.body.rotation.y if foe.body != null else 0.0
+			var front: Vector3 = foe.global_position + Vector3(-sin(yaw), 0.0, -cos(yaw)) * 8.0
+			await _stand_at(Vector3(front.x, foe.global_position.y + 0.05, front.z), foe.global_position)
+			var f0: float = fh.get_current()
+			_face(foe)
+			await get_tree().create_timer(0.1).timeout
+			await _until(func() -> bool: return combat.can_act() and combat.cooldown_left(pinning) <= 0.0, 3.0)
+			_face(foe)
+			await _key(KEY_E)
+			await _until(func() -> bool: return fh.get_current() < f0 or not slowed.is_empty(), 2.0)
+			await _until(func() -> bool: return not slowed.is_empty(), 1.0)
+			pinned = fh.get_current() < f0
+			if pinned:
+				break
+			print("   (the pinning shot missed it: it at %s, we at %s; again)" % [str(foe.global_position), str(me.global_position)])
+			await get_tree().create_timer(float(pinning.cooldown_ms) / 1000.0).timeout
+		fst.effect_changed.disconnect(on_effect)
+	combat.swung.disconnect(on_swung)
+	act.action_resolved.disconnect(on_resolved)
+	combat.refused.disconnect(on_refused)
+	_check(mine.has(pinning.id) and theirs.has(pinning.id) and pinned, "E: %s swung, the server took it, and it hit the skeleton" % pinning.display_name)
+	_check(not slowed.is_empty() and fst != null and fst.has_effect(108), "and SLOWED it: the server's Slowed effect on it (%.1f s left)" % (fst.effect_seconds_left(108) if fst != null else -1.0))
+	# Away from the camp: it gives up past its leash and walks home.
+	combat.set_target(-1)
+	await _stand_at(Vector3(0.0, 0.05, 9.0), Vector3(0.0, 0.0, 0.0))
+	await _heal(my_hp)
 
 
 ## THE LAB'S LOOKS IN THE FIGHT (PROGRESS 82; Luke, 2026-11-14: "lets use the vfx in all the current abilites"): the
@@ -1078,7 +1276,8 @@ func _armor_in_the_camp(my_hp: SpaceTimeHealthComponent, home: Vector3) -> void:
 		last = now_hp
 	var near := func(d: float, among: Array[float]) -> bool: return among.any(func(x: float) -> bool: return absf(x - d) <= 0.02)
 	_check(not drops.is_empty() and drops.all(func(d: float) -> bool: return near.call(d, kept)),
-		"in the armor every hit lands at its foe's hit x %.0f / (%.0f + 12.4) (one of %s): hits taken %s" % [k, k, str(kept), str(drops)])
+		"in the armor every hit lands at its foe's hit x %.0f / (%.0f + 12.4) (one of %s): hits taken %s (the server's block flag: %s)"
+			% [k, k, str(kept), str(drops), str(combat.blocking)])
 	_check(not drops.is_empty() and not drops.any(func(d: float) -> bool: return near.call(d, whole)),
 		"NEGATIVE: none lands whole (%s): hits taken %s" % [str(whole), str(drops)])
 	# Off again, out of the fight.
@@ -1108,11 +1307,15 @@ func _blocked_from_behind(my_hp: SpaceTimeHealthComponent) -> void:
 	var last: float = my_hp.get_current()
 	var until: int = Time.get_ticks_msec() + 12000
 	combat.set_block(true)
+	var raised_ms: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() < until and my_hp.get_current() > 25.0 and not drops.any(func(d: float) -> bool: return whole.has(d)):
 		await get_tree().process_frame
 		_face_nearest_foe()
 		input.set_look(input.get_look_yaw() + PI, 0.0)   # the back to it
-		if not combat.blocking:
+		# Held up again when it dropped, NOT EVERY FRAME (2026-11-17: each frame until the server's row came back sent 25
+		# guards past the rate limit), as `_blocking_the_camp` does.
+		if not combat.blocking and Time.get_ticks_msec() - raised_ms > 300:
+			raised_ms = Time.get_ticks_msec()
 			combat.set_block(true)
 		var now_hp: float = my_hp.get_current()
 		if now_hp < last - 0.01:
