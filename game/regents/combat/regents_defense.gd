@@ -1,8 +1,8 @@
 class_name RegentsDefense extends RefCounted
 ## ARMOR'S NUMBERS, AS THE SERVER COUNTS THEM (W3): the client's twin of `rules::piece_defense` and `rules::defense_mult`
 ## (`server/src/genre/regents/mod.rs`) and of `defense_of` (`server/src/game/regents.rs`). Change both together; the
-## `regents` suite checks this twin on the case the server's own tests pin (a skeleton's 7 through the practice
-## pieces: 4.74). For the bag's words only: the server decides every hit.
+## `regents_bar` suite checks this twin on the case the integration suite pins (a skeleton's 4 through an iron cuirass
+## and a steel armet: 3.18). For the bag's words only: the server decides every hit.
 
 ## A worn piece's Defense: its item's, its quality (thousandths) adding up to a fifth more, as quality adds to damage.
 static func piece(defense: int, quality_pm: int) -> float:

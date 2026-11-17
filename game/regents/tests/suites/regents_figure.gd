@@ -12,7 +12,7 @@ extends "res://tests/suite_base.gd"
 ##   - WORN ARMOR (W2): the table `armor_looks.tres` covers every armor piece with files that exist and a palette; a
 ##     `worn` row dresses its wearer (the pieces, the material's palette), a slot back to 0 or the row gone gives the
 ##     Peasant piece back, another player's row dresses their body only, a reassembly keeps it, steel's pauldrons are
-##     spiked (iron's round), a closed helm hides hair and beard and a hood the hair, the practice piece draws nothing
+##     spiked (iron's round), a closed helm hides hair and beard and a hood the hair, a removed piece draws nothing
 ##   - THE PICKER (template 1.8.4): a color picked lands in the text as `main=<int>` and survives Done, the preview
 ##     dyed in it; NEGATIVE: on a look that does not offer the colors, the same pick is dropped at Done
 ## How it LOOKS: `"$GODOT" --path . res://game/regents/tests/figure_shot.tscn -- <out dir>` (windowed).
@@ -325,8 +325,11 @@ func _run_armor_table() -> void:
 	var hood: Dictionary = looks.dress_for([_item("soft_leather_hood")] as Array[int], &"male")[0]
 	_check(armet.has(&"hairstyle") and armet[&"hairstyle"] == null and armet.has(&"beard") and armet[&"beard"] == null, "a closed helm takes off the hair and beard")
 	_check(hood.has(&"hairstyle") and hood[&"hairstyle"] == null and not hood.has(&"beard"), "a hood the hair only")
-	var practice: Array = looks.dress_for([40067, 40068] as Array[int], &"male")
-	_check((practice[0] as Dictionary).is_empty() and (practice[1] as Dictionary).is_empty(), "the practice pieces (no material) put on nothing")
+	# A PIECE SINCE REMOVED (follow-up A2, 2026-11-17): the practice cuirass and helm (40067, 40068) are gone from the
+	# content, and a database may still hold them in a bag or a `worn` row: no item, so nothing put on.
+	_check(ItemDef.by_id(40067) == null and ItemDef.by_id(40068) == null, "the practice pieces are gone from the content")
+	var gone: Array = looks.dress_for([40067, 40068] as Array[int], &"male")
+	_check((gone[0] as Dictionary).is_empty() and (gone[1] as Dictionary).is_empty(), "a piece since removed (40067, 40068) puts on nothing")
 
 
 class WornRow extends RefCounted:
@@ -426,9 +429,9 @@ func _run_worn() -> void:
 	_check(not _wears(fm, "Hair_"), "a closed helm: no hair")
 	me._on_row_updated(&"worn", _worn(0, 0, 0), null)
 	_check(_outfits(fm) == ["Peasant"] and _wears(fm, "Hair_") and _dyed(fm, BLUE).y == _outfit_surfaces(fm), "the row gone: all Peasant in my colors, the hair back")
-	# The practice piece: nothing drawn, nothing broken.
+	# A worn row naming pieces since removed (the practice ones, a database may still hold them): nothing drawn, nothing broken.
 	me._on_row_updated(&"worn", null, _worn(40068, 40067, 0))
-	_check(_outfits(fm) == ["Peasant"], "the practice pieces draw nothing")
+	_check(_outfits(fm) == ["Peasant"], "pieces since removed draw nothing")
 	# A new model (a look chosen again) is dressed as it comes.
 	me._on_row_updated(&"worn", null, _worn(0, _item("linen_robe"), 0))
 	var visual: Node = fm.get_parent()

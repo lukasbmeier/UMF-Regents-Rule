@@ -186,8 +186,8 @@
 			"type": "foe"
 		},
 		"shared/content/regents/item.json": {
-			"count": 88,
-			"hash": "8ac52f87",
+			"count": 86,
+			"hash": "52e0fb3a",
 			"owner": "regents",
 			"sources": {
 				"game/regents/content/item/arrow_shafts.tres": "890f07f6",
@@ -241,8 +241,6 @@
 				"game/regents/content/item/oak_crossguard_hilt.tres": "bce1db15",
 				"game/regents/content/item/oak_handle.tres": "43b3aa25",
 				"game/regents/content/item/oak_logs.tres": "de9da362",
-				"game/regents/content/item/practice_cuirass.tres": "d610e33d",
-				"game/regents/content/item/practice_helm.tres": "2e1d23e1",
 				"game/regents/content/item/seed_pod.tres": "0d4e5517",
 				"game/regents/content/item/soft_leather.tres": "852175d1",
 				"game/regents/content/item/soft_leather_hood.tres": "e5b40b8f",
