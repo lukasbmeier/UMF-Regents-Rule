@@ -5732,3 +5732,29 @@ talk), and `Ctrl+Z`/`Ctrl+Y` for undo/redo. In `7.NPCs`, type a name and click *
   `save_level` (0 `_BuilderPreview` bloat), and `bake_level`.
 - Full verification: `tests/run_tests.sh` **5215 passed, 0 failed** (lints, engine-error and leak checks green),
   `tests/content_test.sh` **18 passed, 0 failed**, `cargo test` green, `cargo check --target wasm32-unknown-unknown` clean.
+
+## Step 102: THE BAR'S WORDS SAY A HIT'S SLOW, SHOVE AND SWEEP (2026-11-17, the follow-up run's B1)
+
+**Built**:
+- `game/regents/ui/ability_bar.gd`: `RegentsAbilityBar.ability_words` adds lines read from the data, never per ability:
+  "It hits every foe in its sweep, not just the first." (`AbilityDef.hits_all`) and, from the kit's `KitHit` for that
+  ability (`KitDef.hit_entry`), "Unblocked, it leaves the foe 40% slower and unable to sprint for 3 s, and knocks it back
+  at 10 m/s." New helpers `hit_words(KitHit)`, `status_words(StatusDef)` (from `speed`, `can_act`, `can_sprint`,
+  `can_jump`, `can_dash`; the status's name when it changes none of them), `_secs`, `_num`. The staff's area and cone
+  spells now say how much their status slows instead of only "slowed". Every caller gets it: the bar's slot tips, the
+  abilities window, the bag's chest line (no kit there, so no kit hit; a chest spell's own status still shows).
+- `game/regents/ui/bar_lab.gd`: a words panel on the right lists every ability of the weapon's set in the same words
+  (tooltips do not show in a shot); the shots include the axe (`bar_axe_0..2.png`).
+- `game/regents/tests/suites/regents_bar.gd`: `_run_hit_words` and a lab check.
+
+**How to play it**: hover a Q/E/R slot on the bar, or an ability in the abilities window. Or `bar_lab.tscn` (F6), press
+Axe: Hamstring Chop, Shoulder Shove and Whirlwind say their slow, shove and sweep on the right.
+
+**Tested**: `regents_bar` 165/0. Negative: the five lines that add the words removed, five checks fail (the hamstring's
+slow, the shove, Whirlwind's sweep, a made-up status's numbers, the lab's panel); the other way, the axe's Chop (no slow,
+no shove, first foe only) says none of "slower", "sprint", "knocks", "every foe", "unblocked", and a made-up StatusDef
+(speed 0.5, no jumping, 1.5 s, 7.5 m/s) reads back exactly. Shots looked at: sword, axe, staff, bow, three states each.
+On `main` after the merge: the whole unit suite (the ledger has the count).
+
+**Left for later**: the bow's skills are worded as melee ("A strike in front of you: 10 damage, reaching 15.0 m"), a
+line older than B1 and wrong for a shot: it wants a line of its own for a kit that `draws`.

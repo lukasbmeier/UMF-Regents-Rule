@@ -143,6 +143,8 @@ paths:
 - A SWEEP THAT HITS ALL (PROGRESS 89, template #314): a player's judged sweep marked Hits All (`AbilityDef.hits_all`:
   Cleave) lands on every foe in it, each judged as a single hit; a rallying hit heals once a swing (`rallied`).
   Which abilities hit all is Luke's content call.
+- AN ABILITY'S WORDS (PROGRESS 102) come from its data (`RegentsAbilityBar.ability_words`): a `KitHit`'s slow and shove
+  and `hits_all` are worded by `hit_words` / `status_words`. A new on-hit effect gets words there, never per ability.
 - TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
   piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
   (`VillageDressing`), never placed by hand round a house.

@@ -17,6 +17,7 @@ One line each: the question, today's value or the proposal, where it is written.
 - CONFIRM: "Blink moves from the staff to cloth chests" (B8) is built: the staff has no Blink; a staff user with no robe has an empty F that says what fills it.
 - A chest's ability costs no mana and trains no mastery (mana is the staff's alone): yours to change. The chest's level (B8) waits for a family with more than one ability.
 - B13 as read (one free change a week, then the head's materials, escalating): confirm the reading.
+- How a shove is worded on the bar: today "knocks it back at 10 m/s" (the content's number); a distance in meters reads better but depends on the movement's friction (PROGRESS 102).
 - Which other abilities hit every foe in their sweep (only Cleave is marked; `hits_all` on the ability's .tres; PROGRESS 89).
 - YOUR STAFF: the staff now has a placeholder ult (Meteor) on R, so a staff that took Gale or Frost Ring on R keeps the pick but it no longer fires: change the pick to Meteor (free once a week), or say the staff should have no ult until yours is designed.
 - The second pick (~12) has nothing to take once E holds an option: upgrades are not built (B6).
