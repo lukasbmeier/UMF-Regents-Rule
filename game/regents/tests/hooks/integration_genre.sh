@@ -50,6 +50,37 @@ standin_down() {
     spacetime call "$DB" revoke_authority "$OLD_REF" >/dev/null 2>&1
   done
 }
+# put_away ITEM LABEL: every row of ITEM in the bag consumed whole, then ONE check, that none is left. Rows of an item
+# that carries a quality never stack, so how many there are follows a random yield or grade: a check a row made the
+# suite's total change from run to run, and a check missing from one run could not show (A3b, 2026-11-17).
+put_away() {
+  local row n=0
+  for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $1" | awk '{print $1}'); do
+    spacetime call "$DB" consume_item "$row" "$(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" >/dev/null 2>&1
+    n=$((n + 1))
+  done
+  assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $1")" "0" "$2 ($n rows)"
+}
+# give_back SKILL XP LABEL: XP granted back to $MYENT in SKILL when there is any, and ONE check either way (A3b).
+give_back() {
+  local out
+  if [ "${2:-0}" -gt 0 ] 2>/dev/null; then
+    out="$(spacetime call "$DB" grant_xp "$MYENT" "$1" "$2" 2>&1)"
+    if echo "$out" | grep -qiE "^error|error:"; then fail "$3 ($(echo "$out" | grep -v UNSTABLE | grep -m1 .))"; else pass; fi
+  else
+    pass   # nothing to give back
+  fi
+}
+# COUNT_BY_SECTION=1: `tally LABEL` says how many checks the leg since the last tally made (passes and failures), so two
+# runs can be compared leg by leg (A3b). Silent otherwise.
+TALLY_AT=$((passes + failures))
+tally() {
+  if [ "${COUNT_BY_SECTION:-}" = "1" ]; then
+    local now=$((passes + failures))
+    echo "  [count] $((now - TALLY_AT)) checks: $1"
+    TALLY_AT=$now
+  fi
+}
 standin_up() {   # standin_up CODE(JSON-quoted) LABEL
   standin_down
   assert_ok "offer_referee 0 $1" "$2: offered"
@@ -138,6 +169,7 @@ wr_xp() { sql_rows "SELECT id, xp FROM work_result WHERE entity_id = $MYENT AND 
 log_of() { sql_first "SELECT $2 FROM recipe_log WHERE entity_id = $MYENT AND recipe_id = $1" 1; }
 assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051)" "1 1 1" "the player was given a Copper axe, a Copper pickaxe and (herbalism, 2026-11-07) a Copper trowel"
 
+tally "the setup: the camp, the bot, the referee helpers"
 # --- THE TUTORIAL (Luke, 2026-11-01: make your own sword, then the fight; progress on the server) ---
 # Begun here, so the whole suite's real work (rounds, crafts, a parry, a string at the dummy) ticks its lessons;
 # what it ticked is read at the end. Lesson ids: content/lesson/ (40001 chop ... 40015 the grip's shape).
@@ -160,6 +192,7 @@ assert_eq "$(tut_state)" "3" "set aside"
 assert_ok "tutorial_begin" "...and taken after all"
 assert_eq "$(tut_state)" "1" "under way again"
 
+tally "THE TUTORIAL"
 # --- woodcutting ---
 assert_ok 'teleport {"x":0.0,"y":0.0,"z":8.0}' "stand at the spawn, 16 m from tree_1"
 assert_rejected "gather $TREE false" "too far" "gathering from 16 m is refused"
@@ -201,6 +234,7 @@ LOGS1="$(qty_of 40002)"
 assert_ok "submit_challenge_result $CID $BOT_RESULT" "submitted from 10 m away..."
 assert_eq "$(qty_of 40002)" "$LOGS1" "...pays nothing: you have to be where you work"
 
+tally "woodcutting"
 # --- mining, and the rank a node needs ---
 assert_ok 'teleport {"x":-18.0,"y":0.0,"z":16.5}' "stand by iron_1"
 assert_rejected "gather $IRON true" "needs Mining rank 5" "an iron rock needs mining rank 5 (the old 2 on the 1-33 track; a new miner has 1)"
@@ -219,6 +253,7 @@ check "$(echo "$BOT_PLAYED" | grep -q '"score_pm": 1000' && echo true || echo fa
 check "$([ "$ORE" -ge 1 ] && [ "$ORE" -le 3 ] && echo true || echo false)" "the server replayed the strikes and paid $ORE copper ore (2.78 at a full score, fewer if the rock gave out)"
 assert_eq "$(xp_of 40002)" "$((ORE * 10))" "and mining has the XP"
 
+tally "mining, and the rank a node needs"
 # --- the furnace ---
 assert_ok 'teleport {"x":-6.0,"y":0.0,"z":12.5}' "stand at the furnace"
 assert_rejected "craft $FURNACE 40002 true" "needs 2 Iron ore" "no iron ore, no iron bar (two ores to a bar)"
@@ -239,6 +274,7 @@ check "$([ "$SMELT_XP" -ge $((18 * 5 + 18 * BARS - BARS)) ] && [ "$SMELT_XP" -le
 assert_eq "$(log_of 40001 made)" "$BARS" "the recipe log counts the bars made"
 check "$([ "$(log_of 40001 fresh_pm)" -lt 1000 ] && echo true || echo false)" "and the recipe has worn a little stale ($(log_of 40001 fresh_pm) per mille)"
 
+tally "the furnace"
 # --- the anvil: a part as good as the smith ---
 assert_ok 'teleport {"x":-2.0,"y":0.0,"z":15.0}' "stand at the anvil"
 assert_rejected "craft $ANVIL 40004 true" "needs 2 Iron bar" "no iron bars, no axe head"
@@ -262,6 +298,7 @@ SMITH_XP="$(xp_of 40004)"
 assert_eq "$(wr_xp "$ANVIL")" "$SMITH_XP" "smithing has the XP the round's work_result says"
 check "$([ "$SMITH_XP" -ge 180 ] && echo true || echo false)" "a first axe head pays its own 30, its bars' work and the first-make bonus: $SMITH_XP XP"
 
+tally "the anvil"
 # --- the workbench, and a better tool's speed ---
 assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "stand at the workbench"
 assert_rejected "craft $BENCH 40006 false" "needs 1 Grip" "an iron axe needs a grip (and rivets): assembled by the playtest"
@@ -307,9 +344,7 @@ assert_rejected "craft_choosing $BENCH 40006 false [40016,40012] [40006]" "offer
 assert_rejected "craft_choosing $BENCH 40010 false [40016,40012] [40001]" "offers no trait 40001" "and a sword is offered no Steady (a tool's): the oak gives it Heavy"
 assert_rejected "set_craft_grade 4" "grades are 0 to 2" "grade 4: refused"
 # The heads in the bag first go (the one shaped in a round above may be any grade, even Masterwork), then exactly one Fine.
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40014" | tr -d ' '); do
-  assert_ok "consume_item $row 1" "(an iron axe head put away)"
-done
+put_away 40014 "(an iron axe head put away): none left"
 assert_ok "admin_give_item $MYENT 40014 1 600" "(one Fine iron axe head, and no other)"
 assert_ok "set_craft_grade 2" "make with Masterwork heads"
 assert_rejected "craft_choosing $BENCH 40006 false [40016,40012] [40001]" "of grade 2" "no Masterwork head in the bag: refused, by grade"
@@ -320,9 +355,7 @@ assert_ok "craft_with $BENCH 40006 false 40016" "an older build's craft (any gra
 assert_eq "$(row_count "SELECT * FROM craft_grade WHERE entity_id = $MYENT")" "0" "takes the best of any grade: the grade picked is forgotten"
 assert_ok "work_stop" "stop"
 # REFIT: a Fine iron axe made before parts were noted (plain handle, copper rivets), an oak handle swapped in.
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40011" | tr -d ' '); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(no iron bars yet)"
-done
+put_away 40011 "(no iron bars yet): none left"
 assert_ok "admin_give_item $MYENT 40015 1 650" "(a Fine iron axe, quality 650)"
 AXE_R="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40015 AND instance_data = '{\"q\":650}'" 1)"
 OAK0="$(qty_of 40016)"
@@ -344,6 +377,7 @@ assert_rejected "craft_choosing $BENCH 40055 false [] [40009]" "offers no trait 
 assert_ok "craft $BENCH 40055 false" "a copper armet: begun (as good as its plates)"
 assert_ok "work_stop" "stop"
 
+tally "the workbench, and a better tool's speed"
 # --- the order board ---
 assert_eq "$(row_count 'SELECT * FROM work_order WHERE world_id = 0')" "3" "the board has three work orders"
 ORDER="$(sql_first "SELECT id FROM work_order WHERE world_id = 0 AND slot = 0" 1)"
@@ -353,9 +387,7 @@ check "$([ "$O_QTY" -ge 1 ] && [ "$O_XP" -ge 1 ] && echo true || echo false)" "o
 assert_rejected "fill_order $BOARD $ORDER" "too far" "filled from the workbench: too far"
 assert_ok 'teleport {"x":1.0,"y":0.0,"z":17.5}' "stand at the order board"
 assert_rejected "fill_order $FURNACE $ORDER" "too far" "the furnace is no order board (and far)"
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $O_ITEM" | tr -d ' '); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "what the bag had of it goes"
-done
+put_away $O_ITEM "what the bag had of it goes: none left"
 assert_rejected "fill_order $BOARD $ORDER" "it wants $O_QTY" "an empty bag cannot fill it"
 assert_ok "grant_item $MYENT $O_ITEM $O_QTY" "an admin gives what it wants"
 XP0="$(xp_of "$O_SKILL")"
@@ -368,26 +400,28 @@ assert_rejected "fill_order $BOARD $ORDER" "you have filled that order" "an orde
 assert_rejected "fill_order $BOARD 999999" "that order is gone" "an order that is not there"
 # What "the same again" gave goes: an order may want a tool (a steel axe since the material table), which would
 # be the best axe below (found 2026-10-23: the round at the steel axe's 75 %, and "no axe" with one in the bag).
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $O_ITEM" | tr -d ' '); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the order's item again, put away)"
-done
+put_away $O_ITEM "(the order's item again, put away): none left"
 assert_ok "grant_item $MYENT 40015 1" "an admin gives an iron axe (no quality)"
 assert_ok 'teleport {"x":-25.0,"y":0.0,"z":-28.5}' "stand by yew_1"
 assert_rejected "gather $(node_at yew_1) true" "needs Woodcutting rank 12" "a yew needs woodcutting rank 12 (the old 4)"
 assert_ok 'teleport {"x":-3.0,"y":0.0,"z":-9.5}' "back by tree_2"
+# Worked out (status 100), an admin grows it back; either way ONE check that it stands (A3b: a check made only when
+# the branch was taken made the suite's total vary).
 if [ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $TREE2" 1)" = "100" ]; then
-  assert_ok "set_status $TREE2 0 0 \"\"" "tree_2 grows back (an admin)"
+  spacetime call "$DB" set_status "$TREE2" 0 0 '""' >/dev/null 2>&1
 fi
+check "$([ "$(sql_first "SELECT status FROM status_state WHERE entity_id = $TREE2" 1)" != "100" ] && echo true || echo false)" "tree_2 stands (an admin grew it back if it was worked out)"
 # (Woodcutting at rank 1 for this one, its XP back after: on the 1-33 track a few logs make rank 3, whose share
 # shades the speed and eases the round, PROGRESS 73.)
 WC_XP="$(xp_of 40001)"
 assert_ok "admin_set_rank $MYENT 40001 1" "(test) Woodcutting at rank 1"
 assert_ok "gather $TREE2 true" "a round with the iron axe in the bag"
 assert_eq "$(round_field "$(round_cid)" payload)" "\"$TREE2 40001 85\"" "the best axe is used: the round is at the iron axe's speed (85 %)"
-[ "${WC_XP:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40001 $WC_XP" "(test) Woodcutting's $WC_XP XP back"
+give_back 40001 "$WC_XP" "(test) Woodcutting's $WC_XP XP back"
 CID="$(round_cid)"
 assert_ok "submit_challenge_result $CID []" "nothing pressed"
 
+tally "the order board"
 # --- a node worked out ---
 assert_ok 'teleport {"x":-9.0,"y":0.0,"z":-4.5}' "back at tree_1"
 assert_ok "set_status $TREE 100 60000 \"\"" "an admin works tree_1 out (status Depleted, 60 s)"
@@ -399,6 +433,7 @@ assert_rejected "gather $TREE3 false" "need an axe" "with no axe, nothing is cho
 assert_eq "$(qty_of 40001)" "0" "and the starter kit is not handed out again (once per character)"
 assert_ok "grant_item $MYENT 40001 1" "an admin gives the axe back"
 
+tally "a node worked out"
 # --- herbalism (2026-11-07, HERBALISM_HUNTING_PREP.md step 1; 2026-11-08 step 2: PULL THE ROOT, kind 106) ---
 FLAX="$(node_at flax_1)"; FLAX2="$(node_at flax_2)"; FLAX3="$(node_at flax_3)"; WHEEL="$(station_at spinning_wheel)"   # (-12,0,2), (-15,0,5), (-10,0,6), (8,0,14)
 assert_ok 'teleport {"x":-12.0,"y":0.0,"z":3.6}' "stand by flax_1"
@@ -436,9 +471,7 @@ assert_ok "consume_item $TROWEL_ROW 1" "the trowel leaves the bag"
 assert_rejected "gather $FLAX2 false" "need a trowel" "with no trowel, no flax is pulled"
 assert_rejected "gather $FLAX2 true" "need a trowel" "nor a round played"
 assert_ok "grant_item $MYENT 40051 1" "an admin gives the trowel back"
-for ROW in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40046" | tr -d ' '); do
-  assert_ok "consume_item $ROW $(sql_first "SELECT qty FROM inventory_item WHERE id = $ROW" 1)" "(the flax pulled above leaves the bag)"
-done
+put_away 40046 "(the flax pulled above leaves the bag): none left"
 assert_eq "$(qty_of 40046)" "0" "(no flax in the bag)"
 assert_ok 'teleport {"x":8.0,"y":0.0,"z":12.6}' "stand at the spinning wheel"
 assert_rejected "craft $WHEEL 40038 false" "needs 3 Flax" "no flax, no bowstring (three to one)"
@@ -449,6 +482,7 @@ assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "back at the workbench"
 assert_rejected "craft $BENCH 40039 false" "needs 1 Bowstring" "the stave carved above, but no bowstring: no bow to string"
 assert_ok "work_stop" "(nothing left working)"
 
+tally "herbalism"
 # --- combat: the weapon is the kit; the training dummy ---
 C_AIM='{"x":0.0,"y":0.0,"z":-1.0}'
 # The checks below were written for every last hit staggering a dummy (its length, a role's, a trait's): a dummy
@@ -462,8 +496,9 @@ assert_ok 'teleport {"x":7.0,"y":0.0,"z":21.5}' "stand by the dummy"
 AXE_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40001" 1)"
 # The order board's orders are random: one that wanted a copper pickaxe took ours above (2026-10-24).
 if [ -z "$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)" ]; then
-  assert_ok "grant_item $MYENT 40006 1" "(a copper pickaxe again: an order took ours)"
+  spacetime call "$DB" grant_item "$MYENT" 40006 1 >/dev/null 2>&1
 fi
+check "$([ -n "$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)" ] && echo true || echo false)" "(a copper pickaxe in the bag: given again if an order took ours)"
 PICK_ROW="$(sql_first "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40006" 1)"
 assert_rejected "use_ability_seen 40006 0 $C_AIM 901 100" "wield an axe first" "nothing wielded: an axe's chop is refused"
 assert_rejected "wield $PICK_ROW" "is no weapon" "a pickaxe is no weapon"
@@ -587,6 +622,7 @@ timed_ok 6 "the referee: its sweep found the dummy"
 # Read in the run: a CLI read came after the dummy was whole again (4 s), and passed even when the hit landed (2026-11-04).
 num_is "$(timed_val HPC_AFTER)" "$HPC" "but a canceled swing never lands: no damage"
 standin_down
+tally "combat"
 # --- TRAITS (template DECISIONS #275): what changes how a weapon plays, never its Power. A dev reducer
 # gives them here (a designer trying one); the playtest makes a tool with a handle's. Ids: the content's
 # (game/regents/content/trait/). ---
@@ -628,7 +664,7 @@ assert_eq "$(python -c "print(round($HPT1 - $HPT2, 2))")" "7.56" "Brutal, the du
 AXP_LEG="$(( $(xp_of 40007) ))"
 assert_ok "admin_set_rank $MYENT 40007 1" "(test) Axemanship back:"
 AXP_BACK="$(( ${AXP_BEFORE:-0} + AXP_LEG ))"
-[ "$AXP_BACK" -gt 0 ] && assert_ok "grant_xp $MYENT 40007 $AXP_BACK" "(test) ... its XP before the leg and the leg's own ($AXP_BACK)"
+give_back 40007 "$AXP_BACK" "(test) ... its XP before the leg and the leg's own ($AXP_BACK)"
 assert_ok "set_item_traits $AXE_ROW [$T_HEAVY]" "(dev) now Heavy"
 sleep 1.2
 standin_down
@@ -651,6 +687,7 @@ hits "a chop, traits off" "$DUMMY" 40006:934
 assert_eq "$(sql_first "SELECT lock_ms FROM swing WHERE entity_id = $MYENT" 1)" "$L0" "the dial at 0: the kit's own lock"
 assert_ok 'reset_rule "foundation.trait_strength_pct"' "(test) traits back on"
 
+tally "TRAITS"
 # --- POISE (Luke, 2026-11-02: option A, a bar that breaks, with a short B, Steadied): a melee hit wears a foe's or a
 # dummy's poise (regents.poise_light 10, the string's last regents.poise_finisher 40); only the last hit breaks it: a
 # stagger, then Steadied (nothing wears it). Heavy: the last hit wears 35 % more. Read off the public poise_state row.
@@ -722,6 +759,7 @@ standin_down
 assert_ok "set_item_traits $AXE_ROW []" "(dev) the axe plain again"
 standin_down
 sleep 5
+tally "POISE"
 # --- ROLES BY THE HANDLE (COMBAT_OVERHAUL.md §5, Luke 2026-11-01), the sword first: a hilt fits a sword only;
 # RE-HILTING changes the role (the old hilt lost); the server fires the string's last hit the HANDLE gives, whatever
 # the client asked for (a build from before roles always asks for the thrust); its lock, its stagger, its heal. ---
@@ -753,7 +791,7 @@ assert_ok "admin_set_rank $MYENT 40006 33" "(test) Swordsmanship 33, so the leve
 assert_rejected "choose_pick $SW 0 40035" "not one of this weapon's picks" "NEGATIVE: Flurry (the plain grip's) is no crossguard's pick"
 assert_ok "choose_pick $SW 0 40051" "the crossguard's first pick: Charge (placeholder)"
 assert_ok "admin_set_rank $MYENT 40006 1" "(test) Swordsmanship back:"
-[ "${SWX0:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40006 $SWX0" "(test) ... its $SWX0 XP as it was"
+give_back 40006 "$SWX0" "(test) ... its $SWX0 XP as it was"
 # A CLI call takes a second or more: the string's window is made its longest for the test, and each string is
 # played the moment a stand-in referee claims the world (it counts as there for 5 s after: three steps with the
 # answers between outlasted it, 2026-11-01). Only the last step is answered; the first two lapse as misses.
@@ -844,6 +882,7 @@ assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
 assert_ok "wield $AXE_ROW" "the axe again (what follows counts on it)"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
 sleep 5
+tally "ROLES BY THE HANDLE"
 # --- FOES (owner, 2026-10-19: the first enemies, a skeleton camp east of the spawn) ---
 assert_eq "$(row_count 'SELECT * FROM foe WHERE world_id = 0')" "9" "three skeletons at the camp, the yard's sparring skeleton, a deer, a pack of two wolves, the archer and the imp (the level's foe points; steps 65-66)"
 SKEL="$(sql_first "SELECT entity_id FROM foe WHERE point_id = 'skeleton_1'" 1)"
@@ -894,6 +933,7 @@ timed "$(printf '%s\n' \
 timed_ok 3 "the referee: it hit you (the rule off)"
 check "$(logged "regents: $SKEL's 40001 on $MYENT waits $HOLD_WAIT ms past its landing for a parry")" "NEGATIVE: with regents.hit_at_once off the same hit waits $HOLD_WAIT ms"
 assert_ok 'reset_rule "regents.hit_at_once"' "(test) hits dealt at once again"
+tally "FOES"
 # --- ARMOR, THE CORE (S2, ARMOR_PREP.md A1 and A6, settled): pieces worn from the bag out of a fight, their Defense ADDED
 # UP, a hit on the wearer damage x K / (K + Defense) (K: regents.defense_k, 67). The pieces are the material table's (the
 # practice pieces, 40067 and 40068, are gone: follow-up A2).
@@ -941,6 +981,7 @@ assert_ok 'take_off "head"' "the armet off"
 assert_eq "$(sql_first "SELECT chest_row FROM worn WHERE entity_id = $MYENT" 1)$(sql_first "SELECT head_row FROM worn WHERE entity_id = $MYENT" 1)" "00" "nothing worn"
 assert_ok 'reset_rule "regents.regen_delay_s"' "(test) the fight's wait as it was"
 assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) whole again"
+tally "ARMOR, THE CORE"
 # THE ROLL, JUDGED WHERE IT WAS PRESSED (Luke, 2026-11-11: "Yes, credit the delay"): the blow is judged a hit, and
 # a roll its player pressed before it landed AS THEY SAW IT arrives after: they rolled clear, nothing is dealt.
 # (This client shows swings 150 ms late; the hit's wait made long, for a CLI's timing.)
@@ -976,6 +1017,7 @@ assert_ok 'reset_rule "regents.hit_hold_slack_ms"' "(test) the wait's slack back
 assert_ok "report_seen_delay 30" "(test) this client's delay as it was"
 SLASH="$(sql_first "SELECT damage FROM ability_def WHERE ability_id = 40001" 1)"
 check "$(python -c "print('true' if abs(($PHP0 - $PHP1) - $SLASH * 0.5) < 1e-3 else 'false')")" "its slash at its 50 %: half the sword slash's $SLASH ($PHP0 -> $PHP1)"
+tally "THE ROLL, JUDGED WHERE IT WAS PRESSED"
 # DEATH INTERRUPTS AT ONCE (Luke's feedback 4099, 2026-10-31): it swings, dies before the sweep is judged, and
 # lands nothing; then it is whole again (an authority's negative damage) for what follows.
 sleep 1.0
@@ -1017,6 +1059,7 @@ timed "$(printf '%s\n' \
 timed_ok 1 "it slashes again"
 timed_ok 3 "the referee: the sweep caught skeleton_2"
 num_is "$(timed_val NH1)" "$NH0" "skeleton_2 is not hurt by its own kind"
+tally "DEATH INTERRUPTS AT ONCE"
 # YOU SLAY IT: worn down by an authority, then a chop: Slain, its loot is yours, its body goes, it comes back.
 QTY() { local v; v="$(sql_rows "SELECT qty FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $1" | awk -F'|' '{s+=$1} END {print s+0}')"; echo "${v:-0}"; }
 C0="$(QTY 40007)"; I0="$(QTY 40008)"; G0="$(QTY 40009)"; XP0="$(xp_of 40007)"
@@ -1056,9 +1099,13 @@ for p in '$GROUND'.split(','):
         i, q = p.split(':'); b[int(i)] += int(q)
 print('true' if a == b else 'false')
 ")" "its loot ('$LOOT') lies on the ground, yours ('$GROUND')"
+# Every sack picked up, then ONE check (how many sacks there are is the loot's roll: A3b).
+SACKS=0
 for GID in $(sql_rows "SELECT id FROM ground_item WHERE owner_id = $MYENT" | tr -d ' '); do
-  assert_ok "pick_up $GID" "pick up a sack beside it"
+  spacetime call "$DB" pick_up "$GID" >/dev/null 2>&1
+  SACKS=$((SACKS + 1))
 done
+assert_eq "$(row_count "SELECT * FROM ground_item WHERE owner_id = $MYENT")" "0" "every sack beside it picked up ($SACKS): none of yours left on the ground"
 check "$(python -c "
 import sys
 got = {int(a): int(b) for a, b in (p.split(':') for p in '$LOOT'.split(',') if p)}
@@ -1089,6 +1136,7 @@ assert_eq "$MS" "\"axe\"|1|100|true|3600" "into one share: the axe, 1 hit, 100 %
 assert_ok 'reset_rule "regents.meta_period_s"' "(test) the meta by the hour again"
 assert_ok 'reset_rule "regents.meta_alarm_min_hits"' "(test) and an alarm needs a busy hour"
 assert_eq "$(sql_first "SELECT current FROM health_state WHERE entity_id = $SKEL2" 1)" "120" "whole"
+tally "YOU SLAY IT"
 # THE DEER (hunting, 2026-11-09, HERBALISM_HUNTING_PREP.md §7 step 3): a foe that never fights, with its own brain; any
 # hit STARTLES it (status 109, so its brain bolts); slain it lies Slain (the killing hit never startles it) and drops
 # nothing yet (its carcass is skinning's, the next step).
@@ -1113,6 +1161,7 @@ check "$(sql_first "SELECT fell_at FROM foe WHERE entity_id = $DEER" 1 | grep -q
 check "$(logged "slew Deer \($DEER\); its loot: \[\]")" "it drops nothing (its hide is skinned from its carcass): the log's loot is empty"
 assert_eq "$(row_count "SELECT * FROM foe_kill WHERE foe_id = 40004")" "0" "and no kill row of loot"
 check "$(python -c "print('true' if $(xp_of 40007) > $DXP0 else 'false')")" "and the killing chop paid axemanship XP"
+tally "THE DEER"
 # SKINNING (Luke's H1, 2026-11-07; his knife and "the killer first, then anyone", 2026-11-09; HERBALISM_HUNTING_PREP.md
 # §7 step 4): the slain deer's body is taken away at once and its CARCASS lies where it fell, a node yours to skin first;
 # a knife (the starter's copper one) skins it; unskinned, it rots. SEVERAL HIDES (Luke, 2026-11-10): held E deals THE CUT
@@ -1194,13 +1243,12 @@ assert_ok "remove_bots $SESS_D" "(test) the bot goes"
 # skilling playtest's, as above).
 RACK="$(station_at tanning_rack)"
 assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "stand at the tanning rack"
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40056" | awk '{print $1}'); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the skinned hides put away)"
-done
+put_away 40056 "(the skinned hides put away): none left"
 assert_rejected "craft $RACK 40046 false" "needs 1 Deer hide" "NEGATIVE: no hide, no leather"
 assert_ok "grant_item $MYENT 40056 1" "an admin gives a deer hide"
 assert_ok "craft $RACK 40046 false" "a deer hide set to tan (AFK)"
 assert_rejected "craft $RACK 40038 false" "is not made at the" "a bowstring is not made at the tanning rack"
+tally "SKINNING"
 # THE WOLF (hunting, 2026-11-10/11, HERBALISM_HUNTING_PREP.md §7 step 5; PROGRESS 56-57): a foe that fights with its own
 # kit. Hit while it stands, it is STARTLED (Luke, 2026-11-11: "Every foe" turns on who hit it from beyond its sight; its
 # brain's half is the unit suite's). Its string on you, as its brain asks: the BITE is plain; the HAMSTRING BITE slows
@@ -1322,6 +1370,7 @@ WCARCASS="$(sql_first "SELECT entity_id FROM gather_node WHERE point_id = 'carca
 check "$([ -n "$WCARCASS" ] && echo true || echo false)" "the slain wolf left its carcass ($WCARCASS)"
 assert_eq "$(sql_first "SELECT def_id FROM gather_node WHERE entity_id = ${WCARCASS:-0}" 1)" "40009" "a Wolf carcass (node 40009)"
 assert_eq "$(sql_first "SELECT owner_id FROM carcass WHERE entity_id = ${WCARCASS:-0}" 1)" "$MYENT" "yours to skin first: you did the damage"
+tally "THE WOLF"
 # SKINNING 5 (the old 2 on the 1-33 track): refused at rank 1; at rank 5 the cut line skins the whole carcass for its pelts.
 assert_ok "admin_set_rank $MYENT 40011 1" "(test) Skinning at rank 1"
 assert_rejected "gather ${WCARCASS:-0} true" "needs Skinning rank 5" "NEGATIVE: a wolf's carcass needs Skinning rank 5"
@@ -1337,9 +1386,7 @@ for _ in $(seq 1 10); do [ "$(row_count "SELECT * FROM gather_node WHERE entity_
 assert_eq "$(row_count "SELECT * FROM gather_node WHERE entity_id = ${WCARCASS:-0}")" "0" "skinned whole in one round, it is taken away"
 # TANNING, the second leather: a wolf pelt into supple leather at the rack, at Crafting 5 (the old 2).
 assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "back at the tanning rack"
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = 40064" | awk '{print $1}'); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the skinned pelts put away)"
-done
+put_away 40064 "(the skinned pelts put away): none left"
 CRAFT_XP="$(xp_of 40005)"
 assert_ok "admin_set_rank $MYENT 40005 5" "(test) Crafting at rank 5"
 assert_rejected "craft $RACK 40053 false" "needs 1 Wolf pelt" "NEGATIVE: no pelt, no leather"
@@ -1350,7 +1397,8 @@ assert_ok "admin_set_rank $MYENT 40005 5" "(test) Crafting at rank 5"
 assert_ok "craft $RACK 40053 false" "a wolf pelt set to tan (AFK)"
 # (Crafting's XP as it was, or rank 5's start if it had less: what follows counts on neither.)
 assert_ok "admin_set_rank $MYENT 40005 1" "(test) Crafting's XP put back"
-[ "${CRAFT_XP:-0}" -gt 0 ] && assert_ok "grant_xp $MYENT 40005 $CRAFT_XP" "(test) to its $CRAFT_XP XP"
+give_back 40005 "$CRAFT_XP" "(test) to its $CRAFT_XP XP"
+tally "SKINNING 5"
 # A FOE'S SHOT (FOES_PREP.md F4-F6, steps 64-67): the archer's draw, its brain's wish (the stand-in naming you), is
 # taken; but a foe never shoots a player who is not ONLINE (`foe_shot_due`), and the CLI's player is offline between
 # its calls: each call connects, and the server parks it after ("entity N parked", "back where it stood"; an SQL
@@ -1371,6 +1419,7 @@ assert_eq "$(timed_val AS1)" "40030" "its draw is its swing (the tell)"
 check "$([ "$(row_count "SELECT * FROM body_state WHERE owner_id = ${ARCHER:-0}")" -eq "${ARROWS0:-0}" ] && [ "$(timed_val AB1)" = "-" ] && echo true || echo false)" "NEGATIVE: at a player who is not online, nothing flies"
 check "$(spacetime logs "$DB" 2>/dev/null | tail -120 | grep -qE "${ARCHER:-0} looses 40030" && echo false || echo true)" "NEGATIVE: and the server looses nothing"
 assert_ok 'teleport {"x":11.0,"y":0.0,"z":12.6}' "(test) back at the tanning rack, where the next part stands"
+tally "A FOE'S SHOT"
 # A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops.
 # THE TUTORIAL SET ASIDE: nothing ticks; a death offers it again, once (T2).
 assert_ok "tutorial_set_aside" "the tutorial set aside before the death"
@@ -1437,6 +1486,7 @@ assert_ok "apply_damage $MYENT -- -1000.0 0" "(test) and you"
 assert_ok 'reset_rule "regents.combo_window_ms"' "(test) the string's window as it was"
 standin_down
 
+tally "A PLAYER SLAIN gets up at the spawn, whole; what they were working at stops."
 # --- THE YEW BOW (owner, 2026-10-20): draw, loose at a target (the server aims and rolls), what an arrow
 # hits (the referee reports it), point blank, the arrows used and the share back from a kill ---
 assert_ok "grant_item $MYENT 40020 1" "an admin gives a yew bow"
@@ -1536,6 +1586,7 @@ standin_down
 spacetime call "$DB" draw_bow false >/dev/null 2>&1   # never leave the section drawn (a walk's bound)
 assert_ok "wield $AXE_ROW" "the axe again"
 
+tally "THE YEW BOW"
 # --- THE STAFF (owner, 2026-10-20, LOOT_AND_STYLES §4): mana on wielding it; a Bolt; Fireball's cast, splash
 # and burn; a cast let go costs nothing; Frost Ring's slow; Blink; too little mana; Gale's push ---
 xyz() { python -c "
@@ -1578,9 +1629,7 @@ assert_rejected "choose_pick $STAFF_ROW 2 40016" "opens at the weapon's level 20
 # CHANGING A PICK (Luke's B13): free once a week from level 20, anywhere; past it the head's material (a staff's: Yew logs)
 # at a workbench, doubling with each paid change. Out of a fight. The staff is at level 12 here, Frost Ring picked.
 YEW=40004
-for row in $(sql_rows "SELECT id FROM inventory_item WHERE owner_entity_id = $MYENT AND item_def_id = $YEW" | awk '{print $1}'); do
-  assert_ok "consume_item $row $(sql_first "SELECT qty FROM inventory_item WHERE id = $row" 1)" "(the yew logs put away)"
-done
+put_away $YEW "(the yew logs put away): none left"
 assert_rejected "change_pick 0 $STAFF_ROW 0 40016" "at a workbench" "NEGATIVE: level 12 (no free change below 20), no workbench: refused"
 assert_ok 'teleport {"x":4.0,"y":0.0,"z":13.5}' "stand at the workbench"
 assert_rejected "change_pick $BENCH $STAFF_ROW 0 40016" "it takes 2 Yew logs" "NEGATIVE: no yew logs: refused, nothing changed"
@@ -1839,6 +1888,7 @@ assert_eq "$(row_count "SELECT * FROM inventory_item WHERE owner_entity_id = $MY
 assert_eq "$(qty_of 40001) $(qty_of 40006) $(qty_of 40051) $(qty_of 40059) $(qty_of 40024) $(qty_of 40034)" "1 1 1 1 0 0" "a Copper axe, a Copper pickaxe, a Copper trowel and (skinning, 2026-11-09) a Copper knife; no coal, no steel axe"
 assert_eq "$(row_count "SELECT * FROM wielded WHERE entity_id = $MYENT")" "0" "the steel axe it held is put away"
 
+tally "THE STAFF"
 # --- THE WORLD MAP'S DISCOVERY (Luke, 2026-10-26): a node is named once you have been near it ---
 SEEN_TREE="$(node_at tree_1)"
 seen_n() { row_count "SELECT * FROM node_seen WHERE entity_id = $MYENT"; }
@@ -1856,6 +1906,7 @@ assert_eq "$(seen_n)" "1" "seen once only"
 assert_rejected "saw_nodes [$(seq -s, 1 33)]" "at most 32" "33 at once: refused"
 assert_eq "$(spacetime sql --anonymous "$DB" "SELECT * FROM node_seen" 2>/dev/null | tail -n +3 | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')" "0" "another player is sent none of them"
 
+tally "THE WORLD MAP'S DISCOVERY"
 # --- NO ROLL IN THE AIR (Luke's continent playtest, 2026-10-24, #6): the server refuses it, as a swing ---
 # The CLI's player is offline, so the server's own gravity moves it (#70): 300 m up it falls for about 8 s,
 # in the air for the checks. The roll on the ground is the combat playtest's (a real client rolls and is answered).
@@ -1866,6 +1917,7 @@ for _ in $(seq 1 30); do [ "$(sql_first "SELECT grounded FROM movement_state WHE
 assert_eq "$(sql_first "SELECT grounded FROM movement_state WHERE entity_id = $MYENT" 1 | tr -d ' ')" "true" "landed"
 assert_ok 'use_ability_seen 40010 0 {"x":0.0,"y":0.0,"z":-1.0} 2 0' "on the ground, the same roll is taken"
 
+tally "NO ROLL IN THE AIR"
 # --- THE TUTORIAL: what the suite's own work ticked, then the rest done by hand ---
 # Before the set-aside: logs gathered in a round (40001), copper mined (40003), bars smelted (40004), the string's
 # last hit on the dummy (40009), a sword taken in hand (40008), a shaped grip's last hit (40015). (A grip and rivets
@@ -1898,3 +1950,4 @@ assert_eq "$(row_count 'SELECT * FROM foe')" "0" "and its foes"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 103 OR kind = 104 OR kind = 105')" "0" "and their bodies"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 120')" "0" "and the guide"
 assert_eq "$(row_count 'SELECT * FROM entity WHERE kind = 100 OR kind = 101')" "0" "and their entities"
+tally "THE TUTORIAL"
