@@ -643,6 +643,7 @@ func _run_shot_lighter() -> void:
 	(nobody[1] as ShotLook)._age = ShotLook.OWNER_WAIT_S + 0.1
 	(nobody[1] as ShotLook)._process(0.016)
 	_check(not (nobody[1] as ShotLook).lighter and (nobody[1] as ShotLook)._lighter_settled, "NEGATIVE: a shot with no owner: whole")
+	(nobody[1] as ShotLook).cancel_end()   # (cleared away: no hit flash left behind)
 	(nobody[0] as Node).queue_free()
 	EntityRegistry.unregister(9881)
 	other.queue_free()
@@ -763,6 +764,27 @@ func _run_lab() -> void:
 		while stage.get_child_count() == 0 and Time.get_ticks_msec() < until:
 			await get_tree().process_frame
 		_check(stage.get_child_count() > 0, "the lab plays %s: its effects are on the stage" % showcases[i][0])
+	# A Bolt cut off mid-flight by the next showcase leaves no hit flash behind (B2b: it showed in the next shots).
+	var bolt_i: int = showcases.map(func(s: Array) -> String: return String(s[0])).find("Bolt")
+	lab.call(&"_select", bolt_i)
+	var looks: Array[Node] = []
+	var by: int = Time.get_ticks_msec() + 3000
+	while Time.get_ticks_msec() < by:
+		looks = stage.find_children("*", "ShotLook", true, false)
+		if not looks.is_empty() and (looks[0] as ShotLook)._age > 0.1:
+			break
+		await get_tree().process_frame
+	_check(not looks.is_empty() and (looks[0] as ShotLook)._age > 0.1, "the lab's Bolt is in flight")
+	var before: Array[Node] = get_tree().root.get_children()
+	lab.call(&"_select", 0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var left: int = 0
+	for n: Node in get_tree().root.get_children():
+		if n.scene_file_path.ends_with("bolt_hit.tscn") and not before.has(n):
+			left += 1
+			n.queue_free()
+	_check(left == 0, "a Bolt cut off by the next showcase leaves no hit flash in the world (%d)" % left)
 	await _run_comparison(lab, showcases)
 	lab.call(&"_set_speed", 2)
 	_check(is_equal_approx(Engine.time_scale, 0.25), "the lab's quarter speed slows the engine")

@@ -54,6 +54,8 @@ var _age: float = 0.0
 ## before it enters the tree to decide it (the lab).
 var lighter: bool = false
 var _lighter_settled: bool = false
+## It is being cleared away, not ending: no effect where it was (`cancel_end`).
+var _end_canceled: bool = false
 ## How long it waits for its body's owner to be known before it stays whole.
 const OWNER_WAIT_S: float = 0.5
 
@@ -150,9 +152,15 @@ func shooter_hand() -> Vector3:
 	return look.muzzle_point() if look != null else Vector3.INF
 
 
+## It is being cleared away (the VFX lab starting another showcase), not hitting anything: when it goes, it shows no
+## end effect.
+func cancel_end() -> void:
+	_end_canceled = true
+
+
 ## It is gone (it hit, or its time ran out): its effect or a burst where it was.
 func _ended() -> void:
-	if _age <= 0.05 or not is_inside_tree():
+	if _age <= 0.05 or _end_canceled or not is_inside_tree():
 		return
 	if end_scene != null:
 		var fx: Node3D = end_scene.instantiate() as Node3D
