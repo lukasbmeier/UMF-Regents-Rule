@@ -455,13 +455,13 @@ static func ability_words(a: AbilityDef, k: KitDef) -> String:
 					extra += "; it burns %d a second for %.0f s" % [roundi(spell.burn_dps), float(spell.burn_ms) / 1000.0]
 				lines.append("Flies at your target, or where you aim: %s%s." % [dmg, extra])
 			SpellDef.Kind.AREA:
-				var then: String = " and %s for %.0f s" % [spell.status.display_name.to_lower(), float(spell.status_ms) / 1000.0] if spell.status != null else ""
+				var then: String = ", leaving those in it %s for %s" % [status_words(spell.status), _secs(spell.status_ms)] if spell.status != null and spell.status_ms > 0 else ""
 				lines.append("A circle %.0f m wide where you aim, up to %.0f m away, landing after %.1f s: %s%s." % [
 					spell.radius_m * 2.0, a.range_m, float(spell.delay_ms) / 1000.0, dmg, then])
 			SpellDef.Kind.BLINK:
 				lines.append("Carries you %.0f m the way you look, at once." % a.range_m)
 			SpellDef.Kind.CONE:
-				var slows: String = ", %s for %.1f s" % [spell.status.display_name.to_lower(), float(spell.status_ms) / 1000.0] if spell.status != null else ""
+				var slows: String = ", leaving them %s for %s" % [status_words(spell.status), _secs(spell.status_ms)] if spell.status != null and spell.status_ms > 0 else ""
 				lines.append("Everything within %.0f m in front of you: %s%s%s.  It can knock a foe off its feet." % [
 					a.range_m, dmg, ", pushed away" if spell.push_mps > 0.0 else "", slows])
 		if spell.cast_ms > 0:
@@ -472,9 +472,59 @@ static func ability_words(a: AbilityDef, k: KitDef) -> String:
 		lines.append("Carries you forward into a strike: %d damage, reaching %.1f m." % [roundi(a.damage), a.reach_m])
 	else:
 		lines.append("A strike in front of you: %d damage, reaching %.1f m." % [roundi(a.damage), a.reach_m])
+	if a.hits_all:
+		lines.append("It hits every foe in its sweep, not just the first.")
+	var on_hit: String = hit_words(k.hit_entry(a) if k != null else null)
+	if not on_hit.is_empty():
+		lines.append(on_hit)
 	if a.cooldown_ms > 0:
 		lines.append("Ready again %.0f s after." % (float(a.cooldown_ms) / 1000.0))
 	return "\n".join(lines)
+
+
+## WHAT A HIT DOES BEYOND ITS DAMAGE (the kit's `KitHit` for it, null: nothing), in the player's words: "Unblocked, it
+## leaves the foe 40% slower and unable to sprint for 3 s, and knocks it back at 10 m/s." Empty when it does neither.
+static func hit_words(kh: KitHit) -> String:
+	if kh == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	if kh.status != null and kh.status_ms > 0:
+		parts.append("leaves the foe %s for %s" % [status_words(kh.status), _secs(kh.status_ms)])
+	if kh.push_mps > 0.0:
+		parts.append("knocks %s back at %s m/s" % ["it" if not parts.is_empty() else "the foe", _num(kh.push_mps)])
+	return "" if parts.is_empty() else "Unblocked, it %s." % ", and ".join(parts)
+
+
+## What status `s` does to whoever has it, from its numbers: "40% slower and unable to sprint"; its name when it
+## changes nothing a player could put in words.
+static func status_words(s: StatusDef) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	if s.speed < 1.0:
+		parts.append("%d%% slower" % roundi((1.0 - s.speed) * 100.0))
+	elif s.speed > 1.0:
+		parts.append("%d%% faster" % roundi((s.speed - 1.0) * 100.0))
+	var cannot: PackedStringArray = PackedStringArray()
+	if not s.can_act:
+		cannot.append("act")
+	if not s.can_sprint:
+		cannot.append("sprint")
+	if not s.can_jump:
+		cannot.append("jump")
+	if not s.can_dash:
+		cannot.append("dash")
+	if not cannot.is_empty():
+		parts.append("unable to " + " or ".join(cannot))
+	return s.display_name.to_lower() if parts.is_empty() else " and ".join(parts)
+
+
+## `ms` as seconds for a reader: "3 s", "1.5 s".
+static func _secs(ms: int) -> String:
+	return "%s s" % _num(float(ms) / 1000.0)
+
+
+## A number without a trailing ".0": 10, 1.5.
+static func _num(v: float) -> String:
+	return "%d" % roundi(v) if is_equal_approx(v, roundf(v)) else "%.1f" % v
 
 
 ## THE WEAPON'S MOVES, what the old text line said (B11: off the bar, into the weapon's tooltip and the tutorial):

@@ -9,11 +9,12 @@ class_name RegentsBarLab extends Control
 ##   Take a pick    the first pick open takes its next option (as the bag's buttons do in play)
 ##   Q E R F        fire that slot (it flashes, then cools down), as the keys do in play
 ##   Use round / Use square    sets the game's setting (Settings, Game: "Ability bar"), saved
-## Hover a slot (the cursor is free here) for its words. Each look is a `.tres` (`bar_round.tres`,
+## Hover a slot (the cursor is free here) for its words; the panel on the right shows every ability of the weapon
+## in the same words (`RegentsAbilityBar.ability_words`: damage, reach, a slow, a shove, a sweep that hits all). Each look is a `.tres` (`bar_round.tres`,
 ## `bar_square.tres`): change one in the Inspector and run the lab again.
 ##
 ## SHOTS (windowed, no server): `"$GODOT" --path . res://game/regents/ui/bar_lab.tscn -- <out dir>` saves the lab for
-## the sword, the staff and the bow, each out of stance, in stance (its first slot just used) and in a fight, then quits.
+## the sword, the axe, the staff and the bow, each out of stance, in stance (its first slot just used) and in a fight, then quits.
 
 const KITS: Array[StringName] = [&"sword", &"axe", &"bow", &"staff", &""]
 const WEAPONS: Dictionary[StringName, int] = {&"sword": 40019, &"axe": 40001, &"bow": 40020, &"staff": 40023}
@@ -29,6 +30,7 @@ var state: int = 1
 var low_mana: bool = false
 var rank: int = 12
 var _rank_label: Label = null
+var _words: Label = null
 
 
 ## A made-up pool row (what `ResourceComponent` reads from the server's).
@@ -79,6 +81,18 @@ func _ready() -> void:
 		half.add_child(bar)
 		bars.append(bar)
 	_controls()
+	_words = Label.new()
+	_words.name = "Words"
+	_words.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_words.anchor_left = 0.755
+	_words.anchor_top = 0.16
+	_words.offset_right = -12.0
+	_words.offset_bottom = -8.0
+	_words.clip_contents = true
+	_words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_words.add_theme_font_size_override(&"font_size", 11)
+	_words.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_words)
 	combat.swung.connect(func(id: int) -> void:
 		for b: RegentsAbilityBar in bars:
 			b.fired(id))
@@ -91,7 +105,7 @@ func _ready() -> void:
 ## Save the lab for each kit and state into `dir`, then quit.
 func _shoot(dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
-	for k: StringName in [&"sword", &"staff", &"bow"]:
+	for k: StringName in [&"sword", &"axe", &"staff", &"bow"]:
 		for st: int in 3:
 			_set_kit(k)
 			rank = 12 if k == &"staff" and st == 2 else 4   # the staff's last shot: past its first pick, Frost Ring taken
@@ -164,6 +178,25 @@ func _set_kit(key: StringName) -> void:
 	combat.weapon_data_for_tests = ""
 	_set_rank(float(rank))
 	_fill_mana()
+	_show_words()
+
+
+## Every ability of the weapon (its handle's set), in the words its slot's tooltip uses.
+func _show_words() -> void:
+	if _words == null:
+		return
+	var k: KitDef = combat.pool_kit() if combat.kit != null else null
+	if k == null:
+		_words.text = ""
+		return
+	var out: PackedStringArray = PackedStringArray(["What each ability says (hover a slot for the same):"])
+	for a: AbilityDef in k.skills:
+		if a != null:
+			out.append("%s
+%s" % [a.display_name, RegentsAbilityBar.ability_words(a, k)])
+	_words.text = "
+
+".join(out)
 
 
 ## The weapon's level and your mastery both `r` (a fraction is that far into the level, for the ring).

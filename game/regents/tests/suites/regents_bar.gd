@@ -42,6 +42,7 @@ func run() -> void:
 	await _run_bag_picks()
 	await _run_changes()
 	_run_words()
+	_run_hit_words()
 	await _run_drawn()
 	await _run_lab()
 	await _run_doll()
@@ -544,6 +545,58 @@ func _run_words() -> void:
 	c.free()
 
 
+
+## WHAT A HIT DOES BEYOND ITS DAMAGE (follow-up B1): the slow (how much, how long), the shove, hitting every foe in the
+## sweep, read from the kit's `hits` and the ability; an ability with none of them says nothing about them.
+func _run_hit_words() -> void:
+	var axe: KitDef = KitDef.by_key(&"axe")
+	var hamstring: String = RegentsAbilityBar.ability_words(load("res://game/regents/content/ability/axe_hamstring_chop.tres") as AbilityDef, axe)
+	_check(hamstring.contains("Unblocked, it leaves the foe 40% slower and unable to sprint for 3 s.") and not hamstring.contains("knocks"),
+		"a slow says how much and how long: %s" % hamstring.replace("
+", " / "))
+	var shove: String = RegentsAbilityBar.ability_words(load("res://game/regents/content/ability/axe_shoulder_shove.tres") as AbilityDef, axe)
+	_check(shove.contains("Unblocked, it knocks the foe back at 10 m/s.") and not shove.contains("slower"),
+		"a shove says so, and nothing of a slow: %s" % shove.replace("
+", " / "))
+	var whirl: String = RegentsAbilityBar.ability_words(load("res://game/regents/content/ability/axe_whirlwind.tres") as AbilityDef, axe)
+	_check(whirl.contains("every foe in its sweep"), "a sweep that hits all says so: %s" % whirl.replace("
+", " / "))
+	# THE NEGATIVE: the axe's Chop has no slow, no shove and hits the first only: not a word of any.
+	var chop: String = RegentsAbilityBar.ability_words(axe.light[0], axe)
+	for word: String in ["slower", "sprint", "knocks", "every foe", "unblocked"]:
+		_check(not chop.to_lower().contains(word), "an ability with no slow, shove or sweep says nothing of \"%s\": %s" % [word, chop.replace("
+", " / ")])
+	# The same ability out of its kit (the chest's tooltip passes no kit) says nothing of the kit's hits.
+	_check(not RegentsAbilityBar.ability_words(load("res://game/regents/content/ability/axe_hamstring_chop.tres") as AbilityDef, null).contains("slower"),
+		"with no kit, no kit's hit is read")
+	# FROM THE DATA, never per ability: a made-up status and numbers on a made-up ability read back as they are.
+	var s: StatusDef = StatusDef.new()
+	s.speed = 0.5
+	s.can_jump = false
+	s.display_name = "Mired"
+	var a: AbilityDef = AbilityDef.new()
+	a.display_name = "Test strike"
+	var kh: KitHit = KitHit.new()
+	kh.ability = a
+	kh.status = s
+	kh.status_ms = 1500
+	kh.push_mps = 7.5
+	var k: KitDef = KitDef.new()
+	var hits: Array[KitHit] = [kh]
+	k.hits = hits
+	var made: String = RegentsAbilityBar.ability_words(a, k)
+	_check(made.contains("Unblocked, it leaves the foe 50% slower and unable to jump for 1.5 s, and knocks it back at 7.5 m/s."),
+		"the words come from the numbers: %s" % made.replace("
+", " / "))
+	var named: StatusDef = StatusDef.new()
+	named.display_name = "Marked"
+	_check(RegentsAbilityBar.status_words(named) == "marked", "a status that changes nothing worded is called by its name")
+	# The staff's frost ring says how much it slows too, not just "slowed".
+	var staff: KitDef = KitDef.by_key(&"staff")
+	var frost: String = RegentsAbilityBar.ability_words(load("res://game/regents/content/ability/frost_ring.tres") as AbilityDef, staff)
+	_check(frost.contains("40% slower and unable to sprint for 3 s"), "an area that slows says how much: %s" % frost.replace("
+", " / "))
+
 func _run_drawn() -> void:
 	var bar: RegentsAbilityBar = RegentsAbilityBar.new()
 	bar.follows_setting = false
@@ -629,6 +682,9 @@ func _run_lab() -> void:
 	lab._set_rank(1.0)
 	await get_tree().process_frame
 	_check(lab.bars[0].slots[1].state() == RegentsAbilitySlot.LOCKED and lab.bars[0].pool_bar.visible, "the staff at rank 1 in the lab: locks, and mana beside")
+	lab._set_kit(&"axe")
+	_check(lab._words.text.contains("40% slower") and lab._words.text.contains("knocks the foe back") and lab._words.text.contains("every foe in its sweep"),
+		"the lab's words panel shows the axe's slow, shove and sweep")
 	lab.queue_free()
 	await get_tree().process_frame
 
