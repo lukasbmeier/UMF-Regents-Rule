@@ -159,6 +159,8 @@ paths:
 - F IS THE WORN CHEST'S (PROGRESS 97): a chest pattern's `worn_ability`, cast from the worn row whatever is wielded
   (`is_worn_ability`, `worn_ability_of`, both sides), no mana, no mastery; a weapon's kit never holds it. Blink is
   the cloth chest's (Luke's B8); the staff has four spells. Ability ids to 40050 and spells to 40011 are taken.
+- AN INTEGRATION LEG THAT MEASURES A NUMBER sets its own state (ranks, rules) or reads its expectation from the
+  server's rows: never a number an earlier leg or a content change can move (the armor run's M9).
 - NO AI DISCLOSURE (Luke, 2026-11-14; `docs/regents_rule/AI_ASSET_AUDIT.md`): look first to make a thing procedurally,
   in code (draw calls, shaders, noise, synthesis, renders of the game's own models). Never add an image, model,
   texture, sound, music, voice or text from a generative model, nor anything traced or derived from one, to the game

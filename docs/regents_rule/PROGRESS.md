@@ -5611,3 +5611,18 @@ gates and the bar read the item's role's view (`KitDef.for_role` / `KitSeed::in_
 empty. A new role's set is content: claim the skills, give each a slot."
 **Left for later**: the abilities window's footnote (W3), per-role sets for the axe and the bow when they get roles, the
 draft's mechanics the stand-ins only imitate (a mend by a share, buffs, a taunt, a guard window, a health floor).
+
+## The armor run's end sweep (M9, 2026-11-16)
+
+On `main` with steps 87-100 merged (`1feb2d3d`): unit whole 5154/0, `cargo test` green, wasm clean;
+`combat_playtest.sh` 144/0, `spells_seen_playtest.sh` 8/0 + 12/0, `caster_playtest.sh` 20/0,
+`armor_seen_playtest.sh` 11/0 + 7/0. INTEGRATION, first run: 1766 passed, 4 failed, all in the genre hook's legs the run
+wrote. All four were TESTS (no code changed; `game/regents/tests/hooks/integration_genre.sh`):
+1, 2. the traits leg's 8.4 and 7.56 came out x1.0084: S1's Cleave leg, earlier, trained Axemanship to rank 2. The leg now
+   sets Axemanship 1 and gives the XP back after.
+3. the armor leg expected 7 x 67/99: the integration's skeleton swings the sword kit's Slash (8 at 50 % = 4), so 2.707
+   was right (4 x 67/99). The leg now compares against the same slash measured unarmored.
+4. the Bolt's 9: P1 made it 12 (step 91); the leg now reads the server's `ability_def` row.
+INTEGRATION, second run (the fixer's, whole suite, under the lock): **1761 passed, 0 failed** (the count varies with
+loops over bag rows). The rule kept: an integration leg that measures a number sets its own state or reads its
+expectation from the server's rows.
