@@ -24,8 +24,7 @@ Tested: `tests/integration_test.sh` (the whole suite: the genre hook cannot run 
 once, under the lock: **1761 passed, 0 failed**, every section ran (the same section headers as the M9 run). The total differs
 from the M9 run's 1770 (1766 + 4): the suite counts checks inside loops over bag rows (heads put away, an order's items, a
 round's results) whose lengths vary from run to run; nothing was skipped. Log:
-`C:\Users\Luke\AppData\Local\Temp\claude\9f8cd82389d3f1b5\59ed792e-4669-46cd-8faf-cd0c77f150f2\m9fix_integration.log`
-(the session's TEMP; it prints failures only).
+`C:\Users\Luke\AppData\Local\Temp\m9fix_integration.log` (it prints failures only).
 Needs on merge: none (a test file only; no re-bake, no codegen).
 Placeholders made: none. For Luke: none.
 For the rules/handbook: an integration leg that measures a number sets its own state (ranks, rules) or reads its expectation
