@@ -5827,7 +5827,7 @@ Cost (peak particles): Bolt 46 / 46 before, 56 yours / 29 another's after; Meteo
 (as the imp's cinder ring); draw calls Bolt +9, Meteor +3. Shots looked at, before and after.
 
 **Left for later**: on the first cast frame a faint violet circle shows about 1 m in front of the hand, gone a frame
-later, not placed (lane B is looking: B2b).
+later, not placed (found and fixed in step 106: a lab-only leftover).
 
 ## Step 105: THE PRACTICE ARMOR REMOVED (2026-11-17, the follow-up run's A2)
 
@@ -5857,3 +5857,20 @@ was read through, not run (it has no single-leg mode): it runs in M9.
 **Left for later**: the play database may hold a 40067 or 40068 (Luke was told to try them in step 92). Safe as read:
 the server counts a worn item it no longer knows as Defense 0 and no F (`rules::item(..)?`), the figure draws nothing,
 the bag names it through `RegentsHud.item_name`, `take_off` frees the slot. `admin_reset_bag` or dropping clears them.
+
+## Step 106: THE LAB'S LEFTOVER BOLT HIT FLASH (2026-11-17, the follow-up run's B2b)
+
+**Found**: the faint circle about 1 m in front of the hand on the Bolt's first frame (step 104's "left for later") was
+not the new hand flash (it stayed with the flash switched off). It was a Bolt HIT flash (`bolt_hit.tscn`) left over
+from the VFX lab's warm-up: the warm-up plays every showcase for 12 frames, moving from Bolt to Meteor freed the flying
+Bolt, and `ShotLook._ended` played its hit flash under the scene root, which the lab's reset never clears, so it still
+showed (0.5 s) when the real Bolt shot began. Lab only: in the game a missile's body that goes did end there.
+
+**Built**: `game/regents/combat/shot_look.gd` `cancel_end()`: a look being cleared away, not ending, plays no end
+effect. `game/regents/vfx/vfx_lab.gd` `_reset` calls it on every `ShotLook` on the stage before freeing it.
+`regents_vfx.gd`: a Bolt in flight cut off by the next showcase leaves no new hit flash in the world; B2's no-owner shot
+check cancels its end too.
+
+**Tested**: `regents_vfx` 248/0. NEGATIVE: the lab's `cancel_end()` call out, "a Bolt cut off by the next showcase
+leaves no hit flash in the world" fails. Shots looked at: the Bolt with the hand flash off (the circle still there),
+and after the fix (no circle; the hit on the foe at the end unchanged).
