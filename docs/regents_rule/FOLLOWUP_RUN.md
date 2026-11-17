@@ -23,7 +23,8 @@ adds a `class_name`; never push red; `docs/HANDBOOK.md` is never edited here (ru
 | A2 | The practice armor (40067, 40068) removed; legs on real pieces; re-bake | lane A | building (cut from `79cf6bc5`) | - | - |
 | A3 | On call for M9's integration findings | - | - | - | - |
 | B1 | The bar's and tooltips' words: slow, shove, every foe in the sweep | `claude/followup-b1-ability-words-b17159` | merged, unit 5228/0 on main, pushed | 102 | `cf259946` |
-| B2 | Bolt's cast flash; Meteor's ring in fire; others' missile lighter | lane B | building (cut from `cf259946`) | - | - |
+| B2 | Bolt's cast flash; Meteor's ring in fire; others' missile lighter | `claude/followup-b2-effects` | merged, unit 5258/0 on main, pushed | 104 | `dec49de2` |
+| B2b | B2's one-frame violet circle at the Bolt's cast: found and fixed, or shown older than B2 | lane B | building (cut from `dec49de2`) | - | - |
 | M9 | Unit, cargo, wasm, integration once, combat / caster / spells_seen / armor_seen; publish; HANDOFF; cleanup | - | waiting | - | - |
 
 ## Tokens
