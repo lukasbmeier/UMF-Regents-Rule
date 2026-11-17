@@ -26,6 +26,9 @@ func run() -> void:
 	_run_coverage()
 	await _run_ability_vfx()
 	await _run_spell_rings()
+	await _run_bolt_flash()
+	await _run_meteor_ring()
+	await _run_shot_lighter()
 	await _run_lab()
 
 
@@ -536,6 +539,138 @@ func _row(fields: Dictionary) -> LandedRow:
 	return r
 
 
+## THE BOLT'S FLASH IN THE HAND (follow-up B2): the effects table's `on_cast`, in front of the hand, facing the aim;
+## ours as we cast it, another player's from their fresh `spell_landed` row; never for a spell with a cast time.
+func _run_bolt_flash() -> void:
+	var parts: Array = _fighter(&"staff")
+	var who: Node3D = parts[0]
+	var combat: CombatComponent = parts[1]
+	var fx: AbilityVfx = parts[2]
+	var man: Mannequin = parts[3]
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var bolt_id: int = 40012
+	var row: AbilityVfxEntry = fx.vfx_set.entry(bolt_id)
+	_check(row != null and row.on_cast != null and row.on_cast.resource_path.ends_with("bolt_cast.tscn"), "the Bolt's row: a flash in the hand")
+	var aim: Vector3 = Vector3(1, 0, -1).normalized()
+	fx.cast_landing(bolt_id, aim)
+	var flash: VfxEffect = _newest_flash()
+	var hand: Vector3 = man.bone_position(row.hand_bone)
+	_check(fx.played.has("bolt_cast:%d" % bolt_id) and flash != null and hand != Vector3.INF
+		and absf(flash.global_position.distance_to(hand) - row.ahead_m) < 0.03,
+		"our Bolt: its flash %.2f m in front of the hand" % row.ahead_m)
+	_check(flash != null and (-flash.global_basis.z).dot(aim) > 0.99, "it faces the way the Bolt was aimed")
+	_check(flash != null and not flash.lighter, "ours is whole")
+	# NEGATIVE: a spell with a cast time (Fireball) and one with no row of its own (Gale's gust is its `on_land`) flash nothing.
+	var fireball_id: int = (ContentLibrary.find(&"spell", 40002) as SpellDef).ability.id
+	var gale_id: int = (ContentLibrary.find(&"spell", 40005) as SpellDef).ability.id
+	fx.cast_landing(fireball_id, aim)
+	fx.cast_landing(gale_id, aim)
+	_check(fx.played.count("bolt_cast:%d" % bolt_id) == 1 and not fx.played.has("bolt_cast:%d" % fireball_id) and not fx.played.has("bolt_cast:%d" % gale_id),
+		"NEGATIVE: Fireball and Gale flash nothing in the hand (%s)" % str(fx.played))
+	# Another player's Bolt, by their row: the flash on their character here; a stale row nothing.
+	fx.is_local_authority = false
+	var now_us: int = ClockSync.server_usec()
+	_check(not fx.landed_elsewhere(bolt_id, who.global_position, aim, now_us - (AbilityVfx.FRESH_MS + 500) * 1000)
+		and fx.played.count("bolt_cast:%d" % bolt_id) == 1, "NEGATIVE: their Bolt's row that is history: no flash")
+	_check(fx.landed_elsewhere(bolt_id, who.global_position, aim, now_us) and fx.played.count("bolt_cast:%d" % bolt_id) == 2,
+		"another player's Bolt, by its row: its flash in their hand here")
+	fx.is_local_authority = true
+	for n: Node in get_children():
+		if n is VfxEffect:
+			n.queue_free()
+	who.queue_free()
+	combat.free()
+	await get_tree().process_frame
+
+
+## The newest Bolt flash played under the suite (the fighter's world), or null.
+func _newest_flash() -> VfxEffect:
+	var last: VfxEffect = null
+	for n: Node in get_children():
+		if n is VfxEffect and not n.is_queued_for_deletion() and n.scene_file_path.ends_with("bolt_cast.tscn"):
+			last = n as VfxEffect
+	return last
+
+
+## METEOR'S RING IN FIRE (follow-up B2): the effects table names its ring (`AbilityVfxEntry.ring`); a player's area
+## with none stays frost.
+func _run_meteor_ring() -> void:
+	var looks := SpellLooks.new()
+	add_child(looks)
+	var lands: int = ClockSync.server_usec() + 1_500_000
+	looks.show_area(21, Vector3(0, 0, -6), 5.0, lands, false, false, null, 40048)
+	var meteor: VfxGroundRing = looks.ring_of(21)
+	_check(meteor != null and meteor.element == VfxGroundRing.Element.FIRE and meteor.scene_file_path.ends_with("meteor_ring.tscn")
+		and is_equal_approx(meteor.radius_m, 5.0), "Meteor's area: its own ring, in fire, as wide as the server says")
+	var frost_id: int = (ContentLibrary.find(&"spell", 40003) as SpellDef).ability.id
+	looks.show_area(22, Vector3(6, 0, -6), 4.0, lands, false, false, null, frost_id)
+	var frost: VfxGroundRing = looks.ring_of(22)
+	_check(frost != null and frost.element == VfxGroundRing.Element.FROST, "NEGATIVE: Frost Ring's area stays frost")
+	_check(SpellLooks.ring_scene(40048, false).resource_path.ends_with("meteor_ring.tscn") and SpellLooks.ring_scene(-1, false) == SpellLooks.FROST_RING
+		and SpellLooks.ring_scene(-1, true) == SpellLooks.CINDER_RING, "a ring by the table, else by whose: frost a player's, fire a foe's")
+	var ring: VfxGroundRing = _effect("meteor_ring") as VfxGroundRing
+	var multis: Array[Node] = ring.find_children("*", "MultiMeshInstance3D", true, false) if ring != null else []
+	_check(ring != null and multis.size() == 1 and (multis[0] as MultiMeshInstance3D).multimesh.instance_count == ring.pieces,
+		"meteor_ring: its pieces are one MultiMesh, as the family's")
+	if ring != null:
+		ring.queue_free()
+	looks.queue_free()
+	await get_tree().process_frame
+
+
+## ANOTHER PLAYER'S MISSILE IS THE LIGHTER VERSION (follow-up B2, PROGRESS 88): a shot's riding look (`ShotLook`), its
+## body's owner another player: its riding effect thinned, lights out; ours and one with no owner whole.
+func _run_shot_lighter() -> void:
+	var adventurer: EntityDefinition = load("res://game/regents/content/character/adventurer.tres") as EntityDefinition
+	var other := SpaceTimeEntity.new()
+	other.definition = adventurer
+	add_child(other)
+	other.entity_id = 9881
+	other.add_runtime_component(CombatComponent.new())
+	EntityRegistry.register(9881, other)
+	var whole: int = _whole_shot_particles()
+	var theirs: Array = _shot(9881)
+	var look: ShotLook = theirs[1]
+	_check(look.lighter and _particles(look) <= ceili(whole * VfxEffect.LIGHTER_PARTICLES) + 2 and _particles(look) >= whole / 4 and _lights_on(look) == 0,
+		"another player's Bolt in flight: the lighter version (%d of %d particles, %d lights)" % [_particles(look), whole, _lights_on(look)])
+	(theirs[0] as Node).queue_free()
+	other.is_local_authority = true
+	var ours: Array = _shot(9881)
+	_check(not (ours[1] as ShotLook).lighter and _particles(ours[1] as Node) == whole, "NEGATIVE: our own Bolt in flight: whole")
+	(ours[0] as Node).queue_free()
+	var nobody: Array = _shot(0)
+	(nobody[1] as ShotLook)._age = ShotLook.OWNER_WAIT_S + 0.1
+	(nobody[1] as ShotLook)._process(0.016)
+	_check(not (nobody[1] as ShotLook).lighter and (nobody[1] as ShotLook)._lighter_settled, "NEGATIVE: a shot with no owner: whole")
+	(nobody[0] as Node).queue_free()
+	EntityRegistry.unregister(9881)
+	other.queue_free()
+	await get_tree().process_frame
+
+
+## A Bolt's body owned by `owner_id`, its look under it, a frame stepped: [the body, the look].
+func _shot(owner_id: int) -> Array:
+	var body := SpaceTimeEntity.new()
+	add_child(body)
+	var bc := BodyComponent.new()
+	bc.owner_id = owner_id
+	body.add_runtime_component(bc)
+	var look: ShotLook = (load("res://game/regents/combat/bolt_look.tscn") as PackedScene).instantiate() as ShotLook
+	body.add_child(look)
+	look._process(0.016)
+	return [body, look]
+
+
+## A Bolt's riding particles when whole (a look with no body: the lab's).
+func _whole_shot_particles() -> int:
+	var look: ShotLook = (load("res://game/regents/combat/bolt_look.tscn") as PackedScene).instantiate() as ShotLook
+	add_child(look)
+	var n: int = _particles(look)
+	look.free()
+	return n
+
+
 ## The game's rings (`SpellLooks`): the lab's, of the caster's element, landing when the server says; a row gone
 ## mid-landing lets it play out.
 func _run_spell_rings() -> void:
@@ -619,7 +754,7 @@ func _run_lab() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var showcases: Array = lab.get(&"showcases") as Array
-	_check(showcases.size() == 10, "the lab: ten showcases (%d)" % showcases.size())
+	_check(showcases.size() == 12, "the lab: twelve showcases, Bolt and Meteor among them (%d)" % showcases.size())
 	var stage: Node3D = lab.get(&"_stage") as Node3D
 	for i: int in showcases.size():
 		lab.call(&"_select", i)

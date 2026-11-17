@@ -16,6 +16,9 @@
 [ext_resource type="Resource" path="res://game/regents/content/ability/staff_meteor.tres" id="14_meteor"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/chest_snare.tres" id="15_snare"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/chest_shove.tres" id="16_shove"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/staff_bolt.tres" id="17_bolt"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/bolt_cast.tscn" id="18_bolt_cast"]
+[ext_resource type="PackedScene" path="res://game/regents/vfx/effects/meteor_ring.tscn" id="19_meteor_ring"]
 
 [sub_resource type="Resource" id="Fireball"]
 script = ExtResource("2_entry")
@@ -61,6 +64,12 @@ ability = ExtResource("14_meteor")
 charge = ExtResource("9_fire_charge")
 two_hands = true
 ahead_m = 0.2
+ring = ExtResource("19_meteor_ring")
+
+[sub_resource type="Resource" id="Bolt"]
+script = ExtResource("2_entry")
+ability = ExtResource("17_bolt")
+on_cast = ExtResource("18_bolt_cast")
 
 [sub_resource type="Resource" id="ChestSnare"]
 script = ExtResource("2_entry")
@@ -74,5 +83,5 @@ on_land = ExtResource("12_gale_fx")
 
 [resource]
 script = ExtResource("1_set")
-entries = Array[ExtResource("2_entry")]([SubResource("Fireball"), SubResource("FrostRing"), SubResource("Blink"), SubResource("Gale"), SubResource("ImpEmber"), SubResource("ImpCinderRing"), SubResource("Meteor"), SubResource("ChestSnare"), SubResource("ChestShove")])
+entries = Array[ExtResource("2_entry")]([SubResource("Fireball"), SubResource("FrostRing"), SubResource("Blink"), SubResource("Gale"), SubResource("ImpEmber"), SubResource("ImpCinderRing"), SubResource("Meteor"), SubResource("ChestSnare"), SubResource("ChestShove"), SubResource("Bolt")])
 parry = ExtResource("13_parry")

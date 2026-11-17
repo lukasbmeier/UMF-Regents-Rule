@@ -59,6 +59,10 @@ var showcases: Array[Array] = [
 		"_compare_sword", [0.16, 0.24, 0.62, 0.72, 1.12, 1.26], [14.0, -22.0, 5.2, Vector3(0, 1.0, -1.0)]],
 	["Parry", "A foe's cut turned at the last moment. parry_flash.tscn", "_parry",
 		[0.66, 0.7, 0.74, 0.8, 0.9, 1.1], [75.0, -5.0, 4.2, Vector3(0, 1.3, -0.9)]],
+	["Bolt", "Left click: no cast time, a flash in the hand (bolt_cast.tscn), the missile at 32 m/s, a violet flash where it ends: the game's own look (bolt_look.tscn, bolt_hit.tscn).",
+		"_bolt", [0.08, 0.12, 0.18, 0.26, 0.4, 0.62], [70.0, -8.0, 7.0, Vector3(0, 1.2, -3.0)]],
+	["Meteor", "R: a 2 s cast, standing still, then a 10 m circle that lands 1.5 s later. Its ring is the one the game draws for it (SpellLooks.ring_scene).",
+		"_meteor", [1.0, 2.3, 3.0, 3.55, 3.8, 4.6], [45.0, -26.0, 15.0, Vector3(0, 0.6, -7.0)]],
 	["Cinder Ring", "The imp's warning (1.5 s) and its blast, under the adventurer. cinder_ring.tscn", "_cinder",
 		[0.4, 1.0, 1.6, 1.85, 2.05, 2.6], [40.0, -24.0, 9.5, Vector3(0, 0.6, -1.5)]],
 ]
@@ -133,6 +137,7 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	AbilityVfxSet.release()   # the Bolt's and Meteor's showcases read the effects table
 
 
 # ---------------------------------------------------------------- the stage
@@ -508,6 +513,10 @@ func _showcase(method: String, run: int) -> void:
 			await _parry(run)
 		"_cinder":
 			await _cinder(run)
+		"_bolt":
+			await _bolt(run)
+		"_meteor":
+			await _meteor(run)
 
 
 func _reset() -> void:
@@ -799,6 +808,64 @@ func _parry(run: int) -> void:
 	_spawn("parry_flash", at, foe_hand)
 	_foe.play(&"react.stagger", false)
 	await _wait(0.9, run)
+
+
+## THE STAFF'S BOLT as the game draws it: the body's own look (`bolt_look.tscn`, a `ShotLook` with its riding missile)
+## flown at the spell's speed from the hand to the foe, its flash where it ends.
+func _bolt(run: int) -> void:
+	var aim: Vector3 = FOE_AT + Vector3(0, 1.0, 0)
+	_hero.play(&"ability.40012", false)
+	if not await _wait(0.06, run):   # the throw comes forward before it lets go
+		return
+	var from: Vector3 = _cast_point(_hero, [&"hand_l"], 0.3, aim)
+	var body := Node3D.new()
+	body.name = "BoltBody"
+	body.position = from
+	_stage.add_child(body)
+	var row: AbilityVfxEntry = AbilityVfxSet.current().entry(40012)
+	if row != null and row.on_cast != null:   # the flash in the hand, as the game plays it (`AbilityVfx._cast_flash`)
+		_spawn(row.on_cast.resource_path.get_file().get_basename(), _cast_point(_hero, [row.hand_bone], row.ahead_m, aim), aim)
+	var look: ShotLook = (load("res://game/regents/combat/bolt_look.tscn") as PackedScene).instantiate() as ShotLook
+	look.lighter = others   # another player's: the lighter version, as the game decides it from the body's owner
+	body.add_child(look)
+	var speed: float = 32.0
+	var was: float = clock
+	while is_instance_valid(body) and body.position.distance_to(aim) > 0.05:
+		await ticked
+		if run != _run or not is_instance_valid(body):
+			return
+		body.position = body.position.move_toward(aim, speed * (clock - was))
+		was = clock
+	body.queue_free()
+	_foe.play(&"react.hit", false)
+	await _wait(0.8, run)
+
+
+## THE STAFF'S METEOR (placeholder): its charge between both hands through the cast, then the ring the game draws for
+## it, as wide as the spell, landing as late as the spell says.
+func _meteor(run: int) -> void:
+	var spell: SpellDef = SpellDef.by_ability(40048)
+	var at: Vector3 = FOE_AT + Vector3(0, 0, 1.0)
+	_hero.play(&"pose.spell_channel")
+	_charge("fire_charge", [&"hand_l", &"hand_r"], 0.2, at + Vector3(0, 1.0, 0))
+	if not await _wait(float(spell.cast_ms) / 1000.0, run):
+		return
+	for f: Array in _follow:
+		if is_instance_valid(f[0]):
+			(f[0] as Node).queue_free()
+	_follow.clear()
+	_hero.play(&"ability.40014", false)
+	var ring: VfxGroundRing = SpellLooks.ring_scene(40048, false).instantiate() as VfxGroundRing
+	ring.radius_m = spell.radius_m
+	ring.warn_s = float(spell.delay_ms) / 1000.0
+	ring.lighter = others
+	ring.shook.connect(_on_shook)
+	ring.position = at
+	_stage.add_child(ring)
+	if not await _wait(ring.warn_s, run):
+		return
+	_foe.play(&"react.stagger", false)
+	await _wait(1.9, run)
 
 
 func _cinder(run: int) -> void:
