@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_wxch2"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_0hd5w"]
+
+[sub_resource type="Resource" id="Resource_y7fx1"]
+script = ExtResource("1_wxch2")
+animation = &"extra/Sword_Heavy_D"
+until = 0.45
+to_s = 0.45
+blend_in_s = 0.15
+blend_out_s = 0.0
+
+[sub_resource type="Resource" id="Resource_i070m"]
+script = ExtResource("1_wxch2")
+animation = &"extra/Sword_Heavy_D"
+at = 0.45
+from_s = 0.45
+blend_in_s = 0.0
+blend_out_s = 0.3
+
+[resource]
+resource_name = "Sky blade"
+script = ExtResource("2_0hd5w")
+length_s = 2.6
+clips = Array[ExtResource("1_wxch2")]([SubResource("Resource_y7fx1"), SubResource("Resource_i070m")])
+impact_at = 0.5

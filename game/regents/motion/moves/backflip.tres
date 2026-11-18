@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_xswxh"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_085hx"]
+
+[sub_resource type="Resource" id="Resource_1yqk4"]
+script = ExtResource("1_xswxh")
+animation = &"core/BackFlip"
+blend_in_s = 0.08
+blend_out_s = 0.25
+
+[sub_resource type="Curve" id="Curve_pxxhx"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.1, 0), 0.0, 0.0, 0, 0, Vector2(0.42, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[resource]
+resource_name = "Back flip"
+script = ExtResource("2_085hx")
+length_s = 1.55
+clips = Array[ExtResource("1_xswxh")]([SubResource("Resource_1yqk4")])
+travel_m = -2.5
+travel = SubResource("Curve_pxxhx")

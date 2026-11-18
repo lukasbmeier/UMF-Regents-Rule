@@ -79,6 +79,8 @@ A new ability OF an existing kind is content. A new KIND is about one step (Rust
 5. ANIMATIONS are the biggest practical limit on how an ability LOOKS: the Quaternius and Mixamo clips we have, nothing
    AI-made (`ANIMATIONS.md`, `AI_ASSET_AUDIT.md`). A flip, a spin or a slam needs a clip we have. Effects are far freer:
    shaders and particles made in code (`vfx/`, `regents-genre.md` "AN EFFECT").
+   MOTION MADE IN CODE over the clips widens it a lot: flips, spins, leaps, a body hauled in or sent tumbling, an arm
+   reaching (`game/regents/motion/motion_lab.tscn`, PROGRESS 109).
 6. NO CLIENT DECIDES AN OUTCOME (rule 13). Every ability needs a rule the server can judge from inputs. "Hits what the
    player's screen showed" is fine (the referee rewinds up to 150 ms, #226); "the client says it hit" is not.
 

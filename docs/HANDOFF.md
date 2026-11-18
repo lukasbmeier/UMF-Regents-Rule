@@ -1,4 +1,4 @@
-# Handoff — Regent's Rule, 2026-11-17 (the follow-up run, finished)
+# Handoff — Regent's Rule, 2026-11-17 (the follow-up run finished; step 109, the motion lab)
 
 ## Where it stands
 - The FOLLOW-UP run is done: steps 102-108 on `main`, pushed. The ledger is `docs/regents_rule/FOLLOWUP_RUN.md`.
@@ -10,6 +10,8 @@
 - Fishing, Fowl Play, DiscGolf republished with `--codegen`, bindings pushed: Fowl Play 2815/0, DiscGolf 2605/0,
   Fishing 3309/2 (its held-items grip suite: the rod up to 33 cm into the body; the grips are Luke's).
 - Both children archived; their worktrees and branches removed.
+- After the run: `ABILITY_LIMITS.md` (what an ability can be) pushed; step 109, THE MOTION LAB (moves made in code over
+  the clips, `game/regents/motion/`), built in the main checkout, uncommitted at the time of writing (see git).
 
 ## This session
 - 101 committed (Luke's yes). 102 (B1): the bar's words say a hit's slow, shove and sweep (`RegentsAbilityBar.hit_words`).
@@ -19,10 +21,15 @@
 - 106 (B2b): the VFX lab's leftover Bolt hit flash (lab only). 107 (A3): the poise leg waits on its row
   (`steadied_out`), the caster's walked-bolt and cast-stopped legs robust. 108 (A3b): integration's genre hook counts
   the same checks every run (`put_away`, `give_back`, `COUNT_BY_SECTION=1`).
+- 109: the motion lab, rebuilt on Luke's feedback (the all-code cut looked "like a doll"): CLIPS FOR THE BODY
+  (`MotionClip`: our libraries' unused clips, time-warped, chained, masked, their root travel carrying the body) and
+  CODE ON TOP (`MotionMove` channels, `MotionLayer` after the animation driver, `MotionBones`); the SCRUBBER (P,
+  `,` `.`, the time bar) and clip sheets; `regents_motion` 98/0.
 
 ## Next, in order
 1. Luke plays (GAME.md, "The follow-up run"): the bar's words, the staff's Bolt and Meteor, two instances for
-   another player's Bolt; restart the game for the new publish.
+   another player's Bolt; restart the game for the new publish. And the motion lab (F6 on `motion_lab.tscn`): which
+   moves, if any, become abilities is his (PROGRESS 109, "Left for later").
 2. TEMPLATE work (PROGRESS 108, 107): `COUNT_BY_SECTION` in the foundation's `tests/integration_test.sh` and its
    per-row `revoke_authority` / `despawn_entity` checks; the player `vel` in the movement row reading ~4 % low.
    In `../UMF Template`, then pull here.
@@ -39,3 +46,5 @@
   `--import` before its unit suite.
 - Integration took 14-24 min this run (was ~80). Compare counts leg by leg with `COUNT_BY_SECTION=1` (PROGRESS 108).
 - `docs/HANDBOOK.md` is the template's: never edited here.
+- A turn on a character goes on its MODEL after the animation driver (it sets the model's global rotation every frame);
+  a SkeletonModifier3D's bend is invisible to a reader outside it (`MotionBones.seen`, `AimTwist.muzzle`).

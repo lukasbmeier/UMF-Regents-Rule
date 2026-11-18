@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_ijhud"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_jsy3a"]
+
+[sub_resource type="Resource" id="Resource_rwnbu"]
+script = ExtResource("1_ijhud")
+animation = &"extra/LiftAir_RM"
+until = 0.2
+blend_in_s = 0.05
+blend_out_s = 0.0
+
+[sub_resource type="Resource" id="Resource_1n2x6"]
+script = ExtResource("1_ijhud")
+animation = &"extra/LiftAir_Fall"
+at = 0.17
+until = 0.36
+to_s = 0.4
+blend_in_s = 0.05
+blend_out_s = 0.0
+
+[sub_resource type="Resource" id="Resource_etgv2"]
+script = ExtResource("1_ijhud")
+animation = &"extra/LiftAir_Fall_Impact"
+at = 0.3
+until = 0.55
+blend_out_s = 0.0
+
+[sub_resource type="Resource" id="Resource_5ckcc"]
+script = ExtResource("1_ijhud")
+animation = &"extra/KipUp"
+at = 0.55
+blend_in_s = 0.0
+blend_out_s = 0.25
+
+[sub_resource type="Curve" id="Curve_2mb2q"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.17, 0), 0.0, 0.0, 0, 0, Vector2(0.2, 1), 0.0, 0.0, 0, 0, Vector2(0.24, 0.95), 0.0, 0.0, 0, 0, Vector2(0.34, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 6
+
+[sub_resource type="Curve" id="Curve_q6ie0"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.32, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[resource]
+resource_name = "Knocked up (the slam's)"
+script = ExtResource("2_jsy3a")
+length_s = 2.8
+clips = Array[ExtResource("1_ijhud")]([SubResource("Resource_rwnbu"), SubResource("Resource_1n2x6"), SubResource("Resource_etgv2"), SubResource("Resource_5ckcc")])
+lift_m = 1.7
+lift = SubResource("Curve_2mb2q")
+travel_m = -2.5
+travel = SubResource("Curve_q6ie0")

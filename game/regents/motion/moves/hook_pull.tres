@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_80ou6"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_u6ego"]
+
+[sub_resource type="Resource" id="Resource_e2tru"]
+script = ExtResource("1_80ou6")
+animation = &"extra/OverhandThrow"
+until = 0.42
+to_s = 0.62
+blend_in_s = 0.1
+blend_out_s = 0.0
+
+[sub_resource type="Resource" id="Resource_wli7b"]
+script = ExtResource("1_80ou6")
+animation = &"extra/OverhandThrow"
+at = 0.42
+until = 0.78
+from_s = 0.62
+to_s = 0.15
+blend_in_s = 0.0
+blend_out_s = 0.25
+
+[sub_resource type="Curve" id="Curve_6qpb2"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.3, 0), 0.0, 0.0, 0, 0, Vector2(0.42, 1), 0.0, 0.0, 0, 0, Vector2(0.52, 0.6), 0.0, 0.0, 0, 0, Vector2(0.65, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 6
+
+[sub_resource type="Curve" id="Curve_wb84a"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.42, 0), 0.0, 0.0, 0, 0, Vector2(0.65, -1), 0.0, 0.0, 0, 0, Vector2(0.9, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[resource]
+resource_name = "Hook pull"
+script = ExtResource("2_u6ego")
+length_s = 1.5
+clips = Array[ExtResource("1_80ou6")]([SubResource("Resource_e2tru"), SubResource("Resource_wli7b")])
+impact_at = 0.42
+twist_deg = 25.0
+twist = SubResource("Curve_wb84a")
+reach = 0.8
+reach_curve = SubResource("Curve_6qpb2")

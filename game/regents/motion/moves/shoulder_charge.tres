@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_khd6v"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_aa511"]
+
+[sub_resource type="Resource" id="Resource_f2l52"]
+script = ExtResource("1_khd6v")
+animation = &"core/Sprint"
+until = 0.38
+to_s = 0.62
+blend_in_s = 0.1
+blend_out_s = 0.06
+
+[sub_resource type="Resource" id="Resource_dg3wg"]
+script = ExtResource("1_khd6v")
+animation = &"extra/Shield_Dash_RM"
+at = 0.3
+blend_in_s = 0.1
+blend_out_s = 0.3
+root_travel = 1.6
+
+[sub_resource type="Curve" id="Curve_02uds"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 2.7777777, 1, 1, Vector2(0.36, 1), 2.7777777, 0.0, 1, 1, Vector2(1, 1), 0.0, 0.0, 1, 1]
+point_count = 3
+
+[resource]
+resource_name = "Shoulder charge"
+script = ExtResource("2_aa511")
+length_s = 1.4
+clips = Array[ExtResource("1_khd6v")]([SubResource("Resource_f2l52"), SubResource("Resource_dg3wg")])
+impact_at = 0.5
+travel_m = 4.0
+travel = SubResource("Curve_02uds")

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_c4p16"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_4yisy"]
+
+[sub_resource type="Resource" id="Resource_w1elv"]
+script = ExtResource("1_c4p16")
+animation = &"core/Sprint"
+until = 0.34
+to_s = 0.62
+blend_in_s = 0.1
+blend_out_s = 0.1
+
+[sub_resource type="Resource" id="Resource_6lq2x"]
+script = ExtResource("1_c4p16")
+animation = &"extra/Sword_Aerial_B"
+at = 0.27
+until = 0.62
+blend_in_s = 0.1
+blend_out_s = 0.12
+root_height = 0.42
+
+[sub_resource type="Resource" id="Resource_h3o86"]
+script = ExtResource("1_c4p16")
+animation = &"extra/NinjaJump_Land"
+at = 0.52
+from_s = 0.05
+to_s = 1.0
+blend_in_s = 0.1
+blend_out_s = 0.25
+
+[sub_resource type="Curve" id="Curve_q52f5"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 1.8235294, 1, 1, Vector2(0.34, 0.62), 1.8235294, 1.4615383, 1, 1, Vector2(0.6, 1), 1.4615383, 0.0, 1, 1, Vector2(1, 1), 0.0, 0.0, 1, 1]
+point_count = 4
+
+[resource]
+resource_name = "Leaping strike"
+script = ExtResource("2_4yisy")
+length_s = 1.5
+clips = Array[ExtResource("1_c4p16")]([SubResource("Resource_w1elv"), SubResource("Resource_6lq2x"), SubResource("Resource_h3o86")])
+impact_at = 0.47
+travel_m = 4.2
+travel = SubResource("Curve_q52f5")

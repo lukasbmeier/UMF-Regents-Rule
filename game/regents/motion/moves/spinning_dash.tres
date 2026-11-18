@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_3g6le"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_unuae"]
+
+[sub_resource type="Curve" id="Curve_35pw1"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.18, 1), 0.0, 0.0, 0, 0, Vector2(0.7, 1), 0.0, 0.0, 0, 0, Vector2(0.85, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="Resource" id="Resource_ejjdr"]
+script = ExtResource("1_3g6le")
+animation = &"extra/Sword_Dash_RM"
+blend_in_s = 0.08
+blend_out_s = 0.2
+root_travel = 1.9
+
+[sub_resource type="Curve" id="Curve_xqj74"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.15, 0), 0.0, 0.0, 0, 0, Vector2(0.42, 1), 0.0, 0.0, 0, 0, Vector2(0.72, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="Curve" id="Curve_rma1c"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.15, 0), 0.0, 0.0, 0, 0, Vector2(0.7, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[resource]
+resource_name = "Spinning dash"
+script = ExtResource("2_unuae")
+length_s = 0.95
+clips = Array[ExtResource("1_3g6le")]([SubResource("Resource_ejjdr")])
+lift_m = 0.3
+lift = SubResource("Curve_xqj74")
+spin_turns = 2.0
+spin = SubResource("Curve_rma1c")
+bank_deg = 14.0
+bank = SubResource("Curve_35pw1")

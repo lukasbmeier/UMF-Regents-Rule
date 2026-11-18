@@ -5938,3 +5938,74 @@ if a row or a sack is left, where the old per-row checks passed whatever was lef
    (git history: `docs/regents_rule/inbox/A3b.md` on `claude/followup-a3b-check-count`).
 2. The same varying count in the foundation's file: a `revoke_authority` check per registered referee (~lines 1194,
    1219, 1291, 1598) and a `despawn_entity` check per ball (~1288): the loop silent, then one check of the rows left.
+
+## Step 109: THE MOTION LAB, CLIPS FOR THE BODY AND CODE ON TOP (2026-11-17, Luke: "a lab that showcases number 4", then "rebuild it with the clips and add the scrubber")
+
+Luke asked whether a generator animating our Quaternius rig from a prompt counts as AI content (yes: the motion ships;
+`AI_ASSET_AUDIT.md`), then for a lab of the fourth way out, motion made in code: "recreate garen q, e, r. tryndamere e
+(move and spin) darius e pull with an axe, and whatever other melee". The moves are named for what they do.
+
+**The first cut, all code, and why it failed** (Luke's feedback with screenshots: "everything is too unnatural ... the
+leaping strike glides ... and then flys upward in the same position", the spinning advance's sword "on the inside",
+"the spinning dash is like if I took a doll and spun it", "is this how a backflip looks?"): the body was carried over the
+IDLE clip (gliding), and the code turned the whole stiff pose (a doll). Code can move every joint (this Godot has
+two-bone and chain IK, spring bones, look-at), but a natural flip from code alone is hand-keyframing in code. The answer
+was in our libraries: human-made clips the game never used (`core/BackFlip`, `extra/Sword_GroundPound_RM`,
+`Sword_Dash_RM`, `Sword_UpperCut_RM`, `OverhandThrow`, `Shield_Dash_RM`, `LiftAir_*`, `Hit_Knockback_RM`, `KipUp`,
+`NinjaJump_*`, `Sword_Aerial_*`, CC0 Quaternius). So: CLIPS FOR THE BODY, CODE FOR WHAT A CLIP CANNOT DO.
+
+**Built** (`game/regents/motion/`, the genre's; nothing in the foundation):
+- `motion_clip.gd` (`MotionClip`): one clip in a move: `<library>/<name>` (`core`, `extra`, `cuts`), the stretch of the
+  move it plays over (`at`, `until`), the part of the clip (`from_s`, `to_s`; backward when `to_s` is before `from_s`,
+  one frame held when equal), time-warped to fit, eased in and out (`blend_in_s`, `blend_out_s`), on a `mask` (FULL,
+  UPPER: the spine and all it carries, LEGS). Its ROOT bone's travel along the ground is taken off the pose and given to
+  the body (`root_travel`: 1.9 stretches the sword dash's 3.69 m to 7); its root's height stays (`root_height`: a jump's
+  own arc). Clips that overlap blend in their order.
+- `motion_move.gd` (`MotionMove`): `clips`, then the code's channels on top (each an amount and a Curve): lift, travel,
+  spin, tip, bank, squash about the hips; the spine's bend and twist; the weapon arm's raise, spread, reach.
+  `root_at(t)` is the clips' root (height, travel).
+- `motion_bones.gd` (`MotionBones`, first among the skeleton's modifiers): samples each clip at its time and blends it
+  over the pose under it, then the bend and the arm. A modifier's pose is drawn only: a reader outside sees the clip
+  under it, so it keeps the bones in `watch` in `seen` (as `AimTwist`'s muzzle).
+- `motion_layer.gd` (`MotionLayer`): plays a move; THE MODEL IS TURNED AFTER THE ANIMATION DRIVER (it sets the model's
+  global rotation every frame: a turn above it is undone; this runs at `process_priority` 1000, on the model from where
+  the driver left it); carries the body by the travel curve and the clips' root; the code's turning point rises with the
+  clips' root. `enabled` false: the clips alone, no channel (the lab's compare).
+- `motion_trail.gd` (`MotionTrail`): a ribbon behind the held blade.
+- `moves/*.tres`, eleven, on clips: leaping strike (`Sprint`, `Sword_Aerial_B` at hop height, `NinjaJump_Land`);
+  spinning advance (`Sword_Light_B`'s last frame held on the UPPER body, both arms out and the blade out, over walking
+  legs, seven turns of code spin, the shoulders leading); sky blade (`Sword_Heavy_D`, its raise slowed); spinning dash
+  (`Sword_Dash_RM` stretched to 7 m, two turns and a hop of code); hook pull (`OverhandThrow`, then the same clip played
+  BACKWARD as the haul, the arm reaching by code) and its victim's dragged (`Hit_Knockback_RM`'s stagger with its travel
+  turned round: hauled forward leaning back); leap slam (`Sword_UpperCut_RM` launches to 2 m, `Sword_GroundPound_RM`
+  comes down from 2 m, 6 m of code travel) and its victims' knocked up (`LiftAir_RM`, `LiftAir_Fall`,
+  `LiftAir_Fall_Impact`, `KipUp`); back flip (`BackFlip`, 2.5 m back); shoulder charge (`Sprint`, `Shield_Dash_RM`)
+  and its victim's tumble (`Hit_Knockback_RM`, `KipUp`).
+- `motion_lab.gd` / `.tscn`: eight showcases, two packs (C: the clips alone beside it). THE SCRUBBER: P pauses (the
+  camera still turns), `,` and `.` step a frame, the time bar shows the time and goes to any moment (`seek`: ahead it
+  plays on fast, behind it plays again from the start, slowing to land on the moment: the same frame every time). CLIP
+  SHEETS: `-- <dir> clips [names]` saves eight frames of each clip (the candidates in `SHEET_CLIPS`), for choosing.
+  Shots: `-- <dir> [name] [compare] [dense]` (dense: twelve moments evenly through).
+- `game/regents/tests/suites/regents_motion.gd`.
+
+**How to play it**: `game/regents/motion/motion_lab.tscn`, F6. Up/Down picks a move, Space plays, C compares, P pauses,
+`,` `.` step, the bar scrubs, [ ] slows, right mouse turns. FEEDBACK: pause on the moment, give its time ("Leap slam
+0.84: the feet slide"). A move's clips and curves are its `.tres` in the Inspector.
+
+**Tested**: `regents_motion` 98/0, twice: every move names only clips that exist, its channels begin and end at rest,
+and its clips leave no seam where the pose under them shows through (THE SEAM CHECK FOUND ONE: the leaping strike's
+landing came in after the strike had gone, the standing pose 40 % through; the landing now begins earlier); a clip's
+stretch (time-warp, backward, eased, nothing outside); the code's turn; on a real character the flip's clip puts the head
+under the hips, the sky blade's raise the hand over the head, the slam's lift the hips over 1.5 m, the dash's root its
+7 m, the dragged foe hauled forward, the hook's reach at its target; NEGATIVES: the same moves with their clips taken
+out stay on their feet, hand low, hips low, carried nowhere, and with the layer off the arm points elsewhere; a gap
+between two clips, a missing clip and a move left tipped over are caught; the lab's shoulder charge (the charger
+carried, the foe thrown back and standing again); the scrubber lands on 0.30 s and holds, on to 0.90, back to 0.30 the
+same frame (it overshot by 23 ms headless at first: it now closes in by halves). Dense shots of every move looked at.
+LUKE'S LOOK (2026-11-17, in the lab with the scrubber): "These look much much better. Very good." One change: the
+leaping strike's hit was shown on the landing, but the blade passes through at 0.80 s: `impact_at` 0.55 to 0.47.
+
+**Left for later**: nothing is in the game's fights: a move would be played by `CombatComponent` as an ability's row
+says it began, with `carry` off and the server's lunge or push moving the body (its travel would be the move's root).
+No foot IK yet (a landing on a slope; carried travel faster than a clip's steps slides its feet). The slam's fire ring
+is the imp's, toned down: a slam needs its own effect. Which moves become abilities is Luke's.

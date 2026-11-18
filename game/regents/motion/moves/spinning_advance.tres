@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_shu0h"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_iqud1"]
+
+[sub_resource type="Curve" id="Curve_fmon4"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.12, 1), 0.0, 0.0, 0, 0, Vector2(0.88, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="Resource" id="Resource_vxbvp"]
+script = ExtResource("1_shu0h")
+animation = &"extra/Sword_Light_B"
+from_s = 0.36
+to_s = 0.36
+blend_in_s = 0.3
+blend_out_s = 0.35
+mask = 1
+
+[sub_resource type="Curve" id="Curve_5ct2i"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.1, 0.04), 0.0, 0.0, 0, 0, Vector2(0.9, 0.96), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="Curve" id="Curve_0geq5"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.12, 1), 0.0, 0.0, 0, 0, Vector2(0.88, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[resource]
+resource_name = "Spinning advance"
+script = ExtResource("2_iqud1")
+length_s = 3.2
+clips = Array[ExtResource("1_shu0h")]([SubResource("Resource_vxbvp")])
+spin_turns = 7.0
+spin = SubResource("Curve_5ct2i")
+bank_deg = 8.0
+bank = SubResource("Curve_fmon4")
+twist_deg = 14.0
+twist = SubResource("Curve_0geq5")

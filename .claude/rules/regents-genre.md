@@ -148,6 +148,14 @@ paths:
   Which abilities hit all is Luke's content call.
 - AN ABILITY'S WORDS (PROGRESS 102) come from its data (`RegentsAbilityBar.ability_words`): a `KitHit`'s slow and shove
   and `hits_all` are worded by `hit_words` / `status_words`. A new on-hit effect gets words there, never per ability.
+- A MOVE (PROGRESS 109, the motion lab) is CLIPS FOR THE BODY AND CODE ON TOP: a `MotionMove` `.tres` in
+  `game/regents/motion/moves/`, its `clips` (`MotionClip`: a library clip, time-warped, blended, masked; its root's
+  ground travel carries the body, its height stays) and the code's channels (spin, travel, an arm's reach). Never
+  turn a whole stiff pose by code where a clip has the motion (Luke: "like a doll"): look in the libraries first
+  (the lab's clip sheets, `-- <dir> clips`). A turn on a character goes on its model AFTER the animation driver (it
+  sets the model's global rotation each frame); a SkeletonModifier3D's pose is seen outside only through what it
+  keeps (`MotionBones.seen`). The `regents_motion` suite checks every move (clips that exist, no seam showing
+  the pose under, channels at rest at both ends) and fails a move no showcase names. No animation from a generator.
 - TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
   piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
   (`VillageDressing`), never placed by hand round a house.
