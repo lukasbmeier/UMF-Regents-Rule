@@ -24,6 +24,7 @@ extends Node3D
 const FRONTIER: String = "res://game/regents/levels/frontier.tscn"
 const NATURE: String = "res://game/regents/art/nature/"
 const SOLID_PROPS: String = "res://game/regents/levels/solid_props.gd"
+const DIRT_OVERLAY_SHADER: String = "res://game/regents/levels/glade_dirt_overlay.gdshader"
 
 ## WHICH WORLD (PROGRESS step 25): "continent" (level 21, the map at Luke's ~3 km) or "expanse" (level 22, the
 ## same map at Skyrim's size, ~37 km2 of land, for the load test's 300 players spread over a world:
@@ -68,7 +69,7 @@ const ZONE_MIN: int = 4
 
 enum Tex { GRASS, ROCK, SAND }
 const TEXTURE_NAMES: Array[String] = ["grass", "rock", "sand"]
-const TEXTURE_COLOR: Array[Color] = [Color(0.42, 0.6, 0.27), Color(0.55, 0.53, 0.5), Color(0.82, 0.76, 0.56)]
+const TEXTURE_COLOR: Array[Color] = [Color(0.26, 0.37, 0.14), Color(0.43, 0.42, 0.40), Color(0.64, 0.58, 0.44)]
 
 var _shape: ContinentShape = null
 var _rng := RandomNumberGenerator.new()
@@ -648,8 +649,8 @@ func _make_environment() -> void:
 	var glade: Node3D = (load(FRONTIER) as PackedScene).instantiate() as Node3D
 	var env_node: WorldEnvironment = glade.get_node("WorldEnvironment") as WorldEnvironment
 	var env: Environment = env_node.environment.duplicate(true) as Environment
-	# Farther to see across a continent: the glade's fog closed it in at a hundred meters.
-	env.fog_density = 0.0022
+	if env.has_meta(GraphicsQuality.AUTHORED_META):
+		env.remove_meta(GraphicsQuality.AUTHORED_META)
 	var we := WorldEnvironment.new()
 	we.name = "WorldEnvironment"
 	we.environment = env
@@ -657,9 +658,55 @@ func _make_environment() -> void:
 	_own(we)
 	var glade_sun: DirectionalLight3D = glade.get_node("Sun") as DirectionalLight3D
 	var sun: DirectionalLight3D = glade_sun.duplicate() as DirectionalLight3D
+	if sun.has_meta(GraphicsQuality.AUTHORED_META):
+		sun.remove_meta(GraphicsQuality.AUTHORED_META)
 	sun.directional_shadow_max_distance = 140.0
 	_root.add_child(sun)
 	_own(sun)
+	# Camp dirt/soil overlay + GroundPaint + terrain-hugging Clutter + Vista copied from frontier.tscn.
+	var overlay_mat := ShaderMaterial.new()
+	overlay_mat.shader = load(DIRT_OVERLAY_SHADER) as Shader
+	var glade_paint: RegentsGroundPaint = glade.get_node_or_null(^"GroundPaint") as RegentsGroundPaint
+	if glade_paint != null and glade_paint.material != null:
+		overlay_mat.set_shader_parameter(&"grain", glade_paint.material.get_shader_parameter(&"grain"))
+	var overlay_mesh := PlaneMesh.new()
+	overlay_mesh.size = Vector2(128.0, 128.0)
+	overlay_mesh.material = overlay_mat
+	var overlay := MeshInstance3D.new()
+	overlay.name = "GroundOverlay"
+	overlay.position = Vector3(0.0, 0.025, 0.0)
+	overlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	overlay.mesh = overlay_mesh
+	_root.add_child(overlay)
+	_own(overlay)
+	if glade_paint != null:
+		var paint: RegentsGroundPaint = glade_paint.duplicate() as RegentsGroundPaint
+		paint.name = "GroundPaint"
+		paint.material = overlay_mat
+		_root.add_child(paint)
+		_own_tree(paint)
+	var glade_clutter: RegentsGroundClutter = glade.get_node_or_null(^"Clutter") as RegentsGroundClutter
+	if glade_clutter != null:
+		var clutter: RegentsGroundClutter = glade_clutter.duplicate() as RegentsGroundClutter
+		clutter.name = "Clutter"
+		clutter.terrain = NodePath("../Terrain3D")
+		clutter.water_y = ContinentShape.SEA_Y
+		clutter.extent_m = 168.0
+		clutter.draw_distance_m = 68.0
+		clutter.fade_m = 16.0
+		_root.add_child(clutter)
+		_own(clutter)
+	var glade_vista: RegentsGladeVista = glade.get_node_or_null(^"Vista") as RegentsGladeVista
+	if glade_vista != null:
+		var vista: RegentsGladeVista = glade_vista.duplicate() as RegentsGladeVista
+		vista.name = "Vista"
+		vista.terrain = NodePath("../Terrain3D")
+		vista.terrain_water_y = ContinentShape.SEA_Y
+		vista.flat_radius_m = 64.0
+		vista.keep_at = Vector2(-78.0, -195.0)
+		vista.tower_at = Vector2(158.0, -40.0)
+		_root.add_child(vista)
+		_own(vista)
 	glade.free()
 	var cam := Camera3D.new()
 	cam.name = "OverviewCamera"

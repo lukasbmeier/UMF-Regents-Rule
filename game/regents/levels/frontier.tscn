@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://foundation/level/level_info.gd" id="s_info"]
 [ext_resource type="Script" path="res://foundation/level/level_spawn.gd" id="s_spawn"]
@@ -7,7 +7,10 @@
 [ext_resource type="Script" path="res://game/regents/levels/ground_paint.gd" id="s_paint"]
 [ext_resource type="Script" path="res://game/regents/levels/ground_clutter.gd" id="s_clutter"]
 [ext_resource type="Script" path="res://game/regents/levels/clutter_kind.gd" id="s_kind"]
+[ext_resource type="Script" path="res://game/regents/levels/glade_vista.gd" id="s_vista"]
 [ext_resource type="Shader" path="res://game/regents/levels/glade_ground.gdshader" id="sh_ground"]
+[ext_resource type="Shader" path="res://game/regents/showcase/showcase_sky.gdshader" id="sh_sky"]
+[ext_resource type="Resource" path="res://game/regents/showcase/moods/frontier.tres" id="m_mood"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_1.gltf" id="m_Rock_Medium_1"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Medium_2.gltf" id="m_Rock_Medium_2"]
 [ext_resource type="PackedScene" path="res://game/regents/art/nature/Rock_Big_1.gltf" id="m_Rock_Big_1"]
@@ -34,6 +37,9 @@ noise = SubResource("GrainNoise")
 
 [sub_resource type="ShaderMaterial" id="Mat_ground"]
 shader = ExtResource("sh_ground")
+shader_parameter/grass_color = Color(0.2, 0.33, 0.12, 1)
+shader_parameter/grass_color_2 = Color(0.32, 0.42, 0.15, 1)
+shader_parameter/dirt_color = Color(0.36, 0.29, 0.2, 1)
 shader_parameter/grain = SubResource("Grain")
 
 [sub_resource type="Curve3D" id="Curve_trail_camp"]
@@ -74,31 +80,49 @@ point_count = 3
 [sub_resource type="Resource" id="Kind_grass_short"]
 script = ExtResource("s_kind")
 model = ExtResource("m_Grass_Common_Short")
-per_100_m2 = 40.0
-min_scale = 0.35
-max_scale = 0.7
-tint = Color(0.66, 0.78, 0.5, 1)
-patchy = 0.75
-at_edges = 0.7
+per_100_m2 = 160.0
+min_scale = 0.58
+max_scale = 0.96
+height_scale = 0.36
+tint = Color(0.74, 0.85, 0.54, 1)
+patchy = 0.32
+at_edges = 0.95
+sway_m = 0.035
 
 [sub_resource type="Resource" id="Kind_grass_tall"]
 script = ExtResource("s_kind")
 model = ExtResource("m_Grass_Common_Tall")
-per_100_m2 = 6.0
-min_scale = 0.4
-max_scale = 0.7
-tint = Color(0.6, 0.74, 0.46, 1)
-patchy = 0.9
-at_edges = 0.85
+per_100_m2 = 24.0
+min_scale = 0.44
+max_scale = 0.72
+height_scale = 0.42
+tint = Color(0.68, 0.8, 0.48, 1)
+patchy = 0.68
+at_edges = 0.95
+sway_m = 0.045
 
 [sub_resource type="Resource" id="Kind_flowers"]
 script = ExtResource("s_kind")
 model = ExtResource("m_Flower_3_Group")
-per_100_m2 = 1.5
-min_scale = 0.4
-max_scale = 0.65
-patchy = 0.95
-at_edges = 0.1
+per_100_m2 = 6.5
+min_scale = 0.36
+max_scale = 0.6
+height_scale = 0.58
+tint = Color(1, 0.96, 0.94, 1)
+patchy = 0.75
+at_edges = 0.45
+sway_m = 0.025
+
+[sub_resource type="Resource" id="Kind_ferns"]
+script = ExtResource("s_kind")
+model = ExtResource("m_Fern_1")
+per_100_m2 = 3.0
+min_scale = 0.46
+max_scale = 0.76
+height_scale = 0.62
+tint = Color(0.76, 0.88, 0.64, 1)
+patchy = 0.82
+at_edges = 0.92
 sway_m = 0.02
 
 [sub_resource type="Resource" id="Kind_pebbles"]
@@ -112,28 +136,70 @@ at_edges = 0.9
 on_dirt = true
 sway_m = 0.0
 
-[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
-sky_top_color = Color(0.36, 0.55, 0.82, 1)
-sky_horizon_color = Color(0.70, 0.78, 0.84, 1)
-ground_horizon_color = Color(0.62, 0.66, 0.60, 1)
+[sub_resource type="FastNoiseLite" id="CloudNoise"]
+seed = 96
+frequency = 0.012
+fractal_octaves = 5
+
+[sub_resource type="NoiseTexture2D" id="CloudTex"]
+width = 512
+height = 512
+seamless = true
+noise = SubResource("CloudNoise")
+
+[sub_resource type="ShaderMaterial" id="SkyMat"]
+shader = ExtResource("sh_sky")
+shader_parameter/sun_dir = Vector3(-0.7574, 0.2756, -0.5919)
+shader_parameter/moon_dir = Vector3(0.6243, 0.4695, 0.6243)
+shader_parameter/zenith_color = Color(0.18, 0.3, 0.58, 1)
+shader_parameter/horizon_color = Color(0.98, 0.71, 0.49, 1)
+shader_parameter/glow_color = Color(1, 0.62, 0.34, 1)
+shader_parameter/glow_spread = 0.55
+shader_parameter/sun_color = Color(1, 0.8, 0.56, 1)
+shader_parameter/sun_visible = 1.0
+shader_parameter/moon_color = Color(0.66, 0.76, 1, 1)
+shader_parameter/moon_visible = 1.0
+shader_parameter/stars = 0.06
+shader_parameter/cloud_cover = 0.48
+shader_parameter/cloud_lit = Color(1, 0.8, 0.56, 1)
+shader_parameter/cloud_shade = Color(0.4, 0.36, 0.52, 1)
+shader_parameter/cloud_speed = 0.005
+shader_parameter/cloud_noise = SubResource("CloudTex")
+shader_parameter/ground_color = Color(0.34, 0.28, 0.25, 1)
 
 [sub_resource type="Sky" id="Sky"]
 sky_material = SubResource("SkyMat")
+radiance_size = 2
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 2
 sky = SubResource("Sky")
 ambient_light_source = 3
+ambient_light_color = Color(0.7, 0.66, 0.68, 1)
+ambient_light_sky_contribution = 0.72
+ambient_light_energy = 0.88
+reflected_light_source = 2
 tonemap_mode = 2
+tonemap_exposure = 1.04
 ssao_enabled = true
-ssao_light_affect = 0.3
+ssao_light_affect = 0.25
 glow_enabled = true
-glow_intensity = 0.6
+glow_intensity = 0.75
+glow_bloom = 0.08
+glow_hdr_threshold = 1.1
 fog_enabled = true
-fog_light_color = Color(0.70, 0.77, 0.83, 1)
-fog_density = 0.006
-fog_sun_scatter = 0.08
-fog_aerial_perspective = 0.5
+fog_light_color = Color(0.72, 0.58, 0.56, 1)
+fog_sun_scatter = 0.14
+fog_density = 0.0017
+fog_aerial_perspective = 0.6
+fog_sky_affect = 0.15
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0032
+volumetric_fog_albedo = Color(0.95, 0.78, 0.64, 1)
+volumetric_fog_length = 110.0
+volumetric_fog_anisotropy = 0.6
+adjustment_enabled = true
+adjustment_saturation = 1.08
 
 [node name="Frontier" type="Node3D"]
 
@@ -778,21 +844,33 @@ gizmo_extents = 4.5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -1)
 gizmo_extents = 5.5
 
+[node name="worn_fire" type="Marker3D" parent="GroundPaint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 11.4)
+gizmo_extents = 2.0
+
 [node name="Clutter" type="Node3D" parent="."]
 script = ExtResource("s_clutter")
-kinds = Array[ExtResource("s_kind")]([SubResource("Kind_grass_short"), SubResource("Kind_grass_tall"), SubResource("Kind_flowers"), SubResource("Kind_pebbles")])
+kinds = Array[ExtResource("s_kind")]([SubResource("Kind_grass_short"), SubResource("Kind_grass_tall"), SubResource("Kind_flowers"), SubResource("Kind_ferns"), SubResource("Kind_pebbles")])
+draw_distance_m = 76.0
+fade_m = 18.0
 
 [node name="WorldRoot" type="Node3D" parent="."]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.81915206, -0.30395, 0.48642, 0, 0.84805, 0.52992, -0.57357645, -0.43408, 0.69468, 0, 0, 0)
-light_color = Color(1, 0.92, 0.78, 1)
-light_energy = 1.4
+transform = Transform3D(0.615661, -0.217284, -0.757438, 0, 0.961262, -0.275637, 0.788011, 0.169725, 0.591913, 0, 0, 0)
+light_color = Color(1, 0.8, 0.56, 1)
+light_energy = 1.45
 shadow_enabled = true
-directional_shadow_max_distance = 80.0
+shadow_blur = 1.5
+directional_shadow_mode = 2
+directional_shadow_max_distance = 140.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env")
+
+[node name="Vista" type="Node3D" parent="."]
+script = ExtResource("s_vista")
+mood = ExtResource("m_mood")
 
 [node name="Places" type="Node3D" parent="."]
 

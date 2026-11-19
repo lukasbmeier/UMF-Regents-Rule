@@ -6225,3 +6225,83 @@ no library has is refused and the choice stays; the staff, then nothing; NEGATIV
 a bow grown after it was made has its string fitted again. The whole unit suite and the lints: 5453/0. Looked at, windowed: the bow at 1.4x through
 great_sword_slash_4, the staff through standing_2h_magic_attack_01, nothing through the shield slash (the panel, the
 sorted list, the time bar, the words).
+
+## Step 115: PLAYABLE VISUAL PARITY WITH THE SHOWCASE — `frontier.tscn` AND `continent.tscn` + SHORT DENSE TURF (2026-11-18 to 19, Luke: match the menu/showcase look in the playable game, bring it to live level 21, and shorten/densify the grass)
+
+Client presentation only (zero server, schema, content bake, collision or LevelPoint changes: no publish needed,
+restart the game / reload open scenes). Everything sits under `game/regents/` (already covered by
+`tools/template/genres/regents.paths`).
+
+**Built**:
+- **Playable Golden-Hour Mood (`game/regents/showcase/moods/frontier.tres`)**: a `ShowcaseMood` tuned between `golden.tres`
+  and the login's `dusk.tres` for 90% combat and skilling readability — warm `16°` golden sun, painted cloud sky, warm
+  horizon glow, atmospheric distance haze, subtle volumetric valley mist, warm campfire glow (`fire_energy = 2.4`),
+  sunlit dust motes, gentle fireflies, and glowing keep windows. Swap `Vista.mood` on `frontier.tscn` or `continent.tscn`
+  to any `ShowcaseMood` `.tres` (dawn, day, golden, dusk, night) in the Inspector.
+- **360-Degree Backdrop & Atmosphere Driver (`game/regents/levels/glade_vista.gd`, `@tool class_name RegentsGladeVista`)**:
+  - Drives the level's existing top-level `WorldEnvironment` and `Sun`, calling `GraphicsQuality.apply_environment` /
+    `apply_light` after mood updates so low-end presets are always respected.
+  - Builds exclusively under an internal `_VistaGenerated` child (`INTERNAL_MODE_BACK`: zero `.tscn` bloat) and skips
+    `_ready()` in headless mode (zero referee overhead).
+  - **Procedural valley mode (`frontier.tscn`, `terrain` empty)**: wraps the flat playable glade (`r <= 58 m`, tucked at
+    `y = -0.25` below `Ground/Field`) in a 360° sculpted valley (`showcase_ground.gdshader` with `water_y = -10.0` so the
+    meadow rim stays green), forested foothills, snowy alpine ridges (`reach_m = 950 m`), **The Regent's Keep** on a wooded
+    northern hilltop (`(-68, -158)`), an **Eastern Watchtower** bluff (`(138, -34)`), a northeastern **Mountain Tarn**
+    (`(108, -128)`), ~950 cohesive `LEAF_LOOKS` trees, outer boulders, and short plush rim foliage.
+  - **`Terrain3D` mode (`continent.tscn`, `terrain = ^"../Terrain3D"`)**: skips the fake `Land`/`Lake`, samples real
+    `Terrain3D.data.get_height`, grounds **The Regent's Keep** (`(-78, -195)`, `10 m` slope footings) and **Eastern
+    Watchtower** (`(158, -40)`, `10 m` footings) into the continent's slopes, fills the `CAMP_CLEAR_M = 220 m` bald ring
+    around camp with ~560 cohesive forest trees and boulders, and rims camp with short plush turf.
+  - **Living Camp Warmth (both modes)**: places `FirePit.gltf` at `(-3.6, 0, 11.4)` (clear of spawn, stations, trails and
+    `CinemaLab` actors) with breathing `FireLight`, rising flames, swirling embers, rustic stools, bench, barrel holder,
+    crates/barrels, weapon stand and banners, plus sunlit dust motes and meadow fireflies (`GraphicsQuality.GROUP_MEDIUM`).
+  - **GPU Performance Optimization**: outer vista geometry sits on visual layer 2 (`OUTER_LAYER = 2`) while `FireLight`
+    uses `light_cull_mask = 1` + `SHADOW_DUAL_PARABOLOID` (crisp radial firepit basket shadows on camp dirt without
+    rendering distant trees/terrain into local omni shadow maps); outer trees/rocks/rim foliage are split into 4
+    frustum-culled quadrants, and trees past `125 m` skip shadow casting.
+- **Shorter, Denser Plush Turf (`game/regents/levels/clutter_kind.gd`, `ground_clutter.gd`, `frontier.tscn`, `continent.tscn`)**:
+  - Added `@export_range(0.15, 2.0, 0.05) var height_scale: float = 1.0` to `RegentsClutterKind`, scaling Y independently
+    of XZ so grass clumps stay wide and lush while staying ankle-high (below skeletons, enemies and loot sacks).
+  - Tuned meadow clutter on both `frontier.tscn` and `continent.tscn`: `Kind_grass_short` doubled to `160 / 100 m²` with
+    `height_scale = 0.36`, `patchy = 0.32` (much less barren ground), `Kind_grass_tall` `24 / 100 m²` at `height_scale = 0.42`,
+    plus wildflowers (`height_scale = 0.58`) and ferns (`height_scale = 0.62`); outer rim foliage in `RegentsGladeVista`
+    matches the shortened height.
+- **Live Continent Parity (`game/regents/levels/continent/continent.tscn`, `continent_assets.tres`, `glade_dirt_overlay.gdshader`, `ground_paint.gd`, `build_continent.gd`)**:
+  - Live `regents-rule` runs `world_level = 21` (`continent.tscn`), so pressing Play swaps from `frontier.tscn` to
+    `continent.tscn` on connect. Upgraded `continent.tscn` directly and synced `build_continent.gd` for future rebuilds:
+  - Deepened `continent_assets.tres` grass/rock/sand albedos from bright lime to rich meadow greens matching `frontier.tscn`.
+  - Switched `WorldEnvironment` & `Sun` to `showcase_sky.gdshader` + `frontier.tres` volumetric mist & 4-split shadows
+    (clearing stale serialized `metadata/umf_authored`).
+  - Added `GroundOverlay` (`128×128 m` `glade_dirt_overlay.gdshader` transparent dirt/soil plane at `y = 0.025`, no shadows,
+    no collision) driven by `GroundPaint` (fast spatial reject `half_pad` in `ground_paint.gd` skips the 3,500 distant
+    continent nodes) for ragged trodden camp trails and tree/rock soil rings over Terrain3D.
+  - Added terrain-aware `Clutter` (`terrain = ^"../Terrain3D"`, `extent_m = 168 m`, `draw_distance_m = 68 m`) and `Vista`
+    directly under `Continent` root so `LevelStreamer` never frees them.
+- **Upgraded `game/regents/levels/frontier.tscn`** (and `cinema_lab.tscn`, which instantiates it): `showcase_sky.gdshader`,
+  volumetric mist, 4-split 140 m shadows, matched `Mat_ground` greens, `worn_fire`, dense short meadow clutter, `Vista`.
+- **Updated `game/regents/tests/glade_shot.gd`**: `cam.far = 2000.0`, added `"north"` view, draws real `StationDef` models.
+- **Crisp 2D Screen-Space Overhead Text (`game/regents/ui/overhead_names.gd`, mounted in `game/regents/regents_hud.gd`)**:
+  replaces fuzzy 3D `Label3D` nameplates, status tags, chat bubbles and ground-item labels with native 2D `Label`s on
+  `layer = 2` (14/12 px, 16-24 m fade / 36 m focus & Tab-target priority, vertical anti-overlap stacking capped at 2 rows
+  with crowd overflow hiding, Game Settings mode `All` / `Focus & close` / `Minimal`, throttled layer-1 LOS occlusion;
+  zero `foundation/` edits; 25 checks in `_run_overhead_names()`).
+
+**How to play / tune it**: press Play (F5) in `regents_game.tscn` — live `regents-rule` loads the upgraded `continent.tscn`
+straight away (reload `frontier.tscn`/`continent.tscn` or restart Godot if they were already open in the editor). Select
+`Vista` to swap `mood` (`frontier.tres`, `golden.tres`, `dusk.tres`, `day.tres`, `dawn.tres`, `night.tres`), or tweak
+`Clutter`'s `Kind_grass_short.height_scale` / `per_100_m2` in the Inspector.
+
+**Tested**:
+- Full lints + headless unit suites (`tests/run_tests.sh`): **5496 passed, 0 failed**, zero unexpected engine errors, zero
+  exit leaks. `_run_glade_vista()` covers both `frontier.tscn` and `continent.tscn` (including Terrain3D mode, `GroundOverlay`,
+  `GroundPaint`, `Clutter`, Keep/Watchtower placement, dense short grass `height_scale < 0.5`, and negatives);
+  `_run_overhead_names()` covers anti-overlap, mode filtering, settings, restoration and freed-node safety.
+- `tests/content_test.sh`: **18 passed, 0 failed**.
+- `tools/perf/perf_bench.tscn --only=presets` (RX 9060 XT, 1152x648, 30 animated characters):
+  - `continent.tscn`: Low **1.14 ms GPU (738.6 fps)**, Medium **3.10 ms GPU (288.6 fps)**, High **4.71 ms GPU (198.3 fps)**.
+  - `frontier.tscn`: Low **1.63 ms GPU (533.3 fps)**, Medium **5.00 ms GPU (187.2 fps)**, High **7.21 ms GPU (131.2 fps)**.
+- Visual verification: all 7 `glade_shot` views inspected before & after on both `frontier.tscn` and `continent.tscn`.
+
+**Left for later**:
+- Harvestable `Oak` (`TallThick`) and `Yew` (`TwistedTree`) inside the glade still use the kit's blue/pink leaves to keep
+  woodcutting tiers distinct; Luke's call if he wants them shifted to natural oak-emerald / deep-yew tones.

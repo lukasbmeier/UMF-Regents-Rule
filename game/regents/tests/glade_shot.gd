@@ -7,9 +7,11 @@ extends Node3D
 ##   godot --path . res://game/regents/tests/glade_shot.tscn -- <out dir> [res://a/level.tscn]
 
 const NODE_DIR: String = "res://game/regents/content/node/"
+const STATION_DIR: String = "res://game/regents/content/station/"
 ## [name, the eye, what it looks at]
 const VIEWS: Array[Array] = [
 	["camp", Vector3(2.0, 2.6, 6.5), Vector3(2.0, 1.0, 16.0)],
+	["north", Vector3(1.5, 2.4, 13.0), Vector3(-18.0, 6.0, -50.0)],
 	["woods", Vector3(-3.0, 2.4, -1.0), Vector3(-10.0, 1.5, -7.0)],
 	["meadow", Vector3(-6.0, 2.4, 9.0), Vector3(-13.0, 0.8, 3.0)],
 	["rock", Vector3(-4.5, 2.2, 8.5), Vector3(-9.5, 1.2, 12.1)],
@@ -33,7 +35,7 @@ func _ready() -> void:
 	add_child(level)
 	_draw_points(level)
 	var cam := Camera3D.new()
-	cam.far = 400.0
+	cam.far = 2000.0
 	cam.fov = 70.0
 	add_child(cam)
 	cam.make_current()
@@ -63,7 +65,7 @@ func _ready() -> void:
 	AppExit.quit(get_tree(), 0)
 
 
-## Every gathering node's model where its point is, every station a block.
+## Every gathering node's model and every station's real StationDef where its point is.
 func _draw_points(level: Node3D) -> void:
 	var defs: Dictionary[String, NodeDef] = {}
 	for file: String in DirAccess.get_files_at(NODE_DIR):
@@ -71,6 +73,12 @@ func _draw_points(level: Node3D) -> void:
 			var def: NodeDef = load(NODE_DIR + file) as NodeDef
 			if def != null:
 				defs[def.display_name] = def
+	var stations: Dictionary[String, StationDef] = {}
+	for file: String in DirAccess.get_files_at(STATION_DIR):
+		if file.ends_with(".tres"):
+			var sdef: StationDef = load(STATION_DIR + file) as StationDef
+			if sdef != null:
+				stations[String(sdef.key)] = sdef
 	var n: int = 0
 	for found: Node in level.find_children("*", "Marker3D", true, false):
 		var point: LevelPoint = found as LevelPoint
@@ -78,12 +86,43 @@ func _draw_points(level: Node3D) -> void:
 			continue
 		n += 1
 		if point.kind == "station":
-			var block := MeshInstance3D.new()
-			var box := BoxMesh.new()
-			box.size = Vector3(1.2, 1.0, 0.8)
-			block.mesh = box
-			block.position = point.global_position + Vector3(0.0, 0.5, 0.0)
-			add_child(block)
+			var key: String = point.tags[0] if not point.tags.is_empty() else ""
+			var sdef: StationDef = stations.get(key) as StationDef
+			if sdef != null:
+				var holder := Node3D.new()
+				holder.position = point.global_position
+				add_child(holder)
+				if sdef.body_size != Vector3.ZERO:
+					var body := MeshInstance3D.new()
+					var box := BoxMesh.new()
+					box.size = sdef.body_size
+					body.mesh = box
+					body.position = Vector3(0.0, sdef.body_size.y * 0.5, 0.0)
+					var mat := StandardMaterial3D.new()
+					mat.albedo_color = sdef.body_color
+					mat.roughness = 0.95
+					body.material_override = mat
+					holder.add_child(body)
+				for i: int in sdef.pieces.size():
+					if sdef.pieces[i] == null:
+						continue
+					var piece: Node3D = sdef.pieces[i].instantiate() as Node3D
+					piece.transform = sdef.piece_transforms[i] if i < sdef.piece_transforms.size() else Transform3D.IDENTITY
+					holder.add_child(piece)
+				if sdef.glow_color.a > 0.0:
+					var light := OmniLight3D.new()
+					light.light_color = sdef.glow_color
+					light.light_energy = 2.2
+					light.omni_range = 4.0
+					light.position = Vector3(0.0, sdef.body_size.y * 0.45, sdef.body_size.z * 0.5 + 0.15)
+					holder.add_child(light)
+			else:
+				var block := MeshInstance3D.new()
+				var box := BoxMesh.new()
+				box.size = Vector3(1.2, 1.0, 0.8)
+				block.mesh = box
+				block.position = point.global_position + Vector3(0.0, 0.5, 0.0)
+				add_child(block)
 		elif point.kind == "node" and not point.tags.is_empty() and defs.has(point.tags[0]):
 			var def: NodeDef = defs[point.tags[0]]
 			if def.models.is_empty():

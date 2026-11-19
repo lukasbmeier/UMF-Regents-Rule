@@ -10,6 +10,8 @@ class_name RegentsClutterKind extends Resource
 ## Its size, picked between these for each one.
 @export_range(0.05, 4.0, 0.05) var min_scale: float = 0.7
 @export_range(0.05, 4.0, 0.05) var max_scale: float = 1.2
+## Height multiplier relative to width (< 1 makes short plush turf that stays below enemies and loot).
+@export_range(0.15, 2.0, 0.05) var height_scale: float = 1.0
 ## Its color, multiplied into the model's own (white: as the model is; only leaves, petals and blades take it).
 @export var tint: Color = Color.WHITE
 ## 0: spread evenly. 1: only in patches, with bare ground between.

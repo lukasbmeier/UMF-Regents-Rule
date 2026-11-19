@@ -71,24 +71,29 @@ func repaint() -> void:
 	_bytes.resize(resolution * resolution * 3)
 	_bytes.fill(0)
 	var root: Node = get_node_or_null(level)
+	var half_pad: float = extent_m * 0.5 + 12.0
 	if root != null:
 		for found: Node in root.find_children("*", "Marker3D", true, false):
 			var point: LevelPoint = found as LevelPoint
 			if point == null:
 				continue
 			var at: Vector3 = _local(point)
+			if absf(at.x) > half_pad or absf(at.z) > half_pad:
+				continue
 			if worn_kinds.has(point.kind):
 				_stamp(RED, at.x, at.z, worn_radius_m)
 			elif point.kind == KIND_NODE and not (point.tags.size() > 0 and grass_tags.has(point.tags[0])):
 				_stamp(GREEN, at.x, at.z, point.radius + soil_margin_m)
 		for found: Node in root.find_children("*", "MeshInstance3D", true, false):
+			var mi: MeshInstance3D = found as MeshInstance3D
+			var at: Vector3 = _local(mi)
+			if absf(at.x) > half_pad or absf(at.z) > half_pad:
+				continue
 			var owner_scene: Node3D = _model_root(found, root)
 			if owner_scene == null or not _is_rock(owner_scene.scene_file_path):
 				continue
-			var mi: MeshInstance3D = found as MeshInstance3D
 			var box: AABB = mi.get_aabb()
 			var s: Vector3 = mi.global_transform.basis.get_scale()
-			var at: Vector3 = _local(mi)
 			_stamp(GREEN, at.x, at.z, maxf(box.size.x * s.x, box.size.z * s.z) * 0.5 + soil_margin_m * 0.6)
 	for child: Node in get_children():
 		var trail: Path3D = child as Path3D

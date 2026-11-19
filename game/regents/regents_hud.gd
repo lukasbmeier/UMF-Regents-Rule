@@ -74,6 +74,8 @@ var tester_page: RegentsTesterPage = null
 ## THE TUTORIAL (Luke, 2026-11-01): the player's progress and the guide's card.
 var tutorial: TutorialComponent = null
 var tutorial_card: RegentsTutorialCard = null
+## Crisp 2D screen-space overhead names, status tags, chat bubbles and ground-item labels (layer 2).
+var nameplates: RegentsNameplates = null
 var _tester_button: Button = null
 
 
@@ -85,6 +87,8 @@ func _ready() -> void:
 	ShapeMinigame.define_setting()
 	# Spells in the world: a Frost Ring's circle, what burns (owner, 2026-10-20: the Staff).
 	add_child(SpellLooks.new())
+	nameplates = RegentsNameplates.new()
+	add_child(nameplates)
 	_layer = CanvasLayer.new()
 	_layer.layer = 6
 	add_child(_layer)
@@ -314,6 +318,8 @@ func _find_player() -> void:
 	bag_window.inventory = _inventory
 	bag_window.combat = combat
 	bag_window.skilling = s
+	if nameplates != null:
+		nameplates.combat = combat
 	# THE DOLL (W3): the worn row, and how to wear and take off.
 	bag_window.armor = me.find_component(ArmorLookComponent) as ArmorLookComponent
 	if bag_window.armor != null:

@@ -27,7 +27,7 @@ lod0_range = 128.0
 
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_uwjag"]
 name = "grass"
-albedo_color = Color(0.42, 0.6, 0.27, 1)
+albedo_color = Color(0.26, 0.37, 0.14, 1)
 albedo_texture = ExtResource("1_8k6mp")
 normal_texture = ExtResource("2_i6pyp")
 uv_scale = 0.12
@@ -36,7 +36,7 @@ detiling_rotation = 0.15
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_c54iv"]
 name = "rock"
 id = 1
-albedo_color = Color(0.55, 0.53, 0.5, 1)
+albedo_color = Color(0.43, 0.42, 0.4, 1)
 albedo_texture = ExtResource("3_tdb5w")
 normal_texture = ExtResource("4_ut1hv")
 uv_scale = 0.12
@@ -45,7 +45,7 @@ detiling_rotation = 0.15
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_6g7te"]
 name = "sand"
 id = 2
-albedo_color = Color(0.82, 0.76, 0.56, 1)
+albedo_color = Color(0.64, 0.58, 0.44, 1)
 albedo_texture = ExtResource("5_yuowd")
 normal_texture = ExtResource("6_5knsh")
 uv_scale = 0.12

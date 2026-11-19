@@ -51,6 +51,8 @@ func run() -> void:
 	_run_status_bars()
 	_run_tutorial()
 	_run_glade_look()
+	_run_glade_vista()
+	await _run_overhead_names()
 	_run_combat_pass()
 	await _run_crosshair()
 	await _run_shot_stops()
@@ -5441,7 +5443,9 @@ func _run_glade_look() -> void:
 				on_dirt += 1
 			if RegentsGroundClutter.at_foot(paint, at.x, at.z):
 				at_rim += 1
-	_check(total > 2000 and total < 12000 and clutter.made.size() > 25, "a meadow: %d scattered in %d MultiMeshes (the glade had 100 nodes)" % [total, clutter.made.size()])
+	_check(total > 2000 and total < 40000 and clutter.made.size() > 25, "a meadow: %d scattered in %d MultiMeshes (the glade had 100 nodes)" % [total, clutter.made.size()])
+	_check(clutter.kinds.size() > 0 and clutter.kinds[0].height_scale < 0.5,
+		"short plush turf: grass height_scale stays below 0.5 so enemies and loot read clearly (%.2f)" % (clutter.kinds[0].height_scale if clutter.kinds.size() > 0 else 1.0))
 	_check(grouped, "every one of them thins with Detail, is not drawn past its distance, casts no shadow and knows where its own are")
 	_check(on_dirt == 0 and in_soil == 0, "no plant on trodden dirt, nothing in bare soil (%d, %d of %d)" % [on_dirt, in_soil, total])
 	# How much of the ground that could grow something is a foot: a plant there is likelier than its share of it.
@@ -5499,6 +5503,349 @@ func _run_glade_look() -> void:
 	_check(trampled > 0, "NEGATIVE: with no painter the grass grows on the trails (%d plants on dirt)" % trampled)
 	clutter.paint = paint_path
 	level.free()
+
+
+## THE GLADE'S VISUAL PARITY WITH THE SHOWCASE (Step 115): the playable frontier carries the showcase sky shader,
+## playable golden-hour mood (`frontier.tres`), 360-degree surrounding valley with keep, eastern watchtower, tarn,
+## forest perimeter and warm camp firepit, all built as internal nodes (zero `.tscn` bloat, skipped in headless).
+## NEGATIVES: the playable glade stays below y = 0 so Ground/Field never clips; no tree spawns inside the glade,
+## lake or keep yard; GraphicsQuality Effects.OFF stays off even after `apply_mood()`.
+func _run_glade_vista() -> void:
+	print("== regents: the glade's valley vista and sky mood ==")
+	var frontier_mood: ShowcaseMood = load("res://game/regents/showcase/moods/frontier.tres") as ShowcaseMood
+	_check(frontier_mood != null and frontier_mood.display_name == "Frontier" and frontier_mood.sun_elevation > 5.0
+		and frontier_mood.cloud_cover > 0.2 and frontier_mood.fire_energy > 1.0,
+		"the playable Frontier mood loads with golden-afternoon sun, clouds and firelight")
+	var level: Node3D = (load("res://game/regents/levels/frontier.tscn") as PackedScene).instantiate() as Node3D
+	add_child(level)
+	var we: WorldEnvironment = level.get_node_or_null(^"WorldEnvironment") as WorldEnvironment
+	var sun: DirectionalLight3D = level.get_node_or_null(^"Sun") as DirectionalLight3D
+	var vista: RegentsGladeVista = level.get_node_or_null(^"Vista") as RegentsGladeVista
+	var sky_mat: ShaderMaterial = we.environment.sky.sky_material as ShaderMaterial if we != null and we.environment != null and we.environment.sky != null else null
+	_check(we != null and sun != null and vista != null and sky_mat != null
+		and sky_mat.shader.resource_path.ends_with("showcase_sky.gdshader"),
+		"frontier.tscn keeps top-level WorldEnvironment and Sun, uses showcase_sky.gdshader and has RegentsGladeVista")
+	if vista == null or we == null or sun == null:
+		level.free()
+		return
+	if DisplayServer.get_name() == "headless":
+		_check(not vista.is_built(), "a headless process (the referee) does not auto-build the visual vista")
+	vista.detail = 0.25
+	vista.build()
+	_check(vista.is_built() and vista.get_child_count() == 0 and vista.get_child_count(true) == 1,
+		"vista builds exclusively under an internal child (zero editor .tscn bloat)")
+	var gen: Node3D = vista.get_child(0, true) as Node3D
+	_check(gen != null and gen.get_node_or_null(^"Land") != null and gen.get_node_or_null(^"Keep") != null
+		and gen.get_node_or_null(^"Watchtower") != null and gen.get_node_or_null(^"Lake") != null
+		and gen.get_node_or_null(^"Camp") != null and vista.fire_light != null,
+		"vista builds Land, Keep, Watchtower, Lake, Camp and FireLight")
+	# Playable arena stays safely tucked below y = 0 so Ground/Field owns the flat floor with zero z-fighting.
+	var max_inner: float = -INF
+	for p: Vector2 in [Vector2(0, 8), Vector2(-6, 14), Vector2(35, -1), Vector2(-25, -30), Vector2(20, 20)]:
+		max_inner = maxf(max_inner, vista.height_at(p.x, p.y))
+	_check(max_inner < -0.1, "playable glade stays cleanly below Ground/Field (highest inner %.2f m)" % max_inner)
+	_check(vista.height_at(vista.keep_at.x, vista.keep_at.y) > 20.0
+		and vista.height_at(vista.tower_at.x, vista.tower_at.y) > 15.0
+		and vista.height_at(vista.lake_at.x, vista.lake_at.y) > 0.1,
+		"keep hill, watchtower bluff and tarn bed all stand cleanly above y = 0")
+	var ridge: float = 0.0
+	for a: int in range(24):
+		var ang: float = TAU * float(a) / 24.0
+		ridge = maxf(ridge, vista.height_at(cos(ang) * 420.0, sin(ang) * 420.0))
+	_check(ridge > 70.0, "360-degree alpine horizon ridges rise high (%.0f m)" % ridge)
+	# Keep footings stand in the drawn hill all round (zero floating gap).
+	var keep: Node3D = gen.get_node(^"Keep") as Node3D
+	var checked_footings: int = 0
+	var worst_gap: float = -INF
+	for child: Node in keep.get_children():
+		var mi: MeshInstance3D = child as MeshInstance3D
+		if mi == null or mi.mesh == null or mi.mesh is PrismMesh or mi.material_override == vista._window_mat:
+			continue
+		var aabb: AABB = mi.mesh.get_aabb()
+		var foot_y: float = keep.position.y + mi.position.y + aabb.position.y
+		if foot_y > keep.position.y + 1.0:
+			continue
+		var wx: float = keep.position.x + mi.position.x
+		var wz: float = keep.position.z + mi.position.z
+		worst_gap = maxf(worst_gap, foot_y - vista.ground_at(wx, wz))
+		checked_footings += 1
+	_check(checked_footings >= 10 and worst_gap < 0.0,
+		"the keep's %d foundations stand in the hill all round (deepest margin %.2f m)" % [checked_footings, -worst_gap])
+	var tree_total: int = 0
+	for k: String in vista.placed:
+		if k.begins_with("CommonTree") or k.begins_with("TallThick") or k.begins_with("TwistedTree"):
+			tree_total += vista.placed[k]
+	_check(tree_total > 50, "surrounding valley forest trees placed (%d)" % tree_total)
+	_check(not vista.is_treeable(0.0, 8.0) and not vista.is_treeable(30.0, -10.0)
+		and not vista.is_treeable(vista.lake_at.x, vista.lake_at.y)
+		and not vista.is_treeable(vista.keep_at.x + 5.0, vista.keep_at.y),
+		"NEGATIVE: outer trees never spawn inside the playable glade, tarn or keep yard")
+	# Mood relighting and GraphicsQuality respect.
+	var night: ShowcaseMood = load("res://game/regents/showcase/moods/night.tres") as ShowcaseMood
+	vista.mood = night
+	_check(not sun.visible and vista.moon_light != null and vista.moon_light.visible,
+		"switching to night mood hides Sun and lights Moon")
+	var prev_effects: int = GraphicsQuality.effects
+	GraphicsQuality.effects = GraphicsQuality.Effects.OFF
+	vista.mood = frontier_mood
+	_check(sun.visible and not we.environment.ssao_enabled and not we.environment.glow_enabled
+		and not we.environment.volumetric_fog_enabled,
+		"NEGATIVE: GraphicsQuality Effects.OFF keeps SSAO, glow and volumetric fog off even after apply_mood()")
+	GraphicsQuality.effects = prev_effects
+	GraphicsQuality.apply_environment(we.environment)
+	vista.rebuild()
+	_check(vista.is_built() and vista.get_child_count(true) == 1, "rebuild replaces the generated vista cleanly")
+	level.free()
+
+	# Continent (level 21) carries the same visual parity in Terrain3D mode (no fake Land/Lake shell).
+	var cont: Node3D = (load("res://game/regents/levels/continent/continent.tscn") as PackedScene).instantiate() as Node3D
+	add_child(cont)
+	var c_we: WorldEnvironment = cont.get_node_or_null(^"WorldEnvironment") as WorldEnvironment
+	var c_sky: ShaderMaterial = c_we.environment.sky.sky_material as ShaderMaterial if c_we != null and c_we.environment != null and c_we.environment.sky != null else null
+	var c_paint: RegentsGroundPaint = cont.get_node_or_null(^"GroundPaint") as RegentsGroundPaint
+	var c_clutter: RegentsGroundClutter = cont.get_node_or_null(^"Clutter") as RegentsGroundClutter
+	var c_vista: RegentsGladeVista = cont.get_node_or_null(^"Vista") as RegentsGladeVista
+	_check(c_sky != null and c_sky.shader.resource_path.ends_with("showcase_sky.gdshader")
+		and c_paint != null and c_clutter != null and c_vista != null and not c_vista.terrain.is_empty(),
+		"continent.tscn carries showcase_sky.gdshader, camp GroundPaint, terrain-aware Clutter and Terrain3D Vista")
+	if c_vista != null:
+		if DisplayServer.get_name() == "headless":
+			_check(not c_vista.is_built(), "continent Vista skips auto-build in headless")
+		c_vista.detail = 0.25
+		c_vista.build()
+		var c_gen: Node3D = c_vista.get_child(0, true) as Node3D
+		_check(c_gen != null and c_gen.get_node_or_null(^"Land") == null and c_gen.get_node_or_null(^"Lake") == null
+			and c_gen.get_node_or_null(^"Keep") != null and c_gen.get_node_or_null(^"Watchtower") != null
+			and c_gen.get_node_or_null(^"Camp") != null,
+			"continent Vista uses real Terrain3D (no fake Land/Lake) while placing Keep, Watchtower and Camp")
+	cont.free()
+
+
+func _run_overhead_names() -> void:
+	print("== regents: crisp 2D screen-space overhead names ==")
+	# Pure helpers: distance fade, font-size hysteresis, depth sort, integer pixel snap.
+	_check(is_equal_approx(RegentsNameplates.distance_alpha(10.0, 40.0, 0.65), 1.0)
+		and is_equal_approx(RegentsNameplates.distance_alpha(33.0, 40.0, 0.65), 0.5)
+		and is_equal_approx(RegentsNameplates.distance_alpha(40.0, 40.0, 0.65), 0.0)
+		and is_equal_approx(RegentsNameplates.distance_alpha(55.0, 40.0, 0.65), 0.0),
+		"overhead: distance_alpha stays 1.0 inside fade range, halves midway and hits 0 at max range")
+	_check(RegentsNameplates.choose_font_size(18.5, 16, 16, 14, 18.0) == 16
+		and RegentsNameplates.choose_font_size(19.5, 16, 16, 14, 18.0) == 14
+		and RegentsNameplates.choose_font_size(17.5, 14, 16, 14, 18.0) == 14
+		and RegentsNameplates.choose_font_size(16.5, 14, 16, 14, 18.0) == 16,
+		"overhead: font size steps cleanly with hysteresis around far_distance_m")
+	_check(RegentsNameplates.depth_z_index(4.0) > RegentsNameplates.depth_z_index(18.0),
+		"overhead: closer entities sort in front of farther ones")
+	var snapped: Vector2 = RegentsNameplates.anchor_position(Vector2(100.3, 200.7), Vector2(81.0, 20.0))
+	_check(snapped == Vector2(roundf(snapped.x), roundf(snapped.y)) and snapped == Vector2(60.0, 181.0),
+		"overhead: anchor_position snaps to integer screen pixels bottom-centered on the head")
+	# Anti-overlap stacking: priority order, vertical lift without intersection, cap & crowd overflow hiding.
+	var stack_items: Array[Dictionary] = [
+		{"id": 1, "priority": 0, "dist": 12.0, "pos": Vector2(500.0, 300.0), "size": Vector2(100.0, 18.0), "keep": false},
+		{"id": 2, "priority": 3, "dist": 14.0, "pos": Vector2(510.0, 300.0), "size": Vector2(100.0, 18.0), "keep": true},
+		{"id": 3, "priority": 0, "dist": 12.2, "pos": Vector2(505.0, 300.0), "size": Vector2(100.0, 18.0), "keep": false},
+		{"id": 4, "priority": 0, "dist": 16.0, "pos": Vector2(502.0, 300.0), "size": Vector2(100.0, 18.0), "keep": false},
+	]
+	RegentsNameplates.resolve_overlaps(stack_items, 2)
+	var by_id: Dictionary = {}
+	for it: Dictionary in stack_items:
+		by_id[int(it["id"])] = it
+	var r2: Rect2 = Rect2(by_id[2]["pos"] as Vector2, by_id[2]["size"] as Vector2)
+	var r1: Rect2 = Rect2(by_id[1]["pos"] as Vector2, by_id[1]["size"] as Vector2)
+	var r3: Rect2 = Rect2(by_id[3]["pos"] as Vector2, by_id[3]["size"] as Vector2)
+	_check(bool(by_id[2]["visible"]) and int(by_id[2]["lifts"]) == 0
+		and bool(by_id[1]["visible"]) and int(by_id[1]["lifts"]) == 1 and not r2.intersects(r1)
+		and bool(by_id[3]["visible"]) and int(by_id[3]["lifts"]) == 2 and not r1.intersects(r3),
+		"overhead: Tab target stays anchored while colliding neighbors stack cleanly upward with no overlap")
+	_check(not bool(by_id[4]["visible"]),
+		"NEGATIVE: low-priority 4th label past max_stack_rows hides cleanly instead of piling to the sky")
+
+	var rig := Node3D.new()
+	add_child(rig)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0.0, 2.0, 8.0)
+	rig.add_child(cam)
+	cam.look_at(Vector3(0.0, 2.0, 0.0))
+	var overlay := RegentsNameplates.new()
+	overlay.check_occlusion = false
+	rig.add_child(overlay)
+	# Settings integration: Game tab choice updates overlay.mode live.
+	var setting_entry: Dictionary = Settings.entry(RegentsNameplates.SETTING)
+	_check(not setting_entry.is_empty() and String(setting_entry["tab"]) == Settings.GAME
+		and (setting_entry["choices"] as PackedStringArray) == PackedStringArray(RegentsNameplates.MODE_NAMES)
+		and int(setting_entry["default"]) == RegentsNameplates.Mode.ALL,
+		"overhead: Game Settings defines 'Overhead names' (All / Focus & close / Minimal), default All")
+	Settings.set_value(RegentsNameplates.SETTING, RegentsNameplates.Mode.FOCUS_AND_CLOSE)
+	_check(overlay.mode == RegentsNameplates.Mode.FOCUS_AND_CLOSE,
+		"overhead: changing the Game setting switches overlay.mode live")
+	Settings.set_value(RegentsNameplates.SETTING, RegentsNameplates.Mode.ALL)
+
+	# Remote NPC entity with NameplateComponent + Nameplate holder.
+	var npc := SpaceTimeEntity.new()
+	var def := EntityDefinition.new()
+	def.kind = 120
+	def.display_name = "Drillmaster"
+	npc.definition = def
+	var holder := Node3D.new()
+	holder.name = "Nameplate"
+	npc.add_child(holder)
+	var comps := Node.new()
+	comps.name = "Components"
+	npc.add_child(comps)
+	var plate := NameplateComponent.new()
+	comps.add_child(plate)
+	rig.add_child(npc)
+	npc.entity_id = 94101
+	npc.position = Vector3(0.0, 0.0, 0.0)
+	npc.reset_physics_interpolation()
+	npc._collect_components()
+	plate.bind(npc, {})
+	plate.set_tag("Staggered", Color(1.0, 0.6, 0.2))
+	EntityRegistry.register(npc.entity_id, npc)
+
+	# Local player entity (must be skipped).
+	var local_ent := SpaceTimeEntity.new()
+	local_ent.is_local_authority = true
+	rig.add_child(local_ent)
+	local_ent.entity_id = 94102
+	EntityRegistry.register(local_ent.entity_id, local_ent)
+
+	# Ground item sack.
+	var ground := GroundItems.new()
+	ground.auto_pickup = false
+	rig.add_child(ground)
+	ground.show_row(941, 1, 3, "", Vector3(1.5, 0.0, 0.0), 0)
+	var sack: Node3D = ground.sack(941)
+	var sack_3d: Label3D = sack.get_node(^"Name") as Label3D
+
+	await get_tree().process_frame
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+
+	var box: VBoxContainer = overlay.plate_for(npc.entity_id)
+	var name_lbl: Label = box.get_node(^"Name") as Label if box != null else null
+	var tag_lbl: Label = box.get_node(^"Tag") as Label if box != null else null
+	_check(box != null and box.visible and name_lbl != null and name_lbl.text == "Drillmaster"
+		and tag_lbl != null and tag_lbl.visible and tag_lbl.text == "Staggered" and not holder.visible,
+		"overhead: remote NPC renders crisp 2D name + status tag and hides its fuzzy 3D Nameplate holder")
+	_check(overlay.plate_for(local_ent.entity_id) == null,
+		"NEGATIVE: local player entity never gets an overhead plate")
+
+	# Chat bubble mirrored in 2D and hidden in 3D.
+	var b3d := Label3D.new()
+	b3d.name = "ChatBubble"
+	b3d.text = "Hold a moment, traveler."
+	b3d.modulate = Color(1.0, 1.0, 1.0, 0.75)
+	npc.add_child(b3d)
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	var wrap: PanelContainer = box.get_node(^"BubbleWrap") as PanelContainer
+	var b2d: Label = wrap.get_node(^"Bubble") as Label
+	_check(wrap.visible and b2d.text == "Hold a moment, traveler."
+		and is_equal_approx(wrap.modulate.a, 0.75) and not b3d.visible,
+		"overhead: chat bubble mirrors into crisp 2D with matching alpha and hides the 3D bubble")
+
+	# Ground item mirrored in 2D and hidden in 3D.
+	var glbl: Label = overlay.ground_label_for(sack)
+	_check(glbl != null and glbl.visible and glbl.text == sack_3d.text and not sack_3d.visible,
+		"overhead: ground item label renders in crisp 2D and hides its 3D Label3D")
+
+	# Negative visibility cases: behind camera, past max range, hidden entity.
+	npc.position = Vector3(0.0, 0.0, 20.0)
+	npc.reset_physics_interpolation()
+	await get_tree().physics_frame
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(not box.visible, "NEGATIVE: entity behind the camera hides its 2D nameplate")
+
+	npc.position = Vector3(0.0, 0.0, -50.0)
+	npc.reset_physics_interpolation()
+	await get_tree().physics_frame
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(not box.visible, "NEGATIVE: entity beyond max_distance_m hides its 2D nameplate")
+
+	npc.position = Vector3(0.0, 0.0, 0.0)
+	npc.reset_physics_interpolation()
+	npc.visible = false
+	await get_tree().physics_frame
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(not box.visible, "NEGATIVE: hidden entity hides its 2D nameplate")
+
+	# Mode filtering: off-center entity at 15 m hides in Focus & close and Minimal, but shows when Tab-targeted.
+	npc.visible = true
+	plate.set_tag("", Color.WHITE)
+	b3d.visible = false
+	b3d.text = ""
+	npc.position = Vector3(6.0, 0.0, -5.0)   # ~14.3 m away, well off screen center
+	npc.reset_physics_interpolation()
+	await get_tree().physics_frame
+	overlay.mode = RegentsNameplates.Mode.ALL
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(box.visible, "overhead: All mode shows off-center entity at ~14 m")
+	overlay.mode = RegentsNameplates.Mode.FOCUS_AND_CLOSE
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(not box.visible, "NEGATIVE: Focus & close hides off-center entity beyond close_distance_m")
+	overlay.target_id_override = npc.entity_id
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(box.visible, "overhead: Tab-targeted entity stays visible even off-center in Focus & close")
+	overlay.mode = RegentsNameplates.Mode.MINIMAL
+	overlay.target_id_override = -1
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(not box.visible, "NEGATIVE: Minimal mode hides untargeted off-center entity")
+	overlay.target_id_override = npc.entity_id
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(box.visible, "overhead: Minimal mode still shows your Tab target")
+	overlay.target_id_override = -1
+	overlay.mode = RegentsNameplates.Mode.ALL
+	b3d.text = "Hold a moment, traveler."
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+
+	# Freed entity + picked-up (freed) loot sack mid-flight must never cast a freed object.
+	var sack2_id: int = 942
+	ground.show_row(sack2_id, 1, 1, "", Vector3(-1.5, 0.0, 0.0), 0)
+	var sack2: Node3D = ground.sack(sack2_id)
+	var sack2_key: int = sack2.get_instance_id()
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(overlay.ground_label_for(sack2) != null, "overhead: second ground sack tracked before pickup")
+	ground.forget(sack2_id)
+	sack2.free()   # synchronous free simulates pickup between frames (freed Label3D in _ground)
+	var doomed := SpaceTimeEntity.new()
+	var d_def := EntityDefinition.new()
+	d_def.kind = 104
+	d_def.display_name = "Skeleton axeman"
+	doomed.definition = d_def
+	var d_holder := Node3D.new()
+	d_holder.name = "Nameplate"
+	doomed.add_child(d_holder)
+	var d_comps := Node.new()
+	d_comps.name = "Components"
+	doomed.add_child(d_comps)
+	var d_plate := NameplateComponent.new()
+	d_comps.add_child(d_plate)
+	rig.add_child(doomed)
+	doomed.entity_id = 94103
+	doomed._collect_components()
+	d_plate.bind(doomed, {})
+	EntityRegistry.register(doomed.entity_id, doomed)
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(overlay.plate_for(94103) != null, "overhead: doomed foe tracked before despawn")
+	doomed.free()   # synchronous free simulates despawn (freed holder/entity in _entries)
+	overlay.refresh(cam, Vector2(1280.0, 720.0))
+	_check(overlay.plate_for(94103) == null and not overlay._ground.has(sack2_key),
+		"NEGATIVE: freeing a tracked foe or loot sack cleans up cleanly with zero freed-object casts")
+
+	# Clean exit restores 3D visibility and leaves no leaks.
+	overlay.free()
+	_check(holder.visible and b3d.visible and sack_3d.visible,
+		"overhead: removing RegentsNameplates restores underlying 3D labels cleanly")
+
+	# Layer ordering inside RegentsHud (overhead names below HUD windows).
+	var hud: RegentsHud = (load("res://game/regents/regents_hud.tscn") as PackedScene).instantiate() as RegentsHud
+	rig.add_child(hud)
+	_check(hud.nameplates != null and hud.nameplates.layer < hud._layer.layer,
+		"overhead: RegentsHud mounts RegentsNameplates below its main HUD CanvasLayer")
+
+	EntityRegistry.unregister(npc.entity_id)
+	EntityRegistry.unregister(local_ent.entity_id)
+	rig.queue_free()
+	await get_tree().process_frame
 
 
 ## The names of `root`'s foliage materials that are still the kit's plain double-sided ones (lit black from behind).

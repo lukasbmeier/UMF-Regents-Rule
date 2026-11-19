@@ -148,7 +148,7 @@ func _scatter_cell(k: int, kind: RegentsClutterKind, parts: Array[Array], cx: in
 			local_y = wy - here.y
 		if roll >= _chance(kind, wx, wz, mask, patches, i >= tries):
 			continue
-		placed.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), Vector3(x - middle.x, local_y, z - middle.z)))
+		placed.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s * kind.height_scale, s)), Vector3(x - middle.x, local_y, z - middle.z)))
 	if placed.is_empty():
 		return
 	var where := PackedVector3Array()
