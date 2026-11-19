@@ -4,6 +4,9 @@ extends "res://tests/suite_base.gd"
 ##   - a `FlyingBody` in real physics: it falls, bounces (a hit, fast), rolls and comes to rest (and stops),
 ##     its frames and what it remembers; its def's forces push it; `shift` moves it and its memory;
 ##     `place` puts it somewhere, at rest or moving
+##   - what it hit, every way it can meet something (DECISIONS #317): within its first frame, launched
+##     overlapping, with forces that stop it on touch, head-on and rear-end with another body (both say so,
+##     once), a roll that says nothing; `hits_bodies` off: through each other, still onto the floor and people
 ##   - the referee's `BodyReferee`: one write a tick for a body in flight with its frames, one more when it
 ##     comes to rest and then none; a hit on a person's stand-in reported with whom; a server teleport
 ##     adopted, its own echo not
@@ -12,6 +15,28 @@ extends "res://tests/suite_base.gd"
 ##   - the turn between two rows (`BodyComponent._turn_at`), the movement component's render seq
 
 const BALL_ID: int = 1
+
+
+## A body's hits, with the frame each came in (its `frames` as it said so: 0 is its first physics frame).
+class Hits extends RefCounted:
+	var list: Array[Dictionary] = []
+	var body: FlyingBody
+	func _init(b: FlyingBody) -> void:
+		body = b
+		b.hit.connect(_on_hit)
+	func _on_hit(other: Object, pos: Vector3, normal: Vector3, speed: float) -> void:
+		list.append({"other": other, "pos": pos, "normal": normal, "speed": speed, "frame": body.frames})
+	func with(o: Object) -> Array[Dictionary]:
+		var out: Array[Dictionary] = []
+		out.assign(list.filter(func(h: Dictionary) -> bool: return h["other"] == o))
+		return out
+	func said() -> String:
+		var parts: PackedStringArray = []
+		for h: Dictionary in list:
+			var o: Object = h["other"]
+			parts.append("%s f%d %.2f m/s n%s" % [(o as Node).name if o is Node else str(o), int(h["frame"]),
+				float(h["speed"]), h["normal"]])
+		return "[%s]" % ", ".join(parts)
 
 
 class FakeMoveRow extends RefCounted:
@@ -33,6 +58,7 @@ func run() -> void:
 	_run_def()
 	# Real time: `Engine.time_scale` would make each physics frame longer, not add frames.
 	await _run_flight()
+	await _run_contacts()
 	await _run_forces_and_moves()
 	await _run_referee()
 	_run_correction()
@@ -99,7 +125,11 @@ func _run_flight() -> void:
 	var b: FlyingBody = FlyingBody.make(ball)
 	get_tree().root.add_child(b)
 	var hits: Array[float] = []
-	b.hit.connect(func(_o: Object, _p: Vector3, _n: Vector3, speed: float) -> void: hits.append(speed))
+	var hit_frames: Array[int] = []
+	b.hit.connect(func(_o: Object, _p: Vector3, _n: Vector3, speed: float) -> void:
+		hits.append(speed)
+		hit_frames.append(b.frames))
+	var roll_from: Array[int] = [-1]   # the first frame of its roll: on the floor, no longer bouncing, until rest
 	var rested: Array[bool] = [false]
 	b.came_to_rest.connect(func() -> void: rested[0] = true)
 	b.launch(Vector3(0, 2.0, 0), Vector3(3, 0, 0), Vector3.ZERO, Vector3.ZERO)
@@ -112,7 +142,16 @@ func _run_flight() -> void:
 	while not rested[0] and waited < 900:
 		await get_tree().physics_frame
 		waited += 1
+		var rolling: bool = b.global_position.y < ball.radius_m + 0.01 and absf(b.linear_velocity.y) < 0.05
+		if not rolling:
+			roll_from[0] = -1
+		elif roll_from[0] < 0:
+			roll_from[0] = b.frames
 	_check(not hits.is_empty() and hits[0] > 3.0, "it hit the floor fast (%.1f m/s), once on landing" % (hits[0] if not hits.is_empty() else 0.0))
+	var rolling_hits: Array[int] = []
+	rolling_hits.assign(hit_frames.filter(func(f: int) -> bool: return f > roll_from[0] + 1))
+	_check(roll_from[0] > 0 and b.frames - roll_from[0] > 30 and rolling_hits.is_empty(),
+		"rolling to rest on the floor (frames %d-%d) it says nothing: no hit spam (hits at frames %s)" % [roll_from[0], b.frames, hit_frames])
 	_check(rested[0] and b.at_rest, "it rolled and came to rest (after %d frames)" % waited)
 	await _frames(3)
 	var x: float = b.global_position.x
@@ -121,6 +160,205 @@ func _run_flight() -> void:
 	_check(is_equal_approx(b.global_position.x, x), "and it stays put")
 	b.queue_free()
 	floor_node.queue_free()
+	await get_tree().physics_frame
+
+
+## The ball's size with no gravity, no drag and no roll drag: it goes where it is sent and nowhere else.
+func _plain(bounce: float, report_mps: float) -> BodyDef:
+	var d: BodyDef = (BodyDef.by_id(BALL_ID) as BodyDef).duplicate() as BodyDef
+	d.gravity_scale = 0.0
+	d.linear_damp = 0.0
+	d.angular_damp = 0.0
+	d.ground_drag = 0.0
+	d.bounce = bounce
+	d.contact_speed_mps = report_mps
+	return d
+
+
+func _box(n: String, at: Vector3, size: Vector3) -> StaticBody3D:
+	var w := StaticBody3D.new()
+	w.name = n
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	w.add_child(shape)
+	w.collision_layer = 1
+	w.position = at
+	get_tree().root.add_child(w)
+	return w
+
+
+func _fly(d: BodyDef, n: String, at: Vector3, vel: Vector3) -> FlyingBody:
+	var b: FlyingBody = FlyingBody.make(d)
+	b.name = n
+	get_tree().root.add_child(b)
+	b.launch(at, vel, Vector3.ZERO, Vector3.ZERO)
+	return b
+
+
+func _run_contacts() -> void:
+	print("== bodies: what it hit, every way it meets something (DECISIONS #317) ==")
+	var r: float = (BodyDef.by_id(BALL_ID) as BodyDef).radius_m
+	# 1. Within its first frame: a wall 5 cm from it, at 10 m/s (17 cm a frame). Jolt's first step meets the
+	# wall before the body's first `_integrate_forces`, and with no bounce it is stopped dead there: nothing
+	# left ahead for a cast to find.
+	var wall: StaticBody3D = _box("Wall", Vector3(r + 0.05 + 0.5, 50, 0), Vector3(1, 4, 4))
+	var b: FlyingBody = _fly(_plain(0.0, 1.0), "Close", Vector3(0, 50, 0), Vector3(10, 0, 0))
+	var h := Hits.new(b)
+	await _frames(12)
+	var on_wall: Array[Dictionary] = h.with(wall)
+	_check(on_wall.size() == 1 and int(on_wall[0]["frame"]) == 0, "a wall within its first frame: hit, in that frame, once %s" % h.said())
+	_check(on_wall.size() == 1 and float(on_wall[0]["speed"]) > 9.0 and (on_wall[0]["normal"] as Vector3).dot(Vector3.LEFT) > 0.99,
+		"at the speed it went in (10 m/s), the wall's face pointing back at it %s" % h.said())
+	_check(b.linear_velocity.length() < 0.5, "and it did stop there (no bounce): the hit was not a cast's guess (%s)" % b.linear_velocity)
+	b.queue_free()
+	# Launched into the wall (3 cm deep), standing still: reported when its contacts are read at all (0 m/s).
+	b = _fly(_plain(0.0, 0.0), "Overlapping", Vector3(0.05 + 0.03, 50, 0), Vector3.ZERO)   # the face at r + 5 cm
+	h = Hits.new(b)
+	await _frames(2)
+	on_wall = h.with(wall)
+	_check(not on_wall.is_empty() and int(on_wall[0]["frame"]) == 0, "launched overlapping a wall, reporting every touch: hit in its first frame %s" % h.said())
+	b.queue_free()
+	wall.queue_free()
+	await get_tree().physics_frame
+
+	# 2. Forces that stop it on touch (a genre's shot) never hide the hit: the wall within a frame, bouncy.
+	var stop: BodyDef = _plain(0.6, 1.0)
+	stop.forces = (load("res://tests/fixtures/stop_forces.gd") as Script).new() as BodyForces
+	wall = _box("Wall", Vector3(r + 0.05 + 0.5, 50, 10), Vector3(1, 4, 4))
+	b = _fly(stop, "Shot", Vector3(0, 50, 10), Vector3(10, 0, 0))
+	h = Hits.new(b)
+	await _frames(12)
+	on_wall = h.with(wall)
+	# Bounce 0.6 into a wall of none: Jolt sends it back at 6, a 16 m/s push; less its bounce, the 10 it came in at.
+	_check(on_wall.size() == 1 and absf(float(on_wall[0]["speed"]) - 10.0) < 0.5,
+		"stopped on touch by its forces, within its first frame: still hit, at the 10 m/s it closed at (not its bounce's 16) %s" % h.said())
+	_check(b.linear_velocity.length() < 0.01, "and its forces did stop it (%s)" % b.linear_velocity)
+	b.queue_free()
+	b = _fly(stop, "FarShot", Vector3(-1.0, 50, 10), Vector3(10, 0, 0))
+	h = Hits.new(b)
+	await _frames(20)
+	on_wall = h.with(wall)
+	_check(on_wall.size() == 1 and float(on_wall[0]["speed"]) > 9.0 and b.linear_velocity.length() < 0.01,
+		"from a metre away: hit once, at 10 m/s, stopped %s" % h.said())
+	b.queue_free()
+	wall.queue_free()
+	# Touching something (a wall 5 mm behind it: Jolt counts it as a contact) and a target 25 cm ahead (more
+	# than its first step's 17 cm, less than two): its forces stop it at the end of its first step, so it never
+	# reaches the target, and nothing may say it did. Its cast ahead runs AFTER its forces, along the velocity
+	# it really has (none); run before them it "hit" the target at 10 m/s. (Something touched under its path,
+	# the floor, stops the cast whichever way round: a cast starting against a surface goes nowhere.)
+	var behind: StaticBody3D = _box("Behind", Vector3(-r - 0.005 - 0.5, 50, 60), Vector3(1, 4, 4))
+	var target: StaticBody3D = _box("Target", Vector3(r + 0.25 + 0.5, 50, 60), Vector3(1, 4, 4))
+	b = _fly(stop, "Touching", Vector3(0, 50, 60), Vector3(10, 0, 0))
+	h = Hits.new(b)
+	await _frames(12)
+	_check(h.with(target).is_empty() and b.linear_velocity.length() < 0.01 and b.global_position.x < 0.2,
+		"stopped on touch short of a target: no hit on the target it never reached (stopped at x %.2f) %s" % [b.global_position.x, h.said()])
+	b.queue_free()
+	behind.queue_free()
+	target.queue_free()
+	await get_tree().physics_frame
+
+	# 3. Two bodies. Head-on at 5 m/s each, 1.78 m apart: 10 frames leave 11 cm, more than either one's own
+	# 8 cm a frame, so neither cast finds the other and they meet inside the 11th step.
+	var pair: BodyDef = _plain(0.5, 0.5)
+	var a: FlyingBody = _fly(pair, "A", Vector3(-1, 50, 20), Vector3(5, 0, 0))
+	var c: FlyingBody = _fly(pair, "B", Vector3(1, 50, 20), Vector3(-5, 0, 0))
+	var ha := Hits.new(a)
+	var hc := Hits.new(c)
+	await _frames(30)
+	_check(ha.list.size() == 1 and ha.with(c).size() == 1 and float(ha.list[0]["speed"]) > 4.0,
+		"head-on, met inside a step: A says it hit B, once, at 5 m/s %s" % ha.said())
+	_check(hc.list.size() == 1 and hc.with(a).size() == 1 and float(hc.list[0]["speed"]) > 4.0,
+		"and B says it hit A, once %s" % hc.said())
+	_check(a.linear_velocity.x < 0.0 and c.linear_velocity.x > 0.0, "and they did meet: both bounced back")
+	a.queue_free()
+	c.queue_free()
+	# Rear-end: A at 8 m/s catches B at 2 m/s. B goes away from A, so nothing it does says "into": its hit is
+	# the push it took (the contact's impulse over its mass), less its own bounce (over 1.5). Godot adds two
+	# bounces (0.5 + 0.5: all of it kept), so B leaves at 8: a 6 m/s push, said as 4. No gravity and no drag,
+	# so its change of speed IS the push.
+	a = _fly(pair, "Chaser", Vector3(-1, 50, 30), Vector3(8, 0, 0))
+	c = _fly(pair, "Leader", Vector3(0, 50, 30), Vector3(2, 0, 0))
+	ha = Hits.new(a)
+	hc = Hits.new(c)
+	await _frames(30)
+	var pushed: float = c.linear_velocity.x - 2.0
+	_check(ha.list.size() == 1 and ha.with(c).size() == 1, "rear-end: the faster one behind says it hit the one ahead, once %s" % ha.said())
+	_check(pushed > 3.0, "and the one ahead was pushed on (%.2f m/s faster)" % pushed)
+	var said_as: float = pushed / (1.0 + pair.bounce)
+	_check(hc.list.size() == 1 and hc.with(a).size() == 1 and absf(float(hc.list[0]["speed"]) - said_as) < 0.1,
+		"and it says it was hit, once, at the push it took less its bounce (%.2f m/s) %s" % [said_as, hc.said()])
+	a.queue_free()
+	c.queue_free()
+	# A cast that found it the frame before: said then, not again when the contact comes.
+	a = _fly(pair, "Thrown", Vector3(-1, 50, 40), Vector3(6, 0, 0))
+	c = _fly(pair, "Still", Vector3(0, 50, 40), Vector3.ZERO)
+	ha = Hits.new(a)
+	hc = Hits.new(c)
+	await _frames(30)
+	_check(ha.list.size() == 1 and hc.list.size() == 1 and int(ha.list[0]["frame"]) < int(hc.list[0]["frame"]),
+		"one still: A's cast says it first, a frame early, and its contact a frame later says nothing more %s %s" % [ha.said(), hc.said()])
+	a.queue_free()
+	c.queue_free()
+	await get_tree().physics_frame
+
+	# 4. `hits_bodies` off: bodies pass through each other, and still meet the level and people.
+	var ghost: BodyDef = _plain(0.5, 0.5)
+	ghost.hits_bodies = false
+	var probe: FlyingBody = FlyingBody.make(ghost)
+	var solid: FlyingBody = FlyingBody.make(pair)
+	_check(probe.collision_layer == 0 and probe.collision_mask == (1 | FlyingBody.PROXY_LAYER),
+		"hits_bodies off: not on the bodies' layer, and not looking for it")
+	_check(solid.collision_layer == FlyingBody.BODY_LAYER and solid.collision_mask == FlyingBody.MASK, "on (the default): as before")
+	_check(not ghost.to_bake().has("hits_bodies"), "physics only: not baked")
+	probe.free()
+	solid.free()
+	a = _fly(ghost, "A", Vector3(-1, 50, 50), Vector3(5, 0, 0))
+	c = _fly(ghost, "B", Vector3(1, 50, 50), Vector3(-5, 0, 0))
+	var mixed: FlyingBody = _fly(pair, "Solid", Vector3(1, 50, 55), Vector3(-5, 0, 0))
+	var mixed_ghost: FlyingBody = _fly(ghost, "Ghost", Vector3(-1, 50, 55), Vector3(5, 0, 0))
+	ha = Hits.new(a)
+	hc = Hits.new(c)
+	var hm := Hits.new(mixed)
+	var hg := Hits.new(mixed_ghost)
+	await _frames(30)
+	_check(ha.list.is_empty() and hc.list.is_empty() and a.global_position.x > 0.9 and c.global_position.x < -0.9
+		and is_equal_approx(a.linear_velocity.x, 5.0), "both off: straight through each other, no hit, no change of speed %s %s" % [ha.said(), hc.said()])
+	_check(hm.list.is_empty() and hg.list.is_empty() and mixed_ghost.global_position.x > 0.9,
+		"one off, one on: through each other too (either one off is off) %s %s" % [hm.said(), hg.said()])
+	for n: FlyingBody in [a, c, mixed, mixed_ghost]:
+		n.queue_free()
+	await get_tree().physics_frame
+	var floor_node: StaticBody3D = _floor()
+	var person := AnimatableBody3D.new()
+	person.name = "Person"
+	person.sync_to_physics = false
+	person.collision_layer = FlyingBody.PROXY_LAYER
+	person.collision_mask = 0
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.4
+	cap.height = 1.8
+	var cap_shape := CollisionShape3D.new()
+	cap_shape.shape = cap
+	cap_shape.position.y = 0.9
+	person.add_child(cap_shape)
+	person.position = Vector3(2.0, 0, 0)
+	get_tree().root.add_child(person)
+	var falling: BodyDef = ghost.duplicate() as BodyDef
+	falling.gravity_scale = 1.0
+	a = _fly(falling, "A", Vector3(-1, 1.0, 0), Vector3(5, 0, 0))
+	c = _fly(falling, "B", Vector3(1, 1.0, 0), Vector3(-5, 0, 0))
+	ha = Hits.new(a)
+	hc = Hits.new(c)
+	await _frames(60)
+	_check(ha.with(c).is_empty() and hc.with(a).is_empty(), "off and falling: still through each other %s %s" % [ha.said(), hc.said()])
+	_check(not ha.with(person).is_empty(), "and still hits a person (their stand-in) %s" % ha.said())
+	_check(not hc.with(floor_node).is_empty(), "and the floor %s" % hc.said())
+	for n: Node in [a, c, person, floor_node]:
+		n.queue_free()
 	await get_tree().physics_frame
 
 
