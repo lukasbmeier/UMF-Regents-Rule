@@ -1217,3 +1217,26 @@ Client only: nothing to republish, no codegen. No look changes until it declares
   int 0xRRGGBB + 1 (0 the look's own); out of range is refused. A genre's own look declares one by extending
   `ModularCharacter` (example: `tests/fixtures/genre_look/`). Tests: `tests/suites/looks.gd` "a free colour"
   (mutation-checked).
+
+## 1.8.5 — a body says every hit; bodies that pass through each other (DECISIONS #317)
+Nothing to republish, no codegen, no bake: no table, reducer or baked field changed, so old clients and old referees
+keep working. A game takes it with its next template pull; its referee reports the new hits once it runs the new build.
+- `FlyingBody._contacts` reads the step's own (Jolt) contacts before it casts ahead: a body met within its first frame
+  or launched overlapping, two bodies meeting inside a step (head-on, or the slower one ahead in a rear-end), a graze
+  the cast missed. Speed = max(into, push): `-_prev_vel.dot(normal)`, `get_contact_impulse(i).length() / mass / (1 + bounce)`. Below
+  the def's `contact_speed_mps` a contact is a touch (not said, not remembered); 0 says every contact. What either
+  way said is left out of both for `REHIT_FRAMES`, so nothing is said twice.
+- `FlyingBody._contacts` still runs after the def's forces and ground drag: the contacts read what the step did, which
+  the forces never change (a genre's forces that stop a body on touch no longer hide its hit), and the cast ahead
+  looks along the velocity the body really has (a shot stopped on touch never reports a target past it). `_prev_vel`: its velocity going into each step (set by `launch`,
+  `place`, `shift` and the end of each frame). `launch` forgets the previous flight's hits.
+- `BodyDef.hits_bodies` (Its body, default on; physics only, not baked): off, `FlyingBody.make` puts it on no layer and
+  has it look only for the level and people (`1 | PROXY_LAYER`): bodies pass through each other, either one off is off.
+- The push is divided by 1 + the body's bounce, so a bouncy body's contact reads the speed it closed at, as a cast's
+  hit does (exact against a wall of no bounce; Godot adds two bodies' bounces, so two bouncy bodies read a little high).
+- Tests: `tests/suites/bodies.gd` "what it hit, every way it meets something" (a wall within the first frame, launched
+  overlapping, stopped on touch by its forces (`tests/fixtures/stop_forces.gd`) and short of a target, head-on, rear-end, a cast's hit not
+  said again, `hits_bodies` off: through each other, still the floor and a person) and "rolling ... no hit spam".
+  12 checks fail on the 1.8.4 flight; each guard broken alone fails its checks (no contacts read, no re-hit skip, no
+  speed filter, the push not counted, the push not scaled by the bounce, the contacts read before the forces,
+  `_prev_vel` not kept, `hits_bodies` ignored).

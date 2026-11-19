@@ -685,6 +685,15 @@ near the referee's: `foundation.body_correct_share`, `foundation.body_snap_m` on
 everyone else sees the referee's. What a body hits fast is said to everyone (a `body_contact` row) and to
 the genre (`on_body_contact`: a disc in the chains, a ball to the face), and so is its coming to rest.
 
+What counts as a hit (DECISIONS #317): anything it meets faster than its **Contact speed mps** (At rest),
+however it meets it: thrown point-blank into a wall, two bodies flying into each other, one catching another
+from behind (the one ahead is hit too, at the push it took), a glancing touch. Each thing is said once, not
+again while it stays against it; a ball rolling on the ground says nothing. 0 says every touch. A body's
+`forces` may stop it on touch (a genre's arrow) and its hit is still said. A hit's speed is how fast it closed with what it
+hit (its own bounce back is not counted), and a body its forces stopped never says it hit something it did
+not reach. Untick **Hits bodies** (Its body) for things that must fly through each other (shots that should never
+knock each other aside): it still hits the level and people. Nothing to bake or republish for either.
+
 To try it in the template: the greybox game, hold G and let go to throw the foundation's ball
 where you look. A genre throws its own with `BodyLaunch.throw_body` (or its own reducer calling
 `launch_body_internal`, beside `BodyLaunch.fly` for the thrower's view). Tested by the `bodies` suite, the

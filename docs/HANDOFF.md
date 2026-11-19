@@ -1,32 +1,40 @@
-# Handoff — UMF Template, 2026-11-16 (1.8.4: a free colour in the character picker; branch claude/t2-picker-color)
+# Handoff — UMF Template, 2026-11-19 (1.8.5: a body says every hit; `hits_bodies`; branch claude/body-contacts)
 
 ## Where it stands
-- 1.8.3 SHIPPED (template main 4437fa4, pushed, all four games pulled): `ModularCharacter.wear` + `assembled` (#313),
-  a sweep that hits all (#314, S1), NPCs bind without a session row (#315).
-- 1.8.4 (DECISIONS #316) committed on branch `claude/t2-picker-color` (child T2 of Regent's Rule's armor run), cut
-  from main 4437fa4; not merged, not pushed, not shipped: the run's master merges and ships. Client only.
-- Green: `looks` 68/0 (the new "a free colour" section; 5 mutations each failed it: the stale check dropping colours,
-  keeping one out of range, no +1, clamping, no colour row); the full `tests/run_tests.sh` 2530/0 (with `COLOR_OPTIONS`, its check mutation-checked).
-  A windowed shot of the picker with a colour row was taken and looked at (the armor run's notes folder,
-  `t2_picker_colour_row.png`).
+- 1.8.4 SHIPPED to the template's GitHub (main 9491439 = origin/main): a free colour in the picker (#316).
+- 1.8.5 (DECISIONS #317) committed on branch `claude/body-contacts`, cut from main 9491439; not merged, not pushed,
+  not shipped. Client and referee only: no republish, no codegen, no bake.
+- Green: `bodies` 79/0; the full `tests/run_tests.sh` 2554/0 (no engine errors, nothing left at exit);
+  `tests/content_test.sh` 18/0 (`hits_bodies` is not baked). 12 of the `bodies` checks fail on the 1.8.4 flight; each
+  guard broken alone fails its own checks (no contacts read 8, no re-hit skip 3, no speed filter 5, push not counted 2,
+  push not scaled by the bounce 2, contacts read before the forces 1, `_prev_vel` not kept 4, `hits_bodies` ignored 5).
+  No server suite run: no server code changed.
 
 ## This session
-- `foundation/core/appearance.gd`: `COLOR_MAX`, `color_value`, `is_color`, `color_of` (0xRRGGBB + 1; out of range refused).
-- `foundation/ui/character_picker.gd`: an option with `"color": true` is `_color_row` (ColorPickerButton, swatches,
-  "Look's own"), `pick_color`, the stale check keeps colours, a dragged colour rebuilds the preview once a frame.
-- `tests/fixtures/genre_look/` (a genre's look extending `ModularCharacter` with a colour option),
-  `tests/suites/looks.gd` `_run_color_tests`. HANDBOOK (a free colour), CHANGELOG 1.8.4, DECISIONS #316.
+- `foundation/physics/flying_body.gd`: `_prev_vel`; `_contacts` reads `state.get_contact_count()` first (speed =
+  max(into, impulse / mass / (1 + bounce)), below `contact_speed_mps` skipped, `_hit_at` shared with the cast), then
+  casts ahead; still AFTER the forces and ground drag (Luke's call); `launch` clears `_hit_at`; `make` honours
+  `hits_bodies`.
+- `foundation/content/body_def.gd`: `hits_bodies` (Its body, default true, not in `to_bake`).
+- `tests/suites/bodies.gd` (`_run_contacts`, the roll check in `_run_flight`, `Hits`), `tests/fixtures/stop_forces.gd`.
+- DECISIONS #317, CHANGELOG 1.8.5, HANDBOOK (Bodies: what counts as a hit), rules `sidecar_and_npcs.md` §BODIES and
+  `netcode.md` (layers).
 
 ## Next, in order
-1. The armor run's master merges `claude/t2-picker-color` and ships 1.8.4 (`ship_template.sh`).
-2. Regent's Rule's W1 declares its per-slot colour options in its own look scene.
+1. Luke merges `claude/body-contacts` and ships 1.8.5 (`ship_template.sh`).
+2. Each game pulls it. Regent's Rule: its shots (`MissileFlight`, contact speeds 1-2 m/s) now say hits they used to
+   lose; recheck its "a shot stops where it touches" checks and the referee's contacts after the pull. DiscGolf: its
+   discs report at 0.5 m/s and take the FIRST hit as the landing spot; run its `discgolf` suite after the pull.
 
 ## Waiting on Luke
 - From before: strips per expanse; the SDK fix upstream; bandwidth budget; greybox humanoid roll default.
 
 ## Watch out
-- A `-s` SceneTree script compiles before the autoloads exist: anything naming `Settings` (the picker via
-  `SettingsPanel`) must be loaded by path at run time in such a script.
-- The picker's colour preview reassembles the model once a frame while a colour is dragged: fine for one preview,
-  not something to copy into a list of many.
+- Two bouncy bodies still read a little fast: Godot ADDS their bounces, the push is divided by 1 + this body's own
+  (two 5 m/s balls of bounce 0.5 head-on read 6.7 each). Exact against a wall of no bounce (#317 "revisit if").
+- A cast that starts against a surface (a body on the floor, even 5 mm off it) goes nowhere: the look-ahead is blind
+  while a body touches something under its path; the step's contacts cover that.
+- Godot adds two bodies' bounces (clamped to 1): a test that predicts a collision's outcome must use the sum.
+- Nodes freed with `queue_free` keep their name until the frame ends: a new node of the same name is renamed
+  (`@RigidBody3D@13`). Name test bodies uniquely if a message prints their names.
 - From 1.8.3: a respawn (appearance row change) shows the appearance's pieces until a genre's component wears its own.
