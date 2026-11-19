@@ -147,7 +147,10 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     - **FACE YOUR TARGET**: "I can tab target and then face AWAY from the target and still shoot, I think either it
       should turn the model and force facing ... or refuse to shoot if not facing somewhat near". Asked (refuse, turn
       to face it, or shoot at the crosshair instead); his pick: **refuse the shot**, inside the same 120 degree arc
-      Tab picks from (`regents.aim_arc_deg`).
+      Tab picks from (`regents.aim_arc_deg`). **CHANGED (Luke, 2026-11-18, PROGRESS 113)**: "just make it fire where
+      you are facing if you aren't in lock in degrees in case you wanted to 180 and fire at an enemy behind you or fire
+      at something not your target without hitting tab": outside the arc the shot flies to the crosshair, as with no
+      target; nothing is refused.
     - **A FULL POISE BAR BREAKS ON ANY HIT**: "if the stagger bar is full (orange) the next hit should stagger not
       just the next finisher hit". Narrows 2026-11-02's "only the last hit breaks it": a light still cannot empty a
       bar in one go (it fills it), but the hit after, of any kind, breaks it.
@@ -610,6 +613,24 @@ Owner decisions (2026-10-13 scope; 2026-10-18 open items), which win where the d
     add anything that would need Steam's AI disclosure: no image, model, texture, sound, music, voice or text from a
     generative model, nor anything traced or derived from one, in the build or on the store page. Otherwise
     human-made (CC0 or licensed, its source noted). The continent map is the one known exception, to be replaced.
+  - **MIXAMO CLIPS** (Luke, 2026-11-18, PROGRESS 111): Mixamo's animations (human mocap, royalty-free in a game) are
+    used, retargeted onto our skeleton (`game/regents/tools/retarget_mixamo.gd`). The repo is PRIVATE, so the
+    retargeted `.res` libraries are committed; the raw FBX never are (Mixamo forbids sharing them): they live in his
+    `Downloads\04_GameAssets\Mixamo\`. Downloaded so far: Great Sword, Pro Sword and Shield, Pro Magic, a Locomotion
+    Pack, Y Bot.
+  - **THE BOWS BY ROLE** (Luke, 2026-11-18, after the bladed bow's clip sheets, PROGRESS 111): the tank bow is ITS OWN
+    CARVED BOW, the yew bow at 1.4x its size, swung through the Great Sword set he chose (attack, slash, the overhead
+    chop as the last hit, the jump attack, the kick, the guard); "we might need" a SHORTBOW for support. Then (same
+    day): **the three bows ARE the bow's roles**, "the equivalent to grips/handles for melee": the BOW (damage), the
+    LONGBOW / PLATED BOW (tank), the SHORTBOW (support). "Staffs will do something similar I think." Still his: their
+    numbers, recipes and names, the tap-to-swing input.
+  - **THE STAFF'S ROLES** (Luke, 2026-11-18, asked: three carved weapons like the bows, or the shafts): **KEEP THE
+    SHAFTS**: one staff, its role set by its shaft as the sword's by its hilt (`COMBAT_OVERHAUL.md` §5: the CONDUIT
+    shaft damage, the WARD shaft tank, the CENSER shaft support). With the ward shaft, LEFT-CLICK IS A MELEE STRING
+    (the staff swung, as the tank bow: the great sword set), its wards, taunt and slows on Q/E/R; with the censer shaft,
+    left-click is QUICK WEAK BOLTS, its heals and buffs on Q/E/R; the conduit shaft keeps today's Bolt. ONLY THE TANK'S
+    CARRIES METAL: the ward shaft (and the plated longbow) take a smithed part at assembly; the conduit and censer
+    shafts are wood. Still his: the shafts' and spells' numbers, names, recipes; which spells each holds.
   - **Each band's new thing** (M9): smithing first: two strikes in band 1 (the buttons a UI setting, tried both ways),
     heat colors with hard and soft spots in band 2, a quench in band 3 that lifts or lowers but never destroys a part;
     the others' band things are prototyped and played before deciding.
@@ -797,7 +818,7 @@ and has a 0.8 % rare **Wolf fang**); hold E for **the cut line**: press the
 mouse on the gold ring and drag the knife along the marked line (off it, or too fast, tears the hide); the round skins
 the whole carcass, 2 to 3 hides or pelts for a clean one. The tanning rack (by the spinning wheel) turns a deer hide
 into soft leather and a wolf pelt into supple leather (Crafting 2).
-**The motion lab** (PROGRESS 109, `game/regents/motion/motion_lab.tscn`, F6): moves built of human-made CLIPS for the body (from our Quaternius libraries, never used by the game before: a back flip, a ground pound, a sword dash, an overhand throw, a launch into the air, a kip-up) and CODE on top for what a clip cannot do (a spin, a jump stretched to a distance, an arm turned to a target, a foe hauled in): a leaping strike, a spinning advance, a blade from the sky, a spinning dash, an axe that hooks and hauls a foe in, a leap slam that throws three skeletons, a back flip, a shoulder charge. C puts the clips alone beside it. P pauses, `,` and `.` step a frame, the time bar goes to any moment: give a moment's time with your feedback. Each move is a `.tres` in `game/regents/motion/moves/` (its clips and curves in the Inspector). Nothing in it is in the game's fights yet.
+**The motion lab** (PROGRESS 109, `game/regents/motion/motion_lab.tscn`, F6): moves built of human-made CLIPS for the body (from our Quaternius libraries, never used by the game before: a back flip, a ground pound, a sword dash, an overhand throw, a launch into the air, a kip-up) and CODE on top for what a clip cannot do (a spin, a jump stretched to a distance, an arm turned to a target, a foe hauled in): a leaping strike, a spinning advance, a blade from the sky, a spinning dash, an axe that hooks and hauls a foe in, a leap slam that throws three skeletons, a back flip, a shoulder charge. C puts the clips alone beside it. P pauses, `,` and `.` step a frame, the time bar goes to any moment: give a moment's time with your feedback. Each move is a `.tres` in `game/regents/motion/moves/` (its clips and curves in the Inspector). Since PROGRESS 110 there is also a blade waltz and a roundhouse kick, and the moves are IN THE GAME as placeholder abilities to try (the sword's plain grip: Leaping Strike, Spinning Dash, Roundhouse Kick on E, Blade Waltz, Leap Slam on R; the axe's Hook Pull on E, which hauls the foe in; Execute, Charge and Whirlwind shown as the sky blade, the shoulder charge and the spin): the Tester page's "Level 20" and "Clear its picks" on the weapon in hand, then pick them in the abilities window. Which stay, and what they really do, is yours. The blade waltz is a sketch (the figure darts, the body stays; the hit is one wide sweep), and the back flip is not an ability (it could be how a roll backward looks: yours).
 **Labs with no server** (F6 on each; nothing in them is in the game's levels yet): **the wardrobe**
 (PROGRESS 81) `game/regents/wardrobe/wardrobe_lab.tscn`, every outfit dyed any color, the metal tiers;
 **the towns** (PROGRESS 85) `game/regents/town/town_world.tscn`, a kilometer with a village, a walled market town and a

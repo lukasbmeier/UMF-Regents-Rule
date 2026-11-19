@@ -12,49 +12,81 @@
 			"hits": [
 				{
 					"ability": 40036,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 3000
 				},
 				{
 					"ability": 40037,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 8.0,
 					"status": 0,
 					"status_ms": 0
 				},
 				{
 					"ability": 40051,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 8.0,
 					"status": 0,
 					"status_ms": 0
 				},
 				{
 					"ability": 40052,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 2500
 				},
 				{
 					"ability": 40053,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 10.0,
 					"status": 0,
 					"status_ms": 0
 				},
 				{
 					"ability": 40055,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 8.0,
 					"status": 0,
 					"status_ms": 0
 				},
 				{
 					"ability": 40056,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 2500
 				},
 				{
 					"ability": 40057,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 10.0,
+					"status": 0,
+					"status_ms": 0
+				},
+				{
+					"ability": 40061,
+					"lift_mps": 7.0,
+					"pull_to_m": 0.0,
+					"push_mps": 3.0,
+					"status": 0,
+					"status_ms": 0
+				},
+				{
+					"ability": 40062,
+					"lift_mps": 5.0,
+					"pull_to_m": 0.0,
+					"push_mps": 7.0,
 					"status": 0,
 					"status_ms": 0
 				}
@@ -134,6 +166,26 @@
 				[
 					40057,
 					875
+				],
+				[
+					40058,
+					1250
+				],
+				[
+					40059,
+					1250
+				],
+				[
+					40062,
+					1222
+				],
+				[
+					40060,
+					734
+				],
+				[
+					40061,
+					1048
 				]
 			],
 			"name": "Sword",
@@ -148,7 +200,12 @@
 						40005,
 						40035,
 						40036,
-						40038
+						40038,
+						40058,
+						40059,
+						40062,
+						40060,
+						40061
 					],
 					"stagger_pct": 100
 				},
@@ -228,6 +285,26 @@
 				[
 					40057,
 					1
+				],
+				[
+					40058,
+					1
+				],
+				[
+					40059,
+					1
+				],
+				[
+					40062,
+					1
+				],
+				[
+					40060,
+					1
+				],
+				[
+					40061,
+					1
 				]
 			],
 			"slots": [
@@ -242,6 +319,11 @@
 				0,
 				1,
 				1,
+				2,
+				1,
+				1,
+				1,
+				2,
 				2
 			],
 			"unblockable": [],
@@ -261,13 +343,25 @@
 			"hits": [
 				{
 					"ability": 40039,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 3000
 				},
 				{
 					"ability": 40041,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 10.0,
+					"status": 0,
+					"status_ms": 0
+				},
+				{
+					"ability": 40063,
+					"lift_mps": 0.0,
+					"pull_to_m": 1.2,
+					"push_mps": 0.0,
 					"status": 0,
 					"status_ms": 0
 				}
@@ -306,6 +400,10 @@
 				[
 					40042,
 					875
+				],
+				[
+					40063,
+					875
 				]
 			],
 			"name": "Axe",
@@ -332,6 +430,10 @@
 				[
 					40042,
 					1
+				],
+				[
+					40063,
+					1
 				]
 			],
 			"slots": [
@@ -339,7 +441,8 @@
 				1,
 				1,
 				1,
-				2
+				2,
+				1
 			],
 			"unblockable": [],
 			"unlock_levels": [
@@ -357,12 +460,16 @@
 			"hits": [
 				{
 					"ability": 40044,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 3000
 				},
 				{
 					"ability": 40045,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 10.0,
 					"status": 0,
 					"status_ms": 0
@@ -648,12 +755,16 @@
 			"hits": [
 				{
 					"ability": 40028,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 0.0,
 					"status": 108,
 					"status_ms": 3000
 				},
 				{
 					"ability": 40029,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 10.0,
 					"status": 0,
 					"status_ms": 0
@@ -704,6 +815,8 @@
 			"hits": [
 				{
 					"ability": 40031,
+					"lift_mps": 0.0,
+					"pull_to_m": 0.0,
 					"push_mps": 6.0,
 					"status": 0,
 					"status_ms": 0

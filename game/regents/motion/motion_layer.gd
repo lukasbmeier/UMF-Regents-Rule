@@ -30,6 +30,11 @@ var enabled: bool = true:
 var carry: bool = true
 ## How fast its clock runs (1: real time).
 var speed: float = 1.0
+## How much of a move's own height it shows (the code's lift and the clips' root rising): 1 in the lab; 0 in the game
+## where the server lifts the body itself (a knock-up's push), so it is not lifted twice.
+var lift_scale: float = 1.0
+## The figure (never the body) shown this far away (world): a waltz's cut at a foe while the body stands (PROGRESS 110).
+var shift: Vector3 = Vector3.ZERO
 
 var body: Node3D = null
 var model: Node3D = null
@@ -133,13 +138,16 @@ func step(delta: float) -> void:
 
 func _apply(at_s: float) -> void:
 	pose = move.at(at_s)
+	pose.lift_m *= lift_scale
 	# The clips' root: its height lifts the turning point (a flip in the air turns about the hips up there); its travel
 	# along the ground is carried below.
 	var root: Vector3 = move.root_at(at_s)
+	root.y *= lift_scale
 	var pivot: float = move.pivot_m + root.y * _skel_scale.y
 	if bones != null:
 		bones.move = move
 		bones.t = at_s
+		bones.root_height_scale = lift_scale
 	if not enabled:
 		_apply_rest()
 	else:
@@ -150,6 +158,7 @@ func _apply(at_s: float) -> void:
 			var at_body := Transform3D(Basis.IDENTITY, body.global_position)
 			var turn_w: Transform3D = at_body * figure_transform(pose, facing, pivot) * at_body.affine_inverse()
 			model.global_transform = turn_w * model.global_transform
+			model.global_position += shift
 		if bones != null:
 			bones.pose = pose
 			var turn: Basis = figure_transform(pose, facing, move.pivot_m).basis.orthonormalized()

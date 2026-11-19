@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 9000
+range_m = 3.6
+wind_up_ms = 150
+damage = 18.0
+animation = &"ability.40059"
+key = &"regents.combat"
+judged = true
+hits_all = true
+reach_m = 3.6
+radius_m = 0.9
+height_m = 0.9
+lunges = true
+id = 40059
+display_name = "Spinning Dash (placeholder)"
+designer_notes = "PLACEHOLDER (PROGRESS 110, 2026-11-18, Luke: \"map everything to placeholder abilities and I'll try them in action\"): a motion lab move (game/regents/motion/) on a placeholder built from existing atoms, to try as a prototype. Its name, numbers and what it really does are Luke's. Sword, plain grip, an E option: a spinning lunge cutting all it passes (spinning_dash.tres); the body goes the lunge's dash, not the lab's 7 m."

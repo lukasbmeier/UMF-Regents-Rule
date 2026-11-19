@@ -19,6 +19,11 @@
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_shoulder_check.tres" id="n5"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_banner_sweep.tres" id="n6"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/sword_banner_storm.tres" id="n7"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_leaping_strike.tres" id="m1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_spinning_dash.tres" id="m2"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_blade_waltz.tres" id="m3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_leap_slam.tres" id="m4"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_roundhouse_kick.tres" id="m5"]
 [ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="h_script"]
 [ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="h_slow"]
 [ext_resource type="Script" path="res://game/regents/content/kit_role.gd" id="3_kit_role"]
@@ -69,12 +74,24 @@ script = ExtResource("h_script")
 ability = ExtResource("n7")
 push_mps = 10.0
 
+[sub_resource type="Resource" id="Hit_slam"]
+script = ExtResource("h_script")
+ability = ExtResource("m4")
+push_mps = 3.0
+lift_mps = 7.0
+
+[sub_resource type="Resource" id="Hit_kick"]
+script = ExtResource("h_script")
+ability = ExtResource("m5")
+push_mps = 7.0
+lift_mps = 5.0
+
 [sub_resource type="Resource" id="Role_damage"]
 script = ExtResource("3_kit_role")
 role = ExtResource("r_damage")
 finisher = ExtResource("a2")
 does = "The string ends in a piercing thrust: the hardest hit, and the longest reach."
-skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4")])
+skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4"), ExtResource("m1"), ExtResource("m2"), ExtResource("m5"), ExtResource("m3"), ExtResource("m4")])
 
 [sub_resource type="Resource" id="Role_tank"]
 script = ExtResource("3_kit_role")
@@ -100,10 +117,10 @@ skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a1"), ExtResource("a2")])
 follow_ms = PackedInt32Array(200, 200, 200)
 roles = Array[ExtResource("3_kit_role")]([SubResource("Role_damage"), SubResource("Role_tank"), SubResource("Role_support")])
-skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4"), ExtResource("p3"), ExtResource("n1"), ExtResource("n2"), ExtResource("n3"), ExtResource("n4"), ExtResource("n5"), ExtResource("n6"), ExtResource("n7")])
-skill_ranks = PackedInt32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-skill_slots = PackedInt32Array(0, 1, 1, 2, 0, 1, 1, 2, 0, 1, 1, 2)
-hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_bash"), SubResource("Hit_charge"), SubResource("Hit_hold"), SubResource("Hit_bulwark"), SubResource("Hit_shoulder"), SubResource("Hit_sweep"), SubResource("Hit_storm")])
+skills = Array[Resource]([ExtResource("a4"), ExtResource("p1"), ExtResource("p2"), ExtResource("p4"), ExtResource("p3"), ExtResource("n1"), ExtResource("n2"), ExtResource("n3"), ExtResource("n4"), ExtResource("n5"), ExtResource("n6"), ExtResource("n7"), ExtResource("m1"), ExtResource("m2"), ExtResource("m5"), ExtResource("m3"), ExtResource("m4")])
+skill_ranks = PackedInt32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+skill_slots = PackedInt32Array(0, 1, 1, 2, 0, 1, 1, 2, 0, 1, 1, 2, 1, 1, 1, 2, 2)
+hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_bash"), SubResource("Hit_charge"), SubResource("Hit_hold"), SubResource("Hit_bulwark"), SubResource("Hit_shoulder"), SubResource("Hit_sweep"), SubResource("Hit_storm"), SubResource("Hit_slam"), SubResource("Hit_kick")])
 id = 40001
 display_name = "Sword"
-designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut. PLACEHOLDER POOL (armor run P1, 2026-11-15): PER-ROLE POOLS (S1b, 2026-11-16): each handle its own set (the plain grip Lunge, Flurry, Hamstring Cut, Execute; the crossguard Shield Bash, Charge, Hold the Line, Bulwark; the banner Swipe, Shoulder Check, Banner Sweep, Banner Storm), its KitRole's `skills`; the options and the ults are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."
+designer_notes = "The sword (COMBAT_OVERHAUL.md §5, Luke 2026-11-01): its role map is the first, the handle's shape choosing the string's last hit: the plain grip a piercing thrust, the crossguard hilt a pommel bash, the banner hilt a rallying cut. PLACEHOLDER POOL (armor run P1, 2026-11-15): PER-ROLE POOLS (S1b, 2026-11-16): each handle its own set (the plain grip Lunge, Flurry, Hamstring Cut, Execute; the crossguard Shield Bash, Charge, Hold the Line, Bulwark; the banner Swipe, Shoulder Check, Banner Sweep, Banner Storm), its KitRole's `skills`; THE MOTION LAB'S MOVES (PROGRESS 110, 2026-11-18): the plain grip also has Leaping Strike, Spinning Dash and Roundhouse Kick as options and Blade Waltz and Leap Slam as ults, to try as prototypes; the options and the ults are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."

@@ -193,6 +193,8 @@ var _recover_strike: StringName = &""
 var _recover_at_ms: int = -1
 ## How many recoveries have played (tests).
 var recoveries: int = 0
+## The motion lab's moves on this fighter (PROGRESS 110: an ability with a row in `AbilityMoves`); null until its model is.
+var motion: MotionPlayer = null
 
 
 func required_tables() -> Array[StringName]:
@@ -214,6 +216,7 @@ func _on_bound() -> void:
 	if _roll != null and is_local_authority and not _roll.rolled.is_connected(_on_rolled):
 		_roll.rolled.connect(_on_rolled)
 	set_process(true)   # everyone's draw is drawn here; the keys only for our own
+	_motion_player.call_deferred()   # before any hit lands on it: a victim's move plays from its health (`hit_by`)
 	# Everyone's swings and rolls play whole, here and on every other client (their starts arrive later).
 	if _action != null:
 		_action.action_started.connect(func(id: int, _pid: int) -> void: _began(id))
@@ -526,6 +529,9 @@ func _began(ability_id: int) -> void:
 		return
 	if ability_id == DODGE_ID:
 		return   # the foundation's roll plays its own clip, facing its motion (`RollComponent`)
+	var mp: MotionPlayer = _motion_player()
+	if mp != null:
+		mp.began(ability_id)   # a motion lab move over its clip, if the ability has one (PROGRESS 110)
 	# A foe wields nothing: its swing is whichever kit has it.
 	for k: KitDef in ([kit] if kit != null else KitDef.all()):
 		for a: AbilityDef in k.abilities():
@@ -534,6 +540,13 @@ func _began(ability_id: int) -> void:
 				_driver.commit_action(commit_seconds(a, strike_s))
 				_plan_recovery(a.id, strike_s)
 				return
+
+
+## This fighter's `MotionPlayer`, made the first time its model and skeleton are there.
+func _motion_player() -> MotionPlayer:
+	if motion == null and is_inside_tree():
+		motion = MotionPlayer.make(entity as SpaceTimeEntity, _driver)
+	return motion
 
 
 ## THE SWING'S RECOVERY (Luke's feedback, 2026-11-01: "the end of the swing ... transition back to the idle/locomotion
@@ -804,12 +817,12 @@ func loose() -> bool:
 	var at_point: Vector3 = crosshair_point()
 	var aim: Vector3 = launch_direction(muzzle(), at_point, speed, ARROW_GRAVITY if crosshair_on_body else 0.0)
 	var at: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
-	# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"; his
-	# pick: refuse): nothing is loosed, and the draw is let go.
+	# THE WAY YOU FACE (Luke, 2026-11-18, replacing 2026-11-12's refusal: "just make it fire where you are facing if
+	# you aren't in lock in degrees in case you wanted to 180 and fire at an enemy behind you or fire at something not
+	# your target without hitting tab"): a Tab target outside the arc in front of you is not aimed at: the arrow goes
+	# to the crosshair, as with no target. The server does the same (`loose_arrow`).
 	if at != 0 and not target_in_front(at):
-		SpaceTimeSync.call_reducer(&"draw_bow", [false], ["bool"])
-		refused.emit(FACE_YOUR_TARGET)
-		return false
+		at = 0
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"loose_arrow", [at, aim], ["u64", "vector3[f32,f32,f32]"])
 	if req != null:
 		req.settled.connect(func(r: ReducerRequest) -> void:
@@ -825,13 +838,10 @@ func loose() -> bool:
 	return true
 
 
-## What is said when a shot at a Tab target is refused for not facing it.
-const FACE_YOUR_TARGET: String = "Face your target"
-
-
 ## Whether this player FACES entity `id`: it is inside `regents.aim_arc_deg` in front of the body (the way the body
 ## faces, which in stance and while drawing is the way the camera looks). A bow's or a staff's shot is aimed at a
-## Tab target only then (the server's `faces_target`, a little wider for the turn's trip there).
+## Tab target only then (the server's `faces_target`, a little wider for the turn's trip there); otherwise it goes
+## to the crosshair (Luke, 2026-11-18).
 func target_in_front(id: int) -> bool:
 	var me: Node3D = entity as Node3D
 	var t: Node3D = EntityRegistry.get_entity(id) as Node3D
@@ -1205,8 +1215,7 @@ func cast(a: AbilityDef) -> bool:
 	var at: Vector3 = area_point(a.range_m) if spell.kind == SpellDef.Kind.AREA else Vector3.ZERO
 	var at_target: int = target_id if target_id >= 0 and _target_ok(target_id) else 0
 	if spell.kind == SpellDef.Kind.BOLT and at_target != 0 and not target_in_front(at_target):
-		refused.emit(FACE_YOUR_TARGET)   # as the bow's: a missile is aimed at a Tab target only from facing it
-		return true
+		at_target = 0   # as the bow's (Luke, 2026-11-18): a Tab target not faced is not aimed at; it flies to the crosshair
 	var req: ReducerRequest = SpaceTimeSync.call_reducer(&"cast_spell", [a.id, at_target, aim, at],
 		["u32", "u64", "vector3[f32,f32,f32]", "vector3[f32,f32,f32]"])
 	req.settled.connect(func(r: ReducerRequest) -> void:

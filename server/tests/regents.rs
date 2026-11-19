@@ -1637,7 +1637,8 @@ fn item_levels_and_picks() {
         let roles: Vec<u32> = if k.role_skills.is_empty() { vec![0] } else { k.roles.iter().map(|r| r.role).collect() };
         for role in roles {
             let count = |slot: u32| k.skills.iter().zip(k.slots.iter()).filter(|((a, _), s)| **s == slot && k.in_pool(*a, role)).count();
-            assert!(count(rules::SLOT_BASE) == 1 && count(rules::SLOT_OPTION) >= 2 && count(rules::SLOT_ULT) == 1, "{key} (role {role}): a base, options, an ult");
+            // Ults: at least one (the plain grip has three since PROGRESS 110: Execute and the motion lab's two; one is chosen).
+            assert!(count(rules::SLOT_BASE) == 1 && count(rules::SLOT_OPTION) >= 2 && count(rules::SLOT_ULT) >= 1, "{key} (role {role}): a base, options, an ult");
         }
     }
     assert!(staff.pick_refusal(3, frost, 33, [0; 3]).is_some(), "NEGATIVE: no pick 3");
@@ -1845,6 +1846,39 @@ fn each_role_of_a_weapon_its_own_pool() {
             assert_eq!(k.slot_refusal_for(*a, 33, [0; 3], 12345), k.slot_refusal(*a, 33, [0; 3]), "{key}: any role, as before");
         }
     }
-    // The sword's pools are whole: every skill one role's, three roles, twelve skills.
-    assert_eq!((sword.role_skills.len(), sword.skills.len()), (12, 12));
+    // The sword's pools are whole: every skill one role's, three roles, seventeen skills (the motion lab's five on the
+    // plain grip since PROGRESS 110).
+    assert_eq!((sword.role_skills.len(), sword.skills.len()), (17, 17));
+}
+
+/// THE MOTION LAB'S MOVES AS PLACEHOLDERS (PROGRESS 110): a hit that pulls stops short of its attacker, one that lifts
+/// throws up, and the new skills sit in their pools.
+#[test]
+fn a_hit_pulls_in_to_its_stop_and_lifts() {
+    use umf_module::sim::Vector3;
+    let at = |x: f32, z: f32| Vector3::new(x, 0.0, z);
+    // Pulled from 3.2 m to 1.2 m: toward the attacker, as fast as the push's carry loses it over 2 m: sqrt(2 * 6 * 2).
+    let v = rules::hit_push(0.0, 1.2, 0.0, at(0.0, 0.0), at(0.0, -3.2)).expect("a pull moves it");
+    assert!(v.z > 0.0 && v.x.abs() < 1e-6, "toward the attacker ({v:?})");
+    assert!((v.z - (2.0f32 * umf_module::push::PUSH_DRAG_MPS2 * 2.0).sqrt()).abs() < 1e-4, "as fast as carries it 2 m ({v:?})");
+    assert_eq!(v.y, rules::PUSH_HOP_MPS, "with the usual hop");
+    let carried = v.z * v.z / (2.0 * umf_module::push::PUSH_DRAG_MPS2);
+    assert!((3.2 - carried - 1.2).abs() < 1e-3, "it stops 1.2 m short ({carried} m carried)");
+    // NEGATIVE: already that near, the pull moves nothing.
+    assert!(rules::hit_push(0.0, 1.2, 0.0, at(0.0, 0.0), at(0.0, -1.0)).is_none(), "nothing at 1 m");
+    // A push is away, as before: 8 m/s and the hop.
+    let p = rules::hit_push(8.0, 0.0, 0.0, at(0.0, 0.0), at(3.0, 0.0)).unwrap();
+    assert!((p.x - 8.0).abs() < 1e-5 && p.y == rules::PUSH_HOP_MPS, "a push away ({p:?})");
+    // A knock-up: up at its lift, a push with it.
+    let k = rules::hit_push(3.0, 0.0, 7.0, at(0.0, 0.0), at(0.0, 2.0)).unwrap();
+    assert!((k.z - 3.0).abs() < 1e-5 && k.y == 7.0, "thrown up at 7 m/s ({k:?})");
+    // NEGATIVE: none of them: nothing.
+    assert!(rules::hit_push(0.0, 0.0, 0.0, at(0.0, 0.0), at(1.0, 0.0)).is_none());
+    // The content: the hook pulls to 1.2 m, the slam and the kick lift, each its kit's.
+    let axe = rules::kit_keyed("axe").unwrap();
+    assert_eq!(axe.hit_of(40063).map(|h| (h.pull_to_m, h.push_mps)), Some((1.2, 0.0)), "the hook pulls in to 1.2 m");
+    let sword = rules::kit_keyed("sword").unwrap();
+    assert_eq!(sword.hit_of(40061).map(|h| h.lift_mps), Some(7.0), "the leap slam throws up");
+    assert_eq!(sword.hit_of(40062).map(|h| (h.push_mps, h.lift_mps)), Some((7.0, 5.0)), "the kick sends flying");
+    assert!(sword.hit_of(40038).is_none(), "NEGATIVE: Execute still only hurts");
 }

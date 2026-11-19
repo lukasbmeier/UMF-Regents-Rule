@@ -842,7 +842,7 @@ number = 120.0
 minimum = 10.0
 maximum = 360.0
 unit = "deg"
-description = "FACE YOUR TARGET (Luke, 2026-11-12): a bow's or a staff's shot is aimed at the Tab target only when it is within this arc in front of you (the whole arc; the same 120 Tab picks from). Outside it the shot is refused: 'Face your target'. 360: any way you face."
+description = "THE WAY YOU FACE (Luke, 2026-11-12; 2026-11-18): a bow's or a staff's shot is aimed at the Tab target only when it is within this arc in front of you (the whole arc; the same 120 Tab picks from). Outside it the shot flies where you aim (the crosshair), as with no target: turn and shoot one behind you, or anything, without Tab. 360: the target is aimed at whichever way you face."
 
 [sub_resource type="Resource" id="Rule_hitstop"]
 script = ExtResource("2_rule")

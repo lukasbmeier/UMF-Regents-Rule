@@ -4744,6 +4744,24 @@
 			"return_data": {}
 		},
 		{
+			"name": "admin_clear_picks",
+			"wire_name": "admin_clear_picks",
+			"namespace": [],
+			"local_name": "admin_clear_picks",
+			"params": [
+				{
+					"name": "entity_id",
+					"type": "U64"
+				},
+				{
+					"name": "item_row",
+					"type": "U64"
+				}
+			],
+			"return_type": "",
+			"return_data": {}
+		},
+		{
 			"name": "admin_give_item",
 			"wire_name": "admin_give_item",
 			"namespace": [],

@@ -64,6 +64,9 @@ class_name MotionMove extends Resource
 ## The weapon arm pointed at the move's target (0 to 1: how much).
 @export_range(0.0, 1.0, 0.01) var reach: float = 0.0
 @export var reach_curve: Curve
+## The weapon hand rolled about the fore arm (deg; positive: the thumb turned out): an axe's head turned sideways to hook.
+@export_range(-180.0, 180.0, 1.0, "suffix:deg") var wrist_deg: float = 0.0
+@export var wrist: Curve
 
 
 ## Its root's height (skeleton units, the clips' blended) and its travel along the ground (skeleton frame, x and z, the
@@ -106,6 +109,7 @@ func at(t: float) -> Pose:
 	p.raise = deg_to_rad(raise_deg) * _sample(raise, u)
 	p.spread = deg_to_rad(spread_deg) * _sample(spread, u)
 	p.reach = reach * clampf(_sample(reach_curve, u), 0.0, 1.0)
+	p.wrist = deg_to_rad(wrist_deg) * _sample(wrist, u)
 	return p
 
 
@@ -129,8 +133,9 @@ class Pose extends RefCounted:
 	var raise: float = 0.0
 	var spread: float = 0.0
 	var reach: float = 0.0
+	var wrist: float = 0.0
 
 	## Nothing on: a body standing as its clip has it.
 	func is_rest() -> bool:
 		return absf(lift_m) + absf(spin) + absf(tip) + absf(bank) + absf(squash) + absf(bend) + absf(twist) \
-			+ absf(raise) + absf(spread) + absf(reach) < 0.0001
+			+ absf(raise) + absf(spread) + absf(reach) + absf(wrist) < 0.0001

@@ -6009,3 +6009,219 @@ leaping strike's hit was shown on the landing, but the blade passes through at 0
 says it began, with `carry` off and the server's lunge or push moving the body (its travel would be the move's root).
 No foot IK yet (a landing on a slope; carried travel faster than a clip's steps slides its feet). The slam's fire ring
 is the imp's, toned down: a slam needs its own effect. Which moves become abilities is Luke's.
+
+## Step 110: THE MOVES AS PLACEHOLDER ABILITIES, AND MORE MOVES (2026-11-18, Luke: "add more moves to the lab, the blade waltz and others ... lets map everything to place holder abilites and ill try them in action")
+
+Luke's look at 109's moves in the lab (screenshots): "the spinning goes on too long after it finishes, the trail isnt on
+the sword and the actual spin hits themself are kinda unnatural, im not sure we will be able to keep the spinning effect
+unless we can make them look better"; then, mid-step: "the axe pull should be a closer field and more aligned to what
+darius does (turns the axe sideways and pulls with the axe not the red line). fix that before adding to axe ability".
+
+**The lab**:
+- THE TRAIL WAS OFF THE SWORD: it sampled the held item in `_process`, where the item still stands as the clip UNDER the
+  move puts it (and before the layer turns the model): a wedge at the hip. It now samples on the skeleton's
+  `skeleton_updated` (`MotionTrail._sample`), after the bones are bent and the model turned, the held item synced on the
+  same signal first. `clear()` forgets it (a blink).
+- THE SPINNING ADVANCE: `Sword_Light_Combo`'s real spin-cut (1.04-1.6 s in, the arm swinging out with the blade along
+  it) leads in, its 1.6 s frame held on the upper body, its 1.84-2.34 s sweep back to the guard ends it; four turns of
+  code (was seven over 3.2 s with a `Sword_Light_B` frame); 2 s; the walk ends with the spin; a skeleton is cut at most
+  twice (a flinch each turn read as a twitch). Whether the spin stays is Luke's after trying it.
+- THE HOOK PULL, AS DARIUS'S: `Sword_Heavy_C`'s sideways sweep (no step: its root travel off), the hand ROLLED 85
+  degrees by code (a new channel, `MotionMove.wrist`: the axe head turned sideways to hook), reaching past the foe's near
+  side; the yank is the clip on, then `Sword_Heavy_C_Rec`. The foe at 3 m (was 5), hauled to about 1 m (`dragged`'s root
+  travel -0.95, was -1.6). No line.
+- NEW: BLADE WALTZ (`waltz_cut.tres`, `Sword_Light_A`): gone in a flash, a cut on each of three skeletons from a new side
+  (a third of the way round each time), ending beside the last. ROUNDHOUSE KICK (`roundhouse_kick.tres`, `core/Kick`)
+  and its victim KICKED (`kicked.tres`: `LiftAir_RM`, `LiftAir_Fall_Impact`, `KipUp`, 4 m back): a skeleton sent flying.
+- Clip sheets take a part of a clip (`extra/Sword_Light_Combo@1.4-2.4`) and print each frame's time: how the spin-cut
+  was found.
+
+**In the game** (placeholders, to try as prototypes):
+- `AbilityMoves` (`game/regents/motion/ability_moves.tres`, rows of `AbilityMove`: ability, move, where it starts, its
+  speed, the victim's move, a waltz): an ability with a row plays its move ON EVERY CLIENT as it begins
+  (`CombatComponent._began` -> `MotionPlayer.began`), over its clip; a hit landing on a fighter plays the striker's
+  victim move, facing it (`MotionPlayer.hit_by`, from the fighter's health; within 2.5 s of the ability). `carry` off
+  and `lift_scale` 0 (new on `MotionLayer`): the lunge's dash and the server's push move and lift the body, so a move's
+  own travel and height show only in the lab.
+- NEW PLACEHOLDERS (built from existing atoms; ids 40058-40063; every name "(placeholder)", Luke's to rewrite):
+  the sword's PLAIN GRIP: options Leaping Strike (a lunge, its dash as the hop comes down), Spinning Dash (a lunge that
+  hits all), Roundhouse Kick (sends flying: push 7, lift 5); ults Blade Waltz, Leap Slam (a lunge that hits all and
+  throws up: lift 7). The AXE: option Hook Pull (hits all in a 3.2 m reach, PULLS the foe in to 1.2 m).
+  EXISTING placeholders shown as moves: Execute as the sky blade, Charge (the crossguard's) as the shoulder charge, the
+  axe's Whirlwind as the spinning advance. The back flip is NOT an ability: no atom moves a player backward on purpose
+  (a lunge dashes the way you walk); it could be how a roll BACKWARD looks: Luke's.
+- BLADE WALTZ IS A SKETCH: the server's hit is one wide sweep in front (hits all, 4.5 m); the FIGURE (never the body)
+  is shown darting to up to three foes in reach (`MotionLayer.shift`). A real one (the server placing you at each foe,
+  untouchable) is a new kind (`ABILITY_LIMITS.md` §2).
+- THE SERVER: a kit's hit can PULL (`KitHit.pull_to_m`: toward the attacker, as fast as the push's carry takes it to
+  that stop, `sqrt(2 x 6 m/s2 x gap)`, nothing when already that near) and LIFT (`KitHit.lift_mps`; none: the old 2 m/s
+  hop). One pure function, `rules::hit_push`; the bake refuses a hit that does nothing or both pushes and pulls; the
+  bar words them ("hauls the foe in to 1.2 m from you", "throws it into the air"). Pools may hold several ults (the
+  plain grip has three; one is chosen at 20).
+- THE TESTER PAGE: "Weapon in hand: Level 20 (every slot)" and "Clear its picks" (a new admin reducer,
+  `admin_clear_picks`: every pick free to choose again), to try one placeholder after another.
+
+**How to play it**: publish was done (`--codegen`: the new admin reducer). In the game, Escape > Tester (admin): Give a
+steel sword (and a steel axe), wield it, "Level 20 (every slot)"; open the abilities window and pick E and R (Leaping
+Strike, Spinning Dash or Roundhouse Kick on E; Blade Waltz or Leap Slam on R; the axe's Hook Pull on E); "Clear its
+picks" to choose again. Fight the camp's skeletons. The lab: `motion_lab.tscn`, F6 (ten showcases now).
+
+**Tested**: `regents_motion` 154/0: every move (fourteen) as before; the spinning advance turns four times; the dragged
+foe hauled 1.2-2.4 m; THE TRAIL AS DRAWN: through the sky blade the newest blade starts by the bent hand over the head
+(within 0.5 m), `clear` empties it; THE WRIST: the same frame rolled and not, the finger turns more than 20 degrees about
+the hand and the hand does not move; THE TABLE: every row a kit's ability with a move, every motion lab placeholder has
+a row, the hook's victim is dragged, NEGATIVE the first slash has none; IN THE GAME on two fighters: a motion player on
+the model, carrying and lifting nothing; the hook plays as it begins, its foe plays dragged, the kick's foe kicked;
+NEGATIVES: an ability with no row plays nothing, a hit 2.6 s after plays nothing, the leaping strike's foe flinches as
+before; the leap slam's hips stay under 1.3 m with the server's lift (the lab's go over 1.5). The seam check caught four
+slips in the new moves (the waltz cut began leaning; the kick's flight, the hook's yank and the spin's end left gaps):
+fixed. `cargo test --test regents` 65/0: a new test, the pull stops 1.2 m short (2 m carried at the drag), nothing
+already near, a push away as before, a knock-up's lift, nothing from none; the content (the hook pulls to 1.2, the slam
+and the kick lift, Execute still only hurts); the sword's pools 17; the whole `cargo test` and the wasm check green.
+THE WHOLE UNIT SUITE 5414/0 (twice red first: three new strikes lacked their `recover.<id>`, four pool checks counted the
+old pools (a handle four, one ult: now the plain grip nine, ults one or more), and THE SCRUBBER missed when run after
+other suites: a seek aimed to land in one frame, and the half-second settle before the clock ran at 8x so the cast took
+a big step uncounted; now it closes in by halves on the slowest recent frame, and the settle is counted on the lab's
+clock and closed in on the same way: green twice in a row and in the full run). `content_test.sh` 18/0. Published
+(`--codegen`): the play database `regents-rule`, 64 tables, 112 reducers. Dense shots of the changed moves looked at
+(the spin's dense sheet repeats frames and walks late: the shot tool's seek with a walking actor, not looked into).
+NOT RUN: a real client against the server (the combat playtest): the pull and the lift on a live foe are checked by the
+native test of their numbers only; Luke's try is the first live one.
+
+**Left for later**: the real blade waltz (a sequence kind on the server); the back flip as a backward roll (Luke's);
+foot IK; the slam's own effect; how the placeholders' timings feel (each row's `from_s` and `speed`, each ability's
+`wind_up_ms`) is for Luke's playtest.
+
+## Step 111: MIXAMO RETARGETED ONTO OUR SKELETON (2026-11-18, Luke: "lets test out retargeting", after asking whether a bladed, plated recurve could be a tanky hybrid bow)
+
+The question first (answered in chat, nothing built for it): a tank bow is mostly the bow's guard-grip ROLE (the full
+block, the stave's parry, faster lighter shots: `draw_full_ms`, Swift Draw), and its melee fits the bow's skills,
+already judged as sweeps. What was missing: SWING CLIPS for a long two-handed weapon (Quaternius has none), a melee
+string on LMB (the bow's LMB is the draw; tap-to-swing would change the quick-release rule: Luke's), and the plating
+(the bow is one imported mesh; `MetalFinish` is the outfits' only). This step answers the clips.
+
+**Luke's calls**: the packs (Great Sword, Pro Sword and Shield, Pro Magic, his older Locomotion Pack, Y Bot for
+reference); the repo is PRIVATE, so the retargeted `.res` libraries are committed; the raw FBX never are (Mixamo's terms).
+
+**Built**:
+- `game/regents/tools/retarget_mixamo.gd` (a SceneTree script): a folder of Mixamo FBX per pack in
+  `game/anim/_import/mixamo/<pack>/` (git-ignored) -> `game/regents/anim/mixamo_<pack>.res`. Both rigs are 65 bones in a
+  T-pose, Y up, +Z forward, one for one (fingers too), so each frame carries each Mixamo bone's TURN FROM ITS REST in the
+  character's space onto our bone's rest, then back to parent-local; the hips' path is scaled by the hip heights (ours
+  0.88 of Mixamo's) about our pelvis's rest. IN PLACE: the hips' drift over the clip is taken out (the server moves the
+  body). Idle/walk/run/strafe/sprint loop. Sampled at 30 fps, keys within 0.0015 rad / 0.5 mm of the line dropped. It
+  prints per clip: length, keys, the travel removed, how far the hands' gap differs from the source's, the lowest foot.
+- Four libraries, 170 clips, 7.3 MB: `mx_great_sword` 51 (1.7 MB), `mx_sword_shield` 51 (1.6), `mx_magic` 56 (3.6),
+  `mx_locomotion` 12 (0.4). In `MotionClip.LIBRARIES` (the lab's clip sheets and moves) ONLY: no animation set uses
+  them yet.
+- `regents_motion` checks them (below).
+
+**How to see it**: `"$GODOT" --path . res://game/regents/motion/motion_lab.tscn -- <out dir> clips
+mx_great_sword/great_sword_slash mx_great_sword/great_sword_idle mx_magic/standing_2h_magic_attack_01 ...` (eight frames
+a clip). A move's `MotionClip.animation` can name one (`mx_great_sword/great_sword_high_spin_attack`). The clip names
+are the files' (`great sword slash (2).fbx` -> `great_sword_slash_2`).
+
+**Tested**: `regents_motion` 170/0 (16 new): every library loads with its clips and keys only our skeleton's bones
+(NEGATIVE: a `mixamorig_Hips` track is caught); on a real character Mixamo's idle stands at our hip height (2.4 cm off
+at most) with the head over the hips; the great sword's idle holds both hands on the hilt (0.19 m apart at most;
+NEGATIVE Quaternius's idle 0.56 m); its slash raises both hands over the head (0.14 m); the shield slash swings the
+right hand 1.64 m against the shield hand's 1.02 m (left and right not swapped); the walk walks in place (0.00 m).
+The whole unit suite and the lints: 5430/0.
+
+**The bladed bow, seen** (Luke: "use the suggested set ... scale up a bow a little bit and see how it looks"): the clip
+sheets take `held=<scene>` and `scale=<x>` (the held item's model only). The yew bow (held in the left hand by its own
+grip) through attack, slash, slash_4, jump_attack, kick, blocking, blocking_2, high_spin_attack at 1x and 1.4x: at
+1.4x the limbs read as a weapon through every sweep; at 1x it looks thin. The block holds the bow upright by the face
+(it hides behind the head): a block wants its own grip entry (the bow across, horizontal). Nothing in the game changed:
+the bow's size in play is its scene's `Model` scale (0.75; x1.4 = 1.05), and it would change the draw's look too.
+Clip sheets looked at: Quaternius's idle beside Mixamo's idle and walk, the great sword's slash, idle, spin attack and
+block, two magic attacks, the shield slash and block, the great sword's casting, kick and jump attack, a death: all
+upright, the right hands, both hands on the hilt where the source has them, feet on the ground (the report's low
+feet are kneels and falls).
+
+**Left for later**:
+- Putting clips in the game: an animation set row per ability (`adventurer.tres`), a `recover.<id>`, the lengths as
+  locks; the bow's or a staff's swing set is Luke's pick from the sheets.
+- The hands sit ~10 cm wider than Mixamo's on a two-handed hold (our clavicles sit forward and wider): fine on a long
+  hilt; a hand IK onto the held item's off-hand point would close it if a grip shows a gap.
+- A held item's grip is per clip (`*_grip.tres`, Luke's): a new clip may need its entry.
+- No longbow pack yet (the bow's own quick shot, overdraw, block with the bow, dive): `ANIMATIONS.md` §1.
+- The tool is general (any Mixamo rig onto the Quaternius skeleton): a TEMPLATE tool once it has been used a while
+  (`tools/`, beside `extract_animation_library.gd`).
+
+## Step 112: THE BOWSTRING DRAWN INTO A V, AND THE ARROW ON IT (2026-11-18, Luke: "is there a way to get the string to pull back into a V while drawing and show an arrow nocked?")
+
+**Built**: `BowString` (`game/regents/combat/bow_string.gd`), a child node `String` of `yew_bow.tscn`. The model's own
+string (surface 2 of `Bow_Wooden.fbx`, the white cord) is taken out of its mesh (one stripped copy shared by every bow
+of that model) and drawn in code: two thin cylinders from the limbs' tips to a NOCK POINT, in the cord's own material.
+At rest the nock is the string's middle (straight, as the model had it). While the body's UPPER-BODY POSE is a draw
+(`pose.bow_draw` / `pose.bow_aim`, which `CombatComponent._draw_pose` holds on every client, for another player's draw
+from their Drawing status too) the nock is the drawing fingers (`index_02_r`, `middle_02_r`), and `Arrow.fbx` lies from
+the nock over the riser (0.78 m). The fingers take the string only when BEHIND it, within `max_draw_m` (0.85) and on
+the BOW'S PLANE (`plane_m`, 0.12 m): early in the draw the hand reaches over the shoulder for an arrow, and without the
+plane check the string stretched up to it (seen in the stepped draw). Let go, the pose blends out and it snaps straight.
+Tips, middle and riser are MEASURED from the model, so a bigger or smaller bow (the tank's 1.4x, a shortbow) needs
+nothing. Presentation only: it reads the driver's pose and the bones, updated on `skeleton_updated` (connected after
+the held item's), and does nothing while at rest. Skeleton archers hold the same bow: their shot is a clip, not the
+draw pose, so their string stays straight.
+
+**How to see it**: in the game, wield the yew bow and hold LMB (another player's draw shows it too); without a server,
+`aim_shot.tscn` (CLAUDE.md) draws it at half and full draw.
+
+**Tested**: `regents_motion` 182/0 (12 new): the bow carries it; the model's string is gone (two surfaces left); tip to
+tip 1.1-1.7 m; straight at rest with no arrow; at full draw the string goes to the fingers (within 2 cm), more than
+0.2 m behind its rest, the arrow along nock-to-riser; let go it is straight with no arrow; NEGATIVE early in the draw
+(the hand over the shoulder) it stays straight; later in the same draw it is taken; NEGATIVE a spell's cast pose is
+not a draw; a 1.4x bow's string is 1.4x as long. Looked at: close shots at rest, half and full draw (side, back,
+front), and the draw stepped 0 to 1 in eighths (straight while the hand reaches back, taken at 0.375, a clean V to
+full draw). The whole unit suite and the lints: 5442/0.
+
+**Left for later**: the limbs do not bend (a vertex bend by the draw, in a shader, if wanted); the arrow appears at the
+moment the string is taken (no arrow carried from the quiver); a shortbow's and the tank bow's own scenes (GAME.md,
+THE BOWS BY ROLE) get a `String` node the same way.
+
+## Step 113: A SHOT NOT FACING ITS TARGET FLIES WHERE YOU AIM (2026-11-18, Luke: "right now if you face 120 degrees it facing your target and if you dont it say 'face your target' but I think we should just make it fire where you are facing if you arent in lock in degrees in case you wanted to 180 and fire at an enemy behind you or fire at something not your target without hitting tab")
+
+Also his, the same message (GAME.md, THE BOWS BY ROLE): the bow, the longbow / plated bow and the shortbow ARE the bow's
+roles, as the grips are a melee weapon's; staves likely the same. Nothing built for that yet.
+
+**Built** (replacing step 61's refusal; `regents.aim_arc_deg` keeps its meaning, 120):
+- The client (`CombatComponent.loose`, the staff's missile in `_cast`): a Tab target outside the arc is not sent; the
+  shot goes to the crosshair as with no target. `FACE_YOUR_TARGET` and its words are gone.
+- The server (`loose_arrow`, `cast_spell` for a BOLT): a target the shooter does not face (`faces_target`, 30 degrees
+  wider) is dropped and the shot flies along `aim`, logged; no reducer refuses for it any more. No reducer's arguments
+  changed (rule 17): an old client that still refuses simply never sends one.
+- The rule's description (`regents.tres`, baked), `CombatLook.aim_point`'s words, the genre rules, GAME.md (CHANGED),
+  `COMBAT_CURRENT.md`.
+
+**How to play it**: wield the bow (or the staff), Tab a skeleton, turn your back to it and shoot: the arrow (or the
+Bolt) goes where the crosshair is. Facing it, it still goes at the target with the hit roll.
+
+**Tested**: the unit suite and lints 5442/0 (`regents`: inside the arc a target is faced; NEGATIVE behind or 68
+degrees off it is not, and the shot goes to the crosshair; nothing says "Face your target"). `cargo test` (28 suites)
+and the wasm check green. Integration (the only coverage of the reducers), its legs rewritten: a loose at a Tab target
+behind you is not refused, its arrow flies NORTH the way you face (NEGATIVE of the aim at the target: not south at the
+skeleton), an arrow is taken (given back for the counts after); a Bolt at a target behind you is not refused and flies
+north; the staff's catch-up baseline read after it. Result: 1712 passed, 0 failed. Published to the play database
+(no schema change).
+
+## Step 114: THE MOTION LAB'S CLIP BROWSER (2026-11-18, Luke: "the motion lab uses the same ability prototypes and I dont see a way to play the retargeted animation with different weapons and things")
+
+**Built** (`game/regents/motion/motion_lab.gd`): the list's last entry, CLIP BROWSER (`BROWSER`, 10). A panel on the
+right: the library (every `MotionClip.LIBRARIES` key: core, extra, cuts, the four Mixamo ones), a filter, the clips
+(sorted; one click plays it), HOLDING (every item with a held scene, found from `content/item/`, once a scene, or
+Nothing), and SIZE (0.5-2x, the held model only). The clip plays alone on its own adventurer (`Pack.browser`), its
+root's travel left out, with the scrubber (its length the clip's), the speeds, loop and compare. From code:
+`browse(library, clip)` (false for a clip no library has), `browse_hold(scene, size)`; `clip_move` is shared with the
+clip sheets. BowString now FITS ITSELF AGAIN when its bow's size or place changes (`_fit_to_model`: the tips and riser
+kept in the mesh's own space), so a bow grown in the lab keeps its string on its tips.
+
+**How to use it**: open `game/regents/motion/motion_lab.tscn`, F6, click "Clip browser" (last in the list), pick a
+library and a clip on the right, what to hold and its size. P pauses, `,` `.` step, the bar scrubs, right mouse turns.
+
+**Tested**: `regents_motion` 193/0 (11 new): the list ends with the browser; a Mixamo clip taken and played by the
+browser's adventurer; the time bar its length; the yew bow at 1.4x (its model 1.05); the panel shows; NEGATIVE a clip
+no library has is refused and the choice stays; the staff, then nothing; NEGATIVE another showcase hides the panel;
+a bow grown after it was made has its string fitted again. The whole unit suite and the lints: 5453/0. Looked at, windowed: the bow at 1.4x through
+great_sword_slash_4, the staff through standing_2h_magic_attack_01, nothing through the shield slash (the panel, the
+sorted list, the time bar, the words).

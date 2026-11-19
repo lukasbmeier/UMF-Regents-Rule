@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 8000
+range_m = 3.4
+wind_up_ms = 500
+damage = 22.0
+animation = &"ability.40058"
+key = &"regents.combat"
+judged = true
+hits_all = false
+reach_m = 3.4
+radius_m = 0.5
+height_m = 0.9
+lunges = true
+id = 40058
+display_name = "Leaping Strike (placeholder)"
+designer_notes = "PLACEHOLDER (PROGRESS 110, 2026-11-18, Luke: \"map everything to placeholder abilities and I'll try them in action\"): a motion lab move (game/regents/motion/) on a placeholder built from existing atoms, to try as a prototype. Its name, numbers and what it really does are Luke's. Sword, plain grip, an E option: a hop into an overhead strike (leaping_strike.tres); the body's travel is the lunge's dash, fired as the hop comes down."

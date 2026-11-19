@@ -168,6 +168,13 @@ func _build() -> void:
 	box.add_child(_button("Reset all skills", func() -> void: reset_skills(target())))
 	box.add_child(_give_row())
 	box.add_child(_button("Reset the bag (back to the starter kit)", func() -> void: reset_bag(target())))
+	# THE WEAPON IN HAND (PROGRESS 110): every slot open, and its picks cleared to choose again for free (the
+	# placeholders, tried one after another).
+	var weapon := HBoxContainer.new()
+	box.add_child(weapon)
+	weapon.add_child(_text("Weapon in hand:"))
+	weapon.add_child(_button("Level 20 (every slot)", func() -> void: set_weapon_level(target(), 20)))
+	weapon.add_child(_button("Clear its picks", func() -> void: clear_weapon_picks(target())))
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_status)
@@ -221,6 +228,29 @@ func _give_row() -> HBoxContainer:
 	row.add_child(_grade)
 	row.add_child(_button("Give", give_selected))
 	return row
+
+
+## The bag row of what player `entity_id` holds (-1: nothing, or not seen here).
+func weapon_row(entity_id: int) -> int:
+	var e: SpaceTimeEntity = EntityRegistry.get_entity(entity_id) as SpaceTimeEntity if entity_id > 0 else null
+	var c: CombatComponent = e.find_component(CombatComponent) as CombatComponent if e != null else null
+	return c.weapon_row if c != null else -1
+
+
+func set_weapon_level(entity_id: int, level: int) -> ReducerRequest:
+	var row: int = weapon_row(entity_id)
+	if row < 0:
+		_status.text = "Hold a weapon first"
+		return null
+	return _send(&"admin_set_item_level", [entity_id, row, level], ["u64", "u64", "u32"], "the weapon in hand is level %d" % level)
+
+
+func clear_weapon_picks(entity_id: int) -> ReducerRequest:
+	var row: int = weapon_row(entity_id)
+	if row < 0:
+		_status.text = "Hold a weapon first"
+		return null
+	return _send(&"admin_clear_picks", [entity_id, row], ["u64", "u64"], "the weapon in hand has no picks: choose again")
 
 
 func _send(reducer: StringName, args: Array, types: Array[String], done: String) -> ReducerRequest:

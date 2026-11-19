@@ -37,7 +37,7 @@ paths:
   PLACEHOLDER in its `designer_notes`. Ability ids to 40048 and spell 40009 are taken.
 - EACH HANDLE ITS OWN SET (PROGRESS 100): a role claims its skills (`KitRole.skills`); the gates and the bar read the
   item's role's view (`KitDef.for_role` / `KitSeed::in_pool`); a stored pick outside it reads as empty (free to choose
-  again). A new role's set is content: claim the skills, give each a slot. Ability ids to 40057 are taken.
+  again). A new role's set is content: claim the skills, give each a slot. Ability ids to 40063 are taken (40058-40063 the motion lab's, PROGRESS 110).
 - Items: three grades; Power is the number; a trait changes how an item plays and never its Power,
   and every trait trades (#275, `LOOT_AND_STYLES.md` §2, §6). Materials and modular gear:
   `docs/regents_rule/MATERIALS.md` (2026-10-23; crafted items hold Common 1 / Fine 2 / MW 3 traits, picked).
@@ -80,9 +80,11 @@ paths:
   longer be taken back (`settle_dealt_hit`), never done at once. A roll goes the way it began for its whole length. A new foe needs nothing for its
   swing trail if its weapon is in its hand bone's mesh or it has a `Head` bone (`SwingTrail`); a new shot's look has
   `shot_look.gd` at its root.
-- FACE YOUR TARGET (Luke, 2026-11-12, step 61): a bow's or a staff's shot is aimed at the Tab target only when it is
-  inside `regents.aim_arc_deg` (120) in front of the body; outside it the shot is REFUSED ("Face your target"), by the
-  client and by the server (`faces_target`). Never turn the body for the player, never quietly shoot elsewhere. The
+- THE WAY YOU FACE (Luke, 2026-11-12, step 61; CHANGED 2026-11-18, step 113): a bow's or a staff's shot is aimed at
+  the Tab target only when it is inside `regents.aim_arc_deg` (120) in front of the body; outside it the shot flies
+  where the player aims (the crosshair), as with no target, by the client and by the server (`faces_target`): never
+  refused (the old "Face your target" is gone), so a player turns and shoots one behind them, or anything, without
+  Tab. Never turn the body for the player. The
   upper body turns to the shot from the way the BODY faces, less where the pose points by itself (`CombatLook`'s
   "pose points", Luke's to adjust with `tests/aim_shot.tscn`): never from the hands, which move through a draw.
 - A FOE'S BEHAVIOR IS A LIMBOAI TREE (Luke's F2, 2026-11-12, PROGRESS step 63; `FOES_PREP.md`): `FoeDef.behavior` names
@@ -156,6 +158,10 @@ paths:
   sets the model's global rotation each frame); a SkeletonModifier3D's pose is seen outside only through what it
   keeps (`MotionBones.seen`). The `regents_motion` suite checks every move (clips that exist, no seam showing
   the pose under, channels at rest at both ends) and fails a move no showcase names. No animation from a generator.
+  IN THE GAME (PROGRESS 110) an ability is shown as a move by its row in `game/regents/motion/ability_moves.tres`
+  (`AbilityMove`: the move, where it starts, its speed, the victim's move), played by the fighter's `MotionPlayer` on every
+  client, never carrying or lifting the body (the server's lunge, push, pull and lift do: `KitHit.pull_to_m`,
+  `lift_mps`, `rules::hit_push`). A sampler of a held item reads it on `skeleton_updated`, never in `_process`.
 - TOWNS (PROGRESS 85, 90): a kit piece is found through `TownKit.piece` (cached by name): never `load` a kit path per
   piece (the loader's lookup costs ~2 ms each). A place's small village props are its `Settlement`'s `dressing`
   (`VillageDressing`), never placed by hand round a house.

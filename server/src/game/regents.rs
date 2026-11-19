@@ -702,6 +702,20 @@ pub fn admin_set_item_level(ctx: &ReducerContext, entity_id: u64, item_row: u64,
     Ok(())
 }
 
+/// Admin: the weapon in `entity_id`'s bag row `item_row` has no picks (every pick open again, free: a newly opened pick
+/// is). The Tester page's, to try one placeholder after another (PROGRESS 110). Its XP and the rest are kept.
+#[reducer]
+pub fn admin_clear_picks(ctx: &ReducerContext, entity_id: u64, item_row: u64) -> Result<(), String> {
+    tester_target(ctx, entity_id, "admin_clear_picks")?;
+    let mut row = ctx.db.inventory_item().id().find(item_row).filter(|r| r.owner_entity_id == entity_id)
+        .ok_or("admin_clear_picks: that row is not in their bag")?;
+    rules::item(row.item_def_id).and_then(|i| rules::kit_keyed(i.weapon_kit)).ok_or("admin_clear_picks: that is no weapon")?;
+    row.instance_data = rules::with_picks(&row.instance_data, [0, 0, 0]);
+    ctx.db.inventory_item().id().update(row);
+    log::info!("regents: the admin cleared {entity_id}'s weapon {item_row}'s picks");
+    Ok(())
+}
+
 /// Admin: `entity_id` starts over in every skill: no XP, no recipe made before (the first-make bonus
 /// back, nothing stale), no work order filled. Whatever they were working at stops.
 #[reducer]
@@ -2177,14 +2191,16 @@ pub fn loose_arrow(ctx: &ReducerContext, target_id: u64, aim: Vector3) -> Result
     let target = (target_id != 0).then(|| ctx.db.movement_state().entity_id().find(target_id)).flatten()
         .filter(|t| t.world_id == ent.world_id && t.entity_id != me)
         .filter(|t| { let (dx, dz) = (t.pos.x - from.x, t.pos.z - from.z); (dx * dx + dz * dz).sqrt() <= hot_number(ctx, hot::BOW_RANGE_M) as f32 });
-    // FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"; his
-    // pick: refuse): a Tab target aims the shot only from inside the arc in front of the shooter. The client refuses
-    // first (and lets the draw go); this is the server's own word.
-    if let Some(t) = &target {
-        if !faces_target(ctx, &at, t.pos) {
-            return Err("loose_arrow: face your target".into());
+    // THE WAY YOU FACE (Luke, 2026-11-18, replacing 2026-11-12's refusal): a Tab target aims the shot only from inside
+    // the arc in front of the shooter; outside it the arrow flies along `aim` (where you look), as with no target: a
+    // turn to shoot one behind you, or something that is not your target, without Tab. The client does the same first.
+    let target = target.filter(|t| {
+        let faced = faces_target(ctx, &at, t.pos);
+        if !faced {
+            log::info!("regents: {me} looses with {} behind them: along their aim instead", t.entity_id);
         }
-    }
+        faced
+    });
     let mut taken = Vec::new();
     take_items(ctx, me, ammo_id, 1, &mut taken);
     let vel = match target {
@@ -2469,11 +2485,14 @@ pub fn cast_spell(ctx: &ReducerContext, ability_id: u32, target_id: u64, aim: Ve
     }
     let m = ctx.db.movement_state().entity_id().find(me).ok_or("cast_spell: you are nowhere")?;
     check_spell_place(ctx, me, spell, ability_id, &m, aim, at)?;
-    // A missile at a Tab target: only from facing it (as the bow's, `faces_target`).
+    // A missile at a Tab target: aimed at it only from facing it (as the bow's, `faces_target`); otherwise it flies
+    // along `aim`, as with no target (Luke, 2026-11-18, replacing the refusal).
+    let mut target_id = target_id;
     if spell.kind == rules::SPELL_BOLT && target_id != 0 && target_id != me {
         if let Some(t) = ctx.db.movement_state().entity_id().find(target_id).filter(|t| t.world_id == m.world_id) {
             if !faces_target(ctx, &m, t.pos) {
-                return Err("cast_spell: face your target".into());
+                log::info!("regents: {me} casts {ability_id} with {target_id} behind them: along their aim instead");
+                target_id = 0;
             }
         }
     }
@@ -3710,11 +3729,11 @@ fn hit_effect(ctx: &ReducerContext, actor: u64, target_id: u64, kit: &'static ru
             chained_by(ctx, actor, target_id, m.world_id);
         }
     }
-    if kh.push_mps > 0.0 {
+    if kh.push_mps > 0.0 || kh.pull_to_m > 0.0 || kh.lift_mps > 0.0 {
         if let (Some(from), Some(to)) = (pos_of(ctx, actor), pos_of(ctx, target_id)) {
-            let (dx, dz) = (to.x - from.x, to.z - from.z);
-            let d = (dx * dx + dz * dz).sqrt().max(0.01);
-            let _ = crate::module::push_entity(ctx, target_id, Vector3::new(dx / d * kh.push_mps, 2.0, dz / d * kh.push_mps), actor);
+            if let Some(v) = rules::hit_push(kh.push_mps, kh.pull_to_m, kh.lift_mps, from, to) {
+                let _ = crate::module::push_entity(ctx, target_id, v, actor);
+            }
         }
     }
 }

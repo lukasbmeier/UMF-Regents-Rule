@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MotionMove" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/motion_clip.gd" id="1_clip"]
+[ext_resource type="Script" path="res://game/regents/motion/motion_move.gd" id="2_move"]
+
+[sub_resource type="Resource" id="Clip_cut"]
+script = ExtResource("1_clip")
+animation = &"extra/Sword_Light_A"
+blend_in_s = 0.03
+blend_out_s = 0.08
+
+[sub_resource type="Curve" id="Curve_lean"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.15, 1), 0.0, 0.0, 0, 0, Vector2(0.6, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[resource]
+resource_name = "Blade waltz (one cut)"
+script = ExtResource("2_move")
+length_s = 0.34
+clips = Array[ExtResource("1_clip")]([SubResource("Clip_cut")])
+impact_at = 0.45
+tip_deg = 14.0
+tip = SubResource("Curve_lean")

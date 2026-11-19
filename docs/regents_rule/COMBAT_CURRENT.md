@@ -363,11 +363,11 @@ off heals as it walks home). A placeholder until food or potions are decided.
   my character is standing"): the server starts every shot at the chest, 0.6 m along its way; the shot's look
   (`ShotLook.leave_hand_s`, 0.12 s) is drawn at its shooter's hand at first and comes onto its true path. Look only:
   the body the referee flies is where it always was.
-- **FACE YOUR TARGET** (2026-11-12, Luke: "I can tab target and then face AWAY from the target and still shoot"; his
-  pick of three: refuse): a shot is aimed at the Tab target only when it is inside `aim_arc_deg` (120, the arc Tab
-  picks from) in front of the body, which while drawing and in stance faces where the camera looks. Outside it the
-  client looses nothing, lets the draw go and says "Face your target"; the server refuses the same
-  (`faces_target`, 30 degrees wider for the turn's trip there): `loose_arrow` and a missile's `cast_spell`.
+- **THE WAY YOU FACE** (2026-11-12, refuse; CHANGED 2026-11-18, Luke: "just make it fire where you are facing"): a
+  shot is aimed at the Tab target only when it is inside `aim_arc_deg` (120, the arc Tab picks from) in front of the
+  body, which while drawing and in stance faces where the camera looks. Outside it the shot flies to the crosshair, as
+  with no target (the client sends no target; the server, `faces_target`, 30 degrees wider for the turn's trip there,
+  drops one it does not face and flies along the aim): `loose_arrow` and a missile's `cast_spell`. Nothing refused.
 - **The arrow is a real body** (BodyDef 40001) the referee flies, nose into the wind; what it hits is
   reported and the server deals: `30 × power × bow % × arrow % × quality × mastery`, at `point_blank_pct`
   60 % inside `point_blank_m` 4 m. An arrow in a foe stays in it; when it falls, `arrow_recover_pct` 40 %

@@ -326,9 +326,9 @@ func _run_combat() -> void:
 	var sword: KitDef = KitDef.by_key(&"sword")
 	var axe: KitDef = KitDef.by_key(&"axe")
 	_check(sword != null and axe != null and sword.validate().is_empty() and axe.validate().is_empty(), "the sword and axe kits, valid")
-	_check(sword.light.size() == 3 and sword.skills.size() == 12 and sword.skills[0].display_name == "Lunge" and sword.slot_of_skill(0) == KitDef.SLOT_BASE
+	_check(sword.light.size() == 3 and sword.skills.size() == 17 and sword.skills[0].display_name == "Lunge" and sword.slot_of_skill(0) == KitDef.SLOT_BASE
 		and sword.has_role_pools(),
-		"the sword: a string of three, Lunge first, then each handle's own set (S1b: four a handle, twelve in all; placeholders)")
+		"the sword: a string of three, Lunge first, then each handle's own set (S1b, four a handle; the plain grip nine with the motion lab's five, PROGRESS 110: seventeen; placeholders)")
 	# THE HEAVY MERGED INTO THE FINISHER (COMBAT_OVERHAUL.md §3): the last step, a little heavier and slower each.
 	_check(sword.is_finisher(sword.light[2]) and not sword.is_finisher(sword.light[1]) and axe.light.size() == 2 and axe.is_finisher(axe.light[1]),
 		"the finisher is the string's last step: the sword's third, the axe's second")
@@ -5627,15 +5627,16 @@ func _run_combat_pass() -> void:
 		"the turn is shared over three spine bones the adventurer has (%s); the hands a shot leaves from are its bones" % str(twist_default.spine_bones))
 	adv_model.free()
 	twist_default.free()
-	# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"): a
-	# shot is aimed at a Tab target only inside the arc in front of the body.
+	# THE WAY YOU FACE (Luke, 2026-11-12; 2026-11-18): a shot is aimed at a Tab target only inside the arc in front of
+	# the body; outside it, it goes to the crosshair (never refused).
 	var arc: float = HotRules.number(&"regents.aim_arc_deg")
 	_check(is_equal_approx(arc, 120.0) and CombatComponent.within_arc(0.0, 0.0, -5.0, arc) and CombatComponent.within_arc(0.0, 4.0, -3.0, arc),
 		"a target straight ahead, or 53 degrees to the side, is faced (the arc: %.0f degrees)" % arc)
 	_check(not CombatComponent.within_arc(0.0, 0.0, 5.0, arc) and not CombatComponent.within_arc(0.0, 5.0, -2.0, arc),
-		"NEGATIVE: one behind you, or 68 degrees to the side, is not: the shot is refused")
+		"NEGATIVE: one behind you, or 68 degrees to the side, is not: the shot goes to the crosshair instead")
 	_check(CombatComponent.within_arc(PI, 0.0, 5.0, arc) and not CombatComponent.within_arc(PI, 0.0, -5.0, arc), "turned right round, it is the other way about")
-	_check(CombatComponent.FACE_YOUR_TARGET == "Face your target", "and it says so")
+	var face_src: String = FileAccess.get_file_as_string("res://game/regents/combat/combat_component.gd")
+	_check(not face_src.contains("Face your target"), "and nothing says \"Face your target\" any more: it is never refused")
 	shooter.free()
 	aim_look.free()
 	# A SHOT THE SERVER AIMS (a Tab target) goes to the middle of what it is aimed at.

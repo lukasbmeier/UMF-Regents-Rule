@@ -313,10 +313,10 @@ func _run_item_twin() -> void:
 	var sword: KitDef = full.for_role(RoleDef.plain_role())
 	var sword_open: Array[Dictionary] = RegentsItemLevel.open_picks(sword, 33, none)
 	_check(RegentsItemLevel.bar(sword, none)[0] == sword.skills[0] and sword.skills[0].display_name == "Lunge" and sword_open.size() == 3
-		and (sword_open[0]["options"] as Array[AbilityDef]).size() == 2 and int(sword_open[2]["n"]) == 2
+		and (sword_open[0]["options"] as Array[AbilityDef]).size() == 5 and int(sword_open[2]["n"]) == 2
 		and (sword_open[2]["options"] as Array[AbilityDef]) == sword.skills_in(KitDef.SLOT_ULT)
 		and RegentsItemLevel.open_picks(sword, 4, none).is_empty(),
-		"the plain grip's pool: Lunge on Q; at 33 two for E (either pick) and its ult for R; NEGATIVE: nothing open at 4")
+		"the plain grip's pool: Lunge on Q; at 33 five for E (either pick: two, and the motion lab's three) and its ults for R; NEGATIVE: nothing open at 4")
 	var qs: PackedStringArray = PackedStringArray()
 	for kr: KitRole in full.roles:
 		var view: KitDef = full.for_role(kr.role)
@@ -325,9 +325,11 @@ func _run_item_twin() -> void:
 		for other: KitRole in full.roles:
 			if other != kr:
 				others.append_array(other.skills)
-		_check(view.skills.size() == 4 and not view.skills.any(func(a: AbilityDef) -> bool: return others.has(a))
+		# Four a handle; the plain grip nine since PROGRESS 110 (the motion lab's five placeholders).
+		var own: int = 9 if kr.role == RoleDef.plain_role() else 4
+		_check(view.skills.size() == own and not view.skills.any(func(a: AbilityDef) -> bool: return others.has(a))
 			and view.validate().is_empty(),
-			"the %s's pool: four of its own, NEGATIVE: none of another handle's" % kr.role.display_name)
+			"the %s's pool: %d of its own, NEGATIVE: none of another handle's" % [kr.role.display_name, own])
 	_check(qs == PackedStringArray(["Lunge", "Shield Bash (placeholder)", "Swipe (placeholder)"]), "each handle its own Q: %s" % ", ".join(qs))
 	var kept_picks: Array[int] = [40035, 0, 40038]   # a crossguard sword that took Flurry and Execute from the one pool
 	var tank: KitDef = full.for_role(full.roles[1].role)
@@ -345,11 +347,11 @@ func _run_item_twin() -> void:
 		else:
 			views.append(whole)
 		for k: KitDef in views:
-			var ok: bool = (k.validate().is_empty() and k.skills_in(KitDef.SLOT_BASE).size() == 1 and k.skills_in(KitDef.SLOT_ULT).size() == 1
+			var ok: bool = (k.validate().is_empty() and k.skills_in(KitDef.SLOT_BASE).size() == 1 and k.skills_in(KitDef.SLOT_ULT).size() >= 1
 				and k.skills_in(KitDef.SLOT_OPTION).size() >= 2)
 			for a: AbilityDef in k.skills_in(KitDef.SLOT_OPTION) + k.skills_in(KitDef.SLOT_ULT):
 				ok = ok and (a.display_name.ends_with("(placeholder)") or a.display_name in ["Frost Ring", "Gale"])
-			_check(ok, "%s: one Q, options for E, one ult on R (each handle's own), every new one named (placeholder)" % key)
+			_check(ok, "%s: one Q, options for E, ults for R, one chosen (each handle's own), every new one named (placeholder)" % key)
 	var bad: KitDef = staff.duplicate() as KitDef
 	bad.skill_slots = PackedInt32Array([0, 0, 3, 1])
 	_check(bad.validate().any(func(e: String) -> bool: return e.contains("one base")), "NEGATIVE: two bases refused")

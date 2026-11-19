@@ -2,7 +2,7 @@ extends "res://tests/suite_base.gd"
 ## MOVES MADE OF CLIPS AND CODE (`-- --only=regents_motion`; 2026-11-17, the motion lab), with no server and no renderer:
 ##   - every move in `game/regents/motion/moves/` loads, names only clips that exist, begins and ends with its channels
 ##     at rest (a spin whole turns), and its clips' seams leave no gap where the pose under them shows through; the
-##     spinning advance turns seven times; NEGATIVE: a move left tipped over is caught, a clip with no such name is
+##     spinning advance turns four times; NEGATIVE: a move left tipped over is caught, a clip with no such name is
 ##     found missing, a move with no curves and no clips never moves
 ##   - a clip's stretch: time-warped to its part (forward and back), eased in and out, nothing outside it
 ##   - the figure's turn (the code's): about the hips, a tip toward the facing, a spin to the left, a squash feet down
@@ -12,7 +12,17 @@ extends "res://tests/suite_base.gd"
 ##     dash's clip root carries it its 7 m; the dragged foe is hauled forward; the hook's reach (code) points the arm at
 ##     its target; NEGATIVES: the same moves with their clips taken out stay on their feet, hand low, hips low, carried
 ##     only as far as the code says, and with the layer off the arm points elsewhere
-##   - the trail keeps a blade while it draws and is empty once it stops and its life runs out
+##   - the trail keeps a blade while it draws and is empty once it stops and its life runs out; it is sampled AS DRAWN
+##     (the sky blade's raised blade starts at the bent hand, over the head), and `clear` forgets it
+##   - the wrist (code) rolls the hand about the fore arm: what the hand carries turns, the arm does not
+##   - IN THE GAME (PROGRESS 110): every row of `AbilityMoves` names an ability some kit has and a move; every motion lab
+##     placeholder has a row; a fighter's `MotionPlayer` plays an ability's move as it begins and the victim move on what
+##     it hits, its own height left out (the server lifts the body); NEGATIVES: an ability with no row plays nothing, a
+##     hit from one with no victim move, or long after, plays nothing
+##   - MIXAMO (PROGRESS 111): the retargeted libraries key only our bones; on a character a clip stands, a two-handed
+##     hold keeps the hands together, the sword arm is the right one, a walk walks in place (and their negatives)
+##   - THE BOWSTRING (PROGRESS 112): straight at rest, a V to the fingers with an arrow at full draw, straight when let
+##     go, measured from the model (a 1.4x bow's is 1.4x); NEGATIVES: a hand reaching for an arrow, a spell's pose
 ##   - the lab shows every move, its shoulder charge plays to its end (the charger carried, the foe thrown back and on
 ##     its feet again), and its SCRUBBER lands on the moment asked, held, and back to the same moment shows the same
 ##     frame (forward and backward)
@@ -30,6 +40,11 @@ func run() -> void:
 	_run_figure_turn()
 	await _run_on_a_character()
 	await _run_trail()
+	await _run_wrist()
+	_run_ability_table()
+	await _run_mixamo()
+	await _run_bow_string()
+	await _run_in_game()
 	await _run_lab()
 
 
@@ -89,7 +104,7 @@ static func _thinnest_seam(m: MotionMove) -> float:
 
 func _run_moves() -> void:
 	var names: PackedStringArray = _move_names()
-	_check(names.size() >= 11, "the lab's moves are there (%d)" % names.size())
+	_check(names.size() >= 14, "the lab's moves are there (%d)" % names.size())
 	for n: String in names:
 		var m: MotionMove = _move(n)
 		_check(m != null and m.length_s > 0.0, "%s loads, with a length" % n)
@@ -104,7 +119,7 @@ func _run_moves() -> void:
 		_check(_off_rest(m.at(m.length_s)) < 1.0, "%s ends with its channels at rest (%.1f off)" % [n, _off_rest(m.at(m.length_s))])
 		_check(_thinnest_seam(m) > 0.7, "%s's clips leave no gap at a seam (the thinnest %.2f)" % [n, _thinnest_seam(m)])
 	var spin: MotionMove = _move("spinning_advance")
-	_check(absf(spin.at(spin.length_s).spin - 7.0 * TAU) < 0.01, "the spinning advance turns seven times")
+	_check(absf(spin.at(spin.length_s).spin - 4.0 * TAU) < 0.01, "the spinning advance turns four times")
 	# NEGATIVES: the checks are not blind.
 	var bad := MotionMove.new()
 	bad.tip_deg = 90.0
@@ -260,7 +275,7 @@ func _run_on_a_character() -> void:
 		await _through(a, l, drag, func(_u: float) -> void: pass)
 		went = start.z - a.position.z
 		if clipped:
-			_check(went > 1.5, "the dragged foe is hauled forward (%.2f m)" % went)
+			_check(went > 1.2 and went < 2.4, "the dragged foe is hauled forward, from 3 m to near its hauler (%.2f m)" % went)
 		else:
 			_check(absf(went) < 0.05, tag + "it stays where it was (%.2f)" % went)
 	# The hook's reach is the code's: with the layer off, the arm is wherever the throw's clip has it.
@@ -282,24 +297,341 @@ func _run_on_a_character() -> void:
 	await get_tree().process_frame
 
 
+# ---------------------------------------------------------------- Mixamo, retargeted
+
+## The retargeted libraries (`game/regents/tools/retarget_mixamo.gd`, 2026-11-18) and their least clip count.
+const MIXAMO: Dictionary[String, int] = {"mx_great_sword": 51, "mx_sword_shield": 51, "mx_magic": 56, "mx_locomotion": 12}
+
+
+## A move that is one clip, all of it.
+static func _clip_move(clip_name: StringName) -> MotionMove:
+	var clip: Animation = MotionClip.find(clip_name)
+	var m := MotionMove.new()
+	m.length_s = clip.length if clip != null else 1.0
+	var mc := MotionClip.new()
+	mc.animation = clip_name
+	mc.blend_in_s = 0.0
+	mc.blend_out_s = 0.0
+	m.clips = [mc]
+	return m
+
+
+## The tracks of `lib` that name anything but a bone of `skel` on the skeleton node.
+static func _strays(lib: AnimationLibrary, skel: Skeleton3D) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for n: StringName in lib.get_animation_list():
+		var anim: Animation = lib.get_animation(n)
+		for i: int in anim.get_track_count():
+			var p: NodePath = anim.track_get_path(i)
+			if String(p.get_concatenated_names()) != "Skeleton3D" or skel.find_bone(p.get_concatenated_subnames()) < 0:
+				out.append("%s: %s" % [n, p])
+	return out
+
+
+## Mixamo's clips on our skeleton: every library loads and keys only our bones; on a real character a clip stands,
+## a two-handed hold keeps the hands together, a chop goes over the head, the sword arm is the right one, a walk walks
+## in place. NEGATIVES: a Mixamo bone name left in is caught; Quaternius's idle holds the hands apart; the shield
+## hand swings less than the sword hand.
+func _run_mixamo() -> void:
+	var a: ShowcaseActor = _actor()
+	var l: MotionLayer = _layer(a)
+	l.bones.watch = [&"hand_r", &"hand_l", &"Head", &"pelvis"]
+	for key: String in MIXAMO:
+		var lib: AnimationLibrary = load(MotionClip.LIBRARIES.get(key, "")) as AnimationLibrary
+		_check(lib != null and lib.get_animation_list().size() >= MIXAMO[key],
+			"%s loads with its %d clips" % [key, MIXAMO[key]])
+		if lib == null:
+			continue
+		var strays: PackedStringArray = _strays(lib, a.skeleton)
+		_check(strays.is_empty(), "%s keys only our skeleton's bones %s" % [key, str(strays.slice(0, 3))])
+	# NEGATIVE: a track still on Mixamo's rig is found.
+	var probe := AnimationLibrary.new()
+	var bad: Animation = MotionClip.find(&"mx_locomotion/idle").duplicate() as Animation
+	bad.track_set_path(0, NodePath("Skeleton3D:mixamorig_Hips"))
+	probe.add_animation(&"bad", bad)
+	_check(_strays(probe, a.skeleton).size() == 1, "NEGATIVE: a Mixamo bone left in a track is caught")
+
+	# Standing: Mixamo's idle keeps the hips at our height and the head over them, all through.
+	var rest_hips: float = a.skeleton.get_bone_global_rest(a.skeleton.find_bone(&"pelvis")).origin.y
+	var hips_off: Array[float] = [0.0]
+	var head_over: Array[float] = [9.0]
+	var ground_y: float = a.position.y
+	await _through(a, l, _clip_move(&"mx_locomotion/idle"), func(_u: float) -> void:
+		hips_off[0] = maxf(hips_off[0], absf(_seen(l, &"pelvis").y - ground_y - rest_hips))
+		head_over[0] = minf(head_over[0], _seen(l, &"Head").y - _seen(l, &"pelvis").y))
+	_check(hips_off[0] < 0.06, "Mixamo's idle stands at our hip height (%.1f cm off at most)" % (hips_off[0] * 100.0))
+	_check(head_over[0] > 0.5, "and keeps the head over the hips (%.2f m at least)" % head_over[0])
+
+	# Two hands on the hilt: the great sword's idle holds them together; Quaternius's idle does not.
+	var gaps: Array[float] = []
+	for clip: StringName in [&"mx_great_sword/great_sword_idle", &"core/Idle"]:
+		var gap: Array[float] = [0.0]
+		await _through(a, l, _clip_move(clip), func(_u: float) -> void:
+			gap[0] = maxf(gap[0], _seen(l, &"hand_r").distance_to(_seen(l, &"hand_l"))))
+		gaps.append(gap[0])
+	_check(gaps[0] < 0.25, "the great sword's idle holds both hands on the hilt (%.2f m apart at most)" % gaps[0])
+	_check(gaps[1] > 0.5, "NEGATIVE: Quaternius's idle holds them apart (%.2f m)" % gaps[1])
+
+	# The chop: both hands over the head.
+	var over: Array[float] = [-9.0]
+	await _through(a, l, _clip_move(&"mx_great_sword/great_sword_slash"), func(_u: float) -> void:
+		over[0] = maxf(over[0], minf(_seen(l, &"hand_r").y, _seen(l, &"hand_l").y) - _seen(l, &"Head").y))
+	_check(over[0] > 0.1, "the great sword's slash raises both hands over the head (%.2f m)" % over[0])
+
+	# The sword arm is the right one (Mixamo's RightHand onto our hand_r): in the shield slash it sweeps much farther.
+	var sweep: Dictionary[StringName, Array] = {&"hand_r": [], &"hand_l": []}
+	await _through(a, l, _clip_move(&"mx_sword_shield/sword_and_shield_slash"), func(_u: float) -> void:
+		for h: StringName in sweep:
+			sweep[h].append(_seen(l, h) - _seen(l, &"pelvis")))
+	var reach: Dictionary[StringName, float] = {}
+	for h: StringName in sweep:
+		var box := AABB(sweep[h][0] as Vector3, Vector3.ZERO)
+		for p: Variant in sweep[h]:
+			box = box.expand(p as Vector3)
+		reach[h] = box.size.length()
+	_check(reach[&"hand_r"] > reach[&"hand_l"] * 1.3,
+		"the shield slash swings the right hand (%.2f m) more than the shield hand (%.2f m)" % [reach[&"hand_r"], reach[&"hand_l"]])
+
+	# A walk walks in place (the server moves the body): the hips end where they began.
+	var path: Array[Vector3] = []
+	await _through(a, l, _clip_move(&"mx_locomotion/walking"), func(_u: float) -> void:
+		path.append(_seen(l, &"pelvis") - a.position))
+	var drift: Vector3 = path[path.size() - 1] - path[0]
+	drift.y = 0.0
+	_check(drift.length() < 0.1, "Mixamo's walk walks in place (the hips drift %.2f m)" % drift.length())
+	a.queue_free()
+	await get_tree().process_frame
+
+
+# ---------------------------------------------------------------- the bowstring
+
+const BOW_SCENE: String = "res://game/regents/combat/weapons/yew_bow.tscn"
+
+
+## Hold the bow's draw pose at `t` (or none: let it go) for `frames` frames, the actor stepped by hand.
+func _bow_frames(a: ShowcaseActor, frames: int, pose: StringName, t: float = -1.0) -> void:
+	for i: int in frames:
+		if pose.is_empty():
+			a.driver.release_upper_pose()
+		else:
+			a.driver.hold_upper_pose(pose, 1.0, t)
+		a.step(1.0 / 30.0)
+		await get_tree().process_frame
+
+
+## The bowstring (Luke, 2026-11-18, PROGRESS 112): straight at rest, drawn back into a V to the fingers with an arrow on
+## it at full draw, straight again when let go. NEGATIVES: a hand reaching over the shoulder for an arrow (early in the
+## draw) does not take it; a pose that is not a draw (a spell's cast) does not; the model's own string is gone.
+func _run_bow_string() -> void:
+	var a: ShowcaseActor = ShowcaseActor.make(ADVENTURER, 4, load(BOW_SCENE) as PackedScene, null)
+	add_child(a)
+	a.set_process(false)
+	a.driver.set_process(false)
+	await _bow_frames(a, 10, &"")
+	var s: BowString = a.held.get_node_or_null("String") as BowString if a.held != null else null
+	_check(s != null, "the yew bow carries a BowString")
+	if s == null:
+		a.queue_free()
+		return
+	var mi: MeshInstance3D = BowString._first_mesh(a.held.get_node("Model"))
+	_check(mi != null and mi.mesh.get_surface_count() == 2, "the model's own string is taken out (%d surfaces left)" % (mi.mesh.get_surface_count() if mi != null else -1))
+	var span: float = s.tip_a.distance_to(s.tip_b)
+	_check(span > 1.1 and span < 1.7, "the string runs tip to tip (%.2f m)" % span)
+	var straight: Callable = func() -> bool: return not s.held and s.nock.is_equal_approx(s.rest_nock) and not s._arrow.visible
+	_check(straight.call(), "at rest it is straight, with no arrow")
+	# Full draw: the V to the fingers, the arrow from the nock over the riser.
+	await _bow_frames(a, 30, &"pose.bow_aim")
+	var back: float = (s.nock - s.rest_nock).dot((s.rest_nock - s.riser).normalized())
+	_check(s.held and s.nock.distance_to(s.hand_point()) < 0.02, "at full draw the string goes to the fingers")
+	_check(back > 0.2, "drawn back into a V (%.2f m behind its rest)" % back)
+	var arrow_dir: Vector3 = -s._arrow.transform.basis.z.normalized()
+	_check(s._arrow.visible and arrow_dir.dot((s.riser - s.nock).normalized()) > 0.99, "an arrow lies from the nock over the riser")
+	# Let go: straight again.
+	await _bow_frames(a, 30, &"")
+	_check(straight.call(), "let go, it snaps straight and the arrow is gone")
+	# NEGATIVE: early in the draw the hand is over the shoulder, reaching for an arrow.
+	await _bow_frames(a, 30, &"pose.bow_draw", 0.125)
+	_check(s.drawing() and not s.takes(s.hand_point()) and straight.call(),
+		"NEGATIVE: a hand reaching over the shoulder for an arrow leaves it straight")
+	await _bow_frames(a, 30, &"pose.bow_draw", 0.75)
+	_check(s.held, "later in the same draw it is taken")
+	# NEGATIVE: a pose that is not a draw.
+	await _bow_frames(a, 30, &"pose.spell_cast")
+	_check(not s.drawing() and straight.call(), "NEGATIVE: a spell's cast pose is not a draw")
+	a.queue_free()
+	await get_tree().process_frame
+	# A bigger bow (the tank's, 1.4x) has a longer string: it is measured from the model.
+	var big: Node3D = (load(BOW_SCENE) as PackedScene).instantiate() as Node3D
+	(big.get_node("Model") as Node3D).scale *= 1.4
+	add_child(big)
+	var bs: BowString = big.get_node("String") as BowString
+	_check(absf(bs.tip_a.distance_to(bs.tip_b) / span - 1.4) < 0.01, "a 1.4x bow's string is 1.4x as long")
+	big.queue_free()
+	await get_tree().process_frame
+	# Made at one size and grown after (the lab's size bar): the string is fitted to it again.
+	var grown: Node3D = (load(BOW_SCENE) as PackedScene).instantiate() as Node3D
+	add_child(grown)
+	var gs: BowString = grown.get_node("String") as BowString
+	var before: float = gs.tip_a.distance_to(gs.tip_b)
+	(grown.get_node("Model") as Node3D).scale *= 1.4
+	gs._update()
+	_check(absf(gs.tip_a.distance_to(gs.tip_b) / before - 1.4) < 0.01 and gs.nock.is_equal_approx(gs.rest_nock),
+		"a bow grown after it was made has its string fitted again (%.2f m to %.2f m)" % [before, gs.tip_a.distance_to(gs.tip_b)])
+	grown.queue_free()
+	await get_tree().process_frame
+
+
 # ---------------------------------------------------------------- the trail
 
 func _run_trail() -> void:
 	var a: ShowcaseActor = _actor()
+	var l: MotionLayer = _layer(a)
 	var trail := MotionTrail.new()
 	add_child(trail)
 	trail.set_process(false)
+	trail.life_s = 5.0
 	trail.follow(a.held)
 	trail.emitting = true
-	for i: int in 10:
-		trail.step(1.0 / 60.0)
-	_check(trail.sample_count() >= 9, "the trail keeps the blade while it draws (%d)" % trail.sample_count())
+	# Sampled as the skeleton draws (`skeleton_updated`): through the sky blade, where its clip raises the blade over
+	# the head, the newest blade starts by the hand AS DRAWN, never down where the pose under the move holds it.
+	var off: Array[float] = [0.0]
+	var counted: Array[int] = [0]
+	await _through(a, l, _move("sky_blade"), func(u: float) -> void:
+		trail.step(1.0 / 30.0)
+		if u > 0.3 and u < 0.45 and trail.sample_count() > 0:
+			var base: Vector3 = trail._samples[trail._samples.size() - 1][0] as Vector3
+			off[0] = maxf(off[0], base.distance_to(_seen(l, &"hand_r")))
+			counted[0] += 1)
+	_check(trail.sample_count() >= 20, "the trail keeps the blade while it draws (%d)" % trail.sample_count())
+	_check(counted[0] > 0 and off[0] < 0.5, "the trail is on the blade as drawn: it starts by the bent hand (%.2f m off, %d frames)" % [off[0], counted[0]])
 	trail.emitting = false
+	trail.life_s = 0.2
 	for i: int in 30:
 		trail.step(1.0 / 60.0)
 	_check(trail.sample_count() == 0, "and is empty once it stops and its life runs out")
+	trail.emitting = true
+	for i: int in 3:
+		await get_tree().process_frame
+	trail.clear()
+	_check(trail.sample_count() == 0, "clear forgets it (a blink: no ribbon across the gap)")
 	trail.queue_free()
 	a.queue_free()
+	await get_tree().process_frame
+
+
+# ---------------------------------------------------------------- the wrist
+
+func _run_wrist() -> void:
+	var a: ShowcaseActor = _actor()
+	var l: MotionLayer = _layer(a)
+	var skel: Skeleton3D = a.skeleton
+	var hand: int = skel.find_bone("hand_r")
+	var kids: PackedInt32Array = skel.get_bone_children(hand)
+	_check(not kids.is_empty(), "the hand carries bones (fingers)")
+	if kids.is_empty():
+		a.queue_free()
+		return
+	var finger: StringName = StringName(skel.get_bone_name(kids[0]))
+	l.bones.watch = [&"hand_r", &"lowerarm_r", finger]
+	var roll := MotionMove.new()
+	roll.length_s = 1.0
+	roll.wrist_deg = 90.0
+	roll.wrist = Curve.new()
+	roll.wrist.add_point(Vector2(0.0, 1.0))
+	roll.wrist.add_point(Vector2(1.0, 1.0))
+	var none: MotionMove = roll.duplicate() as MotionMove
+	none.wrist_deg = 0.0
+	# The same frame with no roll and with it: the finger from the hand, and the hand.
+	var fingers: Array[Vector3] = []
+	var hands: Array[Vector3] = []
+	for m: MotionMove in [none, roll]:
+		var got: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
+		await _through(a, l, m, func(u: float) -> void:
+			if u > 0.4 and u < 0.6:
+				got[0] = _seen(l, finger) - _seen(l, &"hand_r")
+				got[1] = _seen(l, &"hand_r"))
+		fingers.append(got[0])
+		hands.append(got[1])
+	var f0: Vector3 = fingers[0]
+	var f1: Vector3 = fingers[1]
+	var angle: float = rad_to_deg(f0.angle_to(f1)) if f0.length() > 0.001 and f1.length() > 0.001 else 0.0
+	_check(angle > 20.0, "the wrist rolls the hand: what it carries turns (%.0f deg)" % angle)
+	_check(hands[0].distance_to(hands[1]) < 0.02, "and the arm does not move (the hand %.3f m away)" % hands[0].distance_to(hands[1]))
+	a.queue_free()
+	await get_tree().process_frame
+
+
+# ---------------------------------------------------------------- in the game (PROGRESS 110)
+
+func _run_ability_table() -> void:
+	var table: AbilityMoves = load(AbilityMoves.PATH) as AbilityMoves
+	_check(table != null and table.rows.size() >= 9, "the abilities shown as moves are there (%d)" % (table.rows.size() if table != null else 0))
+	if table == null:
+		return
+	var in_kits: Dictionary[int, bool] = {}
+	for k: KitDef in KitDef.all():
+		for a: AbilityDef in k.abilities():
+			in_kits[a.id] = true
+	for r: AbilityMove in table.rows:
+		var n: String = r.ability.display_name if r.ability != null else "a row"
+		_check(r.ability != null and in_kits.has(r.ability.id), "%s is a kit's ability" % n)
+		_check(r.move != null and r.move.length_s > 0.0, "%s has a move" % n)
+	# Every motion lab placeholder has its row (its notes say so).
+	for k: KitDef in KitDef.all():
+		for a: AbilityDef in k.abilities():
+			if a.designer_notes.contains("PROGRESS 110"):
+				_check(AbilityMoves.of(a.id) != null, "%s (a motion lab placeholder) is shown as its move" % a.display_name)
+	var hook: AbilityMove = AbilityMoves.of(40063)
+	_check(hook != null and hook.victim != null and hook.victim.resource_path.ends_with("dragged.tres"), "the hook pull hauls its foe (dragged)")
+	_check(AbilityMoves.of(40001) == null, "NEGATIVE: the sword's first slash has no move: its clip as before")
+
+
+func _run_in_game() -> void:
+	var a: ShowcaseActor = _actor()
+	var foe: ShowcaseActor = _actor()
+	foe.walk_to(a.position + Vector3(0.0, 0.0, -3.0), 0.0)
+	foe.step(0.0)
+	var p: MotionPlayer = MotionPlayer.make(a, a.driver)
+	var q: MotionPlayer = MotionPlayer.make(foe, foe.driver)
+	_check(p != null and q != null, "a fighter gets a motion player on its model")
+	if p == null or q == null:
+		a.queue_free()
+		foe.queue_free()
+		return
+	_check(not p.layer.carry and p.layer.lift_scale == 0.0, "in the game it carries nothing and lifts nothing (the server moves the body)")
+	_check(not p.began(40001) and not p.layer.playing(), "NEGATIVE: an ability with no row plays nothing")
+	_check(p.began(40063) and p.layer.playing() and p.layer.move == AbilityMoves.of(40063).move, "the hook pull plays its move as it begins")
+	# A hit from it on the foe: the foe is dragged (EntityRegistry finds who struck).
+	EntityRegistry.register(a.entity_id, a)
+	q.hit_by(12.0, a.entity_id)
+	_check(q.layer.playing() and q.layer.move == AbilityMoves.of(40063).victim, "the foe it hits plays its victim move (dragged)")
+	q.layer.stop()
+	p.last_ability_ms -= MotionPlayer.HIT_WINDOW_MS + 100
+	q.hit_by(12.0, a.entity_id)
+	_check(not q.layer.playing(), "NEGATIVE: a hit long after it began plays nothing")
+	p.began(40062)
+	q.hit_by(12.0, a.entity_id)
+	_check(q.layer.move == AbilityMoves.of(40062).victim, "the kick sends its foe flying (kicked)")
+	q.layer.stop()
+	p.began(40058)
+	q.hit_by(12.0, a.entity_id)
+	_check(not q.layer.playing(), "NEGATIVE: the leaping strike has no victim move: its foe flinches as before")
+	EntityRegistry.unregister(a.entity_id)
+	# Its height is the server's: the leap slam's hips stay low here (the lab lifts them over 1.5 m).
+	p.layer.stop()
+	p.layer.bones.watch = [&"pelvis"]
+	p.layer.manual = true
+	var slam: MotionMove = _move("leap_slam")
+	p.layer.play(slam, Vector3(0.0, 0.0, -1.0))
+	var hips: float = 0.0
+	while p.layer.playing():
+		a.step(1.0 / 30.0)
+		p.layer.step(1.0 / 30.0)
+		await get_tree().process_frame
+		hips = maxf(hips, (p.layer.bones.seen.get(&"pelvis", Vector3.ZERO) as Vector3).y - a.position.y)
+	_check(hips < 1.3, "the leap slam's own height is left to the server's lift (hips %.2f m)" % hips)
+	a.queue_free()
+	foe.queue_free()
 	await get_tree().process_frame
 
 
@@ -313,6 +645,41 @@ func _await_lab(lab: Node3D, done: Callable, seconds: float) -> void:
 		var now: int = Time.get_ticks_msec()
 		waited += float(now - last) / 1000.0
 		last = now
+
+
+## THE CLIP BROWSER (PROGRESS 114): a Mixamo clip on the browser's adventurer holding the yew bow at 1.4x, played to its
+## length; then the staff, then nothing. NEGATIVES: a clip no library has is refused and changes nothing; the sword's
+## showcase hides the browser's panel.
+func _run_browser(lab: Node3D) -> void:
+	var index: int = int(lab.get(&"BROWSER"))
+	_check(String((lab.get(&"showcases") as Array[Array])[index][2]) == "_browse", "the lab's list ends with the clip browser")
+	var bow: String = "res://game/regents/combat/weapons/yew_bow.tscn"
+	lab.call(&"_set_paused", false)
+	lab.call(&"browse_hold", bow, 1.4)
+	_check(bool(lab.call(&"browse", "mx_great_sword", &"great_sword_slash_4")), "it takes a Mixamo clip")
+	lab.call(&"_select", index)
+	var coded: RefCounted = lab.get(&"coded") as RefCounted
+	var a: ShowcaseActor = coded.get(&"browser") as ShowcaseActor
+	var l: MotionLayer = (coded.get(&"layers") as Dictionary).get(a) as MotionLayer
+	await _await_lab(lab, func() -> bool: return bool(lab.get(&"started")) and l.playing(), 4.0)
+	var clip: Animation = MotionClip.find(&"mx_great_sword/great_sword_slash_4")
+	_check(l.playing() and l.move != null and l.move.clips[0].animation == &"mx_great_sword/great_sword_slash_4",
+		"the browser's adventurer plays it")
+	_check(is_equal_approx(float(lab.call(&"_length_of", index)), clip.length), "the time bar is the clip's length (%.2f s)" % clip.length)
+	var model: Node3D = a.held.get_node_or_null("Model") as Node3D if a.held != null else null
+	_check(a.held != null and a.held.scene_file_path == bow and model != null and is_equal_approx(model.scale.x, 0.75 * 1.4),
+		"holding the yew bow at 1.4x (its model %.2f)" % (model.scale.x if model != null else 0.0))
+	var panel: Control = lab.get(&"_br_panel") as Control
+	_check(panel.visible, "its panel shows")
+	# NEGATIVE: no such clip.
+	_check(not bool(lab.call(&"browse", "mx_magic", &"no_such_clip")) and lab.get(&"browse_clip") == &"great_sword_slash_4",
+		"NEGATIVE: a clip no library has is refused, and the choice stays")
+	lab.call(&"browse_hold", "res://game/regents/combat/weapons/yew_staff.tscn", 1.0)
+	_check(a.held != null and a.held.scene_file_path.ends_with("yew_staff.tscn"), "then the staff")
+	lab.call(&"browse_hold", "", 1.0)
+	_check(a.held == null, "then nothing")
+	lab.call(&"_select", 0)
+	_check(not panel.visible, "NEGATIVE: another showcase hides the browser's panel")
 
 
 func _run_lab() -> void:
@@ -368,6 +735,7 @@ func _run_lab() -> void:
 	await _await_lab(lab, settled, 6.0)
 	_check(absf(float(lab.get(&"clock")) - 0.3) < 0.02, "back to 0.30 s (played again from the start: %.3f)" % float(lab.get(&"clock")))
 	_check(charger.position.distance_to(at_03) < 0.08, "the same frame as before (%.3f m apart)" % charger.position.distance_to(at_03))
+	await _run_browser(lab)
 	lab.queue_free()
 	Engine.time_scale = 1.0
 	await get_tree().process_frame

@@ -9,6 +9,7 @@
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_skull_splitter.tres" id="p2"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_shoulder_shove.tres" id="p3"]
 [ext_resource type="Resource" path="res://game/regents/content/ability/axe_whirlwind.tres" id="p4"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_hook_pull.tres" id="m1"]
 [ext_resource type="Script" path="res://game/regents/content/kit_hit.gd" id="h_script"]
 [ext_resource type="Resource" path="res://game/regents/content/status/slowed.tres" id="h_slow"]
 
@@ -23,16 +24,21 @@ script = ExtResource("h_script")
 ability = ExtResource("p3")
 push_mps = 10.0
 
+[sub_resource type="Resource" id="Hit_hook"]
+script = ExtResource("h_script")
+ability = ExtResource("m1")
+pull_to_m = 1.2
+
 [resource]
 script = ExtResource("1_kit")
 key = &"axe"
 skill = ExtResource("2_skill")
 light = Array[Resource]([ExtResource("a0"), ExtResource("a2")])
 follow_ms = PackedInt32Array(200, 200)
-skills = Array[Resource]([ExtResource("a3"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4")])
-skill_ranks = PackedInt32Array(1, 1, 1, 1, 1)
-skill_slots = PackedInt32Array(0, 1, 1, 1, 2)
-hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_shove")])
+skills = Array[Resource]([ExtResource("a3"), ExtResource("p1"), ExtResource("p2"), ExtResource("p3"), ExtResource("p4"), ExtResource("m1")])
+skill_ranks = PackedInt32Array(1, 1, 1, 1, 1, 1)
+skill_slots = PackedInt32Array(0, 1, 1, 1, 2, 1)
+hits = Array[Resource]([SubResource("Hit_hamstring"), SubResource("Hit_shove"), SubResource("Hit_hook")])
 id = 40002
 display_name = "Axe"
-designer_notes = "The axe: Chop, Overhead; Cleave on Q. PLACEHOLDER POOL (armor run P1, 2026-11-15): one pool for every handle until per-role pools exist on the server (Lane S); the options and the ult are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."
+designer_notes = "The axe: Chop, Overhead; Cleave on Q. PLACEHOLDER POOL (armor run P1, 2026-11-15): one pool for every handle until per-role pools exist on the server (Lane S); Hook Pull (PROGRESS 110, the motion lab's) an option to try as a prototype; the options and the ult are stand-ins, every name ending (placeholder), Luke's to rewrite (ABILITIES_PREP.md section 9)."

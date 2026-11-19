@@ -32,9 +32,12 @@ catalog searched by weapon, reaction and foe terms), and other free or licensed 
   Pack* (51), *Sword And Shield Pack* (49), *Lite Sword And Shield Pack* (17). The axe, bow and magic clips
   come as families ("... With Axe", "... With Bow", "Standing 1H/2H Magic ..."); their pack names were not
   checked.
-- **Retargeting Mixamo onto our skeleton is not set up yet.** The first Mixamo clip settles how: Godot's
-  import retarget (a BoneMap to the Humanoid profile) or retarget in Blender onto the Quaternius rig and
-  export a `.glb` into today's pipeline. Do that once, with one clip, before buying anything.
+- **Retargeting Mixamo is set up** (2026-11-18, PROGRESS 111): `game/regents/tools/retarget_mixamo.gd` turns a
+  folder of Mixamo FBX into `game/regents/anim/mixamo_<pack>.res` (its header: the steps). In already, retargeted
+  and checked (`regents_motion`): *Great Sword Pack* (`mx_great_sword`, 51), *Pro Sword And Shield Pack*
+  (`mx_sword_shield`, 51), *Pro Magic Pack* (`mx_magic`, 56: the staff's "Standing 1H/2H Magic ..." clips below),
+  a *Locomotion Pack* (`mx_locomotion`, 12). Not yet in any animation set: the lab's clip sheets show them. Still to
+  get: the longbow clips (search "longbow" under Packs). Packs come without "In Place": the tool takes the drift out.
 - **Lengths matter**: a clip's length at its speed IS the lock (`COMBAT_CURRENT.md` §4). A long wind-up needs
   a clip with a real drawn-back pose; slowing a fast clip slows the whole swing, not just the wind-up.
 - Mixamo has **no clip called a parry**. Its quick arm blocks ("Inward Block", "Right Block") have the right

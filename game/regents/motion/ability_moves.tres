@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="AbilityMoves" format=3]
+
+[ext_resource type="Script" path="res://game/regents/motion/ability_moves.gd" id="1_table"]
+[ext_resource type="Script" path="res://game/regents/motion/ability_move.gd" id="2_row"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_leaping_strike.tres" id="r0"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/leaping_strike.tres" id="r1"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_spinning_dash.tres" id="r2"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/spinning_dash.tres" id="r3"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_blade_waltz.tres" id="r4"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/waltz_cut.tres" id="r5"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_leap_slam.tres" id="r6"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/leap_slam.tres" id="r7"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/knocked_up.tres" id="r8"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_roundhouse_kick.tres" id="r9"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/roundhouse_kick.tres" id="r10"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/kicked.tres" id="r11"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_hook_pull.tres" id="r12"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/hook_pull.tres" id="r13"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/dragged.tres" id="r14"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_execute.tres" id="r15"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/sky_blade.tres" id="r16"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/sword_charge.tres" id="r17"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/shoulder_charge.tres" id="r18"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/tumble.tres" id="r19"]
+[ext_resource type="Resource" path="res://game/regents/content/ability/axe_whirlwind.tres" id="r20"]
+[ext_resource type="Resource" path="res://game/regents/motion/moves/spinning_advance.tres" id="r21"]
+
+[sub_resource type="Resource" id="Row_0"]
+script = ExtResource("2_row")
+ability = ExtResource("r0")
+move = ExtResource("r1")
+
+[sub_resource type="Resource" id="Row_1"]
+script = ExtResource("2_row")
+ability = ExtResource("r2")
+move = ExtResource("r3")
+
+[sub_resource type="Resource" id="Row_2"]
+script = ExtResource("2_row")
+ability = ExtResource("r4")
+move = ExtResource("r5")
+waltz = true
+
+[sub_resource type="Resource" id="Row_3"]
+script = ExtResource("2_row")
+ability = ExtResource("r6")
+move = ExtResource("r7")
+victim = ExtResource("r8")
+
+[sub_resource type="Resource" id="Row_4"]
+script = ExtResource("2_row")
+ability = ExtResource("r9")
+move = ExtResource("r10")
+victim = ExtResource("r11")
+
+[sub_resource type="Resource" id="Row_5"]
+script = ExtResource("2_row")
+ability = ExtResource("r12")
+move = ExtResource("r13")
+victim = ExtResource("r14")
+
+[sub_resource type="Resource" id="Row_6"]
+script = ExtResource("2_row")
+ability = ExtResource("r15")
+move = ExtResource("r16")
+from_s = 0.5
+speed = 1.35
+
+[sub_resource type="Resource" id="Row_7"]
+script = ExtResource("2_row")
+ability = ExtResource("r17")
+move = ExtResource("r18")
+from_s = 0.4
+speed = 1.2
+victim = ExtResource("r19")
+
+[sub_resource type="Resource" id="Row_8"]
+script = ExtResource("2_row")
+ability = ExtResource("r20")
+move = ExtResource("r21")
+
+[resource]
+script = ExtResource("1_table")
+rows = Array[ExtResource("2_row")]([SubResource("Row_0"), SubResource("Row_1"), SubResource("Row_2"), SubResource("Row_3"), SubResource("Row_4"), SubResource("Row_5"), SubResource("Row_6"), SubResource("Row_7"), SubResource("Row_8")])

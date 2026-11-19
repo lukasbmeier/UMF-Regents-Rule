@@ -492,6 +492,10 @@ static func hit_words(kh: KitHit) -> String:
 		parts.append("leaves the foe %s for %s" % [status_words(kh.status), _secs(kh.status_ms)])
 	if kh.push_mps > 0.0:
 		parts.append("knocks %s back at %s m/s" % ["it" if not parts.is_empty() else "the foe", _num(kh.push_mps)])
+	if kh.pull_to_m > 0.0:
+		parts.append("hauls %s in to %s m from you" % ["it" if not parts.is_empty() else "the foe", _num(kh.pull_to_m)])
+	if kh.lift_mps > 0.0:
+		parts.append("throws %s into the air" % ("it" if not parts.is_empty() else "the foe"))
 	return "" if parts.is_empty() else "Unblocked, it %s." % ", and ".join(parts)
 
 

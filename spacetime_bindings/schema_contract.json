@@ -4,6 +4,7 @@
 	"reducers": {
 		"add_bot": "(session_id:U64,kind:U8,brain:String,pos:Vector3(x:F32,y:F32,z:F32))",
 		"add_score": "(entity_id:U64,score:I64,coins:I64)",
+		"admin_clear_picks": "(entity_id:U64,item_row:U64)",
 		"admin_give_item": "(entity_id:U64,item_id:U32,qty:U32,quality:U32)",
 		"admin_reset_bag": "(entity_id:U64)",
 		"admin_reset_skills": "(entity_id:U64)",

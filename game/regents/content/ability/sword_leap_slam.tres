@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 30000
+range_m = 3.8
+wind_up_ms = 850
+damage = 28.0
+animation = &"ability.40061"
+key = &"regents.combat"
+judged = true
+hits_all = true
+reach_m = 3.8
+radius_m = 2.0
+height_m = 0.9
+lunges = true
+id = 40061
+display_name = "Leap Slam (placeholder)"
+designer_notes = "PLACEHOLDER (PROGRESS 110, 2026-11-18, Luke: \"map everything to placeholder abilities and I'll try them in action\"): a motion lab move (game/regents/motion/) on a placeholder built from existing atoms, to try as a prototype. Its name, numbers and what it really does are Luke's. Sword, plain grip, an ult: a rising cut into a leap and a ground pound that throws what it lands on into the air (leap_slam.tres, knocked_up.tres); the lunge's dash is the leap's travel."

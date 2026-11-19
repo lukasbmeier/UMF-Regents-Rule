@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 40000
+range_m = 4.5
+wind_up_ms = 450
+damage = 30.0
+animation = &"ability.40060"
+key = &"regents.combat"
+judged = true
+hits_all = true
+reach_m = 4.5
+radius_m = 2.5
+height_m = 0.9
+lunges = false
+id = 40060
+display_name = "Blade Waltz (placeholder)"
+designer_notes = "PLACEHOLDER (PROGRESS 110, 2026-11-18, Luke: \"map everything to placeholder abilities and I'll try them in action\"): a motion lab move (game/regents/motion/) on a placeholder built from existing atoms, to try as a prototype. Its name, numbers and what it really does are Luke's. Sword, plain grip, an ult: SHOWN as a cut on up to three foes from a new side each (waltz_cut.tres); THE BODY DOES NOT MOVE: the server's hit is one wide sweep in front. A real waltz (the server placing you at each foe, untouchable) is a new kind (ABILITY_LIMITS.md section 2)."

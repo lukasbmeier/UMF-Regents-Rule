@@ -367,8 +367,10 @@ func _validate_hits() -> Array[String]:
 		if seen.has(kh.ability):
 			out.append("`hits` lists %s twice" % kh.ability.display_name)
 		seen.append(kh.ability)
-		if kh.push_mps <= 0.0 and kh.status == null:
-			out.append("%s's hit entry does nothing: set `push_mps` or `status`" % kh.ability.display_name)
+		if kh.push_mps <= 0.0 and kh.pull_to_m <= 0.0 and kh.lift_mps <= 0.0 and kh.status == null:
+			out.append("%s's hit entry does nothing: set `push_mps`, `pull_to_m`, `lift_mps` or `status`" % kh.ability.display_name)
+		if kh.push_mps > 0.0 and kh.pull_to_m > 0.0:
+			out.append("%s's hit entry both pushes and pulls: set one" % kh.ability.display_name)
 		if kh.status != null and kh.status_ms <= 0:
 			out.append("%s's hit entry applies %s for 0 ms: set `status_ms`" % [kh.ability.display_name, kh.status.display_name])
 	return out

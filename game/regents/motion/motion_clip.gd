@@ -13,6 +13,12 @@ const LIBRARIES: Dictionary[String, String] = {
 	"core": "res://game/anim/humanoid_core.res",
 	"extra": "res://game/anim/humanoid_extra.res",
 	"cuts": "res://game/regents/anim/regents_cuts.res",
+	# Mixamo's, retargeted onto our skeleton (`game/regents/tools/retarget_mixamo.gd`, 2026-11-18): not in any
+	# animation set yet, the lab's clip sheets only.
+	"mx_great_sword": "res://game/regents/anim/mixamo_great_sword.res",
+	"mx_sword_shield": "res://game/regents/anim/mixamo_sword_shield.res",
+	"mx_magic": "res://game/regents/anim/mixamo_magic.res",
+	"mx_locomotion": "res://game/regents/anim/mixamo_locomotion.res",
 }
 
 ## The clip: `<library>/<name>`, as the animation sets name them (`extra/Sword_Dash_RM`).

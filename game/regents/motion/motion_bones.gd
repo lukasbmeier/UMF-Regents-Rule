@@ -32,6 +32,8 @@ var seen: Dictionary[StringName, Vector3] = {}
 ## The move playing and how far in (s): its clips are sampled here (the layer sets them each frame; null: none).
 var move: MotionMove = null
 var t: float = 0.0
+## How much of the clips' root rising it keeps (the layer's `lift_scale`).
+var root_height_scale: float = 1.0
 
 ## Per clip, per skeleton: [bone, track type, track] for each of its tracks this skeleton has.
 var _tracks: Dictionary[Animation, Array] = {}
@@ -77,7 +79,7 @@ func _blend_clip(skel: Skeleton3D, c: MotionClip, w: float) -> void:
 				var p: Vector3 = a.position_track_interpolate(e[2], ct)
 				var now: Vector3 = skel.get_bone_pose_position(bone)
 				if skel.get_bone_name(bone) == "root":
-					skel.set_bone_pose_position(bone, Vector3(now.x, lerpf(now.y, p.y * c.root_height, w), now.z))
+					skel.set_bone_pose_position(bone, Vector3(now.x, lerpf(now.y, p.y * c.root_height * root_height_scale, w), now.z))
 				else:
 					skel.set_bone_pose_position(bone, now.lerp(p, w))
 			Animation.TYPE_SCALE_3D:
@@ -155,6 +157,21 @@ func _bend(skel: Skeleton3D) -> void:
 		turn_bone(skel, ua, frame.inverse() * arm * frame)
 	if pose.reach > 0.0001 and target != Vector3.INF:
 		_point_arm(skel, ua, frame, pose.reach)
+	if absf(pose.wrist) > 0.0001:
+		_roll_wrist(skel, frame, pose.wrist)
+
+
+## The weapon hand rolled `angle` about the fore arm's line (elbow to wrist): what it holds turns with it.
+func _roll_wrist(skel: Skeleton3D, frame: Basis, angle: float) -> void:
+	var fa: int = skel.find_bone(String(fore_arm))
+	var h: int = skel.find_bone(String(hand))
+	if fa < 0 or h < 0:
+		return
+	var to_world: Transform3D = skel.global_transform
+	var along: Vector3 = to_world * skel.get_bone_global_pose(h).origin - to_world * skel.get_bone_global_pose(fa).origin
+	if along.length_squared() < 0.000001:
+		return
+	turn_bone(skel, h, frame.inverse() * Basis(along.normalized(), angle * side_sign) * frame)
 
 
 ## The arm pointed at `target`, `weight` of the way: the upper arm turned so shoulder-to-hand lies along it, then the

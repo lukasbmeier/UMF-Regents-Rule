@@ -1526,17 +1526,25 @@ $2 loose_arrow [$SKB,{\"x\":0.0,\"y\":0.0,\"z\":-1.0}]
 0 sql DEAD$1 SELECT is_dead FROM health_state WHERE entity_id = $SKB"
 }
 bow_referee
-# FACE YOUR TARGET (Luke, 2026-11-12: "I can tab target and then face AWAY from the target and still shoot"; his pick:
-# refuse): standing north of it, facing north (this CLI player never turns), the skeleton is behind: nothing is
-# loosed and no arrow is taken. From the south it is in front (the shots below).
+# THE WAY YOU FACE (Luke, 2026-11-12; CHANGED 2026-11-18, PROGRESS 113: "just make it fire where you are facing"):
+# standing north of it, facing north (this CLI player never turns), the skeleton is behind: the arrow is loosed along
+# the aim (north), not at the skeleton behind; an arrow is taken (and given back for the shots below). From the south
+# it is in front (the shots below).
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":-11.0}' "stand ten meters north of skeleton_1, your back to it"
 ARROWS_FACING="$(qty_of 40022)"
 timed "0 draw_bow [true]
 400 loose_arrow [$SKB,{\"x\":0.0,\"y\":0.0,\"z\":-1.0}]
-0 draw_bow [false]"
+0 sqlwait AB SELECT entity_id FROM body_state WHERE owner_id = $MYENT AND def_id = 40001"
 timed_ok 1 "draw"
-timed_refused 2 "face your target" "a loose at a Tab target behind you: refused"
-assert_eq "$(qty_of 40022)" "$ARROWS_FACING" "and no arrow was taken"
+timed_ok 2 "a loose at a Tab target behind you is not refused"
+AB_VEL="$(sql_first "SELECT vel FROM movement_state WHERE entity_id = $(timed_val AB)" 1)"
+check "$(python -c "
+import re, sys
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
+print('true' if len(v) == 3 and v[2] < -15 and abs(v[0]) < 0.5 else 'false')
+" "$AB_VEL")" "NEGATIVE of the aim at a target: it flies north, the way you face, not south at the skeleton ($AB_VEL)"
+assert_eq "$(qty_of 40022)" "$(python -c "print(${ARROWS_FACING:-0} - 1)")" "an arrow was taken"
+assert_ok "grant_item $MYENT 40022 1" "(test) that arrow given back, for the counts below"
 assert_ok 'teleport {"x":33.0,"y":0.0,"z":9.0}' "back ten meters south of it: it is in front"
 AXP0="$(xp_of 40008)"
 shot 1 900 -1.0
@@ -1668,12 +1676,19 @@ STAFF_X0="$(IX "$STAFF_ROW")"
 # No healing until the fire is measured.
 assert_ok 'set_rule "regents.regen_delay_s" 120.0 ""' "(test) no regeneration while the spells are measured"
 bow_referee
-# A missile at a Tab target is refused the same way from facing away (north of it, your back to it).
+# A missile at a Tab target behind you flies the way you face too (north of it, your back to it; Luke 2026-11-18).
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 - 8)")")" "stand eight meters north of skeleton_2, your back to it"
-MANA_FACING="$(MANA)"
-assert_rejected "cast_spell 40012 $SK2 $NORTH $NONE" "face your target" "a Bolt at a Tab target behind you: refused"
-assert_eq "$(MANA)" "$MANA_FACING" "and nothing was spent"
+assert_ok "cast_spell 40012 $SK2 $NORTH $NONE" "a Bolt at a Tab target behind you is not refused"
+BB="$(newest_body 40002)"
+BB_VEL="$(sql_first "SELECT vel FROM movement_state WHERE entity_id = ${BB:-0}" 1)"
+check "$(python -c "
+import re, sys
+v = [float(x) for x in re.findall(r'-?[0-9.]+(?:e-?[0-9]+)?', sys.argv[1])][:3]
+print('true' if len(v) == 3 and v[2] < -5 and abs(v[0]) < 0.5 else 'false')
+" "$BB_VEL")" "NEGATIVE of the aim at a target: the Bolt flies north, the way you face, not south at skeleton_2 ($BB_VEL)"
+sleep 0.7   # (the Bolt's own 600 ms cooldown, before the Bolt below)
 assert_ok "teleport $(vec "$X2" 0.0 "$(python -c "print($Z2 + 8)")")" "back eight meters south of it"
+STAFF_X0="$(IX "$STAFF_ROW")"   # (again: the Bolt behind you is the staff's too)
 H0="$(HP "$SK2")"
 SXP0="$(xp_of 40009)"
 # The Bolt and its hit, timed calls: a missile lives 3 s, and on a busy machine the CLI's calls between the cast and

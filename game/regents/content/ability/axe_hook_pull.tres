@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://foundation/content/ability_def.gd" id="1_ability"]
+
+[resource]
+script = ExtResource("1_ability")
+cooldown_ms = 10000
+range_m = 3.2
+wind_up_ms = 590
+damage = 12.0
+animation = &"ability.40063"
+key = &"regents.combat"
+judged = true
+hits_all = true
+reach_m = 3.2
+radius_m = 1.0
+height_m = 0.9
+lunges = false
+id = 40063
+display_name = "Hook Pull (placeholder)"
+designer_notes = "PLACEHOLDER (PROGRESS 110, 2026-11-18, Luke: \"map everything to placeholder abilities and I'll try them in action\"): a motion lab move (game/regents/motion/) on a placeholder built from existing atoms, to try as a prototype. Its name, numbers and what it really does are Luke's. Axe, an E option: the axe swept out, its head turned to hook, and yanked back with what it caught, hauled in to 1.2 m (hook_pull.tres, dragged.tres; Luke, 2026-11-18: with the axe itself, closer in)."

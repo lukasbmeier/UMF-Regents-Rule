@@ -1,50 +1,37 @@
-# Handoff — Regent's Rule, 2026-11-17 (the follow-up run finished; step 109, the motion lab)
+# Handoff — Regent's Rule, 2026-11-18 (steps 110-114: placeholder moves; Mixamo; the bowstring; shots off-target; the clip browser)
 
 ## Where it stands
-- The FOLLOW-UP run is done: steps 102-108 on `main`, pushed. The ledger is `docs/regents_rule/FOLLOWUP_RUN.md`.
-- Suites on `main` (2026-11-17): the whole unit suite after the last merge 5249/0; `cargo test` and wasm green; `content_test.sh` 18/0. M9 on `main`: combat
-  157/0, spells_seen 12/0, armor_seen 7/0; integration and caster red at first (1734/3, 19/1), fixed in 107: integration
-  1703/0 then 1710/0 (108), caster 4 of 4 green, on lane A's branch.
-- The play database `regents-rule` was published after A2 (step 105: the practice armor gone); later steps are client
-  or test changes. Schema unchanged.
-- Fishing, Fowl Play, DiscGolf republished with `--codegen`, bindings pushed: Fowl Play 2815/0, DiscGolf 2605/0,
-  Fishing 3309/2 (its held-items grip suite: the rod up to 33 cm into the body; the grips are Luke's).
-- Both children archived; their worktrees and branches removed.
-- After the run: `ABILITY_LIMITS.md` (what an ability can be) pushed; step 109, THE MOTION LAB (moves made in code over
-  the clips, `game/regents/motion/`), built in the main checkout, uncommitted at the time of writing (see git).
+- Step 109 committed and pushed (a5bc9099). Steps 110-114 built in the main checkout, UNCOMMITTED (see git).
+  111: `game/regents/tools/retarget_mixamo.gd`, `game/regents/anim/mixamo_*.res` + `ATTRIBUTION.md`, `motion_clip.gd`
+  LIBRARIES, the lab's `held=` / `scale=`. 112: `game/regents/combat/bow_string.gd`, a `String` node in `yew_bow.tscn`.
+  113: `combat_component.gd`, `combat_look.gd`, `server/src/game/regents.rs` (`loose_arrow`, `cast_spell`), the
+  `aim_arc_deg` rule's words (baked), `integration_genre.sh`. Several steps share files (`regents_motion.gd`,
+  `combat_component.gd`): stage by path. 114: `motion_lab.gd` (the clip browser), `bow_string.gd` (refits).
+- Suites after 113: the unit suite and lints 5442/0; `cargo test` (28) and the wasm check green; integration 1712/0.
+  After 114: the unit suite and lints 5453/0.
+- The play database `regents-rule`: published after 113 (no schema change: restart the game).
 
 ## This session
-- 101 committed (Luke's yes). 102 (B1): the bar's words say a hit's slow, shove and sweep (`RegentsAbilityBar.hit_words`).
-- 103 (A1): a real client presses the bow's Q, E, R (`combat_playtest.sh`, `LEG=bow_skills`).
-- 104 (B2): the Bolt's hand flash (`on_cast`), Meteor's fire ring (`ring`), others' missiles lighter (`ShotLook.make_lighter`).
-- 105 (A2): the practice armor 40067/40068 deleted; integration and tests on the iron cuirass and steel armet.
-- 106 (B2b): the VFX lab's leftover Bolt hit flash (lab only). 107 (A3): the poise leg waits on its row
-  (`steadied_out`), the caster's walked-bolt and cast-stopped legs robust. 108 (A3b): integration's genre hook counts
-  the same checks every run (`put_away`, `give_back`, `COUNT_BY_SECTION=1`).
-- 109: the motion lab, rebuilt on Luke's feedback (the all-code cut looked "like a doll"): CLIPS FOR THE BODY
-  (`MotionClip`: our libraries' unused clips, time-warped, chained, masked, their root travel carrying the body) and
-  CODE ON TOP (`MotionMove` channels, `MotionLayer` after the animation driver, `MotionBones`); the SCRUBBER (P,
-  `,` `.`, the time bar) and clip sheets; `regents_motion` 98/0.
+- Answered the tank bow; Luke's calls (GAME.md): MIXAMO CLIPS (private repo), THE BOWS BY ROLE (bow / longbow-plated /
+  shortbow are the bow's roles, as grips are melee's; staves likely the same), THE WAY YOU FACE (CHANGED).
+- 111: 170 Mixamo clips on our skeleton; great sword swings, and the yew bow swung through them at 1x and 1.4x.
+- 112: the bowstring drawn into a V to the fingers with an arrow on it, every client, from the draw pose.
+- 113: a shot at a Tab target you do not face flies to the crosshair (client and server), never refused.
+- 114: the motion lab's CLIP BROWSER (any clip, any held item, any size). Luke's staff roles: KEEP THE SHAFTS (GAME.md).
 
 ## Next, in order
-1. Luke plays (GAME.md, "The follow-up run"): the bar's words, the staff's Bolt and Meteor, two instances for
-   another player's Bolt; restart the game for the new publish. And the motion lab (F6 on `motion_lab.tscn`): which
-   moves, if any, become abilities is his (PROGRESS 109, "Left for later").
-2. TEMPLATE work (PROGRESS 108, 107): `COUNT_BY_SECTION` in the foundation's `tests/integration_test.sh` and its
-   per-row `revoke_authority` / `despawn_entity` checks; the player `vel` in the movement row reading ~4 % low.
-   In `../UMF Template`, then pull here.
-3. The bow's skills are worded as melee on the bar (PROGRESS 102): a line for a kit that `draws`.
-4. Whatever Luke answers in `WAITING_ON_LUKE.md` (armor's traits and numbers, the real ability content, the UI
-   rebuild, towns, the world builder's NPCs on the server).
+1. Luke plays: the bowstring (hold LMB with the yew bow); shooting a target behind you; the bow sheets.
+2. The three bows as roles (the bow's `KitDef.roles`, the longbow at 1.4x and a shortbow as items with a `String`
+   node, carving): Luke's numbers, recipes, names. The tank bow's melee from the great sword set (`adventurer.tres`).
+3. The staff's shafts (GAME.md, THE STAFF'S ROLES): ward = melee string + metal part, censer = quick weak bolts; specifics next.
+4. 110's live pull and lift check; TEMPLATE work (PROGRESS 108, 107).
 
 ## Waiting on Luke
-- `docs/regents_rule/WAITING_ON_LUKE.md`; new this run: a shove worded in m/s or meters; Meteor's ring colors (a
-  player's fire ring like the imp's?); the Bolt's hand flash's size; foes' shots led a little short of a walker.
+- The bows' and shafts' numbers, recipes, names, spells per role; tap swings or shoots. A Mixamo longbow pack.
+- 110's: which moves stay; the spin; the back flip as a backward roll; a real blade waltz.
 
 ## Watch out
-- The local SpacetimeDB server was down at the run's start; lane A started it (detached). Fishing needed a Godot
-  `--import` before its unit suite.
-- Integration took 14-24 min this run (was ~80). Compare counts leg by leg with `COUNT_BY_SECTION=1` (PROGRESS 108).
-- `docs/HANDBOOK.md` is the template's: never edited here.
-- A turn on a character goes on its MODEL after the animation driver (it sets the model's global rotation every frame);
-  a SkeletonModifier3D's bend is invisible to a reader outside it (`MotionBones.seen`, `AimTwist.muzzle`).
+- NEVER leave Mixamo FBX in `game/anim/_import/`: the export filter does not exclude it.
+- `--script` runs have no autoloads: a look check with the game's classes needs a scene.
+- A changed `.tres` rule or content needs `tools/bake_content.gd` before `cargo` builds (build.rs refuses a stale bake).
+- `docs/HANDBOOK.md` is the template's: never edited here. Heredocs with apostrophes break the Bash tool: patch files.

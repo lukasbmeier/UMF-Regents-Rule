@@ -9,7 +9,7 @@ animation = &"extra/Hit_Knockback_RM"
 to_s = 0.42
 blend_in_s = 0.06
 blend_out_s = 0.25
-root_travel = -1.6
+root_travel = -0.95
 
 [resource]
 resource_name = "Dragged (the hook's catch)"

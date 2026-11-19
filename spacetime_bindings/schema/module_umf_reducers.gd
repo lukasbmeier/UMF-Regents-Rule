@@ -20,6 +20,11 @@ func add_score(entity_id: int, score: int, coins: int) -> SpacetimeDBReducerCall
 	return _client.call_reducer('add_score', [entity_id, score, coins], [&'u64', &'i64', &'i64'], &'')
 
 ## 0. entity_id: int [br]
+## 1. item_row: int [br]
+func admin_clear_picks(entity_id: int, item_row: int) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('admin_clear_picks', [entity_id, item_row], [&'u64', &'u64'], &'')
+
+## 0. entity_id: int [br]
 ## 1. item_id: int [br]
 ## 2. qty: int [br]
 ## 3. quality: int [br]

@@ -140,8 +140,8 @@ func body_facing() -> Vector3:
 	return Vector3(fwd.x, 0.0, fwd.z).normalized()
 
 
-## Where this character's shot goes: ours at the Tab target's middle when we face it (a shot at one we do not face
-## is refused: `CombatComponent.target_in_front`), else where the crosshair is; another player's far ahead the way
+## Where this character's shot goes: ours at the Tab target's middle when we face it (`CombatComponent.target_in_front`),
+## else where the crosshair is (a shot at a target not faced goes there too, Luke 2026-11-18); another player's far ahead the way
 ## their body faces.
 func aim_point() -> Vector3:
 	var me: Node3D = entity as Node3D

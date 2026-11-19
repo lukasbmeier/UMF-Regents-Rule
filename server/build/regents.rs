@@ -323,8 +323,12 @@ pub fn regents_data() {
             let push = kh.get("push_mps").and_then(|x| x.as_f64()).unwrap_or(0.0).max(0.0) as f32;
             let status = kh["status"].as_i64().unwrap_or(0).clamp(0, 255) as u8;
             let status_ms = kh["status_ms"].as_i64().unwrap_or(0).max(0) as u32;
-            assert!(push > 0.0 || (status > 0 && status_ms > 0), "regents content: the {name} kit's hit entry for {ab} does nothing");
-            hit_map.push_str(&format!("KitHitSeed {{ ability: {ab}, push_mps: {push:?}f32, status: {status}, status_ms: {status_ms} }}, "));
+            // A PULL and a LIFT (the motion lab's moves as placeholders, PROGRESS 110); absent in an older bake.
+            let pull_to = kh.get("pull_to_m").and_then(|x| x.as_f64()).unwrap_or(0.0).max(0.0) as f32;
+            let lift = kh.get("lift_mps").and_then(|x| x.as_f64()).unwrap_or(0.0).max(0.0) as f32;
+            assert!(push > 0.0 || pull_to > 0.0 || lift > 0.0 || (status > 0 && status_ms > 0), "regents content: the {name} kit's hit entry for {ab} does nothing");
+            assert!(!(push > 0.0 && pull_to > 0.0), "regents content: the {name} kit's hit entry for {ab} both pushes and pulls");
+            hit_map.push_str(&format!("KitHitSeed {{ ability: {ab}, push_mps: {push:?}f32, status: {status}, status_ms: {status_ms}, pull_to_m: {pull_to:?}f32, lift_mps: {lift:?}f32 }}, "));
         }
         // ITEM LEVELS (ABILITIES_PREP.md §7 step 2): each skill's bar slot (0 base, 1 pick option, 2 ult option, 3 F; none:
         // every skill a base), and the item level each unlock opens at.

@@ -128,6 +128,34 @@ pub struct KitHitSeed {
     pub push_mps: f32,
     pub status: u8,
     pub status_ms: u32,
+    /// Drawn TOWARD its attacker, to stop this far from it (m; 0: no pull): the hook's haul.
+    pub pull_to_m: f32,
+    /// Thrown up this fast (m/s; 0: the push's usual little hop): a knock-up.
+    pub lift_mps: f32,
+}
+
+/// The hop a push gives when its hit sets no lift (m/s, as it always was).
+pub const PUSH_HOP_MPS: f32 = 2.0;
+
+/// WHAT A KIT'S HIT DOES TO A BODY'S SPEED (a push, a pull, a lift), its attacker at `from` and its target at `to` (flat):
+/// away at `push_mps`; or toward the attacker, as fast as carries it from where it stands to `pull_to_m` short of it
+/// (the push's carry is lost at `crate::push::PUSH_DRAG_MPS2`, so `v = sqrt(2 a d)`), nothing when it is already that
+/// near; and up at `lift_mps` (none set: `PUSH_HOP_MPS` when it moves at all). None: it moves nothing.
+pub fn hit_push(push_mps: f32, pull_to_m: f32, lift_mps: f32, from: crate::sim::Vector3, to: crate::sim::Vector3) -> Option<crate::sim::Vector3> {
+    let (dx, dz) = (to.x - from.x, to.z - from.z);
+    let d = (dx * dx + dz * dz).sqrt();
+    let (ux, uz) = if d > 0.01 { (dx / d, dz / d) } else { (0.0, 0.0) };
+    let along = if pull_to_m > 0.0 {
+        let gap = (d - pull_to_m).max(0.0);
+        -(2.0 * crate::push::PUSH_DRAG_MPS2 * gap).sqrt()
+    } else {
+        push_mps.max(0.0)
+    };
+    if along == 0.0 && lift_mps <= 0.0 {
+        return None;
+    }
+    let up = if lift_mps > 0.0 { lift_mps } else { PUSH_HOP_MPS };
+    Some(crate::sim::Vector3::new(ux * along, up, uz * along))
 }
 
 /// A skill (`SkillDef`): XP to reach each rank from 2 up.
