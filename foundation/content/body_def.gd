@@ -24,6 +24,10 @@ enum Shape { SPHERE, CYLINDER, BOX }
 @export var box_size: Vector3 = Vector3(0.3, 0.3, 0.3)
 ## Its mass: what a collision with another body shares out.
 @export_range(0.01, 100.0, 0.01, "suffix:kg") var mass_kg: float = 0.2
+## Whether it meets other bodies (DECISIONS #317). Off: it flies through every other body (and they
+## through it: either one off is off), and still hits the level and people. Shots that should never
+## knock each other aside. Physics only: not baked, nothing to republish.
+@export var hits_bodies: bool = true
 
 @export_group("In flight")
 ## How much of its speed a bounce keeps (0: it stops dead, 1: it bounces as high as it fell).

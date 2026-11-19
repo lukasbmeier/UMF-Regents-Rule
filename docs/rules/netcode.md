@@ -7,7 +7,8 @@ How entities are shaped and bound, what the client subscribes to, and how it con
 - Entity bodies: `collision_layer = SpaceTimeEntity.ENTITY_MASK`, `collision_mask =
   SpaceTimeEntity.WORLD_MASK`. Level geometry stays on layer 1. Entities never collide with each other.
 - Bodies the referee flies (DECISIONS #246) are on layer 20 and meet layer 1, each other and layer 21 (the
-  referee's stand-ins for people); a body's entity node on a client has no collision at all. Layers 5-19
+  referee's stand-ins for people); one whose def has `hits_bodies` off is on no layer and meets only 1 and 21
+  (#317). A body's entity node on a client has no collision at all. Layers 5-19
   are left to the games (Fowl Play's hens' kin layer is 6).
 - An entity still binding is handed its rows directly (`EntityRegistry.await_rows`, DECISIONS #247); only an
   entity not yet built has its rows buffered.

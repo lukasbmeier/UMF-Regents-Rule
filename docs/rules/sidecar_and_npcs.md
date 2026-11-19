@@ -49,8 +49,13 @@ SERVER_AUTHORITY worlds, the headless authority process, and the brains it runs.
 - Its `movement_state.last_processed_seq` is its physics frames since launch; a client compares the
   referee's frame N with its own frame N. Never write a body's movement row any other way than
   `write_body_batch` (or `place_entity`, a teleport the referee adopts).
-- Hits come from a cast ahead along the frame's motion, not Godot's contact list (a fast hit is gone by
-  the end of the step). People are stand-ins (`AnimatableBody3D`, layer 21) at their newest row; a body
+- Hits come two ways, in `FlyingBody._contacts` (DECISIONS #246, #317): first the step's own contacts (a hit
+  within the first frame, two bodies meeting mid-step, a graze; faster than the def's `contact_speed_mps`,
+  0 = all), then a cast ahead along the frame's motion (a fast hit is gone by the end of the step). It runs
+  AFTER the def's forces and ground drag: the contacts read `_prev_vel` and the step's impulses (the push over
+  1 + bounce), which the forces never change, and the cast follows the velocity the next step really runs. What
+  either way said is not said again for `REHIT_FRAMES`.
+- `BodyDef.hits_bodies` off: layer 0, mask `1 | PROXY_LAYER` (passes through every body). Not baked. People are stand-ins (`AnimatableBody3D`, layer 21) at their newest row; a body
   passes through its own thrower's for its first `CLEAR_OWNER_FRAMES`.
 - On clients a body's rows are timed by `server_ts` (`timeline_by_server_ts`), never by seq: its seq starts
   when the referee picked it up, not at the launch.
